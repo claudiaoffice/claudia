@@ -1,0 +1,26 @@
+{
+ "version": "0.1.0",
+ "TlsPolicy": {
+  "class": [
+   "object"
+  ],
+  "init": "(cafile: 'str | os.PathLike | None' = None, accept_new: 'bool' = False, known_servers: 'str | os.PathLike | None' = None)",
+  "methods": {
+   "context_for": "(self, host: 'str', port: 'int', timeout: 'float' = 10.0) -> 'ssl.SSLContext'",
+   "forget": "(self, server: 'str') -> 'bool'",
+   "trust": "(self, server: 'str', fingerprint: 'str', pem: 'str') -> 'None'"
+  },
+  "properties": []
+ },
+ "UntrustedCertificate": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(message: 'str', server: 'str', fingerprint: 'str')",
+  "methods": {},
+  "properties": []
+ },
+ "fingerprint_of": {
+  "function": "(der: 'bytes') -> 'str'"
+ }
+}

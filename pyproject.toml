@@ -1,0 +1,71 @@
+[project]
+name = "claudia-monorepo"
+version = "0.0.0"
+description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
+requires-python = ">=3.14"
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-server", "claudia-client"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+claudia-core = { workspace = true }
+claudia-computes = { workspace = true }
+claudia-composes = { workspace = true }
+claudia-creates = { workspace = true }
+claudia-server = { workspace = true }
+claudia-client = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "mypy>=1.10",
+    "ruff>=0.6",
+    "vulture>=2.11",
+    "sphinx>=7.3",
+    "myst-parser>=3",
+    "httpx>=0.27",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+extend-exclude = [".venv", ".mypy_cache"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RET", "PL", "PERF"]
+ignore = [
+    "PLR2004",  # magic values in comparisons: noisy in tests and small parsers
+    "PLR0913",  # many arguments: the Document constructor is the one place it is justified
+    "PLR0911",  # many returns: region transforms read best as a list of cases
+    "RET505",   # else after return: sometimes clearer
+    "PLC0415",  # local imports break the kernel's import cycles on purpose (log <-> commands, model <-> manifest)
+    "B027",     # optional hooks on abstract bases (settle, mark_stale) are empty on purpose
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["PLR0915", "B018"]
+"vulture_whitelist.py" = ["B018"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_server"]
+
+[tool.mypy]
+python_version = "3.14"
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-server/src", "packages/claudia-client/src"]
+explicit_package_bases = true
+
+[tool.vulture]
+paths = ["packages", "scripts", "vulture_whitelist.py"]
+min_confidence = 60
+exclude = [".venv/", "docs/"]

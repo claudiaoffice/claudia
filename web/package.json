@@ -1,0 +1,27 @@
+{
+  "name": "claudia-web",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt generate",
+    "test": "vitest run",
+    "typecheck": "nuxt typecheck",
+    "e2e": "node e2e/demo.cjs",
+    "e2e:resilience": "node e2e/resilience.cjs"
+  },
+  "dependencies": {
+    "nuxt": "^4.6.3",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@fontsource/fraunces": "^5.0.0",
+    "@fontsource/inter": "^5.0.0",
+    "@fontsource/jetbrains-mono": "^5.0.0",
+    "@fontsource/sacramento": "^5.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0",
+    "vue-tsc": "^3.0.0"
+  }
+}

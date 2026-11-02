@@ -1,0 +1,605 @@
+"""The wire protocol: which requests exist, what they accept, and what they do (E3.1).
+
+Messages are JSON text frames.
+
+    client -> server   {"id": 7, "method": "apply", "params": {"command": {...}, "base": "main:12"}}
+    server -> client   {"id": 7, "ok": true,  "result": {"revision": "main:13"}}
+                       {"id": 7, "ok": false, "error": {"code": "stale", "message": "..."}}
+    server -> client   {"event": "command", "data": {...}}                    pushed, no id
+
+Every request gets exactly one response with the same ``id`` (an integer or a short string chosen by the client).
+Events caused by a request are sent *before* its response, so when the response arrives the client has seen the
+change.
+
+The method table is the single source of truth: it validates parameters, says who may call what, and is published by
+``MethodTable.describe`` (served at ``/api/protocol``) so clients in other languages can be generated or checked
+against it (E3.2). The table in this module, ``core_methods``, holds what every app has (documents, undo,
+checkpoints, presence, locks, chat); an app takes ``core_methods.extended()`` and adds its own methods and parameter
+types. A *command* travels in its stored form (``{"k": kind, "s": schema, "d": data}``), so the protocol never needs
+to know what a spreadsheet, a text or a slide is.
+
+Restoring a checkpoint and switching the line are deliberately not requests yet: who may do that in a live session is
+still being decided. Their effect on connected clients is already defined: ``branch`` and ``rebuilt`` events, and the
+``stale`` error for an edit that was written against the line left behind.
+
+This module has no web framework in it, so it is tested without sockets.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+from claudia_core import (
+    Document,
+    KernelError,
+    RegionHeld,
+    Revision,
+    SchemaTooNew,
+    StaleEdit,
+    UndoConflict,
+    UnknownCommand,
+)
+
+from .auth import Account, UserDirectory
+
+if TYPE_CHECKING:
+    from claudia_core import Region
+
+PROTOCOL_VERSION = 1
+INT_MAX = 2**31 - 1
+MAX_LOG = 5000
+
+ERROR_CODES = {
+    "bad_request": "malformed message, unknown or missing parameter, wrong type, or over a limit",
+    "unknown_method": "no such method",
+    "command_error": "the request was understood but rejected (bad index, unknown sheet...); nothing changed",
+    "forbidden": "the account may not do this (read-only role)",
+    "unauthorized": "missing or wrong credentials",
+    "not_found": "no such document",
+    "unavailable": "a server limit was reached (too many connections to the document)",
+    "locked": "somebody else is working on that part of the document right now; nothing changed",
+    "conflict": "undo or redo would overwrite a colleague's later work; nothing changed",
+    "stale": "the request was made against a view of the document that is gone (it went back to a checkpoint or "
+    "changed line); reload the document and try again; nothing changed",
+    "internal": "a server error; the request may or may not have been applied, check the revision",
+}
+
+EVENTS = {
+    "command": "a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. "
+    "State events of the app (the document's own, e.g. cells changed) come just before it",
+    "history": "your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that "
+    "author only",
+    "checkpoint": "somebody saved a checkpoint: {number, label, author, marks}",
+    "chat": "a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not "
+    "for everybody",
+    "ephemeral": "something that is not stored: {kind: presence|preview|typing|..., sender, data}",
+    "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
+    "fork_point}. Everything you hold is stale: call snapshot",
+    "rebuilt": "the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot",
+    "redacted": "the content of these revisions was removed: {revisions}",
+    "stale": "functions the document uses changed: {functions}; results computed by them are out of date",
+    "joined": "somebody connected: {id, user, color}",
+    "left": "somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection",
+}
+
+
+class RequestError(Exception):
+    """A request failed in a way the client is told about: ``code`` is one of ``ERROR_CODES``."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+    def to_dict(self) -> dict:
+        """The error as sent in a response."""
+        return {"code": self.code, "message": self.message}
+
+
+@dataclass(frozen=True)
+class Limits:
+    """Caps that keep one client from exhausting the server. Apps add their own in their own settings."""
+
+    max_text: int = 32_767  # characters in one text parameter (a chat message, a cell input)
+    max_message_bytes: int = 16 * 1024 * 1024
+    max_regions: int = 16  # regions one request may show or lock
+
+    def to_dict(self) -> dict:
+        """The limits as sent to a client in the welcome."""
+        return dict(self.__dict__)
+
+
+# ----------------------------------------------------------------- parameter types
+def _is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and abs(value) <= INT_MAX
+
+
+def _int(value: Any, limits: Limits) -> int:
+    """integer"""
+    if not _is_int(value):
+        raise ValueError("must be an integer")
+    return value
+
+
+def _number(value: Any, limits: Limits) -> float:
+    """finite number"""
+    if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
+        raise ValueError("must be a finite number")
+    return float(value)
+
+
+def _bool(value: Any, limits: Limits) -> bool:
+    """true / false"""
+    if not isinstance(value, bool):
+        raise ValueError("must be true or false")
+    return value
+
+
+def _str(value: Any, limits: Limits) -> str:
+    """string, at most 1000 characters (ids, names)"""
+    if not isinstance(value, str) or len(value) > 1000:
+        raise ValueError("must be a string of at most 1000 characters")
+    return value
+
+
+def _text(value: Any, limits: Limits) -> str:
+    """string, at most limits.max_text characters (chat, cell input)"""
+    if not isinstance(value, str) or len(value) > limits.max_text:
+        raise ValueError(f"must be a string of at most {limits.max_text} characters")
+    return value
+
+
+def _dict(value: Any, limits: Limits) -> dict:
+    """object"""
+    if not isinstance(value, dict):
+        raise ValueError("must be an object")
+    return value
+
+
+def _list(value: Any, limits: Limits) -> list:
+    """array"""
+    if not isinstance(value, list):
+        raise ValueError("must be a list")
+    return value
+
+
+def _any(value: Any, limits: Limits) -> Any:
+    """anything"""
+    return value
+
+
+def _revision(value: Any, limits: Limits) -> Revision:
+    """a revision as the server writes it: \"line:number\", e.g. \"main:12\""""
+    if not isinstance(value, str):
+        raise ValueError('must be a revision like "main:12"')
+    try:
+        return Revision.parse(value)
+    except ValueError:
+        raise ValueError('must be a revision like "main:12"') from None
+
+
+def _regions(value: Any, limits: Limits) -> list[dict]:
+    """array of regions in the app's wire form (each an object with a kind), at most limits.max_regions"""
+    if not isinstance(value, list) or len(value) > limits.max_regions:
+        raise ValueError(f"must be a list of at most {limits.max_regions} regions")
+    if not all(isinstance(item, dict) for item in value):
+        raise ValueError("must be a list of region objects")
+    return value
+
+
+@dataclass(frozen=True)
+class Param:
+    """One parameter of a method."""
+
+    name: str
+    kind: str
+    required: bool = True
+    default: Any = None
+
+    def to_dict(self) -> dict:
+        """The parameter as described to client developers."""
+        return {"name": self.name, "type": self.kind, "required": self.required, "default": self.default}
+
+
+def _parse_params(spec: str) -> tuple[Param, ...]:
+    """``"label:str? count:int=1"``: name:type, optional ``=json`` default, or ``?`` for default null."""
+    params = []
+    for token in spec.split():
+        name, _, rest = token.partition(":")
+        if rest.endswith("?"):
+            params.append(Param(name, rest[:-1], required=False, default=None))
+        elif "=" in rest:
+            kind, _, literal = rest.partition("=")
+            params.append(Param(name, kind, required=False, default=json.loads(literal)))
+        else:
+            params.append(Param(name, rest))
+    return tuple(params)
+
+
+# --------------------------------------------------------------------- method table
+@dataclass
+class Context:
+    """What a method works with: the document, who asks, the limits, and who is connected."""
+
+    document: Document
+    account: Account
+    limits: Limits
+    users: Callable[[], list[str]] = field(default=lambda: [])  # names of the people connected now
+    lock_seconds: float = 300.0  # how long a lock lasts without being renewed
+    directory: UserDirectory | None = None  # where this document's people are kept, if the server manages them
+    doc_id: str = ""
+
+    @property
+    def user(self) -> str:
+        """The author of what this request changes."""
+        return self.account.user
+
+
+@dataclass(frozen=True)
+class Method:
+    """One request: its name, parameters, whether it needs a role that may write, and the function."""
+
+    name: str
+    params: tuple[Param, ...]
+    write: bool
+    doc: str
+    fn: Callable[..., Any] = field(repr=False)
+
+
+class MethodTable:
+    """The methods and parameter types of a protocol. An app extends a copy (``extended``)."""
+
+    def __init__(self) -> None:
+        self._methods: dict[str, Method] = {}
+        self._kinds: dict[str, Callable[[Any, Limits], Any]] = {}
+
+    # -- building ---------------------------------------------------------------------
+    def method(self, name: str, spec: str = "", *, write: bool = False):
+        """Decorator: register ``fn(ctx, **params)`` as method ``name``.
+
+        ``spec`` lists the parameters as ``"name:type name:type=default"``."""
+
+        def register(fn):
+            self._methods[name] = Method(name, _parse_params(spec), write, (fn.__doc__ or "").strip(), fn)
+            return fn
+
+        return register
+
+    def kind(self, name: str):
+        """Decorator: register ``check(value, limits)`` as parameter type ``name``; it returns the value or raises
+        ValueError."""
+
+        def register(check):
+            self._kinds[name] = check
+            return check
+
+        return register
+
+    def extended(self) -> MethodTable:
+        """A copy an app can add to without changing this table."""
+        copy = MethodTable()
+        copy._methods = dict(self._methods)
+        copy._kinds = dict(self._kinds)
+        return copy
+
+    def names(self) -> set[str]:
+        """The names of all methods."""
+        return set(self._methods)
+
+    # -- running ----------------------------------------------------------------------
+    def bind(self, entry: Method, raw: Any, limits: Limits) -> dict[str, Any]:
+        """Validate the request's params against the method's spec and fill in defaults."""
+        if raw is None:
+            raw = {}
+        if not isinstance(raw, dict):
+            raise RequestError("bad_request", "params must be an object")
+        extra = sorted(set(raw) - {p.name for p in entry.params})
+        if extra:
+            raise RequestError("bad_request", f"unknown parameter {extra[0]!r} for {entry.name}")
+        args = {}
+        for p in entry.params:
+            if p.name not in raw or (raw[p.name] is None and not p.required):
+                if p.required:
+                    raise RequestError("bad_request", f"{entry.name}: missing parameter {p.name!r}")
+                args[p.name] = p.default
+                continue
+            try:
+                args[p.name] = self._kinds[p.kind](raw[p.name], limits)
+            except ValueError as exc:
+                raise RequestError("bad_request", f"{entry.name}: {p.name} {exc}") from None
+        return args
+
+    def dispatch(self, ctx: Context, name: Any, params: Any) -> Any:
+        """Run one request and return its JSON-able result. Raises ``RequestError``."""
+        if not isinstance(name, str):
+            raise RequestError("bad_request", "method must be a string")
+        entry = self._methods.get(name)
+        if entry is None:
+            raise RequestError("unknown_method", f"no method {name!r}")
+        if entry.write and not ctx.account.can_write:
+            raise RequestError("forbidden", f"{name} needs the editor role")
+        args = self.bind(entry, params, ctx.limits)
+        try:
+            return entry.fn(ctx, **args)
+        except RequestError:
+            raise
+        except StaleEdit as exc:
+            raise RequestError("stale", str(exc)) from exc
+        except RegionHeld as exc:  # (and UndoRefused, which is one)
+            raise RequestError("locked", str(exc)) from exc
+        except UndoConflict as exc:
+            raise RequestError("conflict", str(exc)) from exc
+        except (
+            KernelError,
+            ValueError,
+            LookupError,
+        ) as exc:  # a command refuses with ValueError / IndexError / KeyError
+            raise RequestError("command_error", str(exc)) from exc
+
+    def describe(self, limits: Limits | None = None) -> dict:
+        """A machine-readable description of the protocol (served at /api/protocol)."""
+        return {
+            "protocol": PROTOCOL_VERSION,
+            "framing": "JSON text frames; requests {id, method, params}; responses {id, ok, result | error}; "
+            "pushed {event, data}",
+            "methods": {
+                m.name: {"write": m.write, "doc": m.doc, "params": [p.to_dict() for p in m.params]}
+                for m in self._methods.values()
+            },
+            "param_types": {
+                name: (check.__doc__ or "defined by the app").strip() for name, check in self._kinds.items()
+            },
+            "events": EVENTS,
+            "errors": ERROR_CODES,
+            "limits": (limits or Limits()).to_dict(),
+        }
+
+
+def parse_request(raw: str | bytes, limits: Limits) -> tuple[Any, Any, Any]:
+    """``(id, method, params)`` of a request frame; raises ``RequestError`` for a malformed one."""
+    if len(raw) > limits.max_message_bytes:
+        raise RequestError("bad_request", "message too large")
+    try:
+        message = json.loads(raw)
+    except ValueError, RecursionError:
+        raise RequestError("bad_request", "not valid JSON") from None
+    if not isinstance(message, dict):
+        raise RequestError("bad_request", "a request must be a JSON object")
+    request_id = message.get("id")
+    if not (isinstance(request_id, str) and len(request_id) <= 100) and not _is_int(request_id):
+        raise RequestError("bad_request", "id must be an integer or a short string")
+    return request_id, message.get("method"), message.get("params")
+
+
+core_methods = MethodTable()
+for _name, _check in (
+    ("int", _int),
+    ("number", _number),
+    ("bool", _bool),
+    ("str", _str),
+    ("text", _text),
+    ("dict", _dict),
+    ("list", _list),
+    ("any", _any),
+    ("revision", _revision),
+    ("regions", _regions),
+):
+    core_methods.kind(_name)(_check)
+
+
+def _regions_of(ctx: Context, items: list[dict]) -> list[Region]:
+    try:
+        return [ctx.document.model.region_from_data(item) for item in items]
+    except (KeyError, TypeError, ValueError, NotImplementedError) as exc:
+        raise RequestError("bad_request", f"not a region this document understands: {exc!r}") from None
+
+
+def _checkpoint(info) -> dict:
+    return {
+        "number": info.number,
+        "label": info.label,
+        "author": info.author,
+        "marks": info.marks.to_data(),
+        "entry": info.entry.to_data(),
+        "time": info.time,
+    }
+
+
+# -- reading
+@core_methods.method("ping")
+def _ping(ctx):
+    """The current revision of the document's line (and a cheap liveness check)."""
+    return {"revision": _rev_text(ctx.document.revision), "line": ctx.document.branch}
+
+
+def _rev_text(revision: Revision | None) -> str | None:
+    return None if revision is None else revision.to_data()
+
+
+@core_methods.method("snapshot")
+def _snapshot(ctx):
+    """The whole state of the document and the revision it is at (can be large; apps offer viewports)."""
+    doc = ctx.document
+    return {
+        "revision": _rev_text(doc.revision),
+        "line": doc.branch,
+        "app": doc.model.app,
+        "state_schema": doc.model.state_schema,
+        "state": doc.model.serialize(),
+    }
+
+
+@core_methods.method("lines")
+def _lines(ctx):
+    """The lines of the document's history: the active one and the side lines a restore left behind."""
+    return [
+        {
+            "name": line.name,
+            "head": _rev_text(line.head),
+            "active": line.active,
+            "forked_from": _rev_text(line.forked_from),
+        }
+        for line in ctx.document.lines()
+    ]
+
+
+@core_methods.method("changes_since", "revision:revision?")
+def _changes_since(ctx, revision):
+    """The entries after a revision (everything if null), for bringing a replica up to date. A revision that is not
+    on the document's line any more (it went back to a checkpoint) gives the error `stale`: reload with `snapshot`."""
+    try:
+        return [entry.to_data() for entry in ctx.document.entries_since(revision)]
+    except KeyError:
+        raise RequestError("stale", f"{revision} is not part of the document's current line; reload it") from None
+
+
+@core_methods.method("log", "limit:int=200")
+def _log(ctx, limit):
+    """The visible history, oldest first, as sentences for a history panel: the newest `limit` entries (1 to 5000) of
+    the active line as `{revision, author, origin, time, label, summary, of}`. `summary` may name values (a cell and
+    what was typed into it) and is gone from a redacted entry."""
+    if not 1 <= limit <= MAX_LOG:
+        raise RequestError("bad_request", f"log: limit must be from 1 to {MAX_LOG}")
+    entries = ctx.document.log.path(ctx.document.revision)[-limit:]
+    return [
+        {
+            "revision": entry.rev.to_data(),
+            "author": entry.author,
+            "origin": entry.origin,
+            "time": entry.time,
+            "label": entry.command.label,
+            "summary": entry.command.summary,
+            "of": None if entry.of is None else entry.of.to_data(),
+        }
+        for entry in entries
+    ]
+
+
+@core_methods.method("chat_log", "limit:int=200")
+def _chat_log(ctx, limit):
+    """The chat this account may read, oldest first: messages for everybody and the private ones it sent or got.
+    The newest `limit` (1 to 5000), each as in the `chat` event."""
+    if not 1 <= limit <= MAX_LOG:
+        raise RequestError("bad_request", f"chat_log: limit must be from 1 to {MAX_LOG}")
+    me = ctx.user.casefold()
+    readable = [
+        record.to_data()
+        for record in ctx.document.chat
+        if not record.to or me in (record.author.casefold(), record.to.casefold())
+    ]
+    return readable[-limit:]
+
+
+@core_methods.method("history")
+def _history(ctx):
+    """This account's undo and redo state."""
+    h = ctx.document.history_for(ctx.user)
+    return {"can_undo": h.can_undo, "can_redo": h.can_redo, "undo_label": h.undo_label, "redo_label": h.redo_label}
+
+
+@core_methods.method("checkpoints")
+def _checkpoints(ctx):
+    """The saved checkpoints of the document's line, oldest first."""
+    return [_checkpoint(info) for info in ctx.document.checkpoints]
+
+
+@core_methods.method("users")
+def _users(ctx):
+    """The names of the people connected to the document now (for addressing chat messages)."""
+    return ctx.users()
+
+
+# -- writing
+@core_methods.method("apply", "command:dict base:revision?", write=True)
+def _apply(ctx, command, base):
+    """Execute a command in its stored form `{k, s, d}` as this account. `base` is the revision the client's view was
+    at: if the document moved to another line meanwhile the edit is refused with `stale`. Refused with `locked` if a
+    colleague holds the part it touches; `command_error` if the command itself is rejected. Nothing changes on any
+    error."""
+    try:
+        parsed = ctx.document.model.registry.decode(command)
+    except (UnknownCommand, SchemaTooNew) as exc:
+        raise RequestError("bad_request", str(exc)) from exc
+    except (KeyError, TypeError, ValueError, AttributeError) as exc:
+        raise RequestError("bad_request", f"invalid command: {exc!r}") from exc
+    applied = ctx.document.execute(parsed, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+def _stepped(applied) -> dict:
+    return {"applied": applied is not None, "revision": None if applied is None else applied.revision.to_data()}
+
+
+@core_methods.method("undo", write=True)
+def _undo(ctx):
+    """Undo this account's last step. `conflict` if a colleague changed the same thing since, `locked` if somebody
+    holds it."""
+    return _stepped(ctx.document.undo(ctx.user))
+
+
+@core_methods.method("redo", write=True)
+def _redo(ctx):
+    """Redo this account's last undone step. Same errors as undo."""
+    return _stepped(ctx.document.redo(ctx.user))
+
+
+@core_methods.method("save_checkpoint", "label:str?", write=True)
+def _save_checkpoint(ctx, label):
+    """File > Save: label the current state. `saved` is false if nothing changed since the last checkpoint."""
+    info = ctx.document.save_checkpoint(ctx.user, label)
+    return {"saved": info is not None, "checkpoint": None if info is None else _checkpoint(info)}
+
+
+# -- presence and locks
+@core_methods.method("presence", "regions:regions")
+def _presence(ctx, regions):
+    """Tell the others where you are (the regions you look at). Not a change of the document, so viewers may use it.
+    Others receive an `ephemeral` event of kind `presence`."""
+    ctx.document.show_presence(ctx.user, _regions_of(ctx, regions))
+    return {}
+
+
+@core_methods.method("lock", "regions:regions", write=True)
+def _lock(ctx, regions):
+    """Hold these regions while you edit them: others cannot change them until you unlock, move on, or go quiet.
+    `locked` if a colleague holds any part. Renew by locking again."""
+    ctx.document.lock(ctx.user, _regions_of(ctx, regions), ctx.lock_seconds)
+    return {}
+
+
+@core_methods.method("unlock", write=True)
+def _unlock(ctx):
+    """Let go of what you hold; you stay visible where you were."""
+    hold = ctx.document.presence.of(ctx.user)
+    if hold is not None:
+        ctx.document.show_presence(ctx.user, hold.regions)
+    return {}
+
+
+# -- people
+@core_methods.method("add_user", 'name:str password:str role:str="editor"')
+def _add_user(ctx, name, password, role):
+    """Owners only: let a person into this document with a name and a password you give them (they can keep using
+    it; there is no way yet to change it). `role` is `editor` or `viewer`. Returns `{user, role}`; `command_error`
+    with a sentence for the person if the name is taken or reserved or the password is too short."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", "only the owner of a document adds people to it")
+    if ctx.directory is None:
+        raise RequestError("unavailable", "this server does not manage people")
+    if role not in ("editor", "viewer"):
+        raise RequestError("bad_request", "add_user: role must be editor or viewer")
+    account = ctx.directory.add_user(ctx.doc_id, name, password, role)
+    return {"user": account.user, "role": account.role}
+
+
+# -- chat
+@core_methods.method("chat", "text:text", write=True)
+def _chat(ctx, text):
+    """`@username message` for one person who is connected (names may contain spaces; case does not matter), a message
+    without a leading @ (or `@all message`) for everybody. Chat is kept apart from the document's changes. Returns the
+    record."""
+    return ctx.document.post_chat(ctx.user, text, users=ctx.users()).to_data()

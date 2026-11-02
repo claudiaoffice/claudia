@@ -1,0 +1,700 @@
+{
+ "version": "0.4.0",
+ "Applied": {
+  "class": [
+   "object"
+  ],
+  "init": "(revision: 'Revision', command: 'Command', inverse: 'Command', entry: 'Entry') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Batch": {
+  "class": [
+   "Command"
+  ],
+  "init": "(commands: 'tuple[Command, ...]', name: 'str | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Batch'",
+   "leaves": "(self) -> 'Iterator[Command]'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'DocumentModel') -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary",
+   "undoable"
+  ]
+ },
+ "Branch": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', fork_point: 'Revision | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Branch'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "BranchSwitched": {
+  "class": [
+   "object"
+  ],
+  "init": "(old: 'str', new: 'str', fork_point: 'Revision | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ChatPosted": {
+  "class": [
+   "object"
+  ],
+  "init": "(record: 'ChatRecord') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ChatRecord": {
+  "class": [
+   "object"
+  ],
+  "init": "(number: 'int', author: 'str', to: 'str', text: 'str', time: 'str', at: 'Revision | None') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ChatRecord'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Checkpoint": {
+  "class": [
+   "Command"
+  ],
+  "init": "(label_text: 'str', marks: 'Revision') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Checkpoint'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label"
+  ]
+ },
+ "CheckpointInfo": {
+  "class": [
+   "object"
+  ],
+  "init": "(number: 'int', label: 'str', author: 'str | None', marks: 'Revision', entry: 'Revision', time: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "CheckpointSaved": {
+  "class": [
+   "object"
+  ],
+  "init": "(number: 'int', label: 'str', author: 'str | None', marks: 'Revision') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Command": {
+  "class": [
+   "ABC"
+  ],
+  "init": "()",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Command'",
+   "leaves": "(self) -> 'Iterator[Command]'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'DocumentModel') -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "CommandApplied": {
+  "class": [
+   "object"
+  ],
+  "init": "(entry: 'Entry', inverse: 'Command') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "CommandLog": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "activate": "(self, name: 'str') -> 'None'",
+   "append": "(self, entry: 'Entry') -> 'None'",
+   "discard_off_path": "(self, keep: 'Revision | None') -> 'list[Revision]'",
+   "fork": "(self, name: 'str', at: 'Revision') -> 'Branch'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CommandLog'",
+   "get": "(self, rev: 'Revision') -> 'Entry'",
+   "has": "(self, rev: 'Revision') -> 'bool'",
+   "head": "(self, branch: 'str' = 'main') -> 'Revision | None'",
+   "next_revision": "(self, branch: 'str' = 'main') -> 'Revision'",
+   "on_path": "(self, rev: 'Revision', head: 'Revision | None') -> 'bool'",
+   "path": "(self, rev: 'Revision | None') -> 'list[Entry]'",
+   "replace_command": "(self, rev: 'Revision', command: 'Command') -> 'Entry'",
+   "restore_entry": "(self, entry: 'Entry') -> 'None'",
+   "since": "(self, rev: 'Revision | None', branch: 'str' = 'main') -> 'list[Entry]'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "branches"
+  ]
+ },
+ "CommandRegistry": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "class_of": "(self, kind: 'str') -> 'type[Command]'",
+   "decode": "(self, envelope: 'dict') -> 'Command'",
+   "known": "(self, kind: 'str') -> 'bool'",
+   "merged": "(self, other: 'CommandRegistry') -> 'CommandRegistry'",
+   "register": "(self, cls: 'type[Command]') -> 'type[Command]'",
+   "schemas": "(self) -> 'dict[str, int]'",
+   "upcaster": "(self, kind: 'str', from_schema: 'int') -> 'Callable'"
+  },
+  "properties": []
+ },
+ "Context": {
+  "class": [
+   "Generic"
+  ],
+  "init": "(model: 'M', author: 'str | None' = None, time: 'str | None' = None, revision: 'Revision | None' = None, origin: 'str' = 'do')",
+  "methods": {
+   "emit": "(self, event: 'Event') -> 'None'"
+  },
+  "properties": []
+ },
+ "Document": {
+  "class": [
+   "object"
+  ],
+  "init": "(model: 'DocumentModel', *, log: 'CommandLog | None' = None, store: 'DocumentStore | None' = None, branch: 'str | None' = None, clock: 'Callable[[], str]' = <function utc_now>, lock_clock: 'Callable[[], float]' = <function monotonic>, chat: 'Iterable[ChatRecord]' = ())",
+  "methods": {
+   "apply_entry": "(self, entry: 'Entry', *, persist: 'bool' = True) -> 'Applied'",
+   "apply_report": "(self, report: 'RequirementReport') -> 'None'",
+   "cache_snapshot": "(self) -> 'Snapshot | None'",
+   "check_free": "(self, author: 'str | None', command: 'Command') -> 'None'",
+   "check_requirements": "(self, env: 'Environment') -> 'RequirementReport'",
+   "discard_side_history": "(self) -> 'list[Revision]'",
+   "entries_since": "(self, revision: 'Revision | None') -> 'list[Entry]'",
+   "execute": "(self, command: 'Command', *, author: 'str | None' = None, time: 'str | None' = None, base: 'Revision | None' = None) -> 'Applied'",
+   "history_for": "(self, author: 'str | None') -> 'History'",
+   "history_revisions": "(self) -> 'list[Revision]'",
+   "lines": "(self) -> 'list[Line]'",
+   "lock": "(self, owner: 'str', regions: 'Iterable[Region]', ttl: 'float') -> 'Ephemeral'",
+   "manifest": "(self) -> 'Manifest'",
+   "materialize": "(self, rev: 'Revision | None') -> 'DocumentModel'",
+   "on_purge": "(self, hook: 'Callable[[tuple[Revision, ...]], None]') -> 'None'",
+   "open": "(model_cls: 'type[DocumentModel]', log: 'CommandLog', *, snapshot: 'Snapshot | None' = None, branch: 'str | None' = None, **options) -> 'Document'",
+   "post_chat": "(self, author: 'str', raw: 'str', *, users: 'Iterable[str]' = ()) -> 'ChatRecord'",
+   "publish": "(self, kind: 'str', sender: 'str | None', data: 'dict | None' = None) -> 'Ephemeral'",
+   "redact": "(self, revisions: 'Iterable[Revision]', *, author: 'str | None' = None) -> 'Applied'",
+   "redo": "(self, author: 'str | None') -> 'Applied | None'",
+   "restore_checkpoint": "(self, number: 'int', author: 'str | None' = None) -> 'Applied | None'",
+   "save_checkpoint": "(self, author: 'str | None' = None, label: 'str | None' = None) -> 'CheckpointInfo | None'",
+   "show_presence": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Ephemeral'",
+   "side_revisions": "(self) -> 'list[Revision]'",
+   "snapshot": "(self) -> 'Snapshot | None'",
+   "subscribe": "(self, callback: 'Callable[[object], None]') -> 'Callable[[], None]'",
+   "subscribe_batches": "(self, callback: 'Callable[[list], None]') -> 'Callable[[], None]'",
+   "switch_to": "(self, line: 'str', author: 'str | None' = None) -> 'Applied | None'",
+   "undo": "(self, author: 'str | None') -> 'Applied | None'"
+  },
+  "properties": [
+   "checkpoints",
+   "revision",
+   "state_revision"
+  ]
+ },
+ "DocumentModel": {
+  "class": [
+   "ABC"
+  ],
+  "init": "()",
+  "methods": {
+   "apply": "(self, command: 'Command', ctx: 'Context') -> 'Command'",
+   "describe_regions": "(self, command: 'Command') -> 'tuple[Region, ...]'",
+   "empty": "() -> 'Self'",
+   "mark_stale": "(self, functions: 'Iterable[str]') -> 'None'",
+   "region_from_data": "(self, data: 'dict') -> 'Region'",
+   "requirements": "(self) -> 'Requirements'",
+   "restore": "(state: 'dict') -> 'Self'",
+   "serialize": "(self) -> 'dict'",
+   "settle": "(self, ctx: 'Context') -> 'None'"
+  },
+  "properties": []
+ },
+ "DocumentStore": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "append_chat": "(self, record: 'ChatRecord') -> 'None'",
+   "append_entry": "(self, entry: 'Entry') -> 'None'",
+   "discard_entries": "(self, revisions: 'Sequence[Revision]') -> 'None'",
+   "drop_snapshots": "(self) -> 'None'",
+   "replace_entries": "(self, entries: 'Sequence[Entry]') -> 'None'",
+   "write_branch": "(self, branch: 'Branch', active: 'bool') -> 'None'",
+   "write_snapshot": "(self, snapshot: 'Snapshot') -> 'None'"
+  },
+  "properties": []
+ },
+ "Entry": {
+  "class": [
+   "object"
+  ],
+  "init": "(rev: 'Revision', parent: 'Revision | None', author: 'str | None', time: 'str', command: 'Command', origin: 'str' = 'do', of: 'Revision | None' = None, redacted: 'bool' = False) -> None",
+  "methods": {
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Entry'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Environment": {
+  "class": [
+   "object"
+  ],
+  "init": "(app: 'str', state_schema: 'int', command_schemas: 'Mapping[str, int]', functions: 'Mapping[str, FunctionInfo]' = <factory>, fonts: 'frozenset[str]' = frozenset(), providable_fonts: 'frozenset[str]' = frozenset()) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Ephemeral": {
+  "class": [
+   "object"
+  ],
+  "init": "(kind: 'str', sender: 'str | None', data: 'dict' = <factory>) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "EphemeralPublished": {
+  "class": [
+   "object"
+  ],
+  "init": "(message: 'Ephemeral') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "EventBus": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "batching": "(self)",
+   "emit": "(self, event: 'Event') -> 'None'",
+   "subscribe": "(self, callback: 'Callable[[Event], None]') -> 'Callable[[], None]'",
+   "subscribe_batches": "(self, callback: 'Callable[[list[Event]], None]') -> 'Callable[[], None]'"
+  },
+  "properties": []
+ },
+ "FontRequirement": {
+  "class": [
+   "object"
+  ],
+  "init": "(family: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "FunctionInfo": {
+  "class": [
+   "object"
+  ],
+  "init": "(version: 'str', digest: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "FunctionRequirement": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', version: 'str', digest: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "History": {
+  "class": [
+   "object"
+  ],
+  "init": "(author: 'str | None', limit: 'int' = 200)",
+  "methods": {
+   "clear": "(self) -> 'None'",
+   "next_redo": "(self) -> 'Step | None'",
+   "next_undo": "(self) -> 'Step | None'",
+   "purge": "(self, revisions: 'set[Revision]') -> 'bool'",
+   "record": "(self, entry: 'Entry', inverse: 'Command') -> 'bool'"
+  },
+  "properties": [
+   "can_redo",
+   "can_undo",
+   "redo_label",
+   "undo_label"
+  ]
+ },
+ "HistoryChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(author: 'str | None', can_undo: 'bool', can_redo: 'bool', undo_label: 'str', redo_label: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Hold": {
+  "class": [
+   "object"
+  ],
+  "init": "(owner: 'str', regions: 'tuple[Region, ...]', expires: 'float | None') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "KernelError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Line": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', head: 'Revision | None', active: 'bool', forked_from: 'Revision | None') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "MAIN": {
+  "value": "'main'"
+ },
+ "Manifest": {
+  "class": [
+   "object"
+  ],
+  "init": "(app: 'str', state_schema: 'int', command_schemas: 'Mapping[str, int]' = <factory>, requirements: 'Requirements' = Requirements(functions=(), fonts=()), format: 'int' = 1) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Manifest'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "MemoryStore": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "append_chat": "(self, record: 'ChatRecord') -> 'None'",
+   "append_entry": "(self, entry: 'Entry') -> 'None'",
+   "discard_entries": "(self, revisions: 'Sequence[Revision]') -> 'None'",
+   "drop_snapshots": "(self) -> 'None'",
+   "replace_entries": "(self, entries: 'Sequence[Entry]') -> 'None'",
+   "write_branch": "(self, branch: 'Branch', active: 'bool') -> 'None'",
+   "write_snapshot": "(self, snapshot: 'Snapshot') -> 'None'"
+  },
+  "properties": []
+ },
+ "MissingUpcaster": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(kind: 'str', schema: 'int')",
+  "methods": {},
+  "properties": []
+ },
+ "Presence": {
+  "class": [
+   "object"
+  ],
+  "init": "(clock: 'Callable[[], float]')",
+  "methods": {
+   "conflicts": "(self, owner: 'str | None', regions: 'Iterable[Region]') -> 'list[tuple[str, Region]]'",
+   "expire": "(self) -> 'None'",
+   "holds": "(self) -> 'list[Hold]'",
+   "lock": "(self, owner: 'str', regions: 'Iterable[Region]', ttl: 'float') -> 'Hold'",
+   "of": "(self, owner: 'str') -> 'Hold | None'",
+   "on_command": "(self, command: 'Command') -> 'None'",
+   "release": "(self, owner: 'str') -> 'None'",
+   "show": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Hold'"
+  },
+  "properties": []
+ },
+ "Rebuilt": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Redacted": {
+  "class": [
+   "Command"
+  ],
+  "init": "(original_kind: 'str', ids: 'dict' = <factory>) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Redacted'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label"
+  ]
+ },
+ "RedactedEvent": {
+  "class": [
+   "object"
+  ],
+  "init": "(revisions: 'tuple[Revision, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Redaction": {
+  "class": [
+   "Command"
+  ],
+  "init": "(targets: 'tuple[Revision, ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Redaction'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label"
+  ]
+ },
+ "RedactionError": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Region": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "overlaps": "(self, other: 'Region') -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'Region | None'"
+  },
+  "properties": []
+ },
+ "RegionHeld": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(holders: 'Sequence[tuple[str, object]]')",
+  "methods": {},
+  "properties": []
+ },
+ "ReplayError": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(revision: 'object', cause: 'BaseException')",
+  "methods": {},
+  "properties": []
+ },
+ "RequirementReport": {
+  "class": [
+   "object"
+  ],
+  "init": "(wrong_app: 'str | None' = None, state_too_new: 'bool' = False, unknown_commands: 'tuple[str, ...]' = (), commands_too_new: 'tuple[tuple[str, int, int], ...]' = (), missing_functions: 'tuple[str, ...]' = (), stale_functions: 'tuple[tuple[str, str, str], ...]' = (), fonts_to_provide: 'tuple[str, ...]' = (), fonts_unavailable: 'tuple[str, ...]' = ()) -> None",
+  "methods": {
+   "describe": "(self) -> 'list[str]'"
+  },
+  "properties": [
+   "clean",
+   "ok",
+   "stale_names"
+  ]
+ },
+ "Requirements": {
+  "class": [
+   "object"
+  ],
+  "init": "(functions: 'tuple[FunctionRequirement, ...]' = (), fonts: 'tuple[FontRequirement, ...]' = ()) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Restore": {
+  "class": [
+   "Command"
+  ],
+  "init": "(label_text: 'str', marks: 'Revision', from_branch: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Restore'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label"
+  ]
+ },
+ "ResultsStale": {
+  "class": [
+   "object"
+  ],
+  "init": "(functions: 'tuple[str, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Revision": {
+  "class": [
+   "object"
+  ],
+  "init": "(branch: 'str', seq: 'int') -> None",
+  "methods": {
+   "from_data": "(data: 'str') -> 'Revision'",
+   "parse": "(text: 'str') -> 'Revision'",
+   "to_data": "(self) -> 'str'"
+  },
+  "properties": []
+ },
+ "RevisionMismatch": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "SchemaTooNew": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(kind: 'str', found: 'int', known: 'int')",
+  "methods": {},
+  "properties": []
+ },
+ "Snapshot": {
+  "class": [
+   "object"
+  ],
+  "init": "(rev: 'Revision', app: 'str', state_schema: 'int', state: 'dict') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Snapshot'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "StaleEdit": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(base: 'object', line: 'str')",
+  "methods": {},
+  "properties": []
+ },
+ "Step": {
+  "class": [
+   "object"
+  ],
+  "init": "(label: 'str', command: 'Command', rev: 'Revision') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Switch": {
+  "class": [
+   "Command"
+  ],
+  "init": "(from_branch: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Switch'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label"
+  ]
+ },
+ "UndoConflict": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "UndoRefused": {
+  "class": [
+   "RegionHeld"
+  ],
+  "init": "(holders: 'Sequence[tuple[str, object]]')",
+  "methods": {},
+  "properties": []
+ },
+ "UnknownCommand": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(kind: 'str')",
+  "methods": {},
+  "properties": []
+ },
+ "check": {
+  "function": "(manifest: 'Manifest', env: 'Environment') -> 'RequirementReport'"
+ },
+ "encode": {
+  "function": "(command: 'Command') -> 'dict'"
+ },
+ "environment_of": {
+  "function": "(model_cls: 'type[DocumentModel]', *, functions=None, fonts=(), providable_fonts=()) -> 'Environment'"
+ },
+ "new_registry": {
+  "function": "() -> 'CommandRegistry'"
+ },
+ "parse_chat": {
+  "function": "(raw: 'str', users: 'Iterable[str]' = ()) -> 'tuple[str, str]'"
+ },
+ "replay": {
+  "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
+ },
+ "transform": {
+  "function": "(region: 'Region', command: 'Command') -> 'Region | None'"
+ }
+}

@@ -1,0 +1,29 @@
+/* The design system of claudia (claude/design-system.md): ink, iris, mist, paper and one colour per app. */
+:root {
+  --ink: #1f1a33;
+  --iris: #5b4bc4;
+  --mist: #e7e1f4;
+  --paper: #f7f3ec;
+  --rose: #d6477a;
+  --teal: #13917f;
+  --apricot: #f2a057;
+
+  --app: var(--teal); /* this is computes */
+  --app-dark: #0f7d6e;
+  --app-soft: color-mix(in srgb, var(--teal) 12%, white);
+
+  --text: var(--ink);
+  --muted: color-mix(in srgb, var(--ink) 58%, transparent);
+  --faint: color-mix(in srgb, var(--ink) 12%, transparent);
+  --line: color-mix(in srgb, var(--ink) 14%, transparent);
+  --surface: #ffffff;
+  --page: var(--paper);
+
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  --font-hand: 'Sacramento', cursive;
+
+  --radius: 10px;
+  --shadow: 0 1px 2px rgb(31 26 51 / 8%), 0 8px 24px rgb(31 26 51 / 8%);
+}

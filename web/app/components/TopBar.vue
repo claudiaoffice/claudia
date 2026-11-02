@@ -1,0 +1,147 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { Session } from '~/lib/session'
+import { colorOf, initial, inkOn } from '~/lib/people'
+
+const props = defineProps<{ session: Session; panelOpen: boolean }>()
+defineEmits<{ togglePanel: [] }>()
+
+const state = props.session.state
+const everybody = computed(() => [
+  { user: state.me.user, color: state.me.color, me: true },
+  ...state.people.map((p) => ({ user: p.user, color: colorOf(state, p.user), me: false })),
+])
+const statusText = computed(() =>
+  state.status === 'open' ? 'live' : state.status === 'reconnecting' ? 'reconnecting…' : state.status === 'connecting' ? 'connecting…' : 'offline',
+)
+</script>
+
+<template>
+  <header class="bar">
+    <div class="brand">
+      <Wordmark />
+      <span class="app"><AppIcon :size="22" /> computes</span>
+    </div>
+    <h1 class="doc" :title="`document ${state.doc}`">{{ state.doc }}</h1>
+    <div class="right">
+      <ul class="people" aria-label="people in this document">
+        <li
+          v-for="p in everybody"
+          :key="p.user"
+          :title="p.me ? `${p.user} (you)` : p.user"
+          :style="{ background: p.color, color: inkOn(p.color) }"
+          :class="{ ai: p.user.toLowerCase() === 'ai' }"
+        >
+          {{ p.user.toLowerCase() === 'ai' ? 'ai' : initial(p.user) }}
+        </li>
+      </ul>
+      <span class="status" :class="state.status"><span class="dot" />{{ statusText }}</span>
+      <button class="btn panel" type="button" :aria-pressed="panelOpen" @click="$emit('togglePanel')">History &amp; chat</button>
+    </div>
+  </header>
+</template>
+
+<style scoped>
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 52px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.app {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 500;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+}
+.doc {
+  font: 500 19px/1 var(--font-display);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.people {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.people li {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  border: 2px solid var(--surface);
+  margin-left: -6px;
+}
+.people li:first-child {
+  margin-left: 0;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.status .dot {
+  background: var(--muted);
+}
+.status.open .dot {
+  background: var(--teal);
+}
+.status.reconnecting .dot,
+.status.connecting .dot {
+  background: var(--apricot);
+}
+.panel[aria-pressed='true'] {
+  background: var(--mist);
+  border-color: transparent;
+}
+@media (max-width: 736px) {
+  .status,
+  .app {
+    display: none;
+  }
+  .bar {
+    gap: 10px;
+    padding: 0 10px;
+  }
+  .right {
+    gap: 8px;
+  }
+  .doc {
+    font-size: 17px;
+  }
+  .panel {
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 440px) {
+  .panel {
+    font-size: 13px;
+  }
+}
+</style>

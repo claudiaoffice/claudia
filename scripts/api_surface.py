@@ -1,0 +1,78 @@
+"""The public API of claudia-core as plain data: names, kinds and signatures.
+
+``uv run python scripts/api_surface.py``          print it
+``uv run python scripts/api_surface.py --write``  update tests/api/<package>.json for every package
+
+The test ``tests/test_public_api.py`` compares the code with those files. A change to the public API therefore shows
+up in a diff that a reviewer must read, and comes with a version bump and a CHANGELOG entry (docs/versioning.md).
+"""
+
+from __future__ import annotations
+
+import inspect
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+PACKAGES = ("claudia_core", "claudia_server", "claudia_client")  # the packages whose API is a promise
+
+
+def signature(obj) -> str:
+    try:
+        return re.sub(r" at 0x[0-9a-f]+", "", str(inspect.signature(obj)))  # defaults that are functions
+    except TypeError, ValueError:
+        return "(...)"
+
+
+def surface(module) -> dict:
+    out: dict[str, object] = {"version": module.__version__}
+    for name in sorted(module.__all__):
+        if name == "__version__":
+            continue
+        obj = getattr(module, name)
+        if inspect.isclass(obj):
+            members = {
+                member: signature(getattr(obj, member))
+                for member in sorted(vars(obj))
+                if not member.startswith("_")
+                and callable(getattr(obj, member, None))
+                and not isinstance(vars(obj)[member], property)
+            }
+            properties = sorted(m for m, v in vars(obj).items() if isinstance(v, property) and not m.startswith("_"))
+            out[name] = {
+                "class": [b.__name__ for b in obj.__bases__],
+                "init": signature(obj),
+                "methods": members,
+                "properties": properties,
+            }
+        elif callable(obj):
+            out[name] = {"function": signature(obj)}
+        else:
+            out[name] = {
+                "value": repr(obj) if isinstance(obj, int | float | str | tuple | dict) else f"<{type(obj).__name__}>"
+            }
+    return out
+
+
+def snapshot_path(name: str) -> Path:
+    """Where the snapshot of package ``name`` is kept."""
+    return ROOT / "tests" / "api" / f"{name}.json"
+
+
+def main() -> None:
+    """Print the API surfaces, or with ``--write`` update the snapshots."""
+    import importlib
+
+    for name in PACKAGES:
+        text = json.dumps(surface(importlib.import_module(name)), indent=1, sort_keys=False) + "\n"
+        if "--write" in sys.argv:
+            snapshot_path(name).write_text(text)
+            print(f"wrote {snapshot_path(name)}")
+        else:
+            print(f"# {name}\n{text}", end="")
+
+
+if __name__ == "__main__":
+    main()

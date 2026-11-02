@@ -1,0 +1,43 @@
+"""Names vulture cannot see being used. Each line says who uses it.
+
+Everything here is public API of the kernel or a registration done by a decorator. New entries need a reason.
+"""
+
+from vulture.whitelist_utils import Whitelist
+
+used = Whitelist()
+
+used.failed  # Context.failed: set by Document, read by models in settle() after a rolled-back command
+used.__cause__  # ReplayError chains the original exception
+used._add_1_to_2  # registered as an upcaster by a decorator (tests/test_commands.py)
+used.Thing  # registered with a CommandRegistry by a decorator (tests/test_commands.py)
+used.Bad  # registered with a CommandRegistry by a decorator (tests/test_commands.py)
+
+# claudia-server: routes and protocol methods are registered by decorators and called by name
+used.protocol  # FastAPI route /api/protocol in create_app
+used.live  # FastAPI WebSocket route in create_app
+used.landing  # FastAPI route / in create_app
+used._ping  # core_methods.method("ping")
+used._snapshot  # core_methods.method("snapshot")
+used._changes_since  # core_methods.method("changes_since")
+used._history  # core_methods.method("history")
+used._apply  # core_methods.method("apply")
+used._save_checkpoint  # core_methods.method("save_checkpoint")
+used._presence  # core_methods.method("presence")
+used._lock  # core_methods.method("lock")
+used._unlock  # core_methods.method("unlock")
+used._chat  # core_methods.method("chat")
+used._log  # core_methods.method("log")
+used._chat_log  # core_methods.method("chat_log")
+used._add_user  # core_methods.method("add_user")
+used._sheets  # computes_methods.method("sheets")
+used._cells  # computes_methods.method("cells")
+used._set_cells  # computes_methods.method("set_cells")
+used._add_sheet  # computes_methods.method("add_sheet")
+used._structure  # computes_methods.method("structure")
+used._boom  # registered with a MethodTable by a decorator (tests/test_server_hub.py)
+used._nan  # registered with a MethodTable by a decorator (tests/test_server_hub.py)
+used._even  # registered as a parameter kind by a decorator (tests/test_server_protocol.py)
+used._double  # registered with a MethodTable by a decorator (tests/test_server_protocol.py)
+used.should_exit  # uvicorn.Server reads it to stop (tests/test_client_trust.py)
+used.redirect_request  # urllib calls it on a redirect (tests/test_server_redirect.py)

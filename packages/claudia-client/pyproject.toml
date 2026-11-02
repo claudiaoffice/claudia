@@ -1,0 +1,19 @@
+[project]
+name = "claudia-client"
+dynamic = ["version"]
+description = "claudia-client: what every client of a Claudia server shares (here: which servers it trusts over TLS)"
+requires-python = ">=3.14"
+dependencies = ["claudia-core"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_client/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_client"]
+
+[tool.uv.sources]
+claudia-core = { workspace = true }

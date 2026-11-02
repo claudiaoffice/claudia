@@ -1,0 +1,144 @@
+"""The methods a table view needs: sheets, a window of cells, typing into cells, rows and columns (computes)."""
+
+import pytest
+
+from claudia_computes import AddSheet, WorkbookModel
+from claudia_core import Document, MemoryStore
+from claudia_server.auth import Account
+from claudia_server.computes import computes_methods
+from claudia_server.protocol import Context, Limits, RequestError, core_methods
+
+ANN = Account("ann", "owner")
+VERA = Account("vera", "viewer")
+
+
+@pytest.fixture
+def book():
+    return Document(WorkbookModel(), store=MemoryStore())
+
+
+def call(doc, name, params=None, account=ANN):
+    ctx = Context(doc, account, Limits(), users=lambda: ["ann"], lock_seconds=30.0)
+    return computes_methods.dispatch(ctx, name, params)
+
+
+def typed(doc, sheet, cells):
+    return call(
+        doc, "set_cells", {"sheet": sheet, "cells": [{"row": r, "col": c, "input": text} for r, c, text in cells]}
+    )
+
+
+def test_a_new_workbook_has_no_sheets_and_one_can_be_added(book):
+    assert call(book, "sheets") == []
+    added = call(book, "add_sheet", {"name": "Budget"})
+    assert added["sheet"] == "s1" and added["revision"] == "main:1"
+    assert call(book, "add_sheet", {"name": "Plan"})["sheet"] == "s2"
+    assert [s["name"] for s in call(book, "sheets")] == ["Budget", "Plan"]
+
+
+def test_sheet_names_must_be_new_and_nonempty(book):
+    call(book, "add_sheet", {"name": "Budget"})
+    for bad in ("budget", "", "   "):
+        with pytest.raises(RequestError) as caught:
+            call(book, "add_sheet", {"name": bad})
+        assert caught.value.code in {"command_error", "bad_request"}
+
+
+def test_typing_makes_numbers_text_and_booleans(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "42"), (0, 1, "3.5"), (0, 2, "hello"), (0, 3, "true"), (0, 4, "'007"), (0, 5, " -7 ")])
+    cells = {
+        (r, c): v
+        for r, c, v in call(book, "cells", {"sheet": "s1", "row0": 0, "row1": 9, "col0": 0, "col1": 9})["cells"]
+    }
+    assert cells[(0, 0)] == {"t": "int", "v": 42}
+    assert cells[(0, 1)] == {"t": "float", "v": 3.5}
+    assert cells[(0, 2)] == {"t": "text", "v": "hello"}
+    assert cells[(0, 3)] == {"t": "bool", "v": True}
+    assert cells[(0, 4)] == {"t": "text", "v": "007"}, "a leading apostrophe forces text"
+    assert cells[(0, 5)] == {"t": "int", "v": -7}
+
+
+def test_empty_input_clears_a_cell(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(1, 1, "x")])
+    typed(book, "s1", [(1, 1, "")])
+    assert call(book, "cells", {"sheet": "s1", "row0": 0, "row1": 5, "col0": 0, "col1": 5})["cells"] == []
+
+
+def test_a_window_returns_only_its_cells_sorted(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(5, 5, "far"), (1, 1, "a"), (2, 0, "b"), (1, 0, "c")])
+    window = call(book, "cells", {"sheet": "s1", "row0": 1, "row1": 2, "col0": 0, "col1": 1})["cells"]
+    assert [(r, c) for r, c, _ in window] == [(1, 0), (1, 1), (2, 0)]
+
+
+def test_a_window_is_limited_in_size(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="too large"):
+        call(book, "cells", {"sheet": "s1", "row0": 0, "row1": 100_000, "col0": 0, "col1": 100})
+    with pytest.raises(RequestError):
+        call(book, "cells", {"sheet": "s1", "row0": 5, "row1": 1, "col0": 0, "col1": 1})
+
+
+def test_the_extent_of_a_sheet_is_reported(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(9, 3, "x")])
+    (info,) = call(book, "sheets")
+    assert (info["rows"], info["cols"]) == (10, 4)
+
+
+def test_unknown_sheets_are_errors_and_change_nothing(book):
+    with pytest.raises(RequestError) as caught:
+        typed(book, "nope", [(0, 0, "x")])
+    assert caught.value.code == "command_error" and book.revision is None
+
+
+def test_viewers_may_read_but_not_type(book):
+    call(book, "add_sheet", {"name": "S"})
+    assert call(book, "sheets", account=VERA)
+    with pytest.raises(RequestError) as caught:
+        call(book, "set_cells", {"sheet": "s1", "cells": [{"row": 0, "col": 0, "input": "x"}]}, account=VERA)
+    assert caught.value.code == "forbidden"
+
+
+def test_malformed_cells_are_bad_requests(book):
+    call(book, "add_sheet", {"name": "S"})
+    for bad in (
+        [{"row": "0", "col": 0, "input": "x"}],
+        [{"row": 0, "col": 0}],
+        ["A1"],
+        [{"row": -1, "col": 0, "input": "x"}],
+    ):
+        with pytest.raises(RequestError) as caught:
+            call(book, "set_cells", {"sheet": "s1", "cells": bad})
+        assert caught.value.code in {"bad_request", "command_error"}
+
+
+def test_editing_against_an_old_view_is_stale(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError) as caught:
+        call(book, "set_cells", {"sheet": "s1", "cells": [{"row": 0, "col": 0, "input": "x"}], "base": "restore-1:3"})
+    assert caught.value.code == "stale"
+
+
+def test_rows_and_columns_can_be_inserted_and_deleted(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "a"), (1, 0, "b")])
+    call(book, "structure", {"sheet": "s1", "axis": "row", "insert": True, "at": 1, "count": 2})
+    rows = [r for r, c, v in call(book, "cells", {"sheet": "s1", "row0": 0, "row1": 9, "col0": 0, "col1": 1})["cells"]]
+    assert rows == [0, 3]
+    with pytest.raises(RequestError):
+        call(book, "structure", {"sheet": "s1", "axis": "diagonal", "insert": True, "at": 0})
+
+
+def test_computes_has_everything_the_core_has(book):
+    assert core_methods.names() <= computes_methods.names()
+    assert {"sheets", "cells", "set_cells", "add_sheet", "structure"} <= computes_methods.names()
+    assert "sheets" not in core_methods.names()
+
+
+def test_the_workbook_helper_adds_sheets_to_documents_that_exist():
+    doc = Document(WorkbookModel(), store=MemoryStore())
+    doc.execute(AddSheet("s1", "Old"), author="ann")
+    assert call(doc, "add_sheet", {"name": "New"})["sheet"] == "s2"

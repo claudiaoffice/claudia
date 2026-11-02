@@ -1,0 +1,36 @@
+{
+ "branches": [
+  {
+   "name": "main",
+   "fork": null
+  }
+ ],
+ "entries": [
+  {
+   "rev": "main:1",
+   "parent": null,
+   "author": "ana",
+   "time": "2026-11-01T12:00:01.000Z",
+   "command": {
+    "k": "tally.Add",
+    "s": 1,
+    "d": {
+     "n": 3
+    }
+   }
+  },
+  {
+   "rev": "main:2",
+   "parent": "main:1",
+   "author": "ana",
+   "time": "2026-11-01T12:00:02.000Z",
+   "command": {
+    "k": "tally.Add",
+    "s": 1,
+    "d": {
+     "n": 5
+    }
+   }
+  }
+ ]
+}

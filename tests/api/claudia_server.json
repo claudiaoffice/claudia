@@ -1,0 +1,333 @@
+{
+ "version": "0.3.0",
+ "AI_USER": {
+  "value": "'ai'"
+ },
+ "Account": {
+  "class": [
+   "object"
+  ],
+  "init": "(user: 'str', role: 'str' = 'editor', system: 'bool' = False) -> None",
+  "methods": {
+   "assistant": "() -> 'Account'"
+  },
+  "properties": [
+   "can_write"
+  ]
+ },
+ "Assistant": {
+  "class": [
+   "object"
+  ],
+  "init": "(engine: 'Engine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>)",
+  "methods": {
+   "attach": "(self, hosted: 'HostedDocument') -> 'Connection'",
+   "idle": "(self) -> 'None'"
+  },
+  "properties": []
+ },
+ "AuthRefused": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Call": {
+  "class": [
+   "object"
+  ],
+  "init": "(method: 'str', params: 'dict[str, Any]' = <factory>, focus: 'tuple[dict, ...]' = ()) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Certificate": {
+  "class": [
+   "object"
+  ],
+  "init": "(cert_file: 'Path', key_file: 'Path', fingerprint: 'str', names: 'tuple[str, ...]', self_signed_by_us: 'bool') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "CertificateError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Connection": {
+  "class": [
+   "object"
+  ],
+  "init": "(hosted: 'HostedDocument', account: 'Account', send: 'Callable[[str], None]')",
+  "methods": {
+   "close": "(self) -> 'None'",
+   "deliver": "(self, message: 'dict') -> 'None'",
+   "handle": "(self, raw: 'str | bytes') -> 'None'",
+   "person": "(self) -> 'dict'",
+   "welcome": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Credentials": {
+  "class": [
+   "object"
+  ],
+  "init": "(user: 'str | None' = None, password: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "DocumentProvider": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "create": "(self, doc_id: 'str') -> 'Document'",
+   "documents": "(self) -> 'list[StoredInfo]'",
+   "exists": "(self, doc_id: 'str') -> 'bool'",
+   "open": "(self, doc_id: 'str') -> 'Document'"
+  },
+  "properties": []
+ },
+ "ERROR_CODES": {
+  "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
+ },
+ "EVENTS": {
+  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|..., sender, data}', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions was removed: {revisions}', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection'}"
+ },
+ "Engine": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "plan": "(self, task: 'Task') -> 'list[Step]'"
+  },
+  "properties": []
+ },
+ "FileDirectory": {
+  "class": [
+   "ScryptDirectory"
+  ],
+  "init": "(root: 'str | Path', cost: 'int' = 16384)",
+  "methods": {
+   "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'"
+  },
+  "properties": []
+ },
+ "FileProvider": {
+  "class": [
+   "object"
+  ],
+  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', **options)",
+  "methods": {
+   "create": "(self, doc_id: 'str') -> 'Document'",
+   "documents": "(self) -> 'list[StoredInfo]'",
+   "exists": "(self, doc_id: 'str') -> 'bool'",
+   "open": "(self, doc_id: 'str') -> 'Document'"
+  },
+  "properties": []
+ },
+ "Gateway": {
+  "class": [
+   "object"
+  ],
+  "init": "(hub: 'Hub', directory: 'UserDirectory', allowed: 'set[str]')",
+  "methods": {
+   "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool') -> 'Account | None'",
+   "serve": "(self, websocket: 'WebSocket', doc_id: 'str') -> 'None'"
+  },
+  "properties": []
+ },
+ "HostedDocument": {
+  "class": [
+   "object"
+  ],
+  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None)",
+  "methods": {
+   "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
+   "connect": "(self, account: 'Account', send: 'Callable[[str], None]') -> 'Connection'",
+   "humans": "(self) -> 'list[Connection]'",
+   "new_connection_id": "(self) -> 'int'",
+   "pick_color": "(self) -> 'str'",
+   "sweep": "(self) -> 'None'",
+   "touch": "(self) -> 'None'",
+   "users": "(self) -> 'list[str]'"
+  },
+  "properties": []
+ },
+ "Hub": {
+  "class": [
+   "object"
+  ],
+  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>)",
+  "methods": {
+   "check_id": "(doc_id: 'object') -> 'str'",
+   "exists": "(self, doc_id: 'str') -> 'bool'",
+   "is_loaded": "(self, doc_id: 'str') -> 'bool'",
+   "listing": "(self) -> 'list[dict]'",
+   "open": "(self, doc_id: 'str', create: 'bool' = False) -> 'HostedDocument'",
+   "start": "(self) -> 'None'",
+   "stop": "(self) -> 'None'",
+   "sweep": "(self) -> 'None'"
+  },
+  "properties": []
+ },
+ "HubError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(code: 'str', message: 'str')",
+  "methods": {},
+  "properties": []
+ },
+ "Limits": {
+  "class": [
+   "object"
+  ],
+  "init": "(max_text: 'int' = 32767, max_message_bytes: 'int' = 16777216, max_regions: 'int' = 16) -> None",
+  "methods": {
+   "to_dict": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "MemoryProvider": {
+  "class": [
+   "object"
+  ],
+  "init": "(model_cls: 'type[DocumentModel]', **options)",
+  "methods": {
+   "create": "(self, doc_id: 'str') -> 'Document'",
+   "documents": "(self) -> 'list[StoredInfo]'",
+   "exists": "(self, doc_id: 'str') -> 'bool'",
+   "open": "(self, doc_id: 'str') -> 'Document'"
+  },
+  "properties": []
+ },
+ "Method": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', params: 'tuple[Param, ...]', write: 'bool', doc: 'str', fn: 'Callable[..., Any]') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "MethodTable": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "bind": "(self, entry: 'Method', raw: 'Any', limits: 'Limits') -> 'dict[str, Any]'",
+   "describe": "(self, limits: 'Limits | None' = None) -> 'dict'",
+   "dispatch": "(self, ctx: 'Context', name: 'Any', params: 'Any') -> 'Any'",
+   "extended": "(self) -> 'MethodTable'",
+   "kind": "(self, name: 'str')",
+   "method": "(self, name: 'str', spec: 'str' = '', *, write: 'bool' = False)",
+   "names": "(self) -> 'set[str]'"
+  },
+  "properties": []
+ },
+ "PROTOCOL_VERSION": {
+  "value": "1"
+ },
+ "RequestError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(code: 'str', message: 'str')",
+  "methods": {
+   "to_dict": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Say": {
+  "class": [
+   "object"
+  ],
+  "init": "(text: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ScriptedEngine": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "plan": "(self, task: 'Task') -> 'list[Step]'"
+  },
+  "properties": []
+ },
+ "ScryptDirectory": {
+  "class": [
+   "object"
+  ],
+  "init": "(cost: 'int' = 16384)",
+  "methods": {
+   "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "dump": "(self) -> 'dict'",
+   "load": "(self, data: 'dict') -> 'None'",
+   "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
+   "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
+  },
+  "properties": []
+ },
+ "Step": {
+  "value": "<Union>"
+ },
+ "StoredInfo": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', app: 'str', modified: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Task": {
+  "class": [
+   "object"
+  ],
+  "init": "(sender: 'str', text: 'str', document: 'Document') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "UserDirectory": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
+   "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
+  },
+  "properties": []
+ },
+ "computes_methods": {
+  "value": "<MethodTable>"
+ },
+ "core_methods": {
+  "value": "<MethodTable>"
+ },
+ "create_app": {
+  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), web_dir: 'str | Path | None' = None, list_documents: 'bool' = True) -> 'FastAPI'"
+ },
+ "ensure_certificate": {
+  "function": "(state_dir: 'str | Path | None' = None, extra_names: 'tuple[str, ...]' = (), cert_file: 'str | Path | None' = None, key_file: 'str | Path | None' = None) -> 'Certificate'"
+ },
+ "methods_for": {
+  "function": "(model_cls: 'type[DocumentModel]') -> 'MethodTable'"
+ },
+ "parse_request": {
+  "function": "(raw: 'str | bytes', limits: 'Limits') -> 'tuple[Any, Any, Any]'"
+ },
+ "stand_in_assistant_for": {
+  "function": "(model_cls: 'type[DocumentModel]') -> 'Callable[[], Assistant] | None'"
+ }
+}

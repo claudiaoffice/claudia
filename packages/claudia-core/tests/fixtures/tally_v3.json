@@ -1,0 +1,40 @@
+{
+ "branches": [
+  {
+   "name": "main",
+   "fork": null
+  }
+ ],
+ "entries": [
+  {
+   "rev": "main:1",
+   "parent": null,
+   "author": "ana",
+   "time": "2026-11-01T12:00:01.000Z",
+   "command": {
+    "k": "tally.Add",
+    "s": 3,
+    "d": {
+     "amount": 3,
+     "unit": "ones",
+     "extra": true
+    }
+   }
+  },
+  {
+   "rev": "main:2",
+   "parent": "main:1",
+   "author": "ana",
+   "time": "2026-11-01T12:00:02.000Z",
+   "command": {
+    "k": "tally.Add",
+    "s": 3,
+    "d": {
+     "amount": 5,
+     "unit": "ones",
+     "extra": true
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,125 @@
+// What happens when things go wrong: a viewer tries to edit, and the server restarts under people's hands.
+const { chromium } = require('playwright')
+const { spawn } = require('node:child_process')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const os = require('node:os')
+const path = require('node:path')
+
+const ROOT = path.resolve(__dirname, '../..')
+const PORT = 8766
+const URL = `http://127.0.0.1:${PORT}/`
+const DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'claudia-e2e-'))
+const SHOTS = process.env.SHOTS ?? '/tmp/shots'
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+function startServer() {
+  const child = spawn(
+    path.join(ROOT, '.venv/bin/python'),
+    ['-m', 'claudia_server', '--no-tls', '--port', String(PORT), '--dir', DATA, '--web', path.join(ROOT, 'web/.output/public')],
+    { cwd: ROOT, stdio: 'ignore' },
+  )
+  return child
+}
+async function ready() {
+  for (let i = 0; i < 50; i++) {
+    try {
+      if ((await fetch(URL + 'api/health')).ok) return
+    } catch {}
+    await sleep(200)
+  }
+  throw new Error('the server did not start')
+}
+async function login(browser, doc, user, password, create) {
+  const page = await (await browser.newContext({ viewport: { width: 1360, height: 800 } })).newPage()
+  page.errors = []
+  page.on('pageerror', (e) => page.errors.push(e.message))
+  await page.goto(URL)
+  await page.fill('input[name=document]', doc)
+  await page.fill('input[name=user]', user)
+  await page.fill('input[name=password]', password)
+  await page.click(create ? 'text=Create document' : 'button:text-is("Open")')
+  await page.waitForSelector('.viewport')
+  await page.waitForFunction(() => document.querySelector('.status.open'))
+  return page
+}
+const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 15000 }).catch(() => Promise.reject(new Error('timed out: ' + what)))
+
+;(async () => {
+  let server = startServer()
+  const browser = await chromium.launch()
+  try {
+    await ready()
+    const ann = await login(browser, 'plan', 'ann', 'ann has a password', true)
+    await ann.click('.viewport', { position: { x: 100, y: 40 } })
+    await ann.keyboard.type('hello')
+    await ann.keyboard.press('Enter')
+    await wait(ann, () => document.querySelector('.cell'), null, 'first cell')
+
+    // formulas are not there yet: said honestly, kept as text
+    await ann.keyboard.type('=1+1')
+    await ann.keyboard.press('Enter')
+    await wait(ann, () => document.querySelector('.toast')?.textContent.includes('Formulas'), null, 'formula note')
+    console.log('formula note:', await ann.locator('.toast').textContent())
+
+    // ---- a viewer may look and not touch
+    await ann.click('.menus .title:text-is("File")')
+    await ann.click('.menus [role=menuitem]:has-text("Share")')
+    await ann.fill('.modal input >> nth=0', 'vera')
+    await ann.fill('.modal input >> nth=1', 'vera has a password')
+    await ann.selectOption('.modal select', 'viewer')
+    await ann.click('.modal button:has-text("Add person")')
+    await ann.waitForSelector('.added')
+    await ann.keyboard.press('Escape')
+    const vera = await login(browser, 'plan', 'vera', 'vera has a password', false)
+    await wait(vera, () => [...document.querySelectorAll('.cell')].some((e) => e.textContent.trim() === 'hello'), null, 'vera sees the table')
+    await vera.click('.viewport', { position: { x: 100, y: 40 } })
+    await vera.keyboard.type('x')
+    await wait(vera, () => document.querySelector('.toast')?.textContent.includes('only look'), null, 'viewer refusal')
+    assert.equal(await vera.locator('.editor').count(), 0)
+    assert.equal(await vera.locator('.menus .title:text-is("File")').count(), 1)
+    console.log('viewer is told:', await vera.locator('.toast').textContent())
+    // a viewer sees where others are
+    await ann.click('.viewport', { position: { x: 300, y: 100 } })
+    await wait(vera, () => document.querySelector('.outline'), null, 'vera sees ann’s place')
+    console.log('viewer sees ann’s cursor')
+
+    // ---- the list on the start page
+    const lister = await (await browser.newContext()).newPage()
+    await lister.goto(URL)
+    await wait(lister, () => document.querySelector('.list li button'), null, 'document list')
+    console.log('start page lists:', (await lister.locator('.list li').first().textContent()).replace(/\s+/g, ' ').trim())
+
+    // ---- the server goes away and comes back: nobody loses anything
+    server.kill('SIGTERM')
+    await wait(ann, () => document.querySelector('.banner'), null, 'reconnect banner')
+    await ann.screenshot({ path: `${SHOTS}/08-reconnecting.png` })
+    console.log('banner:', (await ann.locator('.banner').textContent()).trim())
+    await sleep(1500)
+    server = startServer()
+    await ready()
+    await wait(ann, () => document.querySelector('.status.open') && !document.querySelector('.banner'), null, 'ann reconnected')
+    await wait(vera, () => document.querySelector('.status.open'), null, 'vera reconnected')
+    await wait(ann, () => [...document.querySelectorAll('.cell')].some((e) => e.textContent.trim() === 'hello'), null, 'the table is back')
+    await ann.click('.viewport', { position: { x: 100, y: 120 } })
+    await ann.keyboard.type('after the restart')
+    await ann.keyboard.press('Enter')
+    await wait(vera, () => [...document.querySelectorAll('.cell')].some((e) => e.textContent.trim() === 'after the restart'), null, 'vera sees the new cell')
+    console.log('server restarted; both reconnected by themselves and keep working')
+
+    // ---- a narrow screen
+    await ann.setViewportSize({ width: 390, height: 800 })
+    await sleep(300)
+    await ann.screenshot({ path: `${SHOTS}/09-narrow.png` })
+
+    for (const [n, p] of [['ann', ann], ['vera', vera]]) assert.deepEqual(p.errors, [], `${n} page errors`)
+    console.log('\nALL GOOD')
+  } finally {
+    await browser.close()
+    server.kill('SIGTERM')
+    fs.rmSync(DATA, { recursive: true, force: true })
+  }
+})().catch((e) => {
+  console.error('FAILED:', e.message)
+  process.exit(1)
+})
