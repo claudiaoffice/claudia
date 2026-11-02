@@ -3,6 +3,18 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.2.0] - 2026-11-02
+
+Document file, journal and people (E2.1, E2.3, first slice).
+
+### Added
+- `create_document`, `read_manifest`, `unlock`, `unlock_with_recovery`, `read_people`, `add_user`, `remove_user`,
+  `change_password`, `Manifest`, `Person`, `journal_path`, `FORMAT_TEXT`: the document file, a zip with a plain manifest,
+  key slots and the sealed list of people; every change replaces the file atomically; a file from outside is checked
+  (`ContainerError`, `NotAClaudiaDocument`, `UnsupportedFormat`, `ReaderLimitExceeded`).
+- `JournalWriter`, `read_journal`, `JournalRecord`, `JournalError`: the encrypted journal of an open document; a change
+  is on disk before it is acknowledged, a cut-off last record is dropped, tampering is refused.
+
 ## [0.1.0] - 2026-11-02
 
 First version (E2.2, first slice). Design: D70-D82 in `claude/e2-container-design.md` of the project.

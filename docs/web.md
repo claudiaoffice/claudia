@@ -23,7 +23,7 @@ sliders, encryption of the file store, column resizing.
 ## Build and run
 
 The quick way (Linux, macOS: `./start.sh`, Windows: `start.cmd`) builds the web app when it is missing, starts the
-server and opens the browser. Documents are kept in `./demo-docs`.
+server and opens the browser. Documents are kept in `./demo-docs`, each one sealed (encrypted); a folder from an earlier version needs `--plain-dir`.
 
 ```bash
 ./start.sh                       # or: uv run python scripts/start.py

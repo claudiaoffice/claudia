@@ -402,6 +402,7 @@ name = "claudia-server"
 source = { editable = "packages/claudia-server" }
 dependencies = [
     { name = "claudia-computes" },
+    { name = "claudia-container" },
     { name = "claudia-core" },
     { name = "cryptography" },
     { name = "fastapi" },
@@ -412,8 +413,9 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "claudia-computes", editable = "packages/claudia-computes" },
+    { name = "claudia-container", editable = "packages/claudia-container" },
     { name = "claudia-core", editable = "packages/claudia-core" },
-    { name = "cryptography", specifier = ">=43" },
+    { name = "cryptography", specifier = ">=44" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "uvicorn", specifier = ">=0.30" },
     { name = "websockets", specifier = ">=13" },

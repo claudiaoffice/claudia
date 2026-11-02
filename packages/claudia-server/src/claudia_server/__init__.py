@@ -25,6 +25,7 @@ from .protocol import (
     core_methods,
     parse_request,
 )
+from .sealed import SealedDocuments
 from .standin import ScriptedEngine
 
 __all__ = [
@@ -55,6 +56,7 @@ __all__ = [
     "RequestError",
     "Say",
     "ScriptedEngine",
+    "SealedDocuments",
     "Step",
     "ScryptDirectory",
     "StoredInfo",

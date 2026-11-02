@@ -3,6 +3,30 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-02
+
+### Added
+- `SealedDocuments`: documents and their people in the encrypted container (`claudia-container`). It is the
+  `DocumentProvider` and the `UserDirectory` in one, because the people of a document are the key slots in its file. A
+  document is `docs/<id>.claudia` and a sealed journal next to it; the names, roles, passwords and content are not in
+  any file in readable form. Keys live in memory only: a login by an owner or editor leaves them waiting for `open`
+  (`key_ttl`, 60 s), and they are forgotten when the hub unloads the document. A viewer holds only the content key, so a
+  viewer who logs in first after a restart is told that the document is sealed and an editor has to open it.
+- `--plain-dir DIR`: the old unencrypted store of the early demos, by name, with a banner that says so.
+- `replay(items, model_cls)` in `claudia_server.filestore`: rebuilds log and chat from journal items, shared by the plain
+  and the sealed store.
+- `Gateway(max_hashing=2)`: at most two password hashings run at once.
+
+### Changed
+- **Breaking:** `--dir DIR` now keeps sealed documents. Folders made by earlier versions are not read (use
+  `--plain-dir` to keep using them).
+- **Breaking:** `DocumentProvider` has a new method `release(doc_id)`, called when the hub unloads a document from
+  memory. A provider of your own must have it (it may do nothing).
+- Passwords are checked in a thread and not on the event loop (SEC-03), and an unknown document costs as much time as a
+  wrong password (SEC-04). Creating a document adds its owner in a thread too.
+- A password must have 8 characters, a capital letter, a small letter and a digit (in the sealed store).
+- claudia-server now depends on claudia-container, and on `cryptography>=44`.
+
 ## [0.3.0] - 2026-11-02
 
 ### Added

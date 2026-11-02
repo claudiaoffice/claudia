@@ -21,10 +21,10 @@ import contextlib
 import json
 import os
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
 from claudia_core import (
     Branch,
@@ -128,8 +128,10 @@ class _Replay:
         self.chat.append(ChatRecord.from_data(data))
 
 
-def read_journal(path: Path, model_cls: type[DocumentModel]) -> tuple[CommandLog, list[ChatRecord]]:
-    """Rebuild the log and the chat of a document from its journal."""
+def replay(items: Iterable[tuple[str, Any]], model_cls: type[DocumentModel]) -> tuple[CommandLog, list[ChatRecord]]:
+    """Rebuild the log and the chat from journal items ``(kind, data)`` in the order they were written.
+
+    ``ValueError`` for a kind nobody knows. Shared by every store that keeps the same items (plain and sealed)."""
     state = _Replay()
     handlers: dict[str, Callable] = {
         "entry": state.entry,
@@ -138,26 +140,36 @@ def read_journal(path: Path, model_cls: type[DocumentModel]) -> tuple[CommandLog
         "branch": state.branch,
         "chat": state.chat_record,
     }
-    lines = path.read_bytes().split(b"\n")
-    if lines and lines[-1] == b"":
-        lines.pop()
-    for number, raw in enumerate(lines, start=1):
-        try:
-            item = json.loads(raw)
-            handler = handlers.get(item["t"])
-            data = item["d"]
-        except (ValueError, KeyError, TypeError) as exc:
-            if number == len(lines):
-                break  # cut off by a crash: the change it carried never happened
-            raise ValueError(f"the journal {path} is damaged at line {number}") from exc
+    for kind, data in items:
+        handler = handlers.get(kind)
         if handler is None:
-            raise ValueError(f"the journal {path} has an unknown line type {item['t']!r} at line {number}")
+            raise ValueError(f"the journal has an unknown item type {kind!r}")
         handler(data)
     log = CommandLog.from_data(
         {"active": state.active, "branches": list(state.branches.values()), "entries": list(state.entries.values())},
         model_cls.registry,
     )
     return log, state.chat
+
+
+def read_journal(path: Path, model_cls: type[DocumentModel]) -> tuple[CommandLog, list[ChatRecord]]:
+    """Rebuild the log and the chat of a document from its journal."""
+    lines = path.read_bytes().split(b"\n")
+    if lines and lines[-1] == b"":
+        lines.pop()
+    items: list[tuple[str, Any]] = []
+    for number, raw in enumerate(lines, start=1):
+        try:
+            item = json.loads(raw)
+            items.append((item["t"], item["d"]))
+        except (ValueError, KeyError, TypeError) as exc:
+            if number == len(lines):
+                break  # cut off by a crash: the change it carried never happened
+            raise ValueError(f"the journal {path} is damaged at line {number}") from exc
+    try:
+        return replay(items, model_cls)
+    except ValueError as exc:
+        raise ValueError(f"{exc} (in {path})") from exc
 
 
 class FileProvider:
@@ -202,6 +214,12 @@ class FileProvider:
             previous.close()  # a document that was unloaded and is opened again gets a fresh handle
         store = self._stores[doc_id] = JournalStore(path)
         return store
+
+    def release(self, doc_id: str) -> None:
+        """The hub unloaded the document: let go of its file."""
+        store = self._stores.pop(doc_id, None)
+        if store is not None:
+            store.close()
 
     def documents(self) -> list[StoredInfo]:
         """Every stored document, the most recently changed first."""
