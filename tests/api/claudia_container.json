@@ -1,0 +1,127 @@
+{
+ "version": "0.1.0",
+ "DecryptionError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Domain": {
+  "class": [
+   "StrEnum"
+  ],
+  "init": "(*values)",
+  "methods": {},
+  "properties": []
+ },
+ "InvalidRecoveryKey": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "KdfParams": {
+  "class": [
+   "object"
+  ],
+  "init": "(iterations: int, memory_kib: int, lanes: int) -> None",
+  "methods": {
+   "default": "() -> claudia_container.crypto.KdfParams",
+   "from_dict": "(data: object) -> claudia_container.crypto.KdfParams",
+   "to_dict": "(self) -> dict[str, int]"
+  },
+  "properties": []
+ },
+ "KeySlot": {
+  "class": [
+   "object"
+  ],
+  "init": "(locator: bytes, sealed: bytes) -> None",
+  "methods": {
+   "from_dict": "(data: object) -> claudia_container.slots.KeySlot",
+   "to_dict": "(self) -> dict[str, str]"
+  },
+  "properties": []
+ },
+ "LoginMaterial": {
+  "class": [
+   "object"
+  ],
+  "init": "(locator: bytes, key: bytes) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "MIN_PASSWORD_LENGTH": {
+  "value": "8"
+ },
+ "ROLE_DOMAINS": {
+  "value": "<mappingproxy>"
+ },
+ "Role": {
+  "class": [
+   "StrEnum"
+  ],
+  "init": "(*values)",
+  "methods": {},
+  "properties": []
+ },
+ "Unlocked": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: str, role: claudia_container.slots.Role, keys: dict[claudia_container.slots.Domain, bytes]) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "WeakPassword": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(problems: tuple[str, ...]) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "derive_login_material": {
+  "function": "(password: str, name: str, doc_salt: bytes, params: claudia_container.crypto.KdfParams) -> claudia_container.crypto.LoginMaterial"
+ },
+ "derive_recovery_material": {
+  "function": "(recovery_key: bytes) -> claudia_container.crypto.LoginMaterial"
+ },
+ "format_recovery_key": {
+  "function": "(key: bytes) -> str"
+ },
+ "make_slot": {
+  "function": "(material: claudia_container.crypto.LoginMaterial, doc_id: str, name: str, role: claudia_container.slots.Role, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> claudia_container.slots.KeySlot"
+ },
+ "new_domain_keys": {
+  "function": "() -> dict[claudia_container.slots.Domain, bytes]"
+ },
+ "new_recovery_key": {
+  "function": "() -> bytes"
+ },
+ "open_sealed": {
+  "function": "(key: bytes, sealed: bytes, aad: bytes) -> bytes"
+ },
+ "open_slot": {
+  "function": "(slots: collections.abc.Sequence[claudia_container.slots.KeySlot], material: claudia_container.crypto.LoginMaterial, doc_id: str) -> claudia_container.slots.Unlocked | None"
+ },
+ "parse_recovery_key": {
+  "function": "(text: str) -> bytes"
+ },
+ "password_problems": {
+  "function": "(password: str) -> tuple[str, ...]"
+ },
+ "random_key": {
+  "function": "() -> bytes"
+ },
+ "require_strong_password": {
+  "function": "(password: str) -> None"
+ },
+ "seal": {
+  "function": "(key: bytes, plaintext: bytes, aad: bytes) -> bytes"
+ }
+}

@@ -11,6 +11,7 @@ members = [
     "claudia-client",
     "claudia-composes",
     "claudia-computes",
+    "claudia-container",
     "claudia-core",
     "claudia-creates",
     "claudia-monorepo",
@@ -325,6 +326,16 @@ dependencies = [
 requires-dist = [{ name = "claudia-core", editable = "packages/claudia-core" }]
 
 [[package]]
+name = "claudia-container"
+source = { editable = "packages/claudia-container" }
+dependencies = [
+    { name = "cryptography" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "cryptography", specifier = ">=44" }]
+
+[[package]]
 name = "claudia-core"
 source = { editable = "packages/claudia-core" }
 
@@ -347,6 +358,7 @@ dependencies = [
     { name = "claudia-client" },
     { name = "claudia-composes" },
     { name = "claudia-computes" },
+    { name = "claudia-container" },
     { name = "claudia-core" },
     { name = "claudia-creates" },
     { name = "claudia-server" },
@@ -368,6 +380,7 @@ requires-dist = [
     { name = "claudia-client", editable = "packages/claudia-client" },
     { name = "claudia-composes", editable = "packages/claudia-composes" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
+    { name = "claudia-container", editable = "packages/claudia-container" },
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
     { name = "claudia-server", editable = "packages/claudia-server" },
