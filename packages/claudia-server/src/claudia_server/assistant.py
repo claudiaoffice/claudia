@@ -7,10 +7,14 @@ locks apply to it like to anybody else, and its work is in the history under its
 
 The engine is a plug-in. It gets a ``Task`` (who asked, what, and the document to look at) and returns a list of
 steps: ``Say`` something, or ``Call`` a method. ``claudia_server.standin.ScriptedEngine`` is a stand-in that
-understands a few phrases; a real model (OpenVINO, E3.6) takes its place without anything else changing.
+understands a few phrases; ``claudia_server.model_engine.ModelEngine`` asks a language model (OpenVINO, E7.1).
+An engine that has to wait for something slow (a model) is an ``AsyncEngine``: it is awaited, so the event loop keeps
+serving everybody else meanwhile. It must read the document before it first awaits and keep its own copy: other
+people go on editing while it waits.
 
-Questions are answered one at a time, in the order they were asked. While it works the assistant shows that it is typing
-and where it is working (its cursor), so people can watch.
+Questions are answered one at a time, in the order they were asked; with ``max_waiting`` a document refuses the ones
+that would wait too long behind others. While it works the assistant shows that it is typing and where it is working
+(its cursor), so people can watch.
 """
 
 from __future__ import annotations
@@ -20,7 +24,7 @@ import logging
 from collections import deque
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from claudia_core import ChatPosted, ChatRecord, Document
 
@@ -71,18 +75,31 @@ class Engine(Protocol):
         """The steps that answer ``task``. May raise: the assistant then says it could not answer."""
 
 
+@runtime_checkable
+class AsyncEngine(Protocol):
+    """An engine that waits for something slow, such as a language model, and so is awaited."""
+
+    async def plan_async(self, task: Task) -> list[Step]:
+        """The steps that answer ``task``. May raise: the assistant then says it could not answer."""
+
+
 class Assistant:
-    """The AI participant of one document."""
+    """The AI participant of one document.
+
+    ``max_waiting`` is how many questions may wait behind the one being answered; further ones are refused at once
+    with a message (``None``: no limit)."""
 
     def __init__(
         self,
-        engine: Engine,
+        engine: Engine | AsyncEngine,
         *,
         pause: float = 0.5,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        max_waiting: int | None = None,
     ):
         self.engine = engine
         self.pause = pause  # seconds between steps, so that people can follow what happens
+        self.max_waiting = max_waiting
         self._sleep = sleep
         self.hosted: HostedDocument | None = None
         self.connection: Connection | None = None
@@ -104,9 +121,14 @@ class Assistant:
         if not isinstance(event, ChatPosted):
             return
         record = event.record
-        if record.to and is_reserved(record.to) and not is_reserved(record.author):
-            self._queue.append(record)
-            self._start()
+        if not (record.to and is_reserved(record.to) and not is_reserved(record.author)):
+            return
+        if self.max_waiting is not None and len(self._queue) >= self.max_waiting:
+            busy = f"I am busy with {len(self._queue)} other questions here. Ask me again in a moment."
+            self._say(record.author, busy)
+            return
+        self._queue.append(record)
+        self._start()
 
     def _start(self) -> None:
         try:
@@ -140,7 +162,7 @@ class Assistant:
         document.publish("typing", AI_USER, {"on": True})
         try:
             try:
-                steps = self.engine.plan(Task(record.author, record.text, document))
+                steps = await self._plan(Task(record.author, record.text, document))
             except Exception as exc:  # the engine is a plug-in: whatever it does wrong, the asker is told
                 log.exception("the engine failed")
                 steps = [Say(f"I could not answer: {exc}")]
@@ -150,6 +172,11 @@ class Assistant:
                     break
         finally:
             document.publish("typing", AI_USER, {"on": False})
+
+    async def _plan(self, task: Task) -> list[Step]:
+        if isinstance(self.engine, AsyncEngine):
+            return await self.engine.plan_async(task)
+        return self.engine.plan(task)
 
     def _run(self, step: Step, asker: str) -> bool:
         """Do one step; ``False`` if the rest of the plan should be dropped."""
