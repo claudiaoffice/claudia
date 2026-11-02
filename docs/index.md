@@ -15,9 +15,11 @@ versioning
 api/claudia_core
 api/claudia_server
 api/claudia_client
+api/claudia_container
 api/apps
 contributing
 changelog
 changelog-server
 changelog-client
+changelog-container
 ```
