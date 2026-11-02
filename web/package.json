@@ -9,6 +9,7 @@
     "test": "vitest run",
     "typecheck": "nuxt typecheck",
     "e2e": "node e2e/demo.cjs",
+    "e2e:composes": "node e2e/composes.cjs",
     "e2e:resilience": "node e2e/resilience.cjs"
   },
   "dependencies": {

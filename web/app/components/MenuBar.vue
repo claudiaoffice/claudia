@@ -7,6 +7,8 @@ export interface MenuItem {
   action?: () => void
   disabled?: boolean
   separator?: boolean
+  /** A choice that is on or off: shown with a tick. */
+  checked?: boolean
 }
 export interface Menu {
   label: string
@@ -55,8 +57,8 @@ onBeforeUnmount(() => {
         <template v-for="(item, j) in menu.items" :key="j">
           <li v-if="item.separator" class="sep" role="separator" />
           <li v-else>
-            <button type="button" role="menuitem" :disabled="item.disabled" @click="choose(item)">
-              <span>{{ item.label }}</span>
+            <button type="button" role="menuitem" :aria-checked="item.checked" :disabled="item.disabled" @click="choose(item)">
+              <span><i v-if="item.checked !== undefined" class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</i>{{ item.label }}</span>
               <kbd v-if="item.hint">{{ item.hint }}</kbd>
             </button>
           </li>
@@ -67,6 +69,12 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.tick {
+  display: inline-block;
+  width: 1.3em;
+  font-style: normal;
+  color: var(--app);
+}
 .menus {
   display: flex;
   gap: 2px;

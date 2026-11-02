@@ -388,6 +388,7 @@ dev = [
 name = "claudia-server"
 source = { editable = "packages/claudia-server" }
 dependencies = [
+    { name = "claudia-composes" },
     { name = "claudia-computes" },
     { name = "claudia-core" },
     { name = "cryptography" },
@@ -398,6 +399,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "claudia-composes", editable = "packages/claudia-composes" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "cryptography", specifier = ">=43" },

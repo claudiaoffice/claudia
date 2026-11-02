@@ -23,11 +23,14 @@ autodoc_typehints = "signature"
 autodoc_default_options = {"members": True, "undoc-members": False, "show-inheritance": True}
 nitpicky = True
 # Standard-library types are not linked (the build needs no network); everything of ours must resolve.
-nitpick_ignore_regex = [(r"py:.*", r"(typing|collections\.abc|abc|builtins)\..*"), (r"py:class", r"abc\.ABC|M"),
-                       (r"py:class", r"'Mapping\[str"),  # (Sphinx cannot split the quoted Mapping[str, int])
-                       # (nor generics with several arguments in a signature: it cuts them at the first comma)
-                       (r"py:class", r"(Callable|dict|list|tuple)\[.*"),
-                       # standard library and FastAPI types in signatures (no network for intersphinx)
-                       (r"py:class", r"(os|pathlib|ssl)\.\w+|(fastapi|starlette)\..*")]
+nitpick_ignore_regex = [
+    (r"py:.*", r"(typing|collections\.abc|abc|builtins)\..*"),
+    (r"py:class", r"abc\.ABC|M"),
+    (r"py:class", r"'Mapping\[str"),  # (Sphinx cannot split the quoted Mapping[str, int])
+    # (nor generics with several arguments in a signature: it cuts them at the first comma)
+    (r"py:class", r"(Callable|dict|list|tuple)\[.*"),
+    # standard library and FastAPI types in signatures (no network for intersphinx)
+    (r"py:class", r"(os|pathlib|ssl)\.\w+|(fastapi|starlette)\..*"),
+]
 html_theme = "alabaster"
 myst_heading_anchors = 3

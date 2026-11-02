@@ -1,10 +1,10 @@
 // Who is who on screen: a colour for every participant, and text that is readable on it.
-import type { State } from './session'
+import type { BaseState } from './base-session'
 
 export const IRIS = '#5b4bc4'
 const GREY = '#8a8697'
 
-export function colorOf(state: Pick<State, 'me' | 'people'>, user: string): string {
+export function colorOf(state: Pick<BaseState, 'me' | 'people'>, user: string): string {
   if (user.toLowerCase() === 'ai') return IRIS
   if (user === state.me.user) return state.me.color || GREY
   return state.people.find((p) => p.user === user)?.color ?? GREY

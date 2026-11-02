@@ -71,6 +71,21 @@ def test_a_workbook_server_offers_the_spreadsheet_methods_and_others_do_not(tmp_
     assert "cells" not in methods("--model", "claudia_core.testing:ListModel")
 
 
+def test_a_text_server_offers_the_text_methods_and_the_text_assistant(tmp_path):
+    import asyncio
+
+    from starlette.testclient import TestClient
+
+    served = plan("--no-tls", "--model", "claudia_composes:TextModel", tmp_path=tmp_path)
+    methods = set(TestClient(served.app).get("/api/protocol").json()["methods"])
+    assert {"blocks", "replace_text", "suggest"} <= methods and "cells" not in methods
+
+    async def users():
+        return (await served.app.state.hub.open("x", create=True)).users()
+
+    assert asyncio.run(users()) == ["ai"]
+
+
 def test_workbooks_get_the_stand_in_assistant_unless_switched_off(tmp_path):
     import asyncio
 

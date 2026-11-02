@@ -3,7 +3,7 @@ name = "claudia-server"
 dynamic = ["version"]
 description = "claudia-server: hosts documents, authenticates people and speaks the live protocol (E3.1)"
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "fastapi>=0.115", "uvicorn>=0.30", "websockets>=13", "cryptography>=43"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "fastapi>=0.115", "uvicorn>=0.30", "websockets>=13", "cryptography>=43"]
 
 [build-system]
 requires = ["hatchling"]
@@ -18,3 +18,4 @@ packages = ["src/claudia_server"]
 [tool.uv.sources]
 claudia-core = { workspace = true }
 claudia-computes = { workspace = true }
+claudia-composes = { workspace = true }

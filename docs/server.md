@@ -54,7 +54,11 @@ When the handshake fails the server answers and closes the socket with a code: 4
   its sender and recipient; ephemeral messages (presence, typing) are not echoed to the sender.
 * The history panel reads `log` (the newest entries of the visible history, each with a sentence such as `B3 = 40`).
   Workbooks add `sheets`, `cells` (a window), `set_cells` (the text people typed; the server decides what it means),
-  `add_sheet` and `structure`.
+  `add_sheet` and `structure`. Texts (`--model claudia_composes:TextModel`) add `blocks`, `suggestions`,
+  `replace_text` (a range replaced by text; line breaks start paragraphs; one request is one history step),
+  `set_style`, `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
+  and `accept_suggestion` / `reject_suggestion`. The assistant has no direct write path into a text: it suggests,
+  people accept (D63).
 * The AI is a participant called `ai`, one per document: it shows up in `users` and `people` (in the colour Iris), hears
   messages that start with `@ai`, and answers the asker only. It edits through the same methods as everybody, so locks
   and roles apply and its work is in the history under its name. The model behind it is a plug-in (`Engine`); the
