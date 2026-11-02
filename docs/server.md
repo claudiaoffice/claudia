@@ -57,8 +57,23 @@ When the handshake fails the server answers and closes the socket with a code: 4
   `add_sheet` and `structure`.
 * The AI is a participant called `ai`, one per document: it shows up in `users` and `people` (in the colour Iris), hears
   messages that start with `@ai`, and answers the asker only. It edits through the same methods as everybody, so locks
-  and roles apply and its work is in the history under its name. The model behind it is a plug-in (`Engine`); the
-  scripted stand-in understands a handful of phrases (`@ai help`) and `--no-assistant` switches it off.
+  and roles apply and its work is in the history under its name. The model behind it is a plug-in (`Engine`, or
+  `AsyncEngine` for one that has to wait); the scripted stand-in understands a handful of phrases (`@ai help`) and
+  `--no-assistant` switches it off.
+* **A real model (`--ai`).** `python3 -m claudia_server --ai MODEL_DIR --ai-device GPU` makes the AI user answer with a
+  language model that runs on the server's own machine with OpenVINO GenAI (`pip install claudia-server[openvino]`;
+  a model converted with `optimum-cli export openvino --model Qwen/Qwen2.5-7B-Instruct --weight-format int4 qwen-ov`, or
+  one of huggingface.co/OpenVINO). The device is `GPU` (default, decision D13), `CPU`, `NPU` or `AUTO`;
+  `--ai-max-tokens` (512) limits an answer and `--ai-timeout` (180 s) the time it may take. The model is loaded before
+  the server listens, so a wrong folder, a missing library or a device that is not there stops the server with a
+  message that says what to do. Nothing leaves the machine. The questions of all documents wait in one queue and are
+  answered one at a time, in order (`ModelRunner`); a document refuses more than four waiting questions. While the model
+  works the event loop serves everybody else and the others see "ai is typing". A failure is answered in the chat
+  ("I could not answer: ..."), never silently. The model may ask for `set_cells`, `add_sheet` and `structure`
+  (it is told how in its prompt, built from the method table) and nothing else; each request that fails is reported
+  to the asker with the reason. It remembers the last six exchanges with each person while the document is loaded.
+  What is provisional: the prompt names the sheets but does not show cell contents yet (E7.5), and the answer is
+  read as text with an optional fenced `commands` block (`claudia_ai.Agent`).
 * Restoring a checkpoint and switching lines are **not on the wire yet**: the rules for who may do that in a live
   session are still to be decided.
 

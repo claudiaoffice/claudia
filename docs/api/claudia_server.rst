@@ -48,8 +48,11 @@ Assistant
 .. autoclass:: claudia_server.Task
 .. autoclass:: claudia_server.Say
 .. autoclass:: claudia_server.Call
+.. autoclass:: claudia_server.AsyncEngine
 .. autoclass:: claudia_server.ScriptedEngine
 .. autofunction:: claudia_server.stand_in_assistant_for
+.. autoclass:: claudia_server.ModelEngine
+.. autofunction:: claudia_server.model_assistant_for
 
 Users
 -----

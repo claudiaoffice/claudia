@@ -15,6 +15,7 @@ versioning
 api/claudia_core
 api/claudia_server
 api/claudia_client
+api/claudia_ai
 api/claudia_container
 api/apps
 contributing
