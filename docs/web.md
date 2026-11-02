@@ -22,6 +22,18 @@ sliders, encryption of the file store, column resizing.
 
 ## Build and run
 
+The quick way (Linux, macOS: `./start.sh`, Windows: `start.cmd`) builds the web app when it is missing, starts the
+server and opens the browser. Documents are kept in `./demo-docs`.
+
+```bash
+./start.sh                       # or: uv run python scripts/start.py
+./start.sh --dir ~/claudia-docs --port 9000 --no-browser
+./start.sh --rebuild             # build the web app again first
+./start.sh --tls                 # encrypted; the browser warns once about the server's own certificate
+```
+
+By hand (needs Node.js 22 or newer for the build):
+
 ```bash
 cd web && npm ci && npx nuxt generate          # writes web/.output/public
 cd .. && uv run python -m claudia_server --no-tls --dir ./demo-docs --web web/.output/public

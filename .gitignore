@@ -1,5 +1,6 @@
 demo-docs
 .venv
 *__pycache__*
-./web/.nuxt
-./web/.output
+web/.nuxt
+web/.output
+web/node_modules
