@@ -1,0 +1,5 @@
+demo-docs
+.venv
+*__pycache__*
+./web/.nuxt
+./web/.output
