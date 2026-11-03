@@ -10,6 +10,7 @@ from claudia_composes import (
     SetStyle,
     SplitBlock,
     TextModel,
+    next_style,
 )
 from claudia_composes.runs import Run
 from claudia_core import Batch, CommandLog, Document, UndoConflict
@@ -112,9 +113,9 @@ def test_an_unknown_style_is_refused(doc):
 
 
 def test_every_style_says_what_it_is_for_and_what_follows_it():
-    styles = TextModel.styles
-    assert styles["heading-1"].next == "body" and styles["quote"].purpose
-    assert all(style.name and style.purpose and style.next in styles for style in styles.values())
+    styles = TextModel().styles
+    assert next_style(styles, "heading-1") == "body" and styles.get("quote").purpose
+    assert all(style.name and style.purpose and next_style(styles, style.id) in styles for style in styles)
 
 
 # ----------------------------------------------------------------------------- history sentences
@@ -123,7 +124,7 @@ def test_the_history_reads_as_sentences(doc):
     doc.execute(SplitBlock("b1", 6, "b2", "body"), author="ben")
     doc.execute(SetStyle("b2", "heading-1"), author="ben")
     sentences = [entry.command.summary for entry in doc.log.path(doc.revision)]
-    assert sentences[-3:] == ["typed “Hello ”", "new paragraph", "style Heading 1"]
+    assert sentences[-3:] == ["typed “Hello ”", "new paragraph", "style heading-1"]
 
 
 # ----------------------------------------------------------------------------- undo with colleagues (E1.4)

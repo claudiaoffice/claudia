@@ -8,10 +8,11 @@ are state of the document like the paragraphs, but they change no text until som
 from __future__ import annotations
 
 import re
+from collections import Counter
 from dataclasses import dataclass, field, replace
 from typing import ClassVar, Self
 
-from claudia_core import CommandRegistry, DocumentModel, Region, new_registry
+from claudia_core import CommandRegistry, DocumentModel, Region, StyleBook, StyleDef, new_registry
 
 from .region import TextRange
 from .runs import Run, delete_runs, insert_runs, runs_from_data, runs_to_data, slice_runs, total
@@ -22,28 +23,129 @@ FIRST_BLOCK = "b1"
 _NUMBERED = re.compile(r"[bs](\d+)")
 
 
-@dataclass(frozen=True)
-class Style:
-    """A named paragraph style: what the text is for, and which style follows when a writer ends such a paragraph."""
-
-    id: str
-    name: str
-    purpose: str
-    next: str
+_SANS = "Inter, system-ui, 'Segoe UI', sans-serif"
+_SERIF = "Fraunces, Georgia, serif"
+_INK = "#1F1A33"
 
 
-STYLES: dict[str, Style] = {
-    s.id: s
-    for s in (
-        Style("body", "Body text", "running text", "body"),
-        Style("title", "Title", "names the document", "body"),
-        Style("heading-1", "Heading 1", "a section", "body"),
-        Style("heading-2", "Heading 2", "a subsection", "body"),
-        Style("quote", "Quote", "words of someone else", "body"),
-        Style("remark", "Remark", "a note to the reader or co-author", "body"),
-        Style("definition", "Definition", "says what a term means", "body"),
-    )
-}
+def _style(style_id: str, name: str, purpose: str, **css: str) -> StyleDef:
+    return StyleDef(style_id, name, purpose, None if style_id == DEFAULT_STYLE else DEFAULT_STYLE, css)
+
+
+#: The styles every text starts with, all based on Body text (D73): a change to Body text reaches the others where they
+#: have not set the property themselves. They are made by the model, not by commands, so they are in every log's past.
+BUILTIN_STYLES: tuple[StyleDef, ...] = (
+    _style(
+        "body",
+        "Body text",
+        "running text",
+        **{
+            "font-family": _SANS,
+            "font-size": "12pt",
+            "line-height": "1.75",
+            "color": _INK,
+            "text-align": "left",
+            "margin-top": "0",
+            "margin-bottom": "0.9em",
+        },
+    ),
+    _style(
+        "title",
+        "Title",
+        "names the document",
+        **{
+            "font-family": _SERIF,
+            "font-size": "30pt",
+            "font-weight": "500",
+            "line-height": "1.15",
+            "letter-spacing": "-0.01em",
+            "margin-bottom": "0.5em",
+        },
+    ),
+    _style(
+        "heading-1",
+        "Heading 1",
+        "a section",
+        **{
+            "font-family": _SERIF,
+            "font-size": "19pt",
+            "font-weight": "500",
+            "line-height": "1.25",
+            "margin-top": "1.6em",
+            "margin-bottom": "0.5em",
+        },
+    ),
+    _style(
+        "heading-2",
+        "Heading 2",
+        "a subsection",
+        **{
+            "font-family": _SERIF,
+            "font-size": "14.5pt",
+            "font-weight": "500",
+            "line-height": "1.3",
+            "margin-top": "1.3em",
+            "margin-bottom": "0.4em",
+        },
+    ),
+    _style(
+        "quote",
+        "Quote",
+        "words of someone else",
+        **{
+            "font-family": _SERIF,
+            "font-style": "italic",
+            "font-size": "14pt",
+            "line-height": "1.7",
+            "color": "rgba(31, 26, 51, 0.82)",
+            "border-left": "3px solid #F2A057",
+            "padding-left": "1.1em",
+        },
+    ),
+    _style(
+        "remark",
+        "Remark",
+        "a note to the reader or co-author",
+        **{
+            "font-size": "11pt",
+            "line-height": "1.6",
+            "color": "rgba(31, 26, 51, 0.78)",
+            "background-color": "rgba(214, 71, 122, 0.07)",
+            "border-left": "3px solid #D6477A",
+            "padding-top": "0.55em",
+            "padding-bottom": "0.55em",
+            "padding-left": "0.9em",
+            "padding-right": "0.9em",
+        },
+    ),
+    _style(
+        "definition",
+        "Definition",
+        "says what a term means",
+        **{
+            "background-color": "rgba(231, 225, 244, 0.55)",
+            "border-left": "3px solid #5B4BC4",
+            "padding-top": "0.5em",
+            "padding-bottom": "0.5em",
+            "padding-left": "0.9em",
+            "padding-right": "0.9em",
+        },
+    ),
+)
+_BUILTIN_IDS = frozenset(s.id for s in BUILTIN_STYLES)
+
+
+def builtin_styles() -> StyleBook:
+    """A new style book with the built-in styles."""
+    return StyleBook(BUILTIN_STYLES)
+
+
+def next_style(styles: StyleBook, style_id: str) -> str:
+    """The style of the paragraph that starts when a writer ends one in ``style_id`` (Enter at its end): body text
+    after a heading, a quote or a remark, and more of the same after body text. A style made by deviating follows the
+    built-in style it comes from."""
+    root = next(s for s in reversed(styles.chain(style_id)) if s.id in _BUILTIN_IDS)
+    return style_id if root.id == DEFAULT_STYLE else DEFAULT_STYLE
 
 
 @dataclass
@@ -80,12 +182,12 @@ class TextModel(DocumentModel):
     """The paragraphs of a document and its suggestions."""
 
     app: ClassVar[str] = "composes"
-    state_schema: ClassVar[int] = 2
+    state_schema: ClassVar[int] = 3
     registry: ClassVar[CommandRegistry] = new_registry()
-    styles: ClassVar[dict[str, Style]] = STYLES
 
-    def __init__(self, blocks: list[Block] | None = None):
+    def __init__(self, blocks: list[Block] | None = None, styles: StyleBook | None = None):
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
+        self.styles: StyleBook = styles if styles is not None else builtin_styles()
         self.suggestions: dict[str, Suggestion] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
 
@@ -99,6 +201,7 @@ class TextModel(DocumentModel):
         """The state as plain data (a snapshot is a cache of it)."""
         return {
             "blocks": [b.to_data() for b in self.blocks],
+            "styles": self.styles.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
             "last": dict(self._last),
         }
@@ -110,7 +213,8 @@ class TextModel(DocumentModel):
         if raw and isinstance(raw[0], str):  # state schema 1: the stub, which could not hold more than strings
             blocks = [Block(f"b{i}", DEFAULT_STYLE, t, [Run(len(t), None)] if t else []) for i, t in enumerate(raw, 1)]
             return cls(blocks)
-        model = cls([Block(b["id"], b["style"], b["text"], runs_from_data(b["runs"])) for b in raw])
+        styles = StyleBook.from_data(state["styles"]) if "styles" in state else None  # schema 2 had the built-in ones
+        model = cls([Block(b["id"], b["style"], b["text"], runs_from_data(b["runs"])) for b in raw], styles)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model._last = dict(state.get("last", model._last))
@@ -146,6 +250,14 @@ class TextModel(DocumentModel):
     def fresh_id(self) -> str:
         """An id for a new paragraph (see ``fresh_ids``)."""
         return self.fresh_ids(1)[0]
+
+    def style_in_use(self, style_id: str) -> bool:
+        """Does any paragraph have this style? (Asked by the style commands before they take a style back.)"""
+        return any(b.style == style_id for b in self.blocks)
+
+    def style_uses(self) -> dict[str, int]:
+        """How many paragraphs have each style that is in use."""
+        return dict(Counter(b.style for b in self.blocks))
 
     def fresh_suggestion_id(self) -> str:
         """An id for a new suggestion."""
@@ -238,7 +350,7 @@ class TextModel(DocumentModel):
         return second.style
 
     def check_style(self, style: str) -> None:
-        """``ValueError`` unless the document has a style of this name."""
+        """``ValueError`` unless the document has a style with this id."""
         if style not in self.styles:
             raise ValueError(f"no style {style!r}")
 

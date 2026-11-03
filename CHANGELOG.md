@@ -4,6 +4,22 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.5.0] - 2026-11-03
+
+Styles in the kernel (E1.10, D73, D75): one CSS allow-list and one style model for all three apps.
+
+### Added
+- `ALLOWED_CSS`, `CSS_VERSION` (1), `validate_css`, `parse_css`, `format_css`, `CssError`, `CssProblem`: the CSS a style
+  may hold. A short list of properties and value types (font, size, weight, style, decoration, colours, alignment,
+  line height, spacing, margins, padding, borders (`border-left` and the like: width, style, colour), and `fill`, `stroke`, `stroke-width` for shapes); nothing with `url()`, `var()`,
+  `calc()`, `@`-rules or `!important`. `parse_css` reads the text of a style and reports every problem with its line
+  and property.
+- `StyleDef`, `StyleBook` (styles based on each other; stores only differences; `computed`, `chain`, `children`,
+  unique names and ids, provisional names such as `Heading 1 (changed)`) and the event `StylesChanged`.
+- Commands `CreateStyle`, `ChangeStyle`, `RenameStyle` and `RemoveStyle` (the undo of a creation). A model that wants
+  styles has a `styles` attribute (a `StyleBook`) and may answer `style_in_use(style_id)`. A colleague's later change
+  of the same property, a rename, or a style based on the new one makes an undo refused, never an overwrite.
+
 ## [0.4.0] - 2026-11-02
 
 ### Added

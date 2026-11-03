@@ -91,6 +91,28 @@ Manifest and requirements
 .. autofunction:: claudia_core.check
 .. autofunction:: claudia_core.environment_of
 
+Styles and CSS
+--------------
+
+A style is CSS from one short, versioned allow-list (``CSS_VERSION``): no ``url()``, ``var()``, ``calc()``,
+``@``-rules or ``!important``. An app's model that wants styles holds a ``StyleBook``; the commands are the only ways to
+change it.
+
+.. autodata:: claudia_core.CSS_VERSION
+.. autodata:: claudia_core.ALLOWED_CSS
+.. autofunction:: claudia_core.validate_css
+.. autofunction:: claudia_core.parse_css
+.. autofunction:: claudia_core.format_css
+.. autoexception:: claudia_core.CssError
+.. autoclass:: claudia_core.CssProblem
+.. autoclass:: claudia_core.StyleDef
+.. autoclass:: claudia_core.StyleBook
+.. autoclass:: claudia_core.StylesChanged
+.. autoclass:: claudia_core.CreateStyle
+.. autoclass:: claudia_core.ChangeStyle
+.. autoclass:: claudia_core.RenameStyle
+.. autoclass:: claudia_core.RemoveStyle
+
 Errors
 ------
 

@@ -1,5 +1,8 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
+ "ALLOWED_CSS": {
+  "value": "<frozenset>"
+ },
  "Applied": {
   "class": [
    "object"
@@ -48,6 +51,25 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "CSS_VERSION": {
+  "value": "1"
+ },
+ "ChangeStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', set: 'dict[str, str]', unset: 'tuple[str, ...]' = ()) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ChangeStyle'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "ChatPosted": {
   "class": [
@@ -182,6 +204,39 @@
   "init": "(model: 'M', author: 'str | None' = None, time: 'str | None' = None, revision: 'Revision | None' = None, origin: 'str' = 'do')",
   "methods": {
    "emit": "(self, event: 'Event') -> 'None'"
+  },
+  "properties": []
+ },
+ "CreateStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'StyleDef') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CreateStyle'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "CssError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(problems: 'list[CssProblem]')",
+  "methods": {},
+  "properties": []
+ },
+ "CssProblem": {
+  "class": [
+   "object"
+  ],
+  "init": "(line: 'int | None', property: 'str | None', message: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -527,6 +582,38 @@
   "methods": {},
   "properties": []
  },
+ "RemoveStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveStyle'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RenameStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', name: 'str', to_name: 'bool' = False) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RenameStyle'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "ReplayError": {
   "class": [
    "KernelError"
@@ -637,6 +724,51 @@
   "methods": {},
   "properties": []
  },
+ "StyleBook": {
+  "class": [
+   "object"
+  ],
+  "init": "(styles: 'Iterable[StyleDef]' = ())",
+  "methods": {
+   "add": "(self, style: 'StyleDef') -> 'None'",
+   "chain": "(self, style_id: 'str') -> 'list[StyleDef]'",
+   "children": "(self, style_id: 'str') -> 'list[str]'",
+   "computed": "(self, style_id: 'str') -> 'dict[str, str]'",
+   "from_data": "(items: 'Iterable[dict]') -> 'StyleBook'",
+   "get": "(self, style_id: 'str') -> 'StyleDef'",
+   "ids": "(self) -> 'list[str]'",
+   "name_taken": "(self, name: 'str', *, besides: 'str | None' = None) -> 'bool'",
+   "provisional_name": "(self, parent_id: 'str') -> 'str'",
+   "remove": "(self, style_id: 'str') -> 'StyleDef'",
+   "rename": "(self, style_id: 'str', name: 'str', *, to_name: 'bool' = False) -> 'None'",
+   "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
+   "to_data": "(self) -> 'list[dict]'",
+   "unique_id": "(self, base: 'str') -> 'str'",
+   "views": "(self) -> 'list[dict]'"
+  },
+  "properties": []
+ },
+ "StyleDef": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'StyleDef'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "StylesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(styles: 'tuple[dict, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Switch": {
   "class": [
    "Command"
@@ -685,16 +817,25 @@
  "environment_of": {
   "function": "(model_cls: 'type[DocumentModel]', *, functions=None, fonts=(), providable_fonts=()) -> 'Environment'"
  },
+ "format_css": {
+  "function": "(css: 'Mapping[str, str]') -> 'str'"
+ },
  "new_registry": {
   "function": "() -> 'CommandRegistry'"
  },
  "parse_chat": {
   "function": "(raw: 'str', users: 'Iterable[str]' = ()) -> 'tuple[str, str]'"
  },
+ "parse_css": {
+  "function": "(text: 'str') -> 'tuple[dict[str, str], list[CssProblem]]'"
+ },
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
  },
  "transform": {
   "function": "(region: 'Region', command: 'Command') -> 'Region | None'"
+ },
+ "validate_css": {
+  "function": "(css: 'Mapping[str, object]') -> 'dict[str, str]'"
  }
 }

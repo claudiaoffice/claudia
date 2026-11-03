@@ -1,7 +1,8 @@
 """Styles: how objects look, named by what they are for (D62, D73).
 
-A style is a name, a sentence about its purpose and a few CSS properties from a short allow-list. Nothing in a style
-can reach outside the page: no ``url()``, no ``@import``, no script. The first draft ships two built-in styles and has
+A style is a name, a sentence about its purpose and a few CSS properties from the allow-list of claudia-core
+(``ALLOWED_CSS``, shared by all three apps). Nothing in a style can reach outside the page: no ``url()``, no
+``@import``, no script. The first draft ships two built-in styles and has
 no style editor; every object refers to one of them by id, so that "how does this look" always has a name.
 The styles live in the program, not in the document, until templates arrive (E10.4); a later release that changes
 them restyles old documents.
@@ -11,22 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-#: The CSS properties a style may set. Widened on purpose, one property at a time, as the apps need them (D73).
-ALLOWED_CSS = frozenset(
-    {
-        "color",
-        "fill",
-        "font-family",
-        "font-size",
-        "font-style",
-        "font-weight",
-        "letter-spacing",
-        "line-height",
-        "stroke",
-        "stroke-width",
-        "text-align",
-    }
-)
+from claudia_core import ALLOWED_CSS  # noqa: F401  (re-exported: creates has always offered the list)
 
 _FONT = "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif"
 

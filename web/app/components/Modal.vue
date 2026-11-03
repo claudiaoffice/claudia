@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue'
 
-defineProps<{ title: string }>()
+defineProps<{ title: string; width?: number }>()
 const emit = defineEmits<{ close: [] }>()
 
 function escape(event: KeyboardEvent) {
@@ -13,7 +13,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', escape))
 
 <template>
   <div class="backdrop" @mousedown.self="emit('close')">
-    <div class="modal" role="dialog" aria-modal="true" :aria-label="title">
+    <div class="modal" role="dialog" aria-modal="true" :aria-label="title" :style="width ? { width: `min(${width}px, calc(100vw - 32px))` } : undefined">
       <h2>{{ title }}</h2>
       <slot />
     </div>

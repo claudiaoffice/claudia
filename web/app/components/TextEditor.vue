@@ -5,18 +5,20 @@
 import { nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
 import { colorOf } from '~/lib/people'
 import type { Block, Pos } from '~/lib/blocks'
+import { paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
 
 const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null }>()
-const emit = defineEmits<{ suggestion: [id: string] }>()
+const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }] }>()
 
 const state = props.session.state
 const root = ref<HTMLElement | null>(null)
 const scroller = ref<HTMLElement | null>(null)
 const renderKey = ref(0)
 let composing = false
-const TAGS: Record<string, string> = { title: 'h1', 'heading-1': 'h2', 'heading-2': 'h3', quote: 'blockquote' }
-const tagOf = (style: string) => TAGS[style] ?? 'p'
+// A paragraph is drawn from the CSS of its style (D73); the element only says what it is (a heading, a quote).
+const tagOf = (style: string) => semanticTag(state.styles, style)
+const cssOf = (style: string) => paragraphCss(state.styles.find((s) => s.id === style)?.computed ?? {})
 
 // ------------------------------------------------------------------------------ what is drawn
 interface TextSeg {
@@ -330,12 +332,30 @@ function focus() {
   placeSelection()
 }
 
+/** The right button or the menu key: the style menu opens where the person pointed, or at the caret. */
+function onContextMenu(event: MouseEvent) {
+  event.preventDefault()
+  adoptSelection(true)
+  const keyboard = event.clientX === 0 && event.clientY === 0
+  const rect = keyboard ? document.getSelection()?.rangeCount ? document.getSelection()!.getRangeAt(0).getClientRects()[0] : undefined : undefined
+  emit('style-menu', rect ? { x: rect.left, y: rect.bottom + 6 } : { x: event.clientX, y: event.clientY })
+}
+
+/** Where the caret is on the window (to open the style menu from the keyboard or a menu). */
+function caretPoint(): { x: number; y: number } {
+  const range = document.getSelection()?.rangeCount ? document.getSelection()!.getRangeAt(0) : null
+  const rect = range?.getClientRects()[0] ?? range?.getBoundingClientRect()
+  const box = scroller.value?.getBoundingClientRect()
+  if (rect && (rect.width || rect.height || rect.top)) return { x: rect.left, y: rect.bottom + 6 }
+  return { x: (box?.left ?? 0) + 60, y: (box?.top ?? 0) + 60 }
+}
+
 function scrollToSuggestion(id: string) {
   const mark = root.value?.querySelector<HTMLElement>(`[data-sug="${CSS.escape(id)}"]`)
   mark?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
-defineExpose({ focus, scrollToSuggestion })
+defineExpose({ focus, scrollToSuggestion, caretPoint })
 </script>
 
 <template>
@@ -360,11 +380,12 @@ defineExpose({ focus, scrollToSuggestion })
         @cut="onCut"
         @copy="onCopy"
         @click="onClick"
+        @contextmenu="onContextMenu"
         @drop.prevent
         @dragstart.prevent
         @blur="session.flush()"
       >
-        <component :is="tagOf(block.style)" v-for="block in state.blocks" :key="`${block.id}:${tagOf(block.style)}`" class="para" :class="`st-${block.style}`" :data-block="block.id">
+        <component :is="tagOf(block.style)" v-for="block in state.blocks" :key="`${block.id}:${tagOf(block.style)}`" class="para" :class="`st-${block.style}`" :style="cssOf(block.style)" :data-block="block.id">
           <template v-for="seg in segmentsOf(block)" :key="seg.key">
             <span
               v-if="seg.kind === 'text'"
@@ -422,52 +443,6 @@ defineExpose({ focus, scrollToSuggestion })
 }
 .doc :deep(.para) {
   margin: 0 0 0.9em;
-}
-.doc :deep(.st-title) {
-  font: 500 2.5rem/1.15 var(--font-display);
-  letter-spacing: -0.01em;
-  margin-bottom: 0.5em;
-}
-.doc :deep(.st-heading-1) {
-  font: 500 1.6rem/1.25 var(--font-display);
-  margin: 1.6em 0 0.5em;
-}
-.doc :deep(.st-heading-2) {
-  font: 500 1.2rem/1.3 var(--font-display);
-  margin: 1.3em 0 0.4em;
-}
-.doc :deep(.st-quote) {
-  font: italic 400 1.15rem/1.7 var(--font-display);
-  padding: 0.1em 0 0.1em 1.1rem;
-  border-left: 3px solid var(--apricot);
-  color: rgb(31 26 51 / 82%);
-}
-.doc :deep(.st-remark) {
-  position: relative;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  padding: 0.55rem 0.9rem;
-  border-left: 3px solid var(--rose);
-  background: color-mix(in srgb, var(--rose) 7%, transparent);
-  border-radius: 0 6px 6px 0;
-  color: rgb(31 26 51 / 78%);
-}
-.doc :deep(.st-remark)::before {
-  content: 'Remark';
-  display: block;
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--app-dark);
-  user-select: none;
-  pointer-events: none;
-}
-.doc :deep(.st-definition) {
-  padding: 0.5rem 0.9rem;
-  border-left: 3px solid var(--iris);
-  background: color-mix(in srgb, var(--mist) 55%, transparent);
-  border-radius: 0 6px 6px 0;
 }
 
 /* who wrote what */

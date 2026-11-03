@@ -44,10 +44,8 @@ class FakeLink implements LinkLike {
   }
 }
 
-const STYLES = [
-  { id: 'body', name: 'Body text', purpose: 'running text', next: 'body' },
-  { id: 'title', name: 'Title', purpose: 'names the document', next: 'body' },
-]
+const view = (id: string, name: string, css: Record<string, string>, based_on: string | null = null, to_name = false) => ({ id, name, purpose: '', based_on, css, computed: css, to_name })
+const STYLES = [view('body', 'Body text', { 'font-size': '11pt', color: '#1F1A33' }), view('title', 'Title', { 'font-size': '26pt' }, 'body')]
 
 /** A server that holds one paragraph and answers `replace_text` the way the real one does: events first, then the answer. */
 function server(link: FakeLink, text = 'hello world') {
@@ -64,6 +62,10 @@ function server(link: FakeLink, text = 'hello world') {
     unlock: () => ({}),
     undo: () => ({ applied: true }),
     set_style: () => ({ revision: 'main:9' }),
+    change_style: () => ({ revision: 'main:9' }),
+    deviate_style: () => ({ style: 'body-changed', name: 'Body text (changed)', revision: 'main:9' }),
+    rename_style: () => ({ revision: 'main:9' }),
+    check_css: (p: any) => ({ css: {}, text: p.text, problems: [] }),
     accept_suggestion: () => ({ revision: 'main:9' }),
     reject_suggestion: () => ({ revision: 'main:9' }),
     replace_text: (p: any) => {
@@ -359,5 +361,75 @@ describe('typing faster than the network', () => {
     await vi.advanceTimersByTimeAsync(3000)
     await session.flush()
     expect(link.sent('replace_text').map((p) => p.text)).toEqual(['one ', 'two', '\n', 'three'])
+  })
+})
+
+
+describe('styles', () => {
+  it('keeps the styles as the server sends them, and takes the whole book from a styles event', async () => {
+    const { link, session } = await opened()
+    expect(session.styleView('title')?.based_on).toBe('body')
+    link.push('styles', { type: 'styles', styles: [...STYLES, view('note', 'Note', { color: 'red' }, 'body')] })
+    expect(session.state.styles.map((s) => s.id)).toEqual(['body', 'title', 'note'])
+  })
+
+  it('counts how many paragraphs use each style', async () => {
+    const { session } = await opened()
+    session.state.blocks.push({ id: 'b2', style: 'title', text: 'x', runs: [[1, 'ann', null]] })
+    expect(session.uses()).toEqual({ body: 1, title: 1 })
+  })
+
+  it('changing a style sends the properties to set and to remove, after what was typed', async () => {
+    const { link, session } = await opened('')
+    session.type('hi')
+    await session.changeStyle('body', { set: { color: 'red' }, unset: ['font-size'] })
+    expect(link.calls.map((c) => c.method).filter((m) => m === 'replace_text' || m === 'change_style')).toEqual(['replace_text', 'change_style'])
+    expect(link.sent('change_style')).toEqual([{ style: 'body', set: { color: 'red' }, unset: ['font-size'], base: 'main:2' }])
+  })
+
+  it('changing a style with the text of its CSS sends the text', async () => {
+    const { link, session } = await opened()
+    await session.changeStyle('body', { text: 'color: red;' })
+    expect(link.sent('change_style')).toEqual([{ style: 'body', text: 'color: red;', base: 'main:2' }])
+  })
+
+  it('deviating asks once per style among the selected paragraphs, and puts the caret in the new style by the event', async () => {
+    const { link, session } = await opened()
+    session.state.blocks.push({ id: 'b2', style: 'title', text: 'x', runs: [[1, 'ann', null]] }, { id: 'b3', style: 'body', text: 'y', runs: [[1, 'ann', null]] })
+    session.setSelection(at(0, 'b1'), at(1, 'b3'))
+    await session.deviateStyle({ set: { 'font-weight': 'bold' } })
+    expect(link.sent('deviate_style')).toEqual([
+      { parent: 'body', blocks: ['b1', 'b3'], set: { 'font-weight': 'bold' }, base: 'main:2' },
+      { parent: 'title', blocks: ['b2'], set: { 'font-weight': 'bold' }, base: 'main:2' },
+    ])
+  })
+
+  it('renaming a style asks the server', async () => {
+    const { link, session } = await opened()
+    expect(await session.renameStyle('body-changed', 'Accent')).toBe(true)
+    expect(link.sent('rename_style')).toEqual([{ style: 'body-changed', name: 'Accent', base: 'main:2' }])
+  })
+
+  it('checking CSS is a read that does not wait for the queue', async () => {
+    const { link, session } = await opened()
+    link.handlers.check_css = () => ({ css: { color: 'red' }, text: 'color: red;', problems: [] })
+    expect(await session.checkCss('color: red')).toEqual({ css: { color: 'red' }, text: 'color: red;', problems: [] })
+    expect(link.sent('check_css')).toEqual([{ text: 'color: red' }])
+  })
+
+  it('a refused change tells the person why and answers false', async () => {
+    const { link, session } = await opened()
+    link.handlers.change_style = () => {
+      throw new ProtocolError('command_error', 'color: “nope” is not a colour')
+    }
+    expect(await session.changeStyle('body', { set: { color: 'nope' } })).toBe(false)
+    expect(session.state.notice?.text).toContain('not a colour')
+  })
+
+  it('does nothing in a document one can only look at', async () => {
+    const { link, session } = await opened()
+    session.state.me.role = 'viewer'
+    expect(await session.changeStyle('body', { set: { color: 'red' } })).toBe(false)
+    expect(link.sent('change_style')).toEqual([])
   })
 })

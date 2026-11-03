@@ -33,7 +33,21 @@ documents). The text view lives in `TextWorkspace.vue` and `TextEditor.vue`; its
 the paragraphs, the events that change them, where a caret or zone goes when somebody else writes).
 
 * **Paragraphs with named styles** (Body text, Title, Heading 1/2, Quote, Remark, Definition). You mark text by what
-  it is for (D62); Enter after a heading starts body text. No bold/italic yet.
+  it is for (D62); Enter after a heading starts body text. Every style is CSS held in the document (D73): all are
+  based on Body text, so changing Body text changes them all, except where they set the property themselves. The page
+  draws a paragraph from its computed CSS (`lib/style-css.ts`); the element only says what it is (heading, quote).
+* **The style menu** (right-click, Shift+F10, or Format ▸ Look of this style…). *Paragraph style* lists the styles
+  (you mark text by what it is for); *Look* shows the style's look as **Controls** (font, size, bold, italic,
+  underline, strike-through, alignment, text and background colour) or as its **CSS**, one switch, remembered. The CSS
+  view is the style's own declarations, checked by the server as you type (`check_css`, errors with their line) and
+  applied with Ctrl+Enter. A change goes to *This paragraph only* (the default: it makes a new style that is named
+  later, `Body text (changed)`, flagged *to name*) or to *Every use of “X”* (changes the style). A style still
+  waiting for its name is yours, so the next change goes into it, and the menu invites a name once. *All styles…*
+  lists styles with their use counts and renames them. Nothing outside the CSS allow-list of `claudia-core` can be
+  written (no `url()`, `var()`, `calc()`); see `CSS_VERSION`.
+* The menu is app-agnostic: `StyleMenu.vue`, `StyleSpec.vue`, `Popover.vue` and the pickers talk to a `StyleHost`
+  (`lib/style-host.ts`; `lib/text-style-host.ts` is the text's) and `StyleEditor` holds the rules (where a change goes,
+  the controls' edits). Cells and shapes bring a host of their own; the menu does not change.
 * **Typing** is shown at once and sent when the word ends (a pause or any other action sends it too), so a word is a
   step in the history. Text appears in the document only when the server's events say so; the browser never edits the
   page itself. Everything goes through `replace_text` (a range, which may span paragraphs, replaced by text).

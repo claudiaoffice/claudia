@@ -75,6 +75,7 @@ def test_kernel_has_no_third_party_imports():
         "re",
         "time",
         "typing",
+        "unicodedata",  # pure tables, used to turn a style name into an id
     }
     for path, tree in modules().items():
         for node in ast.walk(tree):

@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { countWords } from '~/lib/blocks'
 import { toMarkdown } from '~/lib/markdown'
 import { SAMPLE_TEXT } from '~/lib/sample'
+import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
 import type { Menu } from './MenuBar.vue'
 
@@ -12,10 +13,12 @@ const emit = defineEmits<{ leave: [] }>()
 const session = props.session
 const state = session.state
 
-const dialog = ref<null | 'checkpoint' | 'share' | 'help'>(null)
+const dialog = ref<null | 'checkpoint' | 'share' | 'help' | 'styles'>(null)
+const styleMenu = ref<{ x: number; y: number } | null>(null)
+const styleHost = textStyleHost(session)
 const panelOpen = ref(true)
 const active = ref<string | null>(null)
-const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void } | null>(null)
+const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
 const panel = ref<{ ask: (text?: string) => void } | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
@@ -70,6 +73,15 @@ async function download() {
   setTimeout(() => URL.revokeObjectURL(link.href), 1000)
 }
 
+function openStyleMenu(at = editor.value?.caretPoint() ?? { x: 80, y: 120 }) {
+  styleMenu.value = at
+}
+
+function closeStyleMenu() {
+  styleMenu.value = null
+  editor.value?.focus()
+}
+
 function insertSample() {
   session.paste(SAMPLE_TEXT)
   editor.value?.focus()
@@ -98,15 +110,20 @@ const menus = computed<Menu[]>(() => [
   },
   {
     label: 'Format',
-    items: state.styles.map((s) => ({
-      label: s.name,
-      checked: session.currentStyle() === s.id,
-      action: () => {
-        void session.setStyle(s.id)
-        editor.value?.focus()
-      },
-      disabled: readonly.value,
-    })),
+    items: [
+      ...state.styles.map((s) => ({
+        label: s.name,
+        checked: session.currentStyle() === s.id,
+        action: () => {
+          void session.setStyle(s.id)
+          editor.value?.focus()
+        },
+        disabled: readonly.value,
+      })),
+      { label: '', separator: true },
+      { label: 'Look of this style…', hint: 'Shift+F10', action: () => openStyleMenu() },
+      { label: 'All styles…', action: () => (dialog.value = 'styles') },
+    ],
   },
   {
     label: 'View',
@@ -134,6 +151,11 @@ const menus = computed<Menu[]>(() => [
 function onWindowKey(event: KeyboardEvent) {
   const target = event.target as HTMLElement
   if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+  if (event.key === 'F10' && event.shiftKey) {
+    event.preventDefault()
+    openStyleMenu()
+    return
+  }
   if (!(event.ctrlKey || event.metaKey)) return
   const key = event.key.toLowerCase()
   if (key === 'z' && !event.shiftKey) {
@@ -169,7 +191,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <MenuBar :menus="menus" />
     <StyleBar :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" />
     <div class="main" :class="{ wide: !panelOpen }">
-      <TextEditor ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" />
+      <TextEditor ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
       <SidePanel v-show="panelOpen" ref="panel" :session="session">
         <template #top><SuggestionList :session="session" :active="active" @pick="pick" /></template>
       </SidePanel>
@@ -192,6 +214,8 @@ onBeforeUnmount(() => clearTimeout(timer))
       @ok="checkpoint"
       @close="dialog = null"
     />
+    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
+    <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
     <HelpDialog v-if="dialog === 'help'" app="composes" @close="dialog = null" />
 

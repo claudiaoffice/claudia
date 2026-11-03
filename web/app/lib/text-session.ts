@@ -23,13 +23,8 @@ import {
   type TextEvent,
 } from './blocks'
 import { type LinkLike, type Region } from './protocol'
+import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
-export interface StyleInfo {
-  id: string
-  name: string
-  purpose: string
-  next: string
-}
 export interface SuggestionInfo {
   id: string
   author: string | null
@@ -53,7 +48,7 @@ export interface Unwritten {
   text: string
 }
 export interface TextState extends BaseState {
-  styles: StyleInfo[]
+  styles: StyleView[]
   blocks: Block[]
   suggestions: SuggestionInfo[]
   selection: Selection | null
@@ -93,7 +88,7 @@ export class TextSession extends BaseSession<TextState> {
   protected async loadApp() {
     const link = this.need()
     const [answer, suggestions] = await Promise.all([
-      link.request<{ styles: StyleInfo[]; blocks: Block[] }>('blocks'),
+      link.request<{ styles: StyleView[]; blocks: Block[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
     ])
     const s = this.state
@@ -156,6 +151,9 @@ export class TextSession extends BaseSession<TextState> {
         else this.follow(event)
         return true
       }
+      case 'styles':
+        s.styles = data.styles as StyleView[]
+        return true
       case 'suggestions': {
         for (const item of data.items as SuggestionInfo[]) {
           const known = s.suggestions.findIndex((x) => x.id === item.id)
@@ -454,6 +452,57 @@ export class TextSession extends BaseSession<TextState> {
   currentStyle(): string {
     const focus = this.state.selection?.focus
     return this.state.blocks.find((b) => b.id === focus?.block)?.style ?? 'body'
+  }
+
+  // -- styles (CSS, E9.7)
+  styleView(id: string): StyleView | undefined {
+    return this.state.styles.find((s) => s.id === id)
+  }
+
+  /** How many paragraphs have each style. */
+  uses(): Record<string, number> {
+    return styleUses(this.state.blocks)
+  }
+
+  /** Change a style for everything that has it: properties to set and remove, or the complete text of its CSS. */
+  changeStyle(style: string, edit: CssEdit): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false)
+  }
+
+  /**
+   * Change only the selected paragraphs: each style among them is deviated from, which makes a new style that is named
+   * later (D75). Paragraphs that had the same style get the same new style.
+   */
+  deviateStyle(edit: CssEdit): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => {
+      const r = this.range()
+      if (!r) return false
+      const { blocks } = this.state
+      const [i, j] = [indexOf(blocks, r[0].block), indexOf(blocks, r[1].block)]
+      const parents = new Map<string, string[]>()
+      for (const block of blocks.slice(i, j + 1)) parents.set(block.style, [...(parents.get(block.style) ?? []), block.id])
+      for (const [parent, ids] of parents) {
+        const params = { parent, blocks: ids, ...edit, base: this.state.revision }
+        if ((await this.attempt('deviate_style', params)) === false) return false
+      }
+      return true
+    })
+  }
+
+  renameStyle(style: string, name: string): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false)
+  }
+
+  /** What the server makes of this CSS text, line by line. A read: it does not wait for typing or other changes. */
+  async checkCss(text: string): Promise<CssCheck | null> {
+    try {
+      return await this.need().request<CssCheck>('check_css', { text })
+    } catch {
+      return null
+    }
   }
 
   // -- suggestions

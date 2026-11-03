@@ -3,6 +3,23 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.7.0] - 2026-11-03
+
+### Added
+- Styles in texts (E9.7, E1.10): `composes_methods` offers `styles`, `change_style`, `deviate_style`, `rename_style` and
+  `check_css`. A style is CSS (the allow-list of `claudia-core`, `CSS_VERSION` 1). `change_style` changes a style for
+  every paragraph that has it, by properties (`set`, `unset`) or by the complete CSS `text`; `deviate_style` makes a new
+  style from a parent for given paragraphs in one history step, with a provisional name (`Heading 1 (changed)`) and
+  `to_name` set until `rename_style` names it; `check_css` reads CSS text and reports every problem with its line,
+  without changing anything.
+- The `styles` event (the whole style book, with each style's `computed` CSS) comes just before the command event of a
+  change of a style.
+
+### Changed
+- **Breaking:** `blocks` answers `styles` as `{id, name, purpose, based_on, css, computed, to_name}`; the `next` field
+  is gone (what follows a style is decided by the server from the style a deviation is based on).
+- A text document's state has `state_schema` 3 (it holds its styles); older states get the built-in styles.
+
 ## [0.6.0] - 2026-11-03
 
 Security release: three findings of the first QA review (SEC-01, SEC-02, SEC-07).

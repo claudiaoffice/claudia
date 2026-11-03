@@ -14,8 +14,10 @@
     store        what the kernel needs from storage (implemented by E2)
     document     Document: ties it all together
     events       what a Document tells its subscribers
+    css          the CSS a style may hold: a versioned allow-list, a validator, the text form of a style
+    styles       StyleBook and the commands that change it (E1.10)
 
-The kernel contains no spreadsheet, text or slide code and does no I/O.
+The kernel contains no spreadbook, text or slide code and does no I/O.
 """
 
 from ._version import __version__
@@ -32,6 +34,7 @@ from .commands import (
     new_registry,
 )
 from .context import Context
+from .css import ALLOWED_CSS, CSS_VERSION, CssError, CssProblem, format_css, parse_css, validate_css
 from .document import Applied, CheckpointInfo, Document, Line, environment_of
 from .errors import (
     KernelError,
@@ -77,14 +80,18 @@ from .region import Region, transform
 from .replay import replay
 from .revision import MAIN, Branch, Revision
 from .store import DocumentStore, MemoryStore
+from .styles import ChangeStyle, CreateStyle, RemoveStyle, RenameStyle, StyleBook, StyleDef, StylesChanged
 
 __all__ = [
     "__version__",
+    "ALLOWED_CSS",
+    "CSS_VERSION",
     "Applied",
     "Batch",
     "Branch",
     "BranchSwitched",
     "ChatPosted",
+    "ChangeStyle",
     "ChatRecord",
     "Checkpoint",
     "CheckpointInfo",
@@ -94,6 +101,9 @@ __all__ = [
     "CommandLog",
     "CommandRegistry",
     "Context",
+    "CreateStyle",
+    "CssError",
+    "CssProblem",
     "Document",
     "DocumentModel",
     "DocumentStore",
@@ -122,6 +132,8 @@ __all__ = [
     "RedactionError",
     "Region",
     "RegionHeld",
+    "RemoveStyle",
+    "RenameStyle",
     "ReplayError",
     "RequirementReport",
     "Requirements",
@@ -133,6 +145,9 @@ __all__ = [
     "Snapshot",
     "StaleEdit",
     "Step",
+    "StyleDef",
+    "StyleBook",
+    "StylesChanged",
     "Switch",
     "UndoConflict",
     "UndoRefused",
@@ -140,8 +155,11 @@ __all__ = [
     "check",
     "encode",
     "environment_of",
+    "format_css",
     "new_registry",
     "parse_chat",
+    "parse_css",
     "replay",
     "transform",
+    "validate_css",
 ]

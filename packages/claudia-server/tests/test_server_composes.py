@@ -49,7 +49,7 @@ def test_a_new_document_has_one_empty_body_paragraph_and_the_styles(paper):
     answer = call(paper, "blocks")
     assert [(b["id"], b["style"], b["text"]) for b in answer["blocks"]] == [("b1", "body", "")]
     assert [s["id"] for s in answer["styles"]][:3] == ["body", "title", "heading-1"]
-    assert all({"name", "purpose", "next"} <= set(s) for s in answer["styles"])
+    assert all({"name", "purpose", "css", "computed", "based_on", "to_name"} <= set(s) for s in answer["styles"])
     assert answer["revision"] is None
 
 
@@ -275,3 +275,132 @@ def test_unknown_suggestions_and_ranges_are_refused(paper):
         with pytest.raises(RequestError) as caught:
             call(paper, name, params, account)
         assert caught.value.code == "command_error"
+
+
+# ----------------------------------------------------------------------------- styles (E9.7, E9.8)
+def style(doc, style_id):
+    return next(s for s in call(doc, "styles") if s["id"] == style_id)
+
+
+def test_the_styles_come_with_their_css_and_the_blocks_answer_lists_the_same(paper):
+    listed = call(paper, "styles")
+    assert [s["id"] for s in listed][:3] == ["body", "title", "heading-1"]
+    heading = style(paper, "heading-1")
+    assert heading["based_on"] == "body" and heading["css"]["font-size"] == "19pt"
+    assert heading["computed"]["color"] == style(paper, "body")["css"]["color"]  # inherited from Body text
+    assert heading["to_name"] is False and heading["purpose"]
+    assert call(paper, "blocks")["styles"] == listed
+
+
+def test_changing_a_style_by_properties(paper):
+    answer = call(paper, "change_style", {"style": "heading-1", "set": {"color": "#5B4BC4"}, "unset": ["font-weight"]})
+    assert answer["revision"] == "main:1"
+    heading = style(paper, "heading-1")
+    assert heading["css"]["color"] == "#5B4BC4" and "font-weight" not in heading["css"]
+    assert style(paper, "heading-2")["computed"]["color"] == style(paper, "body")["computed"]["color"]
+
+
+def test_changing_a_style_by_its_css_text_replaces_its_own_declarations(paper):
+    call(paper, "change_style", {"style": "quote", "text": "font-size: 15pt;\ncolor: #333333;"})
+    assert style(paper, "quote")["css"] == {"font-size": "15pt", "color": "#333333"}
+    log = [e["summary"] for e in call(paper, "log")]
+    assert log[-1].startswith("changed the style quote")
+
+
+def test_changing_a_style_to_what_it_is_already_is_not_an_edit(paper):
+    same = style(paper, "quote")["css"]
+    answer = call(paper, "change_style", {"style": "quote", "set": dict(list(same.items())[:2])})
+    assert answer["revision"] is None and paper.revision is None
+
+
+def test_bad_css_is_refused_and_changes_nothing(paper):
+    for params in (
+        {"style": "quote", "set": {"color": "url(http://example.com/x)"}},
+        {"style": "quote", "set": {"position": "absolute"}},
+        {"style": "quote", "text": "color: red;\nfont-size: huge"},
+        {"style": "quote", "set": {"color": "red"}, "text": "color: blue"},  # one way or the other, not both
+        {"style": "nope", "set": {"color": "red"}},
+    ):
+        with pytest.raises(RequestError) as caught:
+            call(paper, "change_style", params)
+        assert caught.value.code in {"command_error", "bad_request"}
+    assert paper.revision is None
+
+
+def test_checking_css_names_the_lines_and_changes_nothing_so_viewers_may_do_it(paper):
+    answer = call(paper, "check_css", {"text": "color: red;\nfont-size: huge;\nposition: absolute"}, VERA)
+    assert answer["css"] == {"color": "red"}
+    assert [(p["line"], p["property"]) for p in answer["problems"]] == [(2, "font-size"), (3, "position")]
+    good = call(paper, "check_css", {"text": "FONT-WEIGHT: BOLD;color:#fff"})
+    assert good["problems"] == [] and good["text"] == "font-weight: bold;\ncolor: #fff;"
+    assert paper.revision is None
+
+
+def test_deviating_makes_a_style_with_a_provisional_name_and_applies_it_in_one_step(paper):
+    type_(paper, "Intro")
+    answer = call(paper, "deviate_style", {"parent": "heading-1", "blocks": ["b1"], "set": {"color": "#D6477A"}})
+    assert answer["style"] == "heading-1-changed" and answer["name"] == "Heading 1 (changed)"
+    made = style(paper, answer["style"])
+    assert (made["based_on"], made["to_name"], made["css"]) == ("heading-1", True, {"color": "#D6477A"})
+    assert call(paper, "blocks")["blocks"][0]["style"] == answer["style"]
+    call(paper, "undo")
+    assert call(paper, "blocks")["blocks"][0]["style"] == "body"
+    assert all(s["id"] != answer["style"] for s in call(paper, "styles"))
+
+
+def test_a_second_deviation_from_the_same_style_gets_the_next_free_name(paper):
+    first = call(paper, "deviate_style", {"parent": "quote", "blocks": [], "set": {"font-size": "16pt"}})
+    second = call(paper, "deviate_style", {"parent": "quote", "blocks": [], "set": {"font-size": "17pt"}})
+    third = call(paper, "deviate_style", {"parent": first["style"], "blocks": [], "text": "color: red"})
+    assert [first["name"], second["name"], third["name"]] == [
+        "Quote (changed)",
+        "Quote (changed 2)",
+        "Quote (changed 3)",
+    ]
+    assert first["style"] != second["style"] != third["style"]
+
+
+def test_a_deviation_must_differ_from_its_parent(paper):
+    parent = style(paper, "quote")["computed"]
+    for params in (
+        {"parent": "quote", "blocks": [], "set": {}},
+        {"parent": "quote", "blocks": [], "set": {"font-size": parent["font-size"]}},
+        {"parent": "nope", "blocks": [], "set": {"color": "red"}},
+        {"parent": "quote", "blocks": ["b9"], "set": {"color": "red"}},
+    ):
+        with pytest.raises(RequestError) as caught:
+            call(paper, "deviate_style", params)
+        assert caught.value.code == "command_error"
+    assert paper.revision is None
+
+
+def test_naming_a_style_ends_the_invitation(paper):
+    made = call(paper, "deviate_style", {"parent": "quote", "blocks": [], "set": {"font-size": "16pt"}})
+    call(paper, "rename_style", {"style": made["style"], "name": "Epigraph"})
+    assert (style(paper, made["style"])["name"], style(paper, made["style"])["to_name"]) == ("Epigraph", False)
+    with pytest.raises(RequestError) as caught:
+        call(paper, "rename_style", {"style": "quote", "name": "epigraph"})
+    assert caught.value.code == "command_error" and "already a style named" in caught.value.message
+
+
+def test_viewers_and_the_assistant_do_not_change_styles(paper):
+    calls = (
+        ("change_style", {"style": "quote", "set": {"color": "red"}}),
+        ("deviate_style", {"parent": "quote", "blocks": [], "set": {"color": "red"}}),
+        ("rename_style", {"style": "quote", "name": "Cite"}),
+    )
+    for name, params in calls:
+        with pytest.raises(RequestError) as caught:
+            call(paper, name, params, VERA)
+        assert caught.value.code == "forbidden"
+        with pytest.raises(RequestError) as caught:
+            call(paper, name, params, AI)
+        assert caught.value.code == "forbidden"
+    assert paper.revision is None
+
+
+def test_enter_at_the_end_of_a_deviated_heading_starts_body_text(paper):
+    type_(paper, "Intro")
+    made = call(paper, "deviate_style", {"parent": "heading-1", "blocks": ["b1"], "set": {"color": "#D6477A"}})
+    type_(paper, "\n", at=5)
+    assert [b["style"] for b in call(paper, "blocks")["blocks"]] == [made["style"], "body"]

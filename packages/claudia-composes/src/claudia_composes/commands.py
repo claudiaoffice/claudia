@@ -293,8 +293,7 @@ class SetStyle(TextCommand):
 
     @property
     def summary(self) -> str:
-        known = TextModel.styles.get(self.style)
-        return f"style {known.name if known else self.style}"
+        return f"style {self.style}"
 
     def apply(self, ctx: Context[TextModel]) -> Command:
         model = ctx.model
