@@ -50,7 +50,13 @@ export interface TextRegion {
   start: number
   end: number
 }
-export type Region = CellsRegion | TextRegion
+/** The objects of a slide that somebody has selected (and so holds). */
+export interface ObjectsRegion {
+  kind: 'objects'
+  slide: string
+  ids: string[]
+}
+export type Region = CellsRegion | TextRegion | ObjectsRegion
 
 export type EventHandler = (name: string, data: any) => void
 export type CloseHandler = (code: number, requested: boolean) => void

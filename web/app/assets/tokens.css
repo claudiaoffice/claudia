@@ -34,3 +34,8 @@
   --app-dark: #b8386a;
   --app-soft: color-mix(in srgb, var(--rose) 12%, white);
 }
+:root[data-app='creates'] {
+  --app: var(--apricot);
+  --app-dark: #b9651c;
+  --app-soft: color-mix(in srgb, var(--apricot) 18%, white);
+}

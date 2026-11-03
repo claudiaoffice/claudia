@@ -77,6 +77,10 @@ class DocumentProvider(Protocol):
     """Where documents come from and go to. E2 implements it with the container file; ``MemoryProvider`` is the
     stand-in."""
 
+    @property
+    def app(self) -> str:
+        """The kind of documents this provider holds (``DocumentModel.app``): a server hosts one kind."""
+
     def exists(self, doc_id: str) -> bool:
         """Is there a document with this id?"""
 
@@ -104,6 +108,11 @@ class MemoryProvider:
         self._options = options  # clock, lock_clock
         self._stored: dict[str, tuple[CommandLog, MemoryStore]] = {}
         self._created: dict[str, str] = {}
+
+    @property
+    def app(self) -> str:
+        """The kind of documents kept here."""
+        return self._model_cls.app
 
     def exists(self, doc_id: str) -> bool:
         """Is there a document with this id?"""
@@ -370,6 +379,11 @@ class Hub:
     def exists(self, doc_id: str) -> bool:
         """Is there a document with this id (open or in storage)?"""
         return doc_id in self._documents or self.provider.exists(doc_id)
+
+    @property
+    def app(self) -> str:
+        """The kind of documents this server hosts (``"computes"``, ``"creates"``, ...)."""
+        return self.provider.app
 
     def listing(self) -> list[dict]:
         """The documents on this server: ``{id, app, modified, online}``, most recently changed first.

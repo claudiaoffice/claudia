@@ -356,7 +356,6 @@ source = { editable = "packages/claudia-core" }
 
 [[package]]
 name = "claudia-creates"
-version = "0.0.1"
 source = { editable = "packages/claudia-creates" }
 dependencies = [
     { name = "claudia-core" },
@@ -418,11 +417,12 @@ dev = [
 name = "claudia-server"
 source = { editable = "packages/claudia-server" }
 dependencies = [
-    { name = "claudia-composes" },
     { name = "claudia-ai" },
+    { name = "claudia-composes" },
     { name = "claudia-computes" },
     { name = "claudia-container" },
     { name = "claudia-core" },
+    { name = "claudia-creates" },
     { name = "cryptography" },
     { name = "fastapi" },
     { name = "uvicorn" },
@@ -436,12 +436,14 @@ openvino = [
 
 [package.metadata]
 requires-dist = [
-    { name = "claudia-composes", editable = "packages/claudia-composes" },
+    { name = "claudia-ai", editable = "packages/claudia-ai" },
     { name = "claudia-ai", extras = ["openvino"], marker = "extra == 'openvino'", editable = "packages/claudia-ai" },
+    { name = "claudia-composes", editable = "packages/claudia-composes" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
     { name = "claudia-container", editable = "packages/claudia-container" },
     { name = "claudia-core", editable = "packages/claudia-core" },
-    { name = "cryptography", specifier = ">=44" },
+    { name = "claudia-creates", editable = "packages/claudia-creates" },
+    { name = "cryptography", specifier = ">=43" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "uvicorn", specifier = ">=0.30" },
     { name = "websockets", specifier = ">=13" },

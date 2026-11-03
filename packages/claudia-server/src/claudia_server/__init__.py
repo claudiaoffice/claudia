@@ -13,6 +13,7 @@ from .auth import AI_USER, Account, AuthRefused, Credentials, ScryptDirectory, U
 from .certs import Certificate, CertificateError, ensure_certificate
 from .composes import composes_methods
 from .computes import computes_methods
+from .creates import creates_methods, creates_methods_with
 from .filestore import FileDirectory, FileProvider
 from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, StoredInfo
 from .model_engine import ModelEngine
@@ -73,6 +74,8 @@ __all__ = [
     "computes_methods",
     "core_methods",
     "create_app",
+    "creates_methods",
+    "creates_methods_with",
     "ensure_certificate",
     "methods_for",
     "model_assistant_for",

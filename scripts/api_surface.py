@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # the packages whose API is a promise
-PACKAGES = ("claudia_core", "claudia_server", "claudia_client", "claudia_container")
+PACKAGES = ("claudia_core", "claudia_server", "claudia_client", "claudia_container", "claudia_creates")
 
 
 def signature(obj) -> str:

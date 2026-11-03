@@ -1,0 +1,7 @@
+{
+  "format": 1,
+  "id": "triangle",
+  "name": "Triangle",
+  "path": "M50 0 L100 100 L0 100 Z",
+  "text_area": {"x": 25, "y": 50, "w": 50, "h": 50}
+}

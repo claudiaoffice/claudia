@@ -5,6 +5,7 @@ import asyncio
 from starlette.testclient import TestClient
 
 from claudia_core.testing import Insert, ListModel
+from claudia_creates import SlideModel
 from claudia_server import Hub, MemoryProvider, ScryptDirectory, create_app
 from claudia_server.filestore import FileProvider
 
@@ -18,7 +19,7 @@ def serve(provider, **options):
 def test_an_empty_server_lists_nothing():
     with serve(MemoryProvider(ListModel)) as client:
         reply = client.get("/api/docs")
-        assert reply.status_code == 200 and reply.json() == {"documents": []}
+        assert reply.status_code == 200 and reply.json() == {"app": "test-list", "documents": []}
 
 
 def test_documents_are_listed_with_app_time_and_people_online():
@@ -61,6 +62,13 @@ def test_the_list_shows_no_names_and_no_content():
 def test_listing_can_be_switched_off():
     with serve(MemoryProvider(ListModel), list_documents=False) as client:
         assert client.get("/api/docs").status_code == 404
+
+
+def test_the_list_tells_which_app_the_server_hosts_so_that_a_new_document_can_be_the_right_kind(tmp_path):
+    with serve(MemoryProvider(SlideModel)) as client:
+        assert client.get("/api/docs").json()["app"] == "creates"
+    with serve(FileProvider(tmp_path, ListModel)) as client:
+        assert client.get("/api/docs").json()["app"] == "test-list"
 
 
 def test_the_list_reads_a_file_store(tmp_path):

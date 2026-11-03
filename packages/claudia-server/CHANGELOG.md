@@ -3,6 +3,24 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.5.0] - 2026-11-03
+
+### Added
+- Presentations (E10.1): `claudia_server.creates.creates_methods` offers `slides`, `slide`, `shapes`, `styles`,
+  `add_slide`, `add_object`, `move_object`, `resize_object`, `set_text` and `remove_object` besides the core methods.
+  `creates_methods_with(library)` makes the table for a server with more shapes than the built-in ones. A shape comes
+  from the library by its id and is copied into the document with the first object that uses it, in one history step.
+- `python3 -m claudia_server --shapes DIR` (repeatable) adds the shape files (JSON) in DIR to a presentation server; the
+  start-up report names the shapes and every file that was skipped, with the reason.
+- `GET /api/docs` also tells which `app` the server hosts, so that a client knows what kind of document to create.
+- `Hub.app`; `DocumentProvider.app` (a provider tells which kind of documents it holds; `MemoryProvider`, `FileProvider` and `SealedDocuments` do).
+- `scripts/start.py --app creates` starts the presentation server (documents in `demo-docs-creates`).
+
+### Changed
+- `methods_for(model_cls, *, shapes=None)` picks the presentation table for `creates` documents.
+- claudia-server now depends on claudia-creates.
+- **Breaking for custom providers:** a `DocumentProvider` must have an `app` property.
+
 ## [0.4.0] - 2026-11-02
 
 ### Added

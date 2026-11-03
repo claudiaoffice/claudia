@@ -17,10 +17,12 @@ api/claudia_server
 api/claudia_client
 api/claudia_ai
 api/claudia_container
+api/claudia_creates
 api/apps
 contributing
 changelog
 changelog-server
 changelog-client
 changelog-container
+changelog-creates
 ```

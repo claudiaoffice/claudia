@@ -1,13 +1,16 @@
 [project]
 name = "claudia-creates"
-version = "0.0.1"
-description = "claudia-creates"
+dynamic = ["version"]
+description = "claudia-creates: the presentation app (slides, text boxes and shapes)"
 requires-python = ">=3.14"
 dependencies = ["claudia-core"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_creates/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claudia_creates"]

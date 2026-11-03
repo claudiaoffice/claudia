@@ -35,6 +35,8 @@ from pathlib import Path
 from typing import Any
 
 from claudia_ai import DEFAULT_DEVICE, ModelError, ModelRunner, OpenVinoModel
+from claudia_core import DocumentModel
+from claudia_creates import ShapeLibrary
 
 from . import __version__, redirect
 from .app import create_app
@@ -88,6 +90,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="keep documents and users in DIR as plain files, NOT encrypted (the store of the early demos)",
     )
     parser.add_argument("--web", metavar="DIR", help="serve the built web app from DIR")
+    parser.add_argument(
+        "--shapes",
+        action="append",
+        default=[],
+        metavar="DIR",
+        help="presentations: offer the shapes (JSON files) in DIR besides the built-in ones; can be repeated",
+    )
     parser.add_argument("--no-list", action="store_true", help="do not serve the list of documents (/api/docs)")
     parser.add_argument(
         "--no-assistant", action="store_true", help="do not give workbooks the scripted stand-in for the AI"
@@ -120,7 +129,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def load_model(spec: str) -> type:
+def load_model(spec: str) -> type[DocumentModel]:
     """The document model class named ``module:Class``."""
     module_name, _, class_name = spec.partition(":")
     if not (module_name and class_name):
@@ -145,7 +154,32 @@ def _tls(args: argparse.Namespace) -> tuple[Certificate | None, dict[str, str]]:
     return certificate, {"ssl_certfile": str(certificate.cert_file), "ssl_keyfile": str(certificate.key_file)}
 
 
-def _assistant(args: argparse.Namespace, model: type) -> tuple[Callable[[], Assistant] | None, ModelRunner | None]:
+def _shapes(args: argparse.Namespace, model: type[DocumentModel]) -> ShapeLibrary | None:
+    """The shape library of a presentation server (``None`` for the other apps, which have no shapes)."""
+    if model.app != "creates":
+        if args.shapes:
+            raise UsageError("--shapes: only servers of presentations use shapes")
+        return None
+    for folder in args.shapes:
+        if not Path(folder).is_dir():
+            raise UsageError(f"--shapes: {folder} is not a folder")
+    return ShapeLibrary.load([Path(folder) for folder in args.shapes])
+
+
+def _what_is_loaded(library: ShapeLibrary | None, runner: ModelRunner | None) -> list[str]:
+    """The lines of the start-up report about the shapes (and the files skipped) and the AI model."""
+    lines: list[str] = []
+    if library is not None:
+        lines.append("shapes: " + ", ".join(shape.id for shape in library))
+        lines += [f"  not used, {name}: {message}" for name, message in library.problems]
+    if runner is not None:
+        lines.append(f'AI assistant: user "ai", model {runner.name}')
+    return lines
+
+
+def _assistant(
+    args: argparse.Namespace, model: type[DocumentModel]
+) -> tuple[Callable[[], Assistant] | None, ModelRunner | None]:
     """The assistant factory the options ask for, and the runner of the language model if there is one."""
     if not args.ai:
         return (None if args.no_assistant else stand_in_assistant_for(model)), None
@@ -189,9 +223,10 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     else:
         provider, directory = MemoryProvider(model), ScryptDirectory()
     assistant, runner = _assistant(args, model)
+    library = _shapes(args, model)
     hub = Hub(
         provider,
-        methods=methods_for(model),
+        methods=methods_for(model, shapes=library),
         assistant=assistant,
         limits=limits,
         allow_create=not args.no_create,
@@ -225,6 +260,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         )
     else:
         banner.append("documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)")
+    banner += _what_is_loaded(library, runner)
     options = {
         "host": args.host,
         "port": args.port,

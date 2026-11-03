@@ -182,6 +182,11 @@ class FileProvider:
         self._stores: dict[str, JournalStore] = {}
         private_dir(self.root / "docs")
 
+    @property
+    def app(self) -> str:
+        """The kind of documents kept in the folder."""
+        return self.model_cls.app
+
     def _journal(self, doc_id: str) -> Path:
         return self.root / "docs" / _check_id(doc_id) / JOURNAL
 

@@ -24,6 +24,7 @@ CHANGELOGS = {
     "claudia_server": ROOT / "packages" / "claudia-server" / "CHANGELOG.md",
     "claudia_client": ROOT / "packages" / "claudia-client" / "CHANGELOG.md",
     "claudia_container": ROOT / "packages" / "claudia-container" / "CHANGELOG.md",
+    "claudia_creates": ROOT / "packages" / "claudia-creates" / "CHANGELOG.md",
 }
 
 
