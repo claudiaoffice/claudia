@@ -1,7 +1,6 @@
 """The sealed store (E2.1 to E2.3, E2.7): documents and their people in the encrypted container, behind the server's two
 interfaces (``DocumentProvider`` and ``UserDirectory``)."""
 
-import statistics
 import sys
 import time
 
@@ -154,16 +153,15 @@ def test_a_missing_document_costs_as_much_time_as_a_wrong_password(tmp_path):
     store = SealedDocuments(tmp_path, ListModel, kdf=KdfParams(iterations=2, memory_kib=16384, lanes=1))
     start(store)
 
-    def timed(doc_id):
-        samples = []
-        for _ in range(7):
+    # The fastest of several tries, taken alternately, is the cost of the work itself; a busy machine only adds to the
+    # others (the median of a loaded run is what made this test flaky).
+    fastest = {"plan": float("inf"), "nothing-here": float("inf")}
+    for _ in range(9):
+        for doc_id, best in fastest.items():
             started = time.perf_counter()
             sign_in(store, "Annabelle", "wrong-Pass-1", doc_id=doc_id)
-            samples.append(time.perf_counter() - started)
-        return statistics.median(samples)
-
-    existing, missing = timed("plan"), timed("nothing-here")
-    assert 1 / 1.5 < existing / missing < 1.5, (existing, missing)
+            fastest[doc_id] = min(best, time.perf_counter() - started)
+    assert 1 / 1.5 < fastest["plan"] / fastest["nothing-here"] < 1.5, fastest
 
 
 # --- only somebody with all the keys can bring a document up ---------------------------------------------------------

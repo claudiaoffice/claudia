@@ -10,6 +10,14 @@ const password = ref('')
 const role = ref<'editor' | 'viewer'>('editor')
 const added = ref<string[]>([])
 const busy = ref(false)
+const newKey = ref<string | null>(null)
+const isOwner = props.session.state.me.role === 'owner'
+
+async function makeKey() {
+  busy.value = true
+  newKey.value = await props.session.newRecoveryKey()
+  busy.value = false
+}
 
 async function add() {
   busy.value = true
@@ -24,7 +32,8 @@ async function add() {
 </script>
 
 <template>
-  <Modal title="Share this document" @close="emit('close')">
+  <RecoveryKeyDialog v-if="newKey" :recovery-key="newKey" :doc="session.state.doc" replacing @done="newKey = null" />
+  <Modal v-else title="Share this document" @close="emit('close')">
     <p class="lead">
       Give a colleague a name and a password for <b>{{ session.state.doc }}</b>. They open the document with them, like you did. Tell them the
       password yourself: the server never shows it again.
@@ -43,6 +52,14 @@ async function add() {
     <ul v-if="added.length" class="added" aria-label="people added just now">
       <li v-for="a in added" :key="a">✓ {{ a }}</li>
     </ul>
+    <section v-if="isOwner" class="recovery">
+      <h3>Recovery key</h3>
+      <p class="lead">
+        If somebody forgets their password, the recovery key lets them choose a new one. Making a new key shows it to you once and
+        makes the old one stop working.
+      </p>
+      <div class="buttons"><button class="btn" type="button" :disabled="busy" @click="makeKey">Make a new recovery key</button></div>
+    </section>
   </Modal>
 </template>
 
@@ -58,6 +75,19 @@ async function add() {
 .buttons {
   display: flex;
   gap: 10px;
+}
+.recovery {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+h3 {
+  margin: 0;
+  font: 500 12px/1 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 .added {
   margin: 0;

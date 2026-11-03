@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watchEffect } from 'vue'
+import { computed, onMounted, ref, shallowRef, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
 import { openSession, type AnySession } from '~/lib/open'
 import { Session } from '~/lib/session'
@@ -22,6 +22,11 @@ const user = ref('')
 const password = ref('')
 const error = ref('')
 const busy = ref(false)
+/** The recovery key of a document that was just made, shown before the person goes in (the session waits here). */
+const fresh = shallowRef<{ session: AnySession; key: string } | null>(null)
+/** "I forgot my password": the form that comes in with the recovery key. */
+const recovering = ref(false)
+const recoveryKey = ref('')
 /** The server serves one app; the documents it lists say which (before that, claudia in general). */
 const app = computed(() => documents.value[0]?.app ?? 'claudia')
 const words = computed(
@@ -71,10 +76,35 @@ onMounted(async () => {
   }
 })
 
-async function go(create: boolean) {
+/** Show the session at last (a table starts with its first sheet). */
+async function enter(session: AnySession) {
+  if (session instanceof Session && session.state.sheets.length === 0 && session.state.me.role !== 'viewer') {
+    await session.addSheet('Sheet1')
+  }
+  remember('claudia.user', user.value.trim())
+  remember('claudia.doc', doc.value.trim())
+  emit('opened', session)
+}
+
+function proceed() {
+  const waiting = fresh.value
+  fresh.value = null
+  if (waiting) void enter(waiting.session)
+}
+
+/**
+ * Connect. `how` decides the first connection only (the one that finds out what the document is): it creates the
+ * document, or comes in with the recovery key and the new password. Every later connection (the session's own, and its
+ * reconnects) is an ordinary login with what the person typed, which by then is right.
+ */
+async function go(how: 'open' | 'create' | 'recover') {
   error.value = ''
-  if (!doc.value.trim() || !user.value.trim() || !password.value) {
-    error.value = 'Fill in the document, your name and your password.'
+  const missing = !doc.value.trim() || !user.value.trim() || !password.value || (how === 'recover' && !recoveryKey.value.trim())
+  if (missing) {
+    error.value =
+      how === 'recover'
+        ? 'Fill in the document, your name, the recovery key and a new password.'
+        : 'Fill in the document, your name and your password.'
     return
   }
   busy.value = true
@@ -84,7 +114,8 @@ async function go(create: boolean) {
       url: socketUrl(doc.value.trim(), { protocol: location.protocol, host: server }),
       user: user.value.trim(),
       password: password.value,
-      create: create && first,
+      create: how === 'create' && first,
+      recoveryKey: how === 'recover' && first ? recoveryKey.value.trim() : undefined,
     })
     first = false
     return link
@@ -92,18 +123,18 @@ async function go(create: boolean) {
   let session: AnySession | null = null
   try {
     session = await openSession(factory)
-    if (session instanceof Session && session.state.sheets.length === 0 && session.state.me.role !== 'viewer') {
-      await session.addSheet('Sheet1')
-    }
-    remember('claudia.user', user.value.trim())
-    remember('claudia.doc', doc.value.trim())
-    emit('opened', session)
+    recoveryKey.value = ''
+    const key = session.justCreated ? await session.newRecoveryKey({ quiet: true }) : null
+    if (key) fresh.value = { session, key }
+    else await enter(session)
   } catch (e: any) {
     error.value =
       e?.code === 'unauthorized'
-        ? create
+        ? how === 'create'
           ? 'That document exists already — or the name or password is not acceptable. Try Open.'
-          : 'The name or password is not right (or there is no such document).'
+          : how === 'recover'
+            ? 'That recovery key does not fit this document.'
+            : 'The name or password is not right (or there is no such document).'
         : (e?.message ?? 'Could not connect.')
     session?.close()
   } finally {
@@ -137,19 +168,39 @@ async function go(create: boolean) {
           </ul>
         </div>
 
-        <form @submit.prevent="go(false)">
+        <form @submit.prevent="go(recovering ? 'recover' : 'open')">
           <label class="field">Document<input v-model="doc" name="document" autocomplete="off" placeholder="budget-2027" /></label>
           <label class="field">Your name<input v-model="user" name="user" autocomplete="username" placeholder="ann" /></label>
-          <label class="field">Password<input v-model="password" name="password" type="password" autocomplete="current-password" /></label>
+          <label v-if="recovering" class="field">
+            Recovery key<input v-model="recoveryKey" name="recovery-key" autocomplete="off" spellcheck="false" placeholder="ABCD-EFGH-…" />
+          </label>
+          <label class="field">
+            {{ recovering ? 'New password' : 'Password' }}
+            <input v-model="password" name="password" type="password" :autocomplete="recovering ? 'new-password' : 'current-password'" />
+          </label>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
           <div class="buttons">
-            <button class="btn primary" type="submit" :disabled="busy">Open</button>
-            <button class="btn" type="button" :disabled="busy" @click="go(true)">Create document</button>
+            <template v-if="recovering">
+              <button class="btn primary" type="submit" :disabled="busy">Get back in</button>
+              <button class="btn" type="button" :disabled="busy" @click="recovering = false">Back</button>
+            </template>
+            <template v-else>
+              <button class="btn primary" type="submit" :disabled="busy">Open</button>
+              <button class="btn" type="button" :disabled="busy" @click="go('create')">Create document</button>
+            </template>
           </div>
-          <p class="hint">A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).</p>
+          <p v-if="recovering" class="hint">
+            The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new
+            password; you keep what you were allowed to do.
+          </p>
+          <template v-else>
+            <p class="hint">A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).</p>
+            <p class="hint"><button class="link" type="button" @click="recovering = true">I forgot my password</button></p>
+          </template>
         </form>
       </div>
     </section>
+    <RecoveryKeyDialog v-if="fresh" :recovery-key="fresh.key" :doc="doc.trim()" @done="proceed" />
   </main>
 </template>
 
@@ -255,6 +306,15 @@ form {
 .error {
   color: var(--rose);
   margin: 0;
+}
+.link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--app);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 @media (max-width: 736px) {
   .cols {

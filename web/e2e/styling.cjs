@@ -25,6 +25,9 @@ async function main() {
   await page.fill('input[name=user]', 'ann')
   await page.fill('input[name=password]', 'Ann has a password 1')
   await page.click('text=Create document')
+  await page.waitForSelector('[data-testid=recovery-key]')
+  await page.check('.modal input[type=checkbox]')
+  await page.click('.modal button:text-is("Continue")')
   await page.waitForSelector('[data-testid=text]')
   await page.waitForFunction(() => document.querySelector('.status.open'))
 

@@ -15,12 +15,18 @@ the URL, so they do not end up in logs):
 
     {"id": 1, "method": "hello", "params": {"user": "ann", "password": "...", "create": false}}
 
-The answer carries the welcome data (user, role, document, line, revision, people, limits). After that the connection
-speaks the protocol of ``protocol.py`` and receives events. With ``create: true`` for a document that does not exist,
-the document is made and the person becomes its owner. A wrong password, an unknown name and a document that does not
-exist are the same answer. Failures to get that far close the socket with a code: 4400 bad request, 4401 unauthorized,
-4404 no such document, 4408 no hello in time, 4403 foreign origin or host, 1013 too many connections, too many people
-waiting to be let in, a full server or a client that is too slow.
+The answer carries the welcome data (user, role, document, line, revision, people, limits) and ``created``: true if
+the document was made by this very ``hello``, so that the client can show the recovery key at once. After that the
+connection speaks the protocol of ``protocol.py`` and receives events. With ``create: true`` for a document that does
+not exist, the document is made and the person becomes its owner. A wrong password, an unknown name and a document
+that does not exist are the same answer. Failures to get that far close the socket with a code: 4400 bad request, 4401
+unauthorized, 4404 no such document, 4408 no hello in time, 4403 foreign origin or host, 4423 the document is sealed
+(nobody who holds all its keys has opened it since the server started: a viewer tries again later), 1013 too many
+connections, too many people waiting to be let in, a full server or a client that is too slow.
+
+A person who has lost their password sends ``"recovery_key": "<key>"`` with their ``user`` and a *new* ``password`` (and
+no ``create``): if the key is the document's, they get that password, keep their role (somebody new becomes an owner)
+and are in. A wrong key, a document that does not exist and a server without recovery keys all look alike.
 
 A server started with an access secret lets only those who know it make documents: they add ``"access": "<secret>"`` to
 ``hello`` (and send ``Authorization: Bearer <secret>`` to read the list of documents). Everybody else is answered as if
@@ -57,7 +63,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
-from .auth import Account, AuthRefused, Credentials, UserDirectory
+from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
 from .protocol import RequestError, parse_request
@@ -67,7 +73,7 @@ OUTGOING_QUEUE = 1000  # frames waiting for a slow client before it is dropped
 DEFAULT_MAX_WAITING = 256  # connections that have not been let in yet, all together ...
 DEFAULT_MAX_WAITING_PER_ADDRESS = 64  # ... and from one address (a whole school may sit behind one)
 MIN_ACCESS_SECRET = 16
-_CLOSE = {"not_found": 4404, "bad_request": 4400, "unavailable": 1013, "internal": 1011}
+_CLOSE = {"not_found": 4404, "bad_request": 4400, "unavailable": 1013, "internal": 1011, "sealed": 4423}
 
 
 class SinglePageApp(StaticFiles):
@@ -205,22 +211,28 @@ class Gateway:
         server makes documents and the person knows its access secret (``access``), if it has one.
 
         ``HubError('unavailable')`` if the server already holds as many documents as it may."""
+        return (await self._admit(doc_id, credentials, create, access))[0]
+
+    async def _admit(
+        self, doc_id: str, credentials: Credentials, create: bool, access: object
+    ) -> tuple[Account | None, bool]:
+        """As :meth:`admit`, and whether the document was just made."""
         hub, directory = self.hub, self.directory
         if hub.exists(doc_id):
-            return await self._verify(doc_id, credentials)
+            return await self._verify(doc_id, credentials), False
         if not (create and hub.allow_create and self.accepts_secret(access)):
             await self._verify(doc_id, credentials)  # the same work as for a document that exists (SEC-04) ...
-            return None  # ... and the same answer
+            return None, False  # ... and the same answer
         async with self._creating:
             if hub.exists(doc_id):  # somebody was faster
-                return await self._verify(doc_id, credentials)
+                return await self._verify(doc_id, credentials), False
             if not (isinstance(credentials.user, str) and isinstance(credentials.password, str)):
-                return None
+                return None, False
             await hub.ensure_room()  # before any hashing or disk: a refused document costs nothing
             if (
                 reserved := await self._verify(doc_id, credentials)
             ) is not None:  # (cannot happen; keeps verify's checks)
-                return reserved
+                return reserved, False
             async with self._hashing:
                 account = await asyncio.to_thread(
                     directory.add_user, doc_id, credentials.user, credentials.password, "owner"
@@ -230,7 +242,18 @@ class Gateway:
             except BaseException:
                 directory.remove_user(doc_id, credentials.user)
                 raise
-            return account
+            return account, True
+
+    async def _recover(self, doc_id: str, params: dict) -> Account | None:
+        """The account of a person who came in with a recovery key and chose a new password (they are logged in)."""
+        key, user, password = params.get("recovery_key"), params.get("user"), params.get("password")
+        if not (isinstance(key, str) and isinstance(user, str) and isinstance(password, str)):
+            raise HubError("bad_request", "a recovery key, a name and a new password are needed")
+        directory = self.directory
+        if not isinstance(directory, RecoverableDirectory):
+            raise HubError("unavailable", "this server does not keep recovery keys")
+        async with self._hashing:
+            return await asyncio.to_thread(directory.recover, doc_id, key, user, password)
 
     async def serve(self, websocket: WebSocket, doc_id: str) -> None:
         """One connection from the handshake to its end."""
@@ -248,8 +271,8 @@ class Gateway:
         finally:
             self._waiting.leave(address)
         if admitted is not None:
-            request_id, account, document = admitted
-            await _Live(websocket, document, account, request_id).run()
+            request_id, account, document, created = admitted
+            await _Live(websocket, document, account, request_id, created=created).run()
 
     async def _hello(self, websocket: WebSocket, doc_id: str):
         """The first frame: ``(request id, account, document)`` if the person may come in, else the socket is closed."""
@@ -270,12 +293,17 @@ class Gateway:
             return None
         try:
             Hub.check_id(doc_id)
-            credentials = Credentials(params.get("user"), params.get("password"))
-            account = await self.admit(doc_id, credentials, params.get("create") is True, params.get("access"))
+            if params.get("recovery_key") is not None:
+                account, created = await self._recover(doc_id, params), False
+            else:
+                credentials = Credentials(params.get("user"), params.get("password"))
+                account, created = await self._admit(
+                    doc_id, credentials, params.get("create") is True, params.get("access")
+                )
             if account is None:
                 await _refuse(websocket, request_id, "unauthorized", "missing or wrong credentials", 4401)
                 return None
-            return request_id, account, await self.hub.open(doc_id)
+            return request_id, account, await self.hub.open(doc_id), created
         except HubError as exc:
             await _refuse(websocket, request_id, exc.code, exc.message, _CLOSE.get(exc.code, 4400))
         except AuthRefused as exc:
@@ -295,7 +323,8 @@ async def _refuse(websocket: WebSocket, request_id, code: str, message: str, clo
 class _Live:
     """A connection that has been let in: events go out through a bounded queue, requests come in through ``handle``."""
 
-    def __init__(self, websocket: WebSocket, document, account: Account, request_id):
+    def __init__(self, websocket: WebSocket, document, account: Account, request_id, *, created: bool = False):
+        self.created = created
         self.websocket = websocket
         self.document = document
         self.account = account
@@ -327,7 +356,7 @@ class _Live:
         except HubError as exc:
             await _refuse(self.websocket, self.request_id, exc.code, exc.message, _CLOSE.get(exc.code, 1013))
             return
-        welcome = {"id": self.request_id, "ok": True, "result": connection.welcome()}
+        welcome = {"id": self.request_id, "ok": True, "result": {**connection.welcome(), "created": self.created}}
         self.send(json.dumps(welcome, separators=(",", ":")))
         pump = asyncio.create_task(self._pump())
         try:

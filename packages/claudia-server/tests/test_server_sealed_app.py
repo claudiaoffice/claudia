@@ -85,7 +85,7 @@ def test_after_a_restart_a_viewer_is_told_to_ask_an_editor(tmp_path):
         ann.close()
     with server(tmp_path) as client:
         code, error = refused(client, user=VERA, password=VERA_PW)
-        assert (code, error) == (4400, "bad_request")
+        assert (code, error) == (4423, "sealed")  # its own answer: a client may wait and try again
         with client.websocket_connect("/api/docs/plan/ws") as ws:
             ws.send_text(json.dumps({"id": 1, "method": "hello", "params": {"user": VERA, "password": VERA_PW}}))
             message = ws.receive_json()["error"]["message"]

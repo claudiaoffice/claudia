@@ -4,6 +4,8 @@ The reference values are published: RFC 5869 (HKDF), the argon2 reference test s
 GCM test cases 13 and 14 for AES-256 (McGrew and Viega). If a library update changes one of them, something is wrong.
 """
 
+import threading
+
 import pytest
 
 from claudia_container import crypto
@@ -13,6 +15,7 @@ from claudia_container.crypto import (
     MAX_MEMORY_KIB,
     DecryptionError,
     KdfParams,
+    argon2id,
     open_sealed,
     random_key,
     seal,
@@ -126,3 +129,26 @@ def test_a_file_cannot_demand_absurd_or_broken_kdf_parameters(bad):
 
 def test_the_default_parameters_are_allowed_by_the_limits():
     assert KdfParams.default() == KdfParams.from_dict(KdfParams.default().to_dict())
+
+
+def test_several_threads_may_hash_at_the_same_time():
+    """OpenSSL's Argon2id with more than one lane fails or hangs when two threads use it at once (seen with the
+    server: two people logging in together). The container serialises such calls, so this must finish and agree."""
+    params = KdfParams(iterations=1, memory_kib=1024, lanes=4)
+    expected = argon2id(b"pw", b"s" * 16, params, 32)
+    results, errors = [], []
+
+    def work():
+        try:
+            results.extend(argon2id(b"pw", b"s" * 16, params, 32) for _ in range(3))
+        except Exception as error:  # noqa: BLE001 - whatever it is, the test reports it
+            errors.append(error)
+
+    threads = [threading.Thread(target=work, daemon=True) for _ in range(6)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(30)
+    assert not any(t.is_alive() for t in threads), "hashing in several threads hangs"
+    assert not errors, errors
+    assert results == [expected] * 18

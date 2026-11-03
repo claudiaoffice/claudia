@@ -84,6 +84,17 @@ describe('openSession', () => {
     expect(session.state.app).toBe('creates')
   })
 
+  it('remembers that the document was made by this very opening, so that the person can be shown its recovery key', async () => {
+    const { factory } = links({ ...welcome('creates'), created: true }, true)
+    const session = await openSession(factory)
+    expect(session.justCreated).toBe(true)
+  })
+
+  it('does not say so for a document that was there before', async () => {
+    const { factory } = links(welcome('creates'), false)
+    expect((await openSession(factory)).justCreated).toBe(false)
+  })
+
   it('opens a table in a table session', async () => {
     const { made, factory } = links(welcome('computes'), false)
     const session = await openSession(factory)

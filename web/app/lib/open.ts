@@ -18,6 +18,7 @@ export async function openSession(makeLink: () => LinkLike, options: SessionOpti
       : welcome.app === 'creates'
         ? new SlideSession(makeLink, options)
         : new Session(makeLink, options)
+  session.justCreated = welcome.created === true
   try {
     await session.open()
   } catch (error) {

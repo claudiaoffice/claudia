@@ -32,6 +32,8 @@ export interface Welcome {
   presence: { user: string; regions: Region[]; locked: boolean }[]
   checkpoints: { number: number; label: string; author: string | null }[]
   limits: { max_text: number }
+  /** True if this very hello made the document (so its owner should now be given a recovery key). */
+  created?: boolean
 }
 
 export interface CellRef {
@@ -66,6 +68,8 @@ export interface LinkOptions {
   user: string
   password: string
   create?: boolean
+  /** Come in with the recovery key instead of the password: `password` is then the *new* one. */
+  recoveryKey?: string
   socket?: (url: string) => SocketLike
 }
 
@@ -98,14 +102,15 @@ export class Link implements LinkLike {
   }
 
   connect(): Promise<Welcome> {
-    const { url, user, password, create = false } = this.options
+    const { url, user, password, create = false, recoveryKey } = this.options
     const make = this.options.socket ?? ((u: string) => new WebSocket(u) as unknown as SocketLike)
     const socket = (this.socket = make(url))
     return new Promise<Welcome>((resolve, reject) => {
       socket.onopen = () => {
         const id = this.nextId++
         this.pending.set(id, { resolve, reject })
-        socket.send(JSON.stringify({ id, method: 'hello', params: { user, password, create } }))
+        const params = recoveryKey === undefined ? { user, password, create } : { user, password, recovery_key: recoveryKey }
+        socket.send(JSON.stringify({ id, method: 'hello', params }))
       }
       socket.onmessage = (event) => this.receive(String(event.data))
       socket.onclose = (event) => {
@@ -170,6 +175,8 @@ export function closeMessage(code: number): string {
       return 'There is no such document.'
     case 4408:
       return 'The server did not hear from the page in time.'
+    case 4423:
+      return 'The document is waiting for an owner or editor to open it.'
     case 1013:
       return 'The document is full, or the connection was too slow.'
     default:

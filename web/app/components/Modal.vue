@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue'
 
-defineProps<{ title: string; width?: number }>()
+/** `locked`: Escape and a click outside do not close it; only what is inside it does (something must be answered). */
+const props = defineProps<{ title: string; width?: number; locked?: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 function escape(event: KeyboardEvent) {
-  if (event.key === 'Escape') emit('close')
+  if (event.key === 'Escape' && !props.locked) emit('close')
 }
 onMounted(() => window.addEventListener('keydown', escape))
 onBeforeUnmount(() => window.removeEventListener('keydown', escape))
 </script>
 
 <template>
-  <div class="backdrop" @mousedown.self="emit('close')">
+  <div class="backdrop" @mousedown.self="!locked && emit('close')">
     <div class="modal" role="dialog" aria-modal="true" :aria-label="title" :style="width ? { width: `min(${width}px, calc(100vw - 32px))` } : undefined">
       <h2>{{ title }}</h2>
       <slot />

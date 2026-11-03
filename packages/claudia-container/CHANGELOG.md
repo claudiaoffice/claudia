@@ -3,6 +3,32 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-03
+
+Blocks, head record, snapshot and the recovery key in use (E2.1, E2.5, E2.2; third slice).
+
+### Added
+- `read_state`, `begin`, `pack_journal`, `read_snapshot`, `State`, `TamperedDocument`: the history and the chat rest in
+  the file as *blocks* (zlib-compressed, AES-256-GCM sealed, about 1 MiB each) that form a hash chain per domain; the
+  *head record* (sealed with the history key) names the number and the last hash of each chain and the last journal
+  generation that is folded in; a *snapshot* (a cache of the state, sealed with the content key) shortens opening.
+  Packing replaces the file first and the journal second, so a crash between the two loses nothing. A block that is
+  removed, changed, moved, swapped or taken from another document is refused (`TamperedDocument`). Not covered: putting
+  back an older copy of the whole file.
+- `has_recovery_key`, `set_recovery_key`, `recover_access`: a document can be given a new recovery key (the old one
+  stops working) and a person can choose a new password with it, keeping their role; somebody who is not in the document
+  becomes an owner. The key slot of the recovery key is hidden like all the others (D72).
+- `JournalWriter.generation`, `JournalWriter.replace`, `journal_generation`; `blocks` module (`seal_block`,
+  `open_block`, `seal_head`, `open_head`, `Head`, `Chain`, `Place`, `BlockError`).
+
+### Changed
+- Adding or removing a person, and changing a password, keep the packed blocks, the head, the snapshot and the
+  recovery key.
+
+### Fixed
+- Argon2id with more than one lane fails or never returns when two threads use it at once (OpenSSL 4.0 through
+  `cryptography` 50), which hung a server whose people logged in together. Such calls now take turns.
+
 ## [0.2.0] - 2026-11-02
 
 Document file, journal and people (E2.1, E2.3, first slice).

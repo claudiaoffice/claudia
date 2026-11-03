@@ -15,7 +15,7 @@ page, `tokens.css`).
 * A panel docked on the right with the **history** (every command: who, what, when) and the **chat**; `@name`
   mentions people, `@ai` asks the assistant.
 * Presence: other people's cursors and locks are outlined with their colour and name.
-* File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`).
+* File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`) and make a new recovery key (`new_recovery_key`). A new document shows its recovery key once, before it opens (`created` in the answer to `hello`); "I forgot my password" on the start page comes in with it (`hello` with `recovery_key`).
 * A banner while the connection is lost; the app reconnects by itself and reloads what it shows.
 
 The assistant in this demo is a **scripted stand-in** (`claudia_server.ScriptedEngine`): it understands a few

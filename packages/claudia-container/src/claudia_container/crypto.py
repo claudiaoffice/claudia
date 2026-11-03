@@ -12,6 +12,7 @@ the name *and* the password, so a wrong name and a wrong password are the same r
 
 import hashlib
 import os
+import threading
 import unicodedata
 from dataclasses import dataclass, field
 
@@ -104,6 +105,13 @@ def hkdf_sha256(ikm: bytes, *, info: bytes, length: int, salt: bytes | None = No
     return HKDF(algorithm=hashes.SHA256(), length=length, salt=salt, info=info).derive(ikm)
 
 
+# OpenSSL runs the lanes of an Argon2id call on a pool of worker threads that all callers in the process share. With
+# more than one lane, two calls from different threads at once fail ("Not enough memory to derive key") or never
+# return (seen with OpenSSL 4.0 through ``cryptography`` 50: two people logging in to a server together). So such calls
+# take turns. One lane needs no pool and runs freely.
+_POOL_LOCK = threading.Lock()
+
+
 def argon2id(
     password: bytes,
     salt: bytes,
@@ -125,7 +133,10 @@ def argon2id(
         ad=ad,
         secret=secret,
     )
-    return kdf.derive(password)
+    if params.lanes == 1:
+        return kdf.derive(password)
+    with _POOL_LOCK:
+        return kdf.derive(password)
 
 
 def _normalise_name(name: str) -> str:
@@ -140,9 +151,7 @@ def derive_login_material(password: str, name: str, doc_salt: bytes, params: Kdf
     two people and for two documents. Whoever holds only the file must guess name and password together.
     """
     name_bytes = _normalise_name(name).encode()
-    salt = hashlib.sha256(
-        b"claudia/login-salt/1" + len(doc_salt).to_bytes(4, "big") + doc_salt + name_bytes
-    ).digest()
+    salt = hashlib.sha256(b"claudia/login-salt/1" + len(doc_salt).to_bytes(4, "big") + doc_salt + name_bytes).digest()
     secret = argon2id(unicodedata.normalize("NFKC", password).encode(), salt, params, KEY_SIZE)
     return LoginMaterial(
         locator=hkdf_sha256(secret, info=b"claudia/locator/1", length=LOCATOR_SIZE),

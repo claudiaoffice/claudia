@@ -24,7 +24,7 @@ import os
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 ROLES = ("owner", "editor", "viewer")
 WRITE_ROLES = ("owner", "editor")
@@ -97,6 +97,20 @@ class UserDirectory(Protocol):
 
     def remove_user(self, doc_id: str, name: str) -> None:
         """Remove a user; ``KeyError`` if there is none of that name."""
+
+
+@runtime_checkable
+class RecoverableDirectory(Protocol):
+    """A directory whose documents have a recovery key (D75): a way back in for somebody who lost their password."""
+
+    def new_recovery_key(self, doc_id: str) -> str:
+        """Make a new recovery key for the document, replacing the old one, and return it for the owner to write
+        down. The directory keeps nothing of it. ``ValueError`` with a sentence if that is not possible now."""
+
+    def recover(self, doc_id: str, recovery_key: str, name: str, new_password: str) -> Account | None:
+        """Give ``name`` the password ``new_password`` using the recovery key; the account, or ``None`` if the key is
+        not the document's (a document that does not exist gives the same answer). ``ValueError`` with a sentence for
+        a key that is not a key, an unacceptable name or a weak password."""
 
 
 @dataclass(frozen=True)

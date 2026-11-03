@@ -3,6 +3,37 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.8.0] - 2026-11-03
+
+Sealed documents are packed into blocks with a snapshot, and the recovery key is shown (E2.1, E2.5, E2.2).
+
+### Added
+- **Packing.** `SealedDocuments` folds the journal of a document into the blocks of its file and leaves a snapshot when
+  the document is let go, when one is opened with unpacked work left over from a crash, and every `pack_every` (500)
+  changes while it is open. Opening uses the snapshot and replays only what follows it. A failed packing is logged and
+  loses nothing: the journal still has it. A removed, changed or reordered block is refused when the document is
+  opened.
+- **Recovery key.** The wire method `new_recovery_key` (owners only; `{recovery_key}` as 13 groups of 4 letters and
+  digits, shown once, never stored by the server, a key made before stops working). `hello` accepts `recovery_key`
+  together with `user` and a *new* `password`: if the key is the document's, the person gets that password, keeps their
+  role (somebody new becomes an owner) and is in. A wrong key, a missing document and a server without recovery keys
+  look alike. `auth.RecoverableDirectory`; `SealedDocuments.new_recovery_key` and `.recover`.
+- `hello` answers `created` (true if this very `hello` made the document), so that a client can show the recovery key
+  at once.
+- Error code `sealed` (close code 4423): the document is stored but nobody who holds all its keys has opened it since
+  the server started. A viewer is told to try again later; before, this was `bad_request`. `DocumentSealed`.
+- `Hub.housekeeping()`: idle documents are let go in a thread, under the lock that opening takes, so packing neither
+  stops the server nor races with opening the same document again. `Hub.stop()` lets go of every open document, so a
+  server that is shut down gracefully leaves packed files.
+
+### Changed
+- **Breaking:** a viewer who reaches a sealed document gets the error code `sealed` and close code 4423 instead of
+  `bad_request` and 4400.
+- Opening a document from a snapshot does not restore undo steps made before the snapshot (they start again).
+
+### Fixed
+- Two people logging in at the same moment could hang the server for ever (see claudia-container 0.3.0).
+
 ## [0.7.0] - 2026-11-03
 
 ### Added

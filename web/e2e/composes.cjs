@@ -23,6 +23,12 @@ async function open(browser, [user, password], create) {
   await page.fill('input[name=user]', user)
   await page.fill('input[name=password]', password)
   await page.click(create ? 'text=Create document' : 'button:text-is("Open")')
+  if (create) {
+    // a new document first shows its recovery key; the person must confirm having stored it
+    await page.waitForSelector('[data-testid=recovery-key]')
+    await page.check('.modal input[type=checkbox]')
+    await page.click('.modal button:text-is("Continue")')
+  }
   await page.waitForSelector('[data-testid=text]')
   await page.waitForFunction(() => document.querySelector('.status.open'))
   return page

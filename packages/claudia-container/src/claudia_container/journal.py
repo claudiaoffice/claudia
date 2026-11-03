@@ -145,6 +145,11 @@ class JournalWriter:
         self.seq = last_seq
         """The number of the last record written (0 for none)."""
 
+    @property
+    def generation(self) -> int:
+        """The generation of this journal. It grows by one every time the journal is folded into the document file."""
+        return self._generation
+
     @classmethod
     def create(cls, path: Path, doc_id: str, keys: Mapping[Domain, bytes], generation: int = 0) -> Self:
         """Start a new journal; ``FileExistsError`` if there is one."""
@@ -155,6 +160,25 @@ class JournalWriter:
         os.fsync(handle.fileno())
         _fsync_directory(path.parent)
         return cls(handle, doc_id, keys, generation, 0)
+
+    @classmethod
+    def replace(cls, path: Path, doc_id: str, keys: Mapping[Domain, bytes], generation: int) -> Self:
+        """Put an empty journal of ``generation`` in place of the one at ``path``, all at once: a crash leaves the old
+        journal or the new one, never a mixture. Returns a writer on the new journal."""
+        temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+        fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        try:
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(_header(doc_id, generation))
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temp, path)
+            _fsync_directory(path.parent)
+        except BaseException:
+            with contextlib.suppress(OSError):
+                temp.unlink()
+            raise
+        return cls(path.open("ab"), doc_id, keys, generation, 0)
 
     @classmethod
     def open(cls, path: Path, doc_id: str, keys: Mapping[Domain, bytes]) -> Self:
@@ -191,6 +215,13 @@ class JournalWriter:
     def close(self) -> None:
         """Let go of the file."""
         self._handle.close()
+
+
+def journal_generation(path: Path) -> int:
+    """The generation in the header of the journal at ``path`` (no key needed). :class:`JournalError` if it has none."""
+    with path.open("rb") as handle:
+        data = handle.read(len(MAGIC) + 6 + 2048)
+    return _header_end(data)[1]
 
 
 def read_journal(path: Path, doc_id: str, keys: Mapping[Domain, bytes]) -> list[JournalRecord]:

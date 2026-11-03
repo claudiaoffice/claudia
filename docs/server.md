@@ -102,8 +102,20 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   letter, a small letter and a digit. See `claudia-container` and the design in `e2-container-design.md`.
 * The keys are held in memory only while a document is open, and are forgotten when the server unloads it. After a
   restart a **viewer** cannot bring a document up (a viewer holds only the content key): the first person to log in has
-  to be an owner or editor; a viewer is told so. Password hashing runs in threads, at most two at a time, so it never
-  stops the server.
+  to be an owner or editor; a viewer is told so (error `sealed`, close code 4423, and the web app keeps trying until
+  somebody has opened it). Password hashing runs in threads, so it never stops the server; the hashes take turns
+  (OpenSSL's Argon2id is not safe to run twice at once).
+* **Packing.** Changes are appended to the journal as they happen. When a document is unloaded (and when the server is
+  stopped, and every 500 changes while it is open) the journal is folded into the document file as sealed, chained
+  blocks with a head record, and a snapshot is left, so that opening replays only what came after it. Somebody who
+  holds the file but no key can still delete the newest blocks and the head together, or put back an older copy of the
+  whole file; neither can be told from the file alone. Undo steps made before the snapshot are not restored when a
+  document is opened.
+* **Recovery key.** The owner of a new document is shown a recovery key (13 groups of 4 letters and digits) once, in the
+  web app, before the document opens. It is the only way back in for somebody who forgot their password ("I forgot my
+  password" on the start page: document, name, recovery key and a new password); that person keeps their role, and
+  somebody who is not in the document becomes an owner. The server does not keep the key. An owner can make a new one
+  in *Share* (the old one stops working). Whoever has the key can read the document: keep it away from the file.
 * `--plain-dir DIR` is the old store of the early demos: plain files, scrypt hashes, **not encrypted**.
 * Without a folder, passwords are stored in memory as scrypt hashes with a random salt.
 * Limits: frame size, text length, regions per request, connections per document, documents per server, and the
@@ -139,7 +151,7 @@ people who already have a document still log in with their name and password. So
 make a document is answered like somebody who asked for one that does not exist, so nothing is learned about which
 documents there are. The secret is compared in constant time and never printed. The web app has no field for it yet.
 
-Not there yet: packing the journal into blocks and the head record (E2.1/E2.6), the recovery key in the server and web UI (E2.5), unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers (E2.4).
+Not there yet: redaction in packed blocks (E2.6: a redacted text still rests in older blocks), unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers and a viewer opening a sealed document first (E2.4).
 
 
 ## Presentations (creates)

@@ -17,7 +17,7 @@ function startServer() {
   const child = spawn(
     path.join(ROOT, '.venv/bin/python'),
     ['-m', 'claudia_server', '--no-tls', '--port', String(PORT), '--dir', DATA, '--web', path.join(ROOT, 'web/.output/public')],
-    { cwd: ROOT, stdio: 'ignore' },
+    { cwd: ROOT, stdio: process.env.SERVER_LOG ? ['ignore', fs.openSync(process.env.SERVER_LOG, 'a'), fs.openSync(process.env.SERVER_LOG, 'a')] : 'ignore' },
   )
   return child
 }
@@ -39,6 +39,12 @@ async function login(browser, doc, user, password, create) {
   await page.fill('input[name=user]', user)
   await page.fill('input[name=password]', password)
   await page.click(create ? 'text=Create document' : 'button:text-is("Open")')
+  if (create) {
+    // a new document first shows its recovery key; the person must confirm having stored it
+    await page.waitForSelector('[data-testid=recovery-key]')
+    await page.check('.modal input[type=checkbox]')
+    await page.click('.modal button:text-is("Continue")')
+  }
   await page.waitForSelector('.viewport')
   await page.waitForFunction(() => document.querySelector('.status.open'))
   return page

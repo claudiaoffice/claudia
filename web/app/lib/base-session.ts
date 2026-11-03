@@ -94,6 +94,8 @@ function initialState(): BaseState {
 
 export abstract class BaseSession<S extends BaseState = BaseState> {
   readonly state: S
+  /** Was this document made by the very opening that led here? Then its owner is shown the recovery key. */
+  justCreated = false
 
   protected link: LinkLike | null = null
   private tasks = new Set<Promise<unknown>>()
@@ -196,7 +198,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         await this.start()
         return
       } catch (error) {
-        if (error instanceof ProtocolError && error.code !== 'closed') {
+        if (error instanceof ProtocolError && error.code !== 'closed' && error.code !== 'sealed') {
           this.state.status = 'closed'
           this.state.error = error.message
           return
@@ -349,5 +351,19 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   async addUser(name: string, password: string, role: 'editor' | 'viewer'): Promise<boolean> {
     return (await this.attempt('add_user', { name, password, role })) !== false
+  }
+
+  /**
+   * Owners: make a new recovery key (the old one stops working). It is shown once and the server keeps nothing of it,
+   * so whoever calls this must show it to the person at once. `null` if there is none; unless `quiet`, the person is
+   * told why (a server may simply keep no recovery keys).
+   */
+  async newRecoveryKey(options: { quiet?: boolean } = {}): Promise<string | null> {
+    try {
+      return (await this.need().request<{ recovery_key: string }>('new_recovery_key')).recovery_key
+    } catch (error) {
+      if (!options.quiet) this.explain(error)
+      return null
+    }
   }
 }

@@ -281,6 +281,35 @@ describe('losing the connection', () => {
     expect(second.count('sheets')).toBe(1)
   })
 
+  it('keeps trying while the document is sealed (an editor has not opened it since the server started)', async () => {
+    const first = new FakeLink()
+    const sealed = new FakeLink()
+    const second = new FakeLink()
+    server(first)
+    server(second)
+    sealed.failConnect = new ProtocolError('sealed', 'this document is sealed: an owner or editor has to open it first')
+    const links = [first, sealed, second]
+    const session = new Session(() => links.shift()!, { retryDelays: [0] })
+    await session.open()
+    first.drop(1006)
+    await session.settled()
+    expect(session.state.status).toBe('open')
+    expect(second.count('sheets')).toBe(1)
+  })
+
+  it('gives up for good on a refusal that will not change', async () => {
+    const first = new FakeLink()
+    const refused = new FakeLink()
+    server(first)
+    refused.failConnect = new ProtocolError('unauthorized', 'missing or wrong credentials')
+    const links = [first, refused]
+    const session = new Session(() => links.shift()!, { retryDelays: [0] })
+    await session.open()
+    first.drop(1006)
+    await session.settled()
+    expect(session.state.status).toBe('closed')
+  })
+
   it('loads the cells again on the new connection, even if a request was left hanging on the old one', async () => {
     const first = new FakeLink()
     const second = new FakeLink()
@@ -319,5 +348,41 @@ describe('reading what is loaded', () => {
     await session.ensure('s1', 0, 10, 0, 5)
     expect(session.filledIn('s1', 0, 0, 5, 5).sort()).toEqual([[0, 0], [1, 1]])
     expect(session.filledIn('s1', 1, 0, 5, 0)).toEqual([])
+  })
+})
+
+describe('the recovery key', () => {
+  it('asks the server for a new one and hands it over', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.new_recovery_key = () => ({ recovery_key: 'ABCD-EFGH' })
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.newRecoveryKey()).toBe('ABCD-EFGH')
+    expect(session.state.notice).toBeNull()
+  })
+
+  it('gives nothing back, and says why, if the server will not make one', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.new_recovery_key = () => {
+      throw new ProtocolError('forbidden', 'only the owner of a document makes a recovery key')
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.newRecoveryKey()).toBeNull()
+    expect(session.state.notice?.text).toBe('You can only look at this document.')
+  })
+
+  it('stays quiet when the server simply keeps no recovery keys (that is not the person’s doing)', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.new_recovery_key = () => {
+      throw new ProtocolError('unavailable', 'this server does not keep recovery keys')
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.newRecoveryKey({ quiet: true })).toBeNull()
+    expect(session.state.notice).toBeNull()
   })
 })

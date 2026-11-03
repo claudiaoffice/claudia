@@ -100,6 +100,10 @@ class DocumentProvider(Protocol):
         """Every stored document, the most recently changed first."""
 
 
+class DocumentSealed(ValueError):
+    """The document is stored, but nobody who holds all its keys has opened it since the server started."""
+
+
 class MemoryProvider:
     """Documents kept in memory (tests, a development server). Unloading a document loses nothing: the log stays
     here."""
@@ -435,6 +439,8 @@ class Hub:
             if self.provider.exists(doc_id):
                 try:
                     document = await asyncio.to_thread(self.provider.open, doc_id)
+                except DocumentSealed as exc:
+                    raise HubError("sealed", f"{doc_id} cannot be opened yet: {exc}") from exc
                 except ValueError as exc:
                     raise HubError("bad_request", f"{doc_id} cannot be opened: {exc}") from exc
                 except OSError as exc:
@@ -462,20 +468,39 @@ class Hub:
             return hosted
 
     # -- housekeeping ------------------------------------------------------------------------
-    def sweep(self) -> None:
-        """Tell people about lapsed locks and unload documents nobody has used for a while."""
+    def _unload_idle(self) -> list[str]:
+        """Tell people about lapsed locks and take documents nobody has used for a while out of memory (not yet
+        released from storage). Returns their ids."""
         now = self._clock()
+        gone = []
         for doc_id, hosted in list(self._documents.items()):
             hosted.sweep()
             if now - hosted.last_active > self.idle_unload and not hosted.humans():
                 del self._documents[doc_id]  # nothing is lost: every change reached storage when it happened
-                self.provider.release(doc_id)  # a sealed store forgets the document's keys
+                gone.append(doc_id)
+        return gone
+
+    def sweep(self) -> None:
+        """Tell people about lapsed locks and unload documents nobody has used for a while (all in the caller's
+        thread; the running server uses :meth:`housekeeping`, which lets go of storage in a thread)."""
+        for doc_id in self._unload_idle():
+            self.provider.release(doc_id)  # a sealed store forgets the document's keys
+
+    async def housekeeping(self) -> None:
+        """As :meth:`sweep`, but letting go of a document may take time (a sealed store packs it into its file), so
+        that runs in a thread, and nobody can open the document again before it is done."""
+        async with self._open_lock:
+            for doc_id in self._unload_idle():
+                try:
+                    await asyncio.to_thread(self.provider.release, doc_id)
+                except Exception:
+                    log.exception("cannot let go of %s", doc_id)
 
     async def _sweep_loop(self) -> None:
         while True:
             await asyncio.sleep(self.sweep_interval)
             try:
-                self.sweep()
+                await self.housekeeping()
             except Exception:
                 log.exception("housekeeping failed; will retry")
 
@@ -485,9 +510,16 @@ class Hub:
             self._task = asyncio.create_task(self._sweep_loop())
 
     async def stop(self) -> None:
-        """Stop the housekeeping."""
+        """Stop the housekeeping and let go of every open document (a sealed store packs them into their files)."""
         if self._task is not None:
             self._task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._task
             self._task = None
+        async with self._open_lock:
+            for doc_id in list(self._documents):
+                del self._documents[doc_id]
+                try:
+                    await asyncio.to_thread(self.provider.release, doc_id)
+                except Exception:
+                    log.exception("cannot let go of %s", doc_id)

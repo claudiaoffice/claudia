@@ -44,7 +44,7 @@ from claudia_core import (
     UnknownCommand,
 )
 
-from .auth import Account, UserDirectory
+from .auth import Account, RecoverableDirectory, UserDirectory
 
 if TYPE_CHECKING:
     from claudia_core import Region
@@ -61,6 +61,8 @@ ERROR_CODES = {
     "unauthorized": "missing or wrong credentials",
     "not_found": "no such document",
     "unavailable": "a server limit was reached (too many connections to the document)",
+    "sealed": "the document is stored but nobody who holds all its keys has opened it since the server started; "
+    "a viewer has to wait (and may try again) until an owner or editor has",
     "locked": "somebody else is working on that part of the document right now; nothing changed",
     "conflict": "undo or redo would overwrite a colleague's later work; nothing changed",
     "stale": "the request was made against a view of the document that is gone (it went back to a checkpoint or "
@@ -594,6 +596,19 @@ def _add_user(ctx, name, password, role):
         raise RequestError("bad_request", "add_user: role must be editor or viewer")
     account = ctx.directory.add_user(ctx.doc_id, name, password, role)
     return {"user": account.user, "role": account.role}
+
+
+@core_methods.method("new_recovery_key")
+def _new_recovery_key(ctx):
+    """Owners only: make a new recovery key for this document. It is the way back in for somebody who has lost their
+    password (`hello` with `recovery_key`), and it is shown here, this once: the server keeps nothing of it. A key the
+    document had before stops working. Returns `{recovery_key}` as 13 groups of 4 letters and digits; `unavailable`
+    on a server whose documents have none."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", "only the owner of a document makes a recovery key")
+    if not isinstance(ctx.directory, RecoverableDirectory):
+        raise RequestError("unavailable", "this server does not keep recovery keys")
+    return {"recovery_key": ctx.directory.new_recovery_key(ctx.doc_id)}
 
 
 # -- chat

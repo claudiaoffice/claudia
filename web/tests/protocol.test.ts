@@ -40,6 +40,27 @@ describe('Link', () => {
     expect(await welcome).toEqual(WELCOME)
   })
 
+  it('comes in with a recovery key and a new password instead of creating or logging in', async () => {
+    const socket = new FakeSocket()
+    const l = new Link({
+      url: 'ws://x/api/docs/plan/ws',
+      user: 'ben',
+      password: 'Fresh-Start-42',
+      recoveryKey: 'ABCD-EFGH',
+      create: true, // never both: a recovery is not a creation
+      socket: () => socket,
+    })
+    const welcome = l.connect()
+    socket.open()
+    expect(socket.sent[0]).toEqual({
+      id: 1,
+      method: 'hello',
+      params: { user: 'ben', password: 'Fresh-Start-42', recovery_key: 'ABCD-EFGH' },
+    })
+    socket.push({ id: 1, ok: true, result: WELCOME })
+    await welcome
+  })
+
   it('rejects the handshake with the server’s error', async () => {
     const { l, socket } = link()
     const welcome = l.connect()

@@ -25,13 +25,15 @@ import threading
 import unicodedata
 import zipfile
 import zlib
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from . import blocks
+from .blocks import GENESIS, BlockError, Chain, Head, Place, block_hash, open_block, open_head, seal_block, seal_head
 from .crypto import DecryptionError, KdfParams, derive_login_material, derive_recovery_material, open_sealed, seal
-from .journal import _fsync_directory
+from .journal import JournalWriter, _fsync_directory, journal_generation, read_journal
 from .passwords import require_strong_password
 from .slots import Domain, KeySlot, Role, Unlocked, make_slot, new_domain_keys, open_slot
 
@@ -47,6 +49,11 @@ _RATIO_FROM = 1024 * 1024
 _NAME = re.compile(r"[a-z0-9][a-z0-9_.-]*(/[a-z0-9][a-z0-9_.-]*)*")
 _DOC_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 _MAX_PERSON_NAME = 80
+_CORE_ENTRIES = frozenset({"format", "manifest.json", "slots.json", "people.bin"})
+_BLOCK_NAME = re.compile(r"(history|chat)/(\d{6})\.blk")
+_HEAD = "head.bin"
+_SNAPSHOT = "content/snapshot.bin"
+_RECOVERY_NAME = "(recovery)"
 _WRITE_LOCK = threading.RLock()  # changes are rare; one at a time keeps read-modify-write simple and safe
 
 
@@ -60,6 +67,11 @@ class NotAClaudiaDocument(ContainerError):
 
 class UnsupportedFormat(ContainerError):
     """The file was written by a newer version of Claudia."""
+
+
+class TamperedDocument(ContainerError):
+    """A block, the head or the journal does not fit the rest of the file: removed, changed, swapped, from another
+    document or from another time."""
 
 
 class ReaderLimitExceeded(ContainerError):
@@ -257,18 +269,27 @@ def _people_aad(doc_id: str) -> bytes:
     return b"claudia/people/1" + doc_id.encode()
 
 
-def _open_people(entries: dict[str, bytes], manifest: Manifest, keys: Mapping[Domain, bytes]) -> list[Person]:
+def _open_people_data(
+    entries: dict[str, bytes], manifest: Manifest, keys: Mapping[Domain, bytes]
+) -> tuple[list[Person], bytes | None]:
+    """The people and the locator of the recovery slot (``None`` if there is none)."""
     key = keys.get(Domain.CONTENT)
     if key is None:
         raise PermissionError("the list of people is sealed with the content key")
     try:
         data = json.loads(open_sealed(key, entries["people.bin"], _people_aad(manifest.id)))
-        return [
+        people = [
             Person(item["name"], Role(item["role"]), base64.b64decode(item["locator"], validate=True))
             for item in data["people"]
         ]
+        recovery = data.get("recovery")
+        return people, None if recovery is None else base64.b64decode(recovery, validate=True)
     except (DecryptionError, ValueError, KeyError, TypeError) as error:
         raise ContainerError("the list of people is damaged") from error
+
+
+def _open_people(entries: dict[str, bytes], manifest: Manifest, keys: Mapping[Domain, bytes]) -> list[Person]:
+    return _open_people_data(entries, manifest, keys)[0]
 
 
 def read_people(path: Path, keys: Mapping[Domain, bytes]) -> list[Person]:
@@ -280,17 +301,32 @@ def read_people(path: Path, keys: Mapping[Domain, bytes]) -> list[Person]:
 # --- writing --------------------------------------------------------------------------------------------------------
 
 
-def _people_blob(manifest: Manifest, content_key: bytes, people: list[Person]) -> bytes:
+def _people_blob(manifest: Manifest, content_key: bytes, people: list[Person], recovery: bytes | None) -> bytes:
     data = {
         "people": [
             {"name": p.name, "role": p.role.value, "locator": base64.b64encode(p.locator).decode()} for p in people
-        ]
+        ],
+        "recovery": None if recovery is None else base64.b64encode(recovery).decode(),
     }
     return seal(content_key, json.dumps(data).encode(), _people_aad(manifest.id))
 
 
-def _write_zip(path: Path, manifest: Manifest, slots: list[KeySlot], people_blob: bytes, *, exclusive: bool) -> None:
-    """Write the whole file next to the old one and replace it atomically."""
+def _carried(entries: Mapping[str, bytes]) -> dict[str, bytes]:
+    """The entries that a change of the people leaves as they are: blocks, head and snapshot."""
+    return {name: data for name, data in entries.items() if name not in _CORE_ENTRIES}
+
+
+def _write_zip(
+    path: Path,
+    manifest: Manifest,
+    slots: list[KeySlot],
+    people_blob: bytes,
+    others: Mapping[str, bytes],
+    *,
+    exclusive: bool,
+) -> None:
+    """Write the whole file next to the old one and replace it atomically. ``others`` are the entries besides the
+    four that every document has: the head, the blocks and the snapshot."""
     if exclusive and path.exists():
         raise FileExistsError(path)
     temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
@@ -306,6 +342,8 @@ def _write_zip(path: Path, manifest: Manifest, slots: list[KeySlot], people_blob
                     compress_type=zipfile.ZIP_DEFLATED,
                 )
                 archive.writestr("people.bin", people_blob, compress_type=zipfile.ZIP_STORED)
+                for name in sorted(others):
+                    archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp, path)
@@ -343,11 +381,15 @@ def create_document(
     keys = new_domain_keys()
     material = derive_login_material(password, name, manifest.salt, params)
     slots = [make_slot(material, doc_id, name, Role.OWNER, keys)]
+    recovery_locator = None
     if recovery_key is not None:
-        slots.append(make_slot(derive_recovery_material(recovery_key), doc_id, "(recovery)", Role.OWNER, keys))
+        recovery = derive_recovery_material(recovery_key)
+        slots.append(make_slot(recovery, doc_id, _RECOVERY_NAME, Role.OWNER, keys))
+        recovery_locator = recovery.locator
     person = Person(name, Role.OWNER, material.locator)
+    blob = _people_blob(manifest, keys[Domain.CONTENT], [person], recovery_locator)
     with _WRITE_LOCK:
-        _write_zip(path, manifest, slots, _people_blob(manifest, keys[Domain.CONTENT], [person]), exclusive=True)
+        _write_zip(path, manifest, slots, blob, {}, exclusive=True)
     return Unlocked(name, Role.OWNER, keys)
 
 
@@ -381,14 +423,14 @@ def add_user(path: Path, keys: Mapping[Domain, bytes], name: str, password: str,
     with _WRITE_LOCK:
         entries = _read_entries(path)
         manifest = _manifest_of(entries, path)
-        people = _open_people(entries, manifest, keys)
+        people, recovery = _open_people_data(entries, manifest, keys)
         if any(_normalised(p.name) == _normalised(clean) for p in people):
             raise ValueError(f"{clean!r} is already a person of this document")
         material = derive_login_material(password, clean, manifest.salt, manifest.kdf)
         person = Person(clean, role, material.locator)
         slots = [*_slots_of(entries, path), make_slot(material, manifest.id, clean, role, keys)]
-        blob = _people_blob(manifest, keys[Domain.CONTENT], [*people, person])
-        _write_zip(path, _changed(manifest), slots, blob, exclusive=False)
+        blob = _people_blob(manifest, keys[Domain.CONTENT], [*people, person], recovery)
+        _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
     return person
 
 
@@ -401,7 +443,7 @@ def remove_user(path: Path, keys: Mapping[Domain, bytes], name: str, *, allow_la
     with _WRITE_LOCK:
         entries = _read_entries(path)
         manifest = _manifest_of(entries, path)
-        people = _open_people(entries, manifest, keys)
+        people, recovery = _open_people_data(entries, manifest, keys)
         target = next((p for p in people if _normalised(p.name) == _normalised(name)), None)
         if target is None:
             raise KeyError(name)
@@ -409,8 +451,8 @@ def remove_user(path: Path, keys: Mapping[Domain, bytes], name: str, *, allow_la
         if target.role is Role.OWNER and not allow_last and not any(p.role is Role.OWNER for p in others):
             raise ValueError("a document must keep at least one owner")
         slots = [s for s in _slots_of(entries, path) if s.locator != target.locator]
-        blob = _people_blob(manifest, keys[Domain.CONTENT], others)
-        _write_zip(path, _changed(manifest), slots, blob, exclusive=False)
+        blob = _people_blob(manifest, keys[Domain.CONTENT], others, recovery)
+        _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
 
 
 def change_password(path: Path, name: str, old_password: str, new_password: str) -> bool:
@@ -428,10 +470,320 @@ def change_password(path: Path, name: str, old_password: str, new_password: str)
         if unlocked is None:
             return False
         fresh = derive_login_material(new_password, unlocked.name, manifest.salt, manifest.kdf)
-        people = _open_people(entries, manifest, unlocked.keys)
+        people, recovery = _open_people_data(entries, manifest, unlocked.keys)
         people = [Person(p.name, p.role, fresh.locator) if p.locator == old.locator else p for p in people]
         replacement = make_slot(fresh, manifest.id, unlocked.name, unlocked.role, unlocked.keys)
         slots = [replacement if s.locator == old.locator else s for s in slots]
-        blob = _people_blob(manifest, unlocked.keys[Domain.CONTENT], people)
-        _write_zip(path, _changed(manifest), slots, blob, exclusive=False)
+        blob = _people_blob(manifest, unlocked.keys[Domain.CONTENT], people, recovery)
+        _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
     return True
+
+
+# --- the recovery key -----------------------------------------------------------------------------------------------
+
+
+def has_recovery_key(path: Path, keys: Mapping[Domain, bytes]) -> bool:
+    """Does the document have a recovery slot? Needs the content key (the list of people says so)."""
+    entries = _read_entries(path)
+    return _open_people_data(entries, _manifest_of(entries, path), keys)[1] is not None
+
+
+def set_recovery_key(path: Path, keys: Mapping[Domain, bytes], recovery_key: bytes) -> None:
+    """Give the document this recovery key. A recovery key the document had before stops working.
+
+    Needs all keys (``PermissionError``); ``ValueError`` if ``recovery_key`` is not 32 bytes."""
+    _require_all_keys(keys)
+    material = derive_recovery_material(recovery_key)
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        people, old = _open_people_data(entries, manifest, keys)
+        slots = [s for s in _slots_of(entries, path) if old is None or s.locator != old]
+        slots.append(make_slot(material, manifest.id, _RECOVERY_NAME, Role.OWNER, keys))
+        blob = _people_blob(manifest, keys[Domain.CONTENT], people, material.locator)
+        _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
+
+
+def recover_access(path: Path, recovery_key: bytes, name: str, new_password: str) -> Person | None:
+    """Get back in with the recovery key: ``name`` gets ``new_password``.
+
+    A person of the document keeps their role; somebody else becomes an owner. ``None`` if the key is not the
+    document's recovery key (nothing changes); :class:`~claudia_container.passwords.WeakPassword` if the password breaks
+    the rules (nothing changes)."""
+    clean = _check_name(name)
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        slots = _slots_of(entries, path)
+        opened = open_slot(slots, derive_recovery_material(recovery_key), manifest.id)
+        if opened is None:
+            return None
+        require_strong_password(new_password)
+        people, recovery = _open_people_data(entries, manifest, opened.keys)
+        target = next((p for p in people if _normalised(p.name) == _normalised(clean)), None)
+        label = target.name if target else clean
+        role = target.role if target else Role.OWNER
+        material = derive_login_material(new_password, label, manifest.salt, manifest.kdf)
+        fresh = make_slot(material, manifest.id, label, role, opened.keys)
+        person = Person(label, role, material.locator)
+        if target is None:
+            slots, people = [*slots, fresh], [*people, person]
+        else:
+            slots = [fresh if s.locator == target.locator else s for s in slots]
+            people = [person if p is target else p for p in people]
+        blob = _people_blob(manifest, opened.keys[Domain.CONTENT], people, recovery)
+        _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
+    return person
+
+
+# --- blocks, head and snapshot (E2.1, E2.5) -------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class State:
+    """Everything an editor needs to bring a document up: the payloads of the history and the chat in order, the
+    snapshot (a cache of the state, if there is one) and how many of the payloads are still only in the journal."""
+
+    history: list[bytes]
+    chat: list[bytes]
+    snapshot: bytes | None
+    pending: int
+
+
+@dataclass(frozen=True)
+class _Chains:
+    head: Head
+    stored: dict[Domain, list[bytes]]  # the blocks as they are in the file, per domain, in order
+    opened: dict[Domain, list[list[bytes]]]  # their payloads
+
+
+def _require_content_keys(keys: Mapping[Domain, bytes]) -> None:
+    if Domain.HISTORY not in keys or Domain.CHAT not in keys:
+        raise PermissionError("the history and the chat are sealed with keys that this role does not hold")
+
+
+def _block_names(entries: Mapping[str, bytes]) -> dict[Domain, dict[int, str]]:
+    """The block entries of the file by domain and number. Anything else in the block folders is not ours."""
+    found: dict[Domain, dict[int, str]] = {Domain.HISTORY: {}, Domain.CHAT: {}}
+    for name in entries:
+        if not name.startswith(("history/", "chat/")):
+            continue
+        match = _BLOCK_NAME.fullmatch(name)
+        if match is None:
+            raise TamperedDocument(f"{name} does not belong in the block folders")
+        found[Domain(match.group(1))][int(match.group(2))] = name
+    return found
+
+
+def _head_of(
+    entries: Mapping[str, bytes], manifest: Manifest, keys: Mapping[Domain, bytes], *, blocks_exist: bool
+) -> Head:
+    stored = entries.get(_HEAD)
+    if stored is None:
+        if blocks_exist:
+            raise TamperedDocument("the head of the document is missing although it has blocks")
+        return Head.empty()
+    history_key = keys.get(Domain.HISTORY)
+    if history_key is None:
+        raise PermissionError("the head is sealed with the history key")
+    try:
+        return open_head(history_key, manifest.id, stored)
+    except BlockError as error:
+        raise TamperedDocument(str(error)) from error
+
+
+def _load_chains(entries: Mapping[str, bytes], manifest: Manifest, keys: Mapping[Domain, bytes]) -> _Chains:
+    """Open every block and check them against the head: count, order, chain and the hash of the last one."""
+    _require_content_keys(keys)
+    names = _block_names(entries)
+    head = _head_of(entries, manifest, keys, blocks_exist=any(names.values()))
+    stored: dict[Domain, list[bytes]] = {}
+    opened: dict[Domain, list[list[bytes]]] = {}
+    for domain in (Domain.HISTORY, Domain.CHAT):
+        numbers = sorted(names[domain])
+        if numbers != list(range(1, len(numbers) + 1)):
+            raise TamperedDocument(f"a block of the {domain} is missing")
+        expected = head.chain(domain)
+        if len(numbers) != expected.blocks:
+            raise TamperedDocument(f"the file has {len(numbers)} {domain} blocks but its head says {expected.blocks}")
+        previous, stored[domain], opened[domain] = GENESIS, [], []
+        for number in numbers:
+            data = entries[names[domain][number]]
+            try:
+                payloads = open_block(keys[domain], Place(manifest.id, domain, number, previous), data)
+            except BlockError as error:
+                raise TamperedDocument(f"{names[domain][number]}: {error}") from error
+            stored[domain].append(data)
+            opened[domain].append(payloads)
+            previous = block_hash(data)
+        if previous != expected.last:
+            raise TamperedDocument(f"the last {domain} block is not the one that the head names")
+    return _Chains(head, stored, opened)
+
+
+def _snapshot_of(entries: Mapping[str, bytes], manifest: Manifest, keys: Mapping[Domain, bytes]) -> bytes | None:
+    key, stored = keys.get(Domain.CONTENT), entries.get(_SNAPSHOT)
+    if key is None or stored is None:
+        return None
+    try:
+        return open_sealed(key, stored, _snapshot_aad(manifest.id))
+    except DecryptionError:
+        return None  # a cache that cannot be trusted is no cache; the history still has everything
+
+
+def _snapshot_aad(doc_id: str) -> bytes:
+    return b"claudia/snapshot/1" + doc_id.encode()
+
+
+def read_snapshot(path: Path, keys: Mapping[Domain, bytes]) -> bytes | None:
+    """The snapshot, if the file has one that opens with the content key (a viewer holds it). ``None`` otherwise."""
+    entries = _read_entries(path)
+    return _snapshot_of(entries, _manifest_of(entries, path), keys)
+
+
+def _journal_records(
+    path: Path, manifest: Manifest, keys: Mapping[Domain, bytes], head: Head
+) -> tuple[list[bytes], list[bytes]]:
+    """The history and chat payloads of the journal if it follows the file; none if the file has already taken them."""
+    journal = journal_path(path)
+    if not journal.exists():
+        return [], []
+    generation = journal_generation(journal)
+    if generation <= head.generation:
+        return [], []  # a crash came between the new file and the new journal: the file has these records already
+    if generation > head.generation + 1:
+        raise TamperedDocument("the journal does not follow the document file: blocks or the head were taken out")
+    history, chat = [], []
+    for record in read_journal(journal, manifest.id, keys):
+        if record.domain is Domain.HISTORY:
+            history.append(record.payload)
+        elif record.domain is Domain.CHAT:
+            chat.append(record.payload)
+    return history, chat
+
+
+def read_state(path: Path, keys: Mapping[Domain, bytes]) -> State:
+    """The history, the chat and the snapshot of the document: the blocks of the file (checked against the head) and the
+    journal that follows them. Needs all keys (``PermissionError``).
+
+    :class:`TamperedDocument` if blocks, head or journal do not fit together,
+    :class:`~claudia_container.journal.JournalError` if the journal is damaged."""
+    entries = _read_entries(path)
+    manifest = _manifest_of(entries, path)
+    chains = _load_chains(entries, manifest, keys)
+    history = [payload for block in chains.opened[Domain.HISTORY] for payload in block]
+    chat = [payload for block in chains.opened[Domain.CHAT] for payload in block]
+    more_history, more_chat = _journal_records(path, manifest, keys, chains.head)
+    return State(
+        [*history, *more_history],
+        [*chat, *more_chat],
+        _snapshot_of(entries, manifest, keys),
+        len(more_history) + len(more_chat),
+    )
+
+
+def begin(path: Path, keys: Mapping[Domain, bytes]) -> JournalWriter:
+    """A writer for the journal of an open document: the existing one is continued (a cut-off last record is removed),
+    one that the file has already taken in is replaced by the next, and a missing one is made."""
+    _require_content_keys(keys)
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        head = _head_of(entries, manifest, keys, blocks_exist=any(_block_names(entries).values()))
+        journal, wanted = journal_path(path), head.generation + 1
+        if not journal.exists():
+            return JournalWriter.create(journal, manifest.id, keys, wanted)
+        generation = journal_generation(journal)
+        if generation == wanted:
+            return JournalWriter.open(journal, manifest.id, keys)
+        if generation < wanted:
+            return JournalWriter.replace(journal, manifest.id, keys, wanted)
+        raise TamperedDocument("the journal does not follow the document file: blocks or the head were taken out")
+
+
+def _chunks(payloads: Sequence[bytes]) -> Iterator[list[bytes]]:
+    """The payloads in runs that each reach the block size (the last run may be smaller)."""
+    run, size = [], 0
+    for payload in payloads:
+        run.append(payload)
+        size += len(payload)
+        if size >= blocks.BLOCK_TARGET_BYTES:
+            yield run
+            run, size = [], 0
+    if run:
+        yield run
+
+
+def _extend(
+    key: bytes, doc_id: str, domain: Domain, chains: _Chains, payloads: Sequence[bytes]
+) -> tuple[dict[str, bytes], Chain]:
+    """The blocks of ``domain`` after ``payloads`` were added: the last block is filled up if it is small, new blocks
+    follow. Returns the block entries and the new end of the chain."""
+    stored = list(chains.stored[domain])
+    payloads = list(payloads)
+    if payloads and stored:
+        last = chains.opened[domain][-1]
+        if sum(len(p) for p in last) < blocks.BLOCK_TARGET_BYTES:
+            stored.pop()
+            payloads = [*last, *payloads]
+    previous = block_hash(stored[-1]) if stored else GENESIS
+    for run in _chunks(payloads):
+        data = seal_block(key, Place(doc_id, domain, len(stored) + 1, previous), run)
+        stored.append(data)
+        previous = block_hash(data)
+    entries = {f"{domain.value}/{number:06d}.blk": data for number, data in enumerate(stored, start=1)}
+    return entries, Chain(len(stored), previous)
+
+
+def _pack_blocks(
+    path: Path,
+    keys: Mapping[Domain, bytes],
+    *,
+    history: Sequence[bytes],
+    chat: Sequence[bytes],
+    snapshot: bytes | None,
+    generation: int,
+) -> None:
+    """Fold the records of journal ``generation`` into the blocks, write the new head and snapshot, and replace the
+    file atomically. The journal is not touched."""
+    _require_all_keys(keys)
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        chains = _load_chains(entries, manifest, keys)
+        if generation <= chains.head.generation:
+            raise ValueError(f"journal generation {generation} is already in the file")
+        history_blocks, history_end = _extend(keys[Domain.HISTORY], manifest.id, Domain.HISTORY, chains, history)
+        chat_blocks, chat_end = _extend(keys[Domain.CHAT], manifest.id, Domain.CHAT, chains, chat)
+        head = Head(generation, history_end, chat_end)
+        replaced = (_HEAD, _SNAPSHOT)
+        kept = {n: d for n, d in _carried(entries).items() if n not in replaced and not _BLOCK_NAME.fullmatch(n)}
+        packed = {**kept, **history_blocks, **chat_blocks, _HEAD: seal_head(keys[Domain.HISTORY], manifest.id, head)}
+        if snapshot is not None:
+            packed[_SNAPSHOT] = seal(keys[Domain.CONTENT], snapshot, _snapshot_aad(manifest.id))
+        people_blob = entries["people.bin"]
+        _write_zip(path, _changed(manifest), _slots_of(entries, path), people_blob, packed, exclusive=False)
+
+
+def pack_journal(
+    path: Path, keys: Mapping[Domain, bytes], writer: JournalWriter, snapshot: bytes | None = None
+) -> JournalWriter:
+    """Fold the journal into the document file and go on with a fresh journal.
+
+    Returns the writer of the fresh journal (``writer`` is closed).
+
+    The file is replaced first and the journal second. A crash between the two leaves a journal whose records the file
+    already holds; :func:`read_state` ignores it and :func:`begin` replaces it. ``snapshot`` becomes the snapshot of the
+    file (``None`` removes it). If anything fails, ``writer`` is still the open journal and nothing has changed."""
+    journal = journal_path(path)
+    manifest = read_manifest(path)
+    history, chat = [], []
+    for record in read_journal(journal, manifest.id, keys):
+        if record.domain is Domain.HISTORY:
+            history.append(record.payload)
+        elif record.domain is Domain.CHAT:
+            chat.append(record.payload)
+    _pack_blocks(path, keys, history=history, chat=chat, snapshot=snapshot, generation=writer.generation)
+    fresh = JournalWriter.replace(journal, manifest.id, keys, writer.generation + 1)
+    writer.close()
+    return fresh

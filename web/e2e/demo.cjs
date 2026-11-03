@@ -22,6 +22,12 @@ async function open(browser, [user, password], create) {
   await page.fill('input[name=user]', user)
   await page.fill('input[name=password]', password)
   await page.click(create ? 'text=Create document' : 'button:text-is("Open")')
+  if (create) {
+    // a new document first shows its recovery key; the person must confirm having stored it
+    await page.waitForSelector('[data-testid=recovery-key]')
+    await page.check('.modal input[type=checkbox]')
+    await page.click('.modal button:text-is("Continue")')
+  }
   await page.waitForSelector('.viewport')
   await page.waitForFunction(() => document.querySelector('.status.open'))
   return page
@@ -144,7 +150,7 @@ async function menu(page, title, item) {
     // ---- ann asks for a sum; the number lands in her cell
     await ann.fill('.write input', '@ai sum B2:B5 into B7')
     await ann.press('.write input', 'Enter')
-    await waitFor(ann, () => [...document.querySelectorAll('.msg.ai')].some((e) => e.textContent.includes('plain number')), null, 'ai sum')
+    await waitFor(ann, () => [...document.querySelectorAll('.msg.ai')].some((e) => e.textContent.includes('I wrote =SUM(B2:B5)')), null, 'ai sum')
     await click(ann, 6, 1)
     await waitFor(ann, () => document.querySelector('.text').value !== '', null, 'formula bar shows B7')
     const b7 = await ann.inputValue('.text')

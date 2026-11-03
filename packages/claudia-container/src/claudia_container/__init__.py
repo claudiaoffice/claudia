@@ -3,9 +3,9 @@
 The building blocks of the file's security: the password rules (:mod:`claudia_container.passwords`), the
 cryptographic primitives behind one small interface (:mod:`claudia_container.crypto`), the key slots that decide who may
 open which part of a document (:mod:`claudia_container.slots`), the document file with its people
-(:mod:`claudia_container.container`) and the encrypted journal of an open document (:mod:`claudia_container.journal`).
-Packing the journal into encrypted blocks follows in a later version. The design is in the project document
-``e2-container-design.md`` (decisions D70 to D82).
+(:mod:`claudia_container.container`), the encrypted journal of an open document (:mod:`claudia_container.journal`) and
+the blocks, head record and snapshot that the journal is packed into (:mod:`claudia_container.blocks`). The design is in
+the project document ``e2-container-design.md`` (decisions D70 to D82).
 """
 
 from ._version import __version__
@@ -16,14 +16,23 @@ from .container import (
     NotAClaudiaDocument,
     Person,
     ReaderLimitExceeded,
+    State,
+    TamperedDocument,
     UnsupportedFormat,
     add_user,
+    begin,
     change_password,
     create_document,
+    has_recovery_key,
     journal_path,
+    pack_journal,
     read_manifest,
     read_people,
+    read_snapshot,
+    read_state,
+    recover_access,
     remove_user,
+    set_recovery_key,
     unlock,
     unlock_with_recovery,
 )
@@ -37,7 +46,7 @@ from .crypto import (
     random_key,
     seal,
 )
-from .journal import JournalError, JournalRecord, JournalWriter, read_journal
+from .journal import JournalError, JournalRecord, JournalWriter, journal_generation, read_journal
 from .passwords import MIN_PASSWORD_LENGTH, WeakPassword, password_problems, require_strong_password
 from .slots import (
     ROLE_DOMAINS,
@@ -73,31 +82,41 @@ __all__ = [
     "Person",
     "ReaderLimitExceeded",
     "Role",
+    "State",
+    "TamperedDocument",
     "Unlocked",
     "UnsupportedFormat",
     "WeakPassword",
     "__version__",
     "add_user",
+    "begin",
     "change_password",
     "create_document",
     "derive_login_material",
     "derive_recovery_material",
     "format_recovery_key",
+    "has_recovery_key",
+    "journal_generation",
     "journal_path",
     "make_slot",
     "new_domain_keys",
     "new_recovery_key",
     "open_sealed",
     "open_slot",
+    "pack_journal",
     "parse_recovery_key",
     "password_problems",
     "random_key",
     "read_journal",
     "read_manifest",
     "read_people",
+    "read_snapshot",
+    "read_state",
+    "recover_access",
     "remove_user",
     "require_strong_password",
     "seal",
+    "set_recovery_key",
     "unlock",
     "unlock_with_recovery",
 ]
