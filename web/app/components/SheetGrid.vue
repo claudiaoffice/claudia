@@ -423,6 +423,9 @@ defineExpose({ focus: () => viewport.value?.focus() })
   text-align: center;
   font-weight: 500;
 }
+.cell.error {
+  color: var(--rose);
+}
 .selection {
   position: absolute;
   background: color-mix(in srgb, var(--app) 9%, transparent);

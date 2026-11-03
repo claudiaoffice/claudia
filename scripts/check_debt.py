@@ -25,7 +25,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCES = sorted(str(p) for p in ROOT.glob("packages/*/src"))
-PERF = "packages/claudia-core/tests/test_performance.py"
+PERF = (
+    "packages/claudia-core/tests/test_performance.py",
+    "packages/claudia-computes/tests/test_formula_performance.py",
+)  # (each runs on its own: the packages' conftest files would clash)
 DOCS_OUT = "docs/_build/html"
 
 
@@ -44,9 +47,9 @@ def checks() -> list[Check]:
         Check("ruff", (*run, "ruff", "check", ".")),
         Check("mypy", (*run, "mypy", *SOURCES)),
         Check("vulture", (*run, "vulture")),
-        Check("tests", (*run, "pytest", "--durations=5", "--deselect", PERF)),
+        Check("tests", (*run, "pytest", "--durations=5", *[arg for path in PERF for arg in ("--deselect", path)])),
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
-        Check("perf", (*run, "pytest", PERF), slow=True),
+        *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],
         *web_checks(),
     ]
 

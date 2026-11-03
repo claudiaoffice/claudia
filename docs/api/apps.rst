@@ -17,6 +17,22 @@ computes
 .. autoclass:: claudia_computes.RemoveSheet
 .. autoclass:: claudia_computes.CellRegion
 
+Formulas
+~~~~~~~~
+
+Formulas are parsed once into a tree, compiled into closures and calculated incrementally (``claudia_computes.calc``).
+Choosing and referencing functions (``IF``, ``XLOOKUP``, ``INDEX``, ``OFFSET`` ...) and the operators are part of the
+core; every function that takes cell ranges and gives a value is a ``UserFunction``:
+
+.. autoclass:: claudia_computes.functions.base.UserFunction
+.. autoclass:: claudia_computes.functions.base.Example
+.. autoclass:: claudia_computes.functions.registry.FunctionRegistry
+.. autoclass:: claudia_computes.functions.range.Range
+.. autoclass:: claudia_computes.values.ErrorValue
+.. autoclass:: claudia_computes.values.FormulaError
+.. autoclass:: claudia_computes.functions.base.Bound
+.. autoclass:: claudia_computes.functions.range.Grid
+
 Types that appear in the signatures above:
 
 .. autoclass:: claudia_computes.refs.SheetId

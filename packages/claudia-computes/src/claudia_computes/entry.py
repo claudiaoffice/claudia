@@ -1,4 +1,4 @@
-"""What a person typed into a cell, read as a value (the formulas come later and will use the same door)."""
+"""What a person typed into a cell, read as content: a constant, or a formula when it starts with ``=``."""
 
 from __future__ import annotations
 
@@ -15,7 +15,9 @@ _INT_LIMIT = 2**53  # beyond this a float stores the number as exactly as the pe
 def parse_input(text: str) -> Content:
     """The content that typing ``text`` makes.
 
-    Nothing (or only blanks) empties the cell; a leading apostrophe keeps the rest as text (``'007``); TRUE and FALSE
+    Nothing (or only blanks) empties the cell; a leading apostrophe keeps the rest as text (``'007``, ``'=1+1``); text
+    starting with ``=`` and having more after it is a formula (it is read when it is stored: a formula that cannot be
+    read is kept and shows ``#ERROR!``, so that it can be corrected, not retyped); TRUE and FALSE
     in any case are booleans; whole numbers are integers and decimals with a point or an exponent are floats; anything
     else, including a number the computer cannot hold, stays text."""
     if text.startswith("'"):
@@ -23,6 +25,8 @@ def parse_input(text: str) -> Content:
     word = text.strip()
     if not word:
         return None
+    if word[0] == "=" and len(word) > 1:
+        return {"t": "formula", "v": word}
     if word.upper() in ("TRUE", "FALSE"):
         return content_of(word.upper() == "TRUE")
     if _INT.fullmatch(word):

@@ -2,7 +2,7 @@
 
 It understands a few phrases about cells and says so honestly when it does not understand: it is not an intelligence
 and does not pretend to be one. It works on the sheet the asker is looking at (their presence), else on the first one.
-Sums and the like are computed here and written as plain numbers: formulas come with the formula engine.
+Sums and the like are written as formulas (``=SUM(B2:B6)``), so that they follow the numbers they add up.
 """
 
 from __future__ import annotations
@@ -59,11 +59,6 @@ def _label(area: RangeRef) -> str:
     first = f"{column_name(area.first.col)}{area.first.row + 1}"
     last = f"{column_name(area.last.col)}{area.last.row + 1}"
     return first if first == last else f"{first}:{last}"
-
-
-def _shown(number: float) -> str:
-    """A number as one types it, without noise such as 2.0 or 0.30000000000000004."""
-    return str(int(number)) if float(number).is_integer() else format(number, ".12g")
 
 
 def _cells(area: RangeRef, text: str) -> list[dict]:
@@ -139,32 +134,36 @@ class ScriptedEngine:
         area = parse_range_ref(where)
         return self._put(sheet, area, "", f"I cleared {_label(area)}.")
 
+    _FUNCTIONS = {
+        "sum": "SUM",
+        "total": "SUM",
+        "average": "AVERAGE",
+        "mean": "AVERAGE",
+        "min": "MIN",
+        "max": "MAX",
+        "count": "COUNT",
+    }
+
     def _summary(self, model: WorkbookModel, sheet: SheetId, how: str, source: str, target: str) -> list[Step]:
         area, into = parse_range_ref(source), parse_range_ref(target)
-        cells = model.sheet(sheet).cells
-        numbers = [cells[p]["v"] for p in area.cells() if p in cells and cells[p]["t"] in ("int", "float")]
+        grid = model.sheet(sheet).grid  # what the cells show: a number that a formula calculated counts too
+        numbers = [
+            v
+            for p in area.cells()
+            if (v := grid.get(p)) is not None and isinstance(v, (int, float)) and not isinstance(v, bool)
+        ]
         if not numbers:
             return [Say(f"There are no numbers in {_label(area)} to work with.")]
-        how = how.casefold()
-        result = {
-            "sum": sum(numbers),
-            "total": sum(numbers),
-            "average": sum(numbers) / len(numbers),
-            "mean": sum(numbers) / len(numbers),
-            "min": min(numbers),
-            "max": max(numbers),
-            "count": len(numbers),
-        }[how]
-        said = (
-            f"The {how} of {_label(area)} is {_shown(result)}, written into {_label(into)} "
-            "as a plain number for now: formulas come later."
-        )
-        return self._put(sheet, into, _shown(result), said)
+        function = self._FUNCTIONS[how.casefold()]
+        formula = f"={function}({_label(area)})"
+        said = f"I wrote {formula} into {_label(into)}: it follows the numbers in {_label(area)} when they change."
+        return self._put(sheet, into, formula, said)
 
     def _example(self, model: WorkbookModel, sheet: SheetId) -> list[Step]:
         steps: list[Step] = [Say("I will type a small monthly budget into A1:B6.")]
-        for row, (item, amount) in enumerate((*BUDGET, ("Total", sum(a for _, a in BUDGET[1:])))):
+        last = len(BUDGET)
+        for row, (item, amount) in enumerate((*BUDGET, ("Total", f"=SUM(B2:B{last})"))):
             cells = [{"row": row, "col": 0, "input": item}, {"row": row, "col": 1, "input": str(amount)}]
             steps.append(Call("set_cells", {"sheet": sheet, "cells": cells}, _focus(sheet, _area(row, 0, 1))))
-        steps.append(Say("Done. Try changing a number, or ask me to sum B2:B5 into B7."))
+        steps.append(Say("Done. The total is a formula: change a number and it follows."))
         return steps

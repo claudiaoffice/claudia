@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { alignment, cellLabel, columnIndex, columnName, inputOf, parseCell, rangeLabel, show } from '~/lib/cells'
+import { alignment, cellLabel, columnIndex, columnName, formulaOf, inputOf, parseCell, rangeLabel, show } from '~/lib/cells'
 
 describe('labels', () => {
   it('names columns like a spreadsheet', () => {
@@ -48,5 +48,27 @@ describe('inputOf', () => {
     for (const text of ['007', 'true', ' ', "'quoted", '1e3', '-2.5', '']) {
       expect(inputOf({ t: 'text', v: text })).toBe(`'${text}`)
     }
+  })
+})
+
+describe('formulas', () => {
+  it('shows the value a formula gave, and edits the formula', () => {
+    const sum = { t: 'int', v: 42, f: '=SUM(A1:A2)' } as const
+    expect(show(sum)).toBe('42')
+    expect(alignment(sum)).toBe('right')
+    expect(inputOf(sum)).toBe('=SUM(A1:A2)')
+    expect(formulaOf(sum)).toBe('=SUM(A1:A2)')
+    expect(formulaOf({ t: 'int', v: 1 })).toBeNull()
+    expect(formulaOf(null)).toBeNull()
+  })
+  it('shows an error by its code, in the middle', () => {
+    const broken = { t: 'error', v: '#DIV/0!', f: '=1/0' } as const
+    expect(show(broken)).toBe('#DIV/0!')
+    expect(alignment(broken)).toBe('center')
+    expect(inputOf(broken)).toBe('=1/0')
+  })
+  it('keeps text that looks like a formula as text', () => {
+    expect(inputOf({ t: 'text', v: '=1+1' })).toBe("'=1+1")
+    expect(inputOf({ t: 'text', v: '  =x' })).toBe("'  =x")
   })
 })

@@ -70,4 +70,5 @@ explicit_package_bases = true
 [tool.vulture]
 paths = ["packages", "scripts", "vulture_whitelist.py"]
 min_confidence = 60
+ignore_decorators = ["@form", "@builtin"]  # (they register the function in a table; nothing calls it by name)
 exclude = [".venv/", "docs/"]

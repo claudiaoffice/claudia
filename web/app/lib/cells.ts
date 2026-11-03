@@ -1,6 +1,13 @@
 // Cells as people see and type them: A1 labels, how a stored value is shown, and what typing it again would need.
 
-export type Content = { t: 'int' | 'float' | 'text' | 'bool'; v: number | string | boolean } | null
+/** What a cell holds as the server sends it. A formula comes as the value it gave, with its text under `f`; an error
+ * (`t: 'error'`) has its code in `v` and may say why under `d`. */
+export type Content = {
+  t: 'int' | 'float' | 'text' | 'bool' | 'error'
+  v: number | string | boolean
+  f?: string
+  d?: string
+} | null
 
 export const MAX_ROWS = 1_048_576
 export const MAX_COLS = 16_384
@@ -48,7 +55,12 @@ export function show(content: Content): string {
 export function alignment(content: Content): 'left' | 'right' | 'center' {
   if (content === null) return 'left'
   if (content.t === 'int' || content.t === 'float') return 'right'
-  return content.t === 'bool' ? 'center' : 'left'
+  return content.t === 'bool' || content.t === 'error' ? 'center' : 'left'
+}
+
+/** The formula of a cell, or null if it holds a plain value. */
+export function formulaOf(content: Content): string | null {
+  return content?.f ?? null
 }
 
 const INT = /^[+-]?[0-9]+$/
@@ -57,12 +69,18 @@ const FLOAT = /^[+-]?(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/
 /** What to type to get exactly this content: text that would be read as something else gets the apostrophe. */
 export function inputOf(content: Content): string {
   if (content === null) return ''
+  if (content.f !== undefined) return content.f // a formula is edited as the formula, not as what it gave
   if (content.t === 'bool') return content.v ? 'TRUE' : 'FALSE'
   if (content.t === 'int' || content.t === 'float') return String(content.v)
   const text = String(content.v)
   const word = text.trim()
   const ambiguous =
-    text.startsWith("'") || word === '' || INT.test(word) || FLOAT.test(word) || /^(true|false)$/i.test(word)
+    text.startsWith("'") ||
+    word === '' ||
+    word.startsWith('=') ||
+    INT.test(word) ||
+    FLOAT.test(word) ||
+    /^(true|false)$/i.test(word)
   return ambiguous ? `'${text}` : text
 }
 

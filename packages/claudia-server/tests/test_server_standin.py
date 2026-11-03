@@ -57,15 +57,15 @@ def test_clear_empties_cells(book):
 @pytest.mark.parametrize(
     ("text", "answer"),
     [
-        ("sum A1:A3 into A4", "6"),
-        ("total of A1:A3 in A4", "6"),
-        ("average A1:A3 into A4", "2"),
-        ("max A1:A3 into A4", "3"),
-        ("min A1:A3 into A4", "1"),
-        ("count A1:A3 into A4", "3"),
+        ("sum A1:A3 into A4", "=SUM(A1:A3)"),
+        ("total of A1:A3 in A4", "=SUM(A1:A3)"),
+        ("average A1:A3 into A4", "=AVERAGE(A1:A3)"),
+        ("max A1:A3 into A4", "=MAX(A1:A3)"),
+        ("min A1:A3 into A4", "=MIN(A1:A3)"),
+        ("count A1:A3 into A4", "=COUNT(A1:A3)"),
     ],
 )
-def test_summaries_are_computed_here_and_written_as_numbers(book, text, answer):
+def test_summaries_are_written_as_formulas(book, text, answer):
     book.execute(
         SetCells(
             "s1",
@@ -80,7 +80,12 @@ def test_summaries_are_computed_here_and_written_as_numbers(book, text, answer):
     )
     steps = plan(book, text)
     assert cells_of(steps)[1]["cells"] == [{"row": 3, "col": 0, "input": answer}]
-    assert any(isinstance(s, Say) and "number" in s.text for s in steps), "it says that this is a value, not a formula"
+    assert any(isinstance(s, Say) and answer in s.text for s in steps), "it says which formula it wrote"
+
+
+def test_numbers_that_formulas_calculated_count_as_numbers(book):
+    book.execute(SetCells("s1", ((0, 0, {"t": "int", "v": 4}), (1, 0, {"t": "formula", "v": "=A1*2"}))), author="ann")
+    assert cells_of(plan(book, "sum A1:A2 into A3"))[1]["cells"] == [{"row": 2, "col": 0, "input": "=SUM(A1:A2)"}]
 
 
 def test_summing_nothing_is_explained(book):
@@ -98,6 +103,7 @@ def test_the_example_builds_a_small_budget(book):
     assert len(calls) >= 3 and all(c.method == "set_cells" for c in calls)
     typed = {(c["row"], c["col"]): c["input"] for call in calls for c in call.params["cells"]}
     assert typed[(0, 0)] == "Item" and typed[(0, 1)] == "Amount"
+    assert typed[(5, 1)] == "=SUM(B2:B5)", "the total is a formula"
     assert any(isinstance(s, Say) for s in steps)
 
 

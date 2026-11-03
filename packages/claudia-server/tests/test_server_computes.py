@@ -142,3 +142,32 @@ def test_the_workbook_helper_adds_sheets_to_documents_that_exist():
     doc = Document(WorkbookModel(), store=MemoryStore())
     doc.execute(AddSheet("s1", "Old"), author="ann")
     assert call(doc, "add_sheet", {"name": "New"})["sheet"] == "s2"
+
+
+def window(doc, sheet="s1"):
+    reply = call(doc, "cells", {"sheet": sheet, "row0": 0, "row1": 9, "col0": 0, "col1": 9})
+    return {(r, c): v for r, c, v in reply["cells"]}
+
+
+def test_a_formula_comes_back_with_its_value_and_its_text(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "20"), (1, 0, "22"), (2, 0, "=sum(a1:a2)"), (0, 1, "=A1/2"), (1, 1, "=A1/0")])
+    cells = window(book)
+    assert cells[(2, 0)] == {"t": "int", "v": 42, "f": "=SUM(A1:A2)"}, "the text is the canonical one"
+    assert cells[(0, 1)] == {"t": "float", "v": 10.0, "f": "=A1/2"}
+    assert cells[(1, 1)]["t"] == "error" and cells[(1, 1)]["v"] == "#DIV/0!" and cells[(1, 1)]["f"] == "=A1/0"
+    typed(book, "s1", [(0, 0, "30")])
+    assert window(book)[(2, 0)]["v"] == 52, "the formula follows what it reads"
+
+
+def test_a_formula_that_cannot_be_read_is_kept_so_it_can_be_corrected(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "=1+*2")])
+    assert window(book)[(0, 0)] == {"t": "error", "v": "#ERROR!", "f": "=1+*2", "d": window(book)[(0, 0)]["d"]}
+
+
+def test_inserting_rows_moves_formulas_and_what_they_read(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "5"), (1, 0, "=A1*2")])
+    call(book, "structure", {"sheet": "s1", "axis": "row", "insert": True, "at": 0})
+    assert window(book)[(2, 0)] == {"t": "int", "v": 10, "f": "=A2*2"}

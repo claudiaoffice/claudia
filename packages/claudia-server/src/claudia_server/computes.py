@@ -1,10 +1,11 @@
 """The methods of the spreadsheet app: what a table view needs to show cells and to take what people type (E3.1).
 
 ``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet`` and ``structure``.
-Cells travel as ``[row, column, content]`` with zero-based indexes and the content in its stored form
-(``{"t": "int"|"float"|"text"|"bool", "v": value}``). What people type goes through ``parse_input``, so a client sends
-the text of the cell and the server decides what it means. Every write may carry the ``base`` revision of the client's
-view, as ``apply`` does.
+Cells travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it:
+``{"t": "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
+with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client sends
+the text of the cell (``=B2*2`` for a formula) and the server decides what it means. Every write may carry the
+``base`` revision of the client's view, as ``apply`` does.
 """
 
 from __future__ import annotations
@@ -69,16 +70,17 @@ def _sheets(ctx):
 @computes_methods.method("cells", "sheet:str row0:int row1:int col0:int col1:int")
 def _cells(ctx, *, sheet, row0, row1, col0, col1):
     """The cells that hold something in a window of a sheet (both ends included), sorted by row and column, as
-    `{revision, cells: [[row, col, content]]}`. A window has at most 50000 positions; ask for what is visible."""
+    `{revision, cells: [[row, col, content]]}`; a formula comes with its value and, under `f`, its text. A window has at
+    most 50000 positions; ask for what is visible."""
     row0, row1 = _index(row0, MAX_ROWS, "row0"), _index(row1, MAX_ROWS, "row1")
     col0, col1 = _index(col0, MAX_COLS, "col0"), _index(col1, MAX_COLS, "col1")
     if row1 < row0 or col1 < col0:
         raise RequestError("bad_request", "cells: the window must not end before it starts")
     if (row1 - row0 + 1) * (col1 - col0 + 1) > MAX_WINDOW_CELLS:
         raise RequestError("bad_request", f"cells: window too large (at most {MAX_WINDOW_CELLS} positions)")
-    found = _workbook(ctx).sheet(sheet).cells
-    inside = sorted(((r, c, v) for (r, c), v in found.items() if row0 <= r <= row1 and col0 <= c <= col1))
-    return {"revision": _rev(ctx), "cells": [[r, c, v] for r, c, v in inside]}
+    found = _workbook(ctx).sheet(sheet)
+    inside = sorted((r, c) for r, c in found.cells if row0 <= r <= row1 and col0 <= c <= col1)
+    return {"revision": _rev(ctx), "cells": [[r, c, found.view((r, c))] for r, c in inside]}
 
 
 def _rev(ctx) -> str | None:

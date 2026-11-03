@@ -13,13 +13,14 @@ from typing import ClassVar
 from claudia_core import Batch, Command, Context
 
 from .events import CellsChanged, SheetsChanged, StructureChanged
+from .formula import parse_formula
+from .formula.rewrite import adjusted
 from .model import MAX_COLS, MAX_ROWS, Content, Sheet, WorkbookModel
 from .refs import (
     DeleteCols,
     DeleteRows,
     InsertCols,
     InsertRows,
-    Position,
     SheetId,
     StructuralEdit,
     column_name,
@@ -35,7 +36,7 @@ MAX_LISTED_TEXT = 70  # characters of such a sentence; longer ones name the area
 def _show(content: dict) -> str:
     """A cell's content as one short piece of text (for sentences in the history)."""
     value = content["v"]
-    text = ("TRUE" if value else "FALSE") if content["t"] == "bool" else str(value)
+    text = ("TRUE" if value else "FALSE") if content["t"] == "bool" else str(value)  # (a formula: its text)
     return text if len(text) <= 30 else text[:29] + "…"
 
 
@@ -43,6 +44,18 @@ def _one(row: int, col: int, content: dict | None) -> str:
     """``B3 = 40`` or ``B3 cleared``."""
     where = f"{column_name(col)}{row + 1}"
     return f"{where} cleared" if content is None else f"{where} = {_show(content)}"
+
+
+def _followed(content: Content, edit: StructuralEdit, home: SheetId) -> Content:
+    """A formula that is put back after ``edit`` happened: what it points at has moved, so it follows.
+
+    Only formulas without sheet names are followed: a command knows the ids of sheets, not their names, and a formula
+    names them. Those keep their text (what they point at on other sheets is, as a rule, where it was)."""
+    if content is None or content["t"] != "formula" or "!" in content["v"]:
+        return content
+    formula = parse_formula(content["v"])
+    followed = adjusted(formula, edit, home)
+    return content if followed is formula else {"t": "formula", "v": followed.source}
 
 
 def _check_position(row: int, col: int) -> None:
@@ -73,9 +86,7 @@ class AddSheet(Command):
             raise ValueError(f"sheet id {self.id!r} exists")
         if any(s.name.casefold() == self.name.casefold() for s in model.sheets.values()):
             raise ValueError(f"a sheet called {self.name!r} exists")
-        ordered = list(model.sheets.values())
-        ordered.insert(len(ordered) if self.index is None else self.index, Sheet(self.id, self.name))
-        model.sheets = {s.id: s for s in ordered}
+        model.add_sheet(Sheet(self.id, self.name), self.index)
         ctx.emit(SheetsChanged())
         return RemoveSheet(self.id)
 
@@ -112,10 +123,13 @@ class RemoveSheet(Command):
         sheet = model.sheet(self.id)
         index = list(model.sheets).index(self.id)
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
-        del model.sheets[self.id]
+        restores = model.drop_sheet(self.id)  # formulas elsewhere that pointed here, as they were
         ctx.emit(SheetsChanged())
-        add = AddSheet(sheet.id, sheet.name, index)
-        return Batch((add, SetCells(sheet.id, cells))) if cells else add
+        undo: list[Command] = [AddSheet(sheet.id, sheet.name, index)]
+        if cells:
+            undo.append(SetCells(sheet.id, cells))
+        undo.extend(SetCells(other, tuple(sorted(items))) for other, items in restores.items())
+        return undo[0] if len(undo) == 1 else Batch(tuple(undo))
 
     def to_data(self) -> dict:
         return {"id": self.id}
@@ -164,13 +178,11 @@ class SetCells(Command):
         for row, col, _ in self.cells:
             _check_position(row, col)
         previous = tuple((r, c, sheet.cells.get((r, c))) for r, c, _ in self.cells)
-        for row, col, content in self.cells:
-            if content is None:
-                sheet.cells.pop((row, col), None)
-            else:
-                sheet.cells[(row, col)] = content
-        final = {(r, c): content for r, c, content in self.cells}  # later duplicates win, as they do above
-        ctx.emit(CellsChanged(self.sheet, frozenset(final), tuple((r, c, v) for (r, c), v in final.items())))
+        model = ctx.model
+        final = {(r, c): model.store(sheet, r, c, content) for r, c, content in self.cells}  # later duplicates win
+        # Formulas are told by ``settle``, with the value they give; the event here carries what needs no calculating.
+        shown = tuple((r, c, v) for (r, c), v in final.items() if v is None or v["t"] != "formula")
+        ctx.emit(CellsChanged(self.sheet, frozenset(final), shown))
         return SetCells(self.sheet, tuple(reversed(previous)))  # reversed: later duplicates restore first
 
     def to_data(self) -> dict:
@@ -193,7 +205,8 @@ class SetCells(Command):
             for row, col, content in self.cells:
                 target = other.edit.map_index(row if other.edit.axis == "row" else col)
                 if target is not None:  # cells whose line was deleted no longer exist: nothing to restore
-                    moved.append((target, col, content) if other.edit.axis == "row" else (row, target, content))
+                    followed = _followed(content, other.edit, self.sheet)
+                    moved.append((target, col, followed) if other.edit.axis == "row" else (row, target, followed))
             return SetCells(self.sheet, tuple(moved)) if moved else None
         if isinstance(other, SetCells) and other.sheet == self.sheet:
             mine = {(r, c) for r, c, _ in self.cells}
@@ -245,25 +258,15 @@ class Structure(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         edit = self.edit
-        sheet = ctx.model.sheet(edit.sheet)
-        limit = MAX_ROWS if edit.axis == "row" else MAX_COLS
-        if edit.at >= limit or (not edit.insert and edit.at + edit.count > limit):
-            raise ValueError("structural edit is outside the sheet")
-        index = 0 if edit.axis == "row" else 1
-        moved: dict[Position, dict] = {}
-        destroyed: list[tuple[int, int, Content]] = []
-        for pos, content in sheet.cells.items():
-            new = edit.map_index(pos[index])
-            if new is None:
-                destroyed.append((pos[0], pos[1], content))
-            else:
-                moved[(new, pos[1]) if index == 0 else (pos[0], new)] = content
-        if any(r >= MAX_ROWS or c >= MAX_COLS for r, c in moved):
-            raise ValueError("structural edit would push cells off the sheet")
-        sheet.cells = moved
+        destroyed, restores = ctx.model.restructure(edit)
         ctx.emit(StructureChanged(edit))
         undo = Structure(_OPPOSITE[type(edit)](edit.sheet, edit.at, edit.count))
-        return Batch((undo, SetCells(edit.sheet, tuple(sorted(destroyed, key=lambda t: t[:2]))))) if destroyed else undo
+        # Deleted cells come back, and so do the formulas that pointed at them, as they were typed.
+        restores[edit.sheet] = [*restores.get(edit.sheet, []), *destroyed]
+        sets = [
+            SetCells(sheet, tuple(sorted(items, key=lambda t: t[:2]))) for sheet, items in restores.items() if items
+        ]
+        return Batch((undo, *sets)) if sets else undo
 
     def to_data(self) -> dict:
         e = self.edit

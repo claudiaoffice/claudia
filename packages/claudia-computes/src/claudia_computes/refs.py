@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import ClassVar, NewType
 
 SheetId = NewType("SheetId", str)
@@ -208,9 +208,15 @@ class CellRef:
             return "#REF!"
         return f"{quote_sheet_name(name)}!{body}"
 
+    def with_row(self, row: int) -> CellRef:
+        return CellRef(row, self.col, self.sheet, self.row_abs, self.col_abs)
+
+    def with_col(self, col: int) -> CellRef:
+        return CellRef(self.row, col, self.sheet, self.row_abs, self.col_abs)
+
     def resolved(self, home: SheetId) -> CellRef:
         """Same reference with ``sheet`` filled in (``home`` if it was None)."""
-        return self if self.sheet is not None else replace(self, sheet=home)
+        return self if self.sheet is not None else CellRef(self.row, self.col, home, self.row_abs, self.col_abs)
 
     def offset(self, d_row: int, d_col: int) -> CellRef | None:
         """Move for copy/paste: absolute parts stay put. None if off the sheet."""
@@ -218,7 +224,7 @@ class CellRef:
         col = self.col if self.col_abs else self.col + d_col
         if row < 0 or col < 0:
             return None
-        return replace(self, row=row, col=col)
+        return CellRef(row, col, self.sheet, self.row_abs, self.col_abs)
 
     def adjusted(self, edit: StructuralEdit, home: SheetId) -> CellRef | None:
         """The reference after ``edit``; None if the cell was deleted (#REF!)."""
@@ -226,9 +232,9 @@ class CellRef:
             return self
         if edit.axis == "row":
             new = edit.map_index(self.row)
-            return None if new is None else replace(self, row=new)
+            return None if new is None else CellRef(new, self.col, self.sheet, self.row_abs, self.col_abs)
         new = edit.map_index(self.col)
-        return None if new is None else replace(self, col=new)
+        return None if new is None else CellRef(self.row, new, self.sheet, self.row_abs, self.col_abs)
 
     def to_dict(self) -> dict:
         return {
@@ -302,11 +308,11 @@ class RangeRef:
             span = edit.map_span(self.first.row, self.last.row)
             if span is None:
                 return None
-            return RangeRef(replace(self.first, row=span[0]), replace(self.last, row=span[1]))
+            return RangeRef(self.first.with_row(span[0]), self.last.with_row(span[1]))
         span = edit.map_span(self.first.col, self.last.col)
         if span is None:
             return None
-        return RangeRef(replace(self.first, col=span[0]), replace(self.last, col=span[1]))
+        return RangeRef(self.first.with_col(span[0]), self.last.with_col(span[1]))
 
     def to_dict(self) -> dict:
         return {"first": self.first.to_dict(), "last": self.last.to_dict()}
