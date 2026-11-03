@@ -3,7 +3,8 @@
 // click outside, and never takes the text selection away from the page: only the fields in it take the focus.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-const props = defineProps<{ x: number; y: number; label: string; width?: number }>()
+/** `anchor`: the button that opened it; pressing it is not "outside", so that the button can close the panel itself. */
+const props = defineProps<{ x: number; y: number; label: string; width?: number; anchor?: HTMLElement | null }>()
 const emit = defineEmits<{ close: [] }>()
 
 const box = ref<HTMLElement | null>(null)
@@ -21,7 +22,8 @@ async function fit() {
 }
 
 function outside(event: PointerEvent) {
-  if (box.value && !box.value.contains(event.target as Node)) emit('close')
+  const target = event.target as Node
+  if (box.value && !box.value.contains(target) && !props.anchor?.contains(target)) emit('close')
 }
 function key(event: KeyboardEvent) {
   if (event.key === 'Escape') {

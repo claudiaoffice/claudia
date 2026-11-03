@@ -334,6 +334,7 @@ function focus() {
 
 /** The right button or the menu key: the style menu opens where the person pointed, or at the caret. */
 function onContextMenu(event: MouseEvent) {
+  if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu (spelling, copy link…), as everywhere
   event.preventDefault()
   adoptSelection(true)
   const keyboard = event.clientX === 0 && event.clientY === 0
@@ -359,7 +360,7 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
 </script>
 
 <template>
-  <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller">
+  <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller" @contextmenu.capture="onContextMenu">
     <div class="sheet">
       <div
         :key="renderKey"
@@ -380,7 +381,6 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
         @cut="onCut"
         @copy="onCopy"
         @click="onClick"
-        @contextmenu="onContextMenu"
         @drop.prevent
         @dragstart.prevent
         @blur="session.flush()"

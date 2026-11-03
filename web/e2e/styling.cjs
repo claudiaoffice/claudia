@@ -47,6 +47,41 @@ async function main() {
   assert.notEqual(title.size, (await look(page, 1)).size, 'the title is drawn bigger than body text, from its CSS')
   log('built-in styles come from CSS:', title.size, 'vs', (await look(page, 1)).size)
 
+  // the style list of the bar hangs below the bar and must really be on top there (not clipped by the bar)
+  await page.click('[data-testid=style-button]')
+  const hit = await page.evaluate(() => {
+    const el = document.querySelector('.style-list [data-style=heading-1]')
+    const r = el.getBoundingClientRect()
+    return document.elementFromPoint(r.left + 20, r.top + r.height / 2)?.closest('[data-style]')?.getAttribute('data-style')
+  })
+  assert.equal(hit, 'heading-1', 'the list is visible and clickable where it is drawn')
+  await page.screenshot({ path: `${SHOTS}/styling-0-dropdown.png` })
+  await page.mouse.click(700, 500) // press outside: it closes
+  await page.waitForSelector('.style-list', { state: 'detached' })
+  await page.click('[data-testid=style-button]')
+  const box = await page.locator('.style-list [data-style=heading-2]').boundingBox()
+  await page.mouse.click(box.x + 20, box.y + box.height / 2) // a real mouse click on the entry, where it is drawn
+  await page.waitForSelector('.style-list', { state: 'detached' })
+  await page.waitForFunction(() => document.querySelector('[data-testid=text] [data-block]').className.includes('st-heading-2'))
+  await page.click('[data-testid=style-button]')
+  await page.click('[data-testid=style-button]') // the button toggles it
+  await page.waitForSelector('.style-list', { state: 'detached' })
+  await page.click('[data-testid=look-button]') // the same menu, without a right click
+  await page.waitForSelector('[data-testid=style-menu]')
+  await page.keyboard.press('Escape')
+  await page.waitForSelector('[data-testid=style-menu]', { state: 'detached' })
+  // a contextmenu event the way any browser sends it, also from the margin of the page, opens the menu and is not left to the browser
+  const prevented = await page.evaluate(() => {
+    const e = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 300, clientY: 300, button: 2 })
+    document.querySelector('[data-testid=text-scroller]').dispatchEvent(e)
+    return e.defaultPrevented
+  })
+  assert.equal(prevented, true)
+  await page.waitForSelector('[data-testid=style-menu]')
+  await page.keyboard.press('Escape')
+  await page.waitForSelector('[data-testid=style-menu]', { state: 'detached' })
+  log('style list of the bar is visible and closes; the Look button and a contextmenu event open the menu')
+
   // right-click in the second paragraph: the menu opens with the style gallery and the look
   const second = page.locator('[data-testid=text] [data-block]').nth(1)
   await second.click()

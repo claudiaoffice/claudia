@@ -1,59 +1,73 @@
 <script setup lang="ts">
 // The toolbar row of a text: the style of the paragraph (you mark text by what it is for, D62) and how to look at the text.
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { colorOf } from '~/lib/people'
 import type { TextSession } from '~/lib/text-session'
 
 const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean }>()
-const emit = defineEmits<{ view: [view: 'flow' | 'page']; authors: [on: boolean]; styled: [] }>()
+const emit = defineEmits<{ view: [view: 'flow' | 'page']; authors: [on: boolean]; styled: []; look: [at: { x: number; y: number }] }>()
 
 const state = props.session.state
-const open = ref(false)
-const root = ref<HTMLElement | null>(null)
+// The list is a floating panel at the button, not a child of the bar: the bar scrolls sideways on a narrow window, which
+// would clip anything that hangs out of it.
+const at = ref<{ x: number; y: number } | null>(null)
+const button = ref<HTMLElement | null>(null)
+const look = ref<HTMLElement | null>(null)
+
+const below = (el: HTMLElement | null) => {
+  const r = el?.getBoundingClientRect()
+  return { x: r?.left ?? 0, y: (r?.bottom ?? 0) + 4 }
+}
+
+function toggle() {
+  at.value = at.value ? null : below(button.value)
+}
+
+function close() {
+  at.value = null
+}
 
 const current = () => state.styles.find((s) => s.id === props.session.currentStyle()) ?? state.styles[0]
 
 function choose(id: string) {
-  open.value = false
+  close()
   void props.session.setStyle(id)
   emit('styled')
 }
-
-function outside(event: PointerEvent) {
-  if (root.value && !root.value.contains(event.target as Node)) open.value = false
-}
-onMounted(() => document.addEventListener('pointerdown', outside))
-onBeforeUnmount(() => document.removeEventListener('pointerdown', outside))
 
 const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter((u, i, all) => all.indexOf(u) === i)
 </script>
 
 <template>
   <div class="stylebar" role="toolbar" aria-label="Text">
-    <div ref="root" class="style-picker">
+    <div class="style-picker">
       <button
+        ref="button"
         class="style-btn"
         type="button"
         aria-haspopup="listbox"
-        :aria-expanded="open"
+        :aria-expanded="!!at"
         :disabled="session.readOnly"
         title="Style: mark text by what it is for"
         data-testid="style-button"
         @mousedown.prevent
-        @click="open = !open"
+        @click="toggle"
       >
         <span>{{ current()?.name ?? 'Body text' }}</span
         ><span class="caret">▾</span>
       </button>
-      <ul v-if="open" class="style-list" role="listbox" aria-label="Styles">
-        <li v-for="s in state.styles" :key="s.id" role="option" :aria-selected="s.id === current()?.id">
-          <button class="style-opt" :class="{ current: s.id === current()?.id }" type="button" :data-style="s.id" @mousedown.prevent @click="choose(s.id)">
-            <span class="name">{{ s.name }}</span
-            ><span class="purpose">{{ s.purpose }}</span>
-          </button>
-        </li>
-      </ul>
+      <Popover v-if="at" :x="at.x" :y="at.y" :width="300" :anchor="button" label="Styles" @close="close">
+        <ul class="style-list" role="listbox" aria-label="Styles">
+          <li v-for="s in state.styles" :key="s.id" role="option" :aria-selected="s.id === current()?.id">
+            <button class="style-opt" :class="{ current: s.id === current()?.id }" type="button" :data-style="s.id" @click="choose(s.id)">
+              <span class="name">{{ s.name }}</span
+              ><span class="purpose">{{ s.purpose }}</span>
+            </button>
+          </li>
+        </ul>
+      </Popover>
     </div>
+    <button ref="look" class="tool" type="button" :disabled="session.readOnly" title="How this style looks: font, size, colour, CSS (right-click in the text does the same)" data-testid="look-button" @mousedown.prevent @click="emit('look', below(look))">Look…</button>
 
     <span class="grow" />
 
@@ -94,7 +108,10 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
   background: transparent;
   font-weight: 500;
 }
-.tool:hover {
+.tool:disabled {
+  opacity: 0.5;
+}
+.tool:hover:not(:disabled) {
   background: var(--mist);
 }
 .tool.on {
@@ -129,18 +146,9 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
   font-size: 10px;
 }
 .style-list {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  z-index: 40;
-  width: 300px;
   margin: 0;
-  padding: 5px;
+  padding: 0;
   list-style: none;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 .style-opt {
   display: flex;
