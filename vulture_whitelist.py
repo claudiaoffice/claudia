@@ -66,3 +66,10 @@ used._move_object  # creates_methods_with(...).method("move_object")
 used._resize_object  # creates_methods_with(...).method("resize_object")
 used._set_text  # creates_methods_with(...).method("set_text")
 used._remove_object  # creates_methods_with(...).method("remove_object")
+
+# claudia-fonts: set on a fontTools table in claudia_fonts.testing, which tests use
+used.macStyle  # head.macStyle is read by fontTools when the font is saved
+
+# claudia-typeset tests: pytest reads these by name
+used.pytestmark  # module variable read by pytest (skip conditions, fixtures every test of the module needs)
+used.needs_tex  # fixture requested by name with pytest.mark.usefixtures("needs_tex") in the real-engine tests

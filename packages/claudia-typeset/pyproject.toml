@@ -1,0 +1,19 @@
+[project]
+name = "claudia-typeset"
+dynamic = ["version"]
+description = "claudia-typeset: the typesetting service of a Claudia server (E3.4, E3.10): sandboxed LaTeX jobs, cache, queue"
+requires-python = ">=3.14"
+dependencies = ["claudia-fonts"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_typeset/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_typeset"]
+
+[tool.uv.sources]
+claudia-fonts = { workspace = true }

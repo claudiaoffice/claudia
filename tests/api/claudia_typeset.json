@@ -1,0 +1,191 @@
+{
+ "version": "0.2.0",
+ "BadJob": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Built": {
+  "class": [
+   "object"
+  ],
+  "init": "(text: str, first_line: int, line_count: int) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Completed": {
+  "class": [
+   "object"
+  ],
+  "init": "(returncode: int, output: str) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Diagnosis": {
+  "class": [
+   "object"
+  ],
+  "init": "(steps: tuple[claudia_typeset.diagnosis.Step, ...]) -> None",
+  "methods": {},
+  "properties": [
+   "ok"
+  ]
+ },
+ "EngineUnavailable": {
+  "class": [
+   "RuntimeError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "FontUnavailable": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "HELP_TOPIC": {
+  "value": "'typeset.configure-latex'"
+ },
+ "Job": {
+  "class": [
+   "object"
+  ],
+  "init": "(mode: claudia_typeset.job.Mode, source: str, files: collections.abc.Mapping[str, bytes] = <factory>, main: str = 'main.tex', passes: int = 1, font: str | None = None, width_mm: float = 150.0) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Limits": {
+  "class": [
+   "object"
+  ],
+  "init": "(seconds: float = 20.0, memory_mb: int = 2048, output_mb: int = 16, pages: int = 200) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Mode": {
+  "class": [
+   "StrEnum"
+  ],
+  "init": "(*values)",
+  "methods": {},
+  "properties": []
+ },
+ "OutputTooLarge": {
+  "class": [
+   "SandboxError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "ResultCache": {
+  "class": [
+   "object"
+  ],
+  "init": "(directory: str | pathlib.Path) -> None",
+  "methods": {
+   "get": "(self, key: str) -> str | None",
+   "put": "(self, key: str, svg: str) -> None"
+  },
+  "properties": []
+ },
+ "SETTINGS": {
+  "value": "('xelatex', 'pdftocairo')"
+ },
+ "SandboxError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Step": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: str, ok: bool, detail: str, hint: str = '') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "TexError": {
+  "class": [
+   "object"
+  ],
+  "init": "(message: str, line: int | None, context: str = '') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Timeout": {
+  "class": [
+   "SandboxError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Typeset": {
+  "class": [
+   "object"
+  ],
+  "init": "(svg: str, cached: bool) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "TypesetFailed": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(error: claudia_typeset.source.TexError) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Typesetter": {
+  "class": [
+   "object"
+  ],
+  "init": "(catalogue: claudia_fonts.catalogue.Catalogue, directory: str | pathlib.Path, *, limits: claudia_typeset.job.Limits | None = None, xelatex: str | os.PathLike[str] | None = None, pdftocairo: str | os.PathLike[str] | None = None) -> None",
+  "methods": {
+   "diagnose": "(self) -> claudia_typeset.diagnosis.Diagnosis",
+   "engine_version": "(self) -> str",
+   "typeset": "(self, job: claudia_typeset.job.Job) -> claudia_typeset.engine.Typeset"
+  },
+  "properties": []
+ },
+ "UnsafeOutput": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "build_source": {
+  "function": "(job: claudia_typeset.job.Job, catalogue: claudia_fonts.catalogue.Catalogue) -> claudia_typeset.source.Built"
+ },
+ "cache_key": {
+  "function": "(job: claudia_typeset.job.Job, *, engine: str, fonts: str) -> str"
+ },
+ "check_svg": {
+  "function": "(svg: str) -> str"
+ },
+ "hint_for": {
+  "function": "(message: str) -> str"
+ },
+ "parse_log": {
+  "function": "(output: str, *, first_line: int, line_count: int, job_folder: str | None = None) -> claudia_typeset.source.TexError | None"
+ },
+ "resolve_program": {
+  "function": "(setting: str, configured: str | os.PathLike[str] | None, default: str) -> pathlib.Path"
+ },
+ "run_sandboxed": {
+  "function": "(argv: collections.abc.Sequence[str], *, cwd: pathlib.Path, env: collections.abc.Mapping[str, str], limits: claudia_typeset.job.Limits, search_path: collections.abc.Sequence[str | pathlib.Path] = ()) -> claudia_typeset.sandbox.Completed"
+ }
+}

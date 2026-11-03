@@ -1,0 +1,122 @@
+{
+ "version": "0.1.0",
+ "COLLECTION_FILE": {
+  "value": "'collection.json'"
+ },
+ "Catalogue": {
+  "class": [
+   "object"
+  ],
+  "init": "(fonts: 'Iterable[FontFile]', problems: 'Iterable[Problem]', substitutions: 'Mapping[str, str]') -> 'None'",
+  "methods": {
+   "by_hash": "(self, sha256: 'str') -> 'FontFile | None'",
+   "families": "(self) -> 'tuple[str, ...]'",
+   "fonts": "(self) -> 'tuple[FontFile, ...]'",
+   "fonts_of": "(self, family: 'str') -> 'tuple[FontFile, ...]'",
+   "from_collections": "(collections: 'Iterable[Collection]', *, substitutions: 'Mapping[str, str] | None' = None) -> 'Catalogue'",
+   "from_folders": "(folders: 'Iterable[str | Path]', *, substitutions: 'Mapping[str, str] | None' = None) -> 'Catalogue'",
+   "resolve": "(self, family: 'str') -> 'Resolution'"
+  },
+  "properties": []
+ },
+ "Collection": {
+  "class": [
+   "object"
+  ],
+  "init": "(folder: 'Path', record: 'CollectionRecord') -> None",
+  "methods": {
+   "from_folder": "(folder: 'str | Path') -> 'Collection'"
+  },
+  "properties": []
+ },
+ "CollectionRecord": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', licence: 'str', redistributable: 'bool', source: 'str' = '', version: 'str' = '') -> None",
+  "methods": {
+   "from_data": "(data: 'object') -> 'CollectionRecord'"
+  },
+  "properties": []
+ },
+ "DEFAULT_SUBSTITUTIONS": {
+  "value": "<mappingproxy>"
+ },
+ "FontFile": {
+  "class": [
+   "object"
+  ],
+  "init": "(path: 'Path', family: 'str', style: 'str', weight: 'int', italic: 'bool', sha256: 'str', collection: 'str', licence: 'str', redistributable: 'bool', math: 'bool') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "FontProblem": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "JobFonts": {
+  "class": [
+   "object"
+  ],
+  "init": "(config: 'Path', environment: 'dict[str, str]') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "NotServable": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Problem": {
+  "class": [
+   "object"
+  ],
+  "init": "(path: 'Path', reason: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "RecordError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Resolution": {
+  "class": [
+   "object"
+  ],
+  "init": "(requested: 'str', provided: 'str | None', substituted: 'bool') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "WebFontCache": {
+  "class": [
+   "object"
+  ],
+  "init": "(directory: 'str | Path') -> 'None'",
+  "methods": {
+   "get": "(self, font: 'FontFile') -> 'Path'"
+  },
+  "properties": []
+ },
+ "font_face_css": {
+  "function": "(catalogue: 'Catalogue', family: 'str', url_for: 'Callable[[FontFile], str]') -> 'str'"
+ },
+ "read_font": {
+  "function": "(path: 'str | Path', collection: 'Collection') -> 'FontFile'"
+ },
+ "write_fontconfig": {
+  "function": "(catalogue: 'Catalogue', directory: 'str | Path', cache_directory: 'str | Path') -> 'JobFonts'"
+ }
+}

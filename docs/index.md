@@ -18,6 +18,8 @@ api/claudia_client
 api/claudia_ai
 api/claudia_container
 api/claudia_creates
+api/claudia_fonts
+api/claudia_typeset
 api/apps
 contributing
 changelog
@@ -25,4 +27,6 @@ changelog-server
 changelog-client
 changelog-container
 changelog-creates
+changelog-fonts
+changelog-typeset
 ```
