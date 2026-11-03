@@ -87,6 +87,10 @@ class DocumentProvider(Protocol):
         """Load a document from its log. Raises (``ValueError`` for a document that cannot be opened) with a message fit
         for the person."""
 
+    def release(self, doc_id: str) -> None:
+        """The hub unloaded the document from memory (nobody uses it any more). A store that holds files or keys for
+        an open document lets go of them here; the document stays stored."""
+
     def documents(self) -> list[StoredInfo]:
         """Every stored document, the most recently changed first."""
 
@@ -116,6 +120,9 @@ class MemoryProvider:
         """Rebuild a document from its log."""
         log_, store = self._stored[doc_id]
         return Document.open(self._model_cls, log_, store=store, chat=store.chat, **self._options)
+
+    def release(self, doc_id: str) -> None:
+        """Nothing is held for an open document."""
 
     def documents(self) -> list[StoredInfo]:
         """Every stored document, the most recently changed first."""
@@ -423,6 +430,7 @@ class Hub:
             hosted.sweep()
             if now - hosted.last_active > self.idle_unload and not hosted.humans():
                 del self._documents[doc_id]  # nothing is lost: every change reached storage when it happened
+                self.provider.release(doc_id)  # a sealed store forgets the document's keys
 
     async def _sweep_loop(self) -> None:
         while True:

@@ -27,6 +27,7 @@ from .protocol import (
     core_methods,
     parse_request,
 )
+from .sealed import SealedDocuments
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
 
@@ -60,6 +61,7 @@ __all__ = [
     "RequestError",
     "Say",
     "ScriptedEngine",
+    "SealedDocuments",
     "Step",
     "ScryptDirectory",
     "StoredInfo",

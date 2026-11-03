@@ -1,5 +1,13 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
+ "ContainerError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
  "DecryptionError": {
   "class": [
    "Exception"
@@ -16,12 +24,44 @@
   "methods": {},
   "properties": []
  },
+ "FORMAT_TEXT": {
+  "value": "'claudia-document 1'"
+ },
  "InvalidRecoveryKey": {
   "class": [
    "ValueError"
   ],
   "init": "(...)",
   "methods": {},
+  "properties": []
+ },
+ "JournalError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "JournalRecord": {
+  "class": [
+   "object"
+  ],
+  "init": "(seq: int, domain: claudia_container.slots.Domain, payload: bytes) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "JournalWriter": {
+  "class": [
+   "object"
+  ],
+  "init": "(handle: <class 'BinaryIO'>, doc_id: str, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], generation: int, last_seq: int) -> None",
+  "methods": {
+   "append": "(self, domain: claudia_container.slots.Domain, payload: bytes) -> int",
+   "close": "(self) -> None",
+   "create": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], generation: int = 0) -> Self",
+   "open": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> Self"
+  },
   "properties": []
  },
  "KdfParams": {
@@ -58,8 +98,43 @@
  "MIN_PASSWORD_LENGTH": {
   "value": "8"
  },
+ "Manifest": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: str, app: str, title: str, unlisted: bool, created: str, last_change: str, kdf: claudia_container.crypto.KdfParams, salt: bytes) -> None",
+  "methods": {
+   "from_dict": "(data: object) -> claudia_container.container.Manifest",
+   "to_dict": "(self) -> dict[str, object]"
+  },
+  "properties": []
+ },
+ "NotAClaudiaDocument": {
+  "class": [
+   "ContainerError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Person": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: str, role: claudia_container.slots.Role, locator: bytes) -> None",
+  "methods": {},
+  "properties": []
+ },
  "ROLE_DOMAINS": {
   "value": "<mappingproxy>"
+ },
+ "ReaderLimitExceeded": {
+  "class": [
+   "ContainerError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
  },
  "Role": {
   "class": [
@@ -77,6 +152,14 @@
   "methods": {},
   "properties": []
  },
+ "UnsupportedFormat": {
+  "class": [
+   "ContainerError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
  "WeakPassword": {
   "class": [
    "ValueError"
@@ -84,6 +167,15 @@
   "init": "(problems: tuple[str, ...]) -> None",
   "methods": {},
   "properties": []
+ },
+ "add_user": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], name: str, password: str, role: claudia_container.slots.Role) -> claudia_container.container.Person"
+ },
+ "change_password": {
+  "function": "(path: pathlib.Path, name: str, old_password: str, new_password: str) -> bool"
+ },
+ "create_document": {
+  "function": "(path: pathlib.Path, *, doc_id: str, app: str, title: str, owner: str, password: str, kdf: claudia_container.crypto.KdfParams | None = None, recovery_key: bytes | None = None, now: str | None = None) -> claudia_container.slots.Unlocked"
  },
  "derive_login_material": {
   "function": "(password: str, name: str, doc_salt: bytes, params: claudia_container.crypto.KdfParams) -> claudia_container.crypto.LoginMaterial"
@@ -93,6 +185,9 @@
  },
  "format_recovery_key": {
   "function": "(key: bytes) -> str"
+ },
+ "journal_path": {
+  "function": "(path: pathlib.Path) -> pathlib.Path"
  },
  "make_slot": {
   "function": "(material: claudia_container.crypto.LoginMaterial, doc_id: str, name: str, role: claudia_container.slots.Role, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> claudia_container.slots.KeySlot"
@@ -118,10 +213,28 @@
  "random_key": {
   "function": "() -> bytes"
  },
+ "read_journal": {
+  "function": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> list[claudia_container.journal.JournalRecord]"
+ },
+ "read_manifest": {
+  "function": "(path: pathlib.Path) -> claudia_container.container.Manifest"
+ },
+ "read_people": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> list[claudia_container.container.Person]"
+ },
+ "remove_user": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], name: str, *, allow_last: bool = False) -> None"
+ },
  "require_strong_password": {
   "function": "(password: str) -> None"
  },
  "seal": {
   "function": "(key: bytes, plaintext: bytes, aad: bytes) -> bytes"
+ },
+ "unlock": {
+  "function": "(path: pathlib.Path, name: str, password: str) -> claudia_container.slots.Unlocked | None"
+ },
+ "unlock_with_recovery": {
+  "function": "(path: pathlib.Path, recovery_key: bytes) -> claudia_container.slots.Unlocked | None"
  }
 }

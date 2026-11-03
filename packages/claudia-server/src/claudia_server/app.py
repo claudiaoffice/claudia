@@ -110,31 +110,44 @@ def origin_allowed(origin: str | None, host: str | None, allowed: set[str]) -> b
 
 
 class Gateway:
-    """What the WebSocket route needs: the hub, the users of each document, and the rule for making new documents."""
+    """What the WebSocket route needs: the hub, the users of each document, and the rule for making new documents.
 
-    def __init__(self, hub: Hub, directory: UserDirectory, allowed: set[str]):
+    Checking a password and adding a person cost real work (the password hashing is meant to be slow), so they run in
+    threads and never stop the event loop (SEC-03). At most ``max_hashing`` of them run at once, so a flood of logins
+    cannot use up the memory of the machine (the hashing needs a lot of it)."""
+
+    def __init__(self, hub: Hub, directory: UserDirectory, allowed: set[str], *, max_hashing: int = 2):
         self.hub = hub
         self.directory = directory
         self.allowed = allowed
         self._creating = asyncio.Lock()  # one new document at a time: the first person to ask becomes its owner
+        self._hashing = asyncio.Semaphore(max_hashing)
+
+    async def _verify(self, doc_id: str, credentials: Credentials) -> Account | None:
+        async with self._hashing:
+            return await asyncio.to_thread(self.directory.verify, doc_id, credentials)
 
     async def admit(self, doc_id: str, credentials: Credentials, create: bool) -> Account | None:
         """The account of the person, or ``None``. A new document is made for whoever asks first (its owner)."""
         hub, directory = self.hub, self.directory
         if hub.exists(doc_id):
-            return directory.verify(doc_id, credentials)
+            return await self._verify(doc_id, credentials)
         if not (create and hub.allow_create):
-            return None
+            await self._verify(doc_id, credentials)  # the same work as for a document that exists (SEC-04) ...
+            return None  # ... and the same answer
         async with self._creating:
             if hub.exists(doc_id):  # somebody was faster
-                return directory.verify(doc_id, credentials)
+                return await self._verify(doc_id, credentials)
             if not (isinstance(credentials.user, str) and isinstance(credentials.password, str)):
                 return None
             if (
-                reserved := directory.verify(doc_id, credentials)
+                reserved := await self._verify(doc_id, credentials)
             ) is not None:  # (cannot happen; keeps verify's checks)
                 return reserved
-            account = directory.add_user(doc_id, credentials.user, credentials.password, "owner")
+            async with self._hashing:
+                account = await asyncio.to_thread(
+                    directory.add_user, doc_id, credentials.user, credentials.password, "owner"
+                )
             try:
                 await hub.open(doc_id, create=True)
             except BaseException:

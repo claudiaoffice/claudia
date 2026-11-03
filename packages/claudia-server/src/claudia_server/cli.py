@@ -14,7 +14,8 @@ start-up), or it is given one:
 
 The web app (built in ``web/``) is served from the same address with ``--web``. A page served from another origin (the
 Nuxt dev server on :3000, say) must be named with ``--allow-origin``. Documents live in memory unless ``--dir`` names
-a folder (a plain, unencrypted store until the container file, E2, exists).
+a folder: there every document is a sealed (encrypted) file that only its people can open. ``--plain-dir`` keeps the
+old unencrypted store of the early demos; it has to be asked for by name.
 
 The AI user answers with a language model that runs on this machine, with OpenVINO (``pip install openvino-genai``).
 Give it the folder of a model converted for OpenVINO; it is loaded before the server starts listening, so a wrong
@@ -44,6 +45,7 @@ from .certs import Certificate, CertificateError, ensure_certificate
 from .filestore import FileDirectory, FileProvider
 from .hub import DocumentProvider, Hub, MemoryProvider
 from .protocol import Limits
+from .sealed import SealedDocuments
 
 DEFAULT_MODEL = "claudia_computes.model:WorkbookModel"
 
@@ -76,7 +78,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--model", default=DEFAULT_MODEL, help="the document model, as module:Class")
     parser.add_argument(
-        "--dir", metavar="DIR", help="keep documents and users in DIR (default: in memory, lost on exit)"
+        "--dir",
+        metavar="DIR",
+        help="keep documents in DIR as sealed (encrypted) files (default: in memory, lost on exit)",
+    )
+    parser.add_argument(
+        "--plain-dir",
+        metavar="DIR",
+        help="keep documents and users in DIR as plain files, NOT encrypted (the store of the early demos)",
     )
     parser.add_argument("--web", metavar="DIR", help="serve the built web app from DIR")
     parser.add_argument("--no-list", action="store_true", help="do not serve the list of documents (/api/docs)")
@@ -167,11 +176,16 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     certificate, tls_options = _tls(args)
     if args.web and not (Path(args.web) / "index.html").is_file():
         raise UsageError(f"{args.web} does not contain a built web app (index.html); run `npm run build` in web/")
+    if args.dir and args.plain_dir:
+        raise UsageError("--dir (sealed documents) and --plain-dir (plain files) cannot be used together")
     limits = Limits()
     provider: DocumentProvider
     directory: UserDirectory
     if args.dir:
-        provider, directory = FileProvider(args.dir, model), FileDirectory(args.dir)
+        sealed = SealedDocuments(args.dir, model)
+        provider, directory = sealed, sealed
+    elif args.plain_dir:
+        provider, directory = FileProvider(args.plain_dir, model), FileDirectory(args.plain_dir)
     else:
         provider, directory = MemoryProvider(model), ScryptDirectory()
     assistant, runner = _assistant(args, model)
@@ -203,13 +217,14 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         if args.web
         else f"no web app: {scheme}://{args.host}:{args.port}/ explains how to build and serve it"
     )
-    banner.append(
-        f"documents and users are kept in {args.dir} (not encrypted: the container comes with E2)"
-        if args.dir
-        else "documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)"
-    )
-    if runner is not None:
-        banner.append(f'AI assistant: user "ai", model {runner.name}')
+    if args.dir:
+        banner.append(f"documents are kept in {args.dir}, each sealed (encrypted) by its people's passwords")
+    elif args.plain_dir:
+        banner.append(
+            f"documents and users are kept in {args.plain_dir} (NOT encrypted: use --dir for sealed documents)"
+        )
+    else:
+        banner.append("documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)")
     options = {
         "host": args.host,
         "port": args.port,

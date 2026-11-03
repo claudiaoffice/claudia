@@ -32,8 +32,10 @@ WAIT_SECONDS = 30.0
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """The options of the launcher."""
     parser = argparse.ArgumentParser(description="Start the Claudia demo server and open it in the browser.")
+    parser.add_argument(
+        "--dir", default=str(ROOT / "demo-docs"), help="where the sealed (encrypted) documents are kept"
+    )
     parser.add_argument("--app", choices=sorted(MODELS), default="computes", help="which app the server serves")
-    parser.add_argument("--dir", default=None, help="where documents and users are kept (default: demo-docs[-APP])")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--tls", action="store_true", help="encrypt the connection (default: plain, localhost only)")

@@ -23,6 +23,7 @@ Hub
 .. autoclass:: claudia_server.StoredInfo
 .. autoclass:: claudia_server.FileProvider
 .. autoclass:: claudia_server.FileDirectory
+.. autoclass:: claudia_server.SealedDocuments
 .. autoclass:: claudia_server.HubError
 
 Protocol

@@ -88,7 +88,17 @@ When the handshake fails the server answers and closes the socket with a code: 4
   loudly. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
 * A browser page from another origin cannot use a user's local server: the WebSocket refuses a foreign `Origin` unless
   it is named with `--allow-origin`.
-* Passwords are stored as scrypt hashes with a random salt; unknown names cost the same time as wrong passwords.
+* With `--dir DIR` every document is a sealed file (`docs/<id>.claudia` and a journal next to it): the content, the
+  history, the chat and the names of the people are encrypted (AES-256-GCM), and the keys are opened by each person's
+  password (Argon2id). Nothing readable is on disk, not even who the people are. A wrong password, an unknown name and a
+  document that does not exist give the same answer in the same time. Passwords have at least 8 characters, a capital
+  letter, a small letter and a digit. See `claudia-container` and the design in `e2-container-design.md`.
+* The keys are held in memory only while a document is open, and are forgotten when the server unloads it. After a
+  restart a **viewer** cannot bring a document up (a viewer holds only the content key): the first person to log in has
+  to be an owner or editor; a viewer is told so. Password hashing runs in threads, at most two at a time, so it never
+  stops the server.
+* `--plain-dir DIR` is the old store of the early demos: plain files, scrypt hashes, **not encrypted**.
+* Without a folder, passwords are stored in memory as scrypt hashes with a random salt.
 * Limits: frame size, text length, regions per request, connections per document.
 
-Not there yet: users inside the document file (E2.3), rate limiting (E2.7), read restrictions for viewers (E2.4).
+Not there yet: packing the journal into blocks and the head record (E2.1/E2.6), the recovery key in the server and web UI (E2.5), unencrypted export and import (E2.9), rate limiting (E2.7), read restrictions for viewers (E2.4).

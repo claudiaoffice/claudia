@@ -99,7 +99,8 @@
    "create": "(self, doc_id: 'str') -> 'Document'",
    "documents": "(self) -> 'list[StoredInfo]'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
-   "open": "(self, doc_id: 'str') -> 'Document'"
+   "open": "(self, doc_id: 'str') -> 'Document'",
+   "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": []
  },
@@ -139,7 +140,8 @@
    "create": "(self, doc_id: 'str') -> 'Document'",
    "documents": "(self) -> 'list[StoredInfo]'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
-   "open": "(self, doc_id: 'str') -> 'Document'"
+   "open": "(self, doc_id: 'str') -> 'Document'",
+   "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": []
  },
@@ -147,7 +149,7 @@
   "class": [
    "object"
   ],
-  "init": "(hub: 'Hub', directory: 'UserDirectory', allowed: 'set[str]')",
+  "init": "(hub: 'Hub', directory: 'UserDirectory', allowed: 'set[str]', *, max_hashing: 'int' = 2)",
   "methods": {
    "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool') -> 'Account | None'",
    "serve": "(self, websocket: 'WebSocket', doc_id: 'str') -> 'None'"
@@ -215,7 +217,8 @@
    "create": "(self, doc_id: 'str') -> 'Document'",
    "documents": "(self) -> 'list[StoredInfo]'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
-   "open": "(self, doc_id: 'str') -> 'Document'"
+   "open": "(self, doc_id: 'str') -> 'Document'",
+   "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": []
  },
@@ -293,6 +296,23 @@
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
    "dump": "(self) -> 'dict'",
    "load": "(self, data: 'dict') -> 'None'",
+   "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
+   "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
+  },
+  "properties": []
+ },
+ "SealedDocuments": {
+  "class": [
+   "object"
+  ],
+  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', *, kdf: 'KdfParams | None' = None, key_ttl: 'float' = 60.0, clock: 'Callable[[], float]' = <built-in function monotonic>, **options)",
+  "methods": {
+   "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "create": "(self, doc_id: 'str') -> 'Document'",
+   "documents": "(self) -> 'list[StoredInfo]'",
+   "exists": "(self, doc_id: 'str') -> 'bool'",
+   "open": "(self, doc_id: 'str') -> 'Document'",
+   "release": "(self, doc_id: 'str') -> 'None'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
    "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
   },

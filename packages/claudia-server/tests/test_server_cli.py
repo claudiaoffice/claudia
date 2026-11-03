@@ -46,10 +46,34 @@ def test_the_model_is_loaded_by_name():
     assert load_model("claudia_core.testing:ListModel") is ListModel
 
 
-def test_a_folder_makes_the_store_persistent(tmp_path):
+def test_a_folder_makes_the_store_persistent_and_sealed(tmp_path):
     result = plan("--no-tls", "--dir", str(tmp_path / "data"), tmp_path=tmp_path)
-    assert any("not encrypted" in line for line in result.banner)
+    assert any("encrypted" in line and "NOT" not in line for line in result.banner)
     assert (tmp_path / "data" / "docs").is_dir()
+
+
+def test_the_old_plain_store_must_be_asked_for_by_name_and_says_what_it_is(tmp_path):
+    result = plan("--no-tls", "--plain-dir", str(tmp_path / "data"), tmp_path=tmp_path)
+    assert any("NOT encrypted" in line for line in result.banner)
+    assert (tmp_path / "data" / "docs").is_dir()
+
+
+def test_a_sealed_and_a_plain_folder_cannot_both_be_asked_for(tmp_path):
+    with pytest.raises(UsageError, match="--dir"):
+        plan("--no-tls", "--dir", str(tmp_path / "a"), "--plain-dir", str(tmp_path / "b"), tmp_path=tmp_path)
+
+
+def test_the_server_really_seals_what_a_folder_receives(tmp_path):
+    from starlette.testclient import TestClient
+
+    folder = tmp_path / "data"
+    client = TestClient(plan("--no-tls", "--dir", str(folder), tmp_path=tmp_path).app)
+    with client.websocket_connect("/api/docs/plan/ws") as ws:
+        ws.send_text(
+            '{"id":1,"method":"hello","params":{"user":"Annabelle","password":"Correct-Horse-9","create":true}}'
+        )
+        assert ws.receive_json()["ok"]
+    assert sorted(p.name for p in (folder / "docs").iterdir()) == ["plan.claudia", "plan.claudia.journal"]
 
 
 def test_listing_can_be_switched_off_from_the_command_line(tmp_path):

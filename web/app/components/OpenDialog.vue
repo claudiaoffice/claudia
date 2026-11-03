@@ -137,7 +137,7 @@ async function go(create: boolean) {
             <button class="btn primary" type="submit" :disabled="busy">Open</button>
             <button class="btn" type="button" :disabled="busy" @click="go(true)">Create document</button>
           </div>
-          <p class="hint">A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters).</p>
+          <p class="hint">A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).</p>
         </form>
       </div>
     </section>
