@@ -95,3 +95,79 @@ def test_workbooks_get_the_stand_in_assistant_unless_switched_off(tmp_path):
 
     assert asyncio.run(users()) == ["ai"]
     assert asyncio.run(users("--no-assistant")) == []
+
+
+# ---------------------------------------------------------------- the AI assistant with a language model (E7.1)
+@pytest.fixture
+def model_folder(tmp_path):
+    folder = tmp_path / "qwen-ov"
+    folder.mkdir()
+    (folder / "openvino_model.xml").write_text("<net/>")
+    return folder
+
+
+@pytest.fixture
+def fake_model(monkeypatch):
+    """Stands in for OpenVinoModel: remembers how it was made, answers by echoing the question."""
+    from claudia_ai.testing import FakeModel
+
+    made = []
+
+    def make(path, device, **options):
+        model = FakeModel(lambda messages: "I heard: " + messages[-1]["content"])
+        model.name = f"{path} on {device}"
+        made.append((str(path), device))
+        return model
+
+    monkeypatch.setattr("claudia_server.cli.OpenVinoModel", make)
+    return made
+
+
+def test_a_model_is_loaded_at_start_up_and_named_in_the_banner(tmp_path, model_folder, fake_model):
+    result = plan("--no-tls", "--ai", str(model_folder), "--ai-device", "NPU", tmp_path=tmp_path)
+    assert fake_model == [(str(model_folder), "NPU")]
+    assert any('user "ai"' in line and "NPU" in line for line in result.banner)
+    result.close()
+
+
+def test_the_gpu_is_the_default_device(tmp_path, model_folder, fake_model):
+    plan("--no-tls", "--ai", str(model_folder), tmp_path=tmp_path).close()
+    assert fake_model[0][1] == "GPU"
+
+
+def test_a_model_that_cannot_be_loaded_stops_the_server_with_the_reason(tmp_path):
+    with pytest.raises(UsageError, match=r"--ai: .* is not a folder"):
+        plan("--no-tls", "--ai", str(tmp_path / "missing"), tmp_path=tmp_path)
+
+
+@pytest.mark.parametrize("option", ["--ai-max-tokens", "--ai-timeout"])
+def test_the_limits_must_be_positive(tmp_path, model_folder, fake_model, option):
+    with pytest.raises(UsageError, match="must be positive"):
+        plan("--no-tls", "--ai", str(model_folder), option, "0", tmp_path=tmp_path)
+
+
+def test_a_model_and_no_assistant_contradict_each_other(tmp_path, model_folder, fake_model):
+    with pytest.raises(UsageError, match="contradict"):
+        plan("--no-tls", "--ai", str(model_folder), "--no-assistant", tmp_path=tmp_path)
+
+
+def test_a_model_for_documents_the_assistant_does_not_know_is_refused(tmp_path, model_folder, fake_model):
+    with pytest.raises(UsageError, match="does not know documents of this kind"):
+        plan("--no-tls", "--ai", str(model_folder), "--model", "claudia_core.testing:ListModel", tmp_path=tmp_path)
+
+
+def test_the_first_replies_of_the_model_arrive_in_the_chat_over_a_real_socket(tmp_path, model_folder, fake_model):
+    from starlette.testclient import TestClient
+    from test_server_app import Peer
+
+    result = plan("--no-tls", "--ai", str(model_folder), tmp_path=tmp_path)
+    with TestClient(result.app) as client:
+        peer = Peer(client, create=True)
+        assert peer.request("chat", {"text": "@ai hello"})["ok"]
+        while not any(f.get("event") == "chat" and f["data"]["author"] == "ai" for f in peer.pushed):
+            frame = peer.socket.receive_json()
+            peer.pushed.append(frame)
+        reply = next(f["data"] for f in peer.pushed if f.get("event") == "chat" and f["data"]["author"] == "ai")
+        assert (reply["to"], reply["text"]) == ("ann", "I heard: hello")
+        peer.close()
+    result.close()

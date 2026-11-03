@@ -15,6 +15,18 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ### Changed
 - claudia-server now depends on claudia-composes.
+- The AI user can answer with a language model (E7.1): `python3 -m claudia_server --ai MODEL_DIR` loads a model converted
+  for OpenVINO (`--ai-device`, default GPU; `--ai-max-tokens`; `--ai-timeout`) before the server starts listening.
+  `ModelEngine` asks the shared `claudia_ai.ModelRunner` (one model for the server, one question at a time, off the event
+  loop) and turns the answer into something to say and requests to make (`set_cells`, `add_sheet`, `structure`); the
+  assistant makes them like anybody, so roles, limits and locks apply. `model_assistant_for` makes such assistants.
+- `AsyncEngine`: an engine that is awaited (`plan_async`), for anything slow. `Assistant(max_waiting=...)` refuses
+  questions that would wait behind too many others.
+- Optional dependency `claudia-server[openvino]` (installs `openvino-genai`).
+
+### Changed
+- claudia-server now depends on claudia-ai.
+- `Assistant` accepts an `AsyncEngine` as well as an `Engine`.
 
 ## [0.3.0] - 2026-11-02
 

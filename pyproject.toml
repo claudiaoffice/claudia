@@ -3,7 +3,7 @@ name = "claudia-monorepo"
 version = "0.0.0"
 description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-server", "claudia-client"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container"]
 
 [tool.uv]
 package = false
@@ -16,8 +16,10 @@ claudia-core = { workspace = true }
 claudia-computes = { workspace = true }
 claudia-composes = { workspace = true }
 claudia-creates = { workspace = true }
+claudia-ai = { workspace = true }
 claudia-server = { workspace = true }
 claudia-client = { workspace = true }
+claudia-container = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -55,14 +57,14 @@ ignore = [
 "vulture_whitelist.py" = ["B018"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_server"]
+known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container"]
 
 [tool.mypy]
 python_version = "3.14"
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-server/src", "packages/claudia-client/src"]
+mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src"]
 explicit_package_bases = true
 
 [tool.vulture]
