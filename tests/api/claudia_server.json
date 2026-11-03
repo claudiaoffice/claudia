@@ -317,6 +317,16 @@
   "methods": {},
   "properties": []
  },
+ "TextEngine": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "plan": "(self, task: 'Task') -> 'list[Step]'"
+  },
+  "properties": []
+ },
  "UserDirectory": {
   "class": [
    "Protocol"
@@ -328,6 +338,9 @@
    "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
   },
   "properties": []
+ },
+ "composes_methods": {
+  "value": "<MethodTable>"
  },
  "computes_methods": {
   "value": "<MethodTable>"

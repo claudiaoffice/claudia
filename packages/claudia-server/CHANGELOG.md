@@ -6,6 +6,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [0.4.0] - 2026-11-02
 
 ### Added
+- The text app (composes): `claudia_server.composes.composes_methods` adds `blocks`, `suggestions`, `replace_text`
+  (one request, one step in the history; a line break starts a paragraph), `set_style`, `look`, `hold` (locks the
+  ± n words around the cursor, D11), `suggest` (assistant only), `accept_suggestion` and `reject_suggestion` (D63).
+  The assistant has no direct write path into the text: `replace_text` and `set_style` refuse it.
+- `TextEngine` (`claudia_server.standin_text`): the scripted stand-in assistant for texts. It reviews and only suggests.
+- `methods_for` and `stand_in_assistant_for` know the text app; `--model claudia_composes:TextModel` serves texts.
+
+### Changed
+- claudia-server now depends on claudia-composes.
 - The AI user can answer with a language model (E7.1): `python3 -m claudia_server --ai MODEL_DIR` loads a model converted
   for OpenVINO (`--ai-device`, default GPU; `--ai-max-tokens`; `--ai-timeout`) before the server starts listening.
   `ModelEngine` asks the shared `claudia_ai.ModelRunner` (one model for the server, one question at a time, off the event

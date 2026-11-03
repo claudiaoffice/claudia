@@ -8,11 +8,16 @@ from claudia_ai import ModelRunner
 from claudia_computes import WorkbookModel
 from claudia_core import Document, DocumentModel
 
-from .assistant import Assistant
+from .assistant import Assistant, Engine
+from .composes import composes_methods
 from .computes import computes_methods
 from .model_engine import ModelEngine, tools_of
 from .protocol import MethodTable, core_methods
 from .standin import ScriptedEngine
+from .standin_text import TextEngine
+
+_METHODS: dict[str, MethodTable] = {"computes": computes_methods, "composes": composes_methods}
+_ENGINES: dict[str, Callable[[], Engine]] = {"computes": ScriptedEngine, "composes": TextEngine}
 
 # What a language model may ask for in each app: editing methods only. Talking is what its answer is for, and who
 # may enter a document, what is kept as a checkpoint or who holds a lock are decisions of people.
@@ -27,14 +32,15 @@ WORKBOOK_CONTEXT = (
 
 def methods_for(model_cls: type[DocumentModel]) -> MethodTable:
     """The method table for documents of this model: the app's own when there is one, else the core's."""
-    return computes_methods if model_cls.app == "computes" else core_methods
+    return _METHODS.get(model_cls.app, core_methods)
 
 
 def stand_in_assistant_for(model_cls: type[DocumentModel]) -> Callable[[], Assistant] | None:
-    """Makes the scripted stand-in assistant for the apps it knows (workbooks); ``None`` for the others."""
-    if model_cls.app != "computes":
+    """Makes the scripted stand-in assistant for the apps it knows (workbooks, texts); ``None`` for the others."""
+    engine_class = _ENGINES.get(model_cls.app)
+    if engine_class is None:
         return None
-    engine = ScriptedEngine()
+    engine = engine_class()
     return lambda: Assistant(engine)
 
 

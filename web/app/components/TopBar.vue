@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Session } from '~/lib/session'
+import type { BaseSession } from '~/lib/base-session'
 import { colorOf, initial, inkOn } from '~/lib/people'
 
-const props = defineProps<{ session: Session; panelOpen: boolean }>()
+const props = defineProps<{ session: BaseSession; panelOpen: boolean }>()
 defineEmits<{ togglePanel: [] }>()
 
 const state = props.session.state
@@ -20,7 +20,7 @@ const statusText = computed(() =>
   <header class="bar">
     <div class="brand">
       <Wordmark />
-      <span class="app"><AppIcon :size="22" /> computes</span>
+      <span class="app"><AppIcon :size="22" :app="state.app" /> {{ state.app || 'claudia' }}</span>
     </div>
     <h1 class="doc" :title="`document ${state.doc}`">{{ state.doc }}</h1>
     <div class="right">

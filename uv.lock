@@ -418,6 +418,7 @@ dev = [
 name = "claudia-server"
 source = { editable = "packages/claudia-server" }
 dependencies = [
+    { name = "claudia-composes" },
     { name = "claudia-ai" },
     { name = "claudia-computes" },
     { name = "claudia-core" },
@@ -434,7 +435,7 @@ openvino = [
 
 [package.metadata]
 requires-dist = [
-    { name = "claudia-ai", editable = "packages/claudia-ai" },
+    { name = "claudia-composes", editable = "packages/claudia-composes" },
     { name = "claudia-ai", extras = ["openvino"], marker = "extra == 'openvino'", editable = "packages/claudia-ai" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
     { name = "claudia-core", editable = "packages/claudia-core" },
