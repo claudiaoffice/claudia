@@ -3,6 +3,41 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.6.0] - 2026-11-03
+
+Security release: three findings of the first QA review (SEC-01, SEC-02, SEC-07).
+
+### Added
+- **The server answers only to its own names (SEC-01).** `create_app(allowed_hosts=...)`, `--allow-host NAME` (repeatable)
+  and the module `claudia_server.hosts` (`AllowedHosts`, `HostGuard`, `host_name`, `is_loopback`, `machine_names`; internal for now, not in `__all__`). A request whose
+  `Host` header is not `localhost`, an IP address (not `0.0.0.0` or `::`) or a configured name is refused: 403 for HTTP,
+  close code 4403 for a WebSocket, before any other part of the application sees it. Before, the Origin check trusted
+  the `Host` the page itself sent, so a page that had pointed its own name at 127.0.0.1 (DNS rebinding) could list,
+  create and try passwords on the documents of a server on its visitor's computer. `--tls-name`, the name given with
+  `--host` and this computer's host name are answered without further options; the start-up report lists the names.
+- **Limits against abuse (SEC-02).** `Hub(max_documents=1000)` / `--max-documents N`: past it nobody can make a document
+  (`HubError('unavailable')`, close code 1013) and nothing is hashed or written for the refused one. `Hub.ensure_room()`.
+  `create_app(max_waiting=256, max_waiting_per_address=64)` / `--max-waiting`, `--max-waiting-per-address`: only so many
+  connections may wait to be let in (they are turned away with 1013), so a flood of `hello` frames no longer queues behind
+  the password hashing without end.
+- **Access secret (SEC-02, optional).** `create_app(access_secret=...)` / `--access-secret-file FILE` or the environment
+  variable `CLAUDIA_ACCESS_SECRET` (at least 16 characters): only those who know it can make documents (`"access"` in
+  `hello`) or read `GET /api/docs` (`Authorization: Bearer ...`). A refused creation is answered like a missing document
+  and costs nothing (D50, SEC-04). Without a secret nothing changes. `Gateway.accepts_secret()`.
+- `--behind-proxy` (SEC-07), see below.
+
+### Changed
+- **Breaking:** a server only answers to the names above. A server that was reached by another name (a proxy that passes
+  the name people typed, a name in DNS, `http://myserver:8765` from another computer) now answers 403 until the name is
+  added with `--allow-host` (or `allowed_hosts=`). The 403 page and the log (once per name) say so.
+- **Breaking:** `--no-tls` on any address other than this computer's (`127.0.0.0/8`, `::1`, `localhost`) is refused,
+  because the passwords would cross the network in clear text (SEC-07). Behind a proxy that encrypts, add
+  `--behind-proxy`. The Docker image is not affected (it encrypts by default).
+- `Gateway.admit(..., access=None)` takes the access secret the person gave. `Gateway(max_waiting=..., max_waiting_per_address=...,
+  access_secret=...)`.
+- CORS answers `Authorization` as an allowed header (the Bearer token of the access secret) for the configured origins.
+- `scripts/start.py` refuses `--host` with an address other than this computer's unless `--tls` is given.
+
 ## [0.5.0] - 2026-11-03
 
 ### Added

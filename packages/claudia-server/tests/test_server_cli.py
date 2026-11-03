@@ -233,3 +233,150 @@ def test_the_shape_folder_must_exist_and_belongs_to_presentations(tmp_path):
         plan(*CREATES, "--shapes", str(tmp_path / "missing"), tmp_path=tmp_path)
     with pytest.raises(UsageError, match="presentations"):
         plan("--shapes", str(tmp_path), tmp_path=tmp_path)
+
+
+# ------------------------------------------------------------------------ SEC-01: the names a server answers to
+def status(app, base_url, path="/api/health"):
+    from starlette.testclient import TestClient
+
+    return TestClient(app, base_url=base_url).get(path).status_code
+
+
+def test_the_server_answers_only_to_this_computer_by_default(tmp_path):
+    app = plan("--no-tls", tmp_path=tmp_path).app
+    assert status(app, "http://localhost:8765") == 200
+    assert status(app, "http://127.0.0.1:8765") == 200
+    assert status(app, "http://evil.example:8765") == 403
+
+
+@pytest.mark.parametrize("extra", [["--allow-host", "claudia.example.org"], ["--tls-name", "claudia.example.org"]])
+def test_names_given_on_the_command_line_are_answered(tmp_path, extra):
+    app = plan(*extra, tmp_path=tmp_path).app
+    assert status(app, "http://claudia.example.org") == 200
+    assert status(app, "http://other.example.org") == 403
+
+
+def test_the_name_the_server_binds_to_is_answered(tmp_path):
+    app = plan("--host", "claudia.example.org", tmp_path=tmp_path).app
+    assert status(app, "http://claudia.example.org") == 200
+
+
+def test_the_name_this_computer_goes_by_is_answered_and_asking_for_it_needs_no_dns(tmp_path, monkeypatch):
+    def no_dns():
+        raise AssertionError("finding the fully qualified name can wait for a DNS server for seconds")
+
+    monkeypatch.setattr("socket.gethostname", lambda: "nas")
+    monkeypatch.setattr("socket.getfqdn", no_dns)
+    app = plan("--no-tls", tmp_path=tmp_path).app
+    assert status(app, "http://nas:8765") == 200
+    assert status(app, "http://nas.home.example:8765") == 403, "a longer name is added with --allow-host"
+
+
+def test_a_bad_allow_host_is_refused_with_a_reason(tmp_path):
+    with pytest.raises(UsageError, match="--allow-host"):
+        plan("--no-tls", "--allow-host", "evil.example/path", tmp_path=tmp_path)
+
+
+def test_the_banner_says_what_the_server_answers_to(tmp_path):
+    result = plan("--no-tls", "--allow-host", "claudia.example.org", tmp_path=tmp_path)
+    line = next(line for line in result.banner if line.startswith("answers to"))
+    assert "claudia.example.org" in line and "localhost" in line and "--allow-host" in line
+
+
+# --------------------------------------------------------------- SEC-07: no clear text where others can listen
+@pytest.mark.parametrize("host", ["0.0.0.0", "::", "192.168.1.20", "claudia.example.org"])
+def test_plain_text_is_refused_on_an_address_others_can_reach(tmp_path, host):
+    with pytest.raises(UsageError, match="--behind-proxy"):
+        plan("--no-tls", "--host", host, tmp_path=tmp_path)
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "127.0.0.2", "::1", "localhost"])
+def test_plain_text_is_fine_on_this_computer(tmp_path, host):
+    assert plan("--no-tls", "--host", host, tmp_path=tmp_path).uvicorn_options["host"] == host
+
+
+def test_behind_a_proxy_plain_text_is_allowed_on_any_address_and_the_banner_warns(tmp_path):
+    result = plan("--no-tls", "--host", "0.0.0.0", "--behind-proxy", tmp_path=tmp_path)
+    assert result.uvicorn_options["host"] == "0.0.0.0"
+    assert any(line.startswith("WARNING: no TLS") and "proxy" in line for line in result.banner)
+
+
+def test_behind_proxy_means_nothing_when_the_server_encrypts(tmp_path):
+    with pytest.raises(UsageError, match="--behind-proxy"):
+        plan("--behind-proxy", tmp_path=tmp_path)
+
+
+def test_encryption_is_still_the_default_on_every_address(tmp_path):
+    result = plan("--host", "0.0.0.0", tmp_path=tmp_path)
+    assert result.uvicorn_options["ssl_certfile"].endswith("cert.pem")
+
+
+# ------------------------------------------------------------------------------- SEC-02: limits and the secret
+def test_the_caps_are_set_from_the_command_line(tmp_path):
+    hub = plan("--no-tls", "--max-documents", "3", tmp_path=tmp_path).app.state.hub
+    assert hub.max_documents == 3
+
+
+@pytest.mark.parametrize("option", ["--max-documents", "--max-waiting", "--max-waiting-per-address"])
+def test_a_cap_must_be_a_positive_number(tmp_path, option):
+    with pytest.raises(UsageError, match=option):
+        plan("--no-tls", option, "0", tmp_path=tmp_path)
+
+
+SECRET = "a-long-secret-nobody-guesses-1234"
+
+
+def listing(app, **headers):
+    from starlette.testclient import TestClient
+
+    return TestClient(app).get("/api/docs", headers=headers).status_code
+
+
+def test_an_access_secret_can_come_from_a_file(tmp_path):
+    secret_file = tmp_path / "secret"
+    secret_file.write_text(SECRET + "\n")
+    result = plan("--no-tls", "--access-secret-file", str(secret_file), tmp_path=tmp_path)
+    assert listing(result.app) == 401 and listing(result.app, Authorization=f"Bearer {SECRET}") == 200
+    assert any("access secret" in line for line in result.banner)
+    assert not any(SECRET in line for line in result.banner), "the secret is never printed"
+
+
+def test_an_access_secret_can_come_from_the_environment(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDIA_ACCESS_SECRET", SECRET)
+    app = plan("--no-tls", tmp_path=tmp_path).app
+    assert listing(app) == 401 and listing(app, Authorization=f"Bearer {SECRET}") == 200
+
+
+def test_the_file_wins_over_the_environment(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDIA_ACCESS_SECRET", "x" * 32)
+    secret_file = tmp_path / "secret"
+    secret_file.write_text(SECRET)
+    app = plan("--no-tls", "--access-secret-file", str(secret_file), tmp_path=tmp_path).app
+    assert listing(app, Authorization=f"Bearer {SECRET}") == 200
+
+
+def test_a_missing_or_weak_secret_is_refused_with_a_reason(tmp_path):
+    with pytest.raises(UsageError, match="--access-secret-file"):
+        plan("--no-tls", "--access-secret-file", str(tmp_path / "nothing"), tmp_path=tmp_path)
+    weak = tmp_path / "weak"
+    weak.write_text("short\n")
+    with pytest.raises(UsageError, match="at least"):
+        plan("--no-tls", "--access-secret-file", str(weak), tmp_path=tmp_path)
+
+
+def test_an_empty_secret_stops_the_server_instead_of_leaving_it_open(tmp_path, monkeypatch):
+    """A variable that is set but empty (an unset value in a compose file), or an empty file, is not "no secret"."""
+    empty = tmp_path / "empty"
+    empty.write_text("\n")
+    with pytest.raises(UsageError, match="at least"):
+        plan("--no-tls", "--access-secret-file", str(empty), tmp_path=tmp_path)
+    monkeypatch.setenv("CLAUDIA_ACCESS_SECRET", "")
+    with pytest.raises(UsageError, match="at least"):
+        plan("--no-tls", tmp_path=tmp_path)
+    monkeypatch.setenv("CLAUDIA_ACCESS_SECRET", "short")
+    with pytest.raises(UsageError, match="at least"):
+        plan("--no-tls", tmp_path=tmp_path)
+
+
+def test_no_secret_means_nothing_changes(tmp_path):
+    assert listing(plan("--no-tls", tmp_path=tmp_path).app) == 200

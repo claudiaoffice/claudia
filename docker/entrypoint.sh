@@ -4,8 +4,9 @@
 #   CLAUDIA_APP   computes (default), composes or creates
 #
 # Arguments after the image name are passed on to `python -m claudia_server` and win over the
-# defaults below (for example `--no-tls` behind a TLS proxy, `--tls-name claudia.example.org`,
-# `--ai /models/qwen` or `--shapes /data/shapes`).
+# defaults below (for example `--no-tls --behind-proxy` behind a TLS proxy, `--tls-name claudia.example.org`,
+# `--allow-host myserver` for a name that people type and that is not a certificate name, `--ai /models/qwen` or
+# `--shapes /data/shapes`). The server answers only to localhost, IP addresses and the names it is told about.
 set -eu
 
 app="${CLAUDIA_APP:-computes}"

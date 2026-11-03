@@ -1,5 +1,5 @@
 {
- "version": "0.5.0",
+ "version": "0.6.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -153,9 +153,10 @@
   "class": [
    "object"
   ],
-  "init": "(hub: 'Hub', directory: 'UserDirectory', allowed: 'set[str]', *, max_hashing: 'int' = 2)",
+  "init": "(hub: 'Hub', directory: 'UserDirectory', allowed: 'set[str]', *, max_hashing: 'int' = 2, access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64)",
   "methods": {
-   "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool') -> 'Account | None'",
+   "accepts_secret": "(self, candidate: 'object') -> 'bool'",
+   "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool', access: 'object' = None) -> 'Account | None'",
    "serve": "(self, websocket: 'WebSocket', doc_id: 'str') -> 'None'"
   },
   "properties": []
@@ -181,9 +182,10 @@
   "class": [
    "object"
   ],
-  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>)",
+  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>)",
   "methods": {
    "check_id": "(doc_id: 'object') -> 'str'",
+   "ensure_room": "(self) -> 'None'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
    "is_loaded": "(self, doc_id: 'str') -> 'bool'",
    "listing": "(self) -> 'list[dict]'",
@@ -379,7 +381,7 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), web_dir: 'str | Path | None' = None, list_documents: 'bool' = True) -> 'FastAPI'"
+  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"

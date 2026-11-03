@@ -10,7 +10,19 @@ start-up), or it is given one:
 
     python3 -m claudia_server --tls-cert fullchain.pem --tls-key privkey.pem
     python3 -m claudia_server --tls-name claudia.example.org      # the name people will type
-    python3 -m claudia_server --no-tls                           # behind a TLS-terminating proxy, say
+    python3 -m claudia_server --no-tls                           # plain text: only for this computer
+    python3 -m claudia_server --no-tls --host 0.0.0.0 --behind-proxy   # a proxy that encrypts stands in front
+
+Plain text is only for this computer: passwords would cross the network in the clear, so ``--no-tls`` on any other
+address is refused unless ``--behind-proxy`` says that a proxy in front of the server encrypts (SEC-07).
+
+The server answers only to ``localhost``, to IP addresses, to the name of this computer and to the names it is told
+about with ``--allow-host`` (and ``--tls-name`` and ``--host``): a web page that has pointed its own name at this
+computer is refused (SEC-01). Behind a proxy that passes the name people typed on, add that name with ``--allow-host``.
+
+Whoever can reach the server can make documents, up to ``--max-documents``. To keep strangers out, give the server an
+access secret (``--access-secret-file FILE`` or the environment variable ``CLAUDIA_ACCESS_SECRET``): only those who know
+it can make documents or read the list (SEC-02).
 
 The web app (built in ``web/``) is served from the same address with ``--web``. A page served from another origin (the
 Nuxt dev server on :3000, say) must be named with ``--allow-origin``. Documents live in memory unless ``--dir`` names
@@ -28,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import os
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -39,13 +52,14 @@ from claudia_core import DocumentModel
 from claudia_creates import ShapeLibrary
 
 from . import __version__, redirect
-from .app import create_app
+from .app import DEFAULT_MAX_WAITING, DEFAULT_MAX_WAITING_PER_ADDRESS, MIN_ACCESS_SECRET, create_app
 from .apps import methods_for, model_assistant_for, stand_in_assistant_for
 from .assistant import Assistant
 from .auth import ScryptDirectory, UserDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
 from .filestore import FileDirectory, FileProvider
-from .hub import DocumentProvider, Hub, MemoryProvider
+from .hosts import AllowedHosts, is_loopback, machine_names
+from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
 from .protocol import Limits
 from .sealed import SealedDocuments
 
@@ -115,11 +129,53 @@ def build_parser() -> argparse.ArgumentParser:
         "--ai-timeout", type=float, default=180.0, metavar="SECONDS", help="longest time one answer may take"
     )
     parser.add_argument("--allow-origin", action="append", default=[], metavar="ORIGIN")
+    parser.add_argument(
+        "--allow-host",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="a host name the server answers to besides localhost, IP addresses and this computer's name: the name "
+        "people type in the address bar (behind a proxy: the name the proxy passes on); can be repeated",
+    )
     parser.add_argument("--no-create", action="store_true", help="documents cannot be created over the network")
     parser.add_argument("--max-connections", type=int, default=200)
+    abuse = parser.add_argument_group("limits and access")
+    abuse.add_argument(
+        "--max-documents",
+        type=int,
+        default=DEFAULT_MAX_DOCUMENTS,
+        metavar="N",
+        help="the most documents the server holds; past it nobody can make another (default: %(default)s)",
+    )
+    abuse.add_argument(
+        "--max-waiting",
+        type=int,
+        default=DEFAULT_MAX_WAITING,
+        metavar="N",
+        help="the most connections that may wait to be let in at the same time (default: %(default)s)",
+    )
+    abuse.add_argument(
+        "--max-waiting-per-address",
+        type=int,
+        default=DEFAULT_MAX_WAITING_PER_ADDRESS,
+        metavar="N",
+        help="the most of them from one address (default: %(default)s)",
+    )
+    abuse.add_argument(
+        "--access-secret-file",
+        metavar="FILE",
+        help=f"only those who know the secret in FILE (at least {MIN_ACCESS_SECRET} characters) can make documents or "
+        "read the list; without this option the environment variable CLAUDIA_ACCESS_SECRET is used if it is set",
+    )
     parser.add_argument("--state-dir", help="where the server keeps its certificate (default: a per-user folder)")
     tls = parser.add_argument_group("encryption")
-    tls.add_argument("--no-tls", action="store_true", help="do not encrypt (use behind a TLS proxy)")
+    tls.add_argument("--no-tls", action="store_true", help="do not encrypt (only for this computer, or behind a proxy)")
+    tls.add_argument(
+        "--behind-proxy",
+        action="store_true",
+        help="with --no-tls: a proxy in front of this server encrypts the traffic; needed to listen on any address "
+        "other than this computer's",
+    )
     tls.add_argument("--tls-cert", metavar="FILE")
     tls.add_argument("--tls-key", metavar="FILE")
     tls.add_argument(
@@ -143,15 +199,62 @@ def load_model(spec: str) -> type[DocumentModel]:
 def _tls(args: argparse.Namespace) -> tuple[Certificate | None, dict[str, str]]:
     if args.no_tls and (args.tls_cert or args.tls_key):
         raise UsageError("--no-tls and --tls-cert/--tls-key contradict each other")
+    if args.behind_proxy and not args.no_tls:
+        raise UsageError("--behind-proxy says that a proxy encrypts instead of this server, so it goes with --no-tls")
     if args.no_tls:
         if args.redirect_port:
             raise UsageError("--redirect-port needs TLS (there is nothing to redirect to with --no-tls)")
+        if not (is_loopback(args.host) or args.behind_proxy):
+            raise UsageError(
+                f"--no-tls on {args.host} would send passwords in clear text over the network. Put a proxy that "
+                "encrypts in front of the server and add --behind-proxy, or leave --no-tls out."
+            )
         return None, {}
     try:
         certificate = ensure_certificate(args.state_dir, tuple(args.tls_name), args.tls_cert, args.tls_key)
     except CertificateError as exc:
         raise UsageError(str(exc)) from exc
     return certificate, {"ssl_certfile": str(certificate.cert_file), "ssl_keyfile": str(certificate.key_file)}
+
+
+_CAPS = (
+    ("--max-documents", "max_documents"),
+    ("--max-waiting", "max_waiting"),
+    ("--max-waiting-per-address", "max_waiting_per_address"),
+)
+
+
+def _check_caps(args: argparse.Namespace) -> None:
+    for option, name in _CAPS:
+        if getattr(args, name) < 1:
+            raise UsageError(f"{option} must be at least 1")
+
+
+def _hosts(args: argparse.Namespace) -> AllowedHosts:
+    """The names the server answers to: those it was told about, the one it listens on and this computer's own."""
+    try:
+        return AllowedHosts([*args.allow_host, *args.tls_name, args.host, *machine_names()])
+    except ValueError as exc:
+        raise UsageError(f"the host names (--allow-host, --tls-name, --host): {exc}") from exc
+
+
+def _access_secret(args: argparse.Namespace) -> str | None:
+    """The secret that lets people make documents: from the file the option names, else from the environment, else none.
+
+    A secret that is asked for but empty or short stops the server: an empty variable is what an unset value in a
+    compose file looks like, and it must not leave the server open without a word."""
+    if args.access_secret_file:
+        try:
+            secret = Path(args.access_secret_file).expanduser().read_text(encoding="utf-8").strip()
+        except (OSError, UnicodeDecodeError) as exc:
+            raise UsageError(f"--access-secret-file: cannot read {args.access_secret_file}: {exc}") from exc
+    elif "CLAUDIA_ACCESS_SECRET" in os.environ:
+        secret = os.environ["CLAUDIA_ACCESS_SECRET"].strip()
+    else:
+        return None
+    if len(secret) < MIN_ACCESS_SECRET:
+        raise UsageError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
+    return secret
 
 
 def _shapes(args: argparse.Namespace, model: type[DocumentModel]) -> ShapeLibrary | None:
@@ -206,8 +309,11 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     args = build_parser().parse_args(argv)
     if not 0 < args.port < 65536 or args.max_connections < 1:
         raise UsageError("--port must be 1-65535 and --max-connections at least 1")
+    _check_caps(args)
     model = load_model(args.model)
     certificate, tls_options = _tls(args)
+    hosts = _hosts(args)
+    secret = _access_secret(args)
     if args.web and not (Path(args.web) / "index.html").is_file():
         raise UsageError(f"{args.web} does not contain a built web app (index.html); run `npm run build` in web/")
     if args.dir and args.plain_dir:
@@ -230,16 +336,30 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         assistant=assistant,
         limits=limits,
         allow_create=not args.no_create,
+        max_documents=args.max_documents,
         max_connections=args.max_connections,
     )
     app = create_app(
-        hub, directory, allowed_origins=args.allow_origin, web_dir=args.web, list_documents=not args.no_list
+        hub,
+        directory,
+        allowed_origins=args.allow_origin,
+        allowed_hosts=hosts.names,
+        access_secret=secret,
+        max_waiting=args.max_waiting,
+        max_waiting_per_address=args.max_waiting_per_address,
+        web_dir=args.web,
+        list_documents=not args.no_list,
     )
     scheme = "http" if certificate is None else "https"
     ws_scheme = "ws" if certificate is None else "wss"
     banner = [f"serving on {ws_scheme}://{args.host}:{args.port}/api/docs/<id>/ws"]
     if certificate is None:
-        banner.append("WARNING: no TLS (--no-tls): connections are not encrypted")
+        banner.append(
+            "WARNING: no TLS (--no-tls --behind-proxy): this server does not encrypt, so only a proxy that does may "
+            "stand between it and the network"
+            if args.behind_proxy
+            else "WARNING: no TLS (--no-tls): connections are not encrypted"
+        )
     else:
         origin = (
             "made by this server: browsers warn once, desktop clients ask to trust it"
@@ -247,6 +367,9 @@ def make_plan(argv: list[str] | None = None) -> Plan:
             else "given with --tls-cert"
         )
         banner += [f"connections are encrypted (TLS), certificate {origin}", f"  fingerprint {certificate.fingerprint}"]
+    banner.append(f"answers to {', '.join(hosts.names)} and IP addresses; more names with --allow-host NAME")
+    if secret:
+        banner.append("access secret set: making documents and reading the list need it")
     banner.append(
         f"web app: {scheme}://{args.host}:{args.port}/ (from {args.web})"
         if args.web

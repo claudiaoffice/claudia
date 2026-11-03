@@ -63,8 +63,10 @@ The server makes its own certificate on first start, so the browser warns once.
   certificate (`state/`). Use one volume per app; the documents survive `docker rm` as long as the volume does. A
   folder mounted instead of a volume must be writable by user id 10001 (`chown 10001:10001 DIR`).
 * **Options.** Everything after the image name goes to the server, and `--help` lists it all: `--tls-name
-  claudia.example.org` (the name people type), `--no-tls` (behind a TLS proxy), `--tls-cert` and `--tls-key` (your own
-  certificate, mounted into the container), `--no-create`, `--no-list`, `--shapes DIR` (creates).
+  claudia.example.org` (the name people type), `--allow-host NAME` (another name the server answers to: without it
+  a request that arrives under any name other than `localhost` or an IP address is refused, 403), `--no-tls
+  --behind-proxy` (a TLS proxy in front), `--tls-cert` and `--tls-key` (your own certificate, mounted into the
+  container), `--no-create`, `--no-list`, `--max-documents N`, `--shapes DIR` (creates).
 * **Health.** The image checks `/api/health` itself; `docker ps` shows `healthy` once the server is up.
 * **AI model.** The image has no language model runtime by default. For `--ai` (only computes uses it so far) build
   with `--build-arg WITH_OPENVINO=true`, which makes the image about 270 MB larger, and mount a model folder. A
@@ -76,5 +78,7 @@ The server makes its own certificate on first start, so the browser warns once.
       --ai /models/qwen2.5-7b-instruct-int4-ov --ai-device CPU
   ```
 
-* **Who can reach it.** There is no access secret or rate limit yet: anyone who can reach the port can create documents
-  (`--no-create` stops that). Keep it on a trusted network or behind a proxy that asks for a login.
+* **Who can reach it.** By default anyone who can reach the port can create documents, up to `--max-documents`
+  (1000). To keep strangers out, set an access secret (`-e CLAUDIA_ACCESS_SECRET=...`, at least 16 characters): only
+  those who know it can then create documents or read the list (the web app has no field for it yet, so it is for
+  clients of the protocol for now), or use `--no-create`. See `docs/server.md`, *Who can reach the server*.

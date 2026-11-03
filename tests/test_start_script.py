@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SPEC = importlib.util.spec_from_file_location("start", Path(__file__).parent.parent / "scripts" / "start.py")
 start = importlib.util.module_from_spec(SPEC)
 sys.modules["start"] = start  # dataclasses look their module up
@@ -104,3 +106,21 @@ def test_the_guide_names_every_address_and_what_to_do_there():
     assert "Ctrl+C" in guide
     one = start.guide(start.app_servers(start.parse_args(["creates"])))
     assert "composes" not in one.split("Other apps")[0], "a single app is named alone first"
+
+
+def test_a_server_that_others_can_reach_must_be_encrypted(capsys):
+    """Passwords travel in the first frame: plain text is only for this computer (SEC-07)."""
+    for host in ("0.0.0.0", "::", "192.168.1.20", "claudia.example.org"):
+        with pytest.raises(SystemExit) as stopped:
+            start.parse_args(["--host", host])
+        assert stopped.value.code == 2, host
+        assert "--tls" in capsys.readouterr().err, host
+
+
+@pytest.mark.parametrize("extra", [["--host", "127.0.0.1"], ["--host", "localhost"], ["--host", "::1"], []])
+def test_plain_text_stays_fine_on_this_computer(extra):
+    assert start.parse_args(extra).tls is False
+
+
+def test_an_encrypted_server_may_listen_on_any_address():
+    assert start.parse_args(["--host", "0.0.0.0", "--tls"]).host == "0.0.0.0"

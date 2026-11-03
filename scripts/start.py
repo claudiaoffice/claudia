@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import ipaddress
 import shutil
 import socket
 import subprocess
@@ -42,6 +43,15 @@ WHAT_TO_DO = {
     "composes": "text: paragraphs, styles, suggestions",
     "creates": "presentations: slides, text boxes, shapes",
 }
+
+
+def is_this_computer(host: str) -> bool:
+    """Does ``host``, an address to listen on, mean this computer only? (The same rule as ``claudia_server.hosts``,
+    repeated here because this script runs with a plain ``python3``, without the packages.)"""
+    try:
+        return ipaddress.ip_address(host.strip("[]")).is_loopback
+    except ValueError:
+        return host.lower().rstrip(".") == "localhost"
 
 
 @dataclass(frozen=True)
@@ -78,6 +88,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--rebuild", action="store_true", help="build the web app again before starting")
     parser.add_argument("--no-browser", action="store_true", help="do not open the browser")
     args = parser.parse_args(argv)
+    if not (args.tls or is_this_computer(args.host)):
+        parser.error(
+            f"--host {args.host} can be reached from the network, and a plain connection would send passwords in "
+            "clear text: add --tls"
+        )
     args.app = args.which or args.app or "computes"
     if args.dir is None and args.app != "all":  # one directory holds the documents of one app
         args.dir = str(ROOT / ("demo-docs" if args.app == "computes" else f"demo-docs-{args.app}"))

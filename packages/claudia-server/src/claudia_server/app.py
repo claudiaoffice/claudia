@@ -19,27 +19,38 @@ The answer carries the welcome data (user, role, document, line, revision, peopl
 speaks the protocol of ``protocol.py`` and receives events. With ``create: true`` for a document that does not exist,
 the document is made and the person becomes its owner. A wrong password, an unknown name and a document that does not
 exist are the same answer. Failures to get that far close the socket with a code: 4400 bad request, 4401 unauthorized,
-4404 no such document, 4408 no hello in time, 4403 foreign origin, 1013 too many connections or client too slow.
+4404 no such document, 4408 no hello in time, 4403 foreign origin or host, 1013 too many connections, too many people
+waiting to be let in, a full server or a client that is too slow.
+
+A server started with an access secret lets only those who know it make documents: they add ``"access": "<secret>"`` to
+``hello`` (and send ``Authorization: Bearer <secret>`` to read the list of documents). Everybody else is answered as if
+the document could not be made, so nothing is learned about which documents exist.
 
 The root of the server is never a dead end. With a built web app (``web_dir``) every address that is not under /api
 (and not a file) shows its start page; without one, / shows a short page that says what this server is and how to use
 it.
 
-Browsers: a page on another origin could try to use a user's localhost server, so the WebSocket refuses a request whose
-``Origin`` is neither the server itself nor in ``allowed_origins``. Non-browser clients send no Origin and are not
-affected.
+Browsers: a page on another origin could try to use a user's localhost server. Two rules keep it out. The server
+answers only to its own names (``allowed_hosts``, see ``hosts.py``), so a page that has pointed its own name at this
+computer (DNS rebinding) is refused whatever it sends. And the WebSocket refuses a request whose ``Origin`` is neither
+the server itself nor in ``allowed_origins``. Non-browser clients send no Origin and are not affected by the second.
+
+Abuse: only ``max_waiting`` connections (``max_waiting_per_address`` from one address) may wait to be let in at the same
+time, and a ``Hub`` holds at most ``max_documents`` documents. Without these, a flood of unauthenticated sockets queues
+behind the password hashing without end and anybody can fill the disk with documents.
 """
 
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 from collections.abc import Iterable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, HTTPException, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -47,11 +58,15 @@ from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
 from .auth import Account, AuthRefused, Credentials, UserDirectory
+from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
 from .protocol import RequestError, parse_request
 
 HELLO_TIMEOUT = 10.0
 OUTGOING_QUEUE = 1000  # frames waiting for a slow client before it is dropped
+DEFAULT_MAX_WAITING = 256  # connections that have not been let in yet, all together ...
+DEFAULT_MAX_WAITING_PER_ADDRESS = 64  # ... and from one address (a whole school may sit behind one)
+MIN_ACCESS_SECRET = 16
 _CLOSE = {"not_found": 4404, "bad_request": 4400, "unavailable": 1013, "internal": 1011}
 
 
@@ -109,30 +124,91 @@ def origin_allowed(origin: str | None, host: str | None, allowed: set[str]) -> b
     return host is not None and urlsplit(origin).netloc == host  # the page came from this server
 
 
+class _Waiting:
+    """The connections that have not been let in yet, all together and per address (SEC-02).
+
+    A person is let in within milliseconds. A socket that stays here is queued behind the password hashing or is doing
+    nothing at all, so the number of them is bounded: past it, the newcomer is turned away and the ones that are in
+    keep working."""
+
+    def __init__(self, most: int, most_per_address: int):
+        self._most = most
+        self._most_per_address = most_per_address
+        self._per_address: dict[str, int] = {}
+        self._total = 0
+
+    def enter(self, address: str) -> bool:
+        """Take a place for a connection from ``address``; ``False`` if there is none for it."""
+        here = self._per_address.get(address, 0)
+        if self._total >= self._most or here >= self._most_per_address:
+            return False
+        self._per_address[address] = here + 1
+        self._total += 1
+        return True
+
+    def leave(self, address: str) -> None:
+        """Give the place of a connection from ``address`` back."""
+        self._total -= 1
+        if self._per_address[address] > 1:
+            self._per_address[address] -= 1
+        else:
+            del self._per_address[address]
+
+
 class Gateway:
     """What the WebSocket route needs: the hub, the users of each document, and the rule for making new documents.
 
     Checking a password and adding a person cost real work (the password hashing is meant to be slow), so they run in
     threads and never stop the event loop (SEC-03). At most ``max_hashing`` of them run at once, so a flood of logins
-    cannot use up the memory of the machine (the hashing needs a lot of it)."""
+    cannot use up the memory of the machine (the hashing needs a lot of it).
 
-    def __init__(self, hub: Hub, directory: UserDirectory, allowed: set[str], *, max_hashing: int = 2):
+    Nobody costs the server anything before they are let in beyond a place in the queue: at most ``max_waiting``
+    connections (``max_waiting_per_address`` from one address) wait to be let in, and the others are turned away with
+    1013 (SEC-02). With an ``access_secret`` only those who know it can make documents. It has at least
+    ``MIN_ACCESS_SECRET`` characters, because it is the only thing between the network and the disk."""
+
+    def __init__(
+        self,
+        hub: Hub,
+        directory: UserDirectory,
+        allowed: set[str],
+        *,
+        max_hashing: int = 2,
+        access_secret: str | None = None,
+        max_waiting: int = DEFAULT_MAX_WAITING,
+        max_waiting_per_address: int = DEFAULT_MAX_WAITING_PER_ADDRESS,
+    ):
+        if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
+            raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
         self.hub = hub
         self.directory = directory
         self.allowed = allowed
+        self._secret = None if access_secret is None else access_secret.encode()
         self._creating = asyncio.Lock()  # one new document at a time: the first person to ask becomes its owner
         self._hashing = asyncio.Semaphore(max_hashing)
+        self._waiting = _Waiting(max_waiting, max_waiting_per_address)
+
+    def accepts_secret(self, candidate: object) -> bool:
+        """Did the person give the server's access secret? Always ``True`` for a server that has none."""
+        if self._secret is None:
+            return True
+        if not isinstance(candidate, str):
+            return False
+        return hmac.compare_digest(candidate.encode(errors="surrogatepass"), self._secret)
 
     async def _verify(self, doc_id: str, credentials: Credentials) -> Account | None:
         async with self._hashing:
             return await asyncio.to_thread(self.directory.verify, doc_id, credentials)
 
-    async def admit(self, doc_id: str, credentials: Credentials, create: bool) -> Account | None:
-        """The account of the person, or ``None``. A new document is made for whoever asks first (its owner)."""
+    async def admit(self, doc_id: str, credentials: Credentials, create: bool, access: object = None) -> Account | None:
+        """The account of the person, or ``None``. A new document is made for whoever asks first (its owner), if the
+        server makes documents and the person knows its access secret (``access``), if it has one.
+
+        ``HubError('unavailable')`` if the server already holds as many documents as it may."""
         hub, directory = self.hub, self.directory
         if hub.exists(doc_id):
             return await self._verify(doc_id, credentials)
-        if not (create and hub.allow_create):
+        if not (create and hub.allow_create and self.accepts_secret(access)):
             await self._verify(doc_id, credentials)  # the same work as for a document that exists (SEC-04) ...
             return None  # ... and the same answer
         async with self._creating:
@@ -140,6 +216,7 @@ class Gateway:
                 return await self._verify(doc_id, credentials)
             if not (isinstance(credentials.user, str) and isinstance(credentials.password, str)):
                 return None
+            await hub.ensure_room()  # before any hashing or disk: a refused document costs nothing
             if (
                 reserved := await self._verify(doc_id, credentials)
             ) is not None:  # (cannot happen; keeps verify's checks)
@@ -160,8 +237,16 @@ class Gateway:
         if not origin_allowed(websocket.headers.get("origin"), websocket.headers.get("host"), self.allowed):
             await websocket.close(code=4403)  # refused during the handshake (HTTP 403)
             return
-        await websocket.accept()
-        admitted = await self._hello(websocket, doc_id)
+        address = websocket.client.host if websocket.client else ""
+        if not self._waiting.enter(address):  # taken before the accept, so a client that was let on has its place
+            await websocket.accept()  # (a refusal before the accept carries no close code)
+            await websocket.close(code=1013)
+            return
+        try:
+            await websocket.accept()
+            admitted = await self._hello(websocket, doc_id)
+        finally:
+            self._waiting.leave(address)
         if admitted is not None:
             request_id, account, document = admitted
             await _Live(websocket, document, account, request_id).run()
@@ -186,7 +271,7 @@ class Gateway:
         try:
             Hub.check_id(doc_id)
             credentials = Credentials(params.get("user"), params.get("password"))
-            account = await self.admit(doc_id, credentials, params.get("create") is True)
+            account = await self.admit(doc_id, credentials, params.get("create") is True, params.get("access"))
             if account is None:
                 await _refuse(websocket, request_id, "unauthorized", "missing or wrong credentials", 4401)
                 return None
@@ -261,20 +346,44 @@ class _Live:
                 task.cancel()
 
 
+def _bearer_token(authorization: str | None) -> str | None:
+    """The token of an ``Authorization: Bearer <token>`` header, or ``None`` for any other header."""
+    scheme, _, token = (authorization or "").partition(" ")
+    return token.strip() if scheme.lower() == "bearer" else None
+
+
 def create_app(
     hub: Hub,
     directory: UserDirectory,
     *,
     allowed_origins: Iterable[str] = (),
+    allowed_hosts: Iterable[str] = (),
+    access_secret: str | None = None,
+    max_waiting: int = DEFAULT_MAX_WAITING,
+    max_waiting_per_address: int = DEFAULT_MAX_WAITING_PER_ADDRESS,
     web_dir: str | Path | None = None,
     list_documents: bool = True,
 ) -> FastAPI:
     """The server for ``hub``, with the users of each document in ``directory``.
 
-    ``list_documents`` serves ``GET /api/docs`` (see ``Hub.listing``); switch it off on a shared server where the
-    existence of a document should not be visible."""
+    The server answers only to ``localhost``, to IP addresses and to the host names in ``allowed_hosts`` (SEC-01, see
+    ``claudia_server.hosts``); ``ValueError`` if one of them is not a host name. ``list_documents`` serves
+    ``GET /api/docs`` (see ``Hub.listing``); switch it off on a shared server where the existence of a document should
+    not be visible.
+
+    With an ``access_secret`` (at least ``MIN_ACCESS_SECRET`` characters, ``ValueError`` otherwise) only those who know
+    it can make documents or read the list. ``max_waiting`` and ``max_waiting_per_address`` bound the connections that
+    wait to be let in (SEC-02)."""
     allowed = {o.rstrip("/") for o in allowed_origins}
-    gateway = Gateway(hub, directory, allowed)
+    hosts = AllowedHosts(allowed_hosts)
+    gateway = Gateway(
+        hub,
+        directory,
+        allowed,
+        access_secret=access_secret,
+        max_waiting=max_waiting,
+        max_waiting_per_address=max_waiting_per_address,
+    )
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -287,8 +396,12 @@ def create_app(
     app = FastAPI(title="Claudia server", docs_url="/api/swagger", openapi_url="/api/openapi.json", lifespan=lifespan)
     if allowed:
         app.add_middleware(
-            CORSMiddleware, allow_origins=sorted(allowed), allow_methods=["GET"], allow_headers=["Content-Type"]
+            CORSMiddleware,
+            allow_origins=sorted(allowed),
+            allow_methods=["GET"],
+            allow_headers=["Content-Type", "Authorization"],
         )
+    app.add_middleware(HostGuard, hosts=hosts)  # added last, so it is the first to see a request (even a preflight)
     if hub.directory is None:
         hub.directory = directory  # owners add people to their documents through it
     app.state.hub = hub
@@ -304,7 +417,9 @@ def create_app(
     if list_documents:
 
         @app.get("/api/docs")
-        async def documents():
+        async def documents(request: Request):
+            if not gateway.accepts_secret(_bearer_token(request.headers.get("authorization"))):
+                raise HTTPException(401, "this server needs its access secret", headers={"WWW-Authenticate": "Bearer"})
             return {"app": hub.app, "documents": hub.listing()}
 
     @app.websocket("/api/docs/{doc_id}/ws")

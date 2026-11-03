@@ -252,7 +252,7 @@ def test_an_edit_in_flight_during_a_restore_is_refused_over_the_wire(provider, d
 # ------------------------------------------------------------------------------------- browsers
 def test_origin_rules(provider, directory):
     with TestClient(build(provider, directory)) as c:
-        Peer(c, create=True, origin="http://testserver").close()  # the page came from this server
+        Peer(c, create=True, origin="http://localhost").close()  # the page came from this server
         with pytest.raises(WebSocketDisconnect):
             Peer(c, origin="https://evil.example")
 

@@ -7,7 +7,8 @@ WebSocket per person and document; the same protocol serves the Gtk client, the 
 python3 -m claudia_server                          # https://127.0.0.1:8765, certificate made on first start
 python3 -m claudia_server --web web/.output/public  # also serve the web app from the same address
 python3 -m claudia_server --tls-cert c.pem --tls-key k.pem --tls-name claudia.example.org
-python3 -m claudia_server --no-tls                  # behind a TLS-terminating proxy
+python3 -m claudia_server --no-tls                  # plain text, for this computer only
+python3 -m claudia_server --no-tls --host 0.0.0.0 --behind-proxy --allow-host claudia.example.org   # behind a TLS proxy
 ```
 
 Documents are kept in memory until the container file exists (E2); they are gone when the server stops.
@@ -41,7 +42,11 @@ does not exist, the document is made and the person becomes its owner. A wrong p
 that does not exist give the same answer. The name `ai` belongs to the assistant and cannot be used.
 
 When the handshake fails the server answers and closes the socket with a code: 4400 bad request, 4401 unauthorized,
-4403 foreign origin, 4404 no such document, 4408 no hello in time, 1013 too many connections or a client too slow.
+4403 foreign origin or host, 4404 no such document, 4408 no hello in time, 1013 too many connections, too many people
+waiting to be let in, a full server or a client that is too slow.
+
+On a server with an access secret, `"access": "<secret>"` goes into `hello` when a document is to be made, and
+`Authorization: Bearer <secret>` into `GET /api/docs`; see *Who can reach the server* below.
 
 ## After the handshake
 
@@ -87,8 +92,7 @@ When the handshake fails the server answers and closes the socket with a code: 4
 * TLS by default. The server's own certificate is self-signed; its fingerprint is printed at start-up. The desktop
   client trusts it like an SSH host (`claudia_client.TlsPolicy`): shown once, remembered, a changed certificate refused
   loudly. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
-* A browser page from another origin cannot use a user's local server: the WebSocket refuses a foreign `Origin` unless
-  it is named with `--allow-origin`.
+* A browser page cannot use a user's local server (see *Who can reach the server*).
 * With `--dir DIR` every document is a sealed file (`docs/<id>.claudia` and a journal next to it): the content, the
   history, the chat and the names of the people are encrypted (AES-256-GCM), and the keys are opened by each person's
   password (Argon2id). Nothing readable is on disk, not even who the people are. A wrong password, an unknown name and a
@@ -100,9 +104,40 @@ When the handshake fails the server answers and closes the socket with a code: 4
   stops the server.
 * `--plain-dir DIR` is the old store of the early demos: plain files, scrypt hashes, **not encrypted**.
 * Without a folder, passwords are stored in memory as scrypt hashes with a random salt.
-* Limits: frame size, text length, regions per request, connections per document.
+* Limits: frame size, text length, regions per request, connections per document, documents per server, and the
+  connections that may wait to be let in.
 
-Not there yet: packing the journal into blocks and the head record (E2.1/E2.6), the recovery key in the server and web UI (E2.5), unencrypted export and import (E2.9), rate limiting (E2.7), read restrictions for viewers (E2.4).
+## Who can reach the server
+
+Four rules, each of which can be loosened with one option and none of which needs a setting to be safe on a laptop.
+
+**Names (SEC-01).** The server answers only to `localhost`, to IP addresses, to the name of the computer it runs on
+and to the names it is told about with `--allow-host NAME` (repeatable; `--tls-name` and the name given with `--host`
+count too). Any other `Host` gets 403, and a WebSocket is closed with 4403. This stops DNS rebinding: a web page can
+point its own name (`evil.example`) at `127.0.0.1` and then talk to a server on its visitor's computer as if it were its
+own origin, with a `Host` and an `Origin` that match. It cannot make a browser send a name the server knows as its own.
+Behind a proxy that passes on the name people typed, add that name; the 403 page says so and the log names the refused
+host once. IP addresses are always answered (a page has no name to rebind), except `0.0.0.0` and `::`. The `Origin` of a
+WebSocket must also be the server itself or be named with `--allow-origin`; clients that are not browsers send none.
+
+**Encryption (SEC-07).** Passwords travel in the first frame, and they also open the sealed documents, so plain text is
+only for this computer: `--no-tls` on any other address is refused. A proxy that encrypts in front of the server is the
+exception, and `--behind-proxy` says so (the start-up report keeps a warning). `scripts/start.py` needs `--tls` for a
+`--host` other than this computer's.
+
+**Limits (SEC-02).** `--max-documents N` (default 1000): past it nobody can make a document, and the refused one costs
+no hashing and no disk. `--max-waiting N` (256) and `--max-waiting-per-address N` (64) bound the connections that have
+connected but not yet logged in; the others are closed with 1013 at once, so a flood of `hello` frames cannot queue
+behind the password hashing without end. Make the per-address limit larger where a whole school sits behind one address.
+
+**Access secret (SEC-02, optional).** `--access-secret-file FILE`, or the environment variable `CLAUDIA_ACCESS_SECRET`
+(a Docker secret or `-e`), at least 16 characters (`python3 -c "import secrets; print(secrets.token_urlsafe(24))"`).
+Then only those who know it can make a document (`"access"` in `hello`) or read the list (`Authorization: Bearer ...`);
+people who already have a document still log in with their name and password. Somebody without the secret who asks to
+make a document is answered like somebody who asked for one that does not exist, so nothing is learned about which
+documents there are. The secret is compared in constant time and never printed. The web app has no field for it yet.
+
+Not there yet: packing the journal into blocks and the head record (E2.1/E2.6), the recovery key in the server and web UI (E2.5), unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers (E2.4).
 
 
 ## Presentations (creates)

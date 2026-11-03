@@ -53,6 +53,7 @@ log = logging.getLogger("claudia_server")
 PALETTE = ("#d6477a", "#f2a057", "#3d7dd8", "#8d6e63", "#7cb342", "#b0408f", "#607d8b", "#c9a400")
 
 _DOC_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
+DEFAULT_MAX_DOCUMENTS = 1000  # room for a team for years, but not for anybody who can reach the server (SEC-02)
 
 
 class HubError(Exception):
@@ -336,7 +337,10 @@ class HostedDocument:
 
 
 class Hub:
-    """The documents of one server."""
+    """The documents of one server.
+
+    ``max_documents`` is the most documents the server holds: past it nobody can make another (``ensure_room``), so that
+    whoever can reach the server cannot fill its disk."""
 
     def __init__(
         self,
@@ -345,6 +349,7 @@ class Hub:
         methods: MethodTable = core_methods,
         limits: Limits | None = None,
         allow_create: bool = True,
+        max_documents: int = DEFAULT_MAX_DOCUMENTS,
         idle_unload: float = 120.0,
         edit_timeout: float = 300.0,
         max_connections: int = 50,
@@ -357,6 +362,11 @@ class Hub:
         self.methods = methods
         self.limits = limits or Limits()
         self.allow_create = allow_create
+        self.max_documents = max_documents
+        self._known: set[str] = (
+            set()
+        )  # the ids of the stored documents: found when first asked, and every one opened since
+        self._counted = False
         self.idle_unload = idle_unload
         self.edit_timeout = edit_timeout
         self.max_connections = max_connections
@@ -401,6 +411,19 @@ class Hub:
         """Is the document open in memory now?"""
         return doc_id in self._documents
 
+    async def ensure_room(self) -> None:
+        """``HubError('unavailable')`` if the server already holds as many documents as it may.
+
+        Reading every document of the store is slow, so the store is read once, in a thread; after that every document
+        the hub opens is added to what is known. Ids, not a number: a store may make a document's file before the hub
+        opens it (the sealed store does, when it adds the first person), and counting the same document twice must not
+        matter. (A document put into the folder by hand is only counted after a restart.)"""
+        if not self._counted:
+            self._known.update(info.id for info in await asyncio.to_thread(self.provider.documents))
+            self._counted = True
+        if len(self._known) >= self.max_documents:
+            raise HubError("unavailable", f"this server holds {self.max_documents} documents, the most it may hold")
+
     async def open(self, doc_id: str, create: bool = False) -> HostedDocument:
         """The open document, loaded from storage (or created, if allowed) first."""
         self.check_id(doc_id)
@@ -418,6 +441,7 @@ class Hub:
                     log.exception("cannot read %s", doc_id)
                     raise HubError("internal", f"{doc_id} cannot be read") from exc
             elif create and self.allow_create:
+                await self.ensure_room()
                 document = await asyncio.to_thread(self.provider.create, doc_id)
             else:
                 raise HubError("not_found", f"no document {doc_id!r}")
@@ -434,6 +458,7 @@ class Hub:
             if self.assistant is not None:
                 self.assistant().attach(hosted)
             self._documents[doc_id] = hosted
+            self._known.add(doc_id)
             return hosted
 
     # -- housekeeping ------------------------------------------------------------------------
