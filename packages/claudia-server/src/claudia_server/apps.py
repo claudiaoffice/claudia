@@ -7,16 +7,22 @@ from collections.abc import Callable
 from claudia_ai import ModelRunner
 from claudia_computes import WorkbookModel
 from claudia_core import Document, DocumentModel
+from claudia_creates import ShapeLibrary
 
 from .assistant import Assistant, Engine
 from .composes import composes_methods
 from .computes import computes_methods
+from .creates import creates_methods, creates_methods_with
 from .model_engine import ModelEngine, tools_of
 from .protocol import MethodTable, core_methods
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
 
-_METHODS: dict[str, MethodTable] = {"computes": computes_methods, "composes": composes_methods}
+_METHODS: dict[str, MethodTable] = {
+    "computes": computes_methods,
+    "composes": composes_methods,
+    "creates": creates_methods,
+}
 _ENGINES: dict[str, Callable[[], Engine]] = {"computes": ScriptedEngine, "composes": TextEngine}
 
 # What a language model may ask for in each app: editing methods only. Talking is what its answer is for, and who
@@ -30,8 +36,13 @@ WORKBOOK_CONTEXT = (
 )
 
 
-def methods_for(model_cls: type[DocumentModel]) -> MethodTable:
-    """The method table for documents of this model: the app's own when there is one, else the core's."""
+def methods_for(model_cls: type[DocumentModel], *, shapes: ShapeLibrary | None = None) -> MethodTable:
+    """The method table for documents of this model: the app's own when there is one, else the core's.
+
+    ``shapes`` is the library of outlines a presentation server offers; it matters to presentations only, and by
+    default they get the built-in shapes."""
+    if model_cls.app == "creates" and shapes is not None:
+        return creates_methods_with(shapes)
     return _METHODS.get(model_cls.app, core_methods)
 
 

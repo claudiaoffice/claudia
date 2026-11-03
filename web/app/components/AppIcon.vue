@@ -1,4 +1,5 @@
-<!-- The icon of an app (design system, section 4): computes is "=" with a wavy lower bar on teal, composes a pen nib on rose. -->
+<!-- The icon of an app (design system, section 4): computes is "=" with a wavy lower bar on teal, composes a pen nib on rose,
+     creates a slide with a circle cut out of it on apricot. -->
 <template>
   <svg v-if="app === 'composes'" viewBox="0 0 64 64" :width="size" :height="size" role="img" aria-label="composes">
     <rect x="2" y="2" width="60" height="60" rx="15" fill="#D6477A" />
@@ -6,6 +7,10 @@
     <circle cx="32" cy="29" r="2.6" fill="#D6477A" />
     <path d="M32 31.5 L32 46" stroke="#D6477A" stroke-width="1.8" stroke-linecap="round" />
     <path d="M16 52 H48" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55" />
+  </svg>
+  <svg v-else-if="app === 'creates'" viewBox="0 0 64 64" :width="size" :height="size" role="img" aria-label="creates">
+    <rect x="2" y="2" width="60" height="60" rx="15" fill="#F2A057" />
+    <path fill="#fff" fill-rule="evenodd" d="M14 18 H50 V46 H14 Z M32 22 A8 8 0 1 0 32 38 A8 8 0 1 0 32 22 Z" />
   </svg>
   <svg v-else viewBox="0 0 64 64" :width="size" :height="size" role="img" aria-label="computes">
     <rect x="2" y="2" width="60" height="60" rx="15" fill="#13917F" />

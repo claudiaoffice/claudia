@@ -305,7 +305,7 @@ def create_app(
 
         @app.get("/api/docs")
         async def documents():
-            return {"documents": hub.listing()}
+            return {"app": hub.app, "documents": hub.listing()}
 
     @app.websocket("/api/docs/{doc_id}/ws")
     async def live(websocket: WebSocket, doc_id: str):

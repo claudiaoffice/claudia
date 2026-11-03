@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { shallowRef, watchEffect } from 'vue'
-import { isText, type AnySession } from '~/lib/open'
+import { isSlides, isText, type AnySession } from '~/lib/open'
+import type { SlideSession } from '~/lib/slide-session'
 import type { TextSession } from '~/lib/text-session'
 import type { Session } from '~/lib/session'
 
@@ -19,6 +20,7 @@ watchEffect(() => {
 
 <template>
   <TextWorkspace v-if="session && isText(session)" :session="session as TextSession" @leave="leave" />
+  <SlideWorkspace v-else-if="session && isSlides(session)" :session="session as SlideSession" @leave="leave" />
   <Workspace v-else-if="session" :session="session as Session" @leave="leave" />
   <OpenDialog v-else @opened="(s: AnySession) => (session = s)" />
 </template>

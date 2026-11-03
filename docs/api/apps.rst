@@ -34,5 +34,4 @@ composes
 creates
 -------
 
-.. automodule:: claudia_creates
-   :members:
+The presentation app has grown past a proof: see :doc:`claudia_creates`.

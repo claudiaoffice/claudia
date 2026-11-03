@@ -40,6 +40,9 @@ Protocol
 .. autofunction:: claudia_server.methods_for
 .. autodata:: claudia_server.computes_methods
    :no-value:
+.. autodata:: claudia_server.creates_methods
+   :no-value:
+.. autofunction:: claudia_server.creates_methods_with
 
 Assistant
 ---------

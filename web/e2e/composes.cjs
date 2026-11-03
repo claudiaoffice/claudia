@@ -5,8 +5,8 @@ const assert = require('node:assert/strict')
 const URL = process.env.URL ?? 'http://127.0.0.1:8766/'
 const SHOTS = process.env.SHOTS ?? '/tmp/shots'
 const DOC = `essay-${Date.now() % 100000}`
-const ANN = ['ann', 'ann has a password']
-const BEN = ['ben', 'ben has a password']
+const ANN = ['ann', 'Ann has a password 1']
+const BEN = ['ben', 'Ben has a password 1']
 
 const log = (...a) => console.log(...a)
 

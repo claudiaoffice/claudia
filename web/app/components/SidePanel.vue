@@ -58,7 +58,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     <section class="history">
       <h2>History <span class="count">{{ state.entries.length }}</span></h2>
       <ol ref="history" class="log mono" aria-label="everything that was done to this document">
-        <li v-if="!rows.length" class="empty">Nothing yet. {{ state.app === 'composes' ? 'Start writing.' : 'Type into a cell.' }}</li>
+        <li v-if="!rows.length" class="empty">Nothing yet. {{ { composes: 'Start writing.', creates: 'Put a text box on the slide.' }[state.app] ?? 'Type into a cell.' }}</li>
         <template v-for="(row, i) in rows" :key="i">
           <li v-if="row.kind === 'entry'" class="entry" :class="{ undo: row.entry.origin !== 'do' }">
             <span class="dot" :style="{ background: colorOf(state, row.entry.author ?? '') }" />

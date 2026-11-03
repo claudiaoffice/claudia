@@ -150,6 +150,11 @@ class SealedDocuments:
         self._open: dict[str, _Held] = {}
         private_dir(self.root / "docs")
 
+    @property
+    def app(self) -> str:
+        """The kind of documents kept in the folder."""
+        return self.model_cls.app
+
     # -- where things are ---------------------------------------------------------------------
     def _file(self, doc_id: str) -> Path:
         return self.root / "docs" / f"{_check_id(doc_id)}{SUFFIX}"

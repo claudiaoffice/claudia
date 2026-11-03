@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "id": "circle",
+  "name": "Circle",
+  "aspect": 1,
+  "path": "M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z",
+  "text_area": {"x": 14.6, "y": 14.6, "w": 70.8, "h": 70.8}
+}

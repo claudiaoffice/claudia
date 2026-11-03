@@ -27,7 +27,7 @@ sliders, encryption of the file store, column resizing.
 
 ## Writing in composes
 
-`./start.sh --app composes` serves texts (documents in `./demo-docs-composes`, because a directory holds one app's
+`./start.sh composes` serves texts (documents in `./demo-docs-composes`, because a directory holds one app's
 documents). The text view lives in `TextWorkspace.vue` and `TextEditor.vue`; its state is `lib/text-session.ts`
 (`TextSession`, next to the workbook's `Session`, both built on `lib/base-session.ts`) and `lib/blocks.ts` (pure:
 the paragraphs, the events that change them, where a caret or zone goes when somebody else writes).
@@ -55,8 +55,13 @@ word is one undo step (the kernel has no grouping yet).
 The quick way (Linux, macOS: `./start.sh`, Windows: `start.cmd`) builds the web app when it is missing, starts the
 server and opens the browser. Documents are kept in `./demo-docs`, each one sealed (encrypted); a folder from an earlier version needs `--plain-dir`.
 
+One server serves one app. Name the app to choose it (`computes` is the default), or start all three at once:
+
 ```bash
-./start.sh                       # or: uv run python scripts/start.py
+./start.sh                       # computes (tables) at http://127.0.0.1:8765/; or: uv run python scripts/start.py
+./start.sh composes              # texts, port 8765 (documents in ./demo-docs-composes)
+./start.sh creates               # presentations, port 8765 (documents in ./demo-docs-creates)
+./start.sh all                   # computes 8765, composes 8766, creates 8767; --dir DIR keeps DIR/<app>
 ./start.sh --dir ~/claudia-docs --port 9000 --no-browser
 ./start.sh --rebuild             # build the web app again first
 ./start.sh --tls                 # encrypted; the browser warns once about the server's own certificate
@@ -84,3 +89,27 @@ npm run e2e:resilience       # starts its own server, restarts it, checks that b
 ```
 
 `uv run python scripts/check_debt.py` runs the web checks too (skipped when npm or `web/node_modules` is missing).
+
+
+## Presentations (creates)
+
+The same web app opens presentations: it asks the server what kind of document it holds (`welcome.app`) and shows the
+slide view for `creates`, the table for `computes`. Start a presentation server with
+`./start.sh creates` (or `uv run python scripts/start.py creates`).
+
+* One slide on screen, scaled to fit; **Slide 1, 2, …** along the bottom, **+** adds one.
+* **Insert** (menu or tool bar): a text box, and every shape in the server's library (rectangle, circle and triangle
+  are built in; `--shapes DIR` adds more, see {doc}`server`).
+* Click selects an object and *holds* it: colleagues see your mark with your name and cannot change it until you select
+  something else. Drag moves it, the handles resize it (a circle only from the corners: it stays round), a double click
+  or Enter writes in it (Enter keeps the text, Shift+Enter starts a new line, Esc drops it), Delete removes it, the
+  arrow keys nudge it (10 units, with Shift 1).
+* The slide is drawn in screen pixels rather than scaled by CSS so that outlines keep their width; the lengths of a
+  style (`font-size`, `stroke-width`, `letter-spacing`) are scaled in `lib/slide-style.ts`.
+* What you do while the pointer is down is a preview on your screen; the change is sent when you let go, and the screen
+  shows what the server then says (a refusal snaps the object back).
+* `e2e/slides.cjs` (`npm run e2e:slides`) runs two people on one slide in two real browser windows.
+
+Not in this first draft: text formatting beyond the two built-in styles, images, groups, copy and paste of objects,
+reordering objects, slide order and slide thumbnails, and the assistant (the AI user does not answer in presentations
+yet; the panel with history and chat is there).

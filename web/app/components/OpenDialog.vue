@@ -24,7 +24,22 @@ const error = ref('')
 const busy = ref(false)
 /** The server serves one app; the documents it lists say which (before that, claudia in general). */
 const app = computed(() => documents.value[0]?.app ?? 'claudia')
-const writing = computed(() => app.value === 'composes')
+const words = computed(
+  () =>
+    ({
+      composes: {
+        headline: 'Write together.',
+        sub: 'Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide.',
+      },
+      creates: {
+        headline: 'Say it on a slide.',
+        sub: 'Open a presentation, or start a new one. Everybody you invite works on the same slides at the same time.',
+      },
+    })[app.value] ?? {
+      headline: 'Think with your data.',
+      sub: 'Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant.',
+    },
+)
 watchEffect(() => {
   document.documentElement.dataset.app = app.value
 })
@@ -104,14 +119,8 @@ async function go(create: boolean) {
       <span class="tag"><AppIcon :size="20" :app="app" /> {{ app }}</span>
     </header>
     <section class="card">
-      <h1>{{ writing ? 'Write together.' : 'Think with your data.' }}</h1>
-      <p class="sub">
-        {{
-          writing
-            ? 'Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide.'
-            : 'Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant.'
-        }}
-      </p>
+      <h1>{{ words.headline }}</h1>
+      <p class="sub">{{ words.sub }}</p>
 
       <div class="cols">
         <div class="list">

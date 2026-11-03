@@ -2,7 +2,11 @@
 
 import pytest
 
+from claudia_core import Document, MemoryStore
+from claudia_creates import SlideModel
+from claudia_server.auth import Account
 from claudia_server.cli import UsageError, load_model, make_plan
+from claudia_server.protocol import Context, Limits
 
 
 def plan(*args, tmp_path):
@@ -195,3 +199,37 @@ def test_the_first_replies_of_the_model_arrive_in_the_chat_over_a_real_socket(tm
         assert (reply["to"], reply["text"]) == ("ann", "I heard: hello")
         peer.close()
     result.close()
+
+
+CREATES = ["--model", "claudia_creates:SlideModel"]
+
+
+def test_a_presentation_server_offers_the_slide_methods(tmp_path):
+    from starlette.testclient import TestClient
+
+    client = TestClient(plan("--no-tls", *CREATES, tmp_path=tmp_path).app)
+    assert {"slides", "slide", "add_object", "shapes"} <= set(client.get("/api/protocol").json()["methods"])
+    assert client.get("/api/docs").json()["app"] == "creates"
+
+
+def test_shape_folders_extend_the_library(tmp_path):
+
+    shapes = tmp_path / "my-shapes"
+    shapes.mkdir()
+    (shapes / "bar.json").write_text(
+        '{"format": 1, "id": "bar", "name": "Bar", "path": "M0 0 L100 0 L100 100 L0 100 Z"}'
+    )
+    (shapes / "broken.json").write_text("{ not json")
+    result = plan("--no-tls", *CREATES, "--shapes", str(shapes), tmp_path=tmp_path)
+    assert any("shapes:" in line and "bar" in line for line in result.banner)
+    assert any("broken.json" in line for line in result.banner), "a file that cannot be read is named, not ignored"
+    methods = result.app.state.hub.methods
+    context = Context(Document(SlideModel.empty(), store=MemoryStore()), Account("ann", "owner"), Limits())
+    assert "bar" in [shape["id"] for shape in methods.dispatch(context, "shapes", None)["library"]]
+
+
+def test_the_shape_folder_must_exist_and_belongs_to_presentations(tmp_path):
+    with pytest.raises(UsageError, match="not a folder"):
+        plan(*CREATES, "--shapes", str(tmp_path / "missing"), tmp_path=tmp_path)
+    with pytest.raises(UsageError, match="presentations"):
+        plan("--shapes", str(tmp_path), tmp_path=tmp_path)
