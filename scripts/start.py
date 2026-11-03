@@ -2,6 +2,7 @@
 
     uv run python scripts/start.py                 # documents are kept in ./demo-docs
     uv run python scripts/start.py --dir ~/claudia-docs --port 9000 --no-browser
+    uv run python scripts/start.py --app composes  # the text app (documents in ./demo-docs-composes)
     uv run python scripts/start.py --rebuild       # build the web app again first
     uv run python scripts/start.py --tls           # encrypt (the browser warns once about the own certificate)
 
@@ -24,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 BUILT = WEB / ".output" / "public"
+MODELS = {"computes": "", "composes": "claudia_composes:TextModel"}  # the server's default model is the workbook
 WAIT_SECONDS = 30.0
 
 
@@ -33,12 +35,16 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--dir", default=str(ROOT / "demo-docs"), help="where the sealed (encrypted) documents are kept"
     )
+    parser.add_argument("--app", choices=sorted(MODELS), default="computes", help="which app the server serves")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--tls", action="store_true", help="encrypt the connection (default: plain, localhost only)")
     parser.add_argument("--rebuild", action="store_true", help="build the web app again before starting")
     parser.add_argument("--no-browser", action="store_true", help="do not open the browser")
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.dir is None:  # one directory holds the documents of one app
+        args.dir = str(ROOT / ("demo-docs" if args.app == "computes" else f"demo-docs-{args.app}"))
+    return args
 
 
 def needs_build(args: argparse.Namespace, built: Path = BUILT) -> bool:
@@ -50,6 +56,8 @@ def server_command(args: argparse.Namespace, python: str = sys.executable, built
     """The command line that runs the server for these options."""
     command = [python, "-m", "claudia_server", "--dir", str(args.dir), "--web", str(built)]
     command += ["--host", args.host, "--port", str(args.port)]
+    if MODELS[args.app]:
+        command += ["--model", MODELS[args.app]]
     if not args.tls:
         command.append("--no-tls")
     return command

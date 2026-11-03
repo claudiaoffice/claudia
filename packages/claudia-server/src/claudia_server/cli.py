@@ -16,6 +16,12 @@ The web app (built in ``web/``) is served from the same address with ``--web``. 
 Nuxt dev server on :3000, say) must be named with ``--allow-origin``. Documents live in memory unless ``--dir`` names
 a folder: there every document is a sealed (encrypted) file that only its people can open. ``--plain-dir`` keeps the
 old unencrypted store of the early demos; it has to be asked for by name.
+
+The AI user answers with a language model that runs on this machine, with OpenVINO (``pip install openvino-genai``).
+Give it the folder of a model converted for OpenVINO; it is loaded before the server starts listening, so a wrong
+folder, a missing library or a device that is not there stops the server with a message that says what to do:
+
+    python3 -m claudia_server --dir ./documents --ai ~/models/qwen2.5-7b-instruct-int4-ov --ai-device GPU
 """
 
 from __future__ import annotations
@@ -23,13 +29,17 @@ from __future__ import annotations
 import argparse
 import importlib
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from claudia_ai import DEFAULT_DEVICE, ModelError, ModelRunner, OpenVinoModel
+
 from . import __version__, redirect
 from .app import create_app
-from .apps import methods_for, stand_in_assistant_for
+from .apps import methods_for, model_assistant_for, stand_in_assistant_for
+from .assistant import Assistant
 from .auth import ScryptDirectory, UserDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
 from .filestore import FileDirectory, FileProvider
@@ -52,6 +62,12 @@ class Plan:
     uvicorn_options: dict[str, Any]
     banner: list[str] = field(default_factory=list)
     redirect_from: int | None = None
+    closers: list[Callable[[], None]] = field(default_factory=list)  # what to stop when the server has stopped
+
+    def close(self) -> None:
+        """Stop what the server started besides itself (the language model's worker)."""
+        for close in self.closers:
+            close()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,6 +91,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-list", action="store_true", help="do not serve the list of documents (/api/docs)")
     parser.add_argument(
         "--no-assistant", action="store_true", help="do not give workbooks the scripted stand-in for the AI"
+    )
+    ai = parser.add_argument_group("AI assistant")
+    ai.add_argument(
+        "--ai",
+        metavar="MODEL_DIR",
+        help="the AI user answers with the language model in MODEL_DIR (converted for OpenVINO), not the stand-in",
+    )
+    ai.add_argument(
+        "--ai-device", default=DEFAULT_DEVICE, metavar="DEVICE", help="where the model runs: CPU, GPU, NPU or AUTO"
+    )
+    ai.add_argument("--ai-max-tokens", type=int, default=512, metavar="N", help="longest answer, in tokens")
+    ai.add_argument(
+        "--ai-timeout", type=float, default=180.0, metavar="SECONDS", help="longest time one answer may take"
     )
     parser.add_argument("--allow-origin", action="append", default=[], metavar="ORIGIN")
     parser.add_argument("--no-create", action="store_true", help="documents cannot be created over the network")
@@ -116,6 +145,28 @@ def _tls(args: argparse.Namespace) -> tuple[Certificate | None, dict[str, str]]:
     return certificate, {"ssl_certfile": str(certificate.cert_file), "ssl_keyfile": str(certificate.key_file)}
 
 
+def _assistant(args: argparse.Namespace, model: type) -> tuple[Callable[[], Assistant] | None, ModelRunner | None]:
+    """The assistant factory the options ask for, and the runner of the language model if there is one."""
+    if not args.ai:
+        return (None if args.no_assistant else stand_in_assistant_for(model)), None
+    if args.no_assistant:
+        raise UsageError("--ai and --no-assistant contradict each other")
+    if args.ai_max_tokens < 1 or args.ai_timeout <= 0:
+        raise UsageError("--ai-max-tokens and --ai-timeout must be positive")
+    print(f"loading the AI model from {args.ai} on {args.ai_device} (this can take a while) ...", flush=True)
+    try:
+        runner = ModelRunner(
+            OpenVinoModel(args.ai, args.ai_device), max_new_tokens=args.ai_max_tokens, timeout=args.ai_timeout
+        )
+    except ModelError as exc:
+        raise UsageError(f"--ai: {exc}") from exc
+    factory = model_assistant_for(model, runner)
+    if factory is None:
+        runner.close()
+        raise UsageError("--ai: the AI assistant does not know documents of this kind yet")
+    return factory, runner
+
+
 def make_plan(argv: list[str] | None = None) -> Plan:
     """Read the command line and prepare the server; ``UsageError`` if it cannot be started as asked."""
     args = build_parser().parse_args(argv)
@@ -137,10 +188,11 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         provider, directory = FileProvider(args.plain_dir, model), FileDirectory(args.plain_dir)
     else:
         provider, directory = MemoryProvider(model), ScryptDirectory()
+    assistant, runner = _assistant(args, model)
     hub = Hub(
         provider,
         methods=methods_for(model),
-        assistant=None if args.no_assistant else stand_in_assistant_for(model),
+        assistant=assistant,
         limits=limits,
         allow_create=not args.no_create,
         max_connections=args.max_connections,
@@ -180,7 +232,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         "log_level": "info",
         **tls_options,
     }
-    return Plan(app, options, banner, args.redirect_port)
+    return Plan(app, options, banner, args.redirect_port, [runner.close] if runner else [])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -199,5 +251,8 @@ def main(argv: list[str] | None = None) -> int:
 
     for line in plan.banner:
         print(line, flush=True)
-    uvicorn.run(plan.app, **plan.uvicorn_options)
+    try:
+        uvicorn.run(plan.app, **plan.uvicorn_options)
+    finally:
+        plan.close()
     return 0

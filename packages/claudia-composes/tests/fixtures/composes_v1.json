@@ -1,0 +1,11 @@
+{
+ "branches": [{"name": "main", "fork": null}],
+ "entries": [
+  {"rev": "main:1", "parent": null, "author": "ana", "time": "2026-11-01T12:00:01.000Z",
+   "command": {"k": "composes.InsertText", "s": 1, "d": {"block": 0, "offset": 0, "text": "Hello world"}}},
+  {"rev": "main:2", "parent": "main:1", "author": "ben", "time": "2026-11-01T12:00:02.000Z",
+   "command": {"k": "composes.InsertText", "s": 1, "d": {"block": 0, "offset": 5, "text": ","}}},
+  {"rev": "main:3", "parent": "main:2", "author": "ana", "time": "2026-11-01T12:00:03.000Z",
+   "command": {"k": "composes.DeleteText", "s": 1, "d": {"block": 0, "offset": 0, "length": 1}}}
+ ]
+}

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Session } from '~/lib/session'
+import type { BaseSession } from '~/lib/base-session'
 
-const props = defineProps<{ session: Session }>()
+const props = defineProps<{ session: BaseSession }>()
 const emit = defineEmits<{ close: [] }>()
 
 const name = ref('')

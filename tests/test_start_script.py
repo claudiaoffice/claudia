@@ -28,6 +28,15 @@ def test_tls_is_the_servers_own_default_when_asked_for():
     assert start.page_url(args) == "https://127.0.0.1:9000/"
 
 
+def test_a_text_server_serves_the_text_model_with_documents_of_its_own():
+    args = start.parse_args(["--app", "composes"])
+    command = start.server_command(args)
+    assert command[command.index("--model") + 1] == "claudia_composes:TextModel"
+    assert command[command.index("--dir") + 1].endswith("demo-docs-composes"), "one directory holds one app's documents"
+    assert "--model" not in start.server_command(start.parse_args([])), "workbooks are the server's default"
+    assert start.parse_args(["--app", "composes", "--dir", "mine"]).dir == "mine"
+
+
 def test_the_web_app_is_built_when_missing_or_asked_for(tmp_path):
     assert start.needs_build(start.parse_args([]), built=tmp_path)
     (tmp_path / "index.html").write_text("<html></html>")

@@ -7,13 +7,15 @@ and ``/api/protocol``. ``python3 -m claudia_server`` starts one.
 
 from ._version import __version__
 from .app import Gateway, create_app
-from .apps import methods_for, stand_in_assistant_for
-from .assistant import Assistant, Call, Engine, Say, Step, Task
+from .apps import methods_for, model_assistant_for, stand_in_assistant_for
+from .assistant import Assistant, AsyncEngine, Call, Engine, Say, Step, Task
 from .auth import AI_USER, Account, AuthRefused, Credentials, ScryptDirectory, UserDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
+from .composes import composes_methods
 from .computes import computes_methods
 from .filestore import FileDirectory, FileProvider
 from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, StoredInfo
+from .model_engine import ModelEngine
 from .protocol import (
     ERROR_CODES,
     EVENTS,
@@ -27,6 +29,7 @@ from .protocol import (
 )
 from .sealed import SealedDocuments
 from .standin import ScriptedEngine
+from .standin_text import TextEngine
 
 __all__ = [
     "AI_USER",
@@ -35,6 +38,7 @@ __all__ = [
     "PROTOCOL_VERSION",
     "Account",
     "Assistant",
+    "AsyncEngine",
     "AuthRefused",
     "Call",
     "Certificate",
@@ -53,6 +57,7 @@ __all__ = [
     "MemoryProvider",
     "Method",
     "MethodTable",
+    "ModelEngine",
     "RequestError",
     "Say",
     "ScriptedEngine",
@@ -61,13 +66,16 @@ __all__ = [
     "ScryptDirectory",
     "StoredInfo",
     "Task",
+    "TextEngine",
     "UserDirectory",
     "__version__",
+    "composes_methods",
     "computes_methods",
     "core_methods",
     "create_app",
     "ensure_certificate",
     "methods_for",
+    "model_assistant_for",
     "parse_request",
     "stand_in_assistant_for",
 ]

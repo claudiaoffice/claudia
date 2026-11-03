@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
+import { openSession, type AnySession } from '~/lib/open'
 import { Session } from '~/lib/session'
 import { ago } from '~/lib/people'
 
@@ -11,7 +12,7 @@ interface Listed {
   online: number
 }
 
-const emit = defineEmits<{ opened: [session: Session] }>()
+const emit = defineEmits<{ opened: [session: AnySession] }>()
 
 const server = new URLSearchParams(location.search).get('server') ?? location.host
 const documents = ref<Listed[]>([])
@@ -21,6 +22,12 @@ const user = ref('')
 const password = ref('')
 const error = ref('')
 const busy = ref(false)
+/** The server serves one app; the documents it lists say which (before that, claudia in general). */
+const app = computed(() => documents.value[0]?.app ?? 'claudia')
+const writing = computed(() => app.value === 'composes')
+watchEffect(() => {
+  document.documentElement.dataset.app = app.value
+})
 
 function remembered(key: string): string {
   try {
@@ -67,10 +74,12 @@ async function go(create: boolean) {
     first = false
     return link
   }
-  const session = new Session(factory)
+  let session: AnySession | null = null
   try {
-    await session.open()
-    if (session.state.sheets.length === 0 && session.state.me.role !== 'viewer') await session.addSheet('Sheet1')
+    session = await openSession(factory)
+    if (session instanceof Session && session.state.sheets.length === 0 && session.state.me.role !== 'viewer') {
+      await session.addSheet('Sheet1')
+    }
     remember('claudia.user', user.value.trim())
     remember('claudia.doc', doc.value.trim())
     emit('opened', session)
@@ -81,7 +90,7 @@ async function go(create: boolean) {
           ? 'That document exists already — or the name or password is not acceptable. Try Open.'
           : 'The name or password is not right (or there is no such document).'
         : (e?.message ?? 'Could not connect.')
-    session.close()
+    session?.close()
   } finally {
     busy.value = false
   }
@@ -92,11 +101,17 @@ async function go(create: boolean) {
   <main class="open">
     <header>
       <Wordmark />
-      <span class="tag"><AppIcon :size="20" /> computes</span>
+      <span class="tag"><AppIcon :size="20" :app="app" /> {{ app }}</span>
     </header>
     <section class="card">
-      <h1>Think with your data.</h1>
-      <p class="sub">Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant.</p>
+      <h1>{{ writing ? 'Write together.' : 'Think with your data.' }}</h1>
+      <p class="sub">
+        {{
+          writing
+            ? 'Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide.'
+            : 'Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant.'
+        }}
+      </p>
 
       <div class="cols">
         <div class="list">

@@ -3,7 +3,10 @@ name = "claudia-server"
 dynamic = ["version"]
 description = "claudia-server: hosts documents, authenticates people and speaks the live protocol (E3.1)"
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-container", "fastapi>=0.115", "uvicorn>=0.30", "websockets>=13", "cryptography>=44"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-container", "claudia-ai", "fastapi>=0.115", "uvicorn>=0.30", "websockets>=13", "cryptography>=43"]
+
+[project.optional-dependencies]
+openvino = ["claudia-ai[openvino]"]  # the language model of --ai
 
 [build-system]
 requires = ["hatchling"]
@@ -19,3 +22,5 @@ packages = ["src/claudia_server"]
 claudia-core = { workspace = true }
 claudia-computes = { workspace = true }
 claudia-container = { workspace = true }
+claudia-composes = { workspace = true }
+claudia-ai = { workspace = true }

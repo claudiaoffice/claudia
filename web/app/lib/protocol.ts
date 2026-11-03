@@ -39,10 +39,18 @@ export interface CellRef {
   col: number
   sheet?: string | null
 }
-export interface Region {
-  kind: string
+export interface CellsRegion {
+  kind: 'cells'
   range: { first: CellRef; last: CellRef }
 }
+/** A stretch of one paragraph; an empty one is a caret. Offsets count characters (code points) as the server does. */
+export interface TextRegion {
+  kind: 'text'
+  block: string
+  start: number
+  end: number
+}
+export type Region = CellsRegion | TextRegion
 
 export type EventHandler = (name: string, data: any) => void
 export type CloseHandler = (code: number, requested: boolean) => void

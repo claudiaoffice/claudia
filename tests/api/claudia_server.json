@@ -19,10 +19,20 @@
   "class": [
    "object"
   ],
-  "init": "(engine: 'Engine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>)",
+  "init": "(engine: 'Engine | AsyncEngine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>, max_waiting: 'int | None' = None)",
   "methods": {
    "attach": "(self, hosted: 'HostedDocument') -> 'Connection'",
    "idle": "(self) -> 'None'"
+  },
+  "properties": []
+ },
+ "AsyncEngine": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "plan_async": "(self, task: 'Task') -> 'list[Step]'"
   },
   "properties": []
  },
@@ -236,6 +246,16 @@
   },
   "properties": []
  },
+ "ModelEngine": {
+  "class": [
+   "object"
+  ],
+  "init": "(runner: 'ModelRunner', tools: 'tuple[ToolSpec, ...]', describe: 'Callable[[Document], str]', *, memory_turns: 'int' = 6)",
+  "methods": {
+   "plan_async": "(self, task: 'Task') -> 'list[Step]'"
+  },
+  "properties": []
+ },
  "PROTOCOL_VERSION": {
   "value": "1"
  },
@@ -317,6 +337,16 @@
   "methods": {},
   "properties": []
  },
+ "TextEngine": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "plan": "(self, task: 'Task') -> 'list[Step]'"
+  },
+  "properties": []
+ },
  "UserDirectory": {
   "class": [
    "Protocol"
@@ -328,6 +358,9 @@
    "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
   },
   "properties": []
+ },
+ "composes_methods": {
+  "value": "<MethodTable>"
  },
  "computes_methods": {
   "value": "<MethodTable>"
@@ -343,6 +376,9 @@
  },
  "methods_for": {
   "function": "(model_cls: 'type[DocumentModel]') -> 'MethodTable'"
+ },
+ "model_assistant_for": {
+  "function": "(model_cls: 'type[DocumentModel]', runner: 'ModelRunner', *, max_waiting: 'int' = 4) -> 'Callable[[], Assistant] | None'"
  },
  "parse_request": {
   "function": "(raw: 'str | bytes', limits: 'Limits') -> 'tuple[Any, Any, Any]'"
