@@ -71,5 +71,12 @@ used._remove_object  # creates_methods_with(...).method("remove_object")
 used.macStyle  # head.macStyle is read by fontTools when the font is saved
 
 # claudia-typeset tests: pytest reads these by name
-used.pytestmark  # module variable read by pytest (skip conditions, fixtures every test of the module needs)
+used.pytestmark  # module variable read by pytest (skip conditions, markers such as gtk and e2e, fixtures)
 used.needs_tex  # fixture requested by name with pytest.mark.usefixtures("needs_tex") in the real-engine tests
+
+# claudia-shell-gtk (clients/linux): frameworks call these by name
+used.do_activate  # Gio.Application virtual method: GLib calls it when the application is activated
+used.pytest_collection_modifyitems  # pytest hook, found by name (clients/linux/tests/conftest.py)
+used.do_GET  # http.server calls it by name (the stub site of clients/linux/tests/test_webpage.py)
+used.log_message  # http.server calls it by name (silences the stub site's log)
+used.optionxform  # configparser reads this attribute to keep the case of keys (test_identity.py)

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Claudia Composes
+GenericName=Word Processor
+Comment=Write text with an assistant that runs on your own computer
+Exec=claudia-composes
+Icon=de.claudiaoffice.composes
+Terminal=false
+StartupNotify=true
+StartupWMClass=de.claudiaoffice.composes
+Categories=Office;WordProcessor;GTK;
+Keywords=text;writing;document;assistant;

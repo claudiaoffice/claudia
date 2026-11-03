@@ -1,0 +1,55 @@
+[project]
+name = "claudia-shell-gtk"
+dynamic = ["version"]
+description = "The Linux client of Claudia: a thin GTK 4 / libadwaita shell around the web frontend (WebKitGTK 6.0)."
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+# The shell runs on the Python of the distribution (3.12 on Ubuntu 24.04) and must never ask for a newer one.
+# The server, which is a separate process, runs on 3.14 (clients/linux/README.md, "Two interpreters").
+requires-python = ">=3.12"
+# PyGObject, GTK 4, libadwaita (1.5 or newer) and WebKitGTK 6.0 come from the distribution (or the Flatpak runtime),
+# not from PyPI: a wheel of PyGObject would need a compiler and the GTK development files.
+dependencies = []
+
+[project.scripts]
+claudia-composes = "claudia_shell_gtk.__main__:composes"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_shell_gtk/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_shell_gtk"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+markers = [
+    "gtk: needs GTK 4, libadwaita 1.5+, WebKitGTK 6.0 and a display (Xvfb is enough); skipped where they are missing",
+    "e2e: starts the real server and the built web frontend; skipped when they are not there",
+]
+
+[tool.ruff]
+extend = "../../pyproject.toml"
+# The server is 3.14, this client is 3.12: ruff must not suggest or allow syntax newer than the client's floor.
+target-version = "py312"
+
+[tool.ruff.lint.isort]
+known-first-party = ["claudia_shell_gtk"]
+
+[tool.mypy]
+python_version = "3.12"  # the floor of this client; the root configuration checks for 3.14
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+mypy_path = ["src", "tests"]
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+# PyGObject has no type information: everything from GTK is Any.
+module = ["gi", "gi.*", "jsonschema", "jsonschema.*"]
+ignore_missing_imports = true  # (jsonschema: used by the contract tests only)

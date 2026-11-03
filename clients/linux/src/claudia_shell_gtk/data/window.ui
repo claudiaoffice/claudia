@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The layout of the window of a Claudia shell (D27). The menus are not written here: they come from the manifest and
+     replace the marker below when the window is created, so the manifest stays the one list of what the menus offer. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <!-- menus -->
+  <template class="ClaudiaWindow" parent="AdwApplicationWindow">
+    <property name="default-width">1280</property>
+    <property name="default-height">820</property>
+    <property name="content">
+      <object class="AdwToastOverlay" id="toasts">
+        <property name="child">
+          <object class="AdwToolbarView">
+            <child type="top">
+              <object class="AdwHeaderBar">
+                <child type="start">
+                  <object class="GtkMenuButton">
+                    <property name="label" translatable="yes">File</property>
+                    <property name="menu-model">menu-file</property>
+                  </object>
+                </child>
+                <child type="start">
+                  <object class="GtkMenuButton">
+                    <property name="label" translatable="yes">Edit</property>
+                    <property name="menu-model">menu-edit</property>
+                  </object>
+                </child>
+                <child type="start">
+                  <object class="GtkMenuButton">
+                    <property name="label" translatable="yes">Tools</property>
+                    <property name="menu-model">menu-tools</property>
+                  </object>
+                </child>
+                <child type="start">
+                  <object class="GtkMenuButton">
+                    <property name="label" translatable="yes">Help</property>
+                    <property name="menu-model">menu-help</property>
+                  </object>
+                </child>
+                <child type="end">
+                  <object class="GtkToggleButton">
+                    <property name="icon-name">sidebar-show-right-symbolic</property>
+                    <property name="tooltip-text" translatable="yes">History and Chat</property>
+                    <property name="action-name">win.view.panel</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <property name="content">
+              <object class="GtkStack" id="pages">
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">starting</property>
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="title" translatable="yes">Starting Claudia Composes…</property>
+                        <property name="child">
+                          <object class="GtkSpinner">
+                            <property name="spinning">true</property>
+                            <property name="halign">center</property>
+                            <property name="width-request">32</property>
+                            <property name="height-request">32</property>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">error</property>
+                    <property name="child">
+                      <object class="AdwStatusPage" id="error_page">
+                        <property name="icon-name">dialog-error-symbolic</property>
+                        <property name="child">
+                          <object class="GtkScrolledWindow">
+                            <property name="hscrollbar-policy">never</property>
+                            <property name="propagate-natural-height">true</property>
+                            <property name="max-content-height">260</property>
+                            <property name="halign">center</property>
+                            <property name="width-request">640</property>
+                            <property name="child">
+                              <object class="GtkLabel" id="error_label">
+                                <property name="selectable">true</property>
+                                <property name="wrap">true</property>
+                                <property name="xalign">0</property>
+                                <style><class name="monospace"/></style>
+                              </object>
+                            </property>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">web</property>
+                    <property name="child">
+                      <object class="GtkBox" id="web_slot">
+                        <property name="hexpand">true</property>
+                        <property name="vexpand">true</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </property>
+          </object>
+        </property>
+      </object>
+    </property>
+  </template>
+</interface>

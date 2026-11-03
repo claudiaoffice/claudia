@@ -11,6 +11,8 @@ participant works in the document like any other user.
 core-kernel
 server
 web
+linux-client
+shell-contract
 versioning
 api/claudia_core
 api/claudia_server
@@ -20,6 +22,7 @@ api/claudia_container
 api/claudia_creates
 api/claudia_fonts
 api/claudia_typeset
+api/claudia_shell_gtk
 api/apps
 contributing
 changelog
@@ -29,4 +32,5 @@ changelog-container
 changelog-creates
 changelog-fonts
 changelog-typeset
+changelog-linux-client
 ```

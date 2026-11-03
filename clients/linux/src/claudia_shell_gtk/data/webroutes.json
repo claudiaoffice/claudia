@@ -1,0 +1,19 @@
+{
+  "file.open": { "menu": "File", "label": "Close document" },
+  "file.save": { "menu": "File", "label": "Save" },
+  "file.save-named": { "menu": "File", "label": "Save with a name…" },
+  "file.save-as": { "menu": "File", "label": "Save as Markdown…" },
+  "file.share": { "menu": "File", "label": "Share…" },
+  "edit.undo": { "menu": "Edit", "label": "Undo", "prefix": true },
+  "edit.redo": { "menu": "Edit", "label": "Redo", "prefix": true },
+  "style.look": { "menu": "Format", "label": "Look of this style…" },
+  "style.all": { "menu": "Format", "label": "All styles…" },
+  "view.page": { "menu": "View", "label": "Page", "off": { "menu": "View", "label": "Flow" } },
+  "view.authors": { "menu": "View", "label": "Show who wrote what" },
+  "view.panel": { "menu": "View", "label": "History and chat" },
+  "assistant.ask": { "menu": "Tools", "label": "Ask the assistant…" },
+  "assistant.review-text": { "menu": "Tools", "label": "Review this text" },
+  "assistant.review-paragraph": { "menu": "Tools", "label": "Review this paragraph" },
+  "tools.insert-sample": { "menu": "Tools", "label": "Insert sample text" },
+  "help.help": { "menu": "Help", "label": "Keyboard" }
+}

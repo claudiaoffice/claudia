@@ -12,10 +12,13 @@ Each check prints what it found and the script exits non-zero if any check faile
 * docs       the Sphinx build with warnings as errors (every cross reference must resolve)
 * perf       the scaling guards: the cost of hot paths must not grow with the history
 * web tests  the web app's unit tests (vitest) and its types (vue-tsc), when Node and `npm install` in web/ are there
+* linux client  its types (for Python 3.12) and its tests on the distribution's Python (clients/linux/README.md);
+             the tests are skipped where there is no Python 3.12+ with PyGObject, pytest and jsonschema
 """
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -51,6 +54,7 @@ def checks() -> list[Check]:
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
         *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],
         *web_checks(),
+        *linux_client_checks(),
     ]
 
 
@@ -65,6 +69,39 @@ def web_checks() -> list[Check]:
     return [
         Check("web tests", ("npm", "test", "--silent"), cwd=web, skip_reason=reason),
         Check("web types", ("npm", "run", "typecheck", "--silent"), slow=True, cwd=web, skip_reason=reason),
+    ]
+
+
+def client_python() -> str | None:
+    """The interpreter that runs the Linux client's tests: ``$CLAUDIA_CLIENT_PYTHON``, else the system's ``python3``.
+
+    It must be the distribution's Python (the client's PyGObject lives there, not in the uv environment) and must have
+    pytest and jsonschema; the tests that need GTK skip themselves when ``gi`` is missing.
+    """
+    for candidate in (os.environ.get("CLAUDIA_CLIENT_PYTHON"), "/usr/bin/python3"):
+        if candidate and Path(candidate).is_file():
+            probe = subprocess.run([candidate, "-c", "import pytest, jsonschema"], capture_output=True, check=False)
+            if probe.returncode == 0:
+                return candidate
+    return None
+
+
+def linux_client_checks() -> list[Check]:
+    """The Linux client (``clients/linux``): its own Python floor (3.12) and its own tests."""
+    client = ROOT / "clients" / "linux"
+    python = client_python()
+    reason = ""
+    if sys.platform != "linux":
+        reason = "the Linux client is checked on Linux"
+    elif python is None:
+        reason = "needs Python 3.12+ with pytest and jsonschema: set CLAUDIA_CLIENT_PYTHON (clients/linux/README.md)"
+    mypy = ("uv", "run", "--quiet", "--project", str(ROOT), "mypy")
+    xvfb = () if os.environ.get("DISPLAY") or not shutil.which("xvfb-run") else ("xvfb-run", "-a")
+    return [
+        # mypy runs on the uv environment but checks for 3.12 (clients/linux/pyproject.toml); --project keeps uv from
+        # making an environment inside clients/linux
+        Check("mypy linux client", (*mypy, "src", "tests"), cwd=client),
+        Check("linux client tests", (*xvfb, str(python), "-m", "pytest"), cwd=client, skip_reason=reason),
     ]
 
 

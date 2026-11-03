@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://claudia-office.de/schemas/shell-contract.v1.schema.json",
+  "title": "Claudia shell contract, version 1",
+  "description": "The messages that the Claudia web frontend (the page) and a desktop shell (GTK on Linux, later Neutralino on Windows and macOS) may send each other (E5.12, D42). One message is one JSON object. Evolution inside a version is additive only: new optional fields and new message types may appear, a receiver ignores fields and message types it does not know. Anything else (a field removed, a meaning changed, a field made required) is a new version with its own schema file; shells say which versions they speak in 'welcome' and 'error'.",
+  "type": "object",
+  "required": ["type"],
+  "oneOf": [
+    { "$ref": "#/$defs/hello" },
+    { "$ref": "#/$defs/welcome" },
+    { "$ref": "#/$defs/action" },
+    { "$ref": "#/$defs/action_state" },
+    { "$ref": "#/$defs/error" }
+  ],
+  "$defs": {
+    "actionId": {
+      "description": "An action is named like a menu path in lower case: 'file.save', 'edit.undo', 'view.page'. Menus and ids come from the menu and action manifest of the shell (E5.1).",
+      "type": "string",
+      "pattern": "^[a-z]+(\\.[a-z][a-z0-9-]*)+$",
+      "maxLength": 64
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "maxLength": 32
+    },
+    "hello": {
+      "description": "Page to shell, first message: the page says which contract it speaks and which app it shows.",
+      "type": "object",
+      "required": ["type", "contract", "app"],
+      "properties": {
+        "type": { "const": "hello" },
+        "contract": { "type": "integer", "minimum": 1 },
+        "app": { "$ref": "#/$defs/token" },
+        "frontend": { "description": "Version of the frontend, for diagnostics.", "type": "string", "maxLength": 64 }
+      }
+    },
+    "welcome": {
+      "description": "Shell to page, the answer to 'hello': the version both will speak, who the shell is and what it offers.",
+      "type": "object",
+      "required": ["type", "contract", "shell", "capabilities"],
+      "properties": {
+        "type": { "const": "welcome" },
+        "contract": { "type": "integer", "minimum": 1 },
+        "shell": {
+          "type": "object",
+          "required": ["name", "platform", "version"],
+          "properties": {
+            "name": { "$ref": "#/$defs/token" },
+            "platform": { "enum": ["linux", "windows", "macos"] },
+            "version": { "type": "string", "maxLength": 64 }
+          }
+        },
+        "capabilities": {
+          "description": "What this shell offers. 'native-menu': the shell shows File, Edit, Tools and Help itself, the page should not draw its own menu bar. 'actions': the shell sends 'action' messages for its menu.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/token" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "action": {
+      "description": "Shell to page: the person chose a menu item (or pressed its accelerator) that the page has to carry out.",
+      "type": "object",
+      "required": ["type", "action"],
+      "properties": {
+        "type": { "const": "action" },
+        "action": { "$ref": "#/$defs/actionId" },
+        "target": { "type": "string", "maxLength": 256 }
+      }
+    },
+    "action_state": {
+      "description": "Page to shell: which actions are enabled, ticked or relabelled right now (Undo is only enabled when there is something to undo). Only the actions named change.",
+      "type": "object",
+      "required": ["type", "states"],
+      "properties": {
+        "type": { "const": "action_state" },
+        "states": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "$ref": "#/$defs/actionId" },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "checked": { "type": "boolean" },
+              "label": { "type": "string", "maxLength": 128 }
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "description": "Either direction: a message could not be accepted.",
+      "type": "object",
+      "required": ["type", "code", "message"],
+      "properties": {
+        "type": { "const": "error" },
+        "code": { "enum": ["bad_json", "bad_message", "unsupported_contract", "unknown_action", "internal"] },
+        "message": { "type": "string", "maxLength": 512 },
+        "supported": {
+          "description": "With 'unsupported_contract': the contract versions the sender speaks.",
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}
