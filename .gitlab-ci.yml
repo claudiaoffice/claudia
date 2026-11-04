@@ -9,6 +9,8 @@ variables:
 python-tests:
   stage: test
   image: python:3.14-slim-bookworm
+  tags:
+    - docker
 
   cache:
     key:
@@ -32,6 +34,8 @@ python-tests:
 web-tests:
   stage: test
   image: node:22-bookworm-slim
+  tags:
+    - docker
 
   cache:
     key:
@@ -51,6 +55,8 @@ web-tests:
 web-build:
   stage: test
   image: node:22-bookworm-slim
+  tags:
+    - docker
 
   cache:
     key:
@@ -69,6 +75,8 @@ web-build:
 docker-build:
   stage: build
   image: docker:27-cli
+  tags:
+    - docker
 
   services:
     - name: docker:27-dind
