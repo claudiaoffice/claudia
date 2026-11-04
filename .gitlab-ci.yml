@@ -1,0 +1,11 @@
+stages:
+  - test
+
+runner-test:
+  stage: test
+  image: alpine:latest
+  tags:
+    - docker
+  script:
+    - echo "GitLab Runner is working!"
+    - echo "Hello from Claudia CI/CD"
