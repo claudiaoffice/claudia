@@ -1,11 +1,87 @@
 stages:
   - test
+  - build
 
-runner-test:
+variables:
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv-cache"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+
+python-tests:
   stage: test
-  image: alpine:latest
-  tags:
-    - docker
+  image: python:3.14-slim-bookworm
+
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - .uv-cache/
+
+  before_script:
+    - pip install --no-cache-dir uv
+    - uv sync --locked --all-packages
+
   script:
-    - echo "GitLab Runner is working!"
-    - echo "Hello from Claudia CI/CD"
+    - uv run --locked pytest packages/ --junitxml=pytest-report.xml
+
+  artifacts:
+    when: always
+    reports:
+      junit: pytest-report.xml
+
+web-tests:
+  stage: test
+  image: node:22-bookworm-slim
+
+  cache:
+    key:
+      files:
+        - web/package-lock.json
+    paths:
+      - .npm/
+
+  before_script:
+    - cd web
+    - npm ci
+
+  script:
+    - npm run test -- --run
+
+
+web-build:
+  stage: test
+  image: node:22-bookworm-slim
+
+  cache:
+    key:
+      files:
+        - web/package-lock.json
+    paths:
+      - .npm/
+
+  before_script:
+    - cd web
+    - npm ci
+
+  script:
+    - npx nuxt generate
+
+docker-build:
+  stage: build
+  image: docker:27-cli
+
+  services:
+    - name: docker:27-dind
+      command: ["--tls=false"]
+
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+
+  script:
+    - docker build --pull -t claudia-server:$CI_COMMIT_SHORT_SHA .
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
