@@ -277,6 +277,35 @@ Renumbered from the Linux client notes' D97–D103 (see the table at the top). D
 | D118 | **Rules of the web view in every shell:** the page cannot leave the server's origin; links go to the default browser for web and mail addresses only; permission requests are denied; a downloaded file is saved in Downloads under a name the page cannot use to escape, and never overwrites. | 2026-11-03 | Stop-gap for downloads until a native Save As exists. |
 | D119 | **The server never outlives its shell.** It has its own process group, which the shell ends with the window, and it asks Linux for `SIGTERM` when the shell dies for any reason. | 2026-11-03 | Linux only; Windows and macOS need their own mechanism (job object, lifeline). |
 
+## Menu redesign and accessibility baseline (nineteenth round)
+
+Screens only so far (`notes/mockups/`, `notes/e5-1-e5-10-menus-and-accessibility.md`); nothing below is built. Scope
+agreed with the owner 2026-11-05, before the screens themselves were reviewed.
+
+| ID | Decision | Date | Notes |
+|---|---|---|---|
+| D120 | **The menu schema is fixed at seven header-bar menus, identical in every app and every shell: File, Edit, Format, View, Tools, Config, Help.** Edit and View each carry a shared block ahead of an app-specific section (Edit: Undo, Redo, then Copy/Cut/Paste/Paste as ▸ Plain text, then app items; View: Show who did what, History and chat, Dark mode/light mode, then app items). Tools is entirely app-specific. Config is new, holding only Shortcuts for now. | 2026-11-05 | Supersedes D4's four; resolves UX-06. File ships as a flat list with no separators — open item below. |
+| D121 | **Scope of the E5.1/E5.10 pass:** the Linux GTK manifest (`manifest.py`) is rebuilt to the full seven-menu schema rather than staying collapsed to D4's four, and is extended to computes and creates, which have no GTK manifest at all today. `shim.js` is retired in the same pass — the web app will speak the shell contract directly, reaching D117's own stated exit condition rather than deferring it further. UX-03 (`Modal.vue` → native `<dialog>` + `showModal()`) ships alongside UX-01/04/05 instead of being sequenced after. | 2026-11-05 | Supersedes the "not changed for the shells (yet)" half of D117; D117's versioned-contract mechanism itself stands. |
+| D122 | **Keyboard shortcuts move to one shared, structured map**, replacing the three near-identical hardcoded `keydown` handlers in `TextWorkspace.vue`, `DocumentFrame.vue` and `Workspace.vue`, with GNOMEish defaults — e.g. Redo is Ctrl+Shift+Z only, dropping today's extra Ctrl+Y binding. Config ▸ Shortcuts shows this read-only for now; an editable remapping UI is deferred. | 2026-11-05 | Groundwork for shipping "typical" per-OS shortcut sets later, per the owner. |
+| D123 | **Where today's items land in the new schema:** insert-like items (creates' text box and shapes, computes' row/column insert-delete and Clear cells) and the "New sheet…" / "New slide" actions move to Edit's app-specific section, not File or Tools. File ▸ Download ships as a stub — today's single-format Save-As action, relabelled — until real export formats exist. File ▸ "Save new checkpoint" is today's "Save with a name…", renamed. "Close document" keeps its current meaning (back to the document list, not quit). | 2026-11-05 | Confirmed directly by the owner. |
+
+The owner's first look at the screens (same day) settled most of what D120 had left open:
+
+| ID | Decision | Date | Notes |
+|---|---|---|---|
+| D124 | **File keeps separators**, grouped New, Open \| Save, Save new checkpoint, Download \| Share \| Close document. | 2026-11-05 | Supersedes D120's flat-list reading. Claude's grouping, from the pre-redesign pattern — not individually confirmed item by item. |
+| D125 | **A menu item with nothing behind it yet stays visible but inert, rather than being hidden:** computes' and creates' empty Format menu (no style system yet), and Help's "How do I…?" and "Documentation" (no help system yet, E13). | 2026-11-05 | Confirmed by the owner, one pattern for both cases. |
+| D126 | **Help ▸ "Ask ai" is a generic "open chat, empty prompt" entry point**, distinct from Tools' task-specific AI actions (Review this text, Ask for an example budget, …). Today's Help ▸ Keyboard dialog content moves into Config ▸ Shortcuts instead of staying under Help. | 2026-11-05 | Confirmed by the owner. |
+| D127 | **composes' Format menu groups its style names**, rather than the flat list D120 carried over from the original sketch. | 2026-11-05 | Grouping shown in `notes/mockups/menu-bar-states.svg` (separators by style family) is Claude's proposed reading of "grouped" and has not yet been checked against the owner's actual style set. |
+| D128 | **A dialog always closes on Esc, including a "locked" one** (e.g. Save new checkpoint) — only an outside click is still blocked for a locked dialog. Esc stays a deliberate, always-honoured exit; the outside-click guard is what protects against an accidental dismiss. | 2026-11-05 | Supersedes the Esc-blocked-when-locked reading in the first round of UX-03 screens. |
+| D129 | **UX-04's contrast fix and the UX-05 dark-mode token proposal are agreed as shown** in `notes/mockups/contrast-and-dark-mode.svg`. `tokens.css` can be changed. | 2026-11-05 | The white-text-on-`--app` 3.9:1 note stays open (see below) — agreeing the sheet did not resolve that part. |
+
+The owner then asked whether computes' Edit menu, grown long with row/column actions, should group them:
+
+| ID | Decision | Date | Notes |
+|---|---|---|---|
+| D130 | **computes' Edit menu groups its row and column actions into two submenus — "Row ▸" (Insert above, Insert below, Delete) and "Column ▸" (Insert left, Insert right, Delete)** — instead of six flat items, reusing the submenu mechanism already built for "Paste as ▸ Plain text" rather than adding a second one. | 2026-11-05 | Claude's recommendation, given in answer to the owner's question; not yet confirmed. Shown in `notes/mockups/menu-bar-states.svg`, panel C. |
+
 ## Open design questions
 
 - **Typesetting:** the full-document comparison of E0.4 (Tectonic against TeX Live, biblatex with biber, Beamer,
@@ -288,11 +317,16 @@ Renumbered from the Linux client notes' D97–D103 (see the table at the top). D
   view is typeset by the engine (server-side layout) or by the browser; the LaTeX import subset; the Beamer theme.
 - **Help system (D76), none decided:** the topic file format, the search service, whether an extension without help is
   refused in composes and creates too, where the help view lives, and whether tooltips could default from docstrings.
+  **And now also:** Help's "How do I…?" and "Documentation" ship as visible, inert stubs until this exists, and
+  today's Help ▸ Keyboard dialog content moves into Config ▸ Shortcuts instead of staying in Help (D125, D126).
 - **Shells:** Neutralino on Windows and macOS against GTK on Linux — window behaviour, menus, dialogs, input methods,
   accessibility, install size, maturity (E0.3, E0.8). Nothing is verified.
-- **Menus:** the shared manifest for GTK, the Neutralino menu and the web header bar; where the demo's Insert items go;
-  Select All. **And now also:** whether D4's four menus or the web app's six are the decision (UX-06), which blocks
-  E5.1 and keeps the Linux shell's click-path adapter alive (UX-09).
+- **Menus:** four or six (UX-06) is resolved — D120, seven, identical everywhere; GTK extended to all three apps and
+  `shim.js` retired — D121; File's separators (D124), the empty-but-visible treatment (D125), Help's "Ask ai" (D126)
+  and style grouping (D127) are all settled. Still open: Select All (never decided for any menu); Tools as entirely
+  app-specific (D120) is a working default the owner has not revisited ("don't know yet, not too much for it at the
+  moment") — nothing blocks on it, since Tools already has real content in every app today; computes' Edit ▸ Row ▸ /
+  Column ▸ grouping (D130) is proposed, not yet confirmed.
 - **Styling:** deleting a style that other styles are based on (a proposal exists: deleting never changes how anything
   looks and never leaves a dangling reference; the person chooses "keep their look" or "re-base on another style"; root
   and built-in styles cannot be deleted, only hidden); whether row heights and column widths are style or sheet layout;
@@ -309,6 +343,10 @@ Renumbered from the Linux client notes' D97–D103 (see the table at the top). D
   cancellation and queue visibility in the AI server; structured output for small local models.
 - **Which use case comes first** (PM, FIN, SCI, DATA, EDU).
 - **Accessibility standard** to aim at, and which countries' administrations to interview first.
+- **White text on the base `--app` colour (e.g. Teal) as a filled background measures 3.9:1** — under the 4.5:1
+  normal-text bar, though it clears 3:1 for UI components/large text. Not one of UX-04's five measured pairs, and
+  agreeing D129 did not resolve it — noticed while building the dark-mode screen; worth a look independently of
+  dark mode. Dark-mode tokens themselves are agreed (D129).
 - **Side effects of D51/D52 to settle elsewhere:** redaction has to reach hidden lines, or a secret removed from the
   active line stays in the file; viewers must not see hidden lines; chat is not rolled back by a restore; after a
   restore the `ai` user must rebuild its context.

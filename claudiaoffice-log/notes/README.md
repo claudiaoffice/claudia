@@ -18,6 +18,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `e5-linux-client.md` | The GTK shell, the shell contract, the menu mapping, and the compatibility notes | 2026-11-03 |
 | `e7-ai.md` | The `ai` user design and the E7.1 port: packages, decisions taken while porting, what is unverified | 2026-11-01/02 |
 | `e9-composes.md` | The composes model, the web demo history, and the styling work | 2026-11-02/03 |
+| `e5-1-e5-10-menus-and-accessibility.md` | The menu-schema redesign (UX-06/UX-09) and the UX-01/03/04/05 accessibility baseline, with `mockups/`; proposed, not built | 2026-11-05 |
 | `code-map.md` | The narrative map of the repository, **stale**: written at `842d739`, six packages | 2026-11-02 |
 
 ## Three documents were deliberately not copied
