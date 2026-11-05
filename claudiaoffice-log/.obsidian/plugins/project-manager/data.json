@@ -1,0 +1,153 @@
+{
+  "projectsFolder": "Projects",
+  "peopleFolder": "People",
+  "excludedFolders": [],
+  "defaultView": "table",
+  "ganttGranularity": "week",
+  "ganttWeekLabel": "weekNumber",
+  "holidays": [],
+  "statuses": [
+    {
+      "id": "todo",
+      "label": "To Do",
+      "color": "#8a94a0",
+      "icon": "",
+      "complete": false
+    },
+    {
+      "id": "in-progress",
+      "label": "In Progress",
+      "color": "#8b72be",
+      "icon": "",
+      "complete": false
+    },
+    {
+      "id": "blocked",
+      "label": "Blocked",
+      "color": "#c47070",
+      "icon": "",
+      "complete": false
+    },
+    {
+      "id": "review",
+      "label": "In Review",
+      "color": "#b8a06b",
+      "icon": "",
+      "complete": false
+    },
+    {
+      "id": "done",
+      "label": "Done",
+      "color": "#79b58d",
+      "icon": "",
+      "complete": true
+    },
+    {
+      "id": "cancelled",
+      "label": "Cancelled",
+      "color": "#767491",
+      "icon": "",
+      "complete": true
+    }
+  ],
+  "priorities": [
+    {
+      "id": "critical",
+      "label": "Critical",
+      "color": "#c47070",
+      "icon": ""
+    },
+    {
+      "id": "high",
+      "label": "High",
+      "color": "#b8a06b",
+      "icon": ""
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "color": "#8a94a0",
+      "icon": ""
+    },
+    {
+      "id": "low",
+      "label": "Low",
+      "color": "#79b58d",
+      "icon": ""
+    }
+  ],
+  "priorityIcons": "chevrons",
+  "customFields": [],
+  "globalTeamMembers": [],
+  "showSubtreeConnections": true,
+  "lineBorders": "none",
+  "showTagColors": true,
+  "dateFormat": "",
+  "notificationsEnabled": true,
+  "notificationLeadDays": 2,
+  "autoArchiveDays": 0,
+  "lastAutoArchiveDate": "",
+  "autoSchedule": true,
+  "pullForwardOnEarlyFinish": false,
+  "saveTaskOnClose": true,
+  "taskEditorSurface": "modal",
+  "editorSaveModifier": "Shift",
+  "projectSurface": "overview",
+  "projectFilters": {
+    "project:Projects/claudia-office/claudia-office.md": {
+      "filter": {
+        "conditions": [],
+        "showArchived": false
+      },
+      "activeSavedViewId": null,
+      "sort": [
+        {
+          "key": "progress",
+          "dir": "asc"
+        }
+      ],
+      "group": {
+        "field": "status",
+        "columns": {
+          "status": {}
+        }
+      },
+      "fields": {
+        "table": {
+          "visible": [
+            "title",
+            "status",
+            "priority",
+            "assignees",
+            "progress"
+          ]
+        }
+      },
+      "ganttGranularity": "week",
+      "nonWorkingDays": {}
+    }
+  },
+  "defaultFields": {},
+  "scopeViews": {},
+  "collapsedTasks": {
+    "Projects/claudia-office/claudia-office.md": [
+      "w0ipiw84mw2jd96q",
+      "6pox7j2emw2jdqxt",
+      "77fftat6mw2jdxvb"
+    ]
+  },
+  "collapsedProjects": [],
+  "showArchivedProjects": false,
+  "projectList": {
+    "filter": {},
+    "sort": [],
+    "group": "none",
+    "activeViewId": null
+  },
+  "projectListViews": [],
+  "localApiEnabled": false,
+  "localApiPort": 27178,
+  "localApiToken": "68ece647e9e1153df54ecae2741f0cce4db6721d2e779482",
+  "showReleaseNotes": true,
+  "lastSeenVersion": "2.6.0"
+}
