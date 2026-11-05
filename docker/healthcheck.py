@@ -5,11 +5,12 @@ The certificate is not verified: this only asks the server running in the same c
 """
 
 import http.client
+import os
 import ssl
 import sys
 import urllib.request
 
-PORT = 8765
+PORT = int(os.environ.get("PORT", "8765"))
 
 
 def healthy(scheme: str) -> bool:
