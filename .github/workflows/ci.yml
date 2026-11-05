@@ -31,6 +31,15 @@ jobs:
         with:
           python-version: "3.14"
           enable-cache: true
+      # The typesetting tests that run the real engine skip themselves where TeX is missing. LaTeX is the user's own
+      # install (D90, nothing is bundled), so only Linux has it here; the sandbox, the Windows Job Object and the
+      # program lookup are tested everywhere with stand-in programs, and tests/test_typeset_sandbox_windows.py runs
+      # for real on the Windows runner.
+      - name: Install TeX Live and poppler (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends texlive-xetex texlive-latex-recommended texlive-latex-extra fonts-lmodern poppler-utils
       - run: uv sync --locked
       - run: uv run python scripts/check_debt.py
 
@@ -52,3 +61,35 @@ jobs:
       - run: npx nuxt prepare # vitest needs the generated .nuxt files
       - run: npx vitest run
       - run: npx vue-tsc --noEmit
+
+  # The Linux client runs on the distribution's Python (3.12 on Ubuntu 24.04) with GTK from the distribution, while the
+  # server it starts runs on 3.14 (clients/linux/README.md, "Two interpreters"). Its end-to-end test starts the real
+  # server and the built web frontend under Xvfb.
+  linux-client:
+    name: Linux client (Python 3.12, GTK 4)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: GTK 4, libadwaita, WebKitGTK and the test tools, all from the distribution
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri \
+            python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-webkit-6.0 python3-pytest python3-jsonschema
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked # the interpreter of the server that the end-to-end test starts
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci && npm run build # the web frontend that the shell shows
+        working-directory: web
+      - name: Tests on the distribution's Python
+        working-directory: clients/linux
+        run: |
+          /usr/bin/python3 --version
+          xvfb-run -a /usr/bin/python3 -m pytest
