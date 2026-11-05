@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { inputOf, rangeLabel, parseCell, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
+import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
 import type { Menu } from './MenuBar.vue'
@@ -15,6 +16,7 @@ const SIZE = { rows: VIEW_ROWS, cols: VIEW_COLS }
 
 const sel = ref<Sel>(single(0, 0))
 const edit = ref<EditState | null>(null)
+const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 const dialog = ref<null | 'sheet' | 'checkpoint' | 'share' | 'help'>(null)
 const panelOpen = ref(true)
@@ -25,6 +27,8 @@ const readonly = computed(() => state.me.role === 'viewer')
 const b = computed(() => bounds(sel.value))
 const label = computed(() => (edit.value ? rangeLabel(edit.value.row, edit.value.col, edit.value.row, edit.value.col) : rangeLabel(b.value.r0, b.value.c0, b.value.r1, b.value.c1)))
 const formulaText = computed(() => (edit.value ? edit.value.text : inputOf(session.cell(state.activeSheet, sel.value.row, sel.value.col))))
+/** Does a click pick cells for the formula being typed (the caret is where a reference fits)? */
+const pointing = computed(() => edit.value !== null && slotAt(edit.value.text, edit.value.caret) !== null)
 const summary = computed(() => {
   void state.generation
   return summarize(sel.value, (r, c) => session.cell(state.activeSheet, r, c))
@@ -34,13 +38,37 @@ const summary = computed(() => {
 watch(
   [sel, () => state.activeSheet],
   () => {
-    if (state.activeSheet) session.show(state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
+    if (state.activeSheet && !edit.value) session.show(state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
   },
   { deep: true },
 )
 
 function select(next: Sel) {
+  if (edit.value && pointing.value) return point(next)
   sel.value = next
+}
+
+/** Write the cells picked with the mouse into the formula, in place of the previous pick if there is one. */
+function point(next: Sel) {
+  const e = edit.value!
+  const sheet = state.sheets.find((s) => s.id === state.activeSheet)
+  const reference = refOf(next, SIZE, state.activeSheet === e.sheet || !sheet ? '' : sheetPrefix(sheet.name))
+  const placed = reference === null ? null : pointTo(e.text, e.caret, reference)
+  if (!placed) return
+  e.text = placed.text
+  e.caret = placed.caret
+  sel.value = next
+  pointed.value = true
+  void nextTick(() => putCaret(placed.caret))
+}
+
+/** The text being typed keeps the focus, with the caret behind what was picked. */
+function putCaret(position: number) {
+  const inputs = [...document.querySelectorAll<HTMLInputElement>('input[data-editing]')]
+  const target = inputs.find((i) => i === document.activeElement) ?? inputs.find((i) => i.classList.contains('editor')) ?? inputs[0]
+  if (!target) return
+  target.focus()
+  target.setSelectionRange(position, position)
 }
 
 function moveBy(dr: number, dc: number, extend: boolean, jumping: boolean) {
@@ -62,7 +90,9 @@ async function beginEdit(initial?: string) {
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   const { row, col } = sel.value
   original = inputOf(session.cell(state.activeSheet, row, col))
-  edit.value = { row, col, text: initial ?? original }
+  const text = initial ?? original
+  pointed.value = false
+  edit.value = { sheet: state.activeSheet, row, col, text, caret: text.length }
   if (!(await session.beginEdit(state.activeSheet, row, col))) edit.value = null
 }
 
@@ -70,23 +100,30 @@ async function commit(dir: 'down' | 'up' | 'right' | 'left' | 'none' = 'none') {
   const e = edit.value
   if (!e) return
   edit.value = null
+  state.activeSheet = e.sheet // (a formula may have been typed while looking at another sheet)
   const delta = { down: [1, 0], up: [-1, 0], right: [0, 1], left: [0, -1], none: [0, 0] }[dir]
   sel.value = move(single(e.row, e.col), delta[0]!, delta[1]!, false, SIZE)
   grid.value?.focus()
-  if (e.text.startsWith('=') && e.text !== original) session.notice('Formulas are not there yet: this is kept as text.')
-  if (e.text !== original) await session.setCells(state.activeSheet, [{ row: e.row, col: e.col, input: e.text }])
+  if (e.text !== original) await session.setCells(e.sheet, [{ row: e.row, col: e.col, input: e.text }])
   await session.endEdit()
 }
 
 async function cancel() {
   if (!edit.value) return
+  state.activeSheet = edit.value.sheet
   edit.value = null
   grid.value?.focus()
   await session.endEdit()
 }
 
 function updateText(text: string) {
-  if (edit.value) edit.value.text = text
+  if (!edit.value) return
+  edit.value.text = text
+  pointed.value = false
+}
+
+function moveCaret(position: number) {
+  if (edit.value) edit.value.caret = position
 }
 
 async function clearSelection() {
@@ -108,9 +145,11 @@ async function paste(rows: string[][]) {
 }
 
 // ------------------------------------------------------------------------------ sheets, rows, columns
-function pickSheet(id: string) {
+async function pickSheet(id: string) {
+  if (edit.value && !pointing.value) await commit('none') // (a formula being typed can point at another sheet)
   state.activeSheet = id
   sel.value = single(0, 0)
+  pointed.value = false
 }
 
 async function addSheet(name: string) {
@@ -228,6 +267,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       @goto="goto"
       @focus-text="beginEdit()"
       @update:text="updateText"
+      @caret="moveCaret"
       @commit="commit('down')"
       @cancel="cancel"
       @undo="session.undo()"
@@ -241,11 +281,14 @@ onBeforeUnmount(() => clearTimeout(timer))
         :sheet="state.activeSheet"
         :sel="sel"
         :edit="edit"
+        :pointing="pointing"
+        :anchored="pointed"
         @select="select"
         @move="moveBy"
         @type="beginEdit($event)"
         @begin-edit="beginEdit()"
         @update:edit-text="updateText"
+        @caret="moveCaret"
         @commit="commit($event)"
         @cancel="cancel"
         @clear="clearSelection"

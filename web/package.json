@@ -11,6 +11,7 @@
     "e2e": "node e2e/demo.cjs",
     "e2e:composes": "node e2e/composes.cjs",
     "e2e:slides": "node e2e/slides.cjs",
+    "e2e:pointing": "node e2e/pointing.cjs",
     "e2e:resilience": "node e2e/resilience.cjs"
   },
   "dependencies": {

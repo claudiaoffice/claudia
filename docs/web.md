@@ -99,6 +99,7 @@ npm run typecheck            # vue-tsc
 npm run e2e                  # two real browsers against a running server (needs Playwright)
 npm run e2e:composes         # the same for a text: URL=http://127.0.0.1:8766/ against a server started with
                              #   --model claudia_composes:TextModel --no-tls --web web/.output/public
+npm run e2e:pointing         # picking cells with the mouse while typing a formula (one browser, a running server)
 npm run e2e:resilience       # starts its own server, restarts it, checks that both browsers come back
 ```
 

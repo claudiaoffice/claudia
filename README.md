@@ -82,3 +82,52 @@ The server makes its own certificate on first start, so the browser warns once.
   (1000). To keep strangers out, set an access secret (`-e CLAUDIA_ACCESS_SECRET=...`, at least 16 characters): only
   those who know it can then create documents or read the list (the web app has no field for it yet, so it is for
   clients of the protocol for now), or use `--no-create`. See `docs/server.md`, *Who can reach the server*.
+
+### A web demo on a serverless platform (Scaleway)
+
+For a demo that needs no storage, the same image runs on a serverless container platform with `CLAUDIA_DEMO=1`:
+documents live in memory (at most 100, and gone whenever the container stops or scales to zero), nothing is written to
+disk, and the server speaks plain HTTP because the platform encrypts in front of it (`--no-tls --behind-proxy`). The
+server listens on the port in `PORT`, which the platform sets (Scaleway: 8080). One container serves one app; make one
+per app.
+
+| Environment variable | |
+| --- | --- |
+| `CLAUDIA_DEMO` | `1` |
+| `CLAUDIA_APP` | `computes` (default), `composes` or `creates` |
+| `CLAUDIA_ALLOW_HOST` | the name people type in the address bar, without `https://`, e.g. `abc123.functions.fnc.fr-par.scw.cloud` or your own domain; several separated by commas |
+
+Scaleway Serverless Containers, step by step:
+
+1. Build for `linux/amd64` (Scaleway refuses other architectures, so on Apple silicon the `--platform` matters), push to
+   a Container Registry namespace of yours:
+
+   ```
+   docker login rg.fr-par.scw.cloud/NAMESPACE -u nologin --password-stdin <<< "$SCW_SECRET_KEY"
+   docker build --platform linux/amd64 -t rg.fr-par.scw.cloud/NAMESPACE/claudia-demo:latest .
+   docker push rg.fr-par.scw.cloud/NAMESPACE/claudia-demo:latest
+   ```
+
+2. Create the container in a Serverless Containers namespace, with that image, the three variables above, privacy
+   *public*, and these settings:
+
+   | Setting | Value | Why |
+   | --- | --- | --- |
+   | Port | leave the default | the platform tells the server which one through `PORT` |
+   | Min scale / max scale | 0 / **1** | documents are in the memory of one instance; with two, people would land on different ones and not see each other |
+   | Memory | 1 GB | the server needs about 70 MB idle and a few MB per document |
+   | Request timeout | the maximum, 3600 s | the live connection is one long request; the web app reconnects by itself when it ends |
+   | Health check | **TCP**, not HTTP | the server refuses requests under names it does not know, and the name a platform's probe uses is not known in advance |
+
+3. The platform gives the container its address only once it exists, so the first start has no `CLAUDIA_ALLOW_HOST`
+   and every page answers *This server does not answer to the name you used*. Copy the address from the console
+   (or from the log line *refused a request for the host '...'*), set it as `CLAUDIA_ALLOW_HOST`, and redeploy. A
+   custom domain can be set from the start.
+
+Things to know:
+
+* After 15 minutes without traffic the container scales to zero and the demo documents are gone (min scale 1 keeps
+  them, and costs).
+* To keep strangers from filling the demo, set `CLAUDIA_ACCESS_SECRET` as a *secret* environment variable (see above).
+* Scaleway's documentation does not say whether WebSocket connections are supported, and the apps cannot work without
+  them. If the page loads but opening or creating a document fails, check the container log first, then ask Scaleway.

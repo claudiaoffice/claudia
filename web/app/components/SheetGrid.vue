@@ -2,22 +2,36 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { alignment, columnName, inputOf, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
 import { colorOf, inkOn } from '~/lib/people'
+import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
 
+/** The cell being edited (on which sheet), what is typed so far and where the caret stands in it. */
 export interface EditState {
+  sheet: string
   row: number
   col: number
   text: string
+  caret: number
 }
 
-const props = defineProps<{ session: Session; sheet: string; sel: Sel; edit: EditState | null }>()
+const props = defineProps<{
+  session: Session
+  sheet: string
+  sel: Sel
+  edit: EditState | null
+  /** Typing a formula where a picked reference fits: a click picks cells instead of ending the edit. */
+  pointing: boolean
+  /** The last pick is the selection, so shift+click may extend it. */
+  anchored: boolean
+}>()
 const emit = defineEmits<{
   select: [sel: Sel, dragging: boolean]
   move: [dr: number, dc: number, extend: boolean, jump: boolean]
   type: [text: string]
   beginEdit: []
   'update:editText': [text: string]
+  caret: [position: number]
   commit: [dir: 'down' | 'up' | 'right' | 'left']
   cancel: []
   clear: []
@@ -50,6 +64,8 @@ const range = computed(() => ({
 const x = (col: number) => HW + col * W - scroll.value.left
 const y = (row: number) => HH + row * H - scroll.value.top
 
+const editHere = computed(() => props.edit !== null && props.edit.sheet === props.sheet)
+
 const cells = computed(() => {
   void state.generation
   const out: { key: number; left: number; top: number; text: string; align: string; kind: string }[] = []
@@ -57,7 +73,7 @@ const cells = computed(() => {
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const content = props.session.cell(props.sheet, r, c)
-      if (content === null || (props.edit && props.edit.row === r && props.edit.col === c)) continue
+      if (content === null || (editHere.value && props.edit!.row === r && props.edit!.col === c)) continue
       out.push({ key: r * 100_000 + c, left: x(c), top: y(r), text: show(content), align: alignment(content), kind: content.t })
     }
   }
@@ -115,6 +131,19 @@ const linesStyle = computed(() => ({
   backgroundPosition: `${HW - (scroll.value.left % W)}px ${HH - (scroll.value.top % H)}px`,
 }))
 
+/** The cells the formula being typed refers to, outlined in the colour its reference has in the text. */
+const referenced = computed(() => {
+  if (!props.edit) return []
+  const wanted = (name: string | null) =>
+    name === null ? props.edit!.sheet : state.sheets.find((s) => s.name.toLowerCase() === name.toLowerCase())?.id
+  const last = { row: VIEW_ROWS - 1, col: VIEW_COLS - 1 }
+  return referencesIn(props.edit.text).flatMap((ref, i) =>
+    wanted(ref.sheet) === props.sheet && ref.r0 <= last.row && ref.c0 <= last.col
+      ? [{ key: i, color: REFERENCE_COLORS[i % REFERENCE_COLORS.length]!, style: box(ref.r0, ref.c0, Math.min(ref.r1, last.row), Math.min(ref.c1, last.col)) }]
+      : [],
+  )
+})
+
 const editorStyle = computed(() => {
   if (!props.edit) return {}
   const width = Math.max(W, Math.min(360, props.edit.text.length * 8 + 28))
@@ -157,23 +186,32 @@ onBeforeUnmount(() => {
 watch(() => [state.generation, props.sheet], load)
 
 // ------------------------------------------------------------------------------ keeping the focus cell in view
-function reveal(row: number, col: number) {
+function reveal(row: number, col: number, vertically: boolean, horizontally: boolean) {
   const el = viewport.value
   if (!el) return
   const left = col * W
   const top = row * H
-  if (left < el.scrollLeft) el.scrollLeft = left
-  else if (left + W > el.scrollLeft + el.clientWidth - HW) el.scrollLeft = left + W - (el.clientWidth - HW)
-  if (top < el.scrollTop) el.scrollTop = top
-  else if (top + H > el.scrollTop + el.clientHeight - HH) el.scrollTop = top + H - (el.clientHeight - HH)
+  if (horizontally) {
+    if (left < el.scrollLeft) el.scrollLeft = left
+    else if (left + W > el.scrollLeft + el.clientWidth - HW) el.scrollLeft = left + W - (el.clientWidth - HW)
+  }
+  if (vertically) {
+    if (top < el.scrollTop) el.scrollTop = top
+    else if (top + H > el.scrollTop + el.clientHeight - HH) el.scrollTop = top + H - (el.clientHeight - HH)
+  }
 }
 watch(
-  () => [props.sel.row2, props.sel.col2],
-  ([row, col]) => reveal(row!, col!),
+  () => [props.sel.row, props.sel.col, props.sel.row2, props.sel.col2],
+  ([row, col, row2, col2]) => {
+    // a whole column (or row) was picked at its header: the view stays where it is instead of running to its far end
+    const wholeColumn = row === 0 && row2 === VIEW_ROWS - 1
+    const wholeRow = col === 0 && col2 === VIEW_COLS - 1
+    reveal(row2!, col2!, !wholeColumn, !wholeRow)
+  },
 )
 
 watch(
-  () => props.edit !== null,
+  editHere,
   async (editing) => {
     if (!editing) return
     await nextTick()
@@ -203,15 +241,16 @@ function onDown(event: MouseEvent) {
   if ((event.target as HTMLElement).closest('.editor')) return
   const hit = cellAt(event)
   if (!hit || event.button !== 0) return
-  if (props.edit) emit('commit', 'down' as never) // clicking elsewhere keeps what was typed
-  viewport.value?.focus()
+  const picking = props.edit !== null && props.pointing // (then the focus stays in the text being typed)
+  if (props.edit && !picking) emit('commit', 'down') // clicking elsewhere keeps what was typed
+  if (!picking) viewport.value?.focus()
   event.preventDefault()
   const { row, col } = hit
   let next: Sel
   if (hit.rowHead && hit.colHead) next = { row: 0, col: 0, row2: VIEW_ROWS - 1, col2: VIEW_COLS - 1 }
   else if (hit.colHead) next = { row: 0, col, row2: VIEW_ROWS - 1, col2: col }
   else if (hit.rowHead) next = { row, col: 0, row2: row, col2: VIEW_COLS - 1 }
-  else if (event.shiftKey) next = { ...props.sel, row2: row, col2: col }
+  else if (event.shiftKey && (!picking || props.anchored)) next = { ...props.sel, row2: row, col2: col }
   else next = { row, col, row2: row, col2: col }
   dragging = !hit.rowHead && !hit.colHead
   emit('select', next, dragging)
@@ -281,6 +320,16 @@ function onKey(event: KeyboardEvent) {
   }
 }
 
+function reportCaret(event: Event) {
+  const position = (event.target as HTMLInputElement).selectionStart
+  if (position !== null) emit('caret', position)
+}
+
+function onEditorInput(event: Event) {
+  emit('update:editText', (event.target as HTMLInputElement).value)
+  reportCaret(event)
+}
+
 function onEditorKey(event: KeyboardEvent) {
   event.stopPropagation()
   if (event.key === 'Enter') {
@@ -348,23 +397,27 @@ defineExpose({ focus: () => viewport.value?.focus() })
           {{ cell.text }}
         </div>
 
-        <div class="selection" :style="selectionStyle" />
-        <div class="active" :style="activeStyle" />
+        <div class="selection" :class="{ picking: edit && pointing }" :style="selectionStyle" />
+        <div class="active" :class="{ picking: edit && pointing }" :style="activeStyle" />
+        <div v-for="ref in referenced" :key="ref.key" class="reference" :style="{ ...ref.style, '--color': ref.color }" />
 
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
           <span class="tag">{{ o.name }}<template v-if="o.locked"> · editing</template></span>
         </div>
 
         <input
-          v-if="edit"
+          v-if="editHere"
           ref="editor"
+          data-editing
           class="editor mono"
           :style="editorStyle"
-          :value="edit.text"
+          :value="edit!.text"
           spellcheck="false"
           autocomplete="off"
           aria-label="editing cell"
-          @input="$emit('update:editText', ($event.target as HTMLInputElement).value)"
+          @input="onEditorInput"
+          @keyup="reportCaret"
+          @click="reportCaret"
           @keydown="onEditorKey"
         />
 
@@ -435,6 +488,16 @@ defineExpose({ focus: () => viewport.value?.focus() })
 .active {
   position: absolute;
   border: 2px solid var(--app);
+  pointer-events: none;
+}
+.selection.picking,
+.active.picking {
+  border-style: dashed;
+}
+.reference {
+  position: absolute;
+  border: 2px solid var(--color);
+  background: color-mix(in srgb, var(--color) 8%, transparent);
   pointer-events: none;
 }
 .outline {

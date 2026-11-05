@@ -14,6 +14,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   goto: [label: string]
   focusText: []
+  caret: [position: number]
   'update:text': [text: string]
   commit: []
   cancel: []
@@ -26,6 +27,16 @@ watch(
   () => props.label,
   (label) => (jump.value = label),
 )
+
+function reportCaret(event: Event) {
+  const position = (event.target as HTMLInputElement).selectionStart
+  if (position !== null) emit('caret', position)
+}
+
+function onInput(event: Event) {
+  emit('update:text', (event.target as HTMLInputElement).value)
+  reportCaret(event)
+}
 
 function submitJump() {
   emit('goto', jump.value)
@@ -59,8 +70,11 @@ function submitJump() {
       :readonly="readonly"
       :value="text"
       :class="{ editing }"
+      :data-editing="editing || undefined"
       @focus="$emit('focusText')"
-      @input="$emit('update:text', ($event.target as HTMLInputElement).value)"
+      @input="onInput"
+      @keyup="reportCaret"
+      @click="reportCaret"
       @keydown.enter.prevent="$emit('commit')"
       @keydown.esc.prevent="$emit('cancel')"
     />
