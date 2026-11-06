@@ -43,12 +43,15 @@ def downloads_dir() -> Path:
 
 
 def default_page_factory(**callbacks: Any) -> Any:
-    """The real web page (WebKit is imported only now, so everything else works and is tested without it)."""
+    """The real web page (WebKit is imported only now, so everything else works and is tested without it).
+
+    No app name is passed through: the page itself is app-agnostic (D121, ``webpage.WebPage``) — which app it shows
+    is something the web app's own ``hello`` message states, and ``Bridge._hello`` checks that against the window's
+    own manifest, not against anything the shell handed the page up front.
+    """
     from .webpage import WebPage
 
-    routes = resources.files("claudia_shell_gtk").joinpath("data/webroutes.json").read_text(encoding="utf-8")
-    shim = resources.files("claudia_shell_gtk").joinpath("data/shim.js").read_text(encoding="utf-8")
-    return WebPage(shim=shim, routes=routes, downloads_dir=downloads_dir(), **callbacks)
+    return WebPage(downloads_dir=downloads_dir(), **callbacks)
 
 
 class ComposesApp(Adw.Application):
@@ -79,6 +82,12 @@ class ComposesApp(Adw.Application):
     def do_startup(self) -> None:
         Adw.Application.do_startup(self)
         Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(str(self._identity.icon_search_path))
+        provider = Gtk.CssProvider()
+        css = resources.files("claudia_shell_gtk").joinpath("data/style.css").read_text(encoding="utf-8")
+        provider.load_from_string(css)
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
         for action in self._manifest.actions:
             if action.accelerators:
                 self.set_accels_for_action(f"win.{action.id}", list(action.accelerators))

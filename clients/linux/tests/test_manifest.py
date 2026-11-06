@@ -1,8 +1,13 @@
-"""The menu and action manifest of the Linux client (E5.1, D4, D54, D74) and the menus built from it.
+"""The menu and action manifest of the Linux client (E5.1 / E5.10, D120–D130) and the menus built from it.
 
-The four menus are File, Edit, Tools and Help. The web app that this shell shows still has six (it is being cleaned up
-separately), so the manifest says what a *native* menu offers and ``webroutes.json`` says where the unchanged page has
-each action. The tests below keep the two from drifting apart.
+D120 gives every app the same seven menus. composes, computes and creates share Edit's Undo/Redo/Copy/Cut/Paste/
+Paste-as block and View's Show-who-wrote-what/History-and-chat/Dark-mode block verbatim; the tests below check that
+directly (one set of ids, compared across the three manifests) rather than retyping the block three times.
+
+The drift guard against the web app changed shape with this round (D121): it used to grep ``webroutes.json``'s
+*labels* against ``shim.js``'s hidden-DOM-click targets, which is retired along with ``shim.js`` itself. Now that the
+page speaks the shell contract directly, the guard compares *ids* — a stronger guarantee, since an id is the one
+thing both sides are required to agree on (`web/app/lib/menu-dispatch.ts`), where a label never was.
 """
 
 from __future__ import annotations
@@ -15,11 +20,22 @@ from pathlib import Path
 import pytest
 
 from claudia_shell_gtk import contract, manifest
-from claudia_shell_gtk.manifest import Kind
+from claudia_shell_gtk.manifest import Action, Kind, Submenu
 
 REPO = Path(__file__).resolve().parents[3]
-WEB_SOURCE = REPO / "web" / "app" / "components" / "TextWorkspace.vue"
-ROUTES = Path(manifest.__file__).parent / "data" / "webroutes.json"
+WEB_SOURCES = {
+    "composes": REPO / "web" / "app" / "components" / "TextWorkspace.vue",
+    "computes": REPO / "web" / "app" / "components" / "Workspace.vue",
+    "creates": REPO / "web" / "app" / "components" / "SlideWorkspace.vue",
+}
+BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
+APPS = tuple(BUILDERS)
+
+
+@pytest.fixture(scope="module", params=APPS)
+def app(request: pytest.FixtureRequest) -> manifest.Manifest:
+    """Each of the three manifests in turn — most tests below hold for all three identically."""
+    return BUILDERS[request.param]()
 
 
 @pytest.fixture(scope="module")
@@ -27,68 +43,164 @@ def composes() -> manifest.Manifest:
     return manifest.composes()
 
 
+@pytest.fixture(scope="module")
+def computes() -> manifest.Manifest:
+    return manifest.computes()
+
+
+@pytest.fixture(scope="module")
+def creates() -> manifest.Manifest:
+    return manifest.creates()
+
+
+def entries(menu: manifest.Menu) -> list[manifest.MenuEntry]:
+    return [entry for section in menu.sections for entry in section]
+
+
 def labels(menu: manifest.Menu) -> list[str]:
-    return [action.label for section in menu.sections for action in section]
+    return [entry.label for entry in entries(menu)]
 
 
-def test_there_are_four_menus_in_the_order_of_d4(composes: manifest.Manifest) -> None:
-    assert [menu.label for menu in composes.menus] == ["File", "Edit", "Tools", "Help"]
+def action_ids(menu: manifest.Menu) -> list[str]:
+    return [a.id for a in menu.all_actions()]
 
 
-def test_file_has_open_save_save_as_and_quit(composes: manifest.Manifest) -> None:
-    file_menu = composes.menu("File")
-    assert {"Open…", "Save", "Save As…", "Quit"} <= set(labels(file_menu))
+# ------------------------------------------------------------------------------------------------------ the schema
 
 
-def test_edit_is_undo_redo_cut_copy_paste_paste_as(composes: manifest.Manifest) -> None:
-    """D54 and D74 (Select All is deliberately not a menu item)."""
-    assert labels(composes.menu("Edit")) == ["Undo", "Redo", "Cut", "Copy", "Paste", "Paste As Plain Text"]
+def test_every_app_has_the_same_seven_menus_in_the_same_order(app: manifest.Manifest) -> None:
+    assert [menu.label for menu in app.menus] == ["File", "Edit", "Format", "View", "Tools", "Config", "Help"]
 
 
-def test_help_has_help_and_about(composes: manifest.Manifest) -> None:
-    assert labels(composes.menu("Help")) == ["Help", "About Claudia Composes"]
+def test_file_is_grouped_new_open_save_group_share_close_quit(app: manifest.Manifest) -> None:
+    """D123/D124: separators kept, grouped as New/Open · Save-group · Share · Close/Quit."""
+    file_menu = app.menu("File")
+    assert [[e.label for e in section] for section in file_menu.sections] == [
+        ["New", "Open…"],
+        ["Save", "Save New Checkpoint…", "Download"],
+        ["Share…"],
+        ["Close Document", "Quit"],
+    ]
 
 
-def test_the_page_menus_that_d4_does_not_have_are_folded_into_tools(composes: manifest.Manifest) -> None:
-    """Format and View of the web app do not exist natively; they are reachable from Tools or the header bar."""
-    tools = set(labels(composes.menu("Tools")))
-    assert {"Look of this Style…", "All Styles…", "Page View", "Show Who Wrote What"} <= tools
-    assert [toggle.id for toggle in composes.header_toggles] == ["view.panel"]
+def test_edits_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
+    """Undo, Redo, Copy, Cut, Paste, Paste as ▸ Plain text — D120's shared block, verbatim in every app."""
+    shared_ids = [e.id if isinstance(e, Action) else [i.id for i in e.items] for e in entries(app.menu("Edit"))[:6]]
+    assert shared_ids == [
+        "edit.undo",
+        "edit.redo",
+        "edit.copy",
+        "edit.cut",
+        "edit.paste",
+        ["edit.paste-as-plain"],
+    ]
 
 
-def test_every_action_id_is_a_valid_contract_action(composes: manifest.Manifest) -> None:
-    for action in composes.actions:
+def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
+    """Show who wrote what, History and chat, Dark mode — D120's shared block, verbatim in every app (even where,
+    per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship yet)."""
+    assert [a.id for a in app.menu("View").sections[0]] == ["view.authors", "view.panel", "view.dark"]
+
+
+def test_configs_only_item_is_shortcuts(app: manifest.Manifest) -> None:
+    assert action_ids(app.menu("Config")) == ["config.shortcuts"]
+
+
+def test_helps_shared_shape_is_identical_in_every_app(app: manifest.Manifest) -> None:
+    """Ask ai, then the two D125 stubs, then About — only the About dialog's own title differs per app."""
+    help_menu = app.menu("Help")
+    assert action_ids(help_menu) == ["help.ask", "help.how-to", "help.docs", "help.about"]
+    about = next(a for a in help_menu.all_actions() if a.id == "help.about")
+    assert about.label.startswith("About Claudia ")
+
+
+def test_composes_format_offers_the_two_style_actions(composes: manifest.Manifest) -> None:
+    assert labels(composes.menu("Format")) == ["Edit This Style…", "All Styles…"]
+
+
+def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manifest) -> None:
+    assert [a.id for a in composes.menu("View").sections[1]] == ["view.page"]
+
+
+@pytest.mark.parametrize("app_name", ["computes", "creates"])
+def test_computes_and_creates_format_is_a_single_visible_but_inert_stub(
+    app_name: str, request: pytest.FixtureRequest
+) -> None:
+    """D125: the action exists (so the page can report it `enabled: false` the moment it connects) rather than the
+    menu being empty or missing."""
+    m = request.getfixturevalue(app_name)
+    assert action_ids(m.menu("Format")) == ["format.none"]
+
+
+def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(computes: manifest.Manifest) -> None:
+    """D123 (where new items land) and D130 (Claude's recommendation — not yet confirmed, decision-log.md — grouped
+    into two submenus of three items each, not six flat items)."""
+    edit = computes.menu("Edit")
+    tail = entries(edit)[6:]  # past the shared Undo…Paste-as block
+    assert [e.label for e in tail] == ["New Sheet…", "Row", "Column", "Clear Cells"]
+    row, column = tail[1], tail[2]
+    assert isinstance(row, Submenu)
+    assert [a.id for a in row.items] == ["edit.row-insert-above", "edit.row-insert-below", "edit.row-delete"]
+    assert isinstance(column, Submenu) and [a.id for a in column.items] == [
+        "edit.column-insert-left",
+        "edit.column-insert-right",
+        "edit.column-delete",
+    ]
+
+
+def test_creates_edit_has_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:
+    """D123. The shape library itself is dynamic (one entry per document) and, like composes' style names, is
+    deliberately not a static manifest entry — see this module's own docstring and ``manifest.py``'s."""
+    edit = creates.menu("Edit")
+    tail = [e.label for e in entries(edit)[6:]]
+    assert tail == ["New Slide", "Edit Text", "Text Box", "Delete"]
+
+
+# ------------------------------------------------------------------------------------------------- ids and actions
+
+
+def test_every_action_id_is_a_valid_contract_action(app: manifest.Manifest) -> None:
+    for action in app.actions:
         contract.action(action.id)  # raises on a bad id
 
 
-def test_action_ids_are_unique(composes: manifest.Manifest) -> None:
-    ids = [action.id for action in composes.actions]
+def test_action_ids_are_unique(app: manifest.Manifest) -> None:
+    ids = [action.id for action in app.actions]
     assert len(ids) == len(set(ids))
 
 
+def test_a_submenu_itself_has_no_id_or_kind_only_its_items_do(app: manifest.Manifest) -> None:
+    for menu in app.menus:
+        for section in menu.sections:
+            for entry in section:
+                if isinstance(entry, Submenu):
+                    assert not hasattr(entry, "id") and not hasattr(entry, "kind")
+                    assert entry.items, f"{menu.label} ▸ {entry.label} has no items"
+
+
 def test_ids_do_not_depend_on_the_menu_an_action_sits_in(composes: manifest.Manifest) -> None:
-    """Moving an item to another menu must not change the contract: Tools holds 'view.page' and 'style.look'."""
-    ids = {action.id for action in composes.menu("Tools").all_actions()}
-    assert {"view.page", "style.look"} <= ids
+    """Moving an item to another menu must not change the contract: Format holds 'format.look', not 'style.look'."""
+    assert {"format.look", "format.all-styles"} <= {a.id for a in composes.menu("Format").all_actions()}
 
 
-def test_accelerators_are_well_formed_and_not_shared(composes: manifest.Manifest) -> None:
+def test_accelerators_are_well_formed_and_not_shared(app: manifest.Manifest) -> None:
     seen: dict[str, str] = {}
-    for action in composes.actions:
+    for action in app.actions:
         for accel in action.accelerators:
             assert re.fullmatch(r"(<(Primary|Shift|Alt)>)*[A-Za-z0-9_]+", accel), accel
             assert accel not in seen, f"{accel} is on {seen[accel]} and {action.id}"
             seen[accel] = action.id
 
 
-def test_keys_the_page_handles_itself_are_not_bound_a_second_time(composes: manifest.Manifest) -> None:
-    """If both the page and the shell reacted to Ctrl+Z, one keystroke would undo twice."""
-    for action_id in ("file.save", "edit.undo", "edit.redo", "style.look", "edit.cut", "edit.copy", "edit.paste"):
-        assert composes.action(action_id).accelerators == (), action_id
+def test_keys_the_page_handles_itself_are_not_bound_a_second_time(app: manifest.Manifest) -> None:
+    """If both the page and the shell reacted to Ctrl+Z, one keystroke would undo twice (`lib/shortcuts.ts` already
+    handles Undo, Redo and Save on the page side; D122 moved Redo off Ctrl+Y, so there is nothing left to clash)."""
+    for action_id in ("file.save", "edit.undo", "edit.redo", "edit.cut", "edit.copy", "edit.paste"):
+        assert app.action(action_id).accelerators == (), action_id
 
 
-def test_each_action_is_carried_out_by_exactly_one_party(composes: manifest.Manifest) -> None:
-    for action in composes.actions:
+def test_each_action_is_carried_out_by_exactly_one_party(app: manifest.Manifest) -> None:
+    for action in app.actions:
         assert isinstance(action.kind, Kind)
         if action.kind is Kind.EDITING:
             assert action.editing, f"{action.id} needs a WebKit editing command"
@@ -96,65 +208,93 @@ def test_each_action_is_carried_out_by_exactly_one_party(composes: manifest.Mani
             assert action.editing is None
 
 
-def test_checkable_actions_are_the_three_toggles(composes: manifest.Manifest) -> None:
-    assert {a.id for a in composes.actions if a.checkable} == {"view.page", "view.authors", "view.panel"}
+def test_checkable_actions_are_the_view_toggles(app: manifest.Manifest) -> None:
+    checkable = {a.id for a in app.actions if a.checkable}
+    if app.app == "composes":
+        assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"}
+    else:
+        assert checkable == {"view.authors", "view.panel", "view.dark"}
 
 
-# ------------------------------------------------------------------------------------------- the unchanged page
+def test_composes_clipboard_actions_are_native_webkit_editing_commands(composes: manifest.Manifest) -> None:
+    """Carried over unchanged from before this round (D121's scope note in ``manifest.py``)."""
+    pairs = (
+        ("edit.copy", "Copy"),
+        ("edit.cut", "Cut"),
+        ("edit.paste", "Paste"),
+        ("edit.paste-as-plain", "PasteAsPlainText"),
+    )
+    for action_id, command in pairs:
+        action = composes.action(action_id)
+        assert action.kind is Kind.EDITING and action.editing == command
 
 
-def routes() -> dict[str, dict]:
-    return json.loads(ROUTES.read_text(encoding="utf-8"))
+@pytest.mark.parametrize("app_name", ["computes", "creates"])
+def test_computes_and_creates_clipboard_actions_go_through_the_page_instead(
+    app_name: str, request: pytest.FixtureRequest
+) -> None:
+    """New to the GTK shell (D121): a cell grid or a slide canvas needs its own paste logic, not WebKit's generic
+    one, so these dispatch through the page like any other ``file.*``/``edit.*`` action, not natively."""
+    m = request.getfixturevalue(app_name)
+    for action_id in ("edit.copy", "edit.cut", "edit.paste", "edit.paste-as-plain"):
+        assert m.action(action_id).kind is Kind.PAGE
 
 
-def test_every_page_action_has_a_route_and_no_route_is_orphaned(composes: manifest.Manifest) -> None:
-    page_actions = {a.id for a in composes.actions if a.kind is Kind.PAGE}
-    assert set(routes()) == page_actions
+# ------------------------------------------------------------------------------------------- the web app, by id
 
 
-@pytest.mark.skipif(not WEB_SOURCE.exists(), reason="the web sources are not next to the client")
-def test_every_route_points_at_a_menu_item_that_the_web_app_still_has() -> None:
-    """The guard against drift: if the web cleanup renames 'Save with a name…', this fails and says where."""
-    source = WEB_SOURCE.read_text(encoding="utf-8")
-
-    def exists(menu: str, label: str, prefix: bool) -> bool:
-        has_menu = f"label: '{menu}'" in source
-        has_item = f"label: '{label}'" in source or (prefix and "label: state.can" in source and f"`{label}" in source)
-        return has_menu and has_item
-
-    problems = [
-        f"{action_id}: {step['menu']} ▸ {step['label']}"
-        for action_id, route in routes().items()
-        for step in (route, route.get("off"))
-        if step and not exists(step["menu"], step["label"], step.get("prefix", False))
-    ]
-    assert not problems, "the web app no longer has: " + "; ".join(problems)
+@pytest.mark.parametrize("app_name", APPS)
+def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name: str) -> None:
+    """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
+    still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
+    design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
+    source_path = WEB_SOURCES[app_name]
+    if not source_path.exists():
+        pytest.skip("the web sources are not next to the client")
+    source = source_path.read_text(encoding="utf-8")
+    missing = [a.id for a in BUILDERS[app_name]().actions if a.kind is not Kind.SHELL and f"id: '{a.id}'" not in source]
+    assert not missing, f"{app_name}: the web app no longer has " + ", ".join(missing)
 
 
 # ------------------------------------------------------------------------------------------------- GMenu XML
 
 
-def test_the_gmenu_xml_has_one_menu_per_manifest_menu(composes: manifest.Manifest) -> None:
-    root = ET.fromstring(manifest.menu_xml(composes))
+def test_the_gmenu_xml_has_one_menu_per_manifest_menu_in_order(app: manifest.Manifest) -> None:
+    root = ET.fromstring(manifest.menu_xml(app))
     assert root.tag == "interface"
-    assert [m.get("id") for m in root.findall("menu")] == ["menu-file", "menu-edit", "menu-tools", "menu-help"]
+    assert [m.get("id") for m in root.findall("menu")] == [menu.id for menu in app.menus]
 
 
-def test_menu_items_call_window_actions_and_are_translatable(composes: manifest.Manifest) -> None:
-    root = ET.fromstring(manifest.menu_xml(composes))
+def test_menu_items_call_window_actions_and_are_translatable(app: manifest.Manifest) -> None:
+    root = ET.fromstring(manifest.menu_xml(app))
     items = root.findall(".//item")
-    assert len(items) == sum(1 for menu in composes.menus for _ in menu.all_actions())
+    assert len(items) == sum(1 for menu in app.menus for _ in menu.all_actions())
     for item in items:
         attributes = {a.get("name"): a for a in item.findall("attribute")}
         assert (attributes["action"].text or "").startswith("win.")
         assert attributes["label"].get("translatable") == "yes"
 
 
-def test_sections_become_gmenu_sections_so_that_separators_are_drawn(composes: manifest.Manifest) -> None:
-    root = ET.fromstring(manifest.menu_xml(composes))
+def test_a_submenu_renders_as_a_nested_gmenu_submenu_with_its_own_section(computes: manifest.Manifest) -> None:
+    """D130/the schema's one new capability: ``<submenu>`` nested in a ``<section>``, GTK's own flyout shape — the
+    same thing ``MenuBar.vue``'s ``items`` property draws on the web side."""
+    root = ET.fromstring(manifest.menu_xml(computes))
+    edit_menu = root.find("menu[@id='menu-edit']")
+    assert edit_menu is not None
+    submenus = edit_menu.findall(".//submenu")
+    labels_found = {s.findtext("attribute[@name='label']") for s in submenus}
+    assert {"Paste As", "Row", "Column"} <= labels_found
+    row = next(s for s in submenus if s.findtext("attribute[@name='label']") == "Row")
+    row_items = row.findall("section/item")
+    assert len(row_items) == 3
+    assert all((i.findtext("attribute[@name='action']") or "").startswith("win.edit.row-") for i in row_items)
+
+
+def test_sections_become_gmenu_sections_so_that_separators_are_drawn(app: manifest.Manifest) -> None:
+    root = ET.fromstring(manifest.menu_xml(app))
     file_menu = root.find("menu[@id='menu-file']")
     assert file_menu is not None
-    assert len(file_menu.findall("section")) == len(composes.menu("File").sections) > 1
+    assert len(file_menu.findall("section")) == len(app.menu("File").sections) > 1
 
 
 def test_special_characters_in_a_label_are_escaped() -> None:
@@ -167,8 +307,23 @@ def test_special_characters_in_a_label_are_escaped() -> None:
     assert label is not None and label.text == "Fish & <Chips>"
 
 
-def test_the_manifest_can_be_listed_for_the_page_and_the_docs(composes: manifest.Manifest) -> None:
-    listing = composes.describe()
-    assert listing["app"] == "composes"
+def test_the_manifest_can_be_listed_for_the_page_and_the_docs(app: manifest.Manifest) -> None:
+    listing = app.describe()
+    assert listing["app"] == app.app
     assert listing["menus"][0]["label"] == "File"
-    json.dumps(listing)  # plain data
+    json.dumps(listing)  # plain data, including any submenu's nested "items"
+    paste_as = next(e for e in listing["menus"][1]["sections"][1] if e.get("label") == "Paste As")
+    assert paste_as["items"][0]["id"] == "edit.paste-as-plain"
+
+
+def test_about_links_are_website_then_report_an_issue_then_legal() -> None:
+    """D28's shared About dialog (``window.py``'s ``_show_about``, ``AboutDialog.vue``'s own ``LINKS``): this is the
+    one side of that agreement GTK can test without a display — the three links, their order and their targets."""
+    labels = [label for label, _url in manifest.about_links()]
+    assert labels == ["Website", "Report an Issue", "Legal"]
+    urls = dict(manifest.about_links())
+    assert urls["Website"] == "https://www.claudia-office.de"
+    assert urls["Report an Issue"] == "https://github.com/claudiaoffice/claudia/issues"
+    # linked, not reproduced in full — claudiaoffice-log/notes/README.md's reason for not duplicating generated
+    # content applies here too: a second copy of the licence text cannot be kept true.
+    assert urls["Legal"] == "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"

@@ -93,7 +93,7 @@ statement until the owner agrees.
 | D25 | The demo's GUI is reworked to the agreed menu structure (D4). | 2026-11-01 | |
 | D26 | A **font library** lives on the server as a service shared by the three servers: the OS fonts plus downloadable collections. A document declares the fonts it needs; the server delivers fonts the client lacks. | 2026-11-01 | Built as `claudia-fonts`; not yet wired to the server. Fonts are served from our own server, never a CDN. |
 | D27 | GTK layout lives in **XML files** (GtkBuilder), not in code. | 2026-11-01 | Held: `clients/linux/src/claudia_shell_gtk/data/window.ui`. |
-| D28 | One good-looking **About dialog** shared by all apps, showing each app's own logo icon. | 2026-11-01 | `Adw.AboutDialog` in the Linux shell (needs libadwaita 1.5+); a shared web component elsewhere. |
+| D28 | One good-looking **About dialog** shared by all apps, showing each app's own logo icon. | 2026-11-01 | Built by hand on `Adw.Dialog` in the Linux shell, not `Adw.AboutDialog` — its own Website/Troubleshooting/Legal row is oversized next to the web app's buttons (owner's report, 2026-11-06); a shared web component elsewhere. Both sides read the same three links (Website, Report an Issue, Legal) in the same order (`manifest.py`'s `about_links()`, `AboutDialog.vue`'s `LINKS`). Patch exists, not yet committed (PROC-03) — see `notes/e5-1-e5-10-menus-and-accessibility.md`. |
 | D29 | Every app server offers the **UserFunction** interface: users define their own functions or macros in Python. | 2026-11-01 | Who installs them: D38. Open: the macro API for composes and creates. |
 | D30 | Every UserFunction has **getTooltip and getHelp** methods returning renderable help text in **LaTeX**. The user doc and help system is based on this. | 2026-11-01 | Built as a mandatory description plus at least one `Example` in `functions/base.py`. The LaTeX help text and the help system are not built. Widened by D88. |
 | D31 | English first, **internationalization built in** from the start: every menu item and text is translatable. | 2026-11-01 | Proposal: gettext `.po` as the single source. **Not started:** no catalogue exists anywhere. |
@@ -305,6 +305,14 @@ The owner then asked whether computes' Edit menu, grown long with row/column act
 | ID | Decision | Date | Notes |
 |---|---|---|---|
 | D130 | **computes' Edit menu groups its row and column actions into two submenus — "Row ▸" (Insert above, Insert below, Delete) and "Column ▸" (Insert left, Insert right, Delete)** — instead of six flat items, reusing the submenu mechanism already built for "Paste as ▸ Plain text" rather than adding a second one. | 2026-11-05 | Claude's recommendation, given in answer to the owner's question; not yet confirmed. Shown in `notes/mockups/menu-bar-states.svg`, panel C. |
+
+The owner ran the applied patch in dark mode a second time and reported a further, larger round of contrast and
+boundary bugs. Asked for design suggestions before any code; two choices were put to the owner and answered:
+
+| ID | Decision | Date | Notes |
+|---|---|---|---|
+| D131 | **Native shell chrome (the GTK/libadwaita About dialog) follows the page's own Dark Mode toggle, not the desktop's theme.** The window already reports `view.dark`'s resolved `checked` state to the shell on every change (click or system-triggered); the shell now also feeds that into `Adw.StyleManager.set_color_scheme()`, forced light or dark to match — never `PREFER_*`, since the in-app toggle is meant to override the desktop setting, not just suggest to it. | 2026-11-06 | Owner's report: the About dialog stayed whatever colour GTK's own theme was, regardless of the document's own Dark Mode setting. Chosen (over leaving native chrome theme-independent) via `AskUserQuestion`. No new shell-contract message needed — `set_action_states` already received everything required. |
+| D132 | **A document's own default ink (stored as black, however written) is swapped for the page's own text colour at display time only, never in the stored style.** Applies wherever a style's computed CSS reaches the page — composes' paragraphs and creates' text/shape objects alike. | 2026-11-06 | Owner's framing: "in the document they would count as black obviously" — typed text was unreadable, black-on-near-black, in dark mode because a style's stored `color` always overrides the container's theme-aware default. Chosen (over a document-wide black→ink-token migration, which would have changed stored data) via `AskUserQuestion`. Web client only, per the owner's choice; GTK has no document rendering of its own to fix. |
 
 ## Open design questions
 

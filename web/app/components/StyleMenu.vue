@@ -56,7 +56,7 @@ h3 {
 .all {
   border: 0;
   background: none;
-  color: var(--app-dark);
+  color: var(--app-text); /* --app-dark as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
   font-size: 12px;
   cursor: pointer;
 }
@@ -83,6 +83,7 @@ h3 {
 }
 .gallery button:hover:not(:disabled) {
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode */
 }
 .gallery button.on {
   background: color-mix(in srgb, var(--app) 14%, transparent);

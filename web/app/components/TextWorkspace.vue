@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { countWords } from '~/lib/blocks'
 import { toMarkdown } from '~/lib/markdown'
 import { SAMPLE_TEXT } from '~/lib/sample'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
+import { copySelection, cutSelection } from '~/lib/clipboard'
+import { applyAction, collectStates } from '~/lib/menu-dispatch'
+import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/shortcuts'
+import { createShellBridge } from '~/lib/shell-bridge'
+import { useTheme } from '~/lib/theme'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
-const emit = defineEmits<{ leave: [] }>()
+const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
 
 const session = props.session
 const state = session.state
+const { dark, toggle: toggleDark } = useTheme()
 
-const dialog = ref<null | 'checkpoint' | 'share' | 'help' | 'styles'>(null)
+const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'styles'>(null)
 const styleMenu = ref<{ x: number; y: number } | null>(null)
 const styleHost = textStyleHost(session)
 const panelOpen = ref(true)
@@ -87,90 +93,173 @@ function insertSample() {
   editor.value?.focus()
 }
 
-// ------------------------------------------------------------------------------ menus and keys
+// composes has one way to bring text in, however it arrives (typed, "Paste", or "Paste as plain text") — there is no
+// separate rich-paste path yet, so the two Edit items below are, honestly, the same operation.
+async function pasteFromClipboard() {
+  let text: string
+  try {
+    text = await navigator.clipboard.readText()
+  } catch {
+    return // no permission, no secure context, or nothing textual on the clipboard — same as a native paste finding nothing
+  }
+  if (text) {
+    session.paste(text)
+    editor.value?.focus()
+  }
+}
+
+// ------------------------------------------------------------------------------ menus, shortcuts and the shell
+// D122: one structured list instead of a hand-rolled `keydown` handler; `hints` turns the same list into the menu's
+// `hint` labels, so a shortcut and what the menu claims about it cannot drift apart.
+const shortcuts = computed(() => [
+  ...sharedShortcuts({
+    undo: () => session.undo(),
+    redo: () => session.redo(),
+    save: () => {
+      if (!readonly.value) void checkpoint(null)
+    },
+  }),
+  { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => openStyleMenu() },
+])
+installWindowShortcuts(() => shortcuts.value)
+const hints = computed<Record<string, string>>(() => Object.fromEntries(shortcuts.value.map((s) => [s.id, chordLabel(s.chord)])))
+
 const menus = computed<Menu[]>(() => [
   {
     label: 'File',
     items: [
-      { label: 'Save', hint: 'Ctrl+S', action: () => checkpoint(null), disabled: readonly.value },
-      { label: 'Save with a name…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
-      { label: 'Save as Markdown…', action: download },
+      { id: 'file.new', label: 'New', action: () => emit('leave', { startFresh: true }) },
+      { id: 'file.open', label: 'Open…', action: () => emit('leave') },
       { label: '', separator: true },
-      { label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+      { id: 'file.save', label: 'Save', hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
+      { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
+      { id: 'file.download', label: 'Download', action: download },
       { label: '', separator: true },
-      { label: 'Close document', action: () => emit('leave') },
+      { id: 'file.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+      { label: '', separator: true },
+      { id: 'file.close', label: 'Close document', action: () => emit('leave') },
     ],
   },
   {
     label: 'Edit',
     items: [
-      { label: state.canUndo ? `Undo ${state.undoLabel}` : 'Undo', hint: 'Ctrl+Z', action: () => session.undo(), disabled: !state.canUndo },
-      { label: state.canRedo ? `Redo ${state.redoLabel}` : 'Redo', hint: 'Ctrl+Y', action: () => session.redo(), disabled: !state.canRedo },
+      { id: 'edit.undo', label: state.canUndo ? `Undo ${state.undoLabel}` : 'Undo', hint: hints.value['edit.undo'], action: () => session.undo(), disabled: !state.canUndo },
+      { id: 'edit.redo', label: state.canRedo ? `Redo ${state.redoLabel}` : 'Redo', hint: hints.value['edit.redo'], action: () => session.redo(), disabled: !state.canRedo },
+      { label: '', separator: true },
+      { id: 'edit.copy', label: 'Copy', hint: 'Ctrl+C', action: () => copySelection() },
+      { id: 'edit.cut', label: 'Cut', hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
+      { id: 'edit.paste', label: 'Paste', hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
+      {
+        id: 'edit.paste-as',
+        label: 'Paste as',
+        disabled: readonly.value,
+        // The child's own `disabled` is what a shell actually reports per-action (`collectStates` walks each item on
+        // its own terms, not by inheriting a parent's); the parent's `disabled` above only keeps the web menu from
+        // opening the flyout at all — both need to agree, or a shell could show the leaf as enabled regardless.
+        items: [{ id: 'edit.paste-as-plain', label: 'Plain text', action: () => pasteFromClipboard(), disabled: readonly.value }],
+      },
     ],
   },
   {
     label: 'Format',
-    items: [
-      ...state.styles.map((s) => ({
-        label: s.name,
-        checked: session.currentStyle() === s.id,
-        action: () => {
-          void session.setStyle(s.id)
-          editor.value?.focus()
-        },
-        disabled: readonly.value,
-      })),
-      { label: '', separator: true },
-      { label: 'Look of this style…', hint: 'Shift+F10', action: () => openStyleMenu() },
-      { label: 'All styles…', action: () => (dialog.value = 'styles') },
-    ],
+    items:
+      state.styles.length === 0
+        ? [{ label: 'No styles yet', disabled: true }]
+        : [
+            ...['title', 'heading-1', 'heading-2'].map((id) => styleItem(id)),
+            { label: '', separator: true },
+            ...['body'].map((id) => styleItem(id)),
+            { label: '', separator: true },
+            ...['quote', 'remark', 'definition'].map((id) => styleItem(id)),
+            ...customStyleItems(),
+            { label: '', separator: true },
+            { id: 'format.look', label: 'Edit this style…', hint: hints.value['format.look'], action: () => openStyleMenu() },
+            { id: 'format.all-styles', label: 'All styles…', action: () => (dialog.value = 'styles') },
+          ],
   },
   {
     label: 'View',
     items: [
-      { label: 'Flow', checked: view.value === 'flow', action: () => (view.value = 'flow') },
-      { label: 'Page', checked: view.value === 'page', action: () => (view.value = 'page') },
+      { id: 'view.authors', label: 'Show who wrote what', checked: authors.value, action: (t) => (authors.value = t ? t === 'on' : !authors.value) },
+      { id: 'view.panel', label: 'History and chat', checked: panelOpen.value, action: (t) => (panelOpen.value = t ? t === 'on' : !panelOpen.value) },
+      {
+        id: 'view.dark',
+        label: 'Dark mode',
+        checked: dark(),
+        action: (t) => {
+          if (t === undefined || (t === 'on') !== dark()) toggleDark()
+        },
+      },
       { label: '', separator: true },
-      { label: 'Show who wrote what', checked: authors.value, action: () => (authors.value = !authors.value) },
-      { label: 'History and chat', checked: panelOpen.value, action: () => (panelOpen.value = !panelOpen.value) },
+      { label: 'Flow', checked: view.value === 'flow', action: () => (view.value = 'flow') },
+      // One boolean action (GTK has no notion of two radio items), set/cleared explicitly by a shell, toggled by a web click.
+      { id: 'view.page', label: 'Page', checked: view.value === 'page', action: (t) => (view.value = t === 'off' ? 'flow' : 'page') },
     ],
   },
   {
     label: 'Tools',
     items: [
-      { label: 'Ask the assistant…', action: () => ask('@ai ') },
-      { label: 'Review this text', action: () => ask('@ai review this text') },
-      { label: 'Review this paragraph', action: () => ask('@ai check this paragraph') },
+      { id: 'tools.ask', label: 'Ask the assistant…', action: () => ask('@ai ') },
+      { id: 'tools.review-text', label: 'Review this text', action: () => ask('@ai review this text') },
+      { id: 'tools.review-paragraph', label: 'Review this paragraph', action: () => ask('@ai check this paragraph') },
       { label: '', separator: true },
-      { label: 'Insert sample text', action: insertSample, disabled: readonly.value },
+      { id: 'tools.insert-sample', label: 'Insert sample text', action: insertSample, disabled: readonly.value },
     ],
   },
-  { label: 'Help', items: [{ label: 'Keyboard', action: () => (dialog.value = 'help') }] },
+  { label: 'Config', items: [{ id: 'config.shortcuts', label: 'Shortcuts', action: () => (dialog.value = 'shortcuts') }] },
+  {
+    label: 'Help',
+    items: [
+      { id: 'help.ask', label: 'Ask ai', action: () => ask('@ai ') },
+      { id: 'help.how-to', label: 'How do I…?', disabled: true },
+      { id: 'help.docs', label: 'Documentation', disabled: true },
+      { id: 'help.about', label: 'About claudia', action: () => (dialog.value = 'about') },
+    ],
+  },
 ])
 
-function onWindowKey(event: KeyboardEvent) {
-  const target = event.target as HTMLElement
-  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
-  if (event.key === 'F10' && event.shiftKey) {
-    event.preventDefault()
-    openStyleMenu()
-    return
-  }
-  if (!(event.ctrlKey || event.metaKey)) return
-  const key = event.key.toLowerCase()
-  if (key === 'z' && !event.shiftKey) {
-    event.preventDefault()
-    void session.undo()
-  } else if (key === 'y' || (key === 'z' && event.shiftKey)) {
-    event.preventDefault()
-    void session.redo()
-  } else if (key === 's') {
-    event.preventDefault()
-    if (!readonly.value) void checkpoint(null)
+/** One Format-menu entry for a built-in style, by id — kept as a function rather than inlining `state.styles.find`
+ * three times over, since the three groups below (D127: structure · running text · called-out blocks) each pick a
+ * fixed subset of the seven built-in ids, not a contiguous slice. */
+function styleItem(id: string) {
+  const s = state.styles.find((s) => s.id === id)
+  return {
+    label: s?.name ?? id,
+    checked: session.currentStyle() === id,
+    action: () => {
+      void session.setStyle(id)
+      editor.value?.focus()
+    },
+    disabled: readonly.value || !s,
   }
 }
-onMounted(() => window.addEventListener('keydown', onWindowKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKey))
+const BUILTIN_STYLE_IDS = new Set(['body', 'title', 'heading-1', 'heading-2', 'quote', 'remark', 'definition'])
+/** A style made by deviating from a built-in (`next_style` in `model.py`) is not one of the three fixed groups above
+ * — D127 only grouped the seven built-ins, so anything else gets its own trailing group rather than being folded
+ * silently into one of them. */
+function customStyleItems() {
+  const custom = state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id))
+  if (!custom.length) return []
+  return [{ label: '', separator: true }, ...custom.map((s) => styleItem(s.id))]
+}
+
+// `reactive()` so the template's `shell.nativeMenu` (a getter reading `capabilities`) re-renders once the shell's
+// `welcome` message actually arrives — a plain class instance's own fields are not tracked otherwise.
+const shell = reactive(createShellBridge('composes'))
+shell.onAction((id, target) => applyAction(menus.value, id, target))
+onBeforeUnmount(() => shell.detach())
+watch(menus, (m) => shell.reportStates(collectStates(m)), { immediate: true })
+
+// Config ▸ Shortcuts (D122/D126): the structured list above, plus the things that are not a `keydown` shortcut at
+// all — typing itself, and native Ctrl+C/X/V, which the browser already handles for whatever has focus.
+const EXTRA_SHORTCUTS: [string, string][] = [
+  ['Type', 'write; a word is sent when it ends, and the others see where you are'],
+  ['Enter', 'end the paragraph (after a heading the next one is body text)'],
+  ['Backspace / Delete', 'delete; at the edge of a paragraph it joins the one next to it'],
+  ['Ctrl + Backspace / Delete', 'delete a word'],
+  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
+  ['@ai review this text', 'the assistant suggests changes; you accept or reject each'],
+]
 
 // ------------------------------------------------------------------------------ notices
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -188,7 +277,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   <div class="workspace" data-testid="text-workspace">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you type now is not saved.</div>
-    <MenuBar :menus="menus" />
+    <MenuBar v-if="!shell.nativeMenu" :menus="menus" />
     <StyleBar :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     <div class="main" :class="{ wide: !panelOpen }">
       <TextEditor ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
@@ -207,7 +296,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 
     <PromptDialog
       v-if="dialog === 'checkpoint'"
-      title="Save with a name"
+      title="Save new checkpoint"
       label="Name of this state (you can leave it empty)"
       ok="Save"
       placeholder="before the review"
@@ -217,7 +306,13 @@ onBeforeUnmount(() => clearTimeout(timer))
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
     <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
-    <HelpDialog v-if="dialog === 'help'" app="composes" @close="dialog = null" />
+    <ShortcutsDialog
+      v-if="dialog === 'shortcuts'"
+      :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
+      :extra="EXTRA_SHORTCUTS"
+      @close="dialog = null"
+    />
+    <AboutDialog v-if="dialog === 'about'" app="composes" @close="dialog = null" />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
 

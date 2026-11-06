@@ -1,24 +1,30 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { inputOf, rangeLabel, parseCell, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
 import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
+import { copySelection, cutSelection } from '~/lib/clipboard'
+import { applyAction, collectStates } from '~/lib/menu-dispatch'
+import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/shortcuts'
+import { createShellBridge } from '~/lib/shell-bridge'
+import { useTheme } from '~/lib/theme'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
 const props = defineProps<{ session: Session }>()
-const emit = defineEmits<{ leave: [] }>()
+const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
 
 const session = props.session
 const state = session.state
+const { dark, toggle: toggleDark } = useTheme()
 const SIZE = { rows: VIEW_ROWS, cols: VIEW_COLS }
 
 const sel = ref<Sel>(single(0, 0))
 const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
-const dialog = ref<null | 'sheet' | 'checkpoint' | 'share' | 'help'>(null)
+const dialog = ref<null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about'>(null)
 const panelOpen = ref(true)
 const grid = ref<{ focus: () => void } | null>(null)
 const panel = ref<{ ask: (text?: string) => void } | null>(null)
@@ -144,6 +150,19 @@ async function paste(rows: string[][]) {
   }
 }
 
+/** Edit ▸ Paste / Paste as plain text, from a menu click rather than the grid's own native `paste` DOM event
+ * (`@paste="paste"` below) — same destination (`paste(rows)`, which already knows where the selection is and checks
+ * its bounds), only the source of the text differs: the Clipboard API instead of a browser paste event's data. */
+async function pasteFromClipboard() {
+  let text: string
+  try {
+    text = await navigator.clipboard.readText()
+  } catch {
+    return
+  }
+  if (text) await paste(text.split('\n').map((line) => line.split('\t')))
+}
+
 // ------------------------------------------------------------------------------ sheets, rows, columns
 async function pickSheet(id: string) {
   if (edit.value && !pointing.value) await commit('none') // (a formula being typed can point at another sheet)
@@ -172,71 +191,139 @@ async function checkpoint(label: string | null) {
   grid.value?.focus()
 }
 
-// ------------------------------------------------------------------------------ menus and keys
-const menus = computed<Menu[]>(() => [
-  {
-    label: 'File',
-    items: [
-      { label: 'New sheet…', action: () => (dialog.value = 'sheet'), disabled: readonly.value },
-      { label: '', separator: true },
-      { label: 'Save', hint: 'Ctrl+S', action: () => checkpoint(null), disabled: readonly.value },
-      { label: 'Save with a name…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
-      { label: '', separator: true },
-      { label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
-      { label: '', separator: true },
-      { label: 'Close document', action: () => emit('leave') },
-    ],
-  },
-  {
-    label: 'Edit',
-    items: [
-      { label: state.canUndo ? `Undo ${state.undoLabel}` : 'Undo', hint: 'Ctrl+Z', action: () => session.undo(), disabled: !state.canUndo },
-      { label: state.canRedo ? `Redo ${state.redoLabel}` : 'Redo', hint: 'Ctrl+Y', action: () => session.redo(), disabled: !state.canRedo },
-      { label: '', separator: true },
-      { label: 'Insert row above', action: () => structure('row', true), disabled: readonly.value },
-      { label: 'Insert row below', action: () => structure('row', true, true), disabled: readonly.value },
-      { label: 'Delete row', action: () => structure('row', false), disabled: readonly.value },
-      { label: '', separator: true },
-      { label: 'Insert column left', action: () => structure('col', true), disabled: readonly.value },
-      { label: 'Insert column right', action: () => structure('col', true, true), disabled: readonly.value },
-      { label: 'Delete column', action: () => structure('col', false), disabled: readonly.value },
-      { label: '', separator: true },
-      { label: 'Clear cells', hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
-    ],
-  },
-  {
-    label: 'Tools',
-    items: [
-      { label: 'Ask the assistant…', action: () => ask('@ai ') },
-      { label: 'Ask for an example budget', action: () => ask('@ai build an example budget') },
-    ],
-  },
-  { label: 'Help', items: [{ label: 'Keyboard', action: () => (dialog.value = 'help') }] },
-])
-
 function ask(text: string) {
   panelOpen.value = true
   setTimeout(() => panel.value?.ask(text), 0)
 }
 
-function onWindowKey(event: KeyboardEvent) {
-  const target = event.target as HTMLElement
-  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
-  if (!(event.ctrlKey || event.metaKey)) return
-  const key = event.key.toLowerCase()
-  if (key === 'z' && !event.shiftKey) {
-    event.preventDefault()
-    session.undo()
-  } else if (key === 'y' || (key === 'z' && event.shiftKey)) {
-    event.preventDefault()
-    session.redo()
-  } else if (key === 's') {
-    event.preventDefault()
-    if (!readonly.value) checkpoint(null)
-  }
-}
-onMounted(() => window.addEventListener('keydown', onWindowKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKey))
+// ------------------------------------------------------------------------------ menus, shortcuts and the shell
+const shortcuts = computed(() => [
+  ...sharedShortcuts({
+    undo: () => session.undo(),
+    redo: () => session.redo(),
+    save: () => {
+      if (!readonly.value) void checkpoint(null)
+    },
+  }),
+])
+installWindowShortcuts(() => shortcuts.value)
+const hints = computed<Record<string, string>>(() => Object.fromEntries(shortcuts.value.map((s) => [s.id, chordLabel(s.chord)])))
+
+const menus = computed<Menu[]>(() => [
+  {
+    label: 'File',
+    items: [
+      { id: 'file.new', label: 'New', action: () => emit('leave', { startFresh: true }) },
+      { id: 'file.open', label: 'Open…', action: () => emit('leave') },
+      { label: '', separator: true },
+      { id: 'file.save', label: 'Save', hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
+      { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
+      { id: 'file.download', label: 'Download', disabled: true }, // D123: a stub here until computes has an export format
+      { label: '', separator: true },
+      { id: 'file.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+      { label: '', separator: true },
+      { id: 'file.close', label: 'Close document', action: () => emit('leave') },
+    ],
+  },
+  {
+    label: 'Edit',
+    items: [
+      { id: 'edit.undo', label: state.canUndo ? `Undo ${state.undoLabel}` : 'Undo', hint: hints.value['edit.undo'], action: () => session.undo(), disabled: !state.canUndo },
+      { id: 'edit.redo', label: state.canRedo ? `Redo ${state.redoLabel}` : 'Redo', hint: hints.value['edit.redo'], action: () => session.redo(), disabled: !state.canRedo },
+      { label: '', separator: true },
+      { id: 'edit.copy', label: 'Copy', hint: 'Ctrl+C', action: () => copySelection() },
+      { id: 'edit.cut', label: 'Cut', hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
+      { id: 'edit.paste', label: 'Paste', hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
+      {
+        id: 'edit.paste-as',
+        label: 'Paste as',
+        disabled: readonly.value,
+        // The child's own `disabled` is what a shell actually reports per-action (`collectStates` walks each item on
+        // its own terms, not by inheriting a parent's); the parent's `disabled` above only keeps the web menu from
+        // opening the flyout at all — both need to agree, or a shell could show the leaf as enabled regardless.
+        items: [{ id: 'edit.paste-as-plain', label: 'Plain text', action: () => pasteFromClipboard(), disabled: readonly.value }],
+      },
+      { label: '', separator: true },
+      { id: 'edit.new-sheet', label: 'New sheet…', action: () => (dialog.value = 'sheet'), disabled: readonly.value },
+      { label: '', separator: true },
+      // D130 (Claude's recommendation, flagged unconfirmed in decision-log.md): grouped into Row ▸ / Column ▸ rather
+      // than six flat items, reusing the submenu mechanism Edit ▸ Paste as ▸ already needed.
+      {
+        id: 'edit.row',
+        label: 'Row',
+        disabled: readonly.value,
+        items: [
+          { id: 'edit.row-insert-above', label: 'Insert above', action: () => structure('row', true), disabled: readonly.value },
+          { id: 'edit.row-insert-below', label: 'Insert below', action: () => structure('row', true, true), disabled: readonly.value },
+          { id: 'edit.row-delete', label: 'Delete', action: () => structure('row', false), disabled: readonly.value },
+        ],
+      },
+      {
+        id: 'edit.column',
+        label: 'Column',
+        disabled: readonly.value,
+        items: [
+          { id: 'edit.column-insert-left', label: 'Insert left', action: () => structure('col', true), disabled: readonly.value },
+          { id: 'edit.column-insert-right', label: 'Insert right', action: () => structure('col', true, true), disabled: readonly.value },
+          { id: 'edit.column-delete', label: 'Delete', action: () => structure('col', false), disabled: readonly.value },
+        ],
+      },
+      { label: '', separator: true },
+      { id: 'edit.clear', label: 'Clear cells', hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
+    ],
+  },
+  { label: 'Format', items: [{ id: 'format.none', label: 'No styles yet', disabled: true }] }, // D125: visible, inert — computes has no style system yet
+  {
+    label: 'View',
+    items: [
+      { id: 'view.authors', label: 'Show who wrote what', checked: false, disabled: true }, // computes tracks no per-cell authorship yet
+      { id: 'view.panel', label: 'History and chat', checked: panelOpen.value, action: (t) => (panelOpen.value = t ? t === 'on' : !panelOpen.value) },
+      {
+        id: 'view.dark',
+        label: 'Dark mode',
+        checked: dark(),
+        action: (t) => {
+          if (t === undefined || (t === 'on') !== dark()) toggleDark()
+        },
+      },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { id: 'tools.ask', label: 'Ask the assistant…', action: () => ask('@ai ') },
+      { id: 'tools.example-budget', label: 'Ask for an example budget', action: () => ask('@ai build an example budget') },
+    ],
+  },
+  { label: 'Config', items: [{ id: 'config.shortcuts', label: 'Shortcuts', action: () => (dialog.value = 'shortcuts') }] },
+  {
+    label: 'Help',
+    items: [
+      { id: 'help.ask', label: 'Ask ai', action: () => ask('@ai ') },
+      { id: 'help.how-to', label: 'How do I…?', disabled: true },
+      { id: 'help.docs', label: 'Documentation', disabled: true },
+      { id: 'help.about', label: 'About claudia', action: () => (dialog.value = 'about') },
+    ],
+  },
+])
+
+// `reactive()` so the template's `shell.nativeMenu` (a getter reading `capabilities`) re-renders once the shell's
+// `welcome` message actually arrives — a plain class instance's own fields are not tracked otherwise.
+const shell = reactive(createShellBridge('computes'))
+shell.onAction((id, target) => applyAction(menus.value, id, target))
+onBeforeUnmount(() => shell.detach())
+watch(menus, (m) => shell.reportStates(collectStates(m)), { immediate: true })
+
+// Config ▸ Shortcuts: the structured list above, plus the grid's own mouse/keyboard conventions, which are not a
+// single `keydown` chord and so were never candidates for the shared map.
+const EXTRA_SHORTCUTS: [string, string][] = [
+  ['Arrows, Tab, Enter', 'move through the table'],
+  ['Shift + arrows or drag', 'select a block'],
+  ['Ctrl + arrows', 'jump to the edge of a block of data'],
+  ['Type, F2 or double click', 'edit a cell (others are kept out of it while you do)'],
+  ['Enter / Tab / Esc', 'keep and go down / keep and go right / cancel'],
+  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
+]
 
 // ------------------------------------------------------------------------------ notices
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -254,7 +341,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   <div class="workspace">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you type now is not saved.</div>
-    <MenuBar :menus="menus" />
+    <MenuBar v-if="!shell.nativeMenu" :menus="menus" />
     <FormulaBar
       :label="label"
       :text="formulaText"
@@ -303,7 +390,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <PromptDialog v-if="dialog === 'sheet'" title="New sheet" label="Name" ok="Add sheet" required placeholder="Forecast" @ok="addSheet" @close="dialog = null" />
     <PromptDialog
       v-if="dialog === 'checkpoint'"
-      title="Save with a name"
+      title="Save new checkpoint"
       label="Name of this state (you can leave it empty)"
       ok="Save"
       placeholder="before the review"
@@ -311,7 +398,13 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
-    <HelpDialog v-if="dialog === 'help'" @close="dialog = null" />
+    <ShortcutsDialog
+      v-if="dialog === 'shortcuts'"
+      :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
+      :extra="EXTRA_SHORTCUTS"
+      @close="dialog = null"
+    />
+    <AboutDialog v-if="dialog === 'about'" app="computes" @close="dialog = null" />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
 

@@ -93,7 +93,7 @@ function submitJump() {
 .name {
   width: 96px;
   text-align: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   padding: 5px 8px;
   background: var(--page);
@@ -121,7 +121,10 @@ function submitJump() {
 }
 .eq {
   font: 500 17px var(--font-display);
-  color: var(--app);
+  /* Base `--app` as literal text measured under 4.5:1 for Teal/Rose against `--surface-dark` (4.04:1 / 3.78:1) —
+   * found while auditing every accent-as-text site, not separately reported. `--app-text` resolves to `--app-dark`
+   * in light mode (visually near-identical to base `--app`) and the dark-mode-safe variant in dark mode. */
+  color: var(--app-text);
   padding: 0 2px 0 8px;
 }
 .text {

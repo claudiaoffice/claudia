@@ -65,7 +65,7 @@ defineExpose({ fit })
   overflow-y: auto;
   padding: 6px;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a floating panel's own edge, not a divider — same fix as Modal.vue */
   border-radius: 12px;
   box-shadow: var(--shadow), 0 18px 48px rgb(31 26 51 / 14%);
 }

@@ -7,6 +7,6 @@
   font-family: var(--font-hand);
   font-size: 34px;
   line-height: 1;
-  color: var(--ink);
+  color: var(--wordmark);
 }
 </style>

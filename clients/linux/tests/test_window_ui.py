@@ -22,10 +22,14 @@ def test_there_is_a_menu_button_for_every_menu_of_the_manifest() -> None:
     assert buttons == wanted
 
 
-def test_the_header_toggle_of_the_manifest_is_wired_to_its_action() -> None:
-    toggle = manifest.composes().header_toggles[0]
+def test_the_header_bars_own_panel_toggle_is_wired_to_the_view_panel_action() -> None:
+    """The quick-access `GtkToggleButton` in the header bar (independent of the View menu's own "History and
+    chat" item) is not generated from the manifest at all — it is hand-written in `window.ui` — but still has to
+    name a real action. D120 moved `view.panel` out of `Manifest.header_toggles` (now always empty: nothing else
+    uses it) into the View menu proper, so this checks the id directly rather than through that field."""
+    assert "view.panel" in {a.id for a in manifest.composes().menu("View").all_actions()}
     actions = [node.text for node in window_ui().iter("property") if node.get("name") == "action-name"]
-    assert actions == [f"win.{toggle.id}"]
+    assert actions == ["win.view.panel"]
 
 
 def test_the_visible_texts_of_the_layout_can_be_translated() -> None:

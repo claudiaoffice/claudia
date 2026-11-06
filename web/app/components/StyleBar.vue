@@ -113,10 +113,11 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
 }
 .tool:hover:not(:disabled) {
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode */
 }
 .tool.on {
   background: color-mix(in srgb, var(--app) 16%, transparent);
-  color: var(--app-dark);
+  color: var(--app-text); /* --app-dark as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
 }
 .style-picker {
   position: relative;
@@ -129,7 +130,7 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
   width: 190px;
   height: 30px;
   padding: 0 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   background: var(--surface);
   font-weight: 500;
@@ -164,6 +165,7 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
 }
 .style-opt:hover {
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode */
 }
 .style-opt.current {
   background: color-mix(in srgb, var(--app) 14%, transparent);
