@@ -2,8 +2,10 @@
 
 Four jobs, each one a rule of the shell:
 
-* the page adapter (``data/shim.js``) runs in its own script world and only on pages of the server's own origin
-  (WebKit admits the host, the adapter checks the port), and its messages reach the shell through one named handler;
+* the page speaks the shell contract itself (D121, ``web/app/lib/shell-bridge.ts``) through one named script message
+  handler, registered in the view's main world — the page's own compiled JavaScript posts to it directly, so there is
+  no separate adapter script or isolated world to inject any more (that was ``data/shim.js``, retired with D121: it
+  scraped the DOM of a web app that did not yet know about the shell; the web app now does);
 * the view never leaves its origin: links to other sites open in the person's browser (web and mail only), everything
   else is dropped (``urls``);
 * files the page downloads go to the Downloads folder, under a name the page cannot use to escape it, and never
@@ -22,7 +24,6 @@ import os
 import warnings
 from collections.abc import Callable
 from pathlib import Path
-from urllib.parse import urlsplit
 
 from ._gi import Gio, GLib, Gtk
 from .urls import external_target, is_internal, safe_download_name, unique_path
@@ -36,7 +37,6 @@ __all__ = ["WebPage"]
 
 log = logging.getLogger(__name__)
 
-WORLD = "claudia-shell"
 HANDLER = "claudia"
 
 
@@ -47,8 +47,6 @@ class WebPage:
         self,
         *,
         origin: str,
-        shim: str,
-        routes: str,
         downloads_dir: Path,
         on_message: Callable[[str], None],
         on_reset: Callable[[], None],
@@ -64,22 +62,14 @@ class WebPage:
         self._on_download = on_download
         self._open_external = open_external or self._launch_default_application
 
+        # D121: the web app speaks the shell contract itself now (`shell-bridge.ts`) — it calls
+        # `window.webkit.messageHandlers.claudia.postMessage(...)` and reads `window.__claudiaShell` from its own,
+        # main-world script. No adapter is injected any more, so the handler is registered in the main world (world
+        # name ``None``), not a separate isolated one: a handler registered in an isolated world is invisible to the
+        # page's own main-world code, which is exactly where the compiled web app runs.
         manager = WebKit.UserContentManager()
-        manager.register_script_message_handler(HANDLER, WORLD)
+        manager.register_script_message_handler(HANDLER, None)
         manager.connect(f"script-message-received::{HANDLER}", self._message_received)
-        config = json.dumps({"app": "composes", "origin": self._origin, "routes": json.loads(routes)})
-        parts = urlsplit(self._origin)
-        manager.add_script(
-            WebKit.UserScript.new_for_world(
-                f"{shim}\n({config});\n",
-                WebKit.UserContentInjectedFrames.TOP_FRAME,
-                WebKit.UserScriptInjectionTime.END,
-                WORLD,
-                # WebKit's URL patterns cannot name a port: this admits the host, the adapter checks the origin
-                [f"{parts.scheme}://{parts.hostname}/*"],
-                None,
-            )
-        )
 
         settings = WebKit.Settings()
         settings.set_enable_developer_extras(bool(os.environ.get("CLAUDIA_DEBUG")))
@@ -119,9 +109,9 @@ class WebPage:
         self._view.load_uri(url)
 
     def send(self, raw: str) -> None:
-        """Hand a shell-contract message to the page adapter."""
+        """Hand a shell-contract message to the page, which sets ``window.__claudiaShell`` itself (D121)."""
         script = f"window.__claudiaShell && window.__claudiaShell.receive({json.dumps(raw)})"
-        self._view.evaluate_javascript(script, -1, WORLD, None, None, None)
+        self._view.evaluate_javascript(script, -1, None, None, None, None)
 
     def run_editing_command(self, command: str) -> None:
         self._view.execute_editing_command(command)

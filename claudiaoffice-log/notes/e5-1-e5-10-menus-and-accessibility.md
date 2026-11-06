@@ -1,9 +1,49 @@
 # E5.1 / E5.10 — menu redesign and accessibility baseline
 
-Proposed, 2026-11-05. **Nothing in this note is built.** Per the project's own rule, screen designs come first and
-are agreed before any code; this round is that agreement step. Decisions actually confirmed by the owner are in
-`decision-log.md` (D120–D123); this file is the working detail behind them and the place the remaining open items
-live until they're settled.
+Proposed, 2026-11-05; a patch implementing it exists the same day, delivered as a file (no push access — the owner
+commits it on a feature branch, per the project's working model). **Per PROC-03, nothing here counts as built until
+a commit carries it** — this section describes what the delivered patch contains, not a status to copy into
+`backlog.md`; that still waits for the commit. Decisions confirmed by the owner, plus the ones Claude proposed and
+flagged as unconfirmed, are in `decision-log.md` (D120–D130); this file is the working detail behind them.
+
+## What the patch contains (delivered 2026-11-05, awaiting commit)
+
+Everything below is implemented and its own tests pass; the breakdown is by how it was checked, not by confidence.
+
+**Verified in the sandbox** (no GTK/WebKit there, so this is everything that doesn't need them):
+
+- The web app (`web/app/`): all three workspaces (`TextWorkspace.vue`, `Workspace.vue`, `SlideWorkspace.vue`) rebuilt
+  to the seven-menu schema (D120, D123–D130), with `MenuBar.vue`'s new submenu capability (Edit ▸ Paste as ▸ Plain
+  text everywhere, Edit ▸ Row ▸ / Column ▸ in computes per D130). Shortcuts moved to one shared map (`lib/shortcuts.ts`,
+  D122). `Modal.vue` replaced by a native `<dialog>` (D128's Esc-always-closes). `tokens.css` carries the UX-04/UX-05
+  fix and dark tokens (D129). New `lib/shell-bridge.ts`: the web app now speaks the shell contract directly — D121's
+  other half, see below — gated behind `shell.nativeMenu` so a plain browser tab is unaffected. New `lib/clipboard.ts`
+  for Copy/Cut/Paste outside the editable-document case. `261/261` vitest, `vue-tsc --noEmit` clean.
+- The Linux client's data layer (`clients/linux/src/claudia_shell_gtk/`): `manifest.py` rebuilt to the seven-menu
+  schema with a new `Submenu` type, extended to `computes()` and `creates()` (new, D121 — identities only, see below
+  for what's still missing); `identity.py` gained their `AppIdentity` entries; `window.ui` gained the three new
+  `GtkMenuButton`s. `app.py`/`webpage.py`: the shim/`webroutes.json` mechanism is retired (D121) — the message
+  handler now lives in the WebKit view's main world instead of an isolated one, matching the web app now posting to
+  it directly instead of being scraped by an injected adapter; `data/shim.js` and `data/webroutes.json` are deleted.
+  `193 passed, 36 skipped` (the skips are the `pytest.mark.gtk` tests — see below), `ruff`/`mypy`/`vulture` clean.
+  `test_manifest.py`'s drift guard now compares ids directly against each app's `.vue` source (the stronger
+  guarantee the first draft of this note called for), not against the retired route table.
+
+**Not verified here — needs the owner's own GTK/WebKit environment** (`import gi` fails in this sandbox: no
+PyGObject, so nothing below ever ran): the `pytest.mark.gtk` tests, 36 of them, including the rewritten
+`test_webpage.py` (its stub page now speaks the contract itself instead of being shim-driven) and
+`test_window_ui.py`'s two changed assertions. The reasoning for each GTK-side change is written down above and in
+the diff's own comments, but only `xvfb-run -a pytest -m gtk` (or a real display) can actually confirm WebKit
+accepts a main-world message handler the way the change assumes.
+
+**Deliberately out of scope, left for a later pass:** computes and creates have no GTK window, application class,
+icon, desktop entry or `__main__` entry point yet — only the identity and manifest data exist. `claudia-composes` is
+still the only real Linux app; the new menus/manifests for the other two are exercised solely by their own tests
+until that window-class work happens.
+
+**Still open, not resolved by this patch:** D130 (computes' Row/Column submenu grouping) is Claude's own
+recommendation, not yet confirmed by the owner, and could change the shape of `edit.row`/`edit.column` on both
+sides if revisited. The four items already listed as open below stand unchanged.
 
 Addresses the QA report's recommendation 3 (`qa-recommendations.md`): UX-01, UX-03, UX-04, UX-05, done together
 because they share one test harness; and separately resolves UX-06/UX-09, which were blocking E5.1 outright.

@@ -13,6 +13,14 @@ const emit = defineEmits<{ done: [] }>()
 const stored = ref(false)
 const copied = ref<'' | 'yes' | 'no'>('')
 
+// D128 made Esc always close a dialog, "locked" ones included — right for Share… or Save new checkpoint, wrong here:
+// there is no legitimate way to leave without the checkbox below, since losing the only copy of a recovery key is
+// not an Esc-sized mistake to let through. `modal.reopen()` is this one dialog's deliberate, narrow exception.
+const modal = ref<{ reopen: () => void } | null>(null)
+function keepOpen() {
+  if (!stored.value) modal.value?.reopen()
+}
+
 async function copy() {
   try {
     await navigator.clipboard.writeText(props.recoveryKey)
@@ -24,7 +32,7 @@ async function copy() {
 </script>
 
 <template>
-  <Modal title="Your recovery key" :width="520" locked>
+  <Modal ref="modal" title="Your recovery key" :width="520" locked @close="keepOpen">
     <p class="lead">
       This is the only way back into <b>{{ doc }}</b> for somebody who has forgotten their password.
       <template v-if="replacing">The key you had before no longer works.</template>

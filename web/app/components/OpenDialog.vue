@@ -12,12 +12,17 @@ interface Listed {
   online: number
 }
 
+const props = defineProps<{
+  /** File ▸ New (D123): land with the document field blank and focused, instead of the one just closed. */
+  startFresh?: boolean
+}>()
 const emit = defineEmits<{ opened: [session: AnySession] }>()
 
 const server = new URLSearchParams(location.search).get('server') ?? location.host
 const documents = ref<Listed[]>([])
 const listError = ref('')
 const doc = ref(new URLSearchParams(location.search).get('doc') ?? '')
+const docField = ref<HTMLInputElement | null>(null)
 const user = ref('')
 const password = ref('')
 const error = ref('')
@@ -66,7 +71,8 @@ function remember(key: string, value: string) {
 
 onMounted(async () => {
   user.value = remembered('claudia.user')
-  if (!doc.value) doc.value = remembered('claudia.doc')
+  if (!doc.value && !props.startFresh) doc.value = remembered('claudia.doc')
+  if (props.startFresh) docField.value?.focus()
   try {
     const answer = await fetch(`${location.protocol}//${server}/api/docs`)
     if (answer.status === 404) listError.value = 'This server does not list its documents. Type the name of yours.'
@@ -169,7 +175,7 @@ async function go(how: 'open' | 'create' | 'recover') {
         </div>
 
         <form @submit.prevent="go(recovering ? 'recover' : 'open')">
-          <label class="field">Document<input v-model="doc" name="document" autocomplete="off" placeholder="budget-2027" /></label>
+          <label class="field">Document<input ref="docField" v-model="doc" name="document" autocomplete="off" placeholder="budget-2027" /></label>
           <label class="field">Your name<input v-model="user" name="user" autocomplete="username" placeholder="ann" /></label>
           <label v-if="recovering" class="field">
             Recovery key<input v-model="recoveryKey" name="recovery-key" autocomplete="off" spellcheck="false" placeholder="ABCD-EFGH-…" />

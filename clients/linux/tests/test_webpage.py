@@ -1,8 +1,9 @@
-"""The real WebKit page against a stub site whose menu is built like the web app's (``MenuBar.vue``).
+"""The real WebKit page against a stub site that speaks the shell contract itself (D121), the way the real web app's
+``shell-bridge.ts`` does.
 
-These tests pin the rules of ``webpage.py`` and the behaviour of the page adapter ``shim.js``: hello and welcome, the
-menu actions carried out through the page's own menu, states read back, links that stay inside the application, and
-downloads that stay inside the Downloads folder.
+These tests pin the rules of ``webpage.py``: hello and welcome, menu actions carried out through the page's own
+script, states read back, links that stay inside the application, and downloads that stay inside the Downloads
+folder.
 """
 
 from __future__ import annotations
@@ -11,7 +12,6 @@ import json
 import threading
 from collections.abc import Iterator
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from importlib import resources
 from pathlib import Path
 
 import pytest
@@ -22,8 +22,10 @@ from claudia_shell_gtk.bridge import Bridge
 
 pytestmark = pytest.mark.gtk
 
-# The markup and behaviour of MenuBar.vue: titles open a list that exists only while it is open, items are buttons with
-# role=menuitem, a tick span and aria-checked/disabled; choosing an item closes the list.
+# A minimal stand-in for `shell-bridge.ts`: it posts `hello` itself, keeps `window.__claudiaShell.receive` for the
+# shell's replies, dispatches `action` messages by id (honouring `target` for the checkable, idempotent pair
+# view.page/view.flow, same as `view.page`'s web handler does), and reports states back, diffed, like
+# `ShellBridge.reportStates()` does. No DOM menu, no adapter: this is what a page that knows the contract looks like.
 SITE = """<!doctype html><meta charset=utf-8><title>stub</title>
 <style>nav.menus{display:flex;height:32px;background:#eee}</style>
 <nav class="menus" aria-label="menu"></nav>
@@ -33,46 +35,77 @@ SITE = """<!doctype html><meta charset=utf-8><title>stub</title>
 <script>
 const state = {view: 'flow', authors: false, canUndo: false}
 window.clicked = []
-let open = null
-const menus = () => [
-  {label: 'File', items: [{label: 'Save', hint: 'Ctrl+S'}, {label: 'Save as Markdown…'}]},
-  {label: 'Edit', items: [
-    {label: state.canUndo ? 'Undo typing' : 'Undo', disabled: !state.canUndo},
-    {label: 'Redo', disabled: true}]},
-  {label: 'View', items: [
-    {label: 'Flow', checked: state.view === 'flow', run() { state.view = 'flow' }},
-    {label: 'Page', checked: state.view === 'page', run() { state.view = 'page' }},
-    {label: 'Show who wrote what', checked: state.authors, run() { state.authors = !state.authors }}]},
-]
-function render() {
-  const nav = document.querySelector('nav.menus')
-  nav.innerHTML = ''
-  menus().forEach((menu, i) => {
-    const wrap = document.createElement('div'); wrap.className = 'menu'
-    const title = document.createElement('button'); title.className = 'title' + (open === i ? ' open' : '')
-    title.textContent = menu.label
-    title.onclick = () => { open = open === i ? null : i; render() }
-    wrap.appendChild(title)
-    if (open === i) {
-      const ul = document.createElement('ul'); ul.className = 'drop'; ul.setAttribute('role', 'menu')
-      menu.items.forEach((item) => {
-        const li = document.createElement('li'); const b = document.createElement('button')
-        b.setAttribute('role', 'menuitem'); b.disabled = !!item.disabled
-        if (item.checked !== undefined) b.setAttribute('aria-checked', String(item.checked))
-        const tick = item.checked === undefined ? '' : '<i class="tick">' + (item.checked ? '✓' : '') + '</i>'
-        b.innerHTML = '<span>' + tick + item.label + '</span>'
-        b.onclick = () => {
-          if (item.disabled) return
-          open = null; window.clicked.push(item.label); item.run && item.run(); render()
-        }
-        li.appendChild(b); ul.appendChild(li)
-      })
-      wrap.appendChild(ul)
-    }
-    nav.appendChild(wrap)
-  })
+let ready = false
+let lastReported = null
+
+function specOf(id) {
+  if (id === 'file.save') return {label: 'Save'}
+  if (id === 'edit.undo') return {label: state.canUndo ? 'Undo typing' : 'Undo', disabled: !state.canUndo}
+  if (id === 'edit.redo') return {label: 'Redo', disabled: true}
+  if (id === 'view.page') return {label: 'Page', checked: state.view === 'page'}
+  if (id === 'view.authors') return {label: 'Show who wrote what', checked: state.authors}
+  return null
 }
-render()
+
+function post(message) {
+  window.webkit.messageHandlers.claudia.postMessage(JSON.stringify(message))
+}
+
+function report() {
+  if (!ready) return
+  const states = {}
+  for (const id of ['file.save', 'edit.undo', 'edit.redo', 'view.page', 'view.authors']) {
+    const spec = specOf(id)
+    const s = {enabled: !spec.disabled}
+    if (spec.checked !== undefined) s.checked = spec.checked
+    states[id] = s
+  }
+  const key = JSON.stringify(states)
+  if (key === lastReported) return
+  lastReported = key
+  post({type: 'action_state', states})
+}
+
+function dispatch(id, target) {
+  const spec = specOf(id)
+  if (!spec || spec.disabled) return
+  if (id === 'view.page') {
+    if (target === 'on') {
+      if (state.view !== 'page') { state.view = 'page'; window.clicked.push('Page') }
+    } else if (target === 'off') {
+      if (state.view === 'page') { state.view = 'flow'; window.clicked.push('Flow') }
+    } else {
+      state.view = state.view === 'page' ? 'flow' : 'page'
+      window.clicked.push(state.view === 'page' ? 'Page' : 'Flow')
+    }
+  } else if (id === 'view.authors') {
+    state.authors = target === undefined ? !state.authors : target === 'on'
+    window.clicked.push(spec.label)
+  } else {
+    window.clicked.push(spec.label)
+  }
+}
+
+window.__claudiaShell = {
+  receive(raw) {
+    const message = JSON.parse(raw)
+    if (message.type === 'welcome') {
+      ready = true
+      if ((message.capabilities || []).includes('native-menu')) {
+        const nav = document.querySelector('nav.menus')
+        nav.style.visibility = 'hidden'
+        nav.style.height = '0'
+      }
+      report()
+    } else if (message.type === 'action') {
+      dispatch(message.action, message.target)
+      report()
+    }
+  }
+}
+
+post({type: 'hello', contract: 1, app: 'composes'})
+setInterval(report, 20)
 </script>"""
 
 
@@ -103,7 +136,7 @@ def site() -> Iterator[str]:
 class Rig:
     """A web page wired to a real bridge, as the window wires it, and a record of what happened."""
 
-    def __init__(self, origin: str, tmp_path: Path, *, shim_origin: str | None = None) -> None:
+    def __init__(self, origin: str, tmp_path: Path, *, declared_origin: str | None = None) -> None:
         from claudia_shell_gtk._gi import Gtk
         from claudia_shell_gtk.webpage import WebPage
 
@@ -125,9 +158,7 @@ class Rig:
             self.bridge.receive(raw)
 
         self.page = WebPage(
-            origin=shim_origin or origin,
-            shim=resources.files("claudia_shell_gtk").joinpath("data/shim.js").read_text(encoding="utf-8"),
-            routes=resources.files("claudia_shell_gtk").joinpath("data/webroutes.json").read_text(encoding="utf-8"),
+            origin=declared_origin or origin,
             downloads_dir=self.downloads,
             on_message=on_message,
             on_reset=self.bridge.reset,
@@ -145,7 +176,7 @@ class Rig:
         self.page.widget.evaluate_javascript(source, -1, None, None, None, None)
 
     def clicked(self) -> list[str]:
-        """What the stub page's menu items recorded (read through the page, in its own world)."""
+        """What the stub page recorded as carried out (read through the page, in its own world)."""
         result: list[list[str]] = []
 
         def got(view, task) -> None:
@@ -191,7 +222,7 @@ def test_the_states_change_when_the_page_changes(rig: Rig) -> None:
     pump(lambda: rig.states["edit.undo"]["enabled"], what="Undo to become enabled")
 
 
-def test_an_action_is_carried_out_through_the_pages_own_menu(rig: Rig) -> None:
+def test_an_action_is_carried_out_through_the_pages_own_script(rig: Rig) -> None:
     pump(lambda: rig.bridge.ready)
     rig.bridge.send_action("file.save")
     pump(lambda: rig.clicked() == ["Save"], what="the click")
@@ -233,6 +264,8 @@ def test_a_disabled_item_is_not_clicked(rig: Rig) -> None:
 
 
 def test_the_web_menu_bar_is_hidden_but_keeps_its_place(rig: Rig) -> None:
+    """A page that was told the shell offers ``native-menu`` hides its own menu bar without reclaiming its space —
+    exactly what ``MenuBar.vue``'s own ``v-if="!shell.nativeMenu"`` guard does in the real web app."""
     pump(lambda: rig.bridge.ready)
     result: list[str] = []
 
@@ -277,13 +310,15 @@ def test_nothing_contacts_another_host_by_itself(rig: Rig) -> None:
     assert not settings.get_enable_media_stream()
 
 
-def test_a_page_of_another_origin_does_not_get_the_adapter(site: str, tmp_path: Path) -> None:
-    """The adapter is injected for the server's origin only: here the shell believes its server is somewhere else."""
+def test_a_page_of_another_origin_is_not_heard(site: str, tmp_path: Path) -> None:
+    """The handler is registered once, for the whole view (D121: there is no longer a per-origin adapter to inject),
+    so it is `webpage.WebPage`'s own origin check in `_message_received` that must still hold the line: here the
+    shell believes its server is somewhere else, and the page's messages must be ignored regardless."""
     try:
         import claudia_shell_gtk.webpage  # noqa: F401
     except (ImportError, ValueError) as problem:
         pytest.skip(f"WebKitGTK 6.0 is not available ({problem})")
-    rig = Rig(site, tmp_path, shim_origin="http://127.0.0.1:9")
+    rig = Rig(site, tmp_path, declared_origin="http://127.0.0.1:9")
     try:
         pump_for(1.5)
         assert rig.messages == []

@@ -1,7 +1,10 @@
 """Which Claudia app a shell shows: its application id, name and the server model behind it. No GTK in here.
 
-Only composes has a Linux client so far. Computes and creates get an entry here when their shells are written; the
-window, the bridge and the server launcher already take everything app-specific from an :class:`AppIdentity`.
+Only composes has a window, an application class and a ``claudia-composes`` entry point so far. Computes and creates
+have an identity each (below) — the menus they need already exist too, in ``manifest.py`` — but no window/application
+class or ``__main__`` entry point yet (E5.1's scope cut, see
+``claudiaoffice-log/notes/e5-1-e5-10-menus-and-accessibility.md``): that is real GTK/WebKit wiring this sandbox
+cannot run or check (no PyGObject here), so it is left for a pass that can.
 """
 
 from __future__ import annotations
@@ -47,6 +50,18 @@ _APPS = {
         title="Claudia Composes",
         application_id="de.claudiaoffice.composes",
         model="claudia_composes:TextModel",
+    ),
+    "computes": AppIdentity(
+        name="computes",
+        title="Claudia Computes",
+        application_id="de.claudiaoffice.computes",
+        model="claudia_computes:WorkbookModel",
+    ),
+    "creates": AppIdentity(
+        name="creates",
+        title="Claudia Creates",
+        application_id="de.claudiaoffice.creates",
+        model="claudia_creates:SlideModel",
     ),
 }
 

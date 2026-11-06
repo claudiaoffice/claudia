@@ -28,8 +28,26 @@
                 </child>
                 <child type="start">
                   <object class="GtkMenuButton">
+                    <property name="label" translatable="yes">Format</property>
+                    <property name="menu-model">menu-format</property>
+                  </object>
+                </child>
+                <child type="start">
+                  <object class="GtkMenuButton">
+                    <property name="label" translatable="yes">View</property>
+                    <property name="menu-model">menu-view</property>
+                  </object>
+                </child>
+                <child type="start">
+                  <object class="GtkMenuButton">
                     <property name="label" translatable="yes">Tools</property>
                     <property name="menu-model">menu-tools</property>
+                  </object>
+                </child>
+                <child type="start">
+                  <object class="GtkMenuButton">
+                    <property name="label" translatable="yes">Config</property>
+                    <property name="menu-model">menu-config</property>
                   </object>
                 </child>
                 <child type="start">
