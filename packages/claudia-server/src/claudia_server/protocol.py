@@ -324,6 +324,10 @@ class MethodTable:
             raise RequestError("unknown_method", f"no method {name!r}")
         if entry.write and not ctx.account.can_write:
             raise RequestError("forbidden", f"{name} needs the editor role")
+        allowed = ctx.account.allowed_methods
+        if entry.write and allowed is not None and name not in allowed:
+            # SEC-10: the one place every path goes through (the wire, the assistant, a future remote engine).
+            raise RequestError("forbidden", f"{name} is not one of the methods this account may call")
         args = self.bind(entry, params, ctx.limits)
         try:
             return entry.fn(ctx, **args)
@@ -521,7 +525,10 @@ def _apply(ctx, command, base):
     """Execute a command in its stored form `{k, s, d}` as this account. `base` is the revision the client's view was
     at: if the document moved to another line meanwhile the edit is refused with `stale`. Refused with `locked` if a
     colleague holds the part it touches; `command_error` if the command itself is rejected. Nothing changes on any
-    error."""
+    error. Refused with `forbidden` for the assistant (SEC-10): a raw command would walk around the checks an app's
+    own methods make against it (`composes._people_only` and the like), whatever `apply` itself is allowed to call."""
+    if ctx.account.system:
+        raise RequestError("forbidden", "the assistant cannot apply a raw command; use the app's own methods")
     try:
         parsed = ctx.document.model.registry.decode(command)
     except (UnknownCommand, SchemaTooNew) as exc:

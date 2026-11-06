@@ -5,9 +5,12 @@ import json
 
 import pytest
 
+from claudia_composes import TextModel
 from claudia_computes import WorkbookModel
+from claudia_server.apps import MODEL_METHODS
 from claudia_server.assistant import Assistant, Call, Say, Task
 from claudia_server.auth import Account
+from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
 from claudia_server.hub import Hub, HubError, MemoryProvider
 from claudia_server.protocol import core_methods
@@ -47,13 +50,16 @@ class BrokenEngine:
         raise RuntimeError("the model fell over")
 
 
-def scenario(test, engine=None, methods=computes_methods):
-    """Run ``test(hosted, assistant)`` inside an event loop with a workbook that has the assistant attached."""
+def scenario(test, engine=None, methods=computes_methods, allowed_methods=MODEL_METHODS["computes"]):
+    """Run ``test(hosted, assistant)`` inside an event loop with a workbook that has the assistant attached.
+
+    ``allowed_methods`` is what SEC-10 checks at dispatch; it defaults to the real allow-list for computes, so a
+    test that does not care about it still exercises the real boundary rather than an unrestricted stand-in."""
 
     async def run():
         hub = Hub(MemoryProvider(WorkbookModel), methods=methods)
         hosted = await hub.open("plan", create=True)
-        assistant = Assistant(engine or ScriptedEngine(), pause=0)
+        assistant = Assistant(engine or ScriptedEngine(), pause=0, allowed_methods=allowed_methods)
         assistant.attach(hosted)
         await test(hosted, assistant)
 
@@ -256,3 +262,63 @@ def test_questions_beyond_the_limit_are_refused_at_once_and_say_so():
         await test(hosted, assistant)
 
     asyncio.run(run())
+
+
+# ---------------------------------------------------------------- SEC-10: the allow-list holds even if the engine
+# is rogue, careless, or (D8) one day a socket to another machine: dispatch is what refuses it, not only the
+# model's own output parser (`claudia_ai.agent.Agent._take_calls`).
+class Rogue:
+    """An engine that always asks for one step, whatever the task: a stand-in for a careless or hostile engine."""
+
+    def __init__(self, step):
+        self.step = step
+
+    def plan(self, task: Task):
+        return [self.step]
+
+
+@pytest.mark.parametrize(
+    "step",
+    [
+        Call("apply", {"command": {}}),
+        Call("chat", {"text": "hello"}),
+        Call("undo"),
+        Call("save_checkpoint", {}),
+    ],
+    ids=["apply", "chat", "undo", "save_checkpoint"],
+)
+def test_the_assistant_cannot_reach_a_method_outside_its_allow_list(step):
+    async def test(hosted, assistant):
+        ann = Person(hosted, ANN)
+        ann.request("chat", {"text": "@ai go"})
+        await assistant.idle()
+        assert "is not one of the methods" in ann.said()[-1]
+        assert hosted.document.revision is None, "nothing happened to the document"
+
+    scenario(test, Rogue(step))
+
+
+def test_a_composes_assistant_may_suggest_but_not_replace_text_set_style_or_apply():
+    async def run(step, *, suggests):
+        hub = Hub(MemoryProvider(TextModel), methods=composes_methods)
+        hosted = await hub.open("essay", create=True)
+        Assistant(Rogue(step), pause=0, allowed_methods=("suggest",)).attach(hosted)
+        ann = Person(hosted, ANN)
+        ann.request("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "hi"})
+        before = hosted.document.revision
+        ann.request("chat", {"text": "@ai go"})
+        await hosted.assistant.idle()
+        if suggests:
+            assert ann.request("suggestions")["result"], "suggest is the one method composes offers the assistant"
+        else:
+            assert "is not one of the methods" in ann.said()[-1]
+            assert hosted.document.revision == before, "nothing further changed"
+
+    asyncio.run(
+        run(Call("suggest", {"block": "b1", "start": 0, "end": 2, "reason": "r", "replacement": "Hi"}), suggests=True)
+    )
+    asyncio.run(
+        run(Call("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "x"}), suggests=False)
+    )
+    asyncio.run(run(Call("set_style", {"block": "b1", "style": "title"}), suggests=False))
+    asyncio.run(run(Call("apply", {"command": {}}), suggests=False))

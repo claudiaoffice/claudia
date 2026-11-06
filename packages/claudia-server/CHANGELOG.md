@@ -3,6 +3,28 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.9.0] - 2026-11-06
+
+Security release: the second QA review's first recommendation (SEC-10).
+
+### Added
+- **The AI's allow-list is enforced at dispatch, not only in the model's output parser (SEC-10, E7.6, E9.9).**
+  `Account.allowed_methods` (set by `Account.assistant(allowed_methods=...)`): the write methods this account may
+  call, checked by `MethodTable.dispatch` before the method runs — the one place every path goes through
+  (`Assistant._call`, the wire, and any future remote AI connection). `Assistant(allowed_methods=...)` passes it on
+  when the account is made; `apps.stand_in_assistant_for` and `apps.model_assistant_for` both set it from
+  `apps.MODEL_METHODS` of the document's app, so the scripted stand-in is held to the same guarantee as a real
+  model, not only the engine `claudia_ai.Agent._take_calls` happens to filter for. `apps.MODEL_METHODS` gained a
+  `"composes"` entry: `("suggest",)`, so a composes assistant is refused by name, not only by an empty allowed set.
+- `protocol._apply` refuses `account.system` unconditionally: the assistant cannot use the generic `apply` as a
+  tunnel around an app's own wrapper checks (`composes._people_only` and the like), whatever its allow-list says.
+
+### Changed
+- `Account.__init__` and `Account.assistant()` take an additional optional `allowed_methods` parameter (additive,
+  default `None`: no behaviour change for an account nobody restricts). `Assistant.__init__` takes an additional
+  optional `allowed_methods` parameter (additive, default `()`: an assistant made without passing it writes
+  nothing, which is the safe default rather than a convenience).
+
 ## [0.8.0] - 2026-11-03
 
 Sealed documents are packed into blocks with a snapshot, and the recovery key is shown (E2.1, E2.5, E2.2).

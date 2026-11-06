@@ -22,7 +22,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import deque
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
@@ -87,7 +87,10 @@ class Assistant:
     """The AI participant of one document.
 
     ``max_waiting`` is how many questions may wait behind the one being answered; further ones are refused at once
-    with a message (``None``: no limit)."""
+    with a message (``None``: no limit). ``allowed_methods`` are the write methods its account may call (SEC-10):
+    whoever makes the assistant for an app passes its entry of ``apps.MODEL_METHODS``, so the engine's plan is
+    checked at dispatch, not only by its own filtering of what the model wrote. The default, no methods, is a safe
+    one to fall back to, not a convenience: an assistant made without thinking about this writes nothing."""
 
     def __init__(
         self,
@@ -96,10 +99,12 @@ class Assistant:
         pause: float = 0.5,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         max_waiting: int | None = None,
+        allowed_methods: Iterable[str] = (),
     ):
         self.engine = engine
         self.pause = pause  # seconds between steps, so that people can follow what happens
         self.max_waiting = max_waiting
+        self.allowed_methods = frozenset(allowed_methods)
         self._sleep = sleep
         self.hosted: HostedDocument | None = None
         self.connection: Connection | None = None
@@ -112,7 +117,7 @@ class Assistant:
         if hosted.assistant is not None:
             raise HubError("bad_request", f"{hosted.id} already has an assistant")
         self.hosted = hosted
-        self.connection = hosted.connect(Account.assistant(), lambda _frame: None)
+        self.connection = hosted.connect(Account.assistant(self.allowed_methods), lambda _frame: None)
         hosted.assistant = self
         hosted.document.subscribe(self._on_event)
         return self.connection
