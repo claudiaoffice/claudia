@@ -5,7 +5,7 @@
     format          "claudia-document 1", stored uncompressed and first, so tools can recognise the file
     manifest.json   readable by anyone: id, title, app, times, unlisted flag, the cost of the password hashing, salt
     slots.json      the key slots (see :mod:`claudia_container.slots`): locators and sealed keys, no names
-    people.bin      names, roles and slot locators of everybody; sealed with the content key (D72, D81)
+    people.bin      names, roles and slot locators of everybody; sealed with the content key (D102, D111)
 
 While a document is open its changes go to the journal next to the file (:mod:`claudia_container.journal`). Packing the
 journal into encrypted blocks inside this zip is a later step. Every change of the file writes a new zip next to it and
@@ -80,7 +80,7 @@ class ReaderLimitExceeded(ContainerError):
 
 @dataclass(frozen=True)
 class Manifest:
-    """What anyone may read without a password (D73): enough to list the document, and to open it."""
+    """What anyone may read without a password (D103): enough to list the document, and to open it."""
 
     id: str
     app: str
@@ -251,7 +251,7 @@ def read_manifest(path: Path) -> Manifest:
 
 
 def unlock(path: Path, name: str, password: str) -> Unlocked | None:
-    """Log in. ``None`` for a wrong name or a wrong password: the same answer, whichever it was (D50, D72)."""
+    """Log in. ``None`` for a wrong name or a wrong password: the same answer, whichever it was (D50, D102)."""
     entries = _read_entries(path)
     manifest = _manifest_of(entries, path)
     material = derive_login_material(password, name, manifest.salt, manifest.kdf)
@@ -259,7 +259,7 @@ def unlock(path: Path, name: str, password: str) -> Unlocked | None:
 
 
 def unlock_with_recovery(path: Path, recovery_key: bytes) -> Unlocked | None:
-    """Open with the recovery key (D75): an owner with all keys, or ``None`` if it is not the document's key."""
+    """Open with the recovery key (D105): an owner with all keys, or ``None`` if it is not the document's key."""
     entries = _read_entries(path)
     manifest = _manifest_of(entries, path)
     return open_slot(_slots_of(entries, path), derive_recovery_material(recovery_key), manifest.id)
@@ -293,7 +293,7 @@ def _open_people(entries: dict[str, bytes], manifest: Manifest, keys: Mapping[Do
 
 
 def read_people(path: Path, keys: Mapping[Domain, bytes]) -> list[Person]:
-    """Everybody who may log in, in the order they were added. Needs the content key (a viewer holds it, D81)."""
+    """Everybody who may log in, in the order they were added. Needs the content key (a viewer holds it, D111)."""
     entries = _read_entries(path)
     return _open_people(entries, _manifest_of(entries, path), keys)
 

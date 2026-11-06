@@ -1,4 +1,4 @@
-"""The recovery key (E2.2, D75): made at creation or later, replaced by a new one, and a way back in."""
+"""The recovery key (E2.2, D105): made at creation or later, replaced by a new one, and a way back in."""
 
 import pytest
 

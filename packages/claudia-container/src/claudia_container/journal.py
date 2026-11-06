@@ -1,4 +1,4 @@
-"""The encrypted journal of an open document (E2.1, D76).
+"""The encrypted journal of an open document (E2.1, D106).
 
 While somebody has a document open, every change is appended here as one sealed record and is on disk before the
 server answers (``fsync``). Nothing about the content is visible: a record shows only its domain, a sequence number and

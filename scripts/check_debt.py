@@ -2,10 +2,17 @@
 
 ``uv run python scripts/check_debt.py``          everything
 ``uv run python scripts/check_debt.py --fast``   skip the documentation build and the performance guards
+``uv run python scripts/check_debt.py --ci``     a skipped check fails the build, unless named with ``--allow-skip``
 
-Each check prints what it found and the script exits non-zero if any check failed. The checks are:
+A check that cannot run here (no ``node_modules``, no Linux) is *skipped*, not failed, and the final line always says
+so: ``clean except skipped: …`` rather than ``everything is clean.`` — a skip is never reported as clean (PROC-02).
+``--ci`` goes one step further and turns an unnamed skip into a failure, so CI must say which skips it expects with
+one ``--allow-skip NAME`` per check (for example the web checks in the Python job, which the separate ``web`` job
+covers on its own runner). Each check prints what it found and the script exits non-zero if any check failed. The
+checks are:
 
 * ruff       style, bugs, simplifications, performance anti-patterns
+* ruff format   the enforced formatting (CODE-08); run ``uv run ruff format .`` to fix what it finds
 * mypy       types of the sources
 * vulture    code nobody uses (``vulture_whitelist.py`` lists the reasoned exceptions)
 * tests      the whole suite, with a note of the slowest ones
@@ -18,6 +25,7 @@ Each check prints what it found and the script exits non-zero if any check faile
 
 from __future__ import annotations
 
+import argparse
 import os
 import shutil
 import subprocess
@@ -44,10 +52,55 @@ class Check:
     skip_reason: str = ""  # a check that cannot run here is skipped, not failed
 
 
+@dataclass(frozen=True)
+class Outcome:
+    """What one check did. ``detail`` is the failure output for ``"failed"``, the reason for ``"skipped"``."""
+
+    name: str
+    status: str  # "ok" | "failed" | "skipped"
+    detail: str = ""
+
+
+@dataclass(frozen=True)
+class Args:
+    fast: bool = False
+    ci: bool = False
+    allow_skip: frozenset[str] = frozenset()
+
+
+def parse_args(argv: list[str]) -> Args:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fast", action="store_true", help="skip the documentation build and the performance guards")
+    parser.add_argument("--ci", action="store_true", help="an unnamed skip fails the build")
+    parser.add_argument("--allow-skip", action="append", default=[], metavar="NAME", help="a check --ci may let skip")
+    parsed = parser.parse_args(argv)
+    return Args(fast=parsed.fast, ci=parsed.ci, allow_skip=frozenset(parsed.allow_skip))
+
+
+def verdict(outcomes: list[Outcome], *, ci: bool, allow_skip: set[str] | frozenset[str]) -> tuple[list[str], str]:
+    """The checks that count as failed, and the one summary line the gate prints: never claims "clean" over a skip.
+
+    Pure and side-effect free, so it is tested directly without running any check for real. Under ``--ci`` a skip
+    that is not in ``allow_skip`` fails the build; outside ``--ci`` a skip is always reported, never silently "clean".
+    """
+    failed = [o.name for o in outcomes if o.status == "failed"]
+    skipped = [o for o in outcomes if o.status == "skipped"]
+    if ci:
+        failed += [o.name for o in skipped if o.name not in allow_skip]
+    if failed:
+        message = f"FAILED: {', '.join(failed)}"
+    elif skipped:
+        message = "clean except skipped: " + ", ".join(f"{o.name} ({o.detail})" for o in skipped)
+    else:
+        message = "everything is clean."
+    return failed, message
+
+
 def checks() -> list[Check]:
     run = ("uv", "run", "--quiet")
     return [
         Check("ruff", (*run, "ruff", "check", ".")),
+        Check("ruff format", (*run, "ruff", "format", "--check", ".")),
         Check("mypy", (*run, "mypy", *SOURCES)),
         Check("vulture", (*run, "vulture")),
         Check("tests", (*run, "pytest", "--durations=5", *[arg for path in PERF for arg in ("--deselect", path)])),
@@ -105,25 +158,37 @@ def linux_client_checks() -> list[Check]:
     ]
 
 
-def main(argv: list[str]) -> int:
-    fast = "--fast" in argv
-    failed: list[str] = []
-    for check in checks():
+def run_checks(the_checks: list[Check], *, fast: bool) -> list[Outcome]:
+    """Run each check in turn, printing its line as it finishes, and collect what happened."""
+    outcomes = []
+    for check in the_checks:
         if fast and check.slow:
             print(f"-- {check.name}: skipped (--fast)")
+            outcomes.append(Outcome(check.name, "skipped", "--fast"))
             continue
         if check.skip_reason:
             print(f"-- {check.name}: skipped ({check.skip_reason})")
+            outcomes.append(Outcome(check.name, "skipped", check.skip_reason))
             continue
         started = time.perf_counter()
         result = subprocess.run(check.command, cwd=check.cwd, capture_output=True, text=True, check=False)
         seconds = time.perf_counter() - started
-        status = "ok" if result.returncode == 0 else "FAILED"
-        print(f"-- {check.name}: {status} ({seconds:.1f}s)")
-        if result.returncode != 0:
-            failed.append(check.name)
-            print((result.stdout + result.stderr).strip())
-    print("\nTechnical debt check: " + ("everything is clean." if not failed else f"FAILED: {', '.join(failed)}"))
+        ok = result.returncode == 0
+        print(f"-- {check.name}: {'ok' if ok else 'FAILED'} ({seconds:.1f}s)")
+        if ok:
+            outcomes.append(Outcome(check.name, "ok"))
+        else:
+            detail = (result.stdout + result.stderr).strip()
+            print(detail)
+            outcomes.append(Outcome(check.name, "failed", detail))
+    return outcomes
+
+
+def main(argv: list[str]) -> int:
+    args = parse_args(argv)
+    outcomes = run_checks(checks(), fast=args.fast)
+    failed, message = verdict(outcomes, ci=args.ci, allow_skip=args.allow_skip)
+    print("\nTechnical debt check: " + message)
     return 1 if failed else 0
 
 

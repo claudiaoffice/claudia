@@ -1,11 +1,11 @@
-"""The cryptographic primitives of Claudia documents, behind a small interface (D74).
+"""The cryptographic primitives of Claudia documents, behind a small interface (D104).
 
 Nothing here is invented: passwords become keys with **Argon2id**, one secret becomes several unrelated keys with
 **HKDF-SHA256**, and data is encrypted with **AES-256-GCM** (the `cryptography` package does the work). This module only
 fixes the sizes, the labels and the rules around them, so the rest of Claudia never touches a primitive directly and an
 algorithm can be replaced in one place.
 
-A *login* is turned into two values (D72): a **locator**, which says which key slot belongs to this name and password
+A *login* is turned into two values (D102): a **locator**, which says which key slot belongs to this name and password
 without the file ever containing the name, and a **key-encryption key**, which opens that slot. Both are derived from
 the name *and* the password, so a wrong name and a wrong password are the same refusal.
 """
@@ -46,7 +46,7 @@ class DecryptionError(Exception):
 
 @dataclass(frozen=True)
 class KdfParams:
-    """The cost of turning a password into a key. They are written into the document's manifest (D73).
+    """The cost of turning a password into a key. They are written into the document's manifest (D103).
 
     Raising them later is a matter of re-deriving each slot at the next login. Values read from a file are checked
     against limits so that a hostile file cannot demand absurd amounts of memory or time.
@@ -145,7 +145,7 @@ def _normalise_name(name: str) -> str:
 
 
 def derive_login_material(password: str, name: str, doc_salt: bytes, params: KdfParams) -> LoginMaterial:
-    """Turn a name and a password into the locator and the key-encryption key of that person's slot (D72).
+    """Turn a name and a password into the locator and the key-encryption key of that person's slot (D102).
 
     The Argon2id salt depends on the document's salt *and* the name, so the same password gives unrelated results for
     two people and for two documents. Whoever holds only the file must guess name and password together.

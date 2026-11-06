@@ -1,4 +1,4 @@
-"""Key slots (E2.2, D71, D72, D75): one slot per user, found by a value that depends on name and password."""
+"""Key slots (E2.2, D101, D102, D105): one slot per user, found by a value that depends on name and password."""
 
 import json
 import os
@@ -170,7 +170,7 @@ def test_the_unlocked_keys_are_not_printed_by_accident(slots, keys):
     assert str(keys[Domain.CONTENT]) not in repr(unlocked)
 
 
-# --- the recovery key (D75) --------------------------------------------------------------------------------------
+# --- the recovery key (D105) -------------------------------------------------------------------------------------
 
 
 def test_the_recovery_key_is_256_random_bits_shown_in_groups():

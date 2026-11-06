@@ -53,18 +53,18 @@ statement in the docs or on the website).
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
-| PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | verified open (re-measured) |
-| PROC-03 | P2 | Process | Work described as delivered is not in the repository | **new, verified open** |
+| PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed (patch ready, not yet committed) |
+| PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed (patch ready, not yet committed) |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | verified open |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | verified open |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | verified open |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |
-| CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | **new, verified open** |
-| CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | **new, verified open** |
+| CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed (patch ready, not yet committed) |
+| CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed (patch ready, not yet committed) |
 | CODE-09 | P3 | Code | e2e scripts exist without `package.json` entries | **new, verified open** |
-| DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | **new, verified open** |
+| DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed (patch ready, not yet committed) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -327,7 +327,7 @@ Settling UX-06 is a precondition.
 `scripts/check_debt.py`, a web job (`npm ci`, `nuxt prepare`, `vitest`, `vue-tsc`), a Monday schedule and
 `workflow_dispatch`. Whether it has ever run green on Windows and macOS is still unknown from the tree alone.
 
-### PROC-02 · The quality gate prints "everything is clean" when half of it was skipped · P2 · verified open (re-measured)
+### PROC-02 · The quality gate prints "everything is clean" when half of it was skipped · P2 · fixed (patch ready, not yet committed)
 **Evidence (measured, `54d1245`).** Run in a fresh clone without `npm install`:
 
 ```
@@ -345,11 +345,16 @@ it with no arguments. The Python job never runs `npm install`, so **in CI the we
 operating systems and the gate still reports clean and exits 0.** The separate `web` job does run vitest and `vue-tsc`
 on ubuntu, so the checks are not lost — but the gate's own verdict is untrue, and the Linux-client tests skip the same
 way wherever `/usr/bin/python3` lacks pytest and jsonschema.
-**Fix.** Print "clean except skipped: …" and add `--ci`, which turns a skip into a failure; CI always passes `--ci`,
-with the genuinely platform-specific skips listed explicitly.
-**Acceptance.** With no `node_modules`, `check_debt.py --ci` exits non-zero.
+**Fixed.** `check_debt.py`'s `verdict()` never reports "clean" over a skip — the summary is "clean except skipped: …"
+whenever anything skipped, named, whether or not `--ci` allow-lists it. `--ci` turns any *unlisted* skip into a
+failure. `ci.yml`'s Python job now runs `check_debt.py --ci --allow-skip "web tests" --allow-skip "web types"
+--allow-skip "linux client tests"` — exactly the three checks the separate `web` and `linux-client` jobs cover for
+real on their own runners; any other skip still fails the build. (D133)
+**Acceptance — met.** `tests/test_check_debt.py::test_ci_catches_the_real_bug_with_no_node_modules` feeds this
+checkout's own real skip (no `web/node_modules`) through `verdict(..., ci=True, allow_skip=set())` and asserts it
+fails — the bug's own reproduction, now a standing regression test.
 
-### PROC-03 · Work described as delivered is not in the repository · P2 · new, verified open
+### PROC-03 · Work described as delivered is not in the repository · P2 · fixed (patch ready, not yet committed)
 **Evidence (measured, `54d1245`).** `e4-e6-formulas-notes.md` describes point-and-click cell references for E6.3 as
 built on 2026-11-03: `web/app/lib/pointing.ts`, `web/tests/pointing.test.ts` with 22 cases, `REFERENCE_COLORS`,
 `slotAt`, and a nine-case browser scenario `npm run e2e:pointing`. None of it exists:
@@ -365,11 +370,15 @@ grep "e2e:pointing" web/package.json -> nothing
 can be lost in that gap without anybody noticing, and the notes then record a feature as done that nobody can use. It
 also makes the notes an unreliable basis for deciding what to build next — which is exactly what they are for. This
 one was caught only because the status of every backlog item was re-derived from the code in this round.
-**Fix.** Two parts. (1) Recover or rebuild the E6.3 pointing work. (2) Close the gap: a note may only say "built" with
-the commit that carries it, and the backlog status is derived from the code, never from a note. A cheap check is a line
-in the gate that greps the notes for file paths that do not exist.
-**Acceptance.** The claim is either true in the tree or corrected in the note, and `backlog.md` shows E6.3 without
-click-to-insert.
+**Fixed.** The owner rebuilt and committed the E6.3 pointing work directly (confirmed in the tree at `13d1c80`:
+`web/app/lib/pointing.ts`, 22 cases in `web/tests/pointing.test.ts`, the nine-case `web/e2e/pointing.cjs`), so this
+round's patch covers only the second half: the rule that a note may only say "built" with the commit that carries it
+(status lives in `backlog.md`, derived from the code), and the cheap guard —
+`tests/test_notes_claim_built_files.py` greps every "built" paragraph under `claudiaoffice-log/` for a root-relative
+path and fails if that path is not in the tree. `e4-e6-formulas-notes.md` and `backlog.md`'s E6.3 card are corrected
+to match what is now actually in the tree.
+**Acceptance — met.** The claim is true in the tree (`13d1c80`) and the note and `backlog.md` match it; the new guard
+would have caught the original false claim (proved by temporarily reintroducing it and watching the test fail).
 
 ### CODE-01 · No coverage, no web lint; Playwright not declared · P2 · verified open
 **Evidence (read, `54d1245`).** No `pytest-cov` or coverage settings in `pyproject.toml`; no eslint, prettier or Biome
@@ -404,23 +413,29 @@ checks)".
 ### CODE-06 · `--max-connections` is per document, not per server · P3 · open
 Rename to `--max-connections-per-document`, document it, and keep the server-wide caps from SEC-02 separate.
 
-### CODE-07 · `uv.lock.rej` committed at the repository root · P3 · new, verified open
+### CODE-07 · `uv.lock.rej` committed at the repository root · P3 · fixed (patch ready, not yet committed)
 **Evidence (measured).** `uv.lock.rej` is tracked at the root: rejected hunks from a failed `git apply` of a lock-file
 update. It shows two things that did not land: `claudia-creates` as a dependency of `claudia-server`, and a
 `cryptography` floor moving between `>=43` and `>=44`.
 **Why it matters.** CI runs `uv sync --locked`, so a lock file that disagrees with the package metadata fails the build
 for everyone. The `cryptography` floor is not cosmetic: Argon2id first appears in `cryptography` 44, and the container
 depends on it, so a `>=43` floor allows an install that cannot open a document.
-**Fix.** Delete the file; regenerate the lock with `uv lock`; confirm the `cryptography` floor is `>=44` wherever it is
-declared.
-**Acceptance.** `uv sync --locked` succeeds from a fresh clone; `git ls-files '*.rej' '*.orig'` is empty; a gate line
-fails the build if a `.rej` or `.orig` file is ever tracked.
+**Fixed.** `uv.lock.rej` deleted (and its deletion staged); `claudia-server`'s `pyproject.toml` floor corrected to
+`cryptography>=44`; `uv.lock` regenerated with `uv lock` — its `claudia-server` block now correctly lists
+`claudia-creates` as a dependency.
+**Acceptance — met.** `uv sync --locked` succeeds from a fresh clone; `git ls-files '*.rej' '*.orig'` is empty; the new
+`tests/test_repo_hygiene.py::test_no_rej_or_orig_files_are_tracked` fails the gate if a `.rej` or `.orig` file is ever
+tracked again.
 
-### CODE-08 · `ruff format --check` fails; the gate does not run it · P3 · new, verified open
+### CODE-08 · `ruff format --check` fails; the gate does not run it · P3 · fixed (patch ready, not yet committed)
 **Evidence (measured, `54d1245`).** `uv run ruff format --check .` reports **1 file would be reformatted**
 (`docs/conf.py`). `scripts/check_debt.py` runs `ruff check` but never `ruff format --check`, so the repository has no
 enforced format and the drift is invisible.
-**Fix.** Format the file and add `ruff format --check .` to the gate as its own check.
+**Fixed.** `docs/conf.py` reformatted; `ruff format --check .` added to `check_debt.py` as its own named check
+("ruff format"), distinct from "ruff" (D133). `pyproject.toml` also excludes `claudiaoffice-log` from ruff's scope —
+an illustrative code fence in a notes file was tripping the formatter with no source to fix.
+**Acceptance — met.** `tests/test_check_debt.py::test_ruff_format_is_its_own_check` asserts the gate runs it as a
+named check; `uv run ruff format --check .` now passes clean.
 
 ### CODE-09 · e2e scripts exist without `package.json` entries · P3 · new, verified open
 **Evidence (measured).** `web/e2e/` holds `composes.cjs`, `demo.cjs`, `recovery.cjs`, `resilience.cjs`, `slides.cjs`
@@ -429,7 +444,7 @@ and `styling.cjs`. `web/package.json` has scripts for only four of them: `e2e`, 
 typing the path.
 **Fix.** Add `e2e:styling` and `e2e:recovery`, or one `e2e:all`; and a test that every file in `e2e/` has a script.
 
-### DOC-01 · Decision numbers are used twice for different decisions · P2 · new, verified open
+### DOC-01 · Decision numbers are used twice for different decisions · P2 · fixed (patch ready, not yet committed)
 **Evidence (measured, project context and `54d1245`).** Two blocks of decision numbers were allocated twice:
 
 | Number | Meaning in `decision-log.md` | Meaning in the E2 / Linux-client notes |
@@ -449,12 +464,16 @@ meaning hidden names, the plain manifest and the primitives, while `claudia_serv
 meaning styling-is-CSS and the styling details. The same number means two things two directories apart.
 **Why it matters.** The decision log is the project's memory and the thing stories are justified against. A reader who
 follows a D-number from a docstring can land on the wrong decision, and any future "this rests on D73" is ambiguous.
-**Fix.** Done for the documents in this round: `decision-log.md` keeps the product numbering (it was first and is cited
-most widely), the E2 block moves to **D100–D112** and the native-client block to **D113–D119**, with a mapping table in
-the log so old references resolve. What remains is the code: update the D-number citations in `claudia-container`,
-`claudia-server` and `claudia-creates` to the new numbers.
-**Acceptance.** Every `D<number>` in the source resolves to exactly one entry in `decision-log.md`; a gate line checks
-it.
+**Fixed.** `decision-log.md` keeps the product numbering (it was first and is cited most widely); the E2 block moved
+to **D100–D112** and the native-client block to **D113–D119**, with a mapping table in the log so old references
+resolve. The code citations are now updated to match: `claudia_container/__init__.py`, `container.py`, `crypto.py`,
+`slots.py`, `journal.py`, `passwords.py` and their tests, plus `CHANGELOG.md`; `claudia_server/auth.py`, `sealed.py`
+and its test. `claudia-creates` and `claudia-server/composes.py` needed no change — both already cited D73/D75 in
+their canonical (post-collision) meaning, styling-is-CSS, not the colliding one.
+**Acceptance — met.** `tests/test_decision_log.py` adds two checks: no row in `decision-log.md` is allocated twice,
+and every `D<number>` cited anywhere in `packages/`, `clients/`, `web/`, `scripts/`, `tests/`, `docs/` and the root
+changelogs resolves to exactly one row (it deliberately excludes `claudiaoffice-log/` itself, which is the log and its
+own historical account of the collision).
 
 ---
 

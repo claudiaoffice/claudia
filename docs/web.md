@@ -103,7 +103,9 @@ npm run e2e:pointing         # picking cells with the mouse while typing a formu
 npm run e2e:resilience       # starts its own server, restarts it, checks that both browsers come back
 ```
 
-`uv run python scripts/check_debt.py` runs the web checks too (skipped when npm or `web/node_modules` is missing).
+`uv run python scripts/check_debt.py` runs the web checks too (skipped when npm or `web/node_modules` is missing, and
+named in the summary line either way: a skip is never reported as clean). `--ci` turns an unlisted skip into a
+failure; CI's Python job allows this one because the separate `web` job covers it with Node installed.
 
 
 ## Presentations (creates)

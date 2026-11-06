@@ -1,4 +1,4 @@
-"""The password rules of D79: at least 8 characters with capital letters, small letters and digits."""
+"""The password rules of D109: at least 8 characters with capital letters, small letters and digits."""
 
 import pytest
 

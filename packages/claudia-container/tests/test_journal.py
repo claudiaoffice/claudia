@@ -1,4 +1,4 @@
-"""The encrypted journal (E2.1, D76): every change is appended as a sealed record before it is acknowledged."""
+"""The encrypted journal (E2.1, D106): every change is appended as a sealed record before it is acknowledged."""
 
 import os
 import struct

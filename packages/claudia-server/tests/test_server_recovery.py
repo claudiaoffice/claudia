@@ -1,4 +1,4 @@
-"""The recovery key on the server (E2.2, D75): made by the owner, shown once, and a way back in."""
+"""The recovery key on the server (E2.2, D105): made by the owner, shown once, and a way back in."""
 
 import json
 

@@ -1,4 +1,4 @@
-"""The password rules of D79: at least 8 characters, with capital letters, small letters and digits.
+"""The password rules of D109: at least 8 characters, with capital letters, small letters and digits.
 
 The rules return *codes* instead of sentences, so the interface can translate them (E5.7). Length counts characters
 after Unicode normalisation (NFKC), the same form that is later used to derive the key.

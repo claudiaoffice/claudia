@@ -319,7 +319,7 @@ def test_a_viewer_holds_no_key_for_history_or_chat(path, owner, writer):
     with pytest.raises(PermissionError):
         read_state(path, viewer.keys)
     assert read_state(path, editor.keys).history == H
-    assert read_snapshot(path, viewer.keys) == b"the state"  # a viewer reads the content (D71)
+    assert read_snapshot(path, viewer.keys) == b"the state"  # a viewer reads the content (D101)
 
 
 # --- the snapshot ---------------------------------------------------------------------------------------------------

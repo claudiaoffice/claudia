@@ -26,7 +26,7 @@ A viewer holds only the content key, so a viewer cannot bring a document up: if 
 since the server started, the viewer is told to ask an editor. The viewer has logged in correctly by then, so the
 message gives nothing away.
 
-Who is an owner and who an editor is enforced by the server, not by the keys: both hold all three (D71).
+Who is an owner and who an editor is enforced by the server, not by the keys: both hold all three (D101).
 """
 
 from __future__ import annotations
@@ -412,7 +412,7 @@ class SealedDocuments:
             with contextlib.suppress(OSError):
                 held.store.close()
 
-    # -- the recovery key (D75) ----------------------------------------------------------------
+    # -- the recovery key (D105) ---------------------------------------------------------------
     def new_recovery_key(self, doc_id: str) -> str:
         """Make a new recovery key for an open document, written as people write it down. A key the document had
         before stops working. The server keeps nothing of it: whoever asks must show it to the owner now.

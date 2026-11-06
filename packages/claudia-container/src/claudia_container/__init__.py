@@ -5,7 +5,7 @@ cryptographic primitives behind one small interface (:mod:`claudia_container.cry
 open which part of a document (:mod:`claudia_container.slots`), the document file with its people
 (:mod:`claudia_container.container`), the encrypted journal of an open document (:mod:`claudia_container.journal`) and
 the blocks, head record and snapshot that the journal is packed into (:mod:`claudia_container.blocks`). The design is in
-the project document ``e2-container-design.md`` (decisions D70 to D82).
+the project document ``notes/e2-container-and-encryption.md`` (decisions D100 to D112 in the decision log).
 """
 
 from ._version import __version__

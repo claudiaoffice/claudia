@@ -714,7 +714,7 @@ kanban-plugin: board
 
 	Use case: ALL · Decisions: D2, D36, D42
 
-	Status evidence: the virtualised grid is built with chunked paging (64×16), selection, in-place editing, copy and paste, and presence outlines. **Click-to-insert references is not in the repository** even though `e4-e6-formulas-notes.md` describes it as built on 2026-11-03 with 22 vitest cases and a browser scenario — `web/app/lib/pointing.ts` exists in no commit on any branch (PROC-03). Also not done: the calculating state (needs E4.3), column resizing, an input-method test, and Ctrl+arrow beyond loaded cells. Accessibility is absent (UX-02), and the window query is linear in the sheet (PERF-01).
+	Status evidence: the virtualised grid is built with chunked paging (64×16), selection, in-place editing, copy and paste, presence outlines, and point-and-click references while typing a formula (`web/app/lib/pointing.ts`, 22 cases in `web/tests/pointing.test.ts`, the nine-case browser scenario `npm run e2e:pointing`; rebuilt and verified in the tree 2026-11-06 after PROC-03 found the first claim uncommitted). Also not done: the calculating state (needs E4.3), column resizing, an input-method test, and Ctrl+arrow beyond loaded cells. Accessibility is absent (UX-02), and the window query is linear in the sheet (PERF-01).
 - [ ] **E6.4 · Numeric semantics**
 	As a user, I want predictable numbers, so that models can be trusted.
 

@@ -101,7 +101,7 @@ class UserDirectory(Protocol):
 
 @runtime_checkable
 class RecoverableDirectory(Protocol):
-    """A directory whose documents have a recovery key (D75): a way back in for somebody who lost their password."""
+    """A directory whose documents have a recovery key (D105): a way back in for somebody who lost their password."""
 
     def new_recovery_key(self, doc_id: str) -> str:
         """Make a new recovery key for the document, replacing the old one, and return it for the owner to write

@@ -1,10 +1,10 @@
-"""Key slots (E2.2, D71, D72, D75): who may open which part of a document.
+"""Key slots (E2.2, D101, D102, D105): who may open which part of a document.
 
 A document has three **domain keys** (content, history, chat). Every user has one **slot**: the domain keys that the
 user's role may hold, encrypted with a key derived from that user's name and password. The slot is found by its
 **locator**, a value derived from the same name and password, so the file shows neither names nor roles.
 
-* owner and editor hold all three keys; a viewer holds the content key only (D71);
+* owner and editor hold all three keys; a viewer holds the content key only (D101);
 * a slot is bound to its document and to its own locator, so it cannot be moved to another document or swapped with
   another slot to change somebody's role;
 * a wrong name and a wrong password are the same refusal (``None``), as D50 demands.
@@ -149,7 +149,7 @@ def open_slot(slots: Sequence[KeySlot], material: LoginMaterial, doc_id: str) ->
         raise ValueError(f"the key slot is authentic but malformed: {error}") from error
 
 
-# --- the recovery key (D75) --------------------------------------------------------------------------------------
+# --- the recovery key (D105) -------------------------------------------------------------------------------------
 
 _RECOVERY_CHARS = 52  # 256 bits in base32
 _GROUP = 4

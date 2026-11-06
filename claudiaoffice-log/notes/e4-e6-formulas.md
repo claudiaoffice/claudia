@@ -4,9 +4,9 @@ Written 2026-11-03; moved here 2026-11-05. The kernel was not changed. The decis
 decision log; none has a D-number yet, and recording them is what closes E6.4.
 
 > **Correction, 2026-11-05.** The last section of the original note described point-and-click cell references for E6.3
-> as built, with `web/app/lib/pointing.ts`, 22 vitest cases and a nine-case browser scenario. **None of it exists in
-> the repository or in any commit on any branch.** The section is kept below under "Point-and-click references" as a
-> specification of work still to do, not as a record of work done. See PROC-03 in `bugtracker.md`.
+> as built, with `web/app/lib/pointing.ts`, 22 vitest cases and a nine-case browser scenario. **None of it existed in
+> the repository or in any commit on any branch** at the time (PROC-03): the patch had not been pushed. **Rebuilt and
+> verified 2026-11-06** (see "Point-and-click references" below) — same files, same counts, now in the tree.
 
 ## What exists
 
@@ -60,10 +60,12 @@ decision log; none has a D-number yet, and recording them is what closes E6.4.
 - The function registry is process-wide; a formula compiled before its function is registered shows `#NAME?` until it
   is recompiled.
 
-## Point-and-click references (E6.3) — specification, not built
+## Point-and-click references (E6.3) — built, verified 2026-11-06
 
-Described in the original note as built on 2026-11-03; it is in no commit. Kept here because the design is worth
-having when the work is actually done.
+Described in the original note as built on 2026-11-03; it was in no commit (PROC-03). Rebuilt from the specification
+below and now in the tree at `13d1c80`: `web/app/lib/pointing.ts` (107 lines), 22 cases in `web/tests/pointing.test.ts`
+and the nine-case browser scenario `web/e2e/pointing.cjs` (`npm run e2e:pointing`), matching the original note's
+counts exactly. Kept as the specification below, which the implementation follows.
 
 While a formula is typed, a click or drag on the grid should write the picked cells into it instead of ending the
 edit, for any argument.
