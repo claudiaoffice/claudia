@@ -1,5 +1,5 @@
 {
- "version": "0.8.0",
+ "version": "0.9.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -7,9 +7,9 @@
   "class": [
    "object"
   ],
-  "init": "(user: 'str', role: 'str' = 'editor', system: 'bool' = False) -> None",
+  "init": "(user: 'str', role: 'str' = 'editor', system: 'bool' = False, allowed_methods: 'frozenset[str] | None' = None) -> None",
   "methods": {
-   "assistant": "() -> 'Account'"
+   "assistant": "(allowed_methods: 'Iterable[str] | None' = None) -> 'Account'"
   },
   "properties": [
    "can_write"
@@ -19,7 +19,7 @@
   "class": [
    "object"
   ],
-  "init": "(engine: 'Engine | AsyncEngine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>, max_waiting: 'int | None' = None)",
+  "init": "(engine: 'Engine | AsyncEngine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>, max_waiting: 'int | None' = None, allowed_methods: 'Iterable[str]' = ())",
   "methods": {
    "attach": "(self, hosted: 'HostedDocument') -> 'Connection'",
    "idle": "(self) -> 'None'"

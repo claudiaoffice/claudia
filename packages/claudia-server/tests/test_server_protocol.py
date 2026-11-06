@@ -10,6 +10,7 @@ import pytest
 
 from claudia_core import Revision
 from claudia_core.testing import Insert, Interval, Remove
+from claudia_server.auth import Account
 from claudia_server.protocol import (
     ERROR_CODES,
     Context,
@@ -159,6 +160,35 @@ def test_viewers_may_read_but_not_write(doc, vera):
         with pytest.raises(RequestError) as caught:
             call(doc, vera, name, params)
         assert caught.value.code == "forbidden", name
+
+
+# ------------------------------------------------------------------------- SEC-10: an account's own allow-list
+def test_an_account_may_be_restricted_to_an_allow_list_of_write_methods(doc, ann):
+    restricted = Account(ann.user, ann.role, allowed_methods=frozenset({"apply"}))
+    call(doc, restricted, "apply", {"command": INSERT})  # "apply" is in its allow-list
+    assert doc.model.items == [5]
+    with pytest.raises(RequestError) as caught:
+        call(doc, restricted, "undo")  # "undo" is not
+    assert caught.value.code == "forbidden" and "undo" in caught.value.message
+    assert doc.model.items == [5], "the refused call changed nothing"
+    assert call(doc, restricted, "ping")["revision"] == "main:1", "reading is never limited by the allow-list"
+
+
+def test_an_ordinary_account_has_no_allow_list_and_is_limited_only_by_its_role(doc, ann):
+    assert ann.allowed_methods is None
+    call(doc, ann, "apply", {"command": INSERT})
+    call(doc, ann, "undo")
+    assert doc.model.items == []
+
+
+def test_the_assistant_cannot_apply_a_raw_command_even_if_apply_were_in_its_allow_list(doc):
+    """SEC-10 item 3: `apply` refuses `account.system` unconditionally, so it cannot be used as a tunnel around an
+    app's own wrapper checks (`composes._people_only` and the like), whatever the allow-list happens to say."""
+    ai = Account.assistant(("apply",))
+    with pytest.raises(RequestError) as caught:
+        call(doc, ai, "apply", {"command": INSERT})
+    assert caught.value.code == "forbidden"
+    assert doc.model.items == []
 
 
 # --------------------------------------------------------------------------------------- undo / redo

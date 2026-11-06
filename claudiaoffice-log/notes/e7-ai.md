@@ -3,11 +3,15 @@
 Two notes merged: the original design of the `ai` participant (2026-11-01) and the port of the model into the repo
 (2026-11-02). Moved here 2026-11-05.
 
-> **Read with SEC-10 in `bugtracker.md`.** The restriction on what the model may ask for is enforced in
-> `Agent._take_calls`, inside `claudia-ai`, on the model's generated text. `Assistant._call` dispatches whatever
-> method name reaches it, and the generic `apply` method has no account check. That is a filter, not an authorisation
-> boundary, and the two stories that make it matter are E7.5 (document content into the prompt) and E3.6/D8 (the
-> engine on another machine).
+> **SEC-10, fixed 2026-11-06 — read `bugtracker.md` for the full record.** The restriction on what the assistant may
+> ask for used to be enforced only in `Agent._take_calls`, inside `claudia-ai`, on the model's generated text:
+> `Assistant._call` dispatched whatever method name reached it, and the generic `apply` method had no account check.
+> That was a filter, not an authorisation boundary. It is now `Account.allowed_methods`, checked by
+> `MethodTable.dispatch` before any method runs — the one place every path goes through, including `apply` (which
+> also now refuses `account.system` unconditionally, so it cannot be used as a tunnel around an app's own checks).
+> `apps.stand_in_assistant_for` and `apps.model_assistant_for` both set it from `apps.MODEL_METHODS`, so the scripted
+> stand-in is held to the same guarantee as a real model. `Agent._take_calls` is unchanged and still useful as an
+> early, friendly message to the model; it is no longer what the guarantee rests on.
 
 ## Design of the AI user
 
@@ -53,12 +57,15 @@ Two notes merged: the original design of the `ai` participant (2026-11-01) and t
    message suggesting `--ai-device CPU`.
 3. **The model may only call `set_cells`, `add_sheet`, `structure`** (`apps.MODEL_METHODS`), described to it from the
    method table. Not `chat`, `apply`, `undo`/`redo`, `save_checkpoint`, `lock` or `add_user`. The demo allowed every
-   write method except `chat` and `set_tracking`. *This is the restriction SEC-10 is about: it is applied when the
-   model's answer is parsed, not when a call is dispatched.*
+   write method except `chat` and `set_tracking`. *Since SEC-10 (2026-11-06), this is also the account's own
+   allow-list, checked at dispatch; the list described to the model and the list it is actually held to are now the
+   same set, read from the same place.*
 4. **Order of steps:** the model's text first, then its requests; with no text, requests then "Done.". The demo made
    the requests first. A failing request stops the rest and the asker is told why.
-5. **Only for workbooks**, like the stand-in; `--ai` with another `--model` is a start-up error. There is no
-   `MODEL_METHODS` entry for composes at all.
+5. **Only for workbooks**, like the stand-in; `--ai` with another `--model` is a start-up error. *`MODEL_METHODS` now
+   has a composes entry too (`("suggest",)`, SEC-10), for when a model-driven assistant is wired up for composes; the
+   stand-in `TextEngine` already only ever called `suggest`, so this did not change its behaviour, only made the
+   restriction explicit and enforced.*
 
 ## The provisional convention
 
@@ -99,5 +106,6 @@ back to the model: there is no observe-act loop.
 - No observe-act loop, no streaming; the `commands` block convention is still provisional.
 - After a restore (D48) the memory of a conversation may hold content from a line that is no longer active; the `ai`
   user must be told and rebuild its context.
-- Effective permissions (E7.4) do not exist: the assistant acts with its own account, and nothing intersects the
-  asker's rights with the AI's role.
+- Effective permissions (E7.4) still do not exist: the assistant acts with its own fixed, per-app account, and
+  nothing intersects the asker's rights with it. SEC-10 moved *where* the allow-list is checked (dispatch, not the
+  model's output parser); it did not make the allow-list depend on who asked, which is what E7.4 is actually about.

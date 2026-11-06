@@ -34,7 +34,7 @@ statement in the docs or on the website).
 | SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | verified open |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
-| SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | **new, verified open** |
+| SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
 | SEC-11 | P3 | Security | No per-address back-off on failed logins | verified open |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | verified open (re-measured) |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open |
@@ -128,8 +128,8 @@ written reason per entry.
 `а` to Latin `a`. Only an owner adds users, so the risk is an owner impersonating a colleague in the history.
 **Fix.** Reject mixed-script names, or mark two confusable names in one document. Verify with a two-user test first.
 
-### SEC-10 · The AI's method allow-list is enforced in the model parser, not at dispatch · P2 · new, verified open
-**Evidence (measured, `54d1245`).**
+### SEC-10 · The AI's method allow-list is enforced in the model parser, not at dispatch · P2 · fixed 2026-11-06
+**Evidence (measured, `54d1245`), before the fix.**
 - `apps.MODEL_METHODS` is `{"computes": ("set_cells", "add_sheet", "structure")}`. It decides which `ToolSpec`s are
   *described to the model in the prompt*.
 - `claudia_ai.agent.Agent._take_calls` drops a request whose name is not in that set. This is a filter on the model's
@@ -145,18 +145,28 @@ written reason per entry.
   methods. `MODEL_METHODS` has no entry for composes at all, so a composes assistant is offered nothing — and is
   stopped only because `Agent` finds an empty allowed set.
 **Why it matters.** Two product rules depend on this boundary: D63 ("edits by the AI are suggestions; people write")
-and E7.6 ("a guarantee that the AI cannot add functions"). Both are currently enforced by a regex-extracted JSON block
-filtered against a name set in a client library, not by the server's authorisation layer where the account is known.
-Today nothing is remotely exploitable: every engine in the tree is trusted in-process code. It becomes serious at two
+and E7.6 ("a guarantee that the AI cannot add functions"). Both were enforced by a regex-extracted JSON block filtered
+against a name set in a client library, not by the server's authorisation layer where the account is known. Nothing
+was remotely exploitable, since every engine in the tree is trusted in-process code, but it becomes serious at two
 named milestones — E7.5, which puts document content into the prompt (prompt injection from a cell then chooses method
 names), and E3.6/D8, which moves the engine to another machine behind a socket.
-**Fix.** Move the allow-list to the authorisation layer: give `Account` (or the `Context`) the set of methods it may
-call, and check it in `MethodTable.dispatch` before the method runs, so every path — `Assistant._call`, a future remote
-AI connection, and the wire — passes the same gate. Add `account.system` to the generic `apply` so the assistant cannot
-reach a command whose wrapper method would refuse it. Give composes an explicit `MODEL_METHODS` entry (`suggest` only).
-**Acceptance.** A test builds an `Assistant` whose engine returns `Call("apply", …)` and `Call("chat", …)` and shows
-both are refused with `forbidden` and change nothing; a test shows the assistant cannot reach `replace_text` through
-`apply`; a test shows a composes assistant may call `suggest` and nothing else.
+**Fix, applied in claudia-server 0.9.0.** `Account.allowed_methods` (`auth.py`): the write methods an account may
+call, `None` for an ordinary person. `MethodTable.dispatch` (`protocol.py`) refuses a write method outside it with
+`forbidden`, before the method runs — the one place every path goes through: `Assistant._call`, the wire, and any
+future remote AI connection. `protocol._apply` separately refuses `account.system` unconditionally, so `apply` cannot
+be used as a tunnel around an app's own wrapper checks whatever the allow-list says. `Assistant(allowed_methods=...)`
+passes the set on when its account is made; `apps.stand_in_assistant_for` and `apps.model_assistant_for` both set it
+from `apps.MODEL_METHODS`, so the scripted stand-in is held to the same guarantee as a real model. `MODEL_METHODS`
+gained a `"composes"` entry (`("suggest",)`). `Agent._take_calls` is unchanged: it stays a friendly early message to
+the model, not the thing the guarantee rests on.
+**Verification.** `test_server_protocol.py` (the mechanism directly: a restricted account may call what is in its
+list and nothing else, reading is unaffected, `apply` refuses `account.system` even when `apply` is itself allowed);
+`test_server_assistant.py` (end to end, with a rogue engine: `apply`, `chat`, `undo` and `save_checkpoint` are all
+refused and change nothing; a composes assistant may `suggest` and nothing else); `test_server_auth.py` and
+`test_server_standin_text.py` updated for the new, explicit allow-lists. Full suite green; `uv run python
+scripts/check_debt.py --fast` clean (ruff, mypy, vulture, docs, tests) except a pre-existing, unrelated `mypy` failure
+in the Linux client (`clients/linux/tests/test_manifest.py`, a `Submenu` union-attr error) — not touched by this fix
+and not re-checked here. Not yet re-verified against a commit hash: this round's patch has not been merged.
 
 ### SEC-11 · No per-address back-off on failed logins · P3 · verified open
 **Evidence (read).** `_Waiting` bounds how many connections wait to be let in, but nothing slows a patient guesser who
