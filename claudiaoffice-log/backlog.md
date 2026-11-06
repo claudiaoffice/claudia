@@ -43,9 +43,17 @@ kanban-plugin: board
 
 	AC: File ▸ Save As offers "Claudia, unencrypted (JSON in a zip)", producing **one** documented file; every user may export the content, only owners may include history and chat (hidden side lines included); every unencrypted export writes a log record (who, when, which parts), written by the server on a viewer's behalf; the export contains no key slots and no password hashes; importing creates a new document whose importer becomes owner and sets the passwords, and replaying the imported log gives the identical state; help text says the log cannot detect copying from the screen.
 
-	Use case: ALL · Decisions: D108, D19, D34 · Whether the record is a new kernel entry or a record in the history domain is decided while building.
+	Use case: ALL · Decisions: D108, D19, D34, D139 · Whether the record is a new kernel entry or a record in the history domain is decided while building.
 
-	Status evidence: nothing in the tree.
+	Status evidence: content-only export is built — File ▸ Manage ▸ Export… (every role may use it) produces one documented JSON file with no key slots and no password hashes, for all three apps, web and GTK. **Not done:** owners-only history and chat export; the unencrypted-export log record; import; the help text on screen-copying. The export dialog says plainly that this is Claudia's own file format, not Word, Excel or PowerPoint — that conversion is separate, future work.
+- [ ] **E2.10 · Delete a document from the server**
+	As an owner, I want to remove a document from the server entirely, so that a document nobody wants kept any more does not just sit there.
+
+	AC: only an owner may delete; the document's file and any server-side bookkeeping about it are gone; everyone who had it open is told at once and returned to their document list; deletion cannot be undone and the confirmation says so.
+
+	Use case: ALL · Decisions: D135 · Built directly as a `DeletableDirectory` capability of `SealedDocuments`, alongside leave and transfer-ownership, rather than as its own story up front.
+
+	Status evidence: built — `delete_document` on the server, `file.manage.delete` in the Manage menu (web and GTK), an `ephemeral` `document_deleted` push that closes every other open connection to it. **Not done:** nothing server-side; the lightweight demo backends (`ScryptDirectory`/`FileDirectory`) do not implement it, matching how they already skip `RecoverableDirectory`.
 - [ ] **E3.2 · Protocol schema as one source**
 	As a client developer, I want TypeScript and Python types generated from the protocol table, so that GTK and web clients cannot drift.
 
@@ -528,9 +536,9 @@ kanban-plugin: board
 
 	AC: roles owner, editor and viewer; adding, removing and changing users; the name `ai` is protected; no central user database anywhere.
 
-	Use case: ALL · Decisions: D20, D35, D55, D101
+	Use case: ALL · Decisions: D20, D35, D55, D101, D136, D137, D138
 
-	Status evidence: the directory now lives inside the document (`people.bin`, sealed with the content key) and `SealedDocuments` is both the provider and the user directory; `add_user` is owner-only and `ai` is refused. **Not done:** changing a role without removing and re-adding the person; key rotation; who may discard side history after a restore.
+	Status evidence: the directory now lives inside the document (`people.bin`, sealed with the content key) and `SealedDocuments` is both the provider and the user directory; `add_user` is owner-only and `ai` is refused. Two role changes are now built without remove-and-re-add: anyone can leave on their own (`leave_document`; needs none of the three domain keys, unlike `remove_user`) and an owner can hand ownership to an existing editor through a two-password propose/accept handshake (`transfer_owner`, time-limited, server-memory-only) — both reachable from File ▸ Manage (Leave document…, Assign new owner…, Accept ownership…) in all three apps, web and GTK. **Not done:** changing any other role (editor↔viewer) without removing and re-adding the person; key rotation; who may discard side history after a restore.
 - [ ] **E2.4 · Key domains and visibility**
 	As an owner, I want viewers to read the document but not its history or chat, so that sharing a file does not share everything.
 

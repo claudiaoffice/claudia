@@ -18,9 +18,11 @@ from claudia_container.container import (
     add_user,
     change_password,
     create_document,
+    leave_document,
     read_manifest,
     read_people,
     remove_user,
+    transfer_owner,
     unlock,
     unlock_with_recovery,
 )
@@ -216,6 +218,101 @@ def test_a_weak_new_password_is_refused(path, team):
     with pytest.raises(WeakPassword):
         change_password(path, "Bertram", ED_PW, "weak")
     assert unlock(path, "Bertram", ED_PW) is not None
+
+
+# --- leaving ---------------------------------------------------------------------------------------------------
+
+
+def test_an_editor_can_leave(path, team):
+    assert leave_document(path, "Bertram", ED_PW) is True
+    assert unlock(path, "Bertram", ED_PW) is None
+    assert [p.name for p in read_people(path, team.keys)] == ["Annabelle", "Cornelia"]
+
+
+def test_a_viewer_can_leave_too_though_they_hold_only_the_content_key(path, team):
+    viewer = unlock(path, "Cornelia", VIEW_PW)
+    assert set(viewer.keys) == {Domain.CONTENT}
+    assert leave_document(path, "Cornelia", VIEW_PW) is True
+    assert unlock(path, "Cornelia", VIEW_PW) is None
+
+
+def test_the_only_owner_cannot_leave(path, team):
+    with pytest.raises(ValueError, match="owner"):
+        leave_document(path, "Annabelle", OWNER_PW)
+    assert unlock(path, "Annabelle", OWNER_PW) is not None
+
+
+def test_an_owner_can_leave_once_another_owner_is_there(path, team):
+    add_user(path, team.keys, "Dora", "Another-Pass-1", Role.OWNER)
+    assert leave_document(path, "Annabelle", OWNER_PW) is True
+    assert unlock(path, "Annabelle", OWNER_PW) is None
+    assert unlock(path, "Dora", "Another-Pass-1") is not None
+
+
+def test_a_wrong_password_leaves_nothing(path, team):
+    assert leave_document(path, "Bertram", "wrong-Pass-1") is False
+    assert unlock(path, "Bertram", ED_PW) is not None
+
+
+def test_leaving_somebody_who_is_not_there_is_the_same_wrong_password_refusal(path, team):
+    assert leave_document(path, "Nobody", "whatever-Pass-1") is False
+
+
+# --- handing over ownership ------------------------------------------------------------------------------------
+
+
+def test_the_owner_can_make_an_editor_the_new_owner(path, team):
+    assert (
+        transfer_owner(
+            path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Bertram", new_owner_password=ED_PW
+        )
+        is True
+    )
+    annabelle = unlock(path, "Annabelle", OWNER_PW)
+    bertram = unlock(path, "Bertram", ED_PW)
+    assert annabelle.role is Role.EDITOR
+    assert bertram.role is Role.OWNER
+    assert annabelle.keys == bertram.keys == team.keys
+    assert [p.name for p in read_people(path, team.keys)] == ["Annabelle", "Bertram", "Cornelia"]
+
+
+def test_a_wrong_old_owner_password_transfers_nothing(path, team):
+    ok = transfer_owner(
+        path, old_owner="Annabelle", old_owner_password="wrong-Pass-1", new_owner="Bertram", new_owner_password=ED_PW
+    )
+    assert ok is False
+    assert unlock(path, "Annabelle", OWNER_PW).role is Role.OWNER
+    assert unlock(path, "Bertram", ED_PW).role is Role.EDITOR
+
+
+def test_a_wrong_new_owner_password_transfers_nothing(path, team):
+    ok = transfer_owner(
+        path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Bertram", new_owner_password="wrong-Pass-1"
+    )
+    assert ok is False
+    assert unlock(path, "Annabelle", OWNER_PW).role is Role.OWNER
+    assert unlock(path, "Bertram", ED_PW).role is Role.EDITOR
+
+
+def test_only_the_current_owner_can_be_replaced(path, team):
+    with pytest.raises(ValueError, match="owner"):
+        transfer_owner(
+            path, old_owner="Bertram", old_owner_password=ED_PW, new_owner="Cornelia", new_owner_password=VIEW_PW
+        )
+
+
+def test_the_new_owner_must_already_be_an_editor(path, team):
+    with pytest.raises(ValueError, match="editor"):
+        transfer_owner(
+            path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Cornelia", new_owner_password=VIEW_PW
+        )
+
+
+def test_a_person_cannot_hand_the_document_to_themself(path, team):
+    with pytest.raises(ValueError, match="else"):
+        transfer_owner(
+            path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Annabelle", new_owner_password=OWNER_PW
+        )
 
 
 # --- the recovery key ----------------------------------------------------------------------------------------------

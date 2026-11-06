@@ -1,0 +1,2261 @@
+diff --git a/claudiaoffice-log/backlog.md b/claudiaoffice-log/backlog.md
+index f969d18..13fe76c 100644
+--- a/claudiaoffice-log/backlog.md
++++ b/claudiaoffice-log/backlog.md
+@@ -43,9 +43,17 @@ kanban-plugin: board
+ 
+ 	AC: File ▸ Save As offers "Claudia, unencrypted (JSON in a zip)", producing **one** documented file; every user may export the content, only owners may include history and chat (hidden side lines included); every unencrypted export writes a log record (who, when, which parts), written by the server on a viewer's behalf; the export contains no key slots and no password hashes; importing creates a new document whose importer becomes owner and sets the passwords, and replaying the imported log gives the identical state; help text says the log cannot detect copying from the screen.
+ 
+-	Use case: ALL · Decisions: D108, D19, D34 · Whether the record is a new kernel entry or a record in the history domain is decided while building.
++	Use case: ALL · Decisions: D108, D19, D34, D139 · Whether the record is a new kernel entry or a record in the history domain is decided while building.
+ 
+-	Status evidence: nothing in the tree.
++	Status evidence: content-only export is built — File ▸ Manage ▸ Export… (every role may use it) produces one documented JSON file with no key slots and no password hashes, for all three apps, web and GTK. **Not done:** owners-only history and chat export; the unencrypted-export log record; import; the help text on screen-copying. The export dialog says plainly that this is Claudia's own file format, not Word, Excel or PowerPoint — that conversion is separate, future work.
++- [ ] **E2.10 · Delete a document from the server**
++	As an owner, I want to remove a document from the server entirely, so that a document nobody wants kept any more does not just sit there.
++
++	AC: only an owner may delete; the document's file and any server-side bookkeeping about it are gone; everyone who had it open is told at once and returned to their document list; deletion cannot be undone and the confirmation says so.
++
++	Use case: ALL · Decisions: D135 · Built directly as a `DeletableDirectory` capability of `SealedDocuments`, alongside leave and transfer-ownership, rather than as its own story up front.
++
++	Status evidence: built — `delete_document` on the server, `file.manage.delete` in the Manage menu (web and GTK), an `ephemeral` `document_deleted` push that closes every other open connection to it. **Not done:** nothing server-side; the lightweight demo backends (`ScryptDirectory`/`FileDirectory`) do not implement it, matching how they already skip `RecoverableDirectory`.
+ - [ ] **E3.2 · Protocol schema as one source**
+ 	As a client developer, I want TypeScript and Python types generated from the protocol table, so that GTK and web clients cannot drift.
+ 
+@@ -528,9 +536,9 @@ kanban-plugin: board
+ 
+ 	AC: roles owner, editor and viewer; adding, removing and changing users; the name `ai` is protected; no central user database anywhere.
+ 
+-	Use case: ALL · Decisions: D20, D35, D55, D101
++	Use case: ALL · Decisions: D20, D35, D55, D101, D136, D137, D138
+ 
+-	Status evidence: the directory now lives inside the document (`people.bin`, sealed with the content key) and `SealedDocuments` is both the provider and the user directory; `add_user` is owner-only and `ai` is refused. **Not done:** changing a role without removing and re-adding the person; key rotation; who may discard side history after a restore.
++	Status evidence: the directory now lives inside the document (`people.bin`, sealed with the content key) and `SealedDocuments` is both the provider and the user directory; `add_user` is owner-only and `ai` is refused. Two role changes are now built without remove-and-re-add: anyone can leave on their own (`leave_document`; needs none of the three domain keys, unlike `remove_user`) and an owner can hand ownership to an existing editor through a two-password propose/accept handshake (`transfer_owner`, time-limited, server-memory-only) — both reachable from File ▸ Manage (Leave document…, Assign new owner…, Accept ownership…) in all three apps, web and GTK. **Not done:** changing any other role (editor↔viewer) without removing and re-adding the person; key rotation; who may discard side history after a restore.
+ - [ ] **E2.4 · Key domains and visibility**
+ 	As an owner, I want viewers to read the document but not its history or chat, so that sharing a file does not share everything.
+ 
+diff --git a/claudiaoffice-log/bugtracker.md b/claudiaoffice-log/bugtracker.md
+index 7be4636..164b9ac 100644
+--- a/claudiaoffice-log/bugtracker.md
++++ b/claudiaoffice-log/bugtracker.md
+@@ -64,6 +64,7 @@ statement in the docs or on the website).
+ | CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed (patch ready, not yet committed) |
+ | CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed (patch ready, not yet committed) |
+ | CODE-09 | P3 | Code | e2e scripts exist without `package.json` entries | **new, verified open** |
++| CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed (patch ready, not yet committed) |
+ | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed (patch ready, not yet committed) |
+ | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
+ | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
+@@ -454,6 +455,43 @@ and `styling.cjs`. `web/package.json` has scripts for only four of them: `e2e`,
+ typing the path.
+ **Fix.** Add `e2e:styling` and `e2e:recovery`, or one `e2e:all`; and a test that every file in `e2e/` has a script.
+ 
++### CODE-10 · `main` at `558f429` has a real `SyntaxError` in 10 files: a buggy `ruff format` landed invalid syntax · P1 · fixed (patch ready, not yet committed)
++**Evidence (measured, a fresh clone of `main` at `558f429` — "QA finding fixed: quality signals work", the commit
++that landed D133/CODE-08).** Ten files parse with `python3 -c "import ast; ast.parse(open(f).read())"` to a real
++`SyntaxError: multiple exception types must be parenthesized`, not a lint opinion:
++`docker/healthcheck.py`, `packages/claudia-client/src/claudia_client/trust.py`,
++`packages/claudia-computes/src/claudia_computes/formula/forms/reference.py`,
++`packages/claudia-computes/src/claudia_computes/formula/operators.py`,
++`packages/claudia-computes/src/claudia_computes/functions/base.py`,
++`packages/claudia-computes/tests/test_computes.py`, `packages/claudia-core/tests/helpers.py`,
++`packages/claudia-creates/tests/test_slides.py`, `packages/claudia-typeset/src/claudia_typeset/cache.py`,
++`scripts/api_surface.py`. Every one is the same shape:
++```
++-        except (OSError, ValueError):
+++        except OSError, ValueError:
++```
++`except A, B:` is Python 2 syntax; Python 3 refuses to parse it at all. `pyproject.toml` pins `ruff>=0.6` with no
++upper bound, and `uv.lock` resolves **ruff 0.17.3** (2026-10-27); fed the valid, already-parenthesized form, this
++`ruff` version's formatter reformats it into the invalid form above — confirmed directly with
++`uv run ruff format --diff` on each file in isolation. This is almost certainly how it got into `main`: CODE-08's own
++fix ran `ruff format .` to reformat `docs/conf.py`, and a real (non `--check`) run touches the whole tree, so the
++same bug struck these 10 unrelated files and the broken result was committed alongside the intended fix. CODE-08's
++"`ruff format --check .` now passes clean" was true only against whichever `ruff` resolved at that moment —
++`ruff>=0.6` let a later, regressed release drift underneath it before anyone ran the check again.
++**Why it matters.** This is not a style nit: a fresh checkout of `main`, exactly as the owner asked this round's work
++to start from, fails to import `claudia_client.trust`, three `claudia_computes` modules, and the rest, in whatever
++runs them first. It was caught only because this round's own gate run (`check_debt.py`, with CODE-08's check now
++actually exercised) flagged `ruff format` as failing and the diff looked backwards from a real fix.
++**Fixed.** The parens are restored in all 10 files; each now parses and matches its pre-breakage, correct form.
++Bisected every published release: 0.6–0.14.x format this correctly, every 0.15.0–0.17.4 (the latest) strips the
++parens — no upstream fix exists yet. `pyproject.toml` now pins `ruff>=0.6,<0.15`; `uv lock` resolved **0.14.14**,
++which also wanted two small, unrelated, pre-existing reformats (a docstring's trailing space before `"""`, a blank
++line after a `def`) — applied with `uv run ruff format`, since those two are genuinely correct under the pinned
++version and not the bug.
++**Acceptance — met.** The 10 files parse (`ast.parse`) and keep `except (A, B):`; `uv run python
++scripts/check_debt.py --ci --allow-skip "web tests" --allow-skip "web types"` — CI's own invocation — exits 0, with
++`ruff format: ok`.
++
+ ### DOC-01 · Decision numbers are used twice for different decisions · P2 · fixed (patch ready, not yet committed)
+ **Evidence (measured, project context and `54d1245`).** Two blocks of decision numbers were allocated twice:
+ 
+diff --git a/claudiaoffice-log/decision-log.md b/claudiaoffice-log/decision-log.md
+index 7c16bab..569ee2c 100644
+--- a/claudiaoffice-log/decision-log.md
++++ b/claudiaoffice-log/decision-log.md
+@@ -345,6 +345,20 @@ rejected: the measured workload interleaves edits and window queries closely eno
+ edits) that a rebuild-on-next-read would frequently pay the full O(sheet-size) cost anyway, with none of the
+ incremental approach's guarantee that cost tracks the window, not the sheet.
+ 
++## The Manage menu: leaving, handing over ownership, exporting and deleting (twenty-first round)
++
++Stories E2.3 (leave or remove a collaborator) and E2.9 (export). Built in full — not a mockup — for all three apps, on
++the server, the web client and the Linux shell, from a fresh `main` checkout, as a patch for the owner to apply.
++
++| ID | Decision | Date | Notes |
++|---|---|---|---|
++| D135 | **File ▸ Manage replaces the flat Share item with a submenu of six:** Share…, Assign new owner…, Accept ownership…, Leave document…, Export…, Delete from server…. Built for composes, computes and creates alike, on the web and in the GTK shell manifest, under the shared id namespace `file.manage.*`. | 2026-11-06 | "Accept ownership…" was not in the original mockup — added because the propose/accept transfer flow (D136) is otherwise unreachable by the person being handed the document. This round also re-fixed `uv.lock.rej`'s staged deletion (D133 deleted the file on disk but never staged the `git rm`) and closed DOC-01 for this round's own new citations. |
++| D136 | **Handing over ownership is a two-password handshake, not a single action.** The current owner proposes with their own password and the new owner's name; the new owner must already be an editor; the new owner then accepts with their own password, inside a time window. | 2026-11-06 | A person's role is baked inside their own password-sealed slot (D101); changing it means re-deriving the sealing key from that person's *current* password, which only that person's own password can do. This is also why a role change could not previously be done without remove-and-re-add. |
++| D137 | **A proposed transfer lives only in server memory, for five minutes by default, and is used at most once** — popped on the first accept attempt whether it succeeds or fails. | 2026-11-06 | Keeping the old owner's plaintext password briefly in memory is a deliberate, precedented tradeoff: `sealed.py` already holds raw domain keys in memory the same way between login and open. |
++| D138 | **Leaving a document is a new primitive, separate from removing someone else.** `leave_document()` needs none of the three domain keys — a viewer holding only the content key can still remove their own slot — while `remove_user()` still requires all three. The only invariant anywhere is "at least one owner remains," never "exactly one": `add_user(..., Role.OWNER)` already adds a second owner with no special ceremony. | 2026-11-06 | Corrects an earlier working assumption that the container only ever allowed a single owner; it does not, and nothing new had to be built to allow a second one — only to let someone leave without holding every key. |
++| D139 | **Export ships content-only for now**, matching D108's split: history, chat, and any Word/Excel/PowerPoint import or export stay out of scope. The dialog says plainly that this is Claudia's own file format, not another office format. | 2026-11-06 | Leaves the rest of E2.9 (history/chat export, other-format import/export) open. |
++| D140 | **`ruff` is pinned to `>=0.6,<0.15`.** Every release from 0.15.0 through 0.17.4 (the latest published) reformats a valid `except (A, B):` into the invalid `except A, B:` — confirmed by bisection, and by `ast.parse` raising a real `SyntaxError` on the result. `uv.lock` had already resolved the regressed version this round surfaced it under; this is how CODE-08's `ruff format .` broke 10 files (see CODE-10) at commit `558f429`, the very commit that added the `ruff format --check` gate it then silently failed. | 2026-11-06 | Fixes CODE-10. No upstream fix exists at review time; the pin is removed once one does. |
++
+ ## Open design questions
+ 
+ - **Typesetting:** the full-document comparison of E0.4 (Tectonic against TeX Live, biblatex with biber, Beamer,
+diff --git a/clients/linux/src/claudia_shell_gtk/manifest.py b/clients/linux/src/claudia_shell_gtk/manifest.py
+index b63faf7..209515a 100644
+--- a/clients/linux/src/claudia_shell_gtk/manifest.py
++++ b/clients/linux/src/claudia_shell_gtk/manifest.py
+@@ -194,8 +194,9 @@ def _page(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str,
+ 
+ 
+ def _file_menu(*, title: str) -> Menu:
+-    """New, Open… · Save, Save new checkpoint…, Download · Share… · Close document, Quit (D123, D124's
+-    grouping)."""
++    """New, Open… · Save, Save new checkpoint…, Download · Manage ▸ (Share…, Assign new owner…, Accept
++    ownership…, Leave document…, Export…, Delete from server…) · Close document, Quit (D123, D124's grouping;
++    D135's Manage submenu, renamed from the plain "Share…" item it grew out of)."""
+     return Menu(
+         "File",
+         (
+@@ -213,7 +214,35 @@ def _file_menu(*, title: str) -> Menu:
+                 _page("file.save-as", "Save New Checkpoint…", "Make a checkpoint and give it a name"),
+                 _page("file.download", "Download", "Download the document to this computer"),
+             ),
+-            (_page("file.share", "Share…", "Let other people into the document"),),
++            (
++                Submenu(
++                    "Manage",
++                    (
++                        _page("file.manage.share", "Share…", "Let other people into the document"),
++                        _page(
++                            "file.manage.assign-owner",
++                            "Assign New Owner…",
++                            "Hand this document over to somebody else",
++                        ),
++                        _page(
++                            "file.manage.accept-owner",
++                            "Accept Ownership…",
++                            "Accept a document that was handed over to you",
++                        ),
++                        _page("file.manage.leave", "Leave Document…", "Remove yourself from this document"),
++                        _page(
++                            "file.manage.export",
++                            "Export…",
++                            "Save the document's content in Claudia's own format",
++                        ),
++                        _page(
++                            "file.manage.delete",
++                            "Delete From Server…",
++                            "Remove this document from the server for good",
++                        ),
++                    ),
++                ),
++            ),
+             (
+                 _page("file.close", "Close Document", "Back to the list of documents"),
+                 Action("file.quit", "Quit", Kind.SHELL, f"Close {title}", accelerators=("<Primary>q",)),
+diff --git a/clients/linux/tests/test_manifest.py b/clients/linux/tests/test_manifest.py
+index 70ec7ac..e625e40 100644
+--- a/clients/linux/tests/test_manifest.py
++++ b/clients/linux/tests/test_manifest.py
+@@ -72,17 +72,43 @@ def test_every_app_has_the_same_seven_menus_in_the_same_order(app: manifest.Mani
+     assert [menu.label for menu in app.menus] == ["File", "Edit", "Format", "View", "Tools", "Config", "Help"]
+ 
+ 
+-def test_file_is_grouped_new_open_save_group_share_close_quit(app: manifest.Manifest) -> None:
+-    """D123/D124: separators kept, grouped as New/Open · Save-group · Share · Close/Quit."""
++def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Manifest) -> None:
++    """D123/D124: separators kept, grouped as New/Open · Save-group · Manage · Close/Quit. D135: the Manage
++    item replaces the plain "Share…" item it grew out of, and is itself a submenu."""
+     file_menu = app.menu("File")
+     assert [[e.label for e in section] for section in file_menu.sections] == [
+         ["New", "Open…"],
+         ["Save", "Save New Checkpoint…", "Download"],
+-        ["Share…"],
++        ["Manage"],
+         ["Close Document", "Quit"],
+     ]
+ 
+ 
++def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: manifest.Manifest) -> None:
++    """D135: the "Manage" submenu Claude built from the design the owner accepted (assigning a new owner, leaving,
++    exporting and deleting a document from the server), with Share… kept as its first item so adding people to a
++    document is still possible."""
++    file_menu = app.menu("File")
++    manage = file_menu.sections[2][0]
++    assert isinstance(manage, Submenu) and manage.label == "Manage"
++    assert [a.id for a in manage.items] == [
++        "file.manage.share",
++        "file.manage.assign-owner",
++        "file.manage.accept-owner",
++        "file.manage.leave",
++        "file.manage.export",
++        "file.manage.delete",
++    ]
++    assert [a.label for a in manage.items] == [
++        "Share…",
++        "Assign New Owner…",
++        "Accept Ownership…",
++        "Leave Document…",
++        "Export…",
++        "Delete From Server…",
++    ]
++
++
+ def test_edits_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
+     """Undo, Redo, Copy, Cut, Paste, Paste as ▸ Plain text — D120's shared block, verbatim in every app."""
+     shared_ids = [e.id if isinstance(e, Action) else [i.id for i in e.items] for e in entries(app.menu("Edit"))[:6]]
+@@ -99,7 +125,9 @@ def test_edits_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
+ def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
+     """Show who wrote what, History and chat, Dark mode — D120's shared block, verbatim in every app (even where,
+     per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship yet)."""
+-    assert [a.id for a in app.menu("View").sections[0]] == ["view.authors", "view.panel", "view.dark"]
++    section = app.menu("View").sections[0]
++    assert all(isinstance(e, Action) for e in section), f"expected only plain actions, got {section!r}"
++    assert [e.id for e in section if isinstance(e, Action)] == ["view.authors", "view.panel", "view.dark"]
+ 
+ 
+ def test_configs_only_item_is_shortcuts(app: manifest.Manifest) -> None:
+@@ -119,7 +147,9 @@ def test_composes_format_offers_the_two_style_actions(composes: manifest.Manifes
+ 
+ 
+ def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manifest) -> None:
+-    assert [a.id for a in composes.menu("View").sections[1]] == ["view.page"]
++    section = composes.menu("View").sections[1]
++    assert all(isinstance(e, Action) for e in section), f"expected only plain actions, got {section!r}"
++    assert [e.id for e in section if isinstance(e, Action)] == ["view.page"]
+ 
+ 
+ @pytest.mark.parametrize("app_name", ["computes", "creates"])
+diff --git a/docker/healthcheck.py b/docker/healthcheck.py
+index 6127df5..27bf307 100644
+--- a/docker/healthcheck.py
++++ b/docker/healthcheck.py
+@@ -23,7 +23,7 @@ def healthy(scheme: str) -> bool:
+     try:
+         with urllib.request.urlopen(f"{scheme}://127.0.0.1:{PORT}/api/health", timeout=3, context=context) as reply:
+             return reply.status == 200
+-    except OSError, http.client.HTTPException:
++    except (OSError, http.client.HTTPException):
+         return False
+ 
+ 
+diff --git a/packages/claudia-client/src/claudia_client/trust.py b/packages/claudia-client/src/claudia_client/trust.py
+index d3a15d7..8ad23ad 100644
+--- a/packages/claudia-client/src/claudia_client/trust.py
++++ b/packages/claudia-client/src/claudia_client/trust.py
+@@ -69,7 +69,7 @@ class TlsPolicy:
+         try:
+             data = json.loads(self.known_path.read_text(encoding="utf-8"))
+             return data if isinstance(data, dict) else {}
+-        except OSError, ValueError:
++        except (OSError, ValueError):
+             return {}
+ 
+     def trust(self, server: str, fingerprint: str, pem: str) -> None:
+diff --git a/packages/claudia-computes/src/claudia_computes/formula/forms/reference.py b/packages/claudia-computes/src/claudia_computes/formula/forms/reference.py
+index f712429..820d8f4 100644
+--- a/packages/claudia-computes/src/claudia_computes/formula/forms/reference.py
++++ b/packages/claudia-computes/src/claudia_computes/formula/forms/reference.py
+@@ -20,7 +20,7 @@ def whole_number(value: object, what: str) -> int:
+     number = to_number(single(None if value is MISSING else value))
+     try:
+         return int(number)
+-    except OverflowError, ValueError:
++    except (OverflowError, ValueError):
+         raise FormulaError(NUM, f"{what} is not a usable number") from None
+ 
+ 
+diff --git a/packages/claudia-computes/src/claudia_computes/formula/operators.py b/packages/claudia-computes/src/claudia_computes/formula/operators.py
+index ce9a5b5..454df25 100644
+--- a/packages/claudia-computes/src/claudia_computes/formula/operators.py
++++ b/packages/claudia-computes/src/claudia_computes/formula/operators.py
+@@ -97,7 +97,7 @@ def power(a: Value, b: Value) -> Number:
+         raise FormulaError(DIV0)
+     try:
+         return finite(math.pow(base, exponent))
+-    except ValueError, OverflowError:
++    except (ValueError, OverflowError):
+         raise FormulaError(NUM) from None
+ 
+ 
+diff --git a/packages/claudia-computes/src/claudia_computes/functions/base.py b/packages/claudia-computes/src/claudia_computes/functions/base.py
+index 2079491..de94679 100644
+--- a/packages/claudia-computes/src/claudia_computes/functions/base.py
++++ b/packages/claudia-computes/src/claudia_computes/functions/base.py
+@@ -169,7 +169,7 @@ def _as_number(param: _Param, value: Value):
+         return float(value)
+     try:
+         return int(value)
+-    except OverflowError, ValueError:
++    except (OverflowError, ValueError):
+         raise FormulaError(NUM) from None
+ 
+ 
+@@ -249,7 +249,7 @@ class Bound:
+             raise
+         except ZeroDivisionError:
+             raise FormulaError("#DIV/0!") from None
+-        except ValueError, OverflowError:
++        except (ValueError, OverflowError):
+             raise FormulaError(NUM) from None
+         except TypeError:
+             raise FormulaError(VALUE) from None
+diff --git a/packages/claudia-computes/tests/test_computes.py b/packages/claudia-computes/tests/test_computes.py
+index b577abf..eedbda9 100644
+--- a/packages/claudia-computes/tests/test_computes.py
++++ b/packages/claudia-computes/tests/test_computes.py
+@@ -182,7 +182,7 @@ def random_workbook_session(doc, seed, steps=300):
+             else:
+                 pair = Batch((SetCells(sheet, ((0, 0, content_of(1)),)), Structure(InsertRows(sheet, 0, 1))), "pair")
+                 doc.execute(pair, author=who)
+-        except UndoConflict, UndoRefused, ValueError, IndexError:
++        except (UndoConflict, UndoRefused, ValueError, IndexError):
+             pass  # refused or rejected: by contract nothing changed
+     return doc
+ 
+diff --git a/packages/claudia-container/CHANGELOG.md b/packages/claudia-container/CHANGELOG.md
+index 7451895..7e5f68b 100644
+--- a/packages/claudia-container/CHANGELOG.md
++++ b/packages/claudia-container/CHANGELOG.md
+@@ -3,6 +3,18 @@
+ Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
+ policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
+ 
++## [0.4.0] - 2026-11-06
++
++Leaving a document and handing over ownership (E2.3).
++
++### Added
++- `leave_document`: a person removes themself with their own password, needing none of the document's keys (so a
++  viewer, who only ever holds the content key, can leave too). Refused if they are the document's only owner.
++- `transfer_owner`: make an existing editor the new owner and the old owner an editor, each proving themselves with
++  their own current password. A role lives inside its own password-sealed slot (D102), so changing one means
++  resealing it, which takes the password that sealed it — this is why a transfer needs both passwords at once,
++  rather than just the current owner's.
++
+ ## [0.3.0] - 2026-11-03
+ 
+ Blocks, head record, snapshot and the recovery key in use (E2.1, E2.5, E2.2; third slice).
+diff --git a/packages/claudia-container/src/claudia_container/__init__.py b/packages/claudia-container/src/claudia_container/__init__.py
+index b4212a9..7ce4fbc 100644
+--- a/packages/claudia-container/src/claudia_container/__init__.py
++++ b/packages/claudia-container/src/claudia_container/__init__.py
+@@ -25,6 +25,7 @@ from .container import (
+     create_document,
+     has_recovery_key,
+     journal_path,
++    leave_document,
+     pack_journal,
+     read_manifest,
+     read_people,
+@@ -33,6 +34,7 @@ from .container import (
+     recover_access,
+     remove_user,
+     set_recovery_key,
++    transfer_owner,
+     unlock,
+     unlock_with_recovery,
+ )
+@@ -98,6 +100,7 @@ __all__ = [
+     "has_recovery_key",
+     "journal_generation",
+     "journal_path",
++    "leave_document",
+     "make_slot",
+     "new_domain_keys",
+     "new_recovery_key",
+@@ -117,6 +120,7 @@ __all__ = [
+     "require_strong_password",
+     "seal",
+     "set_recovery_key",
++    "transfer_owner",
+     "unlock",
+     "unlock_with_recovery",
+ ]
+diff --git a/packages/claudia-container/src/claudia_container/_version.py b/packages/claudia-container/src/claudia_container/_version.py
+index 493f741..6a9beea 100644
+--- a/packages/claudia-container/src/claudia_container/_version.py
++++ b/packages/claudia-container/src/claudia_container/_version.py
+@@ -1 +1 @@
+-__version__ = "0.3.0"
++__version__ = "0.4.0"
+diff --git a/packages/claudia-container/src/claudia_container/container.py b/packages/claudia-container/src/claudia_container/container.py
+index be7c316..cc22f82 100644
+--- a/packages/claudia-container/src/claudia_container/container.py
++++ b/packages/claudia-container/src/claudia_container/container.py
+@@ -479,6 +479,90 @@ def change_password(path: Path, name: str, old_password: str, new_password: str)
+     return True
+ 
+ 
++# --- leaving and handing over ownership (E2.3) -----------------------------------------------------------------
++
++
++def leave_document(path: Path, name: str, password: str) -> bool:
++    """``name`` removes themself, proving it with their own current password. Unlike :func:`remove_user` this
++    needs none of the document's keys, so a viewer (who only ever holds the content key) can leave too.
++
++    ``False`` if the password is wrong (or there is nobody of that name: the same refusal as elsewhere, D50).
++    ``ValueError`` if ``name`` is the document's only owner: somebody else must become the owner first
++    (:func:`transfer_owner`), or the document would be left without one.
++    """
++    with _WRITE_LOCK:
++        entries = _read_entries(path)
++        manifest = _manifest_of(entries, path)
++        slots = _slots_of(entries, path)
++        material = derive_login_material(password, name, manifest.salt, manifest.kdf)
++        unlocked = open_slot(slots, material, manifest.id)
++        if unlocked is None:
++            return False
++        people, recovery = _open_people_data(entries, manifest, unlocked.keys)
++        target = next(p for p in people if p.locator == material.locator)
++        others = [p for p in people if p is not target]
++        if target.role is Role.OWNER and not any(p.role is Role.OWNER for p in others):
++            raise ValueError("the document's only owner cannot leave; make somebody else the owner first")
++        remaining_slots = [s for s in slots if s.locator != material.locator]
++        blob = _people_blob(manifest, unlocked.keys[Domain.CONTENT], others, recovery)
++        _write_zip(path, _changed(manifest), remaining_slots, blob, _carried(entries), exclusive=False)
++    return True
++
++
++def transfer_owner(
++    path: Path, *, old_owner: str, old_owner_password: str, new_owner: str, new_owner_password: str
++) -> bool:
++    """Make ``new_owner`` (who must already be an editor) this document's owner, and ``old_owner`` an editor
++    instead. Both must prove themselves with their own current password: a person's role lives inside their own
++    password-sealed slot (D102), so changing it means resealing that slot, which takes the password that sealed
++    it in the first place — nobody else's password will do, and the server never has either on its own. One
++    atomic write, so the document is never left without an owner, or with ``new_owner`` as one before ``old_owner``
++    has stopped being one.
++
++    ``False`` if either password is wrong — the same refusal whichever one it was, as elsewhere in this module.
++    ``ValueError`` if ``old_owner`` is not currently the document's owner, ``new_owner`` is not currently an
++    editor, or they are the same person; none of these depend on a password, so they are reported plainly.
++    """
++    if _normalised(old_owner) == _normalised(new_owner):
++        raise ValueError("choose somebody else to become the new owner")
++    with _WRITE_LOCK:
++        entries = _read_entries(path)
++        manifest = _manifest_of(entries, path)
++        slots = _slots_of(entries, path)
++        old_material = derive_login_material(old_owner_password, old_owner, manifest.salt, manifest.kdf)
++        old_unlocked = open_slot(slots, old_material, manifest.id)
++        if old_unlocked is None:
++            return False
++        if old_unlocked.role is not Role.OWNER:
++            raise ValueError(f"{old_owner!r} is not the owner of this document")
++        new_material = derive_login_material(new_owner_password, new_owner, manifest.salt, manifest.kdf)
++        new_unlocked = open_slot(slots, new_material, manifest.id)
++        if new_unlocked is None:
++            return False
++        if new_unlocked.role is not Role.EDITOR:
++            raise ValueError(f"{new_owner!r} must already be an editor before becoming the owner")
++        people, recovery = _open_people_data(entries, manifest, old_unlocked.keys)
++        old_person = next(p for p in people if p.locator == old_material.locator)
++        new_person = next(p for p in people if p.locator == new_material.locator)
++        old_slot = make_slot(old_material, manifest.id, old_unlocked.name, Role.EDITOR, old_unlocked.keys)
++        new_slot = make_slot(new_material, manifest.id, new_unlocked.name, Role.OWNER, old_unlocked.keys)
++        slots = [
++            old_slot if s.locator == old_material.locator else new_slot if s.locator == new_material.locator else s
++            for s in slots
++        ]
++        people = [
++            Person(old_person.name, Role.EDITOR, old_person.locator)
++            if p is old_person
++            else Person(new_person.name, Role.OWNER, new_person.locator)
++            if p is new_person
++            else p
++            for p in people
++        ]
++        blob = _people_blob(manifest, old_unlocked.keys[Domain.CONTENT], people, recovery)
++        _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
++    return True
++
++
+ # --- the recovery key -----------------------------------------------------------------------------------------------
+ 
+ 
+diff --git a/packages/claudia-container/tests/test_container.py b/packages/claudia-container/tests/test_container.py
+index 25c3f0d..34553b9 100644
+--- a/packages/claudia-container/tests/test_container.py
++++ b/packages/claudia-container/tests/test_container.py
+@@ -18,9 +18,11 @@ from claudia_container.container import (
+     add_user,
+     change_password,
+     create_document,
++    leave_document,
+     read_manifest,
+     read_people,
+     remove_user,
++    transfer_owner,
+     unlock,
+     unlock_with_recovery,
+ )
+@@ -218,6 +220,101 @@ def test_a_weak_new_password_is_refused(path, team):
+     assert unlock(path, "Bertram", ED_PW) is not None
+ 
+ 
++# --- leaving ---------------------------------------------------------------------------------------------------
++
++
++def test_an_editor_can_leave(path, team):
++    assert leave_document(path, "Bertram", ED_PW) is True
++    assert unlock(path, "Bertram", ED_PW) is None
++    assert [p.name for p in read_people(path, team.keys)] == ["Annabelle", "Cornelia"]
++
++
++def test_a_viewer_can_leave_too_though_they_hold_only_the_content_key(path, team):
++    viewer = unlock(path, "Cornelia", VIEW_PW)
++    assert set(viewer.keys) == {Domain.CONTENT}
++    assert leave_document(path, "Cornelia", VIEW_PW) is True
++    assert unlock(path, "Cornelia", VIEW_PW) is None
++
++
++def test_the_only_owner_cannot_leave(path, team):
++    with pytest.raises(ValueError, match="owner"):
++        leave_document(path, "Annabelle", OWNER_PW)
++    assert unlock(path, "Annabelle", OWNER_PW) is not None
++
++
++def test_an_owner_can_leave_once_another_owner_is_there(path, team):
++    add_user(path, team.keys, "Dora", "Another-Pass-1", Role.OWNER)
++    assert leave_document(path, "Annabelle", OWNER_PW) is True
++    assert unlock(path, "Annabelle", OWNER_PW) is None
++    assert unlock(path, "Dora", "Another-Pass-1") is not None
++
++
++def test_a_wrong_password_leaves_nothing(path, team):
++    assert leave_document(path, "Bertram", "wrong-Pass-1") is False
++    assert unlock(path, "Bertram", ED_PW) is not None
++
++
++def test_leaving_somebody_who_is_not_there_is_the_same_wrong_password_refusal(path, team):
++    assert leave_document(path, "Nobody", "whatever-Pass-1") is False
++
++
++# --- handing over ownership ------------------------------------------------------------------------------------
++
++
++def test_the_owner_can_make_an_editor_the_new_owner(path, team):
++    assert (
++        transfer_owner(
++            path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Bertram", new_owner_password=ED_PW
++        )
++        is True
++    )
++    annabelle = unlock(path, "Annabelle", OWNER_PW)
++    bertram = unlock(path, "Bertram", ED_PW)
++    assert annabelle.role is Role.EDITOR
++    assert bertram.role is Role.OWNER
++    assert annabelle.keys == bertram.keys == team.keys
++    assert [p.name for p in read_people(path, team.keys)] == ["Annabelle", "Bertram", "Cornelia"]
++
++
++def test_a_wrong_old_owner_password_transfers_nothing(path, team):
++    ok = transfer_owner(
++        path, old_owner="Annabelle", old_owner_password="wrong-Pass-1", new_owner="Bertram", new_owner_password=ED_PW
++    )
++    assert ok is False
++    assert unlock(path, "Annabelle", OWNER_PW).role is Role.OWNER
++    assert unlock(path, "Bertram", ED_PW).role is Role.EDITOR
++
++
++def test_a_wrong_new_owner_password_transfers_nothing(path, team):
++    ok = transfer_owner(
++        path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Bertram", new_owner_password="wrong-Pass-1"
++    )
++    assert ok is False
++    assert unlock(path, "Annabelle", OWNER_PW).role is Role.OWNER
++    assert unlock(path, "Bertram", ED_PW).role is Role.EDITOR
++
++
++def test_only_the_current_owner_can_be_replaced(path, team):
++    with pytest.raises(ValueError, match="owner"):
++        transfer_owner(
++            path, old_owner="Bertram", old_owner_password=ED_PW, new_owner="Cornelia", new_owner_password=VIEW_PW
++        )
++
++
++def test_the_new_owner_must_already_be_an_editor(path, team):
++    with pytest.raises(ValueError, match="editor"):
++        transfer_owner(
++            path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Cornelia", new_owner_password=VIEW_PW
++        )
++
++
++def test_a_person_cannot_hand_the_document_to_themself(path, team):
++    with pytest.raises(ValueError, match="else"):
++        transfer_owner(
++            path, old_owner="Annabelle", old_owner_password=OWNER_PW, new_owner="Annabelle", new_owner_password=OWNER_PW
++        )
++
++
+ # --- the recovery key ----------------------------------------------------------------------------------------------
+ 
+ 
+diff --git a/packages/claudia-core/tests/helpers.py b/packages/claudia-core/tests/helpers.py
+index 776b6e7..11766b3 100644
+--- a/packages/claudia-core/tests/helpers.py
++++ b/packages/claudia-core/tests/helpers.py
+@@ -52,5 +52,5 @@ def try_step(step, who):
+     """An undo that would hurt a colleague's work is refused; that is a correct outcome, not an error."""
+     try:
+         return step(who)
+-    except UndoConflict, UndoRefused:
++    except (UndoConflict, UndoRefused):
+         return None
+diff --git a/packages/claudia-creates/tests/test_slides.py b/packages/claudia-creates/tests/test_slides.py
+index b8fbcad..7ccad3e 100644
+--- a/packages/claudia-creates/tests/test_slides.py
++++ b/packages/claudia-creates/tests/test_slides.py
+@@ -514,7 +514,7 @@ def test_random_sessions_replay_identically_with_the_same_undo_stacks(doc, seed)
+                     doc.redo(author)
+                 else:
+                     doc.execute(step, author=author)
+-        except ValueError, UndoConflict, UndoRefused:
++        except (ValueError, UndoConflict, UndoRefused):
+             continue
+     again = reopen(doc)
+     assert again.model.serialize() == doc.model.serialize()
+diff --git a/packages/claudia-server/CHANGELOG.md b/packages/claudia-server/CHANGELOG.md
+index c0b885d..987a795 100644
+--- a/packages/claudia-server/CHANGELOG.md
++++ b/packages/claudia-server/CHANGELOG.md
+@@ -20,6 +20,61 @@ work in one request used to stall every document the server holds (QA review 202
+   `workers.stop()`.
+ Security release: the second QA review's first recommendation (SEC-10).
+ 
++### Added
++- **The AI's allow-list is enforced at dispatch, not only in the model's output parser (SEC-10, E7.6, E9.9).**
++  `Account.allowed_methods` (set by `Account.assistant(allowed_methods=...)`): the write methods this account may
++  call, checked by `MethodTable.dispatch` before the method runs — the one place every path goes through
++  (`Assistant._call`, the wire, and any future remote AI connection). `Assistant(allowed_methods=...)` passes it on
++  when the account is made; `apps.stand_in_assistant_for` and `apps.model_assistant_for` both set it from
++  `apps.MODEL_METHODS` of the document's app, so the scripted stand-in is held to the same guarantee as a real
++  model, not only the engine `claudia_ai.Agent._take_calls` happens to filter for. `apps.MODEL_METHODS` gained a
++  `"composes"` entry: `("suggest",)`, so a composes assistant is refused by name, not only by an empty allowed set.
++- `protocol._apply` refuses `account.system` unconditionally: the assistant cannot use the generic `apply` as a
++  tunnel around an app's own wrapper checks (`composes._people_only` and the like), whatever its allow-list says.
++
++### Changed
++- `Account.__init__` and `Account.assistant()` take an additional optional `allowed_methods` parameter (additive,
++  default `None`: no behaviour change for an account nobody restricts). `Assistant.__init__` takes an additional
++  optional `allowed_methods` parameter (additive, default `()`: an assistant made without passing it writes
++  nothing, which is the safe default rather than a convenience).
++
++## [0.10.0] - 2026-11-06
++
++Leaving a document, handing over its ownership, deleting it, and exporting its content (E2.3, E2.9; "Manage" in
++every app's File menu).
++
++### Added
++- `roster`, `leave`, `propose_owner`, `accept_owner`, `delete_document`, `export_content`: the new wire methods
++  behind the File ▸ Manage submenu (assign new owner, leave, export, delete). Handing over ownership is a
++  propose/accept pair, because a role lives inside its own password-sealed slot (D102): the current owner proposes
++  with their own password, and the new owner (who must already be an editor) accepts with theirs, each confirming
++  their own identity. `export_content` returns the document's current content as Claudia's own JSON format only
++  — not Word, Excel or PowerPoint, and not yet the history or the chat (both stay open, E2.9).
++- `RosterDirectory`, `LeavableDirectory`, `TransferableDirectory`, `DeletableDirectory` (`claudia_server.auth`):
++  optional directory capabilities for the above, checked with `isinstance` and implemented by `SealedDocuments`
++  only — like `RecoverableDirectory`, a server using the lightweight in-memory or file-backed directory does not
++  offer them yet, and says so (`unavailable`) rather than failing oddly.
++- `SealedDocuments.list_people`, `.leave`, `.propose_owner_transfer`, `.accept_owner_transfer`, `.delete_document`.
++- Three new `ephemeral` event kinds: `person_left`, `owner_changed`, `document_deleted` — so everybody still
++  connected finds out without having to poll.
++
++## [0.9.0] - 2026-11-06
++
++The worker pool D37 specified and left unbuilt: `Connection.handle` runs synchronously on the event loop, so slow
++work in one request used to stall every document the server holds (QA review 2026-11-06, PERF-02; D134).
++
++### Added
++- **`WorkerPool`** (`workers.py`): runs a function in a separate OS process and awaits its result —
++  `await pool.submit(fn, *args, **kwargs)`. Generic on purpose: knows nothing about cells, formulas or typesetting.
++  `fn` and its arguments must be importable at module level and picklable. A worker process dying outright (killed, a
++  segfault in a C extension) breaks only the task that caused it: the pool replaces itself transparently on the next
++  `submit`, so neither the server nor another document's pending work is affected. `pool.stop()` lets the worker
++  processes go; safe before anything was submitted and safe to call more than once. `DEFAULT_WORKERS` (4).
++- **`Hub.workers`**: one `WorkerPool` per `Hub` (one process per `--model`, D134 — not a pool shared across process
++  boundaries), sized by the new `Hub(..., max_workers=...)` constructor argument. `Hub.stop()` now also calls
++  `workers.stop()`.
++Security release: the second QA review's first recommendation (SEC-10).
++
+ ### Added
+ - **The AI's allow-list is enforced at dispatch, not only in the model's output parser (SEC-10, E7.6, E9.9).**
+   `Account.allowed_methods` (set by `Account.assistant(allowed_methods=...)`): the write methods this account may
+diff --git a/packages/claudia-server/src/claudia_server/_version.py b/packages/claudia-server/src/claudia_server/_version.py
+index 3e2f46a..61fb31c 100644
+--- a/packages/claudia-server/src/claudia_server/_version.py
++++ b/packages/claudia-server/src/claudia_server/_version.py
+@@ -1 +1 @@
+-__version__ = "0.9.0"
++__version__ = "0.10.0"
+diff --git a/packages/claudia-server/src/claudia_server/auth.py b/packages/claudia-server/src/claudia_server/auth.py
+index 6f83de7..905c1fe 100644
+--- a/packages/claudia-server/src/claudia_server/auth.py
++++ b/packages/claudia-server/src/claudia_server/auth.py
+@@ -124,6 +124,51 @@ class RecoverableDirectory(Protocol):
+         a key that is not a key, an unacceptable name or a weak password."""
+ 
+ 
++@runtime_checkable
++class RosterDirectory(Protocol):
++    """A directory that can list every person of a document, not just who happens to be connected right now."""
++
++    def list_people(self, doc_id: str) -> list[Account]:
++        """Everybody who may log in to this document, in the order they were added."""
++
++
++@runtime_checkable
++class LeavableDirectory(Protocol):
++    """A directory where a person can remove themself, with nothing more than their own password."""
++
++    def leave(self, doc_id: str, name: str, password: str) -> bool:
++        """``name`` removes themself; ``False`` if ``password`` is wrong (or there is nobody of that name: the same
++        refusal, D50). ``ValueError`` with a sentence if ``name`` is the document's only owner."""
++
++
++@runtime_checkable
++class TransferableDirectory(Protocol):
++    """A directory whose documents can change who owns them (E2.3). A role is sealed inside its own slot (D102), so
++    handing one over needs both people's current passwords, one at each step: the owner proposes with their own now,
++    the new owner accepts with theirs when they are ready."""
++
++    def propose_owner_transfer(self, doc_id: str, old_owner: str, old_owner_password: str, new_owner: str) -> bool:
++        """``old_owner`` (who must be the document's current owner) asks ``new_owner`` (who must already be an
++        editor) to become the owner instead. A later proposal for the same document replaces one that was not yet
++        accepted. ``False`` if ``old_owner_password`` is wrong. ``ValueError`` with a sentence if ``old_owner`` is
++        not the owner, ``new_owner`` is not currently an editor, or they are the same person."""
++
++    def accept_owner_transfer(self, doc_id: str, new_owner: str, new_owner_password: str) -> Account | None:
++        """``new_owner`` accepts a transfer proposed to them, with their own password. The new account (now the
++        owner), or ``None`` for anything that keeps it from going through: nothing was proposed to them, it already
++        went through, it expired, or the password is wrong — the same answer whichever it is (D50)."""
++
++
++@runtime_checkable
++class DeletableDirectory(Protocol):
++    """A directory that can remove a whole document, not just a person in it."""
++
++    def delete_document(self, doc_id: str, owner: str, owner_password: str) -> bool:
++        """Remove the document for good: its file, its history and its chat. ``False`` if ``owner_password`` is
++        wrong or ``owner`` is not currently an owner of the document (the same refusal either way); nothing is
++        removed then."""
++
++
+ @dataclass(frozen=True)
+ class _Record:
+     account: Account
+diff --git a/packages/claudia-server/src/claudia_server/protocol.py b/packages/claudia-server/src/claudia_server/protocol.py
+index 5783620..bb84bb5 100644
+--- a/packages/claudia-server/src/claudia_server/protocol.py
++++ b/packages/claudia-server/src/claudia_server/protocol.py
+@@ -31,6 +31,7 @@ import json
+ import math
+ from collections.abc import Callable
+ from dataclasses import dataclass, field
++from datetime import UTC, datetime
+ from typing import TYPE_CHECKING, Any
+ 
+ from claudia_core import (
+@@ -44,7 +45,15 @@ from claudia_core import (
+     UnknownCommand,
+ )
+ 
+-from .auth import Account, RecoverableDirectory, UserDirectory
++from .auth import (
++    Account,
++    DeletableDirectory,
++    LeavableDirectory,
++    RecoverableDirectory,
++    RosterDirectory,
++    TransferableDirectory,
++    UserDirectory,
++)
+ 
+ if TYPE_CHECKING:
+     from claudia_core import Region
+@@ -78,7 +87,9 @@ EVENTS = {
+     "checkpoint": "somebody saved a checkpoint: {number, label, author, marks}",
+     "chat": "a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not "
+     "for everybody",
+-    "ephemeral": "something that is not stored: {kind: presence|preview|typing|..., sender, data}",
++    "ephemeral": "something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|"
++    "document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and "
++    "nothing else will ever be stored or delivered for this document — close and forget it",
+     "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
+     "fork_point}. Everything you hold is stale: call snapshot",
+     "rebuilt": "the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot",
+@@ -175,7 +186,7 @@ def _any(value: Any, limits: Limits) -> Any:
+ 
+ 
+ def _revision(value: Any, limits: Limits) -> Revision:
+-    """a revision as the server writes it: \"line:number\", e.g. \"main:12\""""
++    """a revision as the server writes it: \"line:number\", e.g. \"main:12\" """
+     if not isinstance(value, str):
+         raise ValueError('must be a revision like "main:12"')
+     try:
+@@ -618,6 +629,91 @@ def _new_recovery_key(ctx):
+     return {"recovery_key": ctx.directory.new_recovery_key(ctx.doc_id)}
+ 
+ 
++@core_methods.method("roster")
++def _roster(ctx):
++    """Everybody who may log in to this document, not just who is connected now, in the order they were added:
++    `[{user, role}, ...]`. Needed to choose who to hand ownership to. `unavailable` on a server that does not list
++    a document's people this way."""
++    if not isinstance(ctx.directory, RosterDirectory):
++        raise RequestError("unavailable", "this server does not list a document's people this way")
++    return [{"user": account.user, "role": account.role} for account in ctx.directory.list_people(ctx.doc_id)]
++
++
++@core_methods.method("leave", "password:str")
++def _leave(ctx, password):
++    """Remove yourself from this document, confirming it is really you with your own current password. Refused if
++    you are the document's only owner: make somebody else the owner first (`propose_owner`). Returns `{left:
++    true}`; `unauthorized` if the password is wrong."""
++    if not isinstance(ctx.directory, LeavableDirectory):
++        raise RequestError("unavailable", "this server does not support leaving a document")
++    if not ctx.directory.leave(ctx.doc_id, ctx.user, password):
++        raise RequestError("unauthorized", "that is not your current password")
++    ctx.document.publish("person_left", ctx.user, {"user": ctx.user})
++    return {"left": True}
++
++
++@core_methods.method("propose_owner", "name:str password:str")
++def _propose_owner(ctx, name, password):
++    """Owners only: ask `name` (who must already be an editor of this document) to become its owner instead of you,
++    confirming it is really you with your own current password. They have a while to accept (`accept_owner`);
++    asking again replaces a proposal they have not accepted yet. Returns `{proposed: name}`; `unauthorized` if the
++    password is wrong; `command_error` with a sentence if `name` is not currently an editor."""
++    if ctx.account.role != "owner":
++        raise RequestError("forbidden", "only the owner of a document can hand it over")
++    if not isinstance(ctx.directory, TransferableDirectory):
++        raise RequestError("unavailable", "this server does not support handing over ownership")
++    if not ctx.directory.propose_owner_transfer(ctx.doc_id, ctx.user, password, name):
++        raise RequestError("unauthorized", "that is not your current password")
++    return {"proposed": name}
++
++
++@core_methods.method("accept_owner", "password:str")
++def _accept_owner(ctx, password):
++    """Accept an ownership transfer proposed to you (`propose_owner`), confirming it is really you with your own
++    current password. You are the owner from now on; reconnect to be recognised as one by the server for the rest
++    of this session. Returns `{accepted: true}`; `unauthorized` if nothing is waiting for you with that password
++    (none was proposed to you, it already went through, or it expired)."""
++    if not isinstance(ctx.directory, TransferableDirectory):
++        raise RequestError("unavailable", "this server does not support handing over ownership")
++    account = ctx.directory.accept_owner_transfer(ctx.doc_id, ctx.user, password)
++    if account is None:
++        raise RequestError("unauthorized", "no ownership transfer is waiting for you with that password")
++    ctx.document.publish("owner_changed", ctx.user, {"owner": account.user})
++    return {"accepted": True}
++
++
++@core_methods.method("delete_document", "password:str")
++def _delete_document(ctx, password):
++    """Owners only: remove this document from the server for good — its file, its history and its chat, everybody's
++    access to it — confirming it is really you with your own current password. There is no way back from this: make
++    sure everybody who needs something from the document has it first. Returns `{deleted: true}`; `unauthorized` if
++    the password is wrong."""
++    if ctx.account.role != "owner":
++        raise RequestError("forbidden", "only an owner of a document may delete it")
++    if not isinstance(ctx.directory, DeletableDirectory):
++        raise RequestError("unavailable", "this server does not support deleting a document")
++    if not ctx.directory.delete_document(ctx.doc_id, ctx.user, password):
++        raise RequestError("unauthorized", "that is not your current password")
++    ctx.document.publish("document_deleted", ctx.user, {})
++    return {"deleted": True}
++
++
++@core_methods.method("export_content")
++def _export_content(ctx):
++    """The document's current content, as Claudia's own format — not Word, Excel or PowerPoint; import and export
++    for those is separate, planned work: `{format, app, exported_at, state_schema, state}`. Does not include the
++    command history or the chat (E2.9: exporting those, and importing, is not built yet)."""
++    model = ctx.document.model
++    exported_at = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
++    return {
++        "format": "claudia-export 1",
++        "app": model.app,
++        "exported_at": exported_at,
++        "state_schema": model.state_schema,
++        "state": model.serialize(),
++    }
++
++
+ # -- chat
+ @core_methods.method("chat", "text:text", write=True)
+ def _chat(ctx, text):
+diff --git a/packages/claudia-server/src/claudia_server/sealed.py b/packages/claudia-server/src/claudia_server/sealed.py
+index 48652f1..3b1cfe5 100644
+--- a/packages/claudia-server/src/claudia_server/sealed.py
++++ b/packages/claudia-server/src/claudia_server/sealed.py
+@@ -57,6 +57,7 @@ from claudia_container import (
+     derive_login_material,
+     format_recovery_key,
+     journal_path,
++    leave_document,
+     new_recovery_key,
+     pack_journal,
+     parse_recovery_key,
+@@ -66,6 +67,7 @@ from claudia_container import (
+     recover_access,
+     remove_user,
+     set_recovery_key,
++    transfer_owner,
+     unlock,
+     unlock_with_recovery,
+ )
+@@ -106,6 +108,10 @@ def _clean_name(name: str) -> str:
+     return " ".join(text.split())
+ 
+ 
++def _same_name(a: str, b: str) -> bool:
++    return _clean_name(a).casefold() == _clean_name(b).casefold()
++
++
+ def explain(problem: WeakPassword) -> str:
+     """The broken password rules as a sentence for the person: "The password needs a capital letter and a digit."."""
+     needs = [_PROBLEMS[code] for code in problem.problems]
+@@ -177,6 +183,7 @@ class SealedDocuments:
+         *,
+         kdf: KdfParams | None = None,
+         key_ttl: float = 60.0,
++        transfer_ttl: float = 300.0,
+         pack_every: int = DEFAULT_PACK_EVERY,
+         clock: Callable[[], float] = time.monotonic,
+         **options,
+@@ -187,12 +194,14 @@ class SealedDocuments:
+         self.model_cls = model_cls
+         self._kdf = kdf
+         self._key_ttl = key_ttl
++        self._transfer_ttl = transfer_ttl
+         self._pack_every = pack_every
+         self._clock = clock
+         self._options = options
+         self._lock = threading.RLock()  # logins run in threads
+         self._pending: dict[str, tuple[dict[Domain, bytes], float]] = {}
+         self._open: dict[str, _Held] = {}
++        self._transfers: dict[str, tuple[str, str, str, float]] = {}  # doc_id -> (old, old_pw, new, expires)
+         private_dir(self.root / "docs")
+ 
+     @property
+@@ -321,6 +330,86 @@ class SealedDocuments:
+             return False  # something is wrong with it: never delete what might be somebody's work
+         return not state.history and not state.chat
+ 
++    def list_people(self, doc_id: str) -> list[Account]:
++        """Everybody who may log in to this document, not just who is connected now, in the order they were added.
++
++        A live request always reaches this with the document already open (an owner or editor had to open it to
++        get this far), so there is always a set of keys at hand."""
++        keys = self._all_keys(doc_id)
++        people = read_people(self._file(doc_id), keys)
++        return [Account(p.name, p.role.value) for p in people]
++
++    # -- leaving and handing over ownership (E2.3) ---------------------------------------------
++    def leave(self, doc_id: str, name: str, password: str) -> bool:
++        """``name`` removes themself, proving it with their own current password. Needs none of the document's
++        keys, so a viewer (who only ever holds the content key) can leave too.
++
++        ``False`` for a wrong password (the same refusal as everywhere else, D50). ``ValueError`` with a sentence
++        if ``name`` is the document's only owner."""
++        return leave_document(self._file(doc_id), name, password)
++
++    def propose_owner_transfer(self, doc_id: str, old_owner: str, old_owner_password: str, new_owner: str) -> bool:
++        """``old_owner`` asks ``new_owner`` (who must already be an editor) to become the owner instead. Waits
++        ``transfer_ttl`` seconds for ``new_owner`` to accept (``accept_owner_transfer``); a later proposal for the
++        same document replaces one that was not accepted yet.
++
++        ``False`` if ``old_owner_password`` is wrong. ``ValueError`` with a sentence if ``old_owner`` is not the
++        document's owner, ``new_owner`` is not currently an editor, or they are the same person."""
++        path = self._file(doc_id)
++        unlocked = unlock(path, old_owner, old_owner_password)
++        if unlocked is None:
++            return False
++        if unlocked.role is not Role.OWNER:
++            raise ValueError(f"{old_owner!r} is not the owner of this document")
++        people = read_people(path, self._all_keys(doc_id))
++        new_person = next((p for p in people if _same_name(p.name, new_owner)), None)
++        if new_person is None or new_person.role is not Role.EDITOR:
++            raise ValueError(f"{new_owner!r} must already be an editor before becoming the owner")
++        if _same_name(unlocked.name, new_person.name):
++            raise ValueError("choose somebody else to become the new owner")
++        with self._lock:
++            self._transfers[doc_id] = (
++                unlocked.name,
++                old_owner_password,
++                new_person.name,
++                self._clock() + self._transfer_ttl,
++            )
++        return True
++
++    def accept_owner_transfer(self, doc_id: str, new_owner: str, new_owner_password: str) -> Account | None:
++        """``new_owner`` accepts a transfer proposed to them, with their own password. The new account (now the
++        owner), or ``None`` for anything that keeps it from going through: nothing was proposed to them, it already
++        went through, it expired, or the password is wrong — the same answer whichever it is (D50)."""
++        with self._lock:
++            now = self._clock()
++            for stale in [d for d, (_, _, _, expires) in self._transfers.items() if expires <= now]:
++                del self._transfers[stale]
++            pending = self._transfers.get(doc_id)
++            if pending is None or not _same_name(pending[2], new_owner):
++                return None
++            old_owner, old_owner_password, accepted_as, _ = pending
++            del self._transfers[doc_id]
++        ok = transfer_owner(
++            self._file(doc_id),
++            old_owner=old_owner,
++            old_owner_password=old_owner_password,
++            new_owner=accepted_as,
++            new_owner_password=new_owner_password,
++        )
++        return Account(accepted_as, "owner") if ok else None
++
++    def delete_document(self, doc_id: str, owner: str, owner_password: str) -> bool:
++        """Remove the document for good: its file, its history and its chat. ``False`` if ``owner_password`` is
++        wrong or ``owner`` is not currently an owner (the same refusal either way); nothing is removed then."""
++        path = self._file(doc_id)
++        unlocked = unlock(path, owner, owner_password)
++        if unlocked is None or unlocked.role is not Role.OWNER:
++            return False
++        self.release(doc_id)
++        journal_path(path).unlink(missing_ok=True)
++        path.unlink()
++        return True
++
+     # -- DocumentProvider ---------------------------------------------------------------------
+     def create(self, doc_id: str) -> Document:
+         """Start the journal of a document whose owner was just added, and return the empty document."""
+diff --git a/packages/claudia-server/tests/test_server_cli.py b/packages/claudia-server/tests/test_server_cli.py
+index 1d60fe9..02174ef 100644
+--- a/packages/claudia-server/tests/test_server_cli.py
++++ b/packages/claudia-server/tests/test_server_cli.py
+@@ -213,7 +213,6 @@ def test_a_presentation_server_offers_the_slide_methods(tmp_path):
+ 
+ 
+ def test_shape_folders_extend_the_library(tmp_path):
+-
+     shapes = tmp_path / "my-shapes"
+     shapes.mkdir()
+     (shapes / "bar.json").write_text(
+diff --git a/packages/claudia-server/tests/test_server_membership.py b/packages/claudia-server/tests/test_server_membership.py
+new file mode 100644
+index 0000000..8f2bf93
+--- /dev/null
++++ b/packages/claudia-server/tests/test_server_membership.py
+@@ -0,0 +1,280 @@
++"""Leaving a document, handing over its ownership, and deleting it for good (E2.3), on the server."""
++
++import pytest
++from starlette.testclient import TestClient
++from test_server_app import Peer
++
++from claudia_container import KdfParams
++from claudia_core.testing import ListModel
++from claudia_server.app import create_app
++from claudia_server.auth import Credentials, ScryptDirectory
++from claudia_server.hub import Hub, MemoryProvider
++from claudia_server.sealed import SealedDocuments
++
++CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
++ANN, ANN_PW = "Annabelle", "Correct-Horse-9"
++BEN, BEN_PW = "Bertram", "Battery-Staple-7"
++VERA, VERA_PW = "Cornelia", "Purple-Monkey-5"
++
++
++def store_in(tmp_path, **options):
++    return SealedDocuments(tmp_path, ListModel, kdf=CHEAP, **options)
++
++
++def server(tmp_path, **options):
++    store = store_in(tmp_path, **options)
++    return TestClient(create_app(Hub(store), store))
++
++
++def archive(tmp_path):
++    return tmp_path / "docs" / "plan.claudia"
++
++
++def make_document(tmp_path, **options):
++    store = store_in(tmp_path, **options)
++    store.add_user("plan", ANN, ANN_PW, "owner")
++    store.create("plan")
++    store.add_user("plan", BEN, BEN_PW, "editor")
++    store.add_user("plan", VERA, VERA_PW, "viewer")
++    return store
++
++
++# --- the roster --------------------------------------------------------------------------------------------------
++
++
++def test_the_roster_lists_everybody_not_just_who_is_connected(tmp_path):
++    store = make_document(tmp_path)
++    assert [(a.user, a.role) for a in store.list_people("plan")] == [
++        (ANN, "owner"),
++        (BEN, "editor"),
++        (VERA, "viewer"),
++    ]
++
++
++# --- leaving -------------------------------------------------------------------------------------------------------
++
++
++def test_an_editor_can_leave(tmp_path):
++    store = make_document(tmp_path)
++    assert store.leave("plan", BEN, BEN_PW) is True
++    assert store.verify("plan", Credentials(BEN, BEN_PW)) is None
++    assert [a.user for a in store.list_people("plan")] == [ANN, VERA]
++
++
++def test_a_viewer_can_leave_too(tmp_path):
++    store = make_document(tmp_path)
++    assert store.leave("plan", VERA, VERA_PW) is True
++    assert store.verify("plan", Credentials(VERA, VERA_PW)) is None
++
++
++def test_the_only_owner_cannot_leave(tmp_path):
++    store = make_document(tmp_path)
++    with pytest.raises(ValueError, match="owner"):
++        store.leave("plan", ANN, ANN_PW)
++
++
++def test_a_wrong_password_leaves_nothing(tmp_path):
++    store = make_document(tmp_path)
++    assert store.leave("plan", BEN, "wrong-Pass-1") is False
++    assert store.verify("plan", Credentials(BEN, BEN_PW)) is not None
++
++
++# --- handing over ownership ------------------------------------------------------------------------------------
++
++
++def test_the_owner_can_hand_over_to_an_editor(tmp_path):
++    store = make_document(tmp_path)
++    assert store.propose_owner_transfer("plan", ANN, ANN_PW, BEN) is True
++    account = store.accept_owner_transfer("plan", BEN, BEN_PW)
++    assert (account.user, account.role) == (BEN, "owner")
++    assert store.verify("plan", Credentials(ANN, ANN_PW)).role == "editor"
++    assert store.verify("plan", Credentials(BEN, BEN_PW)).role == "owner"
++
++
++def test_a_wrong_proposing_password_is_refused_at_once(tmp_path):
++    store = make_document(tmp_path)
++    assert store.propose_owner_transfer("plan", ANN, "wrong-Pass-1", BEN) is False
++    assert store.accept_owner_transfer("plan", BEN, BEN_PW) is None  # nothing was proposed
++
++
++def test_only_the_current_owner_can_propose(tmp_path):
++    store = make_document(tmp_path)
++    with pytest.raises(ValueError, match="owner"):
++        store.propose_owner_transfer("plan", BEN, BEN_PW, VERA)
++
++
++def test_the_new_owner_must_already_be_an_editor(tmp_path):
++    store = make_document(tmp_path)
++    with pytest.raises(ValueError, match="editor"):
++        store.propose_owner_transfer("plan", ANN, ANN_PW, VERA)
++
++
++def test_a_wrong_accepting_password_does_not_go_through(tmp_path):
++    store = make_document(tmp_path)
++    store.propose_owner_transfer("plan", ANN, ANN_PW, BEN)
++    assert store.accept_owner_transfer("plan", BEN, "wrong-Pass-1") is None
++    assert store.verify("plan", Credentials(ANN, ANN_PW)).role == "owner"
++
++
++def test_accepting_only_works_once(tmp_path):
++    store = make_document(tmp_path)
++    store.propose_owner_transfer("plan", ANN, ANN_PW, BEN)
++    assert store.accept_owner_transfer("plan", BEN, BEN_PW) is not None
++    assert store.accept_owner_transfer("plan", BEN, BEN_PW) is None
++
++
++def test_somebody_else_cannot_accept_a_proposal_not_made_to_them(tmp_path):
++    store = make_document(tmp_path)
++    store.propose_owner_transfer("plan", ANN, ANN_PW, BEN)
++    assert store.accept_owner_transfer("plan", VERA, VERA_PW) is None
++
++
++def test_a_later_proposal_replaces_an_unaccepted_one(tmp_path):
++    store = make_document(tmp_path)
++    store.add_user("plan", "Dora", "Another-Pass-1", "editor")
++    store.propose_owner_transfer("plan", ANN, ANN_PW, BEN)
++    store.propose_owner_transfer("plan", ANN, ANN_PW, "Dora")
++    assert store.accept_owner_transfer("plan", BEN, BEN_PW) is None
++    account = store.accept_owner_transfer("plan", "Dora", "Another-Pass-1")
++    assert account is not None and account.role == "owner"
++
++
++def test_a_proposal_expires(tmp_path):
++    now = [0.0]
++    store = make_document(tmp_path, transfer_ttl=10.0, clock=lambda: now[0])
++    store.propose_owner_transfer("plan", ANN, ANN_PW, BEN)
++    now[0] = 11.0
++    assert store.accept_owner_transfer("plan", BEN, BEN_PW) is None
++
++
++# --- deleting --------------------------------------------------------------------------------------------------
++
++
++def test_an_owner_can_delete_the_document(tmp_path):
++    store = make_document(tmp_path)
++    assert store.delete_document("plan", ANN, ANN_PW) is True
++    assert not archive(tmp_path).exists()
++    assert not store.exists("plan")
++
++
++def test_a_wrong_password_deletes_nothing(tmp_path):
++    store = make_document(tmp_path)
++    assert store.delete_document("plan", ANN, "wrong-Pass-1") is False
++    assert archive(tmp_path).exists()
++
++
++def test_an_editor_cannot_delete_the_document(tmp_path):
++    store = make_document(tmp_path)
++    assert store.delete_document("plan", BEN, BEN_PW) is False
++    assert archive(tmp_path).exists()
++
++
++# --- over the wire ---------------------------------------------------------------------------------------------
++
++
++def setup_wire(tmp_path):
++    client = server(tmp_path).__enter__()
++    ann = Peer(client, user=ANN, password=ANN_PW, create=True)
++    ann.request("add_user", {"name": BEN, "password": BEN_PW, "role": "editor"})
++    ann.request("add_user", {"name": VERA, "password": VERA_PW, "role": "viewer"})
++    return client, ann
++
++
++def test_the_roster_is_available_over_the_wire(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    answer = ann.request("roster")
++    ann.close()
++    client.__exit__(None, None, None)
++    assert answer["ok"]
++    assert [item["user"] for item in answer["result"]] == [ANN, BEN, VERA]
++
++
++def test_leaving_over_the_wire_tells_the_others(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    ben = Peer(client, user=BEN, password=BEN_PW)
++    ann.socket.receive_json()  # "joined", from Bertram's own connection just now
++    answer = ben.request("leave", {"password": BEN_PW})
++    assert answer["ok"] and answer["result"] == {"left": True}
++    pushed = ann.socket.receive_json()
++    assert pushed["event"] == "ephemeral" and pushed["data"]["kind"] == "person_left"
++    assert pushed["data"]["data"] == {"user": BEN}
++    ben.close()
++    ann.close()
++    client.__exit__(None, None, None)
++
++
++def test_a_wrong_password_refuses_to_leave_over_the_wire(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    ben = Peer(client, user=BEN, password=BEN_PW)
++    answer = ben.request("leave", {"password": "wrong-Pass-1"})
++    assert answer["error"]["code"] == "unauthorized"
++    ben.close()
++    ann.close()
++    client.__exit__(None, None, None)
++
++
++def test_proposing_and_accepting_ownership_over_the_wire(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    ben = Peer(client, user=BEN, password=BEN_PW)
++    proposed = ann.request("propose_owner", {"name": BEN, "password": ANN_PW})
++    assert proposed["ok"] and proposed["result"] == {"proposed": BEN}
++    accepted = ben.request("accept_owner", {"password": BEN_PW})
++    assert accepted["ok"] and accepted["result"] == {"accepted": True}
++    ben.close()
++    ann.close()
++    client.__exit__(None, None, None)
++
++
++def test_only_the_owner_may_propose_over_the_wire(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    ben = Peer(client, user=BEN, password=BEN_PW)
++    answer = ben.request("propose_owner", {"name": ANN, "password": BEN_PW})
++    assert answer["error"]["code"] == "forbidden"
++    ben.close()
++    ann.close()
++    client.__exit__(None, None, None)
++
++
++def test_deleting_the_document_over_the_wire(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    answer = ann.request("delete_document", {"password": ANN_PW})
++    assert answer["ok"] and answer["result"] == {"deleted": True}
++    ann.close()
++    client.__exit__(None, None, None)
++    assert not archive(tmp_path).exists()
++
++
++def test_only_an_owner_may_delete_over_the_wire(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    ben = Peer(client, user=BEN, password=BEN_PW)
++    answer = ben.request("delete_document", {"password": BEN_PW})
++    assert answer["error"]["code"] == "forbidden"
++    ben.close()
++    ann.close()
++    client.__exit__(None, None, None)
++    assert archive(tmp_path).exists()
++
++
++def test_exporting_content_over_the_wire(tmp_path):
++    client, ann = setup_wire(tmp_path)
++    answer = ann.request("export_content")
++    ann.close()
++    client.__exit__(None, None, None)
++    assert answer["ok"]
++    result = answer["result"]
++    assert result["app"] == ListModel.app
++    assert "state" in result and "exported_at" in result
++
++
++def test_a_server_without_sealed_documents_has_none_of_these(tmp_path):
++    hub = Hub(MemoryProvider(ListModel))
++    with TestClient(create_app(hub, ScryptDirectory())) as client:
++        ann = Peer(client, user="ann", password="Correct-Horse-9", create=True)
++        assert ann.request("roster")["error"]["code"] == "unavailable"
++        assert ann.request("leave", {"password": "Correct-Horse-9"})["error"]["code"] == "unavailable"
++        assert ann.request("propose_owner", {"name": "ben", "password": "Correct-Horse-9"})["error"]["code"] in (
++            "unavailable",
++            "forbidden",
++        )
++        assert ann.request("delete_document", {"password": "Correct-Horse-9"})["error"]["code"] == "unavailable"
++        ann.close()
+diff --git a/packages/claudia-typeset/src/claudia_typeset/cache.py b/packages/claudia-typeset/src/claudia_typeset/cache.py
+index 45d0864..97f49bc 100644
+--- a/packages/claudia-typeset/src/claudia_typeset/cache.py
++++ b/packages/claudia-typeset/src/claudia_typeset/cache.py
+@@ -50,7 +50,7 @@ class ResultCache:
+         path = self._path(key)
+         try:
+             return path.read_text(encoding="utf-8")
+-        except FileNotFoundError, UnicodeDecodeError:
++        except (FileNotFoundError, UnicodeDecodeError):
+             return None
+ 
+     def put(self, key: str, svg: str) -> None:
+diff --git a/pyproject.toml b/pyproject.toml
+index 74e747c..3da5d79 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -27,7 +27,7 @@ claudia-typeset = { workspace = true }
+ dev = [
+     "pytest>=8",
+     "mypy>=1.10",
+-    "ruff>=0.6",
++    "ruff>=0.6,<0.15",  # D140/CODE-10: 0.15.0-0.17.4 reformat `except (A, B):` into invalid `except A, B:`
+     "vulture>=2.11",
+     "sphinx>=7.3",
+     "myst-parser>=3",
+diff --git a/scripts/api_surface.py b/scripts/api_surface.py
+index d7b5888..0fccb05 100644
+--- a/scripts/api_surface.py
++++ b/scripts/api_surface.py
+@@ -31,7 +31,7 @@ PACKAGES = (
+ def signature(obj) -> str:
+     try:
+         return re.sub(r" at 0x[0-9a-f]+", "", str(inspect.signature(obj)))  # defaults that are functions
+-    except TypeError, ValueError:
++    except (TypeError, ValueError):
+         return "(...)"
+ 
+ 
+diff --git a/tests/api/claudia_container.json b/tests/api/claudia_container.json
+index f7226df..0848396 100644
+--- a/tests/api/claudia_container.json
++++ b/tests/api/claudia_container.json
+@@ -1,5 +1,5 @@
+ {
+- "version": "0.3.0",
++ "version": "0.4.0",
+  "ContainerError": {
+   "class": [
+    "Exception"
+@@ -217,6 +217,9 @@
+  "journal_path": {
+   "function": "(path: pathlib.Path) -> pathlib.Path"
+  },
++ "leave_document": {
++  "function": "(path: pathlib.Path, name: str, password: str) -> bool"
++ },
+  "make_slot": {
+   "function": "(material: claudia_container.crypto.LoginMaterial, doc_id: str, name: str, role: claudia_container.slots.Role, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> claudia_container.slots.KeySlot"
+  },
+@@ -274,6 +277,9 @@
+  "set_recovery_key": {
+   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], recovery_key: bytes) -> None"
+  },
++ "transfer_owner": {
++  "function": "(path: pathlib.Path, *, old_owner: str, old_owner_password: str, new_owner: str, new_owner_password: str) -> bool"
++ },
+  "unlock": {
+   "function": "(path: pathlib.Path, name: str, password: str) -> claudia_container.slots.Unlocked | None"
+  },
+diff --git a/tests/api/claudia_server.json b/tests/api/claudia_server.json
+index 3bc89e4..d4a8ed0 100644
+--- a/tests/api/claudia_server.json
++++ b/tests/api/claudia_server.json
+@@ -1,5 +1,5 @@
+ {
+- "version": "0.9.0",
++ "version": "0.10.0",
+  "AI_USER": {
+   "value": "'ai'"
+  },
+@@ -113,7 +113,7 @@
+   "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'sealed': 'the document is stored but nobody who holds all its keys has opened it since the server started; a viewer has to wait (and may try again) until an owner or editor has', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
+  },
+  "EVENTS": {
+-  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|..., sender, data}', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions was removed: {revisions}', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection'}"
++  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions was removed: {revisions}', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection'}"
+  },
+  "Engine": {
+   "class": [
+@@ -319,14 +319,19 @@
+   "class": [
+    "object"
+   ],
+-  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', *, kdf: 'KdfParams | None' = None, key_ttl: 'float' = 60.0, pack_every: 'int' = 500, clock: 'Callable[[], float]' = <built-in function monotonic>, **options)",
++  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', *, kdf: 'KdfParams | None' = None, key_ttl: 'float' = 60.0, transfer_ttl: 'float' = 300.0, pack_every: 'int' = 500, clock: 'Callable[[], float]' = <built-in function monotonic>, **options)",
+   "methods": {
++   "accept_owner_transfer": "(self, doc_id: 'str', new_owner: 'str', new_owner_password: 'str') -> 'Account | None'",
+    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+    "create": "(self, doc_id: 'str') -> 'Document'",
++   "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
+    "documents": "(self) -> 'list[StoredInfo]'",
+    "exists": "(self, doc_id: 'str') -> 'bool'",
++   "leave": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'bool'",
++   "list_people": "(self, doc_id: 'str') -> 'list[Account]'",
+    "new_recovery_key": "(self, doc_id: 'str') -> 'str'",
+    "open": "(self, doc_id: 'str') -> 'Document'",
++   "propose_owner_transfer": "(self, doc_id: 'str', old_owner: 'str', old_owner_password: 'str', new_owner: 'str') -> 'bool'",
+    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
+    "release": "(self, doc_id: 'str') -> 'None'",
+    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
+diff --git a/uv.lock b/uv.lock
+index 0d6c479..07915d1 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -462,7 +462,7 @@ dev = [
+     { name = "mypy", specifier = ">=1.10" },
+     { name = "myst-parser", specifier = ">=3" },
+     { name = "pytest", specifier = ">=8" },
+-    { name = "ruff", specifier = ">=0.6" },
++    { name = "ruff", specifier = ">=0.6,<0.15" },
+     { name = "sphinx", specifier = ">=7.3" },
+     { name = "vulture", specifier = ">=2.11" },
+ ]
+@@ -1314,27 +1314,28 @@ wheels = [
+ 
+ [[package]]
+ name = "ruff"
+-version = "0.17.3"
+-source = { registry = "https://pypi.org/simple" }
+-sdist = { url = "https://files.pythonhosted.org/packages/59/73/81f140c4edd9cc323de5478e6bbd3bbcfae9a82692df1a258de8cec6a6d2/ruff-0.17.3.tar.gz", hash = "sha256:a57049c8addb3662073859bb55a7ad35aa54f8a7c9ed268911d1333c5aadaaa9", size = 5339444, upload-time = "2026-10-27T00:34:05.914Z" }
+-wheels = [
+-    { url = "https://files.pythonhosted.org/packages/9e/8c/083365310c4e79c842f25bf5a842facbd9b0c0ec336f96dffa5074fe723d/ruff-0.17.3-py3-none-linux_armv6l.whl", hash = "sha256:ab86b84cd9d05e56d329742c0cabdcbe2d1d56c98f4a04aab9b5b66196febfb4", size = 10216522, upload-time = "2026-10-27T00:33:29.822Z" },
+-    { url = "https://files.pythonhosted.org/packages/72/26/4b2edf31cfebe9605d8f6ed8f1d6f376d3a53d4c9a123e62661c64c440f0/ruff-0.17.3-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:e407b4a6852853a9a2cdce96963e94ad9775578bb44e7561a0f2829f3cc04b11", size = 10217786, upload-time = "2026-10-27T00:33:33.949Z" },
+-    { url = "https://files.pythonhosted.org/packages/a2/7e/537aba4b7f54397a374d2f6a6fc93e9c8015e18553f31a4a7b7dbced48b5/ruff-0.17.3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:b75cc113b3aca388933d8296b667b1ac401a80317ea3074c9b0a66541199da29", size = 9440362, upload-time = "2026-10-27T00:33:35.784Z" },
+-    { url = "https://files.pythonhosted.org/packages/3d/66/283e39734f66c8a5ebaa93c22eb7b7515779a0b1d5a5c0ad20e05c0edb41/ruff-0.17.3-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ab5fa7ed5ce18554ea69d850ad162cbaa0c85fc47c08d83a569f806681c9a6ad", size = 10094281, upload-time = "2026-10-27T00:33:38.216Z" },
+-    { url = "https://files.pythonhosted.org/packages/21/4c/1ffc768497bd025a32c72152771e40c0b99bddc5cc6e4f50c7949a395346/ruff-0.17.3-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:c673c170e27834d1262e3a9c1e97bdc9b9c3b180c63d89173ce69747232474c1", size = 10022543, upload-time = "2026-10-27T00:33:40.181Z" },
+-    { url = "https://files.pythonhosted.org/packages/73/c3/f90db547301080fcb82c92abf914c8bd57b89911d9b65a6c4cc6b52d0635/ruff-0.17.3-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6a754c0341bc9ca151b7b335988b3263921c08859f84ca219b70cee825571b6f", size = 10683921, upload-time = "2026-10-27T00:33:42.182Z" },
+-    { url = "https://files.pythonhosted.org/packages/e5/98/92d4a8a26c6c96cf1a5b34dd59036d8a71e52d650aab065c58867e964e63/ruff-0.17.3-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:4590b9d86c0b1543ebb09094254e191cd43fe8edaf330baa035aab03da251532", size = 11373408, upload-time = "2026-10-27T00:33:44.19Z" },
+-    { url = "https://files.pythonhosted.org/packages/43/02/1f24d2e3064c9753926deeb901afa57777b37ee46799b09ddd7aee6e5145/ruff-0.17.3-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:bbde18beccd98c29a227c63c99022e3443b99258e08326df6425dfe0443705ef", size = 10977469, upload-time = "2026-10-27T00:33:46.179Z" },
+-    { url = "https://files.pythonhosted.org/packages/f0/20/fecedea2209f574ab92033b344e01a7f0c2dc76c6d6d19a14c9f8141173f/ruff-0.17.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7fa4b0f931cdbcb8a52044f370a3eb429fb42eb88807b0e800fcaa98dd42b24e", size = 10577491, upload-time = "2026-10-27T00:33:48.233Z" },
+-    { url = "https://files.pythonhosted.org/packages/33/36/b93fdf0bc6f84f0cd487aadfb0354deb40013669ea35ac3d26855de1e959/ruff-0.17.3-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:39405f341deec934b4289634324ad695f72df2970f9121582872eaf5b722f0f5", size = 10608748, upload-time = "2026-10-27T00:33:50.284Z" },
+-    { url = "https://files.pythonhosted.org/packages/5d/b7/7d3f5f14145daead1efb0b9a8289ed1daa100f419d60774375951723ce00/ruff-0.17.3-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:68074094f55ca3d29ab19491f640282f7a84061c4c7977aa5094b968ca457e9a", size = 10075057, upload-time = "2026-10-27T00:33:52.074Z" },
+-    { url = "https://files.pythonhosted.org/packages/b0/ed/93ff7a5909ee56e2bd4b982deae9e0efb2724417874a90c9e41ad66c6dd7/ruff-0.17.3-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:27bb571ac78fef178fe5118d2827df95c2aae74a48fff2b15f6acd03af5ff5bb", size = 10022431, upload-time = "2026-10-27T00:33:54.061Z" },
+-    { url = "https://files.pythonhosted.org/packages/9b/07/a83b9eeec8c1c3c0e4eda15f06c3a91001bfd2687ea2f07b750719bf9712/ruff-0.17.3-py3-none-musllinux_1_2_i686.whl", hash = "sha256:029c37cbd3de48ca37aa12117bead2d065f15da17d66bf84e0d4274013705db2", size = 10394903, upload-time = "2026-10-27T00:33:56.158Z" },
+-    { url = "https://files.pythonhosted.org/packages/af/b2/05c39857c2526fcbebe46ad93a8dc97424656dfef14d3ef933abe1ffd331/ruff-0.17.3-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:692fdb46d0fd9c71e380947dc5fc72f2c3f881073bc1f739e4579376231affbe", size = 10799780, upload-time = "2026-10-27T00:33:58.204Z" },
+-    { url = "https://files.pythonhosted.org/packages/ec/d9/47171a16739eb7a353936b31c20cf54340531e68c9af7d72fd7a784e235d/ruff-0.17.3-py3-none-win32.whl", hash = "sha256:46539cb031b01fd29ae0a02142483c46640b233ee12bb1c1b690bffa1555d5ca", size = 9908481, upload-time = "2026-10-27T00:34:00.087Z" },
+-    { url = "https://files.pythonhosted.org/packages/d0/a0/f08c1631bfd81faa6a90eaf70c37c786c11bed2046302b56bb506c25e1a0/ruff-0.17.3-py3-none-win_amd64.whl", hash = "sha256:56b8ffb3f3b3cbccb8b76b71b38261b7ed982ef5d20f5b447b1b61a7f4949b24", size = 10341333, upload-time = "2026-10-27T00:34:02.099Z" },
+-    { url = "https://files.pythonhosted.org/packages/99/d5/4ad4ed31413c301430918e70d3d38ae6f097af0766cb9ab8c9d502b2a4d6/ruff-0.17.3-py3-none-win_arm64.whl", hash = "sha256:81fce74bcd6be0e9da7c67c7553fd0f1f12964a2052cd728ef917b937a5ca1d9", size = 9854332, upload-time = "2026-10-27T00:34:03.847Z" },
++version = "0.14.14"
++source = { registry = "https://pypi.org/simple" }
++sdist = { url = "https://files.pythonhosted.org/packages/2e/06/f71e3a86b2df0dfa2d2f72195941cd09b44f87711cb7fa5193732cb9a5fc/ruff-0.14.14.tar.gz", hash = "sha256:2d0f819c9a90205f3a867dbbd0be083bee9912e170fd7d9704cc8ae45824896b", size = 4515732, upload-time = "2026-01-22T22:30:17.527Z" }
++wheels = [
++    { url = "https://files.pythonhosted.org/packages/d2/89/20a12e97bc6b9f9f68343952da08a8099c57237aef953a56b82711d55edd/ruff-0.14.14-py3-none-linux_armv6l.whl", hash = "sha256:7cfe36b56e8489dee8fbc777c61959f60ec0f1f11817e8f2415f429552846aed", size = 10467650, upload-time = "2026-01-22T22:30:08.578Z" },
++    { url = "https://files.pythonhosted.org/packages/a3/b1/c5de3fd2d5a831fcae21beda5e3589c0ba67eec8202e992388e4b17a6040/ruff-0.14.14-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:6006a0082336e7920b9573ef8a7f52eec837add1265cc74e04ea8a4368cd704c", size = 10883245, upload-time = "2026-01-22T22:30:04.155Z" },
++    { url = "https://files.pythonhosted.org/packages/b8/7c/3c1db59a10e7490f8f6f8559d1db8636cbb13dccebf18686f4e3c9d7c772/ruff-0.14.14-py3-none-macosx_11_0_arm64.whl", hash = "sha256:026c1d25996818f0bf498636686199d9bd0d9d6341c9c2c3b62e2a0198b758de", size = 10231273, upload-time = "2026-01-22T22:30:34.642Z" },
++    { url = "https://files.pythonhosted.org/packages/a1/6e/5e0e0d9674be0f8581d1f5e0f0a04761203affce3232c1a1189d0e3b4dad/ruff-0.14.14-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f666445819d31210b71e0a6d1c01e24447a20b85458eea25a25fe8142210ae0e", size = 10585753, upload-time = "2026-01-22T22:30:31.781Z" },
++    { url = "https://files.pythonhosted.org/packages/23/09/754ab09f46ff1884d422dc26d59ba18b4e5d355be147721bb2518aa2a014/ruff-0.14.14-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:3c0f18b922c6d2ff9a5e6c3ee16259adc513ca775bcf82c67ebab7cbd9da5bc8", size = 10286052, upload-time = "2026-01-22T22:30:24.827Z" },
++    { url = "https://files.pythonhosted.org/packages/c8/cc/e71f88dd2a12afb5f50733851729d6b571a7c3a35bfdb16c3035132675a0/ruff-0.14.14-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1629e67489c2dea43e8658c3dba659edbfd87361624b4040d1df04c9740ae906", size = 11043637, upload-time = "2026-01-22T22:30:13.239Z" },
++    { url = "https://files.pythonhosted.org/packages/67/b2/397245026352494497dac935d7f00f1468c03a23a0c5db6ad8fc49ca3fb2/ruff-0.14.14-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:27493a2131ea0f899057d49d303e4292b2cae2bb57253c1ed1f256fbcd1da480", size = 12194761, upload-time = "2026-01-22T22:30:22.542Z" },
++    { url = "https://files.pythonhosted.org/packages/5b/06/06ef271459f778323112c51b7587ce85230785cd64e91772034ddb88f200/ruff-0.14.14-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:01ff589aab3f5b539e35db38425da31a57521efd1e4ad1ae08fc34dbe30bd7df", size = 12005701, upload-time = "2026-01-22T22:30:20.499Z" },
++    { url = "https://files.pythonhosted.org/packages/41/d6/99364514541cf811ccc5ac44362f88df66373e9fec1b9d1c4cc830593fe7/ruff-0.14.14-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:1cc12d74eef0f29f51775f5b755913eb523546b88e2d733e1d701fe65144e89b", size = 11282455, upload-time = "2026-01-22T22:29:59.679Z" },
++    { url = "https://files.pythonhosted.org/packages/ca/71/37daa46f89475f8582b7762ecd2722492df26421714a33e72ccc9a84d7a5/ruff-0.14.14-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bb8481604b7a9e75eff53772496201690ce2687067e038b3cc31aaf16aa0b974", size = 11215882, upload-time = "2026-01-22T22:29:57.032Z" },
++    { url = "https://files.pythonhosted.org/packages/2c/10/a31f86169ec91c0705e618443ee74ede0bdd94da0a57b28e72db68b2dbac/ruff-0.14.14-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:14649acb1cf7b5d2d283ebd2f58d56b75836ed8c6f329664fa91cdea19e76e66", size = 11180549, upload-time = "2026-01-22T22:30:27.175Z" },
++    { url = "https://files.pythonhosted.org/packages/fd/1e/c723f20536b5163adf79bdd10c5f093414293cdf567eed9bdb7b83940f3f/ruff-0.14.14-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:e8058d2145566510790eab4e2fad186002e288dec5e0d343a92fe7b0bc1b3e13", size = 10543416, upload-time = "2026-01-22T22:30:01.964Z" },
++    { url = "https://files.pythonhosted.org/packages/3e/34/8a84cea7e42c2d94ba5bde1d7a4fae164d6318f13f933d92da6d7c2041ff/ruff-0.14.14-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:e651e977a79e4c758eb807f0481d673a67ffe53cfa92209781dfa3a996cf8412", size = 10285491, upload-time = "2026-01-22T22:30:29.51Z" },
++    { url = "https://files.pythonhosted.org/packages/55/ef/b7c5ea0be82518906c978e365e56a77f8de7678c8bb6651ccfbdc178c29f/ruff-0.14.14-py3-none-musllinux_1_2_i686.whl", hash = "sha256:cc8b22da8d9d6fdd844a68ae937e2a0adf9b16514e9a97cc60355e2d4b219fc3", size = 10733525, upload-time = "2026-01-22T22:30:06.499Z" },
++    { url = "https://files.pythonhosted.org/packages/6a/5b/aaf1dfbcc53a2811f6cc0a1759de24e4b03e02ba8762daabd9b6bd8c59e3/ruff-0.14.14-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:16bc890fb4cc9781bb05beb5ab4cd51be9e7cb376bf1dd3580512b24eb3fda2b", size = 11315626, upload-time = "2026-01-22T22:30:36.848Z" },
++    { url = "https://files.pythonhosted.org/packages/2c/aa/9f89c719c467dfaf8ad799b9bae0df494513fb21d31a6059cb5870e57e74/ruff-0.14.14-py3-none-win32.whl", hash = "sha256:b530c191970b143375b6a68e6f743800b2b786bbcf03a7965b06c4bf04568167", size = 10502442, upload-time = "2026-01-22T22:30:38.93Z" },
++    { url = "https://files.pythonhosted.org/packages/87/44/90fa543014c45560cae1fffc63ea059fb3575ee6e1cb654562197e5d16fb/ruff-0.14.14-py3-none-win_amd64.whl", hash = "sha256:3dde1435e6b6fe5b66506c1dff67a421d0b7f6488d466f651c07f4cab3bf20fd", size = 11630486, upload-time = "2026-01-22T22:30:10.852Z" },
++    { url = "https://files.pythonhosted.org/packages/9e/6a/40fee331a52339926a92e17ae748827270b288a35ef4a15c9c8f2ec54715/ruff-0.14.14-py3-none-win_arm64.whl", hash = "sha256:56e6981a98b13a32236a72a8da421d7839221fa308b223b9283312312e5ac76c", size = 10920448, upload-time = "2026-01-22T22:30:15.417Z" },
+ ]
+ 
+ [[package]]
+diff --git a/vulture_whitelist.py b/vulture_whitelist.py
+index c0e650e..4ecc4bd 100644
+--- a/vulture_whitelist.py
++++ b/vulture_whitelist.py
+@@ -31,6 +31,12 @@ used._chat  # core_methods.method("chat")
+ used._log  # core_methods.method("log")
+ used._chat_log  # core_methods.method("chat_log")
+ used._add_user  # core_methods.method("add_user")
++used._roster  # core_methods.method("roster")
++used._leave  # core_methods.method("leave")
++used._propose_owner  # core_methods.method("propose_owner")
++used._accept_owner  # core_methods.method("accept_owner")
++used._delete_document  # core_methods.method("delete_document")
++used._export_content  # core_methods.method("export_content")
+ used._sheets  # computes_methods.method("sheets")
+ used._cells  # computes_methods.method("cells")
+ used._set_cells  # computes_methods.method("set_cells")
+diff --git a/web/app/components/AcceptOwnershipDialog.vue b/web/app/components/AcceptOwnershipDialog.vue
+new file mode 100644
+index 0000000..f129dfb
+--- /dev/null
++++ b/web/app/components/AcceptOwnershipDialog.vue
+@@ -0,0 +1,54 @@
++<script setup lang="ts">
++// File ▸ Manage ▸ Accept ownership… (D135): the other half of Assign new owner…. Whoever was asked to take over a
++// document comes here and confirms it is them with their own password; there is no notification yet (the decision
++// log says so) — the two people tell each other, the same way they would hand over a key.
++import { ref } from 'vue'
++import type { BaseSession } from '~/lib/base-session'
++
++const props = defineProps<{ session: BaseSession }>()
++const emit = defineEmits<{ close: [] }>()
++
++const password = ref('')
++const busy = ref(false)
++const accepted = ref(false)
++
++async function accept() {
++  busy.value = true
++  if (await props.session.acceptOwner(password.value)) accepted.value = true
++  busy.value = false
++}
++</script>
++
++<template>
++  <Modal title="Accept ownership" @close="emit('close')">
++    <p v-if="accepted" class="lead">You are now the owner of <b>{{ session.state.doc }}</b>.</p>
++    <template v-else>
++      <p class="lead">If somebody asked you to take over <b>{{ session.state.doc }}</b>, confirm it is you with your own current password.</p>
++      <form class="form" @submit.prevent="accept">
++        <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" /></label>
++        <div class="buttons">
++          <button class="btn primary" type="submit" :disabled="busy || !password">Accept</button>
++          <button class="btn" type="button" @click="emit('close')">Cancel</button>
++        </div>
++      </form>
++    </template>
++    <div v-if="accepted" class="buttons">
++      <button class="btn primary" type="button" @click="emit('close')">Done</button>
++    </div>
++  </Modal>
++</template>
++
++<style scoped>
++.lead {
++  margin: 0;
++  color: var(--muted);
++}
++.form {
++  display: grid;
++  gap: 12px;
++}
++.buttons {
++  display: flex;
++  gap: 10px;
++}
++</style>
+diff --git a/web/app/components/AssignOwnerDialog.vue b/web/app/components/AssignOwnerDialog.vue
+new file mode 100644
+index 0000000..7d0906c
+--- /dev/null
++++ b/web/app/components/AssignOwnerDialog.vue
+@@ -0,0 +1,78 @@
++<script setup lang="ts">
++// File ▸ Manage ▸ Assign new owner… (D135). A role lives inside its own password-sealed slot (D102), so handing
++// one over is a propose/accept pair: we prove it is us with our own password now, and the person we pick proves it
++// is them with theirs when they accept (elsewhere, the next time they open this menu and see the offer — there is
++// no separate "accept" screen yet; see the decision log).
++import { onMounted, ref } from 'vue'
++import type { BaseSession } from '~/lib/base-session'
++
++const props = defineProps<{ session: BaseSession }>()
++const emit = defineEmits<{ close: [] }>()
++
++const editors = ref<string[]>([])
++const loaded = ref(false)
++const chosen = ref('')
++const password = ref('')
++const busy = ref(false)
++const proposed = ref<string | null>(null)
++
++onMounted(async () => {
++  const roster = await props.session.roster()
++  if (roster !== false) editors.value = roster.filter((p) => p.role === 'editor').map((p) => p.user)
++  loaded.value = true
++})
++
++async function propose() {
++  busy.value = true
++  if (await props.session.proposeOwner(chosen.value, password.value)) proposed.value = chosen.value
++  busy.value = false
++}
++</script>
++
++<template>
++  <Modal title="Assign a new owner" @close="emit('close')">
++    <p v-if="proposed" class="lead">
++      <b>{{ proposed }}</b> has been asked to take over <b>{{ session.state.doc }}</b>. Until they accept, you are still the owner. You will become an
++      editor the moment they do.
++    </p>
++    <template v-else>
++      <p class="lead">
++        Hand <b>{{ session.state.doc }}</b> over to somebody who already edits it. You will become an editor; they become the owner once they accept —
++        confirm it is you with your own password.
++      </p>
++      <form v-if="loaded" class="form" @submit.prevent="propose">
++        <label v-if="editors.length" class="field"
++          >New owner
++          <select v-model="chosen">
++            <option value="" disabled>Choose somebody…</option>
++            <option v-for="name in editors" :key="name" :value="name">{{ name }}</option>
++          </select>
++        </label>
++        <p v-else class="lead">Nobody edits this document yet. Make somebody an editor first (File ▸ Manage ▸ Share…).</p>
++        <label v-if="editors.length" class="field">Your password<input v-model="password" type="password" autocomplete="current-password" /></label>
++        <div class="buttons">
++          <button v-if="editors.length" class="btn primary" type="submit" :disabled="busy || !chosen || !password">Ask them to take over</button>
++          <button class="btn" type="button" @click="emit('close')">{{ editors.length ? 'Cancel' : 'Close' }}</button>
++        </div>
++      </form>
++    </template>
++    <div v-if="proposed" class="buttons">
++      <button class="btn primary" type="button" @click="emit('close')">Done</button>
++    </div>
++  </Modal>
++</template>
++
++<style scoped>
++.lead {
++  margin: 0;
++  color: var(--muted);
++}
++.form {
++  display: grid;
++  gap: 12px;
++}
++.buttons {
++  display: flex;
++  gap: 10px;
++}
++</style>
+diff --git a/web/app/components/DeleteDocumentDialog.vue b/web/app/components/DeleteDocumentDialog.vue
+new file mode 100644
+index 0000000..8034e69
+--- /dev/null
++++ b/web/app/components/DeleteDocumentDialog.vue
+@@ -0,0 +1,57 @@
++<script setup lang="ts">
++// File ▸ Manage ▸ Delete from server… (D135). Owners only, confirmed with the owner's own current password. There
++// is no way back from this: no recycle bin, no undo.
++import { ref } from 'vue'
++import type { BaseSession } from '~/lib/base-session'
++
++const props = defineProps<{ session: BaseSession }>()
++const emit = defineEmits<{ close: []; deleted: [] }>()
++
++const password = ref('')
++const busy = ref(false)
++
++async function remove() {
++  busy.value = true
++  if (await props.session.deleteDocument(password.value)) emit('deleted')
++  busy.value = false
++}
++</script>
++
++<template>
++  <Modal title="Delete this document" @close="emit('close')">
++    <p class="lead warning">
++      This removes <b>{{ session.state.doc }}</b> from the server for good — its content, its history and its chat, and everybody's access to it. There is
++      no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Manage ▸ Export…).
++    </p>
++    <form class="form" @submit.prevent="remove">
++      <label class="field">Your password, to confirm<input v-model="password" type="password" autocomplete="current-password" /></label>
++      <div class="buttons">
++        <button class="btn danger" type="submit" :disabled="busy || !password">Delete for good</button>
++        <button class="btn" type="button" @click="emit('close')">Cancel</button>
++      </div>
++    </form>
++  </Modal>
++</template>
++
++<style scoped>
++.lead {
++  margin: 0;
++  color: var(--muted);
++}
++.lead.warning {
++  color: var(--ink);
++}
++.form {
++  display: grid;
++  gap: 12px;
++}
++.buttons {
++  display: flex;
++  gap: 10px;
++}
++.btn.danger {
++  background: var(--rose);
++  color: #fff;
++  border-color: var(--rose);
++}
++</style>
+diff --git a/web/app/components/DocumentFrame.vue b/web/app/components/DocumentFrame.vue
+index 11eb8a2..aee7d9b 100644
+--- a/web/app/components/DocumentFrame.vue
++++ b/web/app/components/DocumentFrame.vue
+@@ -15,7 +15,7 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }
+ 
+ const state = props.session.state
+ const panelOpen = ref(true)
+-const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about'>(null)
++const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'>(null)
+ const panel = ref<{ ask: (text?: string) => void } | null>(null)
+ const readonly = computed(() => state.me.role === 'viewer')
+ 
+@@ -50,7 +50,8 @@ defineExpose({
+   checkpoint,
+   ask,
+   shortcuts,
+-  openDialog: (name: 'checkpoint' | 'share' | 'shortcuts' | 'about') => (dialog.value = name),
++  openDialog: (name: 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete') =>
++    (dialog.value = name),
+   /** View ▸ History and chat (D120's shared block) toggles the one `panelOpen` this frame owns — exposed as a
+    * getter/setter pair, not the ref itself, so the parent's own `computed` menus still track it correctly. */
+   isPanelOpen: () => panelOpen.value,
+@@ -100,6 +101,11 @@ onBeforeUnmount(() => clearTimeout(timer))
+       @close="dialog = null"
+     />
+     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
++    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
++    <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
++    <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
++    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
++    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
+     <ShortcutsDialog
+       v-if="dialog === 'shortcuts'"
+       :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
+diff --git a/web/app/components/ExportDialog.vue b/web/app/components/ExportDialog.vue
+new file mode 100644
+index 0000000..6442138
+--- /dev/null
++++ b/web/app/components/ExportDialog.vue
+@@ -0,0 +1,51 @@
++<script setup lang="ts">
++// File ▸ Manage ▸ Export… (D135, E2.9). Claudia's own file format only: a JSON snapshot of the document's current
++// content, sealed with nothing (it is already decrypted content you are allowed to see) and saved straight to this
++// computer. Word, Excel and PowerPoint import and export is separate, not-yet-built work (the owner asked for this
++// clarification); neither is the command history or the chat — both stay in the document, only not in this file.
++import { ref } from 'vue'
++import type { BaseSession } from '~/lib/base-session'
++import { downloadJSON } from '~/lib/download'
++
++const props = defineProps<{ session: BaseSession }>()
++const emit = defineEmits<{ close: [] }>()
++
++const busy = ref(false)
++const done = ref(false)
++
++async function exportNow() {
++  busy.value = true
++  const data = await props.session.exportContent()
++  if (data !== false) {
++    downloadJSON(`${props.session.state.doc}.claudia-export.json`, data)
++    done.value = true
++  }
++  busy.value = false
++}
++</script>
++
++<template>
++  <Modal title="Export this document" @close="emit('close')">
++    <p class="lead">
++      This saves <b>{{ session.state.doc }}</b>'s current content to this computer as Claudia's own file format (a JSON snapshot) — not a Word, Excel or
++      PowerPoint file; importing and exporting those is separate work, not built yet. It does not include the document's history or chat.
++    </p>
++    <p v-if="done" class="lead">Exported.</p>
++    <div class="buttons">
++      <button v-if="!done" class="btn primary" type="button" :disabled="busy" @click="exportNow">Export</button>
++      <button class="btn" type="button" @click="emit('close')">{{ done ? 'Done' : 'Cancel' }}</button>
++    </div>
++  </Modal>
++</template>
++
++<style scoped>
++.lead {
++  margin: 0;
++  color: var(--muted);
++}
++.buttons {
++  display: flex;
++  gap: 10px;
++  margin-top: 4px;
++}
++</style>
+diff --git a/web/app/components/LeaveDocumentDialog.vue b/web/app/components/LeaveDocumentDialog.vue
+new file mode 100644
+index 0000000..65910a1
+--- /dev/null
++++ b/web/app/components/LeaveDocumentDialog.vue
+@@ -0,0 +1,49 @@
++<script setup lang="ts">
++// File ▸ Manage ▸ Leave document… (D135). Confirms it is really you, with your own current password, before
++// removing you — not the password that opened this connection a moment ago, in case somebody is still at your desk.
++import { ref } from 'vue'
++import type { BaseSession } from '~/lib/base-session'
++
++const props = defineProps<{ session: BaseSession }>()
++const emit = defineEmits<{ close: []; left: [] }>()
++
++const password = ref('')
++const busy = ref(false)
++
++async function leave() {
++  busy.value = true
++  if (await props.session.leave(password.value)) emit('left')
++  busy.value = false
++}
++</script>
++
++<template>
++  <Modal title="Leave this document" @close="emit('close')">
++    <p class="lead">
++      You will no longer be able to open <b>{{ session.state.doc }}</b>, unless somebody adds you again. Confirm it is you with your own current
++      password.
++    </p>
++    <form class="form" @submit.prevent="leave">
++      <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" /></label>
++      <div class="buttons">
++        <button class="btn primary" type="submit" :disabled="busy || !password">Leave document</button>
++        <button class="btn" type="button" @click="emit('close')">Cancel</button>
++      </div>
++    </form>
++  </Modal>
++</template>
++
++<style scoped>
++.lead {
++  margin: 0;
++  color: var(--muted);
++}
++.form {
++  display: grid;
++  gap: 12px;
++}
++.buttons {
++  display: flex;
++  gap: 10px;
++}
++</style>
+diff --git a/web/app/components/SlideWorkspace.vue b/web/app/components/SlideWorkspace.vue
+index 5979fc9..e43832a 100644
+--- a/web/app/components/SlideWorkspace.vue
++++ b/web/app/components/SlideWorkspace.vue
+@@ -53,7 +53,33 @@ const menus = computed<Menu[]>(() => [
+       { id: 'file.save-as', label: 'Save new checkpoint…', action: () => frame.value?.openDialog('checkpoint'), disabled: readonly.value },
+       { id: 'file.download', label: 'Download', disabled: true }, // D123: a stub here until creates has an export format
+       { label: '', separator: true },
+-      { id: 'file.share', label: 'Share…', action: () => frame.value?.openDialog('share'), disabled: state.me.role !== 'owner' },
++      {
++        id: 'file.manage',
++        label: 'Manage',
++        items: [
++          { id: 'file.manage.share', label: 'Share…', action: () => frame.value?.openDialog('share'), disabled: state.me.role !== 'owner' },
++          {
++            id: 'file.manage.assign-owner',
++            label: 'Assign new owner…',
++            action: () => frame.value?.openDialog('assign-owner'),
++            disabled: state.me.role !== 'owner',
++          },
++          {
++            id: 'file.manage.accept-owner',
++            label: 'Accept ownership…',
++            action: () => frame.value?.openDialog('accept-owner'),
++            disabled: state.me.role === 'viewer',
++          },
++          { id: 'file.manage.leave', label: 'Leave document…', action: () => frame.value?.openDialog('leave') },
++          { id: 'file.manage.export', label: 'Export…', action: () => frame.value?.openDialog('export') },
++          {
++            id: 'file.manage.delete',
++            label: 'Delete from server…',
++            action: () => frame.value?.openDialog('delete'),
++            disabled: state.me.role !== 'owner',
++          },
++        ],
++      },
+       { label: '', separator: true },
+       { id: 'file.close', label: 'Close document', action: () => emit('leave') },
+     ],
+diff --git a/web/app/components/TextWorkspace.vue b/web/app/components/TextWorkspace.vue
+index 7f7a9cb..dc84891 100644
+--- a/web/app/components/TextWorkspace.vue
++++ b/web/app/components/TextWorkspace.vue
+@@ -19,7 +19,9 @@ const session = props.session
+ const state = session.state
+ const { dark, toggle: toggleDark } = useTheme()
+ 
+-const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'styles'>(null)
++const dialog = ref<
++  null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'styles' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
++>(null)
+ const styleMenu = ref<{ x: number; y: number } | null>(null)
+ const styleHost = textStyleHost(session)
+ const panelOpen = ref(true)
+@@ -135,7 +137,28 @@ const menus = computed<Menu[]>(() => [
+       { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
+       { id: 'file.download', label: 'Download', action: download },
+       { label: '', separator: true },
+-      { id: 'file.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
++      {
++        id: 'file.manage',
++        label: 'Manage',
++        items: [
++          { id: 'file.manage.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
++          {
++            id: 'file.manage.assign-owner',
++            label: 'Assign new owner…',
++            action: () => (dialog.value = 'assign-owner'),
++            disabled: state.me.role !== 'owner',
++          },
++          { id: 'file.manage.accept-owner', label: 'Accept ownership…', action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
++          { id: 'file.manage.leave', label: 'Leave document…', action: () => (dialog.value = 'leave') },
++          { id: 'file.manage.export', label: 'Export…', action: () => (dialog.value = 'export') },
++          {
++            id: 'file.manage.delete',
++            label: 'Delete from server…',
++            action: () => (dialog.value = 'delete'),
++            disabled: state.me.role !== 'owner',
++          },
++        ],
++      },
+       { label: '', separator: true },
+       { id: 'file.close', label: 'Close document', action: () => emit('leave') },
+     ],
+@@ -306,6 +329,11 @@ onBeforeUnmount(() => clearTimeout(timer))
+     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
+     <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
++    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
++    <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
++    <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
++    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
++    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
+     <ShortcutsDialog
+       v-if="dialog === 'shortcuts'"
+       :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
+diff --git a/web/app/components/Workspace.vue b/web/app/components/Workspace.vue
+index ea937fc..8348684 100644
+--- a/web/app/components/Workspace.vue
++++ b/web/app/components/Workspace.vue
+@@ -24,7 +24,9 @@ const sel = ref<Sel>(single(0, 0))
+ const edit = ref<EditState | null>(null)
+ const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
+ let original = ''
+-const dialog = ref<null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about'>(null)
++const dialog = ref<
++  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
++>(null)
+ const panelOpen = ref(true)
+ const grid = ref<{ focus: () => void } | null>(null)
+ const panel = ref<{ ask: (text?: string) => void } | null>(null)
+@@ -220,7 +222,28 @@ const menus = computed<Menu[]>(() => [
+       { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
+       { id: 'file.download', label: 'Download', disabled: true }, // D123: a stub here until computes has an export format
+       { label: '', separator: true },
+-      { id: 'file.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
++      {
++        id: 'file.manage',
++        label: 'Manage',
++        items: [
++          { id: 'file.manage.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
++          {
++            id: 'file.manage.assign-owner',
++            label: 'Assign new owner…',
++            action: () => (dialog.value = 'assign-owner'),
++            disabled: state.me.role !== 'owner',
++          },
++          { id: 'file.manage.accept-owner', label: 'Accept ownership…', action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
++          { id: 'file.manage.leave', label: 'Leave document…', action: () => (dialog.value = 'leave') },
++          { id: 'file.manage.export', label: 'Export…', action: () => (dialog.value = 'export') },
++          {
++            id: 'file.manage.delete',
++            label: 'Delete from server…',
++            action: () => (dialog.value = 'delete'),
++            disabled: state.me.role !== 'owner',
++          },
++        ],
++      },
+       { label: '', separator: true },
+       { id: 'file.close', label: 'Close document', action: () => emit('leave') },
+     ],
+@@ -398,6 +421,11 @@ onBeforeUnmount(() => clearTimeout(timer))
+       @close="dialog = null"
+     />
+     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
++    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
++    <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
++    <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
++    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
++    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
+     <ShortcutsDialog
+       v-if="dialog === 'shortcuts'"
+       :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
+diff --git a/web/app/lib/base-session.ts b/web/app/lib/base-session.ts
+index 65d55db..416c8b6 100644
+--- a/web/app/lib/base-session.ts
++++ b/web/app/lib/base-session.ts
+@@ -288,6 +288,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
+     } else if (message.kind === 'typing') {
+       const others = s.typing.filter((u) => u !== who)
+       s.typing = message.data.on ? [...others, who] : others
++    } else if (message.kind === 'person_left') {
++      this.notice(`${message.data.user} left this document.`)
++    } else if (message.kind === 'owner_changed') {
++      this.notice(`${message.data.owner} is now the owner of this document.`)
++      this.track(this.reconnectNow())  // our own role may have just changed (we may have been the old owner)
++    } else if (message.kind === 'document_deleted') {
++      this.notice('This document was deleted by its owner.', 'warning')
++      this.close()
+     }
+   }
+ 
+@@ -353,6 +361,52 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
+     return (await this.attempt('add_user', { name, password, role })) !== false
+   }
+ 
++  /** Reopen the connection with the same name and password, so a role the server just changed takes effect. */
++  async reconnectNow(): Promise<void> {
++    this.close()
++    this.closing = false
++    await this.open()
++  }
++
++  /** Everybody who may log in to this document, not just who is connected now, in the order they were added. */
++  async roster(): Promise<{ user: string; role: string }[] | false> {
++    return await this.attempt('roster')
++  }
++
++  /** Remove yourself, confirming it with your own current password. `false` after telling the person why not
++   * (a wrong password, or being the document's only owner). */
++  async leave(password: string): Promise<boolean> {
++    return (await this.attempt('leave', { password })) !== false
++  }
++
++  /** Owners: ask `name` (who must already be an editor) to become the owner instead, confirming it with your own
++   * current password. They accept with `acceptOwner`. */
++  async proposeOwner(name: string, password: string): Promise<boolean> {
++    return (await this.attempt('propose_owner', { name, password })) !== false
++  }
++
++  /** Accept an ownership proposed to you, confirming it with your own current password. Reconnects on success, so
++   * the server recognises you as the owner for the rest of this session. */
++  async acceptOwner(password: string): Promise<boolean> {
++    const done = await this.attempt('accept_owner', { password })
++    if (done !== false) await this.reconnectNow()
++    return done !== false
++  }
++
++  /** Remove this document from the server for good, confirming it with your own current password. There is no
++   * way back from this. */
++  async deleteDocument(password: string): Promise<boolean> {
++    const done = await this.attempt('delete_document', { password })
++    if (done !== false) this.close()
++    return done !== false
++  }
++
++  /** The document's current content as Claudia's own format (not Word, Excel or PowerPoint, and not the history
++   * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
++  async exportContent(): Promise<Record<string, unknown> | false> {
++    return await this.attempt('export_content')
++  }
++
+   /**
+    * Owners: make a new recovery key (the old one stops working). It is shown once and the server keeps nothing of it,
+    * so whoever calls this must show it to the person at once. `null` if there is none; unless `quiet`, the person is
+diff --git a/web/app/lib/download.ts b/web/app/lib/download.ts
+new file mode 100644
+index 0000000..c14d0b5
+--- /dev/null
++++ b/web/app/lib/download.ts
+@@ -0,0 +1,12 @@
++// Saving something the server gave us as a file on this computer. A plain helper (not part of any session) because
++// nothing here needs a connection: by the time a dialog calls this, the data is already in hand.
++
++/** Offer `data` to the browser as a file called `filename`, pretty-printed JSON. */
++export function downloadJSON(filename: string, data: unknown): void {
++  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
++  const link = document.createElement('a')
++  link.href = URL.createObjectURL(blob)
++  link.download = filename
++  link.click()
++  setTimeout(() => URL.revokeObjectURL(link.href), 1000)
++}
+diff --git a/web/tests/session.test.ts b/web/tests/session.test.ts
+index 476b5a8..0cd7e6b 100644
+--- a/web/tests/session.test.ts
++++ b/web/tests/session.test.ts
+@@ -386,3 +386,126 @@ describe('the recovery key', () => {
+     expect(session.state.notice).toBeNull()
+   })
+ })
++
++describe('the Manage menu (leaving, handing over ownership, deleting, exporting)', () => {
++  it('lists everybody, not just who is connected', async () => {
++    const link = new FakeLink()
++    server(link)
++    link.handlers.roster = () => [
++      { user: 'ann', role: 'owner' },
++      { user: 'ben', role: 'editor' },
++    ]
++    const session = new Session(() => link)
++    await session.open()
++    expect(await session.roster()).toEqual([
++      { user: 'ann', role: 'owner' },
++      { user: 'ben', role: 'editor' },
++    ])
++  })
++
++  it('leaves with a password, and closes for nobody but us', async () => {
++    const link = new FakeLink()
++    server(link)
++    link.handlers.leave = () => ({ left: true })
++    const session = new Session(() => link)
++    await session.open()
++    expect(await session.leave('Correct-Horse-9')).toBe(true)
++    expect(session.state.status).toBe('open')
++  })
++
++  it('reports why leaving did not work', async () => {
++    const link = new FakeLink()
++    server(link)
++    link.handlers.leave = () => {
++      throw new ProtocolError('unauthorized', 'that is not your current password')
++    }
++    const session = new Session(() => link)
++    await session.open()
++    expect(await session.leave('wrong')).toBe(false)
++    expect(session.state.notice?.text).toBe('that is not your current password')
++  })
++
++  it('proposes a new owner with our own password', async () => {
++    const link = new FakeLink()
++    server(link)
++    link.handlers.propose_owner = (p) => ({ proposed: p.name })
++    const session = new Session(() => link)
++    await session.open()
++    expect(await session.proposeOwner('ben', 'Correct-Horse-9')).toBe(true)
++    expect(link.calls.at(-1)).toMatchObject({ method: 'propose_owner', params: { name: 'ben', password: 'Correct-Horse-9' } })
++  })
++
++  it('accepting ownership reconnects so the new role is recognised', async () => {
++    const first = new FakeLink()
++    const second = new FakeLink()
++    server(first)
++    server(second)
++    first.handlers.accept_owner = () => ({ accepted: true })
++    const links = [first, second]
++    const session = new Session(() => links.shift()!)
++    await session.open()
++    expect(await session.acceptOwner('Battery-Staple-7')).toBe(true)
++    expect(session.state.status).toBe('open')
++    expect(second.count('sheets')).toBe(1)
++  })
++
++  it('deletes the document with a password, and closes the session', async () => {
++    const link = new FakeLink()
++    server(link)
++    link.handlers.delete_document = () => ({ deleted: true })
++    const session = new Session(() => link)
++    await session.open()
++    expect(await session.deleteDocument('Correct-Horse-9')).toBe(true)
++    expect(session.state.status).toBe('closed')
++  })
++
++  it('does not close the session when deleting is refused', async () => {
++    const link = new FakeLink()
++    server(link)
++    link.handlers.delete_document = () => {
++      throw new ProtocolError('forbidden', 'only an owner of a document may delete it')
++    }
++    const session = new Session(() => link)
++    await session.open()
++    expect(await session.deleteDocument('Correct-Horse-9')).toBe(false)
++    expect(session.state.status).toBe('open')
++  })
++
++  it('exports the current content as plain data', async () => {
++    const link = new FakeLink()
++    server(link)
++    const exported = { format: 'claudia-export 1', app: 'computes', exported_at: 't', state_schema: 1, state: {} }
++    link.handlers.export_content = () => exported
++    const session = new Session(() => link)
++    await session.open()
++    expect(await session.exportContent()).toEqual(exported)
++  })
++
++  it('tells us when somebody else leaves', async () => {
++    const { session, link } = await opened()
++    link.push('ephemeral', { kind: 'person_left', sender: 'ben', data: { user: 'ben' } })
++    expect(session.state.notice?.text).toMatch(/ben left/)
++  })
++
++  it('reconnects when the ownership of the document changed under us', async () => {
++    const first = new FakeLink()
++    const second = new FakeLink()
++    server(first)
++    server(second)
++    const links = [first, second]
++    const session = new Session(() => links.shift()!)
++    await session.open()
++    first.push('ephemeral', { kind: 'owner_changed', sender: 'ben', data: { owner: 'ben' } })
++    await session.settled()
++    expect(session.state.notice?.text).toMatch(/ben is now the owner/)
++    expect(session.state.status).toBe('open')
++    expect(second.count('sheets')).toBe(1)
++  })
++
++  it('closes the session when the document was deleted out from under us', async () => {
++    const { session, link } = await opened()
++    link.push('ephemeral', { kind: 'document_deleted', sender: 'ann', data: {} })
++    expect(session.state.status).toBe('closed')
++    expect(session.state.notice?.text).toMatch(/deleted/)
++  })
++})

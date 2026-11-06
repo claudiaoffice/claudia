@@ -53,7 +53,33 @@ const menus = computed<Menu[]>(() => [
       { id: 'file.save-as', label: 'Save new checkpoint…', action: () => frame.value?.openDialog('checkpoint'), disabled: readonly.value },
       { id: 'file.download', label: 'Download', disabled: true }, // D123: a stub here until creates has an export format
       { label: '', separator: true },
-      { id: 'file.share', label: 'Share…', action: () => frame.value?.openDialog('share'), disabled: state.me.role !== 'owner' },
+      {
+        id: 'file.manage',
+        label: 'Manage',
+        items: [
+          { id: 'file.manage.share', label: 'Share…', action: () => frame.value?.openDialog('share'), disabled: state.me.role !== 'owner' },
+          {
+            id: 'file.manage.assign-owner',
+            label: 'Assign new owner…',
+            action: () => frame.value?.openDialog('assign-owner'),
+            disabled: state.me.role !== 'owner',
+          },
+          {
+            id: 'file.manage.accept-owner',
+            label: 'Accept ownership…',
+            action: () => frame.value?.openDialog('accept-owner'),
+            disabled: state.me.role === 'viewer',
+          },
+          { id: 'file.manage.leave', label: 'Leave document…', action: () => frame.value?.openDialog('leave') },
+          { id: 'file.manage.export', label: 'Export…', action: () => frame.value?.openDialog('export') },
+          {
+            id: 'file.manage.delete',
+            label: 'Delete from server…',
+            action: () => frame.value?.openDialog('delete'),
+            disabled: state.me.role !== 'owner',
+          },
+        ],
+      },
       { label: '', separator: true },
       { id: 'file.close', label: 'Close document', action: () => emit('leave') },
     ],

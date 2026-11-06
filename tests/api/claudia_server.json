@@ -1,5 +1,5 @@
 {
- "version": "0.9.0",
+ "version": "0.10.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -113,7 +113,7 @@
   "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'sealed': 'the document is stored but nobody who holds all its keys has opened it since the server started; a viewer has to wait (and may try again) until an owner or editor has', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
  },
  "EVENTS": {
-  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|..., sender, data}', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions was removed: {revisions}', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection'}"
+  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions was removed: {revisions}', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection'}"
  },
  "Engine": {
   "class": [
@@ -319,14 +319,19 @@
   "class": [
    "object"
   ],
-  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', *, kdf: 'KdfParams | None' = None, key_ttl: 'float' = 60.0, pack_every: 'int' = 500, clock: 'Callable[[], float]' = <built-in function monotonic>, **options)",
+  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', *, kdf: 'KdfParams | None' = None, key_ttl: 'float' = 60.0, transfer_ttl: 'float' = 300.0, pack_every: 'int' = 500, clock: 'Callable[[], float]' = <built-in function monotonic>, **options)",
   "methods": {
+   "accept_owner_transfer": "(self, doc_id: 'str', new_owner: 'str', new_owner_password: 'str') -> 'Account | None'",
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
    "create": "(self, doc_id: 'str') -> 'Document'",
+   "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
    "documents": "(self) -> 'list[StoredInfo]'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
+   "leave": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'bool'",
+   "list_people": "(self, doc_id: 'str') -> 'list[Account]'",
    "new_recovery_key": "(self, doc_id: 'str') -> 'str'",
    "open": "(self, doc_id: 'str') -> 'Document'",
+   "propose_owner_transfer": "(self, doc_id: 'str', old_owner: 'str', old_owner_password: 'str', new_owner: 'str') -> 'bool'",
    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
    "release": "(self, doc_id: 'str') -> 'None'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",

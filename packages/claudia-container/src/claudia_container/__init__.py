@@ -25,6 +25,7 @@ from .container import (
     create_document,
     has_recovery_key,
     journal_path,
+    leave_document,
     pack_journal,
     read_manifest,
     read_people,
@@ -33,6 +34,7 @@ from .container import (
     recover_access,
     remove_user,
     set_recovery_key,
+    transfer_owner,
     unlock,
     unlock_with_recovery,
 )
@@ -98,6 +100,7 @@ __all__ = [
     "has_recovery_key",
     "journal_generation",
     "journal_path",
+    "leave_document",
     "make_slot",
     "new_domain_keys",
     "new_recovery_key",
@@ -117,6 +120,7 @@ __all__ = [
     "require_strong_password",
     "seal",
     "set_recovery_key",
+    "transfer_owner",
     "unlock",
     "unlock_with_recovery",
 ]

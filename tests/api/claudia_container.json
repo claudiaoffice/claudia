@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.4.0",
  "ContainerError": {
   "class": [
    "Exception"
@@ -217,6 +217,9 @@
  "journal_path": {
   "function": "(path: pathlib.Path) -> pathlib.Path"
  },
+ "leave_document": {
+  "function": "(path: pathlib.Path, name: str, password: str) -> bool"
+ },
  "make_slot": {
   "function": "(material: claudia_container.crypto.LoginMaterial, doc_id: str, name: str, role: claudia_container.slots.Role, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> claudia_container.slots.KeySlot"
  },
@@ -273,6 +276,9 @@
  },
  "set_recovery_key": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], recovery_key: bytes) -> None"
+ },
+ "transfer_owner": {
+  "function": "(path: pathlib.Path, *, old_owner: str, old_owner_password: str, new_owner: str, new_owner_password: str) -> bool"
  },
  "unlock": {
   "function": "(path: pathlib.Path, name: str, password: str) -> claudia_container.slots.Unlocked | None"

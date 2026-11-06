@@ -20,7 +20,7 @@ def whole_number(value: object, what: str) -> int:
     number = to_number(single(None if value is MISSING else value))
     try:
         return int(number)
-    except OverflowError, ValueError:
+    except (OverflowError, ValueError):
         raise FormulaError(NUM, f"{what} is not a usable number") from None
 
 

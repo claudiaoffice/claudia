@@ -50,7 +50,7 @@ class ResultCache:
         path = self._path(key)
         try:
             return path.read_text(encoding="utf-8")
-        except FileNotFoundError, UnicodeDecodeError:
+        except (FileNotFoundError, UnicodeDecodeError):
             return None
 
     def put(self, key: str, svg: str) -> None:

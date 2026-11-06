@@ -169,7 +169,7 @@ def _as_number(param: _Param, value: Value):
         return float(value)
     try:
         return int(value)
-    except OverflowError, ValueError:
+    except (OverflowError, ValueError):
         raise FormulaError(NUM) from None
 
 
@@ -249,7 +249,7 @@ class Bound:
             raise
         except ZeroDivisionError:
             raise FormulaError("#DIV/0!") from None
-        except ValueError, OverflowError:
+        except (ValueError, OverflowError):
             raise FormulaError(NUM) from None
         except TypeError:
             raise FormulaError(VALUE) from None
