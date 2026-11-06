@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from importlib import resources
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -81,6 +82,12 @@ class ComposesApp(Adw.Application):
     def do_startup(self) -> None:
         Adw.Application.do_startup(self)
         Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(str(self._identity.icon_search_path))
+        provider = Gtk.CssProvider()
+        css = resources.files("claudia_shell_gtk").joinpath("data/style.css").read_text(encoding="utf-8")
+        provider.load_from_string(css)
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
         for action in self._manifest.actions:
             if action.accelerators:
                 self.set_accels_for_action(f"win.{action.id}", list(action.accelerators))

@@ -41,7 +41,7 @@ dl {
 }
 dt {
   font-size: 12px;
-  color: var(--app-dark);
+  color: var(--app-text); /* --app-dark as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
   white-space: nowrap;
 }
 dd {

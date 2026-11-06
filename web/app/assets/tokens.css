@@ -7,6 +7,12 @@
  * separate from `--line`'s decorative 14% so one can change without the other breaking again.
  */
 :root {
+  /* Native form controls (a `<select>`'s own popup, checkboxes, scrollbars) are drawn by the browser engine itself,
+   * not by this stylesheet, and ignore `data-theme` entirely unless told which variant to draw — the owner's
+   * 2026-11-06 report that Share's role dropdown stayed white while every custom-styled input around it went dark.
+   * Declared explicitly in both schemes (not `light dark`, which leaves the choice to the engine) so it always
+   * follows the resolved theme, not whatever the OS happens to prefer. */
+  color-scheme: light;
   --ink: #1f1a33;
   --iris: #5b4bc4;
   --mist: #e7e1f4;
@@ -25,8 +31,25 @@
    * (the design system's rule is still: Rose and Teal are backgrounds with white text; these two are the exception). */
   --rose-dark: #b8386a;
   --teal-dark: #0f7d6e;
+  /* The wordmark only: Rose lightened for a dark background (7.7:1 on `--page-dark`, 6.6:1 on `--surface-dark`) —
+   * the inverse of `--rose-dark` above, which is Rose darkened for a light one. */
+  --rose-light: #ef87ac;
+  /* `--app-text`'s dark-mode counterparts below (2026-11-06): measured the same way as `--rose-light`, each against
+   * `--surface-dark` — Teal 6.9:1, Apricot 6.6:1. Not used directly; always go through `--app-text`. */
+  --teal-light: #3dbfaa;
+  --apricot-light: #e8954a;
 
   --text: var(--ink);
+  /* The wordmark's own colour, kept apart from `--text`: in dark mode it switches to Rose rather than following
+   * body text to Paper — Ink-on-Ink is how the logo was disappearing (the owner's report, 2026-11-06). */
+  --wordmark: var(--ink);
+  /* `--app-dark` used as literal text (a link, "Rename", an active mark) rather than a filled background: fine in
+   * light mode (that's the whole reason `--app-dark` exists, per the comment below), measured broken in dark mode
+   * when the owner reported "Rename" barely visible — 2.86:1 for Rose, 3.1–3.7:1 for Teal/Apricot against
+   * `--surface-dark`, all under the 4.5:1 normal-text floor, Rose under even the 3:1 UI floor. `--app-text` is the
+   * one token every such use should go through instead of `--app-dark`/`--app` directly; it only differs from
+   * `--app-dark` in dark mode (see the per-app overrides below and under `:root[data-theme='dark']`). */
+  --app-text: var(--app-dark);
   --muted: color-mix(in srgb, var(--ink) 65%, transparent);
   --faint: color-mix(in srgb, var(--ink) 12%, transparent);
   --line: color-mix(in srgb, var(--ink) 14%, transparent);
@@ -72,10 +95,19 @@
 /* UX-05: dark mode. The app accent (`--app`/`--app-dark`/`--app-soft`) stays the same in both schemes — it already
  * reads fine on the dark surface (see the mockup) — only the neutral tokens move. */
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --text: var(--text-dark);
   --muted: color-mix(in srgb, var(--muted-dark) 100%, transparent);
   --line: var(--line-dark);
   --line-field: var(--line-field-dark);
   --surface: var(--surface-dark);
   --page: var(--page-dark);
+  --wordmark: var(--rose-light);
+  --app-text: var(--teal-light); /* computes' own accent-as-text; composes/creates override below */
+}
+:root[data-theme='dark'][data-app='composes'] {
+  --app-text: var(--rose-light);
+}
+:root[data-theme='dark'][data-app='creates'] {
+  --app-text: var(--apricot-light);
 }

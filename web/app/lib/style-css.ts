@@ -161,16 +161,40 @@ export function toHex(color: string | undefined): string | null {
 }
 
 // ------------------------------------------------------------------------------ what the page draws
-/** The CSS of a paragraph on the page: the computed style as it is. */
+
+/** The document's own default ink, in whatever form a style might state it — not a colour anyone chose, the colour
+ * a run gets when nobody touched its `color` at all. A document genuinely is black-on-white (the owner's own framing,
+ * 2026-11-06): this is a display-only stand-in, never a change to what is stored. */
+const DEFAULT_INK_HEXES = new Set(['#1f1a33', '#000000'])
+
+/** Is `color` one of the stand-ins for the document's own default ink? */
+export function isDefaultInk(color: string | undefined): boolean {
+  if (!color) return false
+  const hex = toHex(color)
+  return (hex !== null && DEFAULT_INK_HEXES.has(hex)) || color.trim().toLowerCase() === 'black'
+}
+
+/** `css` with its default-ink `color` (if any) swapped for the page's own text colour, so an unstyled run still
+ * reads in dark mode; a colour anyone actually picked is left exactly as authored, in both themes. Used wherever a
+ * style's computed CSS reaches the page — composes' paragraphs (`paragraphCss` below) and creates' text and shape
+ * objects (`SlideCanvas.vue`'s `cssOf`) alike. */
+export function withDisplayInk(css: Css): Css {
+  return isDefaultInk(css.color) ? { ...css, color: 'var(--text)' } : css
+}
+
+/** The CSS of a paragraph on the page: the computed style as it is, with its ink made to read in dark mode. */
 export function paragraphCss(computed: Css): Css {
-  return { ...computed }
+  return withDisplayInk({ ...computed })
 }
 
 const PREVIEW = ['font-family', 'font-weight', 'font-style', 'text-decoration', 'color', 'background-color', 'letter-spacing']
 
-/** How a style looks in a list of styles: its type and colours, not its size, margins or borders. */
+/** How a style looks in a list of styles: its type and colours, not its size, margins or borders. Goes through the
+ * same `withDisplayInk` swap as `paragraphCss` — a style whose own colour is the document's default ink still has
+ * to be readable in the style picker itself (`StylesDialog.vue`'s "All styles…" list, `StyleMenu.vue`'s "Edit this
+ * style…" picker), the owner's 2026-11-06 report that a style's own name was invisible there in dark mode. */
 export function previewCss(computed: Css): Css {
-  return Object.fromEntries(Object.entries(computed).filter(([name]) => PREVIEW.includes(name)))
+  return withDisplayInk(Object.fromEntries(Object.entries(computed).filter(([name]) => PREVIEW.includes(name))))
 }
 
 const TAGS: Record<string, string> = { title: 'h1', 'heading-1': 'h2', 'heading-2': 'h3', quote: 'blockquote' }

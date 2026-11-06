@@ -33,7 +33,10 @@ button {
 
 /* buttons: sentence case, primary filled, others outlined */
 .btn {
-  border: 1px solid var(--line);
+  /* a button's own outline is a control boundary, not a divider — `--line` is 14% ink, documented in tokens.css as
+   * "decorative only, not a contrast pair"; `--line-field` is the 48% ink token actually rated for this (the owner's
+   * 2026-11-06 report that dialog and input boundaries were hard to see, most visibly but not only in dark mode). */
+  border: 1px solid var(--line-field);
   background: transparent;
   border-radius: 999px;
   padding: 6px 16px;
@@ -65,7 +68,10 @@ button {
 .field select {
   font-size: 14px;
   color: var(--text);
-  border: 1px solid var(--line);
+  /* Same fix, same reason as `.btn` above — this is the actual input/select used by `ShareDialog.vue`'s Name,
+   * Password and role fields; `--line` undershoots the 3:1 UI-component floor regardless of theme, dark mode just
+   * made it impossible to miss (the owner's 2026-11-06 report). */
+  border: 1px solid var(--line-field);
   background: var(--surface);
   border-radius: 8px;
   padding: 8px 10px;

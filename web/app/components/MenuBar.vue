@@ -64,9 +64,26 @@ function titleId(i: number) {
 }
 
 function choose(item: MenuItem) {
-  if (item.disabled || item.separator || item.items) return
+  if (item.disabled || item.separator) return
+  if (item.items) {
+    // A click on a flyout parent (Paste as, Row, Column) opens or closes its own submenu — same thing hovering it
+    // does below — rather than doing nothing, which the owner's 2026-11-06 report read as the submenu being gone
+    // (mouse hover alone could set `activeTop` but never `activeSub`, so the flyout never appeared for a mouse user).
+    activeItem.value = clickable.value.indexOf(item)
+    activeSub.value = activeSub.value === null ? 0 : null
+    return
+  }
   close()
   item.action?.()
+}
+
+/** Hovering a top-level item: makes it active, and opens its flyout at once if it has one — a flyout that only
+ * opened for keyboard users (Arrow-Right) read as missing to anyone using the mouse (the owner's 2026-11-06
+ * report, Edit ▸ Row / Edit ▸ Column in computes). */
+function enterItem(item: MenuItem) {
+  if (item.disabled) return
+  activeItem.value = clickable.value.indexOf(item)
+  activeSub.value = item.items ? 0 : null
 }
 
 function open(i: number, { focusFirst = false }: { focusFirst?: boolean } = {}) {
@@ -284,7 +301,7 @@ onBeforeUnmount(() => {
                 :class="{ active: activeTop === item }"
                 tabindex="-1"
                 @click="choose(item)"
-                @mouseenter="!item.disabled && (activeItem = clickable.indexOf(item)), (activeSub = null)"
+                @mouseenter="enterItem(item)"
               >
                 <span><i v-if="item.checked !== undefined" class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</i>{{ item.label }}</span>
                 <kbd v-if="item.hint">{{ item.hint }}</kbd>
@@ -320,7 +337,7 @@ onBeforeUnmount(() => {
   display: inline-block;
   width: 1.3em;
   font-style: normal;
-  color: var(--app);
+  color: var(--app-text); /* --app as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
 }
 .menus {
   background: var(--surface);
@@ -346,6 +363,9 @@ onBeforeUnmount(() => {
 .title:hover,
 .title.open {
   background: var(--mist);
+  /* `--mist` stays light in dark mode by design (same as `SheetGrid.vue`'s `.colhead.on`) — pin the text to Ink
+   * rather than following `--text` into Paper, or a highlighted item goes unreadable in dark mode. */
+  color: var(--ink);
 }
 .title:focus-visible {
   outline: 2px solid var(--app-dark);
@@ -361,7 +381,7 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 6px;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a floating panel's own edge, not a divider — same fix as Modal.vue */
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
@@ -383,6 +403,7 @@ onBeforeUnmount(() => {
 .drop button:hover:not(:disabled),
 .drop button.active:not(:disabled) {
   background: var(--mist);
+  color: var(--ink); /* same dark-mode fix as .title above */
 }
 .drop button:disabled {
   color: var(--muted);

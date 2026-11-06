@@ -276,7 +276,7 @@ ul {
   justify-content: space-between;
   gap: 12px;
   text-align: left;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   background: transparent;
   border-radius: 10px;
   padding: 10px 12px;
@@ -317,7 +317,7 @@ form {
   border: 0;
   padding: 0;
   background: none;
-  color: var(--app);
+  color: var(--app-text); /* --app as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
   font: inherit;
   text-decoration: underline;
   cursor: pointer;

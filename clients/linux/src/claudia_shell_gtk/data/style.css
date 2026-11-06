@@ -1,0 +1,14 @@
+/* Loaded once, at application startup (`app.py`'s `do_startup`), on top of the system's own GTK theme — this shell
+   changes only what it has to, and nothing else: colours, fonts and every other default stay the user's own theme.
+
+   `.about-link` — the three outbound-link buttons of the About dialog (`window.py`'s `_show_about`). Left at GTK's
+   own default size, a `button` this short in label ("Website", "Legal") still gets Adwaita's generous default
+   padding and, stacked in a narrow dialog, reads as oversized next to the web app's own buttons (`.btn` in
+   `web/app/assets/app.css`: 6px/16px padding, a fully-rounded pill). This rule gives GTK the same proportions,
+   without reaching for libadwaita's own `.pill` class, whose default sizing is exactly the "big and round" this
+   replaces (the owner's 2026-11-06 report after testing the dialog). */
+.about-link {
+  min-height: 0;
+  padding: 6px 16px;
+  border-radius: 9999px;
+}

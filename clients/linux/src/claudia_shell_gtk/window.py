@@ -19,14 +19,15 @@ from ._gi import Adw, Gio, GLib, Gtk
 from ._version import __version__
 from .bridge import Bridge
 from .identity import AppIdentity
-from .manifest import Action, Kind, Manifest, composes, menu_elements
+from .manifest import Action, Kind, Manifest, about_links, composes, menu_elements
 
 __all__ = ["ComposesWindow", "Page", "PageFactory"]
 
 log = logging.getLogger(__name__)
 
-WEBSITE = "https://claudia-office.de"
-ISSUES = "https://github.com/claudiaoffice/claudia/issues"
+# The page's own dark-mode choice (D120's View ▸ Dark Mode, a `Kind.PAGE` checkable) is the one thing native chrome
+# also needs to know: see `set_action_states`'s use of it below.
+_DARK_ACTION = "view.dark"
 
 
 class Page(Protocol):
@@ -68,7 +69,7 @@ class ComposesWindow(Adw.ApplicationWindow):
         self._manifest = manifest
         self._page_factory = page_factory
         self._page: Page | None = None
-        self.about_dialog: Adw.AboutDialog | None = None
+        self.about_dialog: Adw.Dialog | None = None
         self.last_toast = ""
         self._bridge = Bridge(
             manifest,
@@ -169,6 +170,21 @@ class ComposesWindow(Adw.ApplicationWindow):
                 action.set_enabled(bool(state["enabled"]))
             if "checked" in state and action.get_state() is not None:
                 action.set_state(GLib.Variant.new_boolean(bool(state["checked"])))
+            if name == _DARK_ACTION and "checked" in state:
+                self._sync_native_theme(bool(state["checked"]))
+
+    @staticmethod
+    def _sync_native_theme(dark: bool) -> None:
+        """Native dialogs (the About dialog, D28) are plain GTK/libadwaita — a rendering stack entirely separate
+        from the page's own `data-theme` CSS, with nothing tying the two together unless the shell says so itself
+        (the owner's 2026-11-06 report: the About dialog stayed whatever colour GTK's own theme was, regardless of
+        the document's own Dark Mode setting). The page already reports `view.dark`'s *resolved* state — light or
+        dark, "system" already settled — on every change, click or system-triggered alike (`TextWorkspace.vue`'s
+        `menus`, `shell-bridge.ts`'s `reportStates`); this is the other half. `FORCE_*`, not `PREFER_*`: the whole
+        point of the tri-state is that a person can ask for dark regardless of what the desktop itself is set to,
+        so the shell's own chrome has to be just as overridable."""
+        scheme = Adw.ColorScheme.FORCE_DARK if dark else Adw.ColorScheme.FORCE_LIGHT
+        Adw.StyleManager.get_default().set_color_scheme(scheme)
 
     def _set_page_actions_enabled(self, enabled: bool) -> None:
         for spec in self._manifest.actions:
@@ -202,15 +218,49 @@ class ComposesWindow(Adw.ApplicationWindow):
             self._page.send(raw)
 
     def _show_about(self) -> None:
-        dialog = Adw.AboutDialog(
-            application_name=self._identity.title,
-            application_icon=self._identity.application_id,
-            version=__version__,
-            developer_name="The Claudia authors",
-            copyright="© The Claudia authors",
-            license_type=Gtk.License.GPL_3_0,
-            website=WEBSITE,
-            issue_url=ISSUES,
-        )
+        """D28's shared About dialog, built by hand rather than from ``Adw.AboutDialog``: that widget's own "Website"
+        / "Troubleshooting" / "Legal" row is a set of full-width, Adwaita-sized pill buttons — correct content,
+        wrong size next to the web app's own, far smaller buttons (the owner's 2026-11-06 report). Content-sized
+        buttons in a plain `Adw.Dialog`, styled by the `.about-link` rule in `data/style.css`, give the same
+        content without inheriting a size we do not otherwise use anywhere in this shell."""
+        dialog = Adw.Dialog(content_width=300)
+        view = Adw.ToolbarView()
+        header = Adw.HeaderBar(show_title=False)
+        view.add_top_bar(header)
+
+        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4, halign=Gtk.Align.CENTER)
+        body.set_margin_start(24)
+        body.set_margin_end(24)
+        body.set_margin_bottom(24)
+
+        icon = Gtk.Image.new_from_icon_name(self._identity.application_id)
+        icon.set_pixel_size(64)
+        icon.set_margin_bottom(12)
+        body.append(icon)
+
+        title = Gtk.Label(label=self._identity.title)
+        title.add_css_class("title-3")
+        body.append(title)
+
+        version = Gtk.Label(label=f"v{__version__}")
+        version.add_css_class("dim-label")
+        version.add_css_class("caption")
+        version.set_margin_bottom(16)
+        body.append(version)
+
+        links = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, halign=Gtk.Align.CENTER)
+        for label, url in about_links():
+            button = Gtk.Button(label=label)
+            button.add_css_class("about-link")
+            button.connect("clicked", lambda _b, u=url: self._open_link(u))
+            links.append(button)
+        body.append(links)
+
+        view.set_content(body)
+        dialog.set_child(view)
         self.about_dialog = dialog
         dialog.present(self)
+
+    @staticmethod
+    def _open_link(url: str) -> None:
+        Gio.AppInfo.launch_default_for_uri_async(url, None, None, None)

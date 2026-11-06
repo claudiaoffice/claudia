@@ -6,6 +6,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { CORNERS, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { colorOf, inkOn } from '~/lib/people'
 import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
+import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 
 const props = defineProps<{ session: SlideSession }>()
@@ -48,7 +49,9 @@ function boxStyle(o: SlideObject) {
   return { left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h) }
 }
 function cssOf(o: SlideObject) {
-  return scaleCss(state.styles[o.style]?.css ?? {}, scale.value)
+  // withDisplayInk: a text object's default ink, genuinely black in the document (D28/2026-11-06), still needs to
+  // read against a dark slide canvas in dark mode — display-only, same fix as composes' paragraphCss.
+  return withDisplayInk(scaleCss(state.styles[o.style]?.css ?? {}, scale.value))
 }
 function outline(o: SlideObject) {
   return o.shape ? (state.shapes[o.shape] ?? null) : null

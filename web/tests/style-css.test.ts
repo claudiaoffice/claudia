@@ -6,6 +6,7 @@ import {
   formatCss,
   hasDecoration,
   isBold,
+  isDefaultInk,
   isItalic,
   paragraphCss,
   previewCss,
@@ -14,6 +15,7 @@ import {
   styleUses,
   toHex,
   toggleDecoration,
+  withDisplayInk,
   withFontSize,
   type StyleView,
 } from '~/lib/style-css'
@@ -118,8 +120,30 @@ describe('colours', () => {
 })
 
 describe('what the page draws', () => {
-  it('uses the computed CSS as it is', () => {
+  it('uses the computed CSS as it is, apart from the ink it may swap for display', () => {
     expect(paragraphCss({ 'font-size': '12pt', color: 'red' })).toEqual({ 'font-size': '12pt', color: 'red' })
+  })
+  it('recognises the document\'s own default ink however it is written, and nothing else', () => {
+    expect(isDefaultInk('#1f1a33')).toBe(true)
+    expect(isDefaultInk('#1F1A33')).toBe(true)
+    expect(isDefaultInk('rgb(31, 26, 51)')).toBe(true)
+    expect(isDefaultInk('#000000')).toBe(true)
+    expect(isDefaultInk('#000')).toBe(true)
+    expect(isDefaultInk('black')).toBe(true)
+    expect(isDefaultInk('BLACK')).toBe(true)
+    expect(isDefaultInk('red')).toBe(false)
+    expect(isDefaultInk('#1f1a34')).toBe(false)
+    expect(isDefaultInk(undefined)).toBe(false)
+  })
+  it('swaps the document\'s own default ink for the page\'s text colour — display only, never a stored change', () => {
+    expect(withDisplayInk({ color: '#1f1a33', 'font-size': '12pt' })).toEqual({ color: 'var(--text)', 'font-size': '12pt' })
+    expect(withDisplayInk({ color: 'black' })).toEqual({ color: 'var(--text)' })
+    expect(paragraphCss({ color: '#1F1A33', 'font-size': '12pt' })).toEqual({ color: 'var(--text)', 'font-size': '12pt' })
+  })
+  it('leaves a colour someone actually chose exactly as authored, ink or not', () => {
+    expect(withDisplayInk({ color: 'red' })).toEqual({ color: 'red' })
+    expect(withDisplayInk({ 'font-size': '12pt' })).toEqual({ 'font-size': '12pt' })
+    expect(paragraphCss({ color: 'red' })).toEqual({ color: 'red' })
   })
   it('keeps the look of a style in a preview but not its size, margins or borders', () => {
     const p = previewCss({ 'font-family': 'serif', 'font-size': '30pt', 'font-weight': '500', 'margin-top': '2em', 'border-left': '3px solid red', color: 'red', 'background-color': '#eee' })
@@ -127,6 +151,10 @@ describe('what the page draws', () => {
     expect(p['font-size']).toBeUndefined()
     expect(p['margin-top']).toBeUndefined()
     expect(p['border-left']).toBeUndefined()
+  })
+  it('inverts a preview\'s colour too, when it is the document\'s own default ink', () => {
+    expect(previewCss({ 'font-family': 'serif', color: '#1F1A33' })).toEqual({ 'font-family': 'serif', color: 'var(--text)' })
+    expect(previewCss({ color: 'red' })).toEqual({ color: 'red' })
   })
   it('chooses the tag by the built-in style a style comes from', () => {
     expect(semanticTag(styles, 'body')).toBe('p')

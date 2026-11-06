@@ -1,64 +1,81 @@
 <script setup lang="ts">
-// Help ▸ About claudia (D120/D126): new, and web-only — inside a real shell this never even mounts, since
-// `help.about` there is `Kind.SHELL` (the window's own native `Adw.AboutDialog`, intercepted before it reaches the
-// page at all) and the page isn't drawing its own `MenuBar` in the first place once a shell's `welcome` advertises
-// `native-menu` (see `shell.nativeMenu` in the workspace components). This dialog exists for the one case that has
-// no shell to ask: a plain browser tab. Nothing here is fetched: the version is the shell-contract version both
-// sides already agree on, not a separate build number, since the suite doesn't version itself independently of the
-// contract yet.
+// Help ▸ About claudia (D120/D126), rebuilt 2026-11-06 to match the Linux shell's own About dialog exactly (D28,
+// the owner's report that the two had drifted apart): the app's own logo, its name, then the same three outbound
+// links the shell's `about_links()` gives it — Website, Report an Issue, Legal — in the same order, nothing added.
+//
+// Web-only: inside a real shell this never even mounts, since `help.about` there is `Kind.SHELL` (the window's own
+// native dialog, intercepted before it reaches the page at all) and the page isn't drawing its own `MenuBar` in the
+// first place once a shell's `welcome` advertises `native-menu` (see `shell.nativeMenu` in the workspace
+// components). This dialog exists for the one case that has no shell to ask: a plain browser tab. The version
+// shown is the shell-contract version both sides already agree on, not a separate build number, since the suite
+// doesn't version itself independently of the contract yet (the Linux shell's own `__version__` is that build
+// number, and has no web equivalent to show here).
 import { SHELL_CONTRACT_VERSION } from '~/lib/shell-bridge'
 
 defineProps<{ app: 'composes' | 'computes' | 'creates' }>()
 const emit = defineEmits<{ close: [] }>()
 
-const BLURB: Record<'composes' | 'computes' | 'creates', string> = {
-  composes: 'Write together: text, with everyone in it and the assistant alongside.',
-  computes: 'Think with your data: a table, with everyone in it and the assistant alongside.',
-  creates: 'Say it on a slide: a presentation, with everyone in it and the assistant alongside.',
+const TITLE: Record<'composes' | 'computes' | 'creates', string> = {
+  composes: 'Claudia Composes',
+  computes: 'Claudia Computes',
+  creates: 'Claudia Creates',
 }
+
+// Kept in step with `window.py`'s `about_links()` by hand: the two shells have no manifest in common for this, so
+// whichever one of us changes this list has to change the other too.
+const LINKS: { label: string; href: string }[] = [
+  { label: 'Website', href: 'https://www.claudia-office.de' },
+  { label: 'Report an Issue', href: 'https://github.com/claudiaoffice/claudia/issues' },
+  { label: 'Legal', href: 'https://github.com/claudiaoffice/claudia/blob/main/LICENSE' },
+]
 </script>
 
 <template>
   <Modal title="About claudia" @close="emit('close')">
-    <p class="blurb">{{ BLURB[app] }}</p>
-    <dl>
-      <dt>Part of</dt>
-      <dd>claudia, an open-source office suite</dd>
-      <dt>Shell contract</dt>
-      <dd class="mono">v{{ SHELL_CONTRACT_VERSION }}</dd>
-    </dl>
-    <p class="hint"><a href="https://github.com/claudiaoffice/claudia" target="_blank" rel="noopener">github.com/claudiaoffice/claudia</a></p>
-    <button class="btn primary" type="button" @click="emit('close')">Close</button>
+    <div class="about">
+      <AppIcon :size="64" :app="app" />
+      <h3>{{ TITLE[app] }}</h3>
+      <p class="version mono">Shell contract v{{ SHELL_CONTRACT_VERSION }}</p>
+      <div class="links">
+        <a v-for="link in LINKS" :key="link.label" class="btn" :href="link.href" target="_blank" rel="noopener">{{ link.label }}</a>
+      </div>
+      <button class="btn primary" type="button" @click="emit('close')">Close</button>
+    </div>
   </Modal>
 </template>
 
 <style scoped>
-.blurb {
-  margin: 0;
+.about {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding-top: 4px;
+}
+h3 {
+  margin: 10px 0 0;
+  font: 500 17px var(--font-ui);
   color: var(--text);
 }
-dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 6px 18px;
-  margin: 0;
-}
-dt {
+.version {
+  margin: 0 0 10px;
   font-size: 12px;
-  color: var(--app-dark);
-  white-space: nowrap;
+  color: var(--muted);
 }
-dd {
-  margin: 0;
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
 }
-.hint {
-  margin: 0;
-  font-size: 12px;
+.links .btn {
+  text-align: center;
+  text-decoration: none;
+  color: var(--text);
 }
-.hint a {
-  color: var(--app-dark);
-}
-button {
-  justify-self: start;
+.about > .btn.primary {
+  margin-top: 8px;
+  align-self: center;
 }
 </style>

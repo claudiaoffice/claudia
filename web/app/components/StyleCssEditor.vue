@@ -106,12 +106,13 @@ function apply() {
 textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   font-size: 12.5px;
   line-height: 1.55;
   resize: vertical;
   background: color-mix(in srgb, var(--mist) 28%, white);
+  color: var(--ink); /* mixed with literal white, so this background stays light in dark mode too */
   tab-size: 2;
 }
 textarea:focus {
@@ -151,7 +152,7 @@ textarea:focus {
   gap: 2px;
 }
 .from li span {
-  color: var(--app-dark);
+  color: var(--app-text); /* --app-dark as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
   font-family: var(--font-ui);
 }
 </style>

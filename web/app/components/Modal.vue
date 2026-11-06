@@ -46,7 +46,11 @@ defineExpose({ reopen: () => dialog.value?.showModal() })
   width: min(440px, calc(100vw - 32px));
   background: var(--surface);
   color: var(--text);
-  border: 0;
+  /* `--shadow` alone used to carry the dialog's edge: a near-black shadow at low opacity, calibrated for a light
+   * backdrop. Against a dark surface and backdrop (dark mode) it all but disappears — the owner's 2026-11-06 report
+   * that a dialog's own boundary could not be seen. An explicit border is cheap insurance in both themes, not just
+   * dark mode, and `--line-field` (not `--line`) because a dialog's edge is a control boundary, the 3:1 pairing. */
+  border: 1px solid var(--line-field);
   border-radius: 16px;
   padding: 24px 26px;
   box-shadow: var(--shadow);

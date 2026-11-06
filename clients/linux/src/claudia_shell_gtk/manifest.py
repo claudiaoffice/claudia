@@ -41,7 +41,25 @@ __all__ = [
     "creates",
     "menu_elements",
     "menu_xml",
+    "about_links",
 ]
+
+WEBSITE = "https://www.claudia-office.de"
+ISSUES = "https://github.com/claudiaoffice/claudia/issues"
+LEGAL = "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"
+
+
+def about_links() -> tuple[tuple[str, str], ...]:
+    """The three outbound links every About dialog shows, in this order (D28, the owner's 2026-11-06 report that the
+    web and Linux About dialogs had drifted apart): data, so both can be tested without GTK (``window.py``'s
+    ``_show_about`` is what actually builds the dialog). The licence is linked rather than shown in full here, for
+    the same reason ``claudiaoffice-log/notes/README.md`` gives for not duplicating generated content elsewhere: a
+    second copy of the licence text cannot be kept true and competes with the one in the repository.
+
+    Web's own copy of this list is ``AboutDialog.vue``'s ``LINKS`` — there is no shared manifest for the two shells
+    to read this from, so a change here needs the same change made there by hand.
+    """
+    return (("Website", WEBSITE), ("Report an Issue", ISSUES), ("Legal", LEGAL))
 
 
 class Kind(enum.Enum):

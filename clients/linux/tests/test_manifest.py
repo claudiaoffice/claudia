@@ -314,3 +314,16 @@ def test_the_manifest_can_be_listed_for_the_page_and_the_docs(app: manifest.Mani
     json.dumps(listing)  # plain data, including any submenu's nested "items"
     paste_as = next(e for e in listing["menus"][1]["sections"][1] if e.get("label") == "Paste As")
     assert paste_as["items"][0]["id"] == "edit.paste-as-plain"
+
+
+def test_about_links_are_website_then_report_an_issue_then_legal() -> None:
+    """D28's shared About dialog (``window.py``'s ``_show_about``, ``AboutDialog.vue``'s own ``LINKS``): this is the
+    one side of that agreement GTK can test without a display — the three links, their order and their targets."""
+    labels = [label for label, _url in manifest.about_links()]
+    assert labels == ["Website", "Report an Issue", "Legal"]
+    urls = dict(manifest.about_links())
+    assert urls["Website"] == "https://www.claudia-office.de"
+    assert urls["Report an Issue"] == "https://github.com/claudiaoffice/claudia/issues"
+    # linked, not reproduced in full — claudiaoffice-log/notes/README.md's reason for not duplicating generated
+    # content applies here too: a second copy of the licence text cannot be kept true.
+    assert urls["Legal"] == "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"

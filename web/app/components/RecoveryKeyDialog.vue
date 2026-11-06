@@ -66,6 +66,7 @@ async function copy() {
   padding: 14px 16px;
   border-radius: 12px;
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode; the key must not go unreadable there */
   user-select: all;
 }
 code {

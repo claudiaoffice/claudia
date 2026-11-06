@@ -187,7 +187,7 @@ h3 {
 }
 .marks {
   display: inline-flex;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* the group's own edge, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   overflow: hidden;
 }
@@ -207,6 +207,9 @@ h3 {
   background: var(--mist);
 }
 .marks button[aria-pressed='true'] {
+  /* Mixed with literal `white`, not `transparent`: this background stays light regardless of theme (same as
+   * `StylesDialog.vue`'s `.flag`), so `--app-dark` as its text is already theme-stable too — leave both as they
+   * are; swapping the text alone to `--app-text` would break it (light text on a background that never darkens). */
   background: color-mix(in srgb, var(--app) 18%, white);
   color: var(--app-dark);
 }
@@ -238,7 +241,7 @@ h3 {
 .name input {
   height: 30px;
   padding: 0 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
 }
 .actions {

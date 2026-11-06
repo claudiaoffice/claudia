@@ -200,8 +200,12 @@ const menus = computed<Menu[]>(() => [
 }
 .tabs button:hover {
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode */
 }
 .tabs button.on {
+  /* `--app-soft` mixes with literal `white` (tokens.css), so it stays light regardless of theme — `--app-dark` as
+   * its text is already theme-stable for the same reason as `StyleSpec.vue`'s `.marks button[aria-pressed]`; do
+   * not swap to `--app-text`, which would put light-mode-only-safe light text on this still-light background. */
   background: var(--app-soft);
   color: var(--app-dark);
   font-weight: 500;
