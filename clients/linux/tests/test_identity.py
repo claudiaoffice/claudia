@@ -22,13 +22,25 @@ def test_the_app_names_the_server_model_it_hosts() -> None:
     assert identity.get("composes").model == "claudia_composes:TextModel"
 
 
+def test_computes_and_creates_have_an_identity_too_even_without_a_window_class_yet() -> None:
+    """D121: the menus they need already exist (``manifest.py``'s ``computes()``/``creates()``); the identity each
+    needs to be *launched* with is added alongside, ahead of the window/application class itself (out of this
+    round's scope — see ``identity.py``'s module docstring)."""
+    computes = identity.get("computes")
+    assert computes.application_id == "de.claudiaoffice.computes"
+    assert computes.model == "claudia_computes:WorkbookModel"
+    creates = identity.get("creates")
+    assert creates.application_id == "de.claudiaoffice.creates"
+    assert creates.model == "claudia_creates:SlideModel"
+
+
 def test_an_unknown_app_is_a_clear_error() -> None:
     try:
-        identity.get("computes")
+        identity.get("drawbook")  # never was, never will be — the point is only that no such name exists
     except identity.UnknownApp as problem:
         assert "composes" in str(problem)  # it says what is available
     else:
-        raise AssertionError("computes has no Linux client yet")
+        raise AssertionError("drawbook has no Linux client")
 
 
 def desktop_entry() -> configparser.ConfigParser:

@@ -58,6 +58,10 @@ page and are not bound natively, because they would run twice.
 **This table is the debt.** It is a click path between two menu structures that D4 and E5.1 say should be one
 manifest (UX-09), and it has to be rewritten for every shell.
 
+**Update, 2026-11-05:** a patch retiring this whole mapping (D121) — `webroutes.json`/`shim.js` deleted, the web app
+speaking the shell contract directly, `manifest.py` rebuilt to the seven-menu schema of D120 — is delivered, not yet
+committed. This table describes what is on `main` today; see `e5-1-e5-10-menus-and-accessibility.md` for the patch.
+
 ## Deviation from the plan
 
 The first plan was a custom URI scheme for the bundled frontend (D43) plus `--allow-origin` on the local server. It

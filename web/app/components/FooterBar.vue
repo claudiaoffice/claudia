@@ -63,6 +63,7 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
 }
 .tabs button:hover {
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode */
 }
 .tabs button.on {
   background: var(--app-soft);

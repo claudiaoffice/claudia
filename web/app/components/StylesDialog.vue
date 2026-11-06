@@ -88,7 +88,7 @@ async function save(id: string) {
   flex: 1;
   height: 30px;
   padding: 0 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
 }
 .flag {
@@ -101,7 +101,7 @@ async function save(id: string) {
   margin-left: auto;
   border: 0;
   background: none;
-  color: var(--app-dark);
+  color: var(--app-text); /* --app-dark as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
   cursor: pointer;
 }
 .link:hover {

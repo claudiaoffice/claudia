@@ -118,6 +118,7 @@ const statusText = computed(() =>
 .panel[aria-pressed='true'] {
   background: var(--mist);
   border-color: transparent;
+  color: var(--ink); /* `--mist` stays light in dark mode; don't let the text follow `--text` into Paper */
 }
 @media (max-width: 736px) {
   .status,

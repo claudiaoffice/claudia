@@ -54,7 +54,7 @@ function pick(family: string) {
   gap: 8px;
   height: 30px;
   padding: 0 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   background: var(--surface);
 }
@@ -75,7 +75,7 @@ function pick(family: string) {
   display: grid;
   gap: 6px;
   padding: 6px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a floating panel's own edge, not a divider — same fix as Modal.vue */
   border-radius: 10px;
   background: var(--surface);
 }
@@ -97,6 +97,7 @@ li button {
 }
 li button:hover {
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode */
 }
 li button.on {
   background: color-mix(in srgb, var(--app) 14%, transparent);
@@ -105,7 +106,7 @@ li button.on {
   width: 100%;
   height: 30px;
   padding: 0 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
 }
 .reset {
@@ -113,7 +114,7 @@ li button.on {
   border: 0;
   padding: 0;
   background: none;
-  color: var(--app-dark);
+  color: var(--app-text); /* --app-dark as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
   font-size: 12px;
   text-decoration: underline;
   cursor: pointer;

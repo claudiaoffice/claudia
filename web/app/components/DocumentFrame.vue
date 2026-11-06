@@ -3,16 +3,19 @@
 // copy of the same chrome and could move onto this): the top bar, menus, the panel with history and chat, the notices,
 // the keys for undo, redo and save, and the dialogs to save and to share. The app fills in the rest through the slots:
 // `toolbar` (under the menus), the main area (default), `footer` and `overlay` (its own dialogs).
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import { applyAction, collectStates } from '~/lib/menu-dispatch'
+import { chordLabel, installWindowShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { createShellBridge } from '~/lib/shell-bridge'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: BaseSession; menus: Menu[] }>()
-const emit = defineEmits<{ leave: []; saved: [] }>()
+const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }>()
 
 const state = props.session.state
 const panelOpen = ref(true)
-const dialog = ref<null | 'checkpoint' | 'share'>(null)
+const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about'>(null)
 const panel = ref<{ ask: (text?: string) => void } | null>(null)
 const readonly = computed(() => state.me.role === 'viewer')
 
@@ -28,30 +31,40 @@ function ask(text = '@ai ') {
   setTimeout(() => panel.value?.ask(text), 0)
 }
 
+// D122: the shared shortcut map, same as the other two workspaces. `SlideWorkspace.vue` has nothing of its own to
+// add to Undo/Redo/Save, so this is the complete list — kept here (not duplicated in the parent) since this is also
+// where Ctrl+S's own dialog state (`dialog`) and `readonly` already live. Exposed so the parent's Config ▸ Shortcuts
+// dialog can show the same list it is actually wired to.
+const shortcuts = computed<ShortcutDef[]>(() => [
+  ...sharedShortcuts({
+    undo: () => props.session.undo(),
+    redo: () => props.session.redo(),
+    save: () => {
+      if (!readonly.value) void checkpoint(null)
+    },
+  }),
+])
+installWindowShortcuts(() => shortcuts.value)
+
 defineExpose({
   checkpoint,
   ask,
-  openDialog: (name: 'checkpoint' | 'share') => (dialog.value = name),
+  shortcuts,
+  openDialog: (name: 'checkpoint' | 'share' | 'shortcuts' | 'about') => (dialog.value = name),
+  /** View ▸ History and chat (D120's shared block) toggles the one `panelOpen` this frame owns — exposed as a
+   * getter/setter pair, not the ref itself, so the parent's own `computed` menus still track it correctly. */
+  isPanelOpen: () => panelOpen.value,
+  togglePanel: () => (panelOpen.value = !panelOpen.value),
 })
 
-function onWindowKey(event: KeyboardEvent) {
-  const target = event.target as HTMLElement
-  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
-  if (!(event.ctrlKey || event.metaKey)) return
-  const key = event.key.toLowerCase()
-  if (key === 'z' && !event.shiftKey) {
-    event.preventDefault()
-    props.session.undo()
-  } else if (key === 'y' || (key === 'z' && event.shiftKey)) {
-    event.preventDefault()
-    props.session.redo()
-  } else if (key === 's') {
-    event.preventDefault()
-    if (!readonly.value) checkpoint(null)
-  }
-}
-onMounted(() => window.addEventListener('keydown', onWindowKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKey))
+// The shell bridge is wired here, not per-app, since the menus (built by the parent) are what state is reported
+// for, and the frame is what every creates document already mounts.
+// `reactive()` so the template's `shell.nativeMenu` (a getter reading `capabilities`) re-renders once the shell's
+// `welcome` message actually arrives — a plain class instance's own fields are not tracked otherwise.
+const shell = reactive(createShellBridge('creates'))
+shell.onAction((id, target) => applyAction(props.menus, id, target))
+onBeforeUnmount(() => shell.detach())
+watch(() => props.menus, (m) => shell.reportStates(collectStates(m)), { immediate: true })
 
 // A notice goes away by itself.
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -69,7 +82,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   <div class="frame">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you do now is not saved.</div>
-    <MenuBar :menus="menus" />
+    <MenuBar v-if="!shell.nativeMenu" :menus="menus" />
     <slot name="toolbar" />
     <div class="main" :class="{ wide: !panelOpen }">
       <slot />
@@ -79,7 +92,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 
     <PromptDialog
       v-if="dialog === 'checkpoint'"
-      title="Save with a name"
+      title="Save new checkpoint"
       label="Name of this state (you can leave it empty)"
       ok="Save"
       placeholder="before the review"
@@ -87,6 +100,19 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
+    <ShortcutsDialog
+      v-if="dialog === 'shortcuts'"
+      :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
+      :extra="[
+        ['Click', 'select an object (colleagues cannot change it while you hold it)'],
+        ['Drag', 'move it; the handles resize it'],
+        ['Double-click, Enter', 'write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it'],
+        ['Arrows', 'move it by 10 units; with Shift by 1'],
+        ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
+      ]"
+      @close="dialog = null"
+    />
+    <AboutDialog v-if="dialog === 'about'" app="creates" @close="dialog = null" />
     <slot name="overlay" />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>

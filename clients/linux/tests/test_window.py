@@ -114,6 +114,21 @@ def test_states_from_the_page_enable_and_disable_actions(window) -> None:
     assert window.lookup_action("edit.undo").get_enabled()
 
 
+def test_the_pages_dark_mode_choice_is_applied_to_the_native_chrome_too(window) -> None:
+    """D28/2026-11-06: the About dialog stayed whatever colour GTK's own theme was, regardless of the document's own
+    Dark Mode setting — nothing synced the two. `view.dark`'s resolved `checked` state now drives libadwaita's own
+    colour scheme, the same way it already drives the GTK menu's own checkmark."""
+    from claudia_shell_gtk._gi import Adw
+
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says(hello())
+    page.says({"type": "action_state", "states": {"view.dark": {"checked": True}}})
+    assert Adw.StyleManager.get_default().get_color_scheme() == Adw.ColorScheme.FORCE_DARK
+    page.says({"type": "action_state", "states": {"view.dark": {"checked": False}}})
+    assert Adw.StyleManager.get_default().get_color_scheme() == Adw.ColorScheme.FORCE_LIGHT
+
+
 def test_a_page_that_loads_again_disables_the_page_actions_until_it_says_hello_again(window) -> None:
     window.show_page("http://127.0.0.1:1")
     page = window.fake_pages[0]
@@ -158,16 +173,38 @@ def test_a_page_that_cannot_be_loaded_is_reported_in_the_window(window) -> None:
     assert "connection refused" in window.error_details
 
 
-def test_about_names_the_app_the_licence_and_the_version(window) -> None:
+def _labels(box) -> list[str]:
+    """The text of every `Gtk.Label`/`Gtk.Button` found by walking a box's children (depth 1, not recursive) —
+    enough to read what `_show_about` put there without reaching into Adwaita's own widget internals."""
+    found = []
+    child = box.get_first_child()
+    while child is not None:
+        if hasattr(child, "get_label") and child.get_label() is not None:
+            found.append(child.get_label())
+        child = child.get_next_sibling()
+    return found
+
+
+def test_about_shows_the_apps_own_icon_name_title_and_version(window) -> None:
+    from claudia_shell_gtk._version import __version__
+
     window.lookup_action("help.about").activate(None)
     about = window.about_dialog
     assert about is not None
-    assert about.get_application_name() == "Claudia Composes"
-    assert about.get_application_icon() == "de.claudiaoffice.composes"
-    assert about.get_website() == "https://claudia-office.de"
-    from claudia_shell_gtk._gi import Gtk
+    body = about.get_child().get_content()  # Adw.ToolbarView's content: the Gtk.Box built in _show_about
+    assert body.get_first_child().get_icon_name() == "de.claudiaoffice.composes"
+    texts = _labels(body)
+    assert "Claudia Composes" in texts
+    assert f"v{__version__}" in texts
 
-    assert about.get_license_type() == Gtk.License.GPL_3_0
+
+def test_about_offers_the_same_three_links_as_the_web_dialog(window) -> None:
+    from claudia_shell_gtk.manifest import about_links
+
+    window.lookup_action("help.about").activate(None)
+    body = window.about_dialog.get_child().get_content()
+    links = body.get_last_child()  # the Gtk.Box of link buttons, appended last
+    assert _labels(links) == [label for label, _url in about_links()]
 
 
 def test_quit_closes_the_window(window) -> None:

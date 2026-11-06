@@ -50,7 +50,7 @@ function pick(color: string) {
   gap: 7px;
   height: 30px;
   padding: 0 9px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   background: var(--surface);
   font-size: 13px;
@@ -72,7 +72,7 @@ function pick(color: string) {
   padding: 10px;
   display: grid;
   gap: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a floating panel's own edge, not a divider — same fix as Modal.vue */
   border-radius: 10px;
   background: var(--surface);
 }
@@ -101,14 +101,14 @@ function pick(color: string) {
   min-width: 0;
   height: 30px;
   padding: 0 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
 }
 .system {
   width: 38px;
   height: 30px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   background: none;
 }
@@ -117,7 +117,7 @@ function pick(color: string) {
   border: 0;
   padding: 0;
   background: none;
-  color: var(--app-dark);
+  color: var(--app-text); /* --app-dark as literal text fails contrast in dark mode — the owner's 2026-11-06 report */
   font-size: 12px;
   text-decoration: underline;
   cursor: pointer;

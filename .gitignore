@@ -5,3 +5,4 @@ demo-docs-*
 web/.nuxt
 web/.output
 web/node_modules
+claudiaoffice-log/.obsidian/*

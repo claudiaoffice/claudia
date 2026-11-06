@@ -1,11 +1,25 @@
-"""The menu and action manifest of the Linux client (E5.1): one list from which the native menus are built.
+"""The menu and action manifest of the Linux client (E5.1 / E5.10): one list from which the native menus are built.
 
-D4 gives every app four menus, File, Edit, Tools and Help (Undo and Redo are in Edit, D54; Cut, Copy and Paste too,
-D74). An action has an id that names *what it does* (``file.save``, ``view.page``) and not where it sits, so a menu can
-be rearranged without touching the shell contract. Each action is carried out by one party (:class:`Kind`).
+D120 gives every app the same seven header-bar menus — File, Edit, Format, View, Tools, Config, Help — superseding
+D4's four. An action has an id that names *what it does* (``file.save``, ``view.page``) and not where it sits, so a
+menu can be rearranged without touching the shell contract, and so the *same* id means the same thing on the web
+side (``web/app/lib/menu-dispatch.ts``) and here. Each action is carried out by one party (:class:`Kind`).
 
 Nothing here imports GTK: the menus are described as data and turned into GtkBuilder XML by :func:`menu_xml`, so the
-layout stays in XML (D27) and the manifest can be tested anywhere.
+layout stays in XML (D27) and the manifest can be tested anywhere. :func:`composes` already shipped; :func:`computes`
+and :func:`creates` are new (D121) — neither has a GTK window or application class yet (E5.1's scope cut, see
+``claudiaoffice-log/notes/e5-1-e5-10-menus-and-accessibility.md``), so these two are exercised only as data today.
+
+A note on what is deliberately *not* here, following the one precedent this file already had (composes' Format menu
+never listed a style by name): nothing data-driven gets a static entry. Dynamic, per-document content — composes'
+and computes' style names, creates' shape library — has no id and no `Action` of its own on the web side either
+(``lib/menu-dispatch.ts``'s `collectStates`/`findMenuItem` walk explicitly skip id-less items); a shell reaches that
+content through its one real submenu-shaped escape hatch (composes: "All Styles…") rather than the static menu
+growing one entry per document. The same reasoning drops the "visible but inert" stub items (D125) from the
+*accelerator* story but not from the menu itself: ``format.none``, ``help.how-to`` and ``help.docs`` below are
+ordinary ``Kind.PAGE`` actions the shell greys out the moment the page connects (``set_action_states``, driven by the
+page's own ``collectStates`` — nothing shell-side needs to know they are permanent stubs rather than temporarily
+disabled ones).
 """
 
 from __future__ import annotations
@@ -16,7 +30,36 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
-__all__ = ["Action", "Kind", "Manifest", "Menu", "composes", "menu_elements", "menu_xml"]
+__all__ = [
+    "Action",
+    "Kind",
+    "Manifest",
+    "Menu",
+    "Submenu",
+    "composes",
+    "computes",
+    "creates",
+    "menu_elements",
+    "menu_xml",
+    "about_links",
+]
+
+WEBSITE = "https://www.claudia-office.de"
+ISSUES = "https://github.com/claudiaoffice/claudia/issues"
+LEGAL = "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"
+
+
+def about_links() -> tuple[tuple[str, str], ...]:
+    """The three outbound links every About dialog shows, in this order (D28, the owner's 2026-11-06 report that the
+    web and Linux About dialogs had drifted apart): data, so both can be tested without GTK (``window.py``'s
+    ``_show_about`` is what actually builds the dialog). The licence is linked rather than shown in full here, for
+    the same reason ``claudiaoffice-log/notes/README.md`` gives for not duplicating generated content elsewhere: a
+    second copy of the licence text cannot be kept true and competes with the one in the repository.
+
+    Web's own copy of this list is ``AboutDialog.vue``'s ``LINKS`` — there is no shared manifest for the two shells
+    to read this from, so a change here needs the same change made there by hand.
+    """
+    return (("Website", WEBSITE), ("Report an Issue", ISSUES), ("Legal", LEGAL))
 
 
 class Kind(enum.Enum):
@@ -48,11 +91,28 @@ class Action:
 
 
 @dataclass(frozen=True, slots=True)
+class Submenu:
+    """A flyout inside a menu: Edit ▸ Paste as ▸ (every app, D120) and computes' Edit ▸ Row ▸ / Column ▸
+    (D130).
+
+    GTK's own menu format nests these natively (a ``<submenu>`` inside a ``<menu>``'s section) — the same one extra
+    level of nesting ``MenuBar.vue`` grew for exactly this (``claudiaoffice-log/notes/mockups/menu-bar-states.svg``,
+    panel E). A ``Submenu`` carries no id and is never itself a GTK action — only its ``items`` are.
+    """
+
+    label: str
+    items: tuple[Action, ...]
+
+
+MenuEntry = Action | Submenu
+
+
+@dataclass(frozen=True, slots=True)
 class Menu:
     """A menu button of the header bar. ``sections`` are groups drawn with a separator between them."""
 
     label: str
-    sections: tuple[tuple[Action, ...], ...]
+    sections: tuple[tuple[MenuEntry, ...], ...]
 
     @property
     def id(self) -> str:
@@ -60,9 +120,14 @@ class Menu:
         return f"menu-{self.label.lower()}"
 
     def all_actions(self) -> Iterator[Action]:
-        """Every action of the menu, in order."""
+        """Every actionable item of the menu, in order — a :class:`Submenu`'s own ``items``, not the ``Submenu``
+        itself, which has no id and backs no GTK action."""
         for section in self.sections:
-            yield from section
+            for entry in section:
+                if isinstance(entry, Submenu):
+                    yield from entry.items
+                else:
+                    yield entry
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,10 +169,15 @@ class Manifest:
                 "accelerators": list(action.accelerators),
             }
 
+        def entry(e: MenuEntry) -> dict[str, Any]:
+            if isinstance(e, Submenu):
+                return {"label": e.label, "items": [one(a) for a in e.items]}
+            return one(e)
+
         return {
             "app": self.app,
             "menus": [
-                {"label": menu.label, "sections": [[one(a) for a in section] for section in menu.sections]}
+                {"label": menu.label, "sections": [[entry(e) for e in section] for section in menu.sections]}
                 for menu in self.menus
             ],
             "header_toggles": [one(a) for a in self.header_toggles],
@@ -118,73 +188,159 @@ def _page(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str, 
     return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable)
 
 
-def composes() -> Manifest:
-    """The menus of claudia composes in the Linux client.
+# --------------------------------------------------------------------------------------------- shared across apps
+# D120's shared blocks, written once so the three manifests below cannot drift from each other by a typo the way the
+# three ``onWindowKey`` handlers did on the web side before D122.
 
-    The web app still has two more menus (Format, View); what they offer is reachable from Tools and the header bar
-    here, so D4 holds natively without touching the web app.
-    """
-    file_menu = Menu(
+
+def _file_menu(*, title: str) -> Menu:
+    """New, Open… · Save, Save new checkpoint…, Download · Share… · Close document, Quit (D123, D124's
+    grouping)."""
+    return Menu(
         "File",
         (
             (
+                _page("file.new", "New", "Start a new document", accelerators=("<Primary>n",)),
                 _page(
-                    "file.open", "Open…", "Create a document or open one from the server", accelerators=("<Primary>o",)
+                    "file.open",
+                    "Open…",
+                    "Create a document or open one from the server",
+                    accelerators=("<Primary>o",),
                 ),
+            ),
+            (
                 _page("file.save", "Save", "Make a checkpoint of the document"),
-                _page("file.save-named", "Save with a Name…", "Make a checkpoint and give it a name"),
-                _page(
-                    "file.save-as",
-                    "Save As…",
-                    "Download the document to this computer",
-                    accelerators=("<Primary><Shift>s",),
-                ),
+                _page("file.save-as", "Save New Checkpoint…", "Make a checkpoint and give it a name"),
+                _page("file.download", "Download", "Download the document to this computer"),
             ),
             (_page("file.share", "Share…", "Let other people into the document"),),
-            (Action("file.quit", "Quit", Kind.SHELL, "Close Claudia Composes", ("<Primary>q",)),),
+            (
+                _page("file.close", "Close Document", "Back to the list of documents"),
+                Action("file.quit", "Quit", Kind.SHELL, f"Close {title}", accelerators=("<Primary>q",)),
+            ),
         ),
     )
-    edit_menu = Menu(
-        "Edit",
-        (
-            (
-                _page("edit.undo", "Undo", "Take back your last step"),
-                _page("edit.redo", "Redo", "Do your last undone step again"),
-            ),
-            (
-                Action("edit.cut", "Cut", Kind.EDITING, "Move the selection to the clipboard", editing="Cut"),
-                Action("edit.copy", "Copy", Kind.EDITING, "Copy the selection to the clipboard", editing="Copy"),
-                Action("edit.paste", "Paste", Kind.EDITING, "Insert the clipboard", editing="Paste"),
-                Action(
-                    "edit.paste-as",
-                    "Paste As Plain Text",
-                    Kind.EDITING,
-                    "Insert the clipboard without formatting",
-                    editing="PasteAsPlainText",
+
+
+def _shared_edit_block() -> tuple[Action, ...]:
+    """Undo, Redo — identical in every app (D120); their accelerators are page-handled (``lib/shortcuts.ts``), not
+    shell-handled, so none are bound here, the same as before this round."""
+    return (
+        _page("edit.undo", "Undo", "Take back your last step"),
+        _page("edit.redo", "Redo", "Do your last undone step again"),
+    )
+
+
+def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
+    """Copy, Cut, Paste, Paste as ▸ Plain text — identical in every app (D120).
+
+    ``native=True`` (composes, carried over unchanged from before this round) dispatches straight to WebKit's own
+    editing commands. ``native=False`` (computes, creates — both new to the GTK shell, D121) goes through the page
+    instead: a cell grid's paste needs to split the clipboard by tabs and newlines onto the current selection, and a
+    slide canvas's paste needs to land in whichever text frame is being edited, neither of which WebKit's generic
+    "insert this text here" command knows how to do. The page's own ``lib/clipboard.ts`` is what actually does this.
+    """
+    if native:
+        return (
+            Action("edit.copy", "Copy", Kind.EDITING, "Copy the selection to the clipboard", editing="Copy"),
+            Action("edit.cut", "Cut", Kind.EDITING, "Move the selection to the clipboard", editing="Cut"),
+            Action("edit.paste", "Paste", Kind.EDITING, "Insert the clipboard", editing="Paste"),
+            Submenu(
+                "Paste As",
+                (
+                    Action(
+                        "edit.paste-as-plain",
+                        "Plain Text",
+                        Kind.EDITING,
+                        "Insert the clipboard without formatting",
+                        editing="PasteAsPlainText",
+                    ),
                 ),
             ),
+        )
+    return (
+        _page("edit.copy", "Copy", "Copy the selection to the clipboard"),
+        _page("edit.cut", "Cut", "Move the selection to the clipboard"),
+        _page("edit.paste", "Paste", "Insert the clipboard"),
+        Submenu("Paste As", (_page("edit.paste-as-plain", "Plain Text", "Insert the clipboard without formatting"),)),
+    )
+
+
+def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
+    """Show who wrote what, History and chat, Dark mode (D120). ``authors=False`` for computes/creates, which track
+    no per-item authorship yet — the action still exists and starts checkable (D125's visible-but-inert treatment),
+    the page itself reports it permanently disabled."""
+    return (
+        _page(
+            "view.authors",
+            "Show Who Wrote What",
+            "Colour the text by the person who wrote it" if authors else "Not available yet",
+            checkable=True,
+        ),
+        _page("view.panel", "History and Chat", "Show or hide the history and the chat", checkable=True),
+        _page("view.dark", "Dark Mode", "Follow or override the system's light/dark setting", checkable=True),
+    )
+
+
+def _config_menu() -> Menu:
+    """Shortcuts only, for now (D120, D122): an editable remapping UI is deferred."""
+    return Menu(
+        "Config",
+        ((_page("config.shortcuts", "Shortcuts", "The keyboard shortcuts this app uses", accelerators=("F1",)),),),
+    )
+
+
+def _help_menu(title: str) -> Menu:
+    """Ask ai, then the two not-yet-real stubs, then About (D120, D125, D126) — identical shape in every app; only
+    the About dialog's own title differs."""
+    return Menu(
+        "Help",
+        (
+            (
+                _page("help.ask", "Ask ai", "Open the chat with an empty prompt"),
+                _page("help.how-to", "How Do I…?", "Not available yet"),
+                _page("help.docs", "Documentation", "Not available yet"),
+                Action("help.about", f"About {title}", Kind.SHELL, "Version, authors and licence"),
+            ),
+        ),
+    )
+
+
+# ------------------------------------------------------------------------------------------------------ the three apps
+
+
+def composes() -> Manifest:
+    """The menus of claudia composes in the Linux client."""
+    edit_menu = Menu("Edit", (_shared_edit_block(), _shared_clipboard_block(native=True)))
+    format_menu = Menu(
+        "Format",
+        (
+            (
+                _page(
+                    "format.look",
+                    "Edit This Style…",
+                    "Change how this kind of paragraph looks",
+                    accelerators=("<Shift>F10",),
+                ),
+                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
+            ),
+        ),
+    )
+    view_menu = Menu(
+        "View",
+        (
+            _shared_view_block(authors=True),
+            (_page("view.page", "Page", "Show the text as pages instead of a flowing text", checkable=True),),
         ),
     )
     tools_menu = Menu(
         "Tools",
         (
             (
-                _page("style.look", "Look of this Style…", "Change how this kind of paragraph looks"),
-                _page("style.all", "All Styles…", "List, rename and tidy the styles of this document"),
-            ),
-            (
-                _page("view.page", "Page View", "Show the text as pages instead of a flowing text", checkable=True),
+                _page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),
+                _page("tools.review-text", "Review This Text", "Ask the assistant to suggest improvements"),
                 _page(
-                    "view.authors", "Show Who Wrote What", "Colour the text by the person who wrote it", checkable=True
-                ),
-            ),
-            (
-                _page("assistant.ask", "Ask the Assistant…", "Write to the assistant in the chat"),
-                _page("assistant.review-text", "Review This Text", "Ask the assistant to suggest improvements"),
-                _page(
-                    "assistant.review-paragraph",
-                    "Review This Paragraph",
-                    "Ask the assistant about the current paragraph",
+                    "tools.review-paragraph", "Review This Paragraph", "Ask the assistant about the current paragraph"
                 ),
             ),
             (
@@ -196,17 +352,140 @@ def composes() -> Manifest:
             ),
         ),
     )
-    help_menu = Menu(
-        "Help",
+    return Manifest(
+        "composes",
+        (
+            _file_menu(title="Claudia Composes"),
+            edit_menu,
+            format_menu,
+            view_menu,
+            tools_menu,
+            _config_menu(),
+            _help_menu("Claudia Composes"),
+        ),
+    )
+
+
+def computes() -> Manifest:
+    """The menus of claudia computes in the Linux client (new, D121 — no window or application class yet)."""
+    edit_menu = Menu(
+        "Edit",
+        (
+            _shared_edit_block(),
+            _shared_clipboard_block(native=False),
+            (_page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document"),),
+            (
+                # D130 (Claude's recommendation, not yet confirmed — decision-log.md): grouped into Row ▸ /
+                # Column ▸ rather than six flat items, reusing the same submenu mechanism Paste as ▸ already needed.
+                Submenu(
+                    "Row",
+                    (
+                        _page("edit.row-insert-above", "Insert Above", "Insert a row above the selection"),
+                        _page("edit.row-insert-below", "Insert Below", "Insert a row below the selection"),
+                        _page("edit.row-delete", "Delete", "Delete the selected rows"),
+                    ),
+                ),
+                Submenu(
+                    "Column",
+                    (
+                        _page("edit.column-insert-left", "Insert Left", "Insert a column to the left of the selection"),
+                        _page(
+                            "edit.column-insert-right",
+                            "Insert Right",
+                            "Insert a column to the right of the selection",
+                        ),
+                        _page("edit.column-delete", "Delete", "Delete the selected columns"),
+                    ),
+                ),
+            ),
+            (_page("edit.clear", "Clear Cells", "Clear the selected cells"),),
+        ),
+    )
+    format_menu = Menu("Format", ((_page("format.none", "No Styles Yet", "computes has no style system yet"),),))
+    view_menu = Menu("View", (_shared_view_block(authors=False),))
+    tools_menu = Menu(
+        "Tools",
         (
             (
-                _page("help.help", "Help", "Keyboard shortcuts and how to work in a document", accelerators=("F1",)),
-                Action("help.about", "About Claudia Composes", Kind.SHELL, "Version, authors and licence"),
+                _page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),
+                _page(
+                    "tools.example-budget",
+                    "Ask for an Example Budget",
+                    "Ask the assistant to build an example budget",
+                ),
             ),
         ),
     )
-    panel = _page("view.panel", "History and Chat", "Show or hide the history and the chat", checkable=True)
-    return Manifest("composes", (file_menu, edit_menu, tools_menu, help_menu), (panel,))
+    return Manifest(
+        "computes",
+        (
+            _file_menu(title="Claudia Computes"),
+            edit_menu,
+            format_menu,
+            view_menu,
+            tools_menu,
+            _config_menu(),
+            _help_menu("Claudia Computes"),
+        ),
+    )
+
+
+def creates() -> Manifest:
+    """The menus of claudia creates in the Linux client (new, D121 — no window or application class yet).
+
+    The shape library (``InsertBar``'s per-document list) is dynamic, like composes' style names — see this module's
+    docstring — so it has no entry here; only the fixed actions around it (New slide, Edit text, Text box, Delete) do.
+    """
+    edit_menu = Menu(
+        "Edit",
+        (
+            _shared_edit_block(),
+            _shared_clipboard_block(native=False),
+            (_page("edit.new-slide", "New Slide", "Add a new slide to the presentation"),),
+            (
+                _page("edit.edit-text", "Edit Text", "Write in the selected text box"),
+                _page("edit.text-box", "Text Box", "Add a text box to the slide"),
+            ),
+            (_page("edit.delete", "Delete", "Take the selected object off the slide"),),
+        ),
+    )
+    format_menu = Menu("Format", ((_page("format.none", "No Styles Yet", "creates has no style system yet"),),))
+    view_menu = Menu("View", (_shared_view_block(authors=False),))
+    tools_menu = Menu("Tools", ((_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),))
+    return Manifest(
+        "creates",
+        (
+            _file_menu(title="Claudia Creates"),
+            edit_menu,
+            format_menu,
+            view_menu,
+            tools_menu,
+            _config_menu(),
+            _help_menu("Claudia Creates"),
+        ),
+    )
+
+
+# ----------------------------------------------------------------------------------------------------- GtkBuilder XML
+
+
+def _item_element(parent: ET.Element, action: Action) -> None:
+    item = ET.SubElement(parent, "item")
+    label = ET.SubElement(item, "attribute", name="label", translatable="yes")
+    label.text = action.label
+    target = ET.SubElement(item, "attribute", name="action")
+    target.text = f"win.{action.id}"
+
+
+def _submenu_element(parent: ET.Element, submenu: Submenu) -> None:
+    """``<submenu>``: GTK's own nested-flyout element, holding one ``<section>`` of items — the GMenu-XML shape for
+    exactly what ``MenuBar.vue``'s ``items`` property draws as a flyout on the web side."""
+    element = ET.SubElement(parent, "submenu")
+    label = ET.SubElement(element, "attribute", name="label", translatable="yes")
+    label.text = submenu.label
+    section = ET.SubElement(element, "section")
+    for action in submenu.items:
+        _item_element(section, action)
 
 
 def _menu_tree(manifest: Manifest) -> ET.Element:
@@ -215,12 +494,11 @@ def _menu_tree(manifest: Manifest) -> ET.Element:
         menu_element = ET.SubElement(interface, "menu", id=menu.id)
         for section in menu.sections:
             section_element = ET.SubElement(menu_element, "section")
-            for action in section:
-                item = ET.SubElement(section_element, "item")
-                label = ET.SubElement(item, "attribute", name="label", translatable="yes")
-                label.text = action.label
-                target = ET.SubElement(item, "attribute", name="action")
-                target.text = f"win.{action.id}"
+            for entry in section:
+                if isinstance(entry, Submenu):
+                    _submenu_element(section_element, entry)
+                else:
+                    _item_element(section_element, entry)
     ET.indent(interface)
     return interface
 

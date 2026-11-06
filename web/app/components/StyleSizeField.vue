@@ -31,7 +31,7 @@ function commit() {
   display: inline-flex;
   align-items: center;
   height: 30px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
   border-radius: 8px;
   background: var(--surface);
   overflow: hidden;
@@ -45,6 +45,7 @@ function commit() {
 }
 .size button:hover:not(:disabled) {
   background: var(--mist);
+  color: var(--ink); /* `--mist` stays light in dark mode */
 }
 input {
   width: 42px;
