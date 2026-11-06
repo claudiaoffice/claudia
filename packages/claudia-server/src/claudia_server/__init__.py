@@ -31,9 +31,11 @@ from .protocol import (
 from .sealed import SealedDocuments
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
+from .workers import DEFAULT_WORKERS, WorkerPool
 
 __all__ = [
     "AI_USER",
+    "DEFAULT_WORKERS",
     "ERROR_CODES",
     "EVENTS",
     "PROTOCOL_VERSION",
@@ -69,6 +71,7 @@ __all__ = [
     "Task",
     "TextEngine",
     "UserDirectory",
+    "WorkerPool",
     "__version__",
     "composes_methods",
     "computes_methods",

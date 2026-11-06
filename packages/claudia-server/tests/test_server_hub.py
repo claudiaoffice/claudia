@@ -354,3 +354,13 @@ def test_start_and_stop_run_the_housekeeping(make_hub):
         await hub.stop()  # twice is harmless
 
     asyncio.run(scenario())
+
+
+def test_the_worker_pool_is_reachable_and_stopped_with_the_hub(make_hub):
+    async def scenario():
+        hub = make_hub(max_workers=2)
+        assert await hub.workers.submit(pow, 2, 10) == 1024
+        await hub.stop()  # lets the pool's processes go; harmless to call again
+        await hub.stop()
+
+    asyncio.run(scenario())

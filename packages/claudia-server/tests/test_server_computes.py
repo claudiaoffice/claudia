@@ -88,6 +88,14 @@ def test_the_extent_of_a_sheet_is_reported(book):
     assert (info["rows"], info["cols"]) == (10, 4)
 
 
+def test_the_extent_shrinks_back_when_its_boundary_cell_is_cleared(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(9, 3, "x"), (4, 1, "y")])
+    typed(book, "s1", [(9, 3, "")])  # empty input clears; row 4 / col 1 is what is left
+    (info,) = call(book, "sheets")
+    assert (info["rows"], info["cols"]) == (5, 2)
+
+
 def test_unknown_sheets_are_errors_and_change_nothing(book):
     with pytest.raises(RequestError) as caught:
         typed(book, "nope", [(0, 0, "x")])

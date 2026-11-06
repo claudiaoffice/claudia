@@ -42,6 +42,7 @@ from claudia_core.clock import utc_now
 
 from .auth import AI_COLOR, Account, UserDirectory
 from .protocol import PROTOCOL_VERSION, Context, Limits, MethodTable, RequestError, core_methods, parse_request
+from .workers import DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
     from .assistant import Assistant
@@ -344,7 +345,9 @@ class Hub:
     """The documents of one server.
 
     ``max_documents`` is the most documents the server holds: past it nobody can make another (``ensure_room``), so that
-    whoever can reach the server cannot fill its disk."""
+    whoever can reach the server cannot fill its disk. ``workers`` is the pool slow or CPU-bound request handling can
+    offload to, off the one thread every document here is otherwise served from (D134); it starts no process until
+    something is first submitted to it."""
 
     def __init__(
         self,
@@ -361,12 +364,14 @@ class Hub:
         assistant: Callable[[], Assistant] | None = None,
         directory: UserDirectory | None = None,
         clock: Callable[[], float] = time.monotonic,
+        max_workers: int = DEFAULT_WORKERS,
     ):
         self.provider = provider
         self.methods = methods
         self.limits = limits or Limits()
         self.allow_create = allow_create
         self.max_documents = max_documents
+        self.workers = WorkerPool(max_workers=max_workers)
         self._known: set[str] = (
             set()
         )  # the ids of the stored documents: found when first asked, and every one opened since
@@ -510,7 +515,8 @@ class Hub:
             self._task = asyncio.create_task(self._sweep_loop())
 
     async def stop(self) -> None:
-        """Stop the housekeeping and let go of every open document (a sealed store packs them into their files)."""
+        """Stop the housekeeping, let go of every open document (a sealed store packs them into their files), and
+        let go of the worker pool's processes."""
         if self._task is not None:
             self._task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -523,3 +529,4 @@ class Hub:
                     await asyncio.to_thread(self.provider.release, doc_id)
                 except Exception:
                     log.exception("cannot let go of %s", doc_id)
+        await self.workers.stop()

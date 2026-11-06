@@ -52,17 +52,11 @@ def _index(value, limit: int, what: str):
     return value
 
 
-def _extent(sheet) -> tuple[int, int]:
-    rows = max((r for r, _ in sheet.cells), default=-1) + 1
-    cols = max((c for _, c in sheet.cells), default=-1) + 1
-    return rows, cols
-
-
 @computes_methods.method("sheets")
 def _sheets(ctx):
     """The sheets in order, each as `{id, name, rows, cols}`; rows and cols are the extent that holds something."""
     return [
-        {"id": sheet.id, "name": sheet.name, **dict(zip(("rows", "cols"), _extent(sheet), strict=True))}
+        {"id": sheet.id, "name": sheet.name, **dict(zip(("rows", "cols"), sheet.extent(), strict=True))}
         for sheet in _workbook(ctx).sheets.values()
     ]
 
@@ -79,7 +73,7 @@ def _cells(ctx, *, sheet, row0, row1, col0, col1):
     if (row1 - row0 + 1) * (col1 - col0 + 1) > MAX_WINDOW_CELLS:
         raise RequestError("bad_request", f"cells: window too large (at most {MAX_WINDOW_CELLS} positions)")
     found = _workbook(ctx).sheet(sheet)
-    inside = sorted((r, c) for r, c in found.cells if row0 <= r <= row1 and col0 <= c <= col1)
+    inside = found.cells_in(row0, row1, col0, col1)
     return {"revision": _rev(ctx), "cells": [[r, c, found.view((r, c))] for r, c in inside]}
 
 

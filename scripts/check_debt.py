@@ -39,6 +39,7 @@ SOURCES = sorted(str(p) for p in ROOT.glob("packages/*/src"))
 PERF = (
     "packages/claudia-core/tests/test_performance.py",
     "packages/claudia-computes/tests/test_formula_performance.py",
+    "packages/claudia-computes/tests/test_index_performance.py",
 )  # (each runs on its own: the packages' conftest files would clash)
 DOCS_OUT = "docs/_build/html"
 

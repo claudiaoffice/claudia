@@ -26,6 +26,12 @@ Hub
 .. autoclass:: claudia_server.SealedDocuments
 .. autoclass:: claudia_server.HubError
 
+Worker pool
+-----------
+
+.. autoclass:: claudia_server.WorkerPool
+.. autodata:: claudia_server.DEFAULT_WORKERS
+
 Protocol
 --------
 

@@ -14,7 +14,9 @@ tells the calculator what happened; commands never touch ``cells`` themselves.
 
 from __future__ import annotations
 
+from bisect import bisect_left, bisect_right, insort
 from collections import defaultdict
+from heapq import heappop, heappush
 from typing import ClassVar, Self
 
 from claudia_core import CommandRegistry, DocumentModel, Region, new_registry
@@ -65,6 +67,39 @@ def value_of(content: Content) -> Value:
     return None
 
 
+class _LiveMax:
+    """The largest of a set of non-negative ints that gains and loses members, without rescanning on removal.
+
+    A max-heap of values that have ever been live, lazily cleaned: a value no longer live is dropped only once it
+    would be the answer, not when it stops being live. Cost is amortized over how often a value newly becomes live,
+    never over how many values are currently live — the same trade a hash index makes against a sorted one."""
+
+    __slots__ = ("_heap", "_live")
+
+    def __init__(self) -> None:
+        self._heap: list[int] = []
+        self._live: dict[int, int] = {}  # value -> how many times it is currently live
+
+    def add(self, value: int) -> None:
+        count = self._live.get(value, 0)
+        self._live[value] = count + 1
+        if count == 0:
+            heappush(self._heap, -value)
+
+    def discard(self, value: int) -> None:
+        count = self._live.get(value, 0)
+        if count <= 1:
+            self._live.pop(value, None)
+        else:
+            self._live[value] = count - 1
+
+    def max(self) -> int:
+        """The largest live value, or -1 if nothing is live."""
+        while self._heap and self._live.get(-self._heap[0], 0) == 0:
+            heappop(self._heap)
+        return -self._heap[0] if self._heap else -1
+
+
 class Sheet:
     def __init__(self, sheet_id: SheetId, name: str):
         self.id = sheet_id
@@ -76,6 +111,14 @@ class Sheet:
         self._tick = 0
         self._epoch = 0  # the tick of the last change to every column at once (rows moved)
         self._columns: dict[int, int] = {}  # column -> tick of its last change
+        # The row/column index behind `cells_in` and `extent` (QA review 2026-11-06, PERF-01, PERF-05): kept
+        # incrementally on every single-cell set/clear (`_note_filled`/`_note_emptied`, called from
+        # `WorkbookModel.store`), so a window query or the extent cost what they return, not the size of the sheet.
+        # A structural edit moves or destroys cells wholesale, so `refit` rebuilds this the same way it already
+        # rebuilds `rows_used`/`cols_used` — that path was already O(sheet size) and stays so.
+        self._row_cols: dict[int, list[int]] = {}  # row -> sorted columns that hold something, for `cells_in`
+        self._rows_live = _LiveMax()  # rows that hold something, for `extent`
+        self._cols_live = _LiveMax()  # columns that hold something, for `extent`
 
     def to_data(self) -> dict:
         return {
@@ -119,9 +162,59 @@ class Sheet:
         self._epoch = self._tick
 
     def refit(self) -> None:
-        """Recount how far the sheet reaches (after cells moved or went)."""
+        """Recount how far the sheet reaches and rebuild the row/column index (after cells moved or went: a
+        structural edit, or loading from storage). Single-cell edits stay incremental instead — see `_note_filled`
+        and `_note_emptied`, called from `WorkbookModel.store`."""
         self.rows_used = max((r for r, _ in self.grid), default=-1) + 1
         self.cols_used = max((c for _, c in self.grid), default=-1) + 1
+        grouped: dict[int, list[int]] = {}
+        for row, col in self.cells:
+            grouped.setdefault(row, []).append(col)
+        self._row_cols = {row: sorted(cols) for row, cols in grouped.items()}
+        self._rows_live = _LiveMax()
+        self._cols_live = _LiveMax()
+        for row, cols in self._row_cols.items():
+            self._rows_live.add(row)
+            for col in cols:
+                self._cols_live.add(col)
+
+    # -- the row/column index: `cells_in` and `extent` cost what they return, not the size of the sheet
+    def _note_filled(self, position: Position) -> None:
+        """A cell that was empty now holds something."""
+        row, col = position
+        insort(self._row_cols.setdefault(row, []), col)
+        self._rows_live.add(row)
+        self._cols_live.add(col)
+
+    def _note_emptied(self, position: Position) -> None:
+        """A cell that held something is now empty; shrinks the index the same way `_note_filled` grew it."""
+        row, col = position
+        cols = self._row_cols.get(row)
+        if cols is not None:
+            at = bisect_left(cols, col)
+            if at < len(cols) and cols[at] == col:
+                del cols[at]
+            if not cols:
+                del self._row_cols[row]
+        self._rows_live.discard(row)
+        self._cols_live.discard(col)
+
+    def cells_in(self, row0: int, row1: int, col0: int, col1: int) -> list[Position]:
+        """Positions that hold something inside a window (both ends included), sorted by row then column. Costs the
+        number of rows in the window plus the number of cells returned — never the size of the sheet."""
+        found: list[Position] = []
+        for row in range(row0, row1 + 1):
+            cols = self._row_cols.get(row)
+            if not cols:
+                continue
+            lo, hi = bisect_left(cols, col0), bisect_right(cols, col1)
+            found.extend((row, col) for col in cols[lo:hi])
+        return found
+
+    def extent(self) -> tuple[int, int]:
+        """Rows and columns that hold something (the same extent `_sheets`/`_extent` report), amortized O(1) —
+        never a scan of the sheet."""
+        return self._rows_live.max() + 1, self._cols_live.max() + 1
 
     # -- what a client displays
     def view(self, position: Position) -> dict | None:
@@ -217,18 +310,25 @@ class WorkbookModel(DocumentModel):
         position = (row, col)
         key = (sheet.id, row, col)
         calc = self.calc
+        was_filled = position in sheet.cells
         if content is not None and content["t"] == "formula":
             compiled = calc.compile(sheet.id, content["v"])
             stored = content if compiled.source == content["v"] else {"t": "formula", "v": compiled.source}
             sheet.cells[position] = stored
             calc.define(key, compiled)
+            if not was_filled:
+                sheet._note_filled(position)  # noqa: SLF001 (the index is Sheet's own; store() is its one writer)
             return stored
         if key in calc.formulas:
             calc.remove(key)
         if content is None:
             sheet.cells.pop(position, None)
+            if was_filled:
+                sheet._note_emptied(position)  # noqa: SLF001
         else:
             sheet.cells[position] = content
+            if not was_filled:
+                sheet._note_filled(position)  # noqa: SLF001
         if sheet.set_value(position, value_of(content)):
             calc.touch(key)
         return content

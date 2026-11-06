@@ -1,5 +1,5 @@
 {
- "version": "0.8.0",
+ "version": "0.9.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -89,6 +89,9 @@
   "init": "(user: 'str | None' = None, password: 'str | None' = None) -> None",
   "methods": {},
   "properties": []
+ },
+ "DEFAULT_WORKERS": {
+  "value": "4"
  },
  "DocumentProvider": {
   "class": [
@@ -182,7 +185,7 @@
   "class": [
    "object"
   ],
-  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>)",
+  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4)",
   "methods": {
    "check_id": "(doc_id: 'object') -> 'str'",
    "ensure_room": "(self) -> 'None'",
@@ -371,6 +374,17 @@
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
    "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
+  },
+  "properties": []
+ },
+ "WorkerPool": {
+  "class": [
+   "object"
+  ],
+  "init": "(*, max_workers: 'int' = 4)",
+  "methods": {
+   "stop": "(self) -> 'None'",
+   "submit": "(self, fn: 'Callable[P, R]', /, *args: 'P.args', **kwargs: 'P.kwargs') -> 'R'"
   },
   "properties": []
  },
