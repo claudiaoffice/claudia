@@ -13,7 +13,9 @@ The directory that really matters lives inside the document file (E2.3, users an
 the passwords in it are stored as scrypt hashes with a random salt, never as they are.
 
 The name ``ai`` belongs to the assistant (E3.6): nobody can log in under it or be given it, however the server is
-configured. Only the server makes that account (``Account.assistant()``).
+configured. Only the server makes that account (``Account.assistant()``), and only the server decides which protocol
+methods it may call (``allowed_methods``, checked by ``MethodTable.dispatch``, SEC-10): the model that drives it
+offers no guarantee of its own, so the account itself is where the limit has to live.
 """
 
 from __future__ import annotations
@@ -23,6 +25,7 @@ import hmac
 import os
 import re
 import unicodedata
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
@@ -58,11 +61,16 @@ class Credentials:
 
 @dataclass(frozen=True)
 class Account:
-    """A person (or the assistant) in a document: the name that authors their edits, and what they may do."""
+    """A person (or the assistant) in a document: the name that authors their edits, and what they may do.
+
+    ``allowed_methods`` is checked by ``MethodTable.dispatch`` (SEC-10): ``None`` (the default, every ordinary
+    person) means no extra limit beyond the role; a set means this account may not *write* through a method outside
+    it, however the method is reached (the wire, the assistant, a future remote engine). It never limits reading."""
 
     user: str
     role: str = "editor"
     system: bool = field(default=False, compare=False)  # the assistant's own account; only ``assistant()`` makes one
+    allowed_methods: frozenset[str] | None = field(default=None, compare=False)
 
     def __post_init__(self):
         if self.role not in ROLES:
@@ -78,9 +86,12 @@ class Account:
         return self.role in WRITE_ROLES
 
     @classmethod
-    def assistant(cls) -> Account:
-        """The account of the AI assistant (E3.6)."""
-        return cls(AI_USER, "editor", system=True)
+    def assistant(cls, allowed_methods: Iterable[str] | None = None) -> Account:
+        """The account of the AI assistant (E3.6). ``allowed_methods`` are the write methods it may call; production
+        always gives an explicit, small set (``apps.MODEL_METHODS`` of the document's app); ``None`` (the default)
+        means no limit beyond the role and is for tests that are not about this boundary."""
+        names = None if allowed_methods is None else frozenset(allowed_methods)
+        return cls(AI_USER, "editor", system=True, allowed_methods=names)
 
 
 class UserDirectory(Protocol):

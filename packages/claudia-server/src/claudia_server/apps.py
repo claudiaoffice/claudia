@@ -25,9 +25,12 @@ _METHODS: dict[str, MethodTable] = {
 }
 _ENGINES: dict[str, Callable[[], Engine]] = {"computes": ScriptedEngine, "composes": TextEngine}
 
-# What a language model may ask for in each app: editing methods only. Talking is what its answer is for, and who
-# may enter a document, what is kept as a checkpoint or who holds a lock are decisions of people.
-MODEL_METHODS = {"computes": ("set_cells", "add_sheet", "structure")}
+# What the assistant may ask for in each app: editing methods only. Talking is what its answer is for, and who may
+# enter a document, what is kept as a checkpoint or who holds a lock are decisions of people. This is more than a
+# prompt-building list (it also picks the tools *described* to a model): it is the account's allow-list, checked at
+# dispatch for both the model-driven engine and the scripted stand-in alike (SEC-10). An app with no entry here gets
+# none, so an assistant for it can write nothing until somebody decides what it may do.
+MODEL_METHODS = {"computes": ("set_cells", "add_sheet", "structure"), "composes": ("suggest",)}
 MAX_LISTED_SHEETS = 50  # sheets named to the model; a small model has little room
 WORKBOOK_CONTEXT = (
     "Rows and columns are counted from 0. A request looks like "
@@ -47,12 +50,16 @@ def methods_for(model_cls: type[DocumentModel], *, shapes: ShapeLibrary | None =
 
 
 def stand_in_assistant_for(model_cls: type[DocumentModel]) -> Callable[[], Assistant] | None:
-    """Makes the scripted stand-in assistant for the apps it knows (workbooks, texts); ``None`` for the others."""
+    """Makes the scripted stand-in assistant for the apps it knows (workbooks, texts); ``None`` for the others.
+
+    Bound by the same allow-list as a model-driven assistant (``MODEL_METHODS``, SEC-10): the stand-in is a trusted
+    script today, but the guarantee a person is shown must not depend on which engine happens to answer."""
     engine_class = _ENGINES.get(model_cls.app)
     if engine_class is None:
         return None
     engine = engine_class()
-    return lambda: Assistant(engine)
+    allowed = MODEL_METHODS.get(model_cls.app, ())
+    return lambda: Assistant(engine, allowed_methods=allowed)
 
 
 def model_assistant_for(
@@ -66,7 +73,9 @@ def model_assistant_for(
     if names is None:
         return None
     tools = tools_of(methods_for(model_cls), names)
-    return lambda: Assistant(ModelEngine(runner, tools, workbook_context), max_waiting=max_waiting)
+    return lambda: Assistant(
+        ModelEngine(runner, tools, workbook_context), max_waiting=max_waiting, allowed_methods=names
+    )
 
 
 def workbook_context(document: Document) -> str:

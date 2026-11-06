@@ -128,7 +128,7 @@ def test_a_review_in_the_chat_ends_in_suggestions_people_can_accept():
 
     async def run():
         hosted = await Hub(MemoryProvider(TextModel), methods=composes_methods).open("essay", create=True)
-        assistant = Assistant(TextEngine(), pause=0)
+        assistant = Assistant(TextEngine(), pause=0, allowed_methods=("suggest",))
         assistant.attach(hosted)
         frames: list[dict] = []
         ann = hosted.connect(Account("ann", "owner"), lambda text: frames.append(json.loads(text)))

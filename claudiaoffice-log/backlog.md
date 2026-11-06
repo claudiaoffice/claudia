@@ -205,13 +205,13 @@ kanban-plugin: board
 
 	AC: effective rights = the intersection of the AI's role and the asker's; the history shows "ai, on behalf of X"; tested with a viewer. Across two documents it uses a session in each, under the asker's rights in each, and never carries content from a document the asker cannot read into one she can.
 
-	Use case: ALL · Decisions: D6, D35, D65 · Related to SEC-10: today the assistant acts with its own account and the allow-list lives in the model's output parser, so there is no place where an asker's rights are intersected at all.
+	Use case: ALL · Decisions: D6, D35, D65 · Related to SEC-10, fixed 2026-11-06: the allow-list now lives in `Account.allowed_methods`, checked at dispatch, rather than in the model's output parser — but the account is still the assistant's own fixed, per-app one. Nothing yet intersects it with the asker's rights, which is what this story still needs.
 - [ ] **E7.6 · AI cannot install code**
 	As an admin, I want a guarantee that the AI cannot add functions, so that extensibility is not an attack path.
 
 	AC: a test shows that no protocol method reachable by `ai` writes to the function folder, executes code, or changes help topics.
 
-	Use case: PLATFORM · Decisions: D38 · **The guarantee does not hold in the shape the story asks for.** `Assistant._call` dispatches any method name, and the only filter is `Agent._take_calls` inside `claudia-ai`. See SEC-10.
+	Use case: PLATFORM · Decisions: D38 · **The dispatch-level guarantee now holds (SEC-10, fixed 2026-11-06):** `MethodTable.dispatch` refuses any write method outside `Account.allowed_methods`, whatever engine or path reaches it, and `apply` separately refuses `account.system` unconditionally. The story's literal AC (a function folder, code execution, help topics) is still moot — none of those exist yet — but the mechanism this story would be tested against is in place.
 - [ ] **E8.1 · Desktop installers**
 	As a user, I want a normal installer per OS with the interpreter inside, so that I never install Python myself.
 
@@ -826,7 +826,7 @@ kanban-plugin: board
 
 	Use case: ALL · Decisions: D63, D17, D47
 
-	Status evidence: built — `suggest` (assistant only), `accept_suggestion`, `reject_suggestion`, proposals anchored to a region, acceptance recorded as the accepter's edit with `via=ai`, and `SuggestionList.vue` in the panel. **The "no direct write path" guarantee is incomplete:** `replace_text` and `set_style` refuse the assistant, but the generic `apply` method is inherited from the core table and has no account check, so a raw command reaches the text anyway (SEC-10). Also open: undoing a reject reopens the suggestion (intended?), redacting a propose step before its accept may break replay, and the stand-in does not propose around other people's locks.
+	Status evidence: built — `suggest` (assistant only), `accept_suggestion`, `reject_suggestion`, proposals anchored to a region, acceptance recorded as the accepter's edit with `via=ai`, and `SuggestionList.vue` in the panel. **The "no direct write path" guarantee, fixed 2026-11-06 (SEC-10):** `replace_text` and `set_style` refuse the assistant, and `apply` — inherited from the core table, so it used to bypass both — now refuses `account.system` unconditionally, and is also outside the assistant's allow-list (`apps.MODEL_METHODS["composes"] = ("suggest",)`), checked at dispatch. Also open: undoing a reject reopens the suggestion (intended?), redacting a propose step before its accept may break replay, and the stand-in does not propose around other people's locks.
 - [ ] **E9.10 · Authorship view**
 	As an author or reviewer, I want to see which user each word came from.
 

@@ -65,6 +65,15 @@ def test_the_name_ai_belongs_to_the_assistant(users):
     assert Account.assistant().system and Account.assistant().user == AI_USER
 
 
+def test_the_assistants_account_carries_an_optional_allow_list():
+    """SEC-10: production always gives it an explicit, small set (``apps.MODEL_METHODS`` of the document's app).
+    ``None`` (no argument) is only for tests that are not about this boundary."""
+    assert Account.assistant().allowed_methods is None
+    restricted = Account.assistant(("set_cells", "add_sheet"))
+    assert restricted.allowed_methods == frozenset({"set_cells", "add_sheet"})
+    assert restricted.system and restricted.user == AI_USER
+
+
 def test_accounts_are_validated():
     with pytest.raises(ValueError, match="role"):
         Account("Ann", "boss")
