@@ -345,6 +345,12 @@ rejected: the measured workload interleaves edits and window queries closely eno
 edits) that a rebuild-on-next-read would frequently pay the full O(sheet-size) cost anyway, with none of the
 incremental approach's guarantee that cost tracks the window, not the sheet.
 
+## Row height and column width (twenty-second round)
+
+| ID | Decision | Date | Notes |
+|---|---|---|---|
+| D135 | **Row heights and column widths are sheet layout, not a cell style** — resolves E6.13's open point ("whether row heights and column widths are style or sheet layout; proposal: layout"). Stored as sparse per-line overrides on the sheet (`Sheet.row_heights`/`col_widths`, pixels; a line not listed shows at the default, `DEFAULT_ROW_HEIGHT`/`DEFAULT_COL_WIDTH` = 26×96, matching the grid's current fixed size), set and undone through a new `computes.ResizeLines` command exactly like a structural edit — remapped by row/column insert and delete, restored when `Structure` or `RemoveSheet` is undone, conflict-checked against a colleague's own resize of the same line via `shifted_by()` — and independent of the not-yet-built CSS style system (E6.13), which governs cell/range/row/column appearance, not line size. Server: `sizes` (read) and `resize_lines` (write) methods, the latter on the AI's method allow-list alongside `set_cells`/`add_sheet`/`structure`. Patch 1 of two (model/command/server, fully tested); the web grid's variable-height rendering, drag-resize and the context-menu dialog are Patch 2, not yet built. | 2026-11-06 | Chosen (over folding sizes into the E6.13 style system) via `AskUserQuestion`; the owner had no preference on including extras or on recording a decision, so both were the author's own call, flagged as such. Fixes two latent gaps the new state exposed: `RemoveSheet.apply()` and `Structure.apply()` previously restored cell content on undo but not row/col sizes, silently losing custom sizes on remove/delete-then-undo — fixed as part of this patch since the codebase's undo contract requires an exact inverse. |
+
 ## Open design questions
 
 - **Typesetting:** the full-document comparison of E0.4 (Tectonic against TeX Live, biblatex with biber, Beamer,
@@ -368,8 +374,8 @@ incremental approach's guarantee that cost tracks the window, not the sheet.
   Column ▸ grouping (D130) is proposed, not yet confirmed.
 - **Styling:** deleting a style that other styles are based on (a proposal exists: deleting never changes how anything
   looks and never leaves a dangling reference; the person chooses "keep their look" or "re-base on another style"; root
-  and built-in styles cannot be deleted, only hidden); whether row heights and column widths are style or sheet layout;
-  where the dialog appears, with a mock-up (a popover at the caret is built and a review is still wanted).
+  and built-in styles cannot be deleted, only hidden); where the dialog appears, with a mock-up (a popover at the caret
+  is built and a review is still wanted). Row heights and column widths are settled as sheet layout, not style (D135).
 - **Numbers:** the INT type and numeric semantics (E6.4). What is built: whole numbers exact to 2^53 then float, `/`
   always float, no coercion of text, TRUE/FALSE as 1/0, `math.fsum` for sums. Not yet confirmed as a decision.
 - **KDF cost calibration (D109):** keep the defaults or calibrate per machine at creation, with a floor. The measured

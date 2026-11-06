@@ -2,13 +2,13 @@
 
 refs      CellRef / RangeRef / structural edits (from the demo)
 model     WorkbookModel: sheets and typed cells
-commands  AddSheet, RemoveSheet, SetCells, Structure
+commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines
 region    CellRegion: moves with structural edits
 entry     parse_input: what typing into a cell means
 """
 
 from . import commands  # noqa: F401  (registers the commands)
-from .commands import AddSheet, RemoveSheet, SetCells, Structure
+from .commands import AddSheet, RemoveSheet, ResizeLines, SetCells, Structure
 from .entry import parse_input
 from .model import Content, Sheet, WorkbookModel, content_of
 from .refs import (
@@ -37,6 +37,7 @@ __all__ = [
     "RangeRef",
     "RefParseError",
     "RemoveSheet",
+    "ResizeLines",
     "SetCells",
     "Sheet",
     "SheetId",

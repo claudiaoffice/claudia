@@ -1,11 +1,11 @@
 """The methods of the spreadsheet app: what a table view needs to show cells and to take what people type (E3.1).
 
-``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet`` and ``structure``.
-Cells travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it:
-``{"t": "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
-with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client sends
-the text of the cell (``=B2*2`` for a formula) and the server decides what it means. Every write may carry the
-``base`` revision of the client's view, as ``apply`` does.
+``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet``, ``structure``,
+``sizes`` and ``resize_lines``. Cells travel as ``[row, column, content]`` with zero-based indexes and the content as
+a client shows it: ``{"t": "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may
+also be ``"error"``, with the code in ``v``) plus its text under ``"f"``. What people type goes through
+``parse_input``, so a client sends the text of the cell (``=B2*2`` for a formula) and the server decides what it
+means. Every write may carry the ``base`` revision of the client's view, as ``apply`` does.
 """
 
 from __future__ import annotations
@@ -16,18 +16,27 @@ from claudia_computes import (
     DeleteRows,
     InsertCols,
     InsertRows,
+    ResizeLines,
     SetCells,
     SheetId,
     Structure,
     WorkbookModel,
     parse_input,
 )
-from claudia_computes.model import MAX_COLS, MAX_ROWS
+from claudia_computes.model import (
+    MAX_COL_WIDTH,
+    MAX_COLS,
+    MAX_ROW_HEIGHT,
+    MAX_ROWS,
+    MIN_COL_WIDTH,
+    MIN_ROW_HEIGHT,
+)
 
 from .protocol import Context, RequestError, core_methods
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
 MAX_TYPED_CELLS = 10_000  # cells in one ``set_cells``
+MAX_RESIZED_LINES = 1_000  # lines in one ``resize_lines``
 MAX_SHEET_NAME = 60
 AXES = {
     ("row", True): InsertRows,
@@ -35,6 +44,7 @@ AXES = {
     ("col", True): InsertCols,
     ("col", False): DeleteCols,
 }
+SIZE_LIMITS = {"row": (MIN_ROW_HEIGHT, MAX_ROW_HEIGHT), "col": (MIN_COL_WIDTH, MAX_COL_WIDTH)}
 
 computes_methods = core_methods.extended()
 
@@ -130,4 +140,47 @@ def _structure(ctx, *, sheet, axis, insert, at, count, base):
     if edit is None:
         raise RequestError("bad_request", 'structure: axis must be "row" or "col"')
     applied = ctx.document.execute(Structure(edit(sheet, at, count)), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("sizes", "sheet:str")
+def _sizes(ctx, *, sheet):
+    """The rows and columns of a sheet that were given a size away from the default (D135), as
+    `{revision, rows: [[row, height]], cols: [[col, width]]}`, each sorted by index. A line not listed shows at the
+    sheet's default (`DEFAULT_ROW_HEIGHT`/`DEFAULT_COL_WIDTH` in `claudia_computes.model`)."""
+    found = _workbook(ctx).sheet(sheet)
+    return {
+        "revision": _rev(ctx),
+        "rows": [[r, h] for r, h in sorted(found.row_heights.items())],
+        "cols": [[c, w] for c, w in sorted(found.col_widths.items())],
+    }
+
+
+def _sized(axis: str, items: list) -> tuple[tuple[int, float | None], ...]:
+    if len(items) > MAX_RESIZED_LINES:
+        raise RequestError("bad_request", f"resize_lines: at most {MAX_RESIZED_LINES} lines at a time")
+    limit = MAX_ROWS if axis == "row" else MAX_COLS
+    lo, hi = SIZE_LIMITS[axis]
+    sizes = []
+    for item in items:
+        if not (isinstance(item, list) and len(item) == 2):
+            raise RequestError("bad_request", "resize_lines: each line is [index, size]")
+        index, size = item
+        index = _index(index, limit, "index")
+        if size is not None:
+            if isinstance(size, bool) or not isinstance(size, (int, float)):
+                raise RequestError("bad_request", "resize_lines: size must be a number or null")
+            if not lo <= size <= hi:
+                raise RequestError("bad_request", f"resize_lines: size must be between {lo} and {hi}")
+        sizes.append((index, None if size is None else float(size)))
+    return tuple(sizes)
+
+
+@computes_methods.method("resize_lines", "sheet:str axis:str sizes:list base:revision?", write=True)
+def _resize_lines(ctx, *, sheet, axis, sizes, base):
+    """Set (or clear, with `null`) the height of rows or the width of columns: `axis` is "row" or "col", `sizes` a
+    list of `[index, size]`. One change in the history. Same errors as `apply`."""
+    if axis not in SIZE_LIMITS:
+        raise RequestError("bad_request", 'resize_lines: axis must be "row" or "col"')
+    applied = ctx.document.execute(ResizeLines(sheet, axis, _sized(axis, sizes)), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}

@@ -30,7 +30,7 @@ _ENGINES: dict[str, Callable[[], Engine]] = {"computes": ScriptedEngine, "compos
 # prompt-building list (it also picks the tools *described* to a model): it is the account's allow-list, checked at
 # dispatch for both the model-driven engine and the scripted stand-in alike (SEC-10). An app with no entry here gets
 # none, so an assistant for it can write nothing until somebody decides what it may do.
-MODEL_METHODS = {"computes": ("set_cells", "add_sheet", "structure"), "composes": ("suggest",)}
+MODEL_METHODS = {"computes": ("set_cells", "add_sheet", "structure", "resize_lines"), "composes": ("suggest",)}
 MAX_LISTED_SHEETS = 50  # sheets named to the model; a small model has little room
 WORKBOOK_CONTEXT = (
     "Rows and columns are counted from 0. A request looks like "
