@@ -131,3 +131,19 @@ Things to know:
 * To keep strangers from filling the demo, set `CLAUDIA_ACCESS_SECRET` as a *secret* environment variable (see above).
 * Scaleway's documentation does not say whether WebSocket connections are supported, and the apps cannot work without
   them. If the page loads but opening or creating a document fails, check the container log first, then ask Scaleway.
+
+## Releases, image and demo (CI/CD)
+
+GitHub Actions does the work (`.github/workflows/`):
+
+| workflow | when | what |
+| --- | --- | --- |
+| `ci.yml` | every push to `main`, every pull request, weekly | tests of the Python packages, the web app and the Linux client |
+| `docker.yml` | `main`, tags `v*`, pull requests (build only) | builds the server image, starts each app once as a test, pushes `ghcr.io/claudiaoffice/claudia-server` (`:latest`, `:sha-<commit>`, `:1.2.3` for tags) |
+| `deploy-demo.yml` | after `docker.yml` succeeded on `main`; by hand | copies the image to the Scaleway registry and redeploys the demo containers; by hand it deploys any image tag, which is also the way back to an earlier version |
+| `deb.yml` | `main`, tags `v*`, pull requests | builds `claudia-composes_<version>_amd64.deb` (desktop window, server, Python 3.14 and web app in one package), installs it on a clean runner and starts it; on a tag the file is attached to the GitHub release |
+
+To release: set the version in `clients/linux/src/claudia_shell_gtk/_version.py`, then tag `vX.Y.Z` and push the tag.
+The set-up of the demo deployment (secrets and variables) is described at the top of `deploy-demo.yml`. Build the
+package yourself with `packaging/debian/build-deb.sh` (it builds in `/opt/claudia`, which must be empty and writable).
+

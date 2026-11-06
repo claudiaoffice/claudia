@@ -1,0 +1,131 @@
+# Puts the image that CI built on main into the demo on Scaleway Serverless Containers (demo.claudiaoffice.de).
+#
+# Starts by itself when "Docker image" has succeeded on main. By hand (Actions > Deploy demo > Run workflow) it can
+# deploy any tag the image has, which is also the way back to an earlier version: give e.g. sha-1a2b3c4.
+#
+# The image is copied from GHCR to the Scaleway registry under an unchanging tag per commit, the containers are pointed
+# at it and redeployed. Their settings (environment, scale, domain) are left as they are in Scaleway.
+#
+# Set up once, in Settings > Secrets and variables > Actions, and Settings > Environments > demo:
+#   secret   SCW_SECRET_KEY            API key secret of a Scaleway IAM application (rights: ContainersFullAccess,
+#                                      ContainerRegistryFullAccess in the project of the demo)
+#   variable SCW_REGISTRY_NAMESPACE    the Container Registry namespace, as in rg.fr-par.scw.cloud/NAMESPACE
+#   variable SCW_DEMO_CONTAINER_IDS    the ids (UUIDs) of the demo containers, separated by spaces (one per app)
+#   variable SCW_REGION                optional, default fr-par
+#   variable DEMO_URL                  optional, default https://demo.claudiaoffice.de; checked after the deployment
+name: Deploy demo
+
+on:
+  workflow_run:
+    workflows: ["Docker image"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to deploy (sha-1a2b3c4, latest, 0.1.0, ...)"
+        required: true
+        default: latest
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    # A workflow_run starts for failed runs too, and for pushes of tags and pull requests of forks; only main counts.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: demo
+      url: ${{ vars.DEMO_URL || 'https://demo.claudiaoffice.de' }}
+    permissions:
+      contents: read
+      packages: read
+    env:
+      SOURCE: ghcr.io/claudiaoffice/claudia-server
+      REGION: ${{ vars.SCW_REGION || 'fr-par' }}
+      NAMESPACE: ${{ vars.SCW_REGISTRY_NAMESPACE }}
+      CONTAINER_IDS: ${{ vars.SCW_DEMO_CONTAINER_IDS }}
+      DEMO_URL: ${{ vars.DEMO_URL || 'https://demo.claudiaoffice.de' }}
+      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      INPUT_TAG: ${{ inputs.tag }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Check the settings
+        run: |
+          missing=
+          for name in SCW_SECRET_KEY NAMESPACE CONTAINER_IDS; do
+            [ -n "${!name}" ] || { echo "::error::$name is not set (see the top of .github/workflows/deploy-demo.yml)"; missing=1; }
+          done
+          [ -z "$missing" ] || exit 1
+
+      - name: Which image
+        id: image
+        run: |
+          if [ -n "$INPUT_TAG" ]; then tag="$INPUT_TAG"; else tag="sha-${HEAD_SHA:0:7}"; fi
+          # The tag ends up in a command line; a registry tag is letters, digits, dot, dash and underscore.
+          [[ "$tag" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || { echo "::error::'$tag' is not an image tag"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "target=rg.${REGION}.scw.cloud/${NAMESPACE}/claudia-demo:${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Copy the image from GHCR to the Scaleway registry
+        env:
+          TAG: ${{ steps.image.outputs.tag }}
+          TARGET: ${{ steps.image.outputs.target }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          echo "$SCW_SECRET_KEY" | docker login "rg.${REGION}.scw.cloud/${NAMESPACE}" -u nologin --password-stdin
+          docker pull --platform linux/amd64 "$SOURCE:$TAG"
+          docker tag "$SOURCE:$TAG" "$TARGET"
+          docker push "$TARGET"
+
+      - name: Deploy
+        env:
+          TARGET: ${{ steps.image.outputs.target }}
+        run: |
+          api="https://api.scaleway.com/containers/v1beta1/regions/${REGION}/containers"
+          scw() { curl -fsS -H "X-Auth-Token: $SCW_SECRET_KEY" -H "Content-Type: application/json" "$@"; }
+
+          for id in $CONTAINER_IDS; do
+            [[ "$id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::'$id' is not a container id"; exit 1; }
+            echo "::group::container $id"
+            # Point the container at the new image, then roll it out.
+            scw -X PATCH -d "{\"registry_image\": \"$TARGET\"}" "$api/$id" > /dev/null
+            scw -X POST -d '{}' "$api/$id/deploy" > /dev/null
+
+            status=
+            for _ in $(seq 1 60); do
+              body="$(scw "$api/$id")"
+              status="$(jq -r .status <<<"$body")"
+              echo "status: $status"
+              [ "$status" = ready ] && break
+              if [ "$status" = error ]; then
+                echo "::error::deployment failed: $(jq -r .error_message <<<"$body")"
+                exit 1
+              fi
+              sleep 10
+            done
+            [ "$status" = ready ] || { echo "::error::container $id is '$status' after 10 minutes"; exit 1; }
+            echo "::endgroup::"
+          done
+
+      - name: Check the demo answers
+        run: |
+          # A scaled-to-zero container needs a moment to start.
+          for _ in $(seq 1 12); do
+            if curl -fsS "$DEMO_URL/api/health"; then echo; exit 0; fi
+            sleep 10
+          done
+          echo "::error::$DEMO_URL/api/health does not answer. If it is a 403, the host name is missing in CLAUDIA_ALLOW_HOST of the container."
+          exit 1

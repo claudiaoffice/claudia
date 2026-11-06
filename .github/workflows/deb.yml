@@ -1,0 +1,119 @@
+# Builds the Debian package of the Linux client (Claudia Composes with its server and web app inside), installs it
+# on a clean runner and starts it.
+#
+#   pull request / push to main   build, check, install, test; the .deb is kept as a workflow artifact for 30 days
+#   tag v1.2.3                    the same, and the .deb is attached to the GitHub release of the tag
+#
+# The package is for Ubuntu 24.04 and newer, and Debian 13 (it needs the system's GTK 4, libadwaita and WebKitGTK 6).
+name: Debian package
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - packaging/**
+      - clients/linux/**
+      - web/**
+      - packages/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/deb.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deb-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  deb:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Tag and version agree
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' clients/linux/src/claudia_shell_gtk/_version.py)"
+          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME but clients/linux/src/claudia_shell_gtk/_version.py says $version"
+            exit 1
+          fi
+
+      - name: Check the desktop file and the AppStream metadata
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends desktop-file-utils appstream
+          desktop-file-validate clients/linux/apps/composes/de.claudiaoffice.composes.desktop
+          appstreamcli validate --no-net clients/linux/apps/composes/de.claudiaoffice.composes.metainfo.xml
+
+      - name: Build
+        run: |
+          # Builds that are not releases sort before the release they lead to: 0.1.0~git42.1a2b3c4
+          if [[ "$GITHUB_REF" != refs/tags/v* ]]; then
+            export DEB_VERSION_SUFFIX="~git${GITHUB_RUN_NUMBER}.${GITHUB_SHA:0:7}"
+          fi
+          # The server's virtual environment cannot be moved, so it is built where it will live.
+          sudo install -d -o "$USER" -g "$(id -gn)" /opt/claudia
+          packaging/debian/build-deb.sh dist
+          ls -l dist
+
+      - name: Install on this runner and start
+        run: |
+          sudo rm -rf /opt/claudia
+          sudo apt-get install -y --no-install-recommends ./dist/*.deb xvfb
+          test -x /usr/bin/claudia-composes
+          xvfb-run -a claudia-composes --version
+          # The server the shell would start, on the Python that comes with the package.
+          /opt/claudia/venv/bin/python -m claudia_server --model claudia_composes:TextModel \
+            --host 127.0.0.1 --port 8765 --no-tls --web /opt/claudia/web --max-documents 5 &
+          pid=$!
+          ok=
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/api/health; then ok=1; break; fi
+            sleep 1
+          done
+          kill "$pid"
+          [ -n "$ok" ]
+          curl -fsS -o /dev/null http://127.0.0.1:8765/ 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: claudia-composes-deb
+          path: dist/*.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: deb
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: claudia-composes-deb
+          path: dist
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
+          gh release upload "$GITHUB_REF_NAME" dist/*.deb --clobber
