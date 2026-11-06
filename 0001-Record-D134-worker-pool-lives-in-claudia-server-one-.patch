@@ -1,0 +1,60 @@
+From c8dfd6b217177d8c5871b072a6feb36c87aa9898 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 6 Nov 2026 14:18:11 +0000
+Subject: [PATCH 1/2] Record D134: worker pool lives in claudia-server, one
+ instance per process
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+PERF-01/02/05 found the event loop stalling on O(sheet-size) hot paths
+and a synchronous fsync; behind the fsync fix sits the worker pool
+D37 already specified but never built. The owner asked whether the
+pool belongs in claudia-core so all three apps could share it;
+reading cli.py showed the premise was wrong — make_plan() starts one
+Hub per OS process for exactly one --model, so there is no single
+running process hosting all three apps to share a pool across in the
+first place. Records the corrected decision: the pool lives in
+claudia-server, and each server process owns its own instance.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013Hm7H7rUc2rdbEYgf8D4i1
+---
+ claudiaoffice-log/decision-log.md | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/claudiaoffice-log/decision-log.md b/claudiaoffice-log/decision-log.md
+index dfbfd52..7c16bab 100644
+--- a/claudiaoffice-log/decision-log.md
++++ b/claudiaoffice-log/decision-log.md
+@@ -324,6 +324,27 @@ each found by accident rather than by a check that was looking for it.
+ |---|---|---|---|
+ | D133 | **The gate never reports "clean" over a skipped check**, and a `--ci` flag turns an unlisted skip into a failure. `check_debt.py`'s `verdict()` prints `clean except skipped: …` whenever anything skipped, even under `--ci` with the skip allow-listed — an allowed skip still must be named, never folded silently into "clean." CI now calls `check_debt.py --ci`, explicitly allow-listing the three checks the Python job's own OS/toolchain cannot run (`web tests`, `web types`, `linux client tests`), which the separate `web` and `linux-client` jobs cover for real. `ruff format --check .` joins the gate as its own named check (CODE-08). Three new repo-scanning tests close the rest: every `D<number>` cited in source resolves to exactly one row in this log (DOC-01); no `.rej` or `.orig` file is ever tracked (CODE-07); and a note under `claudiaoffice-log/` may say "built" about a path only if that path is actually in the tree (PROC-03) — the guard `e4-e6-formulas-notes.md`'s own false claim should have tripped. | 2026-11-06 | Fixes PROC-02 (the gate's false "clean"), DOC-01 (D70–D82/D97–D99 each allocated twice across `claudia-container`/`claudia-server`, resolved by this log's D100–D119 renumbering — citations in source updated to match), CODE-07 (`uv.lock.rej` deleted, lock regenerated, `cryptography` floor corrected `>=43`→`>=44`), CODE-08 (`ruff format --check .` added to the gate). PROC-03's underlying feature (point-and-click cell references, E6.3) was already rebuilt and committed by the owner before this review; this round added only the guard and the note correction. |
+ 
++## Worker pool placement (twenty-first round)
++
++QA (PERF-01/02/05) found `Connection.handle` running every request on the event loop: two O(sheet-size) hot paths
++(the `_cells` grid-window query and the sheets' `_extent`) and `_cells.py`'s synchronous `os.fsync` each stall every
++document the process holds. The fsync fix and the O(sheet-size) fix are both below; this round is about the worker
++pool that D37 already specified for the fsync tier (and that E4.3/E4.4/E4.9/E3.4 are blocked on) but that was never
++built. Raised by the owner: "where should we locate the worker pool and multi processing? I think it best to have it
++in the core, so it can be re-used in any of the three apps." Discussed and agreed before building.
++
++| ID | Decision | Date | Notes |
++|---|---|---|---|
++| D134 | **The worker-pool abstraction (a generic `submit(fn, *args, **kwargs)` over a `ProcessPoolExecutor`, bridged into `asyncio`, with crash isolation if a worker process dies outright) lives in `claudia-server`, not `claudia-core`, and each server process owns exactly one instance of it, started and stopped with its `Hub`.** | 2026-11-06 | Owner's opening framing ("in the core, so it can be re-used in any of the three apps") turned out to rest on a wrong premise, corrected while reading `cli.py`: `make_plan()` starts exactly one `Hub` per OS process, for exactly one `--model` (one app type). There is no single running `claudia-server` process that already hosts composes, computes and creates together — the real topology is one process per app type. So reuse across apps was never going to come from a shared running instance anyway; it comes from the abstraction being available to every process that is a `claudia-server` process, which all three already are. `claudia-core` stays dependency-free and I/O-free (`pyproject.toml: dependencies = []`) — `asyncio`, `ProcessPoolExecutor` and process lifecycle do not belong in the pure kernel. Each process owning its own pool (over one pool shared across processes) was agreed directly: a document-hosting process must be able to start, stop and recover its pool without coordinating with any other process. Built in `packages/claudia-server/src/claudia_server/workers.py` (`WorkerPool`, `DEFAULT_WORKERS`), wired as `Hub.workers`. |
++
++Separately, the O(sheet-size) cost itself (PERF-01/05) was fixed without a worker pool: `_cells`/`_extent` moved from a
++full scan to an index (sparse row→sorted-columns map, plus lazy-deletion max-heaps for the row/column extent)
++maintained incrementally at `WorkbookModel.store()`'s single per-cell mutation point, falling back to the existing
++O(sheet-size) rebuild only for structural edits and document load. An invalidate-and-rebuild cache was considered and
++rejected: the measured workload interleaves edits and window queries closely enough (a user scrolling while another
++edits) that a rebuild-on-next-read would frequently pay the full O(sheet-size) cost anyway, with none of the
++incremental approach's guarantee that cost tracks the window, not the sheet.
++
+ ## Open design questions
+ 
+ - **Typesetting:** the full-document comparison of E0.4 (Tectonic against TeX Live, biblatex with biber, Beamer,
+-- 
+2.43.0
+

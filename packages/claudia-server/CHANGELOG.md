@@ -5,6 +5,19 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [0.9.0] - 2026-11-06
 
+The worker pool D37 specified and left unbuilt: `Connection.handle` runs synchronously on the event loop, so slow
+work in one request used to stall every document the server holds (QA review 2026-11-06, PERF-02; D134).
+
+### Added
+- **`WorkerPool`** (`workers.py`): runs a function in a separate OS process and awaits its result —
+  `await pool.submit(fn, *args, **kwargs)`. Generic on purpose: knows nothing about cells, formulas or typesetting.
+  `fn` and its arguments must be importable at module level and picklable. A worker process dying outright (killed, a
+  segfault in a C extension) breaks only the task that caused it: the pool replaces itself transparently on the next
+  `submit`, so neither the server nor another document's pending work is affected. `pool.stop()` lets the worker
+  processes go; safe before anything was submitted and safe to call more than once. `DEFAULT_WORKERS` (4).
+- **`Hub.workers`**: one `WorkerPool` per `Hub` (one process per `--model`, D134 — not a pool shared across process
+  boundaries), sized by the new `Hub(..., max_workers=...)` constructor argument. `Hub.stop()` now also calls
+  `workers.stop()`.
 Security release: the second QA review's first recommendation (SEC-10).
 
 ### Added

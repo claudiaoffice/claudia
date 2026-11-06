@@ -32,6 +32,8 @@ nitpick_ignore_regex = [
     (r"py:class", r"(Callable|dict|list|tuple)\[.*"),
     # standard library and FastAPI types in signatures (no network for intersphinx)
     (r"py:class", r"(os|pathlib|ssl)\.\w+|(fastapi|starlette)\..*"),
+    # WorkerPool.submit's own TypeVar/ParamSpec (P, R): not a class to link to
+    (r"py:class", r"claudia_server\.workers\.[PR]"),
 ]
 html_theme = "alabaster"
 myst_heading_anchors = 3
