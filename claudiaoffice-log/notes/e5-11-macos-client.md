@@ -181,6 +181,42 @@ All three have their own tests (`launch.test.ts`'s new `macProcessName` group; `
 pure extension-filter/MIME-guess/basename helpers) — 73 vitest tests now. `installFileDialogBridge()` itself joins
 `installBridge()` as the untested live-wiring half, same reasoning, same place in the README's "Tests" section.
 
+## Third run (owner, 2026-11-07): the heading fix above didn't work, investigated properly this time
+
+The window-title fix held. The other two did not: the application-menu heading still read `neutralino-mac_arm64`,
+and Insert Image's file picker still did nothing. Rather than guess a second time, read Neutralino's own source
+and outside evidence before writing anything:
+
+- **`argv0` (item 1 above) was simply the wrong mechanism — confirmed, not just retried.** Neutralino's own macOS
+  source (`api/window/window.cpp`'s `setMainMenu()`, in the `neutralinojs/neutralinojs` repo) shows that call does
+  nothing but `[NSApplication sharedApplication].mainMenu = <our own menu items>` — no `CFBundleName`, no process
+  name, anywhere in it. Outside confirmation of the same gap in another bare-executable Cocoa app: a plain SDL
+  app's menu-bar name did not change when `argv[0]` did ("you can't do it without putting your app in an app
+  bundle, AFAIK" — https://discourse.libsdl.org/t/setting-the-application-name-on-osx/31982). The heading (also
+  the Cmd+Tab switcher and Activity Monitor) reads a running process's *bundle* identity — `CFBundleName`, through
+  `NSBundle`/`NSRunningApplication` — which a bare downloaded binary simply does not have, whatever `argv0` says.
+  New `app-bundle.ts`: `ensureAppBundle()` wraps it in the smallest `.app` that gets `CFBundleName` to apply —
+  `Contents/MacOS/claudia-<app>` (the binary, copied, re-copied only when the source is newer) and
+  `Contents/Info.plist` (rewritten every launch — cheap, keeps it in step with `identity.ts`). No `.icns`,
+  codesigning or notarization — full packaging stays "Not done"; confirmed against Neutralino's own `settings.cpp`
+  that `--path` is read as an explicit override regardless of where the binary itself runs from, so nothing about
+  resource lookup changes. `macProcessName()`/`argv0` stays in, harmlessly, alongside it.
+- **Insert Image's file picker: re-verified the code is right, asked her to rule out a stale build before treating
+  it as a second bug.** `os.showOpenDialog`/`filesystem.readBinaryFile` are the *exact* method-name strings
+  Neutralino's own router checks (`server/router.cpp`'s `methodMap`), and `OpenDialogOptions`/`Filter`'s shape
+  matches the client library's own TypeScript types (`neutralinojs/neutralino.js`'s `src/types/api/os.ts`) exactly
+  — nothing found wrong in the calling code itself. What *does* explain "still doesn't work" without any code
+  being wrong: `apps/<app>/neutralino.config.json` is read fresh on every launch (confirmed in `settings.cpp` —
+  no caching across runs), which is why the window-title fix took effect with no rebuild; the *injected* script
+  (`apps/<app>/inject/claudia-bridge.js`) is a **build artifact** of `npm run build`, and only updates when that
+  command actually reruns. `start-mac-client.sh` rebuilds it every run unless `CLAUDIA_SKIP_MACOS_BUILD=1` is set
+  — if that or a direct `node dist/launch.js` (skipping the build step) is how she's running it, the fix was never
+  loaded. Flagged to her directly; still open whether the picker works once a genuinely fresh build is confirmed.
+
+79 vitest tests now (6 new: `app-bundle.test.ts`). **The heading fix is this round's second, still-unverified
+attempt** — no real Mac on this end to confirm either theory holds; it's still exactly as speculative as the
+first one was, just better-sourced this time.
+
 ## Not verified (needs a real Mac)
 
 This is the same gap the spike itself named as "the largest gap" and is restated here, now that it has an actual

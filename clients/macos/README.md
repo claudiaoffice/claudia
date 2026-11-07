@@ -24,6 +24,7 @@ clients/
       file-dialog.ts      swaps a broken <input type="file"> click for Neutralino's own Open dialog (plain TS; a few real Neutralino/DOM calls in installFileDialogBridge())
       inject-entry.ts    the file Neutralino's injectScript actually loads     (bundled, not run directly)
       launch.ts          prepare the server, find the binary, start both       (Node + child_process)
+      app-bundle.ts      wraps the binary in the smallest .app that gets CFBundleName to apply (plain Node, fs only)
       generated/         menu.<app>.json, checked in, generated from manifest.py
     tools/
       generate_menu.py   imports clients/linux's manifest.py (no GTK) and writes generated/menu.<app>.json
@@ -112,6 +113,15 @@ on its way out shows up directly on the console.
   `Neutralino.app.exit()`. `help.about` is `Kind.SHELL` in the manifest (GTK shows its own dialog for it), but
   Neutralino has no native About panel (D158 point 4), so it is forwarded to the page like any other action —
   `AboutDialog.vue` already exists and needs no change.
+* **The downloaded binary runs from inside a minimal `.app` bundle, not directly.** The application-menu heading
+  (next to the Apple logo), the Cmd+Tab switcher and Activity Monitor all read a running process's *bundle*
+  identity (`CFBundleName`) when it has one, not anything Neutralino's own `NSApplication.setMainMenu:` call sets
+  (confirmed by reading its macOS source) and not `argv0` either (confirmed against outside reports of the same
+  gap in other bare-executable Cocoa apps). `app-bundle.ts`'s `ensureAppBundle()` builds
+  `apps/<app>/bin/claudia-<app>.app/Contents/{MacOS/claudia-<app>,Info.plist}` — a copy of the downloaded binary
+  plus the smallest Info.plist that gets `CFBundleName` to apply — and `launch.ts` spawns that instead. No `.icns`,
+  no codesigning, no notarization (still "Not done"); `--path` keeps pointing at `apps/<app>/` regardless of where
+  the binary itself runs from (confirmed against Neutralino's own `settings.cpp`).
 * **`<input type="file">` gets the same zero-change-to-the-web-app treatment.** WKWebView (the engine Neutralino's
   macOS binary embeds) shows no native Open panel for a file input unless the host app implements a WKUIDelegate
   method for it, which this generic binary does not — confirmed on the owner's own Mac, where clicking "Choose a
@@ -124,7 +134,7 @@ on its way out shows up directly on the console.
 
 ```
 cd clients/macos
-npm test              # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch, file-dialog — 73 tests
+npm test              # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch, file-dialog, app-bundle — 79 tests
 npm run typecheck      # tsc --strict over src/ and tests/
 python3 -m pytest tools/tests   # generate_menu.py: 10 tests
 ruff check . && ruff format --check . && mypy tools

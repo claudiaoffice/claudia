@@ -67,6 +67,38 @@ cross-origin WebSocket to the server).
 - `server.start()`'s `ServerStartError` was uncaught in `launch.ts`'s `main()` (a raw Node stack trace on the
   console); it is now caught and printed like every other `SetupProblem`.
 
+### Fixed (the application-menu heading fix above didn't actually work)
+
+The owner's third run: the window title fix held, but the application-menu heading still read
+`neutralino-mac_arm64`, and Insert Image's file picker still did nothing. Investigated properly this time instead
+of guessing again:
+
+- **`argv0` was the wrong mechanism.** Reading Neutralino's own macOS source
+  (`api/window/window.cpp`'s `setMainMenu()`) confirms it only ever calls `NSApplication.setMainMenu:` with our
+  own menu items — nothing there touches the app's own name. Outside confirmation too: a bare SDL app's menu-bar
+  name did not change when `argv[0]` did ("you can't do it without putting your app in an app bundle, AFAIK",
+  https://discourse.libsdl.org/t/setting-the-application-name-on-osx/31982). The heading (and the Cmd+Tab switcher,
+  and Activity Monitor) read a running process's *bundle* identity — `CFBundleName`, via `NSBundle`/
+  `NSRunningApplication` — which an unbundled binary simply does not have, whatever `argv0` says.
+- **New `app-bundle.ts`.** `ensureAppBundle()` wraps the downloaded binary in the smallest `.app` bundle that
+  gets `CFBundleName` to apply at all: `Contents/MacOS/claudia-<app>` (a copy of the downloaded binary, re-copied
+  only when the source is newer — not on every launch) and `Contents/Info.plist` (rewritten every launch, cheap).
+  Confirmed safe against Neutralino's own `settings.cpp`: `--path` is read as an explicit override regardless of
+  where the binary itself lives, so running from inside `Contents/MacOS/` instead of `apps/<app>/bin/` directly
+  changes nothing about where `neutralino.config.json` or the app's resources are found. No `.icns`, no
+  codesigning, no notarization — full packaging is still "Not done"; this is only what `CFBundleName`'s
+  resolution needs. The dock icon the owner already has stays exactly as it was (`modes.window.icon`, unrelated to
+  a bundle's own Finder icon). `launch.ts`'s `macProcessName()`/`argv0` stays in as a harmless no-op alongside it.
+- Insert Image's file picker is believed to be a stale-build symptom, not a code bug: re-verified
+  `os.showOpenDialog`/`filesystem.readBinaryFile` are the exact method-name strings Neutralino's own router
+  expects (`server/router.cpp`), and the `OpenDialogOptions`/`Filter` shape matches the client library's own types
+  (`@neutralinojs/lib`'s `src/types/api/os.ts`) exactly. Config changes (like the window-title fix) take effect on
+  the next launch with no rebuild, confirmed from `settings.cpp` reading the config file fresh every start; the
+  injected bundle (`apps/<app>/inject/claudia-bridge.js`) does not — it is a build artifact of `npm run build`,
+  and only updates when that actually reruns. Asked the owner to force a clean rebuild and confirm before treating
+  this as still broken.
+- 79 vitest tests now (6 new: `app-bundle.test.ts`).
+
 ### Fixed (found on the owner's second run, after start-up finally succeeded)
 
 D159's core mechanic is confirmed working on her Mac: the native menu rendered, the dock showed this app's own

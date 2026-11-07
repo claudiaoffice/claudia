@@ -17,6 +17,7 @@ import { arch as hostArch, env as processEnv } from 'node:process'
 import { getIdentity, UnknownAppError, type App, type AppIdentity } from './identity.js'
 import { defaultRepo, documentsDir, findFrontend, findServerPython, stateDir, type Env } from './paths.js'
 import { LOOPBACK, LocalServer, ServerStartError, buildServerCommand, freePort } from './server.js'
+import { ensureAppBundle } from './app-bundle.js'
 
 export class SetupProblem extends Error {}
 
@@ -98,12 +99,11 @@ export interface ShellCommandOptions {
   appDir: string
 }
 
-/** macOS reads the *running process's* own name -- not menu.ts's own NSMenu items -- for the bold heading next to
- * the Apple logo in the menu bar, the Cmd+Tab switcher, and Activity Monitor. The owner's first real run showed
- * exactly that: before this, nothing set a process name, so all three showed the literal downloaded binary
- * filename, 'neutralino-mac_arm64'. `main()` passes this as the spawned binary's `argv0` (Node's
- * `child_process.spawn` option, not a shell string -- no quoting concerns even with the space), which is what
- * `ProcessInfo.processName`/`getprogname()` on Darwin actually report.
+/** `argv0` for the spawned binary -- **tried first, confirmed insufficient by itself** (the owner's own second
+ * run: the window title fixed, this heading did not). `app-bundle.ts`'s `ensureAppBundle()` is the real fix (its
+ * own top comment has the full story -- the heading reads a bundle's CFBundleName, not argv0, once an app has a
+ * real `.app` bundle at all). Kept anyway as a harmless, free second string in the same direction, in case some
+ * other reporting path (not the menu-bar heading) ever does read argv0 on Darwin.
  *
  * Scoped to this one macOS-process-identity string on the owner's own instruction (2026-11-07): `identity.title`
  * ('Claudia Creates') stays Title Case everywhere it is shared with Linux and the web app (the window title bar
@@ -154,14 +154,25 @@ export async function main(argv: readonly string[]): Promise<number> {
   }
 
   const appDir = join(defaultRepo(), 'clients', 'macos', 'apps', appName)
-  const binary = findNeutralinoBinary({ appDir })
-  if (binary === null) {
+  const downloadedBinary = findNeutralinoBinary({ appDir })
+  if (downloadedBinary === null) {
     console.error(
       `No Neutralino binary found for this Mac (expected ${join(appDir, 'bin', neutralinoBinaryName())}).\n` +
         `Fetch it with: cd ${appDir} && npx @neutralinojs/neu update\n` +
         '(reads neutralino.config.json\'s pinned cli.binaryVersion, 6.8.0 today -- D157).\n' +
         'Or set CLAUDIA_NEUTRALINO_BIN to an existing binary\'s path.',
     )
+    return 1
+  }
+
+  // Spawning downloadedBinary directly never gets CFBundleName applied (app-bundle.ts's own top comment has the
+  // full story) -- ensureAppBundle() wraps it in the smallest .app bundle that does, and the copy it makes lives
+  // next to the binary itself (apps/<app>/bin/), not checked into the repo either.
+  let binary: string
+  try {
+    binary = ensureAppBundle({ binDir: join(appDir, 'bin'), sourceBinary: downloadedBinary, identity, displayName: macProcessName(identity) })
+  } catch (error) {
+    console.error(`Could not prepare this app's .app bundle: ${(error as Error).message}`)
     return 1
   }
 
