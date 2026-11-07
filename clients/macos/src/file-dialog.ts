@@ -112,7 +112,12 @@ export function installFileDialogBridge(neutralino: FileDialogNeutralino, doc: P
       const target = event.target
       if (!(target instanceof HTMLInputElement) || target.type !== 'file') return
       event.preventDefault()
-      void pickFiles(neutralino, target)
+      // A rejected call here (permission denied, the native dialog helper failing) must not vanish as a silent
+      // unhandled rejection -- that looks identical to "nothing happened" from the person's side, which is
+      // exactly the bug this file exists to fix. Logged, not swallowed, even without devtools open.
+      pickFiles(neutralino, target).catch((error: unknown) => {
+        console.error('[claudia-bridge] could not open the native file picker:', error)
+      })
     },
     { capture: true },
   )

@@ -67,6 +67,28 @@ cross-origin WebSocket to the server).
 - `server.start()`'s `ServerStartError` was uncaught in `launch.ts`'s `main()` (a raw Node stack trace on the
   console); it is now caught and printed like every other `SetupProblem`.
 
+### Fixed (the app-bundle fix worked; the file picker is a real bug, still open)
+
+The owner's fourth run, after a clean rebuild: the app-bundle fix above is confirmed — the app-menu heading, the
+Cmd+Tab switcher and Activity Monitor all now read correctly. Insert Image's file picker still does nothing, and a
+clean rebuild did not change that, ruling out staleness for good.
+
+- **A separate, real bug found while re-reading the call site: a swallowed promise rejection.**
+  `installFileDialogBridge()` called `pickFiles()` with a bare `void` and no `.catch()` — any rejection (a
+  permission error, the native dialog helper failing) vanished as a silent unhandled rejection, which looks
+  identical to "nothing happens" without devtools open. Fixed with an explicit `.catch(console.error)`.
+  `enableInspector` is now `true` in `apps/creates/neutralino.config.json` so that log (and anything else) is
+  actually visible to her. Neither change fixes the underlying bug.
+- **Leading theory for the underlying bug, not yet confirmed: the native dialog opens off-screen or unfocused,
+  not that it fails to open at all.** `os.showOpenDialog` shows the dialog on macOS by shelling out to AppleScript
+  (`osascript`) as a separate process — confirmed in the vendored `portable-file-dialogs.h` — and that file has no
+  `activate`/frontmost call anywhere in it. A dialog shown this way belongs to the `osascript` process, not ours,
+  and nothing asks it to come to the front. The same class of bug is independently documented in another project
+  that used the same approach before dropping it (flutter_file_picker issues #1445, #1492 — see the notes file for
+  links). Not confirmable without a real Mac, and not patchable from this repo even if confirmed —
+  `portable-file-dialogs.h` is compiled into Neutralino's prebuilt binary, not built here.
+- 79 vitest tests still (no new testable logic this round).
+
 ### Fixed (the application-menu heading fix above didn't actually work)
 
 The owner's third run: the window title fix held, but the application-menu heading still read

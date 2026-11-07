@@ -19,7 +19,7 @@
       "minHeight": 500,
       "center": true,
       "icon": "/icon.png",
-      "enableInspector": false,
+      "enableInspector": true,
       "borderless": false,
       "resizable": true,
       "exitProcessOnClose": true,

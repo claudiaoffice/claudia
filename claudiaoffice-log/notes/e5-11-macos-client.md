@@ -217,6 +217,54 @@ and outside evidence before writing anything:
 attempt** — no real Mac on this end to confirm either theory holds; it's still exactly as speculative as the
 first one was, just better-sourced this time.
 
+### Fourth run — app-bundle fix confirmed; file picker confirmed real, not stale; root cause still open
+
+The owner confirmed, on a clean rebuild (`rm -rf` before `start-mac-client.sh`): the app-bundle fix (above) worked
+— "the app names are now correct everywhere" — and the file picker is a real bug, not the staleness this session
+had hypothesized. Investigated from source again rather than asking for a second clean rebuild:
+
+- **Not a wrong method name, wrong types, or a stale token.** Re-re-verified `os.showOpenDialog`/
+  `filesystem.readBinaryFile` against `server/router.cpp`'s `methodMap` (exact), `OpenDialogOptions`/`Filter`
+  against the client library's own types (exact), and `tokenSecurity: one-time` against `auth/authbasic.cpp`:
+  that flag affects only the one-time JS injection of `NL_TOKEN` into the page, not per-call auth — the client
+  caches the token once at `init()` and every other native call (menu, quit) keeps working all session on it, so
+  a dead token would not explain one call failing while others succeed.
+- **Not a main-thread Cocoa violation.** Traced `os::controllers::showOpenDialog` (`api/os/os.cpp:616`) into the
+  vendored `lib/filedialogs/portable-file-dialogs.h`: on macOS it does not call any Cocoa API in-process at all.
+  `internal::dialog::desktop_helper()` returns `{"osascript"}` — the dialog is shown by shelling out to
+  AppleScript (`osascript -e 'choose file ...'`) as a **separate process**, with its own thread, so there is no
+  WebView/Cocoa threading bug to find here.
+- **Found a real, separate bug while reading the call site: a swallowed promise rejection.**
+  `installFileDialogBridge()` called `pickFiles()` with a bare `void` cast and no `.catch()` — if `showOpenDialog`
+  ever rejects (for any reason), that becomes a silent unhandled promise rejection: indistinguishable, from her
+  side with devtools closed, from the bug itself ("nothing happens"). Fixed with an explicit `.catch(console.error)`.
+  Also flipped `enableInspector` on in `apps/creates/neutralino.config.json` so she can actually see it. Neither
+  change fixes the underlying bug — both exist so the next piece of evidence from her Mac is visible instead of
+  invisible.
+- **Leading theory, not yet confirmed: the osascript dialog opens, but off-screen, unfocused, or behind the main
+  window.** `portable-file-dialogs.h`'s osascript branch (`file_dialog::file_dialog`, line 1058) builds the
+  AppleScript string and hands it to `m_async->start_process(command)` with no `activate`/frontmost call anywhere
+  in the file — confirmed by grepping the whole header for `activate`/`frontmost`/`NSApp`: nothing. A dialog shown
+  this way belongs to the `osascript` process itself, not to our app, and nothing asks it to come to the front.
+  This exact class of bug is independently documented in other projects that used the same osascript approach
+  before replacing it: `flutter_file_picker` issue
+  [#1445](https://github.com/miguelpruivo/flutter_file_picker/issues/1445) ("the open files dialog is not focused;
+  the app retains focus") and issue
+  [#1492](https://github.com/miguelpruivo/flutter_file_picker/issues/1492) (a request to drop osascript for native
+  APIs, citing "a weird UI experience where the file picker isn't focused correctly"). An AppleScript authority
+  making the same general point in a related thread (macscripter.net, on a different dialog command): "the dialog
+  belongs to whatever process is running the script."
+  **This cannot be confirmed or fixed from this side without a real Mac.** There is also no code of ours to patch
+  even if it is confirmed — `portable-file-dialogs.h` is compiled into Neutralino's prebuilt binary
+  (`npx @neutralinojs/neu update` fetches a binary blob; nothing in this repo compiles it), so a real fix would mean
+  either an upstream patch to `portable-file-dialogs` (not ours to ship), or replacing `os.showOpenDialog` entirely
+  with our own native picker (a Swift/Obj-C helper we compile and ship ourselves, communicating over Neutralino's
+  extensions mechanism or bypassing it) — the same path `flutter_file_picker` eventually took in its PR #1690. That
+  is a real feature, not a bug fix, and not something to start blind. Asked her instead for three cheap checks: see
+  the PR/handover message for this round.
+- 79 vitest tests still (no new testable logic this round — the `.catch()` is "live wiring", same category as
+  `installBridge()`/`installFileDialogBridge()` itself, not unit-tested per this package's own precedent).
+
 ## Not verified (needs a real Mac)
 
 This is the same gap the spike itself named as "the largest gap" and is restated here, now that it has an actual
