@@ -4,6 +4,7 @@
 // same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. Nothing is
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { cutSelection, copySelection } from '~/lib/clipboard'
 import { CORNERS, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
 import { contextMenuItems } from '~/lib/object-menu'
@@ -174,11 +175,28 @@ async function onSlideDown(event: PointerEvent) {
 const contextMenu = ref<{ x: number; y: number; id: string } | null>(null)
 const contextItems = computed<MenuItem[]>(() => {
   const o = contextMenu.value ? state.objects[contextMenu.value.id] : null
-  return o ? contextMenuItems(o, readonly.value, { edit: () => beginEdit(o.id), remove: () => session.remove(o.id) }) : []
+  return o
+    ? contextMenuItems(o, readonly.value, {
+        edit: () => beginEdit(o.id),
+        remove: () => session.remove(o.id),
+        cut: () => cutSelection(),
+        copy: () => copySelection(),
+        properties: () => {
+          contextMenu.value = null
+          propertiesFor.value = o.id
+        },
+      })
+    : []
 })
 function closeContextMenu() {
   contextMenu.value = null
 }
+
+// ------------------------------------------------------------------------------ image properties dialog
+/** The image a right-click's "Properties" opened the dialog for (follow-up, 2026-11-07) — tracked separately from
+ * `contextMenu`/`selected` since the menu itself has already closed by the time the dialog is showing. */
+const propertiesFor = ref<string | null>(null)
+const propertiesObject = computed(() => (propertiesFor.value ? state.objects[propertiesFor.value] ?? null : null))
 /** Was showing the browser's own menu here (Back, Inspect, …) over a shape, a text box or a picture — the bug
  * this fixes. Shift + right button still gets the browser's own menu, the same escape hatch `TextEditor.vue`'s
  * `onContextMenu` already gives composes, and editing text keeps its own menu too (spelling, …), same as before. */
@@ -351,6 +369,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     </div>
 
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" label="Object menu" @close="closeContextMenu" />
+    <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>
 </template>
 
