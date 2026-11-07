@@ -54,6 +54,19 @@ jobs:
           Add-MpPreference -ExclusionPath "${{ github.workspace }}"
           Add-MpPreference -ExclusionPath "$env:RUNNER_TEMP"
           Add-MpPreference -ExclusionPath "$env:TEMP"
+      # The exclusion above stopped real-time scanning from locking the journal file, but the replace still gets
+      # refused every time, with nothing of ours holding it open (confirmed by a diagnostic in journal.py that
+      # scans this process for an open handle on the file and finds none). That rules out a lock we could wait
+      # out or exempt our own path from, and points at Controlled Folder Access: a *separate* Defender feature
+      # (ransomware protection, not real-time scanning) that -ExclusionPath does not cover. It blocks an app that
+      # isn't on its own allow-list from writing to a protected folder, as a flat, permanent Access Denied rather
+      # than a scan that finishes and lets the write through -- which matches a failure that eleven retries over
+      # several seconds never once got past. Disabling it (rather than allow-listing python.exe/uv.exe by path,
+      # which would need updating whenever the toolchain's install path changes) removes that block at its source.
+      - name: Disable Controlled Folder Access
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Set-MpPreference -EnableControlledFolderAccess Disabled
       - run: uv sync --locked
       # web tests/types and the Linux client's tests are skipped here on purpose: the separate `web` and
       # `linux-client` jobs below run them for real, with Node and GTK installed. --ci fails on any OTHER skip
