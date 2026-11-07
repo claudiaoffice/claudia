@@ -41,7 +41,17 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 
 from .auth import AI_COLOR, Account, UserDirectory
-from .protocol import PROTOCOL_VERSION, Context, Limits, MethodTable, RequestError, core_methods, parse_request
+from .protocol import (
+    DEFAULT_LOCALE,
+    PROTOCOL_VERSION,
+    Context,
+    Limits,
+    MethodTable,
+    RequestError,
+    core_methods,
+    normalize_locale,
+    parse_request,
+)
 from .workers import DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
@@ -152,7 +162,9 @@ class MemoryProvider:
 class Connection:
     """One window of one person on one document."""
 
-    def __init__(self, hosted: HostedDocument, account: Account, send: Callable[[str], None]):
+    def __init__(
+        self, hosted: HostedDocument, account: Account, send: Callable[[str], None], *, locale: str = DEFAULT_LOCALE
+    ):
         self.hosted = hosted
         self.account = account
         self._send = send
@@ -160,6 +172,7 @@ class Connection:
         self.color = AI_COLOR if account.system else hosted.pick_color()
         self.closed = False
         self.broken = False  # sending failed (client gone or too slow): the transport should drop it
+        self.locale = normalize_locale(locale)  # the window's own locale (E5.7); re-normalized, never trusted raw
 
     # -- outgoing -----------------------------------------------------------------------
     def deliver(self, message: dict) -> None:
@@ -185,6 +198,7 @@ class Connection:
             "limits": self.hosted.limits.to_dict(),
             "id": self.id,
             "color": self.color,
+            "locale": self.locale,
             "people": [c.person() for c in self.hosted.connections if c is not self],
             "presence": [
                 {"user": hold.owner, "regions": [r.to_data() for r in hold.regions], "locked": hold.expires is not None}
@@ -213,6 +227,7 @@ class Connection:
                 hosted.edit_timeout,
                 hosted.directory,
                 hosted.id,
+                self.locale,
             )
             result = hosted.methods.dispatch(context, name, params)
             frame = {"id": request_id, "ok": True, "result": result}
@@ -288,11 +303,11 @@ class HostedDocument:
         """The connections of people (the assistant is not one)."""
         return [c for c in self.connections if not c.account.system]
 
-    def connect(self, account: Account, send: Callable[[str], None]) -> Connection:
+    def connect(self, account: Account, send: Callable[[str], None], *, locale: str = DEFAULT_LOCALE) -> Connection:
         """Add a window. ``HubError('unavailable')`` if the document is full."""
         if not account.system and len(self.humans()) >= self.max_connections:
             raise HubError("unavailable", f"{self.id} already has {self.max_connections} connections")
-        connection = Connection(self, account, send)
+        connection = Connection(self, account, send, locale=locale)
         self.connections.add(connection)
         self.broadcast({"event": "joined", "data": connection.person()}, skip=connection)
         self.touch()

@@ -43,6 +43,7 @@ Message = dict[str, Any]
 
 _ACTION_ID = re.compile(r"^[a-z]+(\.[a-z][a-z0-9-]*)+$")
 _TOKEN = re.compile(r"^[a-z][a-z0-9-]*$")
+_LOCALE = re.compile(r"^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$")  # a BCP-47-ish tag (E5.7); loose on purpose
 _ERROR_CODES = ("bad_json", "bad_message", "unsupported_contract", "unknown_action", "internal")
 _MAX_ACTION_ID = 64
 _MAX_TOKEN = 32
@@ -149,6 +150,9 @@ def _check_welcome(message: Message) -> None:
         raise _bad("'capabilities' is a list of different words")
     for capability in capabilities:
         _token(capability, "a capability")
+    locale = message.get("locale")
+    if locale is not None and not (isinstance(locale, str) and len(locale) <= 35 and _LOCALE.match(locale)):
+        raise _bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
 
 
 def _check_action(message: Message) -> None:
@@ -209,14 +213,23 @@ def negotiate(hello: Message, supported: Sequence[int] = SUPPORTED_VERSIONS) -> 
 # --------------------------------------------------------------------------------------------------- building
 
 
-def welcome(*, shell_version: str, capabilities: Iterable[str], contract: int = CONTRACT_VERSION) -> Message:
-    """The shell's answer to a ``hello``: the agreed version, who the shell is, what it offers."""
-    return {
+def welcome(
+    *, shell_version: str, capabilities: Iterable[str], contract: int = CONTRACT_VERSION, locale: str | None = None
+) -> Message:
+    """The shell's answer to a ``hello``: the agreed version, who the shell is, what it offers.
+
+    ``locale`` (E5.7, D31) is the shell's own best guess at the person's locale — the OS locale by default, or
+    whatever the person picked in the shell itself once that exists. The page is never required to use it: locale is
+    always the client's own setting, and the page may already have a stored override of its own."""
+    message: Message = {
         "type": "welcome",
         "contract": contract,
         "shell": {"name": "gtk", "platform": "linux", "version": shell_version},
         "capabilities": list(capabilities),
     }
+    if locale is not None:
+        message["locale"] = locale
+    return message
 
 
 def action(action_id: str, target: str | None = None) -> Message:

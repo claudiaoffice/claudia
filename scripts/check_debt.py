@@ -15,6 +15,7 @@ checks are:
 * ruff format   the enforced formatting (CODE-08); run ``uv run ruff format .`` to fix what it finds
 * mypy       types of the sources
 * vulture    code nobody uses (``vulture_whitelist.py`` lists the reasoned exceptions)
+* i18n extraction   ``po/claudia.pot`` is current (E5.7, D31); run ``uv run python scripts/extract_i18n.py`` to fix it
 * tests      the whole suite, with a note of the slowest ones
 * docs       the Sphinx build with warnings as errors (every cross reference must resolve)
 * perf       the scaling guards: the cost of hot paths must not grow with the history
@@ -104,6 +105,7 @@ def checks() -> list[Check]:
         Check("ruff format", (*run, "ruff", "format", "--check", ".")),
         Check("mypy", (*run, "mypy", *SOURCES)),
         Check("vulture", (*run, "vulture")),
+        Check("i18n extraction", (*run, "python", "scripts/extract_i18n.py", "--check")),
         Check("tests", (*run, "pytest", "--durations=5", *[arg for path in PERF for arg in ("--deselect", path)])),
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
         *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],

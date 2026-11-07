@@ -12,11 +12,13 @@ from claudia_core import Revision
 from claudia_core.testing import Insert, Interval, Remove
 from claudia_server.auth import Account
 from claudia_server.protocol import (
+    DEFAULT_LOCALE,
     ERROR_CODES,
     Context,
     Limits,
     RequestError,
     core_methods,
+    normalize_locale,
     parse_request,
 )
 
@@ -35,7 +37,7 @@ INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
 # ------------------------------------------------------------------------------------------ the table
 def test_every_method_is_documented_and_described():
     description = core_methods.describe(Limits())
-    assert description["protocol"] == 1 and description["errors"].keys() == ERROR_CODES.keys()
+    assert description["protocol"] == 2 and description["errors"].keys() == ERROR_CODES.keys()
     for name, info in description["methods"].items():
         assert info["doc"], f"{name} has no description"
     assert {
@@ -94,6 +96,36 @@ def test_changes_since_a_revision_of_an_abandoned_line_says_reload(doc, ann):
     assert caught.value.code == "stale"
 
 
+# ------------------------------------------------------------------------------------------ locale (E5.7, D31)
+def test_normalize_locale_accepts_a_wellformed_tag_and_falls_back_on_anything_else():
+    for tag in ("en", "de-DE", "pt-BR", "zh-Hans"):
+        assert normalize_locale(tag) == tag
+    for bad in (None, 7, "", "x", "de_DE", "not a locale!", "x" * 36):
+        assert normalize_locale(bad) == DEFAULT_LOCALE
+
+
+def test_context_locale_defaults_and_is_carried_through_to_a_method(doc, ann):
+    assert ctx_for(doc, ann).locale == DEFAULT_LOCALE
+    table = core_methods.extended()
+
+    @table.method("echo_locale", "", write=False)
+    def _echo(ctx):
+        """Report the connection's own locale, for the test."""
+        return {"locale": ctx.locale}
+
+    ctx = Context(doc, ann, Limits(), users=lambda: ["ann"], lock_seconds=30.0, locale="de-DE")
+    assert table.dispatch(ctx, "echo_locale", None) == {"locale": "de-DE"}
+
+
+def test_request_error_detail_is_only_in_to_dict_when_given():
+    assert RequestError("locked", "x").to_dict() == {"code": "locked", "message": "x"}
+    assert RequestError("locked", "x", detail="region_held").to_dict() == {
+        "code": "locked",
+        "message": "x",
+        "detail": "region_held",
+    }
+
+
 # ---------------------------------------------------------------------------------------- writing
 def test_apply_executes_a_command_as_the_account(doc, ann):
     result = call(doc, ann, "apply", {"command": INSERT})
@@ -116,6 +148,7 @@ def test_an_edit_in_flight_during_a_restore_is_refused_with_stale(doc, ann):
     with pytest.raises(RequestError) as caught:
         call(doc, ann, "apply", {"command": INSERT, "base": "main:3"})
     assert caught.value.code == "stale" and "reload" in caught.value.message.lower()
+    assert caught.value.detail == "stale_edit"
     assert doc.model.serialize() == before
 
 
@@ -143,6 +176,7 @@ def test_a_lock_held_by_a_colleague_refuses_the_edit(doc, ann, ben):
     with pytest.raises(RequestError) as caught:
         call(doc, ann, "apply", {"command": INSERT})
     assert caught.value.code == "locked" and "ben" in caught.value.message
+    assert caught.value.detail == "region_held"
     call(doc, ben, "apply", {"command": INSERT})  # his own lock does not stop him
 
 
@@ -213,6 +247,7 @@ def test_undo_that_would_overwrite_a_colleague_is_a_conflict(doc, ann, ben):
     with pytest.raises(RequestError) as caught:
         call(doc, ann, "undo")
     assert caught.value.code == "conflict" and "ben" in caught.value.message
+    assert caught.value.detail == "undo_conflict"
 
 
 def test_undo_into_a_lock_is_refused(doc, ann, ben):
