@@ -379,3 +379,58 @@ def test_an_empty_secret_stops_the_server_instead_of_leaving_it_open(tmp_path, m
 
 def test_no_secret_means_nothing_changes(tmp_path):
     assert listing(plan("--no-tls", tmp_path=tmp_path).app) == 200
+
+
+# ------------------------------------------------------------------------------- the settings pages (admin.py)
+def test_a_fresh_server_has_no_administrators_and_the_prompt_is_dormant_on_loopback(tmp_path):
+    result = plan(tmp_path=tmp_path)
+    assert not any("administrator" in line for line in result.banner)
+
+
+def test_an_exposed_server_without_administrators_says_so_in_the_banner(tmp_path):
+    result = plan("--no-tls", "--host", "0.0.0.0", "--behind-proxy", tmp_path=tmp_path)
+    assert any("no administrator yet" in line for line in result.banner)
+
+
+def test_max_documents_given_on_the_command_line_overrides_what_was_saved_but_does_not_replace_it(tmp_path):
+    from claudia_server.server_settings import ServerSettings, save_settings
+
+    save_settings(tmp_path, ServerSettings(max_documents=7))
+
+    overridden = plan("--no-tls", "--max-documents", "3", tmp_path=tmp_path)
+    assert overridden.app.state.hub.max_documents == 3
+
+    not_overridden = plan("--no-tls", tmp_path=tmp_path)
+    assert not_overridden.app.state.hub.max_documents == 7  # the override of the earlier run was never saved
+
+
+def test_max_documents_without_any_saved_settings_falls_back_to_the_built_in_default(tmp_path):
+    from claudia_server.hub import DEFAULT_MAX_DOCUMENTS
+
+    result = plan("--no-tls", tmp_path=tmp_path)
+    assert result.app.state.hub.max_documents == DEFAULT_MAX_DOCUMENTS
+
+
+def test_an_access_secret_saved_through_the_settings_applies_without_any_option(tmp_path):
+    from claudia_server.server_settings import ServerSettings, save_settings
+
+    save_settings(tmp_path, ServerSettings(max_documents=5, access_secret=SECRET))
+    app = plan("--no-tls", tmp_path=tmp_path).app
+    assert listing(app) == 401
+    assert listing(app, Authorization=f"Bearer {SECRET}") == 200
+
+
+def test_an_operator_access_secret_overrides_the_saved_one_without_replacing_it(tmp_path):
+    from claudia_server.server_settings import ServerSettings, load_settings, save_settings
+
+    save_settings(tmp_path, ServerSettings(max_documents=5, access_secret=SECRET))
+    other = "a-completely-different-secret-99"
+    app = plan("--no-tls", "--access-secret-file", _write(tmp_path / "other-secret", other), tmp_path=tmp_path).app
+    assert listing(app, Authorization=f"Bearer {other}") == 200
+    assert listing(app, Authorization=f"Bearer {SECRET}") == 401
+    assert load_settings(tmp_path, default_max_documents=1).access_secret == SECRET  # untouched on disk
+
+
+def _write(path, text):
+    path.write_text(text)
+    return str(path)

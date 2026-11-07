@@ -81,6 +81,29 @@ Users
 .. autoclass:: claudia_server.ScryptDirectory
 .. autoclass:: claudia_server.AuthRefused
 
+Server settings
+----------------
+
+Who may configure the server — a separate identity from any document's own users, above — and what they have
+configured it to do.
+
+.. autoclass:: claudia_server.AdminAccount
+.. autoclass:: claudia_server.AdminDirectory
+.. autofunction:: claudia_server.needs_administrator
+.. autoclass:: claudia_server.AdminSession
+.. autoclass:: claudia_server.AdminSessions
+.. autoclass:: claudia_server.AdminContext
+.. autoclass:: claudia_server.AiRuntime
+.. autofunction:: claudia_server.admin_router
+.. autoclass:: claudia_server.ServerSettings
+.. autoclass:: claudia_server.AiSettings
+.. autoclass:: claudia_server.TypesetSettings
+.. autoclass:: claudia_server.Changed
+.. autofunction:: claudia_server.load_settings
+.. autofunction:: claudia_server.save_settings
+.. autofunction:: claudia_server.load_admins
+.. autofunction:: claudia_server.save_admins
+
 Encryption
 ----------
 

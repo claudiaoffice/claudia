@@ -70,6 +70,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
+from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
@@ -208,6 +209,14 @@ class Gateway:
         if not isinstance(candidate, str):
             return False
         return hmac.compare_digest(candidate.encode(errors="surrogatepass"), self._secret)
+
+    def set_secret(self, access_secret: str | None) -> None:
+        """Change the access secret while the server runs (the settings pages, E3.1/admin). ``None`` removes it, so
+        anyone may then make documents or read the list. Takes effect for the next request; nobody already let in
+        is affected. ``ValueError`` for a secret shorter than ``MIN_ACCESS_SECRET``."""
+        if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
+            raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
+        self._secret = None if access_secret is None else access_secret.encode()
 
     async def _verify(self, doc_id: str, credentials: Credentials) -> Account | None:
         async with self._hashing:
@@ -410,6 +419,7 @@ def create_app(
     max_waiting_per_address: int = DEFAULT_MAX_WAITING_PER_ADDRESS,
     web_dir: str | Path | None = None,
     list_documents: bool = True,
+    admin: AdminContext | None = None,
 ) -> FastAPI:
     """The server for ``hub``, with the users of each document in ``directory``.
 
@@ -420,7 +430,11 @@ def create_app(
 
     With an ``access_secret`` (at least ``MIN_ACCESS_SECRET`` characters, ``ValueError`` otherwise) only those who know
     it can make documents or read the list. ``max_waiting`` and ``max_waiting_per_address`` bound the connections that
-    wait to be let in (SEC-02)."""
+    wait to be let in (SEC-02).
+
+    With ``admin`` (``admin_api.AdminContext``), the server also serves ``/api/admin/*``: the settings pages, signed
+    in to separately from any document (``admin.py``). Without it — the default, and every use before this existed
+    — none of those routes exist at all, which keeps every other caller of this function unaffected."""
     allowed = {o.rstrip("/") for o in allowed_origins}
     hosts = AllowedHosts(allowed_hosts)
     gateway = Gateway(
@@ -472,6 +486,9 @@ def create_app(
     @app.websocket("/api/docs/{doc_id}/ws")
     async def live(websocket: WebSocket, doc_id: str):
         await gateway.serve(websocket, doc_id)
+
+    if admin is not None:
+        app.include_router(admin_router(hub, gateway.set_secret, admin))
 
     # The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed origin
     # is needed. Mounted last so /api/... wins.
