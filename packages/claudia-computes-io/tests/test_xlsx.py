@@ -7,9 +7,10 @@ from io import BytesIO
 
 import openpyxl
 import pytest
+from claudia_computes_io import add_pivot_table, workbook_to_xlsx
+from lxml import etree
 
 from claudia_computes import Sheet, SheetId, WorkbookModel
-from claudia_computes_io import add_pivot_table, workbook_to_xlsx
 
 ROWS = [
     ("North", "Widget", 100),
@@ -89,3 +90,31 @@ def test_add_pivot_table_refuses_an_unknown_field():
     base = workbook_to_xlsx(workbook_with_data())
     with pytest.raises(ValueError, match="Region"):
         add_pivot_table(base, source_sheet="Data", source_range="A1:C7", row_field="Country", value_field="Amount")
+
+
+def test_add_pivot_table_escapes_xml_metacharacters_in_cell_data():
+    # A cell value containing XML metacharacters must not be able to break out of the attribute it is written
+    # into and inject a sibling element -- this is the OOXML-injection hole the field data for a pivot cache
+    # passes straight through unescaped if the XML is hand-built with plain string interpolation.
+    model = WorkbookModel()
+    sheet = Sheet(SheetId("s1"), "Data")
+    model.sheets[sheet.id] = sheet
+    sheet.cells[(0, 0)] = {"t": "text", "v": "Region"}
+    sheet.cells[(0, 1)] = {"t": "text", "v": "Amount"}
+    malicious = 'North"><injected/><x a="'
+    sheet.cells[(1, 0)] = {"t": "text", "v": malicious}
+    sheet.cells[(1, 1)] = {"t": "int", "v": 100}
+    sheet.cells[(2, 0)] = {"t": "text", "v": "South"}
+    sheet.cells[(2, 1)] = {"t": "int", "v": 150}
+
+    base = workbook_to_xlsx(model)
+    out = add_pivot_table(base, source_sheet="Data", source_range="A1:B3", row_field="Region", value_field="Amount")
+
+    with zipfile.ZipFile(BytesIO(out)) as z:
+        cache_def = z.read("xl/pivotCache/pivotCacheDefinition1.xml")
+
+    root = etree.fromstring(cache_def)  # must still be well-formed XML
+    ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    assert root.findall(f".//{{{ns}}}injected") == []  # no element was injected
+    shared_values = {s.get("v") for s in root.findall(f".//{{{ns}}}s")}
+    assert malicious in shared_values  # the value itself survives, as data, not as markup

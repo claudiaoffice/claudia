@@ -6,6 +6,7 @@ and the failing test says which protection is missing.
 
 import asyncio
 import functools
+import re
 import sys
 import time
 
@@ -70,19 +71,28 @@ async def test_a_process_that_asks_for_too_much_memory_does_not_get_it(tmp_path)
 
 @runs_in_a_loop
 async def test_a_swarm_of_processes_is_refused(tmp_path):
+    # Each spawned process inherits the sandboxed process's own stdout pipe, so `run_sandboxed` cannot see end of
+    # output until every one of them has exited too. They only need to still be alive when the active-process limit
+    # is checked, not for the length of the test's own deadline, so they sleep far less than `Limits(seconds=...)`.
     code = (
         "import subprocess, sys\n"
         "started = 0\n"
         "try:\n"
         "    for _ in range(40):\n"
-        "        subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])\n"
+        "        subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(2)'])\n"
         "        started += 1\n"
         "except OSError:\n"
         "    pass\n"
         "print('started', started)\n"
     )
     done = await run_sandboxed(python(code), cwd=tmp_path, env={}, limits=Limits(seconds=30))
-    started = int(done.output.split("started")[-1])
+    # Every spawn beyond the limit shares the sandboxed process's own stdout handle, so a process-creation failure
+    # on an overloaded runner can print its own "not enough quota" message there too (before `except OSError`
+    # ever sees it) -- noise from a system under the same pressure we are deliberately causing, not part of what
+    # our script printed. Pick the one number that script actually wrote, instead of assuming nothing else did.
+    match = re.search(r"started (\d+)", done.output)
+    assert match, f"no 'started <n>' in the output: {done.output!r}"
+    started = int(match.group(1))
     assert started < 40
 
 

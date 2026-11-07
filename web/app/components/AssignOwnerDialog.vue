@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ Assign new owner… (D135). A role lives inside its own password-sealed slot (D102), so handing
+// File ▸ Manage ▸ Assign new owner… (D141). A role lives inside its own password-sealed slot (D102), so handing
 // one over is a propose/accept pair: we prove it is us with our own password now, and the person we pick proves it
 // is them with theirs when they accept (elsewhere, the next time they open this menu and see the offer — there is
 // no separate "accept" screen yet; see the decision log).

@@ -4,6 +4,7 @@ import { Link, socketUrl } from '~/lib/protocol'
 import { openSession, type AnySession } from '~/lib/open'
 import { Session } from '~/lib/session'
 import { ago } from '~/lib/people'
+import { currentLocale } from '~/lib/locale'
 
 interface Listed {
   id: string
@@ -122,6 +123,7 @@ async function go(how: 'open' | 'create' | 'recover') {
       password: password.value,
       create: how === 'create' && first,
       recoveryKey: how === 'recover' && first ? recoveryKey.value.trim() : undefined,
+      locale: currentLocale(),
     })
     first = false
     return link

@@ -144,7 +144,7 @@ def test_editing_actions_go_to_the_web_views_editing_commands(window) -> None:
         "edit.cut": "Cut",
         "edit.copy": "Copy",
         "edit.paste": "Paste",
-        "edit.paste-as": "PasteAsPlainText",
+        "edit.paste-as-plain": "PasteAsPlainText",
     }.items():
         window.lookup_action(name).activate(None)
         assert page.editing[-1] == command

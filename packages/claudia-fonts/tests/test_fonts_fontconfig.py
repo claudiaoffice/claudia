@@ -1,7 +1,10 @@
 """The setup that lets a typesetting engine use the collection, and nothing else (E3.3, E3.4)."""
 
 import json
+import sys
 from xml.etree import ElementTree
+
+import pytest
 
 from claudia_fonts import COLLECTION_FILE, Catalogue, write_fontconfig
 from claudia_fonts.testing import make_font
@@ -81,6 +84,7 @@ def test_a_folder_with_only_refused_fonts_is_not_listed(tmp_path):
     assert root.findall("dir") == []
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows does not allow these characters in file names")
 def test_special_characters_in_a_path_stay_valid_xml_and_come_back_unchanged(tmp_path):
     folder = collection_folder(tmp_path, "fonts <&> 'x'", ("a.ttf", {"family": "Alpha"}))
     _, root = config_of(tmp_path, folder)

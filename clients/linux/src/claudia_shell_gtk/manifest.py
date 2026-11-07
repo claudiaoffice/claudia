@@ -196,7 +196,7 @@ def _page(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str, 
 def _file_menu(*, title: str) -> Menu:
     """New, Open… · Save, Save new checkpoint…, Download · Manage ▸ (Share…, Assign new owner…, Accept
     ownership…, Leave document…, Export…, Delete from server…) · Close document, Quit (D123, D124's grouping;
-    D135's Manage submenu, renamed from the plain "Share…" item it grew out of)."""
+    D141's Manage submenu, renamed from the plain "Share…" item it grew out of)."""
     return Menu(
         "File",
         (

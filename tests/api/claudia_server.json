@@ -1,5 +1,5 @@
 {
- "version": "0.11.0",
+ "version": "0.15.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -72,7 +72,7 @@
   "class": [
    "object"
   ],
-  "init": "(hosted: 'HostedDocument', account: 'Account', send: 'Callable[[str], None]')",
+  "init": "(hosted: 'HostedDocument', account: 'Account', send: 'Callable[[str], None]', *, locale: 'str' = 'en')",
   "methods": {
    "close": "(self) -> 'None'",
    "deliver": "(self, message: 'dict') -> 'None'",
@@ -171,7 +171,7 @@
   "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None)",
   "methods": {
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
-   "connect": "(self, account: 'Account', send: 'Callable[[str], None]') -> 'Connection'",
+   "connect": "(self, account: 'Account', send: 'Callable[[str], None]', *, locale: 'str' = 'en') -> 'Connection'",
    "editors": "(self) -> 'list[str]'",
    "humans": "(self) -> 'list[Connection]'",
    "new_connection_id": "(self) -> 'int'",
@@ -272,7 +272,7 @@
   "properties": []
  },
  "PROTOCOL_VERSION": {
-  "value": "1"
+  "value": "2"
  },
  "Proposal": {
   "class": [
@@ -288,7 +288,7 @@
   "class": [
    "Exception"
   ],
-  "init": "(code: 'str', message: 'str')",
+  "init": "(code: 'str', message: 'str', detail: 'str | None' = None)",
   "methods": {
    "to_dict": "(self) -> 'dict'"
   },

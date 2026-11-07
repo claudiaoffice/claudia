@@ -10,7 +10,11 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
+import time
 from pathlib import Path
+
+_REPLACE_RETRIES = 5
+_REPLACE_DELAY = 0.05  # seconds, doubled each retry
 
 
 def default_state_dir() -> Path:
@@ -43,7 +47,25 @@ def write_private(path: Path, data: bytes) -> None:
             handle.write(data)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temp, path)
+        _replace(temp, path)
     except BaseException:
         temp.unlink(missing_ok=True)
         raise
+
+
+def _replace(temp: Path, path: Path) -> None:
+    """``os.replace(temp, path)``, retried briefly on Windows: real-time antivirus scanning or indexing can hold a
+    transient lock on a just-written file there in a way POSIX never does."""
+    if sys.platform != "win32":
+        os.replace(temp, path)
+        return
+    delay = _REPLACE_DELAY
+    for attempt in range(_REPLACE_RETRIES):
+        try:
+            os.replace(temp, path)
+            return
+        except PermissionError:
+            if attempt == _REPLACE_RETRIES - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2

@@ -164,7 +164,7 @@ def _snapshot_from(data: bytes | None) -> Snapshot | None:
         return None
     try:
         return Snapshot.from_data(json.loads(data))
-    except ValueError, KeyError, TypeError:
+    except (ValueError, KeyError, TypeError):
         return None
 
 
@@ -326,7 +326,7 @@ class SealedDocuments:
     def _is_empty(self, doc_id: str, keys: Mapping[Domain, bytes]) -> bool:
         try:
             state = read_state(self._file(doc_id), keys)
-        except ContainerError, JournalError, OSError:
+        except (ContainerError, JournalError, OSError):
             return False  # something is wrong with it: never delete what might be somebody's work
         return not state.history and not state.chat
 
@@ -484,6 +484,13 @@ class SealedDocuments:
             held.store.writer = pack_journal(self._file(doc_id), held.keys, held.store.writer, data)
         except Exception:
             log.exception("cannot pack %s; its changes are safe in the journal", doc_id)
+            # `pack_journal` closes the old writer before it tries to put the new journal in its place (closed,
+            # because Windows refuses to replace a file that is still open); if that replace is what failed,
+            # `held.store.writer` is left pointing at a now-closed file. `begin` reopens whichever journal is
+            # actually on disk (the old one if the replace never happened, the new one if it did), so writing can
+            # carry on either way -- matching "loses nothing" above for the writer itself, not just the records.
+            with contextlib.suppress(Exception):
+                held.store.writer = begin(self._file(doc_id), held.keys)
         finally:
             held.store.unpacked = 0
 
@@ -555,7 +562,7 @@ class SealedDocuments:
                 journal = journal_path(path)
                 if journal.exists():
                     changed = max(changed, journal.stat().st_mtime)
-            except ContainerError, OSError, ValueError:
+            except (ContainerError, OSError, ValueError):
                 continue  # not a document of ours; never break the list for it
             stamp = datetime.fromtimestamp(changed, UTC).isoformat(timespec="milliseconds")
             found.append(StoredInfo(manifest.id, manifest.app, stamp.replace("+00:00", "Z")))

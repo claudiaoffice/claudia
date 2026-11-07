@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -476,10 +476,13 @@ dependencies = [
     { name = "claudia-ai" },
     { name = "claudia-client" },
     { name = "claudia-composes" },
+    { name = "claudia-composes-io" },
     { name = "claudia-computes" },
+    { name = "claudia-computes-io" },
     { name = "claudia-container" },
     { name = "claudia-core" },
     { name = "claudia-creates" },
+    { name = "claudia-creates-io" },
     { name = "claudia-fonts" },
     { name = "claudia-server" },
     { name = "claudia-typeset" },
@@ -488,11 +491,13 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "httpx" },
+    { name = "lxml-stubs" },
     { name = "mypy" },
     { name = "myst-parser" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "sphinx" },
+    { name = "types-openpyxl" },
     { name = "vulture" },
 ]
 
@@ -501,10 +506,13 @@ requires-dist = [
     { name = "claudia-ai", editable = "packages/claudia-ai" },
     { name = "claudia-client", editable = "packages/claudia-client" },
     { name = "claudia-composes", editable = "packages/claudia-composes" },
+    { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
+    { name = "claudia-computes-io", editable = "packages/claudia-computes-io" },
     { name = "claudia-container", editable = "packages/claudia-container" },
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
+    { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
     { name = "claudia-server", editable = "packages/claudia-server" },
     { name = "claudia-typeset", editable = "packages/claudia-typeset" },
@@ -513,11 +521,13 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "httpx", specifier = ">=0.27" },
+    { name = "lxml-stubs", specifier = ">=0.5" },
     { name = "mypy", specifier = ">=1.10" },
     { name = "myst-parser", specifier = ">=3" },
     { name = "pytest", specifier = ">=8" },
     { name = "ruff", specifier = ">=0.6,<0.15" },
     { name = "sphinx", specifier = ">=7.3" },
+    { name = "types-openpyxl", specifier = ">=3.1" },
     { name = "vulture", specifier = ">=2.11" },
 ]
 
@@ -947,6 +957,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/d7/ed6ee6186a89e69ca4ea9658b2a278f46a5efe8b5d4db56c7197f18653fe/lxml-6.1.3-cp315-cp315t-win32.whl", hash = "sha256:ace1d2c83b2bd24db5940600541140e87a325e119cb32d5fa9ad720d7e76648e", size = 3901093, upload-time = "2026-09-02T14:51:37.234Z" },
     { url = "https://files.pythonhosted.org/packages/67/9d/11d10257a4a048d04195d638bb61f0246ce2448eb05f682bcbab25a257a8/lxml-6.1.3-cp315-cp315t-win_amd64.whl", hash = "sha256:b49638355ea3bebba70da783ccbc630fd72afa16bc46c54474bfa1f9a915bbc6", size = 4395446, upload-time = "2026-09-02T14:51:39.884Z" },
     { url = "https://files.pythonhosted.org/packages/f8/b7/44edd7de434181c582892e68d1ffe6775ca403ce14aea07cb5a218a936cf/lxml-6.1.3-cp315-cp315t-win_arm64.whl", hash = "sha256:5a721a98c649855963811b59b55755b30566e7f7fc40bdc9803d66dee9f811cf", size = 3822836, upload-time = "2026-09-02T14:51:42.471Z" },
+]
+
+[[package]]
+name = "lxml-stubs"
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/da/1a3a3e5d159b249fc2970d73437496b908de8e4716a089c69591b4ffa6fd/lxml-stubs-0.5.1.tar.gz", hash = "sha256:e0ec2aa1ce92d91278b719091ce4515c12adc1d564359dfaf81efa7d4feab79d", size = 14778, upload-time = "2024-01-10T09:37:46.521Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/c9/e0f8e4e6e8a69e5959b06499582dca6349db6769cc7fdfb8a02a7c75a9ae/lxml_stubs-0.5.1-py3-none-any.whl", hash = "sha256:1f689e5dbc4b9247cb09ae820c7d34daeb1fdbd1db06123814b856dae7787272", size = 13584, upload-time = "2024-01-10T09:37:44.931Z" },
 ]
 
 [[package]]
@@ -1666,6 +1685,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/48/bb/3d8757f21e9a53d9035c9eb039a777047139a16bfdbedfc7a58241c3d914/starlette-1.10.0.tar.gz", hash = "sha256:b8399098d4c1e3522734f7235dc79b1fc967f96cf139c81e0fa30479e0685f9b", size = 2734356, upload-time = "2026-10-24T15:04:12.342Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/2e/947cfe02def9371c07cd5bf5b6b61c829e9aecb9904db02a66cfafbc1eec/starlette-1.10.0-py3-none-any.whl", hash = "sha256:478c0ab3b4ced6e82719849c118fa406f0278a3499c1a898cd15cd31bdc38ce4", size = 80571, upload-time = "2026-10-24T15:04:10.371Z" },
+]
+
+[[package]]
+name = "types-openpyxl"
+version = "3.1.5.20261017"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/af/13/ce0b36e7e29ee31ec75d6718d48d28d2d48ad319ddf4665f81c8f3a8fc95/types_openpyxl-3.1.5.20261017.tar.gz", hash = "sha256:3deb3b6279b65ab379c126df0ee1fd27500c9628edb8d9667d73f637462917dc", size = 102026, upload-time = "2026-10-17T06:20:01.431Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2b/17/a091e90fde3e90eff9168354269626e210a4c3c688910d8c9176b8a08cb4/types_openpyxl-3.1.5.20261017-py3-none-any.whl", hash = "sha256:3315cfebad290cc7ade1fccaf3a46ee820b3a8e7df726ff4f18d30ab7f383d68", size = 165886, upload-time = "2026-10-17T06:19:59.944Z" },
 ]
 
 [[package]]

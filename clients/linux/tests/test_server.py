@@ -181,7 +181,7 @@ def test_the_server_dies_when_the_shell_is_killed_without_a_chance_to_clean_up(t
         assert line.startswith("PID "), line
         server_pid = int(line.split()[1])
         assert alive(server_pid)
-        os.kill(shell.pid, signal.SIGKILL)
+        os.kill(shell.pid, signal.SIGKILL)  # type: ignore[attr-defined] # POSIX only, not on Windows
         shell.wait(timeout=5)
         assert wait_gone(server_pid), "the server outlived the shell"
     finally:

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ Accept ownership… (D135): the other half of Assign new owner…. Whoever was asked to take over a
+// File ▸ Manage ▸ Accept ownership… (D141): the other half of Assign new owner…. Whoever was asked to take over a
 // document comes here and confirms it is them with their own password; there is no notification yet (the decision
 // log says so) — the two people tell each other, the same way they would hand over a key.
 import { ref } from 'vue'

@@ -45,11 +45,12 @@ def client(provider, directory):
 class Peer:
     """One WebSocket connection that has said hello."""
 
-    def __init__(self, client, doc="plan", user="ann", password=PASSWORD, create=False, **headers):
+    def __init__(self, client, *, doc="plan", user="ann", password=PASSWORD, create=False, locale=None, **headers):
         self.socket = client.websocket_connect(f"/api/docs/{doc}/ws", headers=headers).__enter__()
-        self.socket.send_text(
-            json.dumps({"id": 1, "method": "hello", "params": {"user": user, "password": password, "create": create}})
-        )
+        params = {"user": user, "password": password, "create": create}
+        if locale is not None:
+            params["locale"] = locale
+        self.socket.send_text(json.dumps({"id": 1, "method": "hello", "params": params}))
         self.hello = self.socket.receive_json()
         self._next = 1
         self.pushed: list[dict] = []
@@ -91,6 +92,21 @@ def test_logging_in_to_an_existing_document_needs_its_name_and_password(client, 
     peer = Peer(client, user="ben", password="another good password")  # (the spelling of the name does not matter)
     assert peer.hello["result"]["role"] == "editor" and peer.hello["result"]["user"] == "Ben"
     peer.close()
+
+
+def test_hello_carries_the_locale_over_the_wire_and_falls_back_on_a_bad_one(client):
+    """E5.7, D31: a real websocket round-trip of what test_server_hub.py already checks at the hub level. Each
+    connection brings its own locale (it is not remembered on the document), so one person reconnecting with a
+    different one is enough to show that — no second account needed."""
+    plain = Peer(client, create=True)
+    assert plain.hello["result"]["locale"] == "en"
+    plain.close()
+    german = Peer(client, locale="de-DE")
+    assert german.hello["result"]["locale"] == "de-DE"
+    german.close()
+    garbled = Peer(client, locale="not a locale!")
+    assert garbled.hello["result"]["locale"] == "en"
+    garbled.close()
 
 
 def test_a_wrong_password_an_unknown_name_and_a_missing_document_look_the_same(client):

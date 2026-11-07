@@ -3,7 +3,25 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [0.11.0] - 2026-11-07
+## [0.15.0] - 2026-11-07
+
+The groundwork for E5.7 (D31/D148): no interface string has moved into a catalog yet, by design — the plumbing is
+proven first, with an (almost) empty catalog, so moving real strings later is mechanical.
+
+### Added
+- `hello`'s optional `"locale"` parameter and the matching field on `welcome` and on every live connection
+  (`Connection.locale`, normalized by `protocol.normalize_locale`, never trusted raw). Nothing reads it yet — no
+  interface string has moved into `_()`/`t()` — but every app gets it for free through the shared handshake.
+  `Connection.__init__` and `HostedDocument.connect` take an additional optional `locale` parameter (additive,
+  default `DEFAULT_LOCALE`: no behaviour change for a caller that does not pass one).
+- `PROTOCOL_VERSION` bumped to **2** for the new field; documented in `docs/server.md`.
+- `RequestError.detail` (optional): the finer-grained `claudia_core` error `code` (D148's kernel-side addition)
+  behind a wire-level `code` (`"locked"`, `"stale"`, `"conflict"`...), included in `to_dict()`/the wire response
+  only when given. `message` stays the English sentence for anyone not yet rendering from `code`/`detail`.
+  `MethodTable.dispatch` passes it for `StaleEdit`, `RegionHeld`/`UndoRefused`, `UndoConflict` and any other
+  `KernelError`.
+
+## [0.14.0] - 2026-11-07
 
 Importing a picture from disk and putting it on a slide (E10.8), built on `claudia_core`'s new image decoding and
 `claudia_creates`'s new image object. Clipboard and drag-and-drop import are deliberately not built yet.
@@ -37,10 +55,7 @@ Importing a picture from disk and putting it on a slide (E10.8), built on `claud
   so a web client should send `source_path: null`. A desktop client that reads the real path can send it, and it
   will be masked correctly for every other viewer.
 
-## [0.9.0] - 2026-11-06
-
-The worker pool D37 specified and left unbuilt: `Connection.handle` runs synchronously on the event loop, so slow
-work in one request used to stall every document the server holds (QA review 2026-11-06, PERF-02; D134).
+## [0.13.0] - 2026-11-06
 
 Go back to a checkpoint, with everybody's consent (E3.7), and a read-only preview of any line before anybody is
 asked (E3.8). Restoring or switching the line is no longer a bare request: an owner or editor suggests it, and it
@@ -67,7 +82,17 @@ one, in which case it happens at once, same as it always has.
   from the kernel and from the wire protocol on purpose — session state, not a document's stored state.
 - The assistant may never propose, answer or withdraw (`forbidden`, SEC-10): going back is a decision of people.
 
-## [0.10.0] - 2026-11-06
+## [0.12.0] - 2026-11-06
+
+Row heights and column widths (E6.13/E6.16, D135): sheet layout, not a cell style.
+
+### Added
+- `sizes(sheet)`: the rows and columns of a sheet that were given a size away from the default.
+- `resize_lines(sheet, axis, sizes, base:revision?)`, write: sets or clears (`size: null`) the size of up to
+  `MAX_RESIZED_LINES` (1,000) rows or columns in one call, each checked against the allowed range. On the AI's
+  method allow-list alongside `set_cells`/`add_sheet`/`structure`.
+
+## [0.11.0] - 2026-11-06
 
 Leaving a document, handing over its ownership, deleting it, and exporting its content (E2.3, E2.9; "Manage" in
 every app's File menu).
@@ -87,7 +112,7 @@ every app's File menu).
 - Three new `ephemeral` event kinds: `person_left`, `owner_changed`, `document_deleted` — so everybody still
   connected finds out without having to poll.
 
-## [0.9.0] - 2026-11-06
+## [0.10.0] - 2026-11-06
 
 The worker pool D37 specified and left unbuilt: `Connection.handle` runs synchronously on the event loop, so slow
 work in one request used to stall every document the server holds (QA review 2026-11-06, PERF-02; D134).
@@ -102,6 +127,9 @@ work in one request used to stall every document the server holds (QA review 202
 - **`Hub.workers`**: one `WorkerPool` per `Hub` (one process per `--model`, D134 — not a pool shared across process
   boundaries), sized by the new `Hub(..., max_workers=...)` constructor argument. `Hub.stop()` now also calls
   `workers.stop()`.
+
+## [0.9.0] - 2026-11-06
+
 Security release: the second QA review's first recommendation (SEC-10).
 
 ### Added

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from ._gi import Adw, Gdk, Gio, GLib, Gtk
+from .i18n import detect_system_locale
 from .identity import AppIdentity
 from .launch import SetupProblem, prepare_server
 from .manifest import Manifest, composes
@@ -96,7 +97,13 @@ class ComposesApp(Adw.Application):
         if self.window is not None:
             self.window.present()
             return
-        self.window = ComposesWindow(self._identity, self._manifest, page_factory=self._page_factory, application=self)
+        self.window = ComposesWindow(
+            self._identity,
+            self._manifest,
+            page_factory=self._page_factory,
+            locale=detect_system_locale(),
+            application=self,
+        )
         self.window.present()
         try:
             self._server = self._server_factory(self._identity)

@@ -39,21 +39,24 @@ def test_the_cache_folder_is_made_when_it_is_missing(tmp_path):
     assert (tmp_path / "deep" / "cache").is_dir()
 
 
+_MARKER_NS = 1_000_000_000  # one second since the epoch: far enough from 0 to survive rounding on any filesystem
+
+
 def test_a_font_that_is_already_converted_is_not_converted_again(tmp_path):
     [font] = catalogue_of(tmp_path, ("a.ttf", {"family": "Alpha"})).fonts()
     cache = WebFontCache(tmp_path / "cache")
     path = cache.get(font)
-    os.utime(path, ns=(1, 1))
+    os.utime(path, ns=(_MARKER_NS, _MARKER_NS))
     assert cache.get(font) == path
-    assert path.stat().st_mtime_ns == 1
+    assert path.stat().st_mtime_ns == _MARKER_NS
 
 
 def test_a_new_cache_object_finds_what_an_older_one_made(tmp_path):
     [font] = catalogue_of(tmp_path, ("a.ttf", {"family": "Alpha"})).fonts()
     path = WebFontCache(tmp_path / "cache").get(font)
-    os.utime(path, ns=(1, 1))
+    os.utime(path, ns=(_MARKER_NS, _MARKER_NS))
     WebFontCache(tmp_path / "cache").get(font)
-    assert path.stat().st_mtime_ns == 1
+    assert path.stat().st_mtime_ns == _MARKER_NS
 
 
 def test_no_half_written_file_is_left_behind(tmp_path):

@@ -48,7 +48,7 @@ async def _serve(host: str, port: int, secure_port: int, ready: threading.Event,
                 + body
             )
             await writer.drain()
-        except TimeoutError, asyncio.IncompleteReadError, asyncio.LimitOverrunError, ConnectionError:
+        except (TimeoutError, asyncio.IncompleteReadError, asyncio.LimitOverrunError, ConnectionError):
             pass
         finally:
             writer.close()

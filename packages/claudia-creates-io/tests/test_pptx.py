@@ -7,10 +7,10 @@ from io import BytesIO
 
 import pptx
 import pytest
+from claudia_creates_io import add_transition, slides_to_pptx
 from lxml import etree
 
 from claudia_creates import ShapeDefinition, SlideModel, SlideObject
-from claudia_creates_io import add_transition, slides_to_pptx
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 

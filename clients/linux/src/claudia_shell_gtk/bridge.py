@@ -32,12 +32,14 @@ class Bridge:
         send: Callable[[str], None],
         *,
         shell_version: str,
+        locale: str | None = None,
         on_states: Callable[[dict[str, dict[str, Any]]], None] | None = None,
         on_ready: Callable[[], None] | None = None,
     ) -> None:
         self._manifest = manifest
         self._send = send
         self._shell_version = shell_version
+        self._locale = locale  # (E5.7) the shell's best guess at the person's locale; passed on in `welcome`
         self._on_states = on_states or (lambda _states: None)
         self._on_ready = on_ready or (lambda: None)
         self._ready = False
@@ -83,7 +85,11 @@ class Bridge:
             self._reply(contract.error_for(problem))
             return
         self._ready = True
-        self._reply(contract.welcome(shell_version=self._shell_version, capabilities=CAPABILITIES, contract=version))
+        self._reply(
+            contract.welcome(
+                shell_version=self._shell_version, capabilities=CAPABILITIES, contract=version, locale=self._locale
+            )
+        )
         self._on_ready()
 
     def _states(self, message: contract.Message) -> None:

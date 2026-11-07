@@ -3,7 +3,7 @@ name = "claudia-monorepo"
 version = "0.0.0"
 description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io"]
 
 [tool.uv]
 package = false
@@ -22,16 +22,21 @@ claudia-client = { workspace = true }
 claudia-container = { workspace = true }
 claudia-fonts = { workspace = true }
 claudia-typeset = { workspace = true }
+claudia-computes-io = { workspace = true }
+claudia-composes-io = { workspace = true }
+claudia-creates-io = { workspace = true }
 
 [dependency-groups]
 dev = [
     "pytest>=8",
     "mypy>=1.10",
-    "ruff>=0.6,<0.15",  # D140/CODE-10: 0.15.0-0.17.4 reformat `except (A, B):` into invalid `except A, B:`
+    "ruff>=0.6,<0.15",  # D146/CODE-10: 0.15.0-0.17.4 reformat `except (A, B):` into invalid `except A, B:`
     "vulture>=2.11",
     "sphinx>=7.3",
     "myst-parser>=3",
     "httpx>=0.27",
+    "types-openpyxl>=3.1",
+    "lxml-stubs>=0.5",
 ]
 
 [tool.pytest.ini_options]
@@ -72,6 +77,14 @@ explicit_package_bases = true
 [[tool.mypy.overrides]]
 module = ["fontTools.*"]
 ignore_missing_imports = true  # fontTools ships no type information
+
+[[tool.mypy.overrides]]
+# Each has `type: ignore[attr-defined]` on the attributes of one platform's stdlib that the other does not have
+# (ctypes.WinDLL and friends in _windows, resource/os.killpg/signal.SIGKILL in sandbox). Exactly one side's
+# ignores are ever "needed" for a given mypy run -- it uses sys.platform of the machine it runs on, and this
+# project's CI runs mypy on more than one -- so `warn_unused_ignores` would always flag the other side's.
+module = ["claudia_typeset._windows", "claudia_typeset.sandbox"]
+warn_unused_ignores = false
 
 [tool.vulture]
 paths = ["packages", "scripts", "clients/linux/src", "clients/linux/tests", "vulture_whitelist.py"]

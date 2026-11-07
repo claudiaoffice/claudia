@@ -14,6 +14,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from io import BytesIO
 from itertools import count
+from typing import cast
 
 from docx import Document
 from docx.oxml import OxmlElement
@@ -76,7 +77,11 @@ def _tracked_change(
     tag: str, change_id: int, author: str | None, text: str, *, deleted: bool = False
 ) -> BaseOxmlElement:
     """A ``w:ins`` or ``w:del`` wrapping one run of ``text`` (``w:delText`` when ``deleted``, per the schema)."""
-    change = OxmlElement(tag)
+    # OxmlElement's own return type is `BaseOxmlElement | etree._Element`: the fallback branch is for a tag python-
+    # docx has no custom class for, which none of ``w:ins``/``w:del``/``w:r``/``w:t``/``w:delText`` are (all
+    # standard WordprocessingML elements it registers), so the narrower type is what every one of these calls
+    # actually returns at runtime.
+    change = cast(BaseOxmlElement, OxmlElement(tag))
     change.set(qn("w:id"), str(change_id))
     change.set(qn("w:author"), author or "Claudia AI")
     run = OxmlElement("w:r")

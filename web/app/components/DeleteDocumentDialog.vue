@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ Delete from server… (D135). Owners only, confirmed with the owner's own current password. There
+// File ▸ Manage ▸ Delete from server… (D141). Owners only, confirmed with the owner's own current password. There
 // is no way back from this: no recycle bin, no undo.
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'

@@ -33,6 +33,7 @@ from xml.etree import ElementTree
 
 SUPPORTED_IMAGE_FORMATS = ("jpeg", "gif", "bmp", "svg")
 MAX_IMAGE_BYTES = 8 * 1024 * 1024  # a single asset's encoded size (the source bytes, not any first frame)
+_MAX_BASE64_CHARS = ((MAX_IMAGE_BYTES + 2) // 3) * 4  # the longest base64 text that can decode to <= MAX_IMAGE_BYTES
 MAX_ALT_CHARS = 300
 MAX_SOURCE_NAME_CHARS = 200
 
@@ -122,11 +123,22 @@ class ImageAsset:
             raise ImageError("width and height must be whole numbers greater than 0")
         if not isinstance(animated, bool):
             raise ImageError("animated must be true or false")
+        # Cheap, before any decoding: a base64 string this long cannot possibly decode under the cap, so there
+        # is no reason to spend the memory decoding it just to reject it a moment later. decode_image() enforces
+        # MAX_IMAGE_BYTES before doing any decode work for the same reason; from_data() is a separate path (a
+        # command log replay, a document loaded from storage) that must not be a way around that cap.
+        oversized_text = (not isinstance(encoded, str) or len(encoded) > _MAX_BASE64_CHARS) or (
+            first_frame is not None and (not isinstance(first_frame, str) or len(first_frame) > _MAX_BASE64_CHARS)
+        )
+        if oversized_text:
+            raise ImageError(f"an image is at most {MAX_IMAGE_BYTES // (1024 * 1024)} MB")
         try:
             raw = base64.b64decode(encoded, validate=True)
             raw_first = None if first_frame is None else base64.b64decode(first_frame, validate=True)
         except (ValueError, TypeError) as error:
             raise ImageError(f"data is not valid base64: {error}") from None
+        if len(raw) > MAX_IMAGE_BYTES or (raw_first is not None and len(raw_first) > MAX_IMAGE_BYTES):
+            raise ImageError(f"an image is at most {MAX_IMAGE_BYTES // (1024 * 1024)} MB")
         return cls(image_id, fmt, width, height, animated, raw, raw_first)
 
 
@@ -273,9 +285,15 @@ def _bmp_dimensions(data: bytes) -> tuple[int, int]:
 # -- GIF: a hand-rolled walk of the block structure (no pixel decoding) -----------------------------------------
 def _gif_data_subblocks(data: bytes, position: int) -> int:
     """The position just past a run of GIF "data sub-blocks" (a length byte then that many bytes, until 0)."""
-    while position < len(data) and data[position] != 0:
+    while True:
+        if position >= len(data):
+            # A length byte claimed more data than remains (or the terminator was never reached): this must be
+            # refused outright, not silently stop here — a caller that only checks the position it gets back
+            # would otherwise read this as "no more blocks" and undercount frames instead of seeing an error.
+            raise ImageError("not a well-formed GIF: a truncated data sub-block")
+        if data[position] == 0:
+            return position + 1
         position += 1 + data[position]
-    return position + 1
 
 
 def _gif_blocks(data: bytes) -> list[tuple[int, int]]:
@@ -330,7 +348,10 @@ def _gif_first_frame_bytes(data: bytes) -> bytes:
 
 # -- SVG: stdlib XML, sanitized rather than merely rejected ------------------------------------------------------
 def _sanitize_svg(data: bytes) -> bytes:
-    if _SVG_DOCTYPE_OR_ENTITY.search(data[:2048].decode("utf-8", errors="ignore")):
+    # The whole file, not just an early prefix: a DOCTYPE/ENTITY is still well-formed XML (and still reaches
+    # the parser) if it is pushed past any fixed-size window by padding earlier in the prolog (e.g. a long
+    # comment), so a bounded scan here would be a bypass, not a defense.
+    if _SVG_DOCTYPE_OR_ENTITY.search(data.decode("utf-8", errors="ignore")):
         raise ImageError("not a safe SVG: a DOCTYPE or ENTITY declaration is not allowed")
     try:
         root = ElementTree.fromstring(data)

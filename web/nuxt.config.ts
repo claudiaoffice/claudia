@@ -16,8 +16,10 @@ export default defineNuxtConfig({
     '~/assets/app.css',
   ],
   app: {
+    // The one-size-fits-all build-time default, before a document is open and app.vue's own watchEffect takes
+    // over to say which app (composes, computes, creates) actually opened in this tab.
     head: {
-      title: 'claudia computes',
+      title: 'Claudia',
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     },

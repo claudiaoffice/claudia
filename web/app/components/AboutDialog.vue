@@ -10,16 +10,12 @@
 // shown is the shell-contract version both sides already agree on, not a separate build number, since the suite
 // doesn't version itself independently of the contract yet (the Linux shell's own `__version__` is that build
 // number, and has no web equivalent to show here).
-import { SHELL_CONTRACT_VERSION } from '~/lib/shell-bridge'
+import { APP_NAME, SHELL_CONTRACT_VERSION } from '~/lib/shell-bridge'
 
 defineProps<{ app: 'composes' | 'computes' | 'creates' }>()
 const emit = defineEmits<{ close: [] }>()
 
-const TITLE: Record<'composes' | 'computes' | 'creates', string> = {
-  composes: 'Claudia Composes',
-  computes: 'Claudia Computes',
-  creates: 'Claudia Creates',
-}
+const TITLE = APP_NAME
 
 // Kept in step with `window.py`'s `about_links()` by hand: the two shells have no manifest in common for this, so
 // whichever one of us changes this list has to change the other too.

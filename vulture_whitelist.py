@@ -62,6 +62,7 @@ used._boom  # registered with a MethodTable by a decorator (tests/test_server_hu
 used._nan  # registered with a MethodTable by a decorator (tests/test_server_hub.py)
 used._even  # registered as a parameter kind by a decorator (tests/test_server_protocol.py)
 used._double  # registered with a MethodTable by a decorator (tests/test_server_protocol.py)
+used._echo  # registered with a MethodTable by a decorator (tests/test_server_protocol.py, E5.7/D31 locale test)
 used.should_exit  # uvicorn.Server reads it to stop (tests/test_client_trust.py)
 used.redirect_request  # urllib calls it on a redirect (tests/test_server_redirect.py)
 used._test_client_calls_the_server_by_a_name_it_answers_to  # autouse fixture of packages/claudia-server/tests
@@ -84,6 +85,12 @@ used._set_text  # creates_methods_with(...).method("set_text")
 used._remove_object  # creates_methods_with(...).method("remove_object")
 used._images  # creates_methods_with(...).method("images")
 used._object_gets_image_fields  # registered as an upcaster by a decorator (claudia_creates AddObject schema 1 -> 2)
+
+# claudia-creates-io: set-only properties of python-pptx's own objects (never read back by our code, only by
+# python-pptx itself when the file is saved)
+used.rgb  # RGBColor set on a run's/shape's .color or .fore_color (claudia_creates_io.pptx._style_text/_style_shape)
+used.slide_width  # Presentation.slide_width, set once per deck (claudia_creates_io.pptx.slides_to_pptx)
+used.slide_height  # Presentation.slide_height, set once per deck (claudia_creates_io.pptx.slides_to_pptx)
 
 # claudia-fonts: set on a fontTools table in claudia_fonts.testing, which tests use
 used.macStyle  # head.macStyle is read by fontTools when the font is saved

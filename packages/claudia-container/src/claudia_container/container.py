@@ -33,7 +33,7 @@ from pathlib import Path
 from . import blocks
 from .blocks import GENESIS, BlockError, Chain, Head, Place, block_hash, open_block, open_head, seal_block, seal_head
 from .crypto import DecryptionError, KdfParams, derive_login_material, derive_recovery_material, open_sealed, seal
-from .journal import JournalWriter, _fsync_directory, journal_generation, read_journal
+from .journal import JournalWriter, _fsync_directory, _replace, journal_generation, read_journal
 from .passwords import require_strong_password
 from .slots import Domain, KeySlot, Role, Unlocked, make_slot, new_domain_keys, open_slot
 
@@ -346,7 +346,7 @@ def _write_zip(
                     archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temp, path)
+        _replace(temp, path)
         _fsync_directory(path.parent)
     except BaseException:
         with contextlib.suppress(OSError):
@@ -858,7 +858,10 @@ def pack_journal(
 
     The file is replaced first and the journal second. A crash between the two leaves a journal whose records the file
     already holds; :func:`read_state` ignores it and :func:`begin` replaces it. ``snapshot`` becomes the snapshot of the
-    file (``None`` removes it). If anything fails, ``writer`` is still the open journal and nothing has changed."""
+    file (``None`` removes it). If folding into the file fails, ``writer`` is still the open journal and nothing has
+    changed. Once the file holds the records, ``writer`` is closed before the journal itself is replaced (on Windows,
+    replacing a file that is still open is refused); if that replace then fails, the file already has the records, so
+    the next :func:`begin` repeats it and nothing is lost."""
     journal = journal_path(path)
     manifest = read_manifest(path)
     history, chat = [], []
@@ -868,6 +871,6 @@ def pack_journal(
         elif record.domain is Domain.CHAT:
             chat.append(record.payload)
     _pack_blocks(path, keys, history=history, chat=chat, snapshot=snapshot, generation=writer.generation)
-    fresh = JournalWriter.replace(journal, manifest.id, keys, writer.generation + 1)
+    generation = writer.generation
     writer.close()
-    return fresh
+    return JournalWriter.replace(journal, manifest.id, keys, generation + 1)

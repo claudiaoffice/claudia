@@ -134,11 +134,16 @@ def _slide_part(members: dict[str, bytes], slide_index: int) -> str:
     """The zip member holding slide ``slide_index``'s XML, resolved through ``presentation.xml`` and its rels."""
     presentation = etree.fromstring(members["ppt/presentation.xml"])
     rels = etree.fromstring(members["ppt/_rels/presentation.xml.rels"])
-    slide_ids = list(presentation.find(_qn("sldIdLst")))
+    sld_id_lst = presentation.find(_qn("sldIdLst"))
+    if sld_id_lst is None:
+        raise ValueError("ppt/presentation.xml has no <p:sldIdLst>: not a well-formed presentation part")
+    slide_ids = list(sld_id_lst)
     if not 0 <= slide_index < len(slide_ids):
         raise ValueError(f"slide_index must be from 0 to {len(slide_ids) - 1}, not {slide_index}")
     rid = slide_ids[slide_index].get(_qn("id", RNS))
-    target = next(rel.get("Target") for rel in rels if rel.get("Id") == rid)
+    target = next((rel.get("Target") for rel in rels if rel.get("Id") == rid), None)
+    if target is None:
+        raise ValueError(f"ppt/_rels/presentation.xml.rels has no Target for relationship {rid!r}")
     return _resolve_target("ppt", target)
 
 
@@ -172,6 +177,8 @@ def add_transition(
         anchor = root.find(_qn("clrMapOvr"))
         if anchor is None:
             anchor = root.find(_qn("cSld"))
+        if anchor is None:
+            raise ValueError(f"slide {slide_index}'s XML has neither <p:clrMapOvr> nor <p:cSld>: not a slide part")
         anchor.addnext(transition_el)
 
     members[part_name] = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)

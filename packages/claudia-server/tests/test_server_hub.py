@@ -20,9 +20,10 @@ INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
 class Client:
     """A connected person: everything the server sent is in ``frames``."""
 
-    def __init__(self, hosted, account):
+    def __init__(self, hosted, account, *, locale=None):
         self.frames: list[dict] = []
-        self.connection = hosted.connect(account, lambda text: self.frames.append(json.loads(text)))
+        kwargs = {} if locale is None else {"locale": locale}
+        self.connection = hosted.connect(account, lambda text: self.frames.append(json.loads(text)), **kwargs)
         self._next = 0
 
     def request(self, method, params=None):
@@ -139,6 +140,16 @@ def test_the_welcome_describes_the_document_and_the_people_in_it(hosted):
     assert sorted(p["user"] for p in welcome["people"]) == ["ann", "ben"]
     assert [c["label"] for c in welcome["checkpoints"]] == ["start"]
     assert second.connection.id != first.connection.id and first.connection.color != second.connection.color
+
+
+def test_welcome_carries_the_connections_own_locale_and_falls_back_on_a_malformed_one(hosted):
+    """E5.7, D31: the locale travels with the connection, not the document — each window gets its own back."""
+    plain = Client(hosted, Account("ann", "owner"))
+    assert plain.connection.welcome()["locale"] == "en"
+    german = Client(hosted, Account("ben", "editor"), locale="de-DE")
+    assert german.connection.welcome()["locale"] == "de-DE"
+    garbled = Client(hosted, Account("cleo", "viewer"), locale="not a locale!")
+    assert garbled.connection.welcome()["locale"] == "en"
 
 
 def test_internal_errors_do_not_leak_details(hosted, ann):

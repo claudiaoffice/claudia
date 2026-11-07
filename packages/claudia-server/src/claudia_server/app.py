@@ -13,16 +13,23 @@ belong to it.
 WebSocket handshake: the client connects, then sends ``hello`` as its first frame (credentials travel in a frame, not in
 the URL, so they do not end up in logs):
 
-    {"id": 1, "method": "hello", "params": {"user": "ann", "password": "...", "create": false}}
+    {"id": 1, "method": "hello", "params": {"user": "ann", "password": "...", "create": false, "locale": "de"}}
 
-The answer carries the welcome data (user, role, document, line, revision, people, limits) and ``created``: true if
-the document was made by this very ``hello``, so that the client can show the recovery key at once. After that the
-connection speaks the protocol of ``protocol.py`` and receives events. With ``create: true`` for a document that does
-not exist, the document is made and the person becomes its owner. A wrong password, an unknown name and a document
-that does not exist are the same answer. Failures to get that far close the socket with a code: 4400 bad request, 4401
-unauthorized, 4404 no such document, 4408 no hello in time, 4403 foreign origin or host, 4423 the document is sealed
-(nobody who holds all its keys has opened it since the server started: a viewer tries again later), 1013 too many
-connections, too many people waiting to be let in, a full server or a client that is too slow.
+``locale`` is optional and always the client's own setting (E5.7, D31): there is no account profile to keep it on
+(a document's users are scoped to that document, D35), so the client sends whatever it is showing itself with —
+usually the OS or browser locale, or whatever the person picked in their own client. Anything that is not a short
+tag of letters, digits and hyphens is ignored and falls back to ``"en"``; the negotiated value is echoed back in the
+welcome so the client can tell when its request was not honoured. Nothing is translated with it yet — this is the
+plumbing a later change renders messages with, not a behaviour change.
+
+The answer carries the welcome data (user, role, document, line, revision, people, limits, locale) and ``created``:
+true if the document was made by this very ``hello``, so that the client can show the recovery key at once. After that
+the connection speaks the protocol of ``protocol.py`` and receives events. With ``create: true`` for a document that
+does not exist, the document is made and the person becomes its owner. A wrong password, an unknown name and a
+document that does not exist are the same answer. Failures to get that far close the socket with a code: 4400 bad
+request, 4401 unauthorized, 4404 no such document, 4408 no hello in time, 4403 foreign origin or host, 4423 the
+document is sealed (nobody who holds all its keys has opened it since the server started: a viewer tries again later),
+1013 too many connections, too many people waiting to be let in, a full server or a client that is too slow.
 
 A person who has lost their password sends ``"recovery_key": "<key>"`` with their ``user`` and a *new* ``password`` (and
 no ``create``): if the key is the document's, they get that password, keep their role (somebody new becomes an owner)
@@ -66,7 +73,7 @@ from starlette.websockets import WebSocketDisconnect
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
-from .protocol import RequestError, parse_request
+from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 
 HELLO_TIMEOUT = 10.0
 OUTGOING_QUEUE = 1000  # frames waiting for a slow client before it is dropped
@@ -271,8 +278,8 @@ class Gateway:
         finally:
             self._waiting.leave(address)
         if admitted is not None:
-            request_id, account, document, created = admitted
-            await _Live(websocket, document, account, request_id, created=created).run()
+            request_id, account, document, created, locale = admitted
+            await _Live(websocket, document, account, request_id, created=created, locale=locale).run()
 
     async def _hello(self, websocket: WebSocket, doc_id: str):
         """The first frame: ``(request id, account, document)`` if the person may come in, else the socket is closed."""
@@ -291,6 +298,7 @@ class Gateway:
         if name != "hello" or not isinstance(params, dict):
             await _refuse(websocket, request_id, "bad_request", "the first message must be hello with params", 4400)
             return None
+        locale = normalize_locale(params.get("locale"))
         try:
             Hub.check_id(doc_id)
             if params.get("recovery_key") is not None:
@@ -303,7 +311,7 @@ class Gateway:
             if account is None:
                 await _refuse(websocket, request_id, "unauthorized", "missing or wrong credentials", 4401)
                 return None
-            return request_id, account, await self.hub.open(doc_id), created
+            return request_id, account, await self.hub.open(doc_id), created, locale
         except HubError as exc:
             await _refuse(websocket, request_id, exc.code, exc.message, _CLOSE.get(exc.code, 4400))
         except AuthRefused as exc:
@@ -323,12 +331,22 @@ async def _refuse(websocket: WebSocket, request_id, code: str, message: str, clo
 class _Live:
     """A connection that has been let in: events go out through a bounded queue, requests come in through ``handle``."""
 
-    def __init__(self, websocket: WebSocket, document, account: Account, request_id, *, created: bool = False):
+    def __init__(
+        self,
+        websocket: WebSocket,
+        document,
+        account: Account,
+        request_id,
+        *,
+        created: bool = False,
+        locale: str = DEFAULT_LOCALE,
+    ):
         self.created = created
         self.websocket = websocket
         self.document = document
         self.account = account
         self.request_id = request_id
+        self.locale = locale
         self.queue: asyncio.Queue[str] = asyncio.Queue(maxsize=OUTGOING_QUEUE)
         self.background: set[asyncio.Task] = set()
 
@@ -352,7 +370,7 @@ class _Live:
     async def run(self) -> None:
         """Welcome the person, then serve requests until the socket ends."""
         try:
-            connection = self.document.connect(self.account, self.send)
+            connection = self.document.connect(self.account, self.send, locale=self.locale)
         except HubError as exc:
             await _refuse(self.websocket, self.request_id, exc.code, exc.message, _CLOSE.get(exc.code, 1013))
             return
@@ -366,7 +384,7 @@ class _Live:
                     break
                 text = message.get("text")
                 connection.handle(text if text is not None else message.get("bytes", b""))
-        except WebSocketDisconnect, RuntimeError:
+        except (WebSocketDisconnect, RuntimeError):
             pass
         finally:
             pump.cancel()

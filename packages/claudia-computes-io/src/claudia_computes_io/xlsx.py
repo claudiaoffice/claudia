@@ -17,6 +17,7 @@ from __future__ import annotations
 import posixpath
 import zipfile
 from io import BytesIO
+from xml.sax.saxutils import escape as _xml_escape
 
 import openpyxl
 from lxml import etree
@@ -39,10 +40,20 @@ def _tostring(element) -> bytes:
     return etree.tostring(element, xml_declaration=True, encoding="UTF-8", standalone=True)
 
 
+def _attr(value) -> str:
+    """``value`` (any cell content: a header name, a shared-item value, an amount) escaped for safe placement
+    inside a double-quoted XML attribute value. The pivot cache/table XML below is hand-built with plain string
+    interpolation rather than ``lxml`` elements (unlike ``_register_pivot_cache``), so every piece of data that
+    reaches it this way has to be escaped explicitly -- without this, a cell value containing ``"``, ``<`` or
+    ``&`` breaks out of its attribute and can inject arbitrary markup into the exported file."""
+    return _xml_escape(str(value), {'"': "&quot;"})
+
+
 def workbook_to_xlsx(model: WorkbookModel) -> bytes:
     """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
     with the leading ``=``). No styles, number formats or charts yet (E6.4, E6.9 are the full story)."""
     wb = openpyxl.Workbook()
+    assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
     for sheet in model.sheets.values():
         ws = wb.create_sheet(title=sheet.name)
@@ -58,7 +69,7 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
 
 def _resolve_target(source_dir: str, target: str) -> str:
     """An OPC relationship ``Target`` resolved against the directory of the part that references it: package-
-    absolute (a leading ``/``) from the zip root, otherwise relative to ``source_dir`` (D135: openpyxl writes the
+    absolute (a leading ``/``) from the zip root, otherwise relative to ``source_dir`` (D147: openpyxl writes the
     workbook's own sheet relationships as package-absolute, so both forms have to be handled)."""
     return target[1:] if target.startswith("/") else posixpath.normpath(posixpath.join(source_dir, target))
 
@@ -69,6 +80,8 @@ def _sheet_part(members: dict[str, bytes], sheet_name: str) -> str:
     workbook = etree.fromstring(members["xl/workbook.xml"])
     rels = etree.fromstring(members["xl/_rels/workbook.xml.rels"])
     sheets = workbook.find(_qn("x", "sheets"))
+    if sheets is None:
+        raise ValueError("xl/workbook.xml has no <sheets>: not a well-formed workbook part")
     rid = next((el.get(_qn("r", "id")) for el in sheets if el.get("name") == sheet_name), None)
     if rid is None:
         raise ValueError(f"no sheet named {sheet_name!r}")
@@ -98,25 +111,26 @@ def _shared_items(header: list[str], rows: list[tuple], value_col: int) -> tuple
 
 
 def _cache_xml(
-    header: list[str], rows: list[tuple], row_col: int, value_col: int, *, source_sheet: str, source_range: str
+    header: list[str], rows: list[tuple], value_col: int, *, source_sheet: str, source_range: str
 ) -> tuple[str, str]:
     """The pivot cache's two parts: the field definitions (one per source column) and the records (one per row)."""
     amounts = [row[value_col] for row in rows]
     shared_items, shared_index = _shared_items(header, rows, value_col)
 
     def _cache_field(col: int, name: str) -> str:
+        name = _attr(name)
         if col == value_col:
             return (
                 f'<cacheField name="{name}" numFmtId="0"><sharedItems containsSemiMixedTypes="0" '
-                f'containsString="0" containsNumber="1" minValue="{min(amounts)}" '
-                f'maxValue="{max(amounts)}"/></cacheField>'
+                f'containsString="0" containsNumber="1" minValue="{_attr(min(amounts))}" '
+                f'maxValue="{_attr(max(amounts))}"/></cacheField>'
             )
-        items = "".join(f'<s v="{v}"/>' for v in shared_items[col])
+        items = "".join(f'<s v="{_attr(v)}"/>' for v in shared_items[col])
         return f'<cacheField name="{name}" numFmtId="0"><sharedItems count="{len(shared_items[col])}">{items}</sharedItems></cacheField>'  # noqa: E501
 
     def _record(row: tuple) -> str:
         parts = [
-            f'<n v="{row[col]}"/>' if col == value_col else f'<x v="{shared_index[col][row[col]]}"/>'
+            f'<n v="{_attr(row[col])}"/>' if col == value_col else f'<x v="{shared_index[col][row[col]]}"/>'
             for col in range(len(header))
         ]
         return f"<r>{''.join(parts)}</r>"
@@ -128,7 +142,7 @@ def _cache_xml(
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1" '
         'refreshedBy="claudia-computes-io" refreshedDate="45600" createdVersion="6" refreshedVersion="6" '
         f'minRefreshableVersion="3" recordCount="{len(rows)}"><cacheSource type="worksheet">'
-        f'<worksheetSource ref="{source_range}" sheet="{source_sheet}"/></cacheSource>'
+        f'<worksheetSource ref="{_attr(source_range)}" sheet="{_attr(source_sheet)}"/></cacheSource>'
         f'<cacheFields count="{len(header)}">{cache_fields}</cacheFields></pivotCacheDefinition>'
     )
     records = "".join(_record(row) for row in rows)
@@ -167,7 +181,7 @@ def _pivot_table_xml(header: list[str], row_col: int, value_col: int, value_fiel
         f'firstHeaderRow="1" firstDataRow="2" firstDataCol="1"/><pivotFields count="{len(header)}">{pivot_fields}'
         f'</pivotFields><rowFields count="1"><field x="{row_col}"/></rowFields>'
         f'<rowItems count="{row_count + 1}">{row_items}</rowItems><colItems count="1"><i/></colItems>'
-        f'<dataFields count="1"><dataField name="Sum of {value_field}" fld="{value_col}" baseField="0" '
+        f'<dataFields count="1"><dataField name="Sum of {_attr(value_field)}" fld="{value_col}" baseField="0" '
         'baseItem="0"/></dataFields></pivotTableDefinition>'
     )
 
@@ -244,9 +258,7 @@ def add_pivot_table(
         members = {name: z.read(name) for name in z.namelist()}
 
     pivot_part = _sheet_part(members, pivot_sheet_name)
-    cache_def, cache_records = _cache_xml(
-        header, rows, row_col, value_col, source_sheet=source_sheet, source_range=source_range
-    )
+    cache_def, cache_records = _cache_xml(header, rows, value_col, source_sheet=source_sheet, source_range=source_range)
     pivot_table = _pivot_table_xml(header, row_col, value_col, value_field, row_count)
     _register_pivot_cache(members)
 
