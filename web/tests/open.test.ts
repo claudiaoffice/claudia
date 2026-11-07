@@ -17,6 +17,9 @@ const welcome = (app: string, role: Welcome['role'] = 'owner'): Welcome => ({
   presence: [],
   checkpoints: [],
   limits: { max_text: 100 },
+  lines: [{ name: 'main', head: null, active: true, forked_from: null }],
+  proposal: null,
+  returned: null,
 })
 
 class FakeLink implements LinkLike {
@@ -44,13 +47,18 @@ class FakeLink implements LinkLike {
         return { revision: null, slide: params.slide, objects: [] }
       case 'shapes':
         return { library: [], document: [] }
+      case 'images':
+        return []
       case 'styles':
       case 'log':
       case 'chat_log':
       case 'checkpoints':
+      case 'lines':
         return []
       case 'history':
         return { can_undo: false, can_redo: false, undo_label: '', redo_label: '' }
+      case 'restore_policy':
+        return { policy: 'consensus' }
       case 'add_sheet':
         return { sheet: 's1', revision: 'main:1' }
     }

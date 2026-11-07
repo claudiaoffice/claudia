@@ -15,6 +15,9 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
+  lines: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+  proposal: null,
+  returned: null,
 }
 
 class FakeLink implements LinkLike {
@@ -60,6 +63,8 @@ function server(link: FakeLink) {
     chat_log: () => [{ number: 1, author: 'ben', to: '', text: 'hi', time: 't', at: null }],
     checkpoints: () => [],
     history: () => ({ can_undo: true, can_redo: false, undo_label: 'Edit cell', redo_label: '' }),
+    lines: () => [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+    restore_policy: () => ({ policy: 'consensus' }),
     cells: (p: any) => ({
       revision: 'main:3',
       cells: Object.entries(cells)
@@ -72,6 +77,13 @@ function server(link: FakeLink) {
     lock: () => ({}),
     unlock: () => ({}),
     chat: () => ({}),
+    peek_line: ({ line }: any) => ({ line, revision: 'main:3', app: 'computes', state_schema: 1, state: {} }),
+    propose_restore: () => ({ applied: true, proposal: null }),
+    propose_switch: () => ({ applied: true, proposal: null }),
+    answer_restore: () => ({ resolved: 'agreed' }),
+    withdraw_restore: () => ({}),
+    discard_side_history: () => ({ discarded: [] }),
+    set_restore_policy: ({ policy }: any) => ({ policy }),
   }
 }
 
@@ -507,5 +519,108 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     link.push('ephemeral', { kind: 'document_deleted', sender: 'ann', data: {} })
     expect(session.state.status).toBe('closed')
     expect(session.state.notice?.text).toMatch(/deleted/)
+  })
+})
+
+const PROPOSAL = {
+  id: 1,
+  kind: 'restore' as const,
+  by: 'ben',
+  checkpoint: 1,
+  line: null,
+  label: 'checkpoint “good”',
+  opened_at: 0,
+  expires_at: 900,
+  policy: 'consensus' as const,
+  group: ['ann', 'ben'],
+  agreed: ['ben'],
+}
+
+describe('lines, and restoring with consent', () => {
+  it('loads the lines and the restore policy, and lets you peek at one', async () => {
+    const { session, link } = await opened()
+    expect(session.state.lines).toEqual([{ name: 'main', head: 'main:3', active: true, forked_from: null }])
+    expect(session.state.restorePolicy).toBe('consensus')
+    expect(await session.peekLine('main')).toMatchObject({ line: 'main', revision: 'main:3' })
+    expect(link.calls.find((c) => c.method === 'peek_line')!.params).toEqual({ line: 'main' })
+  })
+
+  it('suggests a restore; the server may carry it out at once', async () => {
+    const { session, link } = await opened()
+    expect(await session.proposeRestore(1)).toBe(true)
+    expect(link.calls.find((c) => c.method === 'propose_restore')!.params).toEqual({ checkpoint: 1 })
+    expect(session.state.proposal).toBeNull()
+  })
+
+  it('suggests switching to another line', async () => {
+    const { session, link } = await opened()
+    expect(await session.proposeSwitch('restore-1')).toBe(true)
+    expect(link.calls.find((c) => c.method === 'propose_switch')!.params).toEqual({ line: 'restore-1' })
+  })
+
+  it('tracks an open suggestion from the restore_proposed event', async () => {
+    const { session, link } = await opened()
+    link.push('restore_proposed', PROPOSAL)
+    expect(session.state.proposal).toEqual(PROPOSAL)
+  })
+
+  it('answers the open suggestion', async () => {
+    const { session, link } = await opened()
+    link.push('restore_proposed', PROPOSAL)
+    expect(await session.answerRestore(true)).toBe(true)
+    expect(link.calls.find((c) => c.method === 'answer_restore')!.params).toEqual({ agree: true })
+  })
+
+  it('clears the proposal and tells everybody once it is agreed', async () => {
+    const { session, link } = await opened()
+    link.push('restore_proposed', PROPOSAL)
+    link.push('restore_resolved', { outcome: 'agreed' })
+    expect(session.state.proposal).toBeNull()
+    expect(session.state.notice).toMatchObject({ kind: 'info', text: expect.stringContaining('checkpoint “good”') })
+  })
+
+  it('warns when the suggestion was declined', async () => {
+    const { session, link } = await opened()
+    link.push('restore_proposed', PROPOSAL)
+    link.push('restore_resolved', { outcome: 'declined' })
+    expect(session.state.proposal).toBeNull()
+    expect(session.state.notice).toMatchObject({ kind: 'warning', text: expect.stringMatching(/declined/i) })
+  })
+
+  it('says when the suggestion was withdrawn', async () => {
+    const { session, link } = await opened()
+    link.push('restore_proposed', PROPOSAL)
+    link.push('restore_resolved', { outcome: 'withdrawn' })
+    expect(session.state.notice?.text).toMatch(/withdrawn/i)
+  })
+
+  it('takes back the open suggestion', async () => {
+    const { session, link } = await opened()
+    expect(await session.withdrawRestore()).toBe(true)
+    expect(link.count('withdraw_restore')).toBe(1)
+  })
+
+  it('discards the hidden lines and reloads what the screen shows', async () => {
+    const { session, link } = await opened()
+    expect(await session.discardSideHistory()).toBe(true)
+    await session.settled()
+    expect(link.count('discard_side_history')).toBe(1)
+    expect(link.count('sheets')).toBe(2)
+  })
+
+  it('sets the restore policy', async () => {
+    const { session, link } = await opened()
+    expect(await session.setRestorePolicy('veto')).toBe(true)
+    expect(session.state.restorePolicy).toBe('veto')
+    expect(link.calls.find((c) => c.method === 'set_restore_policy')!.params).toEqual({ policy: 'veto' })
+  })
+
+  it('tells a returning person what happened to the line they were on', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.welcome = { ...link.welcome, returned: { by: 'ben', kind: 'restore', label: 'checkpoint “good”', agreed: ['ann', 'ben'] } }
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.notice?.text).toMatch(/ben restored to checkpoint “good”/i)
   })
 })

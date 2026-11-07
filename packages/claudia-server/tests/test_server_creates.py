@@ -1,6 +1,8 @@
 """The methods a slide view needs: slides, their objects, the shapes to insert, and the edits (creates)."""
 
+import base64
 import json
+import struct
 
 import pytest
 
@@ -33,6 +35,28 @@ def add_text(doc, **params):
 def add_shape(doc, shape="rectangle", **params):
     given = {"slide": "s1", "kind": "shape", "shape": shape, "x": 200, "y": 200, "w": 300, "h": 200, **params}
     return call(doc, "add_object", given)["object"]
+
+
+def tiny_gif(width=40, height=20) -> str:
+    """A tiny, valid GIF (no real pixels), base64-encoded as a client would send it."""
+    header = b"GIF89a" + struct.pack("<HHBBB", width, height, 0, 0, 0)
+    frame = b"\x2c" + struct.pack("<HHHH", 0, 0, width, height) + b"\x00" + b"\x02\x01\x00\x00"
+    return base64.b64encode(header + frame + b"\x3b").decode("ascii")
+
+
+def add_image(doc, **params):
+    given = {
+        "slide": "s1",
+        "x": 100,
+        "y": 100,
+        "w": 400,
+        "h": 200,
+        "data": tiny_gif(400, 200),
+        "alt": "a sample picture",
+        "source_name": "pic.gif",
+        **params,
+    }
+    return call(doc, "add_image", given)["object"]
 
 
 def objects(doc, slide="s1"):
@@ -80,7 +104,7 @@ def test_the_library_lists_the_shapes_to_insert_and_the_styles(deck):
     shapes = call(deck, "shapes")
     assert [s["id"] for s in shapes["library"]] == ["circle", "rectangle", "triangle"]
     assert shapes["library"][0]["aspect"] == 1
-    assert [s["id"] for s in call(deck, "styles")] == ["body-text", "plain-shape"]
+    assert [s["id"] for s in call(deck, "styles")] == ["body-text", "plain-shape", "plain-image"]
     assert call(deck, "styles")[0]["css"]["font-size"]
 
 
@@ -263,3 +287,93 @@ def test_a_presentation_comes_back_after_a_restart_with_its_shapes_and_order(tmp
     assert objects(back) == before["objects"] and [o["id"] for o in objects(back)] == [text, circle]
     assert call(back, "shapes")["document"] == before["shapes"] and call(back, "slides") == before["slides"]
     assert objects(back)[0]["x"] == 30 and objects(back)[0]["text"] == "Agenda"
+
+
+# -- images (E10.8): add_image, the plain-image style, and masking source_path per viewer ---------------------
+def test_an_image_is_imported_with_the_plain_image_style(deck):
+    added = add_image(deck)
+    (obj,) = objects(deck)
+    assert obj["id"] == added
+    assert (obj["kind"], obj["style"]) == ("image", "plain-image")
+    assert obj["image"] is not None and obj["shape"] is None
+    assert obj["imported"]["alt"] == "a sample picture" and obj["imported"]["source"] == "disk"
+    assert [i["id"] for i in call(deck, "images")] == [obj["image"]]
+
+
+def test_the_asset_is_shared_between_two_objects_using_the_same_picture(deck):
+    data = tiny_gif(300, 150)
+    first = add_image(deck, w=300, h=150, data=data, alt="a")
+    second = add_image(deck, x=500, w=300, h=150, data=data, alt="b")
+    assert first != second
+    assert len(call(deck, "images")) == 1, "the identical picture is decoded once and shared"
+
+
+def test_an_image_keeps_its_proportions(deck):
+    added = add_image(deck, data=tiny_gif(400, 200), w=400, h=200)
+    with pytest.raises(RequestError, match="proportions") as caught:
+        call(deck, "resize_object", {"id": added, "x": 0, "y": 0, "w": 400, "h": 400})
+    assert caught.value.code == "command_error"
+
+
+def test_add_image_needs_a_real_image_and_a_description(deck):
+    with pytest.raises(RequestError) as caught:
+        add_image(deck, data="not an image at all!!")
+    assert caught.value.code == "bad_request"  # not valid base64
+
+    not_a_picture = base64.b64encode(b"hello, this is not a picture").decode("ascii")
+    with pytest.raises(RequestError) as caught:
+        add_image(deck, data=not_a_picture)
+    assert caught.value.code == "command_error"  # understood as a request, refused as an image
+
+    with pytest.raises(RequestError) as caught:
+        add_image(deck, alt="")
+    assert caught.value.code == "command_error"  # every imported image needs a description
+
+
+def test_add_object_refuses_kind_image_and_points_to_add_image(deck):
+    with pytest.raises(RequestError, match="add_image") as caught:
+        call(deck, "add_object", {"slide": "s1", "kind": "image", "x": 0, "y": 0, "w": 100, "h": 50})
+    assert caught.value.code == "bad_request"
+
+
+def test_the_source_path_is_sent_only_to_the_person_who_imported_the_image(deck):
+    box = add_image(deck, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN (the default account)
+    (seen_by_importer,) = call(deck, "slide", {"slide": "s1"}, account=ANN)["objects"]
+    assert seen_by_importer["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
+
+    (seen_by_colleague,) = call(deck, "slide", {"slide": "s1"}, account=BEN)["objects"]
+    assert seen_by_colleague["imported"]["source_path"] is None
+    assert seen_by_colleague["imported"]["source"] == "disk"  # not hidden: only the path is
+    assert seen_by_colleague["imported"]["imported_by"] == "ann"  # not hidden either
+    assert seen_by_colleague["id"] == box
+
+
+def test_viewers_may_look_at_images_but_not_add_one(deck):
+    assert call(deck, "images", account=VERA) == []
+    with pytest.raises(RequestError) as caught:
+        call(
+            deck,
+            "add_image",
+            {"slide": "s1", "x": 0, "y": 0, "w": 100, "h": 50, "data": tiny_gif(), "alt": "x", "source_name": "x"},
+            account=VERA,
+        )
+    assert caught.value.code == "forbidden"
+
+
+def test_adding_an_image_is_one_step_in_the_history_and_undo_takes_both_away(deck):
+    add_image(deck)
+    assert deck.history_for("ann").undo_label == "Add image"
+    deck.undo("ann")
+    assert objects(deck) == [] and call(deck, "images") == []
+
+
+def test_a_presentation_with_an_image_comes_back_after_a_restart(tmp_path):
+    from claudia_server.filestore import FileProvider
+
+    deck = FileProvider(tmp_path, SlideModel).create("talk")
+    add_image(deck)
+    before = {"objects": objects(deck), "images": call(deck, "images")}
+
+    back = FileProvider(tmp_path, SlideModel).open("talk")
+    assert objects(back) == before["objects"]
+    assert call(back, "images") == before["images"]

@@ -7,7 +7,7 @@ import type { Frame } from './geometry'
 export interface SlideObject {
   id: string
   slide: string
-  kind: 'text' | 'shape'
+  kind: 'text' | 'shape' | 'image'
   x: number
   y: number
   w: number
@@ -15,6 +15,31 @@ export interface SlideObject {
   style: string
   text: string
   shape: string | null
+  image: string | null
+  imported: ImageImport | null
+}
+/** How an image object's picture got here (E10.8). `sourcePath`'s field, `source_path`, is sent only to the
+ * person who imported it — everyone else sees it as `null`, same as the server keeps it (`claudia_server`'s
+ * per-viewer masking in `hub.py`). */
+export interface ImageImport {
+  asset: string
+  alt: string
+  imported_by: string
+  imported_at: string
+  source: string
+  source_name: string
+  source_path: string | null
+}
+/** A decoded picture (E10.8): `data`/`first_frame` are base64, exactly as `claudia_core.ImageAsset.to_data()`
+ * sends them. `first_frame` is set only when `animated` is true. */
+export interface ImageAsset {
+  id: string
+  format: string
+  width: number
+  height: number
+  animated: boolean
+  data: string
+  first_frame: string | null
 }
 /** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
 export interface ShapeDef {
@@ -42,6 +67,7 @@ export interface SlideState extends BaseState {
   order: Record<string, string[]> // slide -> object ids, the one in front last
   library: ShapeDef[] // what the server offers for insertion
   shapes: Record<string, ShapeDef> // what this document has taken in, by id
+  images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id (E10.8)
   styles: Record<string, StyleDef>
   selected: string | null
 }
@@ -58,6 +84,7 @@ export class SlideSession extends BaseSession<SlideState> {
       order: {},
       library: [],
       shapes: {},
+      images: {},
       styles: {},
       selected: null,
     })
@@ -67,9 +94,10 @@ export class SlideSession extends BaseSession<SlideState> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [slides, shapes, styles] = await Promise.all([
+    const [slides, shapes, images, styles] = await Promise.all([
       link.request<SlideInfo[]>('slides'),
       link.request<{ library: ShapeDef[]; document: ShapeDef[] }>('shapes'),
+      link.request<ImageAsset[]>('images'),
       link.request<StyleDef[]>('styles'),
     ])
     const loaded = await Promise.all(slides.map((slide) => link.request<{ objects: SlideObject[] }>('slide', { slide: slide.id })))
@@ -82,6 +110,7 @@ export class SlideSession extends BaseSession<SlideState> {
     s.slides = slides
     s.library = shapes.library
     s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
+    s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
     if (!slides.some((x) => x.id === s.activeSlide)) s.activeSlide = slides[0]?.id ?? ''
     if (s.selected && !s.objects[s.selected]) s.selected = null
@@ -124,6 +153,10 @@ export class SlideSession extends BaseSession<SlideState> {
         if (data.definition) s.shapes[data.id] = data.definition
         else delete s.shapes[data.id]
         return true
+      case 'image':
+        if (data.asset) s.images[data.id] = data.asset
+        else delete s.images[data.id]
+        return true
       case 'slides':
         this.track(this.reload())
         return true
@@ -147,6 +180,30 @@ export class SlideSession extends BaseSession<SlideState> {
   /** Put a shape from the library (or the document) on the slide that is shown. */
   addShape(shape: string, frame: Frame): Promise<string | null> {
     return this.insert({ kind: 'shape', shape }, frame)
+  }
+
+  /**
+   * Import a picture from disk and put it on the slide that is shown (E10.8); its id, or null after telling the
+   * person why not. `data` is the file's bytes, base64 (see `lib/images.ts`'s `fileToBase64`); `sourcePath` is the
+   * file's full path if the caller could get one — a plain web browser cannot, for its own security, and passes
+   * `null`. Clipboard and drag-and-drop import are not built yet; this is the "browse a file" path only.
+   */
+  async addImage(
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null },
+    frame: Frame,
+  ): Promise<string | null> {
+    const done = await this.attempt('add_image', {
+      slide: this.state.activeSlide,
+      data: picture.data,
+      alt: picture.alt,
+      source_name: picture.sourceName,
+      source_path: picture.sourcePath,
+      ...frame,
+      base: this.state.revision,
+    })
+    if (done === false) return null
+    await this.select(done.object)
+    return done.object
   }
 
   async addSlide(): Promise<string | null> {

@@ -532,5 +532,18 @@ def test_random_sessions_replay_identically_with_the_same_undo_stacks(doc, seed)
 def test_a_slide_object_knows_what_it_is_made_of():
     box = text_box(text="hi")
     assert SlideObject.from_data(box.to_data()) == box
-    assert set(box.to_data()) == {"id", "slide", "kind", "x", "y", "w", "h", "style", "text", "shape"}
+    assert set(box.to_data()) == {
+        "id",
+        "slide",
+        "kind",
+        "x",
+        "y",
+        "w",
+        "h",
+        "style",
+        "text",
+        "shape",
+        "image",
+        "imported",
+    }
     assert define().to_data()["shape"]["id"] == "rectangle"

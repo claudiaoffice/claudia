@@ -12,9 +12,9 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Command, Context
+from claudia_core import Command, Context, ImageAsset
 
-from .events import ShapesChanged, SlidesChanged
+from .events import ImagesChanged, ShapesChanged, SlidesChanged
 from .model import SlideModel, SlideObject
 from .region import ObjectSet
 from .shapes import ShapeDefinition
@@ -182,24 +182,102 @@ class ForgetShape(Command):
         return self
 
 
+# ------------------------------------------------------------------------------ images
+@register
+@dataclass(frozen=True)
+class DefineImage(Command):
+    """Take a decoded image into the document, so that it opens the same anywhere (mirrors :class:`DefineShape`)."""
+
+    kind: ClassVar[str] = "creates.DefineImage"
+    image: ImageAsset
+
+    @property
+    def label(self) -> str:
+        return "Define image"
+
+    @property
+    def summary(self) -> str:
+        return f"The document takes an image ({self.image.width} × {self.image.height})"
+
+    def apply(self, ctx: Context[SlideModel]) -> Command:
+        ctx.model.define_image(self.image)
+        ctx.emit(ImagesChanged(self.image.id, self.image))
+        return ForgetImage(self.image.id)
+
+    def to_data(self) -> dict:
+        return {"image": self.image.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> DefineImage:
+        return cls(ImageAsset.from_data(data["image"]))
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if isinstance(other, DefineImage) and other.image.id == self.image.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@register
+@dataclass(frozen=True)
+class ForgetImage(Command):
+    """Let go of an image that no object uses (the undo of :class:`DefineImage`)."""
+
+    kind: ClassVar[str] = "creates.ForgetImage"
+    id: str
+
+    @property
+    def label(self) -> str:
+        return "Forget image"
+
+    @property
+    def summary(self) -> str:
+        return f"The document lets go of the image {self.id}"
+
+    def apply(self, ctx: Context[SlideModel]) -> Command:
+        image = ctx.model.forget_image(self.id)
+        ctx.emit(ImagesChanged(self.id, None))
+        return DefineImage(image)
+
+    def to_data(self) -> dict:
+        return {"id": self.id}
+
+    @classmethod
+    def from_data(cls, data, registry) -> ForgetImage:
+        return cls(data["id"])
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Refuse when a colleague now uses the image, or defined it anew."""
+        if isinstance(other, AddObject) and other.obj.image == self.id:
+            return None
+        return None if isinstance(other, DefineImage) and other.image.id == self.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
 # ------------------------------------------------------------------------------ objects
 @register
 @dataclass(frozen=True)
 class AddObject(Command):
-    """Put a text box or a shape on a slide: on top of the others, or at stacking place ``at``."""
+    """Put a text box, a shape or an image on a slide: on top of the others, or at stacking place ``at``."""
 
     kind: ClassVar[str] = "creates.AddObject"
+    schema: ClassVar[int] = 2
     obj: SlideObject
     at: int | None = None
 
     @property
     def label(self) -> str:
-        return "Add text box" if self.obj.kind == "text" else "Add shape"
+        return {"text": "Add text box", "shape": "Add shape", "image": "Add image"}[self.obj.kind]
 
     @property
     def summary(self) -> str:
         if self.obj.kind == "text":
             return f"Added a text box: {_quote(self.obj.text)}" if self.obj.text.strip() else "Added a text box"
+        if self.obj.kind == "image":
+            alt = self.obj.imported.alt if self.obj.imported else ""
+            return f"Added an image: {_quote(alt)}" if alt.strip() else "Added an image"
         return f"Added a {self.obj.shape}"
 
     def apply(self, ctx: Context[SlideModel]) -> Command:
@@ -218,10 +296,13 @@ class AddObject(Command):
         return (ObjectSet(self.obj.slide, frozenset({self.obj.id})),)
 
     def shifted_by(self, other: Command) -> Command | None:
-        """Bringing an object back is refused when somebody made another one with its id, or took its shape away."""
+        """Bringing an object back is refused when somebody made another one with its id, or took its shape or
+        image away."""
         if isinstance(other, AddObject) and other.obj.id == self.obj.id:
             return None
-        return None if isinstance(other, ForgetShape) and other.id == self.obj.shape else self
+        if isinstance(other, ForgetShape) and other.id == self.obj.shape:
+            return None
+        return None if isinstance(other, ForgetImage) and other.id == self.obj.image else self
 
     def redacted(self) -> Command:
         return AddObject(replace(self.obj, text=""), self.at)  # the object stays, its words go
@@ -411,3 +492,10 @@ def _touches(other: Command, object_id: str) -> bool:
 def _changes_frame(other: Command, object_id: str) -> bool:
     """Did ``other`` place, size, remove or re-create the object? (Its text is another matter.)"""
     return isinstance(other, MoveObject | ResizeObject | RemoveObject | AddObject) and _target(other) == object_id
+
+
+# ------------------------------------------------------------------------------ documents are forever
+@SlideModel.registry.upcaster("creates.AddObject", 1)
+def _object_gets_image_fields(data: dict) -> dict:
+    """Schema 1 had no images (E10.8): every stored object gets the new fields, unset."""
+    return {**data, "object": {**data["object"], "image": None, "imported": None}}

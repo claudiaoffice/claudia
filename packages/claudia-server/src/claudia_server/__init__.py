@@ -28,6 +28,7 @@ from .protocol import (
     core_methods,
     parse_request,
 )
+from .restore import Proposal, Resolution, RestoreCoordinator, RestoreError
 from .sealed import SealedDocuments
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
@@ -61,7 +62,11 @@ __all__ = [
     "Method",
     "MethodTable",
     "ModelEngine",
+    "Proposal",
     "RequestError",
+    "Resolution",
+    "RestoreCoordinator",
+    "RestoreError",
     "Say",
     "ScriptedEngine",
     "SealedDocuments",

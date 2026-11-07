@@ -28,12 +28,52 @@ export interface Welcome {
   revision: string | null
   id: number
   color: string
+  /** The locale the server negotiated for this connection (E5.7, D31): what was sent, or 'en' if nothing was, or
+   *  what was sent could not be read as a locale tag. Nothing is rendered in it yet. */
+  locale: string
   people: { id: number; user: string; color: string }[]
   presence: { user: string; regions: Region[]; locked: boolean }[]
   checkpoints: { number: number; label: string; author: string | null }[]
   limits: { max_text: number }
   /** True if this very hello made the document (so its owner should now be given a recovery key). */
   created?: boolean
+  /** Every line of the document's history: the active one and the side lines a restore left behind (E3.8). */
+  lines: LineInfo[]
+  /** A restore/switch suggestion waiting for everybody's answer, if one is open right now (E3.7). */
+  proposal: RestoreProposal | null
+  /** One-time notice of what happened, while this person was away, to the line they were on (E3.7). */
+  returned: RestoreResolution | null
+}
+
+/** One line of a document's history, as `lines` and a `Welcome` carry it. */
+export interface LineInfo {
+  name: string
+  head: string | null
+  active: boolean
+  forked_from: string | null
+}
+
+/** A suggestion to restore a checkpoint or switch the line, open and waiting for answers (E3.7). */
+export interface RestoreProposal {
+  id: number
+  kind: 'restore' | 'switch'
+  by: string
+  checkpoint: number | null
+  line: string | null
+  label: string
+  opened_at: number
+  expires_at: number
+  policy: 'consensus' | 'veto'
+  group: string[]
+  agreed: string[]
+}
+
+/** What became of a line that stopped being active while somebody was away (the `Welcome.returned` notice). */
+export interface RestoreResolution {
+  by: string
+  kind: 'restore' | 'switch'
+  label: string
+  agreed: string[]
 }
 
 export interface CellRef {
@@ -70,6 +110,9 @@ export interface LinkOptions {
   create?: boolean
   /** Come in with the recovery key instead of the password: `password` is then the *new* one. */
   recoveryKey?: string
+  /** The client's own locale (E5.7, D31) — always a client setting, never stored on the server. Omitted, it is not
+   *  sent and the server assumes 'en'. */
+  locale?: string
   socket?: (url: string) => SocketLike
 }
 
@@ -102,14 +145,16 @@ export class Link implements LinkLike {
   }
 
   connect(): Promise<Welcome> {
-    const { url, user, password, create = false, recoveryKey } = this.options
+    const { url, user, password, create = false, recoveryKey, locale } = this.options
     const make = this.options.socket ?? ((u: string) => new WebSocket(u) as unknown as SocketLike)
     const socket = (this.socket = make(url))
     return new Promise<Welcome>((resolve, reject) => {
       socket.onopen = () => {
         const id = this.nextId++
         this.pending.set(id, { resolve, reject })
-        const params = recoveryKey === undefined ? { user, password, create } : { user, password, recovery_key: recoveryKey }
+        const params: Record<string, unknown> =
+          recoveryKey === undefined ? { user, password, create } : { user, password, recovery_key: recoveryKey }
+        if (locale !== undefined) params.locale = locale
         socket.send(JSON.stringify({ id, method: 'hello', params }))
       }
       socket.onmessage = (event) => this.receive(String(event.data))

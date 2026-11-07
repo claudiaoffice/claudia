@@ -63,7 +63,15 @@ class ComposesWindow(Adw.ApplicationWindow):
     error_label = Gtk.Template.Child()
     web_slot = Gtk.Template.Child()
 
-    def __init__(self, identity: AppIdentity, manifest: Manifest, *, page_factory: PageFactory, **properties: Any):
+    def __init__(
+        self,
+        identity: AppIdentity,
+        manifest: Manifest,
+        *,
+        page_factory: PageFactory,
+        locale: str | None = None,
+        **properties: Any,
+    ):
         super().__init__(**properties)
         self._identity = identity
         self._manifest = manifest
@@ -75,6 +83,7 @@ class ComposesWindow(Adw.ApplicationWindow):
             manifest,
             self._send_to_page,
             shell_version=__version__,
+            locale=locale,
             on_states=self.set_action_states,
             on_ready=self._page_is_ready,
         )

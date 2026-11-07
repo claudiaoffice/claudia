@@ -1,10 +1,10 @@
-"""The creates document model: slides holding text boxes and shapes (E10.1).
+"""The creates document model: slides holding text boxes, shapes and images (E10.1, E10.8).
 
-State: the slides in order, the shape definitions the document has taken from a library (so that it opens the same on
-any server), and the objects with their stacking order per slide. Objects sit in a slide space of 1600 by 900 integer
-units; a view scales it, an export (ODP, PPTX) maps it to centimetres or EMU.
+State: the slides in order, the shape definitions and image assets the document has taken in (so that it opens
+the same on any server), and the objects with their stacking order per slide. Objects sit in a slide space of
+1600 by 900 integer units; a view scales it, an export (ODP, PPTX) maps it to centimetres or EMU.
 
-What is not here yet: templates and layouts (E10.4), images (E10.8), groups, free colours.
+What is not here yet: templates and layouts (E10.4), groups, free colours.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 from typing import ClassVar, Self
 
-from claudia_core import CommandRegistry, DocumentModel, Region, new_registry
+from claudia_core import CommandRegistry, DocumentModel, ImageAsset, ImageImport, Region, new_registry
 
 from .events import ObjectsChanged
 from .region import ObjectSet
@@ -26,16 +26,18 @@ MIN_OBJECT_SIZE = 20  # units; an object is at least this wide and this tall
 MAX_OBJECT_TEXT = 20_000  # characters of text in one object
 MAX_OBJECTS_PER_SLIDE = 500
 ASPECT_TOLERANCE = 1  # units a width may differ from height * aspect (whole units cannot match exactly)
-OBJECT_KINDS = ("text", "shape")
+OBJECT_KINDS = ("text", "shape", "image")
 FIRST_SLIDE = "s1"  # the slide of a new presentation
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
-_FIELDS = ("id", "slide", "kind", "x", "y", "w", "h", "style", "text", "shape")
+_FIELDS = ("id", "slide", "kind", "x", "y", "w", "h", "style", "text", "shape", "image", "imported")
 
 
 @dataclass(frozen=True)
 class SlideObject:
-    """One thing on a slide: a text box (``kind`` ``"text"``) or a shape (``"shape"``, with the id of its outline).
+    """One thing on a slide: a text box (``kind`` ``"text"``), a shape (``"shape"``, with the id of its outline)
+    or an image (``"image"``, with the id of its :class:`~claudia_core.ImageAsset` and the
+    :class:`~claudia_core.ImageImport` record of how it got there).
 
     ``x``, ``y``, ``w`` and ``h`` are whole units in the slide space; ``style`` is the id of a built-in style."""
 
@@ -49,17 +51,30 @@ class SlideObject:
     style: str
     text: str = ""
     shape: str | None = None
+    image: str | None = None
+    imported: ImageImport | None = None
 
     def to_data(self) -> dict:
-        """The plain-data form: what the log stores and what is sent to clients."""
-        return {name: getattr(self, name) for name in _FIELDS}
+        """The plain-data form: what the log stores. Carries ``imported`` unmasked (the log is not a client)."""
+        data = {name: getattr(self, name) for name in _FIELDS if name != "imported"}
+        data["imported"] = None if self.imported is None else self.imported.to_data()
+        return data
+
+    def to_data_for(self, viewer: str) -> dict:
+        """What ``viewer`` is sent: as :meth:`to_data`, but an image's import record is masked for anyone but the
+        person who imported it (a colleague sees "imported from disk", not the importer's own filesystem path)."""
+        data = self.to_data()
+        if self.imported is not None:
+            data["imported"] = self.imported.masked(viewer).to_data()
+        return data
 
     @classmethod
     def from_data(cls, data: dict) -> SlideObject:
         """Inverse of :meth:`to_data`; whether the values make sense is the model's business (``check_object``)."""
         if set(data) != set(_FIELDS):
             raise ValueError("an object has exactly these fields: " + ", ".join(_FIELDS))
-        return cls(**data)
+        imported = data["imported"]
+        return cls(**{**data, "imported": None if imported is None else ImageImport.from_data(imported)})
 
 
 def _is_whole(value: object) -> bool:
@@ -70,12 +85,13 @@ class SlideModel(DocumentModel):
     """A presentation: slides, the shapes it knows and the objects on its slides. See the module description."""
 
     app: ClassVar[str] = "creates"
-    state_schema: ClassVar[int] = 2
+    state_schema: ClassVar[int] = 3
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(self) -> None:
         self.slides: list[str] = []
         self.shapes: dict[str, ShapeDefinition] = {}
+        self.images: dict[str, ImageAsset] = {}
         self.objects: dict[str, SlideObject] = {}
         self._stack: dict[str, list[str]] = {}  # slide id -> object ids, bottom first
 
@@ -90,6 +106,7 @@ class SlideModel(DocumentModel):
         return {
             "slides": list(self.slides),
             "shapes": [shape.to_data() for _, shape in sorted(self.shapes.items())],
+            "images": [image.to_data() for _, image in sorted(self.images.items())],
             "objects": [obj.to_data() for slide in self.slides for obj in self.objects_on(slide)],
         }
 
@@ -101,6 +118,9 @@ class SlideModel(DocumentModel):
         for data in state["shapes"]:
             shape = ShapeDefinition.from_data(data)
             model.shapes[shape.id] = shape
+        for data in state["images"]:
+            image = ImageAsset.from_data(data)
+            model.images[image.id] = image
         for data in state["objects"]:
             obj = SlideObject.from_data(data)
             model.objects[obj.id] = obj
@@ -125,6 +145,10 @@ class SlideModel(DocumentModel):
     def users_of(self, shape_id: str) -> list[str]:
         """The ids of the objects that use this shape."""
         return [obj.id for obj in self.objects.values() if obj.shape == shape_id]
+
+    def users_of_image(self, image_id: str) -> list[str]:
+        """The ids of the objects that use this image asset."""
+        return [obj.id for obj in self.objects.values() if obj.image == image_id]
 
     # -- slides ----------------------------------------------------------------
     def insert_slide(self, slide: str, at: int | None = None) -> None:
@@ -165,6 +189,22 @@ class SlideModel(DocumentModel):
             raise ValueError(f"shape {shape_id!r} is in use by {users[0]!r}")
         return self.shapes.pop(shape_id)
 
+    # -- images ------------------------------------------------------------------
+    def define_image(self, image: ImageAsset) -> None:
+        """Take a decoded image into the document, so that it opens the same on any server."""
+        if image.id in self.images:
+            raise ValueError(f"image {image.id!r} is already defined in this document")
+        self.images[image.id] = image
+
+    def forget_image(self, image_id: str) -> ImageAsset:
+        """Let go of an image asset nobody uses; returns it."""
+        if image_id not in self.images:
+            raise ValueError(f"this document does not know the image {image_id!r}")
+        users = self.users_of_image(image_id)
+        if users:
+            raise ValueError(f"image {image_id!r} is in use by {users[0]!r}")
+        return self.images.pop(image_id)
+
     # -- objects ---------------------------------------------------------------
     def check_object(self, obj: SlideObject) -> None:
         """Raise ``ValueError`` with a sentence if this object cannot exist in this document as it is now."""
@@ -173,25 +213,42 @@ class SlideModel(DocumentModel):
         if obj.slide not in self.slides:
             raise ValueError(f"unknown slide {obj.slide!r}")
         if obj.kind not in OBJECT_KINDS:
-            raise ValueError(f"unknown kind {obj.kind!r}: an object is a text box ('text') or a shape ('shape')")
+            raise ValueError(
+                f"unknown kind {obj.kind!r}: an object is a text box ('text'), a shape ('shape') or an image ('image')"
+            )
         if obj.style not in BUILTIN_STYLES:
             raise ValueError(f"unknown style {obj.style!r}; the styles are {', '.join(BUILTIN_STYLES)}")
-        aspect = self._check_shape(obj)
+        aspect = self._check_visual(obj)
         self._check_frame(obj, aspect)
         if not isinstance(obj.text, str) or len(obj.text) > MAX_OBJECT_TEXT:
             raise ValueError(f"the text must be text of at most {MAX_OBJECT_TEXT} characters")
 
-    def _check_shape(self, obj: SlideObject) -> float | None:
+    def _check_visual(self, obj: SlideObject) -> float | None:
+        """What ``obj.kind`` requires of ``shape``/``image``/``imported``, and the aspect ratio (if any) it keeps."""
         if obj.kind == "text":
-            if obj.shape is not None:
-                raise ValueError("a text box has no shape")
+            if obj.shape is not None or obj.image is not None or obj.imported is not None:
+                raise ValueError("a text box has no shape or image")
             return None
-        if obj.shape is None:
-            raise ValueError("a shape object needs a shape")
-        definition = self.shapes.get(obj.shape)
-        if definition is None:
-            raise ValueError(f"this document does not know the shape {obj.shape!r}")
-        return definition.aspect
+        if obj.kind == "shape":
+            if obj.image is not None or obj.imported is not None:
+                raise ValueError("a shape object has no image")
+            if obj.shape is None:
+                raise ValueError("a shape object needs a shape")
+            definition = self.shapes.get(obj.shape)
+            if definition is None:
+                raise ValueError(f"this document does not know the shape {obj.shape!r}")
+            return definition.aspect
+        # obj.kind == "image"
+        if obj.shape is not None:
+            raise ValueError("an image object has no shape")
+        if obj.image is None or obj.imported is None:
+            raise ValueError("an image object needs an image and its import record")
+        asset = self.images.get(obj.image)
+        if asset is None:
+            raise ValueError(f"this document does not know the image {obj.image!r}")
+        if obj.imported.asset != obj.image:
+            raise ValueError("the import record's asset does not match the object's image")
+        return asset.aspect
 
     @staticmethod
     def _check_frame(obj: SlideObject, aspect: float | None) -> None:

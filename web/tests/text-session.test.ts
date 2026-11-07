@@ -15,6 +15,9 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
+  lines: [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+  proposal: null,
+  returned: null,
 }
 
 class FakeLink implements LinkLike {
@@ -57,6 +60,8 @@ function server(link: FakeLink, text = 'hello world') {
     chat_log: () => [],
     checkpoints: () => [],
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
+    lines: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+    restore_policy: () => ({ policy: 'consensus' }),
     hold: () => ({}),
     look: () => ({}),
     unlock: () => ({}),

@@ -20,9 +20,10 @@ INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
 class Client:
     """A connected person: everything the server sent is in ``frames``."""
 
-    def __init__(self, hosted, account):
+    def __init__(self, hosted, account, *, locale=None):
         self.frames: list[dict] = []
-        self.connection = hosted.connect(account, lambda text: self.frames.append(json.loads(text)))
+        kwargs = {} if locale is None else {"locale": locale}
+        self.connection = hosted.connect(account, lambda text: self.frames.append(json.loads(text)), **kwargs)
         self._next = 0
 
     def request(self, method, params=None):
@@ -139,6 +140,16 @@ def test_the_welcome_describes_the_document_and_the_people_in_it(hosted):
     assert sorted(p["user"] for p in welcome["people"]) == ["ann", "ben"]
     assert [c["label"] for c in welcome["checkpoints"]] == ["start"]
     assert second.connection.id != first.connection.id and first.connection.color != second.connection.color
+
+
+def test_welcome_carries_the_connections_own_locale_and_falls_back_on_a_malformed_one(hosted):
+    """E5.7, D31: the locale travels with the connection, not the document — each window gets its own back."""
+    plain = Client(hosted, Account("ann", "owner"))
+    assert plain.connection.welcome()["locale"] == "en"
+    german = Client(hosted, Account("ben", "editor"), locale="de-DE")
+    assert german.connection.welcome()["locale"] == "de-DE"
+    garbled = Client(hosted, Account("cleo", "viewer"), locale="not a locale!")
+    assert garbled.connection.welcome()["locale"] == "en"
 
 
 def test_internal_errors_do_not_leak_details(hosted, ann):
@@ -364,3 +375,45 @@ def test_the_worker_pool_is_reachable_and_stopped_with_the_hub(make_hub):
         await hub.stop()
 
     asyncio.run(scenario())
+
+
+# ------------------------------------------------------------------------------------------ per-viewer masking (E10.8)
+def test_an_events_to_data_for_is_used_per_connection_when_the_app_offers_it():
+    """``_on_event`` calls an event's own ``to_data_for(viewer)`` when it has one (creates' ``ObjectsChanged``,
+    which masks an imported image's source path), instead of the one shared ``to_data()`` every other event uses."""
+    import base64
+    import struct
+
+    from claudia_creates import SlideModel
+    from claudia_server.creates import creates_methods
+
+    def tiny_gif() -> str:
+        header = b"GIF89a" + struct.pack("<HHBBB", 20, 10, 0, 0, 0)
+        frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 20, 10) + b"\x00" + b"\x02\x01\x00\x00"
+        return base64.b64encode(header + frame + b"\x3b").decode("ascii")
+
+    hub = Hub(MemoryProvider(SlideModel), methods=creates_methods)
+    hosted = asyncio.run(hub.open("talk", create=True))
+    ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
+    ann.forget(), ben.forget()
+
+    ann.request(
+        "add_image",
+        {
+            "slide": "s1",
+            "x": 0,
+            "y": 0,
+            "w": 400,
+            "h": 200,
+            "data": tiny_gif(),
+            "alt": "a chart",
+            "source_name": "chart.gif",
+            "source_path": "/Users/ann/Documents/chart.gif",
+        },
+    )
+
+    (seen_by_ann,) = ann.events("objects")[-1]["changed"]
+    (seen_by_ben,) = ben.events("objects")[-1]["changed"]
+    assert seen_by_ann["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
+    assert seen_by_ben["imported"]["source_path"] is None
+    assert seen_by_ben["imported"]["source"] == "disk" and seen_by_ben["imported"]["imported_by"] == "ann"
