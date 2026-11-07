@@ -3,6 +3,40 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.11.0] - 2026-11-07
+
+Importing a picture from disk and putting it on a slide (E10.8), built on `claudia_core`'s new image decoding and
+`claudia_creates`'s new image object. Clipboard and drag-and-drop import are deliberately not built yet.
+
+### Added
+- **`creates.add_image`**: a write method taking a slide id, a frame (`x y w h`), the file's bytes as base64
+  (`data`), a required short `alt` description, the file name the client has (`source_name`), and its full path if
+  the client could supply one (`source_path`, nullable — a plain web browser cannot, for its own security). Decodes
+  the bytes with `claudia_core.decode_image`, shares the asset across objects that import the same picture exactly
+  (byte-for-byte), and adds the image object in the same step of the history. An image keeps its own proportions,
+  like a circle.
+- **`creates.images`**: the decoded image assets this document has taken in, each as `{id, format, width, height,
+  animated, data, first_frame}`.
+- **The `"image"` parameter kind** (`images.py`, new module): base64 text decoded to raw bytes, capped at
+  `claudia_core.MAX_IMAGE_BYTES`. App-agnostic on purpose — composes and computes register the same kind on their
+  own extended table (`table.kind("image")(image_bytes)`), rather than each app writing its own base64/size check.
+- **Per-connection event masking**: `hub.py`'s `HostedDocument._on_event` now calls an event's own
+  `to_data_for(viewer)` when it has one, instead of the one shared `to_data()` every event used before. This is how
+  `creates.slide`/the `objects` event hide an imported image's `source_path` from everyone but the person who
+  imported it (the path is unmasked in `imported_by`/`source`/`source_name`, matching the decision that an import
+  is attributed, only its local disk path is private). The hook is app-agnostic — `hub.py` imports nothing from
+  `claudia_creates` — so any future app's event can opt in the same way.
+- `creates.add_object` now refuses `kind="image"` with a pointer to `add_image`, instead of failing deeper inside
+  the kernel model with a less specific error.
+- `creates.slide`'s object shape documents the new `image`/`imported` fields and the `source_path` masking rule.
+
+### Notes for implementers
+- Redaction (`AddObject.redacted()`) does not yet touch an image's `alt`/`source_name`/`source_path`; see
+  `claudia_creates`'s 0.2.0 changelog entry. Carried over here unchanged — not addressed by this release.
+- A plain web browser's file input/drag-and-drop APIs cannot supply a full filesystem path (only the file's name),
+  so a web client should send `source_path: null`. A desktop client that reads the real path can send it, and it
+  will be masked correctly for every other viewer.
+
 ## [0.9.0] - 2026-11-06
 
 The worker pool D37 specified and left unbuilt: `Connection.handle` runs synchronously on the event loop, so slow

@@ -113,6 +113,19 @@ change it.
 .. autoclass:: claudia_core.RenameStyle
 .. autoclass:: claudia_core.RemoveStyle
 
+Images
+------
+
+An app's own object (a slide's ``SlideObject``, a sheet's picture, a composes anchor) holds an :class:`ImageAsset`
+and an :class:`ImageImport`; it decides where the picture sits, not this module.
+
+.. autofunction:: claudia_core.decode_image
+.. autoclass:: claudia_core.ImageAsset
+.. autoclass:: claudia_core.ImageImport
+.. autoexception:: claudia_core.ImageError
+.. autodata:: claudia_core.SUPPORTED_IMAGE_FORMATS
+.. autodata:: claudia_core.MAX_IMAGE_BYTES
+
 Errors
 ------
 

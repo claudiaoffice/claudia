@@ -158,16 +158,27 @@ Not there yet: redaction in packed blocks (E2.6: a redacted text still rests in 
 ## Presentations (creates)
 
 A server started with `--model claudia_creates:SlideModel` hosts presentations. Its methods (see `GET /api/protocol`
-for every parameter) are `slides`, `slide`, `shapes`, `styles`, `add_slide`, `add_object`, `move_object`,
-`resize_object`, `set_text` and `remove_object`, plus the core ones. A selection is the region
+for every parameter) are `slides`, `slide`, `shapes`, `images`, `styles`, `add_slide`, `add_object`, `add_image`,
+`move_object`, `resize_object`, `set_text` and `remove_object`, plus the core ones. A selection is the region
 `{"kind": "objects", "slide": "s1", "ids": ["o1"]}` for `presence` and `lock`.
 
 Positions and sizes are whole units of a slide of 1600 by 900. Shapes are JSON files, one per shape (the format is
 described with `claudia_creates.shapes`); `--shapes DIR` adds a folder of them to the built-in rectangle, circle and
 triangle. A document copies the outline of every shape it uses, so it opens the same on a server that does not have
-the file. Each object refers to a named style (`styles`); the first draft has two.
+the file. Each object refers to a named style (`styles`); the first draft has three, one of them (`plain-image`) for
+pictures.
+
+A picture is put on a slide with `add_image` (E10.8), not `add_object`: `data` is the file's bytes, base64, decoded
+and validated server-side (at most 8 MB); `alt` is a required short description; `source_name` is the file's name
+and `source_path` its full path, if the client could supply one — a plain web browser cannot, for its own security,
+and sends `null`. The decoded picture is shared across every object that imports the same bytes, exactly like a
+shape's outline, and listed by `images`. Clipboard and drag-and-drop import are not built yet; `add_image` only
+takes a file chosen from disk. Everyone sees who imported a picture and when (`imported_by`, `imported_at`,
+`source`, `source_name`), but `source_path` is sent only to the person who imported it — everyone else sees `null`
+there, because a local disk path can expose more about someone's machine than the room should see.
 
 The state events of a presentation arrive just before the `command` event of the change, like the cells of a table:
 `objects` `{slide, changed: [object], removed: [id], order: [id]}` (`order` is the stacking order of the slide after the
-change, the object in front last), `shape` `{id, definition | null}` (the document took in or let go of an outline) and
-`slides` `{}` (a slide was added or removed: read `slides` again).
+change, the object in front last; `changed` is masked per connection as `slide` is, for the same reason), `shape`
+`{id, definition | null}` (the document took in or let go of an outline) and `slides` `{}` (a slide was added or
+removed: read `slides` again).

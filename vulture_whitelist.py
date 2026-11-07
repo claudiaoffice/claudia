@@ -74,6 +74,8 @@ used._move_object  # creates_methods_with(...).method("move_object")
 used._resize_object  # creates_methods_with(...).method("resize_object")
 used._set_text  # creates_methods_with(...).method("set_text")
 used._remove_object  # creates_methods_with(...).method("remove_object")
+used._images  # creates_methods_with(...).method("images")
+used._object_gets_image_fields  # registered as an upcaster by a decorator (claudia_creates AddObject schema 1 -> 2)
 
 # claudia-fonts: set on a fontTools table in claudia_fonts.testing, which tests use
 used.macStyle  # head.macStyle is read by fontTools when the font is saved

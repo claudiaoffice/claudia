@@ -22,7 +22,38 @@ const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M50 0 A50 50 0 
 const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', css: { color: '#1f1a33' } }
 const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', css: { fill: '#e7e1f4' } }
 
-const text = (id: string, extra: object = {}) => ({ id, slide: 's1', kind: 'text', x: 100, y: 100, w: 400, h: 120, style: 'body-text', text: '', shape: null, ...extra })
+const text = (id: string, extra: object = {}) => ({
+  id,
+  slide: 's1',
+  kind: 'text',
+  x: 100,
+  y: 100,
+  w: 400,
+  h: 120,
+  style: 'body-text',
+  text: '',
+  shape: null,
+  image: null,
+  imported: null,
+  ...extra,
+})
+const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
+const IMPORT = { asset: ASSET.id, alt: 'a chart', imported_by: 'ann', imported_at: '2026-11-07T10:00:00.000Z', source: 'disk', source_name: 'chart.gif', source_path: '/Users/ann/chart.gif' }
+const image = (id: string, extra: object = {}) => ({
+  id,
+  slide: 's1',
+  kind: 'image',
+  x: 0,
+  y: 0,
+  w: 400,
+  h: 200,
+  style: 'plain-image',
+  text: '',
+  shape: null,
+  image: ASSET.id,
+  imported: IMPORT,
+  ...extra,
+})
 
 class FakeLink implements LinkLike {
   calls: { method: string; params: any }[] = []
@@ -62,12 +93,14 @@ function server(link: FakeLink, objects: any[] = []) {
     slides: () => [{ id: 's1', objects: objects.length }],
     slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? objects : [] }),
     shapes: () => ({ library: [CIRCLE, RECT], document: [] }),
+    images: () => [],
     styles: () => [BODY, SHAPE_STYLE],
     log: () => [],
     chat_log: () => [],
     checkpoints: () => [],
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
     add_object: () => ({ object: 'o1', revision: 'main:1' }),
+    add_image: () => ({ object: 'o1', revision: 'main:1' }),
     move_object: () => ({ revision: 'main:2' }),
     resize_object: () => ({ revision: 'main:2' }),
     set_text: () => ({ revision: 'main:2' }),
@@ -107,6 +140,17 @@ describe('opening a presentation', () => {
     expect(session.state.shapes.rectangle!.path).toContain('L100 100')
     expect(session.state.shapes.circle).toBeUndefined()
   })
+  it('knows the decoded pictures the document has taken in, by id (E10.8)', async () => {
+    const link = new FakeLink()
+    server(link, [image('i1')])
+    link.handlers.images = () => [ASSET]
+    const session = new SlideSession(() => link)
+    await session.open()
+    expect(session.state.images[ASSET.id]).toEqual(ASSET)
+    const o = session.objectsOn('s1')[0]!
+    expect(o.image).toBe(ASSET.id)
+    expect(o.imported).toEqual(IMPORT)
+  })
 })
 
 describe('what the server tells', () => {
@@ -131,6 +175,13 @@ describe('what the server tells', () => {
     expect(state.shapes.circle!.aspect).toBe(1)
     link.push('shape', { type: 'shape', id: 'circle', definition: null })
     expect(state.shapes.circle).toBeUndefined()
+  })
+  it('learns and forgets decoded pictures (E10.8)', async () => {
+    const { link, state } = await opened()
+    link.push('image', { type: 'image', id: ASSET.id, asset: ASSET })
+    expect(state.images[ASSET.id]!.width).toBe(20)
+    link.push('image', { type: 'image', id: ASSET.id, asset: null })
+    expect(state.images[ASSET.id]).toBeUndefined()
   })
   it('reloads when the slides change', async () => {
     const { link, session, state } = await opened()
@@ -172,6 +223,41 @@ describe('making changes', () => {
     const { link, session } = await opened()
     await session.addShape('circle', { x: 10, y: 10, w: 240, h: 240 })
     expect(link.last('add_object')).toMatchObject({ kind: 'shape', shape: 'circle', w: 240, h: 240 })
+  })
+  it('imports a picture from disk and selects it (E10.8)', async () => {
+    const { link, session, state } = await opened()
+    link.handlers.add_image = () => {
+      link.push('objects', { type: 'objects', slide: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
+      return { object: 'i1', revision: 'main:1' }
+    }
+    const id = await session.addImage(
+      { data: 'AA==', alt: 'a chart', sourceName: 'chart.gif', sourcePath: null },
+      { x: 0, y: 0, w: 400, h: 200 },
+    )
+    expect(id).toBe('i1')
+    expect(link.last('add_image')).toEqual({
+      slide: 's1',
+      data: 'AA==',
+      alt: 'a chart',
+      source_name: 'chart.gif',
+      source_path: null,
+      x: 0,
+      y: 0,
+      w: 400,
+      h: 200,
+      base: 'main:0',
+    })
+    expect(state.selected).toBe('i1')
+  })
+  it('does not select anything when importing a picture failed, and says why', async () => {
+    const { link, session, state } = await opened()
+    link.handlers.add_image = () => {
+      throw new ProtocolError('command_error', 'not a supported image')
+    }
+    const id = await session.addImage({ data: 'not base64', alt: 'x', sourceName: 'x.bin', sourcePath: null }, { x: 0, y: 0, w: 10, h: 10 })
+    expect(id).toBeNull()
+    expect(state.selected).toBeNull()
+    expect(state.notice?.text).toContain('not a supported image')
   })
   it('does not select anything when adding failed, and says why', async () => {
     const { link, session, state } = await opened()

@@ -44,6 +44,8 @@ class FakeLink implements LinkLike {
         return { revision: null, slide: params.slide, objects: [] }
       case 'shapes':
         return { library: [], document: [] }
+      case 'images':
+        return []
       case 'styles':
       case 'log':
       case 'chat_log':

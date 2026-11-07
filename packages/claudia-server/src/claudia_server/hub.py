@@ -325,9 +325,14 @@ class HostedDocument:
         data = event.to_data()  # type: ignore[attr-defined]
         if isinstance(event, EphemeralPublished) and event.message.kind == "presence":
             (self._locked.add if event.message.data.get("locked") else self._locked.discard)(event.message.sender or "")
-        frame = {"event": data.get("type", "state"), "data": data}
+        event_type = data.get("type", "state")
+        # An event may offer `to_data_for(viewer)` to mask part of its payload per connection (e.g. an imported
+        # image's source path, hidden from everyone but the person who imported it). Duck-typed, not imported by
+        # name, so this stays app-agnostic: no app's event types are known here.
+        to_data_for = getattr(event, "to_data_for", None)
         for connection in self._audience(event):
-            connection.deliver(frame)
+            payload = data if to_data_for is None else to_data_for(connection.account.user)
+            connection.deliver({"event": event_type, "data": payload})
 
     def sweep(self) -> None:
         """Tell the others about locks that ran out (the kernel turns them into plain presence on its own)."""
