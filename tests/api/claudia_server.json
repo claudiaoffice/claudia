@@ -113,7 +113,7 @@
   "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'sealed': 'the document is stored but nobody who holds all its keys has opened it since the server started; a viewer has to wait (and may try again) until an owner or editor has', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
  },
  "EVENTS": {
-  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions was removed: {revisions}', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection'}"
+  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions was removed: {revisions}', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection', 'restore_proposed': 'a suggestion to restore a checkpoint or switch the line is open, or its answers changed (see `propose_restore`): the proposal, as `answer_restore` returns it', 'restore_resolved': 'the open suggestion closed: {outcome: agreed|declined|withdrawn}. `agreed` is followed by `branch` and `rebuilt`, same as any restore or switch'}"
  },
  "Engine": {
   "class": [
@@ -172,6 +172,7 @@
   "methods": {
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
    "connect": "(self, account: 'Account', send: 'Callable[[str], None]') -> 'Connection'",
+   "editors": "(self) -> 'list[str]'",
    "humans": "(self) -> 'list[Connection]'",
    "new_connection_id": "(self) -> 'int'",
    "pick_color": "(self) -> 'str'",
@@ -273,6 +274,16 @@
  "PROTOCOL_VERSION": {
   "value": "1"
  },
+ "Proposal": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'int', kind: 'str', by: 'str', checkpoint: 'int | None', line: 'str | None', label: 'str', opened_at: 'float', expires_at: 'float', policy: 'str', group: 'set[str]', agreed: 'set[str]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "RequestError": {
   "class": [
    "Exception"
@@ -281,6 +292,43 @@
   "methods": {
    "to_dict": "(self) -> 'dict'"
   },
+  "properties": []
+ },
+ "Resolution": {
+  "class": [
+   "object"
+  ],
+  "init": "(by: 'str', kind: 'str', label: 'str', agreed: 'list[str]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "RestoreCoordinator": {
+  "class": [
+   "object"
+  ],
+  "init": "(apply: 'Callable[[dict], None]', *, clock: 'Callable[[], float]', timeout: 'float' = 900.0)",
+  "methods": {
+   "answer": "(self, *, user: 'str', agree: 'bool') -> 'str | None'",
+   "joined": "(self, user: 'str', can_write: 'bool') -> 'None'",
+   "left": "(self, user: 'str', current_line: 'str') -> 'str | None'",
+   "notice_for": "(self, user: 'str', current_line: 'str') -> 'dict | None'",
+   "propose": "(self, *, kind: 'str', by: 'str', checkpoint: 'int | None', line: 'str | None', label: 'str', group: 'Iterable[str]') -> 'tuple[Proposal | None, bool]'",
+   "record_resolution": "(self, old_line: 'str', resolution: 'Resolution') -> 'None'",
+   "sweep": "(self) -> 'str | None'",
+   "withdraw": "(self, *, user: 'str', is_owner: 'bool') -> 'None'"
+  },
+  "properties": [
+   "open_proposal"
+  ]
+ },
+ "RestoreError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
   "properties": []
  },
  "Say": {

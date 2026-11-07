@@ -39,6 +39,13 @@ without re-deciding what a decoded image or an import record looks like.
   container format), not something this change solves.
 - `ImageImport`'s redaction story is intentionally not addressed here: it is covered by the project's open decision
   on redaction in general, not decided as a side effect of adding images.
+Go back to a checkpoint, with everybody's consent (E3.7): the live session needs a read-only preview of a line
+before anybody is asked to switch to it.
+
+### Added
+- `Document.peek_line(line)`: the state of any line (active or hidden), rebuilt on a scratch model, without
+  switching to it and without touching the live model, undo steps or checkpoints. `KernelError` for a name that is
+  not a line of this document.
 
 ## [0.5.0] - 2026-11-03
 

@@ -419,6 +419,16 @@ class Document:
             for name, branch in self.log.branches.items()
         ]
 
+    def peek_line(self, line: str) -> DocumentModel:
+        """A read-only look at ``line`` without switching to it (E3.8): the state at its head, on a scratch model.
+
+        Like ``materialize`` the live model, the active line and everybody's undo steps are untouched; this is how a
+        person previews a hidden line (or the active one) before asking to make it current. ``KernelError`` for a
+        name that is not a line of this document."""
+        if line not in self.log.branches:
+            raise KernelError(f"there is no line called {line!r}")
+        return self.materialize(self.log.head(line))
+
     def switch_to(self, line: str, author: str | None = None) -> Applied | None:
         """Make an existing line the one the document continues on (the way back after a restore).
 

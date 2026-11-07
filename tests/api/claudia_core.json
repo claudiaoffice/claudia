@@ -262,6 +262,7 @@
    "materialize": "(self, rev: 'Revision | None') -> 'DocumentModel'",
    "on_purge": "(self, hook: 'Callable[[tuple[Revision, ...]], None]') -> 'None'",
    "open": "(model_cls: 'type[DocumentModel]', log: 'CommandLog', *, snapshot: 'Snapshot | None' = None, branch: 'str | None' = None, **options) -> 'Document'",
+   "peek_line": "(self, line: 'str') -> 'DocumentModel'",
    "post_chat": "(self, author: 'str', raw: 'str', *, users: 'Iterable[str]' = ()) -> 'ChatRecord'",
    "publish": "(self, kind: 'str', sender: 'str | None', data: 'dict | None' = None) -> 'Ephemeral'",
    "redact": "(self, revisions: 'Iterable[Revision]', *, author: 'str | None' = None) -> 'Applied'",

@@ -2,7 +2,7 @@
 // checkpoints, undo/redo. The replica of the document itself belongs to the app (Session: cells, TextSession: text).
 // All changes go to the server as requests; nothing is believed until the server's events say it happened.
 import { reactive } from 'vue'
-import { closeMessage, ProtocolError, type LinkLike, type Region, type Welcome } from './protocol'
+import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome } from './protocol'
 
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
@@ -61,6 +61,12 @@ export interface BaseState {
   undoLabel: string
   redoLabel: string
   notice: Notice | null
+  /** Every line of the document's history: the active one, and the side lines a restore left behind (E3.8). */
+  lines: LineInfo[]
+  /** A restore/switch suggestion waiting for everybody's answer, if one is open right now (E3.7). */
+  proposal: RestoreProposal | null
+  /** How silence at a suggestion's deadline is read: `consensus` (must actively agree) or `veto` (must object). */
+  restorePolicy: 'consensus' | 'veto'
 }
 
 export interface SessionOptions {
@@ -89,6 +95,9 @@ function initialState(): BaseState {
     undoLabel: '',
     redoLabel: '',
     notice: null,
+    lines: [],
+    proposal: null,
+    restorePolicy: 'consensus',
   }
 }
 
@@ -164,7 +173,22 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.presence = {}
     for (const p of w.presence) s.presence[p.user] = { regions: this.adoptRegions(p.regions), locked: p.locked }
     s.typing = []
+    s.proposal = w.proposal
+    if (w.returned) this.notice(this.returnedText(w.returned))
     this.onWelcome()
+  }
+
+  /** The one-time notice of what happened, while this person was away, to the line they were on (E3.7). */
+  private returnedText(r: RestoreResolution): string {
+    const verb = r.kind === 'restore' ? 'restored' : 'switched'
+    return `While you were away, ${r.by} ${verb} to ${r.label} (agreed: ${r.agreed.join(', ')}).`
+  }
+
+  /** What became of the suggestion that was open, for the notice everybody sees once it resolves (E3.7). */
+  private resolvedText(p: RestoreProposal, outcome: string): string {
+    if (outcome === 'agreed') return `Everybody agreed: now at ${p.label}.`
+    if (outcome === 'declined') return `The suggestion to go to ${p.label} was declined.`
+    return `The suggestion to go to ${p.label} was withdrawn.`
   }
 
   /** Where the app counts differently from the server it converts the regions people send (default: as they are). */
@@ -219,13 +243,15 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   protected async reload() {
     const link = this.need()
     const s = this.state
-    const [entries, chat, checkpoints, history] = await Promise.all([
+    const [entries, chat, checkpoints, history, lines, restorePolicy] = await Promise.all([
       link.request<Entry[]>('log', { limit: LOG_LIMIT }),
       link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }),
       link.request<CheckpointInfo[]>('checkpoints'),
       link.request<{ can_undo: boolean; can_redo: boolean; undo_label: string; redo_label: string }>('history'),
+      link.request<LineInfo[]>('lines'),
+      link.request<{ policy: 'consensus' | 'veto' }>('restore_policy'),
       this.loadApp(),
-    ]).then(([e, c, k, h]) => [e, c, k, h] as const)
+    ]).then(([e, c, k, h, l, p]) => [e, c, k, h, l, p] as const)
     s.entries = entries
     s.chat = chat
     s.checkpoints = checkpoints
@@ -233,6 +259,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.canRedo = history.can_redo
     s.undoLabel = history.undo_label
     s.redoLabel = history.redo_label
+    s.lines = lines
+    s.restorePolicy = restorePolicy.policy
     const last = entries.at(-1)
     if (last) s.revision = last.revision
   }
@@ -270,6 +298,15 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       case 'ephemeral':
         this.onEphemeral(data)
         break
+      case 'restore_proposed':
+        s.proposal = data
+        break
+      case 'restore_resolved': {
+        const open = s.proposal
+        s.proposal = null
+        if (open) this.notice(this.resolvedText(open, data.outcome), data.outcome === 'declined' ? 'warning' : 'info')
+        break
+      }
       case 'branch':
       case 'rebuilt':
       case 'redacted':
@@ -405,6 +442,50 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
   async exportContent(): Promise<Record<string, unknown> | false> {
     return await this.attempt('export_content')
+  }
+
+  // ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)
+  /** A read-only look at any line (active or hidden), without switching to it: for previewing before suggesting. */
+  async peekLine(line: string): Promise<{ line: string; revision: string | null; app: string; state_schema: string; state: unknown } | false> {
+    return await this.attempt('peek_line', { line })
+  }
+
+  /**
+   * Suggest going back to a checkpoint. Carried out at once if you are the only owner or editor connected right
+   * now; otherwise everybody in that group must agree (`state.proposal`, `answerRestore`) — unless somebody
+   * declines, which ends it right away.
+   */
+  async proposeRestore(checkpoint: number): Promise<boolean> {
+    return (await this.attempt('propose_restore', { checkpoint })) !== false
+  }
+
+  /** Suggest making another line active again (the way back after a restore). Same consent as `proposeRestore`. */
+  async proposeSwitch(line: string): Promise<boolean> {
+    return (await this.attempt('propose_switch', { line })) !== false
+  }
+
+  /** Agree or decline the open suggestion (`state.proposal`). */
+  async answerRestore(agree: boolean): Promise<boolean> {
+    return (await this.attempt('answer_restore', { agree })) !== false
+  }
+
+  /** Take back the open suggestion: only the person who made it, or an owner. */
+  async withdrawRestore(): Promise<boolean> {
+    return (await this.attempt('withdraw_restore')) !== false
+  }
+
+  /** Owners only: permanently forget every hidden line (everything a restore ever left behind). */
+  async discardSideHistory(): Promise<boolean> {
+    const done = await this.attempt('discard_side_history')
+    if (done !== false) this.track(this.reload())
+    return done !== false
+  }
+
+  /** Owners only: choose how silence at a suggestion's deadline is read (`state.restorePolicy`). */
+  async setRestorePolicy(policy: 'consensus' | 'veto'): Promise<boolean> {
+    const done = await this.attempt('set_restore_policy', { policy })
+    if (done !== false) this.state.restorePolicy = done.policy
+    return done !== false
   }
 
   /**
