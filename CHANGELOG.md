@@ -4,6 +4,16 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.6.0] - 2026-11-07
+
+Go back to a checkpoint, with everybody's consent (E3.7): the live session needs a read-only preview of a line
+before anybody is asked to switch to it.
+
+### Added
+- `Document.peek_line(line)`: the state of any line (active or hidden), rebuilt on a scratch model, without
+  switching to it and without touching the live model, undo steps or checkpoints. `KernelError` for a name that is
+  not a line of this document.
+
 ## [0.5.0] - 2026-11-03
 
 Styles in the kernel (E1.10, D73, D75): one CSS allow-list and one style model for all three apps.
