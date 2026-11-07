@@ -6,6 +6,7 @@ and the failing test says which protection is missing.
 
 import asyncio
 import functools
+import re
 import sys
 import time
 
@@ -85,7 +86,13 @@ async def test_a_swarm_of_processes_is_refused(tmp_path):
         "print('started', started)\n"
     )
     done = await run_sandboxed(python(code), cwd=tmp_path, env={}, limits=Limits(seconds=30))
-    started = int(done.output.split("started")[-1])
+    # Every spawn beyond the limit shares the sandboxed process's own stdout handle, so a process-creation failure
+    # on an overloaded runner can print its own "not enough quota" message there too (before `except OSError`
+    # ever sees it) -- noise from a system under the same pressure we are deliberately causing, not part of what
+    # our script printed. Pick the one number that script actually wrote, instead of assuming nothing else did.
+    match = re.search(r"started (\d+)", done.output)
+    assert match, f"no 'started <n>' in the output: {done.output!r}"
+    started = int(match.group(1))
     assert started < 40
 
 

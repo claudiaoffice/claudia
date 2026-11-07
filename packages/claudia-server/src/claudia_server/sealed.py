@@ -484,6 +484,13 @@ class SealedDocuments:
             held.store.writer = pack_journal(self._file(doc_id), held.keys, held.store.writer, data)
         except Exception:
             log.exception("cannot pack %s; its changes are safe in the journal", doc_id)
+            # `pack_journal` closes the old writer before it tries to put the new journal in its place (closed,
+            # because Windows refuses to replace a file that is still open); if that replace is what failed,
+            # `held.store.writer` is left pointing at a now-closed file. `begin` reopens whichever journal is
+            # actually on disk (the old one if the replace never happened, the new one if it did), so writing can
+            # carry on either way -- matching "loses nothing" above for the writer itself, not just the records.
+            with contextlib.suppress(Exception):
+                held.store.writer = begin(self._file(doc_id), held.keys)
         finally:
             held.store.unpacked = 0
 

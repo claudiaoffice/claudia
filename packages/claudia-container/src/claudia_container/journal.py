@@ -20,6 +20,8 @@ who cuts records off the end of the file; that needs the head record of the pack
 import contextlib
 import os
 import struct
+import sys
+import time
 import zlib
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -132,6 +134,33 @@ def _fsync_directory(directory: Path) -> None:
             os.close(fd)
 
 
+_REPLACE_RETRIES = 5
+_REPLACE_DELAY = 0.05  # seconds, doubled each retry
+
+
+def _replace(temp: Path, path: Path) -> None:
+    """``os.replace(temp, path)``, retried briefly on Windows.
+
+    Windows refuses to replace a file that still has an open handle anywhere, including a transient one held
+    for a moment by real-time antivirus scanning or file-system indexing right after the file is written --
+    something POSIX simply does not have. A handle of our own must still be closed before calling this (that
+    failure is deterministic and retrying it would only waste time); this is for the transient kind.
+    """
+    if sys.platform != "win32":
+        os.replace(temp, path)
+        return
+    delay = _REPLACE_DELAY
+    for attempt in range(_REPLACE_RETRIES):
+        try:
+            os.replace(temp, path)
+            return
+        except PermissionError:
+            if attempt == _REPLACE_RETRIES - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2
+
+
 class JournalWriter:
     """Appends sealed records to a journal. One writer per open document."""
 
@@ -172,7 +201,7 @@ class JournalWriter:
                 handle.write(_header(doc_id, generation))
                 handle.flush()
                 os.fsync(handle.fileno())
-            os.replace(temp, path)
+            _replace(temp, path)
             _fsync_directory(path.parent)
         except BaseException:
             with contextlib.suppress(OSError):
