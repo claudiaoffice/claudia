@@ -143,31 +143,62 @@ binary automatically the first time `apps/<app>/bin/neutralino-mac_*` doesn't ex
 cleanly with the right message, and the binary-presence check (missing / already present / `CLAUDIA_NEUTRALINO_BIN`
 override) was exercised in isolation for all three branches.
 
+## Second run (owner, 2026-11-07): D159 confirmed, three more bugs
+
+`start-mac-client.sh` got her past start-up this time. **D159's core mechanic is confirmed**: `window.Neutralino`
+exists on the loopback page, the native menu rendered, and the dock showed creates' own icon — "it looks gorgeous,"
+her words. The spike's largest open question is closed; see the "Not verified" list below, now one item shorter.
+
+Three further bugs, all real, all now fixed:
+
+1. **The application-menu heading (next to the Apple logo) read `neutralino-mac_arm64`.** macOS reads a running
+   process's own name for that heading — also the Cmd+Tab switcher and Activity Monitor — from the process itself
+   (`argv[0]`'s basename via `ProcessInfo.processName`/`getprogname()` on Darwin), not from anything `menu.ts`
+   builds; nothing had ever set it. New `launch.ts` function `macProcessName()` returns `claudia <app>`, passed as
+   `argv0` to the `child_process.spawn()` call that starts the binary.
+2. **The window title bar read "Claudia Creates"; she wants "claudia creates" (lower case) for this native
+   window specifically.** Asked first, since a guess wrong here meant either redoing a narrow fix or undoing a
+   much bigger one: just this native macOS chrome, or the shared display name everywhere (Linux, the browser tab,
+   the About dialog, the docs)? She chose the narrow scope. Fixed by changing the literal string in
+   `apps/creates/neutralino.config.json`'s `modes.window.title` — confirmed, against Neutralino's own `window`
+   docs, to be a static per-app value with no automatic sync to the page's `document.title`, so nothing else needed
+   to change. `identity.ts`'s `title` ("Claudia Creates") stays untouched, matching the scope she chose.
+3. **Insert Image's "Choose a file…" did nothing — no file picker ever appeared.** WKWebView (the engine
+   Neutralino's macOS binary embeds) shows no native Open panel for `<input type="file">` unless the host app
+   implements a WKUIDelegate method for it, which this generic, unmodified binary does not
+   ([WebKit Bugzilla #139745](https://bugs.webkit.org/show_bug.cgi?id=139745)) — a WKWebView-specific gap
+   WebKitGTK (the Linux client's view) does not share, which is why this was never seen there.
+   `web/app/components/ImageImportDialog.vue`'s own top comment had already anticipated exactly this ("a desktop
+   client that can read the real path would pass it instead") but nothing had built that desktop client yet. New
+   `file-dialog.ts`: a capture-phase click listener on every `<input type="file">` swaps the broken native picker
+   for `Neutralino.os.showOpenDialog()` + `filesystem.readBinaryFile()`, handing the chosen file back to the input
+   as an ordinary `File` via `DataTransfer` — `onFileChange` runs completely unchanged, the same
+   zero-change-to-the-web-app discipline `page-bridge.ts`'s menu adapter already follows. `nativeAllowList` gained
+   the two exact method names it needed (D157); `filesystemScopes` stays empty on purpose, since the open dialog
+   itself — not a scope list — is what limits which paths this client ever touches.
+
+All three have their own tests (`launch.test.ts`'s new `macProcessName` group; `file-dialog.test.ts`, new, for the
+pure extension-filter/MIME-guess/basename helpers) — 73 vitest tests now. `installFileDialogBridge()` itself joins
+`installBridge()` as the untested live-wiring half, same reasoning, same place in the README's "Tests" section.
+
 ## Not verified (needs a real Mac)
 
 This is the same gap the spike itself named as "the largest gap" and is restated here, now that it has an actual
 implementation sitting on top of it rather than just a design question:
 
-1. **Whether `window.Neutralino` exists at all once the window shows the loopback page.** `injectGlobals`,
-   `injectClientLibrary` and `injectScript` are confirmed, against Neutralino's own documentation, to be real
-   `modes.window` config fields (and `--window-inject-*` CLI flags) that exist for exactly this purpose — but
-   whether they actually apply to a page the binary did not itself serve is undocumented and untested, on this spike
-   and on this client alike. If they do not, D159 needs its other option: Neutralino serving its own bundle with a
-   cross-origin WebSocket to the document server, `--allow-origin` and a fixed port.
-2. **The Cocoa-selector-plus-page-dispatch interaction on creates' actual slide editor**, not just the spike's
+1. **The Cocoa-selector-plus-page-dispatch interaction on creates' actual slide editor**, not just the spike's
    generic text field — `lib/clipboard.ts`'s own custom clipboard handling for slides is untested against a native
    Cmd+C/Cmd+V.
-3. **No Redo shortcut.** `ROLE_SHORTCUT` in `menu.ts` has no `redo:` entry; nothing in Neutralino's docs or the
+2. **No Redo shortcut.** `ROLE_SHORTCUT` in `menu.ts` has no `redo:` entry; nothing in Neutralino's docs or the
    spike confirmed a `shortcut` grammar for Cmd+Shift+Z. The menu item still works by clicking it.
-4. **What happens to the server if the Neutralino window is killed outright.** Untested on the spike, and still
+3. **What happens to the server if the Neutralino window is killed outright.** Untested on the spike, and still
    untested here — see compatibility note 1.
-5. **A second machine, an older macOS, a screen reader.** Only whatever one Mac the spike ran on.
+4. **A second machine, an older macOS, a screen reader.** Only whatever one Mac the spike ran on.
 
 ## Open points for the owner
 
-- **D159 needs the real test it was always going to need**: run this on a Mac and see whether `window.Neutralino`
-  exists in the page once the window shows the loopback URL. Everything else in this slice is downstream of that
-  answer.
+- ~~D159 needs the real test it was always going to need~~ **Done, 2026-11-07**: `window.Neutralino` exists in the
+  page once the window shows the loopback URL. See "Second run" above.
 - **Printing** (D158 point 2) is still not wired as a contract message — `Neutralino.window.print()` is typed in
   `NeutralinoLike` but nothing calls it yet.
 - **Packaging** (a real `.app`, `.icns` from the existing PNGs, codesigning, notarization, a DMG) is entirely open;

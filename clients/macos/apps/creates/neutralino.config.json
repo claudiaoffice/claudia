@@ -9,10 +9,10 @@
   "enableNativeAPI": true,
   "tokenSecurity": "one-time",
   "logging": { "enabled": true, "writeToLogFile": true },
-  "nativeAllowList": ["app.exit", "window.setMainMenu", "window.print", "events.on"],
+  "nativeAllowList": ["app.exit", "window.setMainMenu", "window.print", "events.on", "os.showOpenDialog", "filesystem.readBinaryFile"],
   "modes": {
     "window": {
-      "title": "Claudia Creates",
+      "title": "claudia creates",
       "width": 1280,
       "height": 860,
       "minWidth": 700,

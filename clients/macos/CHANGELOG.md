@@ -67,6 +67,36 @@ cross-origin WebSocket to the server).
 - `server.start()`'s `ServerStartError` was uncaught in `launch.ts`'s `main()` (a raw Node stack trace on the
   console); it is now caught and printed like every other `SetupProblem`.
 
+### Fixed (found on the owner's second run, after start-up finally succeeded)
+
+D159's core mechanic is confirmed working on her Mac: the native menu rendered, the dock showed this app's own
+icon. Three further bugs surfaced once the window was actually up:
+
+- **The application-menu heading (next to the Apple logo) read the literal binary filename,
+  `neutralino-mac_arm64`.** macOS reads a running process's name for that heading (also the Cmd+Tab switcher and
+  Activity Monitor) from the process itself, not from any NSMenu item `menu.ts` builds — nothing had ever set it, so
+  it fell back to `argv[0]`'s basename, the downloaded binary's own name. `launch.ts`'s new `macProcessName()`
+  returns `claudia <app>` (lower case — the owner's own correction, scoped to this one macOS-process-identity
+  string only; `identity.ts`'s `title` stays Title Case everywhere it's shared with Linux and the web app), passed
+  as `argv0` to the `child_process.spawn()` call that starts the binary.
+- **The window title bar read "Claudia Creates" (capitalized); the owner wants "claudia creates" (lower case) for
+  this native window.** `apps/creates/neutralino.config.json`'s `modes.window.title` is a separate, static,
+  per-app string (confirmed against Neutralino's own `window` docs: nothing syncs it to the page's `document.title`
+  automatically) — just needed the literal string changed, lower case, same scoping as above.
+- **Insert Image's "Choose a file…" did nothing: no file picker ever appeared.** WKWebView shows no native Open
+  panel for `<input type="file">` unless the host app implements the delegate method for it, which Neutralino's
+  generic macOS binary does not (confirmed against
+  [WebKit Bugzilla #139745](https://bugs.webkit.org/show_bug.cgi?id=139745) — a WKWebView-specific gap WebKitGTK,
+  which the Linux client's view uses, does not share, which is why this was never seen there).
+  `web/app/components/ImageImportDialog.vue`'s own top comment had already anticipated this ("a desktop client that
+  can read the real path would pass it instead") but nothing had built that desktop client yet. New
+  `file-dialog.ts`: a capture-phase click listener on every `<input type="file">` that swaps the broken native
+  picker for `Neutralino.os.showOpenDialog()` + `filesystem.readBinaryFile()`, handing the result back to the input
+  as an ordinary `File` via `DataTransfer` so `onFileChange` runs unchanged. `nativeAllowList` gained
+  `os.showOpenDialog` and `filesystem.readBinaryFile` (D157: exact method names, nothing wider); `filesystemScopes`
+  stays empty on purpose — the open dialog itself is the gate on which paths this client ever touches.
+- 73 vitest tests now (16 new: `macProcessName`, `file-dialog.ts`'s pure helpers).
+
 ### Added (after the owner's first run)
 - `start-mac-client.sh` at the repository root -- the macOS counterpart of `start-client.sh`. Runs `uv sync`,
   rebuilds the web frontend and the macOS client on every run (skippable with `CLAUDIA_SKIP_WEB_BUILD=1` /

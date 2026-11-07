@@ -14,7 +14,7 @@ import { mkdir } from 'node:fs/promises'
 import { spawn as nodeSpawn } from 'node:child_process'
 import { join } from 'node:path'
 import { arch as hostArch, env as processEnv } from 'node:process'
-import { getIdentity, UnknownAppError, type App } from './identity.js'
+import { getIdentity, UnknownAppError, type App, type AppIdentity } from './identity.js'
 import { defaultRepo, documentsDir, findFrontend, findServerPython, stateDir, type Env } from './paths.js'
 import { LOOPBACK, LocalServer, ServerStartError, buildServerCommand, freePort } from './server.js'
 
@@ -98,6 +98,21 @@ export interface ShellCommandOptions {
   appDir: string
 }
 
+/** macOS reads the *running process's* own name -- not menu.ts's own NSMenu items -- for the bold heading next to
+ * the Apple logo in the menu bar, the Cmd+Tab switcher, and Activity Monitor. The owner's first real run showed
+ * exactly that: before this, nothing set a process name, so all three showed the literal downloaded binary
+ * filename, 'neutralino-mac_arm64'. `main()` passes this as the spawned binary's `argv0` (Node's
+ * `child_process.spawn` option, not a shell string -- no quoting concerns even with the space), which is what
+ * `ProcessInfo.processName`/`getprogname()` on Darwin actually report.
+ *
+ * Scoped to this one macOS-process-identity string on the owner's own instruction (2026-11-07): `identity.title`
+ * ('Claudia Creates') stays Title Case everywhere it is shared with Linux and the web app (the window title bar
+ * included no more than that is -- see apps/<app>/neutralino.config.json's own `modes.window.title`, a separate,
+ * per-app string, not derived from this). */
+export function macProcessName(identity: AppIdentity): string {
+  return `claudia ${identity.name}`
+}
+
 /** The Neutralino binary's own command line for D159 option 2: load the document server's loopback page instead
  * of anything Neutralino ships, while `--path` keeps this app's own config (and the injection settings inside it)
  * in effect. `--enable-server=true` is Neutralino's own documented requirement for loading a remote/external URL
@@ -162,7 +177,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   }
   const [shellBinary, ...shellArgs] = buildShellCommand(binary, { url, appDir })
   if (!shellBinary) throw new Error('empty shell command') // unreachable: buildShellCommand always returns at least the binary
-  const shell = nodeSpawn(shellBinary, shellArgs, { stdio: 'inherit' })
+  const shell = nodeSpawn(shellBinary, shellArgs, { stdio: 'inherit', argv0: macProcessName(identity) })
 
   const exitCode = await new Promise<number>((resolve) => {
     shell.once('exit', (code) => resolve(code ?? 0))

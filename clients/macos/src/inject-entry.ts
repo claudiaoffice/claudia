@@ -9,6 +9,7 @@
 // (D113's "an app is an entry point... under clients/<os>/apps/<app>/").
 
 import { installBridge, type NeutralinoLike, type WindowLike } from './page-bridge.js'
+import { installFileDialogBridge, type FileDialogNeutralino } from './file-dialog.js'
 import type { ManifestListing } from './menu.js'
 
 declare const __CLAUDIA_APP_TITLE__: string
@@ -16,7 +17,7 @@ declare const __CLAUDIA_MENU_JSON__: string
 
 declare global {
   interface Window {
-    Neutralino?: NeutralinoLike
+    Neutralino?: NeutralinoLike & FileDialogNeutralino
   }
 }
 
@@ -31,6 +32,7 @@ function boot(): void {
   }
   const listing = JSON.parse(__CLAUDIA_MENU_JSON__) as ManifestListing
   installBridge(neutralino, window as unknown as WindowLike, listing, __CLAUDIA_APP_TITLE__)
+  installFileDialogBridge(neutralino, document)
 }
 
 boot()

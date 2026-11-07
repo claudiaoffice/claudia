@@ -13,9 +13,11 @@ import {
   SetupProblem,
   buildShellCommand,
   findNeutralinoBinary,
+  macProcessName,
   neutralinoBinaryName,
   prepareServer,
 } from '../src/launch.js'
+import { getIdentity } from '../src/identity.js'
 
 describe('prepareServer', () => {
   let repo: string
@@ -129,5 +131,19 @@ describe('buildShellCommand', () => {
       '--url=http://127.0.0.1:54321',
       '--enable-server=true',
     ])
+  })
+})
+
+describe('macProcessName', () => {
+  it("is 'claudia <app>', lower case -- the owner's first run showed macOS reading the running process's own " +
+    'name (the bold application-menu heading, Cmd+Tab, Activity Monitor -- none of which read menu.ts\'s own ' +
+    "menu items) straight from the literal downloaded binary filename, 'neutralino-mac_arm64'", () => {
+    expect(macProcessName(getIdentity('creates'))).toBe('claudia creates')
+  })
+
+  it('is scoped to this one process-identity string -- identity.title stays Title Case (shared with Linux and the web app)', () => {
+    const identity = getIdentity('creates')
+    expect(identity.title).toBe('Claudia Creates')
+    expect(macProcessName(identity)).not.toBe(identity.title)
   })
 })

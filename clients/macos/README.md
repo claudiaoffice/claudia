@@ -4,12 +4,12 @@ The native client of Claudia for macOS: a thin Neutralino shell around the one w
 discipline the Linux client (`clients/linux/`) follows for GTK. Today it contains **Claudia Creates**; composes and
 computes follow the same way Linux's did (one more entry in `identity.ts`, one more `apps/<app>/`).
 
-**Read this before anything else:** the one thing this client does that nobody has run on a real Mac yet is
-Neutralino injecting its API (`window.Neutralino`, the native menu/event channel) into a page loaded from an
-*external* URL rather than from Neutralino's own bundle. That is D159's whole open question. Everything below this
-line is built and tested up to that boundary; past it, it is this client's best-effort answer, not a verified one.
-**The first thing to do on a real Mac is confirm `window.Neutralino` exists once the window shows the loopback page**
-— see "Not verified" below.
+**D159's core mechanic is confirmed (owner's own Mac, 2026-11-07): `window.Neutralino` exists and works on the
+loopback page.** The native menu, the dock icon, and the whole D159 option-2 adapter came up as designed on the
+first real run past the start-up bugs (see the CHANGELOG and the implementation notes for the three further bugs
+that first real run found and fixed: the application-menu heading, the window-title casing, and Insert Image's
+file picker). What's below "Not verified" is everything past that boundary — still this client's best-effort
+answer, not yet checked on a real Mac.
 
 ```
 clients/
@@ -21,6 +21,7 @@ clients/
       server.ts          start, wait for and stop the local server, freePort() (plain Node)
       menu.ts            the shared GTK manifest -> Neutralino WindowMenuItem  (plain TS)
       page-bridge.ts      D159 option 2: shims window.webkit.messageHandlers   (plain TS; a few real Neutralino calls in installBridge())
+      file-dialog.ts      swaps a broken <input type="file"> click for Neutralino's own Open dialog (plain TS; a few real Neutralino/DOM calls in installFileDialogBridge())
       inject-entry.ts    the file Neutralino's injectScript actually loads     (bundled, not run directly)
       launch.ts          prepare the server, find the binary, start both       (Node + child_process)
       generated/         menu.<app>.json, checked in, generated from manifest.py
@@ -111,30 +112,37 @@ on its way out shows up directly on the console.
   `Neutralino.app.exit()`. `help.about` is `Kind.SHELL` in the manifest (GTK shows its own dialog for it), but
   Neutralino has no native About panel (D158 point 4), so it is forwarded to the page like any other action —
   `AboutDialog.vue` already exists and needs no change.
+* **`<input type="file">` gets the same zero-change-to-the-web-app treatment.** WKWebView (the engine Neutralino's
+  macOS binary embeds) shows no native Open panel for a file input unless the host app implements a WKUIDelegate
+  method for it, which this generic binary does not — confirmed on the owner's own Mac, where clicking "Choose a
+  file…" did nothing at all. `file-dialog.ts`'s `installFileDialogBridge()` intercepts the click in a capture-phase
+  listener, runs `Neutralino.os.showOpenDialog()` and `filesystem.readBinaryFile()` instead, and hands the result
+  back to the input as an ordinary `File` via `DataTransfer` — `ImageImportDialog.vue`'s own `onFileChange` runs
+  exactly as it would for a real OS dialog, with no changes of its own.
 
 ## Tests
 
 ```
 cd clients/macos
-npm test              # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch — 57 tests
+npm test              # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch, file-dialog — 73 tests
 npm run typecheck      # tsc --strict over src/ and tests/
 python3 -m pytest tools/tests   # generate_menu.py: 10 tests
 ruff check . && ruff format --check . && mypy tools
 npm run check-menu     # fails if src/generated/menu.*.json has drifted from manifest.py
 ```
 
-Nothing here starts a real Neutralino binary or opens a real window — `installBridge()` in `page-bridge.ts` is the
-one function with no test of its own, because what it calls only exists once `window.Neutralino` is real (see "Not
-verified"). Everything pure around it (`routeMenuClick`, `applyActionStates`, `nextCheckedTarget`, the whole of
-`menu.ts`) is tested without one.
+Nothing here starts a real Neutralino binary or opens a real window — `installBridge()` in `page-bridge.ts` and
+`installFileDialogBridge()` in `file-dialog.ts` are the two functions with no test of their own, because what they
+call only exists once `window.Neutralino` is real (and, for the latter, a real DOM — `vitest.config.ts` runs this
+package's tests under Node, not jsdom). Everything pure around them (`routeMenuClick`, `applyActionStates`,
+`nextCheckedTarget`, the whole of `menu.ts`, and `file-dialog.ts`'s `parseAcceptExtensions`/`guessMimeType`/
+`basename`) is tested without one.
 
 ## Not verified (needs a real Mac)
 
-1. **D159's core mechanic.** Whether `injectGlobals`/`injectClientLibrary`/`injectScript` (confirmed as real
-   Neutralino config fields and CLI flags against its own docs) actually reach a page Neutralino did not itself
-   serve — i.e. whether `window.Neutralino` exists at all once the window shows the loopback URL. If it does not,
-   D159 needs its first option instead (Neutralino serves its own bundle, the page opens a cross-origin WebSocket to
-   the document server, `--allow-origin` and a fixed port follow).
+1. ~~D159's core mechanic.~~ **Confirmed, 2026-11-07**: `injectGlobals`/`injectClientLibrary`/`injectScript` do
+   reach the loopback page; `window.Neutralino` exists, the native menu renders, and the dock shows this app's own
+   icon.
 2. **The dual native-Cocoa-action-plus-page-dispatch interaction** for creates' own `lib/clipboard.ts` on a real
    slide canvas — the spike only confirmed this on a generic text field, not Creates' editor.
 3. **No Redo shortcut.** `ROLE_SHORTCUT` in `menu.ts` has no `redo:` entry; no confirmed Neutralino grammar for
@@ -149,6 +157,7 @@ verified"). Everything pure around it (`routeMenuClick`, `applyActionStates`, `n
 Packaging (a real `.app` bundle, `.icns`, codesigning, notarization, a DMG or installer); composes and computes (only
 `creates` has an `apps/<app>/` folder — `packaged: false` in `identity.ts` for the other two); printing as a contract
 message (D158 point 2 — `Neutralino.window.print()` exists and is in `NeutralinoLike`, but nothing calls it yet);
-`nativeAllowList`/`filesystemScopes` are trimmed to the four methods this client actually calls today
-(`app.exit`, `window.setMainMenu`, `window.print`, `events.on`) but have not been re-checked against a later
+`nativeAllowList`/`filesystemScopes` are trimmed to the six methods this client actually calls today
+(`app.exit`, `window.setMainMenu`, `window.print`, `events.on`, `os.showOpenDialog`, `filesystem.readBinaryFile`)
+but have not been re-checked against a later
 Neutralino upgrade (D157 asks for that on every version bump); translations; single-instance behaviour.
