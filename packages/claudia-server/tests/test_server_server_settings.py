@@ -1,5 +1,7 @@
 """Persisting the server's own settings and its administrators under its state folder."""
 
+import sys
+
 from claudia_server.admin import AdminDirectory
 from claudia_server.server_settings import (
     AiSettings,
@@ -43,7 +45,8 @@ def test_the_settings_file_is_private(tmp_path):
     save_settings(tmp_path, ServerSettings(max_documents=1))
     path = tmp_path / "admin" / "settings.json"
     assert path.is_file()
-    assert (path.stat().st_mode & 0o777) == 0o600
+    if sys.platform != "win32":  # Windows has no POSIX permission bits to check
+        assert (path.stat().st_mode & 0o777) == 0o600
 
 
 def test_a_damaged_settings_file_does_not_stop_the_server(tmp_path):

@@ -134,8 +134,9 @@ def _fsync_directory(directory: Path) -> None:
             os.close(fd)
 
 
-_REPLACE_RETRIES = 5
-_REPLACE_DELAY = 0.05  # seconds, doubled each retry
+_REPLACE_RETRIES = 10
+_REPLACE_DELAY = 0.05  # seconds, doubled each retry up to _REPLACE_MAX_DELAY
+_REPLACE_MAX_DELAY = 1.0
 
 
 def _replace(temp: Path, path: Path) -> None:
@@ -145,6 +146,12 @@ def _replace(temp: Path, path: Path) -> None:
     for a moment by real-time antivirus scanning or file-system indexing right after the file is written --
     something POSIX simply does not have. A handle of our own must still be closed before calling this (that
     failure is deterministic and retrying it would only waste time); this is for the transient kind.
+
+    ``pack_journal`` can land here twice in a row for the same file -- once to rotate the journal, and again
+    (via ``begin``'s own recovery) if that rotation's replace is what failed -- so the lock this is waiting out
+    may already have been outstanding for a while by the second attempt. The backoff is capped rather than left
+    to double forever, so repeated contention still clears within a bounded total wait (worst case, with 10
+    retries capped at 1s: a bit under 10s) instead of either giving up too soon or stalling indefinitely.
     """
     if sys.platform != "win32":
         os.replace(temp, path)
@@ -158,7 +165,7 @@ def _replace(temp: Path, path: Path) -> None:
             if attempt == _REPLACE_RETRIES - 1:
                 raise
             time.sleep(delay)
-            delay *= 2
+            delay = min(delay * 2, _REPLACE_MAX_DELAY)
 
 
 class JournalWriter:
