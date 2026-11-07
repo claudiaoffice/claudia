@@ -7,6 +7,7 @@ web/.output
 web/node_modules
 clients/macos/node_modules
 clients/macos/dist
+clients/macos/apps/*/inject
 clients/macos/neutralino-bin
 clients/macos/.tmp
 docs/_build

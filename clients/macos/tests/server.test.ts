@@ -5,7 +5,17 @@
 // notes: an open item, not silently assumed solved).
 import { EventEmitter } from 'node:events'
 import { describe, expect, it, vi } from 'vitest'
-import { LocalServer, ServerStartError, buildServerCommand } from '../src/server.js'
+import { LocalServer, ServerStartError, buildServerCommand, freePort } from '../src/server.js'
+
+describe('freePort', () => {
+  it('returns a port nobody is listening on yet, and two calls do not collide', async () => {
+    const a = await freePort()
+    const b = await freePort()
+    expect(a).toBeGreaterThan(0)
+    expect(b).toBeGreaterThan(0)
+    expect(a).not.toBe(b) // the OS does not hand out the same ephemeral port twice back to back
+  })
+})
 
 describe('buildServerCommand', () => {
   it('matches the Linux client\'s composes_command shape, for the given model', () => {

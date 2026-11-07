@@ -15,11 +15,29 @@
 //    leader automatically on POSIX, so no extra API is needed for that part.
 
 import { spawn as nodeSpawn, type ChildProcess } from 'node:child_process'
+import { createServer } from 'node:net'
 
 export const LOOPBACK = '127.0.0.1'
 const HEALTH_PATH = '/api/health'
 
 export class ServerStartError extends Error {}
+
+/** A port on `host` nobody is listening on right now (mirrors `free_port()` in the Linux client's server.py). The
+ * port can in principle be taken by something else between this call returning and the server actually binding it
+ * -- same race the Linux version accepts, not solved here either. */
+export function freePort(host: string = LOOPBACK): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = createServer()
+    probe.once('error', reject)
+    probe.listen(0, host, () => {
+      const address = probe.address()
+      probe.close(() => {
+        if (address && typeof address === 'object') resolve(address.port)
+        else reject(new Error('could not read the probed port back from the OS'))
+      })
+    })
+  })
+}
 
 export interface ServerCommandOptions {
   model: string
