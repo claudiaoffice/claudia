@@ -1,0 +1,68 @@
+diff --git a/claudiaoffice-log/backlog.md b/claudiaoffice-log/backlog.md
+index 249ce33..a32fa91 100644
+--- a/claudiaoffice-log/backlog.md
++++ b/claudiaoffice-log/backlog.md
+@@ -72,20 +72,6 @@ kanban-plugin: board
+ 	Use case: PLATFORM · Decisions: D37 · The E0.2 spike proposes the lifetime protocol: lifeline pipe from shell to server, parent-sentinel watchdog in every worker, tree kill on timeout, kill-busy-first on shutdown. Tested on Linux only.
+ 	
+ 	Status evidence: no `multiprocessing`, process pool or forkserver anywhere under `packages/*/src`. This is the root cause behind PERF-01, PERF-02 and PERF-05: everything runs on the one event loop.
+-- [ ] **E3.7 · Restore in a live session (consent flow)**
+-	As an editor or owner, I want to propose going back to a checkpoint while others are working, and have it happen only if everybody editing agrees.
+-	
+-	AC: the rule of D51 and the details of D52 (who is asked, how a vote ends, people coming and going, work during the vote, switching back to a hidden line, the notice for users who were away); protocol methods to propose, withdraw and answer, and events for the open proposal, each answer and its end; permission checks; everybody moves to the new line on restore; the banner is a frontend component with proposer, checkpoint, who has agreed and a countdown; tests with three clients covering a decline, an expiry, a user leaving mid-vote, an editor joining mid-vote, a sole editor, a viewer, the `ai` user and a second proposal while one is open.
+-	
+-	Use case: ALL · Decisions: D48, D49, D51, D52 · The kernel can already restore, list lines, switch and discard; only the consent flow, the wire methods and the banner are missing. Edge to decide while building: what happens if the active line changes by another path while a proposal is open.
+-	
+-	Status evidence: no `propose_restore`, no consent, no restore method in `protocol.py`. Deliberately not exposed since E3.1.
+-- [ ] **E3.8 · Line picker (later)**
+-	As a user whose work is on a line that is now hidden, I want to see the lines of the document and pick one to go back to.
+-	
+-	AC: a list of lines (who restored, when, from which checkpoint, authors and number of commands per line, visible according to the key domains); a read-only preview before proposing; choosing a line proposes `switch_to` under the same consent flow; the notice for returning users links to the picker.
+-	
+-	Use case: ALL · Decisions: D48, D51, D52 · Needs E3.7. Whether a read-only preview needs a kernel feature (a view of a side line without switching) is open.
+ - [ ] **E4.3 · Calculating state and stale results**
+ 	As a user, I want a cell with a slow result to show its old value dimmed and "calculating…", so that I know what is current.
+ 	
+@@ -667,7 +653,7 @@ kanban-plugin: board
+ 	
+ 	Use case: PLATFORM · Decisions: D3, D42, D43
+ 	
+-	Status evidence: the frontend is substantial and shared across all three apps — `DocumentFrame`, `DocumentSession`, the grid, the slide canvas, the text editor, the styling components, the panel, the dialogs; 195 vitest tests and `vue-tsc` clean. **Not done: the web app does not implement the shell contract at all.** The Linux shell drives it by clicking its menus through an injected adapter (D117), so there is no capability detection and no browser stub; the restore-consent banner needs E3.7; no shared About component; the frontend is not bundled with any shell.
++	Status evidence: the frontend is substantial and shared across all three apps — `DocumentFrame`, `DocumentSession`, the grid, the slide canvas, the text editor, the styling components, the panel, the dialogs; 288 vitest tests and `vue-tsc` clean. **Not done: the web app does not implement the shell contract at all.** The Linux shell drives it by clicking its menus through an injected adapter (D117), so there is no capability detection and no browser stub; the restore-consent banner is built (E3.7); no shared About component; the frontend is not bundled with any shell.
+ - [ ] **E5.4 · Shared About dialog**
+ 	As a user, I want a good-looking About dialog showing the app's own logo, so that every app feels part of one suite.
+ 	
+@@ -1011,7 +997,23 @@ kanban-plugin: board
+ 	
+ 	Use case: ALL · Decisions: D5, D15, D45, D48
+ 	
+-	Status evidence: `save_checkpoint`, `restore_checkpoint`, `switch_to`, `lines`, `discard_side_history`, and `core.Restore`/`core.Switch` log entries. Edits made against a line that is no longer active are refused (`StaleEdit`, D49). The kernel half is complete; exposing it in a live session is E3.7 and deliberately not on the wire.
++	Status evidence: `save_checkpoint`, `restore_checkpoint`, `switch_to`, `lines`, `discard_side_history`, and `core.Restore`/`core.Switch` log entries. Edits made against a line that is no longer active are refused (`StaleEdit`, D49). The kernel half is complete; exposing it in a live session is E3.7, now also done.
++- [x] **E3.7 · Restore in a live session (consent flow)**
++	As an editor or owner, I want to propose going back to a checkpoint while others are working, and have it happen only if everybody editing agrees.
++
++	AC: the rule of D51 and the details of D52 (who is asked, how a vote ends, people coming and going, work during the vote, switching back to a hidden line, the notice for users who were away); protocol methods to propose, withdraw and answer, and events for the open proposal, each answer and its end; permission checks; everybody moves to the new line on restore; the banner is a frontend component with proposer, checkpoint, who has agreed and a countdown; tests with three clients covering a decline, an expiry, a user leaving mid-vote, an editor joining mid-vote, a sole editor, a viewer, the `ai` user and a second proposal while one is open.
++
++	Use case: ALL · Decisions: D48, D49, D51, D52, D141, D142 · The consent machinery (`RestoreCoordinator`, entirely in-memory, lost with the document like presence and locks) is a new module in `claudia-server`, not the kernel (D142); every new wire method sits on the shared `core_methods` table, so composes and creates get it for free the same way they already share history and chat.
++
++	Status evidence: `claudia_server.restore.RestoreCoordinator` plus seven new wire methods (`propose_restore`, `propose_switch`, `answer_restore`, `withdraw_restore`, `discard_side_history`, `restore_policy`, `set_restore_policy`) and two events (`restore_proposed`, `restore_resolved`); a sole owner/editor is applied at once, otherwise everybody connected as owner or editor must agree, one decline ends it, and the per-document `consensus`/`veto` policy decides what silence at the deadline means; `joined`/`left`/`sweep` handle a vote resolving while people come and go; a returning person's `welcome` carries a one-time `returned` notice of what happened to the line they were left on. 27 isolated `RestoreCoordinator` tests plus 40 hub-level integration tests (`test_server_restore.py`, `test_server_restore_live.py`). The frontend (`BaseSession.proposeRestore`/`proposeSwitch`/`answerRestore`/`withdrawRestore`/`setRestorePolicy`, `SidePanel.vue`'s consent banner and a restore button on every checkpoint mark) is built and shared by every app through the same session/panel layer already used for history and chat. **Not done:** no countdown — the deadline exists on the wire (`expires_at`) but nothing counts it down for the person.
++- [x] **E3.8 · Line picker (first version)**
++	As a user whose work is on a line that is now hidden, I want to see the lines of the document and pick one to go back to.
++
++	AC: a list of lines (who restored, when, from which checkpoint, authors and number of commands per line, visible according to the key domains); a read-only preview before proposing; choosing a line proposes `switch_to` under the same consent flow; the notice for returning users links to the picker.
++
++	Use case: ALL · Decisions: D48, D51, D52, D141 · Needed E3.7, done together with it. The read-only preview did need a kernel feature, agreed with the owner: `Document.peek_line(line)` (D141), a thin wrapper around the existing `materialize`.
++
++	Status evidence: the kernel's `peek_line` (`test_peek_line.py`, 7 tests) and its wire method of the same name; `SidePanel.vue`'s "Lines" section lists every line with the active one marked, a "peek" button that shows the line's raw state, and a "suggest switching here" button that calls `proposeSwitch` under the same consent flow as a restore; owners also get a "forget every hidden line" button (`discard_side_history`, refused while a suggestion is open, so it can never discard what a proposal is aimed at). **First version, deliberately short of the AC:** a line shows only its name, head and fork point, not who restored it, when, its authors or its number of commands; the peek is the line's raw JSON state, not a rendered, per-app live preview; the returning-person notice is a plain sentence, not a link that opens the picker.
+ - [x] **E3.1 · Hub, connection and auth**
+ 	As a developer, I want the demo's hub, connection and protocol machinery with document-local authentication, so that all three servers use one tested base.
+ 	
+@@ -1019,7 +1021,7 @@ kanban-plugin: board
+ 	
+ 	Use case: PLATFORM · Decisions: D10, D35, D47, D49, D50
+ 	
+-	Status evidence: all of it is built, across `claudia-server` (hub, protocol, auth, app, certificates, redirect port) and `claudia-client` (`TlsPolicy`), with the kernel kept free of network code. 416 tests. The protocol is served at `/api/protocol` with `PROTOCOL_VERSION` 1 and described in `docs/server.md`. Three method tables now extend it (core, computes, composes, creates). The known gaps each have their own story and are listed there: viewers receive everything (E2.4), no rate limiting (E2.7), locks are per user name rather than per connection, restore and switch are not on the wire (E3.7).
++	Status evidence: all of it is built, across `claudia-server` (hub, protocol, auth, app, certificates, redirect port) and `claudia-client` (`TlsPolicy`), with the kernel kept free of network code. 416 tests. The protocol is served at `/api/protocol` with `PROTOCOL_VERSION` 1 and described in `docs/server.md`. Three method tables now extend it (core, computes, composes, creates). The known gaps each have their own story and are listed there: viewers receive everything (E2.4), no rate limiting (E2.7), locks are per user name rather than per connection.
+ - [x] **E4.1 · Incremental recalculation**
+ 	As a user, I want an edit to recalculate only what depends on it, so that large sheets stay responsive.
+ 	
