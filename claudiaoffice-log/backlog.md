@@ -187,14 +187,6 @@ kanban-plugin: board
 	AC: a cell, text label or chart title can be marked as LaTeX and is rendered by the typesetting service and drawn as an image, with the source staying the cell content that formulas and search see; the `=$$\frac{x}{y}$$` cases work; rendering never blocks the grid; output is cached and shown as an image, never inline.
 	
 	Use case: SCI, EDU · Decisions: D88, D66 · Depends on E3.4 and E6.3. A sheet with thousands of typeset cells needs batching and limits.
-- [ ] **E6.16 · Row height and column width**
-	As a user, I want to set a row's height and a column's width, changeable from the header, so that I can make room for what a sheet holds.
-
-	AC: a row/column shows at a sheet default when nothing overrides it; a right-click on a row or column header opens a dialog to set its size in pixels, with range limits enforced; dragging the border between two row or column headers resizes the one above/left of the border live as the mouse moves; one command resizes one or many rows/columns at once and undoes as one step; a size survives row/column insert and delete (remapped to the moved line) and survives removing and restoring a sheet; merged cells are out of scope.
-
-	Use case: ALL · Decisions: D135 · A narrower, already-layout-settled split out of E6.13 (styling), not dependent on it. Depends on E1.10, E6.1, E6.3.
-
-	Status evidence: model, command, undo/redo, serialization and the server's `sizes`/`resize_lines` methods are built and tested (`claudia_computes.model.Sheet.row_heights`/`col_widths`, `claudia_computes.commands.ResizeLines`, `claudia_server.computes._sizes`/`_resize_lines`). The web grid still draws every row/column at the fixed default (`SheetGrid.vue` has no variable sizing yet) and there is no drag-resize or context-menu dialog — those are Patch 2, not started.
 - [ ] **E7.2 · skills.md and persona.md**
 	As an app author, I want skills and persona files per app, so that the AI behaves right in each.
 	
@@ -945,7 +937,14 @@ kanban-plugin: board
 
 ## testing
 
+- [ ] **E6.16 · Row height and column width**
+	As a user, I want to set a row's height and a column's width, changeable from the header, so that I can make room for what a sheet holds.
 
+	AC: a row/column shows at a sheet default when nothing overrides it; a right-click on a row or column header opens a dialog to set its size in pixels, with range limits enforced; dragging the border between two row or column headers resizes the one above/left of the border live as the mouse moves; one command resizes one or many rows/columns at once and undoes as one step; a size survives row/column insert and delete (remapped to the moved line) and survives removing and restoring a sheet; merged cells are out of scope.
+
+	Use case: ALL · Decisions: D135, D160 · A narrower, already-layout-settled split out of E6.13 (styling), not dependent on it. Depends on E1.10, E6.1, E6.3.
+
+	Status evidence: Patch 1 (model, command, undo/redo, serialization, the server's `sizes`/`resize_lines` methods) and Patch 2 (the web grid, built and tested) are both in; moved here rather than to done since the owner has not yet applied or reviewed either patch. `SheetGrid.vue` renders every row/column at its real size and drags a header border live with a combined px/percentage readout; `HeaderMenu.vue` is the right-click row/column menu (insert/delete/resize, text only); `LineSizeDialog.vue` is the size dialog, with "Reset to default" as a link, not a button, per the owner's feedback. Resizing more than one line at once scales every line but the one being set by percentage, not to one shared pixel value (D160) — mockups agreed with the owner first (`claude/` — four SVGs, now superseded by the built UI). Merged cells remain out of scope, as they are everywhere else in computes.
 
 ## done
 

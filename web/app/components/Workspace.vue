@@ -9,6 +9,7 @@ import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
 import { useTheme } from '~/lib/theme'
+import type { Axis } from '~/lib/line-sizes'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
@@ -25,11 +26,12 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 const dialog = ref<
-  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
+  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete' | 'row-size' | 'col-size'
 >(null)
 const panelOpen = ref(true)
 const grid = ref<{ focus: () => void } | null>(null)
 const panel = ref<{ ask: (text?: string) => void } | null>(null)
+const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
 const readonly = computed(() => state.me.role === 'viewer')
 const b = computed(() => bounds(sel.value))
@@ -185,6 +187,30 @@ async function structure(axis: 'row' | 'col', insert: boolean, after = false) {
   const last = axis === 'row' ? b.value.r1 : b.value.c1
   const count = last - first + 1
   await session.structure(state.activeSheet, axis, insert, insert && after ? last + 1 : first, count)
+}
+
+// Row/column header menu (mockup 1) and the resize dialog it opens (mockup 2) — SheetGrid.vue already made sure
+// the selection covers the header that was right-clicked, so `b` (above) is the right range for all three actions.
+function openHeaderMenu(axis: Axis, index: number, x: number, y: number) {
+  headerMenu.value = { axis, index, x, y }
+}
+async function headerInsert(after: boolean) {
+  const axis = headerMenu.value!.axis
+  headerMenu.value = null
+  await structure(axis, true, after)
+}
+async function headerDelete() {
+  const axis = headerMenu.value!.axis
+  headerMenu.value = null
+  await structure(axis, false)
+}
+function headerResize() {
+  if (readonly.value) {
+    headerMenu.value = null
+    return session.notice('You can only look at this document.', 'warning')
+  }
+  dialog.value = headerMenu.value!.axis === 'row' ? 'row-size' : 'col-size'
+  headerMenu.value = null
 }
 
 async function checkpoint(label: string | null) {
@@ -407,6 +433,7 @@ onBeforeUnmount(() => clearTimeout(timer))
         @clear="clearSelection"
         @paste="paste"
         @select-all="sel = { row: 0, col: 0, row2: VIEW_ROWS - 1, col2: VIEW_COLS - 1 }"
+        @header-menu="openHeaderMenu"
       />
       <div v-else class="nosheet">This document has no sheet yet.</div>
       <SidePanel v-show="panelOpen" ref="panel" :session="session" />
@@ -436,6 +463,27 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <AboutDialog v-if="dialog === 'about'" app="computes" @close="dialog = null" />
+    <LineSizeDialog
+      v-if="dialog === 'row-size' || dialog === 'col-size'"
+      :session="session"
+      :sheet="state.activeSheet"
+      :axis="dialog === 'row-size' ? 'row' : 'col'"
+      :first="dialog === 'row-size' ? b.r0 : b.c0"
+      :last="dialog === 'row-size' ? b.r1 : b.c1"
+      @close="dialog = null"
+    />
+
+    <HeaderMenu
+      v-if="headerMenu"
+      :axis="headerMenu.axis"
+      :x="headerMenu.x"
+      :y="headerMenu.y"
+      :readonly="readonly"
+      @insert="headerInsert"
+      @delete="headerDelete"
+      @resize="headerResize"
+      @close="headerMenu = null"
+    />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
 
