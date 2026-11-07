@@ -1,0 +1,283 @@
+"""Exporting a :class:`~claudia_computes.WorkbookModel` to xlsx, and adding a pivot table additively.
+
+``workbook_to_xlsx`` is a minimal base export (values, formulas, one worksheet per sheet) built with openpyxl's own
+object model: it is not the ODF-first, loss-reporting import/export story of E6.9 (D5, D70, D67, D69), only enough of
+a real document for ``add_pivot_table`` to have something to attach to.
+
+``add_pivot_table`` is the additive extension the spike validated: openpyxl cannot write a pivot table, so this
+builds the three extra parts (cache definition, cache records, pivot table) and the relationships and content-type
+overrides that reference them, by editing the already-written zip directly with ``lxml`` -- the same element/part
+layer openpyxl itself writes to, not a fork of it. The result is read as a normal pivot table by Excel and
+LibreOffice, and survives an openpyxl load-edit-save round trip (the library renumbers the relationship id but keeps
+it internally consistent).
+"""
+
+from __future__ import annotations
+
+import posixpath
+import zipfile
+from io import BytesIO
+
+import openpyxl
+from lxml import etree
+
+from claudia_computes import WorkbookModel
+
+NS = {
+    "ct": "http://schemas.openxmlformats.org/package/2006/content-types",
+    "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+    "pr": "http://schemas.openxmlformats.org/package/2006/relationships",
+    "x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+}
+
+
+def _qn(prefix: str, tag: str) -> str:
+    return f"{{{NS[prefix]}}}{tag}"
+
+
+def _tostring(element) -> bytes:
+    return etree.tostring(element, xml_declaration=True, encoding="UTF-8", standalone=True)
+
+
+def workbook_to_xlsx(model: WorkbookModel) -> bytes:
+    """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
+    with the leading ``=``). No styles, number formats or charts yet (E6.4, E6.9 are the full story)."""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+    for sheet in model.sheets.values():
+        ws = wb.create_sheet(title=sheet.name)
+        for (row, col), content in sheet.cells.items():
+            cell = ws.cell(row=row + 1, column=col + 1)
+            cell.value = content["v"] if content["t"] == "formula" else content.get("v")
+    if not wb.sheetnames:
+        wb.create_sheet(title="Sheet1")
+    out = BytesIO()
+    wb.save(out)
+    return out.getvalue()
+
+
+def _resolve_target(source_dir: str, target: str) -> str:
+    """An OPC relationship ``Target`` resolved against the directory of the part that references it: package-
+    absolute (a leading ``/``) from the zip root, otherwise relative to ``source_dir`` (D135: openpyxl writes the
+    workbook's own sheet relationships as package-absolute, so both forms have to be handled)."""
+    return target[1:] if target.startswith("/") else posixpath.normpath(posixpath.join(source_dir, target))
+
+
+def _sheet_part(members: dict[str, bytes], sheet_name: str) -> str:
+    """The zip member holding ``sheet_name``'s XML, resolved through ``workbook.xml`` and its rels -- never assumed
+    from sheet order, which openpyxl does not promise to keep stable across a save."""
+    workbook = etree.fromstring(members["xl/workbook.xml"])
+    rels = etree.fromstring(members["xl/_rels/workbook.xml.rels"])
+    sheets = workbook.find(_qn("x", "sheets"))
+    rid = next((el.get(_qn("r", "id")) for el in sheets if el.get("name") == sheet_name), None)
+    if rid is None:
+        raise ValueError(f"no sheet named {sheet_name!r}")
+    target = next((rel.get("Target") for rel in rels if rel.get("Id") == rid), None)
+    if target is None:
+        raise ValueError(f"workbook.xml.rels has no relationship {rid!r}")
+    return _resolve_target("xl", target)
+
+
+def _header_and_rows(wb: openpyxl.Workbook, sheet_name: str, cell_range: str) -> tuple[list[str], list[tuple]]:
+    ws = wb[sheet_name]
+    rows = [tuple(cell.value for cell in row) for row in ws[cell_range]]
+    if not rows:
+        raise ValueError(f"{cell_range!r} on {sheet_name!r} is empty")
+    header, data = [str(v) for v in rows[0]], rows[1:]
+    if not data:
+        raise ValueError(f"{cell_range!r} on {sheet_name!r} has no data rows below its header")
+    return header, data
+
+
+def _shared_items(header: list[str], rows: list[tuple], value_col: int) -> tuple[dict[int, list], dict[int, dict]]:
+    """Every non-data column's distinct values, first-appearance order, and the index of each value within them."""
+    other_cols = [col for col in range(len(header)) if col != value_col]
+    items = {col: list(dict.fromkeys(row[col] for row in rows)) for col in other_cols}
+    index = {col: {value: i for i, value in enumerate(values)} for col, values in items.items()}
+    return items, index
+
+
+def _cache_xml(
+    header: list[str], rows: list[tuple], row_col: int, value_col: int, *, source_sheet: str, source_range: str
+) -> tuple[str, str]:
+    """The pivot cache's two parts: the field definitions (one per source column) and the records (one per row)."""
+    amounts = [row[value_col] for row in rows]
+    shared_items, shared_index = _shared_items(header, rows, value_col)
+
+    def _cache_field(col: int, name: str) -> str:
+        if col == value_col:
+            return (
+                f'<cacheField name="{name}" numFmtId="0"><sharedItems containsSemiMixedTypes="0" '
+                f'containsString="0" containsNumber="1" minValue="{min(amounts)}" '
+                f'maxValue="{max(amounts)}"/></cacheField>'
+            )
+        items = "".join(f'<s v="{v}"/>' for v in shared_items[col])
+        return f'<cacheField name="{name}" numFmtId="0"><sharedItems count="{len(shared_items[col])}">{items}</sharedItems></cacheField>'  # noqa: E501
+
+    def _record(row: tuple) -> str:
+        parts = [
+            f'<n v="{row[col]}"/>' if col == value_col else f'<x v="{shared_index[col][row[col]]}"/>'
+            for col in range(len(header))
+        ]
+        return f"<r>{''.join(parts)}</r>"
+
+    cache_fields = "".join(_cache_field(col, name) for col, name in enumerate(header))
+    cache_def = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<pivotCacheDefinition xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1" '
+        'refreshedBy="claudia-computes-io" refreshedDate="45600" createdVersion="6" refreshedVersion="6" '
+        f'minRefreshableVersion="3" recordCount="{len(rows)}"><cacheSource type="worksheet">'
+        f'<worksheetSource ref="{source_range}" sheet="{source_sheet}"/></cacheSource>'
+        f'<cacheFields count="{len(header)}">{cache_fields}</cacheFields></pivotCacheDefinition>'
+    )
+    records = "".join(_record(row) for row in rows)
+    cache_records = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<pivotCacheRecords xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
+        f'count="{len(rows)}">{records}</pivotCacheRecords>'
+    )
+    return cache_def, cache_records
+
+
+def _pivot_table_xml(header: list[str], row_col: int, value_col: int, value_field: str, row_count: int) -> str:
+    """The pivot table itself: ``row_field`` down the rows, the sum of ``value_field`` as the one data field."""
+
+    def _pivot_field(col: int) -> str:
+        if col == value_col:
+            return '<pivotField dataField="1" showAll="0"/>'
+        if col == row_col:
+            items = "".join(f'<item x="{i}"/>' for i in range(row_count)) + '<item t="default"/>'
+            return f'<pivotField axis="axisRow" showAll="0"><items count="{row_count + 1}">{items}</items></pivotField>'  # noqa: E501
+        return '<pivotField showAll="0"/>'
+
+    def _row_item(i: int) -> str:
+        return "<i><x/></i>" if i == 0 else f'<i><x v="{i}"/></i>'
+
+    pivot_fields = "".join(_pivot_field(col) for col in range(len(header)))
+    row_items = "".join(_row_item(i) for i in range(row_count)) + '<i t="grand"><x/></i>'
+    return (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<pivotTableDefinition xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+        'name="PivotTable1" cacheId="0" applyNumberFormats="0" applyBorderFormats="0" applyFontFormats="0" '
+        'applyPatternFormats="0" applyAlignmentFormats="0" applyWidthHeightFormats="1" dataCaption="Values" '
+        'updatedVersion="6" minRefreshableVersion="3" useAutoFormatting="1" itemPrintTitles="1" createdVersion="6" '
+        f'indent="0" outline="1" outlineData="1" multipleFieldFilters="0"><location ref="A1:B{row_count + 2}" '
+        f'firstHeaderRow="1" firstDataRow="2" firstDataCol="1"/><pivotFields count="{len(header)}">{pivot_fields}'
+        f'</pivotFields><rowFields count="1"><field x="{row_col}"/></rowFields>'
+        f'<rowItems count="{row_count + 1}">{row_items}</rowItems><colItems count="1"><i/></colItems>'
+        f'<dataFields count="1"><dataField name="Sum of {value_field}" fld="{value_col}" baseField="0" '
+        'baseItem="0"/></dataFields></pivotTableDefinition>'
+    )
+
+
+def _register_pivot_cache(members: dict[str, bytes]) -> None:
+    """Wire the new pivot cache into the package: a content-type override, a workbook relationship, and the
+    ``<pivotCaches>`` element ``workbook.xml`` needs to point at it -- the three parts a pivot cache always needs,
+    whatever the pivot table built on top of it looks like."""
+    content_types = etree.fromstring(members["[Content_Types].xml"])
+    for part_name, content_type in (
+        (
+            "/xl/pivotCache/pivotCacheDefinition1.xml",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml",
+        ),
+        (
+            "/xl/pivotCache/pivotCacheRecords1.xml",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheRecords+xml",
+        ),
+        (
+            "/xl/pivotTables/pivotTable1.xml",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml",
+        ),
+    ):
+        override = etree.SubElement(content_types, _qn("ct", "Override"))
+        override.set("PartName", part_name)
+        override.set("ContentType", content_type)
+    members["[Content_Types].xml"] = _tostring(content_types)
+
+    workbook_rels = etree.fromstring(members["xl/_rels/workbook.xml.rels"])
+    rel = etree.SubElement(workbook_rels, _qn("pr", "Relationship"))
+    rel.set("Id", "rIdPivotCache1")
+    rel.set("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition")
+    rel.set("Target", "pivotCache/pivotCacheDefinition1.xml")
+    members["xl/_rels/workbook.xml.rels"] = _tostring(workbook_rels)
+
+    workbook_xml = etree.fromstring(members["xl/workbook.xml"])
+    calc_pr = workbook_xml.find(_qn("x", "calcPr"))
+    pivot_caches = etree.Element(_qn("x", "pivotCaches"))
+    pivot_cache = etree.SubElement(pivot_caches, _qn("x", "pivotCache"))
+    pivot_cache.set("cacheId", "0")
+    pivot_cache.set(_qn("r", "id"), "rIdPivotCache1")
+    (calc_pr.addnext if calc_pr is not None else workbook_xml.append)(pivot_caches)
+    members["xl/workbook.xml"] = _tostring(workbook_xml)
+
+
+def add_pivot_table(
+    xlsx_bytes: bytes,
+    *,
+    source_sheet: str,
+    source_range: str,
+    row_field: str,
+    value_field: str,
+    pivot_sheet_name: str = "Pivot",
+) -> bytes:
+    """``xlsx_bytes`` with one pivot table added: ``row_field`` down the rows, the sum of ``value_field`` as the one
+    data field, on a new (or existing empty) sheet ``pivot_sheet_name``. ``source_range`` is the whole table,
+    header row first; every column in it becomes a cached field, so the pivot table can later be widened in Excel.
+
+    Only one row field and one data field are built (as the spike validated); more fields, column fields and filters
+    are not yet additive -- a later slice would widen this the same way, without touching openpyxl itself.
+    """
+    wb = openpyxl.load_workbook(BytesIO(xlsx_bytes))
+    header, rows = _header_and_rows(wb, source_sheet, source_range)
+    if row_field not in header or value_field not in header:
+        raise ValueError(f"{row_field!r} and {value_field!r} must both be headers in {source_range!r}: {header}")
+    row_col, value_col = header.index(row_field), header.index(value_field)
+    row_count = len(list(dict.fromkeys(row[row_col] for row in rows)))
+
+    if pivot_sheet_name not in wb.sheetnames:
+        wb.create_sheet(pivot_sheet_name)
+    base = BytesIO()
+    wb.save(base)
+    with zipfile.ZipFile(base) as z:
+        members = {name: z.read(name) for name in z.namelist()}
+
+    pivot_part = _sheet_part(members, pivot_sheet_name)
+    cache_def, cache_records = _cache_xml(
+        header, rows, row_col, value_col, source_sheet=source_sheet, source_range=source_range
+    )
+    pivot_table = _pivot_table_xml(header, row_col, value_col, value_field, row_count)
+    _register_pivot_cache(members)
+
+    sheet_rels_path = f"{posixpath.dirname(pivot_part)}/_rels/{posixpath.basename(pivot_part)}.rels"
+    members[sheet_rels_path] = (
+        b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        b'<Relationship Id="rId1" '
+        b'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotTable" '
+        b'Target="../pivotTables/pivotTable1.xml"/></Relationships>'
+    )
+    members["xl/pivotCache/pivotCacheDefinition1.xml"] = cache_def.encode("utf-8")
+    members["xl/pivotCache/pivotCacheRecords1.xml"] = cache_records.encode("utf-8")
+    members["xl/pivotCache/_rels/pivotCacheDefinition1.xml.rels"] = (
+        b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        b'<Relationship Id="rId1" '
+        b'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheRecords" '
+        b'Target="pivotCacheRecords1.xml"/></Relationships>'
+    )
+    members["xl/pivotTables/pivotTable1.xml"] = pivot_table.encode("utf-8")
+    members["xl/pivotTables/_rels/pivotTable1.xml.rels"] = (
+        b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        b'<Relationship Id="rId1" '
+        b'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition" '
+        b'Target="../pivotCache/pivotCacheDefinition1.xml"/></Relationships>'
+    )
+
+    out = BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, data in members.items():
+            z.writestr(name, data)
+    return out.getvalue()
