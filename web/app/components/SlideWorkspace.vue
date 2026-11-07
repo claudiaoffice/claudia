@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // A presentation: the slide, the tool bar to put things on it, the slides along the bottom and the panel.
 import { computed, ref } from 'vue'
-import { insertFrame } from '~/lib/geometry'
+import { insertFrame, type Frame } from '~/lib/geometry'
 import type { SlideSession } from '~/lib/slide-session'
 import { copySelection, cutSelection, pasteAsPlainText } from '~/lib/clipboard'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import SlideCanvas from './SlideCanvas.vue'
+import ImageImportDialog from './ImageImportDialog.vue'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: SlideSession }>()
@@ -17,6 +18,7 @@ const state = session.state
 const { dark, toggle: toggleDark } = useTheme()
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
+const showImageDialog = ref(false)
 
 const readonly = computed(() => state.me.role === 'viewer')
 const here = computed(() => state.slides.findIndex((s) => s.id === state.activeSlide))
@@ -28,6 +30,13 @@ async function addText() {
 async function addShape(id: string) {
   const outline = state.library.find((s) => s.id === id) ?? state.shapes[id]
   if (await session.addShape(id, insertFrame('shape', outline?.aspect ?? null, count.value))) canvas.value?.focus()
+}
+function imageFrame(aspect: number): Frame {
+  return insertFrame('image', aspect, count.value)
+}
+function imageInserted() {
+  showImageDialog.value = false
+  canvas.value?.focus()
 }
 async function remove() {
   if (state.selected) await session.remove(state.selected)
@@ -107,6 +116,7 @@ const menus = computed<Menu[]>(() => [
       { label: '', separator: true },
       { id: 'edit.edit-text', label: 'Edit text', hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
       { id: 'edit.text-box', label: 'Text box', action: () => addText(), disabled: readonly.value },
+      { id: 'edit.image', label: 'Image…', action: () => (showImageDialog.value = true), disabled: readonly.value },
       { label: '', separator: true },
       ...state.library.map((s) => ({ label: s.name, action: () => addShape(s.id), disabled: readonly.value })),
       { label: '', separator: true },
@@ -164,6 +174,7 @@ const menus = computed<Menu[]>(() => [
         :readonly="readonly"
         @text="addText"
         @shape="addShape"
+        @image="showImageDialog = true"
         @remove="remove"
         @undo="session.undo()"
         @redo="session.redo()"
@@ -171,6 +182,9 @@ const menus = computed<Menu[]>(() => [
     </template>
     <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" />
     <div v-else class="noslide">This presentation has no slide.</div>
+    <template #overlay>
+      <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
+    </template>
     <template #footer>
       <footer class="foot">
         <div class="tabs" role="tablist" aria-label="slides">

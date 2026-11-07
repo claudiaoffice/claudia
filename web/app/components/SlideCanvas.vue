@@ -1,13 +1,17 @@
 <script setup lang="ts">
 // The slide on screen: its objects, and what people do to them. A click selects (and holds) an object, dragging moves
-// it, the handles resize it, a double click or Enter edits its text, Delete removes it. Nothing is believed until the
-// server says so: while the pointer is down the frame is a preview here, and it is committed when the pointer is up.
+// it, the handles resize it, a double click or Enter edits its text, Delete removes it, and a right click offers the
+// same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. Nothing is
+// believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { CORNERS, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { imageDataUrl } from '~/lib/images'
+import { contextMenuItems } from '~/lib/object-menu'
 import { colorOf, inkOn } from '~/lib/people'
 import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
+import type { MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: SlideSession }>()
 const session = props.session
@@ -74,7 +78,17 @@ function textStyle(o: SlideObject): Record<string, string> {
 function editorStyle(o: SlideObject): Record<string, string> {
   return { ...textCss(cssOf(o)), ...textBox(o) }
 }
-const label = (o: SlideObject) => (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (o.text ? `: ${o.text}` : '')
+function pictureOf(o: SlideObject) {
+  return o.image ? (state.images[o.image] ?? null) : null
+}
+/** The `<img>` source for an image object's picture, or '' before the asset has loaded (`images`/`objects`'s own
+ * event may arrive in either order on first load). */
+function pictureSrc(o: SlideObject): string {
+  const asset = pictureOf(o)
+  return asset ? imageDataUrl(asset) : ''
+}
+const label = (o: SlideObject) =>
+  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (o.text ? `: ${o.text}` : '')
 
 // ------------------------------------------------------------------------------ selection, dragging, resizing
 type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
@@ -82,12 +96,20 @@ const drag = ref<Drag | null>(null)
 
 const selected = computed(() => (state.selected ? (state.objects[state.selected] ?? null) : null))
 const selectedFrame = computed(() => (selected.value ? frameOf(selected.value) : null))
+/** An image always keeps its own proportions, the same way a shape with a fixed `aspect` does (the server
+ * refuses a `resize_object` that would not keep it, `claudia_creates._check_visual`). */
+function aspectOf(o: SlideObject): number | null {
+  if (o.kind === 'image') {
+    const asset = pictureOf(o)
+    return asset ? asset.width / asset.height : null
+  }
+  return outline(o)?.aspect ?? null
+}
 const handles = computed<Handle[]>(() => {
   const o = selected.value
   if (!o || readonly.value || editing.value) return []
-  return outline(o)?.aspect ? CORNERS : HANDLES
+  return aspectOf(o) !== null ? CORNERS : HANDLES
 })
-const aspectOf = (o: SlideObject) => outline(o)?.aspect ?? null
 
 function point(event: PointerEvent) {
   const box = slideEl.value!.getBoundingClientRect()
@@ -146,6 +168,27 @@ async function onSlideDown(event: PointerEvent) {
   session.select(null)
 }
 
+// ------------------------------------------------------------------------------ right-click context menu
+/** The object a right click opened the menu for, and where — not necessarily `selected`'s object once a second
+ * right click lands on a different one while the first's menu is still fading, so this is tracked on its own. */
+const contextMenu = ref<{ x: number; y: number; id: string } | null>(null)
+const contextItems = computed<MenuItem[]>(() => {
+  const o = contextMenu.value ? state.objects[contextMenu.value.id] : null
+  return o ? contextMenuItems(o, readonly.value, { edit: () => beginEdit(o.id), remove: () => session.remove(o.id) }) : []
+})
+function closeContextMenu() {
+  contextMenu.value = null
+}
+/** Was showing the browser's own menu here (Back, Inspect, …) over a shape, a text box or a picture — the bug
+ * this fixes. Shift + right button still gets the browser's own menu, the same escape hatch `TextEditor.vue`'s
+ * `onContextMenu` already gives composes, and editing text keeps its own menu too (spelling, …), same as before. */
+function onObjectContext(event: MouseEvent, o: SlideObject) {
+  if (event.shiftKey || editing.value?.id === o.id) return
+  event.preventDefault()
+  session.select(o.id)
+  contextMenu.value = { x: event.clientX, y: event.clientY, id: o.id }
+}
+
 // ------------------------------------------------------------------------------ editing text
 const editing = ref<{ id: string; text: string } | null>(null)
 const editText = computed({
@@ -158,7 +201,7 @@ const setEditor = (el: unknown) => {
 
 async function beginEdit(id: string | null = state.selected) {
   const o = id ? state.objects[id] : null
-  if (!o || editing.value) return
+  if (!o || editing.value || o.kind === 'image') return // a picture has no text to write
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
@@ -257,25 +300,29 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         role="button"
         @pointerdown="onObjectDown($event, o)"
         @dblclick.stop="beginEdit(o.id)"
+        @contextmenu="onObjectContext($event, o)"
       >
-        <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="pathCss(cssOf(o))" />
-        </svg>
-        <div class="words" :style="textStyle(o)">
-          <span v-if="o.text === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
-          <span v-else-if="editing?.id !== o.id" class="text">{{ o.text }}</span>
-        </div>
-        <textarea
-          v-if="editing?.id === o.id"
-          :ref="setEditor"
-          v-model="editText"
-          class="editor"
-          aria-label="text of the object"
-          :style="editorStyle(o)"
-          @keydown="onEditorKey"
-          @blur="commitEdit"
-          @pointerdown.stop
-        />
+        <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" />
+        <template v-else>
+          <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="pathCss(cssOf(o))" />
+          </svg>
+          <div class="words" :style="textStyle(o)">
+            <span v-if="o.text === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
+            <span v-else-if="editing?.id !== o.id" class="text">{{ o.text }}</span>
+          </div>
+          <textarea
+            v-if="editing?.id === o.id"
+            :ref="setEditor"
+            v-model="editText"
+            class="editor"
+            aria-label="text of the object"
+            :style="editorStyle(o)"
+            @keydown="onEditorKey"
+            @blur="commitEdit"
+            @pointerdown.stop
+          />
+        </template>
       </div>
 
       <!-- what colleagues have selected: their colour and name -->
@@ -302,6 +349,8 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         />
       </div>
     </div>
+
+    <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" label="Object menu" @close="closeContextMenu" />
   </div>
 </template>
 
@@ -342,6 +391,15 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
   width: 100%;
   height: 100%;
   overflow: visible;
+}
+.picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 .words {
   position: absolute;

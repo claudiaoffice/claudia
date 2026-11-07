@@ -18,9 +18,12 @@ checkpoints, presence, locks, chat); an app takes ``core_methods.extended()`` an
 types. A *command* travels in its stored form (``{"k": kind, "s": schema, "d": data}``), so the protocol never needs
 to know what a spreadsheet, a text or a slide is.
 
-Restoring a checkpoint and switching the line are deliberately not requests yet: who may do that in a live session is
-still being decided. Their effect on connected clients is already defined: ``branch`` and ``rebuilt`` events, and the
-``stale`` error for an edit that was written against the line left behind.
+Restoring a checkpoint or switching the line moves everybody, so neither happens from a bare request: an owner or
+editor *suggests* it (``propose_restore``, ``propose_switch``), and it is carried out once everybody who is
+connected now as an owner or editor has agreed (``answer_restore``; ``restore.py`` is the consent itself, E3.7) —
+unless the one suggesting it is the only one, in which case it happens at once. Either way the result reaches
+connected clients the same way: ``branch`` and ``rebuilt`` events, and the ``stale`` error for an edit that was
+written against the line left behind.
 
 This module has no web framework in it, so it is tested without sockets.
 """
@@ -55,6 +58,7 @@ from .auth import (
     TransferableDirectory,
     UserDirectory,
 )
+from .restore import POLICIES, RestoreCoordinator, RestoreError
 
 if TYPE_CHECKING:
     from claudia_core import Region
@@ -111,6 +115,10 @@ EVENTS = {
     "stale": "functions the document uses changed: {functions}; results computed by them are out of date",
     "joined": "somebody connected: {id, user, color}",
     "left": "somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection",
+    "restore_proposed": "a suggestion to restore a checkpoint or switch the line is open, or its answers changed "
+    "(see `propose_restore`): the proposal, as `answer_restore` returns it",
+    "restore_resolved": "the open suggestion closed: {outcome: agreed|declined|withdrawn}. `agreed` is followed by "
+    "`branch` and `rebuilt`, same as any restore or switch",
 }
 
 
@@ -269,6 +277,13 @@ class Context:
     directory: UserDirectory | None = None  # where this document's people are kept, if the server manages them
     doc_id: str = ""
     locale: str = DEFAULT_LOCALE  # the connection's own locale (E5.7); nothing reads it yet
+    editors: Callable[[], list[str]] = field(default=lambda: [])  # connected now, and may write (E3.7)
+    # The open restore/switch suggestion, if any, and the consent around it (E3.7); a harmless, unattached one by
+    # default, for contexts nothing here is asked of.
+    restore: RestoreCoordinator = field(
+        default_factory=lambda: RestoreCoordinator(lambda record: None, clock=lambda: 0.0)
+    )
+    broadcast: Callable[[dict], None] = field(default=lambda message: None)  # tell every window of this document
 
     @property
     def user(self) -> str:
@@ -486,6 +501,128 @@ def _lines(ctx):
         }
         for line in ctx.document.lines()
     ]
+
+
+@core_methods.method("peek_line", "line:str")
+def _peek_line(ctx, line):
+    """A read-only look at any line (active or hidden), without switching to it (E3.8): its revision and full
+    state, in the shape of `snapshot`. For previewing before suggesting a restore or a switch. `command_error` for
+    a name that is not a line of this document."""
+    model = ctx.document.peek_line(line)
+    return {
+        "line": line,
+        "revision": _rev_text(ctx.document.log.head(line)),
+        "app": model.app,
+        "state_schema": model.state_schema,
+        "state": model.serialize(),
+    }
+
+
+@core_methods.method("restore_policy")
+def _restore_policy(ctx):
+    """How silence at a suggestion's deadline is read (E3.7): `consensus` (must actively agree) or `veto` (must
+    actively object). One choice for the whole document, an owner's to make (`set_restore_policy`)."""
+    return {"policy": ctx.restore.policy}
+
+
+@core_methods.method("set_restore_policy", "policy:str", write=True)
+def _set_restore_policy(ctx, policy):
+    """Owners only: choose `consensus` or `veto` for this document (see `restore_policy`)."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", "only the owner of a document sets this")
+    if policy not in POLICIES:
+        raise RequestError("bad_request", f"set_restore_policy: policy must be one of {POLICIES}")
+    ctx.restore.policy = policy
+    return {"policy": policy}
+
+
+@core_methods.method("propose_restore", "checkpoint:int", write=True)
+def _propose_restore(ctx, checkpoint):
+    """Suggest going back to a checkpoint (E3.7). Everybody connected now as an owner or editor must agree before
+    it happens — unless you are the only one, in which case it happens at once, same as `branch` always does.
+    `command_error` for an unknown checkpoint number, or if a suggestion is already open (`restore_proposed`'s
+    `proposal`, or `null`, says); withdraw or answer that one first."""
+    if ctx.account.system:
+        raise RequestError("forbidden", "the assistant does not suggest restoring a checkpoint")
+    info = next((c for c in ctx.document.checkpoints if c.number == checkpoint), None)
+    if info is None:
+        raise RequestError("command_error", f"no checkpoint number {checkpoint}")
+    try:
+        proposal, applied = ctx.restore.propose(
+            kind="restore",
+            by=ctx.user,
+            checkpoint=checkpoint,
+            line=None,
+            label=f"checkpoint “{info.label}”",
+            group=ctx.editors(),
+        )
+    except RestoreError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    if proposal is not None:
+        ctx.broadcast({"event": "restore_proposed", "data": proposal.to_data()})
+    return {"applied": applied, "proposal": None if proposal is None else proposal.to_data()}
+
+
+@core_methods.method("propose_switch", "line:str", write=True)
+def _propose_switch(ctx, line):
+    """Suggest making another line active again, such as the way back after a restore (E3.7). Same consent as
+    `propose_restore`. `command_error` for a name that is not a line of this document, or if a suggestion is
+    already open."""
+    if ctx.account.system:
+        raise RequestError("forbidden", "the assistant does not suggest switching lines")
+    if line not in {x.name for x in ctx.document.lines()}:
+        raise RequestError("command_error", f"there is no line called {line!r}")
+    try:
+        proposal, applied = ctx.restore.propose(
+            kind="switch", by=ctx.user, checkpoint=None, line=line, label=f"line “{line}”", group=ctx.editors()
+        )
+    except RestoreError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    if proposal is not None:
+        ctx.broadcast({"event": "restore_proposed", "data": proposal.to_data()})
+    return {"applied": applied, "proposal": None if proposal is None else proposal.to_data()}
+
+
+@core_methods.method("answer_restore", "agree:bool", write=True)
+def _answer_restore(ctx, agree):
+    """Agree or decline the open suggestion (E3.7). Resolves it at once if that was the last answer needed, or the
+    moment anybody declines. `command_error` if nothing is open."""
+    if ctx.account.system:
+        raise RequestError("forbidden", "the assistant does not vote")
+    try:
+        outcome = ctx.restore.answer(user=ctx.user, agree=agree)
+    except RestoreError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    if outcome is None:
+        ctx.broadcast({"event": "restore_proposed", "data": ctx.restore.open_proposal.to_data()})
+    else:
+        ctx.broadcast({"event": "restore_resolved", "data": {"outcome": outcome}})
+    return {"resolved": outcome}
+
+
+@core_methods.method("discard_side_history", write=True)
+def _discard_side_history(ctx):
+    """Owners only: permanently forget every hidden line (E3.8) — everything a restore ever left behind that is
+    not part of the visible history. Returns the revisions removed. `command_error` while a suggestion is open
+    (answer or withdraw it first: it may be aimed at exactly what this would remove)."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", "only the owner of a document discards its hidden lines")
+    if ctx.restore.open_proposal is not None:
+        raise RequestError("command_error", "there is an open suggestion; answer or withdraw it first")
+    return {"discarded": [rev.to_data() for rev in ctx.document.discard_side_history()]}
+
+
+@core_methods.method("withdraw_restore", write=True)
+def _withdraw_restore(ctx):
+    """Take back the open suggestion: whoever made it, or an owner. `command_error` if nothing is open."""
+    if ctx.account.system:
+        raise RequestError("forbidden", "the assistant does not withdraw suggestions")
+    try:
+        ctx.restore.withdraw(user=ctx.user, is_owner=ctx.account.role == "owner")
+    except RestoreError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    ctx.broadcast({"event": "restore_resolved", "data": {"outcome": "withdrawn"}})
+    return {}
 
 
 @core_methods.method("changes_since", "revision:revision?")

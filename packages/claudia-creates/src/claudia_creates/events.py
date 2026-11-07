@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from claudia_core import ImageAsset
+
     from .model import SlideObject
     from .shapes import ShapeDefinition
 
@@ -21,7 +23,9 @@ class ObjectsChanged:
     order: tuple[str, ...]
 
     def to_data(self) -> dict:
-        """The plain-data form of the event, as sent to clients."""
+        """The plain-data form of the event. Carries every ``changed`` object's import record unmasked; a client
+        that goes straight to this (rather than through ``to_data_for``) is trusted with the full record, as the
+        log is."""
         return {
             "type": "objects",
             "slide": self.slide,
@@ -29,6 +33,11 @@ class ObjectsChanged:
             "removed": list(self.removed),
             "order": list(self.order),
         }
+
+    def to_data_for(self, viewer: str) -> dict:
+        """What ``viewer`` is sent: as :meth:`to_data`, with each changed image's import record masked for anyone
+        but the person who imported it (``hub.py`` calls this per connection when an event offers it)."""
+        return {**self.to_data(), "changed": [obj.to_data_for(viewer) for obj in self.changed]}
 
 
 @dataclass(frozen=True)
@@ -44,6 +53,22 @@ class ShapesChanged:
             "type": "shape",
             "id": self.shape_id,
             "definition": None if self.definition is None else self.definition.to_data(),
+        }
+
+
+@dataclass(frozen=True)
+class ImagesChanged:
+    """The document learned an image (``asset`` is it) or forgot one (``asset`` is ``None``)."""
+
+    image_id: str
+    asset: ImageAsset | None
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {
+            "type": "image",
+            "id": self.image_id,
+            "asset": None if self.asset is None else self.asset.to_data(),
         }
 
 

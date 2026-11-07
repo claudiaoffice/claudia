@@ -5,8 +5,8 @@ import re
 from claudia_creates import ALLOWED_CSS, BUILTIN_STYLES
 
 
-def test_the_first_draft_has_one_style_for_text_and_one_for_shapes():
-    assert set(BUILTIN_STYLES) == {"body-text", "plain-shape"}
+def test_the_first_draft_has_one_style_each_for_text_shapes_and_images():
+    assert set(BUILTIN_STYLES) == {"body-text", "plain-shape", "plain-image"}
 
 
 def test_every_style_has_a_name_people_can_read_and_says_what_it_is_for():

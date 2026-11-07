@@ -67,6 +67,14 @@ used.should_exit  # uvicorn.Server reads it to stop (tests/test_client_trust.py)
 used.redirect_request  # urllib calls it on a redirect (tests/test_server_redirect.py)
 used._test_client_calls_the_server_by_a_name_it_answers_to  # autouse fixture of packages/claudia-server/tests
 used._slides  # creates_methods_with(...).method("slides")
+used._peek_line  # core_methods.method("peek_line")
+used._restore_policy  # core_methods.method("restore_policy")
+used._set_restore_policy  # core_methods.method("set_restore_policy")
+used._propose_restore  # core_methods.method("propose_restore")
+used._propose_switch  # core_methods.method("propose_switch")
+used._answer_restore  # core_methods.method("answer_restore")
+used._withdraw_restore  # core_methods.method("withdraw_restore")
+used._discard_side_history  # core_methods.method("discard_side_history")
 used._slide  # creates_methods_with(...).method("slide")
 used._styles  # creates_methods_with(...).method("styles")
 used._add_slide  # creates_methods_with(...).method("add_slide")
@@ -75,6 +83,8 @@ used._move_object  # creates_methods_with(...).method("move_object")
 used._resize_object  # creates_methods_with(...).method("resize_object")
 used._set_text  # creates_methods_with(...).method("set_text")
 used._remove_object  # creates_methods_with(...).method("remove_object")
+used._images  # creates_methods_with(...).method("images")
+used._object_gets_image_fields  # registered as an upcaster by a decorator (claudia_creates AddObject schema 1 -> 2)
 
 # claudia-fonts: set on a fontTools table in claudia_fonts.testing, which tests use
 used.macStyle  # head.macStyle is read by fontTools when the font is saved
