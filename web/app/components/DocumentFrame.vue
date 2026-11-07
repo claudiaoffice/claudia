@@ -15,7 +15,7 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }
 
 const state = props.session.state
 const panelOpen = ref(true)
-const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about'>(null)
+const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'>(null)
 const panel = ref<{ ask: (text?: string) => void } | null>(null)
 const readonly = computed(() => state.me.role === 'viewer')
 
@@ -50,7 +50,8 @@ defineExpose({
   checkpoint,
   ask,
   shortcuts,
-  openDialog: (name: 'checkpoint' | 'share' | 'shortcuts' | 'about') => (dialog.value = name),
+  openDialog: (name: 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete') =>
+    (dialog.value = name),
   /** View ▸ History and chat (D120's shared block) toggles the one `panelOpen` this frame owns — exposed as a
    * getter/setter pair, not the ref itself, so the parent's own `computed` menus still track it correctly. */
   isPanelOpen: () => panelOpen.value,
@@ -100,6 +101,11 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
+    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
+    <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
+    <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
+    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
+    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog
       v-if="dialog === 'shortcuts'"
       :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"

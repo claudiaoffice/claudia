@@ -479,6 +479,90 @@ def change_password(path: Path, name: str, old_password: str, new_password: str)
     return True
 
 
+# --- leaving and handing over ownership (E2.3) -----------------------------------------------------------------
+
+
+def leave_document(path: Path, name: str, password: str) -> bool:
+    """``name`` removes themself, proving it with their own current password. Unlike :func:`remove_user` this
+    needs none of the document's keys, so a viewer (who only ever holds the content key) can leave too.
+
+    ``False`` if the password is wrong (or there is nobody of that name: the same refusal as elsewhere, D50).
+    ``ValueError`` if ``name`` is the document's only owner: somebody else must become the owner first
+    (:func:`transfer_owner`), or the document would be left without one.
+    """
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        slots = _slots_of(entries, path)
+        material = derive_login_material(password, name, manifest.salt, manifest.kdf)
+        unlocked = open_slot(slots, material, manifest.id)
+        if unlocked is None:
+            return False
+        people, recovery = _open_people_data(entries, manifest, unlocked.keys)
+        target = next(p for p in people if p.locator == material.locator)
+        others = [p for p in people if p is not target]
+        if target.role is Role.OWNER and not any(p.role is Role.OWNER for p in others):
+            raise ValueError("the document's only owner cannot leave; make somebody else the owner first")
+        remaining_slots = [s for s in slots if s.locator != material.locator]
+        blob = _people_blob(manifest, unlocked.keys[Domain.CONTENT], others, recovery)
+        _write_zip(path, _changed(manifest), remaining_slots, blob, _carried(entries), exclusive=False)
+    return True
+
+
+def transfer_owner(
+    path: Path, *, old_owner: str, old_owner_password: str, new_owner: str, new_owner_password: str
+) -> bool:
+    """Make ``new_owner`` (who must already be an editor) this document's owner, and ``old_owner`` an editor
+    instead. Both must prove themselves with their own current password: a person's role lives inside their own
+    password-sealed slot (D102), so changing it means resealing that slot, which takes the password that sealed
+    it in the first place — nobody else's password will do, and the server never has either on its own. One
+    atomic write, so the document is never left without an owner, or with ``new_owner`` as one before ``old_owner``
+    has stopped being one.
+
+    ``False`` if either password is wrong — the same refusal whichever one it was, as elsewhere in this module.
+    ``ValueError`` if ``old_owner`` is not currently the document's owner, ``new_owner`` is not currently an
+    editor, or they are the same person; none of these depend on a password, so they are reported plainly.
+    """
+    if _normalised(old_owner) == _normalised(new_owner):
+        raise ValueError("choose somebody else to become the new owner")
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        slots = _slots_of(entries, path)
+        old_material = derive_login_material(old_owner_password, old_owner, manifest.salt, manifest.kdf)
+        old_unlocked = open_slot(slots, old_material, manifest.id)
+        if old_unlocked is None:
+            return False
+        if old_unlocked.role is not Role.OWNER:
+            raise ValueError(f"{old_owner!r} is not the owner of this document")
+        new_material = derive_login_material(new_owner_password, new_owner, manifest.salt, manifest.kdf)
+        new_unlocked = open_slot(slots, new_material, manifest.id)
+        if new_unlocked is None:
+            return False
+        if new_unlocked.role is not Role.EDITOR:
+            raise ValueError(f"{new_owner!r} must already be an editor before becoming the owner")
+        people, recovery = _open_people_data(entries, manifest, old_unlocked.keys)
+        old_person = next(p for p in people if p.locator == old_material.locator)
+        new_person = next(p for p in people if p.locator == new_material.locator)
+        old_slot = make_slot(old_material, manifest.id, old_unlocked.name, Role.EDITOR, old_unlocked.keys)
+        new_slot = make_slot(new_material, manifest.id, new_unlocked.name, Role.OWNER, old_unlocked.keys)
+        slots = [
+            old_slot if s.locator == old_material.locator else new_slot if s.locator == new_material.locator else s
+            for s in slots
+        ]
+        people = [
+            Person(old_person.name, Role.EDITOR, old_person.locator)
+            if p is old_person
+            else Person(new_person.name, Role.OWNER, new_person.locator)
+            if p is new_person
+            else p
+            for p in people
+        ]
+        blob = _people_blob(manifest, old_unlocked.keys[Domain.CONTENT], people, recovery)
+        _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
+    return True
+
+
 # --- the recovery key -----------------------------------------------------------------------------------------------
 
 

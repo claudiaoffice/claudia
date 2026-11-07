@@ -31,7 +31,7 @@ PACKAGES = (
 def signature(obj) -> str:
     try:
         return re.sub(r" at 0x[0-9a-f]+", "", str(inspect.signature(obj)))  # defaults that are functions
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return "(...)"
 
 

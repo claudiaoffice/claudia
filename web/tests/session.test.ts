@@ -386,3 +386,126 @@ describe('the recovery key', () => {
     expect(session.state.notice).toBeNull()
   })
 })
+
+describe('the Manage menu (leaving, handing over ownership, deleting, exporting)', () => {
+  it('lists everybody, not just who is connected', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.roster = () => [
+      { user: 'ann', role: 'owner' },
+      { user: 'ben', role: 'editor' },
+    ]
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.roster()).toEqual([
+      { user: 'ann', role: 'owner' },
+      { user: 'ben', role: 'editor' },
+    ])
+  })
+
+  it('leaves with a password, and closes for nobody but us', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.leave = () => ({ left: true })
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.leave('Correct-Horse-9')).toBe(true)
+    expect(session.state.status).toBe('open')
+  })
+
+  it('reports why leaving did not work', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.leave = () => {
+      throw new ProtocolError('unauthorized', 'that is not your current password')
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.leave('wrong')).toBe(false)
+    expect(session.state.notice?.text).toBe('that is not your current password')
+  })
+
+  it('proposes a new owner with our own password', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.propose_owner = (p) => ({ proposed: p.name })
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.proposeOwner('ben', 'Correct-Horse-9')).toBe(true)
+    expect(link.calls.at(-1)).toMatchObject({ method: 'propose_owner', params: { name: 'ben', password: 'Correct-Horse-9' } })
+  })
+
+  it('accepting ownership reconnects so the new role is recognised', async () => {
+    const first = new FakeLink()
+    const second = new FakeLink()
+    server(first)
+    server(second)
+    first.handlers.accept_owner = () => ({ accepted: true })
+    const links = [first, second]
+    const session = new Session(() => links.shift()!)
+    await session.open()
+    expect(await session.acceptOwner('Battery-Staple-7')).toBe(true)
+    expect(session.state.status).toBe('open')
+    expect(second.count('sheets')).toBe(1)
+  })
+
+  it('deletes the document with a password, and closes the session', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.delete_document = () => ({ deleted: true })
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.deleteDocument('Correct-Horse-9')).toBe(true)
+    expect(session.state.status).toBe('closed')
+  })
+
+  it('does not close the session when deleting is refused', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.delete_document = () => {
+      throw new ProtocolError('forbidden', 'only an owner of a document may delete it')
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.deleteDocument('Correct-Horse-9')).toBe(false)
+    expect(session.state.status).toBe('open')
+  })
+
+  it('exports the current content as plain data', async () => {
+    const link = new FakeLink()
+    server(link)
+    const exported = { format: 'claudia-export 1', app: 'computes', exported_at: 't', state_schema: 1, state: {} }
+    link.handlers.export_content = () => exported
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.exportContent()).toEqual(exported)
+  })
+
+  it('tells us when somebody else leaves', async () => {
+    const { session, link } = await opened()
+    link.push('ephemeral', { kind: 'person_left', sender: 'ben', data: { user: 'ben' } })
+    expect(session.state.notice?.text).toMatch(/ben left/)
+  })
+
+  it('reconnects when the ownership of the document changed under us', async () => {
+    const first = new FakeLink()
+    const second = new FakeLink()
+    server(first)
+    server(second)
+    const links = [first, second]
+    const session = new Session(() => links.shift()!)
+    await session.open()
+    first.push('ephemeral', { kind: 'owner_changed', sender: 'ben', data: { owner: 'ben' } })
+    await session.settled()
+    expect(session.state.notice?.text).toMatch(/ben is now the owner/)
+    expect(session.state.status).toBe('open')
+    expect(second.count('sheets')).toBe(1)
+  })
+
+  it('closes the session when the document was deleted out from under us', async () => {
+    const { session, link } = await opened()
+    link.push('ephemeral', { kind: 'document_deleted', sender: 'ann', data: {} })
+    expect(session.state.status).toBe('closed')
+    expect(session.state.notice?.text).toMatch(/deleted/)
+  })
+})

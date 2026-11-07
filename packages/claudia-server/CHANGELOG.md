@@ -38,6 +38,61 @@ Security release: the second QA review's first recommendation (SEC-10).
   optional `allowed_methods` parameter (additive, default `()`: an assistant made without passing it writes
   nothing, which is the safe default rather than a convenience).
 
+## [0.10.0] - 2026-11-06
+
+Leaving a document, handing over its ownership, deleting it, and exporting its content (E2.3, E2.9; "Manage" in
+every app's File menu).
+
+### Added
+- `roster`, `leave`, `propose_owner`, `accept_owner`, `delete_document`, `export_content`: the new wire methods
+  behind the File ▸ Manage submenu (assign new owner, leave, export, delete). Handing over ownership is a
+  propose/accept pair, because a role lives inside its own password-sealed slot (D102): the current owner proposes
+  with their own password, and the new owner (who must already be an editor) accepts with theirs, each confirming
+  their own identity. `export_content` returns the document's current content as Claudia's own JSON format only
+  — not Word, Excel or PowerPoint, and not yet the history or the chat (both stay open, E2.9).
+- `RosterDirectory`, `LeavableDirectory`, `TransferableDirectory`, `DeletableDirectory` (`claudia_server.auth`):
+  optional directory capabilities for the above, checked with `isinstance` and implemented by `SealedDocuments`
+  only — like `RecoverableDirectory`, a server using the lightweight in-memory or file-backed directory does not
+  offer them yet, and says so (`unavailable`) rather than failing oddly.
+- `SealedDocuments.list_people`, `.leave`, `.propose_owner_transfer`, `.accept_owner_transfer`, `.delete_document`.
+- Three new `ephemeral` event kinds: `person_left`, `owner_changed`, `document_deleted` — so everybody still
+  connected finds out without having to poll.
+
+## [0.9.0] - 2026-11-06
+
+The worker pool D37 specified and left unbuilt: `Connection.handle` runs synchronously on the event loop, so slow
+work in one request used to stall every document the server holds (QA review 2026-11-06, PERF-02; D134).
+
+### Added
+- **`WorkerPool`** (`workers.py`): runs a function in a separate OS process and awaits its result —
+  `await pool.submit(fn, *args, **kwargs)`. Generic on purpose: knows nothing about cells, formulas or typesetting.
+  `fn` and its arguments must be importable at module level and picklable. A worker process dying outright (killed, a
+  segfault in a C extension) breaks only the task that caused it: the pool replaces itself transparently on the next
+  `submit`, so neither the server nor another document's pending work is affected. `pool.stop()` lets the worker
+  processes go; safe before anything was submitted and safe to call more than once. `DEFAULT_WORKERS` (4).
+- **`Hub.workers`**: one `WorkerPool` per `Hub` (one process per `--model`, D134 — not a pool shared across process
+  boundaries), sized by the new `Hub(..., max_workers=...)` constructor argument. `Hub.stop()` now also calls
+  `workers.stop()`.
+Security release: the second QA review's first recommendation (SEC-10).
+
+### Added
+- **The AI's allow-list is enforced at dispatch, not only in the model's output parser (SEC-10, E7.6, E9.9).**
+  `Account.allowed_methods` (set by `Account.assistant(allowed_methods=...)`): the write methods this account may
+  call, checked by `MethodTable.dispatch` before the method runs — the one place every path goes through
+  (`Assistant._call`, the wire, and any future remote AI connection). `Assistant(allowed_methods=...)` passes it on
+  when the account is made; `apps.stand_in_assistant_for` and `apps.model_assistant_for` both set it from
+  `apps.MODEL_METHODS` of the document's app, so the scripted stand-in is held to the same guarantee as a real
+  model, not only the engine `claudia_ai.Agent._take_calls` happens to filter for. `apps.MODEL_METHODS` gained a
+  `"composes"` entry: `("suggest",)`, so a composes assistant is refused by name, not only by an empty allowed set.
+- `protocol._apply` refuses `account.system` unconditionally: the assistant cannot use the generic `apply` as a
+  tunnel around an app's own wrapper checks (`composes._people_only` and the like), whatever its allow-list says.
+
+### Changed
+- `Account.__init__` and `Account.assistant()` take an additional optional `allowed_methods` parameter (additive,
+  default `None`: no behaviour change for an account nobody restricts). `Assistant.__init__` takes an additional
+  optional `allowed_methods` parameter (additive, default `()`: an assistant made without passing it writes
+  nothing, which is the safe default rather than a convenience).
+
 ## [0.8.0] - 2026-11-03
 
 Sealed documents are packed into blocks with a snapshot, and the recovery key is shown (E2.1, E2.5, E2.2).

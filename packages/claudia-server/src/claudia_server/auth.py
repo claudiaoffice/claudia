@@ -124,6 +124,51 @@ class RecoverableDirectory(Protocol):
         a key that is not a key, an unacceptable name or a weak password."""
 
 
+@runtime_checkable
+class RosterDirectory(Protocol):
+    """A directory that can list every person of a document, not just who happens to be connected right now."""
+
+    def list_people(self, doc_id: str) -> list[Account]:
+        """Everybody who may log in to this document, in the order they were added."""
+
+
+@runtime_checkable
+class LeavableDirectory(Protocol):
+    """A directory where a person can remove themself, with nothing more than their own password."""
+
+    def leave(self, doc_id: str, name: str, password: str) -> bool:
+        """``name`` removes themself; ``False`` if ``password`` is wrong (or there is nobody of that name: the same
+        refusal, D50). ``ValueError`` with a sentence if ``name`` is the document's only owner."""
+
+
+@runtime_checkable
+class TransferableDirectory(Protocol):
+    """A directory whose documents can change who owns them (E2.3). A role is sealed inside its own slot (D102), so
+    handing one over needs both people's current passwords, one at each step: the owner proposes with their own now,
+    the new owner accepts with theirs when they are ready."""
+
+    def propose_owner_transfer(self, doc_id: str, old_owner: str, old_owner_password: str, new_owner: str) -> bool:
+        """``old_owner`` (who must be the document's current owner) asks ``new_owner`` (who must already be an
+        editor) to become the owner instead. A later proposal for the same document replaces one that was not yet
+        accepted. ``False`` if ``old_owner_password`` is wrong. ``ValueError`` with a sentence if ``old_owner`` is
+        not the owner, ``new_owner`` is not currently an editor, or they are the same person."""
+
+    def accept_owner_transfer(self, doc_id: str, new_owner: str, new_owner_password: str) -> Account | None:
+        """``new_owner`` accepts a transfer proposed to them, with their own password. The new account (now the
+        owner), or ``None`` for anything that keeps it from going through: nothing was proposed to them, it already
+        went through, it expired, or the password is wrong — the same answer whichever it is (D50)."""
+
+
+@runtime_checkable
+class DeletableDirectory(Protocol):
+    """A directory that can remove a whole document, not just a person in it."""
+
+    def delete_document(self, doc_id: str, owner: str, owner_password: str) -> bool:
+        """Remove the document for good: its file, its history and its chat. ``False`` if ``owner_password`` is
+        wrong or ``owner`` is not currently an owner of the document (the same refusal either way); nothing is
+        removed then."""
+
+
 @dataclass(frozen=True)
 class _Record:
     account: Account

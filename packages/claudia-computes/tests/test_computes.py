@@ -182,7 +182,7 @@ def random_workbook_session(doc, seed, steps=300):
             else:
                 pair = Batch((SetCells(sheet, ((0, 0, content_of(1)),)), Structure(InsertRows(sheet, 0, 1))), "pair")
                 doc.execute(pair, author=who)
-        except UndoConflict, UndoRefused, ValueError, IndexError:
+        except (UndoConflict, UndoRefused, ValueError, IndexError):
             pass  # refused or rejected: by contract nothing changed
     return doc
 

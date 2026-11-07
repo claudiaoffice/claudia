@@ -72,14 +72,40 @@ def test_every_app_has_the_same_seven_menus_in_the_same_order(app: manifest.Mani
     assert [menu.label for menu in app.menus] == ["File", "Edit", "Format", "View", "Tools", "Config", "Help"]
 
 
-def test_file_is_grouped_new_open_save_group_share_close_quit(app: manifest.Manifest) -> None:
-    """D123/D124: separators kept, grouped as New/Open · Save-group · Share · Close/Quit."""
+def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Manifest) -> None:
+    """D123/D124: separators kept, grouped as New/Open · Save-group · Manage · Close/Quit. D135: the Manage
+    item replaces the plain "Share…" item it grew out of, and is itself a submenu."""
     file_menu = app.menu("File")
     assert [[e.label for e in section] for section in file_menu.sections] == [
         ["New", "Open…"],
         ["Save", "Save New Checkpoint…", "Download"],
-        ["Share…"],
+        ["Manage"],
         ["Close Document", "Quit"],
+    ]
+
+
+def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: manifest.Manifest) -> None:
+    """D135: the "Manage" submenu Claude built from the design the owner accepted (assigning a new owner, leaving,
+    exporting and deleting a document from the server), with Share… kept as its first item so adding people to a
+    document is still possible."""
+    file_menu = app.menu("File")
+    manage = file_menu.sections[2][0]
+    assert isinstance(manage, Submenu) and manage.label == "Manage"
+    assert [a.id for a in manage.items] == [
+        "file.manage.share",
+        "file.manage.assign-owner",
+        "file.manage.accept-owner",
+        "file.manage.leave",
+        "file.manage.export",
+        "file.manage.delete",
+    ]
+    assert [a.label for a in manage.items] == [
+        "Share…",
+        "Assign New Owner…",
+        "Accept Ownership…",
+        "Leave Document…",
+        "Export…",
+        "Delete From Server…",
     ]
 
 
@@ -99,7 +125,9 @@ def test_edits_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
 def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
     """Show who wrote what, History and chat, Dark mode — D120's shared block, verbatim in every app (even where,
     per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship yet)."""
-    assert [a.id for a in app.menu("View").sections[0]] == ["view.authors", "view.panel", "view.dark"]
+    section = app.menu("View").sections[0]
+    assert all(isinstance(e, Action) for e in section), f"expected only plain actions, got {section!r}"
+    assert [e.id for e in section if isinstance(e, Action)] == ["view.authors", "view.panel", "view.dark"]
 
 
 def test_configs_only_item_is_shortcuts(app: manifest.Manifest) -> None:
@@ -119,7 +147,9 @@ def test_composes_format_offers_the_two_style_actions(composes: manifest.Manifes
 
 
 def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manifest) -> None:
-    assert [a.id for a in composes.menu("View").sections[1]] == ["view.page"]
+    section = composes.menu("View").sections[1]
+    assert all(isinstance(e, Action) for e in section), f"expected only plain actions, got {section!r}"
+    assert [e.id for e in section if isinstance(e, Action)] == ["view.page"]
 
 
 @pytest.mark.parametrize("app_name", ["computes", "creates"])

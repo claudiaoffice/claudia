@@ -52,5 +52,5 @@ def try_step(step, who):
     """An undo that would hurt a colleague's work is refused; that is a correct outcome, not an error."""
     try:
         return step(who)
-    except UndoConflict, UndoRefused:
+    except (UndoConflict, UndoRefused):
         return None

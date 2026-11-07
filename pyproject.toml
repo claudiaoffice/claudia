@@ -27,7 +27,7 @@ claudia-typeset = { workspace = true }
 dev = [
     "pytest>=8",
     "mypy>=1.10",
-    "ruff>=0.6",
+    "ruff>=0.6,<0.15",  # D140/CODE-10: 0.15.0-0.17.4 reformat `except (A, B):` into invalid `except A, B:`
     "vulture>=2.11",
     "sphinx>=7.3",
     "myst-parser>=3",

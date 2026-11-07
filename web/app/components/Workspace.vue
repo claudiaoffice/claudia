@@ -24,7 +24,9 @@ const sel = ref<Sel>(single(0, 0))
 const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
-const dialog = ref<null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about'>(null)
+const dialog = ref<
+  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
+>(null)
 const panelOpen = ref(true)
 const grid = ref<{ focus: () => void } | null>(null)
 const panel = ref<{ ask: (text?: string) => void } | null>(null)
@@ -220,7 +222,28 @@ const menus = computed<Menu[]>(() => [
       { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
       { id: 'file.download', label: 'Download', disabled: true }, // D123: a stub here until computes has an export format
       { label: '', separator: true },
-      { id: 'file.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+      {
+        id: 'file.manage',
+        label: 'Manage',
+        items: [
+          { id: 'file.manage.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+          {
+            id: 'file.manage.assign-owner',
+            label: 'Assign new owner…',
+            action: () => (dialog.value = 'assign-owner'),
+            disabled: state.me.role !== 'owner',
+          },
+          { id: 'file.manage.accept-owner', label: 'Accept ownership…', action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
+          { id: 'file.manage.leave', label: 'Leave document…', action: () => (dialog.value = 'leave') },
+          { id: 'file.manage.export', label: 'Export…', action: () => (dialog.value = 'export') },
+          {
+            id: 'file.manage.delete',
+            label: 'Delete from server…',
+            action: () => (dialog.value = 'delete'),
+            disabled: state.me.role !== 'owner',
+          },
+        ],
+      },
       { label: '', separator: true },
       { id: 'file.close', label: 'Close document', action: () => emit('leave') },
     ],
@@ -398,6 +421,11 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
+    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
+    <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
+    <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
+    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
+    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog
       v-if="dialog === 'shortcuts'"
       :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"

@@ -3,6 +3,18 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-06
+
+Leaving a document and handing over ownership (E2.3).
+
+### Added
+- `leave_document`: a person removes themself with their own password, needing none of the document's keys (so a
+  viewer, who only ever holds the content key, can leave too). Refused if they are the document's only owner.
+- `transfer_owner`: make an existing editor the new owner and the old owner an editor, each proving themselves with
+  their own current password. A role lives inside its own password-sealed slot (D102), so changing one means
+  resealing it, which takes the password that sealed it — this is why a transfer needs both passwords at once,
+  rather than just the current owner's.
+
 ## [0.3.0] - 2026-11-03
 
 Blocks, head record, snapshot and the recovery key in use (E2.1, E2.5, E2.2; third slice).

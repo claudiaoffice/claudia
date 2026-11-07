@@ -213,7 +213,6 @@ def test_a_presentation_server_offers_the_slide_methods(tmp_path):
 
 
 def test_shape_folders_extend_the_library(tmp_path):
-
     shapes = tmp_path / "my-shapes"
     shapes.mkdir()
     (shapes / "bar.json").write_text(
