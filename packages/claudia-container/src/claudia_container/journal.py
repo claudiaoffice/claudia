@@ -153,7 +153,10 @@ def _open_in_this_process(path: Path) -> list[str]:
         if not isinstance(obj, (io.RawIOBase, io.BufferedIOBase)):
             continue
         name = getattr(obj, "name", None)
-        if name is None or obj.closed:
+        # A file opened from a bare descriptor (as every writer here is, via `os.fdopen`) reports that
+        # descriptor's *number* as `.name`, not a path, until something re-opens it by path instead -- that
+        # int is not a path and must be skipped before it ever reaches `Path(...)`, rather than caught after.
+        if not isinstance(name, (str, os.PathLike)) or obj.closed:
             continue
         try:
             same = Path(name).resolve() == path.resolve()
@@ -188,7 +191,12 @@ def _replace(temp: Path, path: Path) -> None:
             return
         except PermissionError as error:
             if attempt == _REPLACE_RETRIES - 1:
-                ours = _open_in_this_process(path) + _open_in_this_process(temp)
+                # Best-effort diagnostic only: whatever goes wrong while looking must never stand in for the
+                # real failure above, so a second bug here cannot hide the first one the way it just did.
+                try:
+                    ours = _open_in_this_process(path) + _open_in_this_process(temp)
+                except Exception:
+                    ours = []
                 if ours:
                     raise PermissionError(f"{error}; still open in this process: {ours}") from error
                 raise
