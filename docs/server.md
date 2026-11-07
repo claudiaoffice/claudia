@@ -164,8 +164,12 @@ Not there yet: redaction in packed blocks (E2.6: a redacted text still rests in 
 
 A server started with `--model claudia_creates:SlideModel` hosts presentations. Its methods (see `GET /api/protocol`
 for every parameter) are `slides`, `slide`, `shapes`, `images`, `styles`, `add_slide`, `add_object`, `add_image`,
-`move_object`, `resize_object`, `set_text` and `remove_object`, plus the core ones. A selection is the region
-`{"kind": "objects", "slide": "s1", "ids": ["o1"]}` for `presence` and `lock`.
+`move_object`, `resize_object`, `set_text`, `set_snap` and `remove_object`, plus the core ones. A selection is the
+region `{"kind": "objects", "slide": "s1", "ids": ["o1"]}` for `presence` and `lock`.
+
+Each object also carries `snap` (E10.15): whether it holds to the grid, a helper the view draws on its own and
+never sends to the server. `set_snap` takes an object's id and a `snap` boolean; releasing or re-snapping an
+object is its own step in the document's history, independent of moving, resizing or editing it.
 
 Positions and sizes are whole units of a slide of 1600 by 900. Shapes are JSON files, one per shape (the format is
 described with `claudia_creates.shapes`); `--shapes DIR` adds a folder of them to the built-in rectangle, circle and

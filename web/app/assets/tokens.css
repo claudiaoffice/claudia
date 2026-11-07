@@ -78,6 +78,9 @@
 
   --radius: 10px;
   --shadow: 0 1px 2px rgb(31 26 51 / 8%), 0 8px 24px rgb(31 26 51 / 8%);
+  /* E10.15: the creates grid overlay, a helper the view draws, not part of the slide. Not themed like `--line` —
+   * a slide's own canvas (`SlideCanvas.vue`'s `.slide`) is always white, light or dark mode, like a real slide. */
+  --grid: rgb(31 26 51 / 8%);
 }
 
 /* Each app has its colour: the rest of the design is shared. */

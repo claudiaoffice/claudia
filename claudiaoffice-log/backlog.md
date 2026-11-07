@@ -1073,6 +1073,14 @@ kanban-plugin: board
 	Superseded by E6.3. A native GTK grid is no longer built; the frontend has one grid that every shell shows (D42).
 	
 	Use case: DATA · Decisions: D42 · Kept for traceability only; no work remains.
+- [x] **E10.15 · Grid and snap**
+	As a presenter, I want to show a grid on the slide and have objects snap to it, so that I can line things up without fighting the mouse.
+	
+	AC: a View menu item shows or hides the grid, on by default, as a client-local preference like Dark mode (not document state, not undoable); an object snaps to the grid by default on both move and resize, at a fixed spacing; a shape or image dragged by a corner keeps its own proportions exactly, snapped on its dominant dimension only; the object's own context menu lets it be released from the grid and snapped back, as a swapping label rather than a checkbox; snapping is the object's own real, persisted state (survives a reload, has its own history entry) and applies whether or not the grid lines happen to be shown.
+	
+	Use case: ALL · Decisions: D151
+	
+	Status evidence: not in this backlog until the owner asked for it directly, mock-up agreed first (`notes/mockups/grid-and-snap.svg`, panels A–F). Built end to end: `claudia_creates.SlideObject.snap` and the `SetSnap` command (`AddObject` schema 2→3, `SlideModel.state_schema` 3→4, upcaster tested), the server's `set_snap` method (`claudia_server` 0.16.0), and the web side — `lib/grid.ts`'s `useGrid`, `geometry.ts`'s grid-aware `moveFrame`/`resizeFrame`, the CSS grid overlay in `SlideCanvas.vue`, and the context-menu toggle in `object-menu.ts`. 50 units between lines (not configurable yet) and no keyboard shortcut (menu only) are the two things a later round could add; neither was asked for.
 
 
 

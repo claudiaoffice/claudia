@@ -93,9 +93,11 @@ used._add_object  # creates_methods_with(...).method("add_object")
 used._move_object  # creates_methods_with(...).method("move_object")
 used._resize_object  # creates_methods_with(...).method("resize_object")
 used._set_text  # creates_methods_with(...).method("set_text")
+used._set_snap  # creates_methods_with(...).method("set_snap")
 used._remove_object  # creates_methods_with(...).method("remove_object")
 used._images  # creates_methods_with(...).method("images")
 used._object_gets_image_fields  # registered as an upcaster by a decorator (claudia_creates AddObject schema 1 -> 2)
+used._object_gets_snap_field  # registered as an upcaster by a decorator (claudia_creates AddObject schema 2 -> 3)
 
 # claudia-creates-io: set-only properties of python-pptx's own objects (never read back by our code, only by
 # python-pptx itself when the file is saved)

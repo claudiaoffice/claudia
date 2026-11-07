@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { insertFrame, type Frame } from '~/lib/geometry'
 import type { SlideSession } from '~/lib/slide-session'
 import { copySelection, cutSelection, pasteAsPlainText } from '~/lib/clipboard'
+import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import SlideCanvas from './SlideCanvas.vue'
@@ -16,6 +17,7 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
 const session = props.session
 const state = session.state
 const { dark, toggle: toggleDark } = useTheme()
+const { shown: gridShown, toggle: toggleGrid } = useGrid()
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
@@ -129,6 +131,14 @@ const menus = computed<Menu[]>(() => [
     items: [
       { id: 'view.authors', label: 'Show who wrote what', checked: false, disabled: true }, // creates tracks no per-object authorship yet
       {
+        id: 'view.grid',
+        label: 'Show grid',
+        checked: gridShown.value,
+        action: (t) => {
+          if (t === undefined || (t === 'on') !== gridShown.value) toggleGrid()
+        },
+      },
+      {
         id: 'view.panel',
         label: 'History and chat',
         checked: frame.value?.isPanelOpen() ?? true,
@@ -180,7 +190,7 @@ const menus = computed<Menu[]>(() => [
         @redo="session.redo()"
       />
     </template>
-    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" />
+    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" />
     <div v-else class="noslide">This presentation has no slide.</div>
     <template #overlay>
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
