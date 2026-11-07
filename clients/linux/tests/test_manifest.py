@@ -16,6 +16,7 @@ import json
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -120,6 +121,34 @@ def test_edits_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
         "edit.paste",
         ["edit.paste-as-plain"],
     ]
+
+
+def test_macos_roles_are_set_on_the_shared_undo_redo_and_clipboard_actions(app: manifest.Manifest) -> None:
+    """D158: a macOS shell needs a Cocoa role (``undo:``, ``redo:``, ``cut:``, ``copy:``, ``paste:``) next to each
+    shared Edit item's accelerator, or the key equivalent is swallowed by the menu and the web view never sees it
+    (confirmed on the owner's Mac, ``notes/e0-3-neutralino-windows-macos.md``). This holds whether the action's
+    ``kind`` is ``EDITING`` (composes, native WebKit commands) or ``PAGE`` (computes/creates, D121): either way the
+    key has to reach the item before anything downstream can run. ``edit.paste-as-plain`` has no standard Cocoa
+    editing selector, so it is not given one."""
+    pairs = {
+        "edit.undo": "undo:",
+        "edit.redo": "redo:",
+        "edit.copy": "copy:",
+        "edit.cut": "cut:",
+        "edit.paste": "paste:",
+    }
+    for action_id, role in pairs.items():
+        assert app.action(action_id).role == role
+    assert app.action("edit.paste-as-plain").role is None
+
+
+def test_only_the_shared_edit_block_carries_a_macos_role(app: manifest.Manifest) -> None:
+    """Everything else (``file.*``, ``view.*``, ``tools.*``, app-specific Edit items such as creates'
+    ``edit.new-slide``) has no Cocoa editing counterpart, so :attr:`manifest.Action.role` stays unset there."""
+    roled = {"edit.undo", "edit.redo", "edit.copy", "edit.cut", "edit.paste"}
+    for action in app.actions:
+        if action.id not in roled:
+            assert action.role is None, f"{action.id} should not carry a macOS role"
 
 
 def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
@@ -344,6 +373,26 @@ def test_the_manifest_can_be_listed_for_the_page_and_the_docs(app: manifest.Mani
     json.dumps(listing)  # plain data, including any submenu's nested "items"
     paste_as = next(e for e in listing["menus"][1]["sections"][1] if e.get("label") == "Paste As")
     assert paste_as["items"][0]["id"] == "edit.paste-as-plain"
+
+
+def test_role_is_in_the_listing_so_the_macos_client_can_read_it_without_importing_this_module(
+    app: manifest.Manifest,
+) -> None:
+    """The macOS client (``clients/macos``) has no PyGObject and no reason to import this GTK-adjacent package at
+    run time; it reads ``describe()``'s JSON instead (``clients/macos/tools/generate_menu.py``). ``role`` has to
+    survive that trip or D158's Cocoa mapping cannot be built on the other side."""
+    listing = app.describe()
+    by_id = {a["id"]: a for menu in listing["menus"] for a in _flatten(menu)}
+    assert by_id["edit.copy"]["role"] == "copy:"
+    assert by_id["file.new"]["role"] is None
+
+
+def _flatten(menu: dict[str, Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for section in menu["sections"]:
+        for entry in section:
+            out.extend(entry.get("items", [entry]))
+    return out
 
 
 def test_about_links_are_website_then_report_an_issue_then_legal() -> None:

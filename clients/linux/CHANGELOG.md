@@ -14,3 +14,6 @@ First slice of the native Linux client (epic 5), for composes only.
 - Shell contract **version 1** (`clients/contract/shell-contract.v1.schema.json`): `hello`, `welcome`, `action`,
   `action_state`, `error`.
 - A page adapter that lets the unchanged web app take part in the contract.
+- `manifest.Action.role` (D158): the Cocoa editing selector (`undo:`, `redo:`, `cut:`, `copy:`, `paste:`) a macOS
+  shell needs next to an Edit item's accelerator, set on the shared Undo/Redo/Copy/Cut/Paste block of every app and
+  carried through `describe()`. Additive; GTK ignores it. First consumer: `clients/macos`.
