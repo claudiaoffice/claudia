@@ -38,3 +38,15 @@ class StructureChanged:
 class SheetsChanged:
     def to_data(self) -> dict:
         return {"type": "sheets"}
+
+
+@dataclass(frozen=True)
+class LinesResized:
+    """Rows or columns of one sheet were given a size, or returned to the sheet's default (``size`` is ``None``)."""
+
+    sheet: SheetId
+    axis: str
+    sizes: tuple[tuple[int, float | None], ...]
+
+    def to_data(self) -> dict:
+        return {"type": "sizes", "sheet": self.sheet, "axis": self.axis, "sizes": [[i, s] for i, s in self.sizes]}

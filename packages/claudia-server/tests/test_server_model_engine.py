@@ -110,7 +110,7 @@ def test_the_model_can_only_use_the_editing_methods_and_is_told_about_them():
         ann.request("chat", {"text": "@ai hi"})
         await hosts[0].assistant.idle()
         prompt = system_prompt(model)
-        for name in ("set_cells", "add_sheet", "structure"):
+        for name in ("set_cells", "add_sheet", "structure", "resize_lines"):
             assert f"- {name}(" in prompt
         for name in ("add_user", "chat", "apply", "undo", "save_checkpoint", "lock"):
             assert f"- {name}(" not in prompt

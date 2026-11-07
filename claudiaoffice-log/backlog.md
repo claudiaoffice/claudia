@@ -192,8 +192,8 @@ kanban-plugin: board
 	As a user, I want to style cells, ranges, rows and columns with named styles that use CSS table properties.
 	
 	AC: a cell carries a style name, settable for a cell, range, row, column or sheet default, layered in a fixed order, and the dialog says where a cell's look comes from; properties from the allow-list; style ranges stored as runs or ranges, not per cell, moving with row and column edits, measured with a million styled cells; the grid draws from the computed styles without an element per cell; ODS and xlsx export map the named styles.
-	
-	Use case: ALL · Decisions: D73, D75, D17 · Open: whether row heights and column widths are style or sheet layout (proposal: layout). Depends on E1.10, E6.1, E6.3.
+
+	Use case: ALL · Decisions: D73, D75, D17 · Row heights and column widths are sheet layout, not part of this card (D135, E6.16). Depends on E1.10, E6.1, E6.3.
 - [ ] **E6.14 · Number and date formats**
 	As a user, I want named number and date formats, so that values look right for their purpose and my locale.
 	
@@ -206,6 +206,14 @@ kanban-plugin: board
 	AC: a cell, text label or chart title can be marked as LaTeX and is rendered by the typesetting service and drawn as an image, with the source staying the cell content that formulas and search see; the `=$$\frac{x}{y}$$` cases work; rendering never blocks the grid; output is cached and shown as an image, never inline.
 	
 	Use case: SCI, EDU · Decisions: D88, D66 · Depends on E3.4 and E6.3. A sheet with thousands of typeset cells needs batching and limits.
+- [ ] **E6.16 · Row height and column width**
+	As a user, I want to set a row's height and a column's width, changeable from the header, so that I can make room for what a sheet holds.
+
+	AC: a row/column shows at a sheet default when nothing overrides it; a right-click on a row or column header opens a dialog to set its size in pixels, with range limits enforced; dragging the border between two row or column headers resizes the one above/left of the border live as the mouse moves; one command resizes one or many rows/columns at once and undoes as one step; a size survives row/column insert and delete (remapped to the moved line) and survives removing and restoring a sheet; merged cells are out of scope.
+
+	Use case: ALL · Decisions: D135 · A narrower, already-layout-settled split out of E6.13 (styling), not dependent on it. Depends on E1.10, E6.1, E6.3.
+
+	Status evidence: model, command, undo/redo, serialization and the server's `sizes`/`resize_lines` methods are built and tested (`claudia_computes.model.Sheet.row_heights`/`col_widths`, `claudia_computes.commands.ResizeLines`, `claudia_server.computes._sizes`/`_resize_lines`). The web grid still draws every row/column at the fixed default (`SheetGrid.vue` has no variable sizing yet) and there is no drag-resize or context-menu dialog — those are Patch 2, not started.
 - [ ] **E7.2 · skills.md and persona.md**
 	As an app author, I want skills and persona files per app, so that the AI behaves right in each.
 	

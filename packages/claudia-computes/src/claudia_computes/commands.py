@@ -12,10 +12,20 @@ from typing import ClassVar
 
 from claudia_core import Batch, Command, Context
 
-from .events import CellsChanged, SheetsChanged, StructureChanged
+from .events import CellsChanged, LinesResized, SheetsChanged, StructureChanged
 from .formula import parse_formula
 from .formula.rewrite import adjusted
-from .model import MAX_COLS, MAX_ROWS, Content, Sheet, WorkbookModel
+from .model import (
+    MAX_COL_WIDTH,
+    MAX_COLS,
+    MAX_ROW_HEIGHT,
+    MAX_ROWS,
+    MIN_COL_WIDTH,
+    MIN_ROW_HEIGHT,
+    Content,
+    Sheet,
+    WorkbookModel,
+)
 from .refs import (
     DeleteCols,
     DeleteRows,
@@ -44,6 +54,12 @@ def _one(row: int, col: int, content: dict | None) -> str:
     """``B3 = 40`` or ``B3 cleared``."""
     where = f"{column_name(col)}{row + 1}"
     return f"{where} cleared" if content is None else f"{where} = {_show(content)}"
+
+
+def _line(axis: str, index: int, size: float | None) -> str:
+    """``row 4 = 40px`` or ``column C reset`` (back to the sheet's default)."""
+    where = f"row {index + 1}" if axis == "row" else f"column {column_name(index)}"
+    return f"{where} reset" if size is None else f"{where} = {size:g}px"
 
 
 def _followed(content: Content, edit: StructuralEdit, home: SheetId) -> Content:
@@ -123,11 +139,17 @@ class RemoveSheet(Command):
         sheet = model.sheet(self.id)
         index = list(model.sheets).index(self.id)
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
+        row_heights = tuple(sorted(sheet.row_heights.items()))
+        col_widths = tuple(sorted(sheet.col_widths.items()))
         restores = model.drop_sheet(self.id)  # formulas elsewhere that pointed here, as they were
         ctx.emit(SheetsChanged())
         undo: list[Command] = [AddSheet(sheet.id, sheet.name, index)]
         if cells:
             undo.append(SetCells(sheet.id, cells))
+        if row_heights:
+            undo.append(ResizeLines(sheet.id, "row", row_heights))
+        if col_widths:
+            undo.append(ResizeLines(sheet.id, "col", col_widths))
         undo.extend(SetCells(other, tuple(sorted(items))) for other, items in restores.items())
         return undo[0] if len(undo) == 1 else Batch(tuple(undo))
 
@@ -258,14 +280,16 @@ class Structure(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         edit = self.edit
-        destroyed, restores = ctx.model.restructure(edit)
+        destroyed, restores, destroyed_sizes = ctx.model.restructure(edit)
         ctx.emit(StructureChanged(edit))
         undo = Structure(_OPPOSITE[type(edit)](edit.sheet, edit.at, edit.count))
         # Deleted cells come back, and so do the formulas that pointed at them, as they were typed.
         restores[edit.sheet] = [*restores.get(edit.sheet, []), *destroyed]
-        sets = [
+        sets: list[Command] = [
             SetCells(sheet, tuple(sorted(items, key=lambda t: t[:2]))) for sheet, items in restores.items() if items
         ]
+        if destroyed_sizes:  # the deleted lines' own sizes, which a reference can't bring back
+            sets.append(ResizeLines(edit.sheet, edit.axis, destroyed_sizes))
         return Batch((undo, *sets)) if sets else undo
 
     def to_data(self) -> dict:
@@ -309,3 +333,93 @@ class Structure(Command):
 
     def redacted(self) -> Command:
         return self
+
+
+# ------------------------------------------------------------------------------ layout
+_SIZE_LIMITS = {"row": (MIN_ROW_HEIGHT, MAX_ROW_HEIGHT), "col": (MIN_COL_WIDTH, MAX_COL_WIDTH)}
+
+
+@register
+@dataclass(frozen=True)
+class ResizeLines(Command):
+    """Set (or clear, with ``None``) the height of rows or the width of columns of one sheet. Clearing returns a
+    line to the sheet's default size (D135: a size is sheet layout, not a cell style — E6.13's not-yet-built style
+    system is a separate, later concern)."""
+
+    kind: ClassVar[str] = "computes.ResizeLines"
+    sheet: SheetId
+    axis: str  # "row" or "col"
+    sizes: tuple[tuple[int, float | None], ...]  # (index, new size; None: back to the sheet's default)
+
+    @property
+    def label(self) -> str:
+        noun = "row" if self.axis == "row" else "column"
+        return f"Resize {noun}" if len(self.sizes) == 1 else f"Resize {noun}s"
+
+    @property
+    def summary(self) -> str:
+        if not self.sizes:
+            return "no lines"
+        if len(self.sizes) == 1:
+            (index, size) = self.sizes[0]
+            return _line(self.axis, index, size)
+        if len(self.sizes) <= MAX_LISTED:
+            listed = ", ".join(_line(self.axis, i, s) for i, s in self.sizes)
+            if len(listed) <= MAX_LISTED_TEXT:
+                return listed
+        indexes = [i for i, _ in self.sizes]
+        noun = "row" if self.axis == "row" else "column"
+        where = (
+            f"rows {min(indexes) + 1}:{max(indexes) + 1}"
+            if self.axis == "row"
+            else f"columns {column_name(min(indexes))}:{column_name(max(indexes))}"
+        )
+        return f"{len(self.sizes)} {noun}s in {where}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        sheet = ctx.model.sheet(self.sheet)
+        limit = MAX_ROWS if self.axis == "row" else MAX_COLS
+        lo, hi = _SIZE_LIMITS[self.axis]
+        for index, size in self.sizes:
+            if not 0 <= index < limit:
+                raise IndexError(f"{self.axis} {index} is outside the sheet")
+            if size is not None and not lo <= size <= hi:
+                raise ValueError(f"a {self.axis} size must be between {lo} and {hi}, not {size}")
+        store = sheet.sizes(self.axis)
+        previous = tuple((i, store.get(i)) for i, _ in self.sizes)
+        for index, size in self.sizes:
+            if size is None:
+                store.pop(index, None)
+            else:
+                store[index] = size
+        ctx.emit(LinesResized(self.sheet, self.axis, self.sizes))
+        return ResizeLines(self.sheet, self.axis, tuple(reversed(previous)))
+
+    def to_data(self) -> dict:
+        return {"sheet": self.sheet, "axis": self.axis, "sizes": [[i, s] for i, s in self.sizes]}
+
+    @classmethod
+    def from_data(cls, data, registry) -> ResizeLines:
+        return cls(SheetId(data["sheet"]), data["axis"], tuple((i, s) for i, s in data["sizes"]))
+
+    # No ``regions()`` override: a size is layout, not cell content, so a colleague's cell lock never blocks a
+    # resize and a resize never needs to hold anything either (the default — nothing lockable — is exactly right).
+
+    def shifted_by(self, other: Command) -> Command | None:
+        if isinstance(other, Structure) and other.edit.sheet == self.sheet and other.edit.axis == self.axis:
+            moved = []
+            for index, size in self.sizes:
+                target = other.edit.map_index(index)
+                if target is not None:  # a line whose index moved: the resize still applies, at its new index
+                    moved.append((target, size))
+            return ResizeLines(self.sheet, self.axis, tuple(moved)) if moved else None
+        if isinstance(other, ResizeLines) and other.sheet == self.sheet and other.axis == self.axis:
+            mine = {i for i, _ in self.sizes}
+            if any(i in mine for i, _ in other.sizes):
+                return None  # a colleague resized these lines after us: undoing would overwrite their work
+        if isinstance(other, RemoveSheet) and other.id == self.sheet:
+            return None
+        return self
+
+    def redacted(self) -> Command:
+        return self  # a size is layout, not content with anything to hide (same reasoning as Structure)

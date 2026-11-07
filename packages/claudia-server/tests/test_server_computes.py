@@ -142,8 +142,89 @@ def test_rows_and_columns_can_be_inserted_and_deleted(book):
 
 def test_computes_has_everything_the_core_has(book):
     assert core_methods.names() <= computes_methods.names()
-    assert {"sheets", "cells", "set_cells", "add_sheet", "structure"} <= computes_methods.names()
+    assert {
+        "sheets",
+        "cells",
+        "set_cells",
+        "add_sheet",
+        "structure",
+        "sizes",
+        "resize_lines",
+    } <= computes_methods.names()
     assert "sheets" not in core_methods.names()
+
+
+# ------------------------------------------------------------------ row heights and column widths (D135)
+def test_a_new_sheet_has_no_resized_lines(book):
+    call(book, "add_sheet", {"name": "S"})
+    assert call(book, "sizes", {"sheet": "s1"}) == {"revision": "main:1", "rows": [], "cols": []}
+
+
+def test_resizing_rows_and_columns(book):
+    call(book, "add_sheet", {"name": "S"})
+    resized = call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[0, 40], [2, 50]]})
+    assert resized["revision"] == "main:2"
+    assert call(book, "resize_lines", {"sheet": "s1", "axis": "col", "sizes": [[1, 120]]})
+    assert call(book, "sizes", {"sheet": "s1"}) == {
+        "revision": "main:3",
+        "rows": [[0, 40], [2, 50]],
+        "cols": [[1, 120]],
+    }
+
+
+def test_a_null_size_clears_a_line_back_to_default(book):
+    call(book, "add_sheet", {"name": "S"})
+    call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[0, 40]]})
+    call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[0, None]]})
+    assert call(book, "sizes", {"sheet": "s1"})["rows"] == []
+
+
+def test_resize_lines_rejects_a_bad_axis(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError) as caught:
+        call(book, "resize_lines", {"sheet": "s1", "axis": "diagonal", "sizes": [[0, 40]]})
+    assert caught.value.code == "bad_request"
+
+
+def test_resize_lines_rejects_malformed_lines(book):
+    call(book, "add_sheet", {"name": "S"})
+    for bad in ([["0", 40]], [[0]], [[0, 40, 1]], ["A1"], [[-1, 40]], [[0, "forty"]]):
+        with pytest.raises(RequestError) as caught:
+            call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": bad})
+        assert caught.value.code == "bad_request"
+
+
+def test_resize_lines_rejects_a_size_outside_the_allowed_range(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="between"):
+        call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[0, 100_000]]})
+
+
+def test_resize_lines_is_limited_in_size(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="at most"):
+        call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[i, 20] for i in range(1_001)]})
+
+
+def test_viewers_may_read_sizes_but_not_resize(book):
+    call(book, "add_sheet", {"name": "S"})
+    assert call(book, "sizes", {"sheet": "s1"}, account=VERA) == {"revision": "main:1", "rows": [], "cols": []}
+    with pytest.raises(RequestError) as caught:
+        call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[0, 40]]}, account=VERA)
+    assert caught.value.code == "forbidden"
+
+
+def test_unknown_sheets_are_errors_for_sizes_too(book):
+    with pytest.raises(RequestError) as caught:
+        call(book, "resize_lines", {"sheet": "nope", "axis": "row", "sizes": [[0, 40]]})
+    assert caught.value.code == "command_error" and book.revision is None
+
+
+def test_resizing_against_an_old_view_is_stale(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError) as caught:
+        call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[0, 40]], "base": "restore-1:3"})
+    assert caught.value.code == "stale"
 
 
 def test_the_workbook_helper_adds_sheets_to_documents_that_exist():

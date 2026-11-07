@@ -60,7 +60,8 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   its sender and recipient; ephemeral messages (presence, typing) are not echoed to the sender.
 * The history panel reads `log` (the newest entries of the visible history, each with a sentence such as `B3 = 40`).
   Workbooks add `sheets`, `cells` (a window), `set_cells` (the text people typed; the server decides what it means),
-  `add_sheet` and `structure`. Texts (`--model claudia_composes:TextModel`) add `blocks`, `suggestions`,
+  `add_sheet`, `structure`, `sizes` (a sheet's row heights and column widths away from the default) and
+  `resize_lines` (D135: layout, not a cell style). Texts (`--model claudia_composes:TextModel`) add `blocks`, `suggestions`,
   `replace_text` (a range replaced by text; line breaks start paragraphs; one request is one history step),
   `set_style`, the style methods `styles`, `change_style`, `deviate_style`, `rename_style` and `check_css` (a style is
   CSS from the kernel's allow-list; a change either alters the style for all its uses or deviates into a new style

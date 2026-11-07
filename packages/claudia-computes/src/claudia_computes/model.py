@@ -31,6 +31,16 @@ from .values import ErrorValue, Value
 Content = dict | None  # None (empty) or {"t": "int"|"float"|"text"|"bool"|"formula", "v": ...}
 Cells = list[tuple[int, int, Content]]
 
+# Row height and column width (D135): sheet layout, not a cell style — a line not in ``Sheet.row_heights`` or
+# ``col_widths`` shows at the default. Pixels, matching the grid's own units; the bounds keep a line shrinkable
+# a long way without a drag ever hiding it outright (there is no separate hide-row/column feature yet).
+DEFAULT_ROW_HEIGHT = 26
+DEFAULT_COL_WIDTH = 96
+MIN_ROW_HEIGHT = 8
+MAX_ROW_HEIGHT = 1_000
+MIN_COL_WIDTH = 16
+MAX_COL_WIDTH = 2_000
+
 _default_functions: FunctionRegistry | None = None
 
 
@@ -108,6 +118,8 @@ class Sheet:
         self.grid: dict[Position, Value] = {}  # sparse: the values they show
         self.rows_used = 0  # rows and columns beyond these hold nothing
         self.cols_used = 0
+        self.row_heights: dict[int, float] = {}  # sparse: only rows resized away from DEFAULT_ROW_HEIGHT
+        self.col_widths: dict[int, float] = {}  # sparse: only columns resized away from DEFAULT_COL_WIDTH
         self._tick = 0
         self._epoch = 0  # the tick of the last change to every column at once (rows moved)
         self._columns: dict[int, int] = {}  # column -> tick of its last change
@@ -125,7 +137,14 @@ class Sheet:
             "id": self.id,
             "name": self.name,
             "cells": [[r, c, content] for (r, c), content in sorted(self.cells.items())],
+            "row_heights": [[r, h] for r, h in sorted(self.row_heights.items())],
+            "col_widths": [[c, w] for c, w in sorted(self.col_widths.items())],
         }
+
+    def sizes(self, axis: str) -> dict[int, float]:
+        """The sparse size overrides for ``axis`` ("row" heights or "col" widths); a line missing from it is at the
+        default. The returned dict is the sheet's own: mutate it to resize, same as ``cells``."""
+        return self.row_heights if axis == "row" else self.col_widths
 
     # -- values
     def set_value(self, position: Position, value: Value) -> bool:
@@ -230,7 +249,7 @@ class Sheet:
 
 class WorkbookModel(DocumentModel):
     app: ClassVar[str] = "computes"
-    state_schema: ClassVar[int] = 1
+    state_schema: ClassVar[int] = 2  # 2: a sheet also carries row_heights and col_widths (D135)
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(self, functions: FunctionRegistry | None = None):
@@ -251,6 +270,8 @@ class WorkbookModel(DocumentModel):
         for item in state["sheets"]:
             sheet = Sheet(SheetId(item["id"]), item["name"])
             sheet.cells = {(r, c): content for r, c, content in item["cells"]}
+            sheet.row_heights = dict(item["row_heights"])
+            sheet.col_widths = dict(item["col_widths"])
             model.sheets[sheet.id] = sheet
         model._calculate_loaded()
         return model
@@ -339,11 +360,13 @@ class WorkbookModel(DocumentModel):
         self.sheets = {s.id: s for s in ordered}
         self._ids = None
 
-    def restructure(self, edit: StructuralEdit) -> tuple[Cells, dict[SheetId, Cells]]:
-        """Insert or delete rows or columns: cells move, formulas follow them and keep pointing at what they pointed at.
+    def restructure(self, edit: StructuralEdit) -> tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...]]:
+        """Insert or delete rows or columns: cells move, formulas follow them and keep pointing at what they pointed
+        at, and the edited axis' sizes (``Sheet.row_heights`` or ``col_widths``) move with their lines.
 
-        Returns the cells that were deleted, and for every sheet the formulas whose text had to change (as they were),
-        which an undo needs to put back exactly (deleting what a formula pointed at cannot be undone by a reference)."""
+        Returns the cells that were deleted, for every sheet the formulas whose text had to change (as they were),
+        and the sizes of the lines that were deleted (on ``edit``'s own axis only) — all three are what an undo needs
+        to put back exactly (deleting what a formula pointed at, or a line's size, cannot be undone by a reference)."""
         sheet = self.sheet(edit.sheet)
         limit = MAX_ROWS if edit.axis == "row" else MAX_COLS
         if edit.at >= limit or (not edit.insert and edit.at + edit.count > limit):
@@ -378,11 +401,18 @@ class WorkbookModel(DocumentModel):
         sheet.grid = {
             target: value for position, value in sheet.grid.items() if (target := remap(position)) is not None
         }
+        old_sizes = sheet.sizes(edit.axis)
+        destroyed_sizes = tuple(sorted((i, s) for i, s in old_sizes.items() if edit.map_index(i) is None))
+        remapped_sizes = {new: s for i, s in old_sizes.items() if (new := edit.map_index(i)) is not None}
+        if edit.axis == "row":
+            sheet.row_heights = remapped_sizes
+        else:
+            sheet.col_widths = remapped_sizes
         sheet.refit()
         sheet.bump_all()
         restores = self._redefine(edit, plan)
         calc.everything = True
-        return destroyed, restores
+        return destroyed, restores, destroyed_sizes
 
     def _plan_restructure(self, edit: StructuralEdit, remap) -> list:
         """The formulas a structural edit touches: (old key, new key, formula after the edit, compiled before)."""
