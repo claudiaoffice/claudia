@@ -15,7 +15,7 @@ env:
   PYTHONUTF8: "1" # Windows consoles default to a legacy encoding; the tests use non-ASCII text
 
 jobs:
-  # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, pytest,
+  # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, i18n extraction, pytest,
   # Sphinx with warnings as errors, performance guards.
   python:
     name: Python (${{ matrix.os }})
@@ -40,6 +40,20 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends texlive-xetex texlive-latex-recommended texlive-latex-extra fonts-lmodern poppler-utils
+      # Windows Defender's real-time protection (and, on hosted runners, its cloud-delivered lookup) can hold a
+      # newly-written file locked for several seconds -- long enough to exhaust any reasonable in-process retry --
+      # right when the journal tests rotate a file by writing a replacement next to it and renaming it into place.
+      # The content looks exactly like what ransomware heuristics watch for (a file suddenly replaced by
+      # high-entropy, encrypted-looking bytes), which is consistent with the lock outlasting every retry budget
+      # tried so far instead of clearing after a short, genuinely transient scan. Excluding the checkout and the
+      # pytest temp directory removes the lock at its source instead of guessing at how long to wait for it.
+      - name: Exclude the work and temp directories from Windows Defender
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Add-MpPreference -ExclusionPath "${{ github.workspace }}"
+          Add-MpPreference -ExclusionPath "$env:RUNNER_TEMP"
+          Add-MpPreference -ExclusionPath "$env:TEMP"
       - run: uv sync --locked
       # web tests/types and the Linux client's tests are skipped here on purpose: the separate `web` and
       # `linux-client` jobs below run them for real, with Node and GTK installed. --ci fails on any OTHER skip

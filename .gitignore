@@ -5,6 +5,7 @@ demo-docs-*
 web/.nuxt
 web/.output
 web/node_modules
+docs/_build
 claudiaoffice-log/.obsidian/*
 claudiaoffice-log/.obsidian/workspace.json
 
