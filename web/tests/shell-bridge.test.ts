@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ShellBridge, createShellBridge, detectHandler } from '~/lib/shell-bridge'
+import { ShellBridge, createShellBridge, detectHandler, tabTitle } from '~/lib/shell-bridge'
 
 function fakeSink() {
   const posted: Record<string, unknown>[] = []
@@ -116,5 +116,22 @@ describe('createShellBridge', () => {
     a.detach() // a is not the current owner any more (b is) — must not remove b's handler
     expect(typeof (globalThis as any).__claudiaShell?.receive).toBe('function')
     b.detach()
+  })
+})
+
+describe('tabTitle', () => {
+  it('names the app that is actually open, not a one-size-fits-all default', () => {
+    expect(tabTitle('composes')).toBe('Claudia Composes')
+    expect(tabTitle('computes')).toBe('Claudia Computes')
+    expect(tabTitle('creates')).toBe('Claudia Creates')
+  })
+
+  it('falls back to the generic title before a document is open', () => {
+    expect(tabTitle(undefined)).toBe('Claudia')
+  })
+
+  it('falls back to the generic title for anything that is not one of the three known apps', () => {
+    expect(tabTitle('')).toBe('Claudia')
+    expect(tabTitle('bogus')).toBe('Claudia')
   })
 })

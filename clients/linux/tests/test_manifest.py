@@ -73,7 +73,7 @@ def test_every_app_has_the_same_seven_menus_in_the_same_order(app: manifest.Mani
 
 
 def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Manifest) -> None:
-    """D123/D124: separators kept, grouped as New/Open · Save-group · Manage · Close/Quit. D135: the Manage
+    """D123/D124: separators kept, grouped as New/Open · Save-group · Manage · Close/Quit. D141: the Manage
     item replaces the plain "Share…" item it grew out of, and is itself a submenu."""
     file_menu = app.menu("File")
     assert [[e.label for e in section] for section in file_menu.sections] == [
@@ -85,7 +85,7 @@ def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Man
 
 
 def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: manifest.Manifest) -> None:
-    """D135: the "Manage" submenu Claude built from the design the owner accepted (assigning a new owner, leaving,
+    """D141: the "Manage" submenu Claude built from the design the owner accepted (assigning a new owner, leaving,
     exporting and deleting a document from the server), with Share… kept as its first item so adding people to a
     document is still possible."""
     file_menu = app.menu("File")

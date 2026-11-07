@@ -8,6 +8,20 @@
 
 export const SHELL_CONTRACT_VERSION = 1
 export type App = 'composes' | 'computes' | 'creates'
+/** The one display name each app goes by, shared so a browser tab's title and the About dialog never drift
+ * apart the way the web and Linux About dialogs once did (D28). */
+export const APP_NAME: Record<App, string> = {
+  composes: 'Claudia Composes',
+  computes: 'Claudia Computes',
+  creates: 'Claudia Creates',
+}
+
+/** The browser tab's title for the session's own app, or the generic fallback before one has opened (or for
+ * anything not one of the three known apps -- `app` is a plain string at this boundary, not the narrower `App`
+ * union, the same way `TopBar.vue`'s own `state.app || 'claudia'` treats it). */
+export function tabTitle(app: string | undefined): string {
+  return (app && APP_NAME[app as App]) || 'Claudia'
+}
 export interface ActionState {
   enabled?: boolean
   checked?: boolean

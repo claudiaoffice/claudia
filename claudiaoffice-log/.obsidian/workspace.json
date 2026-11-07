@@ -218,6 +218,14 @@
   },
   "active": "d7bd1caf5a89d5af",
   "lastOpenFiles": [
+    "implementation-notes/i18n-groundwork.md",
+    "tmp/implementation-notes-i18n-groundwork.md",
+    "tmp/decision-log-and-backlog-updates.md",
+    "tmp/CHANGELOG-claudia-server-entry.md",
+    "tmp/CHANGELOG-claudia-core-entry.md",
+    "tmp/03-decision-log.patch",
+    "tmp/02-backlog.patch",
+    "tmp",
     "implementation-notes/xlsx-docx-pptx-io.md",
     "backlog.md",
     "qa-recommendations.md",
@@ -240,19 +248,11 @@
     "bugtracker.md",
     "implementation-notes.md",
     "decision-log.md",
-    "product-vision.md",
-    "Projects/claudia-office/_tasks/e9.5-odt-and-docx.md",
-    "Projects/claudia-office/_tasks/e9.19-latex-export.md",
-    "Projects/claudia-office/_tasks/e9-claudia-composes.md",
-    "Projects/claudia-office/_tasks/e8-packaging-and-deployment.md",
     "Projects/claudia-office/_tasks",
     "Projects/claudia-office",
     "Projects",
     "implementation-notes",
     "decision-log",
-    "Operon/Tables/Default table.table",
-    "Untitled.base",
-    "Operon/Tasks",
-    "Operon/Tables"
+    "Operon/Tables/Default table.table"
   ]
 }

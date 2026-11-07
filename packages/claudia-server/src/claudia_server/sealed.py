@@ -164,7 +164,7 @@ def _snapshot_from(data: bytes | None) -> Snapshot | None:
         return None
     try:
         return Snapshot.from_data(json.loads(data))
-    except ValueError, KeyError, TypeError:
+    except (ValueError, KeyError, TypeError):
         return None
 
 
@@ -326,7 +326,7 @@ class SealedDocuments:
     def _is_empty(self, doc_id: str, keys: Mapping[Domain, bytes]) -> bool:
         try:
             state = read_state(self._file(doc_id), keys)
-        except ContainerError, JournalError, OSError:
+        except (ContainerError, JournalError, OSError):
             return False  # something is wrong with it: never delete what might be somebody's work
         return not state.history and not state.chat
 
@@ -555,7 +555,7 @@ class SealedDocuments:
                 journal = journal_path(path)
                 if journal.exists():
                     changed = max(changed, journal.stat().st_mtime)
-            except ContainerError, OSError, ValueError:
+            except (ContainerError, OSError, ValueError):
                 continue  # not a document of ours; never break the list for it
             stamp = datetime.fromtimestamp(changed, UTC).isoformat(timespec="milliseconds")
             found.append(StoredInfo(manifest.id, manifest.app, stamp.replace("+00:00", "Z")))

@@ -5,9 +5,9 @@ from __future__ import annotations
 from io import BytesIO
 
 import docx
+from claudia_composes_io import text_to_docx
 
 from claudia_composes import DEFAULT_STYLE, Block, Suggestion, TextModel, TextRange
-from claudia_composes_io import text_to_docx
 
 
 def model_with_blocks(*texts: str) -> TextModel:

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ Export… (D135, E2.9). Claudia's own file format only: a JSON snapshot of the document's current
+// File ▸ Manage ▸ Export… (D141, E2.9). Claudia's own file format only: a JSON snapshot of the document's current
 // content, sealed with nothing (it is already decrypted content you are allowed to see) and saved straight to this
 // computer. Word, Excel and PowerPoint import and export is separate, not-yet-built work (the owner asked for this
 // clarification); neither is the command history or the chat — both stay in the document, only not in this file.

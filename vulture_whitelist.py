@@ -86,6 +86,12 @@ used._remove_object  # creates_methods_with(...).method("remove_object")
 used._images  # creates_methods_with(...).method("images")
 used._object_gets_image_fields  # registered as an upcaster by a decorator (claudia_creates AddObject schema 1 -> 2)
 
+# claudia-creates-io: set-only properties of python-pptx's own objects (never read back by our code, only by
+# python-pptx itself when the file is saved)
+used.rgb  # RGBColor set on a run's/shape's .color or .fore_color (claudia_creates_io.pptx._style_text/_style_shape)
+used.slide_width  # Presentation.slide_width, set once per deck (claudia_creates_io.pptx.slides_to_pptx)
+used.slide_height  # Presentation.slide_height, set once per deck (claudia_creates_io.pptx.slides_to_pptx)
+
 # claudia-fonts: set on a fontTools table in claudia_fonts.testing, which tests use
 used.macStyle  # head.macStyle is read by fontTools when the font is saved
 

@@ -1,6 +1,4 @@
-# I18n groundwork (E5.7, D31, D141)
-
-Save as `claudiaoffice-log/implementation-notes/i18n-groundwork.md`.
+# I18n groundwork (E5.7, D31, D148)
 
 The groundwork for translating Claudia's interface, decided and built in one slice before any real string moves
 into a catalog: prove the single-source-of-truth pipeline end to end with an (almost) empty catalog, so that
@@ -8,7 +6,7 @@ moving strings later is mechanical rather than a design question.
 
 ## Decisions this slice rests on
 
-- **gettext `.po` is the single source, not ICU/vue-i18n** (D31, confirmed by D141): `.po` is more common across
+- **gettext `.po` is the single source, not ICU/vue-i18n** (D31, confirmed by D148): `.po` is more common across
   non-web codebases generally and is what the GTK client needs natively; the web client's JSON catalog is *derived*
   from it (`scripts/po_to_json.py`), never maintained by hand, so the two can never drift apart.
 - **Locale is always a client-side setting** (D31, D35): there is no server-side account profile to keep it on —
@@ -21,14 +19,14 @@ moving strings later is mechanical rather than a design question.
 
 ## What was built
 
-**`claudia-core`** (`errors.py`, v0.5.1): every `KernelError` subclass gained a stable `code: ClassVar[str]`
+**`claudia-core`** (`errors.py`, v0.8.0): every `KernelError` subclass gained a stable `code: ClassVar[str]`
 (`unknown_command`, `stale_edit`, `region_held`, `undo_refused`, `undo_conflict`, ...), independent of the baked
 English `str(exc)` message. The kernel still imports no gettext and knows no catalog exists — `test_purity.py`
 still passes unchanged. `ClassVar` attributes are invisible to `scripts/api_surface.py` (it inspects callable
 signatures and `property` instances only), so this did not need a signature-level entry in the API snapshot, only
 the version bump + CHANGELOG entry the policy still asks for.
 
-**`claudia-server`** (`protocol.py`, `hub.py`, `app.py`, v0.11.0): `hello` accepts an optional `locale`; `welcome`
+**`claudia-server`** (`protocol.py`, `hub.py`, `app.py`, v0.15.0): `hello` accepts an optional `locale`; `welcome`
 always echoes one back. `protocol.normalize_locale` falls back to `DEFAULT_LOCALE` ("en") for anything missing, not
 a string, too long, or not BCP-47-ish shaped — never refuses the connection over it. `Context.locale` carries it to
 every method (nothing reads it yet). `PROTOCOL_VERSION` is now 2. `RequestError.detail` carries the finer-grained
@@ -87,28 +85,31 @@ the same way it reads a real one.
 - A CI gate that actually renders the UI under the `xx` pseudo-locale and asserts nothing reads as plain English —
   there is nothing to assert yet, since no string has moved.
 
-## Verification
+## Verification (re-measured in the 2026-11-07 QA round, full `main` checkout)
 
-- `claudia-core`: `uv run pytest packages/claudia-core/tests` — full suite green, including the new
-  `test_errors.py`. `ruff`, `ruff format`, `mypy` clean.
-- `claudia-server`: `uv run pytest packages/claudia-server/tests` — full suite green (311 tests at the time of this
-  patch), including new/extended coverage of `normalize_locale`, `Context.locale`, `RequestError.detail`, and a
-  real-websocket round trip of `hello`'s `locale` (`test_server_app.py`). `ruff`, `ruff format`, `mypy` clean.
-  `scripts/api_surface.py --write` shows exactly the intended additive signature changes.
-- Linux client: `clients/linux`'s own `pytest` (GTK-dependent cases skip cleanly without a display) and `mypy`
-  clean, including the new `test_i18n.py` and extended `test_contract.py`.
-- Web: `npx vitest run` (298 tests) and `npx nuxt typecheck` clean, including the new `locale.test.ts` and
-  `i18n.test.ts`; the Node-environment guard in `locale.ts` was specifically checked against `people.test.ts`'s
-  existing `ago()`/`clock()` calls, which now transitively call `currentLocale()`.
+- `claudia-core`: `uv run pytest packages/claudia-core/tests` — 369 passed, including `test_errors.py`. `ruff`,
+  `ruff format`, `mypy` clean.
+- `claudia-server`: `uv run pytest packages/claudia-server/tests` — 642 passed, including coverage of
+  `normalize_locale`, `Context.locale`, `RequestError.detail`, and a real-websocket round trip of `hello`'s
+  `locale` (`test_server_app.py`). `ruff`, `ruff format`, `mypy` clean. `scripts/api_surface.py --write` shows
+  exactly the intended additive signature changes.
+- Linux client: `clients/linux`'s own `pytest` — 214 passed, 38 skipped (GTK-dependent cases, cleanly, with no
+  display attached) — including `test_i18n.py` and the extended `test_contract.py`; `mypy` clean.
+- Web: `npm test` (vitest, 325 passed across 24 files) and `npm run typecheck` (vue-tsc) clean, including
+  `locale.test.ts` and `i18n.test.ts`; the Node-environment guard in `locale.ts` was specifically checked against
+  `people.test.ts`'s existing `ago()`/`clock()` calls, which now transitively call `currentLocale()`.
 - `scripts/extract_i18n.py`, `po_to_json.py`, `make_pseudolocale.py`: each has its own unit tests
   (`tests/test_extract_i18n.py`, `test_po_to_json.py`, `test_make_pseudolocale.py`) and was also run for real
   against the repository, producing the checked-in `po/claudia.pot` (empty), `po/xx.po` (empty), and
   `web/public/i18n/xx.json` (`{}`) — all three confirmed correct for a repo with no translatable strings yet.
 
-Pre-existing, unrelated to this patch, found while verifying: `main` (`d3df64a`) has `D135` allocated twice in
-`decision-log.md` and `## [0.9.0]` twice (out of order, with `0.10.0` sandwiched between) in
-`packages/claudia-server/CHANGELOG.md` — the same class of parallel-merge collision D133 exists to catch for
-decision numbers. Also pre-existing: `uv.lock` does not include the three `*-io` packages (`claudia-composes-io`,
-`claudia-computes-io`, `claudia-creates-io`) added by D135, so `uv sync --locked` fails outright and their own
-tests/mypy/ruff checks fail for missing dependencies on a checkout that only runs `uv sync --locked`. Neither is
-touched by this patch.
+Two things noticed while this slice was being verified, and **fixed in the same QA round, not left open**:
+`decision-log.md` had `D135` allocated three times (Row height and column width, The Manage menu, and Additive
+xlsx/docx/pptx extensions — a third branch beyond the two this note first found) and
+`packages/claudia-server/CHANGELOG.md` had `## [0.9.0]` twice with `0.10.0` sandwiched between — the same class of
+parallel-merge collision D133 exists to catch for decision numbers, caught instead by hand. Both are renumbered;
+a new gate line (`tests/test_changelog_versions.py`) now catches the second class the way `test_decision_log.py`
+already catches the first. Also: `uv sync --locked` failed outright because the root `pyproject.toml` never listed
+the three `*-io` packages (`claudia-composes-io`, `claudia-computes-io`, `claudia-creates-io`) as dependencies, so
+their own `openpyxl`/`python-docx`/`python-pptx` were never installed — fixed, with its own gate line
+(`tests/test_workspace_sync.py`).

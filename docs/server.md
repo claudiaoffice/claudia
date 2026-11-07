@@ -34,12 +34,17 @@ the existence of a document should stay private starts with `--no-list` (the add
 Credentials travel in the first frame, not in the URL (URLs end up in logs).
 
 ```json
-{"id": 1, "method": "hello", "params": {"user": "ann", "password": "...", "create": false}}
+{"id": 1, "method": "hello", "params": {"user": "ann", "password": "...", "create": false, "locale": "de"}}
 ```
 
-The answer carries user, role, document, line, revision, people and limits. With `"create": true` for a document that
-does not exist, the document is made and the person becomes its owner. A wrong password, an unknown name and a document
-that does not exist give the same answer. The name `ai` belongs to the assistant and cannot be used.
+The answer carries user, role, document, line, revision, people, limits and locale. With `"create": true` for a
+document that does not exist, the document is made and the person becomes its owner. A wrong password, an unknown
+name and a document that does not exist give the same answer. The name `ai` belongs to the assistant and cannot be
+used.
+
+`"locale"` is optional and always the client's own setting (E5.7, D31/D148 groundwork): there is no account profile
+to keep it on. It is echoed back, normalized, in the welcome and on every connection the hub keeps — nothing reads it
+yet, since no interface string has moved into a catalog. `PROTOCOL_VERSION` is **2** as of this field (was 1).
 
 When the handshake fails the server answers and closes the socket with a code: 4400 bad request, 4401 unauthorized,
 4403 foreign origin or host, 4404 no such document, 4408 no hello in time, 1013 too many connections, too many people

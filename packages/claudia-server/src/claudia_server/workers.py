@@ -63,9 +63,19 @@ class WorkerPool:
             return await loop.run_in_executor(executor, _call, fn, args, kwargs)
         except BrokenProcessPool:
             log.warning("a worker process died; the pool will be replaced on the next submission")
-            executor.shutdown(wait=False, cancel_futures=True)
-            self._executor = None
+            self._discard(executor)
             raise
+
+    def _discard(self, executor: ProcessPoolExecutor) -> None:
+        """Shut the given (broken) executor down, and clear it from ``self`` only if it is still the current one.
+
+        Two tasks can break the same pool at once; each reaches here with its own reference to the executor that
+        broke. If one of them has already been handled and a fresh pool created in the meantime, a second, slower
+        handler must not null that fresh, working pool out from under it — it discards only what it was given.
+        """
+        executor.shutdown(wait=False, cancel_futures=True)
+        if self._executor is executor:
+            self._executor = None
 
     async def stop(self) -> None:
         """Let the worker processes go. Safe to call when nothing was ever submitted, and safe to call twice."""

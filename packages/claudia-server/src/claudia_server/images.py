@@ -22,7 +22,7 @@ def image_bytes(value: Any, limits: Limits) -> bytes:
         raise ValueError("must be base64 text")
     try:
         raw = base64.b64decode(value, validate=True)
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         raise ValueError("must be valid base64 text") from None
     if len(raw) > MAX_IMAGE_BYTES:
         raise ValueError(f"an image is at most {MAX_IMAGE_BYTES // (1024 * 1024)} MB")

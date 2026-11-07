@@ -384,7 +384,7 @@ class _Live:
                     break
                 text = message.get("text")
                 connection.handle(text if text is not None else message.get("bytes", b""))
-        except WebSocketDisconnect, RuntimeError:
+        except (WebSocketDisconnect, RuntimeError):
             pass
         finally:
             pump.cancel()

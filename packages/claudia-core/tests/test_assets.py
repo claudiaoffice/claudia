@@ -124,6 +124,20 @@ def test_gif_without_an_image_is_refused():
         decode_image(header + b"\x3b")
 
 
+def test_gif_with_a_malformed_data_sub_block_is_refused_not_silently_miscounted():
+    # A data sub-block whose length byte claims more bytes than remain must be refused outright. Before this
+    # was fixed, the block walk simply ran off the end of the buffer and stopped there: a genuinely 2-frame GIF
+    # with its first frame's sub-block corrupted this way silently decoded as a 1-frame, non-animated image
+    # (the second frame was never reached) instead of raising ImageError for the malformed input.
+    frames = gif_bytes(6, 4, frames=2)
+    broken = bytearray(frames)
+    sub_block_length_byte = 19 + 8 + 10 + 1  # past header+table, first frame's GCE + image descriptor + LZW-min-code
+    assert broken[sub_block_length_byte] == 1  # sanity: this is indeed the one-byte sub-block's length byte
+    broken[sub_block_length_byte] = 0xFE  # claims 254 bytes of sub-block data where almost none remain
+    with pytest.raises(ImageError, match="truncated data sub-block"):
+        decode_image(bytes(broken))
+
+
 # ----------------------------------------------------------------------------- JPEG/BMP malformed input
 def test_jpeg_without_a_frame_header_is_refused():
     with pytest.raises(ImageError, match="no frame header"):
@@ -170,6 +184,17 @@ def test_svg_foreign_object_and_iframe_are_removed():
     ],
 )
 def test_svg_doctype_and_entity_declarations_are_rejected_outright(payload):
+    with pytest.raises(ImageError, match="DOCTYPE or ENTITY"):
+        decode_image(payload)
+
+
+def test_svg_doctype_past_the_old_scan_window_is_still_rejected():
+    # The DOCTYPE/ENTITY check must see the whole file, not just an early prefix: padding the file with an
+    # innocuous comment before the DOCTYPE must not let an entity-expansion payload reach the XML parser.
+    padding = f"<!-- {'x' * 2100} -->"
+    payload = (
+        '<?xml version="1.0"?>' + padding + '<!DOCTYPE svg [<!ENTITY x "boom">]><svg width="1" height="1">&x;</svg>'
+    ).encode()
     with pytest.raises(ImageError, match="DOCTYPE or ENTITY"):
         decode_image(payload)
 
@@ -287,6 +312,47 @@ def test_image_asset_to_data_is_json_safe():
 def test_image_asset_from_data_rejects_bad_values(bad, message):
     with pytest.raises(ImageError, match=message):
         ImageAsset.from_data(bad)
+
+
+def test_image_asset_from_data_enforces_the_size_limit_too():
+    # decode_image() checks MAX_IMAGE_BYTES before doing any decode work, but from_data() is a separate path
+    # (replaying a command log, loading a document from storage) that bypasses decode_image() entirely. It must
+    # enforce the same cap on the bytes it base64-decodes, or that cap is not a real limit at all on this path.
+    import base64
+    import hashlib
+
+    huge = b"0" * (MAX_IMAGE_BYTES + 1)
+    data = {
+        "id": hashlib.sha256(huge).hexdigest(),
+        "format": "bmp",
+        "width": 1,
+        "height": 1,
+        "animated": False,
+        "data": base64.b64encode(huge).decode("ascii"),
+        "first_frame": None,
+    }
+    with pytest.raises(ImageError, match="at most"):
+        ImageAsset.from_data(data)
+
+
+def test_image_asset_from_data_enforces_the_size_limit_on_first_frame_too():
+    # first_frame is attacker-controlled independently of data when from_data() is called directly (not through
+    # decode_image(), which always derives it from an already-capped source), so it needs its own bound.
+    import base64
+    import hashlib
+
+    small, huge = b"0", b"1" * (MAX_IMAGE_BYTES + 1)
+    data = {
+        "id": hashlib.sha256(small).hexdigest(),
+        "format": "bmp",
+        "width": 1,
+        "height": 1,
+        "animated": True,
+        "data": base64.b64encode(small).decode("ascii"),
+        "first_frame": base64.b64encode(huge).decode("ascii"),
+    }
+    with pytest.raises(ImageError, match="at most"):
+        ImageAsset.from_data(data)
 
 
 def test_image_asset_from_data_requires_every_field():

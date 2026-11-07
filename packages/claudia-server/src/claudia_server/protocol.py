@@ -421,7 +421,7 @@ def parse_request(raw: str | bytes, limits: Limits) -> tuple[Any, Any, Any]:
         raise RequestError("bad_request", "message too large")
     try:
         message = json.loads(raw)
-    except ValueError, RecursionError:
+    except (ValueError, RecursionError):
         raise RequestError("bad_request", "not valid JSON") from None
     if not isinstance(message, dict):
         raise RequestError("bad_request", "a request must be a JSON object")

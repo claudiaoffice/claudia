@@ -4,7 +4,24 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
-## [0.6.0] - 2026-11-07
+## [0.8.0] - 2026-11-07
+
+I18n groundwork (E5.7, D31, D148): the kernel gains stable error identity, without taking on gettext or any other
+translation dependency itself.
+
+### Added
+- `KernelError.code` and a unique `code: ClassVar[str]` on every subclass (`unknown_command`, `schema_too_new`,
+  `missing_upcaster`, `revision_mismatch`, `region_held`, `stale_edit`, `undo_refused`, `undo_conflict`,
+  `redaction_error`, `replay_error`): a machine-readable identity for each error, independent of `str(exc)`'s
+  baked English sentence. A future translator picks the message to show from `code`; the kernel itself still does
+  not import gettext or know any catalog exists (`test_purity.py`).
+- `MissingUpcaster` now also carries `self.kind` and `self.schema` (previously only in the message text).
+
+Note for `scripts/api_surface.py`: it inspects callable signatures and `property` instances only, so a plain
+`ClassVar` attribute like `code` does not show up in the snapshot diff on its own — the snapshot still needed
+regenerating by hand for this release, same as any other addition.
+
+## [0.7.0] - 2026-11-07
 
 Images, shared by every app that can hold a picture (E10.8). This is the first piece of the image-import feature;
 `claudia-creates` builds on it to let the **creates** app put an imported image on a slide. `claudia-composes` and
@@ -31,6 +48,23 @@ without re-deciding what a decoded image or an import record looks like.
   elements are removed; event-handler attributes (`on*`) and any `href`/`xlink:href` that is not a same-document
   anchor (`#...`) are removed. The rest of the drawing survives.
 
+### Fixed
+- **`decode_image`'s `MAX_IMAGE_BYTES` cap was enforced on the live-import path only.** `ImageAsset.from_data` — the
+  deserialization path used for command-log replay and for loading a document from storage — accepted a payload of
+  any size, so a document whose command log already holds an oversized image (however it got there) would decode it
+  anyway, including its `first_frame`. Fixed with a cheap pre-check on the base64 text length (so an oversized
+  payload is rejected without decoding it) plus an exact check on the decoded length, applied to both `data` and
+  `first_frame`.
+- **A truncated GIF data sub-block miscounted frames instead of failing.** The block-structure walk did not check
+  whether a length byte claimed more data than remained, so it could run past the end of the buffer and return a
+  position the caller reads as "no more blocks" — a corrupted first frame of a genuinely animated GIF silently
+  decoded as `animated=False` with only that frame, not an error. `ImageError` now, for a sub-block whose length
+  runs past the end of the data.
+- **The SVG sanitizer's `DOCTYPE`/`ENTITY` check only scanned the first 2048 bytes.** A `DOCTYPE`/`ENTITY`
+  declaration pushed past that offset by padding earlier in the prolog (a long comment, say) is still well-formed
+  XML and still reached the parser unredacted — an XXE/entity-expansion bypass, not merely an edge case. The check
+  now scans the whole decoded text.
+
 ### Notes for implementers
 - `ImageAsset.to_data()`/`from_data()` carry the image's bytes as base64 text, because a document's state and the
   server's wire protocol are both JSON (there is no binary attachment channel). A document with many or large
@@ -39,7 +73,10 @@ without re-deciding what a decoded image or an import record looks like.
   container format), not something this change solves.
 - `ImageImport`'s redaction story is intentionally not addressed here: it is covered by the project's open decision
   on redaction in general, not decided as a side effect of adding images.
-Go back to a checkpoint, with everybody's consent (E3.7): the live session needs a read-only preview of a line
+
+## [0.6.0] - 2026-11-06
+
+Go back to a checkpoint, with everybody's consent (E3.7, D149): the live session needs a read-only preview of a line
 before anybody is asked to switch to it.
 
 ### Added
