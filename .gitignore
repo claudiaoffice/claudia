@@ -6,3 +6,5 @@ web/.nuxt
 web/.output
 web/node_modules
 claudiaoffice-log/.obsidian/*
+claudiaoffice-log/.obsidian/workspace.json
+

@@ -19,7 +19,9 @@ const session = props.session
 const state = session.state
 const { dark, toggle: toggleDark } = useTheme()
 
-const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'styles'>(null)
+const dialog = ref<
+  null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'styles' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
+>(null)
 const styleMenu = ref<{ x: number; y: number } | null>(null)
 const styleHost = textStyleHost(session)
 const panelOpen = ref(true)
@@ -135,7 +137,28 @@ const menus = computed<Menu[]>(() => [
       { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
       { id: 'file.download', label: 'Download', action: download },
       { label: '', separator: true },
-      { id: 'file.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+      {
+        id: 'file.manage',
+        label: 'Manage',
+        items: [
+          { id: 'file.manage.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+          {
+            id: 'file.manage.assign-owner',
+            label: 'Assign new owner…',
+            action: () => (dialog.value = 'assign-owner'),
+            disabled: state.me.role !== 'owner',
+          },
+          { id: 'file.manage.accept-owner', label: 'Accept ownership…', action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
+          { id: 'file.manage.leave', label: 'Leave document…', action: () => (dialog.value = 'leave') },
+          { id: 'file.manage.export', label: 'Export…', action: () => (dialog.value = 'export') },
+          {
+            id: 'file.manage.delete',
+            label: 'Delete from server…',
+            action: () => (dialog.value = 'delete'),
+            disabled: state.me.role !== 'owner',
+          },
+        ],
+      },
       { label: '', separator: true },
       { id: 'file.close', label: 'Close document', action: () => emit('leave') },
     ],
@@ -306,6 +329,11 @@ onBeforeUnmount(() => clearTimeout(timer))
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
     <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
+    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
+    <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
+    <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
+    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
+    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog
       v-if="dialog === 'shortcuts'"
       :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"

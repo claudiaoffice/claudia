@@ -64,6 +64,7 @@ statement in the docs or on the website).
 | CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed (patch ready, not yet committed) |
 | CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed (patch ready, not yet committed) |
 | CODE-09 | P3 | Code | e2e scripts exist without `package.json` entries | **new, verified open** |
+| CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed (patch ready, not yet committed) |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed (patch ready, not yet committed) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
@@ -453,6 +454,43 @@ and `styling.cjs`. `web/package.json` has scripts for only four of them: `e2e`, 
 `e2e:resilience`. `styling.cjs` and `recovery.cjs` — the scenarios for the two newest features — can only be run by
 typing the path.
 **Fix.** Add `e2e:styling` and `e2e:recovery`, or one `e2e:all`; and a test that every file in `e2e/` has a script.
+
+### CODE-10 · `main` at `558f429` has a real `SyntaxError` in 10 files: a buggy `ruff format` landed invalid syntax · P1 · fixed (patch ready, not yet committed)
+**Evidence (measured, a fresh clone of `main` at `558f429` — "QA finding fixed: quality signals work", the commit
+that landed D133/CODE-08).** Ten files parse with `python3 -c "import ast; ast.parse(open(f).read())"` to a real
+`SyntaxError: multiple exception types must be parenthesized`, not a lint opinion:
+`docker/healthcheck.py`, `packages/claudia-client/src/claudia_client/trust.py`,
+`packages/claudia-computes/src/claudia_computes/formula/forms/reference.py`,
+`packages/claudia-computes/src/claudia_computes/formula/operators.py`,
+`packages/claudia-computes/src/claudia_computes/functions/base.py`,
+`packages/claudia-computes/tests/test_computes.py`, `packages/claudia-core/tests/helpers.py`,
+`packages/claudia-creates/tests/test_slides.py`, `packages/claudia-typeset/src/claudia_typeset/cache.py`,
+`scripts/api_surface.py`. Every one is the same shape:
+```
+-        except (OSError, ValueError):
++        except OSError, ValueError:
+```
+`except A, B:` is Python 2 syntax; Python 3 refuses to parse it at all. `pyproject.toml` pins `ruff>=0.6` with no
+upper bound, and `uv.lock` resolves **ruff 0.17.3** (2026-10-27); fed the valid, already-parenthesized form, this
+`ruff` version's formatter reformats it into the invalid form above — confirmed directly with
+`uv run ruff format --diff` on each file in isolation. This is almost certainly how it got into `main`: CODE-08's own
+fix ran `ruff format .` to reformat `docs/conf.py`, and a real (non `--check`) run touches the whole tree, so the
+same bug struck these 10 unrelated files and the broken result was committed alongside the intended fix. CODE-08's
+"`ruff format --check .` now passes clean" was true only against whichever `ruff` resolved at that moment —
+`ruff>=0.6` let a later, regressed release drift underneath it before anyone ran the check again.
+**Why it matters.** This is not a style nit: a fresh checkout of `main`, exactly as the owner asked this round's work
+to start from, fails to import `claudia_client.trust`, three `claudia_computes` modules, and the rest, in whatever
+runs them first. It was caught only because this round's own gate run (`check_debt.py`, with CODE-08's check now
+actually exercised) flagged `ruff format` as failing and the diff looked backwards from a real fix.
+**Fixed.** The parens are restored in all 10 files; each now parses and matches its pre-breakage, correct form.
+Bisected every published release: 0.6–0.14.x format this correctly, every 0.15.0–0.17.4 (the latest) strips the
+parens — no upstream fix exists yet. `pyproject.toml` now pins `ruff>=0.6,<0.15`; `uv lock` resolved **0.14.14**,
+which also wanted two small, unrelated, pre-existing reformats (a docstring's trailing space before `"""`, a blank
+line after a `def`) — applied with `uv run ruff format`, since those two are genuinely correct under the pinned
+version and not the bug.
+**Acceptance — met.** The 10 files parse (`ast.parse`) and keep `except (A, B):`; `uv run python
+scripts/check_debt.py --ci --allow-skip "web tests" --allow-skip "web types"` — CI's own invocation — exits 0, with
+`ruff format: ok`.
 
 ### DOC-01 · Decision numbers are used twice for different decisions · P2 · fixed (patch ready, not yet committed)
 **Evidence (measured, project context and `54d1245`).** Two blocks of decision numbers were allocated twice:

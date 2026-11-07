@@ -69,7 +69,7 @@ class TlsPolicy:
         try:
             data = json.loads(self.known_path.read_text(encoding="utf-8"))
             return data if isinstance(data, dict) else {}
-        except OSError, ValueError:
+        except (OSError, ValueError):
             return {}
 
     def trust(self, server: str, fingerprint: str, pem: str) -> None:

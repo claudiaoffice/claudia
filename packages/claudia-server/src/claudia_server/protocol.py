@@ -31,6 +31,7 @@ import json
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from claudia_core import (
@@ -44,7 +45,15 @@ from claudia_core import (
     UnknownCommand,
 )
 
-from .auth import Account, RecoverableDirectory, UserDirectory
+from .auth import (
+    Account,
+    DeletableDirectory,
+    LeavableDirectory,
+    RecoverableDirectory,
+    RosterDirectory,
+    TransferableDirectory,
+    UserDirectory,
+)
 
 if TYPE_CHECKING:
     from claudia_core import Region
@@ -78,7 +87,9 @@ EVENTS = {
     "checkpoint": "somebody saved a checkpoint: {number, label, author, marks}",
     "chat": "a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not "
     "for everybody",
-    "ephemeral": "something that is not stored: {kind: presence|preview|typing|..., sender, data}",
+    "ephemeral": "something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|"
+    "document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and "
+    "nothing else will ever be stored or delivered for this document — close and forget it",
     "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
     "fork_point}. Everything you hold is stale: call snapshot",
     "rebuilt": "the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot",
@@ -175,7 +186,7 @@ def _any(value: Any, limits: Limits) -> Any:
 
 
 def _revision(value: Any, limits: Limits) -> Revision:
-    """a revision as the server writes it: \"line:number\", e.g. \"main:12\""""
+    """a revision as the server writes it: \"line:number\", e.g. \"main:12\" """
     if not isinstance(value, str):
         raise ValueError('must be a revision like "main:12"')
     try:
@@ -616,6 +627,91 @@ def _new_recovery_key(ctx):
     if not isinstance(ctx.directory, RecoverableDirectory):
         raise RequestError("unavailable", "this server does not keep recovery keys")
     return {"recovery_key": ctx.directory.new_recovery_key(ctx.doc_id)}
+
+
+@core_methods.method("roster")
+def _roster(ctx):
+    """Everybody who may log in to this document, not just who is connected now, in the order they were added:
+    `[{user, role}, ...]`. Needed to choose who to hand ownership to. `unavailable` on a server that does not list
+    a document's people this way."""
+    if not isinstance(ctx.directory, RosterDirectory):
+        raise RequestError("unavailable", "this server does not list a document's people this way")
+    return [{"user": account.user, "role": account.role} for account in ctx.directory.list_people(ctx.doc_id)]
+
+
+@core_methods.method("leave", "password:str")
+def _leave(ctx, password):
+    """Remove yourself from this document, confirming it is really you with your own current password. Refused if
+    you are the document's only owner: make somebody else the owner first (`propose_owner`). Returns `{left:
+    true}`; `unauthorized` if the password is wrong."""
+    if not isinstance(ctx.directory, LeavableDirectory):
+        raise RequestError("unavailable", "this server does not support leaving a document")
+    if not ctx.directory.leave(ctx.doc_id, ctx.user, password):
+        raise RequestError("unauthorized", "that is not your current password")
+    ctx.document.publish("person_left", ctx.user, {"user": ctx.user})
+    return {"left": True}
+
+
+@core_methods.method("propose_owner", "name:str password:str")
+def _propose_owner(ctx, name, password):
+    """Owners only: ask `name` (who must already be an editor of this document) to become its owner instead of you,
+    confirming it is really you with your own current password. They have a while to accept (`accept_owner`);
+    asking again replaces a proposal they have not accepted yet. Returns `{proposed: name}`; `unauthorized` if the
+    password is wrong; `command_error` with a sentence if `name` is not currently an editor."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", "only the owner of a document can hand it over")
+    if not isinstance(ctx.directory, TransferableDirectory):
+        raise RequestError("unavailable", "this server does not support handing over ownership")
+    if not ctx.directory.propose_owner_transfer(ctx.doc_id, ctx.user, password, name):
+        raise RequestError("unauthorized", "that is not your current password")
+    return {"proposed": name}
+
+
+@core_methods.method("accept_owner", "password:str")
+def _accept_owner(ctx, password):
+    """Accept an ownership transfer proposed to you (`propose_owner`), confirming it is really you with your own
+    current password. You are the owner from now on; reconnect to be recognised as one by the server for the rest
+    of this session. Returns `{accepted: true}`; `unauthorized` if nothing is waiting for you with that password
+    (none was proposed to you, it already went through, or it expired)."""
+    if not isinstance(ctx.directory, TransferableDirectory):
+        raise RequestError("unavailable", "this server does not support handing over ownership")
+    account = ctx.directory.accept_owner_transfer(ctx.doc_id, ctx.user, password)
+    if account is None:
+        raise RequestError("unauthorized", "no ownership transfer is waiting for you with that password")
+    ctx.document.publish("owner_changed", ctx.user, {"owner": account.user})
+    return {"accepted": True}
+
+
+@core_methods.method("delete_document", "password:str")
+def _delete_document(ctx, password):
+    """Owners only: remove this document from the server for good — its file, its history and its chat, everybody's
+    access to it — confirming it is really you with your own current password. There is no way back from this: make
+    sure everybody who needs something from the document has it first. Returns `{deleted: true}`; `unauthorized` if
+    the password is wrong."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", "only an owner of a document may delete it")
+    if not isinstance(ctx.directory, DeletableDirectory):
+        raise RequestError("unavailable", "this server does not support deleting a document")
+    if not ctx.directory.delete_document(ctx.doc_id, ctx.user, password):
+        raise RequestError("unauthorized", "that is not your current password")
+    ctx.document.publish("document_deleted", ctx.user, {})
+    return {"deleted": True}
+
+
+@core_methods.method("export_content")
+def _export_content(ctx):
+    """The document's current content, as Claudia's own format — not Word, Excel or PowerPoint; import and export
+    for those is separate, planned work: `{format, app, exported_at, state_schema, state}`. Does not include the
+    command history or the chat (E2.9: exporting those, and importing, is not built yet)."""
+    model = ctx.document.model
+    exported_at = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return {
+        "format": "claudia-export 1",
+        "app": model.app,
+        "exported_at": exported_at,
+        "state_schema": model.state_schema,
+        "state": model.serialize(),
+    }
 
 
 # -- chat

@@ -288,6 +288,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     } else if (message.kind === 'typing') {
       const others = s.typing.filter((u) => u !== who)
       s.typing = message.data.on ? [...others, who] : others
+    } else if (message.kind === 'person_left') {
+      this.notice(`${message.data.user} left this document.`)
+    } else if (message.kind === 'owner_changed') {
+      this.notice(`${message.data.owner} is now the owner of this document.`)
+      this.track(this.reconnectNow())  // our own role may have just changed (we may have been the old owner)
+    } else if (message.kind === 'document_deleted') {
+      this.notice('This document was deleted by its owner.', 'warning')
+      this.close()
     }
   }
 
@@ -351,6 +359,52 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   async addUser(name: string, password: string, role: 'editor' | 'viewer'): Promise<boolean> {
     return (await this.attempt('add_user', { name, password, role })) !== false
+  }
+
+  /** Reopen the connection with the same name and password, so a role the server just changed takes effect. */
+  async reconnectNow(): Promise<void> {
+    this.close()
+    this.closing = false
+    await this.open()
+  }
+
+  /** Everybody who may log in to this document, not just who is connected now, in the order they were added. */
+  async roster(): Promise<{ user: string; role: string }[] | false> {
+    return await this.attempt('roster')
+  }
+
+  /** Remove yourself, confirming it with your own current password. `false` after telling the person why not
+   * (a wrong password, or being the document's only owner). */
+  async leave(password: string): Promise<boolean> {
+    return (await this.attempt('leave', { password })) !== false
+  }
+
+  /** Owners: ask `name` (who must already be an editor) to become the owner instead, confirming it with your own
+   * current password. They accept with `acceptOwner`. */
+  async proposeOwner(name: string, password: string): Promise<boolean> {
+    return (await this.attempt('propose_owner', { name, password })) !== false
+  }
+
+  /** Accept an ownership proposed to you, confirming it with your own current password. Reconnects on success, so
+   * the server recognises you as the owner for the rest of this session. */
+  async acceptOwner(password: string): Promise<boolean> {
+    const done = await this.attempt('accept_owner', { password })
+    if (done !== false) await this.reconnectNow()
+    return done !== false
+  }
+
+  /** Remove this document from the server for good, confirming it with your own current password. There is no
+   * way back from this. */
+  async deleteDocument(password: string): Promise<boolean> {
+    const done = await this.attempt('delete_document', { password })
+    if (done !== false) this.close()
+    return done !== false
+  }
+
+  /** The document's current content as Claudia's own format (not Word, Excel or PowerPoint, and not the history
+   * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
+  async exportContent(): Promise<Record<string, unknown> | false> {
+    return await this.attempt('export_content')
   }
 
   /**

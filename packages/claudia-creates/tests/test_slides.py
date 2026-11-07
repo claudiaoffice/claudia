@@ -514,7 +514,7 @@ def test_random_sessions_replay_identically_with_the_same_undo_stacks(doc, seed)
                     doc.redo(author)
                 else:
                     doc.execute(step, author=author)
-        except ValueError, UndoConflict, UndoRefused:
+        except (ValueError, UndoConflict, UndoRefused):
             continue
     again = reopen(doc)
     assert again.model.serialize() == doc.model.serialize()

@@ -194,8 +194,9 @@ def _page(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str, 
 
 
 def _file_menu(*, title: str) -> Menu:
-    """New, Open… · Save, Save new checkpoint…, Download · Share… · Close document, Quit (D123, D124's
-    grouping)."""
+    """New, Open… · Save, Save new checkpoint…, Download · Manage ▸ (Share…, Assign new owner…, Accept
+    ownership…, Leave document…, Export…, Delete from server…) · Close document, Quit (D123, D124's grouping;
+    D135's Manage submenu, renamed from the plain "Share…" item it grew out of)."""
     return Menu(
         "File",
         (
@@ -213,7 +214,35 @@ def _file_menu(*, title: str) -> Menu:
                 _page("file.save-as", "Save New Checkpoint…", "Make a checkpoint and give it a name"),
                 _page("file.download", "Download", "Download the document to this computer"),
             ),
-            (_page("file.share", "Share…", "Let other people into the document"),),
+            (
+                Submenu(
+                    "Manage",
+                    (
+                        _page("file.manage.share", "Share…", "Let other people into the document"),
+                        _page(
+                            "file.manage.assign-owner",
+                            "Assign New Owner…",
+                            "Hand this document over to somebody else",
+                        ),
+                        _page(
+                            "file.manage.accept-owner",
+                            "Accept Ownership…",
+                            "Accept a document that was handed over to you",
+                        ),
+                        _page("file.manage.leave", "Leave Document…", "Remove yourself from this document"),
+                        _page(
+                            "file.manage.export",
+                            "Export…",
+                            "Save the document's content in Claudia's own format",
+                        ),
+                        _page(
+                            "file.manage.delete",
+                            "Delete From Server…",
+                            "Remove this document from the server for good",
+                        ),
+                    ),
+                ),
+            ),
             (
                 _page("file.close", "Close Document", "Back to the list of documents"),
                 Action("file.quit", "Quit", Kind.SHELL, f"Close {title}", accelerators=("<Primary>q",)),

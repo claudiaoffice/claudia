@@ -97,7 +97,7 @@ def power(a: Value, b: Value) -> Number:
         raise FormulaError(DIV0)
     try:
         return finite(math.pow(base, exponent))
-    except ValueError, OverflowError:
+    except (ValueError, OverflowError):
         raise FormulaError(NUM) from None
 
 

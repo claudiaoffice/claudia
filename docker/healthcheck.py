@@ -23,7 +23,7 @@ def healthy(scheme: str) -> bool:
     try:
         with urllib.request.urlopen(f"{scheme}://127.0.0.1:{PORT}/api/health", timeout=3, context=context) as reply:
             return reply.status == 200
-    except OSError, http.client.HTTPException:
+    except (OSError, http.client.HTTPException):
         return False
 
 

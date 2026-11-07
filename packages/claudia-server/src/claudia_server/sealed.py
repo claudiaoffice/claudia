@@ -57,6 +57,7 @@ from claudia_container import (
     derive_login_material,
     format_recovery_key,
     journal_path,
+    leave_document,
     new_recovery_key,
     pack_journal,
     parse_recovery_key,
@@ -66,6 +67,7 @@ from claudia_container import (
     recover_access,
     remove_user,
     set_recovery_key,
+    transfer_owner,
     unlock,
     unlock_with_recovery,
 )
@@ -104,6 +106,10 @@ def _clean_name(name: str) -> str:
     if any(unicodedata.category(c).startswith("C") for c in text):
         raise ValueError("a name cannot contain control characters")
     return " ".join(text.split())
+
+
+def _same_name(a: str, b: str) -> bool:
+    return _clean_name(a).casefold() == _clean_name(b).casefold()
 
 
 def explain(problem: WeakPassword) -> str:
@@ -177,6 +183,7 @@ class SealedDocuments:
         *,
         kdf: KdfParams | None = None,
         key_ttl: float = 60.0,
+        transfer_ttl: float = 300.0,
         pack_every: int = DEFAULT_PACK_EVERY,
         clock: Callable[[], float] = time.monotonic,
         **options,
@@ -187,12 +194,14 @@ class SealedDocuments:
         self.model_cls = model_cls
         self._kdf = kdf
         self._key_ttl = key_ttl
+        self._transfer_ttl = transfer_ttl
         self._pack_every = pack_every
         self._clock = clock
         self._options = options
         self._lock = threading.RLock()  # logins run in threads
         self._pending: dict[str, tuple[dict[Domain, bytes], float]] = {}
         self._open: dict[str, _Held] = {}
+        self._transfers: dict[str, tuple[str, str, str, float]] = {}  # doc_id -> (old, old_pw, new, expires)
         private_dir(self.root / "docs")
 
     @property
@@ -320,6 +329,86 @@ class SealedDocuments:
         except ContainerError, JournalError, OSError:
             return False  # something is wrong with it: never delete what might be somebody's work
         return not state.history and not state.chat
+
+    def list_people(self, doc_id: str) -> list[Account]:
+        """Everybody who may log in to this document, not just who is connected now, in the order they were added.
+
+        A live request always reaches this with the document already open (an owner or editor had to open it to
+        get this far), so there is always a set of keys at hand."""
+        keys = self._all_keys(doc_id)
+        people = read_people(self._file(doc_id), keys)
+        return [Account(p.name, p.role.value) for p in people]
+
+    # -- leaving and handing over ownership (E2.3) ---------------------------------------------
+    def leave(self, doc_id: str, name: str, password: str) -> bool:
+        """``name`` removes themself, proving it with their own current password. Needs none of the document's
+        keys, so a viewer (who only ever holds the content key) can leave too.
+
+        ``False`` for a wrong password (the same refusal as everywhere else, D50). ``ValueError`` with a sentence
+        if ``name`` is the document's only owner."""
+        return leave_document(self._file(doc_id), name, password)
+
+    def propose_owner_transfer(self, doc_id: str, old_owner: str, old_owner_password: str, new_owner: str) -> bool:
+        """``old_owner`` asks ``new_owner`` (who must already be an editor) to become the owner instead. Waits
+        ``transfer_ttl`` seconds for ``new_owner`` to accept (``accept_owner_transfer``); a later proposal for the
+        same document replaces one that was not accepted yet.
+
+        ``False`` if ``old_owner_password`` is wrong. ``ValueError`` with a sentence if ``old_owner`` is not the
+        document's owner, ``new_owner`` is not currently an editor, or they are the same person."""
+        path = self._file(doc_id)
+        unlocked = unlock(path, old_owner, old_owner_password)
+        if unlocked is None:
+            return False
+        if unlocked.role is not Role.OWNER:
+            raise ValueError(f"{old_owner!r} is not the owner of this document")
+        people = read_people(path, self._all_keys(doc_id))
+        new_person = next((p for p in people if _same_name(p.name, new_owner)), None)
+        if new_person is None or new_person.role is not Role.EDITOR:
+            raise ValueError(f"{new_owner!r} must already be an editor before becoming the owner")
+        if _same_name(unlocked.name, new_person.name):
+            raise ValueError("choose somebody else to become the new owner")
+        with self._lock:
+            self._transfers[doc_id] = (
+                unlocked.name,
+                old_owner_password,
+                new_person.name,
+                self._clock() + self._transfer_ttl,
+            )
+        return True
+
+    def accept_owner_transfer(self, doc_id: str, new_owner: str, new_owner_password: str) -> Account | None:
+        """``new_owner`` accepts a transfer proposed to them, with their own password. The new account (now the
+        owner), or ``None`` for anything that keeps it from going through: nothing was proposed to them, it already
+        went through, it expired, or the password is wrong — the same answer whichever it is (D50)."""
+        with self._lock:
+            now = self._clock()
+            for stale in [d for d, (_, _, _, expires) in self._transfers.items() if expires <= now]:
+                del self._transfers[stale]
+            pending = self._transfers.get(doc_id)
+            if pending is None or not _same_name(pending[2], new_owner):
+                return None
+            old_owner, old_owner_password, accepted_as, _ = pending
+            del self._transfers[doc_id]
+        ok = transfer_owner(
+            self._file(doc_id),
+            old_owner=old_owner,
+            old_owner_password=old_owner_password,
+            new_owner=accepted_as,
+            new_owner_password=new_owner_password,
+        )
+        return Account(accepted_as, "owner") if ok else None
+
+    def delete_document(self, doc_id: str, owner: str, owner_password: str) -> bool:
+        """Remove the document for good: its file, its history and its chat. ``False`` if ``owner_password`` is
+        wrong or ``owner`` is not currently an owner (the same refusal either way); nothing is removed then."""
+        path = self._file(doc_id)
+        unlocked = unlock(path, owner, owner_password)
+        if unlocked is None or unlocked.role is not Role.OWNER:
+            return False
+        self.release(doc_id)
+        journal_path(path).unlink(missing_ok=True)
+        path.unlink()
+        return True
 
     # -- DocumentProvider ---------------------------------------------------------------------
     def create(self, doc_id: str) -> Document:

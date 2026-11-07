@@ -41,13 +41,37 @@ Types that appear in the signatures above:
 .. autoclass:: claudia_computes.refs.StructuralEdit
 .. autoclass:: claudia_computes.model.Sheet
 
+Import/export
+~~~~~~~~~~~~~~
+
+A base xlsx export and one additive extension openpyxl itself cannot write, pivot tables (D135):
+
+.. automodule:: claudia_computes_io
+   :members:
+
 composes
 --------
 
 .. automodule:: claudia_composes
    :members:
 
+Import/export
+~~~~~~~~~~~~~~
+
+A base docx export, with open suggestions written as native Word tracked changes (D135):
+
+.. automodule:: claudia_composes_io
+   :members:
+
 creates
 -------
 
 The presentation app has grown past a proof: see :doc:`claudia_creates`.
+
+Import/export
+~~~~~~~~~~~~~~
+
+A base pptx export and one additive extension python-pptx itself cannot write, slide transitions (D135):
+
+.. automodule:: claudia_creates_io
+   :members:
