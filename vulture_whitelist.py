@@ -17,6 +17,17 @@ used.Bad  # registered with a CommandRegistry by a decorator (tests/test_command
 used.protocol  # FastAPI route /api/protocol in create_app
 used.live  # FastAPI WebSocket route in create_app
 used.landing  # FastAPI route / in create_app
+# admin_api.py: the /api/admin/* routes, registered the same way
+used.setup  # POST /api/admin/setup
+used.logout  # POST /api/admin/logout
+used.add_admin  # POST /api/admin/admins
+used.remove_admin  # DELETE /api/admin/admins/{name}
+used.set_max_documents  # PUT /api/admin/settings/max-documents
+used.reveal_access_secret  # GET /api/admin/settings/access-secret
+used.put_access_secret  # PUT /api/admin/settings/access-secret
+used.rotate_access_secret  # POST /api/admin/settings/access-secret/rotate
+used.set_ai  # PUT /api/admin/settings/ai
+used.set_typeset  # PUT /api/admin/settings/typeset
 used._ping  # core_methods.method("ping")
 used._snapshot  # core_methods.method("snapshot")
 used._changes_since  # core_methods.method("changes_since")

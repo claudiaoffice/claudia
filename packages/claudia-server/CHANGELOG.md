@@ -3,6 +3,42 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.16.0] - 2026-11-07
+
+Who may configure the server, as a question separate from any document's own users (D20/D35): server-side identity,
+sessions and a REST API for the settings pages. The pages themselves (Nuxt) are a later patch; this one is the
+backend they will call.
+
+### Added
+- **`admin.py`**: `AdminAccount`, `AdminDirectory` — a server's administrators, scrypt-hashed the same way a
+  document's own users are (`auth.ScryptDirectory`), but kept once for the server, never inside a document.
+  `needs_administrator(exposed, admin_count)` is the "exposure gate": a server that only answers to this computer
+  never needs one; the moment it is told to listen beyond that, it needs exactly one before its settings do
+  anything but offer to make one, and never asks again once it has one.
+- **`admin_sessions.py`**: `AdminSession`, `AdminSessions` — short-lived bearer tokens for signed-in administrators,
+  in memory only (a restart signs everyone out, same as it drops every open document connection).
+- **`admin_api.py`**: `AdminContext`, `AiRuntime`, `admin_router` — the `/api/admin/*` routes: `status`, `setup`,
+  `login`, `logout`, `me`, `admins` (list/add/remove/change password) and `settings` (`max-documents`,
+  `access-secret` with reveal and rotate, `ai`, `typeset`). Mounted by `create_app`'s new `admin` parameter
+  (`None` by default: every existing caller is unaffected). Changing the AI model restarts just the model, in
+  process (`AiRuntime.apply`); a changed `max_documents` or access secret takes effect on the next request.
+- **`server_settings.py`**: `ServerSettings`, `AiSettings`, `TypesetSettings`, `Changed` and
+  `load_settings`/`save_settings`/`load_admins`/`save_admins` — what an administrator has configured, who last
+  changed each part of it, and how it is written under `<state dir>/admin/` (next to the TLS certificate).
+- `Gateway.set_secret`: changes the access secret while the server runs.
+- `create_app`'s new keyword-only `admin: AdminContext | None = None` parameter.
+- `python3 -m claudia_server`: `--max-documents` now defaults to whatever was last saved through the settings
+  pages (or the built-in default if nothing was ever saved) rather than always to a fixed number; given on the
+  command line, it pins the cap for that run only and leaves what is saved untouched. `--access-secret-file` and
+  `CLAUDIA_ACCESS_SECRET` follow the same operator-override rule against a secret saved through the settings
+  pages. `--ai`/`--ai-device` likewise override an AI model saved through the settings pages; without `--ai`, a
+  saved model is loaded instead of (and survives a restart unlike) the stand-in. The start-up banner reports the
+  server's administrators, or that it needs one.
+
+### Changed
+- `claudia-typeset` is now a dependency (`resolve_program`/`EngineUnavailable`, for the typeset settings' "is this
+  program where I said it is" check — no typesetting itself is wired into the server by this release).
+
 ## [0.15.0] - 2026-11-07
 
 The groundwork for E5.7 (D31/D148): no interface string has moved into a catalog yet, by design — the plumbing is

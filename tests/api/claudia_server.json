@@ -1,5 +1,5 @@
 {
- "version": "0.15.0",
+ "version": "0.16.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -14,6 +14,77 @@
   "properties": [
    "can_write"
   ]
+ },
+ "AdminAccount": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', added: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "AdminContext": {
+  "class": [
+   "object"
+  ],
+  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "AdminDirectory": {
+  "class": [
+   "object"
+  ],
+  "init": "(cost: 'int' = 16384)",
+  "methods": {
+   "add": "(self, name: 'str', password: 'str', *, added: 'str') -> 'AdminAccount'",
+   "change_password": "(self, name: 'str', password: 'str') -> 'None'",
+   "dump": "(self) -> 'dict'",
+   "list_admins": "(self) -> 'list[AdminAccount]'",
+   "load": "(self, data: 'dict') -> 'None'",
+   "remove": "(self, name: 'str') -> 'None'",
+   "verify": "(self, name: 'object', password: 'object') -> 'AdminAccount | None'"
+  },
+  "properties": []
+ },
+ "AdminSession": {
+  "class": [
+   "object"
+  ],
+  "init": "(admin: 'str', expires: 'float') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "AdminSessions": {
+  "class": [
+   "object"
+  ],
+  "init": "(*, lifetime: 'float' = 43200.0, clock: 'Callable[[], float]' = <built-in function monotonic>)",
+  "methods": {
+   "issue": "(self, admin: 'str') -> 'str'",
+   "resolve": "(self, token: 'object') -> 'str | None'",
+   "revoke": "(self, token: 'object') -> 'None'",
+   "revoke_all_of": "(self, admin: 'str') -> 'None'"
+  },
+  "properties": []
+ },
+ "AiRuntime": {
+  "class": [
+   "object"
+  ],
+  "init": "(model: type[claudia_core.model.DocumentModel], enabled: bool, runner: claudia_ai.runner.ModelRunner | None = None) -> None",
+  "methods": {
+   "apply": "(self, hub: claudia_server.hub.Hub, settings: claudia_server.server_settings.AiSettings) -> None"
+  },
+  "properties": []
+ },
+ "AiSettings": {
+  "class": [
+   "object"
+  ],
+  "init": "(model_dir: 'str | None' = None, device: 'str' = 'GPU', max_tokens: 'int' = 512, timeout: 'float' = 180.0) -> None",
+  "methods": {},
+  "properties": []
  },
  "Assistant": {
   "class": [
@@ -65,6 +136,14 @@
    "Exception"
   ],
   "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Changed": {
+  "class": [
+   "object"
+  ],
+  "init": "(by: 'str', at: 'str') -> None",
   "methods": {},
   "properties": []
  },
@@ -160,7 +239,8 @@
   "methods": {
    "accepts_secret": "(self, candidate: 'object') -> 'bool'",
    "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool', access: 'object' = None) -> 'Account | None'",
-   "serve": "(self, websocket: 'WebSocket', doc_id: 'str') -> 'None'"
+   "serve": "(self, websocket: 'WebSocket', doc_id: 'str') -> 'None'",
+   "set_secret": "(self, access_secret: 'str | None') -> 'None'"
   },
   "properties": []
  },
@@ -389,6 +469,19 @@
    "app"
   ]
  },
+ "ServerSettings": {
+  "class": [
+   "object"
+  ],
+  "init": "(max_documents: 'int', access_secret: 'str | None' = None, ai: 'AiSettings' = <factory>, typeset: 'TypesetSettings' = <factory>, changed: 'dict[str, Changed]' = <factory>) -> None",
+  "methods": {
+   "dump": "(self) -> 'dict'",
+   "load": "(data: 'dict') -> 'ServerSettings'",
+   "note_changed": "(self, key: 'str', by: 'str') -> 'None'",
+   "to_public_dict": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Step": {
   "value": "<Union>"
  },
@@ -418,6 +511,14 @@
   },
   "properties": []
  },
+ "TypesetSettings": {
+  "class": [
+   "object"
+  ],
+  "init": "(xelatex: 'str | None' = None, pdftocairo: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
  "UserDirectory": {
   "class": [
    "Protocol"
@@ -441,6 +542,9 @@
   },
   "properties": []
  },
+ "admin_router": {
+  "function": "(hub: claudia_server.hub.Hub, set_access_secret: collections.abc.Callable[[str | None], None], context: claudia_server.admin_api.AdminContext) -> fastapi.routing.APIRouter"
+ },
  "composes_methods": {
   "value": "<MethodTable>"
  },
@@ -451,7 +555,7 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True) -> 'FastAPI'"
+  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"
@@ -462,14 +566,29 @@
  "ensure_certificate": {
   "function": "(state_dir: 'str | Path | None' = None, extra_names: 'tuple[str, ...]' = (), cert_file: 'str | Path | None' = None, key_file: 'str | Path | None' = None) -> 'Certificate'"
  },
+ "load_admins": {
+  "function": "(state_dir: 'Path', directory) -> 'None'"
+ },
+ "load_settings": {
+  "function": "(state_dir: 'Path', *, default_max_documents: 'int') -> 'ServerSettings'"
+ },
  "methods_for": {
   "function": "(model_cls: 'type[DocumentModel]', *, shapes: 'ShapeLibrary | None' = None) -> 'MethodTable'"
  },
  "model_assistant_for": {
   "function": "(model_cls: 'type[DocumentModel]', runner: 'ModelRunner', *, max_waiting: 'int' = 4) -> 'Callable[[], Assistant] | None'"
  },
+ "needs_administrator": {
+  "function": "(exposed: 'bool', admin_count: 'int') -> 'bool'"
+ },
  "parse_request": {
   "function": "(raw: 'str | bytes', limits: 'Limits') -> 'tuple[Any, Any, Any]'"
+ },
+ "save_admins": {
+  "function": "(state_dir: 'Path', directory) -> 'None'"
+ },
+ "save_settings": {
+  "function": "(state_dir: 'Path', settings: 'ServerSettings') -> 'None'"
  },
  "stand_in_assistant_for": {
   "function": "(model_cls: 'type[DocumentModel]') -> 'Callable[[], Assistant] | None'"

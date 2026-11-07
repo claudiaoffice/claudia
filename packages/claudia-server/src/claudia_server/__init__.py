@@ -6,6 +6,9 @@ and ``/api/protocol``. ``python3 -m claudia_server`` starts one.
 """
 
 from ._version import __version__
+from .admin import AdminAccount, AdminDirectory, needs_administrator
+from .admin_api import AdminContext, AiRuntime, admin_router
+from .admin_sessions import AdminSession, AdminSessions
 from .app import Gateway, create_app
 from .apps import methods_for, model_assistant_for, stand_in_assistant_for
 from .assistant import Assistant, AsyncEngine, Call, Engine, Say, Step, Task
@@ -30,6 +33,16 @@ from .protocol import (
 )
 from .restore import Proposal, Resolution, RestoreCoordinator, RestoreError
 from .sealed import SealedDocuments
+from .server_settings import (
+    AiSettings,
+    Changed,
+    ServerSettings,
+    TypesetSettings,
+    load_admins,
+    load_settings,
+    save_admins,
+    save_settings,
+)
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
 from .workers import DEFAULT_WORKERS, WorkerPool
@@ -41,12 +54,20 @@ __all__ = [
     "EVENTS",
     "PROTOCOL_VERSION",
     "Account",
+    "AdminAccount",
+    "AdminContext",
+    "AdminDirectory",
+    "AdminSession",
+    "AdminSessions",
+    "AiRuntime",
+    "AiSettings",
     "Assistant",
     "AsyncEngine",
     "AuthRefused",
     "Call",
     "Certificate",
     "CertificateError",
+    "Changed",
     "Connection",
     "Credentials",
     "DocumentProvider",
@@ -70,14 +91,17 @@ __all__ = [
     "Say",
     "ScriptedEngine",
     "SealedDocuments",
+    "ServerSettings",
     "Step",
     "ScryptDirectory",
     "StoredInfo",
     "Task",
     "TextEngine",
+    "TypesetSettings",
     "UserDirectory",
     "WorkerPool",
     "__version__",
+    "admin_router",
     "composes_methods",
     "computes_methods",
     "core_methods",
@@ -85,8 +109,13 @@ __all__ = [
     "creates_methods",
     "creates_methods_with",
     "ensure_certificate",
+    "load_admins",
+    "load_settings",
     "methods_for",
     "model_assistant_for",
+    "needs_administrator",
     "parse_request",
+    "save_admins",
+    "save_settings",
     "stand_in_assistant_for",
 ]
