@@ -26,3 +26,21 @@ export async function fileToBase64(file: File): Promise<string> {
 export function imageDataUrl(asset: { format: string; data: string }): string {
   return `data:${IMAGE_MIME[asset.format] ?? 'application/octet-stream'};base64,${asset.data}`
 }
+
+/** The exact byte count a base64 string decodes to, for showing an asset's file size (the "Properties" dialog,
+ * E10.10) without carrying the original file's size across the wire separately — `data`'s own length already
+ * says it. Three base64 characters decode to four bytes, minus one byte per trailing `=` of padding. */
+export function imageByteSize(data: string): number {
+  if (data.length === 0) return 0
+  const padding = data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0
+  return (data.length / 4) * 3 - padding
+}
+
+/** A byte count as a person reads it: plain bytes below 1 KB, a whole number of KB below 1 MB, one decimal place
+ * of MB above that — matching how file managers on every platform already round these, so nothing here looks
+ * unusually precise or unusually vague next to them. */
+export function formatByteSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}

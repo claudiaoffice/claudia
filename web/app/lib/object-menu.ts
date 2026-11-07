@@ -1,15 +1,33 @@
 // Right-click on a slide object (bug report, 2026-11-07): "Edit text" and "Delete" already exist on the Edit menu
-// and on the keyboard (Enter/F2, Del) — what was missing was a *context* menu offering the same two actions where
-// the person actually clicked, so the browser's own menu (Back, Inspect, …) stops showing up over an object instead.
-// Pure here on purpose: SlideCanvas.vue supplies the live `edit`/`remove` callbacks (already wired to `beginEdit`/
-// `session.remove`, never duplicated) and renders the result with the generic `ContextMenu.vue`, which composes and
-// computes can reuse for their own objects the same way, by handing it their own `MenuItem[]`.
+// and on the keyboard (Enter/F2, Del) — what was missing was a *context* menu offering the same actions where the
+// person actually clicked, so the browser's own menu (Back, Inspect, …) stops showing up over an object instead.
+// An image's menu was later asked to add Cut, Copy and Properties too (2026-11-07 follow-up) — Cut/Copy exactly as
+// the Edit menu's own `cutSelection`/`copySelection` already behave, Properties opening `ImagePropertiesDialog.vue`.
+// Left for a shape/text object, and left off an image, for now: anything beyond this exact set is undecided.
+// Pure here on purpose: SlideCanvas.vue supplies the live callbacks (never duplicated logic) and renders the result
+// with the generic `ContextMenu.vue`, which composes and computes can reuse for their own objects the same way.
 import type { MenuItem } from '../components/MenuBar.vue'
 import type { SlideObject } from './slide-session'
 
-export function contextMenuItems(o: SlideObject, readonly: boolean, actions: { edit: () => void; remove: () => void }): MenuItem[] {
+export interface ObjectMenuActions {
+  edit: () => void
+  remove: () => void
+  cut: () => void
+  copy: () => void
+  properties: () => void
+}
+
+export function contextMenuItems(o: SlideObject, readonly: boolean, actions: ObjectMenuActions): MenuItem[] {
   const items: MenuItem[] = []
-  if (o.kind !== 'image') {
+  if (o.kind === 'image') {
+    // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call — not a second,
+    // image-specific clipboard. Copy never needs write access, same as `edit.copy` is never disabled either.
+    items.push({ label: 'Cut', hint: 'Ctrl+X', action: actions.cut, disabled: readonly })
+    items.push({ label: 'Copy', hint: 'Ctrl+C', action: actions.copy })
+    items.push({ label: '', separator: true })
+    items.push({ label: 'Properties', action: actions.properties })
+    items.push({ label: '', separator: true })
+  } else {
     // A picture has no text to write — `SlideCanvas.vue`'s own `beginEdit` already refuses it for the same reason
     // (Enter/F2 does nothing on an image either), so the item is left off entirely rather than shown disabled.
     items.push({ label: 'Edit text', hint: 'Enter', action: actions.edit, disabled: readonly })
