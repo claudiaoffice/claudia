@@ -92,6 +92,57 @@ where Cocoa convention (and the spike, §4) put them.
    list that works before E5.11 ships; nothing in this client calls `os.*` or `filesystem.*` today, so
    `filesystemScopes` is left empty too.
 
+## First real run (owner, 2026-11-07)
+
+The owner ran `npm ci`, `npm run generate-menu`, `npm run build` and `node dist/launch.js creates` on her own Mac the
+same day this slice was handed over. It did not start up, which is expected (no Neutralino binary was placed yet),
+but two things it hit were real bugs in this round of the port, not just missing manual setup steps, caught and
+fixed before any patch was re-sent:
+
+1. **`npm run generate-menu` failed** with `TypeError: dataclass() got an unexpected keyword argument 'slots'` deep
+   inside `manifest.py`. Her `python3` was older than 3.12 (`slots=True` needs 3.10+, but `manifest.py`'s own floor
+   is 3.12) — true, but the error gave no hint of that. `generate_menu.py` now checks `sys.version_info` itself
+   before importing anything of `manifest.py`'s, and refuses with a message naming the floor and the repository's
+   own `uv sync` environment as a 3.12+ interpreter already on hand. This step was never required for `npm run
+   build` or `launch.ts` to work — the checked-in `src/generated/menu.*.json` covers that — so it did not block
+   her from continuing.
+2. **After placing a Neutralino binary** (which `findNeutralinoBinary()`'s own error message, correctly, told her
+   was missing) and running again, `node dist/launch.js creates` crashed with an uncaught `ServerStartError: the
+   server stopped at start-up (exit code 1)` and a raw Node stack trace — no indication of what actually failed
+   inside `claudia_server`. Two real gaps, both now fixed:
+   - `LocalServer` never captured the child's stdout/stderr anywhere, so there was nothing to show even if the
+     error had been caught. `server.py`'s own `_what_it_said()` — quoting the log's tail in the error message —
+     had no Node equivalent in the first round of this port. Fixed: `defaultSpawn()` appends stdout and stderr
+     (merged) to `state/server.log`, and `checkReady()`'s `ServerStartError` now quotes its tail.
+   - `launch.ts`'s `main()` never caught `server.start()`'s own exceptions, so a clean `ServerStartError` reached
+     the console as an uncaught exception instead of a one-line message. Fixed: wrapped in the same
+     catch-and-print-the-message pattern every other `SetupProblem` in `main()` already used.
+
+   A third bug was found by trying to reproduce this scenario directly rather than from her transcript: Node's
+   `ChildProcess` emits `'error'` (not `'exit'`) when the OS refuses to start a process at all (ENOENT, EACCES);
+   nothing listened for it, so it was *fatal and uncaught* regardless of the two fixes above. `LocalServer.spawn()`
+   now listens for it and turns it into the same kind of `ServerStartError`.
+3. **Separately, re-reading the E0.3 spike's own `run_macos.sh`** while writing this section found that
+   `findNeutralinoBinary()`'s default search path was simply wrong: `npx @neutralinojs/neu update` — the actual,
+   intended way to fetch the pinned binary — places it in `apps/<app>/bin/`, not in `apps/<app>/` directly as this
+   client originally assumed. Fixed before it could cost the owner a second confusing round; the README and the
+   "no binary found" message now both name the real command and the real path.
+
+All four fixes have their own tests (`server.test.ts`'s "LocalServer log capture", "defaultSpawn" and "LocalServer
+and a spawn that never starts" groups; `launch.test.ts`'s updated `findNeutralinoBinary` test;
+`test_generate_menu.py`'s version-guard test) and are in the CHANGELOG's new "Fixed" section. Her transcript still
+has not reached the point of actually starting the Neutralino binary — the D159 mechanic below remains exactly as
+open as it was.
+
+She also asked, separately, for a one-command way to run this (the README's manual sequence is six steps, several of
+them easy to run from the wrong directory), mirroring `start-client.sh`'s existing role for the Linux client. Added
+`start-mac-client.sh` at the repository root: `uv sync`, rebuild web and the macOS client every run (same
+stale-build lesson `start-client.sh`'s own comment documents, same two independent skip flags), fetch the Neutralino
+binary automatically the first time `apps/<app>/bin/neutralino-mac_*` doesn't exist, then `node dist/launch.js
+<app>`. Checked in this sandbox as far as it can be without a real Mac or network fetch: an unknown app name fails
+cleanly with the right message, and the binary-presence check (missing / already present / `CLAUDIA_NEUTRALINO_BIN`
+override) was exercised in isolation for all three branches.
+
 ## Not verified (needs a real Mac)
 
 This is the same gap the spike itself named as "the largest gap" and is restated here, now that it has an actual

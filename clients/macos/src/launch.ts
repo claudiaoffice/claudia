@@ -16,7 +16,7 @@ import { join } from 'node:path'
 import { arch as hostArch, env as processEnv } from 'node:process'
 import { getIdentity, UnknownAppError, type App } from './identity.js'
 import { defaultRepo, documentsDir, findFrontend, findServerPython, stateDir, type Env } from './paths.js'
-import { LOOPBACK, LocalServer, buildServerCommand, freePort } from './server.js'
+import { LOOPBACK, LocalServer, ServerStartError, buildServerCommand, freePort } from './server.js'
 
 export class SetupProblem extends Error {}
 
@@ -54,7 +54,7 @@ export async function prepareServer(app: App, options: PrepareServerOptions = {}
   await mkdir(state, { recursive: true })
   const port = await freePort()
   const command = buildServerCommand(python, { model: identity.model, port, documents, web, state })
-  return new LocalServer(command, { url: `http://${LOOPBACK}:${port}` })
+  return new LocalServer(command, { url: `http://${LOOPBACK}:${port}`, log: join(state, 'server.log') })
 }
 
 /** The binary name the spike settled on for each Mac architecture (notes/e0-3-neutralino-windows-macos.md §5). */
@@ -65,21 +65,23 @@ export function neutralinoBinaryName(architecture: string = hostArch): string {
 }
 
 export interface FindNeutralinoBinaryOptions {
-  /** apps/<app>/, where the binary is conventionally placed next to neutralino.config.json (not checked into the
-   * repo -- D157 pins the binary and client-library versions together, re-checked on every upgrade). */
+  /** apps/<app>/, the project `neu update` (or `neu run`) is pointed at -- it writes the binary into `bin/`
+   * underneath this, not into this folder directly (confirmed against the E0.3 spike's own `run_macos.sh`, which
+   * downloads with `npx @neutralinojs/neu update` and then runs `bin/neutralino-mac_<arch>`). Not checked into
+   * the repo -- D157 pins the binary and client-library versions together, re-checked on every upgrade. */
   appDir: string
   env?: Env
   arch?: string
 }
 
-/** `$CLAUDIA_NEUTRALINO_BIN`, else `<appDir>/neutralino-mac_<arch>` if it exists and is executable, else `null` --
- * same shape as paths.ts's findServerPython: an explicit override is trusted as-is, a wrong default is reported by
- * main() rather than silently skipped. */
+/** `$CLAUDIA_NEUTRALINO_BIN`, else `<appDir>/bin/neutralino-mac_<arch>` if it exists and is executable, else
+ * `null` -- same shape as paths.ts's findServerPython: an explicit override is trusted as-is, a wrong default is
+ * reported by main() rather than silently skipped. */
 export function findNeutralinoBinary(options: FindNeutralinoBinaryOptions): string | null {
   const env = options.env ?? processEnv
   const explicit = env.CLAUDIA_NEUTRALINO_BIN
   if (explicit) return explicit
-  const candidate = join(options.appDir, neutralinoBinaryName(options.arch))
+  const candidate = join(options.appDir, 'bin', neutralinoBinaryName(options.arch))
   try {
     accessSync(candidate, constants.X_OK)
     return candidate
@@ -140,14 +142,24 @@ export async function main(argv: readonly string[]): Promise<number> {
   const binary = findNeutralinoBinary({ appDir })
   if (binary === null) {
     console.error(
-      `No Neutralino binary found for this Mac.\n` +
-        `Set CLAUDIA_NEUTRALINO_BIN to its path, or place ${neutralinoBinaryName()} in ${appDir}\n` +
-        '(D157: pin it to the same version as the client library in neutralino.config.json, 6.8.0 today).',
+      `No Neutralino binary found for this Mac (expected ${join(appDir, 'bin', neutralinoBinaryName())}).\n` +
+        `Fetch it with: cd ${appDir} && npx @neutralinojs/neu update\n` +
+        '(reads neutralino.config.json\'s pinned cli.binaryVersion, 6.8.0 today -- D157).\n' +
+        'Or set CLAUDIA_NEUTRALINO_BIN to an existing binary\'s path.',
     )
     return 1
   }
 
-  const url = await server.start()
+  let url: string
+  try {
+    url = await server.start()
+  } catch (error) {
+    if (error instanceof ServerStartError) {
+      console.error(error.message)
+      return 1
+    }
+    throw error
+  }
   const [shellBinary, ...shellArgs] = buildShellCommand(binary, { url, appDir })
   if (!shellBinary) throw new Error('empty shell command') // unreachable: buildShellCommand always returns at least the binary
   const shell = nodeSpawn(shellBinary, shellArgs, { stdio: 'inherit' })

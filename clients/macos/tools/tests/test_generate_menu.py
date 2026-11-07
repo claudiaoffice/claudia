@@ -62,6 +62,21 @@ def test_write_produces_stable_deterministic_json(tmp_path: Path) -> None:
     assert first.endswith("\n")  # plays nicely with text-file conventions / diff tools
 
 
+def test_main_refuses_a_too_old_python_with_a_clear_message_not_a_dataclass_typeerror(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The actual bug report this guards against: on a Mac whose `python3` is older than manifest.py's floor
+    (3.12, `slots=True` on `@dataclass` needs 3.10+ and the project's own floor is higher), this script used to
+    fail many frames deep inside manifest.py with `TypeError: dataclass() got an unexpected keyword argument
+    'slots'` -- true, but useless to someone who just ran `npm run generate-menu`. This script's own floor check
+    has to run and refuse *before* `manifest` is ever imported."""
+    monkeypatch.setattr(sys, "version_info", (3, 9, 0, "final", 0))
+    assert generate_menu.main(["creates"]) == 1
+    message = capsys.readouterr().err
+    assert "3.12" in message
+    assert "3.9" in message
+
+
 def test_main_check_succeeds_when_the_checked_in_file_is_current() -> None:
     assert generate_menu.main(["creates", "--check"]) == 0
 

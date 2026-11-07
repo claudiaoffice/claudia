@@ -28,7 +28,8 @@ clients/
       generate_menu.py   imports clients/linux's manifest.py (no GTK) and writes generated/menu.<app>.json
       build-inject.mjs   esbuild: bundles inject-entry.ts into apps/<app>/inject/claudia-bridge.js
     apps/creates/
-      neutralino.config.json, icon.svg/png, inject/claudia-bridge.js (built, not checked in by npm run build)
+      neutralino.config.json, icon.svg/png, inject/claudia-bridge.js (built by npm run build, not checked in),
+      bin/neutralino-mac_<arch> (downloaded by npx @neutralinojs/neu update, not checked in either)
     tests/
 ```
 
@@ -38,14 +39,35 @@ clients/
 uv sync                                    # the server's Python 3.14 environment: .venv
 (cd web && npm ci && npm run build)        # the web frontend: web/.output/public
 cd clients/macos && npm ci
-npm run generate-menu                      # regenerate src/generated/menu.*.json from the shared manifest
+npm run generate-menu                      # regenerate src/generated/menu.*.json from the shared manifest --
+                                            # needs Python 3.12+ on PATH as `python3` (see note below)
 npm run build                              # tsc, then bundles apps/creates/inject/claudia-bridge.js
-# place a Neutralino 6.8.0 macOS binary (neutralino-mac_arm64 or neutralino-mac_x64) in apps/creates/,
-# or set CLAUDIA_NEUTRALINO_BIN to its path
+(cd apps/creates && npx @neutralinojs/neu update)   # downloads the pinned binary into apps/creates/bin/
 node dist/launch.js creates
 ```
 
-Documents are kept in `~/Library/Application Support/Claudia/creates/documents` and the server's state in the
+Or, from the repository root, `./start-mac-client.sh` does all of the above for you in one go (including fetching
+the Neutralino binary if it's missing) -- see its own comments for the `CLAUDIA_SKIP_WEB_BUILD`/
+`CLAUDIA_SKIP_MACOS_BUILD` escape hatches, and `./start-client.sh` for the Linux equivalent.
+
+**`npm run generate-menu` needs a `python3` that is 3.12 or newer**, because it imports the shared manifest
+(`clients/linux/src/claudia_shell_gtk/manifest.py`), which uses `@dataclass(slots=True)`. macOS's own system
+`python3` is often older than that (3.9 on some installs) and gives a confusing `TypeError: dataclass() got an
+unexpected keyword argument 'slots'` many frames deep inside `manifest.py` if it is used — this script checks the
+version itself first and refuses with a clear message instead, naming the repository's own `uv sync` environment
+(`../../.venv/bin/python3`) as a 3.12+ interpreter that is already there. This step is not strictly required to
+build or run the client — the checked-in `src/generated/menu.*.json` is used either way — it only needs to be run
+again after an edit to the shared manifest.
+
+**The Neutralino binary is not checked into the repository** (D157: pin it to the same version as the client
+library, 6.8.0 today). `npx @neutralinojs/neu update`, run from inside `apps/<app>/` (where that app's own
+`neutralino.config.json` lives), reads `cli.binaryVersion` from it and downloads the matching binary into a `bin/`
+subdirectory it creates there — `apps/creates/bin/neutralino-mac_arm64` or `neutralino-mac_x64`, confirmed against
+the E0.3 spike's own `run_macos.sh`. `launch.ts` looks there by default; if a binary already exists somewhere else,
+point `CLAUDIA_NEUTRALINO_BIN` at it instead.
+
+Documents are kept in `~/Library/Application Support/Claudia/creates/documents` and the server's state — including
+**`server.log`**, the first place to look if `node dist/launch.js creates` reports `ServerStartError` — in the
 sibling `state/` folder. There is no packaged `.app` yet (icon assets exist as PNG; `.icns`, codesigning and
 notarization are not done — see "Not done").
 
@@ -53,7 +75,11 @@ notarization are not done — see "Not done").
 | --- | --- |
 | `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv/bin/python` of the checkout. |
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: `web/.output/public` of the checkout (nothing ships a packaged copy yet). If set, it is the only candidate: a wrong path is reported, not replaced. |
-| `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `neutralino-mac_<arch>` next to `neutralino.config.json` in `apps/<app>/`, not checked into the repo. |
+| `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `bin/neutralino-mac_<arch>` under `apps/<app>/`, where `npx @neutralinojs/neu update` places it; not checked into the repo. |
+
+If the server itself fails to start, `launch.ts` now quotes the end of `server.log` in the error message instead of
+just the bare exit code — a missing `claudia_server` package, a bad `--model`, or anything else the server printed
+on its way out shows up directly on the console.
 
 ## How it works
 
@@ -90,9 +116,9 @@ notarization are not done — see "Not done").
 
 ```
 cd clients/macos
-npm test              # vitest: identity, paths, server (incl. freePort), menu, page-bridge, launch — 50 tests
+npm test              # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch — 57 tests
 npm run typecheck      # tsc --strict over src/ and tests/
-python3 -m pytest tools/tests   # generate_menu.py: 9 tests
+python3 -m pytest tools/tests   # generate_menu.py: 10 tests
 ruff check . && ruff format --check . && mypy tools
 npm run check-menu     # fails if src/generated/menu.*.json has drifted from manifest.py
 ```

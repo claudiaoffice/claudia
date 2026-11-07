@@ -43,8 +43,36 @@ cross-origin WebSocket to the server).
   `neutralino.config.json` (`tokenSecurity: one-time`, `nativeAllowList` trimmed to the four methods this client
   calls — `app.exit`, `window.setMainMenu`, `window.print`, `events.on` — per D157; `injectGlobals`/
   `injectClientLibrary`/`injectScript` set, not yet confirmed to take effect on an externally-loaded page).
-- 50 vitest tests (`identity`, `paths`, `server`, `menu`, `page-bridge`, `launch`) and 9 pytest tests
+- 57 vitest tests (`identity`, `paths`, `server`, `menu`, `page-bridge`, `launch`) and 10 pytest tests
   (`generate_menu.py`); `tsc --strict`, ruff, ruff-format and mypy all clean.
+
+### Fixed (found on the owner's first real run)
+- **A crashing server was silent.** `server.ts`'s `LocalServer` piped stdout/stderr nowhere; a `ServerStartError`
+  gave only a bare exit code, never why. `defaultSpawn()` now appends both (merged) to `state/server.log`, and
+  `checkReady()` quotes its tail in the thrown message — the Node port of `server.py`'s own `_what_it_said()`,
+  missing from the first round of this port. `launch.ts`'s `prepareServer()` points it at `state/server.log`.
+- **An unhandled `'error'` event could crash the whole launcher.** A spawn the OS refuses outright (bad
+  interpreter path, no execute permission) fires Node's `'error'` event, not `'exit'`; nothing listened for it, so
+  it was fatal and uncaught instead of becoming a `ServerStartError` like every other start-up failure.
+  `LocalServer.spawn()` now listens for it.
+- **`findNeutralinoBinary()`'s default path was wrong.** It looked directly in `apps/<app>/`; `npx
+  @neutralinojs/neu update` — the actual way to fetch the binary, confirmed against the E0.3 spike's own
+  `run_macos.sh` — places it in `apps/<app>/bin/` instead. Fixed, and the "no binary found" message in `launch.ts`
+  now names the real fetch command instead of just a path to place a file at.
+- **`generate_menu.py` crashed unreadably on an old `python3`.** macOS's system `python3` can be older than
+  3.12 (manifest.py's own floor); without a check, the failure surfaced as `TypeError: dataclass() got an
+  unexpected keyword argument 'slots'` deep inside `manifest.py`. The script now checks `sys.version_info` first
+  and refuses with a message naming the actual floor and a 3.12+ interpreter that is already there (the repo's own
+  `.venv` from `uv sync`).
+- `server.start()`'s `ServerStartError` was uncaught in `launch.ts`'s `main()` (a raw Node stack trace on the
+  console); it is now caught and printed like every other `SetupProblem`.
+
+### Added (after the owner's first run)
+- `start-mac-client.sh` at the repository root -- the macOS counterpart of `start-client.sh`. Runs `uv sync`,
+  rebuilds the web frontend and the macOS client on every run (skippable with `CLAUDIA_SKIP_WEB_BUILD=1` /
+  `CLAUDIA_SKIP_MACOS_BUILD=1`), fetches the Neutralino binary automatically with `npx @neutralinojs/neu update` the
+  first time it's missing, and hands off to `node dist/launch.js <app>` (default `creates`) -- one command instead
+  of the README's six manual steps.
 
 ### Not done
 Packaging (`.app`, `.icns`, codesigning, notarization); composes and computes clients; printing as a contract

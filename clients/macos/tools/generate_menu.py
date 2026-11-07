@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,10 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 LINUX_SRC = REPO / "clients" / "linux" / "src"
 OUT_DIR = HERE.parent / "src" / "generated"
+# manifest.py's own floor (clients/macos/pyproject.toml: requires-python = ">=3.12"); `@dataclass(slots=True)`
+# alone would run on 3.10+, but this script follows the project's actual floor, not the narrowest syntax that
+# happens to parse.
+MIN_PYTHON = (3, 12)
 
 __all__ = ["UnknownApp", "build", "flatten", "write", "main"]
 
@@ -108,7 +113,28 @@ def _check(app_name: str, out_dir: Path) -> bool:
     return True
 
 
+def _check_python_version(argv: Sequence[str]) -> bool:
+    """`False`, with a message on stderr, if this interpreter is older than `MIN_PYTHON`. Called before anything
+    of `manifest.py`'s is imported: without this, too old a `python3` fails many frames deep inside it with a
+    bare ``TypeError: dataclass() got an unexpected keyword argument 'slots'`` -- true (`slots=True` needs 3.10+),
+    but useless to someone who just ran ``npm run generate-menu`` and has no reason to know what that means."""
+    if sys.version_info[:2] >= MIN_PYTHON:
+        return True
+    have = f"{sys.version_info[0]}.{sys.version_info[1]}"
+    need = ".".join(str(part) for part in MIN_PYTHON)
+    print(
+        f"generate_menu.py needs Python {need}+ to import the shared manifest; this is {have}.\n"
+        f"On macOS, the system `python3` is often older than this. Use a newer interpreter instead, for example "
+        f"the repository's own `uv sync` environment: ../../.venv/bin/python3 {Path(__file__).name} "
+        f"{' '.join(argv) or '--all'}",
+        file=sys.stderr,
+    )
+    return False
+
+
 def main(argv: list[str] | None = None) -> int:
+    if not _check_python_version(argv if argv is not None else sys.argv[1:]):
+        return 1
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("app", nargs="?", choices=["composes", "computes", "creates"], help="which app to generate")
     parser.add_argument("--all", action="store_true", help="generate every app")

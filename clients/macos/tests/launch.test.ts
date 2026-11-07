@@ -44,6 +44,13 @@ describe('prepareServer', () => {
     expect(server.running).toBe(false)
   })
 
+  it('points the server at state/server.log, so a start-up failure is not silent', async () => {
+    const server = await prepareServer('creates', { repo, home, env: {} })
+    expect(server.logPath).toBe(
+      join(home, 'Library', 'Application Support', 'Claudia', 'creates', 'state', 'server.log'),
+    )
+  })
+
   it('the documents and state folders exist once prepared', async () => {
     await prepareServer('creates', { repo, home, env: {} })
     expect(() => mkdirSync(join(home, 'Library', 'Application Support', 'Claudia', 'creates', 'documents'))).toThrow() // already exists
@@ -97,8 +104,9 @@ describe('findNeutralinoBinary', () => {
     )
   })
 
-  it('falls back to <appDir>/neutralino-mac_<arch> when it exists and is executable', () => {
-    const binary = join(appDir, 'neutralino-mac_arm64')
+  it('falls back to <appDir>/bin/neutralino-mac_<arch> -- where `neu update` itself places it -- when it exists and is executable', () => {
+    mkdirSync(join(appDir, 'bin'))
+    const binary = join(appDir, 'bin', 'neutralino-mac_arm64')
     writeFileSync(binary, '#!/bin/sh\n')
     chmodSync(binary, 0o755)
     expect(findNeutralinoBinary({ appDir, env: {}, arch: 'arm64' })).toBe(binary)
