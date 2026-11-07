@@ -123,12 +123,6 @@ kanban-plugin: board
 	AC: keyboard reachability of all menus and the history panel; labels for assistive technology; contrast checks; a checklist per release.
 	
 	Use case: ALL · Decisions: D3, D42 · D69 names public administration and schools, who in the EU usually have to meet WCAG 2.1 AA through EN 301 549 (BITV 2.0 in Germany). Open bugs: UX-01 (menus), UX-02 (grid), UX-03 (dialogs), UX-04 (contrast), UX-05 (dark mode).
-- [ ] **E5.11 · claudia-shell-neutralino (Windows, macOS)**
-	As an app developer, I want a Neutralino shell for Windows and macOS with the OS title bar and a native menu around the bundled frontend.
-	
-	AC: configuration with the native API restricted (allow lists, file scopes, one-time token); a native main menu from the manifest including the macOS application menu; native file dialogs; About, theme and scale from the OS; starts and stops the server bundle; installers; a thin adapter so Tauri or pywebview could replace Neutralino.
-	
-	Use case: PLATFORM · Decisions: D42, D43, D44 · Depends on E0.3. Neutralino 6.8.0 has now run on one Mac and one Windows 11 machine with all automatic checks passing (D156), so the bet is no longer unverified, but it is not yet confirmed either: see E0.3 for what is untested. **Acceptance items learned from the spike:** `tokenSecurity: one-time`, the page loads only `js/neutralino.js` (D157); Edit items with Cocoa `action` and `shortcut` on macOS; printing through `Neutralino.window.print()`; binary and client library versions pinned together; the allow-list shrunk from the spike's wide one; the About dialog stays a page dialog; Windows 10 without a WebView2 runtime handled or refused with a message. **Open before building:** how the real frontend reaches the shell under D115 (D159), which decides the transport the web app needs.
 - [ ] **E6.5 · Names and SQL in cells**
 	As an analyst, I want named ranges and SQL, so that I can query my sheets.
 	
@@ -941,6 +935,14 @@ kanban-plugin: board
 	Use case: ALL · Decisions: D76, D29, D30, D38
 	
 	Status evidence: half the contract is built, in the right spirit: `functions/base.py` makes a description and at least one `Example` mandatory, and `check_examples` runs the examples in the tests. **Not done:** `get_tooltip` and `get_help` (E4.6), the registration into a help system that does not exist (E13.3), the interface in `claudia-core`, and the contract for composes and creates, whose macro API is still open (D29).
+- [ ] **E5.11 · claudia-shell-neutralino (Windows, macOS)**
+	As an app developer, I want a Neutralino shell for Windows and macOS with the OS title bar and a native menu around the bundled frontend.
+	
+	AC: configuration with the native API restricted (allow lists, file scopes, one-time token); a native main menu from the manifest including the macOS application menu; native file dialogs; About, theme and scale from the OS; starts and stops the server bundle; installers; a thin adapter so Tauri or pywebview could replace Neutralino.
+	
+	Use case: PLATFORM · Decisions: D42, D43, D44 · Depends on E0.3. Neutralino 6.8.0 has now run on one Mac and one Windows 11 machine with all automatic checks passing (D156). **Acceptance items learned from the spike, now built for macOS/creates:** `tokenSecurity: one-time`, the page loads only `js/neutralino.js`, binary and client library pinned to 6.8.0, allow-list shrunk to four exact methods (D157); Edit items carry a Cocoa `action` and `shortcut` via the shared manifest's new `role` field, the About dialog stays a page dialog (D158, printing still not wired); the transport question (D159) is answered — the owner chose loopback, like Linux, and it is built as `clients/macos/src/launch.ts` + `page-bridge.ts`.
+	
+	Status evidence: `clients/macos/` (package `claudia-shell-macos`), branch `macos-client`, handed to the owner as a patch (no push access from this session). Identity, paths, a local server (`freePort`, SIGTERM/SIGKILL stop), the shared manifest turned into a native macOS menu (D44's app-menu relocation, D158's roles), the D159 page adapter, an esbuild bundling pipeline for the injected script, `neutralino.config.json`, and creates' icon assets — all for **creates only**. 50 vitest tests, 9 pytest tests, `tsc --strict`/ruff/mypy clean; full notes in `notes/e5-11-macos-client.md`. **Not done:** composes and computes (no `apps/<app>/` folder yet, only `identity.ts` entries); Windows entirely untouched; installers, codesigning, notarization; printing as a contract message; translations. **Not verified — the one thing to check first on a real Mac:** whether `window.Neutralino` (and so the native menu and the page adapter) actually exist once the window shows a page Neutralino did not itself serve — D159's injection-into-an-external-page mechanic, confirmed only against Neutralino's own documentation, not against a real window.
 
 
 ## testing
