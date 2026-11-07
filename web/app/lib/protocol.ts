@@ -34,6 +34,43 @@ export interface Welcome {
   limits: { max_text: number }
   /** True if this very hello made the document (so its owner should now be given a recovery key). */
   created?: boolean
+  /** Every line of the document's history: the active one and the side lines a restore left behind (E3.8). */
+  lines: LineInfo[]
+  /** A restore/switch suggestion waiting for everybody's answer, if one is open right now (E3.7). */
+  proposal: RestoreProposal | null
+  /** One-time notice of what happened, while this person was away, to the line they were on (E3.7). */
+  returned: RestoreResolution | null
+}
+
+/** One line of a document's history, as `lines` and a `Welcome` carry it. */
+export interface LineInfo {
+  name: string
+  head: string | null
+  active: boolean
+  forked_from: string | null
+}
+
+/** A suggestion to restore a checkpoint or switch the line, open and waiting for answers (E3.7). */
+export interface RestoreProposal {
+  id: number
+  kind: 'restore' | 'switch'
+  by: string
+  checkpoint: number | null
+  line: string | null
+  label: string
+  opened_at: number
+  expires_at: number
+  policy: 'consensus' | 'veto'
+  group: string[]
+  agreed: string[]
+}
+
+/** What became of a line that stopped being active while somebody was away (the `Welcome.returned` notice). */
+export interface RestoreResolution {
+  by: string
+  kind: 'restore' | 'switch'
+  label: string
+  agreed: string[]
 }
 
 export interface CellRef {

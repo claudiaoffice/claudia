@@ -15,6 +15,9 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
+  lines: [{ name: 'main', head: 'main:0', active: true, forked_from: null }],
+  proposal: null,
+  returned: null,
 }
 
 const RECT = { format: 1, id: 'rectangle', name: 'Rectangle', path: 'M0 0 L100 0 L100 100 L0 100 Z', aspect: null, text_area: { x: 0, y: 0, w: 100, h: 100 } }
@@ -99,6 +102,8 @@ function server(link: FakeLink, objects: any[] = []) {
     chat_log: () => [],
     checkpoints: () => [],
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
+    lines: () => [{ name: 'main', head: 'main:0', active: true, forked_from: null }],
+    restore_policy: () => ({ policy: 'consensus' }),
     add_object: () => ({ object: 'o1', revision: 'main:1' }),
     add_image: () => ({ object: 'o1', revision: 'main:1' }),
     move_object: () => ({ revision: 'main:2' }),

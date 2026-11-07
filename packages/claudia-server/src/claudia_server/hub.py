@@ -42,6 +42,7 @@ from claudia_core.clock import utc_now
 
 from .auth import AI_COLOR, Account, UserDirectory
 from .protocol import PROTOCOL_VERSION, Context, Limits, MethodTable, RequestError, core_methods, parse_request
+from .restore import Resolution, RestoreCoordinator
 from .workers import DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
@@ -192,6 +193,12 @@ class Connection:
                 if hold.owner != self.account.user
             ],
             "checkpoints": [{"number": c.number, "label": c.label, "author": c.author} for c in doc.checkpoints],
+            "lines": [
+                {"name": x.name, "head": None if x.head is None else x.head.to_data(), "active": x.active}
+                for x in doc.lines()
+            ],
+            "proposal": None if (p := self.hosted.restore.open_proposal) is None else p.to_data(),
+            "returned": None if self.account.system else self.hosted.restore.notice_for(self.account.user, doc.branch),
         }
 
     def person(self) -> dict:
@@ -213,6 +220,9 @@ class Connection:
                 hosted.edit_timeout,
                 hosted.directory,
                 hosted.id,
+                hosted.editors,
+                hosted.restore,
+                hosted.broadcast,
             )
             result = hosted.methods.dispatch(context, name, params)
             frame = {"id": request_id, "ok": True, "result": result}
@@ -235,6 +245,10 @@ class Connection:
         if not any(c.account.user == self.account.user for c in hosted.connections):
             hosted.document.presence.release(self.account.user)
             hosted.document.publish("presence", self.account.user, {"regions": [], "gone": True})
+            if not self.account.system:
+                outcome = hosted.restore.left(self.account.user, hosted.document.branch)
+                if outcome is not None:
+                    hosted.broadcast({"event": "restore_resolved", "data": {"outcome": outcome}})
         hosted.broadcast({"event": "left", "data": {"id": self.id, "user": self.account.user}})
         hosted.touch()
 
@@ -267,6 +281,7 @@ class HostedDocument:
         self.last_active = clock()
         self._connection_ids = 0
         self._locked: set[str] = set()  # who held a lock at the last look, to tell the others when one lapses
+        self.restore = RestoreCoordinator(self._apply_proposal, clock=clock)
         document.subscribe(self._on_event)
 
     # -- people ------------------------------------------------------------------------
@@ -284,6 +299,12 @@ class HostedDocument:
         """The names of the people connected now, once each: the addresses for chat messages."""
         return sorted({c.account.user for c in self.connections}, key=str.casefold)
 
+    def editors(self) -> list[str]:
+        """The names of the people connected now who may write (owners and editors, not viewers or the assistant):
+        who must be asked before a restore or a switch happens (E3.7)."""
+        writers = {c.account.user for c in self.connections if c.account.can_write and not c.account.system}
+        return sorted(writers, key=str.casefold)
+
     def humans(self) -> list[Connection]:
         """The connections of people (the assistant is not one)."""
         return [c for c in self.connections if not c.account.system]
@@ -294,6 +315,8 @@ class HostedDocument:
             raise HubError("unavailable", f"{self.id} already has {self.max_connections} connections")
         connection = Connection(self, account, send)
         self.connections.add(connection)
+        if not account.system:
+            self.restore.joined(account.user, account.can_write)
         self.broadcast({"event": "joined", "data": connection.person()}, skip=connection)
         self.touch()
         return connection
@@ -335,7 +358,8 @@ class HostedDocument:
             connection.deliver({"event": event_type, "data": payload})
 
     def sweep(self) -> None:
-        """Tell the others about locks that ran out (the kernel turns them into plain presence on its own)."""
+        """Tell the others about locks that ran out (the kernel turns them into plain presence on its own), and
+        resolve an open restore/switch suggestion whose deadline has passed (E3.7)."""
         now_locked = {hold.owner for hold in self.document.presence.holds() if hold.expires is not None}
         for owner in sorted(self._locked - now_locked):
             hold = self.document.presence.of(owner)
@@ -344,6 +368,23 @@ class HostedDocument:
                     "presence", owner, {"regions": [r.to_data() for r in hold.regions], "locked": False}
                 )
             self._locked.discard(owner)
+        outcome = self.restore.sweep()
+        if outcome is not None:
+            self.broadcast({"event": "restore_resolved", "data": {"outcome": outcome}})
+
+    # -- restoring and switching, with consent (E3.7) -----------------------------------
+    def _apply_proposal(self, record: dict) -> None:
+        """Carry out an agreed suggestion (``RestoreCoordinator``'s ``apply``): call the kernel, and if the line
+        actually moved, remember what happened to the one left behind, for whoever was away when it did."""
+        old = self.document.branch
+        if record["kind"] == "restore":
+            moved = self.document.restore_checkpoint(record["checkpoint"], author=record["by"]) is not None
+        else:
+            moved = self.document.switch_to(record["line"], author=record["by"]) is not None
+        if moved:
+            self.restore.record_resolution(
+                old, Resolution(by=record["by"], kind=record["kind"], label=record["label"], agreed=record["agreed"])
+            )
 
 
 class Hub:

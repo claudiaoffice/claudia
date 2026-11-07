@@ -50,6 +50,14 @@ Protocol
    :no-value:
 .. autofunction:: claudia_server.creates_methods_with
 
+Restore
+-------
+
+.. autoclass:: claudia_server.RestoreCoordinator
+.. autoclass:: claudia_server.Proposal
+.. autoclass:: claudia_server.Resolution
+.. autoclass:: claudia_server.RestoreError
+
 Assistant
 ---------
 

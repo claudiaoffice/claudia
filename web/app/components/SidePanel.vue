@@ -15,15 +15,61 @@ const draft = ref('')
 const rows = computed(() => {
   const marks = new Map<string, typeof state.checkpoints>()
   for (const c of state.checkpoints) marks.set(c.marks, [...(marks.get(c.marks) ?? []), c])
-  const out: ({ kind: 'entry'; entry: (typeof state.entries)[number] } | { kind: 'mark'; label: string; author: string | null })[] = []
+  const out: (
+    | { kind: 'entry'; entry: (typeof state.entries)[number] }
+    | { kind: 'mark'; label: string; author: string | null; number: number }
+  )[] = []
   for (const entry of state.entries) {
     out.push({ kind: 'entry', entry })
-    for (const c of marks.get(entry.revision) ?? []) out.push({ kind: 'mark', label: c.label || `checkpoint ${c.number}`, author: c.author })
+    for (const c of marks.get(entry.revision) ?? []) out.push({ kind: 'mark', label: c.label || `checkpoint ${c.number}`, author: c.author, number: c.number })
   }
   return out
 })
 
 const others = computed(() => state.typing.filter((u) => u !== state.me.user))
+
+// ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)
+const canWrite = computed(() => state.me.role === 'owner' || state.me.role === 'editor')
+const isOwner = computed(() => state.me.role === 'owner')
+const hiddenLines = computed(() => state.lines.filter((l) => !l.active))
+const myProposal = computed(() => state.proposal)
+const canWithdraw = computed(() => myProposal.value && (myProposal.value.by === state.me.user || isOwner.value))
+const haveAgreed = computed(() => myProposal.value?.agreed.includes(state.me.user) ?? false)
+const stillWaitingOn = computed(() => myProposal.value ? myProposal.value.group.filter((u) => !myProposal.value!.agreed.includes(u)) : [])
+
+type Peeked = Exclude<Awaited<ReturnType<BaseSession['peekLine']>>, false>
+const peeked = ref<Record<string, Peeked>>({})
+async function togglePeek(line: string) {
+  if (peeked.value[line]) {
+    const { [line]: _drop, ...rest } = peeked.value
+    peeked.value = rest
+    return
+  }
+  const result = await props.session.peekLine(line)
+  if (result) peeked.value = { ...peeked.value, [line]: result }
+}
+
+function suggestRestore(checkpoint: number) {
+  void props.session.proposeRestore(checkpoint)
+}
+function suggestSwitch(line: string) {
+  void props.session.proposeSwitch(line)
+}
+function agree() {
+  void props.session.answerRestore(true)
+}
+function decline() {
+  void props.session.answerRestore(false)
+}
+function withdraw() {
+  void props.session.withdrawRestore()
+}
+function discard() {
+  void props.session.discardSideHistory()
+}
+function setPolicy(policy: 'consensus' | 'veto') {
+  void props.session.setRestorePolicy(policy)
+}
 
 async function toBottom(el: HTMLElement | null) {
   await nextTick()
@@ -55,6 +101,19 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
 <template>
   <aside class="panel" aria-label="history and chat">
     <slot name="top" />
+
+    <div v-if="myProposal" class="proposal" role="alert">
+      <p class="ask">
+        <b>{{ myProposal.by }}</b> suggests going to {{ myProposal.label }}.
+        <span v-if="stillWaitingOn.length" class="waiting">Waiting on {{ stillWaitingOn.join(', ') }}.</span>
+      </p>
+      <div class="buttons">
+        <button v-if="canWrite && !haveAgreed" type="button" class="agree" @click="agree">Agree</button>
+        <button v-if="canWrite" type="button" class="decline" @click="decline">Decline</button>
+        <button v-if="canWithdraw" type="button" class="withdraw" @click="withdraw">Withdraw</button>
+      </div>
+    </div>
+
     <section class="history">
       <h2>History <span class="count">{{ state.entries.length }}</span></h2>
       <ol ref="history" class="log mono" aria-label="everything that was done to this document">
@@ -68,9 +127,33 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
             </span>
             <time>{{ clock(row.entry.time) }}</time>
           </li>
-          <li v-else class="mark"><span>◆ saved: {{ row.label }}<template v-if="row.author"> · {{ row.author }}</template></span></li>
+          <li v-else class="mark">
+            <span>◆ saved: {{ row.label }}<template v-if="row.author"> · {{ row.author }}</template></span>
+            <button v-if="canWrite && !myProposal" type="button" class="suggest" title="Suggest going back to this checkpoint" @click="suggestRestore(row.number)">↺ restore</button>
+          </li>
         </template>
       </ol>
+    </section>
+
+    <section class="lines" v-if="state.lines.length > 1 || hiddenLines.length">
+      <h2>
+        Lines <span class="count">{{ state.lines.length }}</span>
+        <select v-if="isOwner" class="policy" :value="state.restorePolicy" title="What silence at a suggestion's deadline means" @change="setPolicy(($event.target as HTMLSelectElement).value as 'consensus' | 'veto')">
+          <option value="consensus">silence = decline</option>
+          <option value="veto">silence = agree</option>
+        </select>
+      </h2>
+      <ol class="lineList">
+        <li v-for="line in state.lines" :key="line.name" class="line" :class="{ active: line.active }">
+          <span class="name"><span v-if="line.active" class="dot" />{{ line.name }}</span>
+          <span class="actions">
+            <button type="button" @click="togglePeek(line.name)">{{ peeked[line.name] ? 'close' : 'peek' }}</button>
+            <button v-if="!line.active && canWrite && !myProposal" type="button" @click="suggestSwitch(line.name)">suggest switching here</button>
+          </span>
+          <pre v-if="peeked[line.name]" class="peekBox mono">{{ JSON.stringify(peeked[line.name]!.state, null, 1) }}</pre>
+        </li>
+      </ol>
+      <button v-if="isOwner && hiddenLines.length && !myProposal" type="button" class="discard" @click="discard">Forget every hidden line</button>
     </section>
 
     <section class="chat">
@@ -194,11 +277,161 @@ time {
   font-size: 11px;
 }
 .mark {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   margin: 6px 0;
   color: var(--apricot);
   font-size: 11.5px;
   border-top: 1px dashed rgb(242 160 87 / 40%);
   padding-top: 5px;
+}
+.mark .suggest {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid rgb(242 160 87 / 45%);
+  border-radius: 999px;
+  color: var(--apricot);
+  font-size: 10.5px;
+  padding: 1px 8px;
+  cursor: pointer;
+}
+.mark .suggest:hover {
+  background: rgb(242 160 87 / 14%);
+}
+
+/* -------------------------------------------------------------- the open suggestion to restore or switch (E3.7) */
+.proposal {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--apricot) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--apricot) 40%, transparent);
+  font-size: 12.5px;
+}
+.proposal .ask {
+  margin: 0 0 8px;
+  color: #fff;
+}
+.proposal .waiting {
+  display: block;
+  margin-top: 2px;
+  color: rgb(230 224 245 / 65%);
+  font-size: 11.5px;
+}
+.proposal .buttons {
+  display: flex;
+  gap: 6px;
+}
+.proposal button {
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.proposal .agree {
+  background: var(--iris);
+  color: #fff;
+}
+.proposal .decline {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+.proposal .withdraw {
+  background: none;
+  color: rgb(230 224 245 / 75%);
+  text-decoration: underline;
+}
+
+/* -------------------------------------------------------------------------------------------- lines (E3.8) */
+.lines {
+  flex: 0 0 auto;
+  max-height: 160px;
+}
+.lines h2 {
+  justify-content: space-between;
+}
+.lines .policy {
+  margin-left: auto;
+  background: rgb(255 255 255 / 8%);
+  color: rgb(230 224 245 / 80%);
+  border: 1px solid rgb(231 225 244 / 22%);
+  border-radius: 999px;
+  font-size: 10px;
+  padding: 1px 6px;
+}
+.lineList {
+  flex: 0 1 auto;
+  overflow: auto;
+}
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+.line .name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+}
+.line:not(.active) .name {
+  color: rgb(230 224 245 / 65%);
+}
+.line .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--iris);
+}
+.line .actions {
+  display: flex;
+  gap: 6px;
+}
+.line .actions button {
+  background: none;
+  border: 1px solid rgb(231 225 244 / 22%);
+  border-radius: 999px;
+  color: rgb(230 224 245 / 80%);
+  font-size: 10.5px;
+  padding: 1px 8px;
+  cursor: pointer;
+}
+.line .actions button:hover {
+  background: rgb(255 255 255 / 8%);
+}
+.peekBox {
+  width: 100%;
+  max-height: 90px;
+  overflow: auto;
+  margin: 4px 0 2px;
+  padding: 6px 8px;
+  background: rgb(0 0 0 / 25%);
+  border-radius: 6px;
+  font-size: 10.5px;
+  color: rgb(230 224 245 / 80%);
+  white-space: pre-wrap;
+}
+.discard {
+  align-self: flex-start;
+  margin-top: 6px;
+  background: none;
+  border: 1px solid rgb(231 225 244 / 22%);
+  border-radius: 999px;
+  color: rgb(230 224 245 / 65%);
+  font-size: 10.5px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.discard:hover {
+  color: #fff;
+  border-color: rgb(231 225 244 / 40%);
 }
 .messages {
   display: flex;
