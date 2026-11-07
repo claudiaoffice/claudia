@@ -3,6 +3,7 @@
 import io
 import json
 import os
+import sys
 import zipfile
 
 import pytest
@@ -411,7 +412,23 @@ def test_a_document_of_a_newer_format_says_so(path, owner):
         read_manifest(path)
 
 
-@pytest.mark.parametrize("name", ["../evil", "/abs", "a/../b", "UPPER", "a\\b", "x" * 200])
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../evil",
+        "/abs",
+        "a/../b",
+        "UPPER",
+        pytest.param(
+            "a\\b",
+            marks=pytest.mark.skipif(
+                sys.platform == "win32",
+                reason="zipfile.ZipInfo replaces os.sep with '/' there, so this arrives as the harmless 'a/b'",
+            ),
+        ),
+        "x" * 200,
+    ],
+)
 def test_entry_names_that_could_leave_a_folder_are_refused(path, owner, name):
     path.write_bytes(zip_of([*good_entries(path), (name, b"x")]))
     with pytest.raises(ReaderLimitExceeded):

@@ -5,6 +5,7 @@ was acknowledged) and 6 (a viewer's key opens neither history nor chat)."""
 
 import contextlib
 import os
+import sys
 import zipfile
 from pathlib import Path
 
@@ -387,7 +388,8 @@ def test_a_journal_can_be_replaced_by_the_next_generation_atomically(tmp_path, o
     second = JournalWriter.replace(target, "plan", owner.keys, generation=1)
     assert (journal_generation(target), second.seq) == (1, 0)
     assert read_journal(target, "plan", owner.keys) == []
-    assert target.stat().st_mode & 0o777 == 0o600
+    if sys.platform != "win32":  # Windows has no POSIX permission bits to check
+        assert target.stat().st_mode & 0o777 == 0o600
     second.append(Domain.HISTORY, b"new")
     second.close()
     assert [r.payload for r in read_journal(target, "plan", owner.keys)] == [b"new"]

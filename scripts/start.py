@@ -122,7 +122,9 @@ def needs_build(args: argparse.Namespace, built: Path = BUILT) -> bool:
 
 def server_command(args: argparse.Namespace, python: str = sys.executable, built: Path = BUILT) -> list[str]:
     """The command line that runs the server for these options."""
-    command = [python, "-m", "claudia_server", "--dir", str(args.dir), "--web", str(built)]
+    # `--web` stays forward-slash even on Windows (Path.as_posix(), not str()): it is echoed back by callers and
+    # compared verbatim, and the OS itself accepts either separator when the server opens files under it.
+    command = [python, "-m", "claudia_server", "--dir", str(args.dir), "--web", Path(built).as_posix()]
     command += ["--host", args.host, "--port", str(args.port)]
     if MODELS[args.app]:
         command += ["--model", MODELS[args.app]]

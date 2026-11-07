@@ -858,7 +858,10 @@ def pack_journal(
 
     The file is replaced first and the journal second. A crash between the two leaves a journal whose records the file
     already holds; :func:`read_state` ignores it and :func:`begin` replaces it. ``snapshot`` becomes the snapshot of the
-    file (``None`` removes it). If anything fails, ``writer`` is still the open journal and nothing has changed."""
+    file (``None`` removes it). If folding into the file fails, ``writer`` is still the open journal and nothing has
+    changed. Once the file holds the records, ``writer`` is closed before the journal itself is replaced (on Windows,
+    replacing a file that is still open is refused); if that replace then fails, the file already has the records, so
+    the next :func:`begin` repeats it and nothing is lost."""
     journal = journal_path(path)
     manifest = read_manifest(path)
     history, chat = [], []
@@ -868,6 +871,6 @@ def pack_journal(
         elif record.domain is Domain.CHAT:
             chat.append(record.payload)
     _pack_blocks(path, keys, history=history, chat=chat, snapshot=snapshot, generation=writer.generation)
-    fresh = JournalWriter.replace(journal, manifest.id, keys, writer.generation + 1)
+    generation = writer.generation
     writer.close()
-    return fresh
+    return JournalWriter.replace(journal, manifest.id, keys, generation + 1)

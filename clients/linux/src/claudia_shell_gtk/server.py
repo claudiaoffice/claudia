@@ -196,9 +196,9 @@ class LocalServer:
         try:
             process.wait(timeout=grace)
         except subprocess.TimeoutExpired:
-            self._signal_group(process.pid, signal.SIGKILL)
+            self._signal_group(process.pid, signal.SIGKILL)  # type: ignore[attr-defined] # POSIX only, not on Windows
             process.wait()
-        self._signal_group(process.pid, signal.SIGKILL)  # whatever the server left running in its group
+        self._signal_group(process.pid, signal.SIGKILL)  # type: ignore[attr-defined] # whatever is left in the group
         self._process = None
 
     # ------------------------------------------------------------------------------------------- internals
@@ -206,7 +206,7 @@ class LocalServer:
     @staticmethod
     def _signal_group(pgid: int, sig: signal.Signals) -> None:
         with contextlib.suppress(ProcessLookupError, PermissionError):
-            os.killpg(pgid, sig)
+            os.killpg(pgid, sig)  # type: ignore[attr-defined] # POSIX only, not on Windows
 
     def _answers(self) -> bool:
         try:

@@ -70,12 +70,15 @@ async def test_a_process_that_asks_for_too_much_memory_does_not_get_it(tmp_path)
 
 @runs_in_a_loop
 async def test_a_swarm_of_processes_is_refused(tmp_path):
+    # Each spawned process inherits the sandboxed process's own stdout pipe, so `run_sandboxed` cannot see end of
+    # output until every one of them has exited too. They only need to still be alive when the active-process limit
+    # is checked, not for the length of the test's own deadline, so they sleep far less than `Limits(seconds=...)`.
     code = (
         "import subprocess, sys\n"
         "started = 0\n"
         "try:\n"
         "    for _ in range(40):\n"
-        "        subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])\n"
+        "        subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(2)'])\n"
         "        started += 1\n"
         "except OSError:\n"
         "    pass\n"

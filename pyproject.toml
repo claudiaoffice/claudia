@@ -78,6 +78,14 @@ explicit_package_bases = true
 module = ["fontTools.*"]
 ignore_missing_imports = true  # fontTools ships no type information
 
+[[tool.mypy.overrides]]
+# Each has `type: ignore[attr-defined]` on the attributes of one platform's stdlib that the other does not have
+# (ctypes.WinDLL and friends in _windows, resource/os.killpg/signal.SIGKILL in sandbox). Exactly one side's
+# ignores are ever "needed" for a given mypy run -- it uses sys.platform of the machine it runs on, and this
+# project's CI runs mypy on more than one -- so `warn_unused_ignores` would always flag the other side's.
+module = ["claudia_typeset._windows", "claudia_typeset.sandbox"]
+warn_unused_ignores = false
+
 [tool.vulture]
 paths = ["packages", "scripts", "clients/linux/src", "clients/linux/tests", "vulture_whitelist.py"]
 min_confidence = 60

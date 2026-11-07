@@ -30,7 +30,11 @@ PACKAGES = (
 
 def signature(obj) -> str:
     try:
-        return re.sub(r" at 0x[0-9a-f]+", "", str(inspect.signature(obj)))  # defaults that are functions
+        # A default that is a function reprs as "<function name at ADDRESS>". The address format itself is not
+        # portable: glibc/macOS's `%p` gives lowercase hex with a "0x" prefix, MSVC's gives uppercase hex with
+        # none (e.g. "0x7f3a2bc12340" vs "000001ED86581A60") -- both must be stripped the same way everywhere, or
+        # the snapshot made on one platform never matches a check made on the other.
+        return re.sub(r" at (?:0x)?[0-9A-Fa-f]+", "", str(inspect.signature(obj)))
     except (TypeError, ValueError):
         return "(...)"
 

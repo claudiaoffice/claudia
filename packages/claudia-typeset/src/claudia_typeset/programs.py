@@ -78,8 +78,10 @@ def resolve_program(setting: str, configured: str | os.PathLike[str] | None, def
                 f"The folder {text!r} (setting '{setting}') has no {default} in it." + _hint(setting)
             )
         return found
-    for extension in _extensions():
-        candidate = Path(text + extension)
+    # The given path itself, before trying any extension: on Windows, `_extensions()` is PATHEXT (never ""),
+    # so a path that already names a runnable file (e.g. ending in its own ".cmd") would otherwise never be
+    # tried as-is, and only ever checked with another extension tacked onto the end.
+    for candidate in (path, *(Path(text + extension) for extension in _extensions())):
         if candidate.is_file():
             if not _runnable(candidate):
                 raise EngineUnavailable(f"{str(candidate)!r} (setting '{setting}') cannot be run.")

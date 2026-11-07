@@ -53,3 +53,9 @@ explicit_package_bases = true
 # PyGObject has no type information: everything from GTK is Any.
 module = ["gi", "gi.*", "jsonschema", "jsonschema.*"]
 ignore_missing_imports = true  # (jsonschema: used by the contract tests only)
+
+[[tool.mypy.overrides]]
+# `os.killpg`/`signal.SIGKILL` are POSIX only; the `type: ignore[attr-defined]` on them is needed when mypy runs
+# with a non-Windows sys.platform and unused when it runs with Windows' (as the project's CI does on both).
+module = ["claudia_shell_gtk.server", "test_server"]
+warn_unused_ignores = false

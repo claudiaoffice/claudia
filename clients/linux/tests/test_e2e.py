@@ -74,16 +74,20 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
 
     pump(lambda: window.visible_page == "web", timeout=60, what="the server to answer")
     bridge = window._bridge  # noqa: SLF001
-    pump(lambda: bridge.ready, timeout=30, what="the page to say hello")
     view = window._page.widget  # noqa: SLF001
     assert view.get_uri().startswith("http://127.0.0.1:")
 
-    # Before a document is open the page has no menus, so the page actions are disabled.
+    # Before a document is open the page has no menus, so the page actions are disabled. The page itself has
+    # nothing to say "hello" with yet either: the shell bridge is made by a workspace component (Workspace.vue /
+    # TextWorkspace.vue / SlideWorkspace.vue), and nothing of that sort is on screen while the Open dialog is
+    # (`app.vue` shows it exactly when no document is open) -- so `bridge.ready` only turns true once one is.
     pump(lambda: not window.lookup_action("file.save").get_enabled(), what="no menu yet, so nothing to do")
+    assert not bridge.ready
 
     # Create a document through the page's own Open dialog.
     assert evaluate(view, FILL_AND_CREATE) == "clicked"
     pump(lambda: evaluate(view, CONFIRM_RECOVERY_KEY) == "confirmed", timeout=30, what="the recovery key dialog")
+    pump(lambda: bridge.ready, timeout=30, what="the now-open document's workspace to say hello")
     pump(lambda: window.lookup_action("file.save").get_enabled(), timeout=30, what="the document to open")
     pump(lambda: window.lookup_action("view.page").get_state() is not None)
 

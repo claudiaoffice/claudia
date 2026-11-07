@@ -71,20 +71,20 @@ class _PosixGuard:
         limits = self._limits
         cpu = math.ceil(limits.seconds) + 2  # later than the wall clock, so that reports first
         file_size = limits.output_mb * _MB
-        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-        resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))
-        resource.setrlimit(resource.RLIMIT_FSIZE, (file_size, file_size))
-        resource.setrlimit(resource.RLIMIT_NOFILE, (_OPEN_FILES, _OPEN_FILES))
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))  # type: ignore[attr-defined] # POSIX only, not on Windows
+        resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))  # type: ignore[attr-defined]
+        resource.setrlimit(resource.RLIMIT_FSIZE, (file_size, file_size))  # type: ignore[attr-defined]
+        resource.setrlimit(resource.RLIMIT_NOFILE, (_OPEN_FILES, _OPEN_FILES))  # type: ignore[attr-defined]
         if sys.platform.startswith("linux"):  # macOS does not enforce RLIMIT_AS
             memory = limits.memory_mb * _MB
-            resource.setrlimit(resource.RLIMIT_AS, (memory, memory))
+            resource.setrlimit(resource.RLIMIT_AS, (memory, memory))  # type: ignore[attr-defined]
 
     def attach(self, pid: int) -> None:
         """Nothing to do: the limits are already in the child."""
 
     def kill(self, pid: int) -> None:
         with contextlib.suppress(ProcessLookupError, PermissionError):  # nothing of the group may be left
-            os.killpg(pid, signal.SIGKILL)
+            os.killpg(pid, signal.SIGKILL)  # type: ignore[attr-defined] # POSIX only, not on Windows
 
     def close(self) -> None:
         """Nothing to release."""

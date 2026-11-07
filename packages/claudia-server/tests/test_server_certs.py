@@ -1,5 +1,7 @@
 """The server's own TLS certificate: made once, kept, renewed when a name is missing."""
 
+import sys
+
 import pytest
 
 from claudia_server.certs import CertificateError, ensure_certificate
@@ -43,8 +45,9 @@ def test_given_certificates_are_checked(tmp_path, certificate):
         ensure_certificate(None, (), certificate.cert_file, tmp_path / "nope.key")
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
 def test_secrets_are_written_for_their_owner_only(tmp_path):
     target = tmp_path / "secret"
     write_private(target, b"x")
     assert target.read_bytes() == b"x"
-    assert (target.stat().st_mode & 0o077) == 0 or not hasattr(target.stat(), "st_uid")
+    assert (target.stat().st_mode & 0o077) == 0
