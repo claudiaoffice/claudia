@@ -112,9 +112,28 @@ export class ShellBridge {
  * Makes the bridge for `app` and, if a shell is present, registers it as `window.__claudiaShell` so the shell can
  * reach it. Call `detach()` when the workspace that made it goes away (closing one document and opening another of a
  * different app must not leave the old bridge answering for the new one).
+ *
+ * `wrap` lets the caller make the bridge reactive (Vue's `reactive()`, typically) *before* this function hands out
+ * `window.__claudiaShell.receive` to the shell: that closure has to call back into whatever object the caller will
+ * actually read from (`shell.nativeMenu` in a template), not the plain one underneath it. Calling `reactive()` on
+ * the value this function already returns, as the workspace components used to, wraps a *second*, independent
+ * bridge instance too late to help -- `receive` still mutates the first, unwrapped one, so a change like `welcome`'s
+ * capabilities lands outside Vue's dependency tracking and a template bound to `shell.nativeMenu` is never told to
+ * re-render for it (it only shows the right value by accident, on some later render Vue schedules for an unrelated
+ * reason). This module otherwise knows nothing about Vue (so `ShellBridge` itself stays unit-testable without it);
+ * `wrap` keeps it that way by taking the reactivity function as a plain callback instead of importing one.
  */
-export function createShellBridge(app: App, handler: MessageSink | null = detectHandler()): ShellBridge & { detach: () => void } {
-  const bridge = new ShellBridge(app, handler ?? NULL_SINK) as ShellBridge & { detach: () => void }
+export function createShellBridge(
+  app: App,
+  handler: MessageSink | null = detectHandler(),
+  // Typed as `ShellBridge => ShellBridge`, even though Vue's `reactive()` (the intended `wrap`) actually returns
+  // `Reactive<ShellBridge>` -- a type that structurally drops `ShellBridge`'s private fields and so is never
+  // assignable back to it. Callers pass an inline `(bridge) => reactive(bridge) as ShellBridge` to paper over that
+  // mismatch at the one spot that knows it is safe (the fields are still there at runtime; only the structural
+  // check can't see them), rather than this module importing `reactive` itself just to make the types line up.
+  wrap: (bridge: ShellBridge) => ShellBridge = (bridge) => bridge,
+): ShellBridge & { detach: () => void } {
+  const bridge = wrap(new ShellBridge(app, handler ?? NULL_SINK)) as ShellBridge & { detach: () => void }
   if (handler) {
     const receive = (raw: string) => bridge.receive(raw)
     ;(globalThis as any).__claudiaShell = { receive, contract: SHELL_CONTRACT_VERSION }

@@ -60,9 +60,12 @@ defineExpose({
 
 // The shell bridge is wired here, not per-app, since the menus (built by the parent) are what state is reported
 // for, and the frame is what every creates document already mounts.
-// `reactive()` so the template's `shell.nativeMenu` (a getter reading `capabilities`) re-renders once the shell's
-// `welcome` message actually arrives — a plain class instance's own fields are not tracked otherwise.
-const shell = reactive(createShellBridge('creates'))
+// `reactive` as `createShellBridge`'s `wrap` (not wrapping its return value) so the template's `shell.nativeMenu`
+// re-renders once the shell's `welcome` message actually arrives: `window.__claudiaShell.receive` must call back
+// into the reactive bridge itself, or `welcome`'s capabilities land outside Vue's dependency tracking. The cast is
+// `reactive()`'s own return type (`Reactive<ShellBridge>`) structurally losing `ShellBridge`'s private fields --
+// still there at runtime, just invisible to this particular structural check.
+const shell = createShellBridge('creates', undefined, (bridge) => reactive(bridge) as typeof bridge)
 shell.onAction((id, target) => applyAction(props.menus, id, target))
 onBeforeUnmount(() => shell.detach())
 watch(() => props.menus, (m) => shell.reportStates(collectStates(m)), { immediate: true })
@@ -83,7 +86,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   <div class="frame">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you do now is not saved.</div>
-    <MenuBar v-if="!shell.nativeMenu" :menus="menus" />
+    <MenuBar :class="{ hidden: shell.nativeMenu }" :menus="menus" />
     <slot name="toolbar" />
     <div class="main" :class="{ wide: !panelOpen }">
       <slot />

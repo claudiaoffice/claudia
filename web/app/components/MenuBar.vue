@@ -344,6 +344,18 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--line);
   height: 32px;
 }
+/* A native shell draws its own menus (`shell.nativeMenu`, the workspace components below), so the page's own copy
+ * is not shown -- but it stays in the DOM with its row still reserved (`height: 0` collapses it without a layout
+ * jump) rather than being removed, the same way the old `shim.js` it replaces (D121) hid it: with
+ * `visibility: hidden`, which also drops it from the accessibility tree, same as removing it would. */
+.menus.hidden {
+  visibility: hidden;
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+}
 .bar {
   display: flex;
   gap: 2px;

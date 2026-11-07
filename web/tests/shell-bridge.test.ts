@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { nextTick, reactive, watchEffect } from 'vue'
 import { ShellBridge, createShellBridge, detectHandler, tabTitle } from '~/lib/shell-bridge'
 
 function fakeSink() {
@@ -116,6 +117,27 @@ describe('createShellBridge', () => {
     a.detach() // a is not the current owner any more (b is) — must not remove b's handler
     expect(typeof (globalThis as any).__claudiaShell?.receive).toBe('function')
     b.detach()
+  })
+
+  it("wrap lets a template effect reading shell.nativeMenu re-run on welcome, with no other trigger", async () => {
+    // Real delivery is never this synchronous (the shell's reply to `hello` is always a later turn of the event
+    // loop, a GTK/WebKit IPC round trip away) — it is simulated here the same way `webpage.py`'s `send()` reaches
+    // the page: calling the closure `createShellBridge` registered as `window.__claudiaShell.receive`, once it
+    // exists, exactly as a real shell would, not through the `hello` sink (which fires too early, mid-construction,
+    // for that global to be there yet).
+    const bridge = createShellBridge('composes', { post: () => {} }, (b) => reactive(b) as typeof b)
+    const seen: boolean[] = []
+    // Stands in for `<MenuBar :class="{ hidden: shell.nativeMenu }">`: a Vue effect that reads `nativeMenu` and is
+    // expected to re-run *because that changed*, with nothing else prompting a render in between. Reading
+    // `bridge.nativeMenu` straight after `welcome` (no watchEffect) would pass even on the old, broken code — a
+    // bare read is always live — so this only catches the bug if Vue's dependency tracking is actually wired up.
+    watchEffect(() => seen.push(bridge.nativeMenu))
+    ;(globalThis as any).__claudiaShell.receive(
+      JSON.stringify({ type: 'welcome', contract: 1, shell: { name: 'gtk', platform: 'linux', version: '1' }, capabilities: ['native-menu', 'actions'] }),
+    )
+    await nextTick()
+    expect(seen).toEqual([false, true])
+    bridge.detach()
   })
 })
 
