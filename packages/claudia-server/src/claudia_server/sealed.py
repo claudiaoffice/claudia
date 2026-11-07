@@ -485,10 +485,15 @@ class SealedDocuments:
         except Exception:
             log.exception("cannot pack %s; its changes are safe in the journal", doc_id)
             # `pack_journal` closes the old writer before it tries to put the new journal in its place (closed,
-            # because Windows refuses to replace a file that is still open); if that replace is what failed,
-            # `held.store.writer` is left pointing at a now-closed file. `begin` reopens whichever journal is
+            # because Windows refuses to replace a file that is still open), but only once it gets that far: a
+            # failure earlier in `pack_journal` (folding the journal into the file, say) leaves `held.store.writer`
+            # still open. Closing it here too, before asking `begin` for a fresh one, means nothing of ours is ever
+            # left holding the old journal open underneath `begin`'s own attempt to replace it -- closing an
+            # already-closed writer is a no-op, so this is safe either way. `begin` reopens whichever journal is
             # actually on disk (the old one if the replace never happened, the new one if it did), so writing can
             # carry on either way -- matching "loses nothing" above for the writer itself, not just the records.
+            with contextlib.suppress(Exception):
+                held.store.writer.close()
             with contextlib.suppress(Exception):
                 held.store.writer = begin(self._file(doc_id), held.keys)
         finally:

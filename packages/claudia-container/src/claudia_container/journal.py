@@ -18,6 +18,8 @@ who cuts records off the end of the file; that needs the head record of the pack
 """
 
 import contextlib
+import gc
+import io
 import os
 import struct
 import sys
@@ -139,6 +141,29 @@ _REPLACE_DELAY = 0.05  # seconds, doubled each retry up to _REPLACE_MAX_DELAY
 _REPLACE_MAX_DELAY = 1.0
 
 
+def _open_in_this_process(path: Path) -> list[str]:
+    """Every file object this process still has open against ``path`` (best effort; for the diagnostic below).
+
+    Retrying and excluding the directory from Windows Defender have both failed to explain a replace that keeps
+    being refused, every attempt, every time -- behaviour more consistent with a handle of our own we never
+    closed than with an outside program's transient lock. This answers that directly instead of guessing again:
+    if nothing of ours shows up here, the lock really is somebody else's."""
+    found = []
+    for obj in gc.get_objects():
+        if not isinstance(obj, (io.RawIOBase, io.BufferedIOBase)):
+            continue
+        name = getattr(obj, "name", None)
+        if name is None or obj.closed:
+            continue
+        try:
+            same = Path(name).resolve() == path.resolve()
+        except OSError:
+            continue
+        if same:
+            found.append(repr(obj))
+    return found
+
+
 def _replace(temp: Path, path: Path) -> None:
     """``os.replace(temp, path)``, retried briefly on Windows.
 
@@ -161,8 +186,11 @@ def _replace(temp: Path, path: Path) -> None:
         try:
             os.replace(temp, path)
             return
-        except PermissionError:
+        except PermissionError as error:
             if attempt == _REPLACE_RETRIES - 1:
+                ours = _open_in_this_process(path) + _open_in_this_process(temp)
+                if ours:
+                    raise PermissionError(f"{error}; still open in this process: {ours}") from error
                 raise
             time.sleep(delay)
             delay = min(delay * 2, _REPLACE_MAX_DELAY)
