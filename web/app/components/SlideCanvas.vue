@@ -1,14 +1,17 @@
 <script setup lang="ts">
 // The slide on screen: its objects, and what people do to them. A click selects (and holds) an object, dragging moves
-// it, the handles resize it, a double click or Enter edits its text, Delete removes it. Nothing is believed until the
-// server says so: while the pointer is down the frame is a preview here, and it is committed when the pointer is up.
+// it, the handles resize it, a double click or Enter edits its text, Delete removes it, and a right click offers the
+// same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. Nothing is
+// believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { CORNERS, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
+import { contextMenuItems } from '~/lib/object-menu'
 import { colorOf, inkOn } from '~/lib/people'
 import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
+import type { MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: SlideSession }>()
 const session = props.session
@@ -165,6 +168,27 @@ async function onSlideDown(event: PointerEvent) {
   session.select(null)
 }
 
+// ------------------------------------------------------------------------------ right-click context menu
+/** The object a right click opened the menu for, and where — not necessarily `selected`'s object once a second
+ * right click lands on a different one while the first's menu is still fading, so this is tracked on its own. */
+const contextMenu = ref<{ x: number; y: number; id: string } | null>(null)
+const contextItems = computed<MenuItem[]>(() => {
+  const o = contextMenu.value ? state.objects[contextMenu.value.id] : null
+  return o ? contextMenuItems(o, readonly.value, { edit: () => beginEdit(o.id), remove: () => session.remove(o.id) }) : []
+})
+function closeContextMenu() {
+  contextMenu.value = null
+}
+/** Was showing the browser's own menu here (Back, Inspect, …) over a shape, a text box or a picture — the bug
+ * this fixes. Shift + right button still gets the browser's own menu, the same escape hatch `TextEditor.vue`'s
+ * `onContextMenu` already gives composes, and editing text keeps its own menu too (spelling, …), same as before. */
+function onObjectContext(event: MouseEvent, o: SlideObject) {
+  if (event.shiftKey || editing.value?.id === o.id) return
+  event.preventDefault()
+  session.select(o.id)
+  contextMenu.value = { x: event.clientX, y: event.clientY, id: o.id }
+}
+
 // ------------------------------------------------------------------------------ editing text
 const editing = ref<{ id: string; text: string } | null>(null)
 const editText = computed({
@@ -276,6 +300,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         role="button"
         @pointerdown="onObjectDown($event, o)"
         @dblclick.stop="beginEdit(o.id)"
+        @contextmenu="onObjectContext($event, o)"
       >
         <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" />
         <template v-else>
@@ -324,6 +349,8 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         />
       </div>
     </div>
+
+    <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" label="Object menu" @close="closeContextMenu" />
   </div>
 </template>
 
