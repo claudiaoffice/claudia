@@ -3,40 +3,32 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [0.9.0] - 2026-11-06
+## [0.11.0] - 2026-11-07
 
-The worker pool D37 specified and left unbuilt: `Connection.handle` runs synchronously on the event loop, so slow
-work in one request used to stall every document the server holds (QA review 2026-11-06, PERF-02; D134).
-
-### Added
-- **`WorkerPool`** (`workers.py`): runs a function in a separate OS process and awaits its result —
-  `await pool.submit(fn, *args, **kwargs)`. Generic on purpose: knows nothing about cells, formulas or typesetting.
-  `fn` and its arguments must be importable at module level and picklable. A worker process dying outright (killed, a
-  segfault in a C extension) breaks only the task that caused it: the pool replaces itself transparently on the next
-  `submit`, so neither the server nor another document's pending work is affected. `pool.stop()` lets the worker
-  processes go; safe before anything was submitted and safe to call more than once. `DEFAULT_WORKERS` (4).
-- **`Hub.workers`**: one `WorkerPool` per `Hub` (one process per `--model`, D134 — not a pool shared across process
-  boundaries), sized by the new `Hub(..., max_workers=...)` constructor argument. `Hub.stop()` now also calls
-  `workers.stop()`.
-Security release: the second QA review's first recommendation (SEC-10).
+Go back to a checkpoint, with everybody's consent (E3.7), and a read-only preview of any line before anybody is
+asked (E3.8). Restoring or switching the line is no longer a bare request: an owner or editor suggests it, and it
+happens once everybody connected now as an owner or editor has agreed — unless the one suggesting it is the only
+one, in which case it happens at once, same as it always has.
 
 ### Added
-- **The AI's allow-list is enforced at dispatch, not only in the model's output parser (SEC-10, E7.6, E9.9).**
-  `Account.allowed_methods` (set by `Account.assistant(allowed_methods=...)`): the write methods this account may
-  call, checked by `MethodTable.dispatch` before the method runs — the one place every path goes through
-  (`Assistant._call`, the wire, and any future remote AI connection). `Assistant(allowed_methods=...)` passes it on
-  when the account is made; `apps.stand_in_assistant_for` and `apps.model_assistant_for` both set it from
-  `apps.MODEL_METHODS` of the document's app, so the scripted stand-in is held to the same guarantee as a real
-  model, not only the engine `claudia_ai.Agent._take_calls` happens to filter for. `apps.MODEL_METHODS` gained a
-  `"composes"` entry: `("suggest",)`, so a composes assistant is refused by name, not only by an empty allowed set.
-- `protocol._apply` refuses `account.system` unconditionally: the assistant cannot use the generic `apply` as a
-  tunnel around an app's own wrapper checks (`composes._people_only` and the like), whatever its allow-list says.
-
-### Changed
-- `Account.__init__` and `Account.assistant()` take an additional optional `allowed_methods` parameter (additive,
-  default `None`: no behaviour change for an account nobody restricts). `Assistant.__init__` takes an additional
-  optional `allowed_methods` parameter (additive, default `()`: an assistant made without passing it writes
-  nothing, which is the safe default rather than a convenience).
+- `peek_line(line:str)`: a read-only look at any line (active or hidden), without switching to it. On `core_methods`,
+  so every app gets it the way it already gets `lines`, `log` and `chat`.
+- `restore_policy` / `set_restore_policy(policy:str)`: an owner's choice of `consensus` (silence at the deadline is
+  a decline) or `veto` (silence is agreement), for the whole document. Session state, not stored in the document.
+- `propose_restore(checkpoint:int)` and `propose_switch(line:str)`: suggest it (E3.7). `command_error` for an
+  unknown checkpoint or line, or if a suggestion is already open — at most one at a time.
+- `answer_restore(agree:bool)`: agree or decline the open suggestion; resolves it the moment everybody has agreed,
+  or the moment anybody declines. `withdraw_restore()`: take it back (the proposer, or an owner).
+- `discard_side_history()`: owners only, the wire method `Document.discard_side_history` was missing — forgets
+  every hidden line for good. `command_error` while a suggestion is open.
+- Events `restore_proposed` (opened, or its answers changed) and `restore_resolved` (`{outcome: agreed|declined|
+  withdrawn}`); `agreed` is followed by the usual `branch` and `rebuilt`. A client's welcome now also carries
+  `lines`, the open `proposal` if any, and a one-time `returned` notice for whoever was away when one resolved.
+- `HostedDocument.editors()`: who is connected now and may write (owners and editors, not viewers or the
+  assistant) — who must be asked before a restore or a switch happens.
+- `RestoreCoordinator`, `Proposal`, `Resolution`, `RestoreError` (`restore.py`): the consent itself, kept apart
+  from the kernel and from the wire protocol on purpose — session state, not a document's stored state.
+- The assistant may never propose, answer or withdraw (`forbidden`, SEC-10): going back is a decision of people.
 
 ## [0.10.0] - 2026-11-06
 
