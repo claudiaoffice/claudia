@@ -30,6 +30,12 @@ def text(**message: object) -> str:
 HELLO = {"type": "hello", "contract": 1, "app": "composes", "frontend": "0.1.0"}
 ACTION = {"type": "action", "action": "file.save"}
 STATE = {"type": "action_state", "states": {"edit.undo": {"enabled": False}, "view.page": {"checked": True}}}
+WELCOME = {
+    "type": "welcome",
+    "contract": 1,
+    "shell": {"name": "gtk", "platform": "linux", "version": "0.1.0"},
+    "capabilities": [],
+}
 
 # Messages the page may send and the shell must accept ...
 VALID = [
@@ -41,6 +47,8 @@ VALID = [
     STATE,
     {"type": "action_state", "states": {"edit.undo": {"label": "Undo typing"}}},
     {"type": "error", "code": "unsupported_contract", "message": "no", "supported": [1]},
+    {**WELCOME, "locale": "de"},  # (E5.7) shell -> page too, but the schema does not care which side sends what
+    {**WELCOME, "locale": "de-DE"},
 ]
 # ... and messages nobody may accept.
 INVALID = [
@@ -58,6 +66,8 @@ INVALID = [
     {"type": "action_state"},
     {"type": "error", "code": "nope", "message": "x"},
     {"type": "error", "code": "internal"},
+    {**WELCOME, "locale": 7},  # (E5.7) not a string
+    {**WELCOME, "locale": "not a locale!"},
 ]
 
 
@@ -88,9 +98,16 @@ def test_invalid_messages_are_refused_by_schema_and_parser(schema: dict, message
 
 def test_what_the_shell_builds_is_valid_by_the_schema(schema: dict) -> None:
     jsonschema.validate(contract.welcome(shell_version="0.1.0", capabilities=["native-menu", "actions"]), schema)
+    jsonschema.validate(contract.welcome(shell_version="0.1.0", capabilities=["native-menu"], locale="de-DE"), schema)
     jsonschema.validate(contract.action("file.save"), schema)
     jsonschema.validate(contract.error("bad_message", "what?"), schema)
     jsonschema.validate(contract.error("unsupported_contract", "too new", supported=[1]), schema)
+
+
+def test_welcome_carries_a_locale_only_when_given_one() -> None:
+    # (E5.7) additive and optional: a shell that says nothing about locale builds exactly what it always did
+    assert "locale" not in contract.welcome(shell_version="0.1.0", capabilities=[])
+    assert contract.welcome(shell_version="0.1.0", capabilities=[], locale="de")["locale"] == "de"
 
 
 def test_welcome_says_who_the_shell_is() -> None:

@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -62,9 +63,22 @@ from .restore import POLICIES, RestoreCoordinator, RestoreError
 if TYPE_CHECKING:
     from claudia_core import Region
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 INT_MAX = 2**31 - 1
 MAX_LOG = 5000
+
+DEFAULT_LOCALE = "en"
+_LOCALE = re.compile(r"[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*")  # a BCP-47-ish tag; loose, since this only picks a catalog
+
+
+def normalize_locale(raw: object) -> str:
+    """The client's own locale (E5.7, D31), as sent in ``hello``: a short tag, or ``DEFAULT_LOCALE`` if ``raw`` is
+    missing, not a string, too long to be a tag, or not shaped like one. Never raises: a malformed locale is a reason
+    to fall back, not a reason to refuse the connection."""
+    if not isinstance(raw, str) or not (2 <= len(raw) <= 35) or not _LOCALE.fullmatch(raw):
+        return DEFAULT_LOCALE
+    return raw
+
 
 ERROR_CODES = {
     "bad_request": "malformed message, unknown or missing parameter, wrong type, or over a limit",
@@ -109,16 +123,25 @@ EVENTS = {
 
 
 class RequestError(Exception):
-    """A request failed in a way the client is told about: ``code`` is one of ``ERROR_CODES``."""
+    """A request failed in a way the client is told about: ``code`` is one of ``ERROR_CODES``.
 
-    def __init__(self, code: str, message: str):
+    ``detail``, when given, is the finer-grained ``code`` of the ``claudia_core`` error this came from (E5.7
+    groundwork): ``code`` stays the small, stable wire category a client already branches on (``"locked"``,
+    ``"stale"``...), while ``detail`` is what a future translator would use to pick the exact message to render,
+    alongside ``message`` which stays the English text for anyone not yet rendering it that way."""
+
+    def __init__(self, code: str, message: str, detail: str | None = None):
         super().__init__(message)
         self.code = code
         self.message = message
+        self.detail = detail
 
     def to_dict(self) -> dict:
         """The error as sent in a response."""
-        return {"code": self.code, "message": self.message}
+        out = {"code": self.code, "message": self.message}
+        if self.detail is not None:
+            out["detail"] = self.detail
+        return out
 
 
 @dataclass(frozen=True)
@@ -253,6 +276,7 @@ class Context:
     lock_seconds: float = 300.0  # how long a lock lasts without being renewed
     directory: UserDirectory | None = None  # where this document's people are kept, if the server manages them
     doc_id: str = ""
+    locale: str = DEFAULT_LOCALE  # the connection's own locale (E5.7); nothing reads it yet
     editors: Callable[[], list[str]] = field(default=lambda: [])  # connected now, and may write (E3.7)
     # The open restore/switch suggestion, if any, and the consent around it (E3.7); a harmless, unattached one by
     # default, for contexts nothing here is asked of.
@@ -360,17 +384,17 @@ class MethodTable:
         except RequestError:
             raise
         except StaleEdit as exc:
-            raise RequestError("stale", str(exc)) from exc
+            raise RequestError("stale", str(exc), detail=exc.code) from exc
         except RegionHeld as exc:  # (and UndoRefused, which is one)
-            raise RequestError("locked", str(exc)) from exc
+            raise RequestError("locked", str(exc), detail=exc.code) from exc
         except UndoConflict as exc:
-            raise RequestError("conflict", str(exc)) from exc
+            raise RequestError("conflict", str(exc), detail=exc.code) from exc
         except (
             KernelError,
             ValueError,
             LookupError,
-        ) as exc:  # a command refuses with ValueError / IndexError / KeyError
-            raise RequestError("command_error", str(exc)) from exc
+        ) as exc:  # a command refuses with ValueError / IndexError / KeyError; only KernelError has a `code`
+            raise RequestError("command_error", str(exc), detail=getattr(exc, "code", None)) from exc
 
     def describe(self, limits: Limits | None = None) -> dict:
         """A machine-readable description of the protocol (served at /api/protocol)."""

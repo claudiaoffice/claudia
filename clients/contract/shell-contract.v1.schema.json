@@ -56,6 +56,12 @@
           "type": "array",
           "items": { "$ref": "#/$defs/token" },
           "uniqueItems": true
+        },
+        "locale": {
+          "description": "The shell's best guess at the person's locale (E5.7, D31), usually the OS locale. Optional, and never binding on the page: locale is always the client's own setting, and the page may have a stored override already.",
+          "type": "string",
+          "pattern": "^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$",
+          "maxLength": 35
         }
       }
     },

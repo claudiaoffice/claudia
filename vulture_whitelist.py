@@ -62,6 +62,7 @@ used._boom  # registered with a MethodTable by a decorator (tests/test_server_hu
 used._nan  # registered with a MethodTable by a decorator (tests/test_server_hub.py)
 used._even  # registered as a parameter kind by a decorator (tests/test_server_protocol.py)
 used._double  # registered with a MethodTable by a decorator (tests/test_server_protocol.py)
+used._echo  # registered with a MethodTable by a decorator (tests/test_server_protocol.py, E5.7/D31 locale test)
 used.should_exit  # uvicorn.Server reads it to stop (tests/test_client_trust.py)
 used.redirect_request  # urllib calls it on a redirect (tests/test_server_redirect.py)
 used._test_client_calls_the_server_by_a_name_it_answers_to  # autouse fixture of packages/claudia-server/tests
