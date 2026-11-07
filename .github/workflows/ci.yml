@@ -41,7 +41,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends texlive-xetex texlive-latex-recommended texlive-latex-extra fonts-lmodern poppler-utils
       - run: uv sync --locked
-      - run: uv run python scripts/check_debt.py
+      # web tests/types and the Linux client's tests are skipped here on purpose: the separate `web` and
+      # `linux-client` jobs below run them for real, with Node and GTK installed. --ci fails on any OTHER skip
+      # (PROC-02), so a check that starts skipping for some new reason is caught instead of waved through.
+      - run: >
+          uv run python scripts/check_debt.py --ci
+          --allow-skip "web tests" --allow-skip "web types" --allow-skip "linux client tests"
 
   web:
     name: Web
