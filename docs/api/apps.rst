@@ -16,6 +16,9 @@ computes
 .. autoclass:: claudia_computes.AddSheet
 .. autoclass:: claudia_computes.RemoveSheet
 .. autoclass:: claudia_computes.CellRegion
+.. autoclass:: claudia_computes.SheetObject
+.. autoclass:: claudia_computes.ObjectSet
+.. autoclass:: claudia_computes.ObjectsChanged
 
 Formulas
 ~~~~~~~~

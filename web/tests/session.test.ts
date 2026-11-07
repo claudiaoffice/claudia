@@ -2,6 +2,21 @@ import { describe, expect, it } from 'vitest'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 
+const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
+const IMPORT = { asset: ASSET.id, alt: 'a chart', imported_by: 'ann', imported_at: '2026-11-07T10:00:00.000Z', source: 'disk', source_name: 'chart.gif', source_path: '/Users/ann/chart.gif' }
+const image = (id: string, extra: object = {}) => ({
+  id,
+  sheet: 's1',
+  kind: 'image',
+  row: 0,
+  col: 0,
+  w: 400,
+  h: 200,
+  image: ASSET.id,
+  imported: IMPORT,
+  ...extra,
+})
+
 const WELCOME: Welcome = {
   user: 'ann',
   role: 'owner',
@@ -53,12 +68,17 @@ class FakeLink implements LinkLike {
   count(method: string) {
     return this.calls.filter((c) => c.method === method).length
   }
+  last(method: string) {
+    return this.calls.filter((c) => c.method === method).at(-1)?.params
+  }
 }
 
 function server(link: FakeLink) {
   const cells: Record<string, any> = { '0,0': { t: 'text', v: 'Item' }, '1,1': { t: 'int', v: 40 } }
   link.handlers = {
     sheets: () => [{ id: 's1', name: 'Budget', rows: 2, cols: 2 }],
+    images: () => [],
+    objects: (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: [] }),
     log: () => [{ revision: 'main:3', author: 'ben', origin: 'do', time: 't', label: 'Edit cell', summary: 'B2 = 40', of: null }],
     chat_log: () => [{ number: 1, author: 'ben', to: '', text: 'hi', time: 't', at: null }],
     checkpoints: () => [],
@@ -148,6 +168,93 @@ describe('cells', () => {
     expect(session.state.generation).toBe(before + 1)
     await session.ensure('s1', 0, 10, 0, 5)
     expect(link.count('cells')).toBe(2)
+  })
+})
+
+describe('floating objects (images, E10.11)', () => {
+  it('loads the decoded pictures and the objects of every sheet, on top of the cells', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.images = () => [ASSET]
+    link.handlers.objects = ({ sheet }: any) => ({ revision: 'main:3', sheet, objects: sheet === 's1' ? [image('i1')] : [] })
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.images[ASSET.id]).toEqual(ASSET)
+    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['i1'])
+    const o = session.objectsOn('s1')[0]!
+    expect(o.image).toBe(ASSET.id)
+    expect(o.imported).toEqual(IMPORT)
+  })
+
+  it('follows the stacking order the server sends, and takes objects away', async () => {
+    const { link, session } = await opened()
+    link.push('objects', { type: 'objects', sheet: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
+    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b'])
+    link.push('objects', { type: 'objects', sheet: 's1', changed: [image('a', { row: 3, col: 2 })], removed: [], order: ['a', 'b'] })
+    expect(session.objectsOn('s1')[0]).toMatchObject({ row: 3, col: 2 })
+    link.push('objects', { type: 'objects', sheet: 's1', changed: [], removed: ['a'], order: ['b'] })
+    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
+    expect(session.state.objects.a).toBeUndefined()
+  })
+
+  it('learns and forgets decoded pictures', async () => {
+    const { link, session } = await opened()
+    link.push('image', { type: 'image', id: ASSET.id, asset: ASSET })
+    expect(session.state.images[ASSET.id]!.width).toBe(20)
+    link.push('image', { type: 'image', id: ASSET.id, asset: null })
+    expect(session.state.images[ASSET.id]).toBeUndefined()
+  })
+
+  it('imports a picture, anchored to a cell with a fixed pixel size', async () => {
+    const { link, session } = await opened()
+    link.handlers.add_image = () => ({ object: 'i1', revision: 'main:4' })
+    const id = await session.addImage({ data: 'AA==', alt: 'a chart', sourceName: 'chart.gif', sourcePath: null }, { row: 2, col: 1, w: 400, h: 200 })
+    expect(id).toBe('i1')
+    expect(link.last('add_image')).toEqual({
+      sheet: 's1',
+      data: 'AA==',
+      alt: 'a chart',
+      source_name: 'chart.gif',
+      source_path: null,
+      row: 2,
+      col: 1,
+      w: 400,
+      h: 200,
+      base: 'main:3',
+    })
+  })
+
+  it('says why importing a picture failed, without touching the objects', async () => {
+    const { link, session } = await opened()
+    link.handlers.add_image = () => {
+      throw new ProtocolError('command_error', 'this document does not look like a picture the browser can show')
+    }
+    const id = await session.addImage({ data: 'not base64', alt: 'x', sourceName: 'x.bin', sourcePath: null }, { row: 0, col: 0, w: 10, h: 10 })
+    expect(id).toBeNull()
+    expect(session.state.notice?.text).toContain('picture')
+  })
+
+  it('moves an object to a new anchor cell; its size is never part of the request', async () => {
+    const { link, session } = await opened()
+    link.handlers.move_object = () => ({ revision: 'main:4' })
+    expect(await session.moveObject('i1', 5, 6)).toBe(true)
+    expect(link.last('move_object')).toEqual({ id: 'i1', row: 5, col: 6, base: 'main:3' })
+  })
+
+  it('removes an object', async () => {
+    const { link, session } = await opened()
+    link.handlers.remove_object = () => ({ revision: 'main:4' })
+    expect(await session.removeObject('i1')).toBe(true)
+    expect(link.last('remove_object')).toEqual({ id: 'i1', base: 'main:3' })
+  })
+
+  it('a colleague holding the sheet open refuses the move and the person is told', async () => {
+    const { session, link } = await opened()
+    link.handlers.move_object = () => {
+      throw new ProtocolError('conflict', 'the document changed under you')
+    }
+    expect(await session.moveObject('i1', 1, 1)).toBe(false)
+    expect(session.state.notice).toMatchObject({ kind: 'warning', text: 'the document changed under you' })
   })
 })
 

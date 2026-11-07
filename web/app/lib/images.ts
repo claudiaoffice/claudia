@@ -1,8 +1,33 @@
 // Reading a picture file for an `add_image`-like method, and showing a decoded `ImageAsset` back: shared by every
-// app that can put a picture on a document (creates today; composes and computes the same way, E10.8). No format
-// sniffing or dimension reading here — the server decodes and validates the bytes (`claudia_core.decode_image`);
-// a browser reads a chosen file's own width/height for free once it is shown as a preview `<img>`, so there is
-// nothing for this module to duplicate beyond getting the bytes across the wire and back.
+// app that can put a picture on a document (creates and computes today, E10.8/E10.11; composes the same way).
+// No format sniffing or dimension reading here — the server decodes and validates the bytes
+// (`claudia_core.decode_image`); a browser reads a chosen file's own width/height for free once it is shown as a
+// preview `<img>`, so there is nothing for this module to duplicate beyond getting the bytes across the wire and
+// back.
+
+/** How an image object's picture got here (E10.8). `source_path` is sent only to the person who imported it —
+ * everyone else sees it as `null`, same as the server keeps it (`claudia_server`'s per-viewer masking in
+ * `hub.py`). Shared by every app's own image object (`claudia_creates.SlideObject`, `claudia_computes.SheetObject`). */
+export interface ImageImport {
+  asset: string
+  alt: string
+  imported_by: string
+  imported_at: string
+  source: string
+  source_name: string
+  source_path: string | null
+}
+/** A decoded picture (E10.8): `data`/`first_frame` are base64, exactly as `claudia_core.ImageAsset.to_data()`
+ * sends them. `first_frame` is set only when `animated` is true. */
+export interface ImageAsset {
+  id: string
+  format: string
+  width: number
+  height: number
+  animated: boolean
+  data: string
+  first_frame: string | null
+}
 
 /** Mirrors `claudia_core.MAX_IMAGE_BYTES`: a quick client-side check so a file that cannot win is not uploaded for
  * nothing. The server enforces the real limit; this is only a courtesy. */

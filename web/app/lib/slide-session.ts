@@ -3,6 +3,11 @@
 import { type LinkLike, type Region } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
+import type { ImageAsset, ImageImport } from './images'
+
+// `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
+// so existing imports of them from this module keep working.
+export type { ImageAsset, ImageImport } from './images'
 
 export interface SlideObject {
   id: string
@@ -17,29 +22,6 @@ export interface SlideObject {
   shape: string | null
   image: string | null
   imported: ImageImport | null
-}
-/** How an image object's picture got here (E10.8). `sourcePath`'s field, `source_path`, is sent only to the
- * person who imported it — everyone else sees it as `null`, same as the server keeps it (`claudia_server`'s
- * per-viewer masking in `hub.py`). */
-export interface ImageImport {
-  asset: string
-  alt: string
-  imported_by: string
-  imported_at: string
-  source: string
-  source_name: string
-  source_path: string | null
-}
-/** A decoded picture (E10.8): `data`/`first_frame` are base64, exactly as `claudia_core.ImageAsset.to_data()`
- * sends them. `first_frame` is set only when `animated` is true. */
-export interface ImageAsset {
-  id: string
-  format: string
-  width: number
-  height: number
-  animated: boolean
-  data: string
-  first_frame: string | null
 }
 /** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
 export interface ShapeDef {

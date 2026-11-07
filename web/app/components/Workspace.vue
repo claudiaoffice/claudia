@@ -25,10 +25,10 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 const dialog = ref<
-  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
+  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete' | 'image'
 >(null)
 const panelOpen = ref(true)
-const grid = ref<{ focus: () => void } | null>(null)
+const grid = ref<{ focus: () => void; selectObject: (id: string) => void } | null>(null)
 const panel = ref<{ ask: (text?: string) => void } | null>(null)
 
 const readonly = computed(() => state.me.role === 'viewer')
@@ -193,6 +193,21 @@ async function checkpoint(label: string | null) {
   grid.value?.focus()
 }
 
+// ------------------------------------------------------------------------------ images (E10.11)
+const IMAGE_HEIGHT = 240 // pixels; an image is sized to this height and whatever width keeps its own aspect
+
+/** Anchor a new image at the current selection's top-left cell, sized to keep its own aspect (the server rejects
+ * any other size for an image, within one pixel — mirrors creates' `insertFrame('image', aspect, …)`). */
+function anchorForImage(aspect: number) {
+  return { row: b.value.r0, col: b.value.c0, w: Math.round(IMAGE_HEIGHT * aspect), h: IMAGE_HEIGHT }
+}
+
+function imageInserted(id: string) {
+  dialog.value = null
+  grid.value?.selectObject(id)
+  grid.value?.focus()
+}
+
 function ask(text: string) {
   panelOpen.value = true
   setTimeout(() => panel.value?.ask(text), 0)
@@ -268,6 +283,7 @@ const menus = computed<Menu[]>(() => [
       },
       { label: '', separator: true },
       { id: 'edit.new-sheet', label: 'New sheet…', action: () => (dialog.value = 'sheet'), disabled: readonly.value },
+      { id: 'edit.image', label: 'Image…', action: () => (dialog.value = 'image'), disabled: readonly.value },
       { label: '', separator: true },
       // D130 (Claude's recommendation, flagged unconfirmed in decision-log.md): grouped into Row ▸ / Column ▸ rather
       // than six flat items, reusing the submenu mechanism Edit ▸ Paste as ▸ already needed.
@@ -436,6 +452,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <AboutDialog v-if="dialog === 'about'" app="computes" @close="dialog = null" />
+    <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
 

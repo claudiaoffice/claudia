@@ -3,6 +3,7 @@
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { type LinkLike, type Region } from './protocol'
 import { type Content } from './cells'
+import type { ImageAsset, ImageImport } from './images'
 
 export type {
   BaseState,
@@ -14,6 +15,7 @@ export type {
   SessionOptions,
 } from './base-session'
 export { BaseSession } from './base-session'
+export type { ImageAsset, ImageImport } from './images'
 
 export const CHUNK_ROWS = 64
 export const CHUNK_COLS = 16
@@ -25,11 +27,29 @@ export interface SheetInfo {
   rows: number
   cols: number
 }
+/** A floating object anchored to a cell of a sheet (E10.11): today only an image. `row`/`col` anchor its top
+ * left corner; `w`/`h` are its pixel size, fixed at insertion — neither the anchor nor the size ever change
+ * because of a structural edit (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject`
+ * (dragging it) moves it, and there is no resize of an object yet. Mirrors `claudia_computes.SheetObject`. */
+export interface SheetObject {
+  id: string
+  sheet: string
+  kind: 'image'
+  row: number
+  col: number
+  w: number
+  h: number
+  image: string | null
+  imported: ImageImport | null
+}
 export interface State extends BaseState {
   sheets: SheetInfo[]
   activeSheet: string
   cells: Record<string, Map<number, Content>>
   generation: number
+  objects: Record<string, SheetObject>
+  order: Record<string, string[]> // sheet -> object ids, the one in front last
+  images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id
 }
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
@@ -41,17 +61,32 @@ export class Session extends BaseSession<State> {
   private shown = ''
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { sheets: [], activeSheet: '', cells: {}, generation: 0 })
+    super(makeLink, options, { sheets: [], activeSheet: '', cells: {}, generation: 0, objects: {}, order: {}, images: {} })
   }
 
   // ------------------------------------------------------------------------------ loading
-  /** The sheets; the cells themselves are loaded as they come into view. */
+  /** The sheets, their floating objects and the pictures behind them; the cells themselves are loaded as they
+   * come into view. */
   protected async loadApp() {
+    const link = this.need()
     const s = this.state
-    const sheets = await this.need().request<SheetInfo[]>('sheets')
+    const [sheets, images] = await Promise.all([link.request<SheetInfo[]>('sheets'), link.request<ImageAsset[]>('images')])
     this.forgetCells()
+    const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
+    s.objects = {}
+    s.order = {}
+    sheets.forEach((sheet, i) => {
+      s.order[sheet.id] = loaded[i]!.objects.map((o) => o.id)
+      for (const o of loaded[i]!.objects) s.objects[o.id] = o
+    })
     s.sheets = sheets
+    s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
+  }
+
+  /** The objects of a sheet, the one in front last. */
+  objectsOn(sheet: string): SheetObject[] {
+    return (this.state.order[sheet] ?? []).map((id) => this.state.objects[id]).filter((o): o is SheetObject => o !== undefined)
   }
 
   private forgetCells(sheet?: string) {
@@ -137,6 +172,16 @@ export class Session extends BaseSession<State> {
       case 'sheets':
         this.track(this.reload())
         return true
+      case 'objects': {
+        for (const o of data.changed as SheetObject[]) s.objects[o.id] = o
+        for (const id of data.removed as string[]) delete s.objects[id]
+        s.order[data.sheet] = data.order
+        return true
+      }
+      case 'image':
+        if (data.asset) s.images[data.id] = data.asset
+        else delete s.images[data.id]
+        return true
     }
     return false
   }
@@ -156,6 +201,37 @@ export class Session extends BaseSession<State> {
 
   async structure(sheet: string, axis: 'row' | 'col', insert: boolean, at: number, count = 1): Promise<boolean> {
     return (await this.attempt('structure', { sheet, axis, insert, at, count, base: this.state.revision })) !== false
+  }
+
+  // -- floating objects (images, today): anchored to a cell, a fixed pixel size, never touched by `structure`
+  /** Import a picture from disk and anchor it to a cell of the sheet that is shown (E10.11); its id, or null
+   * after telling the person why not. `data` is the file's bytes, base64 (`lib/images.ts`'s `fileToBase64`);
+   * `sourcePath` is the file's full path if the caller could get one — a plain web browser cannot, and passes
+   * `null`. `anchor` fixes the object's cell and its pixel size for good: there is no resize yet, and no
+   * structural edit (row/column insert, delete or resize) ever changes either. */
+  async addImage(
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null },
+    anchor: { row: number; col: number; w: number; h: number },
+  ): Promise<string | null> {
+    const done = await this.attempt('add_image', {
+      sheet: this.state.activeSheet,
+      data: picture.data,
+      alt: picture.alt,
+      source_name: picture.sourceName,
+      source_path: picture.sourcePath,
+      ...anchor,
+      base: this.state.revision,
+    })
+    return done === false ? null : done.object
+  }
+
+  /** Drag an object to a new anchor cell; its size never changes. */
+  async moveObject(id: string, row: number, col: number): Promise<boolean> {
+    return (await this.attempt('move_object', { id, row, col, base: this.state.revision })) !== false
+  }
+
+  async removeObject(id: string): Promise<boolean> {
+    return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
   }
 
   // -- where I am, and holding a cell while I type into it

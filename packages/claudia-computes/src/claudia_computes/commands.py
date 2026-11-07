@@ -7,12 +7,13 @@ colleagues have inserted or deleted rows, or have written to the same cells, in 
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context
+from claudia_core import Batch, Command, Context, ImageAsset
 
-from .events import CellsChanged, LinesResized, SheetsChanged, StructureChanged
+from .events import CellsChanged, ImagesChanged, LinesResized, SheetsChanged, StructureChanged
 from .formula import parse_formula
 from .formula.rewrite import adjusted
 from .model import (
@@ -24,6 +25,7 @@ from .model import (
     MIN_ROW_HEIGHT,
     Content,
     Sheet,
+    SheetObject,
     WorkbookModel,
 )
 from .refs import (
@@ -35,12 +37,19 @@ from .refs import (
     StructuralEdit,
     column_name,
 )
-from .region import CellRegion
+from .region import CellRegion, ObjectSet
 
 register = WorkbookModel.registry.register
 
 MAX_LISTED = 3  # cells a history sentence names one by one
 MAX_LISTED_TEXT = 70  # characters of such a sentence; longer ones name the area instead
+MAX_LISTED_ALT = 40  # characters of an image's alt text that a history sentence quotes
+
+
+def _quote(text: str) -> str:
+    """A short, one-line piece of an image's alt text for a sentence in the history."""
+    flat = re.sub(r"\s+", " ", text).strip()
+    return flat if len(flat) <= MAX_LISTED_ALT else flat[: MAX_LISTED_ALT - 1] + "…"
 
 
 def _show(content: dict) -> str:
@@ -141,6 +150,10 @@ class RemoveSheet(Command):
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
         row_heights = tuple(sorted(sheet.row_heights.items()))
         col_widths = tuple(sorted(sheet.col_widths.items()))
+        objects = tuple(model.objects_on(self.id))  # bottom first; a removed sheet takes its objects with it
+        for obj in objects:
+            model.delete_object(obj.id)
+        del model._stack[self.id]  # noqa: SLF001 (the stack is WorkbookModel's own; this command is its one clearer)
         restores = model.drop_sheet(self.id)  # formulas elsewhere that pointed here, as they were
         ctx.emit(SheetsChanged())
         undo: list[Command] = [AddSheet(sheet.id, sheet.name, index)]
@@ -150,6 +163,7 @@ class RemoveSheet(Command):
             undo.append(ResizeLines(sheet.id, "row", row_heights))
         if col_widths:
             undo.append(ResizeLines(sheet.id, "col", col_widths))
+        undo.extend(AddObject(obj, place) for place, obj in enumerate(objects))
         undo.extend(SetCells(other, tuple(sorted(items))) for other, items in restores.items())
         return undo[0] if len(undo) == 1 else Batch(tuple(undo))
 
@@ -423,3 +437,233 @@ class ResizeLines(Command):
 
     def redacted(self) -> Command:
         return self  # a size is layout, not content with anything to hide (same reasoning as Structure)
+
+
+# ------------------------------------------------------------------------------ images
+@register
+@dataclass(frozen=True)
+class DefineImage(Command):
+    """Take a decoded image into the document, so that it opens the same anywhere (mirrors creates' own)."""
+
+    kind: ClassVar[str] = "computes.DefineImage"
+    image: ImageAsset
+
+    @property
+    def label(self) -> str:
+        return "Define image"
+
+    @property
+    def summary(self) -> str:
+        return f"the document takes an image ({self.image.width} × {self.image.height})"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        ctx.model.define_image(self.image)
+        ctx.emit(ImagesChanged(self.image.id, self.image))
+        return ForgetImage(self.image.id)
+
+    def to_data(self) -> dict:
+        return {"image": self.image.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> DefineImage:
+        return cls(ImageAsset.from_data(data["image"]))
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if isinstance(other, DefineImage) and other.image.id == self.image.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@register
+@dataclass(frozen=True)
+class ForgetImage(Command):
+    """Let go of an image that no object uses (the undo of :class:`DefineImage`)."""
+
+    kind: ClassVar[str] = "computes.ForgetImage"
+    id: str
+
+    @property
+    def label(self) -> str:
+        return "Forget image"
+
+    @property
+    def summary(self) -> str:
+        return f"the document lets go of the image {self.id}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        image = ctx.model.forget_image(self.id)
+        ctx.emit(ImagesChanged(self.id, None))
+        return DefineImage(image)
+
+    def to_data(self) -> dict:
+        return {"id": self.id}
+
+    @classmethod
+    def from_data(cls, data, registry) -> ForgetImage:
+        return cls(data["id"])
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Refuse when a colleague now uses the image, or defined it anew."""
+        if isinstance(other, AddObject) and other.obj.image == self.id:
+            return None
+        return None if isinstance(other, DefineImage) and other.image.id == self.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+# ------------------------------------------------------------------------------ objects
+@register
+@dataclass(frozen=True)
+class AddObject(Command):
+    """Put an image on a sheet, anchored to a cell: on top of the others, or at stacking place ``at``.
+
+    The object's anchor (``row``/``col``) and its pixel size (``w``/``h``) never change because of a structural
+    edit (a row/column insert, delete, or resize) — see the module docstring. Only :class:`MoveObject` (the
+    person dragging it to another cell) changes where it sits, and nothing changes its size."""
+
+    kind: ClassVar[str] = "computes.AddObject"
+    obj: SheetObject
+    at: int | None = None
+
+    @property
+    def label(self) -> str:
+        return "Add image"
+
+    @property
+    def summary(self) -> str:
+        alt = self.obj.imported.alt if self.obj.imported else ""
+        return f"added an image: {_quote(alt)}" if alt.strip() else "added an image"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        ctx.model.insert_object(self.obj, self.at)
+        ctx.emit(ctx.model.changed(self.obj.sheet, changed=(self.obj,)))
+        return RemoveObject(self.obj.id)
+
+    def to_data(self) -> dict:
+        return {"object": self.obj.to_data(), "at": self.at}
+
+    @classmethod
+    def from_data(cls, data, registry) -> AddObject:
+        return cls(SheetObject.from_data(data["object"]), data.get("at"))
+
+    def regions(self, model: WorkbookModel) -> tuple[ObjectSet, ...]:  # type: ignore[override]
+        return (ObjectSet(self.obj.sheet, frozenset({self.obj.id})),)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Bringing an object back is refused when somebody made another one with its id, took its image away, or
+        removed the sheet it anchors to."""
+        if isinstance(other, AddObject) and other.obj.id == self.obj.id:
+            return None
+        if isinstance(other, RemoveSheet) and other.id == self.obj.sheet:
+            return None
+        return None if isinstance(other, ForgetImage) and other.id == self.obj.image else self
+
+    def redacted(self) -> Command:
+        return self  # an image object carries no text of its own to redact (unlike creates' text boxes)
+
+
+@register
+@dataclass(frozen=True)
+class RemoveObject(Command):
+    """Take an object off its sheet."""
+
+    kind: ClassVar[str] = "computes.RemoveObject"
+    id: str
+
+    @property
+    def label(self) -> str:
+        return "Remove object"
+
+    @property
+    def summary(self) -> str:
+        return "removed an image"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        obj, place = ctx.model.delete_object(self.id)
+        ctx.emit(ctx.model.changed(obj.sheet, removed=(obj.id,)))
+        return AddObject(obj, place)
+
+    def to_data(self) -> dict:
+        return {"id": self.id}
+
+    @classmethod
+    def from_data(cls, data, registry) -> RemoveObject:
+        return cls(data["id"])
+
+    def regions(self, model: WorkbookModel) -> tuple[ObjectSet, ...]:  # type: ignore[override]
+        return _object_selection(model, self.id)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Never destroy what a colleague has done to the object since (this is the undo of adding it)."""
+        return None if _touches_object(other, self.id) else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@register
+@dataclass(frozen=True)
+class MoveObject(Command):
+    """Put an object at a new anchor cell; its pixel size stays. The only way an object's position ever changes —
+    see the module docstring for why a structural edit never does."""
+
+    kind: ClassVar[str] = "computes.MoveObject"
+    id: str
+    row: int
+    col: int
+
+    @property
+    def label(self) -> str:
+        return "Move object"
+
+    @property
+    def summary(self) -> str:
+        return f"moved an image to {column_name(self.col)}{self.row + 1}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        old = ctx.model.get_object(self.id)
+        new = replace(old, row=self.row, col=self.col)
+        ctx.model.replace_object(new)
+        ctx.emit(ctx.model.changed(new.sheet, changed=(new,)))
+        return MoveObject(self.id, old.row, old.col)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "row": self.row, "col": self.col}
+
+    @classmethod
+    def from_data(cls, data, registry) -> MoveObject:
+        return cls(data["id"], data["row"], data["col"])
+
+    def regions(self, model: WorkbookModel) -> tuple[ObjectSet, ...]:  # type: ignore[override]
+        return _object_selection(model, self.id)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if _changes_object_frame(other, self.id) else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+def _object_selection(model: WorkbookModel, object_id: str) -> tuple[ObjectSet, ...]:
+    obj = model.objects.get(object_id)
+    return () if obj is None else (ObjectSet(obj.sheet, frozenset({object_id})),)
+
+
+def _object_target(command: Command) -> str | None:
+    """The id of the object a command is about, if it is about one."""
+    if isinstance(command, AddObject):
+        return command.obj.id
+    if isinstance(command, MoveObject | RemoveObject):
+        return command.id
+    return None
+
+
+def _touches_object(other: Command, object_id: str) -> bool:
+    return _object_target(other) == object_id
+
+
+def _changes_object_frame(other: Command, object_id: str) -> bool:
+    """Did ``other`` place, remove or re-create the object? (There is no resize of an object yet.)"""
+    return isinstance(other, MoveObject | RemoveObject | AddObject) and _object_target(other) == object_id

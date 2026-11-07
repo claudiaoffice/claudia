@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { alignment, columnName, inputOf, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
+import { imageDataUrl } from '~/lib/images'
 import { colorOf, inkOn } from '~/lib/people'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
-import type { Session } from '~/lib/session'
+import type { Session, SheetObject } from '~/lib/session'
 
 /** The cell being edited (on which sheet), what is typed so far and where the caret stands in it. */
 export interface EditState {
@@ -126,6 +127,65 @@ const outlines = computed(() => {
   return out
 })
 
+// ------------------------------------------------------------------------------ floating objects (images)
+/** Selecting an image is local to this view (not shared with colleagues, unlike cell presence): E10.11 only
+ * asked that an image never resizes on a structural edit and takes click priority over the cells beneath it. */
+const selectedObject = ref<string | null>(null)
+
+const objects = computed(() => props.session.objectsOn(props.sheet))
+
+/** An object's own anchor, or the live position of the drag in progress that is moving it. */
+function anchorOf(o: SheetObject): { row: number; col: number } {
+  return objDrag.value?.id === o.id ? objDrag.value.pos : { row: o.row, col: o.col }
+}
+function objectStyle(o: SheetObject) {
+  const { row, col } = anchorOf(o)
+  return { left: `${x(col)}px`, top: `${y(row)}px`, width: `${o.w}px`, height: `${o.h}px` }
+}
+function pictureSrc(o: SheetObject): string | null {
+  const asset = o.image ? state.images[o.image] : null
+  return asset ? imageDataUrl(asset) : null
+}
+
+type ObjDrag = { id: string; from: { x: number; y: number }; start: { row: number; col: number }; pos: { row: number; col: number }; moved: boolean }
+const objDrag = ref<ObjDrag | null>(null)
+
+/** `stopPropagation` here is the whole of "the image takes click priority": the cell grid's own `onDown` is
+ * bound on the outer `.viewport` and never even sees a mousedown that an object already caught, so a cell
+ * underneath an image cannot be reached by clicking — only by moving the image out of the way. */
+function onObjectDown(event: MouseEvent, o: SheetObject) {
+  if (event.button !== 0) return
+  event.stopPropagation()
+  if (props.edit) emit('commit', 'down')
+  viewport.value?.focus() // so Delete/Escape reach `onKey` even if the focus was elsewhere (the formula bar, say)
+  selectedObject.value = o.id
+  objDrag.value = { id: o.id, from: { x: event.clientX, y: event.clientY }, start: { row: o.row, col: o.col }, pos: { row: o.row, col: o.col }, moved: false }
+  window.addEventListener('mousemove', onObjectDrag)
+  window.addEventListener('mouseup', onObjectUp)
+}
+
+function onObjectDrag(event: MouseEvent) {
+  const d = objDrag.value
+  if (!d) return
+  const dCol = Math.round((event.clientX - d.from.x) / W)
+  const dRow = Math.round((event.clientY - d.from.y) / H)
+  const row = Math.max(0, Math.min(VIEW_ROWS - 1, d.start.row + dRow))
+  const col = Math.max(0, Math.min(VIEW_COLS - 1, d.start.col + dCol))
+  if (row !== d.pos.row || col !== d.pos.col) {
+    d.pos = { row, col }
+    d.moved = true
+  }
+}
+
+function onObjectUp() {
+  const d = objDrag.value
+  objDrag.value = null
+  window.removeEventListener('mousemove', onObjectDrag)
+  window.removeEventListener('mouseup', onObjectUp)
+  if (d && d.moved && (d.pos.row !== d.start.row || d.pos.col !== d.start.col)) void props.session.moveObject(d.id, d.pos.row, d.pos.col)
+}
+onBeforeUnmount(onObjectUp)
+
 const linesStyle = computed(() => ({
   backgroundSize: `${W}px ${H}px`,
   backgroundPosition: `${HW - (scroll.value.left % W)}px ${HH - (scroll.value.top % H)}px`,
@@ -241,6 +301,7 @@ function onDown(event: MouseEvent) {
   if ((event.target as HTMLElement).closest('.editor')) return
   const hit = cellAt(event)
   if (!hit || event.button !== 0) return
+  selectedObject.value = null
   const picking = props.edit !== null && props.pointing // (then the focus stays in the text being typed)
   if (props.edit && !picking) emit('commit', 'down') // clicking elsewhere keeps what was typed
   if (!picking) viewport.value?.focus()
@@ -308,9 +369,15 @@ function onKey(event: KeyboardEvent) {
   } else if (event.key === 'Home') {
     event.preventDefault()
     emit('move', 0, -VIEW_COLS, event.shiftKey, false)
+  } else if (event.key === 'Escape' && selectedObject.value) {
+    event.preventDefault()
+    selectedObject.value = null
   } else if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault()
-    emit('clear')
+    if (selectedObject.value) {
+      void props.session.removeObject(selectedObject.value)
+      selectedObject.value = null
+    } else emit('clear')
   } else if (mod && event.key.toLowerCase() === 'a') {
     event.preventDefault()
     emit('selectAll')
@@ -367,7 +434,7 @@ function onPaste(event: ClipboardEvent) {
   emit('paste', parseTsv(text))
 }
 
-defineExpose({ focus: () => viewport.value?.focus() })
+defineExpose({ focus: () => viewport.value?.focus(), selectObject: (id: string) => (selectedObject.value = id) })
 </script>
 
 <template>
@@ -400,6 +467,18 @@ defineExpose({ focus: () => viewport.value?.focus() })
         <div class="selection" :class="{ picking: edit && pointing }" :style="selectionStyle" />
         <div class="active" :class="{ picking: edit && pointing }" :style="activeStyle" />
         <div v-for="ref in referenced" :key="ref.key" class="reference" :style="{ ...ref.style, '--color': ref.color }" />
+
+        <div
+          v-for="o in objects"
+          :key="o.id"
+          class="object"
+          :class="{ selected: o.id === selectedObject }"
+          :style="objectStyle(o)"
+          @mousedown.stop="onObjectDown($event, o)"
+          @dblclick.stop
+        >
+          <img v-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="o.imported?.alt ?? ''" draggable="false" />
+        </div>
 
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
           <span class="tag">{{ o.name }}<template v-if="o.locked"> · editing</template></span>
@@ -499,6 +578,22 @@ defineExpose({ focus: () => viewport.value?.focus() })
   border: 2px solid var(--color);
   background: color-mix(in srgb, var(--color) 8%, transparent);
   pointer-events: none;
+}
+.object {
+  position: absolute;
+  overflow: hidden;
+  cursor: grab;
+  outline: 2px solid transparent;
+}
+.object.selected {
+  outline-color: var(--app);
+}
+.object img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 .outline {
   position: absolute;
