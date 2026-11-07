@@ -87,8 +87,10 @@ const SHAPE_WIDTH = 360
 const STEP = 32 // how far each new object is shifted from the one before
 const STEPS = 8
 
-/** Where a new object goes: the `index`-th one added gets a little further from the first so none hides another. */
-export function insertFrame(kind: 'text' | 'shape', aspect: number | null, index: number): Frame {
+/** Where a new object goes: the `index`-th one added gets a little further from the first so none hides another.
+ * An image is sized the same way a shape is (it always has an aspect, since every decoded picture has a width and
+ * height); it is not its own branch below. */
+export function insertFrame(kind: 'text' | 'shape' | 'image', aspect: number | null, index: number): Frame {
   const shift = (index % STEPS) * STEP
   if (kind === 'text') return { x: 160 + shift, y: 120 + shift, ...TEXT_BOX }
   const h = SHAPE_HEIGHT

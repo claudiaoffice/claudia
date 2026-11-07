@@ -434,6 +434,40 @@
   "methods": {},
   "properties": []
  },
+ "ImageAsset": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', format: 'str', width: 'int', height: 'int', animated: 'bool', data: 'bytes', first_frame: 'bytes | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ImageAsset'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "aspect",
+   "size_bytes"
+  ]
+ },
+ "ImageError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "ImageImport": {
+  "class": [
+   "object"
+  ],
+  "init": "(asset: 'str', alt: 'str', imported_by: 'str', imported_at: 'str', source: 'str', source_name: 'str', source_path: 'str | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ImageImport'",
+   "masked": "(self, viewer: 'str') -> 'ImageImport'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "KernelError": {
   "class": [
    "Exception"
@@ -452,6 +486,9 @@
  },
  "MAIN": {
   "value": "'main'"
+ },
+ "MAX_IMAGE_BYTES": {
+  "value": "8388608"
  },
  "Manifest": {
   "class": [
@@ -690,6 +727,9 @@
   "methods": {},
   "properties": []
  },
+ "SUPPORTED_IMAGE_FORMATS": {
+  "value": "('jpeg', 'gif', 'bmp', 'svg')"
+ },
  "SchemaTooNew": {
   "class": [
    "KernelError"
@@ -811,6 +851,9 @@
  },
  "check": {
   "function": "(manifest: 'Manifest', env: 'Environment') -> 'RequirementReport'"
+ },
+ "decode_image": {
+  "function": "(data: 'bytes') -> 'ImageAsset'"
  },
  "encode": {
   "function": "(command: 'Command') -> 'dict'"

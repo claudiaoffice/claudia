@@ -1,5 +1,6 @@
 """claudia-core: the kernel shared by claudia composes, computes and creates.
 
+    assets       ImageAsset and ImageImport: the image model every app's objects can hold (E10.8)
     revision     Revision(branch, seq): ids that survive redaction and can branch
     commands     Command, Batch, registry with schema versions and upcasters
     model        DocumentModel: the interface each app implements; Snapshot
@@ -21,6 +22,14 @@ The kernel contains no spreadbook, text or slide code and does no I/O.
 """
 
 from ._version import __version__
+from .assets import (
+    MAX_IMAGE_BYTES,
+    SUPPORTED_IMAGE_FORMATS,
+    ImageAsset,
+    ImageError,
+    ImageImport,
+    decode_image,
+)
 from .commands import (
     Batch,
     Checkpoint,
@@ -118,9 +127,13 @@ __all__ = [
     "History",
     "HistoryChanged",
     "Hold",
+    "ImageAsset",
+    "ImageError",
+    "ImageImport",
     "KernelError",
     "Line",
     "MAIN",
+    "MAX_IMAGE_BYTES",
     "Manifest",
     "MemoryStore",
     "MissingUpcaster",
@@ -148,11 +161,13 @@ __all__ = [
     "StyleDef",
     "StyleBook",
     "StylesChanged",
+    "SUPPORTED_IMAGE_FORMATS",
     "Switch",
     "UndoConflict",
     "UndoRefused",
     "UnknownCommand",
     "check",
+    "decode_image",
     "encode",
     "environment_of",
     "format_css",

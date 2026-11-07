@@ -100,6 +100,10 @@ describe('insertFrame', () => {
     const circle = insertFrame('shape', 1, 0)
     expect(circle.w).toBe(circle.h)
   })
+  it('sizes an image by its own aspect, the same way as a shape with fixed proportions', () => {
+    const wide = insertFrame('image', 2, 0)
+    expect(wide.w).toBe(wide.h * 2)
+  })
   it('shifts the next ones a little so that they do not hide each other, and stays on the slide', () => {
     const [a, b] = [insertFrame('text', null, 0), insertFrame('text', null, 1)]
     expect(b.x).toBeGreaterThan(a.x)

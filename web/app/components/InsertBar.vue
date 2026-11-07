@@ -11,7 +11,7 @@ defineProps<{
   redoLabel: string
   readonly: boolean
 }>()
-defineEmits<{ text: []; shape: [id: string]; remove: []; undo: []; redo: [] }>()
+defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; redo: [] }>()
 </script>
 
 <template>
@@ -20,6 +20,10 @@ defineEmits<{ text: []; shape: [id: string]; remove: []; undo: []; redo: [] }>()
       <button type="button" class="tool" :disabled="readonly" title="Text box" aria-label="text box" data-tool="text" @click="$emit('text')">
         <svg viewBox="0 0 20 20" width="18" height="18"><path d="M4 5V3.5h12V5M10 3.5v13M7.5 16.5h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
         <span>Text</span>
+      </button>
+      <button type="button" class="tool" :disabled="readonly" title="Insert an image from disk" aria-label="image" data-tool="image" @click="$emit('image')">
+        <svg viewBox="0 0 20 20" width="18" height="18"><path d="M3.5 4.5h13v11h-13z M3.5 13l4-4 2.5 2.5L13 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /><circle cx="7" cy="7.5" r="1.1" fill="currentColor" stroke="none" /></svg>
+        <span>Image</span>
       </button>
       <button v-for="s in shapes" :key="s.id" type="button" class="tool" :disabled="readonly" :title="s.name" :aria-label="s.name" :data-tool="s.id" @click="$emit('shape', s.id)">
         <svg viewBox="-6 -6 112 112" width="18" height="18" preserveAspectRatio="none" aria-hidden="true">

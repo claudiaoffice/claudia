@@ -60,4 +60,10 @@ BUILTIN_STYLES: dict[str, Style] = {
             "text-align": "center",
         },
     ),
+    "plain-image": Style(
+        id="plain-image",
+        name="Plain image",
+        purpose="A picture placed on the slide; it carries its own colours, so no style properties apply to it.",
+        css={},
+    ),
 }

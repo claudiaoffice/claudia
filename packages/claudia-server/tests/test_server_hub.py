@@ -364,3 +364,45 @@ def test_the_worker_pool_is_reachable_and_stopped_with_the_hub(make_hub):
         await hub.stop()
 
     asyncio.run(scenario())
+
+
+# ------------------------------------------------------------------------------------------ per-viewer masking (E10.8)
+def test_an_events_to_data_for_is_used_per_connection_when_the_app_offers_it():
+    """``_on_event`` calls an event's own ``to_data_for(viewer)`` when it has one (creates' ``ObjectsChanged``,
+    which masks an imported image's source path), instead of the one shared ``to_data()`` every other event uses."""
+    import base64
+    import struct
+
+    from claudia_creates import SlideModel
+    from claudia_server.creates import creates_methods
+
+    def tiny_gif() -> str:
+        header = b"GIF89a" + struct.pack("<HHBBB", 20, 10, 0, 0, 0)
+        frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 20, 10) + b"\x00" + b"\x02\x01\x00\x00"
+        return base64.b64encode(header + frame + b"\x3b").decode("ascii")
+
+    hub = Hub(MemoryProvider(SlideModel), methods=creates_methods)
+    hosted = asyncio.run(hub.open("talk", create=True))
+    ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
+    ann.forget(), ben.forget()
+
+    ann.request(
+        "add_image",
+        {
+            "slide": "s1",
+            "x": 0,
+            "y": 0,
+            "w": 400,
+            "h": 200,
+            "data": tiny_gif(),
+            "alt": "a chart",
+            "source_name": "chart.gif",
+            "source_path": "/Users/ann/Documents/chart.gif",
+        },
+    )
+
+    (seen_by_ann,) = ann.events("objects")[-1]["changed"]
+    (seen_by_ben,) = ben.events("objects")[-1]["changed"]
+    assert seen_by_ann["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
+    assert seen_by_ben["imported"]["source_path"] is None
+    assert seen_by_ben["imported"]["source"] == "disk" and seen_by_ben["imported"]["imported_by"] == "ann"
