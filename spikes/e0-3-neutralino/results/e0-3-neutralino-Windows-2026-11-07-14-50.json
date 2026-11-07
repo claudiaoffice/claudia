@@ -1,0 +1,247 @@
+{
+  "schema": "claudia-e0-3-report/1",
+  "when": "2026-11-07T14:50:56.263Z",
+  "shell": "neutralino",
+  "shellInfo": {
+    "kind": "neutralino",
+    "os": "Windows",
+    "version": "6.8.0",
+    "nativeMenu": true,
+    "nativeAbout": false,
+    "nativeFileDialogs": true,
+    "canStartServer": true,
+    "rolesNative": false
+  },
+  "env": {
+    "shell": "neutralino {\"kind\":\"neutralino\",\"os\":\"Windows\",\"version\":\"6.8.0\",\"nativeMenu\":true,\"nativeAbout\":false,\"nativeFileDialogs\":true,\"canStartServer\":true,\"rolesNative\":false}",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+    "platform": "Win32 / de",
+    "display": "devicePixelRatio 2, screen 1536x960",
+    "window": "1536x870 (dpr 2)",
+    "colorScheme": "light",
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium) / ANGLE (Intel, Intel(R) Arc(TM) Pro Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "plotly": "plotly.js 3.7.0",
+    "readyAfterSeconds": "0.01"
+  },
+  "counts": {
+    "hover": 10,
+    "click": 0,
+    "relayout": 4
+  },
+  "actionsSeen": [
+    "edit.copy",
+    "edit.selectall",
+    "edit.paste"
+  ],
+  "notes": "",
+  "checks": [
+    {
+      "id": "shell.hello",
+      "title": "Shell contract: hello",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.ping",
+      "title": "Shell contract: round-trip time",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "font.bundled",
+      "title": "Font from the bundled page",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.bar",
+      "title": "Plotly bar chart",
+      "status": "pass",
+      "detail": "33 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.line",
+      "title": "Plotly line chart",
+      "status": "pass",
+      "detail": "11 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.gl",
+      "title": "Plotly 100,000 points (WebGL)",
+      "status": "pass",
+      "detail": "103 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.heat",
+      "title": "Plotly heatmap",
+      "status": "pass",
+      "detail": "20 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.events",
+      "title": "Plotly events and hover",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.server",
+      "title": "Local server: start, answer, stop",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "font.server",
+      "title": "Font delivered by the local server (D26)",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.menu",
+      "title": "Menu from the manifest",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.file",
+      "title": "File dialogs",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.about",
+      "title": "About dialog",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.theme",
+      "title": "Dark and light mode",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.dead",
+      "title": "Dead keys and AltGr",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.ime",
+      "title": "Input method (Japanese or Chinese)",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.clip",
+      "title": "Clipboard",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.spell",
+      "title": "Spellcheck and context menu",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.dnd",
+      "title": "Drag and drop of text",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.a11y",
+      "title": "Screen reader",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.window",
+      "title": "Window behaviour",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.hidpi",
+      "title": "Display scale",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.panel",
+      "title": "Docked panel",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.print",
+      "title": "Printing",
+      "status": "info",
+      "detail": "shell print requested",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "m.focus",
+      "title": "Focus and keyboard",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.start",
+      "title": "Start time and size",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    }
+  ]
+}

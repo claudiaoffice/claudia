@@ -22,14 +22,6 @@ kanban-plugin: board
 	Use case: PLATFORM · Decisions: D16, D22, D42 · Windows and macOS packages hold the Neutralino shell, the bundled frontend and the server bundle, no GTK. On Linux the natural form may be Flatpak, where the platform supplies GTK; D16's "interpreter always bundled" then needs a decision.
 	
 	Status evidence: `.github/workflows/ci.yml` runs tests only; no packaging job.
-- [ ] **E0.8 · Text input in the shells' web views**
-	As a developer, I want to type into editable fields in each shell's web view, so that we know where the web frontend's text input and accessibility fall short.
-	
-	AC: a `contenteditable` page and a plain text field run in the GTK shell, the Neutralino shell on Windows and macOS, and a browser; tested with German dead keys and AltGr, an input method with its candidate window, copy and paste of plain and rich text, spellcheck, drag and drop, and the native Edit items and shortcuts reaching the field; a screen reader (Orca, NVDA, VoiceOver) reads the field and announces caret moves; failures written down.
-	
-	Use case: PLATFORM · Decisions: D41, D42 · Needs real machines with real input methods. Feeds E9.3 and E6.3.
-	
-	Status evidence: the Linux client notes say explicitly that only Xvfb was available, with no D-Bus session bus, and that input methods, screen readers and portal dialogs were not checked.
 - [ ] **E2.6 · Redaction in the container**
 	As an owner, I want redaction to rewrite the affected blocks and purge caches, so that content is really gone from the file.
 	
@@ -136,7 +128,7 @@ kanban-plugin: board
 	
 	AC: configuration with the native API restricted (allow lists, file scopes, one-time token); a native main menu from the manifest including the macOS application menu; native file dialogs; About, theme and scale from the OS; starts and stops the server bundle; installers; a thin adapter so Tauri or pywebview could replace Neutralino.
 	
-	Use case: PLATFORM · Decisions: D42, D43, D44 · Depends on E0.3 confirming Neutralino, which has not been run. The whole Windows and macOS story rests on an unverified bet.
+	Use case: PLATFORM · Decisions: D42, D43, D44 · Depends on E0.3. Neutralino 6.8.0 has now run on one Mac and one Windows 11 machine with all automatic checks passing (D156), so the bet is no longer unverified, but it is not yet confirmed either: see E0.3 for what is untested. **Acceptance items learned from the spike:** `tokenSecurity: one-time`, the page loads only `js/neutralino.js` (D157); Edit items with Cocoa `action` and `shortcut` on macOS; printing through `Neutralino.window.print()`; binary and client library versions pinned together; the allow-list shrunk from the spike's wide one; the About dialog stays a page dialog; Windows 10 without a WebView2 runtime handled or refused with a message. **Open before building:** how the real frontend reaches the shell under D115 (D159), which decides the transport the web app needs.
 - [ ] **E6.5 · Names and SQL in cells**
 	As an analyst, I want named ranges and SQL, so that I can query my sheets.
 	
@@ -476,7 +468,7 @@ kanban-plugin: board
 	
 	Use case: DATA · Decisions: D22, D33, D40, D41, D42, D43, D44
 	
-	Status evidence: the spike package exists and the GTK half has since become a real shell (`clients/linux/`), run headless with all automatic checks passing. **Neutralino has never been run** except against an API mock; Windows and macOS runs, the manual rows and the maturity check are open; **no Plotly chart exists anywhere in the tree**, so the acceptance criterion that motivated the whole architecture is untested.
+	Status evidence: the GTK half has since become a real shell (`clients/linux/`), run headless with all automatic checks passing. **Neutralino 6.8.0 has now been run** (2026-11-07, `spikes/e0-3-neutralino/`, notes in `notes/e0-3-neutralino-windows-macos.md`) on one Mac (WKWebView) and one Windows 11 machine (WebView2): all automatic checks pass on both, including Plotly 3.7.0 bar, line, heatmap and 100,000-point WebGL (first WebGL draw on macOS 857 ms, later 50 ms), a native menu from a manifest, native file dialogs, theme, and starting and stopping a server process. Found and solved: the `NE_CL_IVCTOKN` token error (a second Neutralino script tag clears the one-time token; D157). Needed in the shell: Edit roles and accelerators on macOS, and printing through the shell (D158). **Not done:** a clean Windows 10 22H2 and the WebView2 runtime, GNOME on Wayland, an older macOS, the maturity check of Neutralino and a measured install size and start time, a real round-trip time of the bridge (the first number was a no-op), a Windows leftover-process check, and **how the real frontend reaches a Neutralino shell given D115 (D159)**. **No Plotly chart exists in the real frontend**, so the criterion that motivated the architecture is still untested there.
 - [ ] **E0.4 · Typesetting service spike**
 	As a developer, I want to compare LaTeX renderers on real samples, so that we pick the engine for help pages, tooltips and formula pop-ups.
 	
@@ -493,6 +485,14 @@ kanban-plugin: board
 	Use case: DATA · Decisions: D37
 	
 	Status evidence: measurements exist for the new engine, not for the demo it was meant to baseline: parse ~25–59 µs, paste ~90 µs per formula, one edit in a 50k-row workbook with range readers ~0.25 ms (16.7 ms before the block index), a 20k-deep chain ~0.3 s, and **inserting a row in a workbook of 100k formulas ~12 s**. Six scaling guards run in the gate. The last number is the open target (PERF-07).
+- [ ] **E0.8 · Text input in the shells' web views**
+	As a developer, I want to type into editable fields in each shell's web view, so that we know where the web frontend's text input and accessibility fall short.
+	
+	AC: a `contenteditable` page and a plain text field run in the GTK shell, the Neutralino shell on Windows and macOS, and a browser; tested with German dead keys and AltGr, an input method with its candidate window, copy and paste of plain and rich text, spellcheck, drag and drop, and the native Edit items and shortcuts reaching the field; a screen reader (Orca, NVDA, VoiceOver) reads the field and announces caret moves; failures written down.
+	
+	Use case: PLATFORM · Decisions: D41, D42 · Needs real machines with real input methods. Feeds E9.3 and E6.3.
+	
+	Status evidence: **Linux:** the client notes say only Xvfb was available, with no D-Bus session bus; input methods, screen readers and portal dialogs were not checked. **Neutralino, 2026-11-07 (one Mac, one Windows 11; `notes/e0-3-neutralino-windows-macos.md`):** German dead keys and AltGr ok on both (on macOS typed apostrophes came back as curly quotes, cause not investigated and unknown for `<input>`); input method ok on Windows, **not tested on macOS**; clipboard of plain and rich text ok on both after macOS needed Cocoa `action` selectors on the Edit items; spellcheck and context menu ok on both; drag and drop of text ok on Windows, not filled in on macOS; native Edit items reach the field. **Screen readers not tested on any OS.** Still open: all of Linux, VoiceOver, NVDA, and a clean Windows 10.
 - [ ] **E1.8 · Redaction semantics**
 	As an owner, I want to redact commands, so that a leaked secret can be removed from the history.
 	
@@ -644,7 +644,7 @@ kanban-plugin: board
 	
 	Use case: PLATFORM · Decisions: D4, D25, D27, D31, D44, D54, D74
 	
-	Status evidence: a manifest exists but only inside the Linux client (`clients/linux/src/claudia_shell_gtk/manifest.py` plus `data/webroutes.json`), and it **maps between two different menu structures** rather than generating one: the web app has six menus (File, Edit, Format, View, Tools, Help) against D4's four, and the shell carries them out by clicking the web app's own menus through `shim.js` (D117, UX-09). No translation keys, no help topic ids. **Blocked on the open decision UX-06**: four menus or six.
+	Status evidence: a manifest exists but only inside the Linux client (`clients/linux/src/claudia_shell_gtk/manifest.py` plus `data/webroutes.json`), and it **maps between two different menu structures** rather than generating one: the web app has six menus (File, Edit, Format, View, Tools, Help) against D4's four, and the shell carries them out by clicking the web app's own menus through `shim.js` (D117, UX-09). No translation keys, no help topic ids. **Blocked on the open decision UX-06**: four menus or six. *Added 2026-11-07:* the Neutralino run shows an Edit item needs a **role** (undo, redo, cut, copy, paste, select all) beside its accelerator, which on macOS becomes the Cocoa action and shortcut (D158); `manifest.py` has accelerators in GTK syntax but no role field.
 - [ ] **E5.2 · claudia-shell-gtk (Linux)**
 	As an app developer, I want a thin libadwaita application shell for Linux that hosts the frontend in a WebKitGTK 6.0 view.
 	
@@ -668,7 +668,7 @@ kanban-plugin: board
 	
 	Use case: PLATFORM · Decisions: D28
 	
-	Status evidence: `Adw.AboutDialog` is built in the Linux shell. **The shared web component does not exist** — there is no About anywhere in `web/app/components`, so the browser and any future Neutralino shell have none.
+	Status evidence: `Adw.AboutDialog` is built in the Linux shell, and the shared web component exists: `web/app/components/AboutDialog.vue`, opened from the web menu's `help.about` in the apps. *Corrected 2026-11-07:* the earlier line said no web About existed. Neutralino reports `nativeAbout: false` on Windows and macOS, so there the page's own dialog is the About (it was modal and closed on Escape in the spike; D158). **Not done:** a check that all three apps feed it a complete app-info record (authors, licence, links), and that the Linux shell's version and the web one cannot drift.
 - [ ] **E5.5 · App icons**
 	As a user, I want a distinct icon for composes, computes and creates.
 	
@@ -708,7 +708,7 @@ kanban-plugin: board
 	
 	Use case: PLATFORM · Decisions: D42, D114
 	
-	Status evidence: v1 exists as a JSON schema (`clients/contract/shell-contract.v1.schema.json`) with the Python side (`contract.py`, `bridge.py`): `hello`, `welcome`, `action`, `action_state`, `error`, a 64 KiB limit, unknown types ignored and version negotiation (D114). **Not done:** the frontend half — the web app does not speak it (D117), so there are contract tests against the GTK shell only, no browser stub and no Neutralino.
+	Status evidence: v1 exists as a JSON schema (`clients/contract/shell-contract.v1.schema.json`) with the Python side (`contract.py`, `bridge.py`): `hello`, `welcome`, `action`, `action_state`, `error`, a 64 KiB limit, unknown types ignored and version negotiation (D114). **Not done:** the frontend half — the web app does not speak it (D117), so there are contract tests against the GTK shell only, no browser stub and no Neutralino. *Added 2026-11-07:* the Neutralino spike used its own request/response bridge, not this contract; additive changes it points to are a **print** request (D158) and an Edit **role** on menu items, and a Neutralino transport for the web app's `ShellBridge` (D159).
 - [ ] **E5.13 · Shared styling dialog**
 	As a user of any app in any client, I want the same dialog for styling text, backgrounds and cells.
 	

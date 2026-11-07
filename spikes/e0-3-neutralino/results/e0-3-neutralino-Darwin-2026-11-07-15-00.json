@@ -1,0 +1,246 @@
+{
+  "schema": "claudia-e0-3-report/1",
+  "when": "2026-11-07T15:00:53.553Z",
+  "shell": "neutralino",
+  "shellInfo": {
+    "kind": "neutralino",
+    "os": "Darwin",
+    "version": "6.8.0",
+    "nativeMenu": true,
+    "nativeAbout": false,
+    "nativeFileDialogs": true,
+    "canStartServer": true,
+    "rolesNative": true
+  },
+  "env": {
+    "shell": "neutralino {\"kind\":\"neutralino\",\"os\":\"Darwin\",\"version\":\"6.8.0\",\"nativeMenu\":true,\"nativeAbout\":false,\"nativeFileDialogs\":true,\"canStartServer\":true,\"rolesNative\":true}",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "platform": "MacIntel / en-GB",
+    "display": "devicePixelRatio 2, screen 1440x900",
+    "window": "1280x759",
+    "colorScheme": "light",
+    "webgl": "WebGL 2.0 / Apple GPU",
+    "plotly": "plotly.js 3.7.0",
+    "readyAfterSeconds": "0.02"
+  },
+  "counts": {
+    "hover": 18,
+    "click": 6,
+    "relayout": 1
+  },
+  "actionsSeen": [
+    "file.open",
+    "file.saveas"
+  ],
+  "notes": "",
+  "checks": [
+    {
+      "id": "shell.hello",
+      "title": "Shell contract: hello",
+      "status": "pass",
+      "detail": "{\"kind\":\"neutralino\",\"os\":\"Darwin\",\"version\":\"6.8.0\",\"nativeMenu\":true,\"nativeAbout\":false,\"nativeFileDialogs\":true,\"canStartServer\":true,\"rolesNative\":true}",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.ping",
+      "title": "Shell contract: round-trip time",
+      "status": "fail",
+      "detail": "N.app.getProcessId is not a function. (In 'N.app.getProcessId()', 'N.app.getProcessId' is undefined)",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "font.bundled",
+      "title": "Font from the bundled page",
+      "status": "pass",
+      "detail": "loaded from the bundled page; check that the first chart title is italic serif",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.bar",
+      "title": "Plotly bar chart",
+      "status": "pass",
+      "detail": "19 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.line",
+      "title": "Plotly line chart",
+      "status": "pass",
+      "detail": "8 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.gl",
+      "title": "Plotly 100,000 points (WebGL)",
+      "status": "pass",
+      "detail": "50 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.heat",
+      "title": "Plotly heatmap",
+      "status": "pass",
+      "detail": "25 ms",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "plotly.events",
+      "title": "Plotly events and hover",
+      "status": "pass",
+      "detail": "relayout event arrived, hover label drawn",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.server",
+      "title": "Local server: start, answer, stop",
+      "status": "pass",
+      "detail": "started, answered /ping in 5 ms, stopped. After the run check that no server process is left.",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "font.server",
+      "title": "Font delivered by the local server (D26)",
+      "status": "pass",
+      "detail": "font loaded from the local server (cross-origin); the words 'server font' in the text box turn bold serif",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.menu",
+      "title": "Menu from the manifest",
+      "status": "pass",
+      "detail": "{\"ok\":true} (native menu)",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.file",
+      "title": "File dialogs",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.about",
+      "title": "About dialog",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.theme",
+      "title": "Dark and light mode",
+      "status": "pass",
+      "detail": "shell reports dark=false, page sees light",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.dead",
+      "title": "Dead keys and AltGr",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.ime",
+      "title": "Input method (Japanese or Chinese)",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.clip",
+      "title": "Clipboard",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.input.spell",
+      "title": "Spellcheck and context menu",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.dnd",
+      "title": "Drag and drop of text",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.a11y",
+      "title": "Screen reader",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.window",
+      "title": "Window behaviour",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.hidpi",
+      "title": "Display scale",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.panel",
+      "title": "Docked panel",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.print",
+      "title": "Printing",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.focus",
+      "title": "Focus and keyboard",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.start",
+      "title": "Start time and size",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    }
+  ]
+}

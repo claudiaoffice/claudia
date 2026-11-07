@@ -1,0 +1,247 @@
+{
+  "schema": "claudia-e0-3-report/1",
+  "when": "2026-11-07T14:43:06.814Z",
+  "shell": "neutralino",
+  "shellInfo": {
+    "kind": "neutralino",
+    "os": "Darwin",
+    "version": "6.8.0",
+    "nativeMenu": true,
+    "nativeAbout": false,
+    "nativeFileDialogs": true,
+    "canStartServer": true
+  },
+  "env": {
+    "shell": "neutralino {\"kind\":\"neutralino\",\"os\":\"Darwin\",\"version\":\"6.8.0\",\"nativeMenu\":true,\"nativeAbout\":false,\"nativeFileDialogs\":true,\"canStartServer\":true}",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "platform": "MacIntel / en-GB",
+    "display": "devicePixelRatio 2, screen 1440x900",
+    "window": "1280x757 (dpr 2)",
+    "colorScheme": "dark",
+    "webgl": "WebGL 2.0 / Apple GPU",
+    "plotly": "plotly.js 3.7.0",
+    "readyAfterSeconds": "0.00"
+  },
+  "counts": {
+    "hover": 31,
+    "click": 0,
+    "relayout": 17
+  },
+  "actionsSeen": [
+    "tools.ping",
+    "help.help",
+    "help.about",
+    "edit.paste"
+  ],
+  "notes": "",
+  "checks": [
+    {
+      "id": "shell.hello",
+      "title": "Shell contract: hello",
+      "status": "pass",
+      "detail": "{\"kind\":\"neutralino\",\"os\":\"Darwin\",\"version\":\"6.8.0\",\"nativeMenu\":true,\"nativeAbout\":false,\"nativeFileDialogs\":true,\"canStartServer\":true}",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "shell.ping",
+      "title": "Shell contract: round-trip time",
+      "status": "pass",
+      "detail": "30 round trips, median 0.0 ms, slowest 0.0 ms",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "font.bundled",
+      "title": "Font from the bundled page",
+      "status": "pass",
+      "detail": "loaded from the bundled page; check that the first chart title is italic serif",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "plotly.bar",
+      "title": "Plotly bar chart",
+      "status": "pass",
+      "detail": "43 ms",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "plotly.line",
+      "title": "Plotly line chart",
+      "status": "pass",
+      "detail": "11 ms",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "plotly.gl",
+      "title": "Plotly 100,000 points (WebGL)",
+      "status": "pass",
+      "detail": "857 ms",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "plotly.heat",
+      "title": "Plotly heatmap",
+      "status": "pass",
+      "detail": "36 ms",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "plotly.events",
+      "title": "Plotly events and hover",
+      "status": "pass",
+      "detail": "relayout event arrived, hover label drawn",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "shell.server",
+      "title": "Local server: start, answer, stop",
+      "status": "pass",
+      "detail": "started, answered /ping in 2 ms, stopped. After the run check that no server process is left.",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "font.server",
+      "title": "Font delivered by the local server (D26)",
+      "status": "pass",
+      "detail": "font loaded from the local server (cross-origin); the words 'server font' in the text box turn bold serif",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "shell.menu",
+      "title": "Menu from the manifest",
+      "status": "pass",
+      "detail": "{\"ok\":true} (native menu)",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "shell.file",
+      "title": "File dialogs",
+      "status": "info",
+      "detail": "cancelled",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "shell.about",
+      "title": "About dialog",
+      "status": "pass",
+      "detail": "page dialog (shared web component stand-in)",
+      "verdict": "ok",
+      "note": "looks like page dialog, escape closes, its modal"
+    },
+    {
+      "id": "shell.theme",
+      "title": "Dark and light mode",
+      "status": "pass",
+      "detail": "shell reports dark=true, page sees dark",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "m.input.dead",
+      "title": "Dead keys and AltGr",
+      "status": "",
+      "detail": "",
+      "verdict": "ok",
+      "note": "‘ E’e’eè àô€@|"
+    },
+    {
+      "id": "m.input.ime",
+      "title": "Input method (Japanese or Chinese)",
+      "status": "",
+      "detail": "",
+      "verdict": "na",
+      "note": ""
+    },
+    {
+      "id": "m.input.clip",
+      "title": "Clipboard",
+      "status": "",
+      "detail": "",
+      "verdict": "problem",
+      "note": ""
+    },
+    {
+      "id": "m.input.spell",
+      "title": "Spellcheck and context menu",
+      "status": "",
+      "detail": "",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "m.dnd",
+      "title": "Drag and drop of text",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.a11y",
+      "title": "Screen reader",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.window",
+      "title": "Window behaviour",
+      "status": "",
+      "detail": "",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "m.hidpi",
+      "title": "Display scale",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.panel",
+      "title": "Docked panel",
+      "status": "",
+      "detail": "",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "m.print",
+      "title": "Printing",
+      "status": "",
+      "detail": "",
+      "verdict": "",
+      "note": ""
+    },
+    {
+      "id": "m.focus",
+      "title": "Focus and keyboard",
+      "status": "",
+      "detail": "",
+      "verdict": "ok",
+      "note": ""
+    },
+    {
+      "id": "m.start",
+      "title": "Start time and size",
+      "status": "",
+      "detail": "",
+      "verdict": "ok",
+      "note": ""
+    }
+  ]
+}

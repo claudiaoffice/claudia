@@ -10,6 +10,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `design-system.md` | Colour, typography, logos, layout and illustrations; the reference for the web client and the shells | 2026-11-02 |
 | `demo-analysis.md` | The original `gtk_sheet` demo read statically: what to keep, the proposed split, and the gaps against the decisions | 2026-11-01 |
 | `e0-shells-and-web-surface.md` | E0.1, E0.2, E0.3: the Linux and Windows spike results, the web-surface options and why system web views won | 2026-11-01/02 |
+| `e0-3-neutralino-windows-macos.md` | Neutralino 6.8.0 run on a Mac and on Windows 11: results, the `NE_CL_IVCTOKN` token bug and its fix, menu roles, printing, About, what is untested, and the open question of how the real frontend reaches the shell (D156–D159). Evidence in `spikes/e0-3-neutralino/results/` | 2026-11-07 |
 | `e1-kernel.md` | E1.1–E1.9 as built, the design points behind D45–D49, and the project-hygiene rules | 2026-11-02 |
 | `e2-container-and-encryption.md` | E2: threat model, format, key slots, journal, and the three delivered slices with their findings | 2026-11-02/03 |
 | `e3-server-and-security.md` | E3.1 as built, and the SEC-01/02/07 fixes with their breaking changes | 2026-11-02/03 |

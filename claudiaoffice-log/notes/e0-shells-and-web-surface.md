@@ -162,8 +162,10 @@ creates a window menu on Linux and Windows and an application menu on macOS; the
 
 **Not verified:** web view versions per OS, Wayland behaviour, input methods, accessibility, whether its file dialogs
 use the desktop portals, release rhythm and maintainer base. An earlier chat message called it "one maintainer's
-project"; that was a guess, not a finding. **None of this has been checked since**, and the whole Windows and macOS
-story rests on it. Fallbacks if it disappoints: Tauri (which uses the older GTK 3 WebKitGTK API on Linux) and
+project"; that was a guess, not a finding. **Update 2026-11-07:** Neutralino 6.8.0 has since been run on macOS and Windows 11 (see
+`e0-3-neutralino-windows-macos.md`); the web view versions, menus, dialogs, clipboard, printing and dead keys are now
+observed there. Wayland, screen readers, a clean Windows 10, release rhythm and maintainer base are **still not
+checked**, and the whole Windows and macOS story still rests on it. Fallbacks if it disappoints: Tauri (which uses the older GTK 3 WebKitGTK API on Linux) and
 pywebview. The shell adapter stays thin so the switch is cheap.
 
 ## Proposals for decisions (never entered in the log)

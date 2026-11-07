@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claudia shell spike (E0.3)</title>
+<link rel="stylesheet" href="style.css">
+<!-- Neutralino: js/neutralino.js is served with the NL_* globals in front of it. Do NOT also load __neutralino_globals.js:
+     with tokenSecurity one-time the second copy overwrites NL_TOKEN with an empty string (NE_CL_IVCTOKN). -->
+<script src="js/neutralino.js" onerror="void 0"></script>
+</head>
+<body>
+<nav id="webbar" hidden aria-label="Application menu"></nav>
+
+<div id="layout">
+  <main id="main">
+    <h1>Claudia shell spike <small>E0.3 / E0.8</small></h1>
+    <p class="lead">One page, three shells. Press <b>Run all automatic checks</b>, then work through the manual rows. The report can be saved from the button at the bottom.</p>
+
+    <section aria-labelledby="h-env">
+      <h2 id="h-env">Environment</h2>
+      <table id="env"></table>
+    </section>
+
+    <section aria-labelledby="h-charts">
+      <h2 id="h-charts">Charts (plotly.js, bundled)</h2>
+      <div class="counters" aria-live="polite">hover <b id="c-hover">0</b> · click <b id="c-click">0</b> · relayout <b id="c-relayout">0</b></div>
+      <div class="charts">
+        <div id="ch-bar" class="chart"></div>
+        <div id="ch-line" class="chart"></div>
+        <div id="ch-gl" class="chart"></div>
+        <div id="ch-heat" class="chart"></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-input">
+      <h2 id="h-input">Text input</h2>
+      <p>Type here: German dead keys (´ ` ^ then a letter), AltGr (€ @ \ {), an input method (Japanese, Chinese), paste rich text, misspell a word, drag selected text.</p>
+      <label for="in-line">Single line</label>
+      <input id="in-line" type="text" value="Äpfel € @ ˆ">
+      <label for="in-edit">Editable block (contenteditable)</label>
+      <div id="in-edit" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true">Edit <b>this</b> text. Fonts: <span class="f-bundled">bundled font</span>, <span class="f-server">server font</span>.</div>
+    </section>
+
+    <section aria-labelledby="h-checks">
+      <h2 id="h-checks">Checks</h2>
+      <p><button id="run-all" class="primary">Run all automatic checks</button></p>
+      <div id="checks"></div>
+    </section>
+
+    <section aria-labelledby="h-report">
+      <h2 id="h-report">Report</h2>
+      <label for="notes">General notes (machine, OS version, display scale, anything odd)</label>
+      <textarea id="notes" rows="4"></textarea>
+      <p><button id="save-report" class="primary">Save report…</button> <span id="save-status"></span></p>
+    </section>
+
+    <section aria-labelledby="h-log">
+      <h2 id="h-log">Log</h2>
+      <pre id="log" aria-live="off"></pre>
+    </section>
+  </main>
+
+  <aside id="panel" aria-label="History and chat (mock)">
+    <button id="panel-toggle" aria-expanded="true" aria-controls="panel-body" title="Show or hide the panel">›</button>
+    <div id="panel-body">
+      <h2>History and chat</h2>
+      <ul>
+        <li><b>anna</b> set B2 = 12</li>
+        <li><b>ai</b> added a bar chart</li>
+        <li><b>ben</b> @ai please check the sums</li>
+      </ul>
+      <label for="chat">Message</label>
+      <input id="chat" type="text" placeholder="@ai …">
+    </div>
+  </aside>
+</div>
+
+<script src="manifest.js"></script>
+<script src="vendor/plotly.min.js"></script>
+<script src="shell.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
