@@ -130,8 +130,28 @@ def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
     assert [e.id for e in section if isinstance(e, Action)] == ["view.authors", "view.panel", "view.dark"]
 
 
-def test_configs_only_item_is_shortcuts(app: manifest.Manifest) -> None:
-    assert action_ids(app.menu("Config")) == ["config.shortcuts"]
+def test_configs_items_are_shortcuts_then_app_language(app: manifest.Manifest) -> None:
+    """The owner's second i18n round: Shortcuts, then App Language ▸ one item per ``manifest.LANGUAGES`` entry."""
+    assert action_ids(app.menu("Config")) == ["config.shortcuts", "config.language.en", "config.language.de"]
+
+
+def test_app_language_items_are_checkable_page_actions_named_after_their_tag(app: manifest.Manifest) -> None:
+    config = app.menu("Config")
+    app_language = next(
+        e for section in config.sections for e in section if getattr(e, "label", None) == "App Language"
+    )
+    assert isinstance(app_language, manifest.Submenu)
+    assert [(a.id, a.label) for a in app_language.items] == [
+        (f"config.language.{tag}", label) for tag, label in manifest.LANGUAGES
+    ]
+    for action in app_language.items:
+        assert action.kind is manifest.Kind.PAGE
+        assert action.checkable is True
+
+
+def test_each_language_item_labels_itself_with_its_own_autonym(app: manifest.Manifest) -> None:
+    """``LANGUAGES`` itself is the source: "English"/"Deutsch", never translated versions of each other's name."""
+    assert dict(manifest.LANGUAGES) == {"en": "English", "de": "Deutsch"}
 
 
 def test_helps_shared_shape_is_identical_in_every_app(app: manifest.Manifest) -> None:
@@ -238,12 +258,13 @@ def test_each_action_is_carried_out_by_exactly_one_party(app: manifest.Manifest)
             assert action.editing is None
 
 
-def test_checkable_actions_are_the_view_toggles(app: manifest.Manifest) -> None:
+def test_checkable_actions_are_the_view_toggles_and_the_language_picker(app: manifest.Manifest) -> None:
     checkable = {a.id for a in app.actions if a.checkable}
+    language_ids = {f"config.language.{tag}" for tag, _label in manifest.LANGUAGES}
     if app.app == "composes":
-        assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"}
+        assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"} | language_ids
     else:
-        assert checkable == {"view.authors", "view.panel", "view.dark"}
+        assert checkable == {"view.authors", "view.panel", "view.dark"} | language_ids
 
 
 def test_composes_clipboard_actions_are_native_webkit_editing_commands(composes: manifest.Manifest) -> None:
@@ -325,6 +346,38 @@ def test_sections_become_gmenu_sections_so_that_separators_are_drawn(app: manife
     file_menu = root.find("menu[@id='menu-file']")
     assert file_menu is not None
     assert len(file_menu.findall("section")) == len(app.menu("File").sections) > 1
+
+
+def test_menu_xml_defaults_to_no_translation_at_all() -> None:
+    """Every other test in this module calls ``menu_xml``/``menu_elements`` with no ``translate`` and still gets
+    plain English back — the default is the identity function, so none of this module needs a locale installed."""
+    root = ET.fromstring(manifest.menu_xml(manifest.composes()))
+    label = root.find(".//menu[@id='menu-file']//item/attribute[@name='label']")
+    assert label is not None and label.text == "New"
+
+
+def test_a_translate_function_is_applied_to_item_and_submenu_labels() -> None:
+    loud = {"New": "NEW", "Manage": "MANAGE"}.get
+    root = ET.fromstring(manifest.menu_xml(manifest.composes(), translate=lambda s: loud(s) or s))
+    new_item = root.find(".//menu[@id='menu-file']//item/attribute[@name='label']")
+    assert new_item is not None and new_item.text == "NEW"
+    manage_submenu = root.find(".//menu[@id='menu-file']//submenu/attribute[@name='label']")
+    assert manage_submenu is not None and manage_submenu.text == "MANAGE"
+
+
+def test_a_translate_function_never_touches_the_language_pickers_own_autonyms() -> None:
+    """``config.language.en``/``config.language.de``'s labels are ``LANGUAGES``' own autonyms, not English UI text —
+    translating them would be exactly the mistake this module's docstring calls out."""
+    shout_everything = str.upper
+    root = ET.fromstring(manifest.menu_xml(manifest.composes(), translate=shout_everything))
+    config_menu = root.find(".//menu[@id='menu-config']")
+    assert config_menu is not None
+    language_labels = {
+        item.findtext("attribute[@name='label']")
+        for item in config_menu.findall(".//submenu/section/item")
+        if (item.findtext("attribute[@name='action']") or "").startswith("win.config.language.")
+    }
+    assert language_labels == {"English", "Deutsch"}
 
 
 def test_special_characters_in_a_label_are_escaped() -> None:

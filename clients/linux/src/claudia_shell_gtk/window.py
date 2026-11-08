@@ -18,8 +18,10 @@ from typing import Any, Protocol
 from ._gi import Adw, Gio, GLib, Gtk
 from ._version import __version__
 from .bridge import Bridge
+from .i18n import translate as _
 from .identity import AppIdentity
 from .manifest import Action, Kind, Manifest, about_links, composes, menu_elements
+from .settings import save_shell_locale
 
 __all__ = ["ComposesWindow", "Page", "PageFactory"]
 
@@ -28,6 +30,11 @@ log = logging.getLogger(__name__)
 # The page's own dark-mode choice (D120's View ▸ Dark Mode, a `Kind.PAGE` checkable) is the one thing native chrome
 # also needs to know: see `set_action_states`'s use of it below.
 _DARK_ACTION = "view.dark"
+_LANGUAGE_PREFIX = "config.language."
+"""`set_action_states`'s other special case: the page is the one source of truth for which of `manifest.LANGUAGES`
+is active (D31's second round), so a reported language is persisted here for the *next* launch to read — this
+window's own native chrome (built once, below, at class-definition time) only ever reads it then; see `_layout`'s
+docstring and `__main__.py` for why a running shell's own menu-bar text cannot simply be swapped live."""
 
 
 class Page(Protocol):
@@ -46,9 +53,16 @@ PageFactory = Callable[..., Page]
 
 
 def _layout() -> str:
-    """The window layout with the menus of the manifest merged in."""
+    """The window layout with the menus of the manifest merged in, translated into whatever ``i18n.translate``
+    answers with **right now** (``i18n.translate``, not a captured snapshot of it — but this still only runs once:
+    ``@Gtk.Template`` below calls this at class-*definition* time, when this module is first imported, so whoever
+    imports ``.window`` (``__main__.py``, before ``.app``) must already have called ``i18n.install_translation``
+    with the right locale, or this shell's native chrome bakes in English regardless of what gets chosen later from
+    its own Config ▸ App Language menu. That is also why a language chosen there only reaches the native chrome on
+    the *next* launch (``window.py``'s `_LANGUAGE_PREFIX`) — the page's own UI, which this window never bakes
+    anything for, switches at once instead (``web/app/lib/i18n.ts``'s ``useI18n``)."""
     text = resources.files("claudia_shell_gtk").joinpath("data/window.ui").read_text(encoding="utf-8")
-    return text.replace("<!-- menus -->", menu_elements(composes()))
+    return text.replace("<!-- menus -->", menu_elements(composes(), translate=_))
 
 
 @Gtk.Template(string=_layout())
@@ -181,6 +195,8 @@ class ComposesWindow(Adw.ApplicationWindow):
                 action.set_state(GLib.Variant.new_boolean(bool(state["checked"])))
             if name == _DARK_ACTION and "checked" in state:
                 self._sync_native_theme(bool(state["checked"]))
+            if name.startswith(_LANGUAGE_PREFIX) and state.get("checked"):
+                save_shell_locale(name.removeprefix(_LANGUAGE_PREFIX))
 
     @staticmethod
     def _sync_native_theme(dark: bool) -> None:

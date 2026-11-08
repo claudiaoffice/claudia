@@ -2,7 +2,22 @@
 
 from __future__ import annotations
 
-from claudia_shell_gtk.i18n import DEFAULT_LOCALE, detect_system_locale, install_translation, negotiate
+import os
+
+import pytest
+
+from claudia_shell_gtk import i18n
+from claudia_shell_gtk.i18n import DEFAULT_LOCALE, detect_system_locale, install_translation, negotiate, translate
+
+
+@pytest.fixture(autouse=True)
+def _restore_active_translation():
+    """``install_translation`` replaces process-wide, module-global state (the usual gettext pattern) — every test
+    below that calls it gets a clean slate, and leaves one for whatever test (in this file or another) runs next."""
+    before = i18n._active
+    yield
+    i18n._active = before
+
 
 # --------------------------------------------------------------------------- detect_system_locale
 
@@ -69,3 +84,34 @@ def test_without_a_catalog_the_translation_is_the_identity():
 def test_an_unknown_locale_also_falls_back_to_identity():
     _ = install_translation("xx-XX", localedir="/no/such/directory")
     assert _("Open document") == "Open document"
+
+
+# --------------------------------------------------------------------------- translate
+
+
+def test_translate_is_the_identity_before_anything_is_installed():
+    # the module's own fresh state, restored by the fixture above after any earlier test in this process installed
+    # something — exactly what window.py's _layout() gets if it is ever imported before __main__.py calls
+    # install_translation (it must not be, see window.py's own docstring, but translate() still degrades safely).
+    i18n._active = i18n._identity
+    assert translate("Save") == "Save"
+
+
+def test_translate_reads_whatever_was_most_recently_installed():
+    install_translation("de", localedir="/no/such/directory")
+    assert translate("Save") == "Save"  # no catalog at that path: still the identity, through install_translation
+    assert i18n._active is not i18n._identity  # but it is now gettext's own fallback function, not the module default
+
+
+def test_bundled_localedir_points_at_a_locale_folder_next_to_this_module():
+    localedir = i18n.bundled_localedir()
+    assert os.path.basename(localedir) == "locale"
+    assert os.path.dirname(localedir).endswith("claudia_shell_gtk")
+
+
+def test_install_translation_without_an_explicit_localedir_uses_the_bundled_one():
+    """``zz`` has no catalog and never will (not a real BCP-47 language), so this stays the identity regardless of
+    which real locales ``locale/`` holds a compiled ``.mo`` for — the point is that *no* ``localedir`` is passed,
+    confirming the bundled default is what gets used, not that any particular translation exists there."""
+    _ = install_translation("zz")
+    assert _("Save") == "Save"

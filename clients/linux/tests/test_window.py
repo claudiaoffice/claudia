@@ -129,6 +129,37 @@ def test_the_pages_dark_mode_choice_is_applied_to_the_native_chrome_too(window) 
     assert Adw.StyleManager.get_default().get_color_scheme() == Adw.ColorScheme.FORCE_LIGHT
 
 
+def test_the_page_reporting_the_active_language_persists_it_for_the_next_launch(window, monkeypatch) -> None:
+    """The owner's second i18n round: the page is the one source of truth for which of `manifest.LANGUAGES` is
+    active, so `set_action_states` — already written to apply whatever the page reports — saves it for `__main__.py`
+    to read back next launch. This window's own native chrome does not re-translate itself now (`window.py`'s
+    `_layout` docstring); only the tick mark (already covered by `test_states_from_the_page_enable_and_disable_
+    actions`'s general mechanism) and the save below happen live."""
+    from claudia_shell_gtk import window as window_module
+
+    saved: list[str] = []
+    monkeypatch.setattr(window_module, "save_shell_locale", saved.append)
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says(hello())
+    page.says({"type": "action_state", "states": {"config.language.de": {"checked": True}}})
+    assert saved == ["de"]
+
+
+def test_a_language_reported_as_unchecked_is_not_saved(window, monkeypatch) -> None:
+    """Only the one the page says is now *active* is worth persisting — the sibling(s) it just unchecked are not
+    "the chosen language," they are simply no longer it."""
+    from claudia_shell_gtk import window as window_module
+
+    saved: list[str] = []
+    monkeypatch.setattr(window_module, "save_shell_locale", saved.append)
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says(hello())
+    page.says({"type": "action_state", "states": {"config.language.en": {"checked": False}}})
+    assert saved == []
+
+
 def test_a_page_that_loads_again_disables_the_page_actions_until_it_says_hello_again(window) -> None:
     window.show_page("http://127.0.0.1:1")
     page = window.fake_pages[0]
