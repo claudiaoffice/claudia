@@ -88,6 +88,13 @@ class Action:
     checkable: bool = False
     editing: str | None = None
     """For :attr:`Kind.EDITING`: the name of the WebKit editing command (``Cut``, ``Copy``, ``Paste``, ...)."""
+    role: str | None = None
+    """D158: the Cocoa selector (``copy:``, ``cut:``, ``paste:``, ``undo:``, ``redo:``) a macOS shell puts on this
+    item next to its accelerator. GTK ignores it; it is carried here, rather than kept only in the macOS client, so
+    one manifest stays the single source for every shell (the module docstring's reason for existing at all) and
+    ``describe()`` can hand it to a shell that never imports this package (``clients/macos``). Unset for everything
+    that is not a standard editing command — macOS has no selector for "paste as plain text" or an app's own
+    commands, and giving those a Cocoa role would route the key to a native editing action with no page effect."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +174,7 @@ class Manifest:
                 "kind": action.kind.value,
                 "checkable": action.checkable,
                 "accelerators": list(action.accelerators),
+                "role": action.role,
             }
 
         def entry(e: MenuEntry) -> dict[str, Any]:
@@ -184,8 +192,16 @@ class Manifest:
         }
 
 
-def _page(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str, ...] = (), checkable: bool = False):
-    return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable)
+def _page(
+    action_id: str,
+    label: str,
+    tooltip: str,
+    *,
+    accelerators: tuple[str, ...] = (),
+    checkable: bool = False,
+    role: str | None = None,
+):
+    return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable, role=role)
 
 
 # --------------------------------------------------------------------------------------------- shared across apps
@@ -253,10 +269,12 @@ def _file_menu(*, title: str) -> Menu:
 
 def _shared_edit_block() -> tuple[Action, ...]:
     """Undo, Redo — identical in every app (D120); their accelerators are page-handled (``lib/shortcuts.ts``), not
-    shell-handled, so none are bound here, the same as before this round."""
+    shell-handled, so none are bound here, the same as before this round. Each still carries its macOS role
+    (D158): on that shell the key equivalent needs one to reach the item at all, whether or not the shell itself
+    binds an accelerator for it."""
     return (
-        _page("edit.undo", "Undo", "Take back your last step"),
-        _page("edit.redo", "Redo", "Do your last undone step again"),
+        _page("edit.undo", "Undo", "Take back your last step", role="undo:"),
+        _page("edit.redo", "Redo", "Do your last undone step again", role="redo:"),
     )
 
 
@@ -271,9 +289,11 @@ def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
     """
     if native:
         return (
-            Action("edit.copy", "Copy", Kind.EDITING, "Copy the selection to the clipboard", editing="Copy"),
-            Action("edit.cut", "Cut", Kind.EDITING, "Move the selection to the clipboard", editing="Cut"),
-            Action("edit.paste", "Paste", Kind.EDITING, "Insert the clipboard", editing="Paste"),
+            Action(
+                "edit.copy", "Copy", Kind.EDITING, "Copy the selection to the clipboard", editing="Copy", role="copy:"
+            ),
+            Action("edit.cut", "Cut", Kind.EDITING, "Move the selection to the clipboard", editing="Cut", role="cut:"),
+            Action("edit.paste", "Paste", Kind.EDITING, "Insert the clipboard", editing="Paste", role="paste:"),
             Submenu(
                 "Paste As",
                 (
@@ -288,9 +308,9 @@ def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
             ),
         )
     return (
-        _page("edit.copy", "Copy", "Copy the selection to the clipboard"),
-        _page("edit.cut", "Cut", "Move the selection to the clipboard"),
-        _page("edit.paste", "Paste", "Insert the clipboard"),
+        _page("edit.copy", "Copy", "Copy the selection to the clipboard", role="copy:"),
+        _page("edit.cut", "Cut", "Move the selection to the clipboard", role="cut:"),
+        _page("edit.paste", "Paste", "Insert the clipboard", role="paste:"),
         Submenu("Paste As", (_page("edit.paste-as-plain", "Plain Text", "Insert the clipboard without formatting"),)),
     )
 

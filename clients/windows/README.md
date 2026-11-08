@@ -1,0 +1,185 @@
+# Claudia for Windows (claudia-shell-windows)
+
+The native client of Claudia for Windows: a thin Neutralino shell around the one web frontend (D42–D44), the same
+discipline the Linux (`clients/linux/`) and macOS (`clients/macos/`) clients follow for GTK and Cocoa respectively.
+Today it contains **Claudia Composes**; computes and creates follow the same way Linux's did (one more entry in
+`identity.ts`, one more `apps/<app>/`).
+
+**Nothing here has run on a real Windows machine yet.** D159's core mechanic (`window.Neutralino` existing and
+working on an externally-loaded loopback page) was confirmed on macOS on the owner's own Mac, and nothing in the
+spike or in Neutralino's own documentation suggests Windows differs — `injectGlobals`/`injectClientLibrary`/
+`injectScript` are Neutralino's own cross-platform settings, not OS-specific ones — but that is an expectation, not
+a result. Everything below "Not verified" is this client's best-effort answer, pending a real run.
+
+```
+clients/
+  contract/            the shell contract: JSON schema, versioned, shared by every shell (see its README)
+  windows/
+    src/
+      identity.ts       which app, its bundle id, title, server model          (plain Node)
+      paths.ts           %LOCALAPPDATA%\Claudia, frontend/python lookup       (plain Node)
+      server.ts          start, wait for and stop the local server, freePort() (plain Node)
+      menu.ts            the shared GTK manifest -> Neutralino WindowMenuItem  (plain TS)
+      page-bridge.ts      D159 option 2: shims window.webkit.messageHandlers   (plain TS; a few real Neutralino calls in installBridge())
+      inject-entry.ts    the file Neutralino's injectScript actually loads     (bundled, not run directly)
+      launch.ts          prepare the server, find the binary, start both       (Node + child_process)
+      generated/         menu.<app>.json, checked in, generated from manifest.py
+    tools/
+      generate_menu.py   imports clients/linux's manifest.py (no GTK) and writes generated/menu.<app>.json
+      build-inject.mjs   esbuild: bundles inject-entry.ts into apps/<app>/inject/claudia-bridge.js
+    apps/composes/
+      neutralino.config.json, icon.svg/png, inject/claudia-bridge.js (built by npm run build, not checked in),
+      bin/neutralino-win_x64.exe (downloaded by npx @neutralinojs/neu update, not checked in either)
+    tests/
+```
+
+Unlike macOS, there is **no `app-bundle.ts`** and **no `file-dialog.ts`** here — see "How it works" for why both
+are Windows-specific non-problems rather than ports that were skipped.
+
+## Running it from a checkout
+
+```
+uv sync                                    # the server's Python 3.14 environment: .venv
+(cd web && npm ci && npm run build)        # the web frontend: web\.output\public
+cd clients\windows && npm ci
+npm run generate-menu                      # regenerate src/generated/menu.*.json from the shared manifest --
+                                            # needs Python 3.12+ on PATH as `python` (see note below)
+npm run build                              # tsc, then bundles apps/composes/inject/claudia-bridge.js
+(cd apps\composes && npx @neutralinojs/neu update)   # downloads the pinned binary into apps/composes/bin/
+node dist\launch.js composes
+```
+
+Or, from the repository root, `start-win-client.cmd` does all of the above for you in one go (including fetching
+the Neutralino binary if it's missing) — see its own comments for the `CLAUDIA_SKIP_WEB_BUILD`/
+`CLAUDIA_SKIP_WINDOWS_BUILD` escape hatches, and `start-mac-client.sh`/`start-client.sh` for the macOS/Linux
+equivalents.
+
+**`npm run generate-menu` needs a `python` that is 3.12 or newer**, because it imports the shared manifest
+(`clients/linux/src/claudia_shell_gtk/manifest.py`), which uses `@dataclass(slots=True)`. The interpreter on PATH
+on a fresh Windows install is frequently missing entirely (only a Windows Store stub) or older than 3.12 — this
+script checks the version itself first and refuses with a clear message instead of the confusing
+`TypeError: dataclass() got an unexpected keyword argument 'slots'` that would otherwise surface many frames deep
+inside `manifest.py`, naming the repository's own `uv sync` environment (`..\..\.venv\Scripts\python.exe`) as a
+3.12+ interpreter that is already there. This step is not strictly required to build or run the client — the
+checked-in `src/generated/menu.*.json` is used either way — it only needs to be run again after an edit to the
+shared manifest.
+
+**The Neutralino binary is not checked into the repository** (D157: pin it to the same version as the client
+library, 6.8.0 today). `npx @neutralinojs/neu update`, run from inside `apps/<app>/` (where that app's own
+`neutralino.config.json` lives), reads `cli.binaryVersion` from it and downloads the matching binary into a `bin/`
+subdirectory it creates there — `apps/composes/bin/neutralino-win_x64.exe`, the only binary Neutralino 6.8.0
+publishes for Windows today (no `win_arm64`, so unlike macOS's `findNeutralinoBinary`, there is no architecture to
+branch on). `launch.ts` looks there by default; if a binary already exists somewhere else, point
+`CLAUDIA_NEUTRALINO_BIN` at it instead.
+
+Documents are kept in `%LOCALAPPDATA%\Claudia\composes\documents` and the server's state — including
+**`server.log`**, the first place to look if `node dist\launch.js composes` reports `ServerStartError` — in the
+sibling `state\` folder. There is no installer yet (icon assets exist as PNG; an `.ico`, a signed installer and a
+Start Menu shortcut are not done — see "Not done").
+
+| Variable | Meaning |
+| --- | --- |
+| `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv\Scripts\python.exe` of the checkout. |
+| `CLAUDIA_WEB_DIR` | The built web frontend. Default: `web\.output\public` of the checkout (nothing ships a packaged copy yet). If set, it is the only candidate: a wrong path is reported, not replaced. |
+| `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `bin\neutralino-win_x64.exe` under `apps/<app>/`, where `npx @neutralinojs/neu update` places it; not checked into the repo. |
+
+If the server itself fails to start, `launch.ts` quotes the end of `server.log` in the error message instead of
+just the bare exit code — a missing `claudia_server` package, a bad `--model`, or anything else the server printed
+on its way out shows up directly on the console.
+
+## How it works
+
+* **The server, started by this launcher, not by Neutralino.** `launch.ts` spawns `<server python> -m
+  claudia_server --model claudia_composes:TextModel --host 127.0.0.1 --port <free port> --no-tls --web <frontend>
+  ...` itself (plain `node:child_process`, mirroring `server.py`/`launch.py` on Linux and `launch.ts` on macOS) and
+  waits for `/api/health`, **before** the Neutralino binary is started at all — the server's address has to exist
+  first, because it becomes the `--url` the shell is pointed at.
+* **D159 option 2: the window loads that address, not anything Neutralino ships.** The binary runs as
+  `claudia-composes --path=apps/composes --url=http://127.0.0.1:<port> --enable-server=true`. `--path` keeps
+  `neutralino.config.json` (and its `injectGlobals`/`injectClientLibrary`/`injectScript` settings) in effect;
+  `--url` overrides what the window actually shows. `--enable-server=true` is Neutralino's own documented
+  requirement for loading a remote/external URL — it is the native-API/WebSocket channel the injected script
+  depends on. Carried over from macOS's own explicit choice of this option (the owner made that call once, for
+  "a Neutralino shell", not separately per OS — nothing in the spike or the build found a platform split in the
+  transport question).
+* **The injected script (`inject-entry.ts`, bundled to `apps/composes/inject/claudia-bridge.js`) is the whole
+  adapter.** It shims `window.webkit.messageHandlers.claudia.postMessage` to look exactly like the WebKitGTK
+  handler `web/app/lib/shell-bridge.ts`'s own `detectHandler()` already looks for — so **the web app needs zero
+  changes** for a third shell, the same way D121 put the contract client directly in the page for the first one.
+  It answers `hello` with `welcome` itself (there is no separate native shell process to round-trip to: this
+  script *is* the shell, running inside the page), builds the native menu from the generated manifest JSON, and
+  turns `mainMenuItemClicked` into contract `action` messages.
+* **The shared menu manifest, one more consumer.** `manifest.py`
+  (`clients/linux/src/claudia_shell_gtk/manifest.py`) stays the one source of truth for
+  File/Edit/Format/View/Tools/Config/Help across every app and shell. `generate_menu.py` imports it (no GTK, by
+  the same discipline `manifest.py` was already built to) and writes `src/generated/menu.<app>.json`; `menu.ts`
+  turns that into Neutralino's `WindowMenuItem[]` with **no relocation and no `role` reading** — unlike macOS's
+  `buildMainMenu()`, nothing is pulled into a leading application menu (D44: only macOS does that), and the Cocoa
+  selectors D158 added to the manifest for macOS's `role` field are carried straight through `generate_menu.py`'s
+  JSON output unused (`menu.ts`'s own top comment says why: Windows menu items have no native `action` slot to
+  route a Cocoa selector through in the first place). `gtkAccelToWindowsShortcut()` translates `<Primary>letter`
+  accelerators to the `Ctrl+Letter` shape Neutralino's `WindowMenuItem.shortcut` expects, display-only — the real
+  keyboard handling still lives in the web app, same as every other shell.
+* **Quit and About both go to the page.** `page-bridge.ts`'s `routeMenuClick()` sends `file.quit` straight to
+  `Neutralino.app.exit()` (the one case the shell handles itself, because the process has to end either way,
+  whether or not Quit sits in an application menu). `help.about` is `Kind.SHELL` in the manifest (GTK shows its
+  own dialog for it), but Neutralino has no native About panel on any platform (D158 point 4), so — like on macOS
+  — it is forwarded to the page like any other action; `AboutDialog.vue` already exists and needs no change.
+* **The binary runs directly, with no bundle step.** macOS needs `app-bundle.ts` because the Dock, the
+  application-menu heading and Activity Monitor all read a running process's bundle identity (`CFBundleName`),
+  which a bare downloaded binary does not have. Windows has no equivalent identity source to fix: the taskbar and
+  the window's own title bar both read `neutralino.config.json`'s `modes.window.title`, which this client already
+  sets per app the same way it always did on Linux and macOS, so `launch.ts` spawns the downloaded binary as-is.
+* **`<input type="file">` is expected to need no shell-side help, unlike macOS — not yet confirmed.** WKWebView
+  (the engine behind Neutralino's macOS binary) shows no native Open panel for a file input unless the host
+  implements a WKUIDelegate method for it, which Neutralino's generic binary does not — a real bug the owner hit
+  on her own Mac, worked around there by `file-dialog.ts`. WebView2 (the engine behind Neutralino's Windows
+  binary) is Chromium, and Chromium has handled `<input type="file">` with its own native picker since long
+  before Neutralino existed, so the same workaround is not expected to be needed here. `inject-entry.ts`'s own top
+  comment flags this as a hypothesis, not a confirmed result — if a real run on Windows finds the picker broken
+  after all, a Windows `file-dialog.ts` can be added the same way macOS's was: the DOM/Neutralino surfaces
+  (`Neutralino.os.showOpenDialog`, `Neutralino.filesystem.readBinaryFile`) are identical between the two shells.
+
+## Tests
+
+```
+cd clients/windows
+npm test               # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch -- 57 tests
+npm run typecheck       # tsc --strict over src/ and tests/
+python3 -m pytest tools/tests   # generate_menu.py: 10 tests
+npm run check-menu      # fails if src/generated/menu.*.json has drifted from manifest.py
+```
+
+Nothing here starts a real Neutralino binary or opens a real window — `installBridge()` in `page-bridge.ts` is the
+one function with no test of its own, because what it calls only exists once `window.Neutralino` is real.
+Everything pure around it (`routeMenuClick`, `applyActionStates`, `nextCheckedTarget`, and the whole of `menu.ts`)
+is tested without one.
+
+## Not verified (needs a real Windows machine)
+
+1. **D159's core mechanic on Windows.** Confirmed on macOS; expected, not confirmed, to carry over unchanged (see
+   this file's own opening note).
+2. **`<input type="file">` needing no workaround.** This README's and `inject-entry.ts`'s own reasoning above —
+   plausible from how WebView2 and Chromium behave, not checked by clicking the button on a real machine.
+3. **The dual native-menu-plus-page-dispatch interaction** for composes' own editing commands on a real document,
+   rather than a generic text field.
+4. **Orphaned server processes when the shell is killed outright, rather than closed.** Flagged as a known open
+   issue rather than solved here (see "Not done" below) — the user's own explicit choice for this first version,
+   matching how macOS flags the same gap for its own missing PDEATHSIG equivalent.
+5. **A clean machine.** This client has only been built and tested in a Linux sandbox so far; no Windows machine
+   of any kind, no older Windows version, no screen reader.
+
+## Not done
+
+Packaging (a real installer, `.ico`, codesigning, a Start Menu shortcut); computes and creates (only `composes`
+has an `apps/<app>/` folder — `packaged: false` in `identity.ts` for the other two); printing as a contract message (D158 point 2 — `Neutralino.window.print()` exists and is in
+`NeutralinoLike`, but nothing calls it yet); **no Windows Job Object or other mechanism to clean up an orphaned
+server process if the shell is killed outright rather than closed** — `server.ts`'s own top comment documents the
+underlying gap (Windows has no POSIX process groups or real signals; `kill()` is already the hard stop, with no
+softer step before it), and this first version deliberately does not build a solution for the "the shell itself is
+hard-killed" case, matching how macOS also leaves its own equivalent gap open rather than building a fix nobody
+has asked for yet; `nativeAllowList`/`filesystemScopes` are trimmed to the four methods this client actually calls
+today (`app.exit`, `window.setMainMenu`, `window.print`, `events.on`) but have not been re-checked against a later
+Neutralino upgrade (D157 asks for that on every version bump); translations; single-instance behaviour; a CI job
+for this package (same as macOS — see its own README's "Not done"; the Linux client has one job in the main gate,
+this and macOS do not yet).
