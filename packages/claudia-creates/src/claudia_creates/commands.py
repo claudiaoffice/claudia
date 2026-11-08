@@ -263,7 +263,7 @@ class AddObject(Command):
     """Put a text box, a shape or an image on a slide: on top of the others, or at stacking place ``at``."""
 
     kind: ClassVar[str] = "creates.AddObject"
-    schema: ClassVar[int] = 2
+    schema: ClassVar[int] = 3
     obj: SlideObject
     at: int | None = None
 
@@ -475,12 +475,58 @@ class SetText(Command):
         return SetText(self.id, "")
 
 
+@register
+@dataclass(frozen=True)
+class SetSnap(Command):
+    """Hold or release an object's snap to the grid (E10.15). The grid itself is only a helper the view draws,
+    never part of the slide, but whether an object follows it is a real, persisted choice with its own history
+    entry — so it keeps holding (or not) even if the grid is hidden, and survives for everyone who opens the
+    document."""
+
+    kind: ClassVar[str] = "creates.SetSnap"
+    id: str
+    snap: bool
+
+    @property
+    def label(self) -> str:
+        return "Snap to grid" if self.snap else "Release from grid"
+
+    @property
+    def summary(self) -> str:
+        return "Snapped an object to the grid" if self.snap else "Released an object from the grid"
+
+    def apply(self, ctx: Context[SlideModel]) -> Command:
+        old = ctx.model.get(self.id)
+        new = replace(old, snap=self.snap)
+        ctx.model.replace_object(new)
+        ctx.emit(ctx.model.changed(new.slide, changed=(new,)))
+        return SetSnap(self.id, old.snap)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "snap": self.snap}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetSnap:
+        return cls(data["id"], data["snap"])
+
+    def regions(self, model: SlideModel) -> tuple[ObjectSet, ...]:  # type: ignore[override]
+        return _selection(model, self.id)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Moving, resizing or editing the box does not matter to its snap; another snap change or a
+        removal/re-creation does."""
+        return None if isinstance(other, SetSnap | RemoveObject | AddObject) and _target(other) == self.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
 # ------------------------------------------------------------------------------ who touched what
 def _target(command: Command) -> str | None:
     """The id of the object a command is about, if it is about one."""
     if isinstance(command, AddObject):
         return command.obj.id
-    if isinstance(command, MoveObject | ResizeObject | SetText | RemoveObject):
+    if isinstance(command, MoveObject | ResizeObject | SetText | SetSnap | RemoveObject):
         return command.id
     return None
 
@@ -499,3 +545,11 @@ def _changes_frame(other: Command, object_id: str) -> bool:
 def _object_gets_image_fields(data: dict) -> dict:
     """Schema 1 had no images (E10.8): every stored object gets the new fields, unset."""
     return {**data, "object": {**data["object"], "image": None, "imported": None}}
+
+
+@SlideModel.registry.upcaster("creates.AddObject", 2)
+def _object_gets_snap_field(data: dict) -> dict:
+    """Schema 2 had no grid (E10.15): every object already on a slide snapped to it, since there was no way to
+    tell it not to — so it gets the new field set to ``True``, not unset, to keep behaving the way it always
+    looked like it did."""
+    return {**data, "object": {**data["object"], "snap": True}}

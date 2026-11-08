@@ -1,24 +1,36 @@
 """The methods of the spreadsheet app: what a table view needs to show cells and to take what people type (E3.1).
 
 ``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet``, ``structure``,
-``sizes`` and ``resize_lines``. Cells travel as ``[row, column, content]`` with zero-based indexes and the content as
-a client shows it: ``{"t": "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may
-also be ``"error"``, with the code in ``v``) plus its text under ``"f"``. What people type goes through
-``parse_input``, so a client sends the text of the cell (``=B2*2`` for a formula) and the server decides what it
-means. Every write may carry the ``base`` revision of the client's view, as ``apply`` does.
+``sizes``, ``resize_lines``, ``objects``, ``images``, ``add_image``, ``move_object`` and ``remove_object``. Cells
+travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
+"int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
+with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
+sends the text of the cell (``=B2*2`` for a formula) and the server decides what it means. Every write may carry
+the ``base`` revision of the client's view, as ``apply`` does.
+
+An image is anchored to a cell (``row``, ``col``) with a fixed pixel size (``w``, ``h``, chosen once at
+``add_image``): neither the anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only
+``move_object`` (dragging it to another cell) moves it (E10.11, mirrors ``add_image`` in ``creates.py``).
 """
 
 from __future__ import annotations
 
+import secrets
+
 from claudia_computes import (
+    AddObject,
     AddSheet,
+    DefineImage,
     DeleteCols,
     DeleteRows,
     InsertCols,
     InsertRows,
+    MoveObject,
+    RemoveObject,
     ResizeLines,
     SetCells,
     SheetId,
+    SheetObject,
     Structure,
     WorkbookModel,
     parse_input,
@@ -31,7 +43,10 @@ from claudia_computes.model import (
     MIN_COL_WIDTH,
     MIN_ROW_HEIGHT,
 )
+from claudia_core import Batch, ImageImport, decode_image
+from claudia_core.clock import utc_now
 
+from .images import image_bytes
 from .protocol import Context, RequestError, core_methods
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
@@ -47,6 +62,7 @@ AXES = {
 SIZE_LIMITS = {"row": (MIN_ROW_HEIGHT, MAX_ROW_HEIGHT), "col": (MIN_COL_WIDTH, MAX_COL_WIDTH)}
 
 computes_methods = core_methods.extended()
+computes_methods.kind("image")(image_bytes)
 
 
 def _workbook(ctx: Context) -> WorkbookModel:
@@ -60,6 +76,15 @@ def _index(value, limit: int, what: str):
     if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < limit:
         raise RequestError("bad_request", f"{what} must be a whole number from 0 to {limit - 1}")
     return value
+
+
+def _fresh_object_id(taken) -> str:
+    """An id nobody has used in this document. Ids are random, never counted: the id of a removed object must not
+    come back, or undoing its removal would collide with the newcomer (mirrors ``creates.py``'s ``_fresh``)."""
+    while True:
+        candidate = f"o{secrets.token_hex(4)}"
+        if candidate not in taken:
+            return candidate
 
 
 @computes_methods.method("sheets")
@@ -183,4 +208,76 @@ def _resize_lines(ctx, *, sheet, axis, sizes, base):
     if axis not in SIZE_LIMITS:
         raise RequestError("bad_request", 'resize_lines: axis must be "row" or "col"')
     applied = ctx.document.execute(ResizeLines(sheet, axis, _sized(axis, sizes)), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("objects", "sheet:str")
+def _objects(ctx, *, sheet):
+    """The floating objects of a sheet, the one in front last, as `{revision, sheet, objects}`. An object is
+    `{id, sheet, kind, row, col, w, h, image, imported}`, anchored to the cell at (`row`, `col`) with a pixel
+    size that never changes on its own: inserting, deleting or resizing rows/columns never moves or resizes it,
+    only `move_object` does. `imported`'s `source_path` is only sent to the person who imported that image
+    (everyone else sees `null` there, not the path)."""
+    workbook = _workbook(ctx)
+    if sheet not in workbook.sheets:
+        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+    objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(sheet)]
+    return {"revision": _rev(ctx), "sheet": sheet, "objects": objects}
+
+
+@computes_methods.method("images")
+def _images(ctx):
+    """The decoded image assets this document has taken in (and what its image objects are drawn with), each as
+    `{id, format, width, height, animated, data, first_frame}` (`data`/`first_frame` are base64). There is no
+    library to pick from: an image always comes in through `add_image`."""
+    workbook = _workbook(ctx)
+    return [image.to_data() for _, image in sorted(workbook.images.items())]
+
+
+@computes_methods.method(
+    "add_image",
+    "sheet:str row:int col:int w:int h:int data:image alt:str source_name:str source_path:str? base:revision?",
+    write=True,
+)
+def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_path, base):
+    """Import a picture from disk and anchor it to a cell of a sheet: `data` is the file's bytes, base64. `alt`
+    is a short, required description of what it shows. `source_name` is the file name as the client has it;
+    `source_path` is its full path if the client could supply one (a plain web browser cannot, for its own
+    security — send `null`). Returns the new object's id and the revision. The image keeps its own proportions,
+    and its pixel size (and anchor) never change on their own afterwards — only `move_object` moves it."""
+    workbook = _workbook(ctx)
+    if sheet not in workbook.sheets:
+        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+    asset = decode_image(data)
+    steps: list = [] if asset.id in workbook.images else [DefineImage(asset)]
+    imported = ImageImport.from_data(
+        {
+            "asset": asset.id,
+            "alt": alt,
+            "imported_by": ctx.user,
+            "imported_at": utc_now(),
+            "source": "disk",
+            "source_name": source_name,
+            "source_path": source_path,
+        }
+    )
+    object_id = _fresh_object_id(workbook.objects)
+    obj = SheetObject(object_id, SheetId(sheet), "image", row, col, w, h, image=asset.id, imported=imported)
+    steps.append(AddObject(obj))
+    command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"object": object_id, "revision": applied.revision.to_data()}
+
+
+@computes_methods.method("move_object", "id:str row:int col:int base:revision?", write=True)
+def _move_object(ctx, *, id, row, col, base):
+    """Move an object so that its anchor is at (`row`, `col`); its pixel size stays."""
+    applied = ctx.document.execute(MoveObject(id, row, col), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("remove_object", "id:str base:revision?", write=True)
+def _remove_object(ctx, *, id, base):
+    """Take an object off its sheet. Undo brings it back in the same place of the stacking order."""
+    applied = ctx.document.execute(RemoveObject(id), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}

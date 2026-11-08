@@ -97,6 +97,16 @@ def test_ruff_format_is_its_own_check():
     assert formatting.command == ("uv", "run", "--quiet", "ruff", "format", "--check", ".")
 
 
+def test_mo_compilation_is_its_own_check():
+    """D160: the gate protects the Gtk client's compiled ``de`` catalog from drifting away from ``po/de.po`` now
+    that there is real German translation worth drifting away from, the same way "i18n extraction" protects
+    ``po/claudia.pot`` from drifting away from the source."""
+    all_checks = check_debt.checks()
+    assert "mo compilation" in [c.name for c in all_checks]
+    mo_check = next(c for c in all_checks if c.name == "mo compilation")
+    assert mo_check.command == ("uv", "run", "--quiet", "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")
+
+
 def test_ci_catches_the_real_bug_with_no_node_modules():
     """The acceptance test asked for in the finding: with no ``node_modules``, ``--ci`` exits non-zero.
 

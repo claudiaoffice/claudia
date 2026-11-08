@@ -14,14 +14,17 @@ tells the calculator what happened; commands never touch ``cells`` themselves.
 
 from __future__ import annotations
 
+import re
 from bisect import bisect_left, bisect_right, insort
 from collections import defaultdict
+from dataclasses import dataclass
 from heapq import heappop, heappush
 from typing import ClassVar, Self
 
-from claudia_core import CommandRegistry, DocumentModel, Region, new_registry
+from claudia_core import CommandRegistry, DocumentModel, ImageAsset, ImageImport, Region, new_registry
 
 from .calc import Calculator
+from .events import ObjectsChanged
 from .formula.rewrite import adjusted, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
@@ -40,6 +43,73 @@ MIN_ROW_HEIGHT = 8
 MAX_ROW_HEIGHT = 1_000
 MIN_COL_WIDTH = 16
 MAX_COL_WIDTH = 2_000
+
+# Floating objects anchored to a cell (E10.11): today only images; a chart or a shape may follow the same way
+# creates' own objects did. An object's ``row``/``col``/``w``/``h`` never change because of a structural edit
+# (row/column insert, delete, or a row/column resize) — only ``MoveObject`` (the person dragging it) changes
+# where it sits, and nothing in this model ever changes its size. See ``commands.AddObject``/``MoveObject``.
+OBJECT_KINDS = ("image",)
+MIN_OBJECT_SIZE = 20  # pixels; an object is at least this wide and this tall
+MAX_OBJECTS_PER_SHEET = 500
+ASPECT_TOLERANCE = 1  # pixels a width may differ from height * aspect (whole pixels cannot match exactly)
+
+_OBJECT_ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
+_OBJECT_FIELDS = ("id", "sheet", "kind", "row", "col", "w", "h", "image", "imported")
+
+
+def _is_whole(value: object) -> bool:
+    return type(value) is int
+
+
+@dataclass(frozen=True)
+class SheetObject:
+    """One floating thing anchored to a cell of a sheet: today only an image (``kind`` ``"image"``), with the id
+    of its :class:`~claudia_core.ImageAsset` and the :class:`~claudia_core.ImageImport` record of how it got
+    there.
+
+    ``row``/``col`` anchor its top-left corner to a cell; ``w``/``h`` are its pixel size, fixed at insertion and
+    changed only by a person (there is no resize-by-dragging-a-handle yet). Unlike a cell's own content, the
+    anchor and size are deliberately NOT adjusted by a structural edit elsewhere on the sheet — inserting,
+    deleting, or resizing rows/columns never moves or resizes an object; only ``MoveObject`` does."""
+
+    id: str
+    sheet: SheetId
+    kind: str
+    row: int
+    col: int
+    w: int
+    h: int
+    image: str | None = None
+    imported: ImageImport | None = None
+
+    def to_data(self) -> dict:
+        """The plain-data form: what the log stores. Carries ``imported`` unmasked (the log is not a client)."""
+        data = {name: getattr(self, name) for name in _OBJECT_FIELDS if name != "imported"}
+        data["imported"] = None if self.imported is None else self.imported.to_data()
+        return data
+
+    def to_data_for(self, viewer: str) -> dict:
+        """What ``viewer`` is sent: as :meth:`to_data`, but an image's import record is masked for anyone but the
+        person who imported it (a colleague sees "imported from disk", not the importer's own filesystem path)."""
+        data = self.to_data()
+        if self.imported is not None:
+            data["imported"] = self.imported.masked(viewer).to_data()
+        return data
+
+    @classmethod
+    def from_data(cls, data: dict) -> SheetObject:
+        """Inverse of :meth:`to_data`; whether the values make sense is the model's business (``check_object``)."""
+        if set(data) != set(_OBJECT_FIELDS):
+            raise ValueError("an object has exactly these fields: " + ", ".join(_OBJECT_FIELDS))
+        imported = data["imported"]
+        return cls(
+            **{
+                **data,
+                "sheet": SheetId(data["sheet"]),
+                "imported": None if imported is None else ImageImport.from_data(imported),
+            }
+        )
+
 
 _default_functions: FunctionRegistry | None = None
 
@@ -249,20 +319,27 @@ class Sheet:
 
 class WorkbookModel(DocumentModel):
     app: ClassVar[str] = "computes"
-    state_schema: ClassVar[int] = 2  # 2: a sheet also carries row_heights and col_widths (D135)
+    state_schema: ClassVar[int] = 3  # 3: the workbook also carries images and objects anchored to cells (E10.11)
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(self, functions: FunctionRegistry | None = None):
         self.sheets: dict[SheetId, Sheet] = {}
         self.calc = Calculator(self, functions or default_functions())
         self._ids: dict[str, SheetId] | None = None
+        self.images: dict[str, ImageAsset] = {}
+        self.objects: dict[str, SheetObject] = {}
+        self._stack: dict[SheetId, list[str]] = {}  # sheet id -> object ids, bottom first
 
     @classmethod
     def empty(cls) -> Self:
         return cls()
 
     def serialize(self) -> dict:
-        return {"sheets": [sheet.to_data() for sheet in self.sheets.values()]}
+        return {
+            "sheets": [sheet.to_data() for sheet in self.sheets.values()],
+            "images": [image.to_data() for _, image in sorted(self.images.items())],
+            "objects": [obj.to_data() for sheet in self.sheets for obj in self.objects_on(sheet)],
+        }
 
     @classmethod
     def restore(cls, state: dict) -> Self:
@@ -273,6 +350,14 @@ class WorkbookModel(DocumentModel):
             sheet.row_heights = dict(item["row_heights"])
             sheet.col_widths = dict(item["col_widths"])
             model.sheets[sheet.id] = sheet
+            model._stack[sheet.id] = []
+        for data in state["images"]:
+            image = ImageAsset.from_data(data)
+            model.images[image.id] = image
+        for data in state["objects"]:
+            obj = SheetObject.from_data(data)
+            model.objects[obj.id] = obj
+            model._stack[obj.sheet].append(obj.id)
         model._calculate_loaded()
         return model
 
@@ -320,8 +405,10 @@ class WorkbookModel(DocumentModel):
         return self.sheet(sheet_id).grid.get((row, col))
 
     def region_from_data(self, data: dict) -> Region:
-        from .region import CellRegion
+        from .region import CellRegion, ObjectSet
 
+        if data.get("kind") == ObjectSet.kind:
+            return ObjectSet.from_data(data)
         return CellRegion.from_data(data)
 
     # -- changing --------------------------------------------------------------
@@ -359,6 +446,7 @@ class WorkbookModel(DocumentModel):
         ordered.insert(len(ordered) if index is None else index, sheet)
         self.sheets = {s.id: s for s in ordered}
         self._ids = None
+        self._stack.setdefault(sheet.id, [])
 
     def restructure(self, edit: StructuralEdit) -> tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...]]:
         """Insert or delete rows or columns: cells move, formulas follow them and keep pointing at what they pointed
@@ -473,3 +561,106 @@ class WorkbookModel(DocumentModel):
             calc.define(key, calc.compile_formula(key[0], formula))
         calc.everything = True
         return restores
+
+    # -- images ------------------------------------------------------------------
+    def define_image(self, image: ImageAsset) -> None:
+        """Take a decoded image into the document, so that it opens the same on any server."""
+        if image.id in self.images:
+            raise ValueError(f"image {image.id!r} is already defined in this document")
+        self.images[image.id] = image
+
+    def forget_image(self, image_id: str) -> ImageAsset:
+        """Let go of an image asset nobody uses; returns it."""
+        if image_id not in self.images:
+            raise ValueError(f"this document does not know the image {image_id!r}")
+        users = self.users_of_image(image_id)
+        if users:
+            raise ValueError(f"image {image_id!r} is in use by {users[0]!r}")
+        return self.images.pop(image_id)
+
+    def users_of_image(self, image_id: str) -> list[str]:
+        """The ids of the objects that use this image asset."""
+        return [obj.id for obj in self.objects.values() if obj.image == image_id]
+
+    # -- objects -----------------------------------------------------------------
+    def get_object(self, object_id: str) -> SheetObject:
+        """The object with this id; ``ValueError`` if there is none."""
+        try:
+            return self.objects[object_id]
+        except KeyError:
+            raise ValueError(f"no object {object_id!r}") from None
+
+    def objects_on(self, sheet_id: SheetId) -> list[SheetObject]:
+        """The objects of a sheet, bottom first (the last one is in front)."""
+        return [self.objects[object_id] for object_id in self._stack.get(sheet_id, [])]
+
+    def check_object(self, obj: SheetObject) -> None:
+        """Raise ``ValueError`` with a sentence if this object cannot exist in this document as it is now."""
+        if not isinstance(obj.id, str) or not _OBJECT_ID.fullmatch(obj.id):
+            raise ValueError(f"object id {obj.id!r}: lower-case letters, digits, '-' and '_', starting with a letter")
+        if obj.sheet not in self.sheets:
+            raise ValueError(f"unknown sheet {obj.sheet!r}")
+        if obj.kind not in OBJECT_KINDS:
+            raise ValueError(f"unknown kind {obj.kind!r}: an object is an image ('image')")
+        aspect = self._check_visual(obj)
+        self._check_frame(obj, aspect)
+
+    def _check_visual(self, obj: SheetObject) -> float | None:
+        """What ``obj.kind`` requires of ``image``/``imported``, and the aspect ratio it keeps (only kind today
+        is ``"image"``, which always keeps its proportions)."""
+        if obj.image is None or obj.imported is None:
+            raise ValueError("an image object needs an image and its import record")
+        asset = self.images.get(obj.image)
+        if asset is None:
+            raise ValueError(f"this document does not know the image {obj.image!r}")
+        if obj.imported.asset != obj.image:
+            raise ValueError("the import record's asset does not match the object's image")
+        return asset.aspect
+
+    @staticmethod
+    def _check_frame(obj: SheetObject, aspect: float | None) -> None:
+        if not all(_is_whole(v) for v in (obj.row, obj.col, obj.w, obj.h)):
+            raise ValueError("row, col, w and h must be whole numbers")
+        if obj.row < 0 or obj.col < 0 or obj.row >= MAX_ROWS or obj.col >= MAX_COLS:
+            raise ValueError("the object's anchor must be a cell of the sheet")
+        if obj.w < MIN_OBJECT_SIZE or obj.h < MIN_OBJECT_SIZE:
+            raise ValueError(f"the size must be at least {MIN_OBJECT_SIZE} by {MIN_OBJECT_SIZE} pixels")
+        if aspect is not None and abs(obj.w - aspect * obj.h) > ASPECT_TOLERANCE:
+            raise ValueError(f"this image keeps its proportions (width divided by height is {aspect:g})")
+
+    def insert_object(self, obj: SheetObject, at: int | None = None) -> None:
+        """Add a checked object on top of its sheet, or at stacking place ``at``."""
+        if obj.id in self.objects:
+            raise ValueError(f"object {obj.id!r} exists already")
+        self.check_object(obj)
+        stack = self._stack[obj.sheet]
+        if len(stack) >= MAX_OBJECTS_PER_SHEET:
+            raise ValueError(f"a sheet holds at most {MAX_OBJECTS_PER_SHEET} objects")
+        if at is not None and not 0 <= at <= len(stack):
+            raise ValueError(f"there is no stacking place {at} among {len(stack)} objects")
+        stack.insert(len(stack) if at is None else at, obj.id)
+        self.objects[obj.id] = obj
+
+    def delete_object(self, object_id: str) -> tuple[SheetObject, int]:
+        """Take an object away; returns it and the stacking place it had."""
+        obj = self.get_object(object_id)
+        stack = self._stack[obj.sheet]
+        place = stack.index(object_id)
+        del stack[place]
+        del self.objects[object_id]
+        return obj, place
+
+    def replace_object(self, obj: SheetObject) -> SheetObject:
+        """Swap in a changed (checked) version of an object that exists; returns the one it replaces."""
+        old = self.get_object(obj.id)
+        if obj.sheet != old.sheet:
+            raise ValueError("an object cannot change its sheet")
+        self.check_object(obj)
+        self.objects[obj.id] = obj
+        return old
+
+    def changed(
+        self, sheet: SheetId, *, changed: tuple[SheetObject, ...] = (), removed: tuple[str, ...] = ()
+    ) -> ObjectsChanged:
+        """The event that tells views what happened on ``sheet``, with its stacking order as it is now."""
+        return ObjectsChanged(sheet, changed, removed, tuple(self._stack[sheet]))

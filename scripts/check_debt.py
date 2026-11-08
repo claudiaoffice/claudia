@@ -16,6 +16,9 @@ checks are:
 * mypy       types of the sources
 * vulture    code nobody uses (``vulture_whitelist.py`` lists the reasoned exceptions)
 * i18n extraction   ``po/claudia.pot`` is current (E5.7, D31); run ``uv run python scripts/extract_i18n.py`` to fix it
+* mo compilation   the Gtk client's ``de`` catalog matches ``po/de.po`` (D160); run
+             ``uv run python scripts/compile_mo.py po/de.po de`` to fix it -- there was nothing worth drifting from
+             before this round's real German translations existed, which is why this check is new here
 * tests      the whole suite, with a note of the slowest ones
 * docs       the Sphinx build with warnings as errors (every cross reference must resolve)
 * perf       the scaling guards: the cost of hot paths must not grow with the history
@@ -106,6 +109,7 @@ def checks() -> list[Check]:
         Check("mypy", (*run, "mypy", *SOURCES)),
         Check("vulture", (*run, "vulture")),
         Check("i18n extraction", (*run, "python", "scripts/extract_i18n.py", "--check")),
+        Check("mo compilation", (*run, "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")),
         Check("tests", (*run, "pytest", "--durations=5", *[arg for path in PERF for arg in ("--deselect", path)])),
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
         *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],

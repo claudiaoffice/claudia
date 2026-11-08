@@ -1,5 +1,5 @@
 {
- "version": "0.2.0",
+ "version": "0.3.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -235,6 +235,24 @@
  "SLIDE_WIDTH": {
   "value": "1600"
  },
+ "SetSnap": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', snap: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetSnap'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'SlideModel') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetText": {
   "class": [
    "Command"
@@ -325,7 +343,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', slide: 'str', kind: 'str', x: 'int', y: 'int', w: 'int', h: 'int', style: 'str', text: 'str' = '', shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None) -> None",
+  "init": "(id: 'str', slide: 'str', kind: 'str', x: 'int', y: 'int', w: 'int', h: 'int', style: 'str', text: 'str' = '', shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, snap: 'bool' = True) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'SlideObject'",
    "to_data": "(self) -> 'dict'",

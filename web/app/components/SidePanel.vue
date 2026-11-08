@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { clock, colorOf, inkOn } from '~/lib/people'
+import { useI18n } from '~/lib/i18n'
 import type { BaseSession } from '~/lib/base-session'
 
 const props = defineProps<{ session: BaseSession }>()
 const state = props.session.state
+// `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
+// `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring. Only
+// the two static headers below need it; this panel has no Config ▸ App Language menu of its own.
+const { t } = useI18n()
 
 const history = ref<HTMLElement | null>(null)
 const chatLog = ref<HTMLElement | null>(null)
@@ -115,7 +120,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </div>
 
     <section class="history">
-      <h2>History <span class="count">{{ state.entries.length }}</span></h2>
+      <h2>{{ t('History') }} <span class="count">{{ state.entries.length }}</span></h2>
       <ol ref="history" class="log mono" aria-label="everything that was done to this document">
         <li v-if="!rows.length" class="empty">Nothing yet. {{ { composes: 'Start writing.', creates: 'Put a text box on the slide.' }[state.app] ?? 'Type into a cell.' }}</li>
         <template v-for="(row, i) in rows" :key="i">
@@ -157,7 +162,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </section>
 
     <section class="chat">
-      <h2>Chat</h2>
+      <h2>{{ t('Chat') }}</h2>
       <ol ref="chatLog" class="messages" aria-live="polite">
         <li v-if="!state.chat.length" class="empty">Write to everybody, or <b>@ai</b> to ask the assistant. Say <b>@ai help</b> to see what it can do.</li>
         <li

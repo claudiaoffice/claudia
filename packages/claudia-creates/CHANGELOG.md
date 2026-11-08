@@ -3,6 +3,22 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-07
+
+The grid, and snapping to it (E10.15): a view-only helper, never part of the slide, that each object may follow.
+
+### Added
+- `SlideObject.snap` (`bool`, default `True`): whether this object holds to the grid. Unlike the grid itself, this
+  is real document state, changed with its own history entry.
+- Command `SetSnap(id, snap)`: holds or releases one object; its label swaps between "Snap to grid" and "Release
+  from grid" depending on the value it sets. Moving, resizing or editing an object's text never affects its own
+  snap, and the reverse: `SetSnap` never conflicts with a colleague's move, resize or text edit of the same object.
+- `SlideModel.state_schema` is 4 (a cached snapshot older than this is rebuilt from the log, not upcasted).
+
+### Changed
+- **Breaking:** `AddObject.schema` is 3; an upcaster fills schema-2 stored objects' missing `snap` with `True`
+  (what every such object already behaved as, there being no way yet to tell it not to).
+
 ## [0.2.0] - 2026-11-07
 
 Images on a slide (E10.8): a `kind="image"` object, built on `claudia_core`'s shared `ImageAsset`/`ImageImport`.

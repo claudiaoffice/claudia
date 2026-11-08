@@ -1,5 +1,8 @@
 """The methods a table view needs: sheets, a window of cells, typing into cells, rows and columns (computes)."""
 
+import base64
+import struct
+
 import pytest
 
 from claudia_computes import AddSheet, WorkbookModel
@@ -9,6 +12,7 @@ from claudia_server.computes import computes_methods
 from claudia_server.protocol import Context, Limits, RequestError, core_methods
 
 ANN = Account("ann", "owner")
+BEN = Account("ben", "editor")
 VERA = Account("vera", "viewer")
 
 
@@ -18,7 +22,7 @@ def book():
 
 
 def call(doc, name, params=None, account=ANN):
-    ctx = Context(doc, account, Limits(), users=lambda: ["ann"], lock_seconds=30.0)
+    ctx = Context(doc, account, Limits(), users=lambda: ["ann", "ben"], lock_seconds=30.0)
     return computes_methods.dispatch(ctx, name, params)
 
 
@@ -26,6 +30,32 @@ def typed(doc, sheet, cells):
     return call(
         doc, "set_cells", {"sheet": sheet, "cells": [{"row": r, "col": c, "input": text} for r, c, text in cells]}
     )
+
+
+def tiny_gif(width=40, height=20) -> str:
+    """A tiny, valid GIF (no real pixels), base64-encoded as a client would send it."""
+    header = b"GIF89a" + struct.pack("<HHBBB", width, height, 0, 0, 0)
+    frame = b"\x2c" + struct.pack("<HHHH", 0, 0, width, height) + b"\x00" + b"\x02\x01\x00\x00"
+    return base64.b64encode(header + frame + b"\x3b").decode("ascii")
+
+
+def add_image(doc, **params):
+    given = {
+        "sheet": "s1",
+        "row": 2,
+        "col": 2,
+        "w": 400,
+        "h": 200,
+        "data": tiny_gif(400, 200),
+        "alt": "a sample picture",
+        "source_name": "pic.gif",
+        **params,
+    }
+    return call(doc, "add_image", given)["object"]
+
+
+def objects(doc, sheet="s1", account=ANN):
+    return call(doc, "objects", {"sheet": sheet}, account=account)["objects"]
 
 
 def test_a_new_workbook_has_no_sheets_and_one_can_be_added(book):
@@ -260,3 +290,133 @@ def test_inserting_rows_moves_formulas_and_what_they_read(book):
     typed(book, "s1", [(0, 0, "5"), (1, 0, "=A1*2")])
     call(book, "structure", {"sheet": "s1", "axis": "row", "insert": True, "at": 0})
     assert window(book)[(2, 0)] == {"t": "int", "v": 10, "f": "=A2*2"}
+
+
+# -- images and floating objects (E10.11): add_image, move_object, remove_object, and the never-resize guarantee
+def test_an_image_is_imported_and_anchored_to_a_cell(book):
+    call(book, "add_sheet", {"name": "S"})
+    added = add_image(book)
+    (obj,) = objects(book)
+    assert obj["id"] == added
+    assert (obj["kind"], obj["row"], obj["col"], obj["w"], obj["h"]) == ("image", 2, 2, 400, 200)
+    assert obj["image"] is not None
+    assert obj["imported"]["alt"] == "a sample picture" and obj["imported"]["source"] == "disk"
+    assert [i["id"] for i in call(book, "images")] == [obj["image"]]
+
+
+def test_the_asset_is_shared_between_two_objects_using_the_same_picture(book):
+    call(book, "add_sheet", {"name": "S"})
+    data = tiny_gif(300, 150)
+    first = add_image(book, w=300, h=150, data=data, alt="a")
+    second = add_image(book, row=5, w=300, h=150, data=data, alt="b")
+    assert first != second
+    assert len(call(book, "images")) == 1, "the identical picture is decoded once and shared"
+
+
+def test_an_image_keeps_its_proportions(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="proportions") as caught:
+        add_image(book, data=tiny_gif(400, 200), w=400, h=800)
+    assert caught.value.code == "command_error"
+
+
+def test_add_image_needs_a_real_image_and_a_description(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError) as caught:
+        add_image(book, data="not an image at all!!")
+    assert caught.value.code == "bad_request"  # not valid base64
+
+    not_a_picture = base64.b64encode(b"hello, this is not a picture").decode("ascii")
+    with pytest.raises(RequestError) as caught:
+        add_image(book, data=not_a_picture)
+    assert caught.value.code == "command_error"  # understood as a request, refused as an image
+
+
+def test_moving_an_object_keeps_its_size_and_undo_puts_it_back(book):
+    call(book, "add_sheet", {"name": "S"})
+    added = add_image(book)
+    call(book, "move_object", {"id": added, "row": 8, "col": 3})
+    (obj,) = objects(book)
+    assert (obj["row"], obj["col"], obj["w"], obj["h"]) == (8, 3, 400, 200)
+    book.undo("ann")
+    (obj,) = objects(book)
+    assert (obj["row"], obj["col"]) == (2, 2)
+
+
+def test_removing_an_object_is_one_step_and_undo_brings_it_and_its_image_back(book):
+    call(book, "add_sheet", {"name": "S"})
+    added = add_image(book)
+    assert book.history_for("ann").undo_label == "Add image"
+    call(book, "remove_object", {"id": added})
+    assert objects(book) == []
+    book.undo("ann")
+    assert [o["id"] for o in objects(book)] == [added]
+    assert len(call(book, "images")) == 1
+
+
+def test_inserting_or_deleting_rows_and_columns_never_moves_or_resizes_an_object(book):
+    call(book, "add_sheet", {"name": "S"})
+    added = add_image(book, row=5, col=5, w=400, h=200)
+    call(book, "structure", {"sheet": "s1", "axis": "row", "insert": True, "at": 0, "count": 3})
+    call(book, "structure", {"sheet": "s1", "axis": "col", "insert": False, "at": 0, "count": 1})
+    (obj,) = objects(book)
+    assert obj["id"] == added
+    assert (obj["row"], obj["col"], obj["w"], obj["h"]) == (5, 5, 400, 200)
+
+
+def test_resizing_rows_or_columns_never_resizes_an_object(book):
+    call(book, "add_sheet", {"name": "S"})
+    add_image(book, row=1, col=1, w=400, h=200)
+    call(book, "resize_lines", {"sheet": "s1", "axis": "row", "sizes": [[1, 60]]})
+    call(book, "resize_lines", {"sheet": "s1", "axis": "col", "sizes": [[1, 300]]})
+    (obj,) = objects(book)
+    assert (obj["w"], obj["h"]) == (400, 200)
+
+
+def test_the_source_path_is_sent_only_to_the_person_who_imported_the_image(book):
+    call(book, "add_sheet", {"name": "S"})
+    box = add_image(book, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN
+    (seen_by_importer,) = objects(book, account=ANN)
+    assert seen_by_importer["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
+
+    (seen_by_colleague,) = objects(book, account=BEN)
+    assert seen_by_colleague["imported"]["source_path"] is None
+    assert seen_by_colleague["imported"]["source"] == "disk"  # not hidden: only the path is
+    assert seen_by_colleague["imported"]["imported_by"] == "ann"  # not hidden either
+    assert seen_by_colleague["id"] == box
+
+
+def test_viewers_may_look_at_images_but_not_add_one(book):
+    call(book, "add_sheet", {"name": "S"})
+    assert call(book, "images", account=VERA) == []
+    with pytest.raises(RequestError) as caught:
+        call(
+            book,
+            "add_image",
+            {
+                "sheet": "s1",
+                "row": 0,
+                "col": 0,
+                "w": 100,
+                "h": 50,
+                "data": tiny_gif(100, 50),
+                "alt": "x",
+                "source_name": "x",
+            },
+            account=VERA,
+        )
+    assert caught.value.code == "forbidden"
+
+
+def test_removing_a_sheet_takes_its_objects_with_it_and_undo_restores_them(book):
+    """There is no `remove_sheet` method on the wire yet (a pre-existing gap, not introduced here), so this
+    goes through the document directly, the way `claudia_computes`' own tests do."""
+    from claudia_computes import RemoveSheet
+
+    call(book, "add_sheet", {"name": "S"})
+    added = add_image(book)
+    book.execute(RemoveSheet("s1"), author="ann")
+    assert call(book, "sheets") == []
+    book.undo("ann")
+    assert [s["id"] for s in call(book, "sheets")] == ["s1"]
+    assert [o["id"] for o in objects(book)] == [added]

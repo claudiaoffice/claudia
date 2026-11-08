@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AdminApiError, createAdminApi } from '~/lib/admin-api'
+import { AdminApiError, createAdminApi, hasNoAdministrator } from '~/lib/admin-api'
 
 function fakeFetch(handler: (url: string, init?: RequestInit) => { status: number; body?: unknown }): typeof fetch {
   return (async (input: string | URL | Request, init?: RequestInit) => {
@@ -92,5 +92,15 @@ describe('createAdminApi', () => {
     const api = createAdminApi(fetchImpl)
     await api.removeAdmin('t', 'anna marie')
     expect(seenUrl).toBe('/api/admin/admins/anna%20marie')
+  })
+})
+
+describe('hasNoAdministrator', () => {
+  it('is true once nobody has ever become an administrator, exposed or not', () => {
+    expect(hasNoAdministrator({ administrator: null })).toBe(true)
+  })
+
+  it('is false once somebody has, even on a loopback-only server where needs_administrator stays false', () => {
+    expect(hasNoAdministrator({ administrator: 'tobi' })).toBe(false)
   })
 })

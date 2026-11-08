@@ -1,8 +1,8 @@
 """Where the shell keeps documents and state, and where it finds the bundled web frontend (D43).
 
-Documents and state follow the XDG base directory specification: ``$XDG_DATA_HOME`` and ``$XDG_STATE_HOME``, each
-ignored when empty or relative, with ``~/.local/share`` and ``~/.local/state`` as the defaults. Nothing here imports
-GTK.
+Documents and state follow the XDG base directory specification: ``$XDG_DATA_HOME``, ``$XDG_STATE_HOME`` and
+``$XDG_CONFIG_HOME``, each ignored when empty or relative, with ``~/.local/share``, ``~/.local/state`` and
+``~/.config`` as the defaults. Nothing here imports GTK.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-__all__ = ["default_repo", "documents_dir", "find_frontend", "state_dir"]
+__all__ = ["config_dir", "default_repo", "documents_dir", "find_frontend", "state_dir"]
 
 
 def _xdg(variable: str, fallback: str) -> Path:
@@ -28,6 +28,14 @@ def documents_dir(app: str) -> Path:
 def state_dir(app: str) -> Path:
     """Where the server of ``app`` keeps its own state (the server's ``--state-dir``)."""
     return _xdg("XDG_STATE_HOME", ".local/state") / "claudia" / app
+
+
+def config_dir() -> Path:
+    """Where the shell itself keeps its own settings (``settings.py``'s ``shell.json`` — the person's chosen
+    language among them, E5.7). Suite-wide, not one per ``app`` like :func:`documents_dir`/:func:`state_dir`:
+    picking a language in one app's Config menu is meant to be found again in the other two (``web/app/lib/
+    locale.ts``'s own ``localStorage`` key is single and shared for the same reason)."""
+    return _xdg("XDG_CONFIG_HOME", ".config") / "claudia"
 
 
 def default_repo() -> Path:

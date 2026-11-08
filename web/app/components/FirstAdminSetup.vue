@@ -1,10 +1,11 @@
 <script setup lang="ts">
-// Naming the first administrator (E3.11; canvas note s7). Shown once: the moment a server is bound to a real
-// address instead of staying loopback-only, `needs_administrator` turns true until somebody becomes one.
+// Naming the first administrator (E3.11; canvas note s7). Shown whenever no administrator exists yet: forced the
+// moment a server is bound to a real address (`exposed`), offered but skippable while it stays loopback-only — a
+// person can still choose to set one up early, e.g. before exposing the server later.
 import { ref } from 'vue'
 import type { useAdminSession } from '~/lib/admin-session'
 
-const props = defineProps<{ host: string; session: ReturnType<typeof useAdminSession> }>()
+const props = defineProps<{ host: string; exposed: boolean; session: ReturnType<typeof useAdminSession> }>()
 
 const name = ref('')
 const password = ref('')
@@ -38,7 +39,8 @@ function keepLocal() {
         <path d="M12 2l8 3.5v5.3c0 5-3.4 8.9-8 10.2-4.6-1.3-8-5.2-8-10.2V5.5L12 2z" /><path d="M9.5 12l1.8 1.8 3.2-3.6" />
       </svg>
       <h1>Name yourself as this server's administrator</h1>
-      <p class="lead">{{ host }} can now be reached from outside this computer. Before anyone else can reach it, set a name and password for yourself — you'll use them to sign in here from now on.</p>
+      <p v-if="exposed" class="lead">{{ host }} can now be reached from outside this computer. Before anyone else can reach it, set a name and password for yourself — you'll use them to sign in here from now on.</p>
+      <p v-else class="lead">{{ host }} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later.</p>
 
       <label class="field">Your name<input v-model="name" type="text" autocomplete="username" placeholder="tobi" /></label>
       <label class="field">Password<input v-model="password" type="password" autocomplete="new-password" placeholder="••••••••••" /></label>
@@ -55,7 +57,7 @@ function keepLocal() {
 
       <div class="spacer" />
       <div class="buttons">
-        <button class="btn" type="button" :disabled="session.busy.value" @click="keepLocal">Keep this server local for now</button>
+        <button class="btn" type="button" :disabled="session.busy.value" @click="keepLocal">{{ exposed ? 'Keep this server local for now' : 'Skip for now' }}</button>
         <button class="btn primary" type="submit" :disabled="session.busy.value">Create administrator</button>
       </div>
     </form>

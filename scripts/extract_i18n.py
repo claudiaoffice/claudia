@@ -4,7 +4,7 @@ translations, before any string has actually moved into it.
 ``uv run python scripts/extract_i18n.py``          regenerate ``po/claudia.pot``
 ``uv run python scripts/extract_i18n.py --check``  fail if the checked-in file would change (the CI gate)
 
-Two call shapes are collected, by two different techniques:
+Three shapes are collected, by three different techniques:
 
 * Python: ``_("...")`` (the GNU gettext convention; ``install_translation`` in ``clients/shell/i18n.py`` binds
   ``_`` process-wide). Found with the ``ast`` module, so string concatenation, f-strings and anything else that is
@@ -14,9 +14,14 @@ Two call shapes are collected, by two different techniques:
   expression, not a real parser (there is no TypeScript/Vue parser in this project's own dependencies to reach for);
   it accepts the one plain string literal shape actual calls use today and otherwise reports the call so it is
   fixed by hand rather than silently dropped, the same stance as the Python side.
+* The Linux client's menu manifest (``clients/linux/src/claudia_shell_gtk/manifest.py``): every menu label and
+  action label/tooltip is a plain dataclass field, not a ``_("...")`` call (that module's own docstring explains
+  why — it stays pure data, importable and testable with no locale installed), so :func:`extract_manifest` walks
+  the already-built ``Manifest`` objects themselves instead of parsing source text. ``LANGUAGES``' own autonyms
+  ("Deutsch") are the one deliberate exclusion, by the same id rule ``manifest.py``'s own ``_item_element`` uses.
 
-Nothing in the tree calls either one yet (D31's groundwork precedes moving any string), so an (almost) header-only
-``claudia.pot`` is the expected, correct output today — the mechanism is what this proves, not a catalogue.
+The owner's second i18n round (E5.7, D31/D148's groundwork, D160) moved the manifest's own chrome into this catalog;
+nothing else has moved yet, so a mostly menu-shaped ``claudia.pot`` is the expected, correct output today.
 """
 
 from __future__ import annotations
@@ -30,6 +35,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 POT_PATH = ROOT / "po" / "claudia.pot"
+MANIFEST_SRC_DIR = ROOT / "clients" / "linux" / "src"
+MANIFEST_PATH = MANIFEST_SRC_DIR / "claudia_shell_gtk" / "manifest.py"
 
 # Where each extractor looks. claudia-core is deliberately absent: the kernel stays dependency-free and
 # catalog-agnostic (test_purity.py), so it must never grow a call this script would find.
@@ -138,6 +145,40 @@ def extract_web(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
     return found, problems
 
 
+def extract_manifest() -> dict[str, list[str]]:
+    """Every ``Menu``/``Submenu`` label and every (non-autonym) ``Action`` label/tooltip of the three apps' Linux
+    manifests, collected by building and walking them (see this module's docstring for why: these are data, not
+    calls). Always succeeds -- there is no "not a plain string literal" failure mode for a dataclass field -- so,
+    unlike :func:`extract_python`/:func:`extract_web`, this returns no ``problems`` list.
+
+    All three apps' manifests report the same ``clients/linux/src/claudia_shell_gtk/manifest.py`` as every string's
+    one occurrence (not a line number: these are built objects, not source positions), and a label shared by more
+    than one app or more than one action (``"Edit"``, ``"Delete"``, ...) is still listed there only once.
+    """
+    if str(MANIFEST_SRC_DIR) not in sys.path:
+        sys.path.insert(0, str(MANIFEST_SRC_DIR))
+    # clients/linux is its own project (own mypy run, own venv), never on this project's mypy_path -- unresolvable
+    # here by construction, not a mistake to fix.
+    from claudia_shell_gtk import manifest as manifest_module  # type: ignore[import-not-found]
+
+    occurrence = str(MANIFEST_PATH.relative_to(ROOT))
+    texts: set[str] = set()
+    for build in (manifest_module.composes, manifest_module.computes, manifest_module.creates):
+        built = build()
+        for menu in built.menus:
+            texts.add(menu.label)
+            for section in menu.sections:
+                for entry in section:
+                    if isinstance(entry, manifest_module.Submenu):
+                        texts.add(entry.label)
+        for action in built.actions:
+            if not action.id.startswith("config.language."):  # their own autonyms, never translated (manifest.py)
+                texts.add(action.label)
+                if action.tooltip:
+                    texts.add(action.tooltip)
+    return {text: [occurrence] for text in texts}
+
+
 def collect() -> tuple[dict[str, list[str]], list[Problem]]:
     """Every ``msgid`` found anywhere, with every place it occurs, and every call that could not be read."""
     catalog: dict[str, list[str]] = {}
@@ -147,6 +188,7 @@ def collect() -> tuple[dict[str, list[str]], list[Problem]]:
         for msgid, occurrences in found.items():
             catalog.setdefault(msgid, []).extend(occurrences)
 
+    merge(extract_manifest())
     for base in _existing_dirs(PY_DIRS):
         for path in sorted(base.rglob("*.py")):
             found, found_problems = extract_python(path)

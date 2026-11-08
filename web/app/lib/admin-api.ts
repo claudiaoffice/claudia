@@ -23,6 +23,15 @@ export interface AdminStatus {
   administrator: string | null
 }
 
+/** Whether to offer becoming this server's first administrator (`FirstAdminSetup.vue`) — true whenever nobody
+ *  has ever become one, regardless of `needs_administrator`. That flag also requires the server to be exposed
+ *  beyond loopback (D152: a loopback-only server is never *forced* through this screen), so it stays `false` even
+ *  with zero administrators on the common local-only server. This is the other half: someone who navigates to
+ *  the settings pages directly can still *choose* to set one up, so the screen must still be reachable then. */
+export function hasNoAdministrator(status: Pick<AdminStatus, 'administrator'>): boolean {
+  return status.administrator === null
+}
+
 export interface AdminAccount {
   name: string
   added: string

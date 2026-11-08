@@ -3,6 +3,11 @@
 import { type LinkLike, type Region } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
+import type { ImageAsset, ImageImport } from './images'
+
+// `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
+// so existing imports of them from this module keep working.
+export type { ImageAsset, ImageImport } from './images'
 
 export interface SlideObject {
   id: string
@@ -17,29 +22,9 @@ export interface SlideObject {
   shape: string | null
   image: string | null
   imported: ImageImport | null
-}
-/** How an image object's picture got here (E10.8). `sourcePath`'s field, `source_path`, is sent only to the
- * person who imported it — everyone else sees it as `null`, same as the server keeps it (`claudia_server`'s
- * per-viewer masking in `hub.py`). */
-export interface ImageImport {
-  asset: string
-  alt: string
-  imported_by: string
-  imported_at: string
-  source: string
-  source_name: string
-  source_path: string | null
-}
-/** A decoded picture (E10.8): `data`/`first_frame` are base64, exactly as `claudia_core.ImageAsset.to_data()`
- * sends them. `first_frame` is set only when `animated` is true. */
-export interface ImageAsset {
-  id: string
-  format: string
-  width: number
-  height: number
-  animated: boolean
-  data: string
-  first_frame: string | null
+  /** Whether this object holds to the grid (E10.15): the document's own state, set with `setSnap`. The grid
+   * itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is shown. */
+  snap: boolean
 }
 /** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
 export interface ShapeDef {
@@ -223,6 +208,11 @@ export class SlideSession extends BaseSession<SlideState> {
 
   async setText(id: string, text: string): Promise<boolean> {
     return (await this.attempt('set_text', { id, text, base: this.state.revision })) !== false
+  }
+
+  /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
+  async setSnap(id: string, snap: boolean): Promise<boolean> {
+    return (await this.attempt('set_snap', { id, snap, base: this.state.revision })) !== false
   }
 
   async remove(id: string): Promise<boolean> {

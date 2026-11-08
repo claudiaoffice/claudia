@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { alignment, columnName, inputOf, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
+import { imageDataUrl } from '~/lib/images'
+import {
+  buildSizeTable,
+  DEFAULT_COL_WIDTH,
+  DEFAULT_ROW_HEIGHT,
+  formatPercent,
+  indexAt,
+  lineRange,
+  lineStart,
+  percentChange,
+  proportionalResize,
+  SIZE_LIMITS,
+  type Axis,
+  type SizeTable,
+} from '~/lib/line-sizes'
 import { colorOf, inkOn } from '~/lib/people'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
-import type { Session } from '~/lib/session'
+import type { Session, SheetObject } from '~/lib/session'
 
 /** The cell being edited (on which sheet), what is typed so far and where the caret stands in it. */
 export interface EditState {
@@ -37,12 +52,15 @@ const emit = defineEmits<{
   clear: []
   paste: [rows: string[][]]
   selectAll: []
+  /** A row or column header was right-clicked: open its menu (insert/delete/resize, mockup 1) at this point. */
+  headerMenu: [axis: Axis, index: number, x: number, y: number]
 }>()
 
-const W = 96 // cell width
-const H = 26 // cell height
+const W = DEFAULT_COL_WIDTH // a column's width when it has no size of its own
+const H = DEFAULT_ROW_HEIGHT // a row's height when it has no size of its own
 const HW = 52 // width of the row numbers
 const HH = 26 // height of the column letters
+const BORDER = 4 // px on either side of a header's line between two lines that still counts as "on" it, for dragging
 
 const viewport = ref<HTMLElement | null>(null)
 const editor = ref<HTMLInputElement | null>(null)
@@ -51,30 +69,65 @@ const size = ref({ w: 800, h: 600 })
 let observer: ResizeObserver | null = null
 
 const state = props.session.state
-const totalW = HW + VIEW_COLS * W
-const totalH = HH + VIEW_ROWS * H
+
+// ------------------------------------------------------------------------------ row heights and column widths
+// Sparse, like the server's own storage (D135): most lines are `H`/`W`, a few have their own size. While a border
+// is being dragged (`resizeDrag`, below), the line(s) it affects are shown at their live, not-yet-sent size, so the
+// grid reflows as the mouse moves instead of jumping once the server answers.
+const dragPairs = computed<[number, number][]>(() => {
+  const d = resizeDrag.value
+  if (!d) return []
+  const committed = (i: number) => (d.axis === 'col' ? props.session.colWidth(props.sheet, i) : props.session.rowHeight(props.sheet, i))
+  return proportionalResize(d.lines, committed, d.first, d.to, SIZE_LIMITS[d.axis])
+})
+const liveRowHeights = computed<Map<number, number>>(() => {
+  const base = state.rowHeights[props.sheet]
+  if (resizeDrag.value?.axis !== 'row') return base ?? new Map()
+  const merged = new Map(base ?? [])
+  for (const [i, h] of dragPairs.value) merged.set(i, h)
+  return merged
+})
+const liveColWidths = computed<Map<number, number>>(() => {
+  const base = state.colWidths[props.sheet]
+  if (resizeDrag.value?.axis !== 'col') return base ?? new Map()
+  const merged = new Map(base ?? [])
+  for (const [i, w] of dragPairs.value) merged.set(i, w)
+  return merged
+})
+const rowTable = computed<SizeTable>(() => buildSizeTable(liveRowHeights.value, H))
+const colTable = computed<SizeTable>(() => buildSizeTable(liveColWidths.value, W))
+
+function rowHeightAt(row: number): number {
+  return liveRowHeights.value.get(row) ?? H
+}
+function colWidthAt(col: number): number {
+  return liveColWidths.value.get(col) ?? W
+}
+
+const totalW = computed(() => HW + lineStart(colTable.value, W, VIEW_COLS))
+const totalH = computed(() => HH + lineStart(rowTable.value, H, VIEW_ROWS))
 
 const range = computed(() => ({
-  r0: Math.max(0, Math.floor(scroll.value.top / H)),
-  r1: Math.min(VIEW_ROWS - 1, Math.ceil((scroll.value.top + size.value.h - HH) / H)),
-  c0: Math.max(0, Math.floor(scroll.value.left / W)),
-  c1: Math.min(VIEW_COLS - 1, Math.ceil((scroll.value.left + size.value.w - HW) / W)),
+  r0: indexAt(rowTable.value, H, scroll.value.top, VIEW_ROWS),
+  r1: indexAt(rowTable.value, H, scroll.value.top + size.value.h - HH, VIEW_ROWS),
+  c0: indexAt(colTable.value, W, scroll.value.left, VIEW_COLS),
+  c1: indexAt(colTable.value, W, scroll.value.left + size.value.w - HW, VIEW_COLS),
 }))
 
-const x = (col: number) => HW + col * W - scroll.value.left
-const y = (row: number) => HH + row * H - scroll.value.top
+const x = (col: number) => HW + lineStart(colTable.value, W, col) - scroll.value.left
+const y = (row: number) => HH + lineStart(rowTable.value, H, row) - scroll.value.top
 
 const editHere = computed(() => props.edit !== null && props.edit.sheet === props.sheet)
 
 const cells = computed(() => {
   void state.generation
-  const out: { key: number; left: number; top: number; text: string; align: string; kind: string }[] = []
+  const out: { key: number; left: number; top: number; width: number; height: number; text: string; align: string; kind: string }[] = []
   const { r0, r1, c0, c1 } = range.value
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const content = props.session.cell(props.sheet, r, c)
       if (content === null || (editHere.value && props.edit!.row === r && props.edit!.col === c)) continue
-      out.push({ key: r * 100_000 + c, left: x(c), top: y(r), text: show(content), align: alignment(content), kind: content.t })
+      out.push({ key: r * 100_000 + c, left: x(c), top: y(r), width: colWidthAt(c), height: rowHeightAt(r), text: show(content), align: alignment(content), kind: content.t })
     }
   }
   return out
@@ -83,21 +136,21 @@ const cells = computed(() => {
 const colHeads = computed(() => {
   const b = bounds(props.sel)
   const out = []
-  for (let c = range.value.c0; c <= range.value.c1; c++) out.push({ c, left: x(c), name: columnName(c), on: c >= b.c0 && c <= b.c1 })
+  for (let c = range.value.c0; c <= range.value.c1; c++) out.push({ c, left: x(c), width: colWidthAt(c), name: columnName(c), on: c >= b.c0 && c <= b.c1 })
   return out
 })
 const rowHeads = computed(() => {
   const b = bounds(props.sel)
   const out = []
-  for (let r = range.value.r0; r <= range.value.r1; r++) out.push({ r, top: y(r), on: r >= b.r0 && r <= b.r1 })
+  for (let r = range.value.r0; r <= range.value.r1; r++) out.push({ r, top: y(r), height: rowHeightAt(r), on: r >= b.r0 && r <= b.r1 })
   return out
 })
 
 const box = (r0: number, c0: number, r1: number, c1: number) => ({
   left: `${x(c0)}px`,
   top: `${y(r0)}px`,
-  width: `${(c1 - c0 + 1) * W}px`,
-  height: `${(r1 - r0 + 1) * H}px`,
+  width: `${lineStart(colTable.value, W, c1 + 1) - lineStart(colTable.value, W, c0)}px`,
+  height: `${lineStart(rowTable.value, H, r1 + 1) - lineStart(rowTable.value, H, r0)}px`,
 })
 
 const selectionStyle = computed(() => {
@@ -126,10 +179,79 @@ const outlines = computed(() => {
   return out
 })
 
-const linesStyle = computed(() => ({
-  backgroundSize: `${W}px ${H}px`,
-  backgroundPosition: `${HW - (scroll.value.left % W)}px ${HH - (scroll.value.top % H)}px`,
-}))
+// ------------------------------------------------------------------------------ floating objects (images)
+/** Selecting an image is local to this view (not shared with colleagues, unlike cell presence): E10.11 only
+ * asked that an image never resizes on a structural edit and takes click priority over the cells beneath it. */
+const selectedObject = ref<string | null>(null)
+
+const objects = computed(() => props.session.objectsOn(props.sheet))
+
+/** An object's own anchor, or the live position of the drag in progress that is moving it. */
+function anchorOf(o: SheetObject): { row: number; col: number } {
+  return objDrag.value?.id === o.id ? objDrag.value.pos : { row: o.row, col: o.col }
+}
+function objectStyle(o: SheetObject) {
+  const { row, col } = anchorOf(o)
+  return { left: `${x(col)}px`, top: `${y(row)}px`, width: `${o.w}px`, height: `${o.h}px` }
+}
+function pictureSrc(o: SheetObject): string | null {
+  const asset = o.image ? state.images[o.image] : null
+  return asset ? imageDataUrl(asset) : null
+}
+
+type ObjDrag = { id: string; from: { x: number; y: number }; start: { row: number; col: number }; pos: { row: number; col: number }; moved: boolean }
+const objDrag = ref<ObjDrag | null>(null)
+
+/** `stopPropagation` here is the whole of "the image takes click priority": the cell grid's own `onDown` is
+ * bound on the outer `.viewport` and never even sees a mousedown that an object already caught, so a cell
+ * underneath an image cannot be reached by clicking — only by moving the image out of the way. */
+function onObjectDown(event: MouseEvent, o: SheetObject) {
+  if (event.button !== 0) return
+  event.stopPropagation()
+  if (props.edit) emit('commit', 'down')
+  viewport.value?.focus() // so Delete/Escape reach `onKey` even if the focus was elsewhere (the formula bar, say)
+  selectedObject.value = o.id
+  objDrag.value = { id: o.id, from: { x: event.clientX, y: event.clientY }, start: { row: o.row, col: o.col }, pos: { row: o.row, col: o.col }, moved: false }
+  window.addEventListener('mousemove', onObjectDrag)
+  window.addEventListener('mouseup', onObjectUp)
+}
+
+function onObjectDrag(event: MouseEvent) {
+  const d = objDrag.value
+  if (!d) return
+  const dCol = Math.round((event.clientX - d.from.x) / W)
+  const dRow = Math.round((event.clientY - d.from.y) / H)
+  const row = Math.max(0, Math.min(VIEW_ROWS - 1, d.start.row + dRow))
+  const col = Math.max(0, Math.min(VIEW_COLS - 1, d.start.col + dCol))
+  if (row !== d.pos.row || col !== d.pos.col) {
+    d.pos = { row, col }
+    d.moved = true
+  }
+}
+
+function onObjectUp() {
+  const d = objDrag.value
+  objDrag.value = null
+  window.removeEventListener('mousemove', onObjectDrag)
+  window.removeEventListener('mouseup', onObjectUp)
+  if (d && d.moved && (d.pos.row !== d.start.row || d.pos.col !== d.start.col)) void props.session.moveObject(d.id, d.pos.row, d.pos.col)
+}
+onBeforeUnmount(onObjectUp)
+
+/** Grid lines for the rows and columns currently in view, at their own (possibly resized) positions — a plain
+ * repeating background, as it was before D135, can only draw lines evenly spaced apart. */
+const rowLines = computed(() => {
+  const out: { key: number; top: number }[] = []
+  const { r0, r1 } = range.value
+  for (let r = r0; r <= r1; r++) out.push({ key: r, top: y(r) + rowHeightAt(r) })
+  return out
+})
+const colLines = computed(() => {
+  const out: { key: number; left: number }[] = []
+  const { c0, c1 } = range.value
+  for (let c = c0; c <= c1; c++) out.push({ key: c, left: x(c) + colWidthAt(c) })
+  return out
+})
 
 /** The cells the formula being typed refers to, outlined in the colour its reference has in the text. */
 const referenced = computed(() => {
@@ -146,8 +268,8 @@ const referenced = computed(() => {
 
 const editorStyle = computed(() => {
   if (!props.edit) return {}
-  const width = Math.max(W, Math.min(360, props.edit.text.length * 8 + 28))
-  return { left: `${x(props.edit.col)}px`, top: `${y(props.edit.row)}px`, width: `${width}px`, height: `${H}px` }
+  const width = Math.max(colWidthAt(props.edit.col), Math.min(360, props.edit.text.length * 8 + 28))
+  return { left: `${x(props.edit.col)}px`, top: `${y(props.edit.row)}px`, width: `${width}px`, height: `${rowHeightAt(props.edit.row)}px` }
 })
 
 // ------------------------------------------------------------------------------ loading what is in view
@@ -157,6 +279,7 @@ function load() {
   pending = requestAnimationFrame(() => {
     const { r0, r1, c0, c1 } = range.value
     props.session.ensure(props.sheet, r0, r1, c0, c1).catch(() => undefined)
+    props.session.ensureSizes(props.sheet).catch(() => undefined)
   })
 }
 
@@ -189,15 +312,17 @@ watch(() => [state.generation, props.sheet], load)
 function reveal(row: number, col: number, vertically: boolean, horizontally: boolean) {
   const el = viewport.value
   if (!el) return
-  const left = col * W
-  const top = row * H
+  const left = lineStart(colTable.value, W, col)
+  const top = lineStart(rowTable.value, H, row)
+  const colW = colWidthAt(col)
+  const rowH = rowHeightAt(row)
   if (horizontally) {
     if (left < el.scrollLeft) el.scrollLeft = left
-    else if (left + W > el.scrollLeft + el.clientWidth - HW) el.scrollLeft = left + W - (el.clientWidth - HW)
+    else if (left + colW > el.scrollLeft + el.clientWidth - HW) el.scrollLeft = left + colW - (el.clientWidth - HW)
   }
   if (vertically) {
     if (top < el.scrollTop) el.scrollTop = top
-    else if (top + H > el.scrollTop + el.clientHeight - HH) el.scrollTop = top + H - (el.clientHeight - HH)
+    else if (top + rowH > el.scrollTop + el.clientHeight - HH) el.scrollTop = top + rowH - (el.clientHeight - HH)
   }
 }
 watch(
@@ -226,21 +351,59 @@ watch(
 // ------------------------------------------------------------------------------ mouse
 let dragging = false
 
-function cellAt(event: MouseEvent): { row: number; col: number; rowHead: boolean; colHead: boolean } | null {
+function stagePoint(event: MouseEvent): { px: number; py: number } | null {
+  if (!(event.target as HTMLElement).closest('.stage')) return null
   const stage = viewport.value?.querySelector('.stage')
-  if (!stage || !(event.target as HTMLElement).closest('.stage')) return null
+  if (!stage) return null
   const box = stage.getBoundingClientRect()
-  const px = event.clientX - box.left
-  const py = event.clientY - box.top
-  const col = Math.max(0, Math.min(VIEW_COLS - 1, Math.floor((px - HW + scroll.value.left) / W)))
-  const row = Math.max(0, Math.min(VIEW_ROWS - 1, Math.floor((py - HH + scroll.value.top) / H)))
+  return { px: event.clientX - box.left, py: event.clientY - box.top }
+}
+
+function cellAt(event: MouseEvent): { row: number; col: number; rowHead: boolean; colHead: boolean } | null {
+  const p = stagePoint(event)
+  if (!p) return null
+  const { px, py } = p
+  const col = indexAt(colTable.value, W, px - HW + scroll.value.left, VIEW_COLS)
+  const row = indexAt(rowTable.value, H, py - HH + scroll.value.top, VIEW_ROWS)
   return { row, col, rowHead: px < HW, colHead: py < HH }
+}
+
+/** The column whose right border is within `BORDER` px of screen position `px` in the header strip, if any. */
+function colBorderNear(px: number): number | null {
+  const near = indexAt(colTable.value, W, px - HW + scroll.value.left, VIEW_COLS)
+  for (const c of [near - 1, near]) {
+    if (c < 0 || c >= VIEW_COLS) continue
+    if (Math.abs(px - (x(c) + colWidthAt(c))) <= BORDER) return c
+  }
+  return null
+}
+/** Same as `colBorderNear`, for a row's bottom border in the row-number strip. */
+function rowBorderNear(py: number): number | null {
+  const near = indexAt(rowTable.value, H, py - HH + scroll.value.top, VIEW_ROWS)
+  for (const r of [near - 1, near]) {
+    if (r < 0 || r >= VIEW_ROWS) continue
+    if (Math.abs(py - (y(r) + rowHeightAt(r))) <= BORDER) return r
+  }
+  return null
 }
 
 function onDown(event: MouseEvent) {
   if ((event.target as HTMLElement).closest('.editor')) return
+  if (event.button !== 0) return
+  const p = stagePoint(event)
+  if (p) {
+    if (p.py < HH && p.px >= HW) {
+      const c = colBorderNear(p.px)
+      if (c !== null) return startResizeDrag('col', c, event)
+    }
+    if (p.px < HW && p.py >= HH) {
+      const r = rowBorderNear(p.py)
+      if (r !== null) return startResizeDrag('row', r, event)
+    }
+  }
   const hit = cellAt(event)
-  if (!hit || event.button !== 0) return
+  if (!hit) return
+  selectedObject.value = null
   const picking = props.edit !== null && props.pointing // (then the focus stays in the text being typed)
   if (props.edit && !picking) emit('commit', 'down') // clicking elsewhere keeps what was typed
   if (!picking) viewport.value?.focus()
@@ -264,8 +427,8 @@ function onDrag(event: MouseEvent) {
   if (!stage) return
   const px = event.clientX - stage.left
   const py = event.clientY - stage.top
-  const col = Math.max(0, Math.min(VIEW_COLS - 1, Math.floor((px - HW + scroll.value.left) / W)))
-  const row = Math.max(0, Math.min(VIEW_ROWS - 1, Math.floor((py - HH + scroll.value.top) / H)))
+  const col = indexAt(colTable.value, W, px - HW + scroll.value.left, VIEW_COLS)
+  const row = indexAt(rowTable.value, H, py - HH + scroll.value.top, VIEW_ROWS)
   if (row !== props.sel.row2 || col !== props.sel.col2) emit('select', { ...props.sel, row2: row, col2: col }, true)
 }
 
@@ -279,6 +442,110 @@ onBeforeUnmount(onUp)
 function onDouble(event: MouseEvent) {
   const hit = cellAt(event)
   if (hit && !hit.rowHead && !hit.colHead) emit('beginEdit')
+}
+
+// ------------------------------------------------------------------------------ resizing rows and columns (D135)
+// The rule agreed over the mockups (round 2): dragging the border that follows the top-most/left-most line of a
+// multi-line selection scales every other selected line by the same percentage; any other border — including that
+// same border with only one line selected — resizes just the one line it belongs to. `first`/`lines` below already
+// encode which of those this drag is.
+interface ResizeDrag {
+  axis: Axis
+  first: number
+  lines: number[]
+  startSize: number
+  startClient: number
+  to: number
+}
+const resizeDrag = ref<ResizeDrag | null>(null)
+
+function dragTarget(axis: Axis, index: number): { first: number; lines: number[] } {
+  const b = bounds(props.sel)
+  const whole = axis === 'col' ? props.sel.row === 0 && props.sel.row2 === VIEW_ROWS - 1 : props.sel.col === 0 && props.sel.col2 === VIEW_COLS - 1
+  const lo = axis === 'col' ? b.c0 : b.r0
+  const hi = axis === 'col' ? b.c1 : b.r1
+  if (whole && index === lo && hi > lo) return { first: lo, lines: lineRange(lo, hi) }
+  return { first: index, lines: [index] }
+}
+
+function startResizeDrag(axis: Axis, index: number, event: MouseEvent) {
+  event.preventDefault()
+  const target = dragTarget(axis, index)
+  const startSize = axis === 'col' ? props.session.colWidth(props.sheet, target.first) : props.session.rowHeight(props.sheet, target.first)
+  resizeDrag.value = { axis, first: target.first, lines: target.lines, startSize, startClient: axis === 'col' ? event.clientX : event.clientY, to: startSize }
+  window.addEventListener('mousemove', onResizeMove)
+  window.addEventListener('mouseup', onResizeUp)
+}
+
+function onResizeMove(event: MouseEvent) {
+  const d = resizeDrag.value
+  if (!d) return
+  const client = d.axis === 'col' ? event.clientX : event.clientY
+  const limits = SIZE_LIMITS[d.axis]
+  d.to = Math.min(limits.hi, Math.max(limits.lo, d.startSize + (client - d.startClient)))
+}
+
+async function onResizeUp() {
+  window.removeEventListener('mousemove', onResizeMove)
+  window.removeEventListener('mouseup', onResizeUp)
+  const d = resizeDrag.value
+  if (!d) return
+  const changed = Math.round(d.to) !== Math.round(d.startSize)
+  const pairs = dragPairs.value
+  resizeDrag.value = null
+  if (changed) await props.session.resizeLines(props.sheet, d.axis, pairs)
+}
+onBeforeUnmount(() => {
+  window.removeEventListener('mousemove', onResizeMove)
+  window.removeEventListener('mouseup', onResizeUp)
+})
+
+/** The live "144 px · +50%" readout beside the dragged border (mockups 3/4). */
+const dragTag = computed(() => {
+  const d = resizeDrag.value
+  if (!d) return null
+  const text = `${Math.round(d.to)} px · ${formatPercent(percentChange(d.startSize, d.to))}`
+  if (d.axis === 'col') return { left: x(d.first) + colWidthAt(d.first), top: HH + 8, text }
+  return { left: HW + 8, top: y(d.first) + rowHeightAt(d.first), text }
+})
+/** The border being dragged, highlighted at its live position (on top of the ordinary grid line, which already
+ * moved there too). */
+const activeBorder = computed(() => {
+  const d = resizeDrag.value
+  if (!d) return null
+  return d.axis === 'col' ? { axis: 'col' as const, pos: x(d.first) + colWidthAt(d.first) } : { axis: 'row' as const, pos: y(d.first) + rowHeightAt(d.first) }
+})
+
+/** Cursor feedback when hovering a resizable border, outside of an actual drag. */
+const hoverAxis = ref<Axis | null>(null)
+function onHeaderHover(event: MouseEvent) {
+  if (resizeDrag.value || dragging) return
+  const p = stagePoint(event)
+  if (p && p.py < HH && p.px >= HW && colBorderNear(p.px) !== null) {
+    hoverAxis.value = 'col'
+  } else if (p && p.px < HW && p.py >= HH && rowBorderNear(p.py) !== null) {
+    hoverAxis.value = 'row'
+  } else {
+    hoverAxis.value = null
+  }
+}
+
+// ------------------------------------------------------------------------------ the row/column header menu
+function onHeaderContext(event: MouseEvent) {
+  if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu, as in TextEditor.vue
+  const hit = cellAt(event)
+  if (!hit || hit.rowHead === hit.colHead) return // a normal cell, or the corner: no menu for either
+  event.preventDefault()
+  const axis: Axis = hit.colHead ? 'col' : 'row'
+  const index = axis === 'col' ? hit.col : hit.row
+  const b = bounds(props.sel)
+  const whole = axis === 'col' ? props.sel.row === 0 && props.sel.row2 === VIEW_ROWS - 1 : props.sel.col === 0 && props.sel.col2 === VIEW_COLS - 1
+  const within = whole && (axis === 'col' ? index >= b.c0 && index <= b.c1 : index >= b.r0 && index <= b.r1)
+  if (!within) {
+    const next: Sel = axis === 'col' ? { row: 0, col: index, row2: VIEW_ROWS - 1, col2: index } : { row: index, col: 0, row2: index, col2: VIEW_COLS - 1 }
+    emit('select', next, false)
+  }
+  emit('headerMenu', axis, index, event.clientX, event.clientY)
 }
 
 // ------------------------------------------------------------------------------ keyboard
@@ -308,9 +575,15 @@ function onKey(event: KeyboardEvent) {
   } else if (event.key === 'Home') {
     event.preventDefault()
     emit('move', 0, -VIEW_COLS, event.shiftKey, false)
+  } else if (event.key === 'Escape' && selectedObject.value) {
+    event.preventDefault()
+    selectedObject.value = null
   } else if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault()
-    emit('clear')
+    if (selectedObject.value) {
+      void props.session.removeObject(selectedObject.value)
+      selectedObject.value = null
+    } else emit('clear')
   } else if (mod && event.key.toLowerCase() === 'a') {
     event.preventDefault()
     emit('selectAll')
@@ -367,32 +640,36 @@ function onPaste(event: ClipboardEvent) {
   emit('paste', parseTsv(text))
 }
 
-defineExpose({ focus: () => viewport.value?.focus() })
+defineExpose({ focus: () => viewport.value?.focus(), selectObject: (id: string) => (selectedObject.value = id) })
 </script>
 
 <template>
   <div
     ref="viewport"
     class="viewport"
+    :class="{ 'resize-col': hoverAxis === 'col' || resizeDrag?.axis === 'col', 'resize-row': hoverAxis === 'row' || resizeDrag?.axis === 'row' }"
     tabindex="0"
     role="grid"
     aria-label="table"
     @scroll.passive="onScroll"
     @mousedown="onDown"
+    @mousemove.passive="onHeaderHover"
     @dblclick="onDouble"
+    @contextmenu.capture="onHeaderContext"
     @keydown="onKey"
     @copy="onCopy"
     @paste="onPaste"
   >
     <div class="canvas" :style="{ width: `${totalW}px`, height: `${totalH}px` }">
       <div class="stage" :style="{ width: `${size.w}px`, height: `${size.h}px` }">
-        <div class="lines" :style="linesStyle" />
+        <div v-for="rl in rowLines" :key="`r${rl.key}`" class="gridline horiz" :style="{ top: `${rl.top}px` }" />
+        <div v-for="cl in colLines" :key="`c${cl.key}`" class="gridline vert" :style="{ left: `${cl.left}px` }" />
         <div
           v-for="cell in cells"
           :key="cell.key"
           class="cell"
           :class="[cell.kind, cell.align]"
-          :style="{ left: `${cell.left}px`, top: `${cell.top}px`, width: `${W}px`, height: `${H}px` }"
+          :style="{ left: `${cell.left}px`, top: `${cell.top}px`, width: `${cell.width}px`, height: `${cell.height}px` }"
         >
           {{ cell.text }}
         </div>
@@ -401,9 +678,24 @@ defineExpose({ focus: () => viewport.value?.focus() })
         <div class="active" :class="{ picking: edit && pointing }" :style="activeStyle" />
         <div v-for="ref in referenced" :key="ref.key" class="reference" :style="{ ...ref.style, '--color': ref.color }" />
 
+        <div
+          v-for="o in objects"
+          :key="o.id"
+          class="object"
+          :class="{ selected: o.id === selectedObject }"
+          :style="objectStyle(o)"
+          @mousedown.stop="onObjectDown($event, o)"
+          @dblclick.stop
+        >
+          <img v-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="o.imported?.alt ?? ''" draggable="false" />
+        </div>
+
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
           <span class="tag">{{ o.name }}<template v-if="o.locked"> · editing</template></span>
         </div>
+
+        <div v-if="activeBorder" class="active-border" :class="activeBorder.axis" :style="activeBorder.axis === 'col' ? { left: `${activeBorder.pos}px` } : { top: `${activeBorder.pos}px` }" />
+        <div v-if="dragTag" class="size-tag" :style="{ left: `${dragTag.left}px`, top: `${dragTag.top}px` }">{{ dragTag.text }}</div>
 
         <input
           v-if="editHere"
@@ -422,10 +714,10 @@ defineExpose({ focus: () => viewport.value?.focus() })
         />
 
         <div class="colheads">
-          <div v-for="h in colHeads" :key="h.c" class="colhead" :class="{ on: h.on }" :style="{ left: `${h.left - HW}px`, width: `${W}px` }">{{ h.name }}</div>
+          <div v-for="h in colHeads" :key="h.c" class="colhead" :class="{ on: h.on }" :style="{ left: `${h.left - HW}px`, width: `${h.width}px` }">{{ h.name }}</div>
         </div>
         <div class="rowheads">
-          <div v-for="h in rowHeads" :key="h.r" class="rowhead" :class="{ on: h.on }" :style="{ top: `${h.top - HH}px`, height: `${H}px` }">{{ h.r + 1 }}</div>
+          <div v-for="h in rowHeads" :key="h.r" class="rowhead" :class="{ on: h.on }" :style="{ top: `${h.top - HH}px`, height: `${h.height}px` }">{{ h.r + 1 }}</div>
         </div>
         <div class="corner" />
       </div>
@@ -442,6 +734,12 @@ defineExpose({ focus: () => viewport.value?.focus() })
   min-height: 0;
   min-width: 0;
 }
+.viewport.resize-col {
+  cursor: col-resize;
+}
+.viewport.resize-row {
+  cursor: row-resize;
+}
 .canvas {
   position: relative;
 }
@@ -453,12 +751,19 @@ defineExpose({ focus: () => viewport.value?.focus() })
   font-size: 13px;
   user-select: none;
 }
-.lines {
+.gridline {
   position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to bottom, transparent calc(100% - 1px), var(--line) 0),
-    linear-gradient(to right, transparent calc(100% - 1px), var(--line) 0);
+  background: var(--line);
+}
+.gridline.horiz {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+.gridline.vert {
+  top: 0;
+  bottom: 0;
+  width: 1px;
 }
 .cell {
   position: absolute;
@@ -500,6 +805,22 @@ defineExpose({ focus: () => viewport.value?.focus() })
   background: color-mix(in srgb, var(--color) 8%, transparent);
   pointer-events: none;
 }
+.object {
+  position: absolute;
+  overflow: hidden;
+  cursor: grab;
+  outline: 2px solid transparent;
+}
+.object.selected {
+  outline-color: var(--app);
+}
+.object img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
 .outline {
   position: absolute;
   border: 2px solid var(--who);
@@ -521,6 +842,36 @@ defineExpose({ focus: () => viewport.value?.focus() })
   padding: 3px 6px;
   border-radius: 6px 6px 6px 0;
   white-space: nowrap;
+}
+.active-border {
+  position: absolute;
+  background: var(--app);
+  pointer-events: none;
+  z-index: 4;
+}
+.active-border.col {
+  top: 0;
+  bottom: 0;
+  width: 2px;
+}
+.active-border.row {
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+.size-tag {
+  position: absolute;
+  z-index: 5;
+  background: var(--app);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
 }
 .editor {
   position: absolute;
