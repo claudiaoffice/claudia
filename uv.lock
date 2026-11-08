@@ -22,6 +22,7 @@ members = [
     "claudia-monorepo",
     "claudia-opc-io",
     "claudia-server",
+    "claudia-test-documents",
     "claudia-typeset",
 ]
 
@@ -489,6 +490,7 @@ dependencies = [
     { name = "claudia-fonts" },
     { name = "claudia-opc-io" },
     { name = "claudia-server" },
+    { name = "claudia-test-documents" },
     { name = "claudia-typeset" },
 ]
 
@@ -520,6 +522,7 @@ requires-dist = [
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "claudia-server", editable = "packages/claudia-server" },
+    { name = "claudia-test-documents", editable = "packages/claudia-test-documents" },
     { name = "claudia-typeset", editable = "packages/claudia-typeset" },
 ]
 
@@ -579,6 +582,25 @@ requires-dist = [
     { name = "websockets", specifier = ">=13" },
 ]
 provides-extras = ["openvino"]
+
+[[package]]
+name = "claudia-test-documents"
+version = "0.0.1"
+source = { editable = "packages/claudia-test-documents" }
+dependencies = [
+    { name = "claudia-composes" },
+    { name = "claudia-composes-io" },
+    { name = "claudia-opc-io" },
+    { name = "pillow" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "claudia-composes", editable = "packages/claudia-composes" },
+    { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
+    { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
+    { name = "pillow", specifier = ">=10" },
+]
 
 [[package]]
 name = "claudia-typeset"

@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "documents": [
+    {
+      "id": "docx-heading-styles",
+      "format": "docx",
+      "feature": "heading-styles",
+      "source": "docx/heading-styles/source.docx",
+      "spec": "docx/heading-styles/spec.py",
+      "summary": "Word's built-in Title/Heading 1/Heading 2 styles map to claudia's style ids on import and survive an edit to one paragraph untouched on the others.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-08T16:10:53Z",
+        "commit": "f091d2e",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.084,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-tracked-change-suggestion",
+      "format": "docx",
+      "feature": "tracked-change-suggestion",
+      "source": "docx/tracked-change-suggestion/source.docx",
+      "spec": "docx/tracked-change-suggestion/spec.py",
+      "summary": "An open suggestion added in claudia re-exports as a real Word tracked change (w:ins/w:del); docx_to_text cannot reimport one, so the check reads the exported XML directly.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1",
+        "export-only-check"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-08T16:10:53Z",
+        "commit": "f091d2e",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.105,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-beyond-claudia-table",
+      "format": "docx",
+      "feature": "beyond-claudia/table",
+      "source": "docx/beyond-claudia/table/source.docx",
+      "spec": "docx/beyond-claudia/table/spec.py",
+      "summary": "A table (no claudia model at all) sits inside the same part an edit rewrites; its own lxml element must stay byte-identical while the surrounding paragraph changes.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "element-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-08T16:10:53Z",
+        "commit": "f091d2e",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.13,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-beyond-claudia-image",
+      "format": "docx",
+      "feature": "beyond-claudia/image",
+      "source": "docx/beyond-claudia/image/source.docx",
+      "spec": "docx/beyond-claudia/image/spec.py",
+      "summary": "An embedded image is its own package part (word/media/image1.png); it must come back byte-for-byte identical through an edit to a different paragraph.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-08T16:10:53Z",
+        "commit": "f091d2e",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.157,
+        "detail": null
+      }
+    }
+  ]
+}
