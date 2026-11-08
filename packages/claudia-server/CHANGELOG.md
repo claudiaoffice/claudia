@@ -289,7 +289,7 @@ Security release: three findings of the first QA review (SEC-01, SEC-02, SEC-07)
   start-up report names the shapes and every file that was skipped, with the reason.
 - `GET /api/docs` also tells which `app` the server hosts, so that a client knows what kind of document to create.
 - `Hub.app`; `DocumentProvider.app` (a provider tells which kind of documents it holds; `MemoryProvider`, `FileProvider` and `SealedDocuments` do).
-- `scripts/start.py --app creates` starts the presentation server (documents in `demo-docs-creates`).
+- `scripts/start.py --app creates` starts the presentation server (documents in `docs-creates`).
 
 ### Changed
 - `methods_for(model_cls, *, shapes=None)` picks the presentation table for `creates` documents.
