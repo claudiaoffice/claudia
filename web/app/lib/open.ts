@@ -7,6 +7,23 @@ import { TextSession } from './text-session'
 
 export type AnySession = Session | TextSession | SlideSession
 
+/** What `/api/docs` answers: the app this server serves, and the documents it holds. */
+export interface ServerListing {
+  app?: string
+  documents?: { app?: string }[]
+}
+
+/**
+ * Which app a server serves, for the page that greets somebody before any document is open.
+ *
+ * The server says so itself and always has. Reading it only off the first listed document — as this page did —
+ * means an empty server looks like whatever the fallback is, which is how three servers started side by side all
+ * greeted their visitors as computes. The document stays as a second source for an older server that does not say.
+ */
+export function appOfServer(said: ServerListing | null | undefined): string {
+  return said?.app || said?.documents?.[0]?.app || 'claudia'
+}
+
 /** Connect, and give back the session of the document's app, loaded and open. A refused handshake is thrown. */
 export async function openSession(makeLink: () => LinkLike, options: SessionOptions = {}): Promise<AnySession> {
   const probe = makeLink()

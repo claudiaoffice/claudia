@@ -52,6 +52,7 @@ statement in the docs or on the website).
 | UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open (not re-checked) |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
+| UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed (patch ready, not yet committed) |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed (patch ready, not yet committed) |
@@ -332,6 +333,31 @@ Settling UX-06 is a precondition.
 ---
 
 ## Process and code
+
+### UX-10 · An empty server greets everybody as computes, whichever app it serves · P2 · fixed
+**Evidence (measured, `22d5fe4`).** `./start.sh all` runs three servers — computes 8765, composes 8766, creates 8767.
+All three landing pages showed the computes headline, "Think with your data. Open a table, or start a new one", and
+the top bar said only "claudia". Opening a document on each port gave the right app every time, so the servers and
+the launcher were never wrong; only the greeting was. The effect was worst on a fresh machine, where every folder is
+empty and all a person sees is three identical pages claiming to be the table app.
+**Cause.** `OpenDialog.vue` worked the app out as `documents.value[0]?.app ?? 'claudia'` — from the *first listed
+document*. With no documents there was nothing to read, and the copy fell through to the computes wording, which is
+the fallback branch. `/api/docs` has answered `{"app": ..., "documents": [...]}` all along; the page took the
+documents and dropped the app.
+**Fix.** `appOfServer()` in `web/app/lib/open.ts`: believe the server, fall back to a listed document for an older
+server that does not say, then to claudia in general. Extracted into `lib` rather than left in the component so it
+could be tested — the web tests cover `lib`, and there is no component harness. Four tests in `web/tests/open.test.ts`.
+Re-measured on all three ports with empty document folders: computes says "Think with your data", composes "Write
+together", creates "Say it on a slide", and each top bar names its own app.
+**Acceptance.** `tests/e2e/test_greeting.py` — the first test in the project that drives a real browser. It runs
+`./start.sh all`, opens each of the three ports in Chromium and reads `data-app` and the headline off the page.
+Confirmed to fail on `22d5fe4` for the right reason before the fix (all three said `app: claudia` and "Think with
+your data"), and to pass after it. `scripts/check_debt.py` runs it as the `e2e greeting` step and skips it, saying
+which is missing, where the web app is not built or there is no Chromium; CI has an `e2e` job that installs both.
+**Why nothing caught it.** Every layer below the rendered page was correct — the launcher, the three servers,
+`/api/docs` — and the web tests cover `web/app/lib`, not the page. The bug lived in the one place nothing looked.
+**Not the cause, though it looks like one.** computes and creates show "No styles yet" under *Format*: those menus
+are deliberately inert (D125) and the style UI for both is still to come.
 
 ### PROC-01 · No CI workflow in the repository · P1 · fixed
 `.github/workflows/ci.yml` exists at `54d1245`: a Python matrix over ubuntu, windows and macos running
