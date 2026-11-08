@@ -164,15 +164,15 @@ describe('opening a presentation', () => {
 describe('what the server tells', () => {
   it('adds and changes objects, in the stacking order it sends', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
-    link.push('objects', { type: 'objects', slide: 's1', changed: [text('c')], removed: [], order: ['a', 'b', 'c'] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [text('c')], removed: [], order: ['a', 'b', 'c'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b', 'c'])
-    link.push('objects', { type: 'objects', slide: 's1', changed: [text('a', { x: 7 })], removed: [], order: ['a', 'b', 'c'] })
-    expect(session.objectsOn('s1')[0]!.x).toBe(7)
+    link.push('objects', { type: 'objects', container: 's1', changed: [text('a', { anchor: { kind: 'slide', container: 's1', x: 7, y: 100 } })], removed: [], order: ['a', 'b', 'c'] })
+    expect(session.objectsOn('s1')[0]!.anchor.x).toBe(7)
     expect(state.slides[0]!.objects).toBe(3)
   })
   it('takes objects away', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
-    link.push('objects', { type: 'objects', slide: 's1', changed: [], removed: ['a'], order: ['b'] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: ['b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
     expect(state.objects.a).toBeUndefined()
     expect(state.slides[0]!.objects).toBe(1)
@@ -208,7 +208,7 @@ describe('what the server tells', () => {
   it('drops the selection of an object that somebody else removed', async () => {
     const { link, session, state } = await opened([text('a')])
     await session.select('a')
-    link.push('objects', { type: 'objects', slide: 's1', changed: [], removed: ['a'], order: [] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: [] })
     expect(state.selected).toBeNull()
     await session.settled()
     expect(link.count('unlock')).toBe(1)
@@ -219,7 +219,7 @@ describe('making changes', () => {
   it('adds a text box where it is told to and selects it', async () => {
     const { link, session, state } = await opened()
     link.handlers.add_object = () => {
-      link.push('objects', { type: 'objects', slide: 's1', changed: [text('o1')], removed: [], order: ['o1'] })
+      link.push('objects', { type: 'objects', container: 's1', changed: [text('o1')], removed: [], order: ['o1'] })
       return { object: 'o1', revision: 'main:1' }
     }
     expect(await session.addText({ x: 160, y: 120, w: 640, h: 140 })).toBe('o1')
@@ -235,7 +235,7 @@ describe('making changes', () => {
   it('imports a picture from disk and selects it (E10.8)', async () => {
     const { link, session, state } = await opened()
     link.handlers.add_image = () => {
-      link.push('objects', { type: 'objects', slide: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
+      link.push('objects', { type: 'objects', container: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
       return { object: 'i1', revision: 'main:1' }
     }
     const id = await session.addImage(

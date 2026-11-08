@@ -65,6 +65,22 @@ export interface StyleDef {
   computed: Record<string, string>
 }
 
+/** The `objects` event, as the server sends it in every app (`claudia_core.ObjectsChanged`).
+ *
+ * Typed rather than read off an `any`, because `onAppEvent` takes `any` and so the compiler cannot otherwise
+ * catch a renamed field: when `slide`/`sheet` became the one `container` (D177), a handler still reading
+ * `data.slide` filed the stacking order under `undefined`, which made a freshly inserted object invisible and
+ * unselectable until the document was reopened. Each app's handler narrows `data` to this before touching it. */
+export interface ObjectsEvent {
+  type: 'objects'
+  /** The slide, sheet or paragraph these objects are on. */
+  container: string
+  changed: VisualObject[]
+  removed: string[]
+  /** The whole container's stacking order afterwards, bottom first. */
+  order: string[]
+}
+
 /** A rectangle in the units of whatever space the object lives in. */
 export interface Frame {
   x: number

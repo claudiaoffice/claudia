@@ -4,7 +4,7 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import { type LinkLike, type Region } from './protocol'
 import { type Content } from './cells'
 import type { ImageAsset, ImageImport } from './images'
-import type { CellAnchor, VisualObject } from './objects'
+import type { CellAnchor, ObjectsEvent, VisualObject } from './objects'
 import { type Axis, lineSize } from './line-sizes'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
@@ -229,9 +229,10 @@ export class Session extends BaseSession<State> {
         this.track(this.reload())
         return true
       case 'objects': {
-        for (const o of data.changed as SheetObject[]) s.objects[o.id] = o
-        for (const id of data.removed as string[]) delete s.objects[id]
-        s.order[data.container] = data.order
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed as SheetObject[]) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.container] = e.order
         return true
       }
       case 'image':

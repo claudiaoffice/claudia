@@ -4,7 +4,7 @@ import { type LinkLike, type Region } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
 import type { ImageAsset, ImageImport } from './images'
-import type { SlideAnchor, StyleDef, VisualObject } from './objects'
+import type { ObjectsEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
 // so existing imports of them from this module keep working.
@@ -106,12 +106,13 @@ export class SlideSession extends BaseSession<SlideState> {
     const s = this.state
     switch (name) {
       case 'objects': {
-        for (const o of data.changed as SlideObject[]) s.objects[o.id] = o
-        for (const id of data.removed as string[]) delete s.objects[id]
-        s.order[data.slide] = data.order
-        const info = s.slides.find((x) => x.id === data.slide)
-        if (info) info.objects = data.order.length
-        if (s.selected && (data.removed as string[]).includes(s.selected)) {
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed as SlideObject[]) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.container] = e.order
+        const info = s.slides.find((x) => x.id === e.container)
+        if (info) info.objects = e.order.length
+        if (e.removed.includes(s.selected ?? '')) {
           s.selected = null
           this.track(this.letGo())
         }
