@@ -3,6 +3,41 @@
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
+ "ASPECT_TOLERANCE": {
+  "value": "1"
+ },
+ "AddObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'AddObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "object_id",
+   "summary"
+  ]
+ },
+ "Anchor": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "container"
+  ]
+ },
  "Applied": {
   "class": [
    "object"
@@ -10,6 +45,9 @@
   "init": "(revision: 'Revision', command: 'Command', inverse: 'Command', entry: 'Entry') -> None",
   "methods": {},
   "properties": []
+ },
+ "BOX": {
+  "value": "100"
  },
  "Batch": {
   "class": [
@@ -240,6 +278,40 @@
   },
   "properties": []
  },
+ "DefineImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(image: 'ImageAsset') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(shape: 'ShapeDefinition') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "Document": {
   "class": [
    "object"
@@ -369,6 +441,9 @@
   },
   "properties": []
  },
+ "FORMAT": {
+  "value": "1"
+ },
  "FontRequirement": {
   "class": [
    "object"
@@ -378,6 +453,40 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "ForgetImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ForgetShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "FunctionInfo": {
   "class": [
@@ -468,6 +577,16 @@
   },
   "properties": []
  },
+ "ImagesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(image_id: 'str', asset: 'ImageAsset | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "KernelError": {
   "class": [
    "Exception"
@@ -489,6 +608,18 @@
  },
  "MAX_IMAGE_BYTES": {
   "value": "8388608"
+ },
+ "MAX_OBJECTS_PER_CONTAINER": {
+  "value": "500"
+ },
+ "MAX_OBJECT_TEXT": {
+  "value": "20000"
+ },
+ "MAX_SELECTION": {
+  "value": "64"
+ },
+ "MIN_OBJECT_SIZE": {
+  "value": "20"
  },
  "Manifest": {
   "class": [
@@ -523,6 +654,97 @@
   ],
   "init": "(kind: 'str', schema: 'int')",
   "methods": {},
+  "properties": []
+ },
+ "MoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'MoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "OBJECT_KINDS": {
+  "value": "('text', 'shape', 'image')"
+ },
+ "ObjectBody": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', text: 'str' = '', shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectBody'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
+  "properties": []
+ },
+ "ObjectModel": {
+  "class": [
+   "Generic"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "anchor_from_data": "(self, data: 'dict') -> 'A'",
+   "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
+   "check_object": "(self, obj: 'VisualObject[A]') -> 'None'",
+   "close_container": "(self, container: 'str') -> 'None'",
+   "containers": "(self) -> 'Iterable[str]'",
+   "define_image": "(self, image: 'ImageAsset') -> 'None'",
+   "define_shape": "(self, shape: 'ShapeDefinition') -> 'None'",
+   "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
+   "forget_image": "(self, image_id: 'str') -> 'ImageAsset'",
+   "forget_shape": "(self, shape_id: 'str') -> 'ShapeDefinition'",
+   "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
+   "images_to_data": "(self) -> 'list[dict]'",
+   "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None) -> 'None'",
+   "objects_changed": "(self, container: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
+   "objects_on": "(self, container: 'str') -> 'list[VisualObject[A]]'",
+   "objects_to_data": "(self) -> 'list[dict]'",
+   "open_container": "(self, container: 'str') -> 'None'",
+   "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
+   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = ()) -> 'None'",
+   "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
+   "shapes_to_data": "(self) -> 'list[dict]'",
+   "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
+   "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
+   "users_of_shape": "(self, shape_id: 'str') -> 'list[str]'"
+  },
+  "properties": []
+ },
+ "ObjectSet": {
+  "class": [
+   "object"
+  ],
+  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectSet'",
+   "overlaps": "(self, other: 'object') -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'ObjectSet | None'"
+  },
+  "properties": []
+ },
+ "ObjectsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(container: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
   "properties": []
  },
  "Presence": {
@@ -620,6 +842,25 @@
   "methods": {},
   "properties": []
  },
+ "RemoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "RemoveStyle": {
   "class": [
    "Command"
@@ -682,6 +923,24 @@
   "methods": {},
   "properties": []
  },
+ "ResizeObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict', w: 'int', h: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ResizeObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "Restore": {
   "class": [
    "Command"
@@ -727,6 +986,24 @@
   "methods": {},
   "properties": []
  },
+ "RotateObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', rotation: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RotateObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SUPPORTED_IMAGE_FORMATS": {
   "value": "('jpeg', 'gif', 'bmp', 'svg')"
  },
@@ -736,6 +1013,72 @@
   ],
   "init": "(kind: 'str', found: 'int', known: 'int')",
   "methods": {},
+  "properties": []
+ },
+ "SetSnap": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', snap: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetSnap'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetText": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', text: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ShapeDefinition": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', path: 'str', aspect: 'float | None' = None, text_area: 'tuple[float, float, float, float]' = (0, 0, 100, 100)) -> None",
+  "methods": {
+   "from_data": "(data: 'object') -> 'ShapeDefinition'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ShapeError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "ShapesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(shape_id: 'str', definition: 'ShapeDefinition | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
   "properties": []
  },
  "Snapshot": {
@@ -849,6 +1192,22 @@
   "methods": {},
   "properties": []
  },
+ "VisualObject": {
+  "class": [
+   "Generic"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'A') -> None",
+  "methods": {
+   "from_data": "(data: 'dict', read_anchor: 'ReadAnchor[A]') -> 'VisualObject[A]'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'",
+   "with_body": "(self, **changes: 'Any') -> 'Self'"
+  },
+  "properties": [
+   "container",
+   "id"
+  ]
+ },
  "check": {
   "function": "(manifest: 'Manifest', env: 'Environment') -> 'RequirementReport'"
  },
@@ -872,6 +1231,9 @@
  },
  "parse_css": {
   "function": "(text: 'str') -> 'tuple[dict[str, str], list[CssProblem]]'"
+ },
+ "parse_shape": {
+  "function": "(text: 'str') -> 'ShapeDefinition'"
  },
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"

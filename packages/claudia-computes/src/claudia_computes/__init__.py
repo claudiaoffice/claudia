@@ -1,34 +1,52 @@
 """claudia-computes: the spreadsheet app, here only the mini-port that proves claudia-core.
 
 refs      CellRef / RangeRef / structural edits (from the demo)
-model     WorkbookModel: sheets, typed cells, and the images/objects a document knows (E10.11)
-commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, DefineImage, ForgetImage, AddObject, MoveObject,
-RemoveObject
-region    CellRegion: moves with structural edits; ObjectSet: a selection of floating objects (does not)
+model     WorkbookModel, CellAnchor, SheetObject: sheets, typed cells, and this app's own part of an object
+commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines (objects are shared: see ``claudia_core``)
+region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
+styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
 entry     parse_input: what typing into a cell means
 
-An image is anchored to a cell (``row``, ``col``) with a fixed pixel size (``w``, ``h``): neither ever changes
-because of a row/column insert, delete, or resize — only ``MoveObject`` (the person dragging it) moves it, and
-there is no resize of an object yet. Decoding and the import record are ``claudia_core``'s (``ImageAsset``,
-``ImageImport``, re-exported there), shared with creates and composes.
+A floating object is a shared ``ObjectBody`` plus a ``CellAnchor``: only the anchor is this app's. The anchor and
+the object's pixel size never change because of a row/column insert, delete or resize — only ``MoveObject`` (the
+person dragging it) moves it. Placing, stacking, moving, resizing, rotating, styling and the image and shape
+assets are ``claudia_core.objects``, shared with creates and composes.
 """
 
-from . import commands  # noqa: F401  (registers the commands)
-from .commands import (
+# The object commands, the object types and the object region are shared by all three apps and live in
+# ``claudia_core`` (E10.16). They are re-exported here so that an app package names everything it can do.
+from claudia_core import (  # noqa: F401
     AddObject,
-    AddSheet,
     DefineImage,
+    DefineShape,
     ForgetImage,
+    ForgetShape,
     MoveObject,
+    ObjectBody,
+    ObjectSet,
     RemoveObject,
-    RemoveSheet,
-    ResizeLines,
-    SetCells,
-    Structure,
+    ResizeObject,
+    RotateObject,
+    SetSnap,
+    SetText,
+    VisualObject,
 )
+
+from . import commands  # noqa: F401  (registers the commands)
+from .commands import AddSheet, RemoveSheet, ResizeLines, SetCells, Structure
 from .entry import parse_input
-from .events import ImagesChanged, ObjectsChanged
-from .model import OBJECT_KINDS, Content, Sheet, SheetObject, WorkbookModel, content_of
+from .events import ImagesChanged, ObjectsChanged, ShapesChanged
+from .model import (
+    MAX_OBJECTS_PER_SHEET,
+    MIN_OBJECT_SIZE,
+    OBJECT_KINDS,
+    CellAnchor,
+    Content,
+    Sheet,
+    SheetObject,
+    WorkbookModel,
+    content_of,
+)
 from .refs import (
     CellRef,
     DeleteCols,
@@ -41,38 +59,54 @@ from .refs import (
     column_name,
     parse_range_ref,
 )
-from .region import CellRegion, ObjectSet
+from .region import CellRegion
+from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 
 __all__ = [
-    "OBJECT_KINDS",
     "AddObject",
     "AddSheet",
+    "builtin_styles",
+    "BUILTIN_STYLES",
+    "CellAnchor",
     "CellRef",
     "CellRegion",
+    "column_name",
     "Content",
+    "content_of",
+    "DEFAULT_STYLE",
     "DefineImage",
+    "DefineShape",
     "DeleteCols",
     "DeleteRows",
     "ForgetImage",
+    "ForgetShape",
     "ImagesChanged",
     "InsertCols",
     "InsertRows",
+    "MAX_OBJECTS_PER_SHEET",
+    "MIN_OBJECT_SIZE",
     "MoveObject",
-    "ObjectSet",
+    "OBJECT_KINDS",
+    "ObjectBody",
     "ObjectsChanged",
+    "ObjectSet",
+    "parse_input",
+    "parse_range_ref",
     "RangeRef",
     "RefParseError",
     "RemoveObject",
     "RemoveSheet",
     "ResizeLines",
+    "ResizeObject",
+    "RotateObject",
     "SetCells",
+    "SetSnap",
+    "SetText",
+    "ShapesChanged",
     "Sheet",
     "SheetId",
     "SheetObject",
     "Structure",
+    "VisualObject",
     "WorkbookModel",
-    "column_name",
-    "content_of",
-    "parse_input",
-    "parse_range_ref",
 ]

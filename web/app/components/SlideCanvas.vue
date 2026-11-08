@@ -7,6 +7,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
 import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
+import { cssOf as computedCss, slideFrame } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
 import { colorOf, inkOn } from '~/lib/people'
 import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
@@ -54,7 +55,7 @@ const gridStyle = computed(() => (props.showGrid ? { backgroundSize: `${px(GRID_
 
 /** Where an object is on the screen; a frame being dragged replaces the one the server knows. */
 function frameOf(o: SlideObject): Frame {
-  return drag.value?.id === o.id ? drag.value.frame : o
+  return drag.value?.id === o.id ? drag.value.frame : slideFrame(o)
 }
 function boxStyle(o: SlideObject) {
   const f = frameOf(o)
@@ -63,7 +64,7 @@ function boxStyle(o: SlideObject) {
 function cssOf(o: SlideObject) {
   // withDisplayInk: a text object's default ink, genuinely black in the document (D28/2026-11-06), still needs to
   // read against a dark slide canvas in dark mode — display-only, same fix as composes' paragraphCss.
-  return withDisplayInk(scaleCss(state.styles[o.style]?.css ?? {}, scale.value))
+  return withDisplayInk(scaleCss(computedCss(state.styles, o), scale.value))
 }
 function outline(o: SlideObject) {
   return o.shape ? (state.shapes[o.shape] ?? null) : null
@@ -133,7 +134,7 @@ async function onObjectDown(event: PointerEvent, o: SlideObject) {
   target.setPointerCapture(event.pointerId)
   await commitEdit()
   area.value?.focus({ preventScroll: true })
-  drag.value = { id: o.id, handle: 'move', from: where, start: { x: o.x, y: o.y, w: o.w, h: o.h }, frame: { x: o.x, y: o.y, w: o.w, h: o.h }, moved: false }
+  drag.value = { id: o.id, handle: 'move', from: where, start: slideFrame(o), frame: slideFrame(o), moved: false }
   session.select(o.id)
 }
 
@@ -142,7 +143,7 @@ function onHandleDown(event: PointerEvent, handle: Handle) {
   if (!o || event.button !== 0) return
   event.stopPropagation()
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
-  drag.value = { id: o.id, handle, from: point(event), start: { x: o.x, y: o.y, w: o.w, h: o.h }, frame: { x: o.x, y: o.y, w: o.w, h: o.h }, moved: false }
+  drag.value = { id: o.id, handle, from: point(event), start: slideFrame(o), frame: slideFrame(o), moved: false }
 }
 
 function onPointerMove(event: PointerEvent) {
@@ -285,8 +286,8 @@ async function onKey(event: KeyboardEvent) {
   if (arrow) {
     event.preventDefault()
     const step = event.shiftKey ? 1 : STEP
-    const f = moveFrame(o, arrow[0] * step, arrow[1] * step)
-    if (f.x !== o.x || f.y !== o.y) await session.move(o.id, f.x, f.y)
+    const f = moveFrame(slideFrame(o), arrow[0] * step, arrow[1] * step)
+    if (f.x !== o.anchor.x || f.y !== o.anchor.y) await session.move(o.id, f.x, f.y)
   }
 }
 

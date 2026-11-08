@@ -22,15 +22,14 @@ const WELCOME: Welcome = {
 
 const RECT = { format: 1, id: 'rectangle', name: 'Rectangle', path: 'M0 0 L100 0 L100 100 L0 100 Z', aspect: null, text_area: { x: 0, y: 0, w: 100, h: 100 } }
 const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z', aspect: 1, text_area: { x: 15, y: 15, w: 70, h: 70 } }
-const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', css: { color: '#1f1a33' } }
-const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', css: { fill: '#e7e1f4' } }
+const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', based_on: null, to_name: false, css: { color: '#1f1a33' }, computed: { color: '#1f1a33' } }
+const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', based_on: 'body-text', to_name: false, css: { fill: '#e7e1f4' }, computed: { color: '#1f1a33', fill: '#e7e1f4' } }
 
+// An object as the server sends it (E10.16, D177): the shared body's fields flat, the anchor nested — the same
+// shape in all three apps, only `anchor` differing.
 const text = (id: string, extra: object = {}) => ({
   id,
-  slide: 's1',
   kind: 'text',
-  x: 100,
-  y: 100,
   w: 400,
   h: 120,
   style: 'body-text',
@@ -38,17 +37,16 @@ const text = (id: string, extra: object = {}) => ({
   shape: null,
   image: null,
   imported: null,
+  rotation: 0,
   snap: true,
+  anchor: { kind: 'slide', container: 's1', x: 100, y: 100 },
   ...extra,
 })
 const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
 const IMPORT = { asset: ASSET.id, alt: 'a chart', imported_by: 'ann', imported_at: '2026-11-07T10:00:00.000Z', source: 'disk', source_name: 'chart.gif', source_path: '/Users/ann/chart.gif' }
 const image = (id: string, extra: object = {}) => ({
   id,
-  slide: 's1',
   kind: 'image',
-  x: 0,
-  y: 0,
   w: 400,
   h: 200,
   style: 'plain-image',
@@ -56,7 +54,9 @@ const image = (id: string, extra: object = {}) => ({
   shape: null,
   image: ASSET.id,
   imported: IMPORT,
+  rotation: 0,
   snap: true,
+  anchor: { kind: 'slide', container: 's1', x: 0, y: 0 },
   ...extra,
 })
 
@@ -225,7 +225,7 @@ describe('making changes', () => {
     expect(await session.addText({ x: 160, y: 120, w: 640, h: 140 })).toBe('o1')
     expect(link.last('add_object')).toEqual({ slide: 's1', kind: 'text', x: 160, y: 120, w: 640, h: 140, base: 'main:0' })
     expect(state.selected).toBe('o1')
-    expect(link.last('lock').regions).toEqual([{ kind: 'objects', slide: 's1', ids: ['o1'] }])
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['o1'] }])
   })
   it('adds a shape by the id of its outline', async () => {
     const { link, session } = await opened()
@@ -309,7 +309,7 @@ describe('selecting', () => {
     const { link, session, state } = await opened([text('a'), text('b')])
     await session.select('a')
     expect(state.selected).toBe('a')
-    expect(link.last('lock').regions).toEqual([{ kind: 'objects', slide: 's1', ids: ['a'] }])
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['a'] }])
     await session.select(null)
     expect(state.selected).toBeNull()
     expect(link.count('unlock')).toBe(1)
@@ -341,12 +341,12 @@ describe('selecting', () => {
     await session.select('a')
     expect(session.state.selected).toBe('a')
     expect(link.count('lock')).toBe(0)
-    expect(link.last('presence').regions).toEqual([{ kind: 'objects', slide: 's1', ids: ['a'] }])
+    expect(link.last('presence').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['a'] }])
     expect(session.state.notice).toBeNull()
   })
   it('tells which objects colleagues have selected', async () => {
     const { link, session } = await opened([text('a'), text('b')])
-    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'objects', slide: 's1', ids: ['b'] }], locked: true } })
+    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'objects', container: 's1', ids: ['b'] }], locked: true } })
     expect(session.selectedByOthers('s1')).toEqual([{ id: 'b', user: 'ben', locked: true }])
     expect(session.selectedByOthers('s2')).toEqual([])
   })

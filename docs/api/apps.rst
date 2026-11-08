@@ -16,9 +16,10 @@ computes
 .. autoclass:: claudia_computes.AddSheet
 .. autoclass:: claudia_computes.RemoveSheet
 .. autoclass:: claudia_computes.CellRegion
-.. autoclass:: claudia_computes.SheetObject
-.. autoclass:: claudia_computes.ObjectSet
-.. autoclass:: claudia_computes.ObjectsChanged
+.. autoclass:: claudia_computes.CellAnchor
+
+``SheetObject`` is ``VisualObject[CellAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor.
+The object commands, region and events are shared by all three apps (:doc:`claudia_core`, E10.16, D177).
 
 Formulas
 ~~~~~~~~
@@ -57,6 +58,15 @@ composes
 
 .. automodule:: claudia_composes
    :members:
+   :exclude-members: AddObject, DefineImage, DefineShape, ForgetImage, ForgetShape, MoveObject, ObjectBody, ObjectSet, RemoveObject, ResizeObject, RotateObject, SetSnap, SetText, VisualObject
+
+.. automodule:: claudia_composes.anchors
+   :no-members:
+
+.. currentmodule:: claudia_composes
+
+``BlockAnchor`` is documented with the rest of the package above. ``TextObject`` is ``VisualObject[BlockAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor
+(E10.16, D179). Unlike a sheet anchor, a block anchor follows the text.
 
 Import/export
 ~~~~~~~~~~~~~~

@@ -4,28 +4,16 @@ import { type LinkLike, type Region } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
 import type { ImageAsset, ImageImport } from './images'
+import type { SlideAnchor, StyleDef, VisualObject } from './objects'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
 // so existing imports of them from this module keep working.
 export type { ImageAsset, ImageImport } from './images'
+export type { ObjectBody, SlideAnchor, StyleDef, VisualObject } from './objects'
 
-export interface SlideObject {
-  id: string
-  slide: string
-  kind: 'text' | 'shape' | 'image'
-  x: number
-  y: number
-  w: number
-  h: number
-  style: string
-  text: string
-  shape: string | null
-  image: string | null
-  imported: ImageImport | null
-  /** Whether this object holds to the grid (E10.15): the document's own state, set with `setSnap`. The grid
-   * itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is shown. */
-  snap: boolean
-}
+/** One thing on a slide: the shared `ObjectBody` plus a `SlideAnchor` — the only part of it that is this app's
+ * own (E10.16, D177). Read its place with `slideFrame(obj)`, not `obj.x`. */
+export type SlideObject = VisualObject<SlideAnchor>
 /** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
 export interface ShapeDef {
   format: number
@@ -35,12 +23,7 @@ export interface ShapeDef {
   aspect: number | null
   text_area: { x: number; y: number; w: number; h: number }
 }
-export interface StyleDef {
-  id: string
-  name: string
-  purpose: string
-  css: Record<string, string>
-}
+
 export interface SlideInfo {
   id: string
   objects: number
@@ -112,7 +95,7 @@ export class SlideSession extends BaseSession<SlideState> {
     for (const [user, here] of Object.entries(this.state.presence)) {
       if (user === this.state.me.user) continue
       for (const region of here.regions) {
-        if (region.kind === 'objects' && region.slide === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
+        if (region.kind === 'objects' && region.container === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
       }
     }
     return found
@@ -227,7 +210,7 @@ export class SlideSession extends BaseSession<SlideState> {
 
   // -- the selection: shown to the others, and held so that nobody changes the object under my hands
   private regionOf(id: string): Region[] {
-    return [{ kind: 'objects', slide: this.state.objects[id]?.slide ?? this.state.activeSlide, ids: [id] }]
+    return [{ kind: 'objects', container: this.state.objects[id]?.anchor.container ?? this.state.activeSlide, ids: [id] }]
   }
 
   /** Select an object (null: nothing). Selecting holds it; a colleague who holds it first keeps it. */

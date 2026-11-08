@@ -18,24 +18,24 @@ from __future__ import annotations
 
 import secrets
 
-from claudia_core import Batch, ImageImport, decode_image
-from claudia_core.clock import utc_now
-from claudia_creates import (
-    BUILTIN_STYLES,
+from claudia_core import (
     OBJECT_KINDS,
     AddObject,
-    AddSlide,
+    Batch,
     DefineImage,
     DefineShape,
+    ImageImport,
     MoveObject,
+    ObjectBody,
     RemoveObject,
     ResizeObject,
+    RotateObject,
     SetSnap,
     SetText,
-    ShapeLibrary,
-    SlideModel,
-    SlideObject,
+    decode_image,
 )
+from claudia_core.clock import utc_now
+from claudia_creates import AddSlide, ShapeLibrary, SlideAnchor, SlideModel
 
 from .images import image_bytes
 from .protocol import Context, MethodTable, RequestError, core_methods
@@ -93,21 +93,27 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, b
         }
     )
     object_id = _fresh("o", deck.objects)
-    style = STYLE_OF_KIND["image"]
-    obj = SlideObject(object_id, slide, "image", x, y, w, h, style, image=asset.id, imported=imported)
-    steps.append(AddObject(obj))
+    body = ObjectBody(object_id, "image", w, h, STYLE_OF_KIND["image"], image=asset.id, imported=imported)
+    steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
     return _done(ctx, command, base, object=object_id)
 
 
 def _move_object(ctx, *, id, x, y, base):
     """Move an object so that its top left corner is at (x, y)."""
-    return _done(ctx, MoveObject(id, x, y), base)
+    slide = _deck(ctx).get_object(id).anchor.slide
+    return _done(ctx, MoveObject(id, SlideAnchor(slide, x, y).to_data()), base)
 
 
 def _resize_object(ctx, *, id, x, y, w, h, base):
     """Give an object a new frame: top left corner and size (resizing from the left or top moves the corner)."""
-    return _done(ctx, ResizeObject(id, x, y, w, h), base)
+    slide = _deck(ctx).get_object(id).anchor.slide
+    return _done(ctx, ResizeObject(id, SlideAnchor(slide, x, y).to_data(), w, h), base)
+
+
+def _rotate_object(ctx, *, id, rotation, base):
+    """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
+    return _done(ctx, RotateObject(id, rotation), base)
 
 
 def _set_text(ctx, *, id, text, base):
@@ -137,6 +143,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     )(_add_image)
     table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
     table.method("resize_object", "id:str x:int y:int w:int h:int base:revision?", write=True)(_resize_object)
+    table.method("rotate_object", "id:str rotation:int base:revision?", write=True)(_rotate_object)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
@@ -150,10 +157,12 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("slide", "slide:str")
     def _slide(ctx, slide):
         """One slide as `{revision, slide, objects}`: its objects, the one in front last. An object is
-        `{id, slide, kind, x, y, w, h, style, text, shape, image, imported, snap}`; `imported`'s `source_path` is
-        only sent to the person who imported that image (everyone else sees `null` there, not the path). `snap`
-        is whether the object holds to the grid, a helper the view draws and is free to show or hide on its
-        own — `snap` is unaffected by that and is the document's own state, set with `set_snap`."""
+        `{id, kind, w, h, style, text, shape, image, imported, rotation, snap, anchor}` — the same shape in all
+        three apps except for `anchor`, which here is `{kind: "slide", container: <slide>, x, y}` (E10.16).
+        `imported`'s `source_path` is only sent to the person who imported that image (everyone else sees `null`
+        there, not the path). `snap` is whether the object holds to the grid, a helper the view draws and is free
+        to show or hide on its own — `snap` is unaffected by that and is the document's own state, set with
+        `set_snap`."""
         deck = _deck(ctx)
         if slide not in deck.slides:
             raise RequestError("command_error", f"unknown slide {slide!r}")
@@ -181,8 +190,10 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
 
     @table.method("styles")
     def _styles(ctx):
-        """The named looks objects refer to, each as `{id, name, purpose, css}`."""
-        return [style.to_data() for style in BUILTIN_STYLES.values()]
+        """The document's styles, each as `{id, name, purpose, based_on, css, to_name, computed}`: the look an
+        object gets from its `style`. `css` is what the style sets itself, `computed` what it really has once its
+        parents are resolved (D73). A shape's background and border are `fill`/`stroke`/`stroke-width` (D178)."""
+        return _deck(ctx).styles.views()
 
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):
@@ -210,7 +221,8 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 raise RequestError("bad_request", f"add_object: this server has no shape {shape!r}")
             steps.append(DefineShape(outline))
         object_id = _fresh("o", deck.objects)
-        steps.append(AddObject(SlideObject(object_id, slide, kind, x, y, w, h, STYLE_OF_KIND[kind], text, shape)))
+        body = ObjectBody(object_id, kind, w, h, STYLE_OF_KIND[kind], text=text, shape=shape)
+        steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return _done(ctx, command, base, object=object_id)
 

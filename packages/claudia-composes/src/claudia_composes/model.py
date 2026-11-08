@@ -12,8 +12,20 @@ from collections import Counter
 from dataclasses import dataclass, field, replace
 from typing import ClassVar, Self
 
-from claudia_core import CommandRegistry, DocumentModel, Region, StyleBook, StyleDef, new_registry
+from claudia_core import (
+    CommandRegistry,
+    DocumentModel,
+    ObjectBody,
+    ObjectModel,
+    ObjectSet,
+    Region,
+    StyleBook,
+    StyleDef,
+    VisualObject,
+    new_registry,
+)
 
+from .anchors import BlockAnchor
 from .region import TextRange
 from .runs import Run, delete_runs, insert_runs, runs_from_data, runs_to_data, slice_runs, total
 from .spans import TextCommand
@@ -118,6 +130,26 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "padding-right": "0.9em",
         },
     ),
+    # The two object styles, with the same ids in all three apps (E10.16), so that a shape or a picture carried
+    # from a slide or a sheet into a text keeps a style that exists here. A shape's background and border are
+    # ``fill``/``stroke``/``stroke-width``, not ``background-color``/``border-*`` (D178): a shape is an outline in
+    # a 100 by 100 box, not a rectangle, so only the SVG vocabulary can give a circle or a triangle a border.
+    _style(
+        "plain-shape",
+        "Plain shape",
+        "a shape floating over the text, carrying a thought or marking a passage",
+        **{
+            "fill": "rgba(231, 225, 244, 0.55)",
+            "stroke": "#5B4BC4",
+            "stroke-width": "2px",
+            "text-align": "center",
+        },
+    ),
+    _style(
+        "plain-image",
+        "Plain image",
+        "a picture floating over the text; it carries its own colours, so no style properties apply to it",
+    ),
     _style(
         "definition",
         "Definition",
@@ -178,18 +210,25 @@ class Suggestion:
     state: str = "open"
 
 
-class TextModel(DocumentModel):
-    """The paragraphs of a document and its suggestions."""
+#: One floating thing in a text: a text box, a shape or an image, hanging from a place in a paragraph.
+type TextObject = VisualObject[BlockAnchor]
+
+
+class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
+    """The paragraphs of a document, its suggestions and the objects floating over it."""
 
     app: ClassVar[str] = "composes"
-    state_schema: ClassVar[int] = 3
+    state_schema: ClassVar[int] = 4  # 4: a text also carries objects, images and shapes (E10.16)
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(self, blocks: list[Block] | None = None, styles: StyleBook | None = None):
+        super().__init__()
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
         self.suggestions: dict[str, Suggestion] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
+        for block in self.blocks:
+            self.open_container(block.id)
 
     # -- lifecycle ---------------------------------------------------------------
     @classmethod
@@ -203,6 +242,9 @@ class TextModel(DocumentModel):
             "blocks": [b.to_data() for b in self.blocks],
             "styles": self.styles.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
+            "shapes": self.shapes_to_data(),
+            "images": self.images_to_data(),
+            "objects": self.objects_to_data(),
             "last": dict(self._last),
         }
 
@@ -217,17 +259,56 @@ class TextModel(DocumentModel):
         model = cls([Block(b["id"], b["style"], b["text"], runs_from_data(b["runs"])) for b in raw], styles)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
+        model.restore_objects(  # schema 3 and earlier had no objects
+            state.get("objects", ()), state.get("images", ()), state.get("shapes", ())
+        )
         model._last = dict(state.get("last", model._last))
         return model
 
     def region_from_data(self, data: dict) -> Region:
-        """Read a region a client sent: ``{"kind": "text", "block", "start", "end"}``."""
+        """Read a region a client sent: a stretch of text, or a selection of floating objects."""
+        if data.get("kind") == ObjectSet.kind:
+            return ObjectSet.from_data(data)
         if data.get("kind") != TextRange.kind:
-            raise ValueError(f"composes knows only text regions, not {data.get('kind')!r}")
+            raise ValueError(f"composes knows text regions and object selections, not {data.get('kind')!r}")
         block, start, end = data["block"], data["start"], data["end"]
         if not (isinstance(block, str) and isinstance(start, int) and isinstance(end, int) and 0 <= start <= end):
             raise ValueError("a text region names a paragraph and 0 <= start <= end")
         return TextRange(block, start, end)
+
+    # -- the object seam ---------------------------------------------------------
+    def containers(self) -> list[str]:
+        """The paragraphs objects may hang from, in order."""
+        return [block.id for block in self.blocks]
+
+    def anchor_from_data(self, data: dict) -> BlockAnchor:
+        """Read a block anchor; ``ValueError`` if the data is not one."""
+        return BlockAnchor.from_data(data)
+
+    def check_anchor(self, anchor: BlockAnchor, body: ObjectBody) -> None:
+        """An object hangs from a character of its paragraph, so the offset must lie inside that paragraph.
+
+        A text has no edge an object could fall off, unlike a slide: only the offset is checked, never the size."""
+        if not 0 <= anchor.offset <= len(self.block(anchor.block).text):
+            raise IndexError("an object must hang from a place inside its paragraph")
+
+    def move_objects(self, command: TextCommand) -> list[dict]:
+        """Let the objects follow ``command`` (see ``claudia_composes.anchors``); returns the ones that moved,
+        as sent to clients. A paragraph that was joined away takes its objects with it to the surviving one."""
+        moved: list[dict] = []
+        for obj in list(self.objects.values()):
+            span = command.follow(obj.anchor.span)
+            if span == obj.anchor.span:
+                continue
+            placed = obj.anchor.followed(span)
+            was, now = obj.container, placed.container
+            self.objects[obj.id] = replace(obj, anchor=placed)
+            if was != now:  # the paragraph went away, or the anchor crossed into another one
+                self._stack.setdefault(now, []).append(obj.id)
+                if obj.id in self._stack.get(was, []):
+                    self._stack[was].remove(obj.id)
+            moved.append(self.objects[obj.id].to_data())
+        return moved
 
     # -- reading -----------------------------------------------------------------
     def block(self, block_id: str) -> Block:
@@ -333,6 +414,7 @@ class TextModel(DocumentModel):
         rest = Block(new_id, style, block.text[offset:], slice_runs(block.runs, offset, len(block.text)))
         block.text, block.runs = block.text[:offset], slice_runs(block.runs, 0, offset)
         self.blocks.insert(self.index_of(block_id) + 1, rest)
+        self.open_container(new_id)
         self._note_id(new_id)
 
     def join(self, block_id: str, into: str, at: int) -> str:
@@ -346,8 +428,21 @@ class TextModel(DocumentModel):
             raise ValueError("the paragraph before it is not as long as the command says")
         first.text += second.text
         first.runs = insert_runs(first.runs, at, second.runs)
+        self.carry_objects(block_id, into, shift=at)
         self.blocks.remove(second)
+        self.close_container(block_id)
         return second.style
+
+    def carry_objects(self, source: str, target: str, *, shift: int) -> None:
+        """Move every object of the paragraph ``source`` to ``target``, ``shift`` characters further along.
+
+        Used by :meth:`join`: a paragraph that is joined into the one before it takes its objects with it rather
+        than leaving them anchored to something that no longer exists."""
+        for object_id in list(self._stack.get(source, ())):
+            obj = self.objects[object_id]
+            self.objects[object_id] = replace(obj, anchor=BlockAnchor(target, obj.anchor.offset + shift))
+            self._stack.setdefault(target, []).append(object_id)
+            self._stack[source].remove(object_id)
 
     def check_style(self, style: str) -> None:
         """``ValueError`` unless the document has a style with this id."""

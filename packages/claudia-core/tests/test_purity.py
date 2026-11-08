@@ -74,6 +74,8 @@ def test_kernel_has_no_third_party_imports():
         "datetime",
         "enum",
         "hashlib",  # assets.py: content-addressing an image by its sha256
+        "json",  # shapes.py: a shape outline is one JSON object (parsing text, no I/O)
+        "math",  # shapes.py: isfinite, refusing a shape coordinate that is nan or inf
         "re",
         "struct",  # assets.py: reading JPEG/BMP/GIF binary headers
         "time",

@@ -29,6 +29,51 @@ Commands
 .. autoclass:: claudia_core.Redacted
 .. autoclass:: claudia_core.Context
 
+Objects: shapes, images and text boxes
+--------------------------------------
+
+.. automodule:: claudia_core.objects
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+An object is a shared body and a per-app anchor; everything but the anchor is written once here (E10.16, D177).
+
+.. autoclass:: claudia_core.ObjectBody
+.. autoclass:: claudia_core.VisualObject
+.. autoclass:: claudia_core.Anchor
+.. autoclass:: claudia_core.ObjectModel
+.. autoclass:: claudia_core.ObjectSet
+.. autoclass:: claudia_core.ObjectsChanged
+.. autoclass:: claudia_core.ImagesChanged
+.. autoclass:: claudia_core.ShapesChanged
+
+The object commands, the same in all three apps:
+
+.. autoclass:: claudia_core.AddObject
+.. autoclass:: claudia_core.RemoveObject
+.. autoclass:: claudia_core.MoveObject
+.. autoclass:: claudia_core.ResizeObject
+.. autoclass:: claudia_core.RotateObject
+.. autoclass:: claudia_core.SetText
+.. autoclass:: claudia_core.SetSnap
+.. autoclass:: claudia_core.DefineShape
+.. autoclass:: claudia_core.ForgetShape
+.. autoclass:: claudia_core.DefineImage
+.. autoclass:: claudia_core.ForgetImage
+
+Shape outlines
+--------------
+
+.. automodule:: claudia_core.shapes
+   :members: ShapeError
+
+.. currentmodule:: claudia_core
+
+.. autoclass:: claudia_core.ShapeDefinition
+.. autofunction:: claudia_core.parse_shape
+.. autoclass:: claudia_core.objects.ReadAnchor
+
 The model an app implements
 ---------------------------
 

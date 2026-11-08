@@ -1,0 +1,89 @@
+// The shared object layer, client side (E10.16, D177 — mirrors `claudia_core.objects`).
+//
+// An object arrives from any of the three apps in exactly the same shape: the body's fields flat, plus one
+// `anchor` whose contents only its own app understands. So `ObjectBody` below is shared by creates, computes
+// and composes, and the only per-app part is the anchor and the small adapter that turns it into a `Frame` in
+// pixels (`lib/geometry.ts` already works purely on frames and knows nothing about slides).
+//
+// This is the client half of the separation: the property dialog, the resize handles and the style plumbing can
+// be written once against `ObjectBody` and reused per app by swapping the anchor adapter.
+
+import type { ImageImport } from './images'
+
+/** Where an object sits, in the terms of one app. `container` is its slide, sheet or paragraph. */
+export interface SlideAnchor {
+  kind: 'slide'
+  container: string
+  x: number
+  y: number
+}
+export interface CellAnchor {
+  kind: 'cell'
+  container: string
+  row: number
+  col: number
+}
+export interface BlockAnchor {
+  kind: 'block'
+  container: string
+  offset: number
+}
+export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
+
+/** What an object is and how it looks: the same fields in all three apps. */
+export interface ObjectBody {
+  id: string
+  kind: 'text' | 'shape' | 'image'
+  w: number
+  h: number
+  /** The id of a style in the document's style book: its colours, its border and its type come from there. */
+  style: string
+  text: string
+  shape: string | null
+  image: string | null
+  imported: ImageImport | null
+  /** Whole degrees clockwise. Persisted and validated by the model; no client surface yet. */
+  rotation: number
+  /** Whether this object holds to the grid (E10.15, D151): the document's own state, set with `setSnap`. The
+   * grid itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is
+   * shown. */
+  snap: boolean
+}
+
+/** One object: the shared body plus the anchor of its own app. */
+export type VisualObject<A extends Anchor = Anchor> = ObjectBody & { anchor: A }
+
+/** A style as the server sends it: `css` is what it sets itself, `computed` what it really has once its parents
+ * are resolved (D73). Draw with `computed`; edit `css`. */
+export interface StyleDef {
+  id: string
+  name: string
+  purpose: string
+  based_on: string | null
+  css: Record<string, string>
+  to_name: boolean
+  computed: Record<string, string>
+}
+
+/** A rectangle in the units of whatever space the object lives in. */
+export interface Frame {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/** The frame of an object anchored to a point on a slide: the anchor *is* the top-left corner. */
+export function slideFrame(obj: VisualObject<SlideAnchor>): Frame {
+  return { x: obj.anchor.x, y: obj.anchor.y, w: obj.w, h: obj.h }
+}
+
+/** The slide anchor a frame implies (the inverse of `slideFrame`). */
+export function slideAnchor(container: string, frame: Frame): SlideAnchor {
+  return { kind: 'slide', container, x: frame.x, y: frame.y }
+}
+
+/** The look to draw an object with: the computed CSS of its style, or nothing if the style is unknown. */
+export function cssOf(styles: Record<string, StyleDef>, body: ObjectBody): Record<string, string> {
+  return styles[body.style]?.computed ?? {}
+}

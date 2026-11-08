@@ -1,85 +1,97 @@
 """claudia-creates: the presentation app. Slides holding text boxes, shapes and images, on the claudia-core
-kernel (E10.1, E10.8).
+kernel (E10.1, E10.8, E10.16).
 
-shapes    ShapeDefinition, ShapeLibrary: outlines as JSON files that users can add to
-styles    BUILTIN_STYLES: named looks, CSS from an allow-list
-model     SlideModel, SlideObject: slides, the shapes and images a document knows, objects and their stacking order
-commands  AddObject, MoveObject, ResizeObject, SetText, SetSnap, RemoveObject, DefineShape, ForgetShape, DefineImage,
-          ForgetImage, AddSlide, RemoveSlide
-region    ObjectSet: the Region of this app (a selection, a lock)
-events    ObjectsChanged, ShapesChanged, ImagesChanged, SlidesChanged: what views are told
+shapes    ShapeLibrary: outlines read from JSON files on disk that users can add to (the format itself is
+          ``claudia_core.shapes``)
+styles    BUILTIN_STYLES: the styles a presentation starts with, as core StyleDef entries in the document's own book
+model     SlideModel, SlideAnchor, SlideObject: slides, the slide space, and what is this app's own about an object
+commands  AddSlide, RemoveSlide — everything about objects is shared and comes from ``claudia_core``
+events    SlidesChanged (``ObjectsChanged``, ``ShapesChanged``, ``ImagesChanged`` are core's, re-exported)
 
-An image is imported from disk (the clipboard is a later addition); decoding and the import record are
-``claudia_core``'s (``ImageAsset``, ``ImageImport``, re-exported there), shared with composes and computes. This
-draft has one slide space (1600 by 900 units), three built-in styles and three shapes. Templates, layouts and
-groups come later (E10.4).
+An object is a shared ``ObjectBody`` plus a ``SlideAnchor``: only the anchor is this app's. Placing, stacking,
+moving, resizing, rotating, styling and the image and shape assets are ``claudia_core.objects``, shared with
+composes and computes. This draft has one slide space (1600 by 900 units), three built-in styles and three
+shapes. Templates, layouts and groups come later (E10.4).
 """
 
-from . import commands  # noqa: F401  (registers the commands)
-from ._version import __version__
-from .commands import (
+# The object commands, the object types and the object region are shared by all three apps and live in
+# ``claudia_core`` (E10.16). They are re-exported here so that an app package names everything it can do.
+# The shape *format* is core's, shared by all three apps (E10.16); only the on-disk library is this
+# package's. Both are re-exported here, where they have always been imported from.
+from claudia_core import (  # noqa: F401  # noqa: F401
+    BOX,
+    FORMAT,
     AddObject,
-    AddSlide,
     DefineImage,
     DefineShape,
     ForgetImage,
     ForgetShape,
     MoveObject,
+    ObjectBody,
+    ObjectSet,
     RemoveObject,
-    RemoveSlide,
     ResizeObject,
+    RotateObject,
     SetSnap,
     SetText,
+    ShapeDefinition,
+    ShapeError,
+    VisualObject,
+    parse_shape,
 )
+
+from . import commands  # noqa: F401  (registers the commands)
+from ._version import __version__
+from .commands import AddSlide, RemoveSlide
 from .events import ImagesChanged, ObjectsChanged, ShapesChanged, SlidesChanged
 from .model import (
-    ASPECT_TOLERANCE,
-    MAX_OBJECT_TEXT,
-    MAX_OBJECTS_PER_SLIDE,
-    MIN_OBJECT_SIZE,
-    OBJECT_KINDS,
+    FIRST_SLIDE,
     SLIDE_HEIGHT,
     SLIDE_WIDTH,
+    SlideAnchor,
     SlideModel,
     SlideObject,
 )
-from .region import ObjectSet
-from .shapes import ShapeDefinition, ShapeError, ShapeLibrary, parse_shape
-from .styles import ALLOWED_CSS, BUILTIN_STYLES, Style
+from .shapes import BUILTIN_DIRECTORY, ShapeLibrary
+from .styles import ALLOWED_CSS, BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 
 __all__ = [
-    "ALLOWED_CSS",
-    "ASPECT_TOLERANCE",
-    "BUILTIN_STYLES",
-    "MAX_OBJECTS_PER_SLIDE",
-    "MAX_OBJECT_TEXT",
-    "MIN_OBJECT_SIZE",
-    "OBJECT_KINDS",
-    "SLIDE_HEIGHT",
-    "SLIDE_WIDTH",
+    "__version__",
     "AddObject",
     "AddSlide",
+    "ALLOWED_CSS",
+    "BOX",
+    "BUILTIN_DIRECTORY",
+    "builtin_styles",
+    "BUILTIN_STYLES",
+    "DEFAULT_STYLE",
     "DefineImage",
     "DefineShape",
+    "FIRST_SLIDE",
     "ForgetImage",
     "ForgetShape",
+    "FORMAT",
     "ImagesChanged",
     "MoveObject",
-    "ObjectSet",
+    "ObjectBody",
     "ObjectsChanged",
+    "ObjectSet",
+    "parse_shape",
     "RemoveObject",
     "RemoveSlide",
     "ResizeObject",
+    "RotateObject",
     "SetSnap",
     "SetText",
     "ShapeDefinition",
     "ShapeError",
     "ShapeLibrary",
     "ShapesChanged",
+    "SLIDE_HEIGHT",
+    "SLIDE_WIDTH",
+    "SlideAnchor",
     "SlideModel",
     "SlideObject",
     "SlidesChanged",
-    "Style",
-    "__version__",
-    "parse_shape",
+    "VisualObject",
 ]

@@ -1,16 +1,19 @@
 """The methods of the spreadsheet app: what a table view needs to show cells and to take what people type (E3.1).
 
 ``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet``, ``structure``,
-``sizes``, ``resize_lines``, ``objects``, ``images``, ``add_image``, ``move_object`` and ``remove_object``. Cells
+``sizes``, ``resize_lines``, ``objects``, ``images``, ``styles``, ``add_image``, ``move_object``,
+``resize_object``, ``rotate_object`` and ``remove_object``. Cells
 travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
 "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
 with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
 sends the text of the cell (``=B2*2`` for a formula) and the server decides what it means. Every write may carry
 the ``base`` revision of the client's view, as ``apply`` does.
 
-An image is anchored to a cell (``row``, ``col``) with a fixed pixel size (``w``, ``h``, chosen once at
-``add_image``): neither the anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only
-``move_object`` (dragging it to another cell) moves it (E10.11, mirrors ``add_image`` in ``creates.py``).
+An object is a shared ``ObjectBody`` plus a ``CellAnchor`` (E10.16): the body — kind, size, style, text, shape,
+image, rotation, snap — travels the wire identically in all three apps, and only ``anchor`` differs, as
+``{"kind": "cell", "container": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
+anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
+to another cell) moves it, and ``resize_object`` resizes it (E10.11).
 """
 
 from __future__ import annotations
@@ -18,19 +21,15 @@ from __future__ import annotations
 import secrets
 
 from claudia_computes import (
-    AddObject,
     AddSheet,
-    DefineImage,
+    CellAnchor,
     DeleteCols,
     DeleteRows,
     InsertCols,
     InsertRows,
-    MoveObject,
-    RemoveObject,
     ResizeLines,
     SetCells,
     SheetId,
-    SheetObject,
     Structure,
     WorkbookModel,
     parse_input,
@@ -43,7 +42,18 @@ from claudia_computes.model import (
     MIN_COL_WIDTH,
     MIN_ROW_HEIGHT,
 )
-from claudia_core import Batch, ImageImport, decode_image
+from claudia_core import (
+    AddObject,
+    Batch,
+    DefineImage,
+    ImageImport,
+    MoveObject,
+    ObjectBody,
+    RemoveObject,
+    ResizeObject,
+    RotateObject,
+    decode_image,
+)
 from claudia_core.clock import utc_now
 
 from .images import image_bytes
@@ -262,8 +272,8 @@ def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_pat
         }
     )
     object_id = _fresh_object_id(workbook.objects)
-    obj = SheetObject(object_id, SheetId(sheet), "image", row, col, w, h, image=asset.id, imported=imported)
-    steps.append(AddObject(obj))
+    body = ObjectBody(object_id, "image", w, h, "plain-image", image=asset.id, imported=imported)
+    steps.append(AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
     applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"object": object_id, "revision": applied.revision.to_data()}
@@ -272,8 +282,34 @@ def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_pat
 @computes_methods.method("move_object", "id:str row:int col:int base:revision?", write=True)
 def _move_object(ctx, *, id, row, col, base):
     """Move an object so that its anchor is at (`row`, `col`); its pixel size stays."""
-    applied = ctx.document.execute(MoveObject(id, row, col), author=ctx.user, base=base)
+    sheet = _workbook(ctx).get_object(id).anchor.sheet
+    command = MoveObject(id, CellAnchor(sheet, row, col).to_data())
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("resize_object", "id:str row:int col:int w:int h:int base:revision?", write=True)
+def _resize_object(ctx, *, id, row, col, w, h, base):
+    """Give an object a new frame: its anchor cell and its pixel size together, since dragging a corner moves the
+    corner. An image keeps its own proportions, so `w` and `h` must match them."""
+    sheet = _workbook(ctx).get_object(id).anchor.sheet
+    command = ResizeObject(id, CellAnchor(sheet, row, col).to_data(), w, h)
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("rotate_object", "id:str rotation:int base:revision?", write=True)
+def _rotate_object(ctx, *, id, rotation, base):
+    """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
+    applied = ctx.document.execute(RotateObject(id, rotation), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("styles")
+def _styles(ctx):
+    """The document's styles, each as `{id, name, purpose, based_on, css, to_name, computed}`: the look an object
+    gets from its `style`. A shape's background and border are `fill`/`stroke`/`stroke-width` (D178)."""
+    return _workbook(ctx).styles.views()
 
 
 @computes_methods.method("remove_object", "id:str base:revision?", write=True)
