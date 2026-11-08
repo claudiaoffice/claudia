@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.5.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -47,7 +47,7 @@
   "value": "<PosixPath>"
  },
  "BUILTIN_STYLES": {
-  "value": "(StyleDef(id='body-text', name='Body text', purpose='running text on a slide: sentences, short lists, captions', based_on=None, css={'color': '#1F1A33', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '40px', 'line-height': '1.3', 'text-align': 'left'}, to_name=False), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that carries a thought or marks a part of the slide, without drawing attention to itself', based_on='body-text', css={'fill': '#E7E1F4', 'stroke': '#5B4BC4', 'stroke-width': '4px', 'font-size': '36px', 'line-height': '1.25', 'text-align': 'center'}, to_name=False), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the slide; it carries its own colours, so no style properties apply to it', based_on='body-text', css={}, to_name=False))"
+  "value": "(StyleDef(id='body-text', name='Body text', purpose='running text on a slide: sentences, short lists, captions', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '40px', 'line-height': '1.3', 'text-align': 'left'}, to_name=False), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that carries a thought or marks a part of the slide, without drawing attention to itself', based_on='body-text', css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '4px', 'font-size': '36px', 'line-height': '1.25', 'text-align': 'center'}, to_name=False), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the slide; it carries its own colours, so no style properties apply to it', based_on='body-text', css={}, to_name=False))"
  },
  "DEFAULT_STYLE": {
   "value": "'body-text'"
@@ -404,7 +404,7 @@
    "DocumentModel",
    "ObjectModel"
   ],
-  "init": "(styles: 'StyleBook | None' = None) -> 'None'",
+  "init": "(styles: 'StyleBook | None' = None, palette: 'Palette | None' = None) -> 'None'",
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'SlideAnchor'",
    "check_anchor": "(self, anchor: 'SlideAnchor', body: 'ObjectBody') -> 'None'",

@@ -18,9 +18,13 @@ from claudia_core import StyleBook, StyleDef
 DEFAULT_STYLE = "body-text"
 
 _FONT = "Inter, system-ui, 'Segoe UI', sans-serif"
-_INK = "#1F1A33"
-_TEAL = "#2E7D74"
-_MIST = "#E3EFED"
+
+# Colours are roles of the document's palette, never literals (D200). A workbook's plain shape used to be teal
+# where a slide's and a text's were iris; there is one object layer and one palette now, so all three say
+# ``@accent`` and a shape carried between the apps keeps looking like itself.
+_INK = "@text"
+_ACCENT = "@accent"
+_MIST = "@accent/14"
 
 
 def _style(style_id: str, name: str, purpose: str, **css: str) -> StyleDef:
@@ -49,7 +53,7 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
         "a shape that marks or annotates a part of the sheet, without drawing attention to itself",
         **{
             "fill": _MIST,
-            "stroke": _TEAL,
+            "stroke": _ACCENT,
             "stroke-width": "2px",
             "text-align": "center",
         },

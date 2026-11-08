@@ -25,9 +25,11 @@ from claudia_core import (
     DocumentModel,
     ObjectBody,
     ObjectModel,
+    Palette,
     Region,
     StyleBook,
     VisualObject,
+    builtin_palette,
     new_registry,
 )
 
@@ -317,19 +319,28 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     app: ClassVar[str] = "computes"
     # 3: the workbook also carries images and objects anchored to cells (E10.11)
     # 4: objects are a shared body plus a CellAnchor, and the workbook carries a style book (E10.16)
-    state_schema: ClassVar[int] = 4
+    # 5: the workbook carries its own colour palette (D200)
+    state_schema: ClassVar[int] = 5
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
     max_objects_per_container: ClassVar[int] = MAX_OBJECTS_PER_SHEET
 
-    def __init__(self, functions: FunctionRegistry | None = None, styles: StyleBook | None = None):
+    def __init__(
+        self,
+        functions: FunctionRegistry | None = None,
+        styles: StyleBook | None = None,
+        palette: Palette | None = None,
+    ):
         super().__init__()
         self.sheets: dict[SheetId, Sheet] = {}
         self.calc = Calculator(self, functions or default_functions())
         self._ids: dict[str, SheetId] | None = None
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
+        #: The colours of this workbook, by what they mean. Part of the document, so it looks the same on
+        #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
+        self.palette: Palette = palette if palette is not None else builtin_palette()
 
     @classmethod
     def empty(cls) -> Self:
@@ -339,6 +350,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return {
             "sheets": [sheet.to_data() for sheet in self.sheets.values()],
             "styles": self.styles.to_data(),
+            "palette": self.palette.to_data(),
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
@@ -346,7 +358,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     @classmethod
     def restore(cls, state: dict) -> Self:
-        model = cls(styles=StyleBook.from_data(state["styles"]))
+        model = cls(styles=StyleBook.from_data(state["styles"]), palette=Palette.from_data(state["palette"]))
         for item in state["sheets"]:
             sheet = Sheet(SheetId(item["id"]), item["name"])
             sheet.cells = {(r, c): content for r, c, content in item["cells"]}

@@ -7,7 +7,7 @@ from claudia_core import ALLOWED_CSS, CSS_VERSION, CssError, format_css, parse_c
 
 # ----------------------------------------------------------------------------- the list
 def test_the_list_is_versioned_and_has_what_the_style_menu_needs():
-    assert CSS_VERSION == 1
+    assert CSS_VERSION == 2  # 2: a colour may be a role of the palette (D200)
     assert {
         "color",
         "background-color",

@@ -41,6 +41,7 @@ from claudia_creates import AddSlide, ShapeLibrary, SlideAnchor, SlideModel
 
 from .images import image_bytes
 from .protocol import Context, MethodTable, RequestError, core_methods
+from .styles import add_style_methods
 
 STYLE_OF_KIND = {"text": "body-text", "shape": "plain-shape", "image": "plain-image"}
 
@@ -162,6 +163,9 @@ def _add_object_methods(table: MethodTable) -> None:
 def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     """The method table of presentations on a server whose shape library is ``library``."""
     table = core_methods.extended()
+    # ``styles``, ``palette``, ``change_style``, ``rename_style``, ``check_css`` and ``set_object_style``
+    # are the same in every app (E1.10, D200).
+    add_style_methods(table)
     _add_object_methods(table)
 
     @table.method("slides")
@@ -203,13 +207,6 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         no library to pick from: an image always comes in through `add_image`."""
         deck = _deck(ctx)
         return [image.to_data() for _, image in sorted(deck.images.items())]
-
-    @table.method("styles")
-    def _styles(ctx):
-        """The document's styles, each as `{id, name, purpose, based_on, css, to_name, computed}`: the look an
-        object gets from its `style`. `css` is what the style sets itself, `computed` what it really has once its
-        parents are resolved (D73). A shape's background and border are `fill`/`stroke`/`stroke-width` (D178)."""
-        return _deck(ctx).styles.views()
 
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):

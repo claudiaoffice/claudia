@@ -22,8 +22,18 @@ const WELCOME: Welcome = {
 
 const RECT = { format: 1, id: 'rectangle', name: 'Rectangle', path: 'M0 0 L100 0 L100 100 L0 100 Z', aspect: null, text_area: { x: 0, y: 0, w: 100, h: 100 } }
 const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z', aspect: 1, text_area: { x: 15, y: 15, w: 70, h: 70 } }
-const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', based_on: null, to_name: false, css: { color: '#1f1a33' }, computed: { color: '#1f1a33' } }
-const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', based_on: 'body-text', to_name: false, css: { fill: '#e7e1f4' }, computed: { color: '#1f1a33', fill: '#e7e1f4' } }
+// A style names the palette's roles in `css`/`computed` and carries the colours in `resolved`, which is what the
+// page is drawn from (D200).
+const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', based_on: null, to_name: false, css: { color: '@text' }, computed: { color: '@text' }, resolved: { color: '#1f1a33' } }
+const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', based_on: 'body-text', to_name: false, css: { fill: '@accent/14' }, computed: { color: '@text', fill: '@accent/14' }, resolved: { color: '#1f1a33', fill: 'rgba(91, 75, 196, 0.14)' } }
+const PALETTE = {
+  type: 'palette',
+  roles: [
+    { id: 'text', name: 'Text', purpose: 'the words you read', colour: '#1F1A33' },
+    { id: 'accent', name: 'Accent', purpose: 'the one thing to notice', colour: '#5B4BC4' },
+  ],
+  readings: [{ foreground: 'text', background: 'page', ratio: 15.14, floor: 4.5, ok: true, words: true }],
+}
 
 // An object as the server sends it (E10.16, D177): the shared body's fields flat, the anchor nested — the same
 // shape in all three apps, only `anchor` differing.
@@ -107,6 +117,7 @@ function server(link: FakeLink, objects: any[] = []) {
     shapes: () => ({ library: [CIRCLE, RECT], document: [] }),
     images: () => [],
     styles: () => [BODY, SHAPE_STYLE],
+    palette: () => PALETTE,
     log: () => [],
     chat_log: () => [],
     checkpoints: () => [],
@@ -143,7 +154,9 @@ describe('opening a presentation', () => {
     expect(state.activeSlide).toBe('s1')
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['t1'])
     expect(state.library.map((s) => s.id)).toEqual(['circle', 'rectangle'])
-    expect(state.styles['body-text']!.css.color).toBe('#1f1a33')
+    expect(state.styles['body-text']!.css.color).toBe('@text')
+    expect(state.styles['body-text']!.resolved.color).toBe('#1f1a33')
+    expect(state.palette!.roles.map((r) => r.id)).toEqual(['text', 'accent'])
     expect(state.selected).toBeNull()
   })
   it('knows the outlines of the document by id', async () => {
@@ -183,6 +196,20 @@ describe('what the server tells', () => {
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
     expect(state.objects.a).toBeUndefined()
     expect(state.slides[0]!.objects).toBe(1)
+  })
+  it('follows a style change, so a palette role reaches the slide without reopening it', async () => {
+    // Found by driving a real browser: the styles were requested once at open and never again, so a colleague's
+    // style change — and `set_role`, which recolours every style that named the role — did nothing visible here.
+    const { link, state } = await opened([text('a')])
+    const recoloured = { ...SHAPE_STYLE, resolved: { color: '#1f1a33', fill: 'rgba(0, 128, 128, 0.14)' } }
+    link.push('styles', { type: 'styles', styles: [BODY, recoloured] })
+    expect(state.styles['plain-shape']!.resolved.fill).toBe('rgba(0, 128, 128, 0.14)')
+    expect(state.styles['plain-shape']!.computed.fill).toBe('@accent/14')
+  })
+  it('keeps the palette the server sends, roles and readings alike', async () => {
+    const { link, state } = await opened()
+    link.push('palette', { type: 'palette', roles: [{ id: 'accent', name: 'Accent', purpose: '', colour: '#008080' }], readings: [] })
+    expect(state.palette!.roles[0]!.colour).toBe('#008080')
   })
   it('learns and forgets outlines', async () => {
     const { link, state } = await opened()

@@ -18,12 +18,14 @@ from claudia_core import (
     ObjectBody,
     ObjectModel,
     ObjectSet,
+    Palette,
     Paragraph,
     Region,
     Run,
     StyleBook,
     StyleDef,
     VisualObject,
+    builtin_palette,
     delete_runs,
     insert_runs,
     new_registry,
@@ -43,7 +45,10 @@ _NUMBERED = re.compile(r"[bs](\d+)")
 
 _SANS = "Inter, system-ui, 'Segoe UI', sans-serif"
 _SERIF = "Fraunces, Georgia, serif"
-_INK = "#1F1A33"
+# Colours are roles of the document's palette, never literals (D200): a document holds no hex of its own,
+# so replacing its palette really does recolour it. ``@text/82`` is that role at 82% opacity, which is how
+# the softer inks of a quote or a remark keep following the ink they are a shade of.
+_INK = "@text"
 
 
 def _style(style_id: str, name: str, purpose: str, **css: str) -> StyleDef:
@@ -115,8 +120,8 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "font-style": "italic",
             "font-size": "14pt",
             "line-height": "1.7",
-            "color": "rgba(31, 26, 51, 0.82)",
-            "border-left": "3px solid #F2A057",
+            "color": "@text/82",
+            "border-left": "3px solid @highlight",
             "padding-left": "1.1em",
         },
     ),
@@ -127,9 +132,9 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
         **{
             "font-size": "11pt",
             "line-height": "1.6",
-            "color": "rgba(31, 26, 51, 0.78)",
-            "background-color": "rgba(214, 71, 122, 0.07)",
-            "border-left": "3px solid #D6477A",
+            "color": "@text/78",
+            "background-color": "@attention/7",
+            "border-left": "3px solid @attention",
             "padding-top": "0.55em",
             "padding-bottom": "0.55em",
             "padding-left": "0.9em",
@@ -145,8 +150,8 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
         "Plain shape",
         "a shape floating over the text, carrying a thought or marking a passage",
         **{
-            "fill": "rgba(231, 225, 244, 0.55)",
-            "stroke": "#5B4BC4",
+            "fill": "@accent/8",
+            "stroke": "@accent",
             "stroke-width": "2px",
             "text-align": "center",
         },
@@ -161,8 +166,8 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
         "Definition",
         "says what a term means",
         **{
-            "background-color": "rgba(231, 225, 244, 0.55)",
-            "border-left": "3px solid #5B4BC4",
+            "background-color": "@accent/8",
+            "border-left": "3px solid @accent",
             "padding-top": "0.5em",
             "padding-bottom": "0.5em",
             "padding-left": "0.9em",
@@ -222,13 +227,23 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     """The paragraphs of a document, its suggestions and the objects floating over it."""
 
     app: ClassVar[str] = "composes"
-    state_schema: ClassVar[int] = 4  # 4: a text also carries objects, images and shapes (E10.16)
+    # 4: a text also carries objects, images and shapes (E10.16)
+    # 5: the text carries its own colour palette (D200)
+    state_schema: ClassVar[int] = 5
     registry: ClassVar[CommandRegistry] = new_registry()
 
-    def __init__(self, blocks: list[Block] | None = None, styles: StyleBook | None = None):
+    def __init__(
+        self,
+        blocks: list[Block] | None = None,
+        styles: StyleBook | None = None,
+        palette: Palette | None = None,
+    ):
         super().__init__()
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
+        #: The colours of this document, by what they mean. Part of the document, so it looks the same on
+        #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
+        self.palette: Palette = palette if palette is not None else builtin_palette()
         self.suggestions: dict[str, Suggestion] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
         for block in self.blocks:
@@ -245,6 +260,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return {
             "blocks": [b.to_data() for b in self.blocks],
             "styles": self.styles.to_data(),
+            "palette": self.palette.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
@@ -260,7 +276,9 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             blocks = [Block(f"b{i}", DEFAULT_STYLE, t, (Run(len(t), None),) if t else ()) for i, t in enumerate(raw, 1)]
             return cls(blocks)
         styles = StyleBook.from_data(state["styles"]) if "styles" in state else None  # schema 2 had the built-in ones
-        model = cls([Block(b["id"], b["style"], b["text"], tuple(runs_from_data(b["runs"]))) for b in raw], styles)
+        blocks = [Block(b["id"], b["style"], b["text"], tuple(runs_from_data(b["runs"]))) for b in raw]
+        palette = Palette.from_data(state["palette"]) if "palette" in state else None  # schema 4 and earlier
+        model = cls(blocks, styles, palette)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects

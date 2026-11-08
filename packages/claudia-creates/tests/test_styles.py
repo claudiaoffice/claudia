@@ -68,11 +68,26 @@ def test_a_shape_says_its_background_and_border_in_the_svg_vocabulary():
 def test_the_styles_live_in_the_document_and_the_core_commands_change_them(doc):
     """They used to live in the program, read-only (``BUILTIN_STYLES`` as a module-level dict). Now a change is a
     logged command like any other, so it can be undone and everybody sees it."""
-    assert doc.model.styles.computed("plain-shape")["fill"] == "#E7E1F4"
+    assert doc.model.styles.computed("plain-shape")["fill"] == "@accent/14"  # a role, not a colour (D200)
     doc.execute(ChangeStyle("plain-shape", {"fill": "#FFD9E0"}), author="ana")
     assert doc.model.styles.computed("plain-shape")["fill"] == "#FFD9E0"
     doc.undo("ana")
-    assert doc.model.styles.computed("plain-shape")["fill"] == "#E7E1F4"
+    assert doc.model.styles.computed("plain-shape")["fill"] == "@accent/14"
+
+
+def test_a_builtin_style_holds_no_colour_of_its_own_so_the_palette_can_recolour_it():
+    # Every colour in a new presentation is a role; what a client draws with is the resolved form (D200).
+    for style in builtin_styles():
+        for prop, value in style.css.items():
+            if prop in ("color", "background-color", "fill", "stroke") or prop.startswith("border"):
+                assert "@" in value, f"{style.id} sets {prop} to the literal {value!r}"
+
+
+def test_the_roles_resolve_to_exactly_the_colours_the_styles_used_to_hold(doc):
+    views = {v["id"]: v for v in doc.model.styles.views(doc.model.palette.colours())}
+    assert views["body-text"]["resolved"]["color"] == "#1F1A33"
+    assert views["plain-shape"]["resolved"]["stroke"] == "#5B4BC4"
+    assert views["plain-shape"]["resolved"]["fill"] == "rgba(91, 75, 196, 0.14)"
 
 
 def test_a_style_travels_as_plain_data():

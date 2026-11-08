@@ -58,6 +58,7 @@ from claudia_core.clock import utc_now
 
 from .images import image_bytes
 from .protocol import Context, RequestError, core_methods
+from .styles import add_style_methods
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
 MAX_TYPED_CELLS = 10_000  # cells in one ``set_cells``
@@ -72,6 +73,9 @@ AXES = {
 SIZE_LIMITS = {"row": (MIN_ROW_HEIGHT, MAX_ROW_HEIGHT), "col": (MIN_COL_WIDTH, MAX_COL_WIDTH)}
 
 computes_methods = core_methods.extended()
+# ``styles``, ``palette``, ``change_style``, ``rename_style``, ``check_css`` and ``set_object_style`` are the
+# same in every app (E1.10, D200). A workbook has no rule of its own about who may change them.
+add_style_methods(computes_methods)
 computes_methods.kind("image")(image_bytes)
 
 
@@ -303,13 +307,6 @@ def _rotate_object(ctx, *, id, rotation, base):
     """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
     applied = ctx.document.execute(RotateObject(id, rotation), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
-
-
-@computes_methods.method("styles")
-def _styles(ctx):
-    """The document's styles, each as `{id, name, purpose, based_on, css, to_name, computed}`: the look an object
-    gets from its `style`. A shape's background and border are `fill`/`stroke`/`stroke-width` (D178)."""
-    return _workbook(ctx).styles.views()
 
 
 @computes_methods.method("remove_object", "id:str base:revision?", write=True)

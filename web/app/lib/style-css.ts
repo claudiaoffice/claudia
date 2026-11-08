@@ -11,8 +11,11 @@ export interface StyleView {
   based_on: string | null
   /** What the style sets itself. */
   css: Css
-  /** What it really has, once its parents are taken in. */
+  /** What it really has, once its parents are taken in. Still names the palette's roles (`@accent`). */
   computed: Css
+  /** `computed` again, with every palette role replaced by the colour it stands for (D200). Draw with this one:
+   * a role is resolved on the server so that what reaches the page is always a literal colour. */
+  resolved: Css
   /** Made by deviating and still carrying the name it was given: it invites a name (E9.7). */
   to_name: boolean
 }

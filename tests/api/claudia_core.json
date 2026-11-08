@@ -1,5 +1,5 @@
 {
- "version": "0.8.0",
+ "version": "0.10.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -49,6 +49,9 @@
  "BOX": {
   "value": "100"
  },
+ "BUILTIN_ROLES": {
+  "value": "(ColourRole(id='text', name='Text', purpose='the words you read', colour='#1F1A33'), ColourRole(id='muted', name='Muted', purpose='captions and secondary words', colour='#6B6578'), ColourRole(id='page', name='Page', purpose='the page, slide or sheet itself', colour='#F7F3EC'), ColourRole(id='surface', name='Surface', purpose='the fill of a box or a shape', colour='#FFFFFF'), ColourRole(id='structure', name='Structure', purpose='borders, rules and dividers', colour='#8A82A0'), ColourRole(id='accent', name='Accent', purpose='the one thing to notice', colour='#5B4BC4'), ColourRole(id='accent-text', name='Accent text', purpose='words on top of the accent', colour='#FFFFFF'), ColourRole(id='attention', name='Attention', purpose='something addressed to the reader', colour='#D6477A'), ColourRole(id='highlight', name='Highlight', purpose='a passage set apart from the rest', colour='#F2A057'))"
+ },
  "Batch": {
   "class": [
    "Command"
@@ -91,7 +94,7 @@
   "properties": []
  },
  "CSS_VERSION": {
-  "value": "1"
+  "value": "2"
  },
  "ChangeStyle": {
   "class": [
@@ -159,6 +162,17 @@
   ],
   "init": "(number: 'int', label: 'str', author: 'str | None', marks: 'Revision') -> None",
   "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ColourRole": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', purpose: 'str', colour: 'str') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ColourRole'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
@@ -615,6 +629,9 @@
  "MAX_PARAGRAPH_TEXT": {
   "value": "20000"
  },
+ "MAX_ROLES": {
+  "value": "64"
+ },
  "MAX_SELECTION": {
   "value": "64"
  },
@@ -747,6 +764,40 @@
   },
   "properties": []
  },
+ "PAIRINGS": {
+  "value": "(('text', 'page', 4.5), ('text', 'surface', 4.5), ('muted', 'page', 4.5), ('muted', 'surface', 4.5), ('accent-text', 'accent', 4.5), ('structure', 'page', 3.0), ('structure', 'surface', 3.0), ('accent', 'page', 3.0), ('accent', 'surface', 3.0))"
+ },
+ "Palette": {
+  "class": [
+   "object"
+  ],
+  "init": "(roles: 'Iterable[ColourRole]' = ())",
+  "methods": {
+   "add": "(self, role: 'ColourRole') -> 'None'",
+   "colours": "(self) -> 'dict[str, str]'",
+   "from_data": "(items: 'Iterable[dict]') -> 'Palette'",
+   "get": "(self, role_id: 'str') -> 'ColourRole'",
+   "ids": "(self) -> 'list[str]'",
+   "missing_from": "(self, css: 'Mapping[str, str]') -> 'set[str]'",
+   "readings": "(self) -> 'list[Reading]'",
+   "remove": "(self, role_id: 'str') -> 'ColourRole'",
+   "replace_all": "(self, roles: 'Iterable[ColourRole]') -> 'None'",
+   "set_colour": "(self, role_id: 'str', colour: 'str') -> 'None'",
+   "to_data": "(self) -> 'list[dict]'",
+   "views": "(self) -> 'list[dict]'"
+  },
+  "properties": []
+ },
+ "PaletteChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(roles: 'tuple[dict, ...]', readings: 'tuple[dict, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Paragraph": {
   "class": [
    "object"
@@ -778,6 +829,19 @@
    "show": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Hold'"
   },
   "properties": []
+ },
+ "Reading": {
+  "class": [
+   "object"
+  ],
+  "init": "(foreground: 'str', background: 'str', ratio: 'float', floor: 'float') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "ok",
+   "words"
+  ]
  },
  "Rebuilt": {
   "class": [
@@ -900,6 +964,22 @@
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RenameStyle'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ReplacePalette": {
+  "class": [
+   "Command"
+  ],
+  "init": "(roles: 'tuple[ColourRole, ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ReplacePalette'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -1038,6 +1118,24 @@
   "methods": {},
   "properties": []
  },
+ "SetObjectStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetObjectStyle'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetParagraph": {
   "class": [
    "Command"
@@ -1067,6 +1165,22 @@
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetParagraphStyle'",
    "redacted": "(self) -> 'Command'",
    "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetRole": {
+  "class": [
+   "Command"
+  ],
+  "init": "(role: 'str', colour: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetRole'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -1188,7 +1302,7 @@
    "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
    "to_data": "(self) -> 'list[dict]'",
    "unique_id": "(self, base: 'str') -> 'str'",
-   "views": "(self) -> 'list[dict]'"
+   "views": "(self, colours: 'Mapping[str, str] | None' = None) -> 'list[dict]'"
   },
   "properties": []
  },
@@ -1227,6 +1341,12 @@
   "properties": [
    "label"
   ]
+ },
+ "TEXT_FLOOR": {
+  "value": "4.5"
+ },
+ "UI_FLOOR": {
+  "value": "3.0"
  },
  "UndoConflict": {
   "class": [
@@ -1268,8 +1388,14 @@
    "id"
   ]
  },
+ "builtin_palette": {
+  "function": "() -> 'Palette'"
+ },
  "check": {
   "function": "(manifest: 'Manifest', env: 'Environment') -> 'RequirementReport'"
+ },
+ "contrast": {
+  "function": "(one: 'str', other: 'str') -> 'float'"
  },
  "decode_image": {
   "function": "(data: 'bytes') -> 'ImageAsset'"
@@ -1288,6 +1414,9 @@
  },
  "insert_runs": {
   "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
+ },
+ "luminance": {
+  "function": "(colour: 'str') -> 'float'"
  },
  "new_registry": {
   "function": "() -> 'CommandRegistry'"
@@ -1309,6 +1438,15 @@
  },
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
+ },
+ "resolve_css": {
+  "function": "(css: 'Mapping[str, str]', colours: 'Mapping[str, str]') -> 'dict[str, str]'"
+ },
+ "rgb_of": {
+  "function": "(colour: 'str') -> 'tuple[int, int, int]'"
+ },
+ "roles_used": {
+  "function": "(css: 'Mapping[str, str]') -> 'set[str]'"
  },
  "runs_from_data": {
   "function": "(data: 'Iterable[list]') -> 'list[Run]'"

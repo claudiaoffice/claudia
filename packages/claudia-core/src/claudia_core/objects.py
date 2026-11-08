@@ -1100,6 +1100,56 @@ class SetParagraph(Command):
 
 @core_commands.register
 @dataclass(frozen=True)
+class SetObjectStyle(Command):
+    """Put an object under another style of its own: what the *box* looks like — ``fill``, ``stroke`` and
+    ``stroke-width`` (D178).
+
+    Not what its words look like; those follow the paragraph's own style (:class:`SetParagraphStyle`), and keeping
+    the two apart is the whole point of an object having two styles (D181). Until this command existed an object's
+    style was settled by :class:`AddObject` and could never be changed again, which left the style menu with
+    nothing to do: picking a style for the shape you have selected is the most ordinary thing it offers.
+    """
+
+    kind: ClassVar[str] = "core.SetObjectStyle"
+    id: str
+    style: str
+
+    @property
+    def label(self) -> str:
+        return "Object style"
+
+    @property
+    def summary(self) -> str:
+        return f"put an object under {self.style}"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        old = model.get_object(self.id)
+        new = old.with_body(style=self.style)
+        model.replace_object(new)  # checks that the style exists, as it checks everything else about an object
+        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        return SetObjectStyle(self.id, old.body.style)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "style": self.style}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> SetObjectStyle:
+        return cls(data["id"], data["style"])
+
+    def regions(self, model: object) -> tuple[ObjectSet, ...]:
+        return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
+
+    def shifted_by(self, other: Command) -> Command | None:
+        kinds = SetObjectStyle | RemoveObject | AddObject
+        return None if isinstance(other, kinds) and _target(other) == self.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@core_commands.register
+@dataclass(frozen=True)
 class SetParagraphStyle(Command):
     """Put an object's words under another paragraph style.
 

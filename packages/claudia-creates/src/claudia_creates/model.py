@@ -24,9 +24,11 @@ from claudia_core import (
     ObjectBody,
     ObjectModel,
     ObjectSet,
+    Palette,
     Region,
     StyleBook,
     VisualObject,
+    builtin_palette,
     new_registry,
 )
 
@@ -88,13 +90,16 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     :class:`~claudia_core.ObjectModel`."""
 
     app: ClassVar[str] = "creates"
-    state_schema: ClassVar[int] = 5
+    state_schema: ClassVar[int] = 6  # 6: the presentation carries its own colour palette (D200)
     registry: ClassVar[CommandRegistry] = new_registry()
 
-    def __init__(self, styles: StyleBook | None = None) -> None:
+    def __init__(self, styles: StyleBook | None = None, palette: Palette | None = None) -> None:
         super().__init__()
         self.slides: list[str] = []
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
+        #: The colours of this presentation, by what they mean. Part of the document, so it looks the same on
+        #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
+        self.palette: Palette = palette if palette is not None else builtin_palette()
 
     @classmethod
     def empty(cls) -> Self:
@@ -107,6 +112,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return {
             "slides": list(self.slides),
             "styles": self.styles.to_data(),
+            "palette": self.palette.to_data(),
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
@@ -114,7 +120,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
 
     @classmethod
     def restore(cls, state: dict) -> Self:
-        model = cls(StyleBook.from_data(state["styles"]))
+        model = cls(StyleBook.from_data(state["styles"]), Palette.from_data(state["palette"]))
         model.slides = list(state["slides"])
         for slide in model.slides:
             model.open_container(slide)

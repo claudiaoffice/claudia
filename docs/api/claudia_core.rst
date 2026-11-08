@@ -71,6 +71,7 @@ The object commands, the same in all three apps:
 .. autoclass:: claudia_core.RotateObject
 .. autoclass:: claudia_core.SetText
 .. autoclass:: claudia_core.SetParagraph
+.. autoclass:: claudia_core.SetObjectStyle
 .. autoclass:: claudia_core.SetParagraphStyle
 .. autoclass:: claudia_core.SetSnap
 .. autoclass:: claudia_core.DefineShape
@@ -159,11 +160,18 @@ A style is CSS from one short, versioned allow-list (``CSS_VERSION``): no ``url(
 ``@``-rules or ``!important``. An app's model that wants styles holds a ``StyleBook``; the commands are the only ways to
 change it.
 
+A colour may be a role of the document's palette (``@accent``, or ``@accent/55`` for that role at 55% opacity) rather
+than a literal. ``resolve_css`` replaces the roles with colours, and that is the form a client draws with, so what
+reaches a browser is always literal.
+
 .. autodata:: claudia_core.CSS_VERSION
 .. autodata:: claudia_core.ALLOWED_CSS
 .. autofunction:: claudia_core.validate_css
 .. autofunction:: claudia_core.parse_css
 .. autofunction:: claudia_core.format_css
+.. autofunction:: claudia_core.resolve_css
+.. autofunction:: claudia_core.roles_used
+.. autofunction:: claudia_core.rgb_of
 .. autoexception:: claudia_core.CssError
 .. autoclass:: claudia_core.CssProblem
 .. autoclass:: claudia_core.StyleDef
@@ -173,6 +181,32 @@ change it.
 .. autoclass:: claudia_core.ChangeStyle
 .. autoclass:: claudia_core.RenameStyle
 .. autoclass:: claudia_core.RemoveStyle
+
+The palette: colours by what they mean
+--------------------------------------
+
+.. automodule:: claudia_core.palette
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A palette is part of the document, so a document looks the same wherever it is opened (D200). A role says what a
+colour *means*; change the role and everything that meant it follows, across all three apps.
+
+.. autoclass:: claudia_core.ColourRole
+.. autoclass:: claudia_core.Palette
+.. autoclass:: claudia_core.Reading
+.. autoclass:: claudia_core.PaletteChanged
+.. autoclass:: claudia_core.SetRole
+.. autoclass:: claudia_core.ReplacePalette
+.. autofunction:: claudia_core.builtin_palette
+.. autofunction:: claudia_core.contrast
+.. autofunction:: claudia_core.luminance
+.. autodata:: claudia_core.BUILTIN_ROLES
+.. autodata:: claudia_core.PAIRINGS
+.. autodata:: claudia_core.TEXT_FLOOR
+.. autodata:: claudia_core.UI_FLOOR
+.. autodata:: claudia_core.MAX_ROLES
 
 Images
 ------

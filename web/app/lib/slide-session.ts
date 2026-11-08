@@ -4,12 +4,12 @@ import { type LinkLike, type Region } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
 import type { ImageAsset, ImageImport } from './images'
-import type { ObjectsEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
+import type { ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
 // so existing imports of them from this module keep working.
 export type { ImageAsset, ImageImport } from './images'
-export type { ObjectBody, SlideAnchor, StyleDef, VisualObject } from './objects'
+export type { ColourRole, ObjectBody, PaletteEvent, Reading, SlideAnchor, StyleDef, VisualObject } from './objects'
 
 /** One thing on a slide: the shared `ObjectBody` plus a `SlideAnchor` — the only part of it that is this app's
  * own (E10.16, D177). Read its place with `slideFrame(obj)`, not `obj.x`. */
@@ -37,6 +37,8 @@ export interface SlideState extends BaseState {
   shapes: Record<string, ShapeDef> // what this document has taken in, by id
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id (E10.8)
   styles: Record<string, StyleDef>
+  /** The document's colour roles and how they read against each other (D200); the styles are what is drawn from. */
+  palette: PaletteEvent | null
   selected: string | null
 }
 
@@ -54,6 +56,7 @@ export class SlideSession extends BaseSession<SlideState> {
       shapes: {},
       images: {},
       styles: {},
+      palette: null,
       selected: null,
     })
   }
@@ -62,11 +65,12 @@ export class SlideSession extends BaseSession<SlideState> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [slides, shapes, images, styles] = await Promise.all([
+    const [slides, shapes, images, styles, palette] = await Promise.all([
       link.request<SlideInfo[]>('slides'),
       link.request<{ library: ShapeDef[]; document: ShapeDef[] }>('shapes'),
       link.request<ImageAsset[]>('images'),
       link.request<StyleDef[]>('styles'),
+      link.request<PaletteEvent>('palette'),
     ])
     const loaded = await Promise.all(slides.map((slide) => link.request<{ objects: SlideObject[] }>('slide', { slide: slide.id })))
     s.objects = {}
@@ -80,6 +84,7 @@ export class SlideSession extends BaseSession<SlideState> {
     s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
+    s.palette = palette
     if (!slides.some((x) => x.id === s.activeSlide)) s.activeSlide = slides[0]?.id ?? ''
     if (s.selected && !s.objects[s.selected]) s.selected = null
   }
@@ -118,6 +123,17 @@ export class SlideSession extends BaseSession<SlideState> {
         }
         return true
       }
+      case 'styles':
+        // Found by driving a real browser: the styles were requested once at open and never again, so a style a
+        // colleague changed — or a palette role anybody changed (D200) — did not reach this slide until the
+        // document was reopened. The whole book travels, as it does in composes.
+        s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
+        return true
+      case 'palette':
+        // Only the styles are drawn from, and they arrive with the event above. Kept so that a palette change is
+        // not reported as an unknown event, and so the roles are here for the menu that will offer them.
+        s.palette = data as PaletteEvent
+        return true
       case 'shape':
         if (data.definition) s.shapes[data.id] = data.definition
         else delete s.shapes[data.id]

@@ -78,8 +78,16 @@ export function wordsOf(body: ObjectBody): string {
   return body.paragraph?.text ?? ''
 }
 
-/** A style as the server sends it: `css` is what it sets itself, `computed` what it really has once its parents
- * are resolved (D73). Draw with `computed`; edit `css`. */
+/** A style as the server sends it.
+ *
+ * `css` is what the style sets itself, `computed` what it really has once its parents are resolved (D73), and
+ * `resolved` the same again with every palette role (`@accent`, `@accent/55`) replaced by the literal colour the
+ * document's palette gives it (D200).
+ *
+ * **Draw with `resolved`; show and edit `css`/`computed`.** The role grammar deliberately lives on the server, so
+ * that the CSS put on a page is always a literal colour — which is what lets the allow-list go on refusing
+ * `var()` and `calc()`. A client that drew with `computed` would write `color: @accent` into a style attribute and
+ * the browser would simply drop it. */
 export interface StyleDef {
   id: string
   name: string
@@ -88,6 +96,36 @@ export interface StyleDef {
   css: Record<string, string>
   to_name: boolean
   computed: Record<string, string>
+  resolved: Record<string, string>
+}
+
+/** One colour of the document's palette: what it means, and the colour it is (D200). */
+export interface ColourRole {
+  id: string
+  name: string
+  purpose: string
+  colour: string
+}
+
+/** How one role reads against another, as the server works it out.
+ *
+ * `floor` is the contrast the pairing has to clear and `words` says which kind it is: 4.5:1 where it is words,
+ * 3:1 where it is a border or a rule. Say what a failing reading *means* to the person — never show them `ratio`
+ * (D202). */
+export interface Reading {
+  foreground: string
+  background: string
+  ratio: number
+  floor: number
+  ok: boolean
+  words: boolean
+}
+
+/** The `palette` event and the `palette` method's answer. */
+export interface PaletteEvent {
+  type: 'palette'
+  roles: ColourRole[]
+  readings: Reading[]
 }
 
 /** The `objects` event, as the server sends it in every app (`claudia_core.ObjectsChanged`).
@@ -124,7 +162,10 @@ export function slideAnchor(container: string, frame: Frame): SlideAnchor {
   return { kind: 'slide', container, x: frame.x, y: frame.y }
 }
 
-/** The look to draw an object with: the computed CSS of its style, or nothing if the style is unknown. */
+/** The look to draw an object with: the *resolved* CSS of its style, or nothing if the style is unknown.
+ *
+ * Resolved, not computed, so that a palette role has already become a colour by the time it reaches the page
+ * (see `StyleDef`). */
 export function cssOf(styles: Record<string, StyleDef>, body: ObjectBody): Record<string, string> {
-  return styles[body.style]?.computed ?? {}
+  return styles[body.style]?.resolved ?? {}
 }

@@ -29,9 +29,13 @@ DEFAULT_STYLE = "body-text"
 # starting with a hyphen, and creates' own built-in styles never went through ``validate_css`` before E10.16, so
 # nothing caught it.
 _FONT = "Inter, system-ui, 'Segoe UI', sans-serif"
-_INK = "#1F1A33"
-_IRIS = "#5B4BC4"
-_MIST = "#E7E1F4"
+
+# Colours are roles of the document's palette, never literals (D200): a presentation holds no hex of its own, so
+# replacing its palette really does recolour it. ``@accent/14`` is the accent at 14% opacity — the pale wash that
+# used to be written as the suite's "mist", now a tint *of* the accent, so it follows whatever the accent becomes.
+_INK = "@text"
+_IRIS = "@accent"
+_MIST = "@accent/14"
 
 
 def _style(style_id: str, name: str, purpose: str, **css: str) -> StyleDef:

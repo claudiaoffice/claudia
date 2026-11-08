@@ -3,6 +3,33 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.18.0] - 2026-11-08
+
+Colour roles over the protocol, and the style methods shared by every app (D200–D203).
+
+### Added
+- `claudia_server.styles.add_style_methods(table, guard=None)`: registers `styles`, `palette`, `set_role`,
+  `replace_palette`, `set_object_style`, `change_style`, `rename_style` and `check_css` into an app's table. All
+  three apps call it, so a presentation and a workbook can now change their styles and not only read them.
+- `palette` returns `{roles, readings}`: a role is `{id, name, purpose, colour}`, a reading is
+  `{foreground, background, ratio, floor, ok, words}`. A reading carries **no verdict text** — each client says
+  what a failure means in its own words, and never shows the ratio to a reader.
+- `set_role` gives one role another colour; everything in the document that meant that role follows. Nothing is
+  refused for contrast: `palette` reports what a colour costs, it does not prevent it.
+- `replace_palette` puts a whole palette in place of the one the document has, which is what "replace palette" and,
+  later, a template will use. Refused while a style names a role the new palette has not.
+- `set_object_style` puts an object under another style of its own (`fill`, `stroke`, `stroke-width`), beside the
+  `set_paragraph_style` that already pointed its words elsewhere.
+
+### Changed
+- **Breaking:** every style in `styles` (and in composes' `blocks`) now carries a third form of its CSS,
+  `resolved`, with the palette's roles replaced by literal colours. **A client must draw from `resolved`**;
+  `computed` still names the roles, which is what a style menu shows. The role grammar deliberately stays on the
+  server, so what reaches a browser is always a literal colour.
+- `composes_methods` keeps only `set_style` and `deviate_style` of its style methods — the two that name
+  paragraphs. The rest are the shared ones, and composes passes `_people_only` as their guard, so in a text the
+  assistant still suggests and does not write (D63, SEC-10).
+
 ## [0.17.0] - 2026-11-07
 
 The grid, and snapping to it (E10.15), on top of `claudia_creates`'s new `SetSnap` command.
