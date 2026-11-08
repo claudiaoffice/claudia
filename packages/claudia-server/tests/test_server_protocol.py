@@ -381,3 +381,30 @@ def test_an_app_extends_a_copy_of_the_table_with_its_own_methods_and_types(doc, 
         call(doc, ann, "double", {"n": 3}, table=table)
     assert "double" in table.describe(Limits())["methods"] and "even" in table.describe(Limits())["param_types"]
     assert "double" not in core_methods.names(), "the core table must not change when an app extends its copy"
+
+
+# ------------------------------------------------------------------------------------------ help (E13.1, E13.3)
+def test_help_search_finds_the_real_computes_topics_shared_across_apps(doc, ann):
+    found = call(doc, ann, "help_search", {"query": "formula"})
+    assert any(topic["id"] == "computes.writing-a-formula" for topic in found)
+    assert set(found[0]) == {"id", "title", "apps", "tags"}
+
+
+def test_help_search_with_no_query_gives_every_topic(doc, ann):
+    assert len(call(doc, ann, "help_search")) >= 4  # the three new computes topics plus typeset's D99 draft
+
+
+def test_help_topic_gives_the_full_text_by_id(doc, ann):
+    topic = call(doc, ann, "help_topic", {"id": "computes.writing-a-formula"})
+    assert topic["title"] == "How do I write a formula?"
+    assert "=A1+A2" in topic["body"]
+
+
+def test_help_topic_refuses_an_unknown_id(doc, ann):
+    with pytest.raises(RequestError) as caught:
+        call(doc, ann, "help_topic", {"id": "no.such.topic"})
+    assert caught.value.code == "command_error"
+
+
+def test_a_viewer_may_read_help_too(doc, vera):
+    assert call(doc, vera, "help_search") == call(doc, Account("ann", "owner"), "help_search")

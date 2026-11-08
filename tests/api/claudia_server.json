@@ -1,5 +1,5 @@
 {
- "version": "0.17.0",
+ "version": "0.18.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -241,6 +241,27 @@
    "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool', access: 'object' = None) -> 'Account | None'",
    "serve": "(self, websocket: 'WebSocket', doc_id: 'str') -> 'None'",
    "set_secret": "(self, access_secret: 'str | None') -> 'None'"
+  },
+  "properties": []
+ },
+ "HelpContentError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "HelpLibrary": {
+  "class": [
+   "object"
+  ],
+  "init": "(topics: 'Iterable[Topic]' = ())",
+  "methods": {
+   "add": "(self, topic: 'Topic') -> 'None'",
+   "get": "(self, topic_id: 'str') -> 'Topic | None'",
+   "load_folder": "(self, folder: 'Path') -> 'None'",
+   "search": "(self, query: 'str') -> 'list[Topic]'"
   },
   "properties": []
  },
@@ -511,6 +532,17 @@
   },
   "properties": []
  },
+ "Topic": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', title: 'str', apps: 'tuple[str, ...]', language: 'str', tags: 'tuple[str, ...]', explains: 'tuple[str, ...]', body: 'str') -> None",
+  "methods": {
+   "summary": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "TypesetSettings": {
   "class": [
    "object"
@@ -563,6 +595,9 @@
  "creates_methods_with": {
   "function": "(library: 'ShapeLibrary') -> 'MethodTable'"
  },
+ "default_library": {
+  "function": "() -> 'HelpLibrary'"
+ },
  "ensure_certificate": {
   "function": "(state_dir: 'str | Path | None' = None, extra_names: 'tuple[str, ...]' = (), cert_file: 'str | Path | None' = None, key_file: 'str | Path | None' = None) -> 'Certificate'"
  },
@@ -583,6 +618,9 @@
  },
  "parse_request": {
   "function": "(raw: 'str | bytes', limits: 'Limits') -> 'tuple[Any, Any, Any]'"
+ },
+ "parse_topic": {
+  "function": "(text: 'str', *, source: 'str' = '<topic>') -> 'Topic'"
  },
  "save_admins": {
   "function": "(state_dir: 'Path', directory) -> 'None'"

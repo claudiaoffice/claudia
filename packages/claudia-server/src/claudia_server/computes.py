@@ -33,7 +33,9 @@ from claudia_computes import (
     SheetObject,
     Structure,
     WorkbookModel,
+    get_function,
     parse_input,
+    search_functions,
 )
 from claudia_computes.model import (
     MAX_COL_WIDTH,
@@ -281,3 +283,25 @@ def _remove_object(ctx, *, id, base):
     """Take an object off its sheet. Undo brings it back in the same place of the stacking order."""
     applied = ctx.document.execute(RemoveObject(id), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
+
+
+def _function_summary(entry) -> dict:
+    return {"name": entry.name, "signature": entry.signature, "tooltip": entry.tooltip}
+
+
+@computes_methods.method("functions", 'query:str=""')
+def _functions(ctx, *, query):
+    """Every cell function whose name or description mentions `query` (case-insensitive), closest name match
+    first; every function, alphabetically, if `query` is blank (E13.5/E13.6: the searchable function list). Each
+    result is `{name, signature, tooltip}`; fetch the full help text with `function_help`."""
+    return [_function_summary(entry) for entry in search_functions(query)]
+
+
+@computes_methods.method("function_help", "name:str")
+def _function_help(ctx, *, name):
+    """One function's full help text, by the name a `functions` result gave (while typing, the formula bar asks
+    for this itself: E13.5's "in context" is the signature and a short example shown as you type)."""
+    entry = get_function(name)
+    if entry is None:
+        raise RequestError("command_error", f"no function named {name!r}")
+    return {"name": entry.name, "signature": entry.signature, "tooltip": entry.tooltip, "help": entry.help}

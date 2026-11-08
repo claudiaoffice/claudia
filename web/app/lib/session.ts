@@ -30,6 +30,16 @@ export interface SheetInfo {
   rows: number
   cols: number
 }
+/** A `functions` search result: name, signature and a one-line tooltip (E13.5/E13.6). Fetch the full help text,
+ * with its worked example, through `functionHelp`. */
+export interface FunctionSummary {
+  name: string
+  signature: string
+  tooltip: string
+}
+export interface FunctionHelp extends FunctionSummary {
+  help: string
+}
 /** A floating object anchored to a cell of a sheet (E10.11): today only an image. `row`/`col` anchor its top
  * left corner; `w`/`h` are its pixel size, fixed at insertion — neither the anchor nor the size ever change
  * because of a structural edit (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject`
@@ -303,6 +313,19 @@ export class Session extends BaseSession<State> {
    * `sizes` is `[index, size | null]` pairs. */
   async resizeLines(sheet: string, axis: Axis, sizes: [number, number | null][]): Promise<boolean> {
     return (await this.attempt('resize_lines', { sheet, axis, sizes, base: this.state.revision })) !== false
+  }
+
+  // -- the function catalog (E13.5, E13.6: computes' "Documentation", and the formula bar's in-context help)
+  /** Every cell function whose name or description mentions `query`, closest name match first; the whole
+   * catalog, alphabetically, if `query` is blank. */
+  async listFunctions(query = ''): Promise<FunctionSummary[] | false> {
+    return await this.attempt('functions', { query })
+  }
+
+  /** One function's full help text, by the name a `listFunctions` result (or the formula bar's own parsing of
+   * what is being typed) gave. */
+  async functionHelp(name: string): Promise<FunctionHelp | false> {
+    return await this.attempt('function_help', { name })
   }
 
   // -- where I am, and holding a cell while I type into it

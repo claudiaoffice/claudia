@@ -41,6 +41,20 @@ export interface Notice {
   kind: 'info' | 'warning' | 'error'
   text: string
 }
+/** A `help_search` result: everything but the body (E13.1, E13.3). */
+export interface HelpTopicSummary {
+  id: string
+  title: string
+  apps: string[]
+  tags: string[]
+}
+/** A `help_topic` result: the whole topic, its `body` Markdown shown as plain text for now (D30 is not wired up
+ * for help yet — this iteration's own scope decision, not a property of the topic format). */
+export interface HelpTopic extends HelpTopicSummary {
+  language: string
+  explains: string[]
+  body: string
+}
 export interface BaseState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
@@ -451,6 +465,18 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
   async exportContent(): Promise<Record<string, unknown> | false> {
     return await this.attempt('export_content')
+  }
+
+  // ------------------------------------------------------------------------------ help (E13.1, E13.3, E13.5)
+  /** Help topics whose title, tags or what-they-explain mention `query`; every topic, by title, if `query` is
+   * blank. The same for every app — a topic names the apps it is for itself. */
+  async helpSearch(query = ''): Promise<HelpTopicSummary[] | false> {
+    return await this.attempt('help_search', { query })
+  }
+
+  /** One help topic in full, by the id a `helpSearch` result gave. */
+  async helpTopic(id: string): Promise<HelpTopic | false> {
+    return await this.attempt('help_topic', { id })
   }
 
   // ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)

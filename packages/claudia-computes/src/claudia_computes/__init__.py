@@ -11,6 +11,9 @@ An image is anchored to a cell (``row``, ``col``) with a fixed pixel size (``w``
 because of a row/column insert, delete, or resize — only ``MoveObject`` (the person dragging it) moves it, and
 there is no resize of an object yet. Decoding and the import record are ``claudia_core``'s (``ImageAsset``,
 ``ImageImport``, re-exported there), shared with creates and composes.
+
+functions.help  function_catalog/search_functions/get_function: every cell function, library and core alike, as one
+searchable list (E13.5's "Documentation" for computes).
 """
 
 from . import commands  # noqa: F401  (registers the commands)
@@ -28,6 +31,7 @@ from .commands import (
 )
 from .entry import parse_input
 from .events import ImagesChanged, ObjectsChanged
+from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
 from .model import OBJECT_KINDS, Content, Sheet, SheetObject, WorkbookModel, content_of
 from .refs import (
     CellRef,
@@ -54,6 +58,7 @@ __all__ = [
     "DeleteCols",
     "DeleteRows",
     "ForgetImage",
+    "FunctionHelp",
     "ImagesChanged",
     "InsertCols",
     "InsertRows",
@@ -73,6 +78,9 @@ __all__ = [
     "WorkbookModel",
     "column_name",
     "content_of",
+    "function_catalog",
+    "get_function",
     "parse_input",
     "parse_range_ref",
+    "search_functions",
 ]
