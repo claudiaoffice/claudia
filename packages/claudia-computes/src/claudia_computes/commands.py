@@ -27,6 +27,8 @@ from .model import (
     Sheet,
     SheetObject,
     WorkbookModel,
+    content_of,
+    value_of,
 )
 from .refs import (
     DeleteCols,
@@ -38,6 +40,7 @@ from .refs import (
     column_name,
 )
 from .region import CellRegion, ObjectSet
+from .values import ErrorValue, Value
 
 register = WorkbookModel.registry.register
 
@@ -257,6 +260,55 @@ class SetCells(Command):
 
     def redacted(self) -> Command:
         return SetCells(self.sheet, tuple((r, c, None) for r, c, _ in self.cells))  # same cells, emptied
+
+
+# ------------------------------------------------------------------------------ heavy calls
+@register
+@dataclass(frozen=True)
+class ApplyCalculated(Command):
+    """A worker's result for one heavy formula call (``UserFunction.heavy``), landing on the cell that deferred
+    it exactly like any other change -- recalculated readers, an event, a log entry -- except undo: this is the
+    server's own continuation of a formula the person already typed, not a new edit of theirs, so nobody undoes
+    it (PERF review 2026-11-08, D37, D177).
+
+    Applying is a no-op if the cell is not (or is no longer) waiting for this call -- edited away, its sheet
+    removed, or already answered -- so a result computed from a stale snapshot can never land (``Calculator
+    .resolve_heavy``); the dispatcher deciding whether the snapshot is still fresh enough to try is
+    ``claudia-server``'s job, not this command's."""
+
+    kind: ClassVar[str] = "computes.ApplyCalculated"
+    undoable = False
+    sheet: SheetId
+    row: int
+    col: int
+    value: Value
+
+    @property
+    def label(self) -> str:
+        return "Calculated"
+
+    @property
+    def summary(self) -> str:
+        return _one(self.row, self.col, content_of(self.value))
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        ctx.model.calc.resolve_heavy((self.sheet, self.row, self.col), self.value)
+        return self  # nobody undoes this (undoable = False); the inverse is never asked for
+
+    def to_data(self) -> dict:
+        return {"sheet": self.sheet, "row": self.row, "col": self.col, "value": content_of(self.value)}
+
+    @classmethod
+    def from_data(cls, data, registry) -> ApplyCalculated:
+        content = data["value"]
+        if content is not None and content["t"] == "error":
+            value: Value = ErrorValue(content["v"], content.get("d", ""))
+        else:
+            value = value_of(content)
+        return cls(SheetId(data["sheet"]), data["row"], data["col"], value)
+
+    def redacted(self) -> Command:
+        return ApplyCalculated(self.sheet, self.row, self.col, None)
 
 
 # ------------------------------------------------------------------------------ structure

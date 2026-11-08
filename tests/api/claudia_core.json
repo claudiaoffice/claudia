@@ -1,5 +1,5 @@
 {
- "version": "0.8.0",
+ "version": "0.9.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -875,6 +875,9 @@
  },
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
+ },
+ "replay_collecting": {
+  "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]') -> 'list[tuple[Entry, Command]]'"
  },
  "transform": {
   "function": "(region: 'Region', command: 'Command') -> 'Region | None'"

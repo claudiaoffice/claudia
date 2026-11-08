@@ -377,6 +377,29 @@ def test_the_worker_pool_is_reachable_and_stopped_with_the_hub(make_hub):
     asyncio.run(scenario())
 
 
+def test_the_hub_bounds_its_worker_pool_queue(make_hub):
+    hub = make_hub(max_waiting=3)
+    assert hub.workers.max_waiting == 3
+
+
+def test_a_workbook_document_gets_a_heavy_dispatcher_sharing_the_hubs_pool():
+    """Only a workbook has heavy formula calls to dispatch (D37, D177); ``ListModel`` (every other test in this
+    file) has no ``calc`` at all, so this one builds its own hub on ``WorkbookModel`` instead."""
+    from claudia_computes import WorkbookModel
+
+    async def scenario():
+        hub = Hub(MemoryProvider(WorkbookModel))
+        hosted = await hub.open("book", create=True)
+        assert hosted.heavy_dispatch is not None
+        assert hosted.heavy_dispatch.workers is hub.workers
+
+    asyncio.run(scenario())
+
+
+def test_a_non_workbook_document_gets_no_heavy_dispatcher(hosted):
+    assert hosted.heavy_dispatch is None
+
+
 # ------------------------------------------------------------------------------------------ per-viewer masking (E10.8)
 def test_an_events_to_data_for_is_used_per_connection_when_the_app_offers_it():
     """``_on_event`` calls an event's own ``to_data_for(viewer)`` when it has one (creates' ``ObjectsChanged``,

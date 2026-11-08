@@ -1,5 +1,5 @@
 {
- "version": "0.17.0",
+ "version": "0.18.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -169,6 +169,12 @@
   "methods": {},
   "properties": []
  },
+ "DEFAULT_MAX_WAITING": {
+  "value": "8"
+ },
+ "DEFAULT_TIMEOUT": {
+  "value": "30.0"
+ },
  "DEFAULT_WORKERS": {
   "value": "4"
  },
@@ -244,11 +250,21 @@
   },
   "properties": []
  },
+ "HeavyDispatcher": {
+  "class": [
+   "object"
+  ],
+  "init": "(document: 'Document', workers: 'Submittable', *, timeout: 'float' = 30.0)",
+  "methods": {
+   "close": "(self) -> 'None'"
+  },
+  "properties": []
+ },
  "HostedDocument": {
   "class": [
    "object"
   ],
-  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None)",
+  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, workers: 'WorkerPool | None' = None)",
   "methods": {
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
    "connect": "(self, account: 'Account', send: 'Callable[[str], None]', *, locale: 'str' = 'en') -> 'Connection'",
@@ -266,7 +282,7 @@
   "class": [
    "object"
   ],
-  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4)",
+  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4, max_waiting: 'int | None' = 8)",
   "methods": {
    "check_id": "(doc_id: 'object') -> 'str'",
    "ensure_room": "(self) -> 'None'",
@@ -353,6 +369,14 @@
  },
  "PROTOCOL_VERSION": {
   "value": "2"
+ },
+ "PoolBusy": {
+  "class": [
+   "RuntimeError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
  },
  "Proposal": {
   "class": [
@@ -493,6 +517,16 @@
   "methods": {},
   "properties": []
  },
+ "Submittable": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "submit": "(self, fn, /, *args, **kwargs)"
+  },
+  "properties": []
+ },
  "Task": {
   "class": [
    "object"
@@ -535,7 +569,7 @@
   "class": [
    "object"
   ],
-  "init": "(*, max_workers: 'int' = 4)",
+  "init": "(*, max_workers: 'int' = 4, max_waiting: 'int | None' = None)",
   "methods": {
    "stop": "(self) -> 'None'",
    "submit": "(self, fn: 'Callable[P, R]', /, *args: 'P.args', **kwargs: 'P.kwargs') -> 'R'"

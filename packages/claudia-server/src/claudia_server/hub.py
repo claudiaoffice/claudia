@@ -29,6 +29,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from claudia_computes import WorkbookModel
 from claudia_core import (
     ChatPosted,
     CommandLog,
@@ -41,6 +42,7 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 
 from .auth import AI_COLOR, Account, UserDirectory
+from .heavy_dispatch import HeavyDispatcher
 from .protocol import (
     DEFAULT_LOCALE,
     PROTOCOL_VERSION,
@@ -53,7 +55,7 @@ from .protocol import (
     parse_request,
 )
 from .restore import Resolution, RestoreCoordinator
-from .workers import DEFAULT_WORKERS, WorkerPool
+from .workers import DEFAULT_MAX_WAITING, DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
     from .assistant import Assistant
@@ -282,6 +284,7 @@ class HostedDocument:
         edit_timeout: float,
         clock: Callable[[], float],
         directory: UserDirectory | None = None,
+        workers: WorkerPool | None = None,
     ):
         self.id = doc_id
         self.document = document
@@ -297,6 +300,12 @@ class HostedDocument:
         self._connection_ids = 0
         self._locked: set[str] = set()  # who held a lock at the last look, to tell the others when one lapses
         self.restore = RestoreCoordinator(self._apply_proposal, clock=clock)
+        # Only a workbook has heavy formula calls to dispatch (D37, D177); any other app's document gets none.
+        self.heavy_dispatch = (
+            HeavyDispatcher(document, workers)
+            if workers is not None and isinstance(document.model, WorkbookModel)
+            else None
+        )
         document.subscribe(self._on_event)
 
     # -- people ------------------------------------------------------------------------
@@ -408,7 +417,10 @@ class Hub:
     ``max_documents`` is the most documents the server holds: past it nobody can make another (``ensure_room``), so that
     whoever can reach the server cannot fill its disk. ``workers`` is the pool slow or CPU-bound request handling can
     offload to, off the one thread every document here is otherwise served from (D134); it starts no process until
-    something is first submitted to it."""
+    something is first submitted to it. ``max_waiting`` bounds that pool's own queue (``WorkerPool``, D37): every
+    document this server holds shares the one pool, so past that many submissions in flight the pool refuses the
+    next one at once (``PoolBusy``) rather than queuing behind it, the same way ``Assistant.max_waiting`` bounds its
+    own queue of questions."""
 
     def __init__(
         self,
@@ -426,13 +438,14 @@ class Hub:
         directory: UserDirectory | None = None,
         clock: Callable[[], float] = time.monotonic,
         max_workers: int = DEFAULT_WORKERS,
+        max_waiting: int | None = DEFAULT_MAX_WAITING,
     ):
         self.provider = provider
         self.methods = methods
         self.limits = limits or Limits()
         self.allow_create = allow_create
         self.max_documents = max_documents
-        self.workers = WorkerPool(max_workers=max_workers)
+        self.workers = WorkerPool(max_workers=max_workers, max_waiting=max_waiting)
         self._known: set[str] = (
             set()
         )  # the ids of the stored documents: found when first asked, and every one opened since
@@ -526,6 +539,7 @@ class Hub:
                 edit_timeout=self.edit_timeout,
                 clock=self._clock,
                 directory=self.directory,
+                workers=self.workers,
             )
             if self.assistant is not None:
                 self.assistant().attach(hosted)

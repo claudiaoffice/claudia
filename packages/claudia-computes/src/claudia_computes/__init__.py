@@ -3,7 +3,7 @@
 refs      CellRef / RangeRef / structural edits (from the demo)
 model     WorkbookModel: sheets, typed cells, and the images/objects a document knows (E10.11)
 commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, DefineImage, ForgetImage, AddObject, MoveObject,
-RemoveObject
+RemoveObject, ApplyCalculated (a worker's result for a deferred heavy call, D37, D177)
 region    CellRegion: moves with structural edits; ObjectSet: a selection of floating objects (does not)
 entry     parse_input: what typing into a cell means
 
@@ -17,6 +17,7 @@ from . import commands  # noqa: F401  (registers the commands)
 from .commands import (
     AddObject,
     AddSheet,
+    ApplyCalculated,
     DefineImage,
     ForgetImage,
     MoveObject,
@@ -47,6 +48,7 @@ __all__ = [
     "OBJECT_KINDS",
     "AddObject",
     "AddSheet",
+    "ApplyCalculated",
     "CellRef",
     "CellRegion",
     "Content",

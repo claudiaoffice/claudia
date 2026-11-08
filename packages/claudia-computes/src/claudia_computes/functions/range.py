@@ -9,6 +9,7 @@ iteration give every position, ``None`` for empty ones, and refuse rectangles to
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..refs import Position
@@ -32,6 +33,58 @@ class _Constant:
 
     def __init__(self, value: Value):
         self.grid: dict[Position, Value] = {} if value is None else {(0, 0): value}
+
+
+@dataclass(slots=True)
+class FrozenGrid:
+    """A ``Grid`` snapshot holding only the cells one ``Range``'s footprint reached, and nothing else -- no live
+    ``Sheet``, no lock, no connection, nothing that cannot cross a process boundary. This is the copy a deferred
+    heavy call (:class:`~claudia_computes.functions.base.Deferred`) runs on in a worker, instead of the live
+    sheet it was first read from (D37, D177): plain data, pickled once and read many times.
+
+    Not ``frozen=True``: a :class:`Grid` is a plain, writable-attribute :class:`~typing.Protocol`, and a truly
+    immutable dataclass does not structurally match it (its fields are read-only descriptors, not plain
+    attributes). Nothing here writes to a ``FrozenGrid`` once built -- the name is the contract, not the
+    enforcement.
+    """
+
+    grid: dict[Position, Value] = field(default_factory=dict)
+    rows_used: int = 0
+    cols_used: int = 0
+
+    @classmethod
+    def of(cls, source: Grid, row0: int, col0: int, row1: int, col1: int) -> FrozenGrid:
+        """A snapshot of ``source`` covering just ``row0..row1``/``col0..col1`` -- the footprint a single
+        ``Range`` reaches, not the whole sheet, so a huge sheet costs only what the call actually reads."""
+        last_row = min(row1, source.rows_used - 1)
+        last_col = min(col1, source.cols_used - 1)
+        if last_row < row0 or last_col < col0:
+            return cls({}, source.rows_used, source.cols_used)
+        full = source.grid
+        positions = (last_row - row0 + 1) * (last_col - col0 + 1)
+        grid: dict[Position, Value]
+        if positions <= len(full):
+            grid = {
+                (r, c): v
+                for r in range(row0, last_row + 1)
+                for c in range(col0, last_col + 1)
+                if (v := full.get((r, c))) is not None
+            }
+        else:
+            grid = {(r, c): v for (r, c), v in full.items() if row0 <= r <= last_row and col0 <= c <= last_col}
+        return cls(grid, source.rows_used, source.cols_used)
+
+
+def freeze(value: object) -> object:
+    """``value`` as it crosses a process boundary: a :class:`Range` comes back pointed at a :class:`FrozenGrid`
+    snapshot of just the cells it reaches, instead of its live sheet; anything else passes through unchanged.
+
+    This is what a deferred heavy call's arguments are run through before the call is handed to a worker (D37,
+    D177) -- not a general deep-copy, just enough to take the live, mutable sheet out of the picture."""
+    if isinstance(value, Range):
+        snapshot = FrozenGrid.of(value.sheet, value.row0, value.col0, value.row1, value.col1)
+        return Range(snapshot, value.row0, value.col0, value.row1, value.col1, sheet_id=value.sheet_id)
+    return value
 
 
 class Range:

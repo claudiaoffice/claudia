@@ -18,6 +18,7 @@ from .composes import composes_methods
 from .computes import computes_methods
 from .creates import creates_methods, creates_methods_with
 from .filestore import FileDirectory, FileProvider
+from .heavy_dispatch import DEFAULT_TIMEOUT, HeavyDispatcher, Submittable
 from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, StoredInfo
 from .model_engine import ModelEngine
 from .protocol import (
@@ -45,10 +46,12 @@ from .server_settings import (
 )
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
-from .workers import DEFAULT_WORKERS, WorkerPool
+from .workers import DEFAULT_MAX_WAITING, DEFAULT_WORKERS, PoolBusy, WorkerPool
 
 __all__ = [
     "AI_USER",
+    "DEFAULT_MAX_WAITING",
+    "DEFAULT_TIMEOUT",
     "DEFAULT_WORKERS",
     "ERROR_CODES",
     "EVENTS",
@@ -75,6 +78,7 @@ __all__ = [
     "FileDirectory",
     "FileProvider",
     "Gateway",
+    "HeavyDispatcher",
     "HostedDocument",
     "Hub",
     "HubError",
@@ -83,6 +87,7 @@ __all__ = [
     "Method",
     "MethodTable",
     "ModelEngine",
+    "PoolBusy",
     "Proposal",
     "RequestError",
     "Resolution",
@@ -95,6 +100,7 @@ __all__ = [
     "Step",
     "ScryptDirectory",
     "StoredInfo",
+    "Submittable",
     "Task",
     "TextEngine",
     "TypesetSettings",

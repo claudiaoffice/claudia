@@ -3,6 +3,27 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.18.0] - 2026-11-08
+
+CPU-bound work off the event loop, continued (E3.5; D37 specified this and it was not built until now; D134,
+D177): a bound on the worker pool's own queue, and a document's heavy formula calls actually reaching it.
+
+### Added
+- **`workers.WorkerPool.max_waiting`**: bounds how many submissions may be in flight at once across every
+  document this server holds, the same way `Assistant.max_waiting` bounds one document's own question queue.
+  Past the bound, `submit` raises the new `PoolBusy` at once, before it ever reaches the executor — never
+  queued, never run inline instead. `Hub` takes `max_waiting` too (default `DEFAULT_MAX_WAITING`) and passes it
+  through to the pool it owns.
+- **`heavy_dispatch.HeavyDispatcher`**: one per workbook document (`Hub.open` attaches it automatically,
+  `HostedDocument.heavy_dispatch`), watching `claudia_computes.calc.Calculator.pending_heavy` and running what
+  it can safely resolve on the hub's `WorkerPool` — applying the answer through the new `computes
+  .ApplyCalculated` command, or discarding it if the document moved on while the worker ran (D37's "a worker
+  computes on a copy at revision r and its result is discarded if the inputs changed", now built). Resolves a
+  deferred call only when the heavy function *is* the whole formula this round (`=HEAVY(...)`, not
+  `=HEAVY(...)+1`) — a documented, deliberate limit of this patch, not a bug (D177).
+- **`heavy_dispatch.Submittable`**: the `submit(fn, *args, **kwargs)` shape `HeavyDispatcher` needs from a pool,
+  so a test can stand in a fake one without a real process pool.
+
 ## [0.17.0] - 2026-11-07
 
 The grid, and snapping to it (E10.15), on top of `claudia_creates`'s new `SetSnap` command.

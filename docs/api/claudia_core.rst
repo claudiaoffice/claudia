@@ -44,6 +44,7 @@ Log and revisions
 .. autoclass:: claudia_core.Entry
 .. autoclass:: claudia_core.CommandLog
 .. autofunction:: claudia_core.replay
+.. autofunction:: claudia_core.replay_collecting
 .. autoclass:: claudia_core.History
 .. autoclass:: claudia_core.Step
 

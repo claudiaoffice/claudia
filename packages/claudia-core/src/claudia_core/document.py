@@ -48,7 +48,7 @@ from .messages import ChatRecord, Ephemeral, parse_chat
 from .model import DocumentModel, Snapshot
 from .presence import Presence
 from .region import Region
-from .replay import replay
+from .replay import replay, replay_collecting
 from .revision import Branch, Revision
 from .store import DocumentStore
 
@@ -135,8 +135,13 @@ class Document:
                     break
         if model is None:
             model = model_cls.empty()
+        # The replay itself touches only `model` and the log's own entries -- no live Document needed yet
+        # (groundwork for dispatching it to a worker in a future round, D178). `doc` is built afterward, and
+        # recording each author's undo stack from the pairs that come back is the cheap part that stays here.
+        applied = replay_collecting(model, path[start:])
         doc = cls(model, log=log, branch=branch, **options)
-        replay(model, path[start:], doc._record_history)
+        for entry, inverse in applied:
+            doc._record_history(entry, inverse)
         return doc
 
     # ------------------------------------------------------------------ state
@@ -558,7 +563,9 @@ class Document:
             history.clear()
         for hold in list(self.presence.holds()):
             self.presence.release(hold.owner)
-        replay(self.model, self.log.path(self.revision), self._record_history)
+        # Same shape as `open` (D178): the replay itself needs nothing of `self` but `self.model`.
+        for entry, inverse in replay_collecting(self.model, self.log.path(self.revision)):
+            self._record_history(entry, inverse)
 
     # ------------------------------------------------------------------ manifest (E1.9)
     def manifest(self) -> Manifest:

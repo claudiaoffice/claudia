@@ -466,6 +466,29 @@ follow from reading the real backend surface rather than the mockups' more aspir
 
 **Numbering note, found while merging `main` into this branch (2026-11-08):** two ID collisions already exist on `main`, from branches that diverged before either side had the other's new entries — `D151` (this branch's "Administrator accounts are a separate, server-scoped identity…", twenty-seventh round) collides with grid-in-creates' "A grid overlay in creates…"; `D160` (row/column resize, twenty-second round) collides with this round's own original numbering before it was shifted above. Left as-is here, since neither is this patch's to renumber — flagged for whoever next does a renumbering pass (precedent: "Decision-number renumbering, second pass (QA review, 2026-11-07)").
 
+## Worker pool limits and heavy-call dispatch (thirty-first round)
+
+D37's "worker tier is not [built]" gap, closed for its first real case. Scope for this round was settled with the
+owner in advance via two `AskUserQuestion`s: heavy-formula dispatch is **backend only**, with no new "calculating"
+UI state (that needs its own screens-first round, per this project's own rule for new frontend work); and
+`claudia_core.replay()` gets **groundwork only** (made cleanly separable from the live `Document`), not an actual
+worker dispatch — `DocumentProvider.open` stays synchronous this round.
+
+| ID | Decision | Date | Notes |
+|---|---|---|---|
+| D177 | **A `UserFunction` may declare `heavy=True`/`heavy_above=N`; `Bound.__call__` then raises `Deferred` instead of running it inline once the (already-converted) arguments pass that threshold, and `calc.py` carries the call through to resolution rather than blocking the round that hit it.** `Deferred` propagates uncaught up to `Round._calculate`, which freezes its arguments into a `FrozenGrid` snapshot (`functions/range.py`'s `freeze`) *at the moment of deferral* — D37's "a worker computes on a copy at revision r" — and files it in `Calculator.pending_heavy`. A worker's answer lands through the new `ApplyCalculated` command (`claudia_computes/commands.py`, `undoable = False`, the `Redacted`/`Checkpoint` precedent) via `Calculator.resolve_heavy`; `discard_heavy` retries the formula instead if the worker's answer is no longer wanted. Both guard with a plain "not pending → no-op," so a late worker answer racing a subsequent edit does nothing. Dispatch itself is `claudia_server/heavy_dispatch.py`'s new `HeavyDispatcher`, one per workbook document (`Hub`/`HostedDocument`, mirroring `Assistant`), submitting to the existing `WorkerPool` through a duck-typed `Submittable` so tests need no real process pool. | 2026-11-08 | **Deliberately narrow, flagged rather than guessed around:** `Deferred` carries only the one call's own bound function and arguments, with no way back to whatever expression wraps it, so `HeavyDispatcher` only ever resolves a deferred call that *is* the whole formula (`=HEAVY(A1:A5)`, not `=HEAVY(A1:A5)+1`) — checked by `_is_whole_formula` against the compiled AST. A wrapped heavy call simply stays deferred, correct but unresolved, rather than risk landing a silently wrong answer; offloading part of an expression is a follow-up (see Open design questions). No new event type was added for `HeavyDispatcher` to "wake up" on: `hub.py`'s broadcast loop calls `event.to_data()` on every emitted event unconditionally, so a new type would have become client-visible wire protocol, which the UI-scope decision above rules out — it reuses the document's existing event stream purely as a rescan trigger. |
+| D178 | **`claudia_core.replay_collecting(model, entries)` returns the `(entry, inverse)` pairs instead of taking an `on_applied` callback, and `Document.open`/`Document._rebuild` now call it and do their own undo-stack bookkeeping afterward, rather than handing `replay` a bound method of the live `Document`.** Groundwork only, per the owner's choice above: the replay loop — the CPU-bound part of opening a large document — is now a pure function of a model and plain log entries, with zero dependency on anything that cannot cross a process boundary (an event bus, a bound method holding one). Nothing dispatches it to a worker yet. | 2026-11-08 | Behaviour-preserving: `test_document.py`'s `test_replaying_the_log_from_empty_gives_the_identical_state` and `test_history.py` pass unmodified, proving the undo stacks still come out identical. `materialize()` and the redaction-safety replay in `redact()` already took no callback at all and needed no change — only the two call sites that fed `replay` a bound method did. |
+| D179 | **`WorkerPool` gains `max_waiting`, bounding how many submissions may be in flight at once the same way `Assistant.max_waiting` already bounds queued AI turns.** Once `max_waiting` submissions are in flight, `WorkerPool.submit` raises `PoolBusy` immediately, before anything is queued or sent to the executor — never silently queued, never run inline as a fallback. `HeavyDispatcher` treats `PoolBusy` as "try again next time something wakes this document," not an error. | 2026-11-08 | Mirrors `Assistant`'s existing shape deliberately, so the two "the server is too busy for this kind of work right now" signals behave the same way for callers. |
+
+**Think ahead, not built this round:** two more candidates for the same `WorkerPool`, noted here so a future round
+does not have to rediscover them. **Office import/export** (`.xlsx`/`.docx`/`.pptx` parsing, D97–D99's additive
+extensions): parsing an untrusted, possibly large uploaded file is exactly the same "CPU-bound, event-loop-blocking"
+shape D37 named, and today runs inline like every other app-server call. **Image decode and thumbnailing**
+(`ImageAsset`/`ImageImport`, D31, E10.8): decoding a large image or building a thumbnail is likewise CPU-bound and
+currently synchronous in whichever app server handles the import. Neither is designed here — picklability
+(`WorkerPool.submit`'s own constraint) and, for import, where a half-parsed/invalid file's error surfaces are open
+questions for whoever picks either up.
+
 ## Open design questions
 
 - **Typesetting:** the full-document comparison of E0.4 (Tectonic against TeX Live, biblatex with biber, Beamer,
@@ -499,6 +522,11 @@ follow from reading the real backend surface rather than the mockups' more aspir
   always float, no coercion of text, TRUE/FALSE as 1/0, `math.fsum` for sums. Not yet confirmed as a decision.
 - **KDF cost calibration (D109):** keep the defaults or calibrate per machine at creation, with a floor. The measured
   default is below the target, and OpenSSL's multi-lane Argon2id serialisation makes it a throughput question too.
+- **Worker pool, next steps (D37, D177–D179):** offloading part of an expression, not just a whole formula that is
+  one bare heavy call (`HeavyDispatcher`'s deliberate limitation, D177); a visible "calculating" cell state, which
+  needs its own screens-first design round before any code; actually dispatching `replay_collecting` (D178) to a
+  worker for opening a large document, rather than just being ready to; and the two further offload candidates noted
+  above — Office import/export parsing and image decode/thumbnailing — neither designed yet.
 - **The redaction contract:** what a command's `redacted()` must keep so later commands still replay, and what happens
   when the redacted log no longer replays. Affects E1.8 and E2.6, and now also the container (SEC-05).
 - **The AI's authorisation boundary:** whether the method allow-list moves from the model's output parser to the

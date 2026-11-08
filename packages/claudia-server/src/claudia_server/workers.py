@@ -15,6 +15,12 @@ A worker process can die outright (killed, a segfault inside a C extension) rath
 breaks the ``ProcessPoolExecutor`` underneath, not just the one task. :meth:`WorkerPool.submit` replaces the broken
 executor transparently on the next call, so the failure is isolated to the task that caused it — the caller sees an
 ordinary exception, and every other document's work on this server, before and after it, is unaffected.
+
+``max_waiting`` bounds how many submissions may be in flight at once, the same way ``Assistant.max_waiting`` bounds
+its own queue: every document this server holds shares the one pool, so without a bound a server under load would
+pile up an ever-growing, invisible queue of pending work behind it rather than failing anything fast. Past the bound,
+:meth:`WorkerPool.submit` raises :class:`PoolBusy` immediately, before it ever reaches the executor — never queued,
+never run inline instead.
 """
 
 from __future__ import annotations
@@ -32,6 +38,12 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 DEFAULT_WORKERS = 4
+DEFAULT_MAX_WAITING = 2 * DEFAULT_WORKERS  # room for a short burst to queue past the workers actually running
+
+
+class PoolBusy(RuntimeError):
+    """Refused: ``max_waiting`` submissions are already in flight. Never queued, never run inline instead — the
+    caller decides what to do (tell the person, or fall back to running inline itself)."""
 
 
 def _call(fn: Callable, args: tuple, kwargs: dict):
@@ -43,9 +55,11 @@ def _call(fn: Callable, args: tuple, kwargs: dict):
 class WorkerPool:
     """A process pool reachable from the event loop. No process is started until the first :meth:`submit`."""
 
-    def __init__(self, *, max_workers: int = DEFAULT_WORKERS):
+    def __init__(self, *, max_workers: int = DEFAULT_WORKERS, max_waiting: int | None = None):
         self.max_workers = max_workers
+        self.max_waiting = max_waiting
         self._executor: ProcessPoolExecutor | None = None
+        self._waiting = 0
 
     def _ensure(self) -> ProcessPoolExecutor:
         if self._executor is None:
@@ -56,15 +70,23 @@ class WorkerPool:
         """Run ``fn(*args, **kwargs)`` in a worker process and await its result.
 
         ``fn`` and everything passed to it must be importable at module level and picklable: a plain function, not a
-        closure, a lambda or a bound method of something holding a lock, a socket or an open file."""
+        closure, a lambda or a bound method of something holding a lock, a socket or an open file.
+
+        Raises :class:`PoolBusy` at once, before anything is submitted, once ``max_waiting`` other submissions are
+        already in flight."""
+        if self.max_waiting is not None and self._waiting >= self.max_waiting:
+            raise PoolBusy(f"the worker pool already has {self._waiting} submission(s) in flight")
         executor = self._ensure()
         loop = asyncio.get_running_loop()
+        self._waiting += 1
         try:
             return await loop.run_in_executor(executor, _call, fn, args, kwargs)
         except BrokenProcessPool:
             log.warning("a worker process died; the pool will be replaced on the next submission")
             self._discard(executor)
             raise
+        finally:
+            self._waiting -= 1
 
     def _discard(self, executor: ProcessPoolExecutor) -> None:
         """Shut the given (broken) executor down, and clear it from ``self`` only if it is still the current one.

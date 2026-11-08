@@ -4,6 +4,24 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.9.0] - 2026-11-08
+
+Groundwork for running the expensive part of opening a document somewhere other than the caller's own thread
+(PERF review 2026-11-08, D37, D178). No dispatch is wired up yet -- `DocumentProvider.open` stays synchronous --
+this only makes the replay step itself able to run with nothing but a model and a log, ready for a future round
+to hand to a worker.
+
+### Added
+- `replay_collecting(model, entries)`: like `replay`, but returns the `(entry, inverse)` pairs instead of taking
+  an `on_applied` callback. Unlike handing `replay` a bound method such as `document._record_history`, this is a
+  pure function of plain data, with no dependency on any live `Document`.
+
+### Changed
+- `Document.open` and `Document._rebuild` now call `replay_collecting` and do their own (cheap) undo-stack
+  bookkeeping afterward, instead of passing `replay` a bound method. Behaviour is unchanged (`test_document.py`,
+  `test_history.py`, `test_redaction.py` all still pass unmodified) -- this is a refactor of the call sites, not
+  a new capability.
+
 ## [0.8.0] - 2026-11-07
 
 I18n groundwork (E5.7, D31, D148): the kernel gains stable error identity, without taking on gettext or any other

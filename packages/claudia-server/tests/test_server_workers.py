@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 import pytest
 
-from claudia_server.workers import WorkerPool
+from claudia_server.workers import PoolBusy, WorkerPool
 
 
 def _add(a, b):
@@ -25,6 +25,13 @@ def _boom():
 
 def _die():
     os._exit(1)  # a hard crash: nothing to catch, the process is simply gone
+
+
+def _nap(seconds):
+    import time
+
+    time.sleep(seconds)
+    return "done"
 
 
 def test_submit_runs_in_a_worker_and_returns_the_result():
@@ -82,6 +89,61 @@ def test_a_worker_process_dying_fails_only_that_task_not_the_pool():
                 await pool.submit(_die)
             # the pool replaces itself transparently on the next submission; unrelated work is unaffected
             assert await pool.submit(_add, 1, 1) == 2
+        finally:
+            await pool.stop()
+
+    asyncio.run(scenario())
+
+
+def test_max_waiting_refuses_a_submission_once_that_many_are_already_in_flight():
+    """Mirrors Assistant.max_waiting: a bound document must not pile an unbounded queue behind the one pool every
+    document on this server shares. Refused immediately (``PoolBusy``), not queued and not run inline."""
+
+    async def scenario():
+        pool = WorkerPool(max_workers=2, max_waiting=1)
+        try:
+            holding = asyncio.ensure_future(pool.submit(_nap, 0.2))
+            await asyncio.sleep(0.05)  # let the first submission actually claim its slot
+            with pytest.raises(PoolBusy):
+                await pool.submit(_add, 1, 1)
+            assert await holding == "done"
+        finally:
+            await pool.stop()
+
+    asyncio.run(scenario())
+
+
+def test_max_waiting_none_means_no_bound():
+    async def scenario():
+        pool = WorkerPool(max_workers=1, max_waiting=None)
+        try:
+            results = await asyncio.gather(*(pool.submit(_add, 1, i) for i in range(5)))
+            assert results == [1 + i for i in range(5)]
+        finally:
+            await pool.stop()
+
+    asyncio.run(scenario())
+
+
+def test_a_slot_is_freed_again_once_the_submission_finishes():
+    async def scenario():
+        pool = WorkerPool(max_workers=1, max_waiting=1)
+        try:
+            assert await pool.submit(_add, 1, 1) == 2
+            assert await pool.submit(_add, 2, 2) == 4  # the first submission's slot was freed, not leaked
+        finally:
+            await pool.stop()
+
+    asyncio.run(scenario())
+
+
+def test_a_slot_is_freed_even_when_the_submission_raises():
+    async def scenario():
+        pool = WorkerPool(max_workers=1, max_waiting=1)
+        try:
+            with pytest.raises(ValueError, match="boom"):
+                await pool.submit(_boom)
+            assert await pool.submit(_add, 1, 1) == 2  # the failed submission's slot was freed, not leaked
         finally:
             await pool.stop()
 

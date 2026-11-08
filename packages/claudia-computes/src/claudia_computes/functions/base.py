@@ -35,9 +35,23 @@ errors           ``raise FunctionError("#NUM!", "why")`` for an Excel-style code
 ``description``  one line: what it does. Required, as the tooltip is made from it (``get_tooltip``).
 ``examples``     at least one ``Example``: formulas with the result they give. They are the help topic's worked example
                  (``get_help``) and they are run as tests when the function is loaded, so help cannot go stale.
+``heavy``        ``True`` if ``call`` can be slow enough to matter (E3.5, D37, D177): everything on this server runs
+                 on the one thread every document shares, so a slow call must not run there. Default ``False``.
+``heavy_above``  with ``heavy = True``: defer only once a ``Range`` argument holds more than this many present cells
+                 (not the nominal rectangle: ``A1:A1000000`` with two cells filled counts as two). ``None`` (the
+                 default): defer every call, regardless of its arguments -- for a function whose cost is not driven
+                 by range size (a fixed-size simulation, say). The author is in the best position to judge this, the
+                 same way they already judge each argument's type.
+
+A heavy call is never run here: :meth:`Bound.__call__` raises :class:`Deferred` with the call to make instead of
+making it, so a whole formula can be hinted off the event loop to run elsewhere (D177) and the result reconciled
+when it comes back, the way D37 specified without building: on a copy of the inputs, discarded if they changed
+before an answer came back.
 
 The function must be **pure**: the same arguments, the same result, nothing else read. Results are recalculated from
-the document alone, by the server, whenever an input changes.
+the document alone, by the server, whenever an input changes. This matters doubly for a heavy function: it may be
+called again, on the same arguments, after already starting once (the first call's result discarded as stale), and
+it may run in a different process than the one that decided to call it.
 
 Functions are trusted code: they run inside the server with all its privileges and are installed by whoever runs
 the server, never taken from a document or from a network connection.
@@ -83,9 +97,27 @@ class UserFunction:
     name: str | None = None
     description: str = ""
     examples: tuple[Example, ...] = ()
+    heavy: bool = False
+    heavy_above: int | None = None
 
     def call(self, *args):
         raise NotImplementedError(f"{type(self).__name__} must define call()")
+
+
+class Deferred(Exception):
+    """Raised by :meth:`Bound.__call__` instead of running a heavy call: ``bound`` and ``call_args`` are exactly
+    what would have been passed to ``bound.invoke`` -- the already-converted arguments, ready to run elsewhere.
+
+    Named ``call_args``, not ``args``: :class:`Exception` already owns ``args`` (a ``tuple``, set by ``super()``
+    above), and shadowing it with this ``list`` is a type mismatch, not just a style choice.
+
+    Not a :class:`FormulaError`: a deferral is not a formula mistake, and must reach the caller (``calc.py``)
+    undisturbed by anything that only expects to catch formula errors."""
+
+    def __init__(self, bound: Bound, call_args: list):
+        super().__init__(f"{bound.name} deferred: heavy, and over its threshold")
+        self.bound = bound
+        self.call_args = call_args
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,6 +242,8 @@ class Bound:
         self.max_args = None if any(p.variadic for p in self.params) else len(self.params)
         self.description = (instance.description or "").strip()
         self.examples = tuple(instance.examples)
+        self.heavy = bool(instance.heavy)
+        self.heavy_above = instance.heavy_above
 
     @property
     def signature(self) -> str:
@@ -238,11 +272,37 @@ class Bound:
         return "\n".join(lines)
 
     def __call__(self, args: list):
+        """Convert ``args`` and run the call -- or, if it is heavy and over its threshold, raise :class:`Deferred`
+        with the call to make instead (``calc.py`` catches it; nothing here knows about pools or the event loop)."""
+        converted = self.convert_args(args)
+        if self.heavy and self.is_heavy_for(converted):
+            raise Deferred(self, converted)
+        return self.invoke(converted)
+
+    def convert_args(self, args: list) -> list:
+        """The formula's evaluated arguments, converted to what ``call`` declares -- everything ``invoke`` needs,
+        computed before deciding whether this call is heavy."""
         if len(args) < self.min_args or (self.max_args is not None and len(args) > self.max_args):
             raise FormulaError(VALUE, f"{self.name} takes {self._arity()} arguments, not {len(args)}")
         params = self.params
         last = len(params) - 1
-        converted = [_convert(params[min(i, last)], arg) for i, arg in enumerate(args)]
+        return [_convert(params[min(i, last)], arg) for i, arg in enumerate(args)]
+
+    def is_heavy_for(self, converted: list) -> bool:
+        """Whether *this* call (already-converted arguments) should defer, given ``heavy`` and ``heavy_above``.
+
+        ``heavy_above`` counts the present cells of every ``Range`` argument combined -- a sparse million-row range
+        with two cells filled costs what two cells cost, not what a million rows would. A call with no ``Range``
+        argument at all is heavy whenever ``heavy`` is set and ``heavy_above`` is ``None`` (its cost cannot be read
+        off its arguments, so the author's blanket declaration is all there is to go on)."""
+        if self.heavy_above is None:
+            return True
+        size = sum(sum(1 for _ in arg.present()) for arg in converted if isinstance(arg, Range))
+        return size > self.heavy_above
+
+    def invoke(self, converted: list) -> Value | Range:
+        """Actually run the call on already-converted arguments -- the part that may be slow, and that a heavy
+        call's worker runs instead of running it here."""
         try:
             return _result(self.instance.call(*converted))
         except FormulaError:
