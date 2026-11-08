@@ -58,7 +58,7 @@ composes
 
 .. automodule:: claudia_composes
    :members:
-   :exclude-members: AddObject, DefineImage, DefineShape, ForgetImage, ForgetShape, MoveObject, ObjectBody, ObjectSet, RemoveObject, ResizeObject, RotateObject, SetSnap, SetText, VisualObject
+   :exclude-members: AddObject, DefineImage, DefineShape, ForgetImage, ForgetShape, MoveObject, ObjectBody, ObjectSet, Paragraph, RemoveObject, ResizeObject, RotateObject, Run, SetParagraph, SetParagraphStyle, SetSnap, SetText, VisualObject, paragraph_for
 
 .. automodule:: claudia_composes.anchors
    :no-members:

@@ -74,13 +74,13 @@ def test_a_text_box_is_added_with_the_body_text_style(deck):
     (box,) = objects(deck)
     assert box["id"] == added["object"]
     assert (box["kind"], box["anchor"]["x"], box["anchor"]["y"], box["w"], box["h"]) == ("text", 100, 80, 400, 120)
-    assert box["style"] == "body-text" and box["text"] == "" and box["shape"] is None
+    assert box["style"] == "body-text" and box["paragraph"]["text"] == "" and box["shape"] is None
     assert call(deck, "slides") == [{"id": "s1", "objects": 1}]
 
 
 def test_text_can_be_given_when_the_box_is_added(deck):
     add_text(deck, text="Quarterly goals")
-    assert objects(deck)[0]["text"] == "Quarterly goals"
+    assert objects(deck)[0]["paragraph"]["text"] == "Quarterly goals"
 
 
 def test_a_shape_brings_its_outline_into_the_document_once(deck):
@@ -180,7 +180,7 @@ def test_an_object_moves_resizes_and_is_edited(deck):
     call(deck, "resize_object", {"id": box, "x": 300, "y": 50, "w": 500, "h": 200})
     call(deck, "set_text", {"id": box, "text": "Hello"})
     (found,) = objects(deck)
-    assert (found["anchor"]["x"], found["anchor"]["y"], found["w"], found["h"], found["text"]) == (
+    assert (found["anchor"]["x"], found["anchor"]["y"], found["w"], found["h"], found["paragraph"]["text"]) == (
         300,
         50,
         500,
@@ -315,7 +315,7 @@ def test_a_presentation_comes_back_after_a_restart_with_its_shapes_and_order(tmp
     back = FileProvider(tmp_path, SlideModel).open("talk")
     assert objects(back) == before["objects"] and [o["id"] for o in objects(back)] == [text, circle]
     assert call(back, "shapes")["document"] == before["shapes"] and call(back, "slides") == before["slides"]
-    assert objects(back)[0]["anchor"]["x"] == 30 and objects(back)[0]["text"] == "Agenda"
+    assert objects(back)[0]["anchor"]["x"] == 30 and objects(back)[0]["paragraph"]["text"] == "Agenda"
 
 
 # -- images (E10.8): add_image, the plain-image style, and masking source_path per viewer ---------------------

@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime
 
 from .assets import ImageAsset, ImageImport
 from .commands import Command, CommandRegistry, core_commands
+from .paragraphs import Paragraph
 from .shapes import ShapeDefinition
 
 if TYPE_CHECKING:
@@ -42,7 +43,6 @@ if TYPE_CHECKING:
 #: words; an image carries an asset.
 OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image")
 
-MAX_OBJECT_TEXT = 20_000  # characters of text in one object
 MIN_OBJECT_SIZE = 20  # an object is at least this wide and this tall, in its app's own units
 MAX_OBJECTS_PER_CONTAINER = 500
 MAX_SELECTION = 64  # objects in one selection that arrives from a client
@@ -50,12 +50,21 @@ ASPECT_TOLERANCE = 1  # units a width may differ from height * aspect (whole uni
 MAX_LISTED_TEXT = 40  # characters of an object's text that a history sentence quotes
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
-_BODY_FIELDS = ("id", "kind", "w", "h", "style", "text", "shape", "image", "imported", "rotation", "snap")
+_BODY_FIELDS = ("id", "kind", "w", "h", "style", "paragraph", "shape", "image", "imported", "rotation", "snap")
 
 
 def _is_whole(value: object) -> TypeIs[int]:
     """``True`` for a plain ``int`` (not a ``bool``), narrowing the type for the caller."""
     return type(value) is int
+
+
+def paragraph_for(object_id: str, style: str, text: str = "", author: str | None = None) -> Paragraph:
+    """The paragraph a new text box or shape starts with.
+
+    It takes the object's own id (it is the only paragraph in there, so nothing else can collide with it) and,
+    to begin with, the object's own style — so a new object looks exactly as it did before paragraphs existed,
+    and pointing its words at a different style later is a deliberate act rather than a migration."""
+    return Paragraph(object_id, style, text).written_by(author)
 
 
 def _quote(text: str) -> str:
@@ -89,8 +98,13 @@ class ObjectBody:
     """What an object is and how it looks, the same in all three apps.
 
     ``kind`` is one of ``OBJECT_KINDS``. ``w`` and ``h`` are the size in the app's own units. ``style`` is the
-    id of a style in the document's :class:`~claudia_core.StyleBook`, which is where its colours, its border and
-    its font come from. ``text`` is the words in it (a text box always, a shape optionally, an image never).
+    id of a style in the document's :class:`~claudia_core.StyleBook`, which is where *the object's* colours and
+    border come from — its ``fill``, ``stroke`` and ``stroke-width`` (D178).
+
+    ``paragraph`` is the words in it: a :class:`~claudia_core.Paragraph`, the same entity composes uses for a
+    paragraph of a document (E10.17, D181), so a shape's label has a paragraph style, an alignment and per-author
+    runs like any other text in the suite. A text box always has one, a shape may, an image never (``None``).
+    The paragraph's own ``style`` says what the *words* look like, separately from the object's.
     ``shape`` is the id of an outline the document knows, ``image`` the id of an
     :class:`~claudia_core.ImageAsset` and ``imported`` the record of how that image got there. ``rotation`` is
     whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15, D151): the grid is a
@@ -101,7 +115,7 @@ class ObjectBody:
     w: int
     h: int
     style: str
-    text: str = ""
+    paragraph: Paragraph | None = None
     shape: str | None = None
     image: str | None = None
     imported: ImageImport | None = None
@@ -110,8 +124,10 @@ class ObjectBody:
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores. Carries ``imported`` unmasked (the log is not a client)."""
-        data: dict[str, Any] = {name: getattr(self, name) for name in _BODY_FIELDS if name != "imported"}
+        skip = ("imported", "paragraph")
+        data: dict[str, Any] = {name: getattr(self, name) for name in _BODY_FIELDS if name not in skip}
         data["imported"] = None if self.imported is None else self.imported.to_data()
+        data["paragraph"] = None if self.paragraph is None else self.paragraph.to_data()
         return data
 
     def to_data_for(self, viewer: str) -> dict:
@@ -128,8 +144,14 @@ class ObjectBody:
         (:meth:`~claudia_core.ObjectModel.check_object`)."""
         if set(data) != set(_BODY_FIELDS):
             raise ValueError("an object body has exactly these fields: " + ", ".join(_BODY_FIELDS))
-        imported = data["imported"]
-        return cls(**{**data, "imported": None if imported is None else ImageImport.from_data(imported)})
+        imported, paragraph = data["imported"], data["paragraph"]
+        return cls(
+            **{
+                **data,
+                "imported": None if imported is None else ImageImport.from_data(imported),
+                "paragraph": None if paragraph is None else Paragraph.from_data(paragraph),
+            }
+        )
 
 
 @dataclass(frozen=True)
@@ -415,10 +437,16 @@ class ObjectModel[A: Anchor]:
             raise ValueError(f"unknown style {body.style!r}")
         aspect = self._check_visual(body)
         self._check_size(body, aspect)
-        if not isinstance(body.text, str) or len(body.text) > MAX_OBJECT_TEXT:
-            raise ValueError(f"the text must be text of at most {MAX_OBJECT_TEXT} characters")
-        if body.kind == "image" and body.text:
-            raise ValueError("an image carries no text")
+        if body.kind == "image":
+            if body.paragraph is not None:
+                raise ValueError("an image carries no text")
+        else:
+            if body.paragraph is None:
+                raise ValueError(f"a {body.kind} object carries a paragraph, even an empty one")
+            body.paragraph.check()
+            styles = getattr(self, "styles", None)
+            if styles is not None and body.paragraph.style not in styles:
+                raise ValueError(f"unknown paragraph style {body.paragraph.style!r}")
         if not _is_whole(body.rotation) or not 0 <= body.rotation < 360:
             raise ValueError("the rotation must be whole degrees from 0 to 359")
         if type(body.snap) is not bool:
@@ -554,7 +582,10 @@ def _target(command: Command) -> str | None:
     """The id of the object a command is about, if it is about one."""
     if isinstance(command, AddObject):
         return command.object_id
-    if isinstance(command, MoveObject | ResizeObject | SetText | SetSnap | RotateObject | RemoveObject):
+    kinds = (
+        MoveObject | ResizeObject | SetText | SetParagraph | SetSnap | SetParagraphStyle | RotateObject | RemoveObject
+    )
+    if isinstance(command, kinds):
         return command.id
     return None
 
@@ -744,7 +775,8 @@ class AddObject(Command):
     @property
     def summary(self) -> str:
         if self.body.kind == "text":
-            return f"Added a text box: {_quote(self.body.text)}" if self.body.text.strip() else "Added a text box"
+            words = self.body.paragraph.text if self.body.paragraph else ""
+            return f"Added a text box: {_quote(words)}" if words.strip() else "Added a text box"
         if self.body.kind == "image":
             alt = self.body.imported.alt if self.body.imported else ""
             return f"Added an image: {_quote(alt)}" if alt.strip() else "Added an image"
@@ -778,7 +810,10 @@ class AddObject(Command):
         return None if isinstance(other, ForgetImage) and other.id == self.body.image else self
 
     def redacted(self) -> Command:
-        return AddObject(replace(self.body, text=""), self.anchor, self.at)  # the object stays, its words go
+        # The object stays, its words go — but a paragraph that exists must keep existing (an empty one), or the
+        # body would no longer be a valid object of its kind.
+        emptied = None if self.body.paragraph is None else self.body.paragraph.with_text("", ())
+        return AddObject(replace(self.body, paragraph=emptied), self.anchor, self.at)
 
     def stub(self) -> dict:
         return {"id": self.object_id}
@@ -958,7 +993,11 @@ class RotateObject(Command):
 @core_commands.register
 @dataclass(frozen=True)
 class SetText(Command):
-    """Give an object's text box or shape other words. An image carries no text."""
+    """Give an object's text box or shape other words; an image carries no text.
+
+    This replaces the whole paragraph's text at once, so all of it is attributed to whoever ran the command —
+    that is what setting a label means, as against typing into a document paragraph character by character
+    (which is composes' ``InsertText``, and keeps everybody's runs apart)."""
 
     kind: ClassVar[str] = "core.SetText"
     id: str
@@ -975,10 +1014,14 @@ class SetText(Command):
     def apply(self, ctx: Context) -> Command:
         model = _host(ctx)
         old = model.get_object(self.id)
-        new = old.with_body(text=self.text)
+        if old.body.paragraph is None:
+            raise ValueError("an image carries no text")
+        written = old.body.paragraph.with_text(self.text, ()).written_by(ctx.author)
+        new = old.with_body(paragraph=written)
         model.replace_object(new)
         ctx.emit(model.objects_changed(new.container, changed=(new,)))
-        return SetText(self.id, old.body.text)
+        # The inverse restores the whole paragraph, not just its words: see SetParagraph.
+        return SetParagraph(self.id, old.body.paragraph)
 
     def to_data(self) -> dict:
         return {"id": self.id, "text": self.text}
@@ -992,13 +1035,116 @@ class SetText(Command):
 
     def shifted_by(self, other: Command) -> Command | None:
         """Moving or resizing the box does not matter to its words; another text or a removal does."""
-        return None if isinstance(other, SetText | RemoveObject | AddObject) and _target(other) == self.id else self
+        kinds = SetText | SetParagraph | RemoveObject | AddObject
+        return None if isinstance(other, kinds) and _target(other) == self.id else self
 
     def redacted(self) -> Command:
         return SetText(self.id, "")
 
     def stub(self) -> dict:
         return {"id": self.id}
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class SetParagraph(Command):
+    """Put a whole paragraph — its words, its style and who wrote which part — into an object at once.
+
+    This is what the inverse of :class:`~claudia_core.SetText` has to be. Setting the text alone would restore
+    the words but not their authorship, and undoing somebody's edit would quietly re-attribute the text it
+    brought back to whoever pressed undo."""
+
+    kind: ClassVar[str] = "core.SetParagraph"
+    id: str
+    paragraph: Paragraph
+
+    @property
+    def label(self) -> str:
+        return "Edit text"
+
+    @property
+    def summary(self) -> str:
+        words = self.paragraph.text
+        return f"Wrote {_quote(words)}" if words.strip() else "Cleared an object's text"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        old = model.get_object(self.id)
+        if old.body.paragraph is None:
+            raise ValueError("an image carries no text")
+        model.replace_object(old.with_body(paragraph=self.paragraph))
+        new = model.get_object(self.id)
+        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        return SetParagraph(self.id, old.body.paragraph)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "paragraph": self.paragraph.to_data()}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> SetParagraph:
+        return cls(data["id"], Paragraph.from_data(data["paragraph"]))
+
+    def regions(self, model: object) -> tuple[ObjectSet, ...]:
+        return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
+
+    def shifted_by(self, other: Command) -> Command | None:
+        kinds = SetText | SetParagraph | RemoveObject | AddObject
+        return None if isinstance(other, kinds) and _target(other) == self.id else self
+
+    def redacted(self) -> Command:
+        return SetParagraph(self.id, self.paragraph.with_text("", ()))
+
+    def stub(self) -> dict:
+        return {"id": self.id}
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class SetParagraphStyle(Command):
+    """Put an object's words under another paragraph style.
+
+    This is the object's *text* style, not the object's own: a shape's style says what its background and border
+    look like, its paragraph's style says what its words look like (D181). The same core style commands change
+    either, because both are entries in the one :class:`~claudia_core.StyleBook`."""
+
+    kind: ClassVar[str] = "core.SetParagraphStyle"
+    id: str
+    style: str
+
+    @property
+    def label(self) -> str:
+        return "Paragraph style"
+
+    @property
+    def summary(self) -> str:
+        return f"put an object's words under {self.style}"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        old = model.get_object(self.id)
+        if old.body.paragraph is None:
+            raise ValueError("an image carries no text")
+        new = old.with_body(paragraph=old.body.paragraph.with_style(self.style))
+        model.replace_object(new)
+        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        return SetParagraphStyle(self.id, old.body.paragraph.style)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "style": self.style}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> SetParagraphStyle:
+        return cls(data["id"], data["style"])
+
+    def regions(self, model: object) -> tuple[ObjectSet, ...]:
+        return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
+
+    def shifted_by(self, other: Command) -> Command | None:
+        kinds = SetParagraphStyle | RemoveObject | AddObject
+        return None if isinstance(other, kinds) and _target(other) == self.id else self
+
+    def redacted(self) -> Command:
+        return self
 
 
 @core_commands.register

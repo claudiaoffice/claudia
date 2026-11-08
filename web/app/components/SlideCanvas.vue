@@ -7,7 +7,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
 import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
-import { cssOf as computedCss, slideFrame } from '~/lib/objects'
+import { cssOf as computedCss, slideFrame, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
 import { colorOf, inkOn } from '~/lib/people'
 import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
@@ -97,7 +97,7 @@ function pictureSrc(o: SlideObject): string {
   return asset ? imageDataUrl(asset) : ''
 }
 const label = (o: SlideObject) =>
-  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (o.text ? `: ${o.text}` : '')
+  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (wordsOf(o) ? `: ${wordsOf(o)}` : '')
 
 // ------------------------------------------------------------------------------ selection, dragging, resizing
 type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
@@ -233,10 +233,11 @@ async function beginEdit(id: string | null = state.selected) {
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
-  editing.value = { id: o.id, text: o.text }
+  editing.value = { id: o.id, text: wordsOf(o) }
   await nextTick()
   editor.value?.focus()
-  editor.value?.setSelectionRange(o.text.length, o.text.length)
+  const length = wordsOf(o).length
+  editor.value?.setSelectionRange(length, length)
 }
 
 async function commitEdit() {
@@ -244,7 +245,8 @@ async function commitEdit() {
   if (!e) return
   editing.value = null
   area.value?.focus({ preventScroll: true })
-  if (state.objects[e.id] && e.text !== state.objects[e.id]!.text) await session.setText(e.id, e.text)
+  const current = state.objects[e.id]
+  if (current && e.text !== wordsOf(current)) await session.setText(e.id, e.text)
 }
 
 function cancelEdit() {
@@ -322,7 +324,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         v-for="o in objects"
         :key="o.id"
         class="obj"
-        :class="[o.kind, { selected: o.id === state.selected, empty: o.text === '' }]"
+        :class="[o.kind, { selected: o.id === state.selected, empty: wordsOf(o) === '' }]"
         :style="boxStyle(o)"
         :data-id="o.id"
         :aria-label="label(o)"
@@ -337,8 +339,8 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="pathCss(cssOf(o))" />
           </svg>
           <div class="words" :style="textStyle(o)">
-            <span v-if="o.text === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
-            <span v-else-if="editing?.id !== o.id" class="text">{{ o.text }}</span>
+            <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
+            <span v-else-if="editing?.id !== o.id" class="text">{{ wordsOf(o) }}</span>
           </div>
           <textarea
             v-if="editing?.id === o.id"

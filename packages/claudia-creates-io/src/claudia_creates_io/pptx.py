@@ -102,19 +102,27 @@ def slides_to_pptx(model: SlideModel) -> bytes:
                 Emu(round(body.w * scale_x)),
                 Emu(round(body.h * scale_y)),
             )
-            # The *computed* style: what the style really has once its parents are resolved (D73, E10.16).
-            css = model.styles.computed(body.style) if body.style in model.styles else {}
+
+            # The *computed* style: what a style really has once its parents are resolved (D73, E10.16). An
+            # object has two: its own, which says what the box looks like, and its paragraph's, which says what
+            # the words look like (E10.17, D181).
+            def computed(style_id: str) -> dict[str, str]:
+                return model.styles.computed(style_id) if style_id in model.styles else {}
+
+            css = computed(body.style)
+            words = body.paragraph.text if body.paragraph else ""
+            text_css = computed(body.paragraph.style) if body.paragraph else {}
             if body.kind == "text":
                 shape = slide.shapes.add_textbox(*box)
-                shape.text_frame.text = body.text
-                _style_text(shape.text_frame, css, pt_per_unit)
+                shape.text_frame.text = words
+                _style_text(shape.text_frame, text_css, pt_per_unit)
             else:
                 definition = model.shapes.get(body.shape) if body.shape else None
                 auto_shape = _AUTOSHAPE.get(definition.id if definition else "", MSO_SHAPE.RECTANGLE)
                 shape = slide.shapes.add_shape(auto_shape, *box)
-                shape.text_frame.text = body.text
+                shape.text_frame.text = words
                 _style_shape(shape, css, pt_per_unit)
-                _style_text(shape.text_frame, css, pt_per_unit)
+                _style_text(shape.text_frame, text_css, pt_per_unit)
     out = BytesIO()
     prs.save(out)
     return out.getvalue()

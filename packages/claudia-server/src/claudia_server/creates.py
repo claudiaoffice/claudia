@@ -30,9 +30,11 @@ from claudia_core import (
     RemoveObject,
     ResizeObject,
     RotateObject,
+    SetParagraphStyle,
     SetSnap,
     SetText,
     decode_image,
+    paragraph_for,
 )
 from claudia_core.clock import utc_now
 from claudia_creates import AddSlide, ShapeLibrary, SlideAnchor, SlideModel
@@ -111,6 +113,12 @@ def _resize_object(ctx, *, id, x, y, w, h, base):
     return _done(ctx, ResizeObject(id, SlideAnchor(slide, x, y).to_data(), w, h), base)
 
 
+def _set_paragraph_style(ctx, *, id, style, base):
+    """Put an object's words under another paragraph style. This is the style of the *text* inside the object,
+    not the object's own, which says what its background and border look like (D178, D181)."""
+    return _done(ctx, SetParagraphStyle(id, style), base)
+
+
 def _rotate_object(ctx, *, id, rotation, base):
     """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
     return _done(ctx, RotateObject(id, rotation), base)
@@ -132,9 +140,10 @@ def _remove_object(ctx, *, id, base):
     return _done(ctx, RemoveObject(id), base)
 
 
-def creates_methods_with(library: ShapeLibrary) -> MethodTable:
-    """The method table of presentations on a server whose shape library is ``library``."""
-    table = core_methods.extended()
+def _add_object_methods(table: MethodTable) -> None:
+    """The methods that change one object: import a picture, place it, size it, turn it, word it, style its
+    words, hold it to the grid, take it away. Split out of the table builder below only because it had grown
+    past the statement limit — they belong together."""
     table.kind("image")(image_bytes)
     table.method(
         "add_image",
@@ -144,9 +153,16 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
     table.method("resize_object", "id:str x:int y:int w:int h:int base:revision?", write=True)(_resize_object)
     table.method("rotate_object", "id:str rotation:int base:revision?", write=True)(_rotate_object)
+    table.method("set_paragraph_style", "id:str style:str base:revision?", write=True)(_set_paragraph_style)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
+
+
+def creates_methods_with(library: ShapeLibrary) -> MethodTable:
+    """The method table of presentations on a server whose shape library is ``library``."""
+    table = core_methods.extended()
+    _add_object_methods(table)
 
     @table.method("slides")
     def _slides(ctx):
@@ -205,7 +221,9 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         "add_object", 'slide:str kind:str x:int y:int w:int h:int shape:str? text:text="" base:revision?', write=True
     )
     def _add_object(ctx, *, slide, kind, x, y, w, h, shape, text, base):
-        """Put a text box (`kind` "text") or a shape (`kind` "shape" with the `shape` id) on a slide. It gets the
+        """Put a text box (`kind` "text") or a shape (`kind` "shape" with the `shape` id) on a slide. Its words
+        are a paragraph (E10.17): it starts under the object's own style, and `set_paragraph_style` points it at
+        another. It gets the
         style of its kind. Returns the new object's id and the revision. A circle must keep its proportions."""
         deck = _deck(ctx)
         if kind not in OBJECT_KINDS:
@@ -221,7 +239,8 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 raise RequestError("bad_request", f"add_object: this server has no shape {shape!r}")
             steps.append(DefineShape(outline))
         object_id = _fresh("o", deck.objects)
-        body = ObjectBody(object_id, kind, w, h, STYLE_OF_KIND[kind], text=text, shape=shape)
+        style = STYLE_OF_KIND[kind]
+        body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text, ctx.user), shape=shape)
         steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return _done(ctx, command, base, object=object_id)

@@ -36,9 +36,12 @@ export interface ObjectBody {
   kind: 'text' | 'shape' | 'image'
   w: number
   h: number
-  /** The id of a style in the document's style book: its colours, its border and its type come from there. */
+  /** The id of a style in the document's style book: the object's own `fill`, `stroke` and `stroke-width`
+   * (D178). What its *words* look like comes from the paragraph's own style instead. */
   style: string
-  text: string
+  /** The words in it: a paragraph, the same entity composes uses (E10.17, D181), with its own style and the
+   * runs saying who wrote which part. `null` for an image, which carries no text. */
+  paragraph: Paragraph | null
   shape: string | null
   image: string | null
   imported: ImageImport | null
@@ -52,6 +55,28 @@ export interface ObjectBody {
 
 /** One object: the shared body plus the anchor of its own app. */
 export type VisualObject<A extends Anchor = Anchor> = ObjectBody & { anchor: A }
+
+/** Who wrote a stretch of a paragraph: `length` characters by `author` (null: unknown), through `via`'s
+ * suggestion if any. */
+export interface Run {
+  length: number
+  author: string | null
+  via: string | null
+}
+
+/** One paragraph: its characters, the style that says how they look, and who wrote which of them. */
+export interface Paragraph {
+  id: string
+  style: string
+  text: string
+  runs: Run[]
+}
+
+/** The words of an object, or `''` when it has none — the one place the client decides what an object with no
+ * paragraph reads as, so no caller has to repeat the null check. */
+export function wordsOf(body: ObjectBody): string {
+  return body.paragraph?.text ?? ''
+}
 
 /** A style as the server sends it: `css` is what it sets itself, `computed` what it really has once its parents
  * are resolved (D73). Draw with `computed`; edit `css`. */

@@ -18,7 +18,7 @@ shapes. Templates, layouts and groups come later (E10.4).
 # ``claudia_core`` (E10.16). They are re-exported here so that an app package names everything it can do.
 # The shape *format* is core's, shared by all three apps (E10.16); only the on-disk library is this
 # package's. Both are re-exported here, where they have always been imported from.
-from claudia_core import (  # noqa: F401  # noqa: F401
+from claudia_core import (  # noqa: F401
     BOX,
     FORMAT,
     AddObject,
@@ -29,14 +29,18 @@ from claudia_core import (  # noqa: F401  # noqa: F401
     MoveObject,
     ObjectBody,
     ObjectSet,
+    Paragraph,
     RemoveObject,
     ResizeObject,
     RotateObject,
+    Run,
+    SetParagraphStyle,
     SetSnap,
     SetText,
     ShapeDefinition,
     ShapeError,
     VisualObject,
+    paragraph_for,
     parse_shape,
 )
 
@@ -76,11 +80,15 @@ __all__ = [
     "ObjectBody",
     "ObjectsChanged",
     "ObjectSet",
+    "Paragraph",
+    "paragraph_for",
     "parse_shape",
     "RemoveObject",
     "RemoveSlide",
     "ResizeObject",
     "RotateObject",
+    "Run",
+    "SetParagraphStyle",
     "SetSnap",
     "SetText",
     "ShapeDefinition",

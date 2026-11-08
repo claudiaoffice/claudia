@@ -17,6 +17,7 @@
     events       what a Document tells its subscribers
     css          the CSS a style may hold: a versioned allow-list, a validator, the text form of a style
     styles       StyleBook and the commands that change it (E1.10)
+    paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands (E10.16)
 
@@ -88,7 +89,6 @@ from .messages import ChatRecord, Ephemeral, parse_chat
 from .model import DocumentModel, Snapshot
 from .objects import (
     ASPECT_TOLERANCE,
-    MAX_OBJECT_TEXT,
     MAX_OBJECTS_PER_CONTAINER,
     MAX_SELECTION,
     MIN_OBJECT_SIZE,
@@ -108,10 +108,25 @@ from .objects import (
     RemoveObject,
     ResizeObject,
     RotateObject,
+    SetParagraph,
+    SetParagraphStyle,
     SetSnap,
     SetText,
     ShapesChanged,
     VisualObject,
+    paragraph_for,
+)
+from .paragraphs import (
+    MAX_PARAGRAPH_TEXT,
+    Paragraph,
+    Run,
+    delete_runs,
+    insert_runs,
+    normalized,
+    runs_from_data,
+    runs_to_data,
+    slice_runs,
+    total,
 )
 from .presence import Hold, Presence
 from .region import Region, transform
@@ -151,6 +166,7 @@ __all__ = [
     "decode_image",
     "DefineImage",
     "DefineShape",
+    "delete_runs",
     "Document",
     "DocumentModel",
     "DocumentStore",
@@ -175,24 +191,28 @@ __all__ = [
     "ImageError",
     "ImageImport",
     "ImagesChanged",
+    "insert_runs",
     "KernelError",
     "Line",
     "MAIN",
     "Manifest",
     "MAX_IMAGE_BYTES",
-    "MAX_OBJECT_TEXT",
     "MAX_OBJECTS_PER_CONTAINER",
+    "MAX_PARAGRAPH_TEXT",
     "MAX_SELECTION",
     "MemoryStore",
     "MIN_OBJECT_SIZE",
     "MissingUpcaster",
     "MoveObject",
     "new_registry",
+    "normalized",
     "OBJECT_KINDS",
     "ObjectBody",
     "ObjectModel",
     "ObjectsChanged",
     "ObjectSet",
+    "Paragraph",
+    "paragraph_for",
     "parse_chat",
     "parse_css",
     "parse_shape",
@@ -217,12 +237,18 @@ __all__ = [
     "Revision",
     "RevisionMismatch",
     "RotateObject",
+    "Run",
+    "runs_from_data",
+    "runs_to_data",
     "SchemaTooNew",
+    "SetParagraph",
+    "SetParagraphStyle",
     "SetSnap",
     "SetText",
     "ShapeDefinition",
     "ShapeError",
     "ShapesChanged",
+    "slice_runs",
     "Snapshot",
     "StaleEdit",
     "Step",
@@ -231,6 +257,7 @@ __all__ = [
     "StylesChanged",
     "SUPPORTED_IMAGE_FORMATS",
     "Switch",
+    "total",
     "transform",
     "UndoConflict",
     "UndoRefused",

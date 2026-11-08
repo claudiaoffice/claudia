@@ -27,13 +27,20 @@ const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape'
 
 // An object as the server sends it (E10.16, D177): the shared body's fields flat, the anchor nested — the same
 // shape in all three apps, only `anchor` differing.
+const paragraph = (id: string, words = '') => ({
+  id,
+  style: 'body-text',
+  text: words,
+  runs: words ? [[words.length, 'ana', null]] : [],
+})
+
 const text = (id: string, extra: object = {}) => ({
   id,
   kind: 'text',
   w: 400,
   h: 120,
   style: 'body-text',
-  text: '',
+  paragraph: paragraph(id),
   shape: null,
   image: null,
   imported: null,
@@ -50,7 +57,7 @@ const image = (id: string, extra: object = {}) => ({
   w: 400,
   h: 200,
   style: 'plain-image',
-  text: '',
+  paragraph: null,
   shape: null,
   image: ASSET.id,
   imported: IMPORT,
@@ -130,7 +137,7 @@ async function opened(objects: any[] = []) {
 
 describe('opening a presentation', () => {
   it('loads the slides with their objects, the shapes on offer and the styles', async () => {
-    const { state, session } = await opened([text('t1', { text: 'Hello' })])
+    const { state, session } = await opened([text('t1', { paragraph: paragraph('t1', 'Hello') })])
     expect(state.status).toBe('open')
     expect(state.slides).toEqual([{ id: 's1', objects: 1 }])
     expect(state.activeSlide).toBe('s1')

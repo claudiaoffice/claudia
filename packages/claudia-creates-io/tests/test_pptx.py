@@ -10,14 +10,15 @@ import pytest
 from claudia_creates_io import add_transition, slides_to_pptx
 from lxml import etree
 
-from claudia_core import ObjectBody, VisualObject
+from claudia_core import ObjectBody, VisualObject, paragraph_for
 from claudia_creates import ShapeDefinition, SlideAnchor, SlideModel
 
 
 def _object(object_id, slide, kind, x, y, w, h, style, text="", shape=None):
     """A slide object from the flat fields these tests have always used: an ``ObjectBody`` plus a
-    ``SlideAnchor`` (E10.16)."""
-    return VisualObject(ObjectBody(object_id, kind, w, h, style, text=text, shape=shape), SlideAnchor(slide, x, y))
+    ``SlideAnchor`` (E10.16), its words a paragraph of their own (E10.17)."""
+    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text, "ana"), shape=shape)
+    return VisualObject(body, SlideAnchor(slide, x, y))
 
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"

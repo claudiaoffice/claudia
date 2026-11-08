@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
 from claudia_core import (
@@ -18,16 +18,22 @@ from claudia_core import (
     ObjectBody,
     ObjectModel,
     ObjectSet,
+    Paragraph,
     Region,
+    Run,
     StyleBook,
     StyleDef,
     VisualObject,
+    delete_runs,
+    insert_runs,
     new_registry,
+    runs_from_data,
+    slice_runs,
+    total,
 )
 
 from .anchors import BlockAnchor
 from .region import TextRange
-from .runs import Run, delete_runs, insert_runs, runs_from_data, runs_to_data, slice_runs, total
 from .spans import TextCommand
 
 DEFAULT_STYLE = "body"
@@ -180,18 +186,16 @@ def next_style(styles: StyleBook, style_id: str) -> str:
     return style_id if root.id == DEFAULT_STYLE else DEFAULT_STYLE
 
 
-@dataclass
-class Block:
-    """One paragraph: ``runs`` always add up to the length of ``text``."""
-
-    id: str
-    style: str
-    text: str = ""
-    runs: list[Run] = field(default_factory=list)
-
-    def to_data(self) -> dict:
-        """The plain-data form: ``{id, style, text, runs}``."""
-        return {"id": self.id, "style": self.style, "text": self.text, "runs": runs_to_data(self.runs)}
+#: One paragraph of a document. Since E10.17 this is ``claudia_core``'s :class:`~claudia_core.Paragraph`, the
+#: same entity a creates text box and a shape's label carry (D181) — the name ``Block`` stays because that is
+#: what this app has always called it, and because a paragraph in a flowing document is a block in a way one
+#: inside a shape is not: only these can be split and joined.
+#:
+#: It is immutable, so the model replaces a paragraph in :attr:`TextModel.blocks` rather than editing it in
+#: place (``_put``, below). The reason is undo: a command builds its own inverse from the state it found, and a
+#: paragraph changed under it would hand that inverse the new text.
+#: (a plain alias, not a `type` statement: Block(...) is called as a constructor)
+Block = Paragraph
 
 
 @dataclass(frozen=True)
@@ -253,10 +257,10 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """Build a model from ``serialize()``'s output; the older shape (a list of strings) is understood too."""
         raw = state["blocks"]
         if raw and isinstance(raw[0], str):  # state schema 1: the stub, which could not hold more than strings
-            blocks = [Block(f"b{i}", DEFAULT_STYLE, t, [Run(len(t), None)] if t else []) for i, t in enumerate(raw, 1)]
+            blocks = [Block(f"b{i}", DEFAULT_STYLE, t, (Run(len(t), None),) if t else ()) for i, t in enumerate(raw, 1)]
             return cls(blocks)
         styles = StyleBook.from_data(state["styles"]) if "styles" in state else None  # schema 2 had the built-in ones
-        model = cls([Block(b["id"], b["style"], b["text"], runs_from_data(b["runs"])) for b in raw], styles)
+        model = cls([Block(b["id"], b["style"], b["text"], tuple(runs_from_data(b["runs"]))) for b in raw], styles)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects
@@ -383,6 +387,15 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return [self.suggestion_data(s) for s in self.suggestions.values() if s.state == "open"]
 
     # -- changing text (used by the commands) ------------------------------------
+    def restyle(self, block_id: str, style: str) -> None:
+        """Put a paragraph under another style (a paragraph is immutable, so this replaces it)."""
+        self._put(self.block(block_id).with_style(style))
+
+    def _put(self, block: Block) -> None:
+        """Swap a changed paragraph into place. A paragraph is immutable (D181), so every edit below builds a new
+        one and puts it where the old one was."""
+        self.blocks[self.index_of(block.id)] = block
+
     def insert(self, block_id: str, offset: int, text: str, runs: list[Run]) -> None:
         """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it."""
         block = self.block(block_id)
@@ -390,8 +403,9 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             raise IndexError("insert outside the text")
         if total(runs) != len(text):
             raise ValueError("the runs must cover exactly the inserted text")
-        block.text = block.text[:offset] + text + block.text[offset:]
-        block.runs = insert_runs(block.runs, offset, runs)
+        self._put(
+            block.with_text(block.text[:offset] + text + block.text[offset:], insert_runs(block.runs, offset, runs))
+        )
 
     def remove(self, block_id: str, start: int, end: int) -> tuple[str, list[Run]]:
         """Cut ``start <= i < end`` out of a paragraph; returns what was cut, with its runs."""
@@ -399,8 +413,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         if not 0 <= start <= end <= len(block.text):
             raise IndexError("delete outside the text")
         removed = block.text[start:end], slice_runs(block.runs, start, end)
-        block.text = block.text[:start] + block.text[end:]
-        block.runs = delete_runs(block.runs, start, end)
+        self._put(block.with_text(block.text[:start] + block.text[end:], delete_runs(block.runs, start, end)))
         return removed
 
     def split(self, block_id: str, offset: int, new_id: str, style: str) -> None:
@@ -411,8 +424,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         if any(b.id == new_id for b in self.blocks):
             raise ValueError(f"the paragraph {new_id!r} exists already")
         self.check_style(style)
-        rest = Block(new_id, style, block.text[offset:], slice_runs(block.runs, offset, len(block.text)))
-        block.text, block.runs = block.text[:offset], slice_runs(block.runs, 0, offset)
+        rest = Block(new_id, style, block.text[offset:], tuple(slice_runs(block.runs, offset, len(block.text))))
+        self._put(block.with_text(block.text[:offset], slice_runs(block.runs, 0, offset)))
         self.blocks.insert(self.index_of(block_id) + 1, rest)
         self.open_container(new_id)
         self._note_id(new_id)
@@ -426,8 +439,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             raise ValueError("a paragraph can only be joined to the one right before it")
         if len(first.text) != at:
             raise ValueError("the paragraph before it is not as long as the command says")
-        first.text += second.text
-        first.runs = insert_runs(first.runs, at, second.runs)
+        self._put(first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs)))
         self.carry_objects(block_id, into, shift=at)
         self.blocks.remove(second)
         self.close_container(block_id)

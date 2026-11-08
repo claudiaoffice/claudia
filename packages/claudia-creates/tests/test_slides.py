@@ -3,10 +3,23 @@
 import random
 
 import pytest
-from conftest import SLIDE, add, define, move, put, reopen, resize, shape_object, text_box
+from conftest import SLIDE, add, define, move, put, put_image, reopen, resize, shape_object, text_box
 
 import claudia_creates.model as model_module
-from claudia_core import Batch, Document, MemoryStore, RegionHeld, Revision, UndoConflict, UndoRefused, encode
+from claudia_core import (
+    Batch,
+    CreateStyle,
+    Document,
+    MemoryStore,
+    RegionHeld,
+    Revision,
+    SetParagraphStyle,
+    SetText,
+    StyleDef,
+    UndoConflict,
+    UndoRefused,
+    encode,
+)
 from claudia_creates import (
     AddSlide,
     ForgetShape,
@@ -14,7 +27,6 @@ from claudia_creates import (
     RemoveObject,
     RemoveSlide,
     SetSnap,
-    SetText,
     SlideAnchor,
     SlideModel,
     VisualObject,
@@ -29,7 +41,7 @@ def ids(doc, slide=SLIDE):
 # -- the first draft's whole story: add, move, resize, edit, remove, undo ------------------------------------
 def test_a_text_box_is_added_moved_resized_edited_and_removed_and_every_step_can_be_undone(doc):
     put(doc, text_box(text="Hello"))
-    assert doc.model.get("t1").body.text == "Hello"
+    assert doc.model.get("t1").body.paragraph.text == "Hello"
 
     doc.execute(move("t1", 300, 250), author="ana")
     assert (doc.model.get("t1").anchor.x, doc.model.get("t1").anchor.y) == (300, 250)
@@ -48,14 +60,14 @@ def test_a_text_box_is_added_moved_resized_edited_and_removed_and_every_step_can
     )
 
     doc.execute(SetText("t1", "Hello, world"), author="ana")
-    assert doc.model.get("t1").body.text == "Hello, world"
+    assert doc.model.get("t1").body.paragraph.text == "Hello, world"
 
     doc.execute(RemoveObject("t1"), author="ana")
     assert ids(doc) == []
 
     for expected in (
-        lambda o: o.body.text == "Hello, world",  # undo the removal
-        lambda o: o.body.text == "Hello",  # undo the new text
+        lambda o: o.body.paragraph.text == "Hello, world",  # undo the removal
+        lambda o: o.body.paragraph.text == "Hello",  # undo the new text
         lambda o: (o.body.w, o.body.h) == (400, 120) and (o.anchor.x, o.anchor.y) == (300, 250),  # undo the resize
         lambda o: (o.anchor.x, o.anchor.y) == (100, 100),  # undo the move
     ):
@@ -255,7 +267,7 @@ def test_a_move_and_a_new_text_by_two_people_do_not_get_in_each_others_way(doc):
     doc.execute(SetText("t1", "ben was here"), author="ben")
     doc.undo("ana")
     assert (doc.model.get("t1").anchor.x, doc.model.get("t1").anchor.y) == (100, 100)
-    assert doc.model.get("t1").body.text == "ben was here", "ben's words stay"
+    assert doc.model.get("t1").body.paragraph.text == "ben was here", "ben's words stay"
 
 
 def test_undo_of_a_resize_is_refused_when_a_colleague_moved_the_object(doc):
@@ -279,7 +291,7 @@ def test_taking_back_my_new_box_is_refused_when_a_colleague_worked_on_it(doc):
     doc.execute(SetText("t1", "ben's idea"), author="ben")
     with pytest.raises(UndoConflict):
         doc.undo("ana")
-    assert doc.model.get("t1").body.text == "ben's idea"
+    assert doc.model.get("t1").body.paragraph.text == "ben's idea"
 
 
 def test_taking_back_my_new_shape_is_refused_while_a_colleague_uses_the_same_outline(doc):
@@ -325,7 +337,7 @@ def test_the_holder_can_still_change_what_they_hold(doc):
     put(doc, text_box())
     doc.lock("ben", [ObjectSet(SLIDE, frozenset({"t1"}))], ttl=5)
     doc.execute(SetText("t1", "ben types"), author="ben")
-    assert doc.model.get("t1").body.text == "ben types"
+    assert doc.model.get("t1").body.paragraph.text == "ben types"
 
 
 # -- regions -------------------------------------------------------------------------------------------------
@@ -472,7 +484,7 @@ def test_redacting_a_secret_text_keeps_the_object_where_it_is(doc):
     put(doc, text_box())
     secret = doc.execute(SetText("t1", "confidential figures"), author="ben")
     doc.redact([secret.revision])
-    assert doc.model.get("t1").body.text == ""
+    assert doc.model.get("t1").body.paragraph.text == ""
     assert (doc.model.get("t1").anchor.x, doc.model.get("t1").body.w) == (100, 400)
     assert reopen(doc).model.serialize() == doc.model.serialize()
 
@@ -481,7 +493,7 @@ def test_redacting_an_object_added_with_words_keeps_its_place_and_shape(doc):
     added = put(doc, shape_object(text="secret plan"))
     doc.execute(move("r1", 500, 400), author="ana")
     doc.redact([added.revision])
-    assert doc.model.get("r1").body.text == "" and doc.model.get("r1").body.shape == "rectangle"
+    assert doc.model.get("r1").body.paragraph.text == "" and doc.model.get("r1").body.shape == "rectangle"
     assert (doc.model.get("r1").anchor.x, doc.model.get("r1").anchor.y) == (500, 400), (
         "the later move still has its object"
     )
@@ -559,7 +571,7 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "w",
         "h",
         "style",
-        "text",
+        "paragraph",
         "shape",
         "image",
         "imported",
@@ -569,3 +581,56 @@ def test_a_slide_object_knows_what_it_is_made_of():
     }
     assert box.to_data()["anchor"] == {"kind": "slide", "container": SLIDE, "x": 100, "y": 100}
     assert define().to_data()["shape"]["id"] == "rectangle"
+
+
+# -- an object's words as a paragraph (E10.17, D181) ------------------------------------------------------------
+def test_an_objects_words_carry_who_wrote_them(doc):
+    put(doc, text_box("t1", text="ana wrote this"), author="ana")
+    paragraph = doc.model.get("t1").body.paragraph
+    assert paragraph.text == "ana wrote this"
+    assert [(r.length, r.author) for r in paragraph.runs] == [(14, "ana")]
+
+
+def test_undoing_someone_elses_words_gives_the_text_back_to_whoever_wrote_it(doc):
+    """The inverse of SetText restores the whole paragraph, runs included, not just the characters. Restoring
+    the text alone would quietly re-attribute it to whoever pressed undo — the person undoing did not write
+    the words that came back."""
+    put(doc, text_box("t1", text="ana's words"), author="ana")
+    doc.execute(SetText("t1", "ben's words"), author="ben")
+    assert doc.model.get("t1").body.paragraph.runs[0].author == "ben"
+
+    doc.undo("ben")
+    paragraph = doc.model.get("t1").body.paragraph
+    assert paragraph.text == "ana's words"
+    assert paragraph.runs[0].author == "ana", "ben undid his own edit; he did not write what came back"
+
+
+def test_an_objects_own_style_and_its_paragraphs_style_are_separate(doc):
+    """A shape's style says what its background and border look like, its paragraph's what the words do."""
+    put(doc, shape_object("r1", text="a label"), author="ana")
+    doc.execute(CreateStyle(StyleDef("shape-label", "Shape label", "words in a shape", "body-text", {})), author="ana")
+    doc.execute(SetParagraphStyle("r1", "shape-label"), author="ana")
+
+    obj = doc.model.get("r1")
+    assert obj.body.style == "plain-shape"
+    assert obj.body.paragraph.style == "shape-label"
+
+    doc.undo("ana")
+    assert doc.model.get("r1").body.paragraph.style == "plain-shape"
+
+
+def test_an_image_carries_no_paragraph(doc):
+    put_image(doc, "i1")
+    assert doc.model.get("i1").body.paragraph is None
+    with pytest.raises(ValueError, match="carries no text"):
+        doc.execute(SetText("i1", "nope"), author="ana")
+
+
+def test_redacting_an_objects_text_keeps_the_object_and_its_style(doc):
+    """Redaction takes the words out of the history, not the object: a paragraph that exists must keep
+    existing, or the body would no longer be a valid object of its kind."""
+    put(doc, text_box("t1", text="something private"), author="ana")
+    redacted = add(text_box("t1", text="something private")).redacted()
+    assert redacted.body.paragraph is not None
+    assert redacted.body.paragraph.text == ""
+    assert redacted.body.paragraph.style == "body-text"

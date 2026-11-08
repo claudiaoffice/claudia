@@ -303,7 +303,8 @@ class SetStyle(TextCommand):
         model = ctx.model
         model.check_style(self.style)
         block = model.block(self.block)
-        old, block.style = block.style, self.style
+        old = block.style
+        ctx.model.restyle(block.id, self.style)
         ctx.emit(StyleChanged(self.block, self.style))
         return SetStyle(self.block, old)
 

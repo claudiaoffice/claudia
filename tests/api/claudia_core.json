@@ -612,7 +612,7 @@
  "MAX_OBJECTS_PER_CONTAINER": {
   "value": "500"
  },
- "MAX_OBJECT_TEXT": {
+ "MAX_PARAGRAPH_TEXT": {
   "value": "20000"
  },
  "MAX_SELECTION": {
@@ -681,7 +681,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', text: 'str' = '', shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
@@ -744,6 +744,21 @@
   "methods": {
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
+  "properties": []
+ },
+ "Paragraph": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Paragraph'",
+   "to_data": "(self) -> 'dict'",
+   "with_style": "(self, style: 'str') -> 'Paragraph'",
+   "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
+   "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
   },
   "properties": []
  },
@@ -1004,8 +1019,16 @@
    "summary"
   ]
  },
+ "Run": {
+  "class": [
+   "object"
+  ],
+  "init": "(length: 'int', author: 'str | None', via: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
  "SUPPORTED_IMAGE_FORMATS": {
-  "value": "('jpeg', 'gif', 'bmp', 'svg')"
+  "value": "('jpeg', 'png', 'gif', 'bmp', 'svg')"
  },
  "SchemaTooNew": {
   "class": [
@@ -1014,6 +1037,43 @@
   "init": "(kind: 'str', found: 'int', known: 'int')",
   "methods": {},
   "properties": []
+ },
+ "SetParagraph": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', paragraph: 'Paragraph') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetParagraph'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetParagraphStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetParagraphStyle'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "SetSnap": {
   "class": [
@@ -1214,6 +1274,9 @@
  "decode_image": {
   "function": "(data: 'bytes') -> 'ImageAsset'"
  },
+ "delete_runs": {
+  "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"
+ },
  "encode": {
   "function": "(command: 'Command') -> 'dict'"
  },
@@ -1223,8 +1286,17 @@
  "format_css": {
   "function": "(css: 'Mapping[str, str]') -> 'str'"
  },
+ "insert_runs": {
+  "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
+ },
  "new_registry": {
   "function": "() -> 'CommandRegistry'"
+ },
+ "normalized": {
+  "function": "(runs: 'Iterable[Run]') -> 'list[Run]'"
+ },
+ "paragraph_for": {
+  "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"
  },
  "parse_chat": {
   "function": "(raw: 'str', users: 'Iterable[str]' = ()) -> 'tuple[str, str]'"
@@ -1237,6 +1309,18 @@
  },
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
+ },
+ "runs_from_data": {
+  "function": "(data: 'Iterable[list]') -> 'list[Run]'"
+ },
+ "runs_to_data": {
+  "function": "(runs: 'Iterable[Run]') -> 'list[list]'"
+ },
+ "slice_runs": {
+  "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"
+ },
+ "total": {
+  "function": "(runs: 'Iterable[Run]') -> 'int'"
  },
  "transform": {
   "function": "(region: 'Region', command: 'Command') -> 'Region | None'"

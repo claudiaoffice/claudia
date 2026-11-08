@@ -19,12 +19,16 @@ from claudia_core import (  # noqa: F401
     MoveObject,
     ObjectBody,
     ObjectSet,
+    Paragraph,
     RemoveObject,
     ResizeObject,
     RotateObject,
+    Run,
+    SetParagraphStyle,
     SetSnap,
     SetText,
     VisualObject,
+    paragraph_for,
 )
 
 from . import commands  # noqa: F401  (registers the commands)
@@ -50,7 +54,6 @@ from .model import (
     next_style,
 )
 from .region import TextRange, word_window
-from .runs import Run
 from .spans import TextCommand
 
 __all__ = [
@@ -72,12 +75,15 @@ __all__ = [
     "next_style",
     "ObjectBody",
     "ObjectSet",
+    "Paragraph",
+    "paragraph_for",
     "ProposeSuggestion",
     "RemoveObject",
     "ResizeObject",
     "ResolveSuggestion",
     "RotateObject",
     "Run",
+    "SetParagraphStyle",
     "SetSnap",
     "SetStyle",
     "SetText",

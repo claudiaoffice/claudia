@@ -12,7 +12,7 @@ const image = (id: string, extra: object = {}) => ({
   w: 400,
   h: 200,
   style: 'plain-image',
-  text: '',
+  paragraph: null,
   shape: null,
   image: ASSET.id,
   imported: IMPORT,

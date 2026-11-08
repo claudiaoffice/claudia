@@ -29,6 +29,20 @@ Commands
 .. autoclass:: claudia_core.Redacted
 .. autoclass:: claudia_core.Context
 
+Paragraphs
+----------
+
+.. automodule:: claudia_core.paragraphs
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A paragraph is the same entity wherever text appears: a paragraph of a composes document, the words in a creates
+text box, the label inside a shape on a sheet (E10.17, D181).
+
+.. autoclass:: claudia_core.Paragraph
+.. autoclass:: claudia_core.Run
+
 Objects: shapes, images and text boxes
 --------------------------------------
 
@@ -56,6 +70,8 @@ The object commands, the same in all three apps:
 .. autoclass:: claudia_core.ResizeObject
 .. autoclass:: claudia_core.RotateObject
 .. autoclass:: claudia_core.SetText
+.. autoclass:: claudia_core.SetParagraph
+.. autoclass:: claudia_core.SetParagraphStyle
 .. autoclass:: claudia_core.SetSnap
 .. autoclass:: claudia_core.DefineShape
 .. autoclass:: claudia_core.ForgetShape

@@ -16,7 +16,9 @@ from claudia_creates import (
     SlideModel,
     SlideObject,
     VisualObject,
+    paragraph_for,
 )
+from claudia_creates.styles import DEFAULT_STYLE
 
 SLIDE = "s1"
 
@@ -35,8 +37,12 @@ def build(**fields) -> SlideObject:
     """A :class:`SlideObject` from flat fields: the body's go to the body, ``slide``/``x``/``y`` to the anchor.
 
     The helpers below keep the flat signatures the tests have always used, so a test says what it means
-    (``text_box(x=300)``) while the model holds the two halves apart (E10.16)."""
+    (``text_box(x=300)``, ``shape_object(text="hi")``) while the model holds the parts apart: the anchor
+    (E10.16) and, since E10.17, the words as a paragraph of their own (D181)."""
     anchor = SlideAnchor(fields.pop("slide", SLIDE), fields.pop("x", 0), fields.pop("y", 0))
+    text, author = fields.pop("text", ""), fields.pop("author", "ana")
+    if fields.get("kind") != "image" and "paragraph" not in fields:
+        fields["paragraph"] = paragraph_for(fields["id"], fields.get("style", DEFAULT_STYLE), text, author)
     return VisualObject(ObjectBody(**fields), anchor)
 
 
