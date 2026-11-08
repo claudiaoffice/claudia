@@ -104,6 +104,8 @@ function server(link: FakeLink) {
     withdraw_restore: () => ({}),
     discard_side_history: () => ({ discarded: [] }),
     set_restore_policy: ({ policy }: any) => ({ policy }),
+    sizes: () => ({ revision: 'main:3', rows: [[3, 52]], cols: [] }),
+    resize_lines: () => ({ revision: 'main:4' }),
   }
 }
 
@@ -255,6 +257,58 @@ describe('floating objects (images, E10.11)', () => {
     }
     expect(await session.moveObject('i1', 1, 1)).toBe(false)
     expect(session.state.notice).toMatchObject({ kind: 'warning', text: 'the document changed under you' })
+  })
+})
+
+describe('row and column sizes', () => {
+  it('shows every line at the default until the sizes are loaded', async () => {
+    const { session } = await opened()
+    expect(session.rowHeight('s1', 3)).toBe(26)
+    expect(session.colWidth('s1', 0)).toBe(96)
+  })
+
+  it('loads a sheet’s sizes once and serves them from memory', async () => {
+    const { session, link } = await opened()
+    await session.ensureSizes('s1')
+    await session.ensureSizes('s1')
+    expect(link.count('sizes')).toBe(1)
+    expect(session.rowHeight('s1', 3)).toBe(52)
+    expect(session.rowHeight('s1', 4)).toBe(26) // not overridden: the default
+    expect(session.colWidth('s1', 0)).toBe(96)
+  })
+
+  it('follows sizes events, including a line reset back to the default', async () => {
+    const { session, link } = await opened()
+    await session.ensureSizes('s1')
+    link.push('sizes', { sheet: 's1', axis: 'col', sizes: [[0, 144]] })
+    expect(session.colWidth('s1', 0)).toBe(144)
+    link.push('sizes', { sheet: 's1', axis: 'row', sizes: [[3, null]] })
+    expect(session.rowHeight('s1', 3)).toBe(26)
+  })
+
+  it('forgets a sheet’s sizes (and reloads them) when its rows or columns were restructured', async () => {
+    const { session, link } = await opened()
+    await session.ensureSizes('s1')
+    expect(session.rowHeight('s1', 3)).toBe(52)
+    link.push('structure', { sheet: 's1', axis: 'row', insert: true, at: 0, count: 1 })
+    await session.ensureSizes('s1')
+    expect(link.count('sizes')).toBe(2)
+  })
+
+  it('resizes lines against the revision it is looking at', async () => {
+    const { session, link } = await opened()
+    await session.resizeLines('s1', 'row', [[3, 39], [4, 78]])
+    const call = link.calls.find((c) => c.method === 'resize_lines')!
+    expect(call.params).toEqual({ sheet: 's1', axis: 'row', sizes: [[3, 39], [4, 78]], base: 'main:3' })
+  })
+
+  it('tells the person when a colleague is in the way, and does not throw', async () => {
+    const { session, link } = await opened()
+    link.handlers.resize_lines = () => {
+      throw new ProtocolError('conflict', 'ben resized row 4 after you')
+    }
+    expect(await session.resizeLines('s1', 'row', [[3, 39]])).toBe(false)
+    expect(session.state.notice).toMatchObject({ kind: 'warning', text: 'ben resized row 4 after you' })
   })
 })
 

@@ -5,7 +5,7 @@
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
-import { CORNERS, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
 import { contextMenuItems } from '~/lib/object-menu'
 import { colorOf, inkOn } from '~/lib/people'
@@ -14,7 +14,10 @@ import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
 
-const props = defineProps<{ session: SlideSession }>()
+// `showGrid` is the View menu's own preference (`lib/grid.ts`'s `useGrid`, held by SlideWorkspace.vue so the
+// menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
+// object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
+const props = defineProps<{ session: SlideSession; showGrid: boolean }>()
 const session = props.session
 const state = session.state
 
@@ -44,6 +47,10 @@ onBeforeUnmount(() => watcher?.disconnect())
 
 // ------------------------------------------------------------------------------ how objects look
 const px = (units: number) => `${Math.round(units * scale.value * 100) / 100}px`
+
+/** The grid lines, drawn with a CSS background rather than one element per line; absent entirely when hidden,
+ * so the slide prints and exports (D123, once that exists) exactly as it is without it. */
+const gridStyle = computed(() => (props.showGrid ? { backgroundSize: `${px(GRID_SIZE)} ${px(GRID_SIZE)}` } : {}))
 
 /** Where an object is on the screen; a frame being dragged replaces the one the server knows. */
 function frameOf(o: SlideObject): Frame {
@@ -147,7 +154,8 @@ function onPointerMove(event: PointerEvent) {
   d.moved = true
   const o = state.objects[d.id]
   if (!o) return
-  d.frame = d.handle === 'move' ? moveFrame(d.start, dx, dy) : resizeFrame(d.start, d.handle, dx, dy, aspectOf(o))
+  const grid = o.snap ? GRID_SIZE : null
+  d.frame = d.handle === 'move' ? moveFrame(d.start, dx, dy, grid) : resizeFrame(d.start, d.handle, dx, dy, aspectOf(o), grid)
 }
 
 async function onPointerUp() {
@@ -185,6 +193,7 @@ const contextItems = computed<MenuItem[]>(() => {
           contextMenu.value = null
           propertiesFor.value = o.id
         },
+        setSnap: (snap) => session.setSnap(o.id, snap),
       })
     : []
 })
@@ -302,9 +311,10 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     <div
       ref="slideEl"
       class="slide"
+      :class="{ grid: props.showGrid }"
       data-testid="slide"
       :data-slide="state.activeSlide"
-      :style="{ width: px(SLIDE_W), height: px(SLIDE_H) }"
+      :style="{ width: px(SLIDE_W), height: px(SLIDE_H), ...gridStyle }"
       @pointerdown="onSlideDown"
     >
       <div
@@ -390,6 +400,12 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
   box-shadow: var(--shadow);
   overflow: hidden;
   user-select: none;
+}
+.slide.grid {
+  /* E10.15: a helper the view draws, never part of the slide itself — background-position/-size only, so it
+   * never shows up in anything that exports or prints the slide's own content. */
+  background-image: linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-position: -1px -1px;
 }
 .obj {
   position: absolute;

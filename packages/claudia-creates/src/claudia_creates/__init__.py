@@ -4,7 +4,7 @@ kernel (E10.1, E10.8).
 shapes    ShapeDefinition, ShapeLibrary: outlines as JSON files that users can add to
 styles    BUILTIN_STYLES: named looks, CSS from an allow-list
 model     SlideModel, SlideObject: slides, the shapes and images a document knows, objects and their stacking order
-commands  AddObject, MoveObject, ResizeObject, SetText, RemoveObject, DefineShape, ForgetShape, DefineImage,
+commands  AddObject, MoveObject, ResizeObject, SetText, SetSnap, RemoveObject, DefineShape, ForgetShape, DefineImage,
           ForgetImage, AddSlide, RemoveSlide
 region    ObjectSet: the Region of this app (a selection, a lock)
 events    ObjectsChanged, ShapesChanged, ImagesChanged, SlidesChanged: what views are told
@@ -28,6 +28,7 @@ from .commands import (
     RemoveObject,
     RemoveSlide,
     ResizeObject,
+    SetSnap,
     SetText,
 )
 from .events import ImagesChanged, ObjectsChanged, ShapesChanged, SlidesChanged
@@ -69,6 +70,7 @@ __all__ = [
     "RemoveObject",
     "RemoveSlide",
     "ResizeObject",
+    "SetSnap",
     "SetText",
     "ShapeDefinition",
     "ShapeError",

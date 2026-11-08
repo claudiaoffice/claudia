@@ -111,12 +111,16 @@ kanban-plugin: board
 	
 	AC: gettext `.po` as the single source, read by both GTK and web; extraction in CI; English complete; a test language proves nothing is hard-coded; numbers and dates typed by a user are parsed with that user's locale before a command is made.
 	
-	Use case: ALL · Decisions: D31 · D31 says i18n is built in **from the start**; it is the oldest unstarted decision in the log, and the cost of retrofitting grows with every screen. The Linux client marks its labels translatable but no catalogue exists.
+	Use case: ALL · Decisions: D31, D148, D160 · D31 says i18n is built in **from the start**; it is the oldest unstarted decision in the log, and the cost of retrofitting grows with every screen.
 	
 	Status evidence: groundwork built (D148) — kernel error codes, the protocol's `locale` field, a GTK gettext
 	skeleton and a web loader skeleton, `po/claudia.pot` extraction gated in CI, a pseudo-locale proving the
-	pipeline. Still open: no real string has moved off plain English into `_()`/`t()` anywhere; no Config-menu
-	override (no screen design yet); numbers/dates typed by a user are not locale-parsed before a command is made.
+	pipeline. **Now also (D160):** a working `Config ▸ App Language` switch in both shells (`manifest.LANGUAGES`/
+	`web/app/lib/i18n.ts`'s `LANGUAGES`, English/Deutsch), with every manifest menu/action label and tooltip plus
+	`SidePanel.vue`'s History/Chat headers (146 msgids) flowing through `_()`/`t()`, and a real `po/de.po` behind
+	them — the web page's own UI switches live, the GTK shell's native chrome re-translates on next launch. Still
+	open: most interface text elsewhere has not moved off plain English into `_()`/`t()` yet; numbers/dates typed
+	by a user are not locale-parsed before a command is made; only English and German exist.
 - [ ] **E5.10 · Accessibility baseline**
 	As a user with a screen reader or keyboard only, I want to operate Claudia, so that it is usable by everyone.
 	
@@ -187,14 +191,6 @@ kanban-plugin: board
 	AC: a cell, text label or chart title can be marked as LaTeX and is rendered by the typesetting service and drawn as an image, with the source staying the cell content that formulas and search see; the `=$$\frac{x}{y}$$` cases work; rendering never blocks the grid; output is cached and shown as an image, never inline.
 	
 	Use case: SCI, EDU · Decisions: D88, D66 · Depends on E3.4 and E6.3. A sheet with thousands of typeset cells needs batching and limits.
-- [ ] **E6.16 · Row height and column width**
-	As a user, I want to set a row's height and a column's width, changeable from the header, so that I can make room for what a sheet holds.
-
-	AC: a row/column shows at a sheet default when nothing overrides it; a right-click on a row or column header opens a dialog to set its size in pixels, with range limits enforced; dragging the border between two row or column headers resizes the one above/left of the border live as the mouse moves; one command resizes one or many rows/columns at once and undoes as one step; a size survives row/column insert and delete (remapped to the moved line) and survives removing and restoring a sheet; merged cells are out of scope.
-
-	Use case: ALL · Decisions: D135 · A narrower, already-layout-settled split out of E6.13 (styling), not dependent on it. Depends on E1.10, E6.1, E6.3.
-
-	Status evidence: model, command, undo/redo, serialization and the server's `sizes`/`resize_lines` methods are built and tested (`claudia_computes.model.Sheet.row_heights`/`col_widths`, `claudia_computes.commands.ResizeLines`, `claudia_server.computes._sizes`/`_resize_lines`). The web grid still draws every row/column at the fixed default (`SheetGrid.vue` has no variable sizing yet) and there is no drag-resize or context-menu dialog — those are Patch 2, not started.
 - [ ] **E7.2 · skills.md and persona.md**
 	As an app author, I want skills and persona files per app, so that the AI behaves right in each.
 	
@@ -945,7 +941,14 @@ kanban-plugin: board
 
 ## testing
 
+- [ ] **E6.16 · Row height and column width**
+	As a user, I want to set a row's height and a column's width, changeable from the header, so that I can make room for what a sheet holds.
 
+	AC: a row/column shows at a sheet default when nothing overrides it; a right-click on a row or column header opens a dialog to set its size in pixels, with range limits enforced; dragging the border between two row or column headers resizes the one above/left of the border live as the mouse moves; one command resizes one or many rows/columns at once and undoes as one step; a size survives row/column insert and delete (remapped to the moved line) and survives removing and restoring a sheet; merged cells are out of scope.
+
+	Use case: ALL · Decisions: D135, D160 · A narrower, already-layout-settled split out of E6.13 (styling), not dependent on it. Depends on E1.10, E6.1, E6.3.
+
+	Status evidence: Patch 1 (model, command, undo/redo, serialization, the server's `sizes`/`resize_lines` methods) and Patch 2 (the web grid, built and tested) are both in; moved here rather than to done since the owner has not yet applied or reviewed either patch. `SheetGrid.vue` renders every row/column at its real size and drags a header border live with a combined px/percentage readout; `HeaderMenu.vue` is the right-click row/column menu (insert/delete/resize, text only); `LineSizeDialog.vue` is the size dialog, with "Reset to default" as a link, not a button, per the owner's feedback. Resizing more than one line at once scales every line but the one being set by percentage, not to one shared pixel value (D160) — mockups agreed with the owner first (`claude/` — four SVGs, now superseded by the built UI). Merged cells remain out of scope, as they are everywhere else in computes.
 
 ## done
 
@@ -1073,6 +1076,14 @@ kanban-plugin: board
 	Superseded by E6.3. A native GTK grid is no longer built; the frontend has one grid that every shell shows (D42).
 	
 	Use case: DATA · Decisions: D42 · Kept for traceability only; no work remains.
+- [x] **E10.15 · Grid and snap**
+	As a presenter, I want to show a grid on the slide and have objects snap to it, so that I can line things up without fighting the mouse.
+	
+	AC: a View menu item shows or hides the grid, on by default, as a client-local preference like Dark mode (not document state, not undoable); an object snaps to the grid by default on both move and resize, at a fixed spacing; a shape or image dragged by a corner keeps its own proportions exactly, snapped on its dominant dimension only; the object's own context menu lets it be released from the grid and snapped back, as a swapping label rather than a checkbox; snapping is the object's own real, persisted state (survives a reload, has its own history entry) and applies whether or not the grid lines happen to be shown.
+	
+	Use case: ALL · Decisions: D151
+	
+	Status evidence: not in this backlog until the owner asked for it directly, mock-up agreed first (`notes/mockups/grid-and-snap.svg`, panels A–F). Built end to end: `claudia_creates.SlideObject.snap` and the `SetSnap` command (`AddObject` schema 2→3, `SlideModel.state_schema` 3→4, upcaster tested), the server's `set_snap` method (`claudia_server` 0.16.0), and the web side — `lib/grid.ts`'s `useGrid`, `geometry.ts`'s grid-aware `moveFrame`/`resizeFrame`, the CSS grid overlay in `SlideCanvas.vue`, and the context-menu toggle in `object-menu.ts`. 50 units between lines (not configurable yet) and no keyboard shortcut (menu only) are the two things a later round could add; neither was asked for.
 
 
 

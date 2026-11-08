@@ -22,6 +22,9 @@ export interface SlideObject {
   shape: string | null
   image: string | null
   imported: ImageImport | null
+  /** Whether this object holds to the grid (E10.15): the document's own state, set with `setSnap`. The grid
+   * itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is shown. */
+  snap: boolean
 }
 /** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
 export interface ShapeDef {
@@ -205,6 +208,11 @@ export class SlideSession extends BaseSession<SlideState> {
 
   async setText(id: string, text: string): Promise<boolean> {
     return (await this.attempt('set_text', { id, text, base: this.state.revision })) !== false
+  }
+
+  /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
+  async setSnap(id: string, snap: boolean): Promise<boolean> {
+    return (await this.attempt('set_snap', { id, snap, base: this.state.revision })) !== false
   }
 
   async remove(id: string): Promise<boolean> {

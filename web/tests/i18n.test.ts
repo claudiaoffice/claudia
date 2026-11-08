@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { createTranslator, loadCatalog } from '~/lib/i18n'
+import { describe, expect, it, vi } from 'vitest'
+import { LANGUAGES, createTranslator, loadCatalog, useI18n } from '~/lib/i18n'
+import { currentLocale } from '~/lib/locale'
 
 function fakeFetch(responses: Record<string, unknown>): typeof fetch {
   return (async (input: string | URL | Request) => {
@@ -64,5 +65,41 @@ describe('createTranslator', () => {
   it('accepts a numeric var', () => {
     const t = createTranslator({})
     expect(t('{count} items', { count: 3 })).toBe('3 items')
+  })
+})
+
+describe('LANGUAGES', () => {
+  it('lists English and German by their own autonyms, matching manifest.LANGUAGES', () => {
+    expect(LANGUAGES).toEqual([
+      ['en', 'English'],
+      ['de', 'Deutsch'],
+    ])
+  })
+})
+
+describe('useI18n', () => {
+  // `onMounted` warns (harmlessly) outside a component's `setup()` -- exercising `choose` directly, as the Config
+  // menu's own action handler does, needs no component mount.
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+  it('starts at the current locale and falls back to the msgid itself before any catalog has loaded', () => {
+    // Not asserting a specific tag: Node 21+ exposes a minimal global `navigator` of its own (`locale.test.ts`'s
+    // own caveat), so `currentLocale()` reads whatever that reports, not necessarily 'en'.
+    const i18n = useI18n()
+    expect(i18n.locale.value).toBe(currentLocale())
+    expect(i18n.t('Save')).toBe('Save')
+  })
+
+  it('choosing a language switches locale', async () => {
+    const i18n = useI18n()
+    await i18n.choose('de')
+    expect(i18n.locale.value).toBe('de')
+  })
+
+  it('choosing the already-active language is harmless', async () => {
+    const i18n = useI18n()
+    const already = i18n.locale.value
+    await i18n.choose(already)
+    expect(i18n.locale.value).toBe(already)
   })
 })

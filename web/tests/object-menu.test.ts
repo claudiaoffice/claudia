@@ -15,19 +15,20 @@ const text = (extra: object = {}): SlideObject => ({
   shape: null,
   image: null,
   imported: null,
+  snap: true,
   ...extra,
 })
 const shape = (extra: object = {}): SlideObject => ({ ...text(extra), id: 's1-shape', kind: 'shape', shape: 'circle' })
 const image = (extra: object = {}): SlideObject => ({ ...text(extra), id: 'i1', kind: 'image', shape: null, image: 'a'.repeat(64) })
 
-const actions = () => ({ edit: vi.fn(), remove: vi.fn(), cut: vi.fn(), copy: vi.fn(), properties: vi.fn() })
+const actions = () => ({ edit: vi.fn(), remove: vi.fn(), cut: vi.fn(), copy: vi.fn(), properties: vi.fn(), setSnap: vi.fn() })
 
 describe('contextMenuItems', () => {
-  it('offers Edit text and Delete for a text object, each wired to its own action', () => {
+  it('offers Edit text, the grid toggle and Delete for a text object, each wired to its own action', () => {
     const a = actions()
     const items = contextMenuItems(text(), false, a)
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Edit text', 'Delete'])
+    expect(labels).toEqual(['Edit text', 'Release from grid', 'Delete'])
 
     items.find((i) => i.label === 'Edit text')!.action!()
     expect(a.edit).toHaveBeenCalledOnce()
@@ -42,17 +43,17 @@ describe('contextMenuItems', () => {
     expect(items.map((i) => i.label)).toContain('Edit text')
   })
 
-  it('leaves Edit text and Cut/Copy/Properties off a text object or shape, unchanged from before this bug fix', () => {
+  it('leaves Cut/Copy/Properties off a text object or shape, unchanged from before the image-properties bug fix', () => {
     const items = contextMenuItems(shape(), false, actions())
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Edit text', 'Delete'])
+    expect(labels).toEqual(['Edit text', 'Release from grid', 'Delete'])
   })
 
-  it('offers Cut, Copy, Properties and Delete for an image, in that order, no Edit text (it has no text to write)', () => {
+  it('offers Cut, Copy, Properties, the grid toggle and Delete for an image, in that order, no Edit text (it has no text to write)', () => {
     const a = actions()
     const items = contextMenuItems(image(), false, a)
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Cut', 'Copy', 'Properties', 'Delete'])
+    expect(labels).toEqual(['Cut', 'Copy', 'Properties', 'Release from grid', 'Delete'])
 
     items.find((i) => i.label === 'Cut')!.action!()
     expect(a.cut).toHaveBeenCalledOnce()
@@ -64,10 +65,11 @@ describe('contextMenuItems', () => {
     expect(a.remove).toHaveBeenCalledOnce()
   })
 
-  it('disables Cut and Delete for a viewer, same as the Edit menu already does, but leaves Copy and Properties enabled since those only read', () => {
+  it('disables Cut, Delete and the grid toggle for a viewer, but leaves Copy and Properties enabled since those only read', () => {
     const items = contextMenuItems(image(), true, actions())
     expect(items.find((i) => i.label === 'Cut')!.disabled).toBe(true)
     expect(items.find((i) => i.label === 'Delete')!.disabled).toBe(true)
+    expect(items.find((i) => i.label === 'Release from grid')!.disabled).toBe(true)
     expect(items.find((i) => i.label === 'Copy')!.disabled).toBeFalsy()
     expect(items.find((i) => i.label === 'Properties')!.disabled).toBeFalsy()
   })
@@ -86,5 +88,28 @@ describe('contextMenuItems', () => {
     expect(imageItems.find((i) => i.label === 'Cut')!.hint).toBe('Ctrl+X')
     expect(imageItems.find((i) => i.label === 'Copy')!.hint).toBe('Ctrl+C')
     expect(imageItems.find((i) => i.label === 'Delete')!.hint).toBe('Del')
+  })
+
+  describe('the grid toggle (E10.15)', () => {
+    it('offers "Release from grid" for an object that snaps, and calls setSnap(false)', () => {
+      const acts = actions()
+      const items = contextMenuItems(text({ snap: true }), false, acts)
+      const toggle = items.find((i) => i.label === 'Release from grid')!
+      toggle.action!()
+      expect(acts.setSnap).toHaveBeenCalledWith(false)
+    })
+
+    it('offers "Snap to grid" for an object that was released, and calls setSnap(true)', () => {
+      const acts = actions()
+      const items = contextMenuItems(text({ snap: false }), false, acts)
+      const toggle = items.find((i) => i.label === 'Snap to grid')!
+      toggle.action!()
+      expect(acts.setSnap).toHaveBeenCalledWith(true)
+    })
+
+    it('is offered for a shape and an image too, not only a text box', () => {
+      expect(contextMenuItems(shape({ snap: false }), false, actions()).map((i) => i.label)).toContain('Snap to grid')
+      expect(contextMenuItems(image({ snap: false }), false, actions()).map((i) => i.label)).toContain('Snap to grid')
+    })
   })
 })

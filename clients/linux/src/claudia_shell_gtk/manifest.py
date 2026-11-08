@@ -20,19 +20,27 @@ growing one entry per document. The same reasoning drops the "visible but inert"
 ordinary ``Kind.PAGE`` actions the shell greys out the moment the page connects (``set_action_states``, driven by the
 page's own ``collectStates`` — nothing shell-side needs to know they are permanent stubs rather than temporarily
 disabled ones).
+
+A second note, added for Config ▸ App Language (E5.7, D31/D148's groundwork, D160): translation itself is
+applied by :func:`menu_xml`/:func:`menu_elements`, not here — this module still imports no gettext, stays pure data,
+and is tested without any locale installed. The one deliberate exception is :data:`LANGUAGES` itself: each entry's
+own name is its autonym ("Deutsch", not "German" from an English catalog) and is never run through ``translate``,
+the same universal convention every OS and browser language picker already follows, so ``_item_element`` and
+``scripts/extract_i18n.py``'s manifest walk both skip any action whose id starts with ``"config.language."``.
 """
 
 from __future__ import annotations
 
 import enum
 import xml.etree.ElementTree as ET
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
 __all__ = [
     "Action",
     "Kind",
+    "LANGUAGES",
     "Manifest",
     "Menu",
     "Submenu",
@@ -43,6 +51,17 @@ __all__ = [
     "menu_xml",
     "about_links",
 ]
+
+Translate = Callable[[str], str]
+"""A label translator, usually ``i18n.translate`` — defaults to the identity everywhere below, so every function
+here stays callable (and testable) with no locale installed at all."""
+
+LANGUAGES: tuple[tuple[str, str], ...] = (("en", "English"), ("de", "Deutsch"))
+"""The language picker's own short, explicit list for Config ▸ App Language — exactly the catalogs that exist
+(``po/en`` is the source text itself, ``po/de.po``), extended by adding one more ``(tag, autonym)`` pair here, a new
+``po/<tag>.po``, and the matching items in each workspace's own ``menus`` (``web/app/lib/menu-dispatch.ts``'s drift
+guard, ``tests/test_manifest.py``). Not a directory scan: two catalogs do not justify one, and an explicit list
+can never show a half-finished catalog nobody meant to ship yet."""
 
 WEBSITE = "https://www.claudia-office.de"
 ISSUES = "https://github.com/claudiaoffice/claudia/issues"
@@ -312,10 +331,26 @@ def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
 
 
 def _config_menu() -> Menu:
-    """Shortcuts only, for now (D120, D122): an editable remapping UI is deferred."""
+    """Shortcuts (D120, D122: an editable remapping UI is deferred), then App Language (the owner's second i18n
+    round): one checkable ``Kind.PAGE`` action per :data:`LANGUAGES` entry, in its own section/flyout.
+
+    Mutual exclusion (picking one unchecks the rest) is enforced nowhere in this data — it is just ``LANGUAGES``
+    many independent checkable actions, the same primitive ``view.dark`` already uses. The page is the one source of
+    truth for which is active (it owns the catalog): a click sends the usual ``action`` message, the page's own
+    ``menus`` recomputes every item's ``checked`` from its one ``locale`` ref, and ``collectStates`` reports all of
+    them back, so ``window.py``'s ``set_action_states`` — already written to apply whatever the page reports, one id
+    at a time — needs no special case to keep the native tick marks in step."""
     return Menu(
         "Config",
-        ((_page("config.shortcuts", "Shortcuts", "The keyboard shortcuts this app uses", accelerators=("F1",)),),),
+        (
+            (_page("config.shortcuts", "Shortcuts", "The keyboard shortcuts this app uses", accelerators=("F1",)),),
+            (
+                Submenu(
+                    "App Language",
+                    tuple(_page(f"config.language.{tag}", label, "", checkable=True) for tag, label in LANGUAGES),
+                ),
+            ),
+        ),
     )
 
 
@@ -498,26 +533,31 @@ def creates() -> Manifest:
 # ----------------------------------------------------------------------------------------------------- GtkBuilder XML
 
 
-def _item_element(parent: ET.Element, action: Action) -> None:
+def _translatable(action: Action) -> bool:
+    """Everything except :data:`LANGUAGES`' own autonyms (see this module's docstring)."""
+    return not action.id.startswith("config.language.")
+
+
+def _item_element(parent: ET.Element, action: Action, translate: Translate) -> None:
     item = ET.SubElement(parent, "item")
     label = ET.SubElement(item, "attribute", name="label", translatable="yes")
-    label.text = action.label
+    label.text = translate(action.label) if _translatable(action) else action.label
     target = ET.SubElement(item, "attribute", name="action")
     target.text = f"win.{action.id}"
 
 
-def _submenu_element(parent: ET.Element, submenu: Submenu) -> None:
+def _submenu_element(parent: ET.Element, submenu: Submenu, translate: Translate) -> None:
     """``<submenu>``: GTK's own nested-flyout element, holding one ``<section>`` of items — the GMenu-XML shape for
     exactly what ``MenuBar.vue``'s ``items`` property draws as a flyout on the web side."""
     element = ET.SubElement(parent, "submenu")
     label = ET.SubElement(element, "attribute", name="label", translatable="yes")
-    label.text = submenu.label
+    label.text = translate(submenu.label)
     section = ET.SubElement(element, "section")
     for action in submenu.items:
-        _item_element(section, action)
+        _item_element(section, action, translate)
 
 
-def _menu_tree(manifest: Manifest) -> ET.Element:
+def _menu_tree(manifest: Manifest, translate: Translate) -> ET.Element:
     interface = ET.Element("interface")
     for menu in manifest.menus:
         menu_element = ET.SubElement(interface, "menu", id=menu.id)
@@ -525,21 +565,31 @@ def _menu_tree(manifest: Manifest) -> ET.Element:
             section_element = ET.SubElement(menu_element, "section")
             for entry in section:
                 if isinstance(entry, Submenu):
-                    _submenu_element(section_element, entry)
+                    _submenu_element(section_element, entry, translate)
                 else:
-                    _item_element(section_element, entry)
+                    _item_element(section_element, entry, translate)
     ET.indent(interface)
     return interface
 
 
-def menu_elements(manifest: Manifest) -> str:
-    """Only the ``<menu>`` elements, to be merged into the layout file of a window (see ``window.ui``)."""
-    return "\n  ".join(ET.tostring(menu, encoding="unicode").strip() for menu in _menu_tree(manifest))
+def menu_elements(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:
+    """Only the ``<menu>`` elements, to be merged into the layout file of a window (see ``window.ui``).
+
+    ``translate`` is applied here, while the XML is built, rather than through GtkBuilder's own translation-domain
+    machinery: the shell installs exactly one gettext mechanism (``i18n.install_translation``, bound to Python's own
+    ``_()``), and calling ``translate`` directly reuses it instead of also wiring ``Gtk.Builder.set_translation_domain``
+    and glibc's ``bindtextdomain`` for a second, parallel one. Left at the default identity function, this (and
+    everything it calls) needs no locale installed at all — which is what every test below does.
+    """
+    return "\n  ".join(ET.tostring(menu, encoding="unicode").strip() for menu in _menu_tree(manifest, translate))
 
 
-def menu_xml(manifest: Manifest) -> str:
+def menu_xml(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:
     """GtkBuilder XML for the menus of ``manifest``: one ``<menu id="menu-file">`` and so on.
 
-    Every item calls the window action ``win.<id>`` and its label is marked translatable (E5.7).
+    Every item calls the window action ``win.<id>``; ``translatable="yes"`` on its label is a GtkBuilder hint for
+    any future tooling (xgettext and the like) that reads this XML directly; translation itself has already
+    happened by the time this text is written, under ``menu_elements``'s own ``translate`` parameter above (E5.7).
     """
-    return f'<?xml version="1.0" encoding="UTF-8"?>\n<interface>\n  {menu_elements(manifest)}\n</interface>\n'
+    elements = menu_elements(manifest, translate=translate)
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n<interface>\n  {elements}\n</interface>\n'

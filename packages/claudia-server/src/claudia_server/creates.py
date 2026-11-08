@@ -1,8 +1,9 @@
 """The methods of the presentation app: what a slide view needs to show a slide and to take what people do on it.
 
 ``creates_methods`` is ``core_methods`` plus ``slides``, ``slide``, ``shapes``, ``styles``, ``add_slide``,
-``add_object``, ``add_image``, ``move_object``, ``resize_object``, ``set_text`` and ``remove_object``. Positions and
-sizes are whole units of the slide space (1600 by 900). A shape is chosen by its id from the server's shape library;
+``add_object``, ``add_image``, ``move_object``, ``resize_object``, ``set_text``, ``set_snap`` and
+``remove_object``. Positions and sizes are whole units of the slide space (1600 by 900). A shape is chosen by its
+id from the server's shape library;
 the first time a document uses it, its outline is copied into the document, in the same step of the history as the
 object, so a document never depends on the library of the server it is opened on. An image is decoded from the
 bytes the client sends (``add_image``); the first time a document sees that exact picture, the decoded asset is
@@ -29,6 +30,7 @@ from claudia_creates import (
     MoveObject,
     RemoveObject,
     ResizeObject,
+    SetSnap,
     SetText,
     ShapeLibrary,
     SlideModel,
@@ -98,6 +100,32 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, b
     return _done(ctx, command, base, object=object_id)
 
 
+def _move_object(ctx, *, id, x, y, base):
+    """Move an object so that its top left corner is at (x, y)."""
+    return _done(ctx, MoveObject(id, x, y), base)
+
+
+def _resize_object(ctx, *, id, x, y, w, h, base):
+    """Give an object a new frame: top left corner and size (resizing from the left or top moves the corner)."""
+    return _done(ctx, ResizeObject(id, x, y, w, h), base)
+
+
+def _set_text(ctx, *, id, text, base):
+    """Replace the text of an object."""
+    return _done(ctx, SetText(id, text), base)
+
+
+def _set_snap(ctx, *, id, snap, base):
+    """Hold an object to the grid (`snap` true) or release it (false). The grid is only a helper the view
+    draws, never part of the slide, but this choice is: it has its own place in the document's history."""
+    return _done(ctx, SetSnap(id, snap), base)
+
+
+def _remove_object(ctx, *, id, base):
+    """Take an object off its slide. Undo brings it back in the same place of the stacking order."""
+    return _done(ctx, RemoveObject(id), base)
+
+
 def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     """The method table of presentations on a server whose shape library is ``library``."""
     table = core_methods.extended()
@@ -107,6 +135,11 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         "slide:str x:int y:int w:int h:int data:image alt:str source_name:str source_path:str? base:revision?",
         write=True,
     )(_add_image)
+    table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
+    table.method("resize_object", "id:str x:int y:int w:int h:int base:revision?", write=True)(_resize_object)
+    table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
+    table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
+    table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
 
     @table.method("slides")
     def _slides(ctx):
@@ -117,8 +150,10 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("slide", "slide:str")
     def _slide(ctx, slide):
         """One slide as `{revision, slide, objects}`: its objects, the one in front last. An object is
-        `{id, slide, kind, x, y, w, h, style, text, shape, image, imported}`; `imported`'s `source_path` is only
-        sent to the person who imported that image (everyone else sees `null` there, not the path)."""
+        `{id, slide, kind, x, y, w, h, style, text, shape, image, imported, snap}`; `imported`'s `source_path` is
+        only sent to the person who imported that image (everyone else sees `null` there, not the path). `snap`
+        is whether the object holds to the grid, a helper the view draws and is free to show or hide on its
+        own — `snap` is unaffected by that and is the document's own state, set with `set_snap`."""
         deck = _deck(ctx)
         if slide not in deck.slides:
             raise RequestError("command_error", f"unknown slide {slide!r}")
@@ -178,26 +213,6 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         steps.append(AddObject(SlideObject(object_id, slide, kind, x, y, w, h, STYLE_OF_KIND[kind], text, shape)))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return _done(ctx, command, base, object=object_id)
-
-    @table.method("move_object", "id:str x:int y:int base:revision?", write=True)
-    def _move_object(ctx, *, id, x, y, base):
-        """Move an object so that its top left corner is at (x, y)."""
-        return _done(ctx, MoveObject(id, x, y), base)
-
-    @table.method("resize_object", "id:str x:int y:int w:int h:int base:revision?", write=True)
-    def _resize_object(ctx, *, id, x, y, w, h, base):
-        """Give an object a new frame: top left corner and size (resizing from the left or top moves the corner)."""
-        return _done(ctx, ResizeObject(id, x, y, w, h), base)
-
-    @table.method("set_text", "id:str text:text base:revision?", write=True)
-    def _set_text(ctx, *, id, text, base):
-        """Replace the text of an object."""
-        return _done(ctx, SetText(id, text), base)
-
-    @table.method("remove_object", "id:str base:revision?", write=True)
-    def _remove_object(ctx, *, id, base):
-        """Take an object off its slide. Undo brings it back in the same place of the stacking order."""
-        return _done(ctx, RemoveObject(id), base)
 
     return table
 

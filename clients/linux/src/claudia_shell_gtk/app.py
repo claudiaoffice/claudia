@@ -65,6 +65,7 @@ class ComposesApp(Adw.Application):
         server_factory: Callable[[AppIdentity], Server] = prepare_server,
         page_factory: PageFactory = default_page_factory,
         manifest: Manifest | None = None,
+        locale: str | None = None,
         poll_ms: int = POLL_MS,
         flags: Gio.ApplicationFlags = Gio.ApplicationFlags.DEFAULT_FLAGS,
     ) -> None:
@@ -73,6 +74,7 @@ class ComposesApp(Adw.Application):
         self._server_factory = server_factory
         self._page_factory = page_factory
         self._manifest = manifest or composes()
+        self._locale = locale
         self._poll_ms = poll_ms
         self._server: Server | None = None
         self._poll_source = 0
@@ -101,7 +103,7 @@ class ComposesApp(Adw.Application):
             self._identity,
             self._manifest,
             page_factory=self._page_factory,
-            locale=detect_system_locale(),
+            locale=self._locale or detect_system_locale(),
             application=self,
         )
         self.window.present()

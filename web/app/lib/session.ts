@@ -4,6 +4,9 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import { type LinkLike, type Region } from './protocol'
 import { type Content } from './cells'
 import type { ImageAsset, ImageImport } from './images'
+import { type Axis, lineSize } from './line-sizes'
+
+export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
 
 export type {
   BaseState,
@@ -46,6 +49,11 @@ export interface State extends BaseState {
   sheets: SheetInfo[]
   activeSheet: string
   cells: Record<string, Map<number, Content>>
+  /** Rows (by `sheets[].id`) that were given a height away from `DEFAULT_ROW_HEIGHT` (D135). Sparse: a row not in
+   * here shows at the default. */
+  rowHeights: Record<string, Map<number, number>>
+  /** Same as `rowHeights`, for column widths away from `DEFAULT_COL_WIDTH`. */
+  colWidths: Record<string, Map<number, number>>
   generation: number
   objects: Record<string, SheetObject>
   order: Record<string, string[]> // sheet -> object ids, the one in front last
@@ -57,11 +65,23 @@ const key = (row: number, col: number) => row * COL_STRIDE + col
 export class Session extends BaseSession<State> {
   private loaded = new Set<string>()
   private inflight = new Map<string, Promise<void>>()
+  private sizesLoaded = new Set<string>()
+  private sizesInflight = new Map<string, Promise<void>>()
   private editing = false
   private shown = ''
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { sheets: [], activeSheet: '', cells: {}, generation: 0, objects: {}, order: {}, images: {} })
+    super(makeLink, options, {
+      sheets: [],
+      activeSheet: '',
+      cells: {},
+      rowHeights: {},
+      colWidths: {},
+      generation: 0,
+      objects: {},
+      order: {},
+      images: {},
+    })
   }
 
   // ------------------------------------------------------------------------------ loading
@@ -89,21 +109,39 @@ export class Session extends BaseSession<State> {
     return (this.state.order[sheet] ?? []).map((id) => this.state.objects[id]).filter((o): o is SheetObject => o !== undefined)
   }
 
+  /** Forgets a sheet's cells, and with them its row/column sizes — a structural edit (rows or columns inserted or
+   * deleted) shifts both the same way, and the server does not echo the shifted sizes back as their own event. */
   private forgetCells(sheet?: string) {
     const s = this.state
     if (sheet === undefined) {
       s.cells = {}
+      s.rowHeights = {}
+      s.colWidths = {}
       this.loaded.clear()
       this.inflight.clear() // what was asked of a connection that is gone will never be answered
+      this.sizesLoaded.clear()
+      this.sizesInflight.clear()
     } else {
       delete s.cells[sheet]
+      delete s.rowHeights[sheet]
+      delete s.colWidths[sheet]
       for (const k of [...this.loaded]) if (k.startsWith(`${sheet}:`)) this.loaded.delete(k)
+      this.sizesLoaded.delete(sheet)
+      this.sizesInflight.delete(sheet)
     }
     s.generation++
   }
 
   cell(sheet: string, row: number, col: number): Content {
     return this.state.cells[sheet]?.get(key(row, col)) ?? null
+  }
+
+  rowHeight(sheet: string, row: number): number {
+    return lineSize(this.state.rowHeights[sheet], row, 'row')
+  }
+
+  colWidth(sheet: string, col: number): number {
+    return lineSize(this.state.colWidths[sheet], col, 'col')
   }
 
   /** The positions of the filled cells (that are loaded) inside a rectangle. */
@@ -125,6 +163,24 @@ export class Session extends BaseSession<State> {
       }
     }
     await Promise.all(jobs)
+  }
+
+  /** Load a sheet's row and column sizes, unless they are here already (they are sparse, so this is the whole
+   * sheet at once rather than chunked like cells). */
+  async ensureSizes(sheet: string): Promise<void> {
+    if (this.sizesLoaded.has(sheet)) return
+    const running = this.sizesInflight.get(sheet)
+    if (running) return running
+    const job = this.need()
+      .request<{ revision: string; rows: [number, number][]; cols: [number, number][] }>('sizes', { sheet })
+      .then((answer) => {
+        this.state.rowHeights[sheet] = new Map(answer.rows)
+        this.state.colWidths[sheet] = new Map(answer.cols)
+        this.sizesLoaded.add(sheet)
+      })
+      .finally(() => this.sizesInflight.delete(sheet))
+    this.sizesInflight.set(sheet, job)
+    return job
   }
 
   private loadChunk(sheet: string, cr: number, cc: number): Promise<void> {
@@ -169,6 +225,14 @@ export class Session extends BaseSession<State> {
       case 'structure':
         this.forgetCells(data.sheet)
         return true
+      case 'sizes': {
+        const target = (data.axis as Axis) === 'row' ? (s.rowHeights[data.sheet] ??= new Map()) : (s.colWidths[data.sheet] ??= new Map())
+        for (const [i, size] of data.sizes as [number, number | null][]) {
+          if (size === null) target.delete(i)
+          else target.set(i, size)
+        }
+        return true
+      }
       case 'sheets':
         this.track(this.reload())
         return true
@@ -204,6 +268,7 @@ export class Session extends BaseSession<State> {
   }
 
   // -- floating objects (images, today): anchored to a cell, a fixed pixel size, never touched by `structure`
+  // or `resizeLines`
   /** Import a picture from disk and anchor it to a cell of the sheet that is shown (E10.11); its id, or null
    * after telling the person why not. `data` is the file's bytes, base64 (`lib/images.ts`'s `fileToBase64`);
    * `sourcePath` is the file's full path if the caller could get one — a plain web browser cannot, and passes
@@ -232,6 +297,12 @@ export class Session extends BaseSession<State> {
 
   async removeObject(id: string): Promise<boolean> {
     return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
+  }
+
+  /** Set (or, with `null`, clear back to the default) the size of one or more rows or columns in one change.
+   * `sizes` is `[index, size | null]` pairs. */
+  async resizeLines(sheet: string, axis: Axis, sizes: [number, number | null][]): Promise<boolean> {
+    return (await this.attempt('resize_lines', { sheet, axis, sizes, base: this.state.revision })) !== false
   }
 
   // -- where I am, and holding a cell while I type into it

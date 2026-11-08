@@ -3,6 +3,15 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.17.0] - 2026-11-07
+
+The grid, and snapping to it (E10.15), on top of `claudia_creates`'s new `SetSnap` command.
+
+### Added
+- **`creates.set_snap`**: a write method taking an object's id and a `snap` boolean. Holds the object to the grid
+  or releases it; the grid itself is a view-only helper and has no method of its own here. `creates.slide`'s
+  objects each carry the new `snap` field.
+
 ## [0.16.0] - 2026-11-07
 
 Who may configure the server, as a question separate from any document's own users (D20/D35): server-side identity,
