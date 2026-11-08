@@ -1,5 +1,7 @@
 demo-docs
 demo-docs-*
+docs
+docs-*
 .venv
 *__pycache__*
 web/.nuxt
