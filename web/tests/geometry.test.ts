@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  GRID_SIZE,
   SLIDE_H,
   SLIDE_W,
   fitScale,
@@ -40,6 +41,19 @@ describe('moveFrame', () => {
   })
 })
 
+describe('moveFrame snapping to the grid', () => {
+  const start: Frame = { x: 103, y: 97, w: 400, h: 200 }
+  it('leaves the frame alone without a grid', () => {
+    expect(moveFrame(start, 12, 8)).toEqual({ x: 115, y: 105, w: 400, h: 200 })
+  })
+  it('rounds the moved position to the nearest grid line when one is given', () => {
+    expect(moveFrame(start, 12, 8, GRID_SIZE)).toEqual({ x: 100, y: 100, w: 400, h: 200 })
+  })
+  it('still keeps the object on the slide after snapping', () => {
+    expect(moveFrame(start, -5000, -5000, GRID_SIZE)).toEqual({ x: 0, y: 0, w: 400, h: 200 })
+  })
+})
+
 describe('resizeFrame without a fixed shape', () => {
   const start: Frame = { x: 100, y: 100, w: 400, h: 200 }
   it('drags the south-east corner and leaves the north-west one where it is', () => {
@@ -61,6 +75,32 @@ describe('resizeFrame without a fixed shape', () => {
   it('does not leave the slide', () => {
     expect(resizeFrame(start, 'se', 5000, 5000, null)).toEqual({ x: 100, y: 100, w: SLIDE_W - 100, h: SLIDE_H - 100 })
     expect(resizeFrame(start, 'nw', -5000, -5000, null)).toEqual({ x: 0, y: 0, w: 500, h: 300 })
+  })
+})
+
+describe('resizeFrame snapping to the grid, without a fixed shape', () => {
+  const start: Frame = { x: 100, y: 100, w: 400, h: 200 }
+  it('snaps the dragged corner to the nearest grid line; the opposite one stays exactly put', () => {
+    expect(resizeFrame(start, 'se', 42, 18, null, GRID_SIZE)).toEqual({ x: 100, y: 100, w: 450, h: 200 })
+  })
+  it('snaps an edge the same way', () => {
+    expect(resizeFrame(start, 'e', 42, 0, null, GRID_SIZE)).toEqual({ x: 100, y: 100, w: 450, h: 200 })
+  })
+  it('still respects the least size and the slide after snapping', () => {
+    expect(resizeFrame(start, 'se', -1000, -1000, null, GRID_SIZE)).toEqual({ x: 100, y: 100, w: 20, h: 20 })
+  })
+})
+
+describe('resizeFrame snapping to the grid, with a fixed shape', () => {
+  it('snaps the dominant dimension and derives the other one from the aspect, exactly', () => {
+    const circle: Frame = { x: 200, y: 200, w: 200, h: 200 }
+    const frame = resizeFrame(circle, 'se', 42, 18, 1, GRID_SIZE)
+    expect(frame).toEqual({ x: 200, y: 200, w: 250, h: 250 })
+  })
+  it('keeps the proportions within one unit for a non-square aspect too', () => {
+    const start: Frame = { x: 100, y: 100, w: 300, h: 150 }
+    const frame = resizeFrame(start, 'se', 42, 10, 2, GRID_SIZE)
+    expect(Math.abs(frame.w - frame.h * 2)).toBeLessThanOrEqual(1)
   })
 })
 

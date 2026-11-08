@@ -30,7 +30,7 @@ OBJECT_KINDS = ("text", "shape", "image")
 FIRST_SLIDE = "s1"  # the slide of a new presentation
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
-_FIELDS = ("id", "slide", "kind", "x", "y", "w", "h", "style", "text", "shape", "image", "imported")
+_FIELDS = ("id", "slide", "kind", "x", "y", "w", "h", "style", "text", "shape", "image", "imported", "snap")
 
 
 @dataclass(frozen=True)
@@ -39,7 +39,9 @@ class SlideObject:
     or an image (``"image"``, with the id of its :class:`~claudia_core.ImageAsset` and the
     :class:`~claudia_core.ImageImport` record of how it got there).
 
-    ``x``, ``y``, ``w`` and ``h`` are whole units in the slide space; ``style`` is the id of a built-in style."""
+    ``x``, ``y``, ``w`` and ``h`` are whole units in the slide space; ``style`` is the id of a built-in style.
+    ``snap`` is whether the object holds to the grid (E10.15): a helper the view draws, not part of the slide
+    itself, but each object's own choice to follow it is real, persisted document state."""
 
     id: str
     slide: str
@@ -53,6 +55,7 @@ class SlideObject:
     shape: str | None = None
     image: str | None = None
     imported: ImageImport | None = None
+    snap: bool = True
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores. Carries ``imported`` unmasked (the log is not a client)."""
@@ -85,7 +88,7 @@ class SlideModel(DocumentModel):
     """A presentation: slides, the shapes it knows and the objects on its slides. See the module description."""
 
     app: ClassVar[str] = "creates"
-    state_schema: ClassVar[int] = 3
+    state_schema: ClassVar[int] = 4
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(self) -> None:
@@ -222,6 +225,8 @@ class SlideModel(DocumentModel):
         self._check_frame(obj, aspect)
         if not isinstance(obj.text, str) or len(obj.text) > MAX_OBJECT_TEXT:
             raise ValueError(f"the text must be text of at most {MAX_OBJECT_TEXT} characters")
+        if type(obj.snap) is not bool:
+            raise ValueError("snap must be true or false")
 
     def _check_visual(self, obj: SlideObject) -> float | None:
         """What ``obj.kind`` requires of ``shape``/``image``/``imported``, and the aspect ratio (if any) it keeps."""

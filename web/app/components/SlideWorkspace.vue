@@ -5,6 +5,7 @@ import { insertFrame, type Frame } from '~/lib/geometry'
 import type { SlideSession } from '~/lib/slide-session'
 import { copySelection, cutSelection, pasteAsPlainText } from '~/lib/clipboard'
 import { useI18n } from '~/lib/i18n'
+import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import SlideCanvas from './SlideCanvas.vue'
@@ -20,6 +21,7 @@ const { dark, toggle: toggleDark } = useTheme()
 // `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
 // `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring.
 const { t, locale, choose } = useI18n()
+const { shown: gridShown, toggle: toggleGrid } = useGrid()
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
@@ -145,6 +147,14 @@ const menus = computed<Menu[]>(() => [
     items: [
       { id: 'view.authors', label: t('Show who wrote what'), checked: false, disabled: true }, // creates tracks no per-object authorship yet
       {
+        id: 'view.grid',
+        label: 'Show grid',
+        checked: gridShown.value,
+        action: (t) => {
+          if (t === undefined || (t === 'on') !== gridShown.value) toggleGrid()
+        },
+      },
+      {
         id: 'view.panel',
         label: t('History and chat'),
         checked: frame.value?.isPanelOpen() ?? true,
@@ -208,7 +218,7 @@ const menus = computed<Menu[]>(() => [
         @redo="session.redo()"
       />
     </template>
-    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" />
+    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" />
     <div v-else class="noslide">This presentation has no slide.</div>
     <template #overlay>
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />

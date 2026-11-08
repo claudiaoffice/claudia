@@ -184,6 +184,17 @@ def test_an_object_moves_resizes_and_is_edited(deck):
     assert deck.history_for("ann").undo_label == "Edit text"
 
 
+def test_an_object_snaps_by_default_and_can_be_released_and_held_again(deck):
+    box = add_text(deck)
+    assert objects(deck)[0]["snap"] is True
+    call(deck, "set_snap", {"id": box, "snap": False})
+    assert objects(deck)[0]["snap"] is False
+    assert deck.history_for("ann").undo_label == "Release from grid"
+    call(deck, "set_snap", {"id": box, "snap": True})
+    assert objects(deck)[0]["snap"] is True
+    assert deck.history_for("ann").undo_label == "Snap to grid"
+
+
 def test_an_object_is_removed_and_comes_back_on_undo(deck):
     first, second = add_text(deck), add_text(deck, x=700)
     call(deck, "remove_object", {"id": first})
@@ -197,6 +208,7 @@ def test_moving_something_that_is_not_there_is_an_error_not_a_crash(deck):
         ("move_object", {"id": "ghost", "x": 1, "y": 1}),
         ("resize_object", {"id": "ghost", "x": 1, "y": 1, "w": 50, "h": 50}),
         ("set_text", {"id": "ghost", "text": "x"}),
+        ("set_snap", {"id": "ghost", "snap": False}),
         ("remove_object", {"id": "ghost"}),
     ):
         with pytest.raises(RequestError) as caught:
@@ -229,6 +241,7 @@ def test_viewers_may_look_but_not_change(deck):
         ("add_object", {"slide": "s1", "kind": "text", "x": 0, "y": 0, "w": 100, "h": 50}),
         ("move_object", {"id": box, "x": 1, "y": 1}),
         ("set_text", {"id": box, "text": "x"}),
+        ("set_snap", {"id": box, "snap": False}),
         ("remove_object", {"id": box}),
         ("add_slide", {}),
     ):
@@ -258,7 +271,17 @@ def test_a_selection_must_look_like_one(deck):
 
 def test_the_methods_are_described_for_client_developers(deck):
     described = creates_methods.describe()["methods"]
-    for name in ("slides", "slide", "shapes", "styles", "add_object", "move_object", "resize_object", "set_text"):
+    for name in (
+        "slides",
+        "slide",
+        "shapes",
+        "styles",
+        "add_object",
+        "move_object",
+        "resize_object",
+        "set_text",
+        "set_snap",
+    ):
         assert described[name]["doc"], name
     assert described["add_object"]["write"] and not described["slide"]["write"]
     assert {"ping", "apply", "undo", "lock"} <= set(described), "the core methods are all there"

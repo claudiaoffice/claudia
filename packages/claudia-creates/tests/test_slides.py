@@ -16,6 +16,7 @@ from claudia_creates import (
     RemoveObject,
     RemoveSlide,
     ResizeObject,
+    SetSnap,
     SetText,
     SlideModel,
     SlideObject,
@@ -116,6 +117,8 @@ def test_the_document_keeps_working_without_the_library_because_it_holds_the_out
         {"w": "400"},
         {"text": "x" * 20_001},
         {"text": 5},
+        {"snap": 1},
+        {"snap": "true"},
     ],
 )
 def test_an_object_that_is_not_right_is_refused_and_changes_nothing(doc, changes):
@@ -154,6 +157,7 @@ def test_commands_on_an_object_that_is_not_there_are_refused(doc):
         MoveObject("ghost", 1, 1),
         ResizeObject("ghost", 1, 1, 50, 50),
         SetText("ghost", "x"),
+        SetSnap("ghost", False),
         RemoveObject("ghost"),
     ):
         with pytest.raises(ValueError, match="ghost"):
@@ -404,8 +408,15 @@ def test_the_history_has_labels_and_sentences_people_can_read():
     assert MoveObject("t1", 1, 2).label == "Move object"
     assert ResizeObject("t1", 1, 2, 30, 40).label == "Resize object"
     assert SetText("t1", "x").label == "Edit text"
+    assert SetSnap("t1", False).label == "Release from grid" and SetSnap("t1", True).label == "Snap to grid"
     assert RemoveObject("t1").label == "Remove object"
-    for command in (AddObject(box), MoveObject("t1", 1, 2), SetText("t1", "x"), RemoveObject("t1")):
+    for command in (
+        AddObject(box),
+        MoveObject("t1", 1, 2),
+        SetText("t1", "x"),
+        SetSnap("t1", False),
+        RemoveObject("t1"),
+    ):
         assert command.summary.strip()
 
 
@@ -433,6 +444,7 @@ def test_command_data_round_trips_and_kinds_are_namespaced():
         MoveObject("t1", 1, 2),
         ResizeObject("t1", 1, 2, 30, 40),
         SetText("t1", "x"),
+        SetSnap("t1", False),
         define(),
         ForgetShape("rectangle"),
     ]
@@ -473,7 +485,7 @@ def test_redacting_an_object_added_with_words_keeps_its_place_and_shape(doc):
 def random_step(rng, doc, serial):
     author = rng.choice(["ana", "ben"])
     objects = doc.model.objects_on(SLIDE)
-    choice = rng.choice(["add", "add", "move", "resize", "text", "remove", "undo", "redo"])
+    choice = rng.choice(["add", "add", "move", "resize", "text", "snap", "remove", "undo", "redo"])
     if choice == "add" or not objects:
         shape = rng.choice([None, "rectangle", "circle", "triangle"])
         size = rng.randrange(40, 300)
@@ -496,6 +508,8 @@ def random_step(rng, doc, serial):
         return author, [ResizeObject(target.id, rng.randrange(0, 1000), rng.randrange(0, 500), size, side)]
     if choice == "text":
         return author, [SetText(target.id, f"text {rng.randrange(1000)}")]
+    if choice == "snap":
+        return author, [SetSnap(target.id, not target.snap)]
     if choice == "remove":
         return author, [RemoveObject(target.id)]
     return author, [choice]
@@ -545,5 +559,6 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "shape",
         "image",
         "imported",
+        "snap",
     }
     assert define().to_data()["shape"]["id"] == "rectangle"

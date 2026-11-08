@@ -38,6 +38,7 @@ const text = (id: string, extra: object = {}) => ({
   shape: null,
   image: null,
   imported: null,
+  snap: true,
   ...extra,
 })
 const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
@@ -55,6 +56,7 @@ const image = (id: string, extra: object = {}) => ({
   shape: null,
   image: ASSET.id,
   imported: IMPORT,
+  snap: true,
   ...extra,
 })
 
@@ -109,6 +111,7 @@ function server(link: FakeLink, objects: any[] = []) {
     move_object: () => ({ revision: 'main:2' }),
     resize_object: () => ({ revision: 'main:2' }),
     set_text: () => ({ revision: 'main:2' }),
+    set_snap: () => ({ revision: 'main:2' }),
     remove_object: () => ({ revision: 'main:2' }),
     add_slide: () => ({ slide: 's2', revision: 'main:2' }),
     lock: () => ({}),
@@ -281,6 +284,8 @@ describe('making changes', () => {
     expect(link.last('resize_object')).toEqual({ id: 'a', x: 1, y: 2, w: 300, h: 100, base: 'main:0' })
     await session.setText('a', 'Hello')
     expect(link.last('set_text')).toEqual({ id: 'a', text: 'Hello', base: 'main:0' })
+    await session.setSnap('a', false)
+    expect(link.last('set_snap')).toEqual({ id: 'a', snap: false, base: 'main:0' })
     await session.remove('a')
     expect(link.last('remove_object')).toEqual({ id: 'a', base: 'main:0' })
   })
