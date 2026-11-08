@@ -5,6 +5,7 @@ import { openSession, type AnySession } from '~/lib/open'
 import { Session } from '~/lib/session'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
+import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, type Bookmark } from '~/lib/server-bookmarks'
 
 interface Listed {
   id: string
@@ -19,7 +20,19 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ opened: [session: AnySession] }>()
 
-const server = new URLSearchParams(location.search).get('server') ?? location.host
+// `server` is a bare host (`host` or `host:port`, as `location.host` gives it); it starts from `?server=` (a dev-only
+// escape hatch for pointing this page at a different backend) and otherwise this page's own host. Switching to a
+// different bookmarked server is always a full navigation there (below), never an in-page change of this ref to
+// another origin — the same "page and socket share one origin" choice the project made for the Linux shell (D115),
+// so none of this has to think about a cross-origin fetch.
+const server = ref(new URLSearchParams(location.search).get('server') ?? location.host)
+const origin = computed(() => `${location.protocol}//${server.value}`)
+const bookmarks = ref<Bookmark[]>(listBookmarks())
+const renamingOrigin = ref<string | null>(null)
+const renameText = ref('')
+const connecting = ref(false)
+const connectAddress = ref('')
+const connectError = ref('')
 const documents = ref<Listed[]>([])
 const listError = ref('')
 const doc = ref(new URLSearchParams(location.search).get('doc') ?? '')
@@ -70,18 +83,86 @@ function remember(key: string, value: string) {
   }
 }
 
-onMounted(async () => {
-  user.value = remembered('claudia.user')
-  if (!doc.value && !props.startFresh) doc.value = remembered('claudia.doc')
-  if (props.startFresh) docField.value?.focus()
+/**
+ * What a server says about itself, on landing here or on a fresh mount at a different one (E3.11): its document
+ * list, as before, plus the earliest administrator's name if it has one — enough to bookmark it with a sensible
+ * label without making anybody open a document first. Both are plain absolute fetches, same as `/api/docs` always
+ * was, so pointing this page at another server with `?server=` in dev keeps working exactly as it does today.
+ */
+async function loadServer() {
+  listError.value = ''
   try {
-    const answer = await fetch(`${location.protocol}//${server}/api/docs`)
+    const answer = await fetch(`${origin.value}/api/docs`)
     if (answer.status === 404) listError.value = 'This server does not list its documents. Type the name of yours.'
     else documents.value = (await answer.json()).documents
   } catch {
     listError.value = 'The server cannot be reached.'
   }
+  let administrator: string | null = null
+  try {
+    const answer = await fetch(`${origin.value}/api/admin/status`)
+    if (answer.ok) administrator = (await answer.json()).administrator ?? null
+  } catch {
+    /* no hint this time — the bare host still makes a fine default label, and it's refreshed on the next visit */
+  }
+  bookmarks.value = upsertBookmark(origin.value, defaultLabel(origin.value, administrator))
+}
+
+onMounted(async () => {
+  user.value = remembered('claudia.user')
+  if (!doc.value && !props.startFresh) doc.value = remembered('claudia.doc')
+  if (props.startFresh) docField.value?.focus()
+  await loadServer()
 })
+
+function hostOf(bookmarkOrigin: string): string {
+  try {
+    return new URL(bookmarkOrigin).host
+  } catch {
+    return bookmarkOrigin
+  }
+}
+
+/** Go there: a full page navigation to that server's own address, never an in-page fetch to another origin. */
+function switchTo(bookmark: Bookmark) {
+  if (bookmark.origin !== origin.value) location.href = `${bookmark.origin}/`
+}
+
+/** That server's settings pages — reachable from here even for a server nobody has opened a document on yet. */
+function manage(bookmark: Bookmark) {
+  location.href = adminUrl(bookmark.origin)
+}
+
+function startRename(bookmark: Bookmark) {
+  renamingOrigin.value = bookmark.origin
+  renameText.value = bookmark.label
+}
+
+function commitRename() {
+  if (renamingOrigin.value) bookmarks.value = renameBookmark(renamingOrigin.value, renameText.value)
+  renamingOrigin.value = null
+}
+
+function cancelRename() {
+  renamingOrigin.value = null
+}
+
+function startConnect() {
+  connecting.value = true
+  connectAddress.value = ''
+  connectError.value = ''
+}
+
+/** "+ Connect to a server…": a full navigation to whatever address was typed, which lands back in this same dialog
+ * at that server's own origin and bookmarks it there (`loadServer`, above) — nothing to connect to in-page. */
+function goToTyped() {
+  const target = normalizeServerInput(connectAddress.value, location.protocol)
+  if (!target) {
+    connectError.value = 'Type a server address.'
+    return
+  }
+  location.href = `${target}/`
+}
 
 /** Show the session at last (a table starts with its first sheet). */
 async function enter(session: AnySession) {
@@ -118,7 +199,7 @@ async function go(how: 'open' | 'create' | 'recover') {
   let first = true
   const factory = () => {
     const link = new Link({
-      url: socketUrl(doc.value.trim(), { protocol: location.protocol, host: server }),
+      url: socketUrl(doc.value.trim(), { protocol: location.protocol, host: server.value }),
       user: user.value.trim(),
       password: password.value,
       create: how === 'create' && first,
@@ -130,7 +211,7 @@ async function go(how: 'open' | 'create' | 'recover') {
   }
   let session: AnySession | null = null
   try {
-    session = await openSession(factory)
+    session = await openSession(factory, { host: server.value })
     recoveryKey.value = ''
     const key = session.justCreated ? await session.newRecoveryKey({ quiet: true }) : null
     if (key) fresh.value = { session, key }
@@ -158,6 +239,56 @@ async function go(how: 'open' | 'create' | 'recover') {
       <span class="tag"><AppIcon :size="20" :app="app" /> {{ app }}</span>
     </header>
     <section class="card">
+      <nav class="servers" aria-label="Server bookmarks">
+        <div class="servers-title">Servers</div>
+        <ul>
+          <li v-for="b in bookmarks" :key="b.origin">
+            <input
+              v-if="renamingOrigin === b.origin"
+              v-model="renameText"
+              class="rename"
+              :aria-label="`Rename ${b.label}`"
+              autofocus
+              @keydown.enter="commitRename"
+              @keydown.escape="cancelRename"
+              @blur="commitRename"
+            />
+            <template v-else>
+              <button type="button" class="server" :aria-current="b.origin === origin ? 'true' : undefined" @click="switchTo(b)">
+                <span class="server-dot" :class="{ current: b.origin === origin }" aria-hidden="true" />
+                <span class="server-text">
+                  <span class="server-name">{{ b.label }}</span>
+                  <span class="server-host">{{ hostOf(b.origin) }}</span>
+                </span>
+              </button>
+              <button type="button" class="server-action" title="Rename" :aria-label="`Rename ${b.label}`" @click="startRename(b)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+                </svg>
+              </button>
+              <button type="button" class="server-action" :title="`Manage ${b.label}…`" :aria-label="`Manage ${b.label}…`" @click="manage(b)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
+                  />
+                </svg>
+              </button>
+            </template>
+          </li>
+        </ul>
+        <button v-if="!connecting" type="button" class="connect-start" @click="startConnect">+ Connect to a server…</button>
+        <form v-else class="connect-form" @submit.prevent="goToTyped">
+          <input v-model="connectAddress" aria-label="Server address" placeholder="example.com:8420" autofocus />
+          <div class="connect-buttons">
+            <button type="submit" class="btn primary small">Go</button>
+            <button type="button" class="btn small" @click="connecting = false">Cancel</button>
+          </div>
+          <p v-if="connectError" class="error">{{ connectError }}</p>
+        </form>
+      </nav>
+
+      <div class="main">
       <h1>{{ words.headline }}</h1>
       <p class="sub">{{ words.sub }}</p>
 
@@ -207,6 +338,7 @@ async function go(how: 'open' | 'create' | 'recover') {
           </template>
         </form>
       </div>
+      </div>
     </section>
     <RecoveryKeyDialog v-if="fresh" :recovery-key="fresh.key" :doc="doc.trim()" @done="proceed" />
   </main>
@@ -235,12 +367,145 @@ header {
 .card {
   align-self: start;
   justify-self: center;
-  width: min(880px, calc(100% - 32px));
+  width: min(1000px, calc(100% - 32px));
   margin-top: 4vh;
-  padding: 36px 40px 32px;
+  display: flex;
+  align-items: stretch;
   background: var(--surface);
   border-radius: 18px;
   box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 36px 40px 32px;
+}
+.servers {
+  width: 240px;
+  flex: none;
+  padding: 14px 10px;
+  background: var(--mist);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+}
+.servers-title {
+  padding: 4px 8px 8px;
+  font: 600 12px var(--font-ui);
+  color: var(--muted);
+}
+.servers ul {
+  gap: 3px;
+  max-height: 240px;
+}
+.servers li {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.server {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+.server[aria-current='true'] {
+  background: var(--app-soft);
+}
+.server-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.server-dot.current {
+  background: var(--teal);
+}
+.server-text {
+  min-width: 0;
+  flex: 1;
+}
+.server-name {
+  display: block;
+  font: 500 13.5px var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.server-host {
+  display: block;
+  font: 11.5px var(--font-mono);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rename {
+  width: 100%;
+  font: 500 13.5px var(--font-ui);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-field);
+  border-radius: 6px;
+  padding: 7px 8px;
+}
+.server-action {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: pointer;
+}
+.server-action:hover {
+  background: var(--faint);
+  color: var(--text);
+}
+.connect-start {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px dashed var(--line-field);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 13px var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+.connect-form {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+.connect-form input {
+  padding: 7px 9px;
+  border: 1px solid var(--line-field);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font: 13px var(--font-ui);
+}
+.connect-buttons {
+  display: flex;
+  gap: 6px;
+}
+.btn.small {
+  padding: 5px 10px;
+  font-size: 12.5px;
 }
 h1 {
   font: 400 40px/1.1 var(--font-display);
@@ -329,6 +594,17 @@ form {
     grid-template-columns: 1fr;
   }
   .card {
+    flex-direction: column;
+  }
+  .servers {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .servers ul {
+    max-height: 160px;
+  }
+  .main {
     padding: 24px 20px;
   }
 }

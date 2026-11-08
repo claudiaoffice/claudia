@@ -129,4 +129,10 @@ describe('openSession', () => {
     }
     await expect(openSession(() => refused)).rejects.toMatchObject({ code: 'unauthorized' })
   })
+
+  it('carries the server address options were given through to the session (E3.11)', async () => {
+    const { factory } = links(welcome('computes'), false)
+    const session = await openSession(factory, { host: 'demo.claudiaoffice.de:8420' })
+    expect(session.state.host).toBe('demo.claudiaoffice.de:8420')
+  })
 })

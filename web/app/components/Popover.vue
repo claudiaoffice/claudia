@@ -3,8 +3,10 @@
 // click outside, and never takes the text selection away from the page: only the fields in it take the focus.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-/** `anchor`: the button that opened it; pressing it is not "outside", so that the button can close the panel itself. */
-const props = defineProps<{ x: number; y: number; label: string; width?: number; anchor?: HTMLElement | null }>()
+/** `anchor`: the button that opened it; pressing it is not "outside", so that the button can close the panel itself.
+ * `bare`: skip the default card chrome (padding, surface background, border, shadow) for a panel that draws its
+ * own, such as the connection indicator's dark tooltip — only the positioning and the close behavior are shared. */
+const props = defineProps<{ x: number; y: number; label: string; width?: number; anchor?: HTMLElement | null; bare?: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const box = ref<HTMLElement | null>(null)
@@ -52,7 +54,15 @@ defineExpose({ fit })
 </script>
 
 <template>
-  <div ref="box" class="popover" role="dialog" :aria-label="label" :style="{ left: `${at.left}px`, top: `${at.top}px`, width: `${width ?? 320}px` }" @mousedown="(e) => (e.target as HTMLElement).closest('input,textarea,select') || e.preventDefault()">
+  <div
+    ref="box"
+    class="popover"
+    :class="{ bare }"
+    role="dialog"
+    :aria-label="label"
+    :style="{ left: `${at.left}px`, top: `${at.top}px`, width: `${width ?? 320}px` }"
+    @mousedown="(e) => (e.target as HTMLElement).closest('input,textarea,select') || e.preventDefault()"
+  >
     <slot />
   </div>
 </template>
@@ -68,5 +78,13 @@ defineExpose({ fit })
   border: 1px solid var(--line-field); /* a floating panel's own edge, not a divider — same fix as Modal.vue */
   border-radius: 12px;
   box-shadow: var(--shadow), 0 18px 48px rgb(31 26 51 / 14%);
+}
+.popover.bare {
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
 }
 </style>

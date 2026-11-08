@@ -44,6 +44,11 @@ export interface Notice {
 export interface BaseState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
+  /** The server's own address (`host` or `host:port`, as `location.host`/`socketUrl` use it) — whichever one this
+   *  session actually opened a socket to, not necessarily the page's own (E3.11, "knowing which server you're on";
+   *  the Open dialog can connect to a bookmarked server other than the one the page was loaded from). Blank only
+   *  before the first connection has told us. */
+  host: string
   status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed'
   error: string
   me: { user: string; role: string; color: string }
@@ -71,6 +76,9 @@ export interface BaseState {
 
 export interface SessionOptions {
   retryDelays?: number[]
+  /** The server this session is to connect to (same shape as `BaseState.host`) — carried into `state.host` so the
+   *  connection indicator can show it without reaching back into whatever built the link. */
+  host?: string
 }
 
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -78,6 +86,7 @@ export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(r
 function initialState(): BaseState {
   return {
     app: '',
+    host: '',
     status: 'idle',
     error: '',
     me: { user: '', role: '', color: '' },
@@ -119,7 +128,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     app: Omit<S, keyof BaseState>,
   ) {
     this.retryDelays = options.retryDelays ?? [1000, 2000, 4000, 8000]
-    this.state = reactive({ ...initialState(), ...app }) as unknown as S
+    this.state = reactive({ ...initialState(), ...app, host: options.host ?? '' }) as unknown as S
   }
 
   /** Load what the app shows of the document (called with every (re)load, next to the common parts). */
@@ -498,6 +507,19 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       return (await this.need().request<{ recovery_key: string }>('new_recovery_key')).recovery_key
     } catch (error) {
       if (!options.quiet) this.explain(error)
+      return null
+    }
+  }
+
+  /** Round-trip time to the server right now, in milliseconds — `null` if there is no connection or the request
+   *  failed. For the connection indicator's latency reading (E3.11); `ping` is a cheap no-op on the server. */
+  async ping(): Promise<number | null> {
+    if (!this.link) return null
+    const started = performance.now()
+    try {
+      await this.need().request('ping')
+      return Math.round(performance.now() - started)
+    } catch {
       return null
     }
   }

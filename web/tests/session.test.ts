@@ -84,6 +84,7 @@ function server(link: FakeLink) {
     withdraw_restore: () => ({}),
     discard_side_history: () => ({ discarded: [] }),
     set_restore_policy: ({ policy }: any) => ({ policy }),
+    ping: () => ({ revision: 'main:3', line: 'main' }),
   }
 }
 
@@ -118,6 +119,49 @@ describe('opening', () => {
     const session = new Session(() => link)
     await expect(session.open()).rejects.toMatchObject({ code: 'unauthorized' })
     expect(session.state.status).toBe('closed')
+  })
+})
+
+describe('host', () => {
+  it('is blank when nothing was asked to connect to a particular server', async () => {
+    const link = new FakeLink()
+    server(link)
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.host).toBe('')
+  })
+
+  it('carries the server address the caller connected to (E3.11, "knowing which server you\'re on")', async () => {
+    const link = new FakeLink()
+    server(link)
+    const session = new Session(() => link, { host: 'demo.claudiaoffice.de:8420' })
+    await session.open()
+    expect(session.state.host).toBe('demo.claudiaoffice.de:8420')
+  })
+})
+
+describe('ping', () => {
+  it('is null before anything has connected', async () => {
+    const link = new FakeLink()
+    server(link)
+    const session = new Session(() => link)
+    expect(await session.ping()).toBeNull()
+  })
+
+  it('is a non-negative round-trip time once open', async () => {
+    const { session } = await opened()
+    const ms = await session.ping()
+    expect(ms).not.toBeNull()
+    expect(ms).toBeGreaterThanOrEqual(0)
+  })
+
+  it('is null if the request fails', async () => {
+    const link = new FakeLink()
+    server(link)
+    delete link.handlers.ping
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.ping()).toBeNull()
   })
 })
 
