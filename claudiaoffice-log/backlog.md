@@ -111,12 +111,16 @@ kanban-plugin: board
 	
 	AC: gettext `.po` as the single source, read by both GTK and web; extraction in CI; English complete; a test language proves nothing is hard-coded; numbers and dates typed by a user are parsed with that user's locale before a command is made.
 	
-	Use case: ALL · Decisions: D31 · D31 says i18n is built in **from the start**; it is the oldest unstarted decision in the log, and the cost of retrofitting grows with every screen. The Linux client marks its labels translatable but no catalogue exists.
+	Use case: ALL · Decisions: D31, D148, D160 · D31 says i18n is built in **from the start**; it is the oldest unstarted decision in the log, and the cost of retrofitting grows with every screen.
 	
 	Status evidence: groundwork built (D148) — kernel error codes, the protocol's `locale` field, a GTK gettext
 	skeleton and a web loader skeleton, `po/claudia.pot` extraction gated in CI, a pseudo-locale proving the
-	pipeline. Still open: no real string has moved off plain English into `_()`/`t()` anywhere; no Config-menu
-	override (no screen design yet); numbers/dates typed by a user are not locale-parsed before a command is made.
+	pipeline. **Now also (D160):** a working `Config ▸ App Language` switch in both shells (`manifest.LANGUAGES`/
+	`web/app/lib/i18n.ts`'s `LANGUAGES`, English/Deutsch), with every manifest menu/action label and tooltip plus
+	`SidePanel.vue`'s History/Chat headers (146 msgids) flowing through `_()`/`t()`, and a real `po/de.po` behind
+	them — the web page's own UI switches live, the GTK shell's native chrome re-translates on next launch. Still
+	open: most interface text elsewhere has not moved off plain English into `_()`/`t()` yet; numbers/dates typed
+	by a user are not locale-parsed before a command is made; only English and German exist.
 - [ ] **E5.10 · Accessibility baseline**
 	As a user with a screen reader or keyboard only, I want to operate Claudia, so that it is usable by everyone.
 	
