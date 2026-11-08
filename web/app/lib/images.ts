@@ -34,9 +34,16 @@ export interface ImageAsset {
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 /** What `claudia_core.decode_image` reads (`claudia_core.SUPPORTED_IMAGE_FORMATS`), as a file input's `accept`. */
-export const IMAGE_FILE_ACCEPT = 'image/jpeg,image/gif,image/bmp,image/svg+xml,.jpg,.jpeg,.gif,.bmp,.svg'
+export const IMAGE_FILE_ACCEPT =
+  'image/jpeg,image/png,image/gif,image/bmp,image/svg+xml,.jpg,.jpeg,.png,.gif,.bmp,.svg'
 
-const IMAGE_MIME: Record<string, string> = { jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', svg: 'image/svg+xml' }
+const IMAGE_MIME: Record<string, string> = {
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  bmp: 'image/bmp',
+  svg: 'image/svg+xml',
+}
 
 /** Base64 of a file's bytes, the shape `add_image`'s `data` parameter (and every app's own version of it) wants. */
 export async function fileToBase64(file: File): Promise<string> {

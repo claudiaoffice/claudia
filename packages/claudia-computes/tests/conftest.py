@@ -2,7 +2,19 @@ import struct
 
 import pytest
 
-from claudia_computes import AddObject, AddSheet, DefineImage, SheetObject, WorkbookModel
+from claudia_computes import (
+    AddObject,
+    AddSheet,
+    CellAnchor,
+    DefineImage,
+    MoveObject,
+    ObjectBody,
+    ResizeObject,
+    SheetId,
+    SheetObject,
+    VisualObject,
+    WorkbookModel,
+)
 from claudia_core import Batch, CommandLog, Document, ImageAsset, ImageImport, MemoryStore, decode_image
 from claudia_core.testing import FakeClock
 
@@ -59,10 +71,41 @@ def image_object(object_id: str = "i1", sheet: str = S1, asset: ImageAsset | Non
         "col": 2,
         "w": 400,
         "h": 200,
+        "style": "plain-image",
         "image": asset.id,
         "imported": image_import(asset.id),
     }
-    return SheetObject(**{**fields, **changes})
+    return build(**{**fields, **changes})
+
+
+def build(**fields) -> SheetObject:
+    """A :class:`SheetObject` from flat fields: the body's go to the body, ``sheet``/``row``/``col`` to the
+    anchor. The helpers keep the flat signatures the tests have always used, while the model holds the two
+    halves apart (E10.16)."""
+    anchor = CellAnchor(SheetId(fields.pop("sheet", S1)), fields.pop("row", 0), fields.pop("col", 0))
+    return VisualObject(ObjectBody(**fields), anchor)
+
+
+# -- the shared commands, built the way a client does: a body, and the anchor as plain data -------------------
+def add(obj: SheetObject, at: int | None = None) -> AddObject:
+    """``AddObject`` for a built object."""
+    return AddObject(obj.body, obj.anchor.to_data(), at)
+
+
+def move(object_id: str, row: int, col: int, sheet: str = S1) -> MoveObject:
+    """``MoveObject`` to an anchor cell."""
+    return MoveObject(object_id, CellAnchor(SheetId(sheet), row, col).to_data())
+
+
+def resize(object_id: str, row: int, col: int, w: int, h: int, sheet: str = S1) -> ResizeObject:
+    """``ResizeObject`` to an anchor cell and a pixel size."""
+    return ResizeObject(object_id, CellAnchor(SheetId(sheet), row, col).to_data(), w, h)
+
+
+def frame(doc, object_id: str) -> tuple[int, int, int, int]:
+    """``(row, col, w, h)`` of an object: the anchor's cell and the body's size."""
+    obj = doc.model.get_object(object_id)
+    return (obj.anchor.row, obj.anchor.col, obj.body.w, obj.body.h)
 
 
 def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset | None = None, **changes):
@@ -71,5 +114,5 @@ def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset
     Returns what ``doc.execute`` returns — read the object back with ``doc.model.get_object(object_id)``."""
     asset = asset or image_asset()
     obj = image_object(object_id, asset=asset, **changes)
-    steps = [AddObject(obj)] if asset.id in doc.model.images else [DefineImage(asset), AddObject(obj)]
+    steps = [add(obj)] if asset.id in doc.model.images else [DefineImage(asset), add(obj)]
     return doc.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=author)

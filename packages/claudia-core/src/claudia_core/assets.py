@@ -28,10 +28,11 @@ import base64
 import hashlib
 import re
 import struct
+from collections.abc import Iterator
 from dataclasses import dataclass, replace
 from xml.etree import ElementTree
 
-SUPPORTED_IMAGE_FORMATS = ("jpeg", "gif", "bmp", "svg")
+SUPPORTED_IMAGE_FORMATS = ("jpeg", "png", "gif", "bmp", "svg")
 MAX_IMAGE_BYTES = 8 * 1024 * 1024  # a single asset's encoded size (the source bytes, not any first frame)
 _MAX_BASE64_CHARS = ((MAX_IMAGE_BYTES + 2) // 3) * 4  # the longest base64 text that can decode to <= MAX_IMAGE_BYTES
 MAX_ALT_CHARS = 300
@@ -219,6 +220,10 @@ def decode_image(data: bytes) -> ImageAsset:
     if fmt == "bmp":
         width, height = _bmp_dimensions(data)
         return ImageAsset(image_id, fmt, width, height, False, data)
+    if fmt == "png":
+        width, height, animated = _png_info(data)
+        first_frame = _png_first_frame_bytes(data) if animated else None
+        return ImageAsset(image_id, fmt, width, height, animated, data, first_frame)
     if fmt == "gif":
         width, height, frames = _gif_info(data)
         animated = frames > 1
@@ -232,6 +237,8 @@ def decode_image(data: bytes) -> ImageAsset:
 def _sniff_format(data: bytes) -> str:
     if data.startswith(b"\xff\xd8\xff"):
         return "jpeg"
+    if data.startswith(_PNG_SIGNATURE):
+        return "png"
     if data.startswith((b"GIF87a", b"GIF89a")):
         return "gif"
     if data.startswith(b"BM"):
@@ -280,6 +287,61 @@ def _bmp_dimensions(data: bytes) -> tuple[int, int]:
     if width <= 0 or height <= 0:
         raise ImageError("not a well-formed BMP: no positive width and height in the header")
     return width, height
+
+
+# -- PNG: a walk of the chunk structure (no pixel decoding) -----------------------------------------------------
+_PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+#: The chunks that make a PNG an *animated* PNG (APNG). Everything else is an ordinary still image, and a
+#: viewer that does not understand these three shows the default image — which is why dropping them is all it
+#: takes to get a still first frame out of an APNG.
+_APNG_CHUNKS = frozenset({b"acTL", b"fcTL", b"fdAT"})
+
+
+def _png_chunks(data: bytes) -> Iterator[tuple[bytes, int, int]]:
+    """``(type, start, end)`` of each chunk, ``start``/``end`` spanning the whole chunk (length, type, data, CRC).
+
+    A PNG is its 8-byte signature and then nothing but chunks, so this is the whole file structure."""
+    position = len(_PNG_SIGNATURE)
+    while position + 8 <= len(data):
+        (length,) = struct.unpack_from(">I", data, position)
+        kind = data[position + 4 : position + 8]
+        end = position + 12 + length  # 4 length + 4 type + data + 4 CRC
+        if length > len(data) or end > len(data):
+            raise ImageError("not a well-formed PNG: a chunk runs past the end of the file")
+        yield kind, position, end
+        if kind == b"IEND":
+            return
+        position = end
+
+
+def _png_info(data: bytes) -> tuple[int, int, bool]:
+    """``(width, height, animated)``. The size is IHDR's, which a PNG must open with; ``animated`` is whether the
+    file carries the APNG control chunk.
+
+    The whole chunk list is walked, and the walk must reach IEND: a file that simply stops partway is refused
+    rather than read as a shorter one (the same reasoning as the GIF sub-block walk below — a reader that only
+    looked at where it got to would take a truncated file for a well-formed one)."""
+    if len(data) < 24:
+        raise ImageError("not a well-formed PNG: too short for a header")
+    kinds = [kind for kind, _, _ in _png_chunks(data)]
+    if not kinds or kinds[0] != b"IHDR":
+        raise ImageError("not a well-formed PNG: the first chunk must be IHDR")
+    if kinds[-1] != b"IEND":
+        raise ImageError("not a well-formed PNG: the chunks end without IEND")
+    width, height = struct.unpack_from(">II", data, len(_PNG_SIGNATURE) + 8)
+    if width <= 0 or height <= 0:
+        raise ImageError("not a well-formed PNG: no positive width and height in the header")
+    return width, height, b"acTL" in kinds
+
+
+def _png_first_frame_bytes(data: bytes) -> bytes:
+    """An APNG as a still PNG: the same file with the three animation chunks dropped.
+
+    Every other chunk is copied byte for byte, CRC included, so nothing has to be recomputed — what is left is
+    the default image, exactly what a viewer with no APNG support would already have shown."""
+    kept = [_PNG_SIGNATURE]
+    kept += [data[start:end] for kind, start, end in _png_chunks(data) if kind not in _APNG_CHUNKS]
+    return b"".join(kept)
 
 
 # -- GIF: a hand-rolled walk of the block structure (no pixel decoding) -----------------------------------------

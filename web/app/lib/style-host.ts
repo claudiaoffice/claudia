@@ -57,9 +57,13 @@ export class StyleEditor {
     return this.host.current
   }
 
-  /** The css the controls show: what the current style really has. */
+  /** The css the controls show: what the current style really has, with its palette roles already colours (D200).
+   *
+   * Resolved rather than computed, because a control has to show a colour it can paint: a swatch given `@accent`
+   * would come up blank. The consequence is that picking a colour here writes a literal, which is precisely what
+   * leaving the palette means — the menu that offers the roles themselves is the next step. */
   get look(): Css {
-    return this.host.current?.computed ?? none
+    return this.host.current?.resolved ?? none
   }
 
   get scope(): Scope {

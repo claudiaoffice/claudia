@@ -25,7 +25,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Emu, Pt
 
-from claudia_creates import BUILTIN_STYLES, SLIDE_HEIGHT, SLIDE_WIDTH, SlideModel, Style
+from claudia_creates import SLIDE_HEIGHT, SLIDE_WIDTH, SlideModel
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 RNS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -60,9 +60,9 @@ def _rgb(css: dict[str, str], prop: str) -> RGBColor | None:
     return RGBColor.from_string(match.group(1)) if match else None
 
 
-def _style_text(text_frame, style: Style, pt_per_unit: float) -> None:
-    size = _pt(style.css, "font-size", pt_per_unit)
-    color = _rgb(style.css, "color")
+def _style_text(text_frame, css: dict[str, str], pt_per_unit: float) -> None:
+    size = _pt(css, "font-size", pt_per_unit)
+    color = _rgb(css, "color")
     for paragraph in text_frame.paragraphs:
         for run in paragraph.runs:
             if size is not None:
@@ -71,15 +71,15 @@ def _style_text(text_frame, style: Style, pt_per_unit: float) -> None:
                 run.font.color.rgb = color
 
 
-def _style_shape(shape, style: Style, pt_per_unit: float) -> None:
-    fill = _rgb(style.css, "fill")
+def _style_shape(shape, css: dict[str, str], pt_per_unit: float) -> None:
+    fill = _rgb(css, "fill")
     if fill is not None:
         shape.fill.solid()
         shape.fill.fore_color.rgb = fill
-    stroke = _rgb(style.css, "stroke")
+    stroke = _rgb(css, "stroke")
     if stroke is not None:
         shape.line.color.rgb = stroke
-    width = _pt(style.css, "stroke-width", pt_per_unit)
+    width = _pt(css, "stroke-width", pt_per_unit)
     if width is not None:
         shape.line.width = width
 
@@ -95,26 +95,34 @@ def slides_to_pptx(model: SlideModel) -> bytes:
     for slide_id in model.slides:
         slide = prs.slides.add_slide(layout)
         for obj in model.objects_on(slide_id):
+            body, anchor = obj.body, obj.anchor
             box = (
-                Emu(round(obj.x * scale_x)),
-                Emu(round(obj.y * scale_y)),
-                Emu(round(obj.w * scale_x)),
-                Emu(round(obj.h * scale_y)),
+                Emu(round(anchor.x * scale_x)),
+                Emu(round(anchor.y * scale_y)),
+                Emu(round(body.w * scale_x)),
+                Emu(round(body.h * scale_y)),
             )
-            style = BUILTIN_STYLES.get(obj.style)
-            if obj.kind == "text":
+
+            # The *computed* style: what a style really has once its parents are resolved (D73, E10.16). An
+            # object has two: its own, which says what the box looks like, and its paragraph's, which says what
+            # the words look like (E10.17, D181).
+            def computed(style_id: str) -> dict[str, str]:
+                return model.styles.computed(style_id) if style_id in model.styles else {}
+
+            css = computed(body.style)
+            words = body.paragraph.text if body.paragraph else ""
+            text_css = computed(body.paragraph.style) if body.paragraph else {}
+            if body.kind == "text":
                 shape = slide.shapes.add_textbox(*box)
-                shape.text_frame.text = obj.text
-                if style is not None:
-                    _style_text(shape.text_frame, style, pt_per_unit)
+                shape.text_frame.text = words
+                _style_text(shape.text_frame, text_css, pt_per_unit)
             else:
-                definition = model.shapes.get(obj.shape) if obj.shape else None
+                definition = model.shapes.get(body.shape) if body.shape else None
                 auto_shape = _AUTOSHAPE.get(definition.id if definition else "", MSO_SHAPE.RECTANGLE)
                 shape = slide.shapes.add_shape(auto_shape, *box)
-                shape.text_frame.text = obj.text
-                if style is not None:
-                    _style_shape(shape, style, pt_per_unit)
-                    _style_text(shape.text_frame, style, pt_per_unit)
+                shape.text_frame.text = words
+                _style_shape(shape, css, pt_per_unit)
+                _style_text(shape.text_frame, text_css, pt_per_unit)
     out = BytesIO()
     prs.save(out)
     return out.getvalue()

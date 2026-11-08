@@ -14,7 +14,8 @@ A shape is one JSON file; the layout of the file is described with :mod:`claudia
    :no-members:
 
 .. autoclass:: claudia_creates.ShapeLibrary
-.. autoclass:: claudia_creates.ShapeDefinition
+.. autoclass:: claudia_core.ShapeDefinition
+   :no-index:
 .. autoexception:: claudia_creates.ShapeError
 .. autofunction:: claudia_creates.parse_shape
 
@@ -24,9 +25,10 @@ Styles
 .. automodule:: claudia_creates.styles
    :no-members:
 
-.. autoclass:: claudia_creates.Style
+.. autoclass:: claudia_core.StyleDef
+   :no-index:
 .. py:data:: claudia_creates.BUILTIN_STYLES
-   :type: dict[str, Style]
+   :type: tuple[StyleDef, ...]
 
    The styles every document can use, by id: ``body-text``, ``plain-shape`` and ``plain-image``.
 
@@ -46,7 +48,10 @@ An image object's ``image`` and ``imported`` are a :class:`claudia_core.ImageAss
 its proportions, exactly as it does for a shape with an ``aspect``.
 
 .. autoclass:: claudia_creates.SlideModel
-.. autoclass:: claudia_creates.SlideObject
+.. autoclass:: claudia_creates.SlideAnchor
+
+``SlideObject`` is ``VisualObject[SlideAnchor]``: a shared
+:class:`~claudia_core.ObjectBody` and that anchor (E10.16, D177).
 .. autodata:: claudia_creates.SLIDE_WIDTH
 .. autodata:: claudia_creates.SLIDE_HEIGHT
 .. autodata:: claudia_creates.MIN_OBJECT_SIZE
@@ -61,22 +66,19 @@ Commands
 .. automodule:: claudia_creates.commands
    :no-members:
 
-.. autoclass:: claudia_creates.AddObject
-.. autoclass:: claudia_creates.MoveObject
-.. autoclass:: claudia_creates.ResizeObject
-.. autoclass:: claudia_creates.SetText
-.. autoclass:: claudia_creates.RemoveObject
-.. autoclass:: claudia_creates.DefineShape
-.. autoclass:: claudia_creates.ForgetShape
-.. autoclass:: claudia_creates.DefineImage
-.. autoclass:: claudia_creates.ForgetImage
 .. autoclass:: claudia_creates.AddSlide
 .. autoclass:: claudia_creates.RemoveSlide
 
 Regions
 -------
 
-.. autoclass:: claudia_creates.ObjectSet
+The object commands, the object region and the object events are shared by all three apps and are
+documented in :doc:`claudia_core`:
+:class:`~claudia_core.AddObject`, :class:`~claudia_core.RemoveObject`,
+:class:`~claudia_core.MoveObject`, :class:`~claudia_core.ResizeObject`,
+:class:`~claudia_core.RotateObject`, :class:`~claudia_core.SetText`, :class:`~claudia_core.SetSnap`,
+:class:`~claudia_core.DefineShape`, :class:`~claudia_core.ForgetShape`,
+:class:`~claudia_core.DefineImage`, :class:`~claudia_core.ForgetImage`, :class:`~claudia_core.ObjectSet`.
 
 State events
 ------------
@@ -84,7 +86,4 @@ State events
 What a view is told when a command changed the document; the server sends them as they are (``to_data``), except
 ``objects``, whose ``to_data_for(viewer)`` masks an image's import record for anyone but its importer.
 
-.. autoclass:: claudia_creates.ObjectsChanged
-.. autoclass:: claudia_creates.ShapesChanged
-.. autoclass:: claudia_creates.ImagesChanged
 .. autoclass:: claudia_creates.SlidesChanged
