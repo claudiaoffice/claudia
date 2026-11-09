@@ -11,7 +11,7 @@
 
 import { build } from 'esbuild'
 import { readFileSync, existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -23,7 +23,12 @@ async function main() {
     process.exitCode = 1
     return
   }
-  const { APPS, getIdentity } = await import(identityPath)
+  // A dynamic import() specifier has to be a URL, not a bare filesystem path -- Node accepts an absolute POSIX
+  // path as a de facto exception (no "scheme:" prefix to confuse it with), which is exactly why this surfaced
+  // only on a real Windows run and not in this package's own Linux-sandbox build: a Windows absolute path IS one,
+  // "C:\...", and Node's ESM loader reads "C:" as an unsupported URL scheme (ERR_UNSUPPORTED_ESM_URL_SCHEME)
+  // instead of a drive letter. pathToFileURL() is Node's own fix for this, identical on every OS.
+  const { APPS, getIdentity } = await import(pathToFileURL(identityPath).href)
 
   for (const app of APPS) {
     const identity = getIdentity(app)

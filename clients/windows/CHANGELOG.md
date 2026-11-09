@@ -2,6 +2,19 @@
 
 Newest first. The shell contract has its own version (`clients/contract/`); this file does not repeat it.
 
+## [unreleased]
+
+### Fixed
+- `tools/build-inject.mjs`: `npm run build:inject` failed on a real Windows machine with
+  `Error [ERR_UNSUPPORTED_ESM_URL_SCHEME] ... Received protocol 'c:'`, found on the owner's first real run
+  (Windows VM, Git Bash, 2026-11-09). A dynamic `import()` specifier has to be a URL; the script passed a bare
+  `node:path`-joined filesystem path, which Node tolerates on POSIX (no "scheme:" prefix to confuse it with) but
+  not on Windows, where an absolute path's drive letter ("C:\...") parses as an unsupported URL scheme. Fixed with
+  `pathToFileURL(identityPath).href`, Node's own documented fix, identical on every OS. New regression test
+  (`tests/build-inject.test.ts`, 3 tests) pins down the exact scheme-parsing property that broke, independent of
+  which OS actually runs it. The identical bug is present, unexercised, in `clients/macos/tools/build-inject.mjs`
+  (POSIX absolute paths never trigger it) — worth the same one-line fix there.
+
 ## [0.1.0] - unreleased
 
 First version of the native Windows client (E5.11), for composes only, carrying over D159's loopback option

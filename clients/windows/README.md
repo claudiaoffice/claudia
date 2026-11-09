@@ -5,11 +5,14 @@ discipline the Linux (`clients/linux/`) and macOS (`clients/macos/`) clients fol
 Today it contains **Claudia Composes**; computes and creates follow the same way Linux's did (one more entry in
 `identity.ts`, one more `apps/<app>/`).
 
-**Nothing here has run on a real Windows machine yet.** D159's core mechanic (`window.Neutralino` existing and
-working on an externally-loaded loopback page) was confirmed on macOS on the owner's own Mac, and nothing in the
-spike or in Neutralino's own documentation suggests Windows differs — `injectGlobals`/`injectClientLibrary`/
-`injectScript` are Neutralino's own cross-platform settings, not OS-specific ones — but that is an expectation, not
-a result. Everything below "Not verified" is this client's best-effort answer, pending a real run.
+**This has now run on a real Windows machine once** (owner, Windows VM, Git Bash, 2026-11-09) — far enough to find
+and fix a real bug in `npm run build:inject` (see "First real run" in `claudiaoffice-log/notes/e5-11-windows-client.md`
+for the detail), not yet far enough to reach the point `node dist\launch.js composes` actually starts the
+Neutralino binary. D159's core mechanic (`window.Neutralino` existing and working on an externally-loaded loopback
+page) was confirmed on macOS on the owner's own Mac, and nothing in the spike or in Neutralino's own documentation
+suggests Windows differs — `injectGlobals`/`injectClientLibrary`/`injectScript` are Neutralino's own cross-platform
+settings, not OS-specific ones — but on Windows that is still an expectation, not a confirmed result. Everything
+below "Not verified" is this client's best-effort answer, pending a run that gets further than this one did.
 
 ```
 clients/
@@ -108,7 +111,10 @@ on its way out shows up directly on the console.
   changes** for a third shell, the same way D121 put the contract client directly in the page for the first one.
   It answers `hello` with `welcome` itself (there is no separate native shell process to round-trip to: this
   script *is* the shell, running inside the page), builds the native menu from the generated manifest JSON, and
-  turns `mainMenuItemClicked` into contract `action` messages.
+  turns `mainMenuItemClicked` into contract `action` messages. `build-inject.mjs` reaches `identity.ts`'s compiled
+  output with `pathToFileURL(...).href`, not a bare path — a dynamic `import()` specifier has to be a URL, and a
+  raw Windows absolute path ("C:\...") parses as one with an unsupported "c:" scheme instead
+  (`ERR_UNSUPPORTED_ESM_URL_SCHEME`), the first bug this client's first real run on Windows found (2026-11-09).
 * **The shared menu manifest, one more consumer.** `manifest.py`
   (`clients/linux/src/claudia_shell_gtk/manifest.py`) stays the one source of truth for
   File/Edit/Format/View/Tools/Config/Help across every app and shell. `generate_menu.py` imports it (no GTK, by
@@ -144,7 +150,7 @@ on its way out shows up directly on the console.
 
 ```
 cd clients/windows
-npm test               # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch -- 57 tests
+npm test               # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch, build-inject -- 60 tests
 npm run typecheck       # tsc --strict over src/ and tests/
 python3 -m pytest tools/tests   # generate_menu.py: 10 tests
 npm run check-menu      # fails if src/generated/menu.*.json has drifted from manifest.py
@@ -166,8 +172,11 @@ is tested without one.
 4. **Orphaned server processes when the shell is killed outright, rather than closed.** Flagged as a known open
    issue rather than solved here (see "Not done" below) — the user's own explicit choice for this first version,
    matching how macOS flags the same gap for its own missing PDEATHSIG equivalent.
-5. **A clean machine.** This client has only been built and tested in a Linux sandbox so far; no Windows machine
-   of any kind, no older Windows version, no screen reader.
+5. **A clean machine.** This client was built and tested in a Linux sandbox; the one real Windows run so far
+   (2026-11-09, a Windows VM, Git Bash) got as far as a fixed build-time bug (see "How it works" above and
+   `claudiaoffice-log/notes/e5-11-windows-client.md`'s "First real run") but has not yet reached
+   `node dist\launch.js composes` actually starting the Neutralino binary — no older Windows version, no screen
+   reader, no second machine.
 
 ## Not done
 

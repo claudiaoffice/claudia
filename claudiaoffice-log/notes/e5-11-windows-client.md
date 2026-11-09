@@ -72,6 +72,47 @@ menu, unchanged.
 | Edit ▸ Undo/Redo/Cut/Copy/Paste | page dispatch **only** | Unlike macOS, there is no native Cocoa selector to also fire — every Edit item, standard ones included, is a plain contract `action` message, the same path Linux already uses for Undo/Redo. `role` is read from nowhere in this module. |
 | Everything else (File/Format/View/Tools/Config) | page | Forwarded as a contract `action` message, same as every other shell. |
 
+## First real run (owner, Windows VM + Git Bash, 2026-11-09)
+
+The owner ran the start script from a Git Bash shell on a Windows VM. It did not reach the point of starting the
+Neutralino binary — it failed one step earlier, during `npm run build:inject` (part of `npm run build`, which
+`start-win-client.cmd` runs on every invocation):
+
+```
+node:internal/modules/esm/load:191
+    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the
+default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+```
+
+One real bug, caught and fixed before any further patch:
+
+1. **`tools/build-inject.mjs` passed a bare filesystem path to a dynamic `import()`.** Line 20 builds
+   `identityPath` with `node:path`'s `join()` — correct for `readFileSync`/`existsSync`, which take filesystem
+   paths — but line 26 then handed that same string straight to `await import(identityPath)`. A dynamic import
+   specifier has to resolve as a URL. `node:path`'s `join()` returns a bare path, which Node's ESM loader
+   tolerates for an absolute **POSIX** path (`/home/...` has no `scheme:` prefix to misread) — exactly why this
+   never surfaced in this sandbox's own Linux build-and-test cycle — but an absolute **Windows** path starts with
+   a drive letter, and `C:\Users\...\dist\identity.js` parses as a URL whose scheme is `c:`, which is not on the
+   loader's allow-list (`file:`, `data:`, `node:`). Fixed with Node's own documented answer for exactly this:
+   `pathToFileURL(identityPath).href` instead of the bare path, which produces a valid `file:` URL on every OS
+   (confirmed directly in this sandbox: `new URL('C:\\Users\\dev\\dist\\identity.js').protocol` is `'c:'`;
+   `new URL(pathToFileURL('C:\\Users\\dev\\dist\\identity.js').href).protocol` is `'file:'`).
+
+   New test: `tests/build-inject.test.ts` (3 cases), pinned to the scheme-parsing property itself rather than to
+   `build-inject.mjs`'s own `main()` (which runs real esbuild/filesystem side effects the moment the module is
+   imported, so it is not imported directly in a test — the same reasoning `page-bridge.ts`'s own tests already
+   use for `installBridge()`). 60 vitest tests now, up from 57.
+
+   **The identical bug exists, unexercised, in `clients/macos/tools/build-inject.mjs`** (same `join()`-then-
+   `import()` pattern; never triggered because POSIX absolute paths are tolerated) — flagged for the owner to
+   carry the same one-line fix over, not fixed here since this patch has no reach into the `macos-client` branch.
+
+This is a build-time-only bug: it would have hit any Windows VM in the same way, Git Bash or not, regardless of
+PATH, `uv`, or Neutralino. Nothing about D159 was tested by this run — the failure happened one step before the
+server or the Neutralino binary were ever started. The next real run, once this fix is applied, should get as far
+as `findNeutralinoBinary()`'s own "fetch it with npx @neutralinojs/neu update" message, or further.
+
 ## Compatibility notes
 
 1. **No real `SIGTERM` on Windows, not even for the ordinary stop path.** Node's own docs are explicit that
@@ -116,9 +157,9 @@ menu, unchanged.
 
 ## Not verified (needs a real Windows machine)
 
-Unlike the macOS slice, which reached a confirmed first real run before this note was written, **nothing in this
-slice has run on a real Windows machine at all.** Everything below is open, not narrowed by a run the way macOS's
-own list was:
+One real run has happened (see "First real run" above), but it stopped at a build-time bug one step before any of
+the following could be exercised — so, unlike the macOS slice, where a confirmed run narrowed this list, everything
+below is still exactly as open as it was before that run:
 
 1. **D159's core mechanic on Windows** — expected to carry over unchanged from macOS's confirmed result, not
    independently confirmed.
