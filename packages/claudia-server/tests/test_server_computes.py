@@ -420,3 +420,34 @@ def test_removing_a_sheet_takes_its_objects_with_it_and_undo_restores_them(book)
     book.undo("ann")
     assert [s["id"] for s in call(book, "sheets")] == ["s1"]
     assert [o["id"] for o in objects(book)] == [added]
+
+
+def test_functions_lists_the_whole_catalog_with_no_query(book):
+    found = call(book, "functions")
+    names = {f["name"] for f in found}
+    assert "SUM" in names and "XLOOKUP" in names  # a library function and a core one
+    assert len(found) > 60
+    assert set(found[0]) == {"name", "signature", "tooltip"}  # the summary shape, not the full help text
+
+
+def test_functions_searches_by_name_or_description(book):
+    found = [f["name"] for f in call(book, "functions", {"query": "sum"})]
+    assert found[0] == "SUM"
+    assert "SUMIF" in found
+
+
+def test_a_viewer_may_search_functions_too(book):
+    assert call(book, "functions", account=VERA) == call(book, "functions", account=ANN)
+
+
+def test_function_help_gives_the_full_text_by_name_case_insensitively(book):
+    found = call(book, "function_help", {"name": "round"})
+    assert found["name"] == "ROUND"
+    assert found["signature"] == "ROUND(number, digits?)"
+    assert "2.68" in found["help"]  # the worked example survives into the full help text
+
+
+def test_function_help_refuses_an_unknown_name(book):
+    with pytest.raises(RequestError) as caught:
+        call(book, "function_help", {"name": "NOSUCHFUNCTION"})
+    assert caught.value.code == "command_error"

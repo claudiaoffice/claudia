@@ -58,6 +58,15 @@ Restore
 .. autoclass:: claudia_server.Resolution
 .. autoclass:: claudia_server.RestoreError
 
+Help
+----
+
+.. autoclass:: claudia_server.HelpLibrary
+.. autoclass:: claudia_server.Topic
+.. autofunction:: claudia_server.parse_topic
+.. autofunction:: claudia_server.default_library
+.. autoclass:: claudia_server.HelpContentError
+
 Assistant
 ---------
 

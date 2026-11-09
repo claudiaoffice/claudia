@@ -58,6 +58,7 @@ from .auth import (
     TransferableDirectory,
     UserDirectory,
 )
+from .help import default_library
 from .restore import POLICIES, RestoreCoordinator, RestoreError
 
 if TYPE_CHECKING:
@@ -463,6 +464,26 @@ def _checkpoint(info) -> dict:
         "entry": info.entry.to_data(),
         "time": info.time,
     }
+
+
+# -- help (E13.1, E13.3): the same two read-only methods for every app, since a topic names the apps it is for
+# itself (its ``apps`` front matter) rather than the method needing to know which app is asking. Not gated by
+# ``allowed_methods`` (nothing here writes), so the ``ai`` user gets the same read access as everybody (E13.4).
+@core_methods.method("help_search", 'query:str=""')
+def _help_search(ctx, *, query):
+    """Help topics whose title, tags or ``explains`` mention ``query`` (case-insensitive); every topic, by title,
+    if ``query`` is blank. Each result is a summary (`id`, `title`, `apps`, `tags`); fetch the body with
+    `help_topic`."""
+    return [topic.summary() for topic in default_library().search(query)]
+
+
+@core_methods.method("help_topic", "id:str")
+def _help_topic(ctx, *, id):
+    """One help topic in full, by the id a `help_search` result gave."""
+    topic = default_library().get(id)
+    if topic is None:
+        raise RequestError("command_error", f"no help topic {id!r}")
+    return topic.to_data()
 
 
 # -- reading

@@ -31,7 +31,7 @@ const styleHost = textStyleHost(session)
 const panelOpen = ref(true)
 const active = ref<string | null>(null)
 const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
-const panel = ref<{ ask: (text?: string) => void } | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
 function remembered<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
@@ -73,6 +73,12 @@ async function checkpoint(label: string | null) {
 function ask(text: string) {
   panelOpen.value = true
   setTimeout(() => panel.value?.ask(text), 0)
+}
+
+/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
+function help(mode: 'how-to' | 'docs') {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.openHelp(mode), 0)
 }
 
 async function download() {
@@ -262,8 +268,8 @@ const menus = computed<Menu[]>(() => [
     label: t('Help'),
     items: [
       { id: 'help.ask', label: t('Ask ai'), action: () => ask('@ai ') },
-      { id: 'help.how-to', label: t('How do I…?'), disabled: true },
-      { id: 'help.docs', label: t('Documentation'), disabled: true },
+      { id: 'help.how-to', label: t('How do I…?'), action: () => help('how-to') },
+      { id: 'help.docs', label: t('Documentation'), action: () => help('docs') },
       { id: 'help.about', label: t('About claudia'), action: () => (dialog.value = 'about') },
     ],
   },

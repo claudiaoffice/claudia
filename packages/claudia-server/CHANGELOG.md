@@ -5,6 +5,32 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [0.18.0] - 2026-11-08
 
+A first, cross-app help system (E13): searchable help topics and, for `claudia_computes`, a searchable catalog of
+every cell function, both read-only and open to every role including the `ai` user.
+
+### Added
+- **`help.py`**: `Topic` — a help topic's id, title, apps, language, tags, `explains` and body. `parse_topic(text,
+  source=...)` reads the Markdown-with-frontmatter shape already drafted for `claudia_typeset` (D99/E13.1), raising
+  `HelpContentError` with the source for anything malformed. `HelpLibrary` holds topics loaded from a folder
+  (`load_folder`) or added directly (`add`), and answers `get(id)` and `search(query)`. `default_library()` is the
+  lazy, server-wide library, loaded once from every installed package's own `help/` folder (`claudia_typeset`,
+  `claudia_computes`, `claudia_composes`, `claudia_creates` — a package with no such folder, or that isn't
+  installed, is skipped).
+- **`core_methods.help_search`** (read, `query:str=""`): topic summaries (id/title/apps/tags) whose title, tags or
+  `explains` mention `query`, or every topic if `query` is blank. Inherited by `composes_methods`, `computes_methods`
+  and `creates_methods`, so any app gets it for free the moment it has a `help/` folder of its own.
+- **`core_methods.help_topic`** (read, `id:str`): one topic in full. `command_error` if `id` is unknown.
+- **`computes_methods.functions`** (read, `query:str=""`): the function catalog (library and core forms together,
+  via `claudia_computes.search_functions`), as name/signature/tooltip/source summaries.
+- **`computes_methods.function_help`** (read, `name:str`): one function's signature, tooltip and full help text, by
+  name, case-insensitively. `command_error` if `name` is unknown.
+
+claudia-computes (unversioned) gained the generating side of the function catalog: `FunctionHelp`, `function_catalog
+()`, `search_functions(query)` and `get_function(name)`, unifying the library functions' existing `Bound.get_tooltip`
+/`get_help` with the core forms' own docstrings — no new content was written for this; both halves already carried
+everything needed.
+
+
 Colour roles over the protocol, and the style methods shared by every app (D200–D203).
 
 ### Added

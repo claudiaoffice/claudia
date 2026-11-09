@@ -37,6 +37,13 @@ core; every function that takes cell ranges and gives a value is a ``UserFunctio
 .. autoclass:: claudia_computes.functions.base.Bound
 .. autoclass:: claudia_computes.functions.range.Grid
 
+Every library function and core form, as one searchable catalog for the help system (E13.5/E13.6):
+
+.. autoclass:: claudia_computes.FunctionHelp
+.. autofunction:: claudia_computes.function_catalog
+.. autofunction:: claudia_computes.search_functions
+.. autofunction:: claudia_computes.get_function
+
 Types that appear in the signatures above:
 
 .. autoclass:: claudia_computes.refs.SheetId

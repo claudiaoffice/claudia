@@ -8,6 +8,7 @@ import { copySelection, cutSelection } from '~/lib/clipboard'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
+import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
 import type { Axis } from '~/lib/line-sizes'
@@ -34,7 +35,7 @@ const dialog = ref<
 >(null)
 const panelOpen = ref(true)
 const grid = ref<{ focus: () => void; selectObject: (id: string) => void } | null>(null)
-const panel = ref<{ ask: (text?: string) => void } | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
 const readonly = computed(() => state.me.role === 'viewer')
@@ -140,6 +141,25 @@ function moveCaret(position: number) {
   if (edit.value) edit.value.caret = position
 }
 
+// ------------------------------------------------------------------------------ in-context function help (E13.5)
+// While a formula is typed, the formula bar shows the signature and a short example of the function the caret is
+// inside of — the one piece of "help in context" this iteration builds; "Help on this" and hovering a menu item
+// wait for the action manifest itself (E5.1), which is not built yet.
+const currentFunctionName = computed(() => (edit.value ? currentFunctionAt(edit.value.text, edit.value.caret) : null))
+const formulaHelp = ref<{ signature: string; help: string } | null>(null)
+watch(currentFunctionName, async (name) => {
+  if (!name) {
+    formulaHelp.value = null
+    return
+  }
+  const found = await session.functionHelp(name)
+  if (currentFunctionName.value !== name) return // the caret moved again before the server answered
+  formulaHelp.value = found === false ? null : found
+})
+/** The help text's first worked example (after the blank line that separates it from the description), if there
+ * is one — core functions (`IF`, `XLOOKUP`, ...) have no `Example`s to draw one from, only the description. */
+const formulaExample = computed(() => formulaHelp.value?.help.split('\n\n')[1]?.split('\n')[0] ?? '')
+
 async function clearSelection() {
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   const cells = session.filledIn(state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
@@ -241,6 +261,12 @@ function imageInserted(id: string) {
 function ask(text: string) {
   panelOpen.value = true
   setTimeout(() => panel.value?.ask(text), 0)
+}
+
+/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
+function help(mode: 'how-to' | 'docs') {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.openHelp(mode), 0)
 }
 
 // ------------------------------------------------------------------------------ menus, shortcuts and the shell
@@ -393,8 +419,8 @@ const menus = computed<Menu[]>(() => [
     label: t('Help'),
     items: [
       { id: 'help.ask', label: t('Ask ai'), action: () => ask('@ai ') },
-      { id: 'help.how-to', label: t('How do I…?'), disabled: true },
-      { id: 'help.docs', label: t('Documentation'), disabled: true },
+      { id: 'help.how-to', label: t('How do I…?'), action: () => help('how-to') },
+      { id: 'help.docs', label: t('Documentation'), action: () => help('docs') },
       { id: 'help.about', label: t('About claudia'), action: () => (dialog.value = 'about') },
     ],
   },
@@ -438,6 +464,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you type now is not saved.</div>
     <MenuBar :class="{ hidden: shell.nativeMenu }" :menus="menus" />
+    <div class="formulaRow">
     <FormulaBar
       :label="label"
       :text="formulaText"
@@ -456,6 +483,11 @@ onBeforeUnmount(() => clearTimeout(timer))
       @undo="session.undo()"
       @redo="session.redo()"
     />
+    <div v-if="formulaHelp" class="formulaHelp" role="status">
+      <span class="sig mono">{{ formulaHelp.signature }}</span>
+      <span v-if="formulaExample" class="example mono">{{ formulaExample }}</span>
+    </div>
+    </div>
     <div class="main" :class="{ wide: !panelOpen }">
       <SheetGrid
         v-if="state.activeSheet"
@@ -563,6 +595,35 @@ onBeforeUnmount(() => clearTimeout(timer))
   color: var(--ink);
   padding: 6px 16px;
   font-weight: 500;
+}
+.formulaRow {
+  position: relative;
+}
+.formulaHelp {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  left: 118px; /* roughly where the formula text starts, past the cell-name box and undo/redo (FormulaBar.vue) */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 140px);
+  padding: 5px 10px;
+  border-radius: 0 0 8px 8px;
+  background: var(--ink);
+  color: #e6e0f5;
+  font-size: 11.5px;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 18%);
+}
+.formulaHelp .sig {
+  color: #fff;
+  flex: 0 0 auto;
+}
+.formulaHelp .example {
+  color: rgb(230 224 245 / 65%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .nosheet {
   display: grid;

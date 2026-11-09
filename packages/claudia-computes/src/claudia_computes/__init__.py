@@ -9,6 +9,7 @@ region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-expo
 styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
 entry     parse_input: what typing into a cell means
 
+
 A floating object is a shared ``ObjectBody`` plus a ``CellAnchor``: only the anchor is this app's. The anchor and
 the object's pixel size never change because of a row/column insert, delete or resize — only ``MoveObject`` (the
 person dragging it) moves it. Placing, stacking, moving, resizing, rotating, styling and the image, shape and
@@ -17,6 +18,10 @@ diagram assets are ``claudia_core.objects``, shared with creates and composes.
 A chart (E6.6) may be shown as its own tab (``Chart``, ``AddChart``/``RemoveChart``, this app's own) or as a
 floating diagram object on a sheet (``ObjectBody.diagram``, shared) — the two may show the very same
 ``ChartSpec``, exactly as two image objects may share one image asset.
+
+functions.help  function_catalog/search_functions/get_function: every cell function, library and core alike, as one
+searchable list (E13.5's "Documentation" for computes).
+
 """
 
 # The object commands, the object types and the object region are shared by all three apps and live in
@@ -50,6 +55,7 @@ from . import commands  # noqa: F401  (registers the commands)
 from .charts import CHART_KINDS, ChartError, ChartSpec
 from .commands import AddChart, AddSheet, RemoveChart, RemoveSheet, ResizeLines, SetCells, Structure
 from .entry import parse_input
+from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
 from .events import ChartsChanged, DiagramsChanged, ImagesChanged, ObjectsChanged, ShapesChanged
 from .model import (
     MAX_OBJECTS_PER_SHEET,
@@ -63,6 +69,7 @@ from .model import (
     WorkbookModel,
     content_of,
 )
+
 from .refs import (
     CellRef,
     DeleteCols,
@@ -105,6 +112,7 @@ __all__ = [
     "DiagramsChanged",
     "ForgetDiagram",
     "ForgetImage",
+    "FunctionHelp",
     "ForgetShape",
     "ImagesChanged",
     "InsertCols",
@@ -141,4 +149,11 @@ __all__ = [
     "UpdateDiagram",
     "VisualObject",
     "WorkbookModel",
+    "column_name",
+    "content_of",
+    "function_catalog",
+    "get_function",
+    "parse_input",
+    "parse_range_ref",
+    "search_functions",
 ]
