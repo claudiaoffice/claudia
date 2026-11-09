@@ -3,6 +3,23 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.19.0] - 2026-11-09
+
+Fixes `help_search` leaking one app's topics into another's (UX-13): a topic meant for `claudia_computes` was
+showing up in `claudia_composes`' Help tab and the reverse, because nothing read the `apps` front matter the topic
+files already carried.
+
+### Changed
+- **`HelpLibrary.search(query, *, app=None)`**: new optional keyword. When given, keeps only topics that name `app`
+  in their own `apps` front matter, or that name no app at all (shared topics still show everywhere). `query=""`
+  with an `app` given now means "every topic for this app", not "every topic".
+- **`core_methods.help_search`** now passes the asking document's own app (`ctx.document.model.app`) to `search`,
+  so each app only ever sees its own topics plus any shared ones. `help_topic` is unchanged: an id already names
+  one exact topic, the same way a direct link would from anywhere.
+
+claudia-composes gained its own first two help topics (`composes.editing-a-style`, `composes.asking-ai-to-review`),
+so its Help tab is no longer empty now that it is correctly scoped.
+
 ## [0.18.0] - 2026-11-08
 
 A first, cross-app help system (E13): searchable help topics and, for `claudia_computes`, a searchable catalog of

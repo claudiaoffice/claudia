@@ -1,5 +1,5 @@
 {
- "version": "0.18.0",
+ "version": "0.19.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -261,7 +261,7 @@
    "add": "(self, topic: 'Topic') -> 'None'",
    "get": "(self, topic_id: 'str') -> 'Topic | None'",
    "load_folder": "(self, folder: 'Path') -> 'None'",
-   "search": "(self, query: 'str') -> 'list[Topic]'"
+   "search": "(self, query: 'str', *, app: 'str | None' = None) -> 'list[Topic]'"
   },
   "properties": []
  },

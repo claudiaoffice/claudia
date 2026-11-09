@@ -1,18 +1,20 @@
 <script setup lang="ts">
 // The context menu for styling (E9.7), the same in every app: first the styles by purpose (you mark things by what they
 // are for, D62), then how the style looks, as controls or as CSS. It talks to a StyleHost and knows nothing else.
-import { computed } from 'vue'
+//
+// Clicking a gallery row only picks which style the panel below shows and edits next (UX-14) — it is a look, not an
+// instruction to restyle anything, so it never writes to the document and never closes the menu. Applying a style to
+// text is a separate, existing affordance (the Format menu's own style list, and StyleBar's quick list) that this
+// popover does not need to duplicate.
+import { computed, reactive } from 'vue'
 import { previewCss } from '~/lib/style-css'
-import type { StyleHost } from '~/lib/style-host'
+import { StyleEditor, type StyleHost } from '~/lib/style-host'
 
 const props = defineProps<{ host: StyleHost; x: number; y: number }>()
 const emit = defineEmits<{ close: []; styles: [] }>()
 
 const uses = computed(() => props.host.uses())
-
-async function choose(id: string) {
-  if (await props.host.apply(id)) emit('close')
-}
+const editor = reactive(new StyleEditor(props.host)) as StyleEditor
 </script>
 
 <template>
@@ -23,15 +25,16 @@ async function choose(id: string) {
         <button class="all" type="button" data-testid="all-styles" @click="emit('styles')">All styles…</button>
       </header>
       <ul class="gallery" role="listbox" aria-label="Styles">
-        <li v-for="s in host.styles" :key="s.id" role="option" :aria-selected="s.id === host.current?.id">
-          <button type="button" :class="{ on: s.id === host.current?.id }" :disabled="host.readOnly" :data-style="s.id" @click="choose(s.id)">
+        <li v-for="s in host.styles" :key="s.id" role="option" :aria-selected="s.id === editor.current?.id">
+          <button type="button" :class="{ on: s.id === editor.current?.id }" :disabled="host.readOnly" :data-style="s.id" @click="editor.pick(s.id)">
             <span class="name" :style="previewCss(s.resolved)">{{ s.name }}</span>
             <span v-if="s.to_name" class="flag" title="Waiting for a name">to name</span>
+            <span v-if="s.id === host.current?.id && s.id !== editor.current?.id" class="here" title="This is the style where your cursor is">here</span>
             <span class="count mono">{{ uses[s.id] ?? 0 }}</span>
           </button>
         </li>
       </ul>
-      <StyleSpec :host="host" />
+      <StyleSpec :host="host" :editor="editor" />
     </div>
   </Popover>
 </template>
@@ -103,6 +106,15 @@ h3 {
   background: color-mix(in srgb, var(--apricot) 28%, white);
   font-size: 10.5px;
   color: #7a4710;
+}
+.here {
+  /* A quieter pill than .flag: not something to act on, just "this is what your cursor is actually in" while you
+     are browsing a different style's look (UX-14). */
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--mist);
+  font-size: 10.5px;
+  color: var(--muted);
 }
 .count {
   min-width: 1.4em;

@@ -75,8 +75,10 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   people accept (D63).
 * **Help (E13).** `help_search` (an optional `query`, blank for everything) and `help_topic` (an id from a search result)
   read the help topics, which every app inherits for free the moment it has its own `help/` folder; nothing here needs a
-  role, so the `ai` user can read it too. Workbooks add `functions` (the same kind of search, over every cell function,
-  library and core alike) and `function_help` (one function's signature, tooltip and full help text, by name).
+  role, so the `ai` user can read it too. `help_search` only returns topics meant for the document's own app — a topic
+  says which apps it is for in its own front matter, and a topic naming none is shown everywhere. `help_topic` is not
+  re-scoped: an id already names one exact topic. Workbooks add `functions` (the same kind of search, over every cell
+  function, library and core alike) and `function_help` (one function's signature, tooltip and full help text, by name).
 * The AI is a participant called `ai`, one per document: it shows up in `users` and `people` (in the colour Iris), hears
   messages that start with `@ai`, and answers the asker only. It edits through the same methods as everybody, so locks
   and roles apply and its work is in the history under its name. The model behind it is a plug-in (`Engine`, or

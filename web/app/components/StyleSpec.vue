@@ -1,15 +1,19 @@
 <script setup lang="ts">
 // The look of a style, in two views of the same thing: controls (colour, font, size, bold…) or the CSS itself (D73).
 // The switch is remembered. It is used by every app: it only talks to the StyleHost it is given.
-import { computed, reactive, ref, watch } from 'vue'
+//
+// The StyleEditor comes from the caller (StyleMenu.vue) rather than being made here, so that picking a different
+// style to look at in the gallery and editing it below share the one piece of state (UX-14): `editor.current` is
+// whichever style was picked, not necessarily `host.current` (the caret's own paragraph).
+import { computed, ref, watch } from 'vue'
 import { isBold as boldIn, isItalic as italicIn } from '~/lib/style-css'
-import { StyleEditor, type StyleHost } from '~/lib/style-host'
+import type { StyleEditor, StyleHost } from '~/lib/style-host'
 
-const props = defineProps<{ host: StyleHost }>()
+const props = defineProps<{ host: StyleHost; editor: StyleEditor }>()
 const emit = defineEmits<{ edited: [] }>()
 
-const editor = reactive(new StyleEditor(props.host)) as StyleEditor
-const current = computed(() => props.host.current)
+const editor = props.editor
+const current = computed(() => editor.current)
 const uses = computed(() => props.host.uses()[current.value?.id ?? ''] ?? 0)
 const own = (property: string) => !!current.value && property in current.value.css
 const off = computed(() => props.host.readOnly)
@@ -62,8 +66,8 @@ const ALIGN = [
     </header>
 
     <div class="scope" role="radiogroup" :aria-label="`Where a change goes`">
-      <label :class="{ on: editor.scope === 'new' }">
-        <input type="radio" name="scope" value="new" :checked="editor.scope === 'new'" :disabled="off" @change="editor.setScope('new')" />
+      <label :class="{ on: editor.scope === 'new' }" :title="editor.canDeviate ? undefined : `Go to the ${host.noun} where your cursor is to change this ${host.noun} only`">
+        <input type="radio" name="scope" value="new" :checked="editor.scope === 'new'" :disabled="off || !editor.canDeviate" @change="editor.setScope('new')" />
         <span>This {{ host.noun }} only</span>
       </label>
       <label :class="{ on: editor.scope === 'every' }">

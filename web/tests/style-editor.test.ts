@@ -164,6 +164,59 @@ describe('the controls', () => {
   })
 })
 
+describe('picking a style to inspect, without applying it (UX-14)', () => {
+  it('picking nothing shows the caret’s own style, exactly as before', () => {
+    const editor = new StyleEditor(new FakeHost())
+    expect(editor.current?.id).toBe('body')
+    expect(editor.isPicked).toBe(false)
+  })
+
+  it('picking a style shows its look, and does not call apply or change the document', () => {
+    const host = new FakeHost()
+    const editor = new StyleEditor(host)
+    editor.pick('quote')
+    expect(editor.current?.id).toBe('quote')
+    expect(editor.look).toEqual(host.styles[1]!.resolved)
+    expect(host.sent).toEqual([]) // nothing was sent to the document just by looking
+    expect(host.currentId).toBe('body') // the caret’s own paragraph is untouched
+  })
+
+  it('picking a style other than the caret’s own forces “every use”; “this text only” is unavailable', () => {
+    const editor = new StyleEditor(new FakeHost())
+    editor.pick('quote')
+    expect(editor.scope).toBe('every')
+    expect(editor.canDeviate).toBe(false)
+    editor.setScope('new') // asking for "this text only" while picked has no effect
+    expect(editor.scope).toBe('every')
+  })
+
+  it('an edit while a style is picked changes that style for everyone, never the caret’s own as a deviation', async () => {
+    const host = new FakeHost()
+    const editor = new StyleEditor(host)
+    editor.pick('quote')
+    await editor.toggleItalic()
+    expect(host.sent).toEqual([['change', 'quote', { set: { 'font-style': 'normal' } }]])
+  })
+
+  it('picking the style that is already the caret’s own is the same as not picking', () => {
+    const editor = new StyleEditor(new FakeHost())
+    editor.pick('body')
+    expect(editor.isPicked).toBe(false)
+    expect(editor.canDeviate).toBe(true)
+    expect(editor.scope).toBe('new') // the ordinary default for a named style, unaffected
+  })
+
+  it('picking back the caret’s own style after picking another restores the ordinary behaviour', async () => {
+    const host = new FakeHost()
+    const editor = new StyleEditor(host)
+    editor.pick('quote')
+    editor.pick('body')
+    expect(editor.canDeviate).toBe(true)
+    await editor.toggleBold()
+    expect(host.sent).toEqual([['deviate', { set: { 'font-weight': 'bold' } }]])
+  })
+})
+
 describe('naming', () => {
   it('invites a name for a style made by deviating, once, until it is dismissed or named', async () => {
     const host = new FakeHost()

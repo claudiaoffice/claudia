@@ -94,6 +94,22 @@ async function main() {
   await page.screenshot({ path: `${SHOTS}/styling-1-menu.png` })
   log('context menu open on Body text')
 
+  // UX-14: clicking a different style in the gallery only shows its look — it must not touch the document
+  await page.click('[data-testid=style-menu] [data-style=heading-1]')
+  await page.waitForFunction(() => document.querySelector('[data-testid=style-menu] [data-style=heading-1]').classList.contains('on'))
+  assert.equal((await look(page, 1)).tag, 'p', 'picking Heading 1 in the gallery must not restyle the paragraph')
+  assert.equal((await look(page, 1)).weight, '400', 'body text is untouched by just looking at another style')
+  assert.equal(await page.locator('[data-testid=style-menu] [data-style=body] .here').count(), 1, 'the gallery marks which style the cursor is really in')
+  assert.equal(await page.locator('[data-testid=style-spec] input[value=new]').isDisabled(), true, '"this paragraph only" is unavailable while browsing another style’s look')
+  await page.click('[data-testid=bold]') // edits a picked style for "every use" — there is no selection to deviate
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid=style-menu] [data-style=heading-1] .name')).fontWeight === '700')
+  assert.equal((await look(page, 1)).weight, '400', 'the body paragraph is still untouched: the edit changed Heading 1 itself, everywhere')
+  await page.keyboard.press('Control+z') // undo the Heading 1 experiment before the rest of the scenario continues
+  await page.click('[data-testid=style-menu] [data-style=body]') // pick the caret's own style back
+  await page.waitForFunction(() => document.querySelector('[data-testid=style-menu] [data-style=body]').classList.contains('on'))
+  assert.equal(await page.locator('[data-testid=style-spec] input[value=new]').isDisabled(), false, '"this paragraph only" is available again for the caret’s own style')
+  log('picking a style in the gallery shows its look without applying it (UX-14)')
+
   // bold, this paragraph only: a new style appears and waits for its name, the others are untouched
   await page.click('[data-testid=bold]')
   await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-block]')[1].className.includes('body-text-changed'))

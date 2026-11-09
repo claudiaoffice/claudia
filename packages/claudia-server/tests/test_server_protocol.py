@@ -8,9 +8,13 @@ import json
 
 import pytest
 
-from claudia_core import Revision
+from claudia_composes import TextModel
+from claudia_computes import WorkbookModel
+from claudia_core import Document, MemoryStore, Revision
 from claudia_core.testing import Insert, Interval, Remove
 from claudia_server.auth import Account
+from claudia_server.composes import composes_methods
+from claudia_server.computes import computes_methods
 from claudia_server.protocol import (
     DEFAULT_LOCALE,
     ERROR_CODES,
@@ -384,14 +388,34 @@ def test_an_app_extends_a_copy_of_the_table_with_its_own_methods_and_types(doc, 
 
 
 # ------------------------------------------------------------------------------------------ help (E13.1, E13.3)
-def test_help_search_finds_the_real_computes_topics_shared_across_apps(doc, ann):
-    found = call(doc, ann, "help_search", {"query": "formula"})
+def _app_document(model_cls):
+    """A real document of one app, for a `help_search` scoped by `ctx.document.model.app` — not `doc` (UX-13),
+    whose `ListModel` has no help topics of its own and so cannot tell a correctly scoped answer from a wrong one."""
+    return Document(model_cls(), store=MemoryStore())
+
+
+def test_help_search_only_returns_topics_meant_for_the_documents_own_app(ann):
+    """UX-13: composes has no function-catalog topics of its own; computes' must not leak into its results."""
+    found = call(_app_document(TextModel), ann, "help_search", table=composes_methods)
+    ids = {topic["id"] for topic in found}
+    assert not ids & {"computes.writing-a-formula", "computes.looking-up-a-value", "computes.summing-with-a-condition"}
+
+
+def test_help_search_still_finds_a_topic_shared_by_several_apps(ann):
+    """A topic that lists more than one app in its `apps` front matter (typeset's LaTeX guide) stays visible from
+    each of them; UX-13's fix narrows by app, it does not narrow to one app only."""
+    found = call(_app_document(TextModel), ann, "help_search", table=composes_methods)
+    assert any(topic["id"] == "typeset.configure-latex" for topic in found)
+
+
+def test_help_search_finds_the_real_computes_topics_from_a_computes_document(ann):
+    found = call(_app_document(WorkbookModel), ann, "help_search", {"query": "formula"}, table=computes_methods)
     assert any(topic["id"] == "computes.writing-a-formula" for topic in found)
     assert set(found[0]) == {"id", "title", "apps", "tags"}
 
 
-def test_help_search_with_no_query_gives_every_topic(doc, ann):
-    assert len(call(doc, ann, "help_search")) >= 4  # the three new computes topics plus typeset's D99 draft
+def test_help_search_with_no_query_gives_every_topic_for_that_app(ann):
+    assert len(call(_app_document(WorkbookModel), ann, "help_search", table=computes_methods)) >= 4
 
 
 def test_help_topic_gives_the_full_text_by_id(doc, ann):
@@ -400,11 +424,31 @@ def test_help_topic_gives_the_full_text_by_id(doc, ann):
     assert "=A1+A2" in topic["body"]
 
 
+def test_help_topic_is_not_scoped_by_app_unlike_search(ann):
+    """`help_topic` opens one topic by an id a (now scoped) `help_search` result gave; it is deliberately not
+    re-filtered by the asking document's own app, the same way a direct link still works wherever it is followed
+    from — composes may still open a computes topic it was given the id of."""
+    topic = call(
+        _app_document(TextModel), ann, "help_topic", {"id": "computes.writing-a-formula"}, table=composes_methods
+    )
+    assert topic["title"] == "How do I write a formula?"
+
+
 def test_help_topic_refuses_an_unknown_id(doc, ann):
     with pytest.raises(RequestError) as caught:
         call(doc, ann, "help_topic", {"id": "no.such.topic"})
     assert caught.value.code == "command_error"
 
 
-def test_a_viewer_may_read_help_too(doc, vera):
-    assert call(doc, vera, "help_search") == call(doc, Account("ann", "owner"), "help_search")
+def test_a_viewer_may_read_help_too(ann):
+    computes_doc = _app_document(WorkbookModel)
+    vera = Account("vera", "viewer")
+    assert call(computes_doc, vera, "help_search", table=computes_methods) == call(
+        computes_doc, ann, "help_search", table=computes_methods
+    )
+
+
+def test_help_search_finds_composes_own_new_topics(ann):
+    found = call(_app_document(TextModel), ann, "help_search", {"query": "style"}, table=composes_methods)
+    ids = {topic["id"] for topic in found}
+    assert "composes.editing-a-style" in ids

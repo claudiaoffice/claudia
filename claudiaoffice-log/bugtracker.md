@@ -55,6 +55,8 @@ statement in the docs or on the website).
 | UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
 | UX-11 | P2 | UX | The admin sign-in screen had no way back except the browser's Back button | **fixed** |
 | UX-12 | P2 | UX | Open dialog goes blank if the server has an access secret | **fixed** |
+| UX-13 | P2 | UX | `help_search` leaks one app's topics into another's; composes has none of its own | **fixed** |
+| UX-14 | P2 | UX | "Edit this style…" gallery applies and closes on click instead of showing the style to inspect | **fixed** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed (patch ready, not yet committed) |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed (patch ready, not yet committed) |
@@ -373,6 +375,65 @@ with no usable `detail` (generic message), a 200 with no `documents` array, and 
 all passing. Re-verified live: with an access secret set, `/` now renders the Open dialog's full chrome (servers
 sidebar, headline, create-document form) with "this server needs its access secret" where the list would be,
 instead of a blank page; zero JS `pageerror`s.
+
+### UX-13 · `help_search` leaks one app's topics into another's; composes has none of its own · P2 · fixed
+**Evidence (read + measured, `41f8f39`).** Reported by the owner, four composes inconsistencies in one batch; this
+is the help-system one. `core_methods.help_search` (`protocol.py`) called `default_library().search(query)` with
+no app at all, so the per-app `apps` front matter every topic file already carries (`help.py`'s `Topic.apps`,
+documented since E13.1) was simply never read back out. Confirmed by running a composes document's `help_search`
+against the real server code: it returned `computes.writing-a-formula`, `computes.looking-up-a-value` and
+`computes.summing-with-a-condition` — three spreadsheet topics, verbatim, inside a word-processor's own Help tab.
+The reverse leak (composes' own topics into computes) could not also be demonstrated at this commit because
+composes had zero topics of its own — an empty `help/` folder was the second half of the same report: scoping was
+missing *and* there was nothing yet to scope.
+**Fix.** `HelpLibrary.search(query, *, app=None)` gained the optional keyword: when given, it keeps a topic only
+if `app` is in that topic's own `apps`, or `apps` is empty (a topic naming no app is for every app — this is how
+`typeset.configure-latex` keeps showing up from every app that can embed LaTeX). `_help_search` now passes
+`ctx.document.model.app` along; `_help_topic` is deliberately left unscoped, since an id already names one exact
+topic the same way a direct link works from anywhere. This is a Minor, additive change to `claudia_server`'s
+public API (`docs/versioning.md`): version 0.18.0 → 0.19.0, changelog entry, snapshot regenerated
+(`tests/api/claudia_server.json`). Gave composes its first two topics (`composes.editing-a-style`,
+`composes.asking-ai-to-review`) so its Help tab is not merely correctly empty.
+**Acceptance.** `packages/claudia-server/tests/test_server_protocol.py`, the `help (E13.1, E13.3)` block: a
+computes document's `help_search` never returns composes' own topics and the reverse; a topic naming several apps
+(`typeset.configure-latex`) still shows from each of them; `query=""` on a scoped `help_search` gives every topic
+for that app, not every topic in the library; composes' own new topics are found by a `style` search;
+`help_topic`'s existing behaviour (full text by id, unknown-id error, every role including `ai` can read) is
+unchanged, and a new test confirms it is *not* re-scoped — fetching a computes topic's id from a composes document
+still works. 10 tests, all passing; the one that depends on composes' own content (`test_help_search_finds_composes
+_own_new_topics`) was red before the two topic files existed, green after.
+
+### UX-14 · "Edit this style…" gallery applies and closes on click instead of showing the style to inspect · P2 · fixed
+**Evidence (read + measured, `41f8f39`).** Second of the owner's four composes reports. `StyleMenu.vue`'s gallery
+click handler called `choose(id)`, which ran `host.apply(id)` — writing the clicked style onto the caret's current
+paragraph — and then `emit('close')`. There was no way to look at a style's CSS or controls without first applying
+it to whatever the cursor happened to be sitting in, and the menu vanished the instant you clicked, before the
+look below it could even be seen. Confirmed by reading `StyleMenu.vue`/`StyleSpec.vue`/`style-host.ts` together:
+`StyleSpec.vue` always read `props.host.current`, which is exactly the document's own current style — there was
+no separate notion of "the style I am looking at" distinct from "the style under the caret" anywhere in the three
+files. `StylesDialog.vue` ("All styles…") and `StyleBar.vue` (the toolbar's quick-apply list) were checked and
+confirmed unaffected — neither goes through this gallery-click path.
+**Fix.** `StyleEditor` (`web/app/lib/style-host.ts`) gained `pick(id)`, `isPicked` and `canDeviate`: picking a
+style only changes what `editor.current`/`editor.look` show, never the document, and the caret's own paragraph is
+left untouched. The gallery's click handler now calls `editor.pick(s.id)` directly — no `apply`, no `close`.
+Picking a style other than the caret's own forces scope to "every use" and disables "this paragraph only" (there
+is no selection to split off from a style that is merely being browsed); this is also how a change made while
+picking a style is written — to that style, for everyone, never as a deviation of whatever the cursor is really
+in. `StyleMenu.vue` now constructs the one `StyleEditor` and passes it down to `StyleSpec.vue` as a prop (moved
+from being constructed locally in `StyleSpec.vue`), so picking in the gallery and the controls below it share the
+same state; a small "here" badge marks which gallery row is the caret's real style whenever that differs from
+what is being inspected. **Decision taken:** "this paragraph only" is disabled, not merely defaulted away, while
+picking another style — the owner's choice between the two when asked.
+**Acceptance.** `web/tests/style-editor.test.ts`, `describe('picking a style to inspect, without applying it
+(UX-14)', …)`: picking sends nothing to the document and leaves the caret's own style alone; picking forces
+"every use" and disables deviation; an edit made while picking changes the picked style, never a deviation of the
+caret's own; picking the caret's own style back behaves exactly as not picking at all — 6 new tests, all red
+before `pick()` existed, green after; full suite 473/473, `vue-tsc --noEmit` clean. `web/e2e/styling.cjs` gained a
+matching browser scenario (pick Heading 1, confirm the paragraph is untouched and the "here" badge appears, edit
+while picked changes Heading 1 globally, undo and pick back restores the ordinary controls) — written against the
+real component source and existing selectors, but **not executed** in this sandbox: Playwright's browser-binary
+download host is outside the sandbox's network allowlist (confirmed via the proxy's own status endpoint). Running
+it for real, or in CI where Chromium is already installed, is the one piece of this fix not yet machine-verified.
 
 ### Note on PERF-04
 While reproducing the above, `bugtracker.md`'s own index still lists `PERF-04` as "fixed (listing cache)", but

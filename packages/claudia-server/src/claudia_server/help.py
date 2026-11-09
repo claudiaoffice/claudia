@@ -123,13 +123,20 @@ class HelpLibrary:
         """The topic with this id, or ``None``."""
         return self._topics.get(topic_id)
 
-    def search(self, query: str) -> list[Topic]:
+    def search(self, query: str, *, app: str | None = None) -> list[Topic]:
         """Topics whose title, tags or ``explains`` contain ``query`` (case-insensitive), by title; every topic, by
         title, if ``query`` is blank. Full-text search over the body is future work (E13.3 proposes SQLite FTS5); a
-        handful of short topics does not need it yet."""
+        handful of short topics does not need it yet.
+
+        ``app``, when given, keeps only topics that name it in their own ``apps`` front matter, or that name no app
+        at all (a topic with an empty ``apps`` is for every app). This is what keeps one app's results from
+        showing another's: a topic says who it is for itself, in its own file, rather than this method needing a
+        table of which id belongs to which app."""
         needle = query.strip().casefold()
         topics = self._topics.values()
         found = list(topics) if not needle else [topic for topic in topics if self._matches(topic, needle)]
+        if app is not None:
+            found = [topic for topic in found if not topic.apps or app in topic.apps]
         return sorted(found, key=lambda topic: topic.title)
 
     @staticmethod

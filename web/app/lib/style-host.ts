@@ -44,17 +44,40 @@ const none: Css = {}
  * What the style menu does with a person's input. A change goes either to this text only (a new style that is named
  * later: “styles first, deviate second”) or to every use of the style; a style that still waits for its name is the
  * person’s own, so changes go into it. Changes are made one after the other, each deciding where to go at its turn.
+ *
+ * Browsing the gallery and changing text are two different things (UX-14): `pick` only chooses which style these
+ * controls show and edit next; it never touches the document itself. `current` follows the picked style once one is
+ * picked, and `host.current` (the caret's own paragraph) only again once `pick(null)` or the caret's own style is
+ * picked back. Deviating ("this text only") makes sense only for the caret's real style — there is no selection
+ * sitting in a style someone is merely browsing to — so `canDeviate` is false and `scope` stays "every" throughout.
  */
 export class StyleEditor {
   choice: { style: string; scope: Scope } | null = null
   private queue: Promise<unknown> = Promise.resolve()
   /** Styles named or turned down for naming: ids. Public so that a component sees changes. */
   declined: string[] = []
+  private picked: string | null = null
 
   constructor(private readonly host: StyleHost) {}
 
+  /** Look at a style's own definition without applying it to anything. `null` goes back to following the caret. */
+  pick(id: string | null) {
+    this.picked = id
+  }
+
+  /** Whether `current` is a style merely being looked at, not the one actually under the caret. */
+  get isPicked(): boolean {
+    return this.picked !== null && this.picked !== this.host.current?.id
+  }
+
+  /** "This text only" only makes sense for the caret's own style; disabled while browsing another one's look. */
+  get canDeviate(): boolean {
+    return !this.isPicked
+  }
+
   get current(): StyleView | undefined {
-    return this.host.current
+    if (this.picked === null) return this.host.current
+    return this.host.styles.find((s) => s.id === this.picked) ?? this.host.current
   }
 
   /** The css the controls show: what the current style really has, with its palette roles already colours (D200).
@@ -63,32 +86,34 @@ export class StyleEditor {
    * would come up blank. The consequence is that picking a colour here writes a literal, which is precisely what
    * leaving the palette means — the menu that offers the roles themselves is the next step. */
   get look(): Css {
-    return this.host.current?.resolved ?? none
+    return this.current?.resolved ?? none
   }
 
   get scope(): Scope {
-    const current = this.host.current
+    if (this.isPicked) return 'every'
+    const current = this.current
     if (this.choice && current && this.choice.style === current.id) return this.choice.scope
     return current?.to_name ? 'every' : 'new'
   }
 
   setScope(scope: Scope) {
-    const current = this.host.current
+    if (scope === 'new' && !this.canDeviate) return
+    const current = this.current
     if (current) this.choice = { style: current.id, scope }
   }
 
   get invitesName(): boolean {
-    const current = this.host.current
+    const current = this.current
     return !!current?.to_name && !this.declined.includes(current.id) && !this.host.readOnly
   }
 
   dismissNaming() {
-    const current = this.host.current
+    const current = this.current
     if (current) this.declined.push(current.id)
   }
 
   async name(typed: string): Promise<boolean> {
-    const current = this.host.current
+    const current = this.current
     const name = typed.trim()
     if (!current || !name) return false
     const done = await this.host.rename(current.id, name)
@@ -100,7 +125,7 @@ export class StyleEditor {
   edit(edit: CssEdit): Promise<boolean> {
     if (this.host.readOnly) return Promise.resolve(false)
     const run = this.queue.then(() => {
-      const current = this.host.current
+      const current = this.current
       if (!current) return false
       return this.scope === 'every' ? this.host.change(current.id, edit) : this.host.deviate(edit)
     })
