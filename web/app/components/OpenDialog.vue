@@ -1,18 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { appOfServer, openSession, type AnySession } from '~/lib/open'
+import { appOfServer, fetchDocsListing, openSession, type AnySession, type Listed } from '~/lib/open'
 import { Session } from '~/lib/session'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, type Bookmark } from '~/lib/server-bookmarks'
-
-interface Listed {
-  id: string
-  app: string
-  modified: string
-  online: number
-}
 
 const props = defineProps<{
   /** File ▸ New (D123): land with the document field blank and focused, instead of the one just closed. */
@@ -93,18 +86,13 @@ function remember(key: string, value: string) {
  */
 async function loadServer() {
   listError.value = ''
-  try {
-    const answer = await fetch(`${origin.value}/api/docs`)
-    if (answer.status === 404) listError.value = 'This server does not list its documents. Type the name of yours.'
-    else {
-      const said = await answer.json()
-      documents.value = said.documents
-      // The server says which app it serves, and has done all along; this page used to read only the documents and
-      // guess the app from the first of them, so a server with none looked like computes whatever it was serving.
-      serverApp.value = said.app ?? ''
-    }
-  } catch {
-    listError.value = 'The server cannot be reached.'
+  const listing = await fetchDocsListing(origin.value)
+  if ('error' in listing) listError.value = listing.error
+  else {
+    documents.value = listing.documents
+    // The server says which app it serves, and has done all along; this page used to read only the documents and
+    // guess the app from the first of them, so a server with none looked like computes whatever it was serving.
+    serverApp.value = listing.app
   }
   let administrator: string | null = null
   try {
