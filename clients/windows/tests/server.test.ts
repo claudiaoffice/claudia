@@ -10,6 +10,18 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LocalServer, ServerStartError, buildServerCommand, defaultSpawn, freePort } from '../src/server.js'
 
+// Wraps the real `spawn` so defaultSpawn's own tests below still get a genuine child process (and the log-capture
+// test still sees genuine output), while letting one test inspect exactly what options defaultSpawn passed it --
+// the only way to check `windowsHide`, which (unlike `detached`) leaves no trace on the ChildProcess object itself
+// afterwards for a test to read back. `vi.hoisted` so `spawnSpy` exists by the time `vi.mock`'s own factory
+// (hoisted above every import, including the `const` below it) first runs.
+const { spawnSpy } = vi.hoisted(() => ({ spawnSpy: vi.fn() }))
+vi.mock('node:child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:child_process')>()
+  spawnSpy.mockImplementation(actual.spawn)
+  return { ...actual, spawn: spawnSpy }
+})
+
 describe('freePort', () => {
   it('returns a port nobody is listening on yet, and two calls do not collide', async () => {
     const a = await freePort()
@@ -170,6 +182,20 @@ describe('defaultSpawn', () => {
     const written = readFileSync(log, 'utf8')
     expect(written).toContain('from stdout')
     expect(written).toContain('from stderr')
+  })
+
+  it('passes windowsHide: true -- Windows-only, a no-op elsewhere per Node\'s own docs, suppressing the new, ' +
+    'empty console window `detached: true` otherwise pops up on a real Windows run (found 2026-11-09: "the ' +
+    'Python server starts in a separate console")', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'claudia-server-log-'))
+    const log = join(dir, 'server.log')
+    spawnSpy.mockClear()
+    const child = defaultSpawn(['node', '-e', 'process.exit(0)'], log)
+    await new Promise<void>((resolve) => child.once('exit', () => resolve()))
+    expect(spawnSpy).toHaveBeenCalledOnce()
+    const options = spawnSpy.mock.calls[0]?.[2] as Record<string, unknown> | undefined
+    expect(options?.windowsHide).toBe(true)
+    expect(options?.detached).toBe(true) // unchanged by this fix -- still needed for the other half of this trade-off
   })
 })
 

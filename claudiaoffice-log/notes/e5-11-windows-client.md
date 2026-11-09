@@ -150,6 +150,111 @@ same latent exposure to this — unhit so far only because neither of those OSes
 triggered a source build of something in `dev` yet. Flagged for the owner to carry the same `--no-dev` flag to
 both, same as the `build-inject.mjs` flag from the first real run.
 
+## Third real run (owner, same Windows VM, 2026-11-09): build and `uv sync` both succeed, then... nothing
+
+With both fixes applied, `start-win-client.cmd` got all the way through building the web app and the Windows
+client and fetching the Neutralino binary (`npx @neutralinojs/neu update` ran once, as expected) — and then
+`node clients\windows\dist\launch.js composes` produced **no output at all and exited immediately**, no window,
+no error, no console line of any kind.
+
+The owner's own first guess was a missing Microsoft Edge WebView2 Runtime on this particular Windows 11 VM image.
+That turned out not to be the actual cause here, for a specific reason: if the Neutralino binary itself had
+actually been spawned and then failed to show a window because WebView2 was missing, that failure would show up
+as *some* output, because `main()` spawns the shell with `stdio: 'inherit'` — whatever the binary itself prints
+on its way to failing reaches this console directly. Total silence, with literally nothing printed, pointed
+instead at `main()` never being called in the first place.
+
+That is exactly what was happening. The bottom of `launch.ts` has always had an entry-point guard meant to make
+`node dist\launch.js composes` (run directly) call `main()`, the same idiom `launch.py` uses with
+`if __name__ == "__main__"` and the macOS client's own `launch.ts` uses with the same `import.meta.url` check:
+
+```ts
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main(process.argv.slice(2)).then((code) => {
+    process.exitCode = code
+  })
+}
+```
+
+`import.meta.url` is a well-formed URL Node computes correctly on every OS. The right-hand side is not: it is a
+bare string template built from `process.argv[1]`, a raw filesystem path with no attempt to turn it into a
+proper URL. On POSIX this happens to work anyway, because an absolute path already starts with `/`, so
+`"file://" + "/home/.../launch.js"` is already the valid `"file:///home/.../launch.js"`. On Windows,
+`process.argv[1]` is backslashed and drive-lettered (`C:\Users\...\dist\launch.js`); prepending `"file://"` to
+that produces a string that is not a valid URL at all, and can never equal `import.meta.url`'s real,
+forward-slashed, percent-correct form (`file:///C:/Users/.../dist/launch.js`). The comparison was always false on
+Windows. `main()` was never called. The whole script, from the point of view of `node dist\launch.js composes`,
+was a silent no-op — which is exactly the symptom reported.
+
+Fixed the same way as the first two bugs this run cycle found: `pathToFileURL(process.argv[1] ?? '').href`
+instead of the bare template, Node's own documented way to turn a filesystem path into a correct `file:` URL on
+every OS. Verified directly in this sandbox: running the fixed `dist/launch.js` now reaches `main()` and prints
+its own expected `SetupProblem` message (missing Python 3.14 in this sandbox, exit code 1) instead of exiting
+silently with nothing printed and code 0. Two new regression tests in `tests/launch.test.ts` pin down the
+comparison's own correctness in isolation — `main()` itself is not re-run in a test, since it has real side
+effects (spawning a server, and if found, a real Neutralino binary).
+
+This is the third bug in a row this real-run cycle found that has the identical shape: a Windows absolute path
+(backslashes, a drive letter) breaking an assumption a POSIX absolute path happens to satisfy by coincidence.
+**The identical line exists, unexercised, in `clients/macos/src/launch.ts`** — worth the same one-line fix there,
+and at this point probably worth a dedicated pass over `clients/macos/` for this exact pattern rather than
+rediscovering it a fourth time.
+
+The owner's WebView2 hypothesis is not dismissed by this, only provisionally ruled out as the *current* blocker.
+Once this fix lets `main()` actually run and the Neutralino binary actually gets spawned, a missing WebView2
+Runtime becomes the natural next thing to check if the window still doesn't appear — see the README's "Not
+verified" item 5.
+
+## Fourth real run (owner, same Windows VM, 2026-11-09): the server starts, but a new console window and a timeout
+
+With the third fix applied, `main()` is finally called and the local server gets spawned for real. Two new
+things showed up:
+
+**A new, separate console window for the Python server.** `defaultSpawn()` (`server.ts`) passes `detached: true`
+to `node:child_process.spawn`, and Node's own docs are explicit about what that does on Windows beyond what its
+POSIX meaning might suggest: a detached child gets its own, new console window, independent of whatever `stdio`
+options are also given. Here `stdio` already redirects both the server's stdout and stderr to `logPath` (never
+to any console at all), so the window that popped up was never going to show anything — exactly what the owner
+reported: a separate console, with nothing printed to it. Node documents `windowsHide` as the flag for
+suppressing that window specifically (a no-op on every other OS, per the same docs), so it is added alongside
+`detached: true`, not instead of it — `detached` is kept for the one thing Windows still honours about it (this
+module's own top comment: the child survives this process exiting unexpectedly). Confirmed as the right fix by
+reading Node's own `child_process` documentation directly rather than guessing from the symptom alone. New
+regression test in `tests/server.test.ts` spies on `node:child_process`'s `spawn` (`vi.mock` + `vi.hoisted`,
+wrapping the real implementation so the file's other, already-existing `defaultSpawn` test still gets a genuine
+child process) to check the actual options object passed — `windowsHide`, unlike `detached`, leaves no trace on
+the resulting `ChildProcess` object afterwards for a test to read back any other way.
+
+**The server itself did not answer within `LocalServer`'s 30-second startup timeout** (`checkReady()`'s own
+`ServerStartError`, `server.ts`): `the server did not answer at http://127.0.0.1:50424 within 30000ms`. This is
+not yet understood, and this round does not claim to fix it — guessing at a cause from the symptom alone, after
+three straight bugs already found this way, is exactly the discipline this whole real-run cycle has tried not
+to fall into.
+
+What is known: the process did not exit (that would have produced a different error — "the server stopped at
+start-up (exit code N)" — since `checkReady()` checks `process.exitCode` before the timeout check), so whatever
+is happening, the Python process stayed alive the whole 30 seconds without the server answering `/api/health`.
+`cli.py`'s own `main()` prints its start-up banner (host, port, TLS status, administrators, web app path) with
+`flush=True` *before* calling into `uvicorn.run()` — so if the log this client writes to
+(`%LOCALAPPDATA%\Claudia\composes\state\server.log`, computed by `prepareServer()` as
+`join(stateDir(identity.name), 'server.log')`) contains that banner, the server itself started and is uvicorn
+that is not answering (or answering somewhere the health check cannot reach); if the log is empty, something
+upstream of the banner — argument parsing, loading the document model, loading server settings from
+`--state-dir` — is itself the slow or stuck part. `ServerStartError`'s own message is supposed to append that
+log's last 2000 characters automatically (`whatItSaid()`), so the console output already ought to show which of
+these it is — the owner's report did not include that section, which is either because the log was genuinely
+empty, or because the console output as pasted was trimmed before the tail. Either way, the next thing needed
+to go further here is that log's actual content (or the untrimmed console output), not another guess.
+
+A genuinely plausible explanation worth naming without committing to it: Windows Defender (or another real-time
+antivirus) scanning a large, freshly-installed `.venv`'s DLLs and `.pyd` files on first access is a well-known
+source of multi-second-to-multi-minute delays for a Python process's first import of packages like `uvicorn`'s
+or `fastapi`'s dependencies, on a machine that has never run them before — `uv sync` just populated that `.venv`
+fresh. If that is what is happening here, the fix is not a code change at all (raising the 30-second timeout
+would only mask a one-time cold-start cost, and the *right* number to raise it to is not knowable from here) —
+it is confirming the actual delay and, if AV scanning is it, either accepting the one-time cost or excluding the
+`.venv` from real-time scanning. Not committed to as the cause without the log confirming it.
+
 ## Compatibility notes
 
 1. **No real `SIGTERM` on Windows, not even for the ordinary stop path.** Node's own docs are explicit that
@@ -194,9 +299,12 @@ both, same as the `build-inject.mjs` flag from the first real run.
 
 ## Not verified (needs a real Windows machine)
 
-One real run has happened (see "First real run" above), but it stopped at a build-time bug one step before any of
-the following could be exercised — so, unlike the macOS slice, where a confirmed run narrowed this list, everything
-below is still exactly as open as it was before that run:
+Four real runs have happened (see "First real run" through "Fourth real run" above), each fixing one bug and
+getting one step further than the last — the build, then `uv sync`, then `main()` actually being called, then
+the server itself actually spawning (minus its own stray console window) — but the fourth stopped at the
+server's own 30-second startup timeout, for a reason not yet understood (see that run's own notes), so none has
+yet reached the point where the Neutralino binary itself is spawned. Unlike the macOS slice, where a confirmed
+run narrowed this list, everything below is still exactly as open as it was before the first of these runs:
 
 1. **D159's core mechanic on Windows** — expected to carry over unchanged from macOS's confirmed result, not
    independently confirmed.

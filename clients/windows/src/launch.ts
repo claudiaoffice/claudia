@@ -16,6 +16,7 @@ import { mkdir } from 'node:fs/promises'
 import { spawn as nodeSpawn } from 'node:child_process'
 import { join } from 'node:path'
 import { env as processEnv } from 'node:process'
+import { pathToFileURL } from 'node:url'
 import { getIdentity, UnknownAppError, type App } from './identity.js'
 import { defaultRepo, documentsDir, findFrontend, findServerPython, stateDir, type Env } from './paths.js'
 import { LOOPBACK, LocalServer, ServerStartError, buildServerCommand, freePort } from './server.js'
@@ -177,8 +178,15 @@ export async function main(argv: readonly string[]): Promise<number> {
 }
 
 // Run directly (`node dist/launch.js composes`) rather than only imported, matching launch.py's and the macOS
-// launch.ts's own `if __name__ == "__main__"`/import.meta.url guard.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// launch.ts's own `if __name__ == "__main__"`/import.meta.url guard. `pathToFileURL(...).href` on process.argv[1],
+// not a bare `file://${...}` template -- on Windows, argv[1] is a backslashed, drive-lettered path
+// ("C:\...\dist\launch.js"), and simply prepending "file://" to it produces an invalid, malformed URL that can
+// never equal import.meta.url's own well-formed one (forward slashes, "file:///C:/..."). The naive template
+// happens to work on POSIX, where an absolute path already starts with "/" and "file://" + "/x" is a valid
+// "file:///x" -- which is exactly why this shipped broken and untested: this guard silently evaluated false on
+// every real Windows run so far, so `main()` was never called at all, and `node dist\launch.js composes` just
+// exited immediately with no output and no window -- found on the owner's third real run, 2026-11-09.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   main(process.argv.slice(2)).then((code) => {
     process.exitCode = code
   })

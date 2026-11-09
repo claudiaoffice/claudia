@@ -103,7 +103,14 @@ export function defaultSpawn(command: string[], logPath: string): ChildProcess {
     // module's top comment) -- it still does what Node's docs promise on every platform: the child survives this
     // process exiting unexpectedly rather than being torn down mid-flight by whatever the OS does to console
     // children, which is the one half of "detached" Windows does honour.
-    return nodeSpawn(program, args, { detached: true, stdio: ['ignore', fd, fd] })
+    //
+    // `windowsHide: true` is the other half of that same trade-off, Windows-only (a no-op everywhere else, per
+    // Node's own docs): without it, Windows gives a `detached` child its own new, visible console window --
+    // found on a real Windows run, 2026-11-09, as "the Python server starts in a separate console [window]". The
+    // server's stdout/stderr are already redirected to `logPath` via `fd`, never to that console (there was
+    // nothing to see in it), so the window was never anything but a confusing, empty distraction -- this flag is
+    // Node's own documented way to suppress it without touching where the output actually goes.
+    return nodeSpawn(program, args, { detached: true, windowsHide: true, stdio: ['ignore', fd, fd] })
   } finally {
     closeSync(fd)
   }

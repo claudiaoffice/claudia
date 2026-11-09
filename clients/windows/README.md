@@ -5,16 +5,20 @@ discipline the Linux (`clients/linux/`) and macOS (`clients/macos/`) clients fol
 Today it contains **Claudia Composes**; computes and creates follow the same way Linux's did (one more entry in
 `identity.ts`, one more `apps/<app>/`).
 
-**This has now run on a real Windows machine twice** (owner, same Windows VM, Git Bash, 2026-11-09) — far enough
-to find and fix a real bug each time, first in `npm run build:inject` and then in `start-win-client.cmd`'s own
-`uv sync` step (see "First real run" and "Second real run" in
-`claudiaoffice-log/notes/e5-11-windows-client.md` for the detail), not yet far enough to reach the point
-`node dist\launch.js composes` actually starts the Neutralino binary. D159's core mechanic (`window.Neutralino`
-existing and working on an externally-loaded loopback page) was confirmed on macOS on the owner's own Mac, and
-nothing in the spike or in Neutralino's own documentation suggests Windows differs —
+**This has now run on a real Windows machine four times** (owner, same Windows VM, Git Bash, 2026-11-09) — far
+enough to find and fix a real bug each time: first in `npm run build:inject`, then in `start-win-client.cmd`'s
+own `uv sync` step, then in `launch.ts`'s own entry-point guard (the build and `uv sync` could both succeed and
+`node dist\launch.js composes` would still just exit with no output and no window at all), then a cosmetic but
+confusing `windowsHide` gap in how the server itself is spawned (see "First real run" through "Fourth real run"
+in `claudiaoffice-log/notes/e5-11-windows-client.md` for the detail). The fourth run got further than any
+before it — the server process now actually starts — but did not yet get all the way to the server answering
+its own health check in time; see that run's own section for what is and is not yet understood about that. No
+run has yet reached the point where the Neutralino binary itself is actually spawned. D159's core mechanic
+(`window.Neutralino` existing and working on an externally-loaded loopback page) was confirmed on macOS on the
+owner's own Mac, and nothing in the spike or in Neutralino's own documentation suggests Windows differs —
 `injectGlobals`/`injectClientLibrary`/`injectScript` are Neutralino's own cross-platform settings, not
 OS-specific ones — but on Windows that is still an expectation, not a confirmed result. Everything below "Not
-verified" is this client's best-effort answer, pending a run that gets further than these two did.
+verified" is this client's best-effort answer, pending a run that gets further than these four did.
 
 ```
 clients/
@@ -126,6 +130,21 @@ on its way out shows up directly on the console.
   has no prebuilt Windows wheel for every Python version and tries to compile a C extension that needs a
   compiler nothing here requires otherwise. `--no-dev` sidesteps the whole group — none of it is a dependency of
   `claudia_server` or any client.
+* **`launch.ts`'s own entry-point guard, fixed with `pathToFileURL`.** `if (import.meta.url === ...) main(...)`
+  at the bottom of `launch.ts` is what makes `node dist\launch.js composes` actually do anything when run
+  directly rather than imported. It used to compare against a bare `` `file://${process.argv[1]}` `` string
+  template, which is a well-formed URL only on POSIX (an absolute path already starts with `/`); on Windows,
+  `process.argv[1]` is backslashed and drive-lettered, so the template was malformed and the comparison was
+  always false — `main()` was simply never called, with no error and no output of any kind, the third bug this
+  client's real Windows runs found (2026-11-09). Fixed the same way as the other two: `pathToFileURL(...).href`.
+* **`defaultSpawn()` passes `windowsHide: true`, alongside `detached: true`, not instead of it.** A fourth real
+  run (2026-11-09), past the first three fixes, saw the Python server pop up its own separate console window —
+  always empty, since its stdout/stderr already go to `logPath` (see "How it works" above), not to any console.
+  Node's own docs name `windowsHide` as exactly the flag for suppressing that window (a no-op on every other
+  OS); `detached` stays, since it still does the one thing Windows honours about it (`server.ts`'s own top
+  comment). New regression test spies on `node:child_process`'s own `spawn` to check the actual options object
+  passed, since `windowsHide`, unlike `detached`, leaves nothing on the resulting `ChildProcess` for a test to
+  read back afterwards.
 * **The shared menu manifest, one more consumer.** `manifest.py`
   (`clients/linux/src/claudia_shell_gtk/manifest.py`) stays the one source of truth for
   File/Edit/Format/View/Tools/Config/Help across every app and shell. `generate_menu.py` imports it (no GTK, by
@@ -161,7 +180,7 @@ on its way out shows up directly on the console.
 
 ```
 cd clients/windows
-npm test               # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch, build-inject -- 60 tests
+npm test               # vitest: identity, paths, server (incl. freePort, log capture), menu, page-bridge, launch, build-inject -- 63 tests
 npm run typecheck       # tsc --strict over src/ and tests/
 python3 -m pytest tools/tests   # generate_menu.py: 10 tests
 npm run check-menu      # fails if src/generated/menu.*.json has drifted from manifest.py
@@ -183,12 +202,19 @@ is tested without one.
 4. **Orphaned server processes when the shell is killed outright, rather than closed.** Flagged as a known open
    issue rather than solved here (see "Not done" below) — the user's own explicit choice for this first version,
    matching how macOS flags the same gap for its own missing PDEATHSIG equivalent.
-5. **A clean machine.** This client was built and tested in a Linux sandbox; the two real Windows runs so far
-   (2026-11-09, same Windows VM, Git Bash) each got one step further, past a fixed build-time bug and then a
-   fixed `uv sync` dependency-group bug (see "How it works" above and
-   `claudiaoffice-log/notes/e5-11-windows-client.md`'s "First real run" and "Second real run") but has not yet
-   reached `node dist\launch.js composes` actually starting the Neutralino binary — no older Windows version, no screen
-   reader, no second machine.
+5. **A clean machine.** This client was built and tested in a Linux sandbox; the four real Windows runs so far
+   (2026-11-09, same Windows VM, Git Bash) each got one step further: past a fixed build-time bug, then a fixed
+   `uv sync` dependency-group bug, then a fixed entry-point-guard bug that had `main()` never being called at
+   all, then a fixed `windowsHide` gap that popped up a confusing, empty console window for the server (see "How
+   it works" above and `claudiaoffice-log/notes/e5-11-windows-client.md`'s "First real run" through "Fourth real
+   run"). The fourth run is also the first to reach `LocalServer.checkReady()`'s own 30-second startup timeout
+   without a clear enough log to say why yet (see that run's own notes) — not yet resolved, and genuinely open:
+   no older Windows version, no screen reader, no second machine either. One thing not yet worth acting on but
+   worth checking once a run gets past the server answering: whether the Microsoft Edge WebView2 Runtime is
+   present on the target machine. It ships with Windows 11 by default, but a trimmed VM image may lack it; if a
+   future run gets as far as actually spawning the Neutralino binary (`buildShellCommand()`'s own command, with
+   `stdio: 'inherit'`) and still shows no window, that is the first place to look, since it would be expected to
+   produce some console output of its own at that point.
 
 ## Not done
 

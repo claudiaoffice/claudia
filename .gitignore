@@ -14,3 +14,6 @@ clients/windows/apps/composes/js/
 clients/windows/dist/
 clients/windows/node_modules/
 *.patch
+clients/windows/apps/composes/.tmp/
+clients/windows/apps/composes/neutralinojs.log
+
