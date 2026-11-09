@@ -25,6 +25,7 @@ const formatLabel = computed(() => {
   if (!a) return ''
   if (a.format === 'svg') return 'SVG (vector)'
   if (a.format === 'gif') return a.animated ? 'GIF (animated)' : 'GIF'
+  if (a.format === 'png') return a.animated ? 'PNG (animated)' : 'PNG'
   return a.format.toUpperCase()
 })
 const byteSize = computed(() => (asset.value ? formatByteSize(imageByteSize(asset.value.data)) : ''))

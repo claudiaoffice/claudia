@@ -298,7 +298,7 @@ def test_an_image_is_imported_and_anchored_to_a_cell(book):
     added = add_image(book)
     (obj,) = objects(book)
     assert obj["id"] == added
-    assert (obj["kind"], obj["row"], obj["col"], obj["w"], obj["h"]) == ("image", 2, 2, 400, 200)
+    assert (obj["kind"], obj["anchor"]["row"], obj["anchor"]["col"], obj["w"], obj["h"]) == ("image", 2, 2, 400, 200)
     assert obj["image"] is not None
     assert obj["imported"]["alt"] == "a sample picture" and obj["imported"]["source"] == "disk"
     assert [i["id"] for i in call(book, "images")] == [obj["image"]]
@@ -337,10 +337,10 @@ def test_moving_an_object_keeps_its_size_and_undo_puts_it_back(book):
     added = add_image(book)
     call(book, "move_object", {"id": added, "row": 8, "col": 3})
     (obj,) = objects(book)
-    assert (obj["row"], obj["col"], obj["w"], obj["h"]) == (8, 3, 400, 200)
+    assert (obj["anchor"]["row"], obj["anchor"]["col"], obj["w"], obj["h"]) == (8, 3, 400, 200)
     book.undo("ann")
     (obj,) = objects(book)
-    assert (obj["row"], obj["col"]) == (2, 2)
+    assert (obj["anchor"]["row"], obj["anchor"]["col"]) == (2, 2)
 
 
 def test_removing_an_object_is_one_step_and_undo_brings_it_and_its_image_back(book):
@@ -361,7 +361,7 @@ def test_inserting_or_deleting_rows_and_columns_never_moves_or_resizes_an_object
     call(book, "structure", {"sheet": "s1", "axis": "col", "insert": False, "at": 0, "count": 1})
     (obj,) = objects(book)
     assert obj["id"] == added
-    assert (obj["row"], obj["col"], obj["w"], obj["h"]) == (5, 5, 400, 200)
+    assert (obj["anchor"]["row"], obj["anchor"]["col"], obj["w"], obj["h"]) == (5, 5, 400, 200)
 
 
 def test_resizing_rows_or_columns_never_resizes_an_object(book):

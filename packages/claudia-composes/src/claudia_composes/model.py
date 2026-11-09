@@ -9,13 +9,33 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
-from claudia_core import CommandRegistry, DocumentModel, Region, StyleBook, StyleDef, new_registry
+from claudia_core import (
+    CommandRegistry,
+    DocumentModel,
+    ObjectBody,
+    ObjectModel,
+    ObjectSet,
+    Palette,
+    Paragraph,
+    Region,
+    Run,
+    StyleBook,
+    StyleDef,
+    VisualObject,
+    builtin_palette,
+    delete_runs,
+    insert_runs,
+    new_registry,
+    runs_from_data,
+    slice_runs,
+    total,
+)
 
+from .anchors import BlockAnchor
 from .region import TextRange
-from .runs import Run, delete_runs, insert_runs, runs_from_data, runs_to_data, slice_runs, total
 from .spans import TextCommand
 
 DEFAULT_STYLE = "body"
@@ -25,7 +45,10 @@ _NUMBERED = re.compile(r"[bs](\d+)")
 
 _SANS = "Inter, system-ui, 'Segoe UI', sans-serif"
 _SERIF = "Fraunces, Georgia, serif"
-_INK = "#1F1A33"
+# Colours are roles of the document's palette, never literals (D200): a document holds no hex of its own,
+# so replacing its palette really does recolour it. ``@text/82`` is that role at 82% opacity, which is how
+# the softer inks of a quote or a remark keep following the ink they are a shade of.
+_INK = "@text"
 
 
 def _style(style_id: str, name: str, purpose: str, **css: str) -> StyleDef:
@@ -97,8 +120,8 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "font-style": "italic",
             "font-size": "14pt",
             "line-height": "1.7",
-            "color": "rgba(31, 26, 51, 0.82)",
-            "border-left": "3px solid #F2A057",
+            "color": "@text/82",
+            "border-left": "3px solid @highlight",
             "padding-left": "1.1em",
         },
     ),
@@ -109,22 +132,42 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
         **{
             "font-size": "11pt",
             "line-height": "1.6",
-            "color": "rgba(31, 26, 51, 0.78)",
-            "background-color": "rgba(214, 71, 122, 0.07)",
-            "border-left": "3px solid #D6477A",
+            "color": "@text/78",
+            "background-color": "@attention/7",
+            "border-left": "3px solid @attention",
             "padding-top": "0.55em",
             "padding-bottom": "0.55em",
             "padding-left": "0.9em",
             "padding-right": "0.9em",
         },
     ),
+    # The two object styles, with the same ids in all three apps (E10.16), so that a shape or a picture carried
+    # from a slide or a sheet into a text keeps a style that exists here. A shape's background and border are
+    # ``fill``/``stroke``/``stroke-width``, not ``background-color``/``border-*`` (D178): a shape is an outline in
+    # a 100 by 100 box, not a rectangle, so only the SVG vocabulary can give a circle or a triangle a border.
+    _style(
+        "plain-shape",
+        "Plain shape",
+        "a shape floating over the text, carrying a thought or marking a passage",
+        **{
+            "fill": "@accent/8",
+            "stroke": "@accent",
+            "stroke-width": "2px",
+            "text-align": "center",
+        },
+    ),
+    _style(
+        "plain-image",
+        "Plain image",
+        "a picture floating over the text; it carries its own colours, so no style properties apply to it",
+    ),
     _style(
         "definition",
         "Definition",
         "says what a term means",
         **{
-            "background-color": "rgba(231, 225, 244, 0.55)",
-            "border-left": "3px solid #5B4BC4",
+            "background-color": "@accent/8",
+            "border-left": "3px solid @accent",
             "padding-top": "0.5em",
             "padding-bottom": "0.5em",
             "padding-left": "0.9em",
@@ -148,18 +191,16 @@ def next_style(styles: StyleBook, style_id: str) -> str:
     return style_id if root.id == DEFAULT_STYLE else DEFAULT_STYLE
 
 
-@dataclass
-class Block:
-    """One paragraph: ``runs`` always add up to the length of ``text``."""
-
-    id: str
-    style: str
-    text: str = ""
-    runs: list[Run] = field(default_factory=list)
-
-    def to_data(self) -> dict:
-        """The plain-data form: ``{id, style, text, runs}``."""
-        return {"id": self.id, "style": self.style, "text": self.text, "runs": runs_to_data(self.runs)}
+#: One paragraph of a document. Since E10.17 this is ``claudia_core``'s :class:`~claudia_core.Paragraph`, the
+#: same entity a creates text box and a shape's label carry (D181) — the name ``Block`` stays because that is
+#: what this app has always called it, and because a paragraph in a flowing document is a block in a way one
+#: inside a shape is not: only these can be split and joined.
+#:
+#: It is immutable, so the model replaces a paragraph in :attr:`TextModel.blocks` rather than editing it in
+#: place (``_put``, below). The reason is undo: a command builds its own inverse from the state it found, and a
+#: paragraph changed under it would hand that inverse the new text.
+#: (a plain alias, not a `type` statement: Block(...) is called as a constructor)
+Block = Paragraph
 
 
 @dataclass(frozen=True)
@@ -178,18 +219,35 @@ class Suggestion:
     state: str = "open"
 
 
-class TextModel(DocumentModel):
-    """The paragraphs of a document and its suggestions."""
+#: One floating thing in a text: a text box, a shape or an image, hanging from a place in a paragraph.
+type TextObject = VisualObject[BlockAnchor]
+
+
+class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
+    """The paragraphs of a document, its suggestions and the objects floating over it."""
 
     app: ClassVar[str] = "composes"
-    state_schema: ClassVar[int] = 3
+    # 4: a text also carries objects, images and shapes (E10.16)
+    # 5: the text carries its own colour palette (D200)
+    state_schema: ClassVar[int] = 5
     registry: ClassVar[CommandRegistry] = new_registry()
 
-    def __init__(self, blocks: list[Block] | None = None, styles: StyleBook | None = None):
+    def __init__(
+        self,
+        blocks: list[Block] | None = None,
+        styles: StyleBook | None = None,
+        palette: Palette | None = None,
+    ):
+        super().__init__()
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
+        #: The colours of this document, by what they mean. Part of the document, so it looks the same on
+        #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
+        self.palette: Palette = palette if palette is not None else builtin_palette()
         self.suggestions: dict[str, Suggestion] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
+        for block in self.blocks:
+            self.open_container(block.id)
 
     # -- lifecycle ---------------------------------------------------------------
     @classmethod
@@ -202,7 +260,11 @@ class TextModel(DocumentModel):
         return {
             "blocks": [b.to_data() for b in self.blocks],
             "styles": self.styles.to_data(),
+            "palette": self.palette.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
+            "shapes": self.shapes_to_data(),
+            "images": self.images_to_data(),
+            "objects": self.objects_to_data(),
             "last": dict(self._last),
         }
 
@@ -211,23 +273,64 @@ class TextModel(DocumentModel):
         """Build a model from ``serialize()``'s output; the older shape (a list of strings) is understood too."""
         raw = state["blocks"]
         if raw and isinstance(raw[0], str):  # state schema 1: the stub, which could not hold more than strings
-            blocks = [Block(f"b{i}", DEFAULT_STYLE, t, [Run(len(t), None)] if t else []) for i, t in enumerate(raw, 1)]
+            blocks = [Block(f"b{i}", DEFAULT_STYLE, t, (Run(len(t), None),) if t else ()) for i, t in enumerate(raw, 1)]
             return cls(blocks)
         styles = StyleBook.from_data(state["styles"]) if "styles" in state else None  # schema 2 had the built-in ones
-        model = cls([Block(b["id"], b["style"], b["text"], runs_from_data(b["runs"])) for b in raw], styles)
+        blocks = [Block(b["id"], b["style"], b["text"], tuple(runs_from_data(b["runs"]))) for b in raw]
+        palette = Palette.from_data(state["palette"]) if "palette" in state else None  # schema 4 and earlier
+        model = cls(blocks, styles, palette)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
+        model.restore_objects(  # schema 3 and earlier had no objects
+            state.get("objects", ()), state.get("images", ()), state.get("shapes", ())
+        )
         model._last = dict(state.get("last", model._last))
         return model
 
     def region_from_data(self, data: dict) -> Region:
-        """Read a region a client sent: ``{"kind": "text", "block", "start", "end"}``."""
+        """Read a region a client sent: a stretch of text, or a selection of floating objects."""
+        if data.get("kind") == ObjectSet.kind:
+            return ObjectSet.from_data(data)
         if data.get("kind") != TextRange.kind:
-            raise ValueError(f"composes knows only text regions, not {data.get('kind')!r}")
+            raise ValueError(f"composes knows text regions and object selections, not {data.get('kind')!r}")
         block, start, end = data["block"], data["start"], data["end"]
         if not (isinstance(block, str) and isinstance(start, int) and isinstance(end, int) and 0 <= start <= end):
             raise ValueError("a text region names a paragraph and 0 <= start <= end")
         return TextRange(block, start, end)
+
+    # -- the object seam ---------------------------------------------------------
+    def containers(self) -> list[str]:
+        """The paragraphs objects may hang from, in order."""
+        return [block.id for block in self.blocks]
+
+    def anchor_from_data(self, data: dict) -> BlockAnchor:
+        """Read a block anchor; ``ValueError`` if the data is not one."""
+        return BlockAnchor.from_data(data)
+
+    def check_anchor(self, anchor: BlockAnchor, body: ObjectBody) -> None:
+        """An object hangs from a character of its paragraph, so the offset must lie inside that paragraph.
+
+        A text has no edge an object could fall off, unlike a slide: only the offset is checked, never the size."""
+        if not 0 <= anchor.offset <= len(self.block(anchor.block).text):
+            raise IndexError("an object must hang from a place inside its paragraph")
+
+    def move_objects(self, command: TextCommand) -> list[dict]:
+        """Let the objects follow ``command`` (see ``claudia_composes.anchors``); returns the ones that moved,
+        as sent to clients. A paragraph that was joined away takes its objects with it to the surviving one."""
+        moved: list[dict] = []
+        for obj in list(self.objects.values()):
+            span = command.follow(obj.anchor.span)
+            if span == obj.anchor.span:
+                continue
+            placed = obj.anchor.followed(span)
+            was, now = obj.container, placed.container
+            self.objects[obj.id] = replace(obj, anchor=placed)
+            if was != now:  # the paragraph went away, or the anchor crossed into another one
+                self._stack.setdefault(now, []).append(obj.id)
+                if obj.id in self._stack.get(was, []):
+                    self._stack[was].remove(obj.id)
+            moved.append(self.objects[obj.id].to_data())
+        return moved
 
     # -- reading -----------------------------------------------------------------
     def block(self, block_id: str) -> Block:
@@ -302,6 +405,15 @@ class TextModel(DocumentModel):
         return [self.suggestion_data(s) for s in self.suggestions.values() if s.state == "open"]
 
     # -- changing text (used by the commands) ------------------------------------
+    def restyle(self, block_id: str, style: str) -> None:
+        """Put a paragraph under another style (a paragraph is immutable, so this replaces it)."""
+        self._put(self.block(block_id).with_style(style))
+
+    def _put(self, block: Block) -> None:
+        """Swap a changed paragraph into place. A paragraph is immutable (D181), so every edit below builds a new
+        one and puts it where the old one was."""
+        self.blocks[self.index_of(block.id)] = block
+
     def insert(self, block_id: str, offset: int, text: str, runs: list[Run]) -> None:
         """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it."""
         block = self.block(block_id)
@@ -309,8 +421,9 @@ class TextModel(DocumentModel):
             raise IndexError("insert outside the text")
         if total(runs) != len(text):
             raise ValueError("the runs must cover exactly the inserted text")
-        block.text = block.text[:offset] + text + block.text[offset:]
-        block.runs = insert_runs(block.runs, offset, runs)
+        self._put(
+            block.with_text(block.text[:offset] + text + block.text[offset:], insert_runs(block.runs, offset, runs))
+        )
 
     def remove(self, block_id: str, start: int, end: int) -> tuple[str, list[Run]]:
         """Cut ``start <= i < end`` out of a paragraph; returns what was cut, with its runs."""
@@ -318,8 +431,7 @@ class TextModel(DocumentModel):
         if not 0 <= start <= end <= len(block.text):
             raise IndexError("delete outside the text")
         removed = block.text[start:end], slice_runs(block.runs, start, end)
-        block.text = block.text[:start] + block.text[end:]
-        block.runs = delete_runs(block.runs, start, end)
+        self._put(block.with_text(block.text[:start] + block.text[end:], delete_runs(block.runs, start, end)))
         return removed
 
     def split(self, block_id: str, offset: int, new_id: str, style: str) -> None:
@@ -330,9 +442,10 @@ class TextModel(DocumentModel):
         if any(b.id == new_id for b in self.blocks):
             raise ValueError(f"the paragraph {new_id!r} exists already")
         self.check_style(style)
-        rest = Block(new_id, style, block.text[offset:], slice_runs(block.runs, offset, len(block.text)))
-        block.text, block.runs = block.text[:offset], slice_runs(block.runs, 0, offset)
+        rest = Block(new_id, style, block.text[offset:], tuple(slice_runs(block.runs, offset, len(block.text))))
+        self._put(block.with_text(block.text[:offset], slice_runs(block.runs, 0, offset)))
         self.blocks.insert(self.index_of(block_id) + 1, rest)
+        self.open_container(new_id)
         self._note_id(new_id)
 
     def join(self, block_id: str, into: str, at: int) -> str:
@@ -344,10 +457,22 @@ class TextModel(DocumentModel):
             raise ValueError("a paragraph can only be joined to the one right before it")
         if len(first.text) != at:
             raise ValueError("the paragraph before it is not as long as the command says")
-        first.text += second.text
-        first.runs = insert_runs(first.runs, at, second.runs)
+        self._put(first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs)))
+        self.carry_objects(block_id, into, shift=at)
         self.blocks.remove(second)
+        self.close_container(block_id)
         return second.style
+
+    def carry_objects(self, source: str, target: str, *, shift: int) -> None:
+        """Move every object of the paragraph ``source`` to ``target``, ``shift`` characters further along.
+
+        Used by :meth:`join`: a paragraph that is joined into the one before it takes its objects with it rather
+        than leaving them anchored to something that no longer exists."""
+        for object_id in list(self._stack.get(source, ())):
+            obj = self.objects[object_id]
+            self.objects[object_id] = replace(obj, anchor=BlockAnchor(target, obj.anchor.offset + shift))
+            self._stack.setdefault(target, []).append(object_id)
+            self._stack[source].remove(object_id)
 
     def check_style(self, style: str) -> None:
         """``ValueError`` unless the document has a style with this id."""

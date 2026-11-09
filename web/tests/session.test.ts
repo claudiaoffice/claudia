@@ -4,16 +4,21 @@ import { Session } from '~/lib/session'
 
 const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
 const IMPORT = { asset: ASSET.id, alt: 'a chart', imported_by: 'ann', imported_at: '2026-11-07T10:00:00.000Z', source: 'disk', source_name: 'chart.gif', source_path: '/Users/ann/chart.gif' }
+// An object as the server sends it (E10.16, D177): the shared body's fields flat, the anchor nested — the same
+// shape in all three apps, only `anchor` differing (here a cell of a sheet).
 const image = (id: string, extra: object = {}) => ({
   id,
-  sheet: 's1',
   kind: 'image',
-  row: 0,
-  col: 0,
   w: 400,
   h: 200,
+  style: 'plain-image',
+  paragraph: null,
+  shape: null,
   image: ASSET.id,
   imported: IMPORT,
+  rotation: 0,
+  snap: true,
+  anchor: { kind: 'cell', container: 's1', row: 0, col: 0 },
   ...extra,
 })
 
@@ -234,11 +239,11 @@ describe('floating objects (images, E10.11)', () => {
 
   it('follows the stacking order the server sends, and takes objects away', async () => {
     const { link, session } = await opened()
-    link.push('objects', { type: 'objects', sheet: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b'])
-    link.push('objects', { type: 'objects', sheet: 's1', changed: [image('a', { row: 3, col: 2 })], removed: [], order: ['a', 'b'] })
-    expect(session.objectsOn('s1')[0]).toMatchObject({ row: 3, col: 2 })
-    link.push('objects', { type: 'objects', sheet: 's1', changed: [], removed: ['a'], order: ['b'] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [image('a', { anchor: { kind: 'cell', container: 's1', row: 3, col: 2 } })], removed: [], order: ['a', 'b'] })
+    expect(session.objectsOn('s1')[0]?.anchor).toMatchObject({ row: 3, col: 2 })
+    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: ['b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
     expect(session.state.objects.a).toBeUndefined()
   })

@@ -188,7 +188,7 @@ const objects = computed(() => props.session.objectsOn(props.sheet))
 
 /** An object's own anchor, or the live position of the drag in progress that is moving it. */
 function anchorOf(o: SheetObject): { row: number; col: number } {
-  return objDrag.value?.id === o.id ? objDrag.value.pos : { row: o.row, col: o.col }
+  return objDrag.value?.id === o.id ? objDrag.value.pos : { row: o.anchor.row, col: o.anchor.col }
 }
 function objectStyle(o: SheetObject) {
   const { row, col } = anchorOf(o)
@@ -211,7 +211,7 @@ function onObjectDown(event: MouseEvent, o: SheetObject) {
   if (props.edit) emit('commit', 'down')
   viewport.value?.focus() // so Delete/Escape reach `onKey` even if the focus was elsewhere (the formula bar, say)
   selectedObject.value = o.id
-  objDrag.value = { id: o.id, from: { x: event.clientX, y: event.clientY }, start: { row: o.row, col: o.col }, pos: { row: o.row, col: o.col }, moved: false }
+  objDrag.value = { id: o.id, from: { x: event.clientX, y: event.clientY }, start: { row: o.anchor.row, col: o.anchor.col }, pos: { row: o.anchor.row, col: o.anchor.col }, moved: false }
   window.addEventListener('mousemove', onObjectDrag)
   window.addEventListener('mouseup', onObjectUp)
 }

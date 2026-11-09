@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import struct
+import zlib
 
 import pytest
 
@@ -42,6 +43,25 @@ def bmp_bytes(width: int, height: int, *, top_down: bool = False) -> bytes:
     return out + pixels
 
 
+def png_bytes(width: int, height: int, *, animated: bool = False) -> bytes:
+    """A minimal 8-bit truecolour PNG of ``width`` by ``height``; with ``animated``, an APNG (the three control
+    chunks around the same default image)."""
+
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        crc = zlib.crc32(kind + payload) & 0xFFFFFFFF
+        return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", crc)
+
+    raw = b"".join(b"\x00" + b"\xff\x00\x00" * width for _ in range(height))
+    out = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+    if animated:
+        out += chunk(b"acTL", struct.pack(">II", 2, 0))
+        out += chunk(b"fcTL", struct.pack(">IIIIIHHBB", 0, width, height, 0, 0, 1, 10, 0, 0))
+    out += chunk(b"IDAT", zlib.compress(raw))
+    if animated:
+        out += chunk(b"fdAT", struct.pack(">I", 1) + zlib.compress(raw))
+    return out + chunk(b"IEND", b"")
+
+
 def gif_bytes(width: int, height: int, frames: int = 1) -> bytes:
     """A minimal GIF with a 2-colour global table and ``frames`` tiny images, each with a control extension."""
     header = b"GIF89a" + struct.pack("<HHBBB", width, height, 0x80, 0, 0) + b"\x00\x00\x00\xff\xff\xff"
@@ -65,6 +85,8 @@ SAMPLE_SVG = svg_bytes()
     ("data", "fmt", "width", "height"),
     [
         (SAMPLE_JPEG, "jpeg", 5, 7),
+        (png_bytes(4, 3), "png", 4, 3),
+        (png_bytes(16, 9, animated=True), "png", 16, 9),
         (bmp_bytes(4, 3), "bmp", 4, 3),
         (bmp_bytes(4, 3, top_down=True), "bmp", 4, 3),
         (SAMPLE_GIF, "gif", 6, 4),
@@ -417,3 +439,60 @@ def test_image_import_from_data_rejects_unknown_or_missing_fields():
         ImageImport.from_data({**make_import().to_data(), "extra": "nope"})
     with pytest.raises(ImageError, match="exactly these fields"):
         ImageImport.from_data({"asset": "a" * 64})
+
+
+# -- PNG (the owner's own omission, 2026-11-08) ------------------------------------------------------------------
+def test_a_still_png_is_not_animated_and_keeps_no_first_frame():
+    asset = decode_image(png_bytes(4, 3))
+    assert asset.animated is False
+    assert asset.first_frame is None
+
+
+def test_an_apng_is_animated_and_its_first_frame_decodes_on_its_own():
+    """The still frame of an APNG is the file with its three animation chunks dropped — which is exactly the
+    default image a viewer without APNG support would already show, so nothing has to be re-encoded."""
+    asset = decode_image(png_bytes(16, 9, animated=True))
+    assert asset.animated is True
+    assert asset.first_frame is not None
+
+    still = decode_image(asset.first_frame)
+    assert (still.format, still.width, still.height) == ("png", 16, 9)
+    assert still.animated is False
+    assert still.first_frame is None
+    assert len(asset.first_frame) < len(asset.data)
+
+
+def test_png_too_short_is_refused():
+    with pytest.raises(ImageError, match="too short"):
+        decode_image(b"\x89PNG\r\n\x1a\n" + b"\x00" * 8)
+
+
+def test_png_whose_first_chunk_is_not_ihdr_is_refused():
+    """Long enough to be a plausible file, so this is the IHDR rule talking and not the length floor."""
+
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        crc = zlib.crc32(kind + payload) & 0xFFFFFFFF
+        return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", crc)
+
+    wrong = b"\x89PNG\r\n\x1a\n" + chunk(b"tEXt", b"whoops!!") + chunk(b"IEND", b"")
+    assert len(wrong) > 24
+    with pytest.raises(ImageError, match="IHDR"):
+        decode_image(wrong)
+
+
+def test_png_with_a_chunk_running_past_the_end_is_refused():
+    """A length field that claims more than the file holds must be an error, never a silent stop: a reader that
+    only looked at where it got to would take it for a well-formed file with fewer chunks."""
+    truncated = png_bytes(4, 3)[:-6]
+    with pytest.raises(ImageError, match="past the end|without IEND"):
+        decode_image(truncated)
+
+
+def test_png_with_zero_dimensions_is_refused():
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        crc = zlib.crc32(kind + payload) & 0xFFFFFFFF
+        return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", crc)
+
+    bad = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 0, 3, 8, 2, 0, 0, 0)) + chunk(b"IEND", b"")
+    with pytest.raises(ImageError, match="positive width and height"):
+        decode_image(bad)

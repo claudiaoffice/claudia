@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Css, CssCheck, CssEdit, StyleView } from '~/lib/style-css'
 import { StyleEditor, type StyleHost } from '~/lib/style-host'
 
-const view = (id: string, css: Css, based_on: string | null = null, to_name = false, name = id): StyleView => ({ id, name, purpose: '', based_on, css, computed: css, to_name })
+const view = (id: string, css: Css, based_on: string | null = null, to_name = false, name = id): StyleView => ({ id, name, purpose: '', based_on, css, computed: css, resolved: css, to_name })
 
 class FakeHost implements StyleHost {
   styles = [view('body', { 'font-size': '11pt', 'font-weight': 'normal', color: '#1F1A33' }), view('quote', { 'font-style': 'italic' }, 'body')]
