@@ -20,7 +20,9 @@ members = [
     "claudia-creates-io",
     "claudia-fonts",
     "claudia-monorepo",
+    "claudia-opc-io",
     "claudia-server",
+    "claudia-test-documents",
     "claudia-typeset",
 ]
 
@@ -375,6 +377,7 @@ source = { editable = "packages/claudia-composes-io" }
 dependencies = [
     { name = "claudia-composes" },
     { name = "claudia-core" },
+    { name = "claudia-opc-io" },
     { name = "python-docx" },
 ]
 
@@ -382,6 +385,7 @@ dependencies = [
 requires-dist = [
     { name = "claudia-composes", editable = "packages/claudia-composes" },
     { name = "claudia-core", editable = "packages/claudia-core" },
+    { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "python-docx", specifier = ">=1.1" },
 ]
 
@@ -484,7 +488,9 @@ dependencies = [
     { name = "claudia-creates" },
     { name = "claudia-creates-io" },
     { name = "claudia-fonts" },
+    { name = "claudia-opc-io" },
     { name = "claudia-server" },
+    { name = "claudia-test-documents" },
     { name = "claudia-typeset" },
 ]
 
@@ -515,7 +521,9 @@ requires-dist = [
     { name = "claudia-creates", editable = "packages/claudia-creates" },
     { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
+    { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "claudia-server", editable = "packages/claudia-server" },
+    { name = "claudia-test-documents", editable = "packages/claudia-test-documents" },
     { name = "claudia-typeset", editable = "packages/claudia-typeset" },
 ]
 
@@ -532,6 +540,11 @@ dev = [
     { name = "types-openpyxl", specifier = ">=3.1" },
     { name = "vulture", specifier = ">=2.11" },
 ]
+
+[[package]]
+name = "claudia-opc-io"
+version = "0.0.1"
+source = { editable = "packages/claudia-opc-io" }
 
 [[package]]
 name = "claudia-server"
@@ -571,6 +584,25 @@ requires-dist = [
     { name = "websockets", specifier = ">=13" },
 ]
 provides-extras = ["openvino"]
+
+[[package]]
+name = "claudia-test-documents"
+version = "0.0.1"
+source = { editable = "packages/claudia-test-documents" }
+dependencies = [
+    { name = "claudia-composes" },
+    { name = "claudia-composes-io" },
+    { name = "claudia-opc-io" },
+    { name = "pillow" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "claudia-composes", editable = "packages/claudia-composes" },
+    { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
+    { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
+    { name = "pillow", specifier = ">=10" },
+]
 
 [[package]]
 name = "claudia-typeset"
