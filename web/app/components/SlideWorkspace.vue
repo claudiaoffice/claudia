@@ -191,8 +191,8 @@ const menus = computed<Menu[]>(() => [
     label: t('Help'),
     items: [
       { id: 'help.ask', label: t('Ask ai'), action: () => frame.value?.ask('@ai ') },
-      { id: 'help.how-to', label: t('How do I…?'), disabled: true },
-      { id: 'help.docs', label: t('Documentation'), disabled: true },
+      { id: 'help.how-to', label: t('How do I…?'), action: () => frame.value?.openHelp('how-to') },
+      { id: 'help.docs', label: t('Documentation'), action: () => frame.value?.openHelp('docs') },
       { id: 'help.about', label: t('About claudia'), action: () => frame.value?.openDialog('about') },
     ],
   },

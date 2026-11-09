@@ -18,6 +18,7 @@ from .composes import composes_methods
 from .computes import computes_methods
 from .creates import creates_methods, creates_methods_with
 from .filestore import FileDirectory, FileProvider
+from .help import HelpContentError, HelpLibrary, Topic, default_library, parse_topic
 from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, StoredInfo
 from .model_engine import ModelEngine
 from .protocol import (
@@ -75,6 +76,8 @@ __all__ = [
     "FileDirectory",
     "FileProvider",
     "Gateway",
+    "HelpContentError",
+    "HelpLibrary",
     "HostedDocument",
     "Hub",
     "HubError",
@@ -97,6 +100,7 @@ __all__ = [
     "StoredInfo",
     "Task",
     "TextEngine",
+    "Topic",
     "TypesetSettings",
     "UserDirectory",
     "WorkerPool",
@@ -108,6 +112,7 @@ __all__ = [
     "create_app",
     "creates_methods",
     "creates_methods_with",
+    "default_library",
     "ensure_certificate",
     "load_admins",
     "load_settings",
@@ -115,6 +120,7 @@ __all__ = [
     "model_assistant_for",
     "needs_administrator",
     "parse_request",
+    "parse_topic",
     "save_admins",
     "save_settings",
     "stand_in_assistant_for",

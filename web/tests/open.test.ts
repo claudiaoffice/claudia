@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { appOfServer, isSlides, openSession } from '~/lib/open'
+import { appOfServer, fetchDocsListing, isSlides, openSession } from '~/lib/open'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { SlideSession } from '~/lib/slide-session'
+
+/** A fetch stand-in that answers with a given status and JSON body, the same shape admin-api.test.ts's own uses. */
+function fakeFetch(status: number, body?: unknown): typeof fetch {
+  return (async () => ({
+    status,
+    ok: status >= 200 && status < 300,
+    json: async () => body,
+  })) as unknown as typeof fetch
+}
 
 const welcome = (app: string, role: Welcome['role'] = 'owner'): Welcome => ({
   user: 'ann',
@@ -48,6 +57,8 @@ class FakeLink implements LinkLike {
       case 'shapes':
         return { library: [], document: [] }
       case 'images':
+      case 'diagrams':
+      case 'charts':
         return []
       case 'palette':
         return { type: 'palette', roles: [], readings: [] }
@@ -156,5 +167,53 @@ describe('appOfServer', () => {
     expect(appOfServer({ app: '', documents: [] })).toBe('claudia')
     expect(appOfServer(null)).toBe('claudia')
     expect(appOfServer(undefined)).toBe('claudia')
+  })
+})
+
+describe('fetchDocsListing', () => {
+  it('returns the app and documents on a normal answer', async () => {
+    const listing = await fetchDocsListing(
+      'http://example.test',
+      fakeFetch(200, { app: 'creates', documents: [{ id: 'd1', app: 'creates', modified: '2026-11-09T00:00:00Z', online: 1 }] }),
+    )
+    expect(listing).toEqual({ app: 'creates', documents: [{ id: 'd1', app: 'creates', modified: '2026-11-09T00:00:00Z', online: 1 }] })
+  })
+
+  it('treats a missing app as blank, not a crash, same as appOfServer falls back for it', async () => {
+    const listing = await fetchDocsListing('http://example.test', fakeFetch(200, { documents: [] }))
+    expect(listing).toEqual({ app: '', documents: [] })
+  })
+
+  // UX-12: this used to be the one status this function's caller special-cased; every other answer, including a
+  // refusal, was treated as success and `documents` was assigned straight from the (missing) `documents` field.
+  it('gives the listed-documents message on a 404, as before', async () => {
+    const listing = await fetchDocsListing('http://example.test', fakeFetch(404))
+    expect(listing).toEqual({ error: 'This server does not list its documents. Type the name of yours.' })
+  })
+
+  // UX-12 itself: a server with an access secret correctly refuses GET /api/docs with a 401 and a `detail` message
+  // (claudia_server.app's own wording). The old code fell into the success branch for this, set `documents.value`
+  // to `undefined` (the 401 body has no `documents` key) and the Open dialog crashed reading `.length` off it.
+  it('surfaces the server\'s own reason instead of crashing, on a 401 needing the access secret', async () => {
+    const listing = await fetchDocsListing('http://example.test', fakeFetch(401, { detail: 'this server needs its access secret' }))
+    expect(listing).toEqual({ error: 'this server needs its access secret' })
+  })
+
+  it('falls back to a generic message when an error response carries no usable detail', async () => {
+    const listing = await fetchDocsListing('http://example.test', fakeFetch(500, {}))
+    expect(listing).toEqual({ error: 'The server answered with an error (500).' })
+  })
+
+  it('does not trust a 200 that has no documents array, rather than assigning it anyway', async () => {
+    const listing = await fetchDocsListing('http://example.test', fakeFetch(200, { app: 'creates' }))
+    expect(listing).toEqual({ error: 'The server did not answer with a document list.' })
+  })
+
+  it('reports a network failure as before', async () => {
+    const failing = (async () => {
+      throw new Error('offline')
+    }) as unknown as typeof fetch
+    const listing = await fetchDocsListing('http://example.test', failing)
+    expect(listing).toEqual({ error: 'The server cannot be reached.' })
   })
 })

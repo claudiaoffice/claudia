@@ -16,11 +16,17 @@ is a visual choice the model deliberately leaves alone, a chart's range is a *da
 a formula's — so a future iteration may want it to follow structural edits the way ``RangeRef.adjusted`` already
 lets a formula follow them. That is an open decision, not an oversight; it is called out again where
 ``Structure.apply`` touches cell references, and belongs in the decision log once one exists for it.
+
+:func:`figure_of` turns a definition plus already-read category and series data into the chart's Plotly figure
+(data+layout); :meth:`~claudia_computes.WorkbookModel.chart_figure` is what actually reads the sheet, since this
+module cannot import the model that owns the cells without a cycle (``model.py`` imports from here, not the
+other way around).
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from .limits import MAX_COLS, MAX_ROWS
@@ -37,7 +43,19 @@ SERIES_IN = ("columns", "rows")
 MAX_TITLE_CHARS = 120
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
-_KEYS = {"format", "id", "kind", "range", "series_in", "title", "x_title", "y_title", "legend", "gridlines"}
+_KEYS = {
+    "format",
+    "id",
+    "kind",
+    "range",
+    "series_in",
+    "header_row",
+    "title",
+    "x_title",
+    "y_title",
+    "legend",
+    "gridlines",
+}
 _REQUIRED = ("format", "id", "kind", "range")
 
 
@@ -105,6 +123,13 @@ class ChartSpec:
     kind: str
     range: RangeRef
     series_in: str = "columns"
+    #: Whether the range's first row is a header — the series' names when ``series_in`` is "columns", the
+    #: category labels when it is "rows" — rather than a row of data like every other (E6.6, header-row bug).
+    #: Defaults to ``True``, the "select your data including its headers" a spreadsheet chart usually assumes;
+    #: a range with no room for a header on this axis (one row) ignores it, same as before this field existed
+    #: (:meth:`~claudia_computes.WorkbookModel.chart_figure`). The first *column* has no equivalent toggle yet —
+    #: only the row convention turned out to need one in practice, read by shape alone as it always has.
+    header_row: bool = True
     title: str = ""
     x_title: str = ""
     y_title: str = ""
@@ -119,6 +144,7 @@ class ChartSpec:
             "kind": self.kind,
             "range": self.range.to_dict(),
             "series_in": self.series_in,
+            "header_row": self.header_row,
             "title": self.title,
             "x_title": self.x_title,
             "y_title": self.y_title,
@@ -147,6 +173,7 @@ class ChartSpec:
             kind=_check_kind(data["kind"]),
             range=_check_range(data["range"]),
             series_in=_check_series_in(data.get("series_in", "columns")),
+            header_row=_check_bool(data.get("header_row", True), "header_row"),
             title=_check_title(data.get("title", ""), "title"),
             x_title=_check_title(data.get("x_title", ""), "x_title"),
             y_title=_check_title(data.get("y_title", ""), "y_title"),
@@ -159,3 +186,63 @@ def in_bounds(range_: RangeRef) -> bool:
     """Whether a range's far corner is still inside a sheet of the maximum size (the near corner always is:
     :class:`~claudia_computes.RangeRef` never holds a negative row or column)."""
     return range_.last.row < MAX_ROWS and range_.last.col < MAX_COLS
+
+
+#: A fixed, validated categorical order for a chart's series (E6.6) — teal, iris, rose, then a darkened
+#: "chart-safe" apricot. The suite's own four app/brand hues (D-prefixed design-system.md), reordered for
+#: adjacency and with apricot darkened from the brand `#F2A057` to `#C97A33`: the brand tone is too light to
+#: clear the categorical lightness band and sits too close to rose for a deuteranope at this order's other
+#: end. Checked with the dataviz skill's `validate_palette.js --mode light`: lightness band, chroma floor, CVD
+#: adjacent-pair separation, the normal-vision floor and contrast against the paper surface all pass in this
+#: exact order — reordering or cycling these four breaks the CVD check again, so a chart never cycles them; a
+#: fifth series folds into "Other" rather than inventing a fifth hue (E6.6 is bar charts only, so this has not
+#: come up yet). Not yet re-validated against a dark surface (the suite has no dark mode wired up either,
+#: UX-05) — worth a look together, not blocking this round.
+BAR_COLORS: tuple[str, ...] = ("#13917F", "#5B4BC4", "#D6477A", "#C97A33")
+
+
+@dataclass(frozen=True)
+class ChartSeries:
+    """One series' name and values, already read off a sheet in the order the chart will draw them — the shape
+    :meth:`~claudia_computes.WorkbookModel.chart_figure` passes to :func:`figure_of`."""
+
+    name: str
+    values: tuple[float, ...]
+
+
+def figure_of(spec: ChartSpec, categories: Sequence[str], series: Sequence[ChartSeries]) -> dict:
+    """A chart's Plotly figure — ``{"data": [...], "layout": {...}}`` — from its definition plus the category
+    labels and per-series values a sheet's live cells gave (:meth:`~claudia_computes.WorkbookModel.chart_figure`
+    reads those; this function only shapes them, so it needs no model and is plain to test). The **server**
+    builds this, not either client, so the web and desktop shells draw byte-identical charts from the same JSON
+    (`e0-3-web-surface-notes.md`'s "Figure JSON... is provided by the doc server").
+
+    The one door a second chart kind's own trace shape would enter through — with only ``"bar"`` in
+    :data:`CHART_KINDS` so far, a dispatch table would have exactly one entry, so this stays a plain function
+    until a line or scatter kind actually shows up (mirrors why ``CHART_KINDS`` itself is a tuple, not a
+    dispatch-worthy type yet)."""
+    if spec.kind != "bar":  # pragma: no cover - unreachable while CHART_KINDS == ("bar",); guards the day it grows
+        raise ChartError(f"kind: no figure builder for {spec.kind!r} yet")
+    single = len(series) <= 1
+    data = [
+        {
+            "type": "bar",
+            "name": one.name,
+            "x": list(categories),
+            "y": list(one.values),
+            "marker": {"color": BAR_COLORS[i % len(BAR_COLORS)]},
+        }
+        for i, one in enumerate(series)
+    ]
+    return {
+        "data": data,
+        "layout": {
+            "title": {"text": spec.title},
+            "xaxis": {"title": {"text": spec.x_title}, "showgrid": False},
+            "yaxis": {"title": {"text": spec.y_title}, "showgrid": spec.gridlines},
+            "showlegend": spec.legend and not single,  # a single series needs no legend box (dataviz skill)
+            "barmode": "group",
+            "bargap": 0.2,
+            "bargroupgap": 0.1,
+        },
+    }

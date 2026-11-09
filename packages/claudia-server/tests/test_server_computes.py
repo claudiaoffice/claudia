@@ -6,6 +6,7 @@ import struct
 import pytest
 
 from claudia_computes import AddSheet, WorkbookModel
+from claudia_computes.model import MAX_ROWS
 from claudia_core import Document, MemoryStore
 from claudia_server.auth import Account
 from claudia_server.computes import computes_methods
@@ -420,3 +421,301 @@ def test_removing_a_sheet_takes_its_objects_with_it_and_undo_restores_them(book)
     book.undo("ann")
     assert [s["id"] for s in call(book, "sheets")] == ["s1"]
     assert [o["id"] for o in objects(book)] == [added]
+
+
+def test_functions_lists_the_whole_catalog_with_no_query(book):
+    found = call(book, "functions")
+    names = {f["name"] for f in found}
+    assert "SUM" in names and "XLOOKUP" in names  # a library function and a core one
+    assert len(found) > 60
+    assert set(found[0]) == {"name", "signature", "tooltip"}  # the summary shape, not the full help text
+
+
+def test_functions_searches_by_name_or_description(book):
+    found = [f["name"] for f in call(book, "functions", {"query": "sum"})]
+    assert found[0] == "SUM"
+    assert "SUMIF" in found
+
+
+def test_a_viewer_may_search_functions_too(book):
+    assert call(book, "functions", account=VERA) == call(book, "functions", account=ANN)
+
+
+def test_function_help_gives_the_full_text_by_name_case_insensitively(book):
+    found = call(book, "function_help", {"name": "round"})
+    assert found["name"] == "ROUND"
+    assert found["signature"] == "ROUND(number, digits?)"
+    assert "2.68" in found["help"]  # the worked example survives into the full help text
+
+
+def test_function_help_refuses_an_unknown_name(book):
+    with pytest.raises(RequestError) as caught:
+        call(book, "function_help", {"name": "NOSUCHFUNCTION"})
+    assert caught.value.code == "command_error"
+
+
+# -- charts (E6.6): a diagram definition, shown as a floating object, a tab, or both at once ---------------------
+def cell_range(sheet="s1", first=(0, 0), last=(2, 2)):
+    def ref(row, col):
+        return {"row": row, "col": col, "sheet": sheet, "row_abs": False, "col_abs": False}
+
+    return {"first": ref(*first), "last": ref(*last)}
+
+
+def define_diagram(doc, **changes):
+    given = {"kind": "bar", "range": cell_range(), "series_in": "columns", **changes}
+    return call(doc, "define_diagram", {"definition": given})["diagram"]
+
+
+def fill_table(doc, sheet="s1"):
+    """A header row (East, West) and a header column (Jan, Feb) around a 2x2 block of numbers."""
+    typed(
+        doc,
+        sheet,
+        [
+            (0, 1, "East"), (0, 2, "West"),
+            (1, 0, "Jan"), (1, 1, "10"), (1, 2, "20"),
+            (2, 0, "Feb"), (2, 1, "15"), (2, 2, "25"),
+        ],
+    )  # fmt: skip
+
+
+def test_a_diagram_definition_is_taken_in_and_listed(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book, title="Sales")
+    (listed,) = call(book, "diagrams")
+    assert listed["id"] == diagram_id and listed["title"] == "Sales" and listed["kind"] == "bar"
+
+
+def test_define_diagram_assigns_the_id_the_client_may_not(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="assigned by the server") as caught:
+        call(book, "define_diagram", {"definition": {"id": "g1", "kind": "bar", "range": cell_range()}})
+    assert caught.value.code == "bad_request"
+
+
+def test_a_malformed_diagram_definition_is_a_command_error(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError) as caught:
+        call(book, "define_diagram", {"definition": {"kind": "pie", "range": cell_range()}})
+    assert caught.value.code == "command_error"
+
+
+def test_a_diagram_needs_a_sheet_and_range_this_document_has(book):
+    with pytest.raises(RequestError, match="does not know the sheet"):
+        define_diagram(book)
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="inside the sheet"):
+        define_diagram(book, range=cell_range(first=(0, 0), last=(MAX_ROWS, 1)))
+
+
+def test_a_diagram_is_placed_as_a_floating_object_and_behaves_like_any_other_object(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book)
+    added = call(
+        book, "add_diagram_object", {"sheet": "s1", "row": 1, "col": 1, "w": 300, "h": 200, "diagram": diagram_id}
+    )
+    (obj,) = objects(book)
+    assert obj["id"] == added["object"] and obj["kind"] == "diagram" and obj["diagram"] == diagram_id
+    assert (obj["anchor"]["row"], obj["anchor"]["col"], obj["w"], obj["h"]) == (1, 1, 300, 200)
+    call(book, "resize_object", {"id": obj["id"], "row": 1, "col": 1, "w": 500, "h": 150})  # no fixed aspect
+    (obj,) = objects(book)
+    assert (obj["w"], obj["h"]) == (500, 150)
+    call(book, "remove_object", {"id": obj["id"]})
+    assert objects(book) == []
+
+
+def test_add_diagram_object_refuses_an_unknown_diagram_or_sheet(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="does not know the diagram"):
+        call(book, "add_diagram_object", {"sheet": "s1", "row": 0, "col": 0, "w": 100, "h": 100, "diagram": "nope"})
+    diagram_id = define_diagram(book)
+    with pytest.raises(RequestError, match="unknown sheet"):
+        call(
+            book,
+            "add_diagram_object",
+            {"sheet": "nope", "row": 0, "col": 0, "w": 100, "h": 100, "diagram": diagram_id},
+        )
+
+
+def test_a_chart_tab_and_a_floating_object_may_share_the_same_definition(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book)
+    call(book, "add_diagram_object", {"sheet": "s1", "row": 0, "col": 0, "w": 300, "h": 200, "diagram": diagram_id})
+    chart_id = call(book, "add_chart", {"name": "Sales chart", "spec_id": diagram_id})["chart"]
+    (tab,) = call(book, "charts")
+    assert tab["id"] == chart_id and tab["name"] == "Sales chart" and tab["spec_id"] == diagram_id
+    with pytest.raises(RequestError, match="in use") as caught:
+        call(book, "forget_diagram", {"id": diagram_id})  # refused: the object and the tab both still show it
+    assert caught.value.code == "command_error"
+
+
+def test_add_chart_rejects_a_blank_or_unknown_definition(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="does not know the diagram"):
+        call(book, "add_chart", {"name": "X", "spec_id": "nope"})
+    diagram_id = define_diagram(book)
+    with pytest.raises(RequestError, match="1 to"):
+        call(book, "add_chart", {"name": "   ", "spec_id": diagram_id})
+
+
+def test_removing_a_chart_tab_leaves_its_definition_for_whatever_else_shows_it(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book)
+    chart_id = call(book, "add_chart", {"name": "Sales", "spec_id": diagram_id})["chart"]
+    call(book, "remove_chart", {"id": chart_id})
+    assert call(book, "charts") == []
+    assert [d["id"] for d in call(book, "diagrams")] == [diagram_id]
+    call(book, "forget_diagram", {"id": diagram_id})  # nothing shows it any more
+    assert call(book, "diagrams") == []
+
+
+def test_update_diagram_redefines_it_in_place_for_every_viewer(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book, title="First")
+    call(book, "add_chart", {"name": "Sales", "spec_id": diagram_id})
+    call(
+        book,
+        "update_diagram",
+        {"id": diagram_id, "definition": {"kind": "bar", "range": cell_range(), "title": "Second"}},
+    )
+    (listed,) = call(book, "diagrams")
+    assert listed["title"] == "Second"
+
+
+def test_update_diagram_refuses_an_unknown_id(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="does not know the diagram"):
+        call(book, "update_diagram", {"id": "nope", "definition": {"kind": "bar", "range": cell_range()}})
+
+
+def test_chart_figure_reads_the_headers_and_the_data_with_series_in_columns(book):
+    call(book, "add_sheet", {"name": "S"})
+    fill_table(book)
+    diagram_id = define_diagram(book, title="Sales", x_title="Month", y_title="Units")
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert [trace["name"] for trace in figure["data"]] == ["East", "West"]
+    assert figure["data"][0]["x"] == ["Jan", "Feb"]
+    assert figure["data"][0]["y"] == [10.0, 15.0]
+    assert figure["data"][1]["y"] == [20.0, 25.0]
+    assert figure["layout"]["title"]["text"] == "Sales"
+    assert figure["layout"]["xaxis"]["title"]["text"] == "Month"
+    assert figure["layout"]["yaxis"]["title"]["text"] == "Units"
+
+
+def test_chart_figure_reads_series_in_rows_as_the_transpose(book):
+    call(book, "add_sheet", {"name": "S"})
+    fill_table(book)
+    diagram_id = define_diagram(book, series_in="rows")
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert [trace["name"] for trace in figure["data"]] == ["Jan", "Feb"]
+    assert figure["data"][0]["x"] == ["East", "West"]
+    assert figure["data"][0]["y"] == [10.0, 20.0]
+
+
+def test_chart_figure_updates_live_as_cells_change(book):
+    call(book, "add_sheet", {"name": "S"})
+    fill_table(book)
+    diagram_id = define_diagram(book)
+    before = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert before["data"][0]["y"] == [10.0, 15.0]  # East column: Jan, Feb
+    typed(book, "s1", [(1, 1, "99")])  # Jan's East value
+    after = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert after["data"][0]["y"] == [99.0, 15.0]
+
+
+def test_chart_figure_on_a_single_cell_range_makes_up_a_category_and_a_series_name(book):
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "5")])  # one row and one column: no room for either header
+    diagram_id = define_diagram(book, range=cell_range(first=(0, 0), last=(0, 0)))
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert [trace["name"] for trace in figure["data"]] == ["Series 1"]
+    assert figure["data"][0]["x"] == ["1"]
+    assert figure["data"][0]["y"] == [5.0]
+
+
+def test_chart_figure_on_a_single_row_reads_its_first_column_as_category_labels(book):
+    # More than one column still means a header column under the convention, even with only one row of
+    # data left over (``chart_figure``'s docstring): col 0 here is "5", read as the one category's name,
+    # and only col 1 becomes a series ("Series 1" has no header row to draw a name from).
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "5"), (0, 1, "6")])
+    diagram_id = define_diagram(book, range=cell_range(first=(0, 0), last=(0, 1)))
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert [trace["name"] for trace in figure["data"]] == ["Series 1"]
+    assert figure["data"][0]["x"] == ["5"]
+    assert figure["data"][0]["y"] == [6.0]
+
+
+def test_chart_figure_with_header_row_false_reads_every_row_as_data(book):
+    """The header-row bug reported after the first round shipped: a 2-column, 3-row range of plain
+    category/value pairs with no header line of its own used to silently lose its first row — read as a bogus
+    header whose "series name" was really the first row's own value — leaving only the second and third rows on
+    the chart. ``header_row=False`` is the fix: every row becomes a category, and the one data column becomes
+    one series with a generated name (there is still no header row to draw a name from)."""
+    call(book, "add_sheet", {"name": "S"})
+    typed(
+        book,
+        "s1",
+        [(0, 0, "Jan"), (0, 1, "10"), (1, 0, "Feb"), (1, 1, "15"), (2, 0, "Mar"), (2, 1, "20")],
+    )
+    diagram_id = define_diagram(book, range=cell_range(first=(0, 0), last=(2, 1)), header_row=False)
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert [trace["name"] for trace in figure["data"]] == ["Series 1"]
+    assert figure["data"][0]["x"] == ["Jan", "Feb", "Mar"]
+    assert figure["data"][0]["y"] == [10.0, 15.0, 20.0]
+
+
+def test_chart_figure_header_row_has_no_room_to_turn_off_on_a_single_row_range(book):
+    """``header_row=False`` only matters where there is a second row to read as data; a single-row range has no
+    room for a header on that axis regardless of the setting, same as before this field existed."""
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "5"), (0, 1, "6")])
+    diagram_id = define_diagram(book, range=cell_range(first=(0, 0), last=(0, 1)), header_row=False)
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert figure["data"][0]["x"] == ["5"]
+    assert figure["data"][0]["y"] == [6.0]
+
+
+def test_chart_figure_refuses_an_unknown_diagram(book):
+    with pytest.raises(RequestError, match="does not know the diagram"):
+        call(book, "chart_figure", {"diagram": "nope"})
+
+
+def test_a_single_series_chart_shows_no_legend_but_two_series_do(book):
+    call(book, "add_sheet", {"name": "S"})
+    fill_table(book)
+    single = define_diagram(book, range=cell_range(first=(0, 0), last=(2, 1)))  # Jan/Feb header + East only
+    figure = call(book, "chart_figure", {"diagram": single})["figure"]
+    assert len(figure["data"]) == 1 and figure["data"][0]["y"] == [10.0, 15.0]
+    assert figure["layout"]["showlegend"] is False
+
+    both = define_diagram(book)  # default range: East and West
+    figure = call(book, "chart_figure", {"diagram": both})["figure"]
+    assert len(figure["data"]) == 2
+    assert figure["layout"]["showlegend"] is True
+
+
+def test_viewers_may_read_diagrams_and_figures_but_not_change_them(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book)
+    assert call(book, "diagrams", account=VERA)
+    assert call(book, "chart_figure", {"diagram": diagram_id}, account=VERA)
+    with pytest.raises(RequestError) as caught:
+        call(book, "define_diagram", {"definition": {"kind": "bar", "range": cell_range()}}, account=VERA)
+    assert caught.value.code == "forbidden"
+
+
+def test_moving_and_removing_a_diagram_object_undo_round_trips_like_any_object(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book)
+    added = call(
+        book, "add_diagram_object", {"sheet": "s1", "row": 0, "col": 0, "w": 300, "h": 200, "diagram": diagram_id}
+    )
+    call(book, "move_object", {"id": added["object"], "row": 4, "col": 4})
+    book.undo("ann")
+    (obj,) = objects(book)
+    assert (obj["anchor"]["row"], obj["anchor"]["col"]) == (0, 0)
+    call(book, "remove_object", {"id": obj["id"]})
+    book.undo("ann")
+    assert [o["id"] for o in objects(book)] == [added["object"]]
