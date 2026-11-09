@@ -6,33 +6,37 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from claudia_creates import SlideModel
+from claudia_creates import SlideAnchor, SlideModel
 from claudia_test_documents.case import Case
 
 
 def import_checks(model: SlideModel) -> None:
     assert model.slides == ["s1", "s2"]
-    assert [(o.kind, o.style, o.text, o.shape) for o in model.objects_on("s1")] == [
+    assert [(o.body.kind, o.body.style, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s1")] == [
         ("text", "body-text", "Welcome to Claudia", None),
         ("shape", "plain-shape", "Idea", "circle"),
     ]
-    assert [(o.kind, o.style, o.text, o.shape, o.x, o.y, o.w, o.h) for o in model.objects_on("s2")] == [
-        ("shape", "plain-shape", "Box", "rectangle", 100, 500, 400, 200),
+    s2_objects = [
+        (o.body.kind, o.body.style, o.body.paragraph.text, o.body.shape, o.anchor.x, o.anchor.y, o.body.w, o.body.h)
+        for o in model.objects_on("s2")
     ]
+    assert s2_objects == [("shape", "plain-shape", "Box", "rectangle", 100, 500, 400, 200)]
 
 
 def modify(model: SlideModel) -> SlideModel:
     circle = model.get("o2")
-    model.replace_object(replace(circle, text="Idea (refined)"))
+    new_paragraph = circle.body.paragraph.with_text("Idea (refined)", ()).written_by("ana")
+    model.replace_object(circle.with_body(paragraph=new_paragraph))
     box = model.get("o3")
-    model.replace_object(replace(box, x=150, y=550, w=300, h=150))
+    moved = replace(box, anchor=SlideAnchor(box.anchor.slide, 150, 550)).with_body(w=300, h=150)
+    model.replace_object(moved)
     return model
 
 
 def after_checks(model: SlideModel) -> None:
-    assert [o.text for o in model.objects_on("s1")] == ["Welcome to Claudia", "Idea (refined)"]
+    assert [o.body.paragraph.text for o in model.objects_on("s1")] == ["Welcome to Claudia", "Idea (refined)"]
     box = model.objects_on("s2")[0]
-    assert (box.x, box.y, box.w, box.h) == (150, 550, 300, 150)
+    assert (box.anchor.x, box.anchor.y, box.body.w, box.body.h) == (150, 550, 300, 150)
 
 
 CASE = Case(import_checks=import_checks, modify=modify, after_checks=after_checks)

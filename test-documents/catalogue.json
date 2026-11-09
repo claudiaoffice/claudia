@@ -14,8 +14,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T15:55:57Z",
+        "commit": "41f8f39",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -23,7 +23,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.084,
+        "duration_s": 0.059,
         "detail": null
       }
     },
@@ -41,8 +41,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T15:55:57Z",
+        "commit": "41f8f39",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -50,7 +50,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.105,
+        "duration_s": 0.065,
         "detail": null
       }
     },
@@ -69,8 +69,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T15:55:57Z",
+        "commit": "41f8f39",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -78,7 +78,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.13,
+        "duration_s": 0.094,
         "detail": null
       }
     },
@@ -97,8 +97,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T15:55:57Z",
+        "commit": "41f8f39",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -106,7 +106,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.157,
+        "duration_s": 0.052,
         "detail": null
       }
     },
@@ -123,8 +123,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T21:00:41Z",
-        "commit": "0792bbe",
+        "at": "2026-11-09T15:55:57Z",
+        "commit": "41f8f39",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -132,7 +132,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.06,
+        "duration_s": 0.08,
         "detail": null
       }
     },
@@ -151,8 +151,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T21:00:41Z",
-        "commit": "0792bbe",
+        "at": "2026-11-09T15:55:57Z",
+        "commit": "41f8f39",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -160,7 +160,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.062,
+        "duration_s": 0.054,
         "detail": null
       }
     },
@@ -179,8 +179,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T21:00:41Z",
-        "commit": "0792bbe",
+        "at": "2026-11-09T15:55:57Z",
+        "commit": "41f8f39",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -188,7 +188,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.052,
+        "duration_s": 0.045,
         "detail": null
       }
     }
