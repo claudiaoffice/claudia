@@ -4,6 +4,7 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import { type LinkLike, type Region } from './protocol'
 import { type Content } from './cells'
 import type { ImageAsset, ImageImport } from './images'
+import type { CellAnchor, ObjectsEvent, VisualObject } from './objects'
 import { type Axis, lineSize } from './line-sizes'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
@@ -40,21 +41,12 @@ export interface FunctionSummary {
 export interface FunctionHelp extends FunctionSummary {
   help: string
 }
-/** A floating object anchored to a cell of a sheet (E10.11): today only an image. `row`/`col` anchor its top
- * left corner; `w`/`h` are its pixel size, fixed at insertion — neither the anchor nor the size ever change
- * because of a structural edit (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject`
- * (dragging it) moves it, and there is no resize of an object yet. Mirrors `claudia_computes.SheetObject`. */
-export interface SheetObject {
-  id: string
-  sheet: string
-  kind: 'image'
-  row: number
-  col: number
-  w: number
-  h: number
-  image: string | null
-  imported: ImageImport | null
-}
+/** A floating object anchored to a cell of a sheet (E10.11, E10.16): the shared `ObjectBody` plus a
+ * `CellAnchor` — the only part of it that is this app's own (D177). `anchor.row`/`anchor.col` pin its top left
+ * corner; `w`/`h` are its pixel size. Neither the anchor nor the size ever changes because of a structural edit
+ * (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject` (dragging it) moves it and
+ * `resizeObject` resizes it. Mirrors `claudia_computes.SheetObject`. */
+export type SheetObject = VisualObject<CellAnchor>
 export interface State extends BaseState {
   sheets: SheetInfo[]
   activeSheet: string
@@ -247,9 +239,10 @@ export class Session extends BaseSession<State> {
         this.track(this.reload())
         return true
       case 'objects': {
-        for (const o of data.changed as SheetObject[]) s.objects[o.id] = o
-        for (const id of data.removed as string[]) delete s.objects[id]
-        s.order[data.sheet] = data.order
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed as SheetObject[]) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.container] = e.order
         return true
       }
       case 'image':

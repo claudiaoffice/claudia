@@ -512,7 +512,7 @@ kanban-plugin: board
 	
 	Use case: PLATFORM · Decisions: D73, D75, D62, D15, D21
 	
-	Status evidence: built as `claudia_core.css` (`CSS_VERSION` 1, `validate_css`, `parse_css` with line-numbered problems, `format_css`) and `claudia_core.styles` (`StyleDef`, `StyleBook` with `based_on` inheritance, `CreateStyle`, `ChangeStyle`, `RenameStyle`, `RemoveStyle`, `StylesChanged`), with two-author conflict tests. **Not done:** `kind` (only paragraph styles exist), the full delete rules (`RemoveStyle` exists only as the undo of a create), upcasting of dropped properties, and the style kinds for cells and shapes.
+	Status evidence: built as `claudia_core.css` (`CSS_VERSION` 2, `validate_css`, `parse_css` with line-numbered problems, `format_css`, `resolve_css`) and `claudia_core.styles` (`StyleDef`, `StyleBook` with `based_on` inheritance, `CreateStyle`, `ChangeStyle`, `RenameStyle`, `RemoveStyle`, `StylesChanged`), with two-author conflict tests. An object's own style can now be repointed (`core.SetObjectStyle`), and the methods a document needs are shared by all three apps (`claudia_server.styles`, D203). Colour is a second axis beside the styles: `claudia_core.palette` holds the document's nine **colour roles**, a style writes `@accent` or `@accent/55`, and a client draws from the `resolved` form so that what reaches a browser stays literal (D200–D202). Every built-in style in all three apps is written in roles, so no literal colour is left anywhere in a new document. **Not done:** `kind` (only paragraph styles exist), the full delete rules (`RemoveStyle` exists only as the undo of a create), upcasting of dropped properties, the style kinds for cells and shapes, and a command that lets a person define a role of her own (`ReplacePalette` can bring a different set; nothing adds one).
 - [ ] **E2.1 · Container format**
 	As a user, I want my document as one compressed file, so that it is small and easy to move.
 	
@@ -872,7 +872,7 @@ kanban-plugin: board
 	
 	Use case: ALL · Decisions: D67, D78, D79
 	
-	Status evidence: three shapes exist as JSON in the built-in library — rectangle, circle, triangle. **The deliberate set is still the owner's decision** (rounded rectangle, line, arrow, bracket, callout?), and colours come from the built-in style `plain-shape` in code, not from a template (E10.4).
+	Status evidence: three shapes exist as JSON in the built-in library — rectangle, circle, triangle. **The deliberate set is still the owner's decision** (rounded rectangle, line, arrow, bracket, callout?). Colours now come from the document's **palette**: `plain-shape` says `fill: @accent/14` and `stroke: @accent`, and changing the role recolours every shape at once (D200, D201). A template bringing a palette with it is still E10.4.
 - [ ] **E10.13 · First-draft follow-ups**
 	As the project owner, I want the known gaps of the first creates draft written down as work, so that none is forgotten.
 	

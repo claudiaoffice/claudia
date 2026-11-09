@@ -26,7 +26,8 @@ nitpicky = True
 # Standard-library types are not linked (the build needs no network); everything of ours must resolve.
 nitpick_ignore_regex = [
     (r"py:.*", r"(typing|collections\.abc|abc|builtins|enum)\..*"),
-    (r"py:class", r"abc\.ABC|M"),
+    # TypeVars and type parameters: M (DocumentModel), A (the anchor of VisualObject/ObjectModel)
+    (r"py:class", r"abc\.ABC|M|A"),
     (r"py:class", r"'Mapping\[str"),  # (Sphinx cannot split the quoted Mapping[str, int])
     # (nor generics with several arguments in a signature: it cuts them at the first comma)
     (r"py:class", r"(Callable|dict|list|tuple)\[.*"),
@@ -34,6 +35,8 @@ nitpick_ignore_regex = [
     (r"py:class", r"(os|pathlib|ssl)\.\w+|(fastapi|starlette)\..*"),
     # WorkerPool.submit's own TypeVar/ParamSpec (P, R): not a class to link to
     (r"py:class", r"claudia_server\.workers\.[PR]"),
+    # `type` aliases (PEP 695) for the per-app object types: an alias is not a class to link to
+    (r"py:class", r"claudia_(creates|computes|composes)\.model\.(Slide|Sheet|Text)Object"),
 ]
 html_theme = "alabaster"
 myst_heading_anchors = 3

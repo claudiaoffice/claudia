@@ -97,8 +97,8 @@ export interface TextRegion {
  * shape, never both). */
 export interface ObjectsRegion {
   kind: 'objects'
-  slide?: string
-  sheet?: string
+  /** The slide, sheet or paragraph the objects are on: one field in all three apps (E10.16, D177). */
+  container: string
   ids: string[]
 }
 export type Region = CellsRegion | TextRegion | ObjectsRegion

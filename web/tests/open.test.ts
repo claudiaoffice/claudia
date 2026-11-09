@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSlides, openSession } from '~/lib/open'
+import { appOfServer, isSlides, openSession } from '~/lib/open'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { SlideSession } from '~/lib/slide-session'
@@ -49,6 +49,8 @@ class FakeLink implements LinkLike {
         return { library: [], document: [] }
       case 'images':
         return []
+      case 'palette':
+        return { type: 'palette', roles: [], readings: [] }
       case 'styles':
       case 'log':
       case 'chat_log':
@@ -134,5 +136,25 @@ describe('openSession', () => {
     const { factory } = links(welcome('computes'), false)
     const session = await openSession(factory, { host: 'demo.claudiaoffice.de:8420' })
     expect(session.state.host).toBe('demo.claudiaoffice.de:8420')
+  })
+})
+
+describe('appOfServer', () => {
+  // Three servers started side by side all greeted their visitors as computes: this page read the app off the
+  // first listed document, so an empty server showed whatever the fallback was, whichever app it served (UX-10).
+  it('believes the server about the app it serves, even with no documents yet', () => {
+    expect(appOfServer({ app: 'creates', documents: [] })).toBe('creates')
+    expect(appOfServer({ app: 'composes', documents: [] })).toBe('composes')
+  })
+  it('prefers what the server says to what a document says', () => {
+    expect(appOfServer({ app: 'creates', documents: [{ app: 'computes' }] })).toBe('creates')
+  })
+  it('falls back to a listed document for a server that does not say so', () => {
+    expect(appOfServer({ documents: [{ app: 'composes' }] })).toBe('composes')
+  })
+  it('is claudia in general when nothing says anything', () => {
+    expect(appOfServer({ app: '', documents: [] })).toBe('claudia')
+    expect(appOfServer(null)).toBe('claudia')
+    expect(appOfServer(undefined)).toBe('claudia')
   })
 })

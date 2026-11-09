@@ -15,4 +15,5 @@ clients/windows/apps/*/bin
 docs/_build
 claudiaoffice-log/.obsidian/*
 claudiaoffice-log/.obsidian/workspace.json
+test-documents/_artifacts
 

@@ -3,7 +3,7 @@ name = "claudia-composes-io"
 version = "0.0.1"
 description = "claudia-composes-io"
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-composes", "python-docx>=1.1"]
+dependencies = ["claudia-core", "claudia-composes", "claudia-opc-io", "python-docx>=1.1"]
 
 [build-system]
 requires = ["hatchling"]
@@ -15,3 +15,4 @@ packages = ["src/claudia_composes_io"]
 [tool.uv.sources]
 claudia-core = { workspace = true }
 claudia-composes = { workspace = true }
+claudia-opc-io = { workspace = true }

@@ -22,41 +22,58 @@ const WELCOME: Welcome = {
 
 const RECT = { format: 1, id: 'rectangle', name: 'Rectangle', path: 'M0 0 L100 0 L100 100 L0 100 Z', aspect: null, text_area: { x: 0, y: 0, w: 100, h: 100 } }
 const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z', aspect: 1, text_area: { x: 15, y: 15, w: 70, h: 70 } }
-const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', css: { color: '#1f1a33' } }
-const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', css: { fill: '#e7e1f4' } }
+// A style names the palette's roles in `css`/`computed` and carries the colours in `resolved`, which is what the
+// page is drawn from (D200).
+const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', based_on: null, to_name: false, css: { color: '@text' }, computed: { color: '@text' }, resolved: { color: '#1f1a33' } }
+const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', based_on: 'body-text', to_name: false, css: { fill: '@accent/14' }, computed: { color: '@text', fill: '@accent/14' }, resolved: { color: '#1f1a33', fill: 'rgba(91, 75, 196, 0.14)' } }
+const PALETTE = {
+  type: 'palette',
+  roles: [
+    { id: 'text', name: 'Text', purpose: 'the words you read', colour: '#1F1A33' },
+    { id: 'accent', name: 'Accent', purpose: 'the one thing to notice', colour: '#5B4BC4' },
+  ],
+  readings: [{ foreground: 'text', background: 'page', ratio: 15.14, floor: 4.5, ok: true, words: true }],
+}
+
+// An object as the server sends it (E10.16, D177): the shared body's fields flat, the anchor nested — the same
+// shape in all three apps, only `anchor` differing.
+const paragraph = (id: string, words = '') => ({
+  id,
+  style: 'body-text',
+  text: words,
+  runs: words ? [[words.length, 'ana', null]] : [],
+})
 
 const text = (id: string, extra: object = {}) => ({
   id,
-  slide: 's1',
   kind: 'text',
-  x: 100,
-  y: 100,
   w: 400,
   h: 120,
   style: 'body-text',
-  text: '',
+  paragraph: paragraph(id),
   shape: null,
   image: null,
   imported: null,
+  rotation: 0,
   snap: true,
+  anchor: { kind: 'slide', container: 's1', x: 100, y: 100 },
   ...extra,
 })
 const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
 const IMPORT = { asset: ASSET.id, alt: 'a chart', imported_by: 'ann', imported_at: '2026-11-07T10:00:00.000Z', source: 'disk', source_name: 'chart.gif', source_path: '/Users/ann/chart.gif' }
 const image = (id: string, extra: object = {}) => ({
   id,
-  slide: 's1',
   kind: 'image',
-  x: 0,
-  y: 0,
   w: 400,
   h: 200,
   style: 'plain-image',
-  text: '',
+  paragraph: null,
   shape: null,
   image: ASSET.id,
   imported: IMPORT,
+  rotation: 0,
   snap: true,
+  anchor: { kind: 'slide', container: 's1', x: 0, y: 0 },
   ...extra,
 })
 
@@ -100,6 +117,7 @@ function server(link: FakeLink, objects: any[] = []) {
     shapes: () => ({ library: [CIRCLE, RECT], document: [] }),
     images: () => [],
     styles: () => [BODY, SHAPE_STYLE],
+    palette: () => PALETTE,
     log: () => [],
     chat_log: () => [],
     checkpoints: () => [],
@@ -130,13 +148,15 @@ async function opened(objects: any[] = []) {
 
 describe('opening a presentation', () => {
   it('loads the slides with their objects, the shapes on offer and the styles', async () => {
-    const { state, session } = await opened([text('t1', { text: 'Hello' })])
+    const { state, session } = await opened([text('t1', { paragraph: paragraph('t1', 'Hello') })])
     expect(state.status).toBe('open')
     expect(state.slides).toEqual([{ id: 's1', objects: 1 }])
     expect(state.activeSlide).toBe('s1')
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['t1'])
     expect(state.library.map((s) => s.id)).toEqual(['circle', 'rectangle'])
-    expect(state.styles['body-text']!.css.color).toBe('#1f1a33')
+    expect(state.styles['body-text']!.css.color).toBe('@text')
+    expect(state.styles['body-text']!.resolved.color).toBe('#1f1a33')
+    expect(state.palette!.roles.map((r) => r.id)).toEqual(['text', 'accent'])
     expect(state.selected).toBeNull()
   })
   it('knows the outlines of the document by id', async () => {
@@ -164,18 +184,32 @@ describe('opening a presentation', () => {
 describe('what the server tells', () => {
   it('adds and changes objects, in the stacking order it sends', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
-    link.push('objects', { type: 'objects', slide: 's1', changed: [text('c')], removed: [], order: ['a', 'b', 'c'] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [text('c')], removed: [], order: ['a', 'b', 'c'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b', 'c'])
-    link.push('objects', { type: 'objects', slide: 's1', changed: [text('a', { x: 7 })], removed: [], order: ['a', 'b', 'c'] })
-    expect(session.objectsOn('s1')[0]!.x).toBe(7)
+    link.push('objects', { type: 'objects', container: 's1', changed: [text('a', { anchor: { kind: 'slide', container: 's1', x: 7, y: 100 } })], removed: [], order: ['a', 'b', 'c'] })
+    expect(session.objectsOn('s1')[0]!.anchor.x).toBe(7)
     expect(state.slides[0]!.objects).toBe(3)
   })
   it('takes objects away', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
-    link.push('objects', { type: 'objects', slide: 's1', changed: [], removed: ['a'], order: ['b'] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: ['b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
     expect(state.objects.a).toBeUndefined()
     expect(state.slides[0]!.objects).toBe(1)
+  })
+  it('follows a style change, so a palette role reaches the slide without reopening it', async () => {
+    // Found by driving a real browser: the styles were requested once at open and never again, so a colleague's
+    // style change — and `set_role`, which recolours every style that named the role — did nothing visible here.
+    const { link, state } = await opened([text('a')])
+    const recoloured = { ...SHAPE_STYLE, resolved: { color: '#1f1a33', fill: 'rgba(0, 128, 128, 0.14)' } }
+    link.push('styles', { type: 'styles', styles: [BODY, recoloured] })
+    expect(state.styles['plain-shape']!.resolved.fill).toBe('rgba(0, 128, 128, 0.14)')
+    expect(state.styles['plain-shape']!.computed.fill).toBe('@accent/14')
+  })
+  it('keeps the palette the server sends, roles and readings alike', async () => {
+    const { link, state } = await opened()
+    link.push('palette', { type: 'palette', roles: [{ id: 'accent', name: 'Accent', purpose: '', colour: '#008080' }], readings: [] })
+    expect(state.palette!.roles[0]!.colour).toBe('#008080')
   })
   it('learns and forgets outlines', async () => {
     const { link, state } = await opened()
@@ -208,7 +242,7 @@ describe('what the server tells', () => {
   it('drops the selection of an object that somebody else removed', async () => {
     const { link, session, state } = await opened([text('a')])
     await session.select('a')
-    link.push('objects', { type: 'objects', slide: 's1', changed: [], removed: ['a'], order: [] })
+    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: [] })
     expect(state.selected).toBeNull()
     await session.settled()
     expect(link.count('unlock')).toBe(1)
@@ -219,13 +253,13 @@ describe('making changes', () => {
   it('adds a text box where it is told to and selects it', async () => {
     const { link, session, state } = await opened()
     link.handlers.add_object = () => {
-      link.push('objects', { type: 'objects', slide: 's1', changed: [text('o1')], removed: [], order: ['o1'] })
+      link.push('objects', { type: 'objects', container: 's1', changed: [text('o1')], removed: [], order: ['o1'] })
       return { object: 'o1', revision: 'main:1' }
     }
     expect(await session.addText({ x: 160, y: 120, w: 640, h: 140 })).toBe('o1')
     expect(link.last('add_object')).toEqual({ slide: 's1', kind: 'text', x: 160, y: 120, w: 640, h: 140, base: 'main:0' })
     expect(state.selected).toBe('o1')
-    expect(link.last('lock').regions).toEqual([{ kind: 'objects', slide: 's1', ids: ['o1'] }])
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['o1'] }])
   })
   it('adds a shape by the id of its outline', async () => {
     const { link, session } = await opened()
@@ -235,7 +269,7 @@ describe('making changes', () => {
   it('imports a picture from disk and selects it (E10.8)', async () => {
     const { link, session, state } = await opened()
     link.handlers.add_image = () => {
-      link.push('objects', { type: 'objects', slide: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
+      link.push('objects', { type: 'objects', container: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
       return { object: 'i1', revision: 'main:1' }
     }
     const id = await session.addImage(
@@ -309,7 +343,7 @@ describe('selecting', () => {
     const { link, session, state } = await opened([text('a'), text('b')])
     await session.select('a')
     expect(state.selected).toBe('a')
-    expect(link.last('lock').regions).toEqual([{ kind: 'objects', slide: 's1', ids: ['a'] }])
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['a'] }])
     await session.select(null)
     expect(state.selected).toBeNull()
     expect(link.count('unlock')).toBe(1)
@@ -341,12 +375,12 @@ describe('selecting', () => {
     await session.select('a')
     expect(session.state.selected).toBe('a')
     expect(link.count('lock')).toBe(0)
-    expect(link.last('presence').regions).toEqual([{ kind: 'objects', slide: 's1', ids: ['a'] }])
+    expect(link.last('presence').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['a'] }])
     expect(session.state.notice).toBeNull()
   })
   it('tells which objects colleagues have selected', async () => {
     const { link, session } = await opened([text('a'), text('b')])
-    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'objects', slide: 's1', ids: ['b'] }], locked: true } })
+    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'objects', container: 's1', ids: ['b'] }], locked: true } })
     expect(session.selectedByOthers('s1')).toEqual([{ id: 'b', user: 'ben', locked: true }])
     expect(session.selectedByOthers('s2')).toEqual([])
   })

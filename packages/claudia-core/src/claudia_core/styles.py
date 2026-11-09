@@ -13,12 +13,12 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, ClassVar
 
 from .commands import Command, CommandRegistry, core_commands
-from .css import validate_css
+from .css import resolve_css, validate_css
 
 if TYPE_CHECKING:
     from .context import Context
@@ -141,9 +141,25 @@ class StyleBook:
             candidate = f"{base} (changed {number})"
         return candidate
 
-    def views(self) -> list[dict]:
-        """Every style as sent to clients: the plain data plus the ``computed`` CSS."""
-        return [{**style.to_data(), "computed": self.computed(style.id)} for style in self._styles.values()]
+    def views(self, colours: Mapping[str, str] | None = None) -> list[dict]:
+        """Every style as sent to clients: the plain data, the ``computed`` CSS, and the ``resolved`` CSS.
+
+        ``computed`` is the chain of parents resolved, and it still names the palette's roles (``@accent``), which
+        is what a style menu shows a person. ``resolved`` is the same again with every role replaced by the literal
+        colour ``colours`` gives for it — that is what a client draws with, so the CSS reaching a browser is always
+        literal and the allow-list can go on refusing ``var()`` and ``calc()`` outright (D200).
+
+        ``colours`` is the document's palette, as :meth:`claudia_core.Palette.colours` gives it. Without one, a
+        declaration that names a role is left out of ``resolved``: a book is not the place to invent a colour.
+        """
+        return [
+            {
+                **style.to_data(),
+                "computed": (computed := self.computed(style.id)),
+                "resolved": resolve_css(computed, colours or {}),
+            }
+            for style in self._styles.values()
+        ]
 
     def to_data(self) -> list[dict]:
         """The book as plain data (for snapshots); ``from_data`` is the inverse."""
@@ -209,8 +225,18 @@ def _book(ctx: Context) -> StyleBook:
     return book
 
 
+def palette_colours(model: object) -> dict[str, str] | None:
+    """The role colours of a model that has a palette, else ``None``.
+
+    Asked of the model rather than imported, so that this module knows nothing of :mod:`claudia_core.palette` and
+    the two can go on being used apart: an app may hold a style book and no palette.
+    """
+    colours = getattr(getattr(model, "palette", None), "colours", None)
+    return colours() if callable(colours) else None
+
+
 def _tell(ctx: Context, book: StyleBook) -> None:
-    ctx.emit(StylesChanged(tuple(book.views())))
+    ctx.emit(StylesChanged(tuple(book.views(palette_colours(ctx.model)))))
 
 
 def _known(book: StyleBook, style_id: str) -> StyleDef:

@@ -30,7 +30,11 @@ FORBIDDEN_IMPORTS = {
     "uuid",
 }
 CLOCK_ONLY = {"time", "datetime"}  # only clock.py may read a clock
-APP_WORDS = ("sheet", "cell", "workbook", "slide", "paragraph", "formula")
+# "paragraph" was here until E10.17 (D181), when a paragraph stopped being a composes idea: a creates text box
+# and the label inside a shape on a sheet carry the same entity, so the kernel is where it belongs. The rest
+# stay — "slide" is creates', "sheet"/"cell"/"workbook" are computes', "formula" is computes' too, and the
+# kernel knowing any of them would mean it had learned one app's shape.
+APP_WORDS = ("sheet", "cell", "workbook", "slide", "formula")
 
 
 def modules():
@@ -74,6 +78,8 @@ def test_kernel_has_no_third_party_imports():
         "datetime",
         "enum",
         "hashlib",  # assets.py: content-addressing an image by its sha256
+        "json",  # shapes.py: a shape outline is one JSON object (parsing text, no I/O)
+        "math",  # shapes.py: isfinite, refusing a shape coordinate that is nan or inf
         "re",
         "struct",  # assets.py: reading JPEG/BMP/GIF binary headers
         "time",

@@ -120,3 +120,25 @@ def test_ci_catches_the_real_bug_with_no_node_modules():
     assert outcomes, "this test asserts the bug's own precondition: web/node_modules is not installed here"
     failed, _ = check_debt.verdict(outcomes, ci=True, allow_skip=set())
     assert failed, "check_debt.py --ci must exit non-zero when node_modules is missing and no skip is allowed"
+
+
+def test_the_browser_test_is_its_own_step_and_never_fails_the_gate_for_being_unrunnable():
+    """UX-10's test needs a built web app and a Chromium, so it is a step of its own that skips with a reason.
+
+    A skip is still named in the final line (PROC-02) and still fails ``--ci`` unless allowed, which is how CI says
+    out loud that the dedicated ``e2e`` job is the one running it for real.
+    """
+    (check,) = check_debt.e2e_checks()
+    assert check.name == "e2e greeting"
+    assert check.slow, "it starts three servers and a browser; --fast should leave it out"
+    if check.skip_reason:
+        failed, message = check_debt.verdict(
+            [check_debt.Outcome(check.name, "skipped", check.skip_reason)], ci=False, allow_skip=set()
+        )
+        assert not failed and check.name in message, "an unrunnable browser test is a named skip, not a failure"
+
+
+def test_the_browser_test_does_not_also_run_inside_the_main_suite():
+    """It starts three servers; the suite that runs on every save must not."""
+    (tests,) = [c for c in check_debt.checks() if c.name == "tests"]
+    assert "--ignore" in tests.command and check_debt.E2E in tests.command
