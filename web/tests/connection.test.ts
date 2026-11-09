@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { friendlyLabel, indicatorLabel, manageUrl, resolveOrigin, statusWord } from '~/lib/connection'
+import { canManageNow, friendlyLabel, indicatorLabel, manageUrl, resolveOrigin, statusWord } from '~/lib/connection'
 import type { Bookmark } from '~/lib/server-bookmarks'
 
 describe('resolveOrigin', () => {
@@ -50,5 +50,18 @@ describe('indicatorLabel', () => {
 describe('manageUrl', () => {
   it('is that server\'s own settings pages', () => {
     expect(manageUrl('https://demo.claudiaoffice.de')).toBe('https://demo.claudiaoffice.de/admin/')
+  })
+})
+
+describe('canManageNow', () => {
+  it('is true once the connection is open', () => {
+    expect(canManageNow('open')).toBe(true)
+  })
+
+  it('is false while reconnecting, connecting, closed or idle — "Manage this server…" would be misleading there', () => {
+    expect(canManageNow('reconnecting')).toBe(false)
+    expect(canManageNow('connecting')).toBe(false)
+    expect(canManageNow('closed')).toBe(false)
+    expect(canManageNow('idle')).toBe(false)
   })
 })
