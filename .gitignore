@@ -15,5 +15,13 @@ clients/windows/apps/*/bin
 docs/_build
 claudiaoffice-log/.obsidian/*
 claudiaoffice-log/.obsidian/workspace.json
+clients/windows/apps/composes/bin/
+clients/windows/apps/composes/inject/
+clients/windows/apps/composes/js/
+clients/windows/dist/
+clients/windows/node_modules/
+*.patch
+clients/windows/apps/composes/.tmp/
+clients/windows/apps/composes/neutralinojs.log
 test-documents/_artifacts
 
