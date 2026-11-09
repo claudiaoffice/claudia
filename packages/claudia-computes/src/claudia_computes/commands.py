@@ -1,7 +1,11 @@
-"""Commands of the computes model: sheets, cell contents, structural edits, row and column sizes.
+"""Commands of the computes model: sheets, cell contents, structural edits, row and column sizes, chart tabs.
 
-Everything about floating objects — images, shapes, text boxes: define, forget, add, remove, move, resize,
-rotate, retext, snap — is shared with composes and creates and lives in :mod:`claudia_core.objects` (E10.16).
+Everything about floating objects — images, shapes, text boxes, diagrams: define, forget, add, remove, move,
+resize, rotate, retext, snap — is shared with composes and creates and lives in :mod:`claudia_core.objects`
+(E10.16). ``AddChart``/``RemoveChart`` below are computes' own: a chart *tab* is a concept this app alone has
+(creates has slides, composes has none of this), so it stays here even though the diagram *definition* it shows
+(a :class:`~claudia_computes.ChartSpec`) is managed by the shared ``DefineDiagram``/``UpdateDiagram``/
+``ForgetDiagram`` (E6.6).
 
 Every command carries final values and returns its exact inverse, so undo, replay and checkpoints work on the
 kernel without any computes-specific code in it. ``shifted_by`` is what lets one author undo an old step after
@@ -14,9 +18,9 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import AddObject, Batch, Command, Context
+from claudia_core import AddObject, Batch, Command, Context, ForgetDiagram
 
-from .events import CellsChanged, LinesResized, SheetsChanged, StructureChanged
+from .events import CellsChanged, ChartsChanged, LinesResized, SheetsChanged, StructureChanged
 from .formula import parse_formula
 from .formula.rewrite import adjusted
 from .model import (
@@ -26,6 +30,7 @@ from .model import (
     MAX_ROWS,
     MIN_COL_WIDTH,
     MIN_ROW_HEIGHT,
+    Chart,
     Content,
     Sheet,
     WorkbookModel,
@@ -148,6 +153,13 @@ class RemoveSheet(Command):
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         model = ctx.model
         sheet = model.sheet(self.id)
+        blocking = model.charts_reading(self.id)
+        if blocking:
+            # A diagram's range is frozen at the cells it names (E6.6, same policy as an object's anchor) — it
+            # does not follow the sheet elsewhere the way a formula reference would, so removing the sheet
+            # would leave it pointing nowhere. Refusing is the same answer ``forget_shape``/``forget_image``
+            # give while something still uses them.
+            raise ValueError(f"sheet {sheet.name!r} still has chart {blocking[0]!r}'s data on it")
         index = list(model.sheets).index(self.id)
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
         row_heights = tuple(sorted(sheet.row_heights.items()))
@@ -439,3 +451,96 @@ class ResizeLines(Command):
 
     def redacted(self) -> Command:
         return self  # a size is layout, not content with anything to hide (same reasoning as Structure)
+
+
+# ------------------------------------------------------------------------------ chart tabs
+@register
+@dataclass(frozen=True)
+class AddChart(Command):
+    """Add a chart tab (E6.6): a name in the tab strip, showing the diagram definition ``spec_id`` names.
+
+    That definition must already be in the document — put there by :class:`~claudia_core.DefineDiagram` — and
+    stays shared: a floating diagram object elsewhere may show the very same ``spec_id`` (``Chart``'s own
+    docstring says why that mirrors an image asset). A tab is computes' own concept, so this command lives
+    here rather than in :mod:`claudia_core.objects`, even though the definition it shows does not."""
+
+    kind: ClassVar[str] = "computes.AddChart"
+    id: str
+    name: str
+    spec_id: str
+    index: int | None = None  # where in the tab order; None: at the end
+
+    @property
+    def label(self) -> str:
+        return "Add chart"
+
+    @property
+    def summary(self) -> str:
+        return f"add chart {self.name}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        if self.id in model.charts:
+            raise ValueError(f"chart id {self.id!r} exists")
+        if any(c.name.casefold() == self.name.casefold() for c in model.charts.values()):
+            raise ValueError(f"a chart called {self.name!r} exists")
+        if self.spec_id not in model.diagrams:
+            raise ValueError(f"this document does not know the diagram {self.spec_id!r}")
+        model.add_chart(Chart(self.id, self.name, self.spec_id), self.index)
+        ctx.emit(ChartsChanged())
+        return RemoveChart(self.id)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "name": self.name, "spec_id": self.spec_id, "index": self.index}
+
+    @classmethod
+    def from_data(cls, data, registry) -> AddChart:
+        return cls(data["id"], data["name"], data["spec_id"], data.get("index"))
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Refused once the diagram it would show is gone (the same guard ``AddObject`` keeps for its shape,
+        image or diagram, applied here to a tab instead of a floating object)."""
+        return None if isinstance(other, ForgetDiagram) and other.id == self.spec_id else self
+
+    def stub(self) -> dict:
+        return {"chart": self.id}
+
+    def redacted(self) -> Command:
+        return AddChart(self.id, self.id, self.spec_id, self.index)  # still there for later commands, neutral name
+
+
+@register
+@dataclass(frozen=True)
+class RemoveChart(Command):
+    """Remove a chart tab. The diagram definition it showed is untouched — it may still be shown elsewhere, the
+    same way removing an object never forgets the image or shape it used (:class:`~claudia_core.ForgetDiagram`
+    is the separate, explicit step for letting the definition itself go)."""
+
+    kind: ClassVar[str] = "computes.RemoveChart"
+    id: str
+
+    @property
+    def label(self) -> str:
+        return "Remove chart"
+
+    @property
+    def summary(self) -> str:
+        return "remove a chart"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        chart = model.chart(self.id)
+        index = list(model.charts).index(self.id)
+        model.remove_chart(self.id)
+        ctx.emit(ChartsChanged())
+        return AddChart(chart.id, chart.name, chart.spec_id, index)
+
+    def to_data(self) -> dict:
+        return {"id": self.id}
+
+    @classmethod
+    def from_data(cls, data, registry) -> RemoveChart:
+        return cls(data["id"])
+
+    def redacted(self) -> Command:
+        return self

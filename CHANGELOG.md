@@ -4,6 +4,29 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.11.0] - 2026-11-08
+
+A diagram joins the shared object layer as its own kind, so a chart can be a floating object on a slide, sheet
+or paragraph the same way an image or a shape is (E6.6). What a diagram draws is deliberately opaque to the
+kernel — the same split the object layer already draws between a body and an anchor, applied to a kind's own
+content instead of its placement, since only computes (today) knows what a chart's range and titles mean.
+
+### Added
+- `claudia_core.objects`: `"diagram"` joins `OBJECT_KINDS`; `ObjectBody` gained a `diagram` field (the id of a
+  definition, alongside its existing `shape`/`image`).
+- `DiagramDefinition`: a `Protocol` for what a diagram draws, mirroring `Anchor` — an app reads its own back
+  through the new `ObjectModel.diagram_from_data(data)` hook, the one door this data enters through.
+- `ObjectModel.diagrams`, `define_diagram`, `forget_diagram`, `replace_diagram`, `users_of_diagram`, and
+  `diagrams_to_data()`/the `diagrams` parameter of `restore_objects()` — the same shape as the existing
+  shape/image methods, except a diagram can also be redefined in place (`replace_diagram`), since unlike a
+  shape or an image, a diagram is meant to be edited after the fact.
+- `DefineDiagram`, `UpdateDiagram` and `ForgetDiagram`: the commands behind the above, each with its exact
+  inverse (mirroring `DefineShape`/`ForgetShape`).
+- `DiagramsChanged`: the event a view hears when a diagram definition is added, edited or forgotten.
+
+### Changed
+- `AddObject.label`/`summary` and `shifted_by` now cover `"diagram"` alongside `"text"`/`"shape"`/`"image"`.
+
 ## [0.10.0] - 2026-11-08
 
 The document's palette: colours named by what they mean (D200–D203). **Breaking:** `StyleBook.views` gained a

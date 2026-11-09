@@ -40,8 +40,9 @@ if TYPE_CHECKING:
     from .context import Context
 
 #: Kinds of object every app understands. A text box carries only words; a shape carries an outline and may carry
-#: words; an image carries an asset.
-OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image")
+#: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
+#: opaque to the kernel, the same way an anchor's own geometry is (see :class:`DiagramDefinition`).
+OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram")
 
 MIN_OBJECT_SIZE = 20  # an object is at least this wide and this tall, in its app's own units
 MAX_OBJECTS_PER_CONTAINER = 500
@@ -50,7 +51,20 @@ ASPECT_TOLERANCE = 1  # units a width may differ from height * aspect (whole uni
 MAX_LISTED_TEXT = 40  # characters of an object's text that a history sentence quotes
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
-_BODY_FIELDS = ("id", "kind", "w", "h", "style", "paragraph", "shape", "image", "imported", "rotation", "snap")
+_BODY_FIELDS = (
+    "id",
+    "kind",
+    "w",
+    "h",
+    "style",
+    "paragraph",
+    "shape",
+    "image",
+    "imported",
+    "diagram",
+    "rotation",
+    "snap",
+)
 
 
 def _is_whole(value: object) -> TypeIs[int]:
@@ -92,6 +106,28 @@ class Anchor(Protocol):
         """The plain-data form: what the log stores and clients are sent."""
 
 
+# --------------------------------------------------------------------------- the diagram seam
+@runtime_checkable
+class DiagramDefinition(Protocol):
+    """What a diagram draws, in the terms of one app only (E6.6) — a chart's cell range, series direction and
+    titles (computes); another app may one day give it a different shape entirely.
+
+    This is the same split the module description draws between a body and an anchor, applied to a *kind's*
+    own data instead of its placement: the kernel stores a definition by ``id`` and asks only whether one an
+    object still points at exists — never what is inside it. ``to_data`` must round-trip through the app's own
+    :meth:`~claudia_core.ObjectModel.diagram_from_data`, the one door this data enters through, exactly as an
+    anchor does. A definition is referenced by ``id`` from :attr:`ObjectBody.diagram` (a floating diagram
+    object) or from whatever other, app-specific place an app surfaces the same drawing (a tab, say) — the same
+    way an image asset is referenced by both an object and, one day, something else that reuses it."""
+
+    @property
+    def id(self) -> str:
+        """The id this definition is stored and referenced under."""
+
+    def to_data(self) -> dict:
+        """The plain-data form: what the log stores and clients are sent."""
+
+
 # --------------------------------------------------------------------------- the body
 @dataclass(frozen=True)
 class ObjectBody:
@@ -106,9 +142,11 @@ class ObjectBody:
     runs like any other text in the suite. A text box always has one, a shape may, an image never (``None``).
     The paragraph's own ``style`` says what the *words* look like, separately from the object's.
     ``shape`` is the id of an outline the document knows, ``image`` the id of an
-    :class:`~claudia_core.ImageAsset` and ``imported`` the record of how that image got there. ``rotation`` is
-    whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15, D151): the grid is a
-    helper the view draws, but each object's own choice to follow it is real, persisted document state."""
+    :class:`~claudia_core.ImageAsset` and ``imported`` the record of how that image got there. ``diagram`` is the
+    id of a :class:`DiagramDefinition` the document knows (E6.6) — opaque to the kernel, the way an anchor is.
+    ``rotation`` is whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15,
+    D151): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
+    document state."""
 
     id: str
     kind: str
@@ -119,6 +157,7 @@ class ObjectBody:
     shape: str | None = None
     image: str | None = None
     imported: ImageImport | None = None
+    diagram: str | None = None
     rotation: int = 0
     snap: bool = True
 
@@ -301,6 +340,23 @@ class ShapesChanged:
         }
 
 
+@dataclass(frozen=True)
+class DiagramsChanged:
+    """The document learned a diagram definition (``definition`` is it), forgot one (``definition`` is ``None``),
+    or redefined one in place (``definition`` is the new one, same id)."""
+
+    diagram_id: str
+    definition: DiagramDefinition | None
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {
+            "type": "diagram",
+            "id": self.diagram_id,
+            "definition": None if self.definition is None else self.definition.to_data(),
+        }
+
+
 # --------------------------------------------------------------------------- the model mixin
 class ObjectModel[A: Anchor]:
     """Objects, their stacking order, their shapes and their image assets: the state and the operations all three
@@ -312,6 +368,8 @@ class ObjectModel[A: Anchor]:
     * ``check_anchor(anchor, body)`` — whether an object with this body fits where the anchor says it does (a
       slide's bounds, a cell of the sheet, an offset inside a paragraph). Raise ``ValueError`` with a sentence.
     * ``anchor_from_data(data)`` — read its own anchor.
+    * ``diagram_from_data(data)`` — read its own :class:`DiagramDefinition`, if this app offers ``"diagram"``
+      among its ``object_kinds`` (an app that does not need raise the default ``NotImplementedError``).
     * ``styles`` — a :class:`~claudia_core.StyleBook`, which ``check_object`` looks a style up in.
 
     The stacking order is per container, bottom first; the last object is in front."""
@@ -327,6 +385,7 @@ class ObjectModel[A: Anchor]:
         self.objects: dict[str, VisualObject[A]] = {}
         self.images: dict[str, ImageAsset] = {}
         self.shapes: dict[str, ShapeDefinition] = {}
+        self.diagrams: dict[str, DiagramDefinition] = {}
         self._stack: dict[str, list[str]] = {}  # container id -> object ids, bottom first
 
     # -- what the app brings -----------------------------------------------------
@@ -340,6 +399,13 @@ class ObjectModel[A: Anchor]:
 
     def anchor_from_data(self, data: dict) -> A:
         """Read this app's anchor from its plain-data form; ``ValueError`` if it is not one."""
+        raise NotImplementedError
+
+    def diagram_from_data(self, data: dict) -> DiagramDefinition:
+        """Read this app's diagram definition from its plain-data form; ``ValueError`` if it is not one.
+
+        Only apps that put ``"diagram"`` in ``object_kinds`` need override this (the default is never reached by
+        :class:`DefineDiagram`/:class:`UpdateDiagram` unless an app actually issues them)."""
         raise NotImplementedError
 
     # -- the stack ---------------------------------------------------------------
@@ -382,6 +448,10 @@ class ObjectModel[A: Anchor]:
         """The ids of the objects that use this shape outline."""
         return [obj.id for obj in self.objects.values() if obj.body.shape == shape_id]
 
+    def users_of_diagram(self, diagram_id: str) -> list[str]:
+        """The ids of the objects that use this diagram definition."""
+        return [obj.id for obj in self.objects.values() if obj.body.diagram == diagram_id]
+
     def style_in_use(self, style_id: str) -> bool:
         """Does any object have this style? (Asked by the core style commands before they take a style back.)"""
         return any(obj.body.style == style_id for obj in self.objects.values())
@@ -418,6 +488,32 @@ class ObjectModel[A: Anchor]:
             raise ValueError(f"image {image_id!r} is in use by {users[0]!r}")
         return self.images.pop(image_id)
 
+    # -- diagrams ------------------------------------------------------------------
+    def define_diagram(self, definition: DiagramDefinition) -> None:
+        """Take a diagram's definition into the document, so that it opens the same on any server."""
+        if definition.id in self.diagrams:
+            raise ValueError(f"diagram {definition.id!r} is already defined in this document")
+        self.diagrams[definition.id] = definition
+
+    def forget_diagram(self, diagram_id: str) -> DiagramDefinition:
+        """Let go of a diagram definition nobody uses; returns it."""
+        if diagram_id not in self.diagrams:
+            raise ValueError(f"this document does not know the diagram {diagram_id!r}")
+        users = self.users_of_diagram(diagram_id)
+        if users:
+            raise ValueError(f"diagram {diagram_id!r} is in use by {users[0]!r}")
+        return self.diagrams.pop(diagram_id)
+
+    def replace_diagram(self, definition: DiagramDefinition) -> DiagramDefinition:
+        """Swap in a changed version of a diagram definition that exists, in place (its id stays); returns the
+        one it replaces. Unlike a shape or an image, a diagram's own content (its range, its titles) is meant to
+        be edited after the fact — this is what :class:`UpdateDiagram` uses."""
+        if definition.id not in self.diagrams:
+            raise ValueError(f"this document does not know the diagram {definition.id!r}")
+        old = self.diagrams[definition.id]
+        self.diagrams[definition.id] = definition
+        return old
+
     # -- checking ----------------------------------------------------------------
     def check_object(self, obj: VisualObject[A]) -> None:
         """``ValueError`` with a sentence if this object cannot exist in this document as it is now.
@@ -437,9 +533,9 @@ class ObjectModel[A: Anchor]:
             raise ValueError(f"unknown style {body.style!r}")
         aspect = self._check_visual(body)
         self._check_size(body, aspect)
-        if body.kind == "image":
+        if body.kind in ("image", "diagram"):
             if body.paragraph is not None:
-                raise ValueError("an image carries no text")
+                raise ValueError(f"a {body.kind} carries no text")
         else:
             if body.paragraph is None:
                 raise ValueError(f"a {body.kind} object carries a paragraph, even an empty one")
@@ -454,24 +550,43 @@ class ObjectModel[A: Anchor]:
         self.check_anchor(obj.anchor, body)
 
     def _check_visual(self, body: ObjectBody) -> float | None:
-        """What ``body.kind`` requires of ``shape``/``image``/``imported``, and the aspect ratio (if any) it
-        keeps."""
-        if body.kind == "text":
-            if body.shape is not None or body.image is not None or body.imported is not None:
-                raise ValueError("a text box has no shape or image")
-            return None
-        if body.kind == "shape":
-            if body.image is not None or body.imported is not None:
-                raise ValueError("a shape object has no image")
-            if body.shape is None:
-                raise ValueError("a shape object needs a shape")
-            definition = self.shapes.get(body.shape)
-            if definition is None:
-                raise ValueError(f"this document does not know the shape {body.shape!r}")
-            return definition.aspect
-        # body.kind == "image"
-        if body.shape is not None:
-            raise ValueError("an image object has no shape")
+        """What ``body.kind`` requires of ``shape``/``image``/``imported``/``diagram``, and the aspect ratio (if
+        any) it keeps. Each kind's own requirements are a small method of its own below, rather than one long
+        dispatch, now that there are four kinds to tell apart."""
+        checks = {
+            "text": self._check_text_visual,
+            "shape": self._check_shape_visual,
+            "diagram": self._check_diagram_visual,
+            "image": self._check_image_visual,
+        }
+        return checks[body.kind](body)
+
+    def _check_text_visual(self, body: ObjectBody) -> None:
+        if any((body.shape, body.image, body.imported, body.diagram)):
+            raise ValueError("a text box has no shape, image or diagram")
+
+    def _check_shape_visual(self, body: ObjectBody) -> float | None:
+        if any((body.image, body.imported, body.diagram)):
+            raise ValueError("a shape object has no image or diagram")
+        if body.shape is None:
+            raise ValueError("a shape object needs a shape")
+        definition = self.shapes.get(body.shape)
+        if definition is None:
+            raise ValueError(f"this document does not know the shape {body.shape!r}")
+        return definition.aspect
+
+    def _check_diagram_visual(self, body: ObjectBody) -> None:
+        if any((body.shape, body.image, body.imported)):
+            raise ValueError("a diagram object has no shape or image")
+        if body.diagram is None:
+            raise ValueError("a diagram object needs a diagram")
+        if body.diagram not in self.diagrams:
+            raise ValueError(f"this document does not know the diagram {body.diagram!r}")
+        # a diagram keeps no fixed aspect ratio (falls through to the implicit ``None``)
+
+    def _check_image_visual(self, body: ObjectBody) -> float | None:
+        if body.shape is not None or body.diagram is not None:
+            raise ValueError("an image object has no shape or diagram")
         if body.image is None or body.imported is None:
             raise ValueError("an image object needs an image and its import record")
         asset = self.images.get(body.image)
@@ -547,19 +662,27 @@ class ObjectModel[A: Anchor]:
         """Every shape outline, by id: what ``serialize`` stores."""
         return [shape.to_data() for _, shape in sorted(self.shapes.items())]
 
+    def diagrams_to_data(self) -> list[dict]:
+        """Every diagram definition, by id: what ``serialize`` stores."""
+        return [definition.to_data() for _, definition in sorted(self.diagrams.items())]
+
     def restore_objects(
         self,
         objects: Iterable[dict],
         images: Iterable[dict] = (),
         shapes: Iterable[dict] = (),
+        diagrams: Iterable[dict] = (),
     ) -> None:
-        """Put back what the three ``*_to_data`` methods stored (the containers must already exist)."""
+        """Put back what the four ``*_to_data`` methods stored (the containers must already exist)."""
         for data in shapes:
             shape = ShapeDefinition.from_data(data)
             self.shapes[shape.id] = shape
         for data in images:
             image = ImageAsset.from_data(data)
             self.images[image.id] = image
+        for data in diagrams:
+            definition = self.diagram_from_data(data)
+            self.diagrams[definition.id] = definition
         for data in objects:
             obj = VisualObject.from_data(data, self.anchor_from_data)
             self.objects[obj.id] = obj
@@ -752,6 +875,132 @@ class ForgetImage(Command):
 
 @core_commands.register
 @dataclass(frozen=True)
+class DefineDiagram(Command):
+    """Take a diagram's definition into the document, so that it opens the same anywhere.
+
+    ``definition`` crosses the wire and the log as plain data, exactly as an anchor does (see the module
+    description): the app reads it back through :meth:`~claudia_core.ObjectModel.diagram_from_data`, the one
+    door its own geometry (a cell range, say) enters through."""
+
+    kind: ClassVar[str] = "core.DefineDiagram"
+    definition: dict
+
+    @property
+    def label(self) -> str:
+        return "Define diagram"
+
+    @property
+    def summary(self) -> str:
+        return "The document takes a diagram"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        definition = model.diagram_from_data(self.definition)
+        model.define_diagram(definition)
+        ctx.emit(DiagramsChanged(definition.id, definition))
+        return ForgetDiagram(definition.id)
+
+    def to_data(self) -> dict:
+        return {"definition": dict(self.definition)}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> DefineDiagram:
+        return cls(dict(data["definition"]))
+
+    def shifted_by(self, other: Command) -> Command | None:
+        definition_id = self.definition.get("id")
+        return None if isinstance(other, DefineDiagram) and other.definition.get("id") == definition_id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class UpdateDiagram(Command):
+    """Redefine a diagram in place (its id stays): the only way a diagram's own content — its range, its titles —
+    ever changes once added. Unlike a shape or an image, which are immutable once imported, a diagram is meant
+    to be edited after the fact, so there is no forget-and-redefine dance for this."""
+
+    kind: ClassVar[str] = "core.UpdateDiagram"
+    id: str
+    definition: dict
+
+    @property
+    def label(self) -> str:
+        return "Edit diagram"
+
+    @property
+    def summary(self) -> str:
+        return "Edited a diagram"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        new = model.diagram_from_data(self.definition)
+        if new.id != self.id:
+            raise ValueError("a diagram cannot change its id")
+        old = model.replace_diagram(new)
+        ctx.emit(DiagramsChanged(self.id, new))
+        return UpdateDiagram(self.id, old.to_data())
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "definition": dict(self.definition)}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> UpdateDiagram:
+        return cls(data["id"], dict(data["definition"]))
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Never destroy what a colleague has done to the diagram since (edited it again, or forgotten it)."""
+        if isinstance(other, UpdateDiagram) and other.id == self.id:
+            return None
+        return None if isinstance(other, ForgetDiagram) and other.id == self.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class ForgetDiagram(Command):
+    """Let go of a diagram definition that no object uses (the undo of :class:`DefineDiagram`)."""
+
+    kind: ClassVar[str] = "core.ForgetDiagram"
+    id: str
+
+    @property
+    def label(self) -> str:
+        return "Forget diagram"
+
+    @property
+    def summary(self) -> str:
+        return f"The document lets go of the diagram {self.id}"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        definition = model.forget_diagram(self.id)
+        ctx.emit(DiagramsChanged(self.id, None))
+        return DefineDiagram(definition.to_data())
+
+    def to_data(self) -> dict:
+        return {"id": self.id}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> ForgetDiagram:
+        return cls(data["id"])
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Refuse when a colleague now uses the diagram, or defined it anew."""
+        if isinstance(other, AddObject) and other.body.diagram == self.id:
+            return None
+        return None if isinstance(other, DefineDiagram) and other.definition.get("id") == self.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@core_commands.register
+@dataclass(frozen=True)
 class AddObject(Command):
     """Put a text box, a shape or an image on a slide, a sheet or a paragraph: on top of the others, or at
     stacking place ``at``.
@@ -770,7 +1019,8 @@ class AddObject(Command):
 
     @property
     def label(self) -> str:
-        return {"text": "Add text box", "shape": "Add shape", "image": "Add image"}[self.body.kind]
+        labels = {"text": "Add text box", "shape": "Add shape", "image": "Add image", "diagram": "Add diagram"}
+        return labels[self.body.kind]
 
     @property
     def summary(self) -> str:
@@ -780,6 +1030,8 @@ class AddObject(Command):
         if self.body.kind == "image":
             alt = self.body.imported.alt if self.body.imported else ""
             return f"Added an image: {_quote(alt)}" if alt.strip() else "Added an image"
+        if self.body.kind == "diagram":
+            return "Added a diagram"
         return f"Added a {self.body.shape}"
 
     def apply(self, ctx: Context) -> Command:
@@ -801,11 +1053,13 @@ class AddObject(Command):
         return (ObjectSet(container, frozenset({self.object_id})),) if isinstance(container, str) else ()
 
     def shifted_by(self, other: Command) -> Command | None:
-        """Bringing an object back is refused when somebody made another one with its id, or took its shape or
-        image away."""
+        """Bringing an object back is refused when somebody made another one with its id, or took its shape,
+        image or diagram away."""
         if isinstance(other, AddObject) and other.object_id == self.object_id:
             return None
         if isinstance(other, ForgetShape) and other.id == self.body.shape:
+            return None
+        if isinstance(other, ForgetDiagram) and other.id == self.body.diagram:
             return None
         return None if isinstance(other, ForgetImage) and other.id == self.body.image else self
 

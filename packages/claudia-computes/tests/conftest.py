@@ -6,9 +6,13 @@ from claudia_computes import (
     AddObject,
     AddSheet,
     CellAnchor,
+    CellRef,
+    ChartSpec,
+    DefineDiagram,
     DefineImage,
     MoveObject,
     ObjectBody,
+    RangeRef,
     ResizeObject,
     SheetId,
     SheetObject,
@@ -116,3 +120,37 @@ def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset
     obj = image_object(object_id, asset=asset, **changes)
     steps = [add(obj)] if asset.id in doc.model.images else [DefineImage(asset), add(obj)]
     return doc.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=author)
+
+
+# -- charts (E6.6): a ChartSpec plus either a tab or a floating diagram object, or both ------------------------
+def chart_spec(spec_id: str = "c1", *, sheet: str = S1, first=(0, 0), last=(2, 1), **changes) -> ChartSpec:
+    """A minimal, valid bar chart over ``sheet``'s cells from ``first`` to ``last`` (row, col), inclusive."""
+    range_ = RangeRef(CellRef(first[0], first[1], SheetId(sheet)), CellRef(last[0], last[1], SheetId(sheet)))
+    fields = {"id": spec_id, "kind": "bar", "range": range_}
+    return ChartSpec(**{**fields, **changes})
+
+
+def diagram_object(object_id: str = "d1", sheet: str = S1, spec_id: str = "c1", **changes) -> SheetObject:
+    """A floating diagram object (E6.6) showing the definition ``spec_id`` names."""
+    fields = {
+        "id": object_id,
+        "sheet": sheet,
+        "kind": "diagram",
+        "row": 2,
+        "col": 2,
+        "w": 400,
+        "h": 200,
+        "style": "plain-image",  # a diagram carries its own colours, same as an image (plain-image's own purpose)
+        "diagram": spec_id,
+    }
+    return build(**{**fields, **changes})
+
+
+def put_chart_spec(doc, spec_id: str = "c1", author: str = "ana", **changes) -> ChartSpec:
+    """Register a chart definition (``DefineDiagram``), defining it first if the document does not have it.
+
+    Returns the spec — read it back with ``doc.model.diagrams[spec_id]``."""
+    spec = chart_spec(spec_id, **changes)
+    if spec_id not in doc.model.diagrams:
+        doc.execute(DefineDiagram(spec.to_data()), author=author)
+    return spec

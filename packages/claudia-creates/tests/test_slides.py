@@ -575,6 +575,7 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "shape",
         "image",
         "imported",
+        "diagram",  # E6.6: opaque to the shared body, like shape/image — a text box never sets it
         "rotation",
         "snap",
         "anchor",

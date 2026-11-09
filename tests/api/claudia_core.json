@@ -1,5 +1,5 @@
 {
- "version": "0.10.0",
+ "version": "0.11.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -292,6 +292,23 @@
   },
   "properties": []
  },
+ "DefineDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "DefineImage": {
   "class": [
    "Command"
@@ -325,6 +342,28 @@
    "label",
    "summary"
   ]
+ },
+ "DiagramDefinition": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "id"
+  ]
+ },
+ "DiagramsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(diagram_id: 'str', definition: 'DiagramDefinition | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "Document": {
   "class": [
@@ -467,6 +506,23 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "ForgetDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "ForgetImage": {
   "class": [
@@ -692,13 +748,13 @@
   ]
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image')"
+  "value": "('text', 'shape', 'image', 'diagram')"
  },
  "ObjectBody": {
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
@@ -717,9 +773,13 @@
    "check_object": "(self, obj: 'VisualObject[A]') -> 'None'",
    "close_container": "(self, container: 'str') -> 'None'",
    "containers": "(self) -> 'Iterable[str]'",
+   "define_diagram": "(self, definition: 'DiagramDefinition') -> 'None'",
    "define_image": "(self, image: 'ImageAsset') -> 'None'",
    "define_shape": "(self, shape: 'ShapeDefinition') -> 'None'",
    "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
+   "diagram_from_data": "(self, data: 'dict') -> 'DiagramDefinition'",
+   "diagrams_to_data": "(self) -> 'list[dict]'",
+   "forget_diagram": "(self, diagram_id: 'str') -> 'DiagramDefinition'",
    "forget_image": "(self, image_id: 'str') -> 'ImageAsset'",
    "forget_shape": "(self, shape_id: 'str') -> 'ShapeDefinition'",
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
@@ -729,12 +789,14 @@
    "objects_on": "(self, container: 'str') -> 'list[VisualObject[A]]'",
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
+   "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
    "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
-   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = ()) -> 'None'",
+   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = ()) -> 'None'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
    "shapes_to_data": "(self) -> 'list[dict]'",
    "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
    "users_of_shape": "(self, shape_id: 'str') -> 'list[str]'"
   },
@@ -1371,6 +1433,23 @@
   "init": "(kind: 'str')",
   "methods": {},
   "properties": []
+ },
+ "UpdateDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "VisualObject": {
   "class": [

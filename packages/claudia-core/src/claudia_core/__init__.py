@@ -19,7 +19,8 @@
     styles       StyleBook and the commands that change it (E1.10)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
-    objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands (E10.16)
+    objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
+                 (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
 
 The kernel contains no spreadbook, text or slide code and does no I/O.
 """
@@ -106,8 +107,12 @@ from .objects import (
     OBJECT_KINDS,
     AddObject,
     Anchor,
+    DefineDiagram,
     DefineImage,
     DefineShape,
+    DiagramDefinition,
+    DiagramsChanged,
+    ForgetDiagram,
     ForgetImage,
     ForgetShape,
     ImagesChanged,
@@ -125,6 +130,7 @@ from .objects import (
     SetSnap,
     SetText,
     ShapesChanged,
+    UpdateDiagram,
     VisualObject,
     paragraph_for,
 )
@@ -196,9 +202,12 @@ __all__ = [
     "CssError",
     "CssProblem",
     "decode_image",
+    "DefineDiagram",
     "DefineImage",
     "DefineShape",
     "delete_runs",
+    "DiagramDefinition",
+    "DiagramsChanged",
     "Document",
     "DocumentModel",
     "DocumentStore",
@@ -210,6 +219,7 @@ __all__ = [
     "EphemeralPublished",
     "EventBus",
     "FontRequirement",
+    "ForgetDiagram",
     "ForgetImage",
     "ForgetShape",
     "FORMAT",
@@ -308,6 +318,7 @@ __all__ = [
     "UndoConflict",
     "UndoRefused",
     "UnknownCommand",
+    "UpdateDiagram",
     "validate_css",
     "VisualObject",
 ]

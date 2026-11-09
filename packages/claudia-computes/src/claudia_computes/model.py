@@ -18,7 +18,7 @@ from bisect import bisect_left, bisect_right, insort
 from collections import defaultdict
 from dataclasses import dataclass
 from heapq import heappop, heappush
-from typing import ClassVar, Self, TypeIs
+from typing import ClassVar, Self, TypeIs, cast
 
 from claudia_core import (
     CommandRegistry,
@@ -34,6 +34,7 @@ from claudia_core import (
 )
 
 from .calc import Calculator
+from .charts import ChartSpec, in_bounds
 from .formula.rewrite import adjusted, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
@@ -62,7 +63,7 @@ MAX_COL_WIDTH = 2_000
 # row/column resize) — only ``MoveObject`` (the person dragging it) changes where it sits. That is a deliberate
 # policy, not an oversight: a picture should not leap across the sheet because somebody inserted a row above it.
 # It is why ``CellAnchor`` is not a ``RangeRef`` and takes no part in ``refs.adjusted``.
-OBJECT_KINDS = ("text", "shape", "image")
+OBJECT_KINDS = ("text", "shape", "image", "diagram")
 MIN_OBJECT_SIZE = 20  # pixels; an object is at least this wide and this tall
 MAX_OBJECTS_PER_SHEET = 500
 
@@ -107,6 +108,29 @@ class CellAnchor:
 
 #: One floating thing on a sheet: an image, and (as the shared layer grows into computes) a shape or text box.
 type SheetObject = VisualObject[CellAnchor]
+
+
+@dataclass(frozen=True)
+class Chart:
+    """One chart tab (E6.6): a name in the tab strip, and the id of the :class:`~claudia_computes.ChartSpec` it
+    shows — the same definition a floating diagram object elsewhere in the workbook may show too (see
+    ``ObjectBody.diagram``). A tab adds nothing of its own to what is drawn; it only gives a definition a place
+    in the tab strip, the same way a floating object gives one a place on a sheet. Two charts (or a chart and a
+    floating object) may point at the same ``spec_id``, exactly as two image objects may share one
+    :class:`~claudia_core.ImageAsset`."""
+
+    id: str
+    name: str
+    spec_id: str
+
+    def to_data(self) -> dict:
+        """The plain-data form: what the log stores and clients are sent."""
+        return {"id": self.id, "name": self.name, "spec_id": self.spec_id}
+
+    @classmethod
+    def from_data(cls, data: dict) -> Chart:
+        """Inverse of :meth:`to_data`."""
+        return cls(data["id"], data["name"], data["spec_id"])
 
 
 _default_functions: FunctionRegistry | None = None
@@ -320,7 +344,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 3: the workbook also carries images and objects anchored to cells (E10.11)
     # 4: objects are a shared body plus a CellAnchor, and the workbook carries a style book (E10.16)
     # 5: the workbook carries its own colour palette (D200)
-    state_schema: ClassVar[int] = 5
+    # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
+    state_schema: ClassVar[int] = 6
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
@@ -341,6 +366,10 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         #: The colours of this workbook, by what they mean. Part of the document, so it looks the same on
         #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
         self.palette: Palette = palette if palette is not None else builtin_palette()
+        #: Chart tabs, in tab order (E6.6): a name plus the id of the diagram definition (``self.diagrams``,
+        #: from :class:`~claudia_core.ObjectModel`) it shows. A floating diagram object may show the very same
+        #: definition — see ``Chart``'s own docstring.
+        self.charts: dict[str, Chart] = {}
 
     @classmethod
     def empty(cls) -> Self:
@@ -353,7 +382,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "palette": self.palette.to_data(),
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
+            "diagrams": self.diagrams_to_data(),
             "objects": self.objects_to_data(),
+            "charts": [chart.to_data() for chart in self.charts.values()],
         }
 
     @classmethod
@@ -366,7 +397,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.col_widths = dict(item["col_widths"])
             model.sheets[sheet.id] = sheet
             model.open_container(str(sheet.id))
-        model.restore_objects(state["objects"], state["images"], state["shapes"])
+        model.restore_objects(state["objects"], state["images"], state["shapes"], state["diagrams"])
+        model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model._calculate_loaded()
         return model
 
@@ -386,6 +418,47 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             raise ValueError("row and col must be whole numbers")
         if anchor.row < 0 or anchor.col < 0 or anchor.row >= MAX_ROWS or anchor.col >= MAX_COLS:
             raise ValueError("the object's anchor must be a cell of the sheet")
+
+    def diagram_from_data(self, data: dict) -> ChartSpec:
+        """Read a chart definition; ``ValueError`` if the data is not one, or its range does not fit a sheet
+        this workbook actually has (:class:`~claudia_computes.ChartSpec` alone cannot know that)."""
+        spec = ChartSpec.from_data(data)
+        if spec.range.sheet not in self.sheets:
+            raise ValueError(f"this document does not know the sheet {spec.range.sheet!r}")
+        if not in_bounds(spec.range):
+            raise ValueError("a chart's range must be inside the sheet")
+        return spec
+
+    def users_of_diagram(self, diagram_id: str) -> list[str]:
+        """As the shared check (floating objects), plus any chart tab showing this diagram (E6.6): a tab is a
+        user of a diagram definition exactly as an object anchored to one is, so ``forget_diagram`` refuses
+        while either kind of user remains."""
+        return [*super().users_of_diagram(diagram_id), *(c.id for c in self.charts.values() if c.spec_id == diagram_id)]
+
+    def charts_reading(self, sheet_id: SheetId) -> list[str]:
+        """Ids of the diagram definitions whose range names ``sheet_id`` (E6.6): what ``RemoveSheet`` refuses
+        to orphan, the same way it refuses to orphan a formula elsewhere were there no ``#REF!`` for that.
+
+        ``self.diagrams`` is typed by the shared :class:`~claudia_core.ObjectModel` as holding the
+        app-agnostic :class:`~claudia_core.DiagramDefinition`; every value in it is in fact a ``ChartSpec``,
+        since :meth:`diagram_from_data` is the only thing that ever puts one there."""
+        return sorted(spec.id for spec in self.diagrams.values() if cast(ChartSpec, spec).range.sheet == sheet_id)
+
+    # -- chart tabs --------------------------------------------------------------
+    def chart(self, chart_id: str) -> Chart:
+        try:
+            return self.charts[chart_id]
+        except KeyError:
+            raise ValueError(f"unknown chart {chart_id!r}") from None
+
+    def add_chart(self, chart: Chart, index: int | None) -> None:
+        ordered = list(self.charts.values())
+        ordered.insert(len(ordered) if index is None else index, chart)
+        self.charts = {c.id: c for c in ordered}
+
+    def remove_chart(self, chart_id: str) -> None:
+        self.chart(chart_id)
+        self.charts = {c.id: c for c in self.charts.values() if c.id != chart_id}
 
     def _calculate_loaded(self) -> None:
         """Fill the values from the contents: constants as they are, formulas calculated."""
