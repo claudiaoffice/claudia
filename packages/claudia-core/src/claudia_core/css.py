@@ -7,6 +7,19 @@ that names the property, and the list is widened on purpose, one property at a t
 
 ``validate_css`` checks a dictionary, ``parse_css`` reads the text of a style (what the style menu shows in its CSS
 view) and says what is wrong with every line, and ``format_css`` writes the text back in one fixed order.
+
+Colour roles
+------------
+Since ``CSS_VERSION`` 2 a colour may be a *role* of the document's palette instead of a literal: ``@accent``, or
+``@accent/55`` for the same role at 55% opacity. A role says what the colour *means*, so changing the palette's
+``accent`` recolours everything that meant it (:mod:`claudia_core.palette`).
+
+A role is only accepted where a colour is: ``color``, ``background-color``, ``fill``, ``stroke`` and the colour of a
+``border-*`` shorthand. That is not a separate rule — the ``@`` character is simply refused by every other value
+check, so widening the one colour check was enough.
+
+``resolve_css`` turns the roles of a style into literal colours, and it is what the apps send to a client: the CSS
+that reaches a browser is always literal, which is why the ban on ``var()`` and ``calc()`` can stay exactly as it is.
 """
 
 from __future__ import annotations
@@ -16,7 +29,8 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 #: Bumped whenever the list or the meaning of a value changes; an old document is upcast, never broken (E1.3).
-CSS_VERSION = 1
+#: 2: a colour may be a role of the palette (``@accent``, ``@accent/55``).
+CSS_VERSION = 2
 
 _MAX_LENGTH = 1000.0
 _MAX_FAMILIES = 20
@@ -31,6 +45,10 @@ _COLOR_FUNCTION = re.compile(
 )
 _FAMILY_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_ -]*")
 _QUOTED_NAME = re.compile(r"""(?:'[^'\\;{}()<>@\n]+'|"[^"\\;{}()<>@\n]+")""")
+
+#: A colour role: ``@accent``, or ``@accent/55`` for that role at 55% opacity. The id rule is the one
+#: :mod:`claudia_core.palette` uses, so a token that parses here can name a real role.
+_ROLE = re.compile(r"@([a-z0-9][a-z0-9-]{0,39})(?:/([1-9][0-9]?|100))?")
 
 # The 148 colour names of CSS Color 4, plus the two special values that are safe.
 _COLOR_NAMES = frozenset(
@@ -218,11 +236,13 @@ class _Refused(Exception):
 
 # --------------------------------------------------------------------------- value checks
 def _color(value: str) -> str:
+    if _ROLE.fullmatch(value):
+        return value.lower()
     if _HEX.fullmatch(value) or _COLOR_FUNCTION.fullmatch(value):
         return value
     if value.lower() in _COLOR_NAMES:
         return value.lower()
-    raise _Refused("is not a colour (use #rrggbb, rgb(), hsl() or a colour name)")
+    raise _Refused("is not a colour (use a palette role like @accent, or #rrggbb, rgb(), hsl() or a colour name)")
 
 
 def _length(value: str, *, lowest: float = 0.0, highest: float = _MAX_LENGTH, positive: bool = False) -> str:
@@ -390,7 +410,10 @@ def _check_one(prop: str, value: object) -> str:
     text = " ".join(value.split())
     if not text or len(text) > 200:
         raise _Refused("needs a value of up to 200 characters")
-    if any(mark in text for mark in (";", "{", "}", "<", ">", "\\", "@", "!", "/*", "*/")):
+    # ``@`` is not in this list since CSS_VERSION 2: a colour role needs it, and every value check other than
+    # ``_color`` refuses it anyway (a font name may not hold one, nor may a length or a keyword), so a role can
+    # only ever land where a colour belongs. Everything else here would let a style reach outside its own page.
+    if any(mark in text for mark in (";", "{", "}", "<", ">", "\\", "!", "/*", "*/")):
         raise _Refused("has a character that is not allowed in a value")
     if re.search(r"url\s*\(|var\s*\(|calc\s*\(|expression\s*\(|image\s*\(|attr\s*\(|env\s*\(", text, re.IGNORECASE):
         raise _Refused("may not use url(), var(), calc() or other functions")
@@ -470,3 +493,64 @@ def format_css(css: Mapping[str, str]) -> str:
     """The text of a style: one ``property: value;`` per line, always in the same order."""
     ordered = sorted(css.items(), key=lambda item: (_ORDER.get(item[0], len(_ORDER)), item[0]))
     return "\n".join(f"{name}: {value};" for name, value in ordered)
+
+
+# --------------------------------------------------------------------------- colour roles
+def rgb_of(colour: str) -> tuple[int, int, int]:
+    """The red, green and blue of ``#rgb`` or ``#rrggbb`` (any alpha is ignored); ``ValueError`` for anything else.
+
+    Only hexadecimal, because this is what the palette's own colours are kept in: a role is one definite colour, so
+    that opacity and contrast can both be worked out from it exactly.
+    """
+    text = colour.strip().lstrip("#")
+    if len(text) == 4:  # #rgba: the alpha is not part of the colour itself
+        text = text[:3]
+    elif len(text) == 8:  # #rrggbbaa, likewise
+        text = text[:6]
+    if len(text) == 3:
+        text = "".join(char * 2 for char in text)
+    if len(text) != 6 or not all(char in "0123456789abcdefABCDEF" for char in text):
+        raise ValueError(f"{colour!r} is not a hexadecimal colour")
+    return int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16)
+
+
+def roles_used(css: Mapping[str, str]) -> set[str]:
+    """The ids of the palette roles this CSS names, in any of its values."""
+    return {match.group(1) for value in css.values() for match in _ROLE.finditer(value)}
+
+
+def resolve_css(css: Mapping[str, str], colours: Mapping[str, str]) -> dict[str, str]:
+    """The same CSS with every ``@role`` replaced by the literal colour ``colours`` gives for it.
+
+    A declaration whose role is not in ``colours`` is **left out** rather than passed on: a property that points at a
+    role the document no longer has simply does not apply, so the parent style's value shows through and nothing that
+    a browser cannot read ever reaches it. Values without a role are returned untouched.
+    """
+    resolved: dict[str, str] = {}
+    for prop, value in css.items():
+        text = _resolve_value(value, colours)
+        if text is not None:
+            resolved[prop] = text
+    return resolved
+
+
+def _resolve_value(value: str, colours: Mapping[str, str]) -> str | None:
+    """``value`` with its roles replaced, or ``None`` if it names a role that ``colours`` does not have."""
+    missing = False
+
+    def one(match: re.Match[str]) -> str:
+        nonlocal missing
+        colour = colours.get(match.group(1))
+        if colour is None:
+            missing = True
+            return ""
+        return colour if match.group(2) is None else _with_opacity(colour, int(match.group(2)))
+
+    text = _ROLE.sub(one, value)
+    return None if missing else text
+
+
+def _with_opacity(colour: str, percent: int) -> str:
+    """``colour`` at ``percent`` opacity, as ``rgba(...)`` — what ``@accent/55`` means."""
+    red, green, blue = rgb_of(colour)
+    return f"rgba({red}, {green}, {blue}, {percent / 100:g})"

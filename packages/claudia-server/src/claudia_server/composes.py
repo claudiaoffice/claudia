@@ -34,17 +34,14 @@ from claudia_composes import (
 )
 from claudia_core import (
     Batch,
-    ChangeStyle,
     Command,
     CreateStyle,
-    RenameStyle,
     StyleDef,
-    format_css,
-    parse_css,
     validate_css,
 )
 
 from .protocol import Context, RequestError, core_methods
+from .styles import add_style_methods, own_css
 
 MAX_ZONE_WORDS = 10  # the widest ± n words zone a cursor may ask for
 ZONE_SECONDS = 15.0  # a held zone lapses this long after its owner was last active
@@ -68,6 +65,9 @@ def _people_only(ctx: Context) -> None:
         raise RequestError("forbidden", "the assistant can only make suggestions; people write the text")
 
 
+add_style_methods(composes_methods, guard=_people_only)
+
+
 def _rev(ctx: Context) -> str | None:
     revision = ctx.document.revision
     return None if revision is None else revision.to_data()
@@ -85,15 +85,11 @@ def _blocks(ctx):
     """The paragraphs in order, each as `{id, style, text, runs}` (`runs` are `[length, author, via]`: who wrote
     which stretch), the styles (see `styles`), and the revision they are at."""
     model = _text(ctx)
-    return {"revision": _rev(ctx), "styles": model.styles.views(), "blocks": [b.to_data() for b in model.blocks]}
-
-
-@composes_methods.method("styles")
-def _styles(ctx):
-    """The styles as `{id, name, purpose, based_on, css, computed, to_name}`. `css` is what the style sets itself,
-    `computed` the CSS it really has once its parents (`based_on`) are taken in. `to_name` is true for a style that
-    was made by deviating and still has the name it was given (E9.7)."""
-    return _text(ctx).styles.views()
+    return {
+        "revision": _rev(ctx),
+        "styles": model.styles.views(model.palette.colours()),
+        "blocks": [b.to_data() for b in model.blocks],
+    }
 
 
 @composes_methods.method("suggestions")
@@ -181,47 +177,8 @@ def _set_style(ctx, *, block, style, base):
 
 
 # ------------------------------------------------------------------------------ styles (E1.10, E9.7)
-def _own_css(properties: dict | None, text: str | None) -> dict[str, str] | None:
-    """The CSS a request gave, as a dictionary: from `set` or from the text of a style; ``None`` if it gave neither."""
-    if properties is not None and text is not None:
-        raise RequestError("bad_request", "give the CSS as set properties or as text, not both")
-    if text is None:
-        return properties
-    css, problems = parse_css(text)
-    if problems:
-        raise RequestError("command_error", "; ".join(p.message for p in problems))
-    return css
-
-
-@composes_methods.method("change_style", "style:str set:dict? unset:list? text:text? base:revision?", write=True)
-def _change_style(ctx, *, style, set, unset, text, base):
-    """Change a style for every paragraph that has it (and for the styles based on it, where they do not set the
-    property themselves). Either `set` properties (`{"color": "#5B4BC4"}`) and `unset` property names, or `text`,
-    the complete CSS text of the style, which replaces what it sets. `command_error` names every property that is not
-    allowed. A change that changes nothing is not an edit (`revision` is then null)."""
-    _people_only(ctx)
-    known = _text(ctx).styles
-    try:
-        own = known.get(style).css
-    except KeyError as exc:
-        raise RequestError("command_error", exc.args[0]) from None
-    wanted = _own_css(set, text)
-    if text is not None:
-        assert wanted is not None
-        change = {name: value for name, value in wanted.items() if own.get(name) != value}
-        removed = tuple(name for name in own if name not in wanted)
-    else:
-        if unset is not None and not all(isinstance(name, str) for name in unset):
-            raise RequestError("bad_request", "unset must be a list of property names")
-        removed = tuple(name for name in dict.fromkeys(unset or ()) if name in own)
-        change = validate_css(wanted or {})
-        change = {name: value for name, value in change.items() if own.get(name) != value}
-    if not change and not removed:
-        return {"revision": _rev(ctx)}
-    applied = ctx.document.execute(ChangeStyle(style, change, removed), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
+# ``styles``, ``change_style``, ``rename_style``, ``check_css``, the palette and ``set_object_style`` are the
+# same in every app and come from ``.styles``. Only the one that names paragraphs stays here.
 @composes_methods.method("deviate_style", "parent:str blocks:list set:dict? text:text? base:revision?", write=True)
 def _deviate_style(ctx, *, parent, blocks, set, text, base):
     """Make a new style from `parent` that differs in the CSS given (`set` properties, or `text`) and give it to the
@@ -238,7 +195,7 @@ def _deviate_style(ctx, *, parent, blocks, set, text, base):
         raise RequestError("command_error", exc.args[0]) from None
     for block in blocks:
         model.block(block)  # KeyError -> command_error: the paragraph must exist
-    given = validate_css(_own_css(set, text) or {})
+    given = validate_css(own_css(set, text) or {})
     own = {name: value for name, value in given.items() if inherited.get(name) != value}
     if not own:
         raise RequestError(
@@ -249,24 +206,6 @@ def _deviate_style(ctx, *, parent, blocks, set, text, base):
     commands: list[Command] = [CreateStyle(created), *(SetStyle(block, created.id) for block in blocks)]
     applied = ctx.document.execute(Batch(tuple(commands), "Deviate style"), author=ctx.user, base=base)
     return {"style": created.id, "name": name, "revision": applied.revision.to_data()}
-
-
-@composes_methods.method("rename_style", "style:str name:str base:revision?", write=True)
-def _rename_style(ctx, *, style, name, base):
-    """Give a style the name its maker chose. That ends the invitation to name it. `command_error` if another style
-    has that name (in any letters) or the name is empty, long, or more than one line."""
-    _people_only(ctx)
-    applied = ctx.document.execute(RenameStyle(style, name, False), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@composes_methods.method("check_css", "text:text")
-def _check_css(ctx, *, text):
-    """Check the CSS text of a style without changing anything (so viewers may ask, and a client can check while
-    somebody types): `{css, text, problems}` with the valid declarations, the same in the fixed order a style is written
-    in, and a problem `{line, property, message}` for each line that is not allowed."""
-    css, problems = parse_css(text)
-    return {"css": css, "text": format_css(css), "problems": [p.to_data() for p in problems]}
 
 
 # ------------------------------------------------------------------------------ cursors and zones

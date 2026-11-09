@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { openSession, type AnySession } from '~/lib/open'
+import { appOfServer, openSession, type AnySession } from '~/lib/open'
 import { Session } from '~/lib/session'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
@@ -46,8 +46,10 @@ const fresh = shallowRef<{ session: AnySession; key: string } | null>(null)
 /** "I forgot my password": the form that comes in with the recovery key. */
 const recovering = ref(false)
 const recoveryKey = ref('')
-/** The server serves one app; the documents it lists say which (before that, claudia in general). */
-const app = computed(() => documents.value[0]?.app ?? 'claudia')
+/** What `/api/docs` said this server serves, before any document has been opened or even made. */
+const serverApp = ref('')
+/** The server serves one app and says so; a listed document is the fallback (see `appOfServer`). */
+const app = computed(() => appOfServer({ app: serverApp.value, documents: documents.value }))
 const words = computed(
   () =>
     ({
@@ -94,7 +96,13 @@ async function loadServer() {
   try {
     const answer = await fetch(`${origin.value}/api/docs`)
     if (answer.status === 404) listError.value = 'This server does not list its documents. Type the name of yours.'
-    else documents.value = (await answer.json()).documents
+    else {
+      const said = await answer.json()
+      documents.value = said.documents
+      // The server says which app it serves, and has done all along; this page used to read only the documents and
+      // guess the app from the first of them, so a server with none looked like computes whatever it was serving.
+      serverApp.value = said.app ?? ''
+    }
   } catch {
     listError.value = 'The server cannot be reached.'
   }

@@ -4,28 +4,16 @@ import { type LinkLike, type Region } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
 import type { ImageAsset, ImageImport } from './images'
+import type { ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
 // so existing imports of them from this module keep working.
 export type { ImageAsset, ImageImport } from './images'
+export type { ColourRole, ObjectBody, PaletteEvent, Reading, SlideAnchor, StyleDef, VisualObject } from './objects'
 
-export interface SlideObject {
-  id: string
-  slide: string
-  kind: 'text' | 'shape' | 'image'
-  x: number
-  y: number
-  w: number
-  h: number
-  style: string
-  text: string
-  shape: string | null
-  image: string | null
-  imported: ImageImport | null
-  /** Whether this object holds to the grid (E10.15): the document's own state, set with `setSnap`. The grid
-   * itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is shown. */
-  snap: boolean
-}
+/** One thing on a slide: the shared `ObjectBody` plus a `SlideAnchor` — the only part of it that is this app's
+ * own (E10.16, D177). Read its place with `slideFrame(obj)`, not `obj.x`. */
+export type SlideObject = VisualObject<SlideAnchor>
 /** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
 export interface ShapeDef {
   format: number
@@ -35,12 +23,7 @@ export interface ShapeDef {
   aspect: number | null
   text_area: { x: number; y: number; w: number; h: number }
 }
-export interface StyleDef {
-  id: string
-  name: string
-  purpose: string
-  css: Record<string, string>
-}
+
 export interface SlideInfo {
   id: string
   objects: number
@@ -54,6 +37,8 @@ export interface SlideState extends BaseState {
   shapes: Record<string, ShapeDef> // what this document has taken in, by id
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id (E10.8)
   styles: Record<string, StyleDef>
+  /** The document's colour roles and how they read against each other (D200); the styles are what is drawn from. */
+  palette: PaletteEvent | null
   selected: string | null
 }
 
@@ -71,6 +56,7 @@ export class SlideSession extends BaseSession<SlideState> {
       shapes: {},
       images: {},
       styles: {},
+      palette: null,
       selected: null,
     })
   }
@@ -79,11 +65,12 @@ export class SlideSession extends BaseSession<SlideState> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [slides, shapes, images, styles] = await Promise.all([
+    const [slides, shapes, images, styles, palette] = await Promise.all([
       link.request<SlideInfo[]>('slides'),
       link.request<{ library: ShapeDef[]; document: ShapeDef[] }>('shapes'),
       link.request<ImageAsset[]>('images'),
       link.request<StyleDef[]>('styles'),
+      link.request<PaletteEvent>('palette'),
     ])
     const loaded = await Promise.all(slides.map((slide) => link.request<{ objects: SlideObject[] }>('slide', { slide: slide.id })))
     s.objects = {}
@@ -97,6 +84,7 @@ export class SlideSession extends BaseSession<SlideState> {
     s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
+    s.palette = palette
     if (!slides.some((x) => x.id === s.activeSlide)) s.activeSlide = slides[0]?.id ?? ''
     if (s.selected && !s.objects[s.selected]) s.selected = null
   }
@@ -112,7 +100,7 @@ export class SlideSession extends BaseSession<SlideState> {
     for (const [user, here] of Object.entries(this.state.presence)) {
       if (user === this.state.me.user) continue
       for (const region of here.regions) {
-        if (region.kind === 'objects' && region.slide === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
+        if (region.kind === 'objects' && region.container === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
       }
     }
     return found
@@ -123,17 +111,29 @@ export class SlideSession extends BaseSession<SlideState> {
     const s = this.state
     switch (name) {
       case 'objects': {
-        for (const o of data.changed as SlideObject[]) s.objects[o.id] = o
-        for (const id of data.removed as string[]) delete s.objects[id]
-        s.order[data.slide] = data.order
-        const info = s.slides.find((x) => x.id === data.slide)
-        if (info) info.objects = data.order.length
-        if (s.selected && (data.removed as string[]).includes(s.selected)) {
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed as SlideObject[]) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.container] = e.order
+        const info = s.slides.find((x) => x.id === e.container)
+        if (info) info.objects = e.order.length
+        if (e.removed.includes(s.selected ?? '')) {
           s.selected = null
           this.track(this.letGo())
         }
         return true
       }
+      case 'styles':
+        // Found by driving a real browser: the styles were requested once at open and never again, so a style a
+        // colleague changed — or a palette role anybody changed (D200) — did not reach this slide until the
+        // document was reopened. The whole book travels, as it does in composes.
+        s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
+        return true
+      case 'palette':
+        // Only the styles are drawn from, and they arrive with the event above. Kept so that a palette change is
+        // not reported as an unknown event, and so the roles are here for the menu that will offer them.
+        s.palette = data as PaletteEvent
+        return true
       case 'shape':
         if (data.definition) s.shapes[data.id] = data.definition
         else delete s.shapes[data.id]
@@ -227,7 +227,7 @@ export class SlideSession extends BaseSession<SlideState> {
 
   // -- the selection: shown to the others, and held so that nobody changes the object under my hands
   private regionOf(id: string): Region[] {
-    return [{ kind: 'objects', slide: this.state.objects[id]?.slide ?? this.state.activeSlide, ids: [id] }]
+    return [{ kind: 'objects', container: this.state.objects[id]?.anchor.container ?? this.state.activeSlide, ids: [id] }]
   }
 
   /** Select an object (null: nothing). Selecting holds it; a colleague who holds it first keeps it. */

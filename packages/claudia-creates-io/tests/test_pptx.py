@@ -13,7 +13,16 @@ from claudia_creates_io import UnsupportedEdit, add_transition, apply_edits_to_p
 from lxml import etree
 from pptx.util import Emu
 
-from claudia_creates import ShapeDefinition, SlideModel, SlideObject
+from claudia_core import ObjectBody, VisualObject, paragraph_for
+from claudia_creates import ShapeDefinition, SlideAnchor, SlideModel
+
+
+def _object(object_id, slide, kind, x, y, w, h, style, text="", shape=None):
+    """A slide object from the flat fields these tests have always used: an ``ObjectBody`` plus a
+    ``SlideAnchor`` (E10.16), its words a paragraph of their own (E10.17)."""
+    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text, "ana"), shape=shape)
+    return VisualObject(body, SlideAnchor(slide, x, y))
+
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 _DECK_WIDTH, _DECK_HEIGHT = Emu(12_192_000), Emu(6_858_000)
@@ -25,8 +34,8 @@ def two_slide_deck() -> SlideModel:
     model = SlideModel.empty()  # "s1"
     model.insert_slide("s2")
     model.define_shape(_CIRCLE)
-    model.insert_object(SlideObject("o1", "s1", "text", 100, 100, 400, 100, "body-text", "Hello"))
-    model.insert_object(SlideObject("o2", "s2", "shape", 100, 100, 200, 200, "plain-shape", "Circle", "circle"))
+    model.insert_object(_object("o1", "s1", "text", 100, 100, 400, 100, "body-text", "Hello"))
+    model.insert_object(_object("o2", "s2", "shape", 100, 100, 200, 200, "plain-shape", "Circle", "circle"))
     return model
 
 
