@@ -1,4 +1,5 @@
-"""Regenerates every checked-in ``source.docx``/``source.pptx`` in this library, deterministically (D178, D179).
+"""Regenerates every checked-in ``source.docx``/``source.pptx``/``source.xlsx`` in this library, deterministically
+(D178, D179, D204).
 
 A test document is checked in as a real, openable binary -- not just a Python function that builds one on the
 fly, the way every other format test in this repo does -- because the whole point of a *library* is files a
@@ -14,8 +15,11 @@ from io import BytesIO
 from pathlib import Path
 
 import docx
+import openpyxl
 import pptx
 from docx.shared import Inches
+from openpyxl.chart import BarChart, Reference
+from openpyxl.drawing.image import Image as XLImage
 from PIL import Image
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Emu
@@ -130,6 +134,57 @@ def _pptx_bytes(prs: pptx.Presentation) -> bytes:
     return out.getvalue()
 
 
+def build_cells_and_formulas() -> bytes:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Data"
+    ws.append(["Region", "Product", "Amount"])
+    for region, product, amount in (
+        ("North", "Widget", 100),
+        ("North", "Gadget", 150),
+        ("South", "Widget", 200),
+        ("South", "Gadget", 120),
+        ("East", "Widget", 130),
+        ("West", "Gadget", 140),
+    ):
+        ws.append([region, product, amount])
+    ws.append(["Total", None, "=SUM(C2:C7)"])
+    notes = wb.create_sheet("Notes")
+    notes["A1"] = "Six regions, two products."
+    return _xlsx_bytes(wb)
+
+
+def build_xlsx_beyond_claudia_chart() -> bytes:
+    wb = openpyxl.Workbook()
+    data = wb.active
+    data.title = "Data"
+    data.append(["Region", "Amount"])
+    for region, amount in (("North", 100), ("South", 200), ("East", 130)):
+        data.append([region, amount])
+    chart_sheet = wb.create_sheet("Chart")
+    chart = BarChart()
+    chart.add_data(Reference(data, min_col=2, min_row=1, max_row=4), titles_from_data=True)
+    chart.set_categories(Reference(data, min_col=1, min_row=2, max_row=4))
+    chart_sheet.add_chart(chart, "A1")
+    return _xlsx_bytes(wb)
+
+
+def build_xlsx_beyond_claudia_image() -> bytes:
+    wb = openpyxl.Workbook()
+    data = wb.active
+    data.title = "Data"
+    data["A1"] = "North"
+    pics = wb.create_sheet("Pics")
+    pics.add_image(XLImage(_red_square_png()), "A1")
+    return _xlsx_bytes(wb)
+
+
+def _xlsx_bytes(wb: openpyxl.Workbook) -> bytes:
+    out = BytesIO()
+    wb.save(out)
+    return out.getvalue()
+
+
 FIXTURES = {
     "docx/heading-styles/source.docx": build_heading_styles,
     "docx/tracked-change-suggestion/source.docx": build_tracked_change_suggestion,
@@ -138,6 +193,9 @@ FIXTURES = {
     "pptx/shapes-and-text/source.pptx": build_shapes_and_text,
     "pptx/beyond-claudia/table/source.pptx": build_pptx_beyond_claudia_table,
     "pptx/beyond-claudia/image/source.pptx": build_pptx_beyond_claudia_image,
+    "xlsx/cells-and-formulas/source.xlsx": build_cells_and_formulas,
+    "xlsx/beyond-claudia/chart/source.xlsx": build_xlsx_beyond_claudia_chart,
+    "xlsx/beyond-claudia/image/source.xlsx": build_xlsx_beyond_claudia_image,
 }
 
 
