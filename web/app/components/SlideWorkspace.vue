@@ -5,6 +5,7 @@ import { insertFrame, type Frame } from '~/lib/geometry'
 import type { SlideSession } from '~/lib/slide-session'
 import { copySelection, cutSelection, pasteAsPlainText } from '~/lib/clipboard'
 import { useI18n } from '~/lib/i18n'
+import { objectStyleHost } from '~/lib/object-style-host'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
@@ -25,8 +26,73 @@ const { shown: gridShown, toggle: toggleGrid } = useGrid()
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
+/** The modal layer: creates had only the image dialog before the styles arrived. */
+const dialog = ref<null | 'styles' | 'colours'>(null)
 
 const readonly = computed(() => state.me.role === 'viewer')
+const styleHost = objectStyleHost({
+  get readOnly() {
+    return session.readOnly
+  },
+  get styles() {
+    return session.styleViews()
+  },
+  get roles() {
+    return state.palette?.roles ?? []
+  },
+  get readings() {
+    return state.palette?.readings ?? []
+  },
+  get selected() {
+    return state.selected ? state.objects[state.selected] ?? null : null
+  },
+  get bodies() {
+    return session.bodies()
+  },
+  setObjectStyle: (id, style) => session.setObjectStyle(id, style),
+  changeStyle: (style, edit) => session.changeStyle(style, edit),
+  deviateObjectStyle: (parent, ids, edit) => session.deviateObjectStyle(parent, ids, edit),
+  renameStyle: (style, name) => session.renameStyle(style, name),
+  checkCss: (text) => session.checkCss(text),
+  setRole: (role, colour) => session.setRole(role, colour),
+})
+
+/**
+ * The Format menu: the styles by purpose first, because you mark a thing by what it is *for* (D62), then the two
+ * ways in — this object's own look, and the document's colours.
+ *
+ * Styling needs something selected: with nothing selected there is nothing for a change to be about, so the
+ * per-object items say so rather than failing quietly. Colours are the document's and never need a selection.
+ */
+function styleItems() {
+  const styles = session.styleViews()
+  if (styles.length === 0) return [{ label: t('No styles yet'), disabled: true }]
+  const chosen = state.selected ? state.objects[state.selected]?.style : undefined
+  return [
+    ...styles.map((s) => ({
+      label: s.name,
+      checked: s.id === chosen,
+      disabled: readonly.value || !state.selected,
+      action: () => session.setObjectStyle(state.selected ?? '', s.id),
+    })),
+    { label: '', separator: true },
+    {
+      id: 'format.look',
+      label: t('Edit this style…'),
+      disabled: !state.selected,
+      action: () => canvas.value?.openStyleMenu(),
+    },
+    { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
+    { label: '', separator: true },
+    { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
+  ]
+}
+
+/** Put the colours the document started with back, as the server itself states them (no second copy to drift). */
+async function resetPalette() {
+  const started = state.palette?.builtin ?? []
+  if (started.length && (await session.replacePalette(started))) dialog.value = null
+}
 const here = computed(() => state.slides.findIndex((s) => s.id === state.activeSlide))
 const count = computed(() => session.objectsOn(state.activeSlide).length)
 
@@ -141,7 +207,10 @@ const menus = computed<Menu[]>(() => [
       { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
     ],
   },
-  { label: t('Format'), items: [{ id: 'format.none', label: t('No styles yet'), disabled: true }] }, // D125: visible, inert — creates has no style system yet
+  {
+    label: t('Format'),
+    items: styleItems(),
+  },
   {
     label: t('View'),
     items: [
@@ -218,10 +287,12 @@ const menus = computed<Menu[]>(() => [
         @redo="session.redo()"
       />
     </template>
-    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" />
+    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
     <div v-else class="noslide">This presentation has no slide.</div>
     <template #overlay>
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
+      <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
     <template #footer>
       <footer class="foot">

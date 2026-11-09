@@ -22,6 +22,7 @@ import {
   type Pos,
   type TextEvent,
 } from './blocks'
+import type { PaletteEvent } from './objects'
 import { type LinkLike, type Region } from './protocol'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
@@ -49,6 +50,9 @@ export interface Unwritten {
 }
 export interface TextState extends BaseState {
   styles: StyleView[]
+  /** The document's colour roles and how they read against each other (D200); a paragraph style names them, and
+   * the resolved colours arrive with the styles themselves. */
+  palette: PaletteEvent | null
   blocks: Block[]
   suggestions: SuggestionInfo[]
   selection: Selection | null
@@ -77,7 +81,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], blocks: [], suggestions: [], selection: null, pending: null, sending: null })
+    super(makeLink, options, { styles: [], palette: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null })
   }
 
   get readOnly(): boolean {
@@ -87,12 +91,14 @@ export class TextSession extends BaseSession<TextState> {
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions] = await Promise.all([
+    const [answer, suggestions, palette] = await Promise.all([
       link.request<{ styles: StyleView[]; blocks: Block[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
+      link.request<PaletteEvent>('palette'),
     ])
     const s = this.state
     s.styles = answer.styles
+    s.palette = palette
     s.blocks = answer.blocks.map((b) => ({ ...b, runs: runsToUnits(b.text, b.runs) }))
     s.suggestions = suggestions.map((x) => this.suggestionInUnits(x))
     s.pending = null
@@ -153,6 +159,11 @@ export class TextSession extends BaseSession<TextState> {
       }
       case 'styles':
         s.styles = data.styles as StyleView[]
+        return true
+      case 'palette':
+        // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls
+        // that offer them by name (D200).
+        s.palette = data as PaletteEvent
         return true
       case 'suggestions': {
         for (const item of data.items as SuggestionInfo[]) {
@@ -489,6 +500,18 @@ export class TextSession extends BaseSession<TextState> {
       }
       return true
     })
+  }
+
+  /** Give a colour role another colour: every paragraph style that meant it follows (D200). */
+  setRole(role: string, colour: string): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false)
+  }
+
+  /** Put a whole palette in place of this document's — what "the colours it started with" does. */
+  replacePalette(roles: unknown[]): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false)
   }
 
   renameStyle(style: string, name: string): Promise<boolean> {

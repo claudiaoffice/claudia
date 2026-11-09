@@ -126,6 +126,9 @@ export interface PaletteEvent {
   type: 'palette'
   roles: ColourRole[]
   readings: Reading[]
+  /** The palette a document starts with, as the server states it, so no client keeps a copy that could drift.
+   * Absent on the event, which carries only what changed. */
+  builtin?: ColourRole[]
 }
 
 /** The `objects` event, as the server sends it in every app (`claudia_core.ObjectsChanged`).

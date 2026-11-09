@@ -56,6 +56,12 @@ function server(link: FakeLink, text = 'hello world') {
   link.handlers = {
     blocks: () => ({ revision: 'main:2', styles: STYLES, blocks: [{ id: 'b1', style: 'body', text: doc.text, runs: doc.text ? [[[...doc.text].length, 'ann', null]] : [] }] }),
     suggestions: () => [],
+    // The palette reaches composes' paragraph styles from day one (D200): a style names `@text`, not a hex.
+    palette: () => ({
+      type: 'palette',
+      roles: [{ id: 'text', name: 'Text', purpose: 'the words you read', colour: '#1F1A33' }],
+      readings: [],
+    }),
     log: () => [],
     chat_log: () => [],
     checkpoints: () => [],

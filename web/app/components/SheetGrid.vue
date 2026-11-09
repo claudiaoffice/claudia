@@ -16,6 +16,7 @@ import {
   type Axis,
   type SizeTable,
 } from '~/lib/line-sizes'
+import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
@@ -41,6 +42,8 @@ const props = defineProps<{
   anchored: boolean
 }>()
 const emit = defineEmits<{
+  /** Asks the workspace to open the all-styles dialog, which owns the modal layer. */
+  styles: []
   select: [sel: Sel, dragging: boolean]
   move: [dr: number, dc: number, extend: boolean, jump: boolean]
   type: [text: string]
@@ -640,7 +643,50 @@ function onPaste(event: ClipboardEvent) {
   emit('paste', parseTsv(text))
 }
 
-defineExpose({ focus: () => viewport.value?.focus(), selectObject: (id: string) => (selectedObject.value = id) })
+// ------------------------------------------------------------------------------ the style menu (E9.7, D203)
+/** A floating object's own look: its fill, its border. The same menu composes and creates use — what it styles is
+ * whatever `objectStyleHost` says is selected, which here is this grid's own `selectedObject`. */
+const styleMenu = ref<{ x: number; y: number } | null>(null)
+const styleHost = objectStyleHost({
+  get readOnly() {
+    return props.session.readOnly
+  },
+  get styles() {
+    return props.session.styleViews()
+  },
+  get roles() {
+    return props.session.state.palette?.roles ?? []
+  },
+  get readings() {
+    return props.session.state.palette?.readings ?? []
+  },
+  get selected() {
+    const id = selectedObject.value
+    return id ? props.session.state.objects[id] ?? null : null
+  },
+  get bodies() {
+    return props.session.bodies()
+  },
+  setObjectStyle: (id, style) => props.session.setObjectStyle(id, style),
+  changeStyle: (style, edit) => props.session.changeStyle(style, edit),
+  deviateObjectStyle: (parent, ids, edit) => props.session.deviateObjectStyle(parent, ids, edit),
+  renameStyle: (style, name) => props.session.renameStyle(style, name),
+  checkCss: (text) => props.session.checkCss(text),
+  setRole: (role, colour) => props.session.setRole(role, colour),
+})
+
+function openStyleMenu(at: { x: number; y: number } = { x: 160, y: 180 }) {
+  if (selectedObject.value) styleMenu.value = at
+}
+
+defineExpose({
+  focus: () => viewport.value?.focus(),
+  selectObject: (id: string) => (selectedObject.value = id),
+  openStyleMenu,
+  /** What the Format menu ticks and disables itself by. */
+  selectedObject: () => selectedObject.value,
+  selectedStyle: () => (selectedObject.value ? props.session.state.objects[selectedObject.value]?.style : undefined),
+})
 </script>
 
 <template>
@@ -722,6 +768,7 @@ defineExpose({ focus: () => viewport.value?.focus(), selectObject: (id: string) 
         <div class="corner" />
       </div>
     </div>
+    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
   </div>
 </template>
 

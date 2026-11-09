@@ -9,6 +9,7 @@ import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, res
 import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, slideFrame, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
+import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
 import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
@@ -19,6 +20,8 @@ import type { MenuItem } from './MenuBar.vue'
 // menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
 // object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
 const props = defineProps<{ session: SlideSession; showGrid: boolean }>()
+/** `styles` asks the workspace to open the all-styles dialog, which owns the modal layer. */
+const emit = defineEmits<{ styles: [] }>()
 const session = props.session
 const state = session.state
 
@@ -195,9 +198,50 @@ const contextItems = computed<MenuItem[]>(() => {
           propertiesFor.value = o.id
         },
         setSnap: (snap) => session.setSnap(o.id, snap),
+        style: () => {
+          const at = contextMenu.value
+          contextMenu.value = null
+          styleMenu.value = at ? { x: at.x, y: at.y } : { x: 120, y: 160 }
+        },
       })
     : []
 })
+
+// ------------------------------------------------------------------------------ the style menu (E9.7, D203)
+/** Where the style menu is open, if it is. The menu itself is the one every app uses; what it styles is whatever
+ * `objectStyleHost` says is selected, so this component only has to say where to put it. */
+const styleMenu = ref<{ x: number; y: number } | null>(null)
+const styleHost = objectStyleHost({
+  get readOnly() {
+    return session.readOnly
+  },
+  get styles() {
+    return session.styleViews()
+  },
+  get roles() {
+    return state.palette?.roles ?? []
+  },
+  get readings() {
+    return state.palette?.readings ?? []
+  },
+  get selected() {
+    return state.selected ? state.objects[state.selected] ?? null : null
+  },
+  get bodies() {
+    return session.bodies()
+  },
+  setObjectStyle: (id, style) => session.setObjectStyle(id, style),
+  changeStyle: (style, edit) => session.changeStyle(style, edit),
+  deviateObjectStyle: (parent, ids, edit) => session.deviateObjectStyle(parent, ids, edit),
+  renameStyle: (style, name) => session.renameStyle(style, name),
+  checkCss: (text) => session.checkCss(text),
+  setRole: (role, colour) => session.setRole(role, colour),
+})
+
+/** Open the style menu for the object a person has selected — what the Format menu and F10 do. */
+function openStyleMenu(at: { x: number; y: number } = { x: 120, y: 160 }) {
+  if (state.selected) styleMenu.value = at
+}
 function closeContextMenu() {
   contextMenu.value = null
 }
@@ -293,7 +337,7 @@ async function onKey(event: KeyboardEvent) {
   }
 }
 
-defineExpose({ focus: () => area.value?.focus(), beginEdit })
+defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu })
 
 const HANDLE_CURSOR: Record<Handle, string> = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize', n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' }
 const HANDLE_AT: Record<Handle, [number, number]> = { nw: [0, 0], n: [0.5, 0], ne: [1, 0], e: [1, 0.5], se: [1, 1], s: [0.5, 1], sw: [0, 1], w: [0, 0.5] }
@@ -382,6 +426,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     </div>
 
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" label="Object menu" @close="closeContextMenu" />
+    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>
 </template>

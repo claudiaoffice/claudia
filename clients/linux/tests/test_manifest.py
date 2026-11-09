@@ -162,8 +162,8 @@ def test_helps_shared_shape_is_identical_in_every_app(app: manifest.Manifest) ->
     assert about.label.startswith("About Claudia ")
 
 
-def test_composes_format_offers_the_two_style_actions(composes: manifest.Manifest) -> None:
-    assert labels(composes.menu("Format")) == ["Edit This Style…", "All Styles…"]
+def test_composes_format_offers_the_style_actions_and_the_document_colours(composes: manifest.Manifest) -> None:
+    assert labels(composes.menu("Format")) == ["Edit This Style…", "All Styles…", "Colours…"]
 
 
 def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manifest) -> None:
@@ -173,13 +173,12 @@ def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manife
 
 
 @pytest.mark.parametrize("app_name", ["computes", "creates"])
-def test_computes_and_creates_format_is_a_single_visible_but_inert_stub(
-    app_name: str, request: pytest.FixtureRequest
-) -> None:
-    """D125: the action exists (so the page can report it `enabled: false` the moment it connects) rather than the
-    menu being empty or missing."""
+def test_every_app_offers_the_same_three_format_actions(app_name: str, request: pytest.FixtureRequest) -> None:
+    """Was a single inert stub while only composes had styles (D125). All three have them now (D203), and the
+    colours a document is painted from are the same dialog everywhere (D200), so the menu is the same everywhere
+    too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two."""
     m = request.getfixturevalue(app_name)
-    assert action_ids(m.menu("Format")) == ["format.none"]
+    assert action_ids(m.menu("Format")) == ["format.look", "format.all-styles", "format.colours"]
 
 
 def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(computes: manifest.Manifest) -> None:

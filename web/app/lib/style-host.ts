@@ -14,6 +14,18 @@ import {
   type StyleView,
 } from './style-css'
 import { stackFor } from './fonts'
+import type { ColourRole, Reading } from './objects'
+
+/** What the thing being styled actually has, and so which controls the menu offers.
+ *
+ * A paragraph has words. A shape has words *and* a box — a fill and a border, in SVG's vocabulary because a shape
+ * is an outline and not a rectangle (D178). A picture has neither: it carries its own colours and holds no text, so
+ * those controls are left out rather than shown dead. An empty control that can never do anything is worse than no
+ * control at all. */
+export interface Parts {
+  words: boolean
+  box: boolean
+}
 
 export interface StyleHost {
   styles: StyleView[]
@@ -22,6 +34,13 @@ export interface StyleHost {
   readOnly: boolean
   /** What is styled, singular: “paragraph”, “cell”, “shape”. */
   noun: string
+  /** Which groups of controls apply to it. */
+  parts: Parts
+  /** The document's colour roles, so a control can offer a meaning instead of a hex (D200). Empty for a document
+   * whose palette has not arrived (or that has none), and the controls then fall back to plain colours. */
+  roles: ColourRole[]
+  /** How the roles read against each other, as the server works it out (D202). */
+  readings: Reading[]
   /** How many things have each style. */
   uses(): Record<string, number>
   /** Give the selection this style. */
@@ -32,12 +51,16 @@ export interface StyleHost {
   deviate(edit: CssEdit): Promise<boolean>
   rename(style: string, name: string): Promise<boolean>
   check(text: string): Promise<CssCheck | null>
+  /** Give a colour role another colour: everything in the document that meant it follows (D200). */
+  setRole(role: string, colour: string): Promise<boolean>
 }
 
 export type Scope = 'new' | 'every'
 
 const STEP: Record<string, number> = { pt: 1, px: 1, em: 0.1, rem: 0.1, '%': 10 }
 const START = 12
+/** As thick a border as the allow-list will take; past this it is a filled shape with a hole in it. */
+const MAX_STROKE = 24
 const none: Css = {}
 
 /**
@@ -64,6 +87,15 @@ export class StyleEditor {
    * leaving the palette means — the menu that offers the roles themselves is the next step. */
   get look(): Css {
     return this.host.current?.resolved ?? none
+  }
+
+  /** What the current style *names* for a property: a palette role (`@accent`) where it names one, else the
+   * literal value.
+   *
+   * The colour controls read this rather than `look`, so they can show a person "Accent" and not a hex — the whole
+   * point of a role (D200). Everything that has to paint or measure reads `look`, which is already resolved. */
+  named(property: string): string | undefined {
+    return this.host.current?.computed[property]
   }
 
   get scope(): Scope {
@@ -158,5 +190,27 @@ export class StyleEditor {
 
   setAlign(align: string) {
     return this.set('text-align', align)
+  }
+
+  // -- the box: a shape's own look, in SVG's words because a shape is an outline and not a rectangle (D178)
+  setFill(value: string) {
+    return this.set('fill', value)
+  }
+
+  setStroke(value: string) {
+    return this.set('stroke', value)
+  }
+
+  setStrokeWidth(px: number) {
+    return this.set('stroke-width', `${Math.max(0, Math.min(MAX_STROKE, Math.round(px)))}px`)
+  }
+
+  get strokeWidth(): number {
+    const match = /([\d.]+)/.exec(this.look['stroke-width'] ?? '')
+    return match ? Math.round(Number(match[1])) : 0
+  }
+
+  stepStrokeWidth(direction: 1 | -1) {
+    return this.setStrokeWidth(this.strokeWidth + direction)
   }
 }

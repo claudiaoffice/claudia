@@ -53,6 +53,7 @@ statement in the docs or on the website).
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
 | UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
+| UX-11 | P1 | IO / pptx | The PowerPoint exporter cannot be imported, and loses every colour when it can | **fixed** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed (patch ready, not yet committed) |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed (patch ready, not yet committed) |
@@ -358,6 +359,32 @@ which is missing, where the web app is not built or there is no Chromium; CI has
 `/api/docs` — and the web tests cover `web/app/lib`, not the page. The bug lived in the one place nothing looked.
 **Not the cause, though it looks like one.** computes and creates show "No styles yet" under *Format*: those menus
 are deliberately inert (D125) and the style UI for both is still to come.
+
+### UX-11 · The PowerPoint exporter is dead, and loses every colour once it is not · P1 · fixed
+**Evidence (measured, `441d6cb`).** `import claudia_creates_io.pptx` raised `ImportError: cannot import name
+'Style' from 'claudia_creates'` — so every .pptx export and import failed on the first call, and nine of the
+package's own tests failed. `ruff` had three errors at this commit for the same reason, and the catalogue's
+`pptx-*` and `docx-*` entries were failing too.
+**Cause.** Two branches met. The shared object layer (D177) removed creates' own `Style` dataclass, turned
+`SlideObject` into a PEP 695 type alias — which cannot be called — and made an object's words a frozen
+`Paragraph` whose runs must cover its text exactly (D181). The additive-io branch was written against the flat
+object it replaced: it imported `Style`, called `SlideObject(...)`, read `.kind/.x/.text/.style` off a
+`VisualObject`, indexed `BUILTIN_STYLES` as if it were a dict, and its tests and the catalogue's `spec.py` files
+did the same. Nothing caught it because neither branch's own gate ran against the other's code.
+**And a quieter one behind it.** Once it imported, `slides_to_pptx` read `computed` CSS and looked for a
+`#rrggbb`. Since D201 every built-in style names a role: `fill: @accent/14` holds no hex, `_rgb` found none, and
+the fill and the border were dropped silently. A deck exported from a brand-new presentation came out colourless.
+**Fix.** The importer builds a body and an anchor (`_object`); `apply_edits_to_pptx` reads `.body`/`.anchor` and
+resolves against the document's own style book and palette, not the built-in tuple; `_rgb` reads `rgb()` and
+`rgba()` as well as hex, and flattens a translucent colour over the palette's `page`, because a solid pptx fill
+has nowhere to keep an opacity and dropping the 14% would export a pale wash as full-strength iris (D206). The
+catalogue's edits now go through `claudia_test_documents.edits`, so the four `spec.py` files share one correct
+way to retext and move an object instead of four chances to get it wrong.
+**Two regression tests** pin the part no test covered: that a shape's colours reach the file at all, and that
+changing a role changes what the file holds.
+**Why nothing caught it.** The two branches were each green on their own. A merge that is clean to git can still
+be broken in Python — a removed name, an alias that stopped being callable, a dataclass that became frozen — and
+nothing runs the other side's tests until both are on one branch.
 
 ### PROC-01 · No CI workflow in the repository · P1 · fixed
 `.github/workflows/ci.yml` exists at `54d1245`: a Python matrix over ubuntu, windows and macos running

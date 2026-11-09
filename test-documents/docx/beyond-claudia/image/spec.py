@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from claudia_composes import DEFAULT_STYLE, TextModel
 from claudia_test_documents.case import Case
+from claudia_test_documents.edits import retext_block
 
 
 def import_checks(model: TextModel) -> None:
@@ -20,8 +21,7 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    model.blocks[0].text = "Photo attached below."
-    return model
+    return retext_block(model, 0, "Photo attached below.")
 
 
 def after_checks(model: TextModel) -> None:

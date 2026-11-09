@@ -3,6 +3,18 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.19.0] - 2026-11-09
+
+What the style menus in all three apps needed from the protocol (D203).
+
+### Added
+- `deviate_object_style`: "change this shape only". Makes a new style from the one an object has, differing in the
+  CSS given, and points the objects at it in one step — with a provisional name, marked `to_name` until somebody
+  names it (D75). The mirror of composes' `deviate_style`, which names paragraphs; this one names objects, and all
+  three apps have it.
+- `palette` now also answers `builtin`: the palette a document starts with, so a client can offer "the colours it
+  started with" without keeping a copy of the nine roles that could drift from the server's.
+
 ## [0.18.0] - 2026-11-08
 
 A first, cross-app help system (E13): searchable help topics and, for `claudia_computes`, a searchable catalog of

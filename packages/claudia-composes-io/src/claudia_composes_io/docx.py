@@ -122,7 +122,7 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         style = paragraph.style
         style_id = _CLAUDIA_STYLE.get(style.name, DEFAULT_STYLE) if style is not None else DEFAULT_STYLE
         text = paragraph.text
-        blocks.append(Block(f"b{index}", style_id, text, [Run(len(text), None)] if text else []))
+        blocks.append(Block(f"b{index}", style_id, text, (Run(len(text), None),) if text else ()))
     return TextModel(blocks) if blocks else TextModel()
 
 

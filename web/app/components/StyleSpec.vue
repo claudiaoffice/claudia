@@ -3,9 +3,11 @@
 // The switch is remembered. It is used by every app: it only talks to the StyleHost it is given.
 import { computed, reactive, ref, watch } from 'vue'
 import { isBold as boldIn, isItalic as italicIn } from '~/lib/style-css'
+import { flatten, readable } from '~/lib/roles'
 import { StyleEditor, type StyleHost } from '~/lib/style-host'
 
 const props = defineProps<{ host: StyleHost }>()
+const host = props.host
 const emit = defineEmits<{ edited: [] }>()
 
 const editor = reactive(new StyleEditor(props.host)) as StyleEditor
@@ -15,6 +17,27 @@ const own = (property: string) => !!current.value && property in current.value.c
 const off = computed(() => props.host.readOnly)
 const isBold = computed(() => boldIn(editor.look))
 const isItalic = computed(() => italicIn(editor.look))
+
+/** The words of this style, on the background they will really sit on — in plain words, never as a ratio (D202).
+ *
+ * Both colours come from `look`, which is already resolved, so a role and a literal are checked the same way. Two
+ * things have to be right or the warning fires when it should not, which is how a warning gets ignored:
+ *
+ *  * a translucent background is **flattened** over what is behind it first. A shape's fill is `@accent/14`, and
+ *    read as full-strength iris it looks far too dark to put words on — while what is actually there is a pale
+ *    wash a shade off the page.
+ *  * what is behind it is the document's own `page` role, which no style names, so it has to be asked of the
+ *    palette rather than read off the style.
+ *
+ * With no colour of its own on either side there is nothing to check, and nothing is said. */
+const unreadable = computed(() => {
+  const page = host.roles.find((r) => r.id === 'page')?.colour
+  const ink = flatten(editor.look.color, page)
+  const own = editor.look['background-color'] ?? (host.parts.box ? editor.look.fill : undefined)
+  const behind = flatten(own, page)
+  if (!ink || !behind || readable(ink, behind)) return null
+  return host.parts.box ? 'The words will be hard to read on this background.' : 'These words will be hard to read.'
+})
 
 const KEY = 'claudia.style-view'
 function remembered(): 'controls' | 'css' {
@@ -73,6 +96,27 @@ const ALIGN = [
     </div>
 
     <div v-if="view === 'controls'" class="controls" data-testid="controls">
+      <!-- A picture carries its own colours and holds no words, so neither group is drawn for one: a control that
+           can never do anything is worse than no control (D178, D181). -->
+      <template v-if="host.parts.box">
+        <div class="row" data-testid="box-controls">
+          <StyleColorPicker label="Background" :value="editor.named('fill')" :own="own('fill')" :disabled="off" :roles="host.roles" washes @pick="run(editor.setFill($event))" @reset="run(editor.reset('fill'))" />
+          <StyleColorPicker label="Border" :value="editor.named('stroke')" :own="own('stroke')" :disabled="off" :roles="host.roles" @pick="run(editor.setStroke($event))" @reset="run(editor.reset('stroke'))" />
+        </div>
+        <div class="row">
+          <label class="width">
+            <span>Border width</span>
+            <span class="stepper">
+              <button type="button" aria-label="Thinner" :disabled="off" data-testid="thinner" @click="run(editor.stepStrokeWidth(-1))">−</button>
+              <output class="mono" data-testid="stroke-width">{{ editor.strokeWidth }}</output>
+              <button type="button" aria-label="Thicker" :disabled="off" data-testid="thicker" @click="run(editor.stepStrokeWidth(1))">+</button>
+            </span>
+            <span class="unit">px</span>
+          </label>
+        </div>
+      </template>
+
+      <template v-if="host.parts.words">
       <div class="row">
         <StyleFontPicker :look="editor.look" :own="own('font-family')" :disabled="off" @pick="run(editor.setFamily($event))" @reset="run(editor.reset('font-family'))" />
         <StyleSizeField :look="editor.look" :disabled="off" @step="run(editor.stepSize($event))" @size="(v, u) => run(editor.setSize(v, u))" />
@@ -93,9 +137,11 @@ const ALIGN = [
         </div>
       </div>
       <div class="row">
-        <StyleColorPicker label="Text" :value="editor.look.color" :own="own('color')" :disabled="off" @pick="run(editor.setColor('color', $event))" @reset="run(editor.reset('color'))" />
-        <StyleColorPicker label="Background" :value="editor.look['background-color']" :own="own('background-color')" :disabled="off" @pick="run(editor.setColor('background-color', $event))" @reset="run(editor.reset('background-color'))" />
+        <StyleColorPicker label="Text" :value="editor.named('color')" :own="own('color')" :disabled="off" :roles="host.roles" @pick="run(editor.setColor('color', $event))" @reset="run(editor.reset('color'))" />
+        <StyleColorPicker label="Behind" :value="editor.named('background-color')" :own="own('background-color')" :disabled="off" :roles="host.roles" washes @pick="run(editor.setColor('background-color', $event))" @reset="run(editor.reset('background-color'))" />
       </div>
+      <p v-if="unreadable" class="unreadable" data-testid="unreadable">{{ unreadable }}</p>
+      </template>
     </div>
 
     <StyleCssEditor v-else :current="current" :styles="host.styles" :scope="editor.scope" :read-only="off" :check="(t) => host.check(t)" @apply="run(editor.setText($event))" />
@@ -212,6 +258,50 @@ h3 {
    * are; swapping the text alone to `--app-text` would break it (light text on a background that never darkens). */
   background: color-mix(in srgb, var(--app) 18%, white);
   color: var(--app-dark);
+}
+.width {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-field); /* the group's own edge, not a divider */
+  border-radius: 8px;
+  overflow: hidden;
+}
+.stepper button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1;
+}
+.stepper button:hover:not(:disabled) {
+  background: var(--mist);
+}
+.stepper output {
+  min-width: 34px;
+  padding: 0 4px;
+  border-inline: 1px solid var(--line);
+  text-align: center;
+  font-size: 12px;
+  line-height: 28px;
+}
+.unit {
+  color: var(--muted);
+}
+.unreadable {
+  margin: 0;
+  padding: 7px 9px;
+  border-radius: 8px;
+  /* Literal `white` so it stays light in either theme, as `.name` below does. */
+  background: color-mix(in srgb, var(--apricot) 14%, white);
+  font-size: 11.5px;
+  color: var(--ink);
 }
 .b {
   font-weight: 700;

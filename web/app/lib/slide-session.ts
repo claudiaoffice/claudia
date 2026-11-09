@@ -4,7 +4,8 @@ import { type LinkLike, type Region } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
 import type { ImageAsset, ImageImport } from './images'
-import type { ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
+import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
+import type { CssCheck, CssEdit } from './style-css'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
 // so existing imports of them from this module keep working.
@@ -217,6 +218,62 @@ export class SlideSession extends BaseSession<SlideState> {
 
   async remove(id: string): Promise<boolean> {
     return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
+  }
+
+  // -- styles and the palette (E9.7, D200, D203). The same eight methods computes' session has, because the style
+  // menu is one component talking to one `StyleHost` and neither knows which app it is in.
+  get readOnly(): boolean {
+    return this.state.me.role === 'viewer'
+  }
+
+  /** The styles as the menu wants them, in the order the server lists them. */
+  styleViews(): StyleDef[] {
+    return Object.values(this.state.styles)
+  }
+
+  /** Every object of the document, for the use counts beside the style names. */
+  bodies(): ObjectBody[] {
+    // The client's `VisualObject` is flat — `ObjectBody & { anchor }` — so an object is already a body.
+    return Object.values(this.state.objects)
+  }
+
+  /** Put one object under another style of its own: its fill, its border (D178). */
+  async setObjectStyle(id: string, style: string): Promise<boolean> {
+    return (await this.attempt('set_object_style', { id, style, base: this.state.revision })) !== false
+  }
+
+  /** Change a style for everything that has it — and for the styles based on it, where they say nothing (D73). */
+  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
+    return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
+  }
+
+  /** Change these objects only: they get a new style, made from `parent`, which is named later (D75). */
+  async deviateObjectStyle(parent: string, ids: string[], edit: CssEdit): Promise<boolean> {
+    const params = { parent, objects: ids, ...edit, base: this.state.revision }
+    return (await this.attempt('deviate_object_style', params)) !== false
+  }
+
+  async renameStyle(style: string, name: string): Promise<boolean> {
+    return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false
+  }
+
+  /** Give a colour role another colour: every style that meant it follows, and so does every object (D200). */
+  async setRole(role: string, colour: string): Promise<boolean> {
+    return (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false
+  }
+
+  /** Put a whole palette in place of this document's — what "the colours it started with" does (D200). */
+  async replacePalette(roles: ColourRole[]): Promise<boolean> {
+    return (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false
+  }
+
+  /** What the server makes of this CSS text, line by line. A read: viewers may ask it too. */
+  async checkCss(text: string): Promise<CssCheck | null> {
+    try {
+      return await this.need().request<CssCheck>('check_css', { text })
+    } catch {
+      return null
+    }
   }
 
   async showSlide(slide: string): Promise<void> {

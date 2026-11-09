@@ -141,6 +141,15 @@ class StyleBook:
             candidate = f"{base} (changed {number})"
         return candidate
 
+    def resolved(self, style_id: str, colours: Mapping[str, str] | None = None) -> dict[str, str]:
+        """One style's CSS with its parents taken in *and* its palette roles turned into literal colours (D200).
+
+        What :meth:`computed` gives still names roles (``@accent``), which is right for a style menu and wrong for
+        anything that paints: a browser drops a declaration it cannot read, and a file format has nowhere to put
+        one. So everything that renders or exports asks for this form, not ``computed``.
+        """
+        return resolve_css(self.computed(style_id), colours or {})
+
     def views(self, colours: Mapping[str, str] | None = None) -> list[dict]:
         """Every style as sent to clients: the plain data, the ``computed`` CSS, and the ``resolved`` CSS.
 
@@ -155,8 +164,8 @@ class StyleBook:
         return [
             {
                 **style.to_data(),
-                "computed": (computed := self.computed(style.id)),
-                "resolved": resolve_css(computed, colours or {}),
+                "computed": self.computed(style.id),
+                "resolved": self.resolved(style.id, colours),
             }
             for style in self._styles.values()
         ]

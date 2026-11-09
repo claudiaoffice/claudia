@@ -16,7 +16,7 @@ and computes' style names, creates' shape library — has no id and no `Action` 
 (``lib/menu-dispatch.ts``'s `collectStates`/`findMenuItem` walk explicitly skip id-less items); a shell reaches that
 content through its one real submenu-shaped escape hatch (composes: "All Styles…") rather than the static menu
 growing one entry per document. The same reasoning drops the "visible but inert" stub items (D125) from the
-*accelerator* story but not from the menu itself: ``format.none``, ``help.how-to`` and ``help.docs`` below are
+*accelerator* story but not from the menu itself: ``help.how-to`` and ``help.docs`` below are
 ordinary ``Kind.PAGE`` actions the shell greys out the moment the page connects (``set_action_states``, driven by the
 page's own ``collectStates`` — nothing shell-side needs to know they are permanent stubs rather than temporarily
 disabled ones).
@@ -388,6 +388,7 @@ def composes() -> Manifest:
                 ),
                 _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
             ),
+            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
         ),
     )
     view_menu = Menu(
@@ -465,7 +466,21 @@ def computes() -> Manifest:
             (_page("edit.clear", "Clear Cells", "Clear the selected cells"),),
         ),
     )
-    format_menu = Menu("Format", ((_page("format.none", "No Styles Yet", "computes has no style system yet"),),))
+    format_menu = Menu(
+        "Format",
+        (
+            (
+                _page(
+                    "format.look",
+                    "Edit This Style…",
+                    "Change how the object you have selected looks",
+                    accelerators=("<Shift>F10",),
+                ),
+                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
+            ),
+            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+        ),
+    )
     view_menu = Menu("View", (_shared_view_block(authors=False),))
     tools_menu = Menu(
         "Tools",
@@ -513,7 +528,21 @@ def creates() -> Manifest:
             (_page("edit.delete", "Delete", "Take the selected object off the slide"),),
         ),
     )
-    format_menu = Menu("Format", ((_page("format.none", "No Styles Yet", "creates has no style system yet"),),))
+    format_menu = Menu(
+        "Format",
+        (
+            (
+                _page(
+                    "format.look",
+                    "Edit This Style…",
+                    "Change how the object you have selected looks",
+                    accelerators=("<Shift>F10",),
+                ),
+                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
+            ),
+            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+        ),
+    )
     view_menu = Menu("View", (_shared_view_block(authors=False),))
     tools_menu = Menu("Tools", ((_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),))
     return Manifest(

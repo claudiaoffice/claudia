@@ -448,6 +448,7 @@ source = { editable = "packages/claudia-creates-io" }
 dependencies = [
     { name = "claudia-core" },
     { name = "claudia-creates" },
+    { name = "claudia-opc-io" },
     { name = "python-pptx" },
 ]
 
@@ -455,6 +456,7 @@ dependencies = [
 requires-dist = [
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
+    { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "python-pptx", specifier = ">=1.0" },
 ]
 
@@ -592,6 +594,8 @@ source = { editable = "packages/claudia-test-documents" }
 dependencies = [
     { name = "claudia-composes" },
     { name = "claudia-composes-io" },
+    { name = "claudia-creates" },
+    { name = "claudia-creates-io" },
     { name = "claudia-opc-io" },
     { name = "pillow" },
 ]
@@ -600,6 +604,8 @@ dependencies = [
 requires-dist = [
     { name = "claudia-composes", editable = "packages/claudia-composes" },
     { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
+    { name = "claudia-creates", editable = "packages/claudia-creates" },
+    { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "pillow", specifier = ">=10" },
 ]

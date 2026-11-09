@@ -4,6 +4,16 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.12.0] - 2026-11-09
+
+The style surface the menus in all three apps are built on (D203).
+
+### Added
+- `StyleBook.resolved(style_id, colours)`: one style's CSS with its parents taken in *and* its palette roles turned
+  into literal colours. What `views` already returned per style, now askable for one — anything that paints or
+  exports needs it, and reading `computed` instead silently dropped every colour that was a role, which is exactly
+  what the pptx exporter was doing.
+
 ## [0.11.0] - 2026-11-08
 
 A diagram joins the shared object layer as its own kind, so a chart can be a floating object on a slide, sheet

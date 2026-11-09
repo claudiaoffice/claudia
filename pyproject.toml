@@ -92,7 +92,16 @@ module = ["claudia_typeset._windows", "claudia_typeset.sandbox"]
 warn_unused_ignores = false
 
 [tool.vulture]
-paths = ["packages", "scripts", "clients/linux/src", "clients/linux/tests", "vulture_whitelist.py"]
+# ``test-documents`` holds the catalogue's own spec.py files; they are what calls
+# ``claudia_test_documents.edits``, so leaving them out would report those helpers as dead.
+paths = [
+    "packages",
+    "scripts",
+    "test-documents",
+    "clients/linux/src",
+    "clients/linux/tests",
+    "vulture_whitelist.py",
+]
 min_confidence = 60
 ignore_decorators = ["@form", "@builtin"]  # (they register the function in a table; nothing calls it by name)
 exclude = [".venv/", "docs/"]

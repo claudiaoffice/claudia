@@ -24,7 +24,18 @@ const { dark, toggle: toggleDark } = useTheme()
 const { t, locale, choose } = useI18n()
 
 const dialog = ref<
-  null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'styles' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
+  | null
+  | 'checkpoint'
+  | 'share'
+  | 'shortcuts'
+  | 'about'
+  | 'styles'
+  | 'colours'
+  | 'assign-owner'
+  | 'accept-owner'
+  | 'leave'
+  | 'export'
+  | 'delete'
 >(null)
 const styleMenu = ref<{ x: number; y: number } | null>(null)
 const styleHost = textStyleHost(session)
@@ -93,6 +104,14 @@ async function download() {
 
 function openStyleMenu(at = editor.value?.caretPoint() ?? { x: 80, y: 120 }) {
   styleMenu.value = at
+}
+
+/** Put the colours the document started with back: a real `replace_palette`, in the history like any edit.
+ *
+ * The set comes from the server's own `palette` answer, so there is no second copy of the nine roles to drift. */
+async function resetPalette() {
+  const started = state.palette?.builtin ?? []
+  if (started.length && (await session.replacePalette(started))) dialog.value = null
 }
 
 function closeStyleMenu() {
@@ -220,6 +239,9 @@ const menus = computed<Menu[]>(() => [
             { label: '', separator: true },
             { id: 'format.look', label: t('Edit this style…'), hint: hints.value['format.look'], action: () => openStyleMenu() },
             { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
+            { label: '', separator: true },
+            // The palette reaches composes' paragraph styles from day one (D200): a heading's colour is a role.
+            { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
           ],
   },
   {
@@ -291,11 +313,22 @@ function styleItem(id: string) {
   }
 }
 const BUILTIN_STYLE_IDS = new Set(['body', 'title', 'heading-1', 'heading-2', 'quote', 'remark', 'definition'])
+/**
+ * A text's style book holds the floating objects' styles too, since one object layer serves all three apps
+ * (E10.16): `plain-shape` and `plain-image` live here beside the paragraph styles. The *Format* menu marks a
+ * paragraph, and giving a paragraph "Plain shape" means nothing, so they are left out of this list — the style
+ * menu on the object itself is where they belong (D203).
+ *
+ * By id, because a `StyleDef` carries no `kind` yet: the real fix is that field on the style itself, which is
+ * already on the backlog (E1.10, "Not done: kind"). A style somebody makes by deviating from one of these keeps
+ * its parent's shape and would want the same treatment; until `kind` exists there is nothing honest to test for.
+ */
+const OBJECT_STYLE_IDS = new Set(['plain-shape', 'plain-image'])
 /** A style made by deviating from a built-in (`next_style` in `model.py`) is not one of the three fixed groups above
  * — D127 only grouped the seven built-ins, so anything else gets its own trailing group rather than being folded
  * silently into one of them. */
 function customStyleItems() {
-  const custom = state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id))
+  const custom = state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && !OBJECT_STYLE_IDS.has(s.id))
   if (!custom.length) return []
   return [{ label: '', separator: true }, ...custom.map((s) => styleItem(s.id))]
 }
@@ -365,6 +398,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     />
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
     <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+    <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
     <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
     <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />

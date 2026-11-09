@@ -15,14 +15,19 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 
 from claudia_core import (
+    BUILTIN_ROLES,
+    Batch,
     ChangeStyle,
     ColourRole,
+    Command,
+    CreateStyle,
     Palette,
     RenameStyle,
     ReplacePalette,
     SetObjectStyle,
     SetRole,
     StyleBook,
+    StyleDef,
     format_css,
     parse_css,
     validate_css,
@@ -32,6 +37,8 @@ from .protocol import Context, MethodTable, RequestError
 
 #: A palette may not be replaced with more roles than the kernel would take anyway.
 MAX_SENT_ROLES = 64
+#: How many objects one deviation may restyle at once (composes has the same bound for paragraphs).
+MAX_STYLED_OBJECTS = 200
 
 
 def _rev(ctx: Context) -> str | None:
@@ -85,6 +92,15 @@ def _roles_from(items: Iterable[object]) -> tuple[ColourRole, ...]:
     return tuple(roles)
 
 
+def _only_what_differs(given: dict, inherited: dict[str, str]) -> dict[str, str]:
+    """The CSS a deviation really needs: what the person asked for, minus whatever the parent already says.
+
+    A new style that differs from its parent in nothing is not a style, it is a duplicate, so the caller refuses it.
+    """
+    wanted = validate_css(given)
+    return {name: value for name, value in wanted.items() if inherited.get(name) != value}
+
+
 def _changed(ctx: Context, command, base) -> dict:
     applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
@@ -101,6 +117,9 @@ def _add_palette_methods(table: MethodTable, allowed: Callable[[Context], None])
         A role is `{id, name, purpose, colour}`: `id` is what a style names as `@id` (or `@id/55` for that role at
         55% opacity), `name` and `purpose` are what to call it and what it means, and `colour` is `#rrggbb`.
 
+        `builtin` is the palette a document starts with, so a client can offer "the colours it started with"
+        without keeping a copy of its own that could drift from this one.
+
         A reading is `{foreground, background, ratio, floor, ok, words}`: how one role reads against another, the
         contrast it has to clear (4.5 for words, 3 for a border or a rule), and whether it does. `words` says
         which of the two it is. Say what a failing reading *means* — never show the ratio to a reader; a figure
@@ -109,6 +128,7 @@ def _add_palette_methods(table: MethodTable, allowed: Callable[[Context], None])
         return {
             "roles": palette.views(),
             "readings": [reading.to_data() for reading in palette.readings()],
+            "builtin": [role.to_data() for role in BUILTIN_ROLES],
         }
 
     @table.method("set_role", "role:str colour:str base:revision?", write=True)
@@ -137,24 +157,10 @@ def _add_palette_methods(table: MethodTable, allowed: Callable[[Context], None])
             raise RequestError("command_error", str(exc)) from None
 
 
-def add_style_methods(table: MethodTable, *, guard: Callable[[Context], None] | None = None) -> None:
-    """Register the shared style and palette methods in ``table``.
-
-    ``guard`` runs before every one that writes; see the module docstring.
-    """
-    allowed = guard if guard is not None else (lambda ctx: None)
-    _add_palette_methods(table, allowed)
-
-    @table.method("styles")
-    def _styles(ctx):
-        """The document's styles, each as `{id, name, purpose, based_on, css, computed, resolved, to_name}`.
-
-        `css` is what the style sets itself, `computed` the CSS it really has once its parents (`based_on`) are
-        taken in (D73), and `resolved` the same again with every palette role (`@accent`) replaced by the literal
-        colour the palette gives it — that last one is what a client draws with, so the CSS it puts on a page is
-        always literal. `to_name` is true for a style that was made by deviating and still has the provisional
-        name it was given (E9.7). A shape's background and border are `fill`/`stroke`/`stroke-width` (D178)."""
-        return _book(ctx).views(_palette_colours(ctx))
+def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], None]) -> None:
+    """The two methods that style an *object* rather than a paragraph: pointing one at a style, and deviating
+    from that style for the objects a person has selected (D75, D178, D203). Split out of
+    :func:`add_style_methods` only to keep each under the statement limit."""
 
     @table.method("set_object_style", "id:str style:str base:revision?", write=True)
     def _set_object_style(ctx, *, id, style, base):
@@ -169,6 +175,58 @@ def add_style_methods(table: MethodTable, *, guard: Callable[[Context], None] | 
             return _changed(ctx, SetObjectStyle(id, style), base)
         except (KeyError, ValueError) as exc:
             raise RequestError("command_error", str(exc)) from None
+
+    @table.method("deviate_object_style", "parent:str objects:list set:dict? text:text? base:revision?", write=True)
+    def _deviate_object_style(ctx, *, parent, objects, set, text, base):
+        """Make a new style from `parent` that differs in the CSS given (`set` properties, or `text`) and give it to
+        the objects `objects`, in one step.
+
+        This is "change this shape only": a change a person makes to one object does not quietly reach every other
+        object that shares its style. The new style gets a provisional name such as “Plain shape (changed)” and is
+        marked `to_name` until somebody names it (D75) — styles first, deviate second.
+
+        Returns `{style, name, revision}`. `command_error` if nothing differs from the parent, if there is no such
+        style, or if one of the objects is not there."""
+        allowed(ctx)
+        model = ctx.document.model
+        if len(objects) > MAX_STYLED_OBJECTS or not all(isinstance(one, str) for one in objects):
+            raise RequestError("bad_request", f"objects must be a list of at most {MAX_STYLED_OBJECTS} object ids")
+        book = _book(ctx)
+        try:
+            inherited = book.computed(parent)
+            for one in objects:
+                model.get_object(one)  # KeyError -> command_error: the object has to be there
+        except KeyError as exc:
+            raise RequestError("command_error", exc.args[0]) from None
+        own = _only_what_differs(own_css(set, text) or {}, inherited)
+        if not own:
+            raise RequestError("command_error", f"the new style would look just like “{book.get(parent).name}”")
+        name = book.provisional_name(parent)
+        made = StyleDef(book.unique_id(name), name, "", parent, own, to_name=True)
+        steps: list[Command] = [CreateStyle(made), *(SetObjectStyle(one, made.id) for one in objects)]
+        applied = ctx.document.execute(Batch(tuple(steps), "Deviate style"), author=ctx.user, base=base)
+        return {"style": made.id, "name": name, "revision": applied.revision.to_data()}
+
+
+def add_style_methods(table: MethodTable, *, guard: Callable[[Context], None] | None = None) -> None:
+    """Register the shared style and palette methods in ``table``.
+
+    ``guard`` runs before every one that writes; see the module docstring.
+    """
+    allowed = guard if guard is not None else (lambda ctx: None)
+    _add_palette_methods(table, allowed)
+    _add_object_style_methods(table, allowed)
+
+    @table.method("styles")
+    def _styles(ctx):
+        """The document's styles, each as `{id, name, purpose, based_on, css, computed, resolved, to_name}`.
+
+        `css` is what the style sets itself, `computed` the CSS it really has once its parents (`based_on`) are
+        taken in (D73), and `resolved` the same again with every palette role (`@accent`) replaced by the literal
+        colour the palette gives it — that last one is what a client draws with, so the CSS it puts on a page is
+        always literal. `to_name` is true for a style that was made by deviating and still has the provisional
+        name it was given (E9.7). A shape's background and border are `fill`/`stroke`/`stroke-width` (D178)."""
+        return _book(ctx).views(_palette_colours(ctx))
 
     @table.method("change_style", "style:str set:dict? unset:list? text:text? base:revision?", write=True)
     def _change_style(ctx, *, style, set, unset, text, base):

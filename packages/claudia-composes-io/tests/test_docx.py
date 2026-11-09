@@ -131,7 +131,7 @@ def test_docx_to_text_on_a_fresh_document_imports_its_one_default_empty_paragrap
     # python-docx's own blank template already has one paragraph (empty, "Normal"); there is no zero-paragraph
     # case to import, so this is what "empty document" actually means.
     model = docx_to_text(_docx_bytes(docx.Document()))
-    assert [(b.style, b.text, b.runs) for b in model.blocks] == [(DEFAULT_STYLE, "", [])]
+    assert [(b.style, b.text, b.runs) for b in model.blocks] == [(DEFAULT_STYLE, "", ())]
 
 
 def test_apply_edits_patches_only_the_changed_paragraph_and_preserves_a_table():

@@ -10,6 +10,7 @@ import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/short
 import { createShellBridge } from '~/lib/shell-bridge'
 import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
+import { objectStyleHost } from '~/lib/object-style-host'
 import { useTheme } from '~/lib/theme'
 import type { Axis } from '~/lib/line-sizes'
 import type { Menu } from './MenuBar.vue'
@@ -31,10 +32,31 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 const dialog = ref<
-  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete' | 'image' | 'row-size' | 'col-size'
+  | null
+  | 'sheet'
+  | 'checkpoint'
+  | 'share'
+  | 'shortcuts'
+  | 'about'
+  | 'assign-owner'
+  | 'accept-owner'
+  | 'leave'
+  | 'export'
+  | 'delete'
+  | 'image'
+  | 'row-size'
+  | 'col-size'
+  | 'styles'
+  | 'colours'
 >(null)
 const panelOpen = ref(true)
-const grid = ref<{ focus: () => void; selectObject: (id: string) => void } | null>(null)
+const grid = ref<{
+  focus: () => void
+  selectObject: (id: string) => void
+  openStyleMenu: (at?: { x: number; y: number }) => void
+  selectedObject: () => string | null
+  selectedStyle: () => string | undefined
+} | null>(null)
 const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
@@ -213,6 +235,71 @@ async function structure(axis: 'row' | 'col', insert: boolean, after = false) {
   await session.structure(state.activeSheet, axis, insert, insert && after ? last + 1 : first, count)
 }
 
+const styleHost = objectStyleHost({
+  get readOnly() {
+    return session.readOnly
+  },
+  get styles() {
+    return session.styleViews()
+  },
+  get roles() {
+    return state.palette?.roles ?? []
+  },
+  get readings() {
+    return state.palette?.readings ?? []
+  },
+  get selected() {
+    const id = grid.value?.selectedObject() ?? null
+    return id ? state.objects[id] ?? null : null
+  },
+  get bodies() {
+    return session.bodies()
+  },
+  setObjectStyle: (id, style) => session.setObjectStyle(id, style),
+  changeStyle: (style, edit) => session.changeStyle(style, edit),
+  deviateObjectStyle: (parent, ids, edit) => session.deviateObjectStyle(parent, ids, edit),
+  renameStyle: (style, name) => session.renameStyle(style, name),
+  checkCss: (text) => session.checkCss(text),
+  setRole: (role, colour) => session.setRole(role, colour),
+})
+
+/**
+ * The Format menu. A workbook's styles are its floating objects' — a shape, a text box, a picture, a chart. Cell
+ * styling is a separate story (E6.13) and will take its colours from this same palette when it arrives, which is
+ * why the menu says what these styles are for rather than reading as the whole of "Format".
+ *
+ * The per-object items need something selected; the colours are the document's and never do.
+ */
+function styleItems() {
+  const styles = session.styleViews()
+  if (styles.length === 0) return [{ label: t('No styles yet'), disabled: true }]
+  const chosen = grid.value?.selectedStyle()
+  const nothing = !grid.value?.selectedObject()
+  return [
+    { label: t('For the object you select'), disabled: true },
+    ...styles.map((s) => ({
+      label: s.name,
+      checked: s.id === chosen,
+      disabled: readonly.value || nothing,
+      action: () => {
+        const id = grid.value?.selectedObject()
+        if (id) void session.setObjectStyle(id, s.id)
+      },
+    })),
+    { label: '', separator: true },
+    { id: 'format.look', label: t('Edit this style…'), disabled: nothing, action: () => grid.value?.openStyleMenu() },
+    { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
+    { label: '', separator: true },
+    { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
+  ]
+}
+
+/** Put the colours the document started with back, as the server itself states them. */
+async function resetPalette() {
+  const started = state.palette?.builtin ?? []
+  if (started.length && (await session.replacePalette(started))) dialog.value = null
+}
+
 // Row/column header menu (mockup 1) and the resize dialog it opens (mockup 2) — SheetGrid.vue already made sure
 // the selection covers the header that was right-clicked, so `b` (above) is the right range for all three actions.
 function openHeaderMenu(axis: Axis, index: number, x: number, y: number) {
@@ -379,7 +466,7 @@ const menus = computed<Menu[]>(() => [
       { id: 'edit.clear', label: t('Clear cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
     ],
   },
-  { label: t('Format'), items: [{ id: 'format.none', label: t('No styles yet'), disabled: true }] }, // D125: visible, inert — computes has no style system yet
+  { label: t('Format'), items: styleItems() },
   {
     label: t('View'),
     items: [
@@ -498,6 +585,7 @@ onBeforeUnmount(() => clearTimeout(timer))
         :edit="edit"
         :pointing="pointing"
         :anchored="pointed"
+        @styles="dialog = 'styles'"
         @select="select"
         @move="moveBy"
         @type="beginEdit($event)"
@@ -540,6 +628,8 @@ onBeforeUnmount(() => clearTimeout(timer))
     />
     <AboutDialog v-if="dialog === 'about'" app="computes" @close="dialog = null" />
     <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
+    <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+    <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     <LineSizeDialog
       v-if="dialog === 'row-size' || dialog === 'col-size'"
       :session="session"

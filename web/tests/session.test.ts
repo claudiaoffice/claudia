@@ -83,6 +83,24 @@ function server(link: FakeLink) {
   link.handlers = {
     sheets: () => [{ id: 's1', name: 'Budget', rows: 2, cols: 2 }],
     images: () => [],
+    // A workbook has styles and a palette of its own since E9.7/D200: its floating objects are drawn from them.
+    styles: () => [
+      {
+        id: 'plain-shape',
+        name: 'Plain shape',
+        purpose: '',
+        based_on: 'body-text',
+        css: { fill: '@accent/14' },
+        computed: { fill: '@accent/14' },
+        resolved: { fill: 'rgba(91, 75, 196, 0.14)' },
+        to_name: false,
+      },
+    ],
+    palette: () => ({
+      type: 'palette',
+      roles: [{ id: 'accent', name: 'Accent', purpose: 'the one thing to notice', colour: '#5B4BC4' }],
+      readings: [],
+    }),
     objects: (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: [] }),
     log: () => [{ revision: 'main:3', author: 'ben', origin: 'do', time: 't', label: 'Edit cell', summary: 'B2 = 40', of: null }],
     chat_log: () => [{ number: 1, author: 'ben', to: '', text: 'hi', time: 't', at: null }],

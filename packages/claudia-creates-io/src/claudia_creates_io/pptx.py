@@ -34,7 +34,15 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.util import Emu, Pt
 
-from claudia_creates import BUILTIN_STYLES, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideModel, SlideObject, Style
+from claudia_core import ObjectBody, VisualObject, paragraph_for
+from claudia_creates import (
+    SLIDE_HEIGHT,
+    SLIDE_WIDTH,
+    ShapeLibrary,
+    SlideAnchor,
+    SlideModel,
+    SlideObject,
+)
 from claudia_opc_io import owns, reconcile
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -61,6 +69,8 @@ _DEFAULT_TEXT_STYLE, _DEFAULT_SHAPE_STYLE = "body-text", "plain-shape"
 _TRANSITIONS = ("fade", "wipe", "push", "none")
 _SPEEDS = ("fast", "med", "slow")
 _HEX = re.compile(r"#([0-9a-fA-F]{6})\b")
+_SHORT_HEX = re.compile(r"#([0-9a-fA-F]{3})\b")
+_RGB_FUNCTION = re.compile(r"rgba?\(([^)]*)\)")
 _NUMBER = re.compile(r"[\d.]+")
 
 
@@ -79,15 +89,60 @@ def _pt(css: dict[str, str], prop: str, pt_per_unit: float) -> Pt | None:
     return Pt(float(match.group()) * pt_per_unit) if match else None
 
 
-def _rgb(css: dict[str, str], prop: str) -> RGBColor | None:
+def _rgb(css: dict[str, str], prop: str, over: str | None = None) -> RGBColor | None:
+    """``css[prop]`` as a pptx colour, or ``None`` if it holds no colour this can read.
+
+    Hexadecimal **and** ``rgb()``/``rgba()``, because a palette role at an opacity resolves to the latter: a shape's
+    fill is ``@accent/14``, which becomes ``rgba(91, 75, 196, 0.14)`` and holds no hex at all. Reading only hex
+    dropped the fill and the stroke of every built-in shape without a word of complaint.
+
+    A solid pptx fill has no alpha to put the opacity in, so a translucent colour is composited over ``over`` (the
+    slide's own colour, the palette's ``page``) and the flattened result is written. Keeping the colour and
+    discarding the opacity instead would turn a 14% wash into full-strength iris — a shape that looks nothing like
+    the one on the screen, which is the opposite of what an export is for.
+    """
     value = css.get(prop)
-    match = _HEX.search(value) if value else None
-    return RGBColor.from_string(match.group(1)) if match else None
+    if not value:
+        return None
+    parsed = _parse_colour(value)
+    if parsed is None:
+        return None
+    red, green, blue, alpha = parsed
+    if alpha < 1:
+        behind = _parse_colour(over or "") or (255, 255, 255, 1.0)
+        red, green, blue = (
+            round(alpha * near + (1 - alpha) * far) for near, far in zip((red, green, blue), behind[:3], strict=True)
+        )
+    return RGBColor(red, green, blue)
 
 
-def _style_text(text_frame, css: dict[str, str], pt_per_unit: float) -> None:
+def _parse_colour(value: str) -> tuple[int, int, int, float] | None:
+    """``#rgb``, ``#rrggbb``, ``rgb(r, g, b)`` or ``rgba(r, g, b, a)`` as red, green, blue and opacity."""
+    hex_match = _HEX.search(value)
+    if hex_match:
+        text = hex_match.group(1)
+        return int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16), 1.0
+    short = _SHORT_HEX.search(value)
+    if short:
+        text = short.group(1)
+        return (*(int(char * 2, 16) for char in text), 1.0)  # type: ignore[return-value]
+    func = _RGB_FUNCTION.search(value)
+    if not func:
+        return None
+    parts = [part.strip() for part in func.group(1).split(",")]
+    if len(parts) not in (3, 4):
+        return None
+    try:
+        red, green, blue = (min(255, max(0, round(float(part)))) for part in parts[:3])
+        alpha = min(1.0, max(0.0, float(parts[3]))) if len(parts) == 4 else 1.0
+    except ValueError:
+        return None
+    return red, green, blue, alpha
+
+
+def _style_text(text_frame, css: dict[str, str], pt_per_unit: float, over: str | None = None) -> None:
     size = _pt(css, "font-size", pt_per_unit)
-    color = _rgb(css, "color")
+    color = _rgb(css, "color", over)
     for paragraph in text_frame.paragraphs:
         for run in paragraph.runs:
             if size is not None:
@@ -96,17 +151,35 @@ def _style_text(text_frame, css: dict[str, str], pt_per_unit: float) -> None:
                 run.font.color.rgb = color
 
 
-def _style_shape(shape, css: dict[str, str], pt_per_unit: float) -> None:
-    fill = _rgb(css, "fill")
+def _style_shape(shape, css: dict[str, str], pt_per_unit: float, over: str | None = None) -> None:
+    fill = _rgb(css, "fill", over)
     if fill is not None:
         shape.fill.solid()
         shape.fill.fore_color.rgb = fill
-    stroke = _rgb(css, "stroke")
+    stroke = _rgb(css, "stroke", over)
     if stroke is not None:
         shape.line.color.rgb = stroke
     width = _pt(css, "stroke-width", pt_per_unit)
     if width is not None:
         shape.line.width = width
+
+
+def _page_colour(model: SlideModel) -> str | None:
+    """The slide's own colour, which a translucent fill is flattened over on the way into a file (see ``_rgb``)."""
+    return model.palette.colours().get("page")
+
+
+def _look(model: SlideModel, style_id: str) -> dict[str, str]:
+    """What a style really looks like, ready to write into a file: its parents taken in and its palette roles
+    turned into colours (D73, D200).
+
+    *Resolved*, not computed. A built-in style says ``fill: @accent/14``, and a role is not a colour a file format
+    can hold: ``_rgb`` would find no hex in it and the fill would go missing without a word of complaint. The
+    document's palette is what turns it into one.
+    """
+    if style_id not in model.styles:
+        return {}
+    return model.styles.resolved(style_id, model.palette.colours())
 
 
 def slides_to_pptx(model: SlideModel) -> bytes:
@@ -117,6 +190,7 @@ def slides_to_pptx(model: SlideModel) -> bytes:
     scale_x, scale_y = _DECK_WIDTH / SLIDE_WIDTH, _DECK_HEIGHT / SLIDE_HEIGHT
     pt_per_unit = (_DECK_HEIGHT / 914_400 * 72) / SLIDE_HEIGHT
     layout = prs.slide_layouts[_BLANK_LAYOUT]
+    page = _page_colour(model)
     for slide_id in model.slides:
         slide = prs.slides.add_slide(layout)
         for obj in model.objects_on(slide_id):
@@ -128,26 +202,20 @@ def slides_to_pptx(model: SlideModel) -> bytes:
                 Emu(round(body.h * scale_y)),
             )
 
-            # The *computed* style: what a style really has once its parents are resolved (D73, E10.16). An
-            # object has two: its own, which says what the box looks like, and its paragraph's, which says what
-            # the words look like (E10.17, D181).
-            def computed(style_id: str) -> dict[str, str]:
-                return model.styles.computed(style_id) if style_id in model.styles else {}
-
-            css = computed(body.style)
+            css = _look(model, body.style)
             words = body.paragraph.text if body.paragraph else ""
-            text_css = computed(body.paragraph.style) if body.paragraph else {}
+            text_css = _look(model, body.paragraph.style) if body.paragraph else {}
             if body.kind == "text":
                 shape = slide.shapes.add_textbox(*box)
                 shape.text_frame.text = words
-                _style_text(shape.text_frame, text_css, pt_per_unit)
+                _style_text(shape.text_frame, text_css, pt_per_unit, page)
             else:
                 definition = model.shapes.get(body.shape) if body.shape else None
                 auto_shape = _AUTOSHAPE.get(definition.id if definition else "", MSO_SHAPE.RECTANGLE)
                 shape = slide.shapes.add_shape(auto_shape, *box)
                 shape.text_frame.text = words
-                _style_shape(shape, css, pt_per_unit)
-                _style_text(shape.text_frame, text_css, pt_per_unit)
+                _style_shape(shape, css, pt_per_unit, page)
+                _style_text(shape.text_frame, text_css, pt_per_unit, page)
     out = BytesIO()
     prs.save(out)
     return out.getvalue()
@@ -210,7 +278,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             w, h = round(shape.width / scale_x), round(shape.height / scale_y)
             text = shape.text_frame.text if shape.has_text_frame else ""
             if kind == "text":
-                obj = SlideObject(f"o{next(object_ids)}", slide_id, "text", x, y, w, h, _DEFAULT_TEXT_STYLE, text)
+                obj = _object(next(object_ids), slide_id, "text", (x, y, w, h), _DEFAULT_TEXT_STYLE, text)
             else:
                 shape_id = _SHAPE_ID[shape.auto_shape_type]
                 if shape_id not in defined:
@@ -219,11 +287,31 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                         raise ValueError(f"the built-in shape library has no shape {shape_id!r}")
                     model.define_shape(definition)
                     defined.add(shape_id)
-                obj = SlideObject(
-                    f"o{next(object_ids)}", slide_id, "shape", x, y, w, h, _DEFAULT_SHAPE_STYLE, text, shape_id
-                )
+                obj = _object(next(object_ids), slide_id, "shape", (x, y, w, h), _DEFAULT_SHAPE_STYLE, text, shape_id)
             model.insert_object(obj)
     return model
+
+
+def _object(
+    number: int,
+    slide: str,
+    kind: str,
+    frame: tuple[int, int, int, int],
+    style: str,
+    text: str,
+    shape: str | None = None,
+) -> SlideObject:
+    """One imported shape as this suite's own object: a shared body, and a slide anchor for where it sits.
+
+    An object stopped being one flat record when the three apps started sharing an object layer (D177): what it
+    *is* lives in ``ObjectBody``, where it sits lives in the anchor, and its words are a ``Paragraph`` of their own
+    (D181). ``SlideObject`` is a type alias for that pair (``VisualObject[SlideAnchor]``), and a PEP 695 alias is not
+    callable, so the pair is built here and the alias serves as the annotation alone.
+    """
+    x, y, w, h = frame
+    object_id = f"o{number}"
+    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text), shape=shape)
+    return VisualObject(body, SlideAnchor(slide, x, y))
 
 
 def _qn(tag: str, ns: str = PNS) -> str:
@@ -286,6 +374,7 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
     slide_height = prs.slide_height
     assert slide_height is not None
     pt_per_unit = (slide_height / 914_400 * 72) / SLIDE_HEIGHT
+    page = _page_colour(current)
 
     touched_parts: set[str] = set()
     for slide_number, slide_id in enumerate(baseline.slides):
@@ -294,19 +383,24 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
             before, after = baseline_by_id[object_id], current_by_id[object_id]
             if before == after:
                 continue  # nothing about this object changed: leave its shape exactly as is
-            if before.kind != after.kind or before.shape != after.shape:
+            # An object is a shared body plus a slide anchor since D177: what it *is* and what it looks like are in
+            # the body, where it sits is in the anchor, and its words are a paragraph with a style of their own.
+            was, now, place = before.body, after.body, after.anchor
+            if was.kind != now.kind or was.shape != now.shape:
                 raise UnsupportedEdit(
                     "changing an object's kind or shape outline cannot be patched onto the original file yet"
                 )
             shape = prs.slides[slide_number].shapes[shape_indices[position]]
-            shape.left, shape.top = Emu(round(after.x * scale_x)), Emu(round(after.y * scale_y))
-            shape.width, shape.height = Emu(round(after.w * scale_x)), Emu(round(after.h * scale_y))
-            shape.text_frame.text = after.text
-            style = BUILTIN_STYLES.get(after.style)
-            if style is not None:
-                _style_text(shape.text_frame, style, pt_per_unit)
-                if after.kind == "shape":
-                    _style_shape(shape, style, pt_per_unit)
+            shape.left, shape.top = Emu(round(place.x * scale_x)), Emu(round(place.y * scale_y))
+            shape.width, shape.height = Emu(round(now.w * scale_x)), Emu(round(now.h * scale_y))
+            shape.text_frame.text = now.paragraph.text if now.paragraph else ""
+            # Resolved against the document's own palette and style book, exactly as `slides_to_pptx` does it: the
+            # built-in tuple this used to index could neither see a style somebody made nor turn a role into a
+            # colour, so a patched file came out with its colours missing.
+            words_css = _look(current, now.paragraph.style) if now.paragraph else {}
+            _style_text(shape.text_frame, words_css, pt_per_unit, page)
+            if now.kind == "shape":
+                _style_shape(shape, _look(current, now.style), pt_per_unit, page)
             touched_parts.add(_slide_part(members, slide_number))
 
     patched = BytesIO()

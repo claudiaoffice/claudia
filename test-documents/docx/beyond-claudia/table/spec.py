@@ -12,6 +12,7 @@ import docx
 
 from claudia_composes import DEFAULT_STYLE, TextModel
 from claudia_test_documents.case import Case
+from claudia_test_documents.edits import retext_block
 
 
 def import_checks(model: TextModel) -> None:
@@ -24,8 +25,7 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    model.blocks[0].text = "Status report (updated)."
-    return model
+    return retext_block(model, 0, "Status report (updated).")
 
 
 def after_checks(model: TextModel) -> None:

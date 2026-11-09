@@ -4,7 +4,8 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import { type LinkLike, type Region } from './protocol'
 import { type Content } from './cells'
 import type { ImageAsset, ImageImport } from './images'
-import type { CellAnchor, ObjectsEvent, VisualObject } from './objects'
+import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, VisualObject } from './objects'
+import type { CssCheck, CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
@@ -60,6 +61,10 @@ export interface State extends BaseState {
   objects: Record<string, SheetObject>
   order: Record<string, string[]> // sheet -> object ids, the one in front last
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id
+  /** The document's styles: what a floating object looks like. Cell styling is a separate story (E6.13). */
+  styles: Record<string, StyleDef>
+  /** The document's colour roles and how they read against each other (D200); the styles are drawn from. */
+  palette: PaletteEvent | null
 }
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
@@ -83,6 +88,8 @@ export class Session extends BaseSession<State> {
       objects: {},
       order: {},
       images: {},
+      styles: {},
+      palette: null,
     })
   }
 
@@ -92,7 +99,12 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images] = await Promise.all([link.request<SheetInfo[]>('sheets'), link.request<ImageAsset[]>('images')])
+    const [sheets, images, styles, palette] = await Promise.all([
+      link.request<SheetInfo[]>('sheets'),
+      link.request<ImageAsset[]>('images'),
+      link.request<StyleDef[]>('styles'),
+      link.request<PaletteEvent>('palette'),
+    ])
     this.forgetCells()
     const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
     s.objects = {}
@@ -103,7 +115,57 @@ export class Session extends BaseSession<State> {
     })
     s.sheets = sheets
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
+    s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
+    s.palette = palette
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
+  }
+
+  // -- styles and the palette (E9.7, D200, D203): the same methods creates' session has, so that one style menu
+  // can talk to either app through a `StyleHost`.
+  get readOnly(): boolean {
+    return this.state.me.role === 'viewer'
+  }
+
+  styleViews(): StyleDef[] {
+    return Object.values(this.state.styles)
+  }
+
+  /** Every object of the document, for the use counts beside the style names. */
+  bodies(): ObjectBody[] {
+    return Object.values(this.state.objects)
+  }
+
+  async setObjectStyle(id: string, style: string): Promise<boolean> {
+    return (await this.attempt('set_object_style', { id, style, base: this.state.revision })) !== false
+  }
+
+  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
+    return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
+  }
+
+  async deviateObjectStyle(parent: string, ids: string[], edit: CssEdit): Promise<boolean> {
+    const params = { parent, objects: ids, ...edit, base: this.state.revision }
+    return (await this.attempt('deviate_object_style', params)) !== false
+  }
+
+  async renameStyle(style: string, name: string): Promise<boolean> {
+    return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false
+  }
+
+  async setRole(role: string, colour: string): Promise<boolean> {
+    return (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false
+  }
+
+  async replacePalette(roles: ColourRole[]): Promise<boolean> {
+    return (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false
+  }
+
+  async checkCss(text: string): Promise<CssCheck | null> {
+    try {
+      return await this.need().request<CssCheck>('check_css', { text })
+    } catch {
+      return null
+    }
   }
 
   /** The objects of a sheet, the one in front last. */
@@ -248,6 +310,14 @@ export class Session extends BaseSession<State> {
       case 'image':
         if (data.asset) s.images[data.id] = data.asset
         else delete s.images[data.id]
+        return true
+      case 'styles':
+        // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
+        // resolved colours a sheet is drawn with, and a client cannot work them out for itself (D200).
+        s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
+        return true
+      case 'palette':
+        s.palette = data as PaletteEvent
         return true
     }
     return false
