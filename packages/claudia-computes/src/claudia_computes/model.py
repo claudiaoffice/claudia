@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from bisect import bisect_left, bisect_right, insort
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from heapq import heappop, heappush
 from typing import ClassVar, Self, TypeIs, cast
@@ -34,7 +35,7 @@ from claudia_core import (
 )
 
 from .calc import Calculator
-from .charts import ChartSpec, in_bounds
+from .charts import ChartSeries, ChartSpec, figure_of, in_bounds
 from .formula.rewrite import adjusted, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
@@ -459,6 +460,67 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     def remove_chart(self, chart_id: str) -> None:
         self.chart(chart_id)
         self.charts = {c.id: c for c in self.charts.values() if c.id != chart_id}
+
+    def chart_figure(self, diagram_id: str) -> dict:
+        """The Plotly figure (``{"data": [...], "layout": {...}}``) a diagram draws right now, read live off its
+        sheet (E6.6); ``ValueError`` if ``diagram_id`` names no diagram this workbook knows.
+
+        **The header convention** (not configurable yet, documented here because this is the one place it is
+        decided): the range's first row names each series and its first column names each category when
+        ``series_in`` is "columns" (the other way around for "rows") — the usual "select your data including its
+        headers" a spreadsheet chart assumes. A row or column that has only one line to give has no room to be
+        both the header and the data, so it is read as data only, with generated names ("Series 1", "1", "2", …)
+        — this keeps a 1-row or 1-column range usable rather than adding a minimum-size rule charts.py's range
+        check does not have today. A text cell inside the numeric data block plots as 0 rather than failing the
+        whole chart; :meth:`diagram_from_data` already guarantees the range fits a sheet this document has."""
+        spec = cast(ChartSpec, self.diagrams[diagram_id])
+        sheet = self.sheet(cast(SheetId, spec.range.sheet))  # a chart's range always names its sheet (charts.py)
+        first, last = spec.range.first, spec.range.last
+        has_header_row = last.row > first.row
+        has_header_col = last.col > first.col
+        data_row0 = first.row + (1 if has_header_row else 0)
+        data_col0 = first.col + (1 if has_header_col else 0)
+
+        def text_at(row: int, col: int) -> str | None:
+            content = sheet.view((row, col))
+            if content is None:
+                return None
+            value = content["v"]
+            return ("TRUE" if value else "FALSE") if isinstance(value, bool) else str(value)
+
+        def number_at(row: int, col: int) -> float:
+            content = sheet.view((row, col))
+            value = None if content is None else content["v"]
+            if isinstance(value, bool):
+                return 1.0 if value else 0.0
+            return float(value) if isinstance(value, (int, float)) else 0.0
+
+        def labels(count: int, header: int | None, along: Callable[[int, int], tuple[int, int]]) -> list[str]:
+            if header is None:
+                return [str(i) for i in range(1, count + 1)]
+            return [text_at(*along(header, i)) or str(i + 1) for i in range(count)]
+
+        if spec.series_in == "columns":
+            rows, cols = range(data_row0, last.row + 1), range(data_col0, last.col + 1)
+            categories = labels(len(rows), first.col if has_header_col else None, lambda h, i: (data_row0 + i, h))
+            series = [
+                ChartSeries(
+                    (text_at(first.row, c) or f"Series {i + 1}") if has_header_row else f"Series {i + 1}",
+                    tuple(number_at(r, c) for r in rows),
+                )
+                for i, c in enumerate(cols)
+            ]
+        else:
+            rows, cols = range(data_row0, last.row + 1), range(data_col0, last.col + 1)
+            categories = labels(len(cols), first.row if has_header_row else None, lambda h, i: (h, data_col0 + i))
+            series = [
+                ChartSeries(
+                    (text_at(r, first.col) or f"Series {i + 1}") if has_header_col else f"Series {i + 1}",
+                    tuple(number_at(r, c) for c in cols),
+                )
+                for i, r in enumerate(rows)
+            ]
+        return figure_of(spec, categories, series)
 
     def _calculate_loaded(self) -> None:
         """Fill the values from the contents: constants as they are, formulas calculated."""

@@ -146,9 +146,9 @@ kanban-plugin: board
 	
 	AC: bar and line first, then scatter; rendering per E0.3; the same look in web and desktop; a click-to-edit hook.
 	
-	Use case: DATA, EDU · Decisions: D33, D42 · Charts are Plotly figures inside the page, the same in every shell. Plotly is the reason the whole web-surface architecture (D41, D42) was chosen, and no chart exists yet.
+	Use case: DATA, EDU · Decisions: D33, D42, D204, D205, D206, D207 · Charts are Plotly figures inside the page, the same in every shell. Plotly is the reason the whole web-surface architecture (D41, D42) was chosen. Bar charts landed end to end in the web client this round: a diagram definition (`ChartSpec`) is a shared object-layer "diagram" (D177), defined once and placed as a tab, a floating object, or both from the same id (D204); the server computes its Plotly figure on demand from live cells, pulled by the client after a touching `cells` event (D205); series use a validated fixed palette (D206); headers are read by range shape with a documented degenerate fallback (D207). Still open: line and scatter kinds (`CHART_KINDS` is bar-only); a click-to-edit hook (clicking a bar back to its cells); the GTK/desktop client (web only so far — "the same look in web and desktop" is not yet true); interactive resize handles for a floating chart object (it drags like any object, but nothing in the UI calls the already-wired `resizeObject` yet); the palette is validated for light mode only, not dark (noted against D206, computes has no dark mode wired up yet either).
 	
-	Status evidence: no plotly, no chart code anywhere.
+	Status evidence: `packages/claudia-computes/src/claudia_computes/charts.py` (`BAR_COLORS`, `figure_of`), `.../model.py` (`WorkbookModel.chart_figure`), `packages/claudia-server/src/claudia_server/computes.py` (the nine new RPC methods), `web/app/lib/charts.ts`, `web/app/components/ChartView.vue`, `SheetChartInsertDialog.vue`, and the `Workspace.vue`/`SheetGrid.vue`/`FooterBar.vue` wiring for Edit ▸ Chart…, the chart-tab strip and a floating chart object.
 - [ ] **E6.9 · ods and xlsx import and export**
 	As a user, I want to open and save OpenDocument spreadsheets first and Excel files second.
 	
