@@ -43,7 +43,19 @@ SERIES_IN = ("columns", "rows")
 MAX_TITLE_CHARS = 120
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
-_KEYS = {"format", "id", "kind", "range", "series_in", "title", "x_title", "y_title", "legend", "gridlines"}
+_KEYS = {
+    "format",
+    "id",
+    "kind",
+    "range",
+    "series_in",
+    "header_row",
+    "title",
+    "x_title",
+    "y_title",
+    "legend",
+    "gridlines",
+}
 _REQUIRED = ("format", "id", "kind", "range")
 
 
@@ -111,6 +123,13 @@ class ChartSpec:
     kind: str
     range: RangeRef
     series_in: str = "columns"
+    #: Whether the range's first row is a header — the series' names when ``series_in`` is "columns", the
+    #: category labels when it is "rows" — rather than a row of data like every other (E6.6, header-row bug).
+    #: Defaults to ``True``, the "select your data including its headers" a spreadsheet chart usually assumes;
+    #: a range with no room for a header on this axis (one row) ignores it, same as before this field existed
+    #: (:meth:`~claudia_computes.WorkbookModel.chart_figure`). The first *column* has no equivalent toggle yet —
+    #: only the row convention turned out to need one in practice, read by shape alone as it always has.
+    header_row: bool = True
     title: str = ""
     x_title: str = ""
     y_title: str = ""
@@ -125,6 +144,7 @@ class ChartSpec:
             "kind": self.kind,
             "range": self.range.to_dict(),
             "series_in": self.series_in,
+            "header_row": self.header_row,
             "title": self.title,
             "x_title": self.x_title,
             "y_title": self.y_title,
@@ -153,6 +173,7 @@ class ChartSpec:
             kind=_check_kind(data["kind"]),
             range=_check_range(data["range"]),
             series_in=_check_series_in(data.get("series_in", "columns")),
+            header_row=_check_bool(data.get("header_row", True), "header_row"),
             title=_check_title(data.get("title", ""), "title"),
             x_title=_check_title(data.get("x_title", ""), "x_title"),
             y_title=_check_title(data.get("y_title", ""), "y_title"),

@@ -465,18 +465,23 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         """The Plotly figure (``{"data": [...], "layout": {...}}``) a diagram draws right now, read live off its
         sheet (E6.6); ``ValueError`` if ``diagram_id`` names no diagram this workbook knows.
 
-        **The header convention** (not configurable yet, documented here because this is the one place it is
-        decided): the range's first row names each series and its first column names each category when
-        ``series_in`` is "columns" (the other way around for "rows") — the usual "select your data including its
-        headers" a spreadsheet chart assumes. A row or column that has only one line to give has no room to be
-        both the header and the data, so it is read as data only, with generated names ("Series 1", "1", "2", …)
-        — this keeps a 1-row or 1-column range usable rather than adding a minimum-size rule charts.py's range
-        check does not have today. A text cell inside the numeric data block plots as 0 rather than failing the
-        whole chart; :meth:`diagram_from_data` already guarantees the range fits a sheet this document has."""
+        **The header convention:** the range's first column always names each category when ``series_in`` is
+        "columns" (the other way around for "rows") — read by the range's own shape, same as it always has been.
+        The first *row* is the same, except that ``spec.header_row`` can turn it off: a range with headers
+        already baked in (the usual "select your data including its headers") keeps ``header_row`` at its
+        default of ``True``, and a range that is data only, top to bottom, sets it to ``False`` so every row
+        feeds the chart rather than the first one being read as a header and dropped (the header-row bug this
+        field exists to fix: a 2-column, 3-row range of category/value pairs with no header line of its own used
+        to silently lose its first row to exactly this). Either way, a row or column that has only one line to
+        give has no room to be both the header and the data, so it is read as data only regardless of the
+        setting, with generated names ("Series 1", "1", "2", …) — this keeps a 1-row or 1-column range usable
+        rather than adding a minimum-size rule charts.py's range check does not have today. A text cell inside
+        the numeric data block plots as 0 rather than failing the whole chart; :meth:`diagram_from_data` already
+        guarantees the range fits a sheet this document has."""
         spec = cast(ChartSpec, self.diagrams[diagram_id])
         sheet = self.sheet(cast(SheetId, spec.range.sheet))  # a chart's range always names its sheet (charts.py)
         first, last = spec.range.first, spec.range.last
-        has_header_row = last.row > first.row
+        has_header_row = spec.header_row and last.row > first.row
         has_header_col = last.col > first.col
         data_row0 = first.row + (1 if has_header_row else 0)
         data_col0 = first.col + (1 if has_header_col else 0)

@@ -647,6 +647,36 @@ def test_chart_figure_on_a_single_row_reads_its_first_column_as_category_labels(
     assert figure["data"][0]["y"] == [6.0]
 
 
+def test_chart_figure_with_header_row_false_reads_every_row_as_data(book):
+    """The header-row bug reported after the first round shipped: a 2-column, 3-row range of plain
+    category/value pairs with no header line of its own used to silently lose its first row — read as a bogus
+    header whose "series name" was really the first row's own value — leaving only the second and third rows on
+    the chart. ``header_row=False`` is the fix: every row becomes a category, and the one data column becomes
+    one series with a generated name (there is still no header row to draw a name from)."""
+    call(book, "add_sheet", {"name": "S"})
+    typed(
+        book,
+        "s1",
+        [(0, 0, "Jan"), (0, 1, "10"), (1, 0, "Feb"), (1, 1, "15"), (2, 0, "Mar"), (2, 1, "20")],
+    )
+    diagram_id = define_diagram(book, range=cell_range(first=(0, 0), last=(2, 1)), header_row=False)
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert [trace["name"] for trace in figure["data"]] == ["Series 1"]
+    assert figure["data"][0]["x"] == ["Jan", "Feb", "Mar"]
+    assert figure["data"][0]["y"] == [10.0, 15.0, 20.0]
+
+
+def test_chart_figure_header_row_has_no_room_to_turn_off_on_a_single_row_range(book):
+    """``header_row=False`` only matters where there is a second row to read as data; a single-row range has no
+    room for a header on that axis regardless of the setting, same as before this field existed."""
+    call(book, "add_sheet", {"name": "S"})
+    typed(book, "s1", [(0, 0, "5"), (0, 1, "6")])
+    diagram_id = define_diagram(book, range=cell_range(first=(0, 0), last=(0, 1)), header_row=False)
+    figure = call(book, "chart_figure", {"diagram": diagram_id})["figure"]
+    assert figure["data"][0]["x"] == ["5"]
+    assert figure["data"][0]["y"] == [6.0]
+
+
 def test_chart_figure_refuses_an_unknown_diagram(book):
     with pytest.raises(RequestError, match="does not know the diagram"):
         call(book, "chart_figure", {"diagram": "nope"})

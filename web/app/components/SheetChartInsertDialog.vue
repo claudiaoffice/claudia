@@ -23,6 +23,7 @@ const emit = defineEmits<{ close: []; inserted: [id: string] }>()
 
 const name = ref('Chart')
 const seriesIn = ref<'columns' | 'rows'>('columns')
+const headerRow = ref(true)
 const title = ref('')
 const xTitle = ref('')
 const yTitle = ref('')
@@ -42,6 +43,7 @@ async function submit() {
   const draft = {
     range: chartRange(props.sheet, props.range.r0, props.range.c0, props.range.r1, props.range.c1),
     series_in: seriesIn.value,
+    header_row: headerRow.value,
     title: title.value.trim(),
     x_title: xTitle.value.trim(),
     y_title: yTitle.value.trim(),
@@ -68,19 +70,31 @@ async function submit() {
 </script>
 
 <template>
-  <Modal title="Insert chart" :width="440" @close="emit('close')">
+  <Modal title="Insert chart" :width="520" @close="emit('close')">
     <form class="form" @submit.prevent="submit">
       <p class="hint">
         Bar chart over <strong>{{ range.r1 - range.r0 + 1 }}</strong> rows × <strong>{{ range.c1 - range.c0 + 1 }}</strong> columns.
-        <template v-if="multiRow && multiCol">The first row and column are read as headers.</template>
-        <template v-else>Too small for a header on every side — missing labels are made up ("Series 1", "1", "2"…).</template>
+        <template v-if="multiCol">The first column is read as category or series names.</template>
+        <template v-else>Only one column — no room for a header there; a label is made up.</template>
       </p>
       <label class="field">Name (the tab it opens as)<input v-model="name" autocomplete="off" maxlength="60" /></label>
-      <fieldset class="field" :disabled="!multiRow || !multiCol">
-        <legend>Series are in</legend>
-        <label class="radio"><input type="radio" value="columns" v-model="seriesIn" />Columns</label>
-        <label class="radio"><input type="radio" value="rows" v-model="seriesIn" />Rows</label>
-      </fieldset>
+      <div class="two">
+        <fieldset class="field" :disabled="!multiRow || !multiCol">
+          <legend>Series are in</legend>
+          <label class="radio"><input type="radio" value="columns" v-model="seriesIn" />Columns</label>
+          <label class="radio"><input type="radio" value="rows" v-model="seriesIn" />Rows</label>
+        </fieldset>
+        <div class="field">
+          <label class="check" :class="{ disabled: !multiRow }">
+            <input type="checkbox" v-model="headerRow" :disabled="!multiRow" />
+            First row is a header
+          </label>
+          <p class="subhint">
+            <template v-if="multiRow">Off reads every row as data — no row is skipped.</template>
+            <template v-else>Only one row — no room for a header there either.</template>
+          </p>
+        </div>
+      </div>
       <label class="field">Title (optional)<input v-model="title" autocomplete="off" maxlength="120" /></label>
       <div class="two">
         <label class="field">X axis (optional)<input v-model="xTitle" autocomplete="off" maxlength="120" /></label>
@@ -132,6 +146,14 @@ fieldset.field legend {
   align-items: center;
   gap: 6px;
   font-weight: normal;
+}
+.check.disabled {
+  color: var(--muted);
+}
+.subhint {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 .error {
   margin: 0;

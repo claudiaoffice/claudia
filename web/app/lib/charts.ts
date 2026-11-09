@@ -27,6 +27,13 @@ export function chartRange(sheet: string, r0: number, c0: number, r1: number, c1
 export interface ChartDraft {
   range: ChartRange
   series_in: 'columns' | 'rows'
+  /** Whether the range's first row is a header (the series' names, or the category labels when `series_in` is
+   * "rows") rather than a row of data like every other — on by default, matching the usual "select your data
+   * including its headers", but turned off reads every row as data (the header-row bug reported after the
+   * first round: a 2-column, 3-row range of plain category/value pairs with no header line of its own used to
+   * silently lose its first row). Has no column equivalent yet — only the row convention needed one in
+   * practice; the first column still goes by the range's own shape, same as it always has. */
+  header_row: boolean
   title: string
   x_title: string
   y_title: string
