@@ -24,4 +24,5 @@ clients/windows/node_modules/
 clients/windows/apps/composes/.tmp/
 clients/windows/apps/composes/neutralinojs.log
 test-documents/_artifacts
+*.patch
 

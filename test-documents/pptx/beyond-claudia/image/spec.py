@@ -5,25 +5,24 @@ docstring), so a picture is never modeled -- `pptx_to_slides` leaves the slide i
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 from claudia_creates import SlideModel
 from claudia_test_documents.case import Case
 
 
 def import_checks(model: SlideModel) -> None:
-    assert [(o.kind, o.text) for o in model.objects_on("s1")] == [("text", "Photo attached.")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached.")]
     assert model.objects_on("s2") == []
 
 
 def modify(model: SlideModel) -> SlideModel:
     obj = model.get("o1")
-    model.replace_object(replace(obj, text="Photo attached below."))
+    new_paragraph = obj.body.paragraph.with_text("Photo attached below.", ()).written_by("ana")
+    model.replace_object(obj.with_body(paragraph=new_paragraph))
     return model
 
 
 def after_checks(model: SlideModel) -> None:
-    assert [(o.kind, o.text) for o in model.objects_on("s1")] == [("text", "Photo attached below.")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached below.")]
     assert model.objects_on("s2") == []
 
 
