@@ -9,6 +9,7 @@ import { copySelection, cutSelection } from '~/lib/clipboard'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
+import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
 import type { Menu } from './MenuBar.vue'
 
@@ -18,6 +19,9 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
 const session = props.session
 const state = session.state
 const { dark, toggle: toggleDark } = useTheme()
+// `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
+// `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring.
+const { t, locale, choose } = useI18n()
 
 const dialog = ref<
   null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'styles' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
@@ -27,7 +31,7 @@ const styleHost = textStyleHost(session)
 const panelOpen = ref(true)
 const active = ref<string | null>(null)
 const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
-const panel = ref<{ ask: (text?: string) => void } | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
 function remembered<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
@@ -69,6 +73,12 @@ async function checkpoint(label: string | null) {
 function ask(text: string) {
   panelOpen.value = true
   setTimeout(() => panel.value?.ask(text), 0)
+}
+
+/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
+function help(mode: 'how-to' | 'docs') {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.openHelp(mode), 0)
 }
 
 async function download() {
@@ -128,66 +138,78 @@ const hints = computed<Record<string, string>>(() => Object.fromEntries(shortcut
 
 const menus = computed<Menu[]>(() => [
   {
-    label: 'File',
+    label: t('File'),
     items: [
-      { id: 'file.new', label: 'New', action: () => emit('leave', { startFresh: true }) },
-      { id: 'file.open', label: 'Open…', action: () => emit('leave') },
+      { id: 'file.new', label: t('New'), action: () => emit('leave', { startFresh: true }) },
+      { id: 'file.open', label: t('Open…'), action: () => emit('leave') },
       { label: '', separator: true },
-      { id: 'file.save', label: 'Save', hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
-      { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
-      { id: 'file.download', label: 'Download', action: download },
+      { id: 'file.save', label: t('Save'), hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
+      { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
+      { id: 'file.download', label: t('Download'), action: download },
       { label: '', separator: true },
       {
         id: 'file.manage',
-        label: 'Manage',
+        label: t('Manage'),
         items: [
-          { id: 'file.manage.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+          { id: 'file.manage.share', label: t('Share…'), action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
           {
             id: 'file.manage.assign-owner',
-            label: 'Assign new owner…',
+            label: t('Assign new owner…'),
             action: () => (dialog.value = 'assign-owner'),
             disabled: state.me.role !== 'owner',
           },
-          { id: 'file.manage.accept-owner', label: 'Accept ownership…', action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
-          { id: 'file.manage.leave', label: 'Leave document…', action: () => (dialog.value = 'leave') },
-          { id: 'file.manage.export', label: 'Export…', action: () => (dialog.value = 'export') },
+          { id: 'file.manage.accept-owner', label: t('Accept ownership…'), action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
+          { id: 'file.manage.leave', label: t('Leave document…'), action: () => (dialog.value = 'leave') },
+          { id: 'file.manage.export', label: t('Export…'), action: () => (dialog.value = 'export') },
           {
             id: 'file.manage.delete',
-            label: 'Delete from server…',
+            label: t('Delete from server…'),
             action: () => (dialog.value = 'delete'),
             disabled: state.me.role !== 'owner',
           },
         ],
       },
       { label: '', separator: true },
-      { id: 'file.close', label: 'Close document', action: () => emit('leave') },
+      { id: 'file.close', label: t('Close document'), action: () => emit('leave') },
     ],
   },
   {
-    label: 'Edit',
+    label: t('Edit'),
     items: [
-      { id: 'edit.undo', label: state.canUndo ? `Undo ${state.undoLabel}` : 'Undo', hint: hints.value['edit.undo'], action: () => session.undo(), disabled: !state.canUndo },
-      { id: 'edit.redo', label: state.canRedo ? `Redo ${state.redoLabel}` : 'Redo', hint: hints.value['edit.redo'], action: () => session.redo(), disabled: !state.canRedo },
+      {
+        id: 'edit.undo',
+        label: state.canUndo ? t('Undo {label}', { label: state.undoLabel }) : t('Undo'),
+        hint: hints.value['edit.undo'],
+        action: () => session.undo(),
+        disabled: !state.canUndo,
+      },
+      {
+        id: 'edit.redo',
+        label: state.canRedo ? t('Redo {label}', { label: state.redoLabel }) : t('Redo'),
+        hint: hints.value['edit.redo'],
+        action: () => session.redo(),
+        disabled: !state.canRedo,
+      },
       { label: '', separator: true },
-      { id: 'edit.copy', label: 'Copy', hint: 'Ctrl+C', action: () => copySelection() },
-      { id: 'edit.cut', label: 'Cut', hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
-      { id: 'edit.paste', label: 'Paste', hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
+      { id: 'edit.copy', label: t('Copy'), hint: 'Ctrl+C', action: () => copySelection() },
+      { id: 'edit.cut', label: t('Cut'), hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
+      { id: 'edit.paste', label: t('Paste'), hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
       {
         id: 'edit.paste-as',
-        label: 'Paste as',
+        label: t('Paste as'),
         disabled: readonly.value,
         // The child's own `disabled` is what a shell actually reports per-action (`collectStates` walks each item on
         // its own terms, not by inheriting a parent's); the parent's `disabled` above only keeps the web menu from
         // opening the flyout at all — both need to agree, or a shell could show the leaf as enabled regardless.
-        items: [{ id: 'edit.paste-as-plain', label: 'Plain text', action: () => pasteFromClipboard(), disabled: readonly.value }],
+        items: [{ id: 'edit.paste-as-plain', label: t('Plain text'), action: () => pasteFromClipboard(), disabled: readonly.value }],
       },
     ],
   },
   {
-    label: 'Format',
+    label: t('Format'),
     items:
       state.styles.length === 0
-        ? [{ label: 'No styles yet', disabled: true }]
+        ? [{ label: t('No styles yet'), disabled: true }]
         : [
             ...['title', 'heading-1', 'heading-2'].map((id) => styleItem(id)),
             { label: '', separator: true },
@@ -196,47 +218,59 @@ const menus = computed<Menu[]>(() => [
             ...['quote', 'remark', 'definition'].map((id) => styleItem(id)),
             ...customStyleItems(),
             { label: '', separator: true },
-            { id: 'format.look', label: 'Edit this style…', hint: hints.value['format.look'], action: () => openStyleMenu() },
-            { id: 'format.all-styles', label: 'All styles…', action: () => (dialog.value = 'styles') },
+            { id: 'format.look', label: t('Edit this style…'), hint: hints.value['format.look'], action: () => openStyleMenu() },
+            { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
           ],
   },
   {
-    label: 'View',
+    label: t('View'),
     items: [
-      { id: 'view.authors', label: 'Show who wrote what', checked: authors.value, action: (t) => (authors.value = t ? t === 'on' : !authors.value) },
-      { id: 'view.panel', label: 'History and chat', checked: panelOpen.value, action: (t) => (panelOpen.value = t ? t === 'on' : !panelOpen.value) },
+      { id: 'view.authors', label: t('Show who wrote what'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
+      { id: 'view.panel', label: t('History and chat'), checked: panelOpen.value, action: (x) => (panelOpen.value = x ? x === 'on' : !panelOpen.value) },
       {
         id: 'view.dark',
-        label: 'Dark mode',
+        label: t('Dark mode'),
         checked: dark(),
-        action: (t) => {
-          if (t === undefined || (t === 'on') !== dark()) toggleDark()
+        action: (x) => {
+          if (x === undefined || (x === 'on') !== dark()) toggleDark()
         },
       },
       { label: '', separator: true },
-      { label: 'Flow', checked: view.value === 'flow', action: () => (view.value = 'flow') },
+      { label: t('Flow'), checked: view.value === 'flow', action: () => (view.value = 'flow') },
       // One boolean action (GTK has no notion of two radio items), set/cleared explicitly by a shell, toggled by a web click.
-      { id: 'view.page', label: 'Page', checked: view.value === 'page', action: (t) => (view.value = t === 'off' ? 'flow' : 'page') },
+      { id: 'view.page', label: t('Page'), checked: view.value === 'page', action: (x) => (view.value = x === 'off' ? 'flow' : 'page') },
     ],
   },
   {
-    label: 'Tools',
+    label: t('Tools'),
     items: [
-      { id: 'tools.ask', label: 'Ask the assistant…', action: () => ask('@ai ') },
-      { id: 'tools.review-text', label: 'Review this text', action: () => ask('@ai review this text') },
-      { id: 'tools.review-paragraph', label: 'Review this paragraph', action: () => ask('@ai check this paragraph') },
+      { id: 'tools.ask', label: t('Ask the assistant…'), action: () => ask('@ai ') },
+      { id: 'tools.review-text', label: t('Review this text'), action: () => ask('@ai review this text') },
+      { id: 'tools.review-paragraph', label: t('Review this paragraph'), action: () => ask('@ai check this paragraph') },
       { label: '', separator: true },
-      { id: 'tools.insert-sample', label: 'Insert sample text', action: insertSample, disabled: readonly.value },
+      { id: 'tools.insert-sample', label: t('Insert sample text'), action: insertSample, disabled: readonly.value },
     ],
   },
-  { label: 'Config', items: [{ id: 'config.shortcuts', label: 'Shortcuts', action: () => (dialog.value = 'shortcuts') }] },
   {
-    label: 'Help',
+    label: t('Config'),
     items: [
-      { id: 'help.ask', label: 'Ask ai', action: () => ask('@ai ') },
-      { id: 'help.how-to', label: 'How do I…?', disabled: true },
-      { id: 'help.docs', label: 'Documentation', disabled: true },
-      { id: 'help.about', label: 'About claudia', action: () => (dialog.value = 'about') },
+      { id: 'config.shortcuts', label: t('Shortcuts'), action: () => (dialog.value = 'shortcuts') },
+      {
+        label: t('App Language'),
+        items: [
+          { id: 'config.language.en', label: 'English', checked: locale.value === 'en', action: () => choose('en') },
+          { id: 'config.language.de', label: 'Deutsch', checked: locale.value === 'de', action: () => choose('de') },
+        ],
+      },
+    ],
+  },
+  {
+    label: t('Help'),
+    items: [
+      { id: 'help.ask', label: t('Ask ai'), action: () => ask('@ai ') },
+      { id: 'help.how-to', label: t('How do I…?'), action: () => help('how-to') },
+      { id: 'help.docs', label: t('Documentation'), action: () => help('docs') },
+      { id: 'help.about', label: t('About claudia'), action: () => (dialog.value = 'about') },
     ],
   },
 ])

@@ -1,11 +1,15 @@
-"""CellRegion: a rectangle of cells that moves with the edits (the generalised ``refs.py``, E1.5)."""
+"""CellRegion: a rectangle of cells that moves with the edits (the generalised ``refs.py``, E1.5).
+
+The other Region of this app is ``claudia_core.ObjectSet`` — some floating objects of one sheet, selected, held
+or being worked on. It is the same region in all three apps now (E10.16), so it is not repeated here; it is
+re-exported below, where this module's users have always imported it from."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import ClassVar
 
-from claudia_core import Command
+from claudia_core import Command, ObjectSet  # noqa: F401  (re-exported)
 
 from .refs import RangeRef, SheetId
 

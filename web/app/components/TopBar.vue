@@ -11,9 +11,6 @@ const everybody = computed(() => [
   { user: state.me.user, color: state.me.color, me: true },
   ...state.people.map((p) => ({ user: p.user, color: colorOf(state, p.user), me: false })),
 ])
-const statusText = computed(() =>
-  state.status === 'open' ? 'live' : state.status === 'reconnecting' ? 'reconnecting…' : state.status === 'connecting' ? 'connecting…' : 'offline',
-)
 </script>
 
 <template>
@@ -35,7 +32,7 @@ const statusText = computed(() =>
           {{ p.user.toLowerCase() === 'ai' ? 'ai' : initial(p.user) }}
         </li>
       </ul>
-      <span class="status" :class="state.status"><span class="dot" />{{ statusText }}</span>
+      <ConnectionIndicator :session="session" />
       <button class="btn panel" type="button" :aria-pressed="panelOpen" @click="$emit('togglePanel')">History &amp; chat</button>
     </div>
   </header>
@@ -98,30 +95,12 @@ const statusText = computed(() =>
 .people li:first-child {
   margin-left: 0;
 }
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.status .dot {
-  background: var(--muted);
-}
-.status.open .dot {
-  background: var(--teal);
-}
-.status.reconnecting .dot,
-.status.connecting .dot {
-  background: var(--apricot);
-}
 .panel[aria-pressed='true'] {
   background: var(--mist);
   border-color: transparent;
   color: var(--ink); /* `--mist` stays light in dark mode; don't let the text follow `--text` into Paper */
 }
 @media (max-width: 736px) {
-  .status,
   .app {
     display: none;
   }

@@ -20,6 +20,13 @@
   --rose: #d6477a;
   --teal: #13917f;
   --apricot: #f2a057;
+  /* Borrowed GNOME red, not a Claudia colour on purpose (canvas note s4): reserved for the one or two actions on the
+   * server settings pages where getting it wrong is expensive (rotating the access secret, removing an
+   * administrator) — never used for an ordinary document-level "danger" action, which stays `--rose` (see
+   * DeleteDocumentDialog.vue). A single fixed hex in both themes, the same choice already made for `--rose`,
+   * `--teal` and `--apricot` as filled button backgrounds: 10.8:1 for white text, so dark mode needs no override. */
+  --danger: #c01c28;
+  --danger-dark: #a01822;
 
   --app: var(--teal); /* this is computes */
   --app-dark: #0f7d6e;
@@ -78,6 +85,9 @@
 
   --radius: 10px;
   --shadow: 0 1px 2px rgb(31 26 51 / 8%), 0 8px 24px rgb(31 26 51 / 8%);
+  /* E10.15: the creates grid overlay, a helper the view draws, not part of the slide. Not themed like `--line` —
+   * a slide's own canvas (`SlideCanvas.vue`'s `.slide`) is always white, light or dark mode, like a real slide. */
+  --grid: rgb(31 26 51 / 8%);
 }
 
 /* Each app has its colour: the rest of the design is shared. */

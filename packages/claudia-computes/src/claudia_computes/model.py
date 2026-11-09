@@ -16,16 +16,30 @@ from __future__ import annotations
 
 from bisect import bisect_left, bisect_right, insort
 from collections import defaultdict
+from dataclasses import dataclass
 from heapq import heappop, heappush
-from typing import ClassVar, Self
+from typing import ClassVar, Self, TypeIs, cast
 
-from claudia_core import CommandRegistry, DocumentModel, Region, new_registry
+from claudia_core import (
+    CommandRegistry,
+    DocumentModel,
+    ObjectBody,
+    ObjectModel,
+    Palette,
+    Region,
+    StyleBook,
+    VisualObject,
+    builtin_palette,
+    new_registry,
+)
 
 from .calc import Calculator
+from .charts import ChartSpec, in_bounds
 from .formula.rewrite import adjusted, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
 from .refs import Position, SheetId, StructuralEdit
+from .styles import builtin_styles
 from .values import ErrorValue, Value
 
 Content = dict | None  # None (empty) or {"t": "int"|"float"|"text"|"bool"|"formula", "v": ...}
@@ -40,6 +54,84 @@ MIN_ROW_HEIGHT = 8
 MAX_ROW_HEIGHT = 1_000
 MIN_COL_WIDTH = 16
 MAX_COL_WIDTH = 2_000
+
+# Floating objects anchored to a cell (E10.11, E10.16): a shared ``ObjectBody`` plus a ``CellAnchor``. The
+# body — kind, size, style, text, shape, image, rotation, snap — is ``claudia_core``'s and the same in all three
+# apps; the anchor is the only part that is a sheet's own.
+#
+# An object's anchor and size never change because of a structural edit (row/column insert, delete, or a
+# row/column resize) — only ``MoveObject`` (the person dragging it) changes where it sits. That is a deliberate
+# policy, not an oversight: a picture should not leap across the sheet because somebody inserted a row above it.
+# It is why ``CellAnchor`` is not a ``RangeRef`` and takes no part in ``refs.adjusted``.
+OBJECT_KINDS = ("text", "shape", "image", "diagram")
+MIN_OBJECT_SIZE = 20  # pixels; an object is at least this wide and this tall
+MAX_OBJECTS_PER_SHEET = 500
+
+
+def _is_whole(value: object) -> TypeIs[int]:
+    """``True`` for a plain ``int`` (not a ``bool``), narrowing the type for the caller."""
+    return type(value) is int
+
+
+@dataclass(frozen=True)
+class CellAnchor:
+    """Where an object sits on a sheet: its top-left corner pinned to a cell.
+
+    This is the only thing about a computes object that creates and composes do not share. ``row``/``col`` are
+    the anchor cell; the object's pixel size lives in its body. Nothing in the model ever moves or resizes it on
+    its own (see the note above)."""
+
+    kind: ClassVar[str] = "cell"
+    sheet: SheetId
+    row: int
+    col: int
+
+    @property
+    def container(self) -> str:
+        """The sheet this object belongs to."""
+        return str(self.sheet)
+
+    def to_data(self) -> dict:
+        """The plain-data form: what the log stores and clients are sent."""
+        return {"kind": self.kind, "container": str(self.sheet), "row": self.row, "col": self.col}
+
+    @classmethod
+    def from_data(cls, data: dict) -> CellAnchor:
+        """Read an anchor sent by a client or stored in the log; ``ValueError`` if it is not one."""
+        if data.get("kind") != cls.kind:
+            raise ValueError(f"computes knows only cell anchors, not {data.get('kind')!r}")
+        sheet, row, col = data.get("container"), data.get("row"), data.get("col")
+        if not isinstance(sheet, str) or not _is_whole(row) or not _is_whole(col):
+            raise ValueError("a cell anchor names a sheet and whole row and col")
+        return cls(SheetId(sheet), row, col)
+
+
+#: One floating thing on a sheet: an image, and (as the shared layer grows into computes) a shape or text box.
+type SheetObject = VisualObject[CellAnchor]
+
+
+@dataclass(frozen=True)
+class Chart:
+    """One chart tab (E6.6): a name in the tab strip, and the id of the :class:`~claudia_computes.ChartSpec` it
+    shows — the same definition a floating diagram object elsewhere in the workbook may show too (see
+    ``ObjectBody.diagram``). A tab adds nothing of its own to what is drawn; it only gives a definition a place
+    in the tab strip, the same way a floating object gives one a place on a sheet. Two charts (or a chart and a
+    floating object) may point at the same ``spec_id``, exactly as two image objects may share one
+    :class:`~claudia_core.ImageAsset`."""
+
+    id: str
+    name: str
+    spec_id: str
+
+    def to_data(self) -> dict:
+        """The plain-data form: what the log stores and clients are sent."""
+        return {"id": self.id, "name": self.name, "spec_id": self.spec_id}
+
+    @classmethod
+    def from_data(cls, data: dict) -> Chart:
+        """Inverse of :meth:`to_data`."""
+        return cls(data["id"], data["name"], data["spec_id"])
+
 
 _default_functions: FunctionRegistry | None = None
 
@@ -247,34 +339,126 @@ class Sheet:
         return {**shown, "f": content["v"]}  # type: ignore[dict-item]
 
 
-class WorkbookModel(DocumentModel):
+class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     app: ClassVar[str] = "computes"
-    state_schema: ClassVar[int] = 2  # 2: a sheet also carries row_heights and col_widths (D135)
+    # 3: the workbook also carries images and objects anchored to cells (E10.11)
+    # 4: objects are a shared body plus a CellAnchor, and the workbook carries a style book (E10.16)
+    # 5: the workbook carries its own colour palette (D200)
+    # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
+    state_schema: ClassVar[int] = 6
     registry: ClassVar[CommandRegistry] = new_registry()
 
-    def __init__(self, functions: FunctionRegistry | None = None):
+    object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
+    min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
+    max_objects_per_container: ClassVar[int] = MAX_OBJECTS_PER_SHEET
+
+    def __init__(
+        self,
+        functions: FunctionRegistry | None = None,
+        styles: StyleBook | None = None,
+        palette: Palette | None = None,
+    ):
+        super().__init__()
         self.sheets: dict[SheetId, Sheet] = {}
         self.calc = Calculator(self, functions or default_functions())
         self._ids: dict[str, SheetId] | None = None
+        self.styles: StyleBook = styles if styles is not None else builtin_styles()
+        #: The colours of this workbook, by what they mean. Part of the document, so it looks the same on
+        #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
+        self.palette: Palette = palette if palette is not None else builtin_palette()
+        #: Chart tabs, in tab order (E6.6): a name plus the id of the diagram definition (``self.diagrams``,
+        #: from :class:`~claudia_core.ObjectModel`) it shows. A floating diagram object may show the very same
+        #: definition — see ``Chart``'s own docstring.
+        self.charts: dict[str, Chart] = {}
 
     @classmethod
     def empty(cls) -> Self:
         return cls()
 
     def serialize(self) -> dict:
-        return {"sheets": [sheet.to_data() for sheet in self.sheets.values()]}
+        return {
+            "sheets": [sheet.to_data() for sheet in self.sheets.values()],
+            "styles": self.styles.to_data(),
+            "palette": self.palette.to_data(),
+            "shapes": self.shapes_to_data(),
+            "images": self.images_to_data(),
+            "diagrams": self.diagrams_to_data(),
+            "objects": self.objects_to_data(),
+            "charts": [chart.to_data() for chart in self.charts.values()],
+        }
 
     @classmethod
     def restore(cls, state: dict) -> Self:
-        model = cls()
+        model = cls(styles=StyleBook.from_data(state["styles"]), palette=Palette.from_data(state["palette"]))
         for item in state["sheets"]:
             sheet = Sheet(SheetId(item["id"]), item["name"])
             sheet.cells = {(r, c): content for r, c, content in item["cells"]}
             sheet.row_heights = dict(item["row_heights"])
             sheet.col_widths = dict(item["col_widths"])
             model.sheets[sheet.id] = sheet
+            model.open_container(str(sheet.id))
+        model.restore_objects(state["objects"], state["images"], state["shapes"], state["diagrams"])
+        model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model._calculate_loaded()
         return model
+
+    # -- the object seam -------------------------------------------------------
+    def containers(self) -> list[str]:
+        """The sheets objects may sit on, in order."""
+        return [str(sheet) for sheet in self.sheets]
+
+    def anchor_from_data(self, data: dict) -> CellAnchor:
+        """Read a cell anchor; ``ValueError`` if the data is not one."""
+        return CellAnchor.from_data(data)
+
+    def check_anchor(self, anchor: CellAnchor, body: ObjectBody) -> None:
+        """An object's anchor must be a cell of the sheet. Its size is not bounded by the sheet: a sheet has no
+        edge to fall off, unlike a slide."""
+        if not _is_whole(anchor.row) or not _is_whole(anchor.col):
+            raise ValueError("row and col must be whole numbers")
+        if anchor.row < 0 or anchor.col < 0 or anchor.row >= MAX_ROWS or anchor.col >= MAX_COLS:
+            raise ValueError("the object's anchor must be a cell of the sheet")
+
+    def diagram_from_data(self, data: dict) -> ChartSpec:
+        """Read a chart definition; ``ValueError`` if the data is not one, or its range does not fit a sheet
+        this workbook actually has (:class:`~claudia_computes.ChartSpec` alone cannot know that)."""
+        spec = ChartSpec.from_data(data)
+        if spec.range.sheet not in self.sheets:
+            raise ValueError(f"this document does not know the sheet {spec.range.sheet!r}")
+        if not in_bounds(spec.range):
+            raise ValueError("a chart's range must be inside the sheet")
+        return spec
+
+    def users_of_diagram(self, diagram_id: str) -> list[str]:
+        """As the shared check (floating objects), plus any chart tab showing this diagram (E6.6): a tab is a
+        user of a diagram definition exactly as an object anchored to one is, so ``forget_diagram`` refuses
+        while either kind of user remains."""
+        return [*super().users_of_diagram(diagram_id), *(c.id for c in self.charts.values() if c.spec_id == diagram_id)]
+
+    def charts_reading(self, sheet_id: SheetId) -> list[str]:
+        """Ids of the diagram definitions whose range names ``sheet_id`` (E6.6): what ``RemoveSheet`` refuses
+        to orphan, the same way it refuses to orphan a formula elsewhere were there no ``#REF!`` for that.
+
+        ``self.diagrams`` is typed by the shared :class:`~claudia_core.ObjectModel` as holding the
+        app-agnostic :class:`~claudia_core.DiagramDefinition`; every value in it is in fact a ``ChartSpec``,
+        since :meth:`diagram_from_data` is the only thing that ever puts one there."""
+        return sorted(spec.id for spec in self.diagrams.values() if cast(ChartSpec, spec).range.sheet == sheet_id)
+
+    # -- chart tabs --------------------------------------------------------------
+    def chart(self, chart_id: str) -> Chart:
+        try:
+            return self.charts[chart_id]
+        except KeyError:
+            raise ValueError(f"unknown chart {chart_id!r}") from None
+
+    def add_chart(self, chart: Chart, index: int | None) -> None:
+        ordered = list(self.charts.values())
+        ordered.insert(len(ordered) if index is None else index, chart)
+        self.charts = {c.id: c for c in ordered}
+
+    def remove_chart(self, chart_id: str) -> None:
+        self.chart(chart_id)
+        self.charts = {c.id: c for c in self.charts.values() if c.id != chart_id}
 
     def _calculate_loaded(self) -> None:
         """Fill the values from the contents: constants as they are, formulas calculated."""
@@ -320,8 +504,10 @@ class WorkbookModel(DocumentModel):
         return self.sheet(sheet_id).grid.get((row, col))
 
     def region_from_data(self, data: dict) -> Region:
-        from .region import CellRegion
+        from .region import CellRegion, ObjectSet
 
+        if data.get("kind") == ObjectSet.kind:
+            return ObjectSet.from_data(data)
         return CellRegion.from_data(data)
 
     # -- changing --------------------------------------------------------------
@@ -359,6 +545,7 @@ class WorkbookModel(DocumentModel):
         ordered.insert(len(ordered) if index is None else index, sheet)
         self.sheets = {s.id: s for s in ordered}
         self._ids = None
+        self.open_container(str(sheet.id))
 
     def restructure(self, edit: StructuralEdit) -> tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...]]:
         """Insert or delete rows or columns: cells move, formulas follow them and keep pointing at what they pointed

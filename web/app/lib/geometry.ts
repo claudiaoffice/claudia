@@ -4,6 +4,7 @@
 export const SLIDE_W = 1600
 export const SLIDE_H = 900
 export const MIN_SIZE = 20 // the least width or height of an object (claudia_creates.MIN_OBJECT_SIZE)
+export const GRID_SIZE = 50 // units between grid lines (E10.15); SLIDE_W and SLIDE_H both divide evenly by it
 
 export interface Frame {
   x: number
@@ -19,6 +20,9 @@ export const CORNERS: Handle[] = ['nw', 'ne', 'se', 'sw']
 
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), Math.max(low, high))
 
+/** `value` rounded to the nearest multiple of `grid`; unchanged without one (an object that does not snap). */
+const snapTo = (value: number, grid: number | null) => (grid ? Math.round(value / grid) * grid : value)
+
 /** How much the slide is scaled to fit into `avail` (in screen pixels) leaving `margin` free on every side. */
 export function fitScale(avail: { w: number; h: number }, margin: number): number {
   const scale = Math.min((avail.w - 2 * margin) / SLIDE_W, (avail.h - 2 * margin) / SLIDE_H)
@@ -30,11 +34,12 @@ export function toSlide(clientX: number, clientY: number, origin: { left: number
   return { x: (clientX - origin.left) / scale, y: (clientY - origin.top) / scale }
 }
 
-/** The frame after dragging it by (dx, dy); it stays on the slide. */
-export function moveFrame(start: Frame, dx: number, dy: number): Frame {
+/** The frame after dragging it by (dx, dy); it stays on the slide. With `grid`, the moved position snaps to the
+ * nearest grid line (E10.15) before it is kept on the slide. */
+export function moveFrame(start: Frame, dx: number, dy: number, grid: number | null = null): Frame {
   return {
-    x: clamp(Math.round(start.x + dx), 0, SLIDE_W - start.w),
-    y: clamp(Math.round(start.y + dy), 0, SLIDE_H - start.h),
+    x: clamp(snapTo(Math.round(start.x + dx), grid), 0, SLIDE_W - start.w),
+    y: clamp(snapTo(Math.round(start.y + dy), grid), 0, SLIDE_H - start.h),
     w: start.w,
     h: start.h,
   }
@@ -43,31 +48,40 @@ export function moveFrame(start: Frame, dx: number, dy: number): Frame {
 /**
  * The frame after dragging `handle` by (dx, dy). The opposite side stays where it is; the frame stays on the slide
  * and keeps the least size. With an `aspect` (width / height of a shape that must keep it) only the corners work, and
- * the frame keeps the proportions the server checks (within one unit).
+ * the frame keeps the proportions the server checks (within one unit). With `grid` (E10.15), the dragged edge snaps
+ * to the nearest grid line; with an `aspect`, only the dominant dimension is snapped and the other follows it
+ * exactly, so the proportions are never thrown off by rounding to two different grid lines.
  */
-export function resizeFrame(start: Frame, handle: Handle, dx: number, dy: number, aspect: number | null): Frame {
-  return aspect === null ? resizeFree(start, handle, dx, dy) : resizeKeeping(start, handle, dx, dy, aspect)
+export function resizeFrame(
+  start: Frame,
+  handle: Handle,
+  dx: number,
+  dy: number,
+  aspect: number | null,
+  grid: number | null = null,
+): Frame {
+  return aspect === null ? resizeFree(start, handle, dx, dy, grid) : resizeKeeping(start, handle, dx, dy, aspect, grid)
 }
 
-function resizeFree(start: Frame, handle: Handle, dx: number, dy: number): Frame {
+function resizeFree(start: Frame, handle: Handle, dx: number, dy: number, grid: number | null): Frame {
   let left = start.x
   let top = start.y
   let right = start.x + start.w
   let bottom = start.y + start.h
-  if (handle.includes('w')) left = clamp(Math.round(left + dx), 0, right - MIN_SIZE)
-  if (handle.includes('e')) right = clamp(Math.round(right + dx), left + MIN_SIZE, SLIDE_W)
-  if (handle.includes('n')) top = clamp(Math.round(top + dy), 0, bottom - MIN_SIZE)
-  if (handle.includes('s')) bottom = clamp(Math.round(bottom + dy), top + MIN_SIZE, SLIDE_H)
+  if (handle.includes('w')) left = clamp(snapTo(Math.round(left + dx), grid), 0, right - MIN_SIZE)
+  if (handle.includes('e')) right = clamp(snapTo(Math.round(right + dx), grid), left + MIN_SIZE, SLIDE_W)
+  if (handle.includes('n')) top = clamp(snapTo(Math.round(top + dy), grid), 0, bottom - MIN_SIZE)
+  if (handle.includes('s')) bottom = clamp(snapTo(Math.round(bottom + dy), grid), top + MIN_SIZE, SLIDE_H)
   return { x: left, y: top, w: right - left, h: bottom - top }
 }
 
-function resizeKeeping(start: Frame, handle: Handle, dx: number, dy: number, aspect: number): Frame {
+function resizeKeeping(start: Frame, handle: Handle, dx: number, dy: number, aspect: number, grid: number | null): Frame {
   if (handle.length !== 2) return start // an edge would break the proportions
   const east = handle.includes('e')
   const south = handle.includes('s')
   const byWidth = start.w + (east ? dx : -dx)
   const byHeight = (start.h + (south ? dy : -dy)) * aspect
-  const wanted = Math.abs(byWidth - start.w) >= Math.abs(byHeight - start.w) ? byWidth : byHeight
+  const wanted = snapTo(Math.abs(byWidth - start.w) >= Math.abs(byHeight - start.w) ? byWidth : byHeight, grid)
   const roomX = east ? SLIDE_W - start.x : start.x + start.w
   const roomY = south ? SLIDE_H - start.y : start.y + start.h
   const least = MIN_SIZE * Math.max(1, aspect)

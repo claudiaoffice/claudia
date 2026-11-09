@@ -92,10 +92,13 @@ export interface TextRegion {
   start: number
   end: number
 }
-/** The objects of a slide that somebody has selected (and so holds). */
+/** The floating objects of a slide (creates) or a sheet (computes) that somebody has selected (and so holds).
+ * Exactly one of `slide`/`sheet` is set, matching the app the region came from (each app sends only its own
+ * shape, never both). */
 export interface ObjectsRegion {
   kind: 'objects'
-  slide: string
+  /** The slide, sheet or paragraph the objects are on: one field in all three apps (E10.16, D177). */
+  container: string
   ids: string[]
 }
 export type Region = CellsRegion | TextRegion | ObjectsRegion

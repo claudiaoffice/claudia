@@ -51,7 +51,7 @@ class FakePage:
     def close(self) -> None: ...
 
 
-def make_app(server_factory, pages: list | None = None):
+def make_app(server_factory, pages: list | None = None, locale: str | None = None):
     from claudia_shell_gtk._gi import Adw, Gio
     from claudia_shell_gtk.app import ComposesApp
 
@@ -67,6 +67,7 @@ def make_app(server_factory, pages: list | None = None):
         identity.get("composes"),
         server_factory=server_factory,
         page_factory=page_factory,
+        locale=locale,
         poll_ms=10,
         flags=Gio.ApplicationFlags.NON_UNIQUE,
     )
@@ -127,6 +128,30 @@ def test_a_second_activation_shows_the_same_window_and_starts_no_second_server()
     app.activate()
     assert app.window is first
     assert server.spawned == 1
+    app.shutdown_for_test()
+
+
+def test_an_explicit_locale_is_handed_to_the_window_instead_of_the_detected_one(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """E5.7's second round: `__main__.py` resolves a persisted-or-detected locale once, before the window (and this
+    app) exist at all, and hands it in here (`do_activate`) -- the app must not go back to the system's own guess
+    on top of an already-decided one."""
+    import claudia_shell_gtk.app as app_module
+
+    monkeypatch.setattr(app_module, "detect_system_locale", lambda: pytest.fail("should not be called"))
+    app = make_app(lambda _identity: FakeServer(), locale="de")
+    app.register(None)
+    app.activate()
+    assert app.window._bridge._locale == "de"  # noqa: SLF001
+    app.shutdown_for_test()
+
+
+def test_with_no_explicit_locale_the_window_falls_back_to_the_detected_one() -> None:
+    app = make_app(lambda _identity: FakeServer())
+    app.register(None)
+    app.activate()
+    assert app.window._bridge._locale  # noqa: SLF001 -- whatever detect_system_locale() found, just not empty/None
     app.shutdown_for_test()
 
 

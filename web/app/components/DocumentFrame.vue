@@ -16,7 +16,7 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }
 const state = props.session.state
 const panelOpen = ref(true)
 const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'>(null)
-const panel = ref<{ ask: (text?: string) => void } | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 const readonly = computed(() => state.me.role === 'viewer')
 
 async function checkpoint(label: string | null) {
@@ -29,6 +29,12 @@ async function checkpoint(label: string | null) {
 function ask(text = '@ai ') {
   panelOpen.value = true
   setTimeout(() => panel.value?.ask(text), 0)
+}
+
+/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
+function openHelp(mode?: 'how-to' | 'docs') {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.openHelp(mode), 0)
 }
 
 // D122: the shared shortcut map, same as the other two workspaces. `SlideWorkspace.vue` has nothing of its own to
@@ -49,6 +55,7 @@ installWindowShortcuts(() => shortcuts.value)
 defineExpose({
   checkpoint,
   ask,
+  openHelp,
   shortcuts,
   openDialog: (name: 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete') =>
     (dialog.value = name),

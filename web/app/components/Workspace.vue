@@ -8,7 +8,10 @@ import { copySelection, cutSelection } from '~/lib/clipboard'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
+import { currentFunctionAt } from '~/lib/formula-help'
+import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
+import type { Axis } from '~/lib/line-sizes'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
@@ -18,6 +21,9 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
 const session = props.session
 const state = session.state
 const { dark, toggle: toggleDark } = useTheme()
+// `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
+// `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring.
+const { t, locale, choose } = useI18n()
 const SIZE = { rows: VIEW_ROWS, cols: VIEW_COLS }
 
 const sel = ref<Sel>(single(0, 0))
@@ -25,11 +31,12 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 const dialog = ref<
-  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'
+  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete' | 'image' | 'row-size' | 'col-size'
 >(null)
 const panelOpen = ref(true)
-const grid = ref<{ focus: () => void } | null>(null)
-const panel = ref<{ ask: (text?: string) => void } | null>(null)
+const grid = ref<{ focus: () => void; selectObject: (id: string) => void } | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
+const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
 const readonly = computed(() => state.me.role === 'viewer')
 const b = computed(() => bounds(sel.value))
@@ -134,6 +141,25 @@ function moveCaret(position: number) {
   if (edit.value) edit.value.caret = position
 }
 
+// ------------------------------------------------------------------------------ in-context function help (E13.5)
+// While a formula is typed, the formula bar shows the signature and a short example of the function the caret is
+// inside of — the one piece of "help in context" this iteration builds; "Help on this" and hovering a menu item
+// wait for the action manifest itself (E5.1), which is not built yet.
+const currentFunctionName = computed(() => (edit.value ? currentFunctionAt(edit.value.text, edit.value.caret) : null))
+const formulaHelp = ref<{ signature: string; help: string } | null>(null)
+watch(currentFunctionName, async (name) => {
+  if (!name) {
+    formulaHelp.value = null
+    return
+  }
+  const found = await session.functionHelp(name)
+  if (currentFunctionName.value !== name) return // the caret moved again before the server answered
+  formulaHelp.value = found === false ? null : found
+})
+/** The help text's first worked example (after the blank line that separates it from the description), if there
+ * is one — core functions (`IF`, `XLOOKUP`, ...) have no `Example`s to draw one from, only the description. */
+const formulaExample = computed(() => formulaHelp.value?.help.split('\n\n')[1]?.split('\n')[0] ?? '')
+
 async function clearSelection() {
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   const cells = session.filledIn(state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
@@ -187,15 +213,60 @@ async function structure(axis: 'row' | 'col', insert: boolean, after = false) {
   await session.structure(state.activeSheet, axis, insert, insert && after ? last + 1 : first, count)
 }
 
+// Row/column header menu (mockup 1) and the resize dialog it opens (mockup 2) — SheetGrid.vue already made sure
+// the selection covers the header that was right-clicked, so `b` (above) is the right range for all three actions.
+function openHeaderMenu(axis: Axis, index: number, x: number, y: number) {
+  headerMenu.value = { axis, index, x, y }
+}
+async function headerInsert(after: boolean) {
+  const axis = headerMenu.value!.axis
+  headerMenu.value = null
+  await structure(axis, true, after)
+}
+async function headerDelete() {
+  const axis = headerMenu.value!.axis
+  headerMenu.value = null
+  await structure(axis, false)
+}
+function headerResize() {
+  if (readonly.value) {
+    headerMenu.value = null
+    return session.notice('You can only look at this document.', 'warning')
+  }
+  dialog.value = headerMenu.value!.axis === 'row' ? 'row-size' : 'col-size'
+  headerMenu.value = null
+}
+
 async function checkpoint(label: string | null) {
   dialog.value = null
   if (await session.saveCheckpoint(label || null)) session.notice('Checkpoint saved.')
   grid.value?.focus()
 }
 
+// ------------------------------------------------------------------------------ images (E10.11)
+const IMAGE_HEIGHT = 240 // pixels; an image is sized to this height and whatever width keeps its own aspect
+
+/** Anchor a new image at the current selection's top-left cell, sized to keep its own aspect (the server rejects
+ * any other size for an image, within one pixel — mirrors creates' `insertFrame('image', aspect, …)`). */
+function anchorForImage(aspect: number) {
+  return { row: b.value.r0, col: b.value.c0, w: Math.round(IMAGE_HEIGHT * aspect), h: IMAGE_HEIGHT }
+}
+
+function imageInserted(id: string) {
+  dialog.value = null
+  grid.value?.selectObject(id)
+  grid.value?.focus()
+}
+
 function ask(text: string) {
   panelOpen.value = true
   setTimeout(() => panel.value?.ask(text), 0)
+}
+
+/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
+function help(mode: 'how-to' | 'docs') {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.openHelp(mode), 0)
 }
 
 // ------------------------------------------------------------------------------ menus, shortcuts and the shell
@@ -213,119 +284,144 @@ const hints = computed<Record<string, string>>(() => Object.fromEntries(shortcut
 
 const menus = computed<Menu[]>(() => [
   {
-    label: 'File',
+    label: t('File'),
     items: [
-      { id: 'file.new', label: 'New', action: () => emit('leave', { startFresh: true }) },
-      { id: 'file.open', label: 'Open…', action: () => emit('leave') },
+      { id: 'file.new', label: t('New'), action: () => emit('leave', { startFresh: true }) },
+      { id: 'file.open', label: t('Open…'), action: () => emit('leave') },
       { label: '', separator: true },
-      { id: 'file.save', label: 'Save', hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
-      { id: 'file.save-as', label: 'Save new checkpoint…', action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
-      { id: 'file.download', label: 'Download', disabled: true }, // D123: a stub here until computes has an export format
+      { id: 'file.save', label: t('Save'), hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
+      { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
+      { id: 'file.download', label: t('Download'), disabled: true }, // D123: a stub here until computes has an export format
       { label: '', separator: true },
       {
         id: 'file.manage',
-        label: 'Manage',
+        label: t('Manage'),
         items: [
-          { id: 'file.manage.share', label: 'Share…', action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
+          { id: 'file.manage.share', label: t('Share…'), action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
           {
             id: 'file.manage.assign-owner',
-            label: 'Assign new owner…',
+            label: t('Assign new owner…'),
             action: () => (dialog.value = 'assign-owner'),
             disabled: state.me.role !== 'owner',
           },
-          { id: 'file.manage.accept-owner', label: 'Accept ownership…', action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
-          { id: 'file.manage.leave', label: 'Leave document…', action: () => (dialog.value = 'leave') },
-          { id: 'file.manage.export', label: 'Export…', action: () => (dialog.value = 'export') },
+          { id: 'file.manage.accept-owner', label: t('Accept ownership…'), action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
+          { id: 'file.manage.leave', label: t('Leave document…'), action: () => (dialog.value = 'leave') },
+          { id: 'file.manage.export', label: t('Export…'), action: () => (dialog.value = 'export') },
           {
             id: 'file.manage.delete',
-            label: 'Delete from server…',
+            label: t('Delete from server…'),
             action: () => (dialog.value = 'delete'),
             disabled: state.me.role !== 'owner',
           },
         ],
       },
       { label: '', separator: true },
-      { id: 'file.close', label: 'Close document', action: () => emit('leave') },
+      { id: 'file.close', label: t('Close document'), action: () => emit('leave') },
     ],
   },
   {
-    label: 'Edit',
+    label: t('Edit'),
     items: [
-      { id: 'edit.undo', label: state.canUndo ? `Undo ${state.undoLabel}` : 'Undo', hint: hints.value['edit.undo'], action: () => session.undo(), disabled: !state.canUndo },
-      { id: 'edit.redo', label: state.canRedo ? `Redo ${state.redoLabel}` : 'Redo', hint: hints.value['edit.redo'], action: () => session.redo(), disabled: !state.canRedo },
+      {
+        id: 'edit.undo',
+        label: state.canUndo ? t('Undo {label}', { label: state.undoLabel }) : t('Undo'),
+        hint: hints.value['edit.undo'],
+        action: () => session.undo(),
+        disabled: !state.canUndo,
+      },
+      {
+        id: 'edit.redo',
+        label: state.canRedo ? t('Redo {label}', { label: state.redoLabel }) : t('Redo'),
+        hint: hints.value['edit.redo'],
+        action: () => session.redo(),
+        disabled: !state.canRedo,
+      },
       { label: '', separator: true },
-      { id: 'edit.copy', label: 'Copy', hint: 'Ctrl+C', action: () => copySelection() },
-      { id: 'edit.cut', label: 'Cut', hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
-      { id: 'edit.paste', label: 'Paste', hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
+      { id: 'edit.copy', label: t('Copy'), hint: 'Ctrl+C', action: () => copySelection() },
+      { id: 'edit.cut', label: t('Cut'), hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
+      { id: 'edit.paste', label: t('Paste'), hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
       {
         id: 'edit.paste-as',
-        label: 'Paste as',
+        label: t('Paste as'),
         disabled: readonly.value,
         // The child's own `disabled` is what a shell actually reports per-action (`collectStates` walks each item on
         // its own terms, not by inheriting a parent's); the parent's `disabled` above only keeps the web menu from
         // opening the flyout at all — both need to agree, or a shell could show the leaf as enabled regardless.
-        items: [{ id: 'edit.paste-as-plain', label: 'Plain text', action: () => pasteFromClipboard(), disabled: readonly.value }],
+        items: [{ id: 'edit.paste-as-plain', label: t('Plain text'), action: () => pasteFromClipboard(), disabled: readonly.value }],
       },
       { label: '', separator: true },
-      { id: 'edit.new-sheet', label: 'New sheet…', action: () => (dialog.value = 'sheet'), disabled: readonly.value },
+      { id: 'edit.new-sheet', label: t('New sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
+      { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
       { label: '', separator: true },
       // D130 (Claude's recommendation, flagged unconfirmed in decision-log.md): grouped into Row ▸ / Column ▸ rather
       // than six flat items, reusing the submenu mechanism Edit ▸ Paste as ▸ already needed.
       {
         id: 'edit.row',
-        label: 'Row',
+        label: t('Row'),
         disabled: readonly.value,
         items: [
-          { id: 'edit.row-insert-above', label: 'Insert above', action: () => structure('row', true), disabled: readonly.value },
-          { id: 'edit.row-insert-below', label: 'Insert below', action: () => structure('row', true, true), disabled: readonly.value },
-          { id: 'edit.row-delete', label: 'Delete', action: () => structure('row', false), disabled: readonly.value },
+          { id: 'edit.row-insert-above', label: t('Insert above'), action: () => structure('row', true), disabled: readonly.value },
+          { id: 'edit.row-insert-below', label: t('Insert below'), action: () => structure('row', true, true), disabled: readonly.value },
+          { id: 'edit.row-delete', label: t('Delete'), action: () => structure('row', false), disabled: readonly.value },
         ],
       },
       {
         id: 'edit.column',
-        label: 'Column',
+        label: t('Column'),
         disabled: readonly.value,
         items: [
-          { id: 'edit.column-insert-left', label: 'Insert left', action: () => structure('col', true), disabled: readonly.value },
-          { id: 'edit.column-insert-right', label: 'Insert right', action: () => structure('col', true, true), disabled: readonly.value },
-          { id: 'edit.column-delete', label: 'Delete', action: () => structure('col', false), disabled: readonly.value },
+          { id: 'edit.column-insert-left', label: t('Insert left'), action: () => structure('col', true), disabled: readonly.value },
+          { id: 'edit.column-insert-right', label: t('Insert right'), action: () => structure('col', true, true), disabled: readonly.value },
+          { id: 'edit.column-delete', label: t('Delete'), action: () => structure('col', false), disabled: readonly.value },
         ],
       },
       { label: '', separator: true },
-      { id: 'edit.clear', label: 'Clear cells', hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
+      { id: 'edit.clear', label: t('Clear cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
     ],
   },
-  { label: 'Format', items: [{ id: 'format.none', label: 'No styles yet', disabled: true }] }, // D125: visible, inert — computes has no style system yet
+  { label: t('Format'), items: [{ id: 'format.none', label: t('No styles yet'), disabled: true }] }, // D125: visible, inert — computes has no style system yet
   {
-    label: 'View',
+    label: t('View'),
     items: [
-      { id: 'view.authors', label: 'Show who wrote what', checked: false, disabled: true }, // computes tracks no per-cell authorship yet
-      { id: 'view.panel', label: 'History and chat', checked: panelOpen.value, action: (t) => (panelOpen.value = t ? t === 'on' : !panelOpen.value) },
+      { id: 'view.authors', label: t('Show who wrote what'), checked: false, disabled: true }, // computes tracks no per-cell authorship yet
+      { id: 'view.panel', label: t('History and chat'), checked: panelOpen.value, action: (x) => (panelOpen.value = x ? x === 'on' : !panelOpen.value) },
       {
         id: 'view.dark',
-        label: 'Dark mode',
+        label: t('Dark mode'),
         checked: dark(),
-        action: (t) => {
-          if (t === undefined || (t === 'on') !== dark()) toggleDark()
+        action: (x) => {
+          if (x === undefined || (x === 'on') !== dark()) toggleDark()
         },
       },
     ],
   },
   {
-    label: 'Tools',
+    label: t('Tools'),
     items: [
-      { id: 'tools.ask', label: 'Ask the assistant…', action: () => ask('@ai ') },
-      { id: 'tools.example-budget', label: 'Ask for an example budget', action: () => ask('@ai build an example budget') },
+      { id: 'tools.ask', label: t('Ask the assistant…'), action: () => ask('@ai ') },
+      { id: 'tools.example-budget', label: t('Ask for an example budget'), action: () => ask('@ai build an example budget') },
     ],
   },
-  { label: 'Config', items: [{ id: 'config.shortcuts', label: 'Shortcuts', action: () => (dialog.value = 'shortcuts') }] },
   {
-    label: 'Help',
+    label: t('Config'),
     items: [
-      { id: 'help.ask', label: 'Ask ai', action: () => ask('@ai ') },
-      { id: 'help.how-to', label: 'How do I…?', disabled: true },
-      { id: 'help.docs', label: 'Documentation', disabled: true },
-      { id: 'help.about', label: 'About claudia', action: () => (dialog.value = 'about') },
+      { id: 'config.shortcuts', label: t('Shortcuts'), action: () => (dialog.value = 'shortcuts') },
+      {
+        label: t('App Language'),
+        items: [
+          { id: 'config.language.en', label: 'English', checked: locale.value === 'en', action: () => choose('en') },
+          { id: 'config.language.de', label: 'Deutsch', checked: locale.value === 'de', action: () => choose('de') },
+        ],
+      },
+    ],
+  },
+  {
+    label: t('Help'),
+    items: [
+      { id: 'help.ask', label: t('Ask ai'), action: () => ask('@ai ') },
+      { id: 'help.how-to', label: t('How do I…?'), action: () => help('how-to') },
+      { id: 'help.docs', label: t('Documentation'), action: () => help('docs') },
+      { id: 'help.about', label: t('About claudia'), action: () => (dialog.value = 'about') },
     ],
   },
 ])
@@ -368,6 +464,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you type now is not saved.</div>
     <MenuBar :class="{ hidden: shell.nativeMenu }" :menus="menus" />
+    <div class="formulaRow">
     <FormulaBar
       :label="label"
       :text="formulaText"
@@ -386,6 +483,11 @@ onBeforeUnmount(() => clearTimeout(timer))
       @undo="session.undo()"
       @redo="session.redo()"
     />
+    <div v-if="formulaHelp" class="formulaHelp" role="status">
+      <span class="sig mono">{{ formulaHelp.signature }}</span>
+      <span v-if="formulaExample" class="example mono">{{ formulaExample }}</span>
+    </div>
+    </div>
     <div class="main" :class="{ wide: !panelOpen }">
       <SheetGrid
         v-if="state.activeSheet"
@@ -407,6 +509,7 @@ onBeforeUnmount(() => clearTimeout(timer))
         @clear="clearSelection"
         @paste="paste"
         @select-all="sel = { row: 0, col: 0, row2: VIEW_ROWS - 1, col2: VIEW_COLS - 1 }"
+        @header-menu="openHeaderMenu"
       />
       <div v-else class="nosheet">This document has no sheet yet.</div>
       <SidePanel v-show="panelOpen" ref="panel" :session="session" />
@@ -436,6 +539,28 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <AboutDialog v-if="dialog === 'about'" app="computes" @close="dialog = null" />
+    <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
+    <LineSizeDialog
+      v-if="dialog === 'row-size' || dialog === 'col-size'"
+      :session="session"
+      :sheet="state.activeSheet"
+      :axis="dialog === 'row-size' ? 'row' : 'col'"
+      :first="dialog === 'row-size' ? b.r0 : b.c0"
+      :last="dialog === 'row-size' ? b.r1 : b.c1"
+      @close="dialog = null"
+    />
+
+    <HeaderMenu
+      v-if="headerMenu"
+      :axis="headerMenu.axis"
+      :x="headerMenu.x"
+      :y="headerMenu.y"
+      :readonly="readonly"
+      @insert="headerInsert"
+      @delete="headerDelete"
+      @resize="headerResize"
+      @close="headerMenu = null"
+    />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
 
@@ -470,6 +595,35 @@ onBeforeUnmount(() => clearTimeout(timer))
   color: var(--ink);
   padding: 6px 16px;
   font-weight: 500;
+}
+.formulaRow {
+  position: relative;
+}
+.formulaHelp {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  left: 118px; /* roughly where the formula text starts, past the cell-name box and undo/redo (FormulaBar.vue) */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 140px);
+  padding: 5px 10px;
+  border-radius: 0 0 8px 8px;
+  background: var(--ink);
+  color: #e6e0f5;
+  font-size: 11.5px;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 18%);
+}
+.formulaHelp .sig {
+  color: #fff;
+  flex: 0 0 auto;
+}
+.formulaHelp .example {
+  color: rgb(230 224 245 / 65%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .nosheet {
   display: grid;

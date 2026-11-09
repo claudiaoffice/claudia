@@ -15,6 +15,7 @@ export interface ObjectMenuActions {
   cut: () => void
   copy: () => void
   properties: () => void
+  setSnap: (snap: boolean) => void
 }
 
 export function contextMenuItems(o: SlideObject, readonly: boolean, actions: ObjectMenuActions): MenuItem[] {
@@ -33,6 +34,11 @@ export function contextMenuItems(o: SlideObject, readonly: boolean, actions: Obj
     items.push({ label: 'Edit text', hint: 'Enter', action: actions.edit, disabled: readonly })
     items.push({ label: '', separator: true })
   }
+  // The grid is only a helper the view draws; whether this object follows it is real document state (E10.15).
+  // One item whose label swaps, like "Undo <label>" does, rather than a checkbox: ContextMenu.vue renders a
+  // label and a hint only, and a swapping label needs no change there.
+  items.push({ label: o.snap ? 'Release from grid' : 'Snap to grid', action: () => actions.setSnap(!o.snap), disabled: readonly })
+  items.push({ label: '', separator: true })
   items.push({ label: 'Delete', hint: 'Del', action: actions.remove, disabled: readonly })
   return items
 }

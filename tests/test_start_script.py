@@ -35,7 +35,7 @@ def test_a_text_server_serves_the_text_model_with_documents_of_its_own():
     args = start.parse_args(["--app", "composes"])
     command = start.server_command(args)
     assert command[command.index("--model") + 1] == "claudia_composes:TextModel"
-    assert command[command.index("--dir") + 1].endswith("demo-docs-composes"), "one directory holds one app's documents"
+    assert command[command.index("--dir") + 1].endswith("docs-composes"), "one directory holds one app's documents"
     assert "--model" not in start.server_command(start.parse_args([])), "workbooks are the server's default"
     assert start.parse_args(["--app", "composes", "--dir", "mine"]).dir == "mine"
 
@@ -56,7 +56,7 @@ def test_waiting_gives_up_when_the_server_stops():
 def test_presentations_run_on_their_own_model_in_their_own_folder():
     command = start.server_command(start.parse_args(["--app", "creates"]))
     assert command[command.index("--model") + 1] == "claudia_creates:SlideModel"
-    assert Path(command[command.index("--dir") + 1]).name == "demo-docs-creates", "documents of two apps never mix"
+    assert Path(command[command.index("--dir") + 1]).name == "docs-creates", "documents of two apps never mix"
     own = start.server_command(start.parse_args(["--app", "creates", "--dir", "mine"]))
     assert own[own.index("--dir") + 1] == "mine"
 

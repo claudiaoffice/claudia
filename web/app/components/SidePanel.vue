@@ -1,15 +1,33 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { clock, colorOf, inkOn } from '~/lib/people'
+import { useI18n } from '~/lib/i18n'
 import type { BaseSession } from '~/lib/base-session'
 
 const props = defineProps<{ session: BaseSession }>()
 const state = props.session.state
+// `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
+// `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring. Only
+// the two static headers below need it; this panel has no Config ▸ App Language menu of its own.
+const { t } = useI18n()
 
 const history = ref<HTMLElement | null>(null)
 const chatLog = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
 const draft = ref('')
+
+// ------------------------------------------------------------------------------ the two tabs (E13.5; the chat/history
+// redesign discussed alongside the help system is deferred — this tab strip is the one piece of that discussion
+// that ships now, so the new "Help" tab has somewhere to live without touching History & Chat itself).
+const tab = ref<'history' | 'help'>('history')
+const helpPanel = ref<{ focus: (mode?: 'how-to' | 'docs') => void } | null>(null)
+
+/** Help ▸ "How do I…?" and Help ▸ "Documentation" (D125's stubs, now real): switch to the Help tab and its
+ * matching section. */
+function openHelp(mode?: 'how-to' | 'docs') {
+  tab.value = 'help'
+  nextTick(() => helpPanel.value?.focus(mode))
+}
 
 /** The history with the checkpoints in their places. */
 const rows = computed(() => {
@@ -87,21 +105,28 @@ async function send() {
 
 /** Tools ▸ Ask AI: put the cursor in the chat box, ready to write to the assistant. */
 function ask(prefill = '@ai ') {
+  tab.value = 'history'
   draft.value = prefill
   nextTick(() => {
     input.value?.focus()
     input.value?.setSelectionRange(draft.value.length, draft.value.length)
   })
 }
-defineExpose({ ask })
+defineExpose({ ask, openHelp })
 
 const isAi = (user: string) => user.toLowerCase() === 'ai'
 </script>
 
 <template>
-  <aside class="panel" aria-label="history and chat">
+  <aside class="panel" aria-label="document panel">
     <slot name="top" />
 
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">{{ t('History & Chat') }}</button>
+      <button type="button" role="tab" :aria-selected="tab === 'help'" :class="{ active: tab === 'help' }" @click="tab = 'help'">{{ t('Help') }}</button>
+    </div>
+
+    <div v-show="tab === 'history'" class="historyChat" aria-label="history and chat">
     <div v-if="myProposal" class="proposal" role="alert">
       <p class="ask">
         <b>{{ myProposal.by }}</b> suggests going to {{ myProposal.label }}.
@@ -115,7 +140,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </div>
 
     <section class="history">
-      <h2>History <span class="count">{{ state.entries.length }}</span></h2>
+      <h2>{{ t('History') }} <span class="count">{{ state.entries.length }}</span></h2>
       <ol ref="history" class="log mono" aria-label="everything that was done to this document">
         <li v-if="!rows.length" class="empty">Nothing yet. {{ { composes: 'Start writing.', creates: 'Put a text box on the slide.' }[state.app] ?? 'Type into a cell.' }}</li>
         <template v-for="(row, i) in rows" :key="i">
@@ -157,7 +182,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </section>
 
     <section class="chat">
-      <h2>Chat</h2>
+      <h2>{{ t('Chat') }}</h2>
       <ol ref="chatLog" class="messages" aria-live="polite">
         <li v-if="!state.chat.length" class="empty">Write to everybody, or <b>@ai</b> to ask the assistant. Say <b>@ai help</b> to see what it can do.</li>
         <li
@@ -192,6 +217,9 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
         </button>
       </form>
     </section>
+    </div>
+
+    <HelpPanel v-show="tab === 'help'" ref="helpPanel" class="helpTab" :session="session" />
   </aside>
 </template>
 
@@ -202,6 +230,40 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
   min-height: 0;
   background: var(--ink);
   color: #e6e0f5;
+}
+.tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 8px 10px 0;
+}
+.tabs button {
+  flex: 1;
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  padding: 7px 4px;
+  background: transparent;
+  color: rgb(230 224 245 / 60%);
+  font: 500 11.5px var(--font-ui);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.tabs button:hover {
+  color: rgb(230 224 245 / 85%);
+}
+.tabs button.active {
+  background: rgb(255 255 255 / 7%);
+  color: #fff;
+}
+.historyChat {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.helpTab {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 section {
   display: flex;

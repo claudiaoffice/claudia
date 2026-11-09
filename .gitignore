@@ -1,10 +1,17 @@
+*DS_Store*
 demo-docs
 demo-docs-*
+docs
+docs-*
 .venv
 *__pycache__*
 web/.nuxt
 web/.output
 web/node_modules
+clients/windows/node_modules
+clients/windows/dist
+clients/windows/apps/*/inject
+clients/windows/apps/*/bin
 docs/_build
 claudiaoffice-log/.obsidian/*
 claudiaoffice-log/.obsidian/workspace.json
@@ -16,4 +23,5 @@ clients/windows/node_modules/
 *.patch
 clients/windows/apps/composes/.tmp/
 clients/windows/apps/composes/neutralinojs.log
+test-documents/_artifacts
 

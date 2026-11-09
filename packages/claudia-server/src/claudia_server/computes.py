@@ -1,17 +1,28 @@
 """The methods of the spreadsheet app: what a table view needs to show cells and to take what people type (E3.1).
 
 ``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet``, ``structure``,
-``sizes`` and ``resize_lines``. Cells travel as ``[row, column, content]`` with zero-based indexes and the content as
-a client shows it: ``{"t": "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may
-also be ``"error"``, with the code in ``v``) plus its text under ``"f"``. What people type goes through
-``parse_input``, so a client sends the text of the cell (``=B2*2`` for a formula) and the server decides what it
-means. Every write may carry the ``base`` revision of the client's view, as ``apply`` does.
+``sizes``, ``resize_lines``, ``objects``, ``images``, ``styles``, ``add_image``, ``move_object``,
+``resize_object``, ``rotate_object`` and ``remove_object``. Cells
+travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
+"int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
+with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
+sends the text of the cell (``=B2*2`` for a formula) and the server decides what it means. Every write may carry
+the ``base`` revision of the client's view, as ``apply`` does.
+
+An object is a shared ``ObjectBody`` plus a ``CellAnchor`` (E10.16): the body — kind, size, style, text, shape,
+image, rotation, snap — travels the wire identically in all three apps, and only ``anchor`` differs, as
+``{"kind": "cell", "container": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
+anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
+to another cell) moves it, and ``resize_object`` resizes it (E10.11).
 """
 
 from __future__ import annotations
 
+import secrets
+
 from claudia_computes import (
     AddSheet,
+    CellAnchor,
     DeleteCols,
     DeleteRows,
     InsertCols,
@@ -21,7 +32,9 @@ from claudia_computes import (
     SheetId,
     Structure,
     WorkbookModel,
+    get_function,
     parse_input,
+    search_functions,
 )
 from claudia_computes.model import (
     MAX_COL_WIDTH,
@@ -31,8 +44,23 @@ from claudia_computes.model import (
     MIN_COL_WIDTH,
     MIN_ROW_HEIGHT,
 )
+from claudia_core import (
+    AddObject,
+    Batch,
+    DefineImage,
+    ImageImport,
+    MoveObject,
+    ObjectBody,
+    RemoveObject,
+    ResizeObject,
+    RotateObject,
+    decode_image,
+)
+from claudia_core.clock import utc_now
 
+from .images import image_bytes
 from .protocol import Context, RequestError, core_methods
+from .styles import add_style_methods
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
 MAX_TYPED_CELLS = 10_000  # cells in one ``set_cells``
@@ -47,6 +75,10 @@ AXES = {
 SIZE_LIMITS = {"row": (MIN_ROW_HEIGHT, MAX_ROW_HEIGHT), "col": (MIN_COL_WIDTH, MAX_COL_WIDTH)}
 
 computes_methods = core_methods.extended()
+# ``styles``, ``palette``, ``change_style``, ``rename_style``, ``check_css`` and ``set_object_style`` are the
+# same in every app (E1.10, D200). A workbook has no rule of its own about who may change them.
+add_style_methods(computes_methods)
+computes_methods.kind("image")(image_bytes)
 
 
 def _workbook(ctx: Context) -> WorkbookModel:
@@ -60,6 +92,15 @@ def _index(value, limit: int, what: str):
     if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < limit:
         raise RequestError("bad_request", f"{what} must be a whole number from 0 to {limit - 1}")
     return value
+
+
+def _fresh_object_id(taken) -> str:
+    """An id nobody has used in this document. Ids are random, never counted: the id of a removed object must not
+    come back, or undoing its removal would collide with the newcomer (mirrors ``creates.py``'s ``_fresh``)."""
+    while True:
+        candidate = f"o{secrets.token_hex(4)}"
+        if candidate not in taken:
+            return candidate
 
 
 @computes_methods.method("sheets")
@@ -184,3 +225,116 @@ def _resize_lines(ctx, *, sheet, axis, sizes, base):
         raise RequestError("bad_request", 'resize_lines: axis must be "row" or "col"')
     applied = ctx.document.execute(ResizeLines(sheet, axis, _sized(axis, sizes)), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("objects", "sheet:str")
+def _objects(ctx, *, sheet):
+    """The floating objects of a sheet, the one in front last, as `{revision, sheet, objects}`. An object is
+    `{id, sheet, kind, row, col, w, h, image, imported}`, anchored to the cell at (`row`, `col`) with a pixel
+    size that never changes on its own: inserting, deleting or resizing rows/columns never moves or resizes it,
+    only `move_object` does. `imported`'s `source_path` is only sent to the person who imported that image
+    (everyone else sees `null` there, not the path)."""
+    workbook = _workbook(ctx)
+    if sheet not in workbook.sheets:
+        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+    objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(sheet)]
+    return {"revision": _rev(ctx), "sheet": sheet, "objects": objects}
+
+
+@computes_methods.method("images")
+def _images(ctx):
+    """The decoded image assets this document has taken in (and what its image objects are drawn with), each as
+    `{id, format, width, height, animated, data, first_frame}` (`data`/`first_frame` are base64). There is no
+    library to pick from: an image always comes in through `add_image`."""
+    workbook = _workbook(ctx)
+    return [image.to_data() for _, image in sorted(workbook.images.items())]
+
+
+@computes_methods.method(
+    "add_image",
+    "sheet:str row:int col:int w:int h:int data:image alt:str source_name:str source_path:str? base:revision?",
+    write=True,
+)
+def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_path, base):
+    """Import a picture from disk and anchor it to a cell of a sheet: `data` is the file's bytes, base64. `alt`
+    is a short, required description of what it shows. `source_name` is the file name as the client has it;
+    `source_path` is its full path if the client could supply one (a plain web browser cannot, for its own
+    security — send `null`). Returns the new object's id and the revision. The image keeps its own proportions,
+    and its pixel size (and anchor) never change on their own afterwards — only `move_object` moves it."""
+    workbook = _workbook(ctx)
+    if sheet not in workbook.sheets:
+        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+    asset = decode_image(data)
+    steps: list = [] if asset.id in workbook.images else [DefineImage(asset)]
+    imported = ImageImport.from_data(
+        {
+            "asset": asset.id,
+            "alt": alt,
+            "imported_by": ctx.user,
+            "imported_at": utc_now(),
+            "source": "disk",
+            "source_name": source_name,
+            "source_path": source_path,
+        }
+    )
+    object_id = _fresh_object_id(workbook.objects)
+    body = ObjectBody(object_id, "image", w, h, "plain-image", image=asset.id, imported=imported)
+    steps.append(AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data()))
+    command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"object": object_id, "revision": applied.revision.to_data()}
+
+
+@computes_methods.method("move_object", "id:str row:int col:int base:revision?", write=True)
+def _move_object(ctx, *, id, row, col, base):
+    """Move an object so that its anchor is at (`row`, `col`); its pixel size stays."""
+    sheet = _workbook(ctx).get_object(id).anchor.sheet
+    command = MoveObject(id, CellAnchor(sheet, row, col).to_data())
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("resize_object", "id:str row:int col:int w:int h:int base:revision?", write=True)
+def _resize_object(ctx, *, id, row, col, w, h, base):
+    """Give an object a new frame: its anchor cell and its pixel size together, since dragging a corner moves the
+    corner. An image keeps its own proportions, so `w` and `h` must match them."""
+    sheet = _workbook(ctx).get_object(id).anchor.sheet
+    command = ResizeObject(id, CellAnchor(sheet, row, col).to_data(), w, h)
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("rotate_object", "id:str rotation:int base:revision?", write=True)
+def _rotate_object(ctx, *, id, rotation, base):
+    """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
+    applied = ctx.document.execute(RotateObject(id, rotation), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("remove_object", "id:str base:revision?", write=True)
+def _remove_object(ctx, *, id, base):
+    """Take an object off its sheet. Undo brings it back in the same place of the stacking order."""
+    applied = ctx.document.execute(RemoveObject(id), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+def _function_summary(entry) -> dict:
+    return {"name": entry.name, "signature": entry.signature, "tooltip": entry.tooltip}
+
+
+@computes_methods.method("functions", 'query:str=""')
+def _functions(ctx, *, query):
+    """Every cell function whose name or description mentions `query` (case-insensitive), closest name match
+    first; every function, alphabetically, if `query` is blank (E13.5/E13.6: the searchable function list). Each
+    result is `{name, signature, tooltip}`; fetch the full help text with `function_help`."""
+    return [_function_summary(entry) for entry in search_functions(query)]
+
+
+@computes_methods.method("function_help", "name:str")
+def _function_help(ctx, *, name):
+    """One function's full help text, by the name a `functions` result gave (while typing, the formula bar asks
+    for this itself: E13.5's "in context" is the signature and a short example shown as you type)."""
+    entry = get_function(name)
+    if entry is None:
+        raise RequestError("command_error", f"no function named {name!r}")
+    return {"name": entry.name, "signature": entry.signature, "tooltip": entry.tooltip, "help": entry.help}

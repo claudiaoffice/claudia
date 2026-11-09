@@ -54,6 +54,17 @@ button {
   background: var(--iris);
   border-color: var(--iris);
 }
+/* Reserved for the server settings pages' one or two expensive-to-get-wrong actions (canvas note s4) — never for an
+ * ordinary document-level destructive action, which keeps its own `--rose` styling (DeleteDocumentDialog.vue). */
+.btn.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--paper);
+}
+.btn.danger:hover:not(:disabled) {
+  background: var(--danger-dark);
+  border-color: var(--danger-dark);
+}
 .btn:disabled {
   opacity: 0.45;
   cursor: default;

@@ -3,6 +3,48 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.5.0] - 2026-11-08
+
+The presentation carries its own colour palette (D200, D201).
+
+### Added
+- `SlideModel.palette` (a `claudia_core.Palette`), serialized with the document and restored with it, so a
+  presentation looks the same on whichever server it is opened. `SlideModel(styles, palette)` takes it.
+
+### Changed
+- **Breaking:** `state_schema` is 6. An older snapshot is not read.
+- Every built-in style now names colour roles instead of literal colours: `Body text` is `color: @text`, and
+  `Plain shape` is `fill: @accent/14`, `stroke: @accent`. The colours are the suite's own, so what the styles look
+  like did not change — only what they mean, and the fact that replacing the palette recolours them.
+
+## [0.4.0] - 2026-11-08
+
+The shared object layer (D177–D181), recorded after the fact for the same reason as `claudia-core` 0.9.0.
+
+### Changed
+- **Breaking:** `SlideObject` is `VisualObject[SlideAnchor]` — a shared body and a slide anchor — and the object
+  commands moved to `claudia_core` as `core.*`. `SlideModel` inherits `ObjectModel[SlideAnchor]`, holds a real
+  `StyleBook` (creates' own `Style` dataclass is gone, and its built-in styles are validated like any other), and
+  `state_schema` is 5.
+- **Breaking:** `claudia_creates.shapes` keeps the disk half only (`ShapeLibrary`, `BUILTIN_DIRECTORY`); the shape
+  format itself moved to `claudia_core.shapes`.
+
+## [0.3.0] - 2026-11-07
+
+The grid, and snapping to it (E10.15): a view-only helper, never part of the slide, that each object may follow.
+
+### Added
+- `SlideObject.snap` (`bool`, default `True`): whether this object holds to the grid. Unlike the grid itself, this
+  is real document state, changed with its own history entry.
+- Command `SetSnap(id, snap)`: holds or releases one object; its label swaps between "Snap to grid" and "Release
+  from grid" depending on the value it sets. Moving, resizing or editing an object's text never affects its own
+  snap, and the reverse: `SetSnap` never conflicts with a colleague's move, resize or text edit of the same object.
+- `SlideModel.state_schema` is 4 (a cached snapshot older than this is rebuilt from the log, not upcasted).
+
+### Changed
+- **Breaking:** `AddObject.schema` is 3; an upcaster fills schema-2 stored objects' missing `snap` with `True`
+  (what every such object already behaved as, there being no way yet to tell it not to).
+
 ## [0.2.0] - 2026-11-07
 
 Images on a slide (E10.8): a `kind="image"` object, built on `claudia_core`'s shared `ImageAsset`/`ImageImport`.
