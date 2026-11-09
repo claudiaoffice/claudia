@@ -1,18 +1,22 @@
-"""slides_to_pptx: a base export, and add_transition: a slide transition added additively."""
+"""slides_to_pptx/pptx_to_slides: a base export and import with a real edit-and-reexport round trip, and
+add_transition: a slide transition added additively."""
 
 from __future__ import annotations
 
 import zipfile
+from dataclasses import replace
 from io import BytesIO
 
 import pptx
 import pytest
-from claudia_creates_io import add_transition, slides_to_pptx
+from claudia_creates_io import UnsupportedEdit, add_transition, apply_edits_to_pptx, pptx_to_slides, slides_to_pptx
 from lxml import etree
+from pptx.util import Emu
 
 from claudia_creates import ShapeDefinition, SlideModel, SlideObject
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
+_DECK_WIDTH, _DECK_HEIGHT = Emu(12_192_000), Emu(6_858_000)
 
 _CIRCLE = ShapeDefinition(id="circle", name="Circle", path="M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z", aspect=1)
 
@@ -85,3 +89,174 @@ def test_transition_survives_a_python_pptx_round_trip():
     with zipfile.ZipFile(resaved) as z:
         slide1 = etree.fromstring(z.read("ppt/slides/slide1.xml"))
     assert slide1.find(f"{{{PNS}}}transition") is not None
+
+
+# -- pptx_to_slides ----------------------------------------------------------------------------------------------
+
+
+def test_pptx_to_slides_imports_text_and_shape_objects_in_order():
+    model = pptx_to_slides(slides_to_pptx(two_slide_deck()))
+    assert model.slides == ["s1", "s2"]
+    assert [(o.kind, o.text) for o in model.objects_on("s1")] == [("text", "Hello")]
+    assert [(o.kind, o.text, o.shape) for o in model.objects_on("s2")] == [("shape", "Circle", "circle")]
+
+
+def test_pptx_to_slides_falls_back_to_the_default_styles():
+    model = pptx_to_slides(slides_to_pptx(two_slide_deck()))
+    assert model.objects_on("s1")[0].style == "body-text"
+    assert model.objects_on("s2")[0].style == "plain-shape"
+
+
+def test_pptx_to_slides_keeps_position_and_size_through_a_round_trip():
+    model = two_slide_deck()
+    reimported = pptx_to_slides(slides_to_pptx(model))
+    original = model.objects_on("s2")[0]
+    reimported_object = reimported.objects_on("s2")[0]
+    assert (reimported_object.x, reimported_object.y, reimported_object.w, reimported_object.h) == (
+        original.x,
+        original.y,
+        original.w,
+        original.h,
+    )
+
+
+def test_pptx_to_slides_reads_the_decks_own_slide_size_not_a_fixed_one():
+    prs = pptx.Presentation()
+    prs.slide_width, prs.slide_height = Emu(9_144_000), Emu(6_858_000)  # a 4:3 deck, not claudia's 16:9 export
+    # scale_x = 9_144_000 / 1600 = 5715; scale_y = 6_858_000 / 900 = 7620 -- so (left, top, width, height) below
+    # map back to exactly (100, 100, 400, 100) in claudia's own units, same as the assertion checks.
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    slide.shapes.add_textbox(Emu(571_500), Emu(762_000), Emu(2_286_000), Emu(762_000)).text_frame.text = "Hi"
+    out = BytesIO()
+    prs.save(out)
+    model = pptx_to_slides(out.getvalue())
+    obj = model.objects_on("s1")[0]
+    assert (obj.x, obj.y, obj.w, obj.h) == (100, 100, 400, 100)
+
+
+def test_pptx_to_slides_skips_a_table():
+    prs = pptx.Presentation()
+    prs.slide_width, prs.slide_height = _DECK_WIDTH, _DECK_HEIGHT
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    slide.shapes.add_textbox(Emu(762_000), Emu(762_000), Emu(3_048_000), Emu(762_000)).text_frame.text = "Hi"
+    slide.shapes.add_table(1, 2, Emu(762_000), Emu(2_286_000), Emu(3_048_000), Emu(762_000))
+    out = BytesIO()
+    prs.save(out)
+    model = pptx_to_slides(out.getvalue())
+    assert [(o.kind, o.text) for o in model.objects_on("s1")] == [("text", "Hi")]
+
+
+# -- apply_edits_to_pptx -------------------------------------------------------------------------------------------
+
+_RED_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x02\x00\x00\x00\x02\x08\x02\x00\x00\x00\xfd\xd4\x9as\x00\x00"
+    b"\x00\x16IDATx\x9cc\xfc\xcf\xc0\xc0\xc0\xc0\xc0\xc4\xc0\xc0\xc0\xc0\xc0\x00\x00\r\x1d\x01\x03j\xc2\x9b\xe9\x00"
+    b"\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def _pptx_with_table() -> bytes:
+    prs = pptx.Presentation()
+    prs.slide_width, prs.slide_height = _DECK_WIDTH, _DECK_HEIGHT
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    slide.shapes.add_textbox(Emu(762_000), Emu(762_000), Emu(3_048_000), Emu(762_000)).text_frame.text = "First"
+    table_shape = slide.shapes.add_table(1, 2, Emu(762_000), Emu(2_286_000), Emu(3_048_000), Emu(762_000))
+    table_shape.table.cell(0, 0).text = "A"
+    table_shape.table.cell(0, 1).text = "B"
+    out = BytesIO()
+    prs.save(out)
+    return out.getvalue()
+
+
+def test_apply_edits_patches_only_the_changed_object_and_preserves_a_table():
+    original_bytes = _pptx_with_table()
+    baseline = pptx_to_slides(original_bytes)
+    current = pptx_to_slides(original_bytes)
+    obj = baseline.objects_on("s1")[0]
+    current.replace_object(replace(obj, text="First edited"))
+
+    out = apply_edits_to_pptx(original_bytes, baseline, current)
+    reopened = pptx.Presentation(BytesIO(out))
+    assert reopened.slides[0].shapes[0].text_frame.text == "First edited"
+    table = reopened.slides[0].shapes[1].table
+    assert (table.cell(0, 0).text, table.cell(0, 1).text) == ("A", "B")
+
+
+def test_apply_edits_moves_and_resizes_an_object():
+    model = two_slide_deck()
+    original_bytes = slides_to_pptx(model)
+    baseline = pptx_to_slides(original_bytes)
+    current = pptx_to_slides(original_bytes)
+    obj = current.objects_on("s2")[0]
+    current.replace_object(replace(obj, x=300, y=300, w=100, h=100))
+
+    out = apply_edits_to_pptx(original_bytes, baseline, current)
+    reimported = pptx_to_slides(out)
+    moved = reimported.objects_on("s2")[0]
+    assert (moved.x, moved.y, moved.w, moved.h) == (300, 300, 100, 100)
+
+
+def test_apply_edits_leaves_an_untouched_slides_media_part_byte_identical():
+    prs = pptx.Presentation()
+    prs.slide_width, prs.slide_height = _DECK_WIDTH, _DECK_HEIGHT
+    layout = prs.slide_layouts[6]
+    slide1 = prs.slides.add_slide(layout)
+    slide1.shapes.add_textbox(Emu(762_000), Emu(762_000), Emu(3_048_000), Emu(762_000)).text_frame.text = "First"
+    slide2 = prs.slides.add_slide(layout)
+    slide2.shapes.add_picture(BytesIO(_RED_PNG), Emu(762_000), Emu(762_000), Emu(1_524_000), Emu(1_524_000))
+    out = BytesIO()
+    prs.save(out)
+    original_bytes = out.getvalue()
+
+    baseline = pptx_to_slides(original_bytes)
+    current = pptx_to_slides(original_bytes)
+    obj = current.objects_on("s1")[0]
+    current.replace_object(replace(obj, text="First edited"))
+
+    edited_bytes = apply_edits_to_pptx(original_bytes, baseline, current)
+    with zipfile.ZipFile(BytesIO(original_bytes)) as before, zipfile.ZipFile(BytesIO(edited_bytes)) as after:
+        assert before.read("ppt/media/image1.png") == after.read("ppt/media/image1.png")
+        assert before.read("ppt/slides/slide2.xml") == after.read("ppt/slides/slide2.xml")
+
+
+def test_apply_edits_raises_unsupported_edit_when_an_object_is_added():
+    model = two_slide_deck()
+    original_bytes = slides_to_pptx(model)
+    baseline = pptx_to_slides(original_bytes)
+    current = pptx_to_slides(original_bytes)
+    current.insert_object(SlideObject("onew", "s1", "text", 100, 500, 300, 100, "body-text", "New"))
+
+    with pytest.raises(UnsupportedEdit):
+        apply_edits_to_pptx(original_bytes, baseline, current)
+
+
+def test_apply_edits_raises_unsupported_edit_when_an_object_is_removed():
+    model = two_slide_deck()
+    original_bytes = slides_to_pptx(model)
+    baseline = pptx_to_slides(original_bytes)
+    current = pptx_to_slides(original_bytes)
+    object_id = current.objects_on("s1")[0].id
+    current.delete_object(object_id)
+
+    with pytest.raises(UnsupportedEdit):
+        apply_edits_to_pptx(original_bytes, baseline, current)
+
+
+def test_apply_edits_raises_unsupported_edit_when_objects_are_reordered():
+    prs = pptx.Presentation()
+    prs.slide_width, prs.slide_height = _DECK_WIDTH, _DECK_HEIGHT
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    slide.shapes.add_textbox(Emu(100_000), Emu(100_000), Emu(1_000_000), Emu(500_000)).text_frame.text = "One"
+    slide.shapes.add_textbox(Emu(100_000), Emu(1_000_000), Emu(1_000_000), Emu(500_000)).text_frame.text = "Two"
+    out = BytesIO()
+    prs.save(out)
+    original_bytes = out.getvalue()
+
+    baseline = pptx_to_slides(original_bytes)
+    current = pptx_to_slides(original_bytes)
+    first, second = current.objects_on("s1")
+    current.delete_object(first.id)
+    current.insert_object(first, at=1)  # same two objects, swapped stacking order -- not a per-object content change
+
+    with pytest.raises(UnsupportedEdit):
+        apply_edits_to_pptx(original_bytes, baseline, current)

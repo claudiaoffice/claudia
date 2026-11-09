@@ -1,4 +1,4 @@
-# The test-document library (D178)
+# The test-document library (D178, D179)
 
 A catalogue of real office files, organized by format and feature, run through claudia's own import/edit/export
 path and checked three ways -- not by comparing bytes of the whole file (unrealistic: a library's own `save()`
@@ -23,7 +23,7 @@ LibreOffice and compares them perceptually -- reserved for a property that is on
 ```
 test-documents/
   catalogue.json          the list of what actually gets tested -- see below
-  _build_fixtures.py       regenerates every source.docx deterministically
+  _build_fixtures.py       regenerates every source.docx/source.pptx deterministically
   docx/
     heading-styles/
       source.docx          a real, openable file
@@ -31,6 +31,14 @@ test-documents/
     beyond-claudia/
       table/
         source.docx
+        spec.py
+  pptx/
+    shapes-and-text/
+      source.pptx
+      spec.py
+    beyond-claudia/
+      table/
+        source.pptx
         spec.py
 ```
 
@@ -57,9 +65,9 @@ on purpose and updating the catalogue's own record of how it went, not for CI's 
 
 ## Adding a case
 
-1. Add a `build_<name>()` function to `_build_fixtures.py` (python-docx, or whichever library the format uses)
-   and run it to write `source.<ext>` -- or, for content no builder function can produce cleanly, author the
-   file by hand in the real application and drop it in.
+1. Add a `build_<name>()` function to `_build_fixtures.py` (python-docx/python-pptx, or whichever library the
+   format uses) and run it to write `source.<ext>` -- or, for content no builder function can produce cleanly,
+   author the file by hand in the real application and drop it in.
 2. Write `spec.py` next to it: `from claudia_test_documents.case import Case`, then whichever of
    `import_checks`/`modify`/`after_checks`/`export_checks`/`preserve_parts`/`preserve_elements` the feature
    actually needs -- a "beyond claudia" case defines no `import_checks` at all, since claudia has nothing to
@@ -68,6 +76,6 @@ on purpose and updating the catalogue's own record of how it went, not for CI's 
    actually testing and why, the backlog epic it belongs to, and `tags`.
 4. Run `uv run python scripts/run_test_documents.py --id <your-id>` to see it recorded.
 
-A format with no `apply_edits_fn` yet (everything except docx, today -- see
+A format with no `apply_edits_fn` yet (everything except docx and pptx, today -- see
 `claudia_test_documents.adapters.ADAPTERS`) can still be catalogued for Tier 1: the round-trip and preserve
 stages come back `"skipped"`, not failed, until that format gets its own real edit-and-reexport path.

@@ -1,3 +1,4 @@
+*DS_Store*
 demo-docs
 demo-docs-*
 docs
@@ -14,4 +15,5 @@ clients/windows/apps/*/bin
 docs/_build
 claudiaoffice-log/.obsidian/*
 claudiaoffice-log/.obsidian/workspace.json
+test-documents/_artifacts
 

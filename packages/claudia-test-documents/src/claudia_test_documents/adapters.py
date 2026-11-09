@@ -12,6 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from claudia_composes_io import apply_edits_to_docx, docx_to_text
+from claudia_creates_io import apply_edits_to_pptx, pptx_to_slides
 
 from .case import Model
 
@@ -26,8 +27,10 @@ class Adapter:
     apply_edits_fn: Callable[[bytes, Model, Model], bytes] | None = None
 
 
-#: One entry per format the catalogue can test. xlsx/pptx/odt/ods/odp are not here yet -- there is no adapter to
-#: register until each gets its own real import and edit-and-reexport path, the same way docx just did (D177).
+#: One entry per format the catalogue can test. xlsx/odt/ods/odp are not here yet -- there is no adapter to
+#: register until each gets its own real import and edit-and-reexport path, the same way docx (D177) and now
+#: pptx (D179) did.
 ADAPTERS: dict[str, Adapter] = {
     "docx": Adapter(import_fn=docx_to_text, apply_edits_fn=apply_edits_to_docx),
+    "pptx": Adapter(import_fn=pptx_to_slides, apply_edits_fn=apply_edits_to_pptx),
 }

@@ -3,7 +3,14 @@ name = "claudia-test-documents"
 version = "0.0.1"
 description = "claudia-test-documents"
 requires-python = ">=3.14"
-dependencies = ["claudia-composes", "claudia-composes-io", "claudia-opc-io", "Pillow>=10"]
+dependencies = [
+    "claudia-composes",
+    "claudia-composes-io",
+    "claudia-creates",
+    "claudia-creates-io",
+    "claudia-opc-io",
+    "Pillow>=10",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -15,4 +22,6 @@ packages = ["src/claudia_test_documents"]
 [tool.uv.sources]
 claudia-composes = { workspace = true }
 claudia-composes-io = { workspace = true }
+claudia-creates = { workspace = true }
+claudia-creates-io = { workspace = true }
 claudia-opc-io = { workspace = true }

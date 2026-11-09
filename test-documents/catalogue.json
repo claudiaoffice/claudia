@@ -109,6 +109,88 @@
         "duration_s": 0.157,
         "detail": null
       }
+    },
+    {
+      "id": "pptx-shapes-and-text",
+      "format": "pptx",
+      "feature": "shapes-and-text",
+      "source": "pptx/shapes-and-text/source.pptx",
+      "spec": "pptx/shapes-and-text/spec.py",
+      "summary": "A text box and the two built-in autoshapes (circle, rectangle) import as objects with their position and size read back exactly; editing one object's text and moving/resizing another leaves every other object alone.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-08T21:00:41Z",
+        "commit": "0792bbe",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.06,
+        "detail": null
+      }
+    },
+    {
+      "id": "pptx-beyond-claudia-table",
+      "format": "pptx",
+      "feature": "beyond-claudia/table",
+      "source": "pptx/beyond-claudia/table/source.pptx",
+      "spec": "pptx/beyond-claudia/table/spec.py",
+      "summary": "A table (no claudia model at all) sits on the same slide an edit rewrites; its own graphic-frame element must stay byte-identical while the text box on the same slide changes.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "element-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-08T21:00:41Z",
+        "commit": "0792bbe",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.062,
+        "detail": null
+      }
+    },
+    {
+      "id": "pptx-beyond-claudia-image",
+      "format": "pptx",
+      "feature": "beyond-claudia/image",
+      "source": "pptx/beyond-claudia/image/source.pptx",
+      "spec": "pptx/beyond-claudia/image/spec.py",
+      "summary": "A picture is its own package part (ppt/media/image1.png) on a slide the edit never touches; it must come back byte-for-byte identical through an edit to a different slide's text box.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-08T21:00:41Z",
+        "commit": "0792bbe",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.052,
+        "detail": null
+      }
     }
   ]
 }
