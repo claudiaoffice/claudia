@@ -55,8 +55,8 @@ from . import commands  # noqa: F401  (registers the commands)
 from .charts import CHART_KINDS, ChartError, ChartSpec
 from .commands import AddChart, AddSheet, RemoveChart, RemoveSheet, ResizeLines, SetCells, Structure
 from .entry import parse_input
-from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
 from .events import ChartsChanged, DiagramsChanged, ImagesChanged, ObjectsChanged, ShapesChanged
+from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
 from .model import (
     MAX_OBJECTS_PER_SHEET,
     MIN_OBJECT_SIZE,
@@ -69,7 +69,6 @@ from .model import (
     WorkbookModel,
     content_of,
 )
-
 from .refs import (
     CellRef,
     DeleteCols,

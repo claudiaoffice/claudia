@@ -112,6 +112,8 @@ function server(link: FakeLink) {
     ping: () => ({ revision: 'main:3', line: 'main' }),
     sizes: () => ({ revision: 'main:3', rows: [[3, 52]], cols: [] }),
     resize_lines: () => ({ revision: 'main:4' }),
+    diagrams: () => [],
+    charts: () => [],
   }
 }
 

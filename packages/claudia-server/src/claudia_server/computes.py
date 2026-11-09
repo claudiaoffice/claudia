@@ -2,7 +2,9 @@
 
 ``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet``, ``structure``,
 ``sizes``, ``resize_lines``, ``objects``, ``images``, ``styles``, ``add_image``, ``move_object``,
-``resize_object``, ``rotate_object`` and ``remove_object``. Cells
+``resize_object``, ``rotate_object``, ``remove_object``, ``diagrams``, ``charts``, ``chart_figure``,
+``define_diagram``, ``update_diagram``, ``forget_diagram``, ``add_diagram_object``, ``add_chart`` and
+``remove_chart``. Cells
 travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
 "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
 with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
@@ -14,6 +16,16 @@ image, rotation, snap — travels the wire identically in all three apps, and on
 ``{"kind": "cell", "container": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
 anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
 to another cell) moves it, and ``resize_object`` resizes it (E10.11).
+
+A chart (E6.6) is a :class:`~claudia_computes.ChartSpec` *definition* — a cell range plus how to read it and its
+titles — shown as a floating ``"diagram"`` object (``add_diagram_object``), a tab (``add_chart``), or both from
+the very same definition, exactly as two image objects may share one image asset. ``define_diagram`` takes a
+definition into the document and hands back the id it was given (the server assigns it, the way ``add_sheet``
+assigns a sheet id, rather than the client making one up); ``chart_figure`` turns a definition plus its sheet's
+*live* cells into the Plotly figure (``{"data": [...], "layout": {...}}``) both clients draw unchanged — a
+client asks for it again after any ``cells`` push event whose ``sheet``/``positions`` could touch the chart's
+own range; move/resize/rotate/remove already work on a diagram object with no code of their own (E10.16's
+generic object commands do not care what kind an object is).
 """
 
 from __future__ import annotations
@@ -21,12 +33,14 @@ from __future__ import annotations
 import secrets
 
 from claudia_computes import (
+    AddChart,
     AddSheet,
     CellAnchor,
     DeleteCols,
     DeleteRows,
     InsertCols,
     InsertRows,
+    RemoveChart,
     ResizeLines,
     SetCells,
     SheetId,
@@ -47,13 +61,16 @@ from claudia_computes.model import (
 from claudia_core import (
     AddObject,
     Batch,
+    DefineDiagram,
     DefineImage,
+    ForgetDiagram,
     ImageImport,
     MoveObject,
     ObjectBody,
     RemoveObject,
     ResizeObject,
     RotateObject,
+    UpdateDiagram,
     decode_image,
 )
 from claudia_core.clock import utc_now
@@ -101,6 +118,29 @@ def _fresh_object_id(taken) -> str:
         candidate = f"o{secrets.token_hex(4)}"
         if candidate not in taken:
             return candidate
+
+
+def _fresh_diagram_id(taken) -> str:
+    """As :func:`_fresh_object_id`, for a diagram definition. The client never makes up this id itself — unlike
+    an image, whose asset id is a content hash, two otherwise-identical chart definitions are still two
+    definitions, so the server assigns a fresh one every time, the way ``add_sheet`` assigns a sheet id."""
+    while True:
+        candidate = f"g{secrets.token_hex(4)}"
+        if candidate not in taken:
+            return candidate
+
+
+def _fresh_chart_id(taken) -> str:
+    """As :func:`_fresh_object_id`, for a chart tab."""
+    while True:
+        candidate = f"t{secrets.token_hex(4)}"
+        if candidate not in taken:
+            return candidate
+
+
+def _diagram_definition(workbook: WorkbookModel, diagram_id: str, what: str) -> None:
+    if diagram_id not in workbook.diagrams:
+        raise RequestError("command_error", f"{what}: this document does not know the diagram {diagram_id!r}")
 
 
 @computes_methods.method("sheets")
@@ -248,6 +288,106 @@ def _images(ctx):
     library to pick from: an image always comes in through `add_image`."""
     workbook = _workbook(ctx)
     return [image.to_data() for _, image in sorted(workbook.images.items())]
+
+
+@computes_methods.method("diagrams")
+def _diagrams(ctx):
+    """The chart definitions this document knows (E6.6), each as `{format, id, kind, range, series_in, title,
+    x_title, y_title, legend, gridlines}` — what a chart tab or a floating diagram object may show. `range` is
+    `{first, last}`, each a cell reference naming its own sheet; a definition is not itself placed anywhere."""
+    return [spec.to_data() for spec in _workbook(ctx).diagrams.values()]
+
+
+@computes_methods.method("charts")
+def _charts(ctx):
+    """The chart tabs, in tab order, each as `{id, name, spec_id}`. `spec_id` names one of `diagrams`; two tabs
+    (or a tab and a floating diagram object) may share the very same definition."""
+    return [chart.to_data() for chart in _workbook(ctx).charts.values()]
+
+
+@computes_methods.method("chart_figure", "diagram:str")
+def _chart_figure(ctx, *, diagram):
+    """A diagram's Plotly figure, read live off the sheet its range names, as `{revision, figure}` — the same
+    `figure` for every client, computed once here rather than twice (`e0-3-web-surface-notes.md`). Ask again
+    after any `cells` push event whose `sheet`/`positions` might overlap the diagram's own range; this server
+    does not push a fresh figure on its own, since working out which charts are even open to a given client is
+    the client's business, not this document's."""
+    workbook = _workbook(ctx)
+    _diagram_definition(workbook, diagram, "chart_figure")
+    return {"revision": _rev(ctx), "figure": workbook.chart_figure(diagram)}
+
+
+@computes_methods.method("define_diagram", "definition:dict base:revision?", write=True)
+def _define_diagram(ctx, *, definition, base):
+    """Take a new chart definition into the document: `definition` is `{kind, range, series_in, title, x_title,
+    y_title, legend, gridlines}` (E6.6) — the id and format are this server's to assign, not the client's, so
+    neither is sent. Returns the new definition's id and the revision; show it with `add_diagram_object`,
+    `add_chart`, or both."""
+    if "id" in definition or "format" in definition:
+        raise RequestError("bad_request", "define_diagram: id and format are assigned by the server")
+    workbook = _workbook(ctx)
+    diagram_id = _fresh_diagram_id(workbook.diagrams)
+    command = DefineDiagram({**definition, "id": diagram_id, "format": 1})
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"diagram": diagram_id, "revision": applied.revision.to_data()}
+
+
+@computes_methods.method("update_diagram", "id:str definition:dict base:revision?", write=True)
+def _update_diagram(ctx, *, id, definition, base):
+    """Redefine a chart in place (E6.6): what a tab or floating object already showing `id` updates to, with
+    nothing to re-place. Same shape as `define_diagram`'s `definition`; the id and format are unchanged."""
+    _diagram_definition(_workbook(ctx), id, "update_diagram")
+    command = UpdateDiagram(id, {**definition, "id": id, "format": 1})
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("forget_diagram", "id:str base:revision?", write=True)
+def _forget_diagram(ctx, *, id, base):
+    """Let a chart definition go. Refused while a tab or a floating object still shows it — remove or repoint
+    those first (`remove_chart`, `remove_object`, or `update_diagram`/`add_chart` onto another definition)."""
+    applied = ctx.document.execute(ForgetDiagram(id), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method(
+    "add_diagram_object", "sheet:str row:int col:int w:int h:int diagram:str base:revision?", write=True
+)
+def _add_diagram_object(ctx, *, sheet, row, col, w, h, diagram, base):
+    """Put a chart on a sheet as a floating object, showing the definition `diagram` already names
+    (`define_diagram`). Returns the new object's id and the revision; `move_object`/`resize_object`/
+    `rotate_object`/`remove_object` then work on it exactly as they do on any other object."""
+    workbook = _workbook(ctx)
+    if sheet not in workbook.sheets:
+        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+    _diagram_definition(workbook, diagram, "add_diagram_object")
+    object_id = _fresh_object_id(workbook.objects)
+    body = ObjectBody(object_id, "diagram", w, h, "plain-image", diagram=diagram)
+    command = AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data())
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"object": object_id, "revision": applied.revision.to_data()}
+
+
+@computes_methods.method("add_chart", "name:str spec_id:str index:int? base:revision?", write=True)
+def _add_chart(ctx, *, name, spec_id, index, base):
+    """Add a chart tab showing the definition `spec_id` already names (`define_diagram`); `index` is where in
+    the tab order (the end, if omitted). Returns the new tab's id and the revision."""
+    name = name.strip()
+    if not name or len(name) > MAX_SHEET_NAME:
+        raise RequestError("bad_request", f"add_chart: the name must have 1 to {MAX_SHEET_NAME} characters")
+    workbook = _workbook(ctx)
+    _diagram_definition(workbook, spec_id, "add_chart")
+    chart_id = _fresh_chart_id(workbook.charts)
+    applied = ctx.document.execute(AddChart(chart_id, name, spec_id, index), author=ctx.user, base=base)
+    return {"chart": chart_id, "revision": applied.revision.to_data()}
+
+
+@computes_methods.method("remove_chart", "id:str base:revision?", write=True)
+def _remove_chart(ctx, *, id, base):
+    """Remove a chart tab. The definition it showed is untouched — it may still be shown elsewhere
+    (`forget_diagram` is the separate, explicit step for letting the definition itself go)."""
+    applied = ctx.document.execute(RemoveChart(id), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
 
 
 @computes_methods.method(
