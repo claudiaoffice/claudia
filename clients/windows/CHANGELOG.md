@@ -14,6 +14,16 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
   (`tests/build-inject.test.ts`, 3 tests) pins down the exact scheme-parsing property that broke, independent of
   which OS actually runs it. The identical bug is present, unexercised, in `clients/macos/tools/build-inject.mjs`
   (POSIX absolute paths never trigger it) — worth the same one-line fix there.
+- `start-win-client.cmd`: `uv sync` (no flags) failed building `pyyaml` from source on a second real Windows run
+  (2026-11-09) with `error: Microsoft Visual C++ 14.0 or greater is required`. `pyyaml` is not a runtime
+  dependency of anything this client needs — it arrives only through the root `dev` dependency group's
+  `myst-parser` (Sphinx docs tooling), which `uv sync` installs by default alongside the actual server/client
+  packages. On a very recent Python (3.15) with no published Windows wheel yet, that group forces a source build
+  of `pyyaml`'s optional C extension, needing a C toolchain that is no part of this client's own requirements.
+  Fixed: `uv sync --quiet --no-dev` (confirmed directly: `uv tree --no-dev` shows no `pyyaml`/`myst-parser`/
+  `sphinx` at all, while the default tree lists all three under `(group: dev)`). `start-client.sh` and
+  `start-mac-client.sh` call plain `uv sync --quiet` too and carry the same latent risk, just not yet hit by
+  either OS's own Python/compiler situation — worth the same flag there.
 
 ## [0.1.0] - unreleased
 

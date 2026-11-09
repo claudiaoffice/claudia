@@ -5,14 +5,16 @@ discipline the Linux (`clients/linux/`) and macOS (`clients/macos/`) clients fol
 Today it contains **Claudia Composes**; computes and creates follow the same way Linux's did (one more entry in
 `identity.ts`, one more `apps/<app>/`).
 
-**This has now run on a real Windows machine once** (owner, Windows VM, Git Bash, 2026-11-09) — far enough to find
-and fix a real bug in `npm run build:inject` (see "First real run" in `claudiaoffice-log/notes/e5-11-windows-client.md`
-for the detail), not yet far enough to reach the point `node dist\launch.js composes` actually starts the
-Neutralino binary. D159's core mechanic (`window.Neutralino` existing and working on an externally-loaded loopback
-page) was confirmed on macOS on the owner's own Mac, and nothing in the spike or in Neutralino's own documentation
-suggests Windows differs — `injectGlobals`/`injectClientLibrary`/`injectScript` are Neutralino's own cross-platform
-settings, not OS-specific ones — but on Windows that is still an expectation, not a confirmed result. Everything
-below "Not verified" is this client's best-effort answer, pending a run that gets further than this one did.
+**This has now run on a real Windows machine twice** (owner, same Windows VM, Git Bash, 2026-11-09) — far enough
+to find and fix a real bug each time, first in `npm run build:inject` and then in `start-win-client.cmd`'s own
+`uv sync` step (see "First real run" and "Second real run" in
+`claudiaoffice-log/notes/e5-11-windows-client.md` for the detail), not yet far enough to reach the point
+`node dist\launch.js composes` actually starts the Neutralino binary. D159's core mechanic (`window.Neutralino`
+existing and working on an externally-loaded loopback page) was confirmed on macOS on the owner's own Mac, and
+nothing in the spike or in Neutralino's own documentation suggests Windows differs —
+`injectGlobals`/`injectClientLibrary`/`injectScript` are Neutralino's own cross-platform settings, not
+OS-specific ones — but on Windows that is still an expectation, not a confirmed result. Everything below "Not
+verified" is this client's best-effort answer, pending a run that gets further than these two did.
 
 ```
 clients/
@@ -42,7 +44,10 @@ are Windows-specific non-problems rather than ports that were skipped.
 ## Running it from a checkout
 
 ```
-uv sync                                    # the server's Python 3.14 environment: .venv
+uv sync --no-dev                           # the server's Python 3.14 environment: .venv -- --no-dev skips the
+                                            # repo's own docs/lint/test tooling (sphinx, pytest, ruff...), which
+                                            # this client needs none of and which can force an unnecessary source
+                                            # build of a C extension on a Python this new (see "Not verified" 5)
 (cd web && npm ci && npm run build)        # the web frontend: web\.output\public
 cd clients\windows && npm ci
 npm run generate-menu                      # regenerate src/generated/menu.*.json from the shared manifest --
@@ -115,6 +120,12 @@ on its way out shows up directly on the console.
   output with `pathToFileURL(...).href`, not a bare path — a dynamic `import()` specifier has to be a URL, and a
   raw Windows absolute path ("C:\...") parses as one with an unsupported "c:" scheme instead
   (`ERR_UNSUPPORTED_ESM_URL_SCHEME`), the first bug this client's first real run on Windows found (2026-11-09).
+* **`uv sync` runs with `--no-dev`.** The root `dev` dependency group (Sphinx, `pytest`, `mypy`, `ruff`,
+  `vulture`...) is for working on the repository itself, not for running a client to test it, and installing it
+  by default is what the second real run's bug actually was: `myst-parser` (in `dev`) depends on `pyyaml`, which
+  has no prebuilt Windows wheel for every Python version and tries to compile a C extension that needs a
+  compiler nothing here requires otherwise. `--no-dev` sidesteps the whole group — none of it is a dependency of
+  `claudia_server` or any client.
 * **The shared menu manifest, one more consumer.** `manifest.py`
   (`clients/linux/src/claudia_shell_gtk/manifest.py`) stays the one source of truth for
   File/Edit/Format/View/Tools/Config/Help across every app and shell. `generate_menu.py` imports it (no GTK, by
@@ -172,10 +183,11 @@ is tested without one.
 4. **Orphaned server processes when the shell is killed outright, rather than closed.** Flagged as a known open
    issue rather than solved here (see "Not done" below) — the user's own explicit choice for this first version,
    matching how macOS flags the same gap for its own missing PDEATHSIG equivalent.
-5. **A clean machine.** This client was built and tested in a Linux sandbox; the one real Windows run so far
-   (2026-11-09, a Windows VM, Git Bash) got as far as a fixed build-time bug (see "How it works" above and
-   `claudiaoffice-log/notes/e5-11-windows-client.md`'s "First real run") but has not yet reached
-   `node dist\launch.js composes` actually starting the Neutralino binary — no older Windows version, no screen
+5. **A clean machine.** This client was built and tested in a Linux sandbox; the two real Windows runs so far
+   (2026-11-09, same Windows VM, Git Bash) each got one step further, past a fixed build-time bug and then a
+   fixed `uv sync` dependency-group bug (see "How it works" above and
+   `claudiaoffice-log/notes/e5-11-windows-client.md`'s "First real run" and "Second real run") but has not yet
+   reached `node dist\launch.js composes` actually starting the Neutralino binary — no older Windows version, no screen
    reader, no second machine.
 
 ## Not done

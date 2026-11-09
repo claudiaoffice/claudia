@@ -113,6 +113,43 @@ PATH, `uv`, or Neutralino. Nothing about D159 was tested by this run — the fai
 server or the Neutralino binary were ever started. The next real run, once this fix is applied, should get as far
 as `findNeutralinoBinary()`'s own "fetch it with npx @neutralinojs/neu update" message, or further.
 
+## Second real run (owner, same Windows VM, 2026-11-09): past the build, stopped at `uv sync`
+
+Applying the first fix got one step further into `start-win-client.cmd`, to its very first line: `uv sync`.
+It failed trying to compile `pyyaml` from source:
+
+```
+error: Failed to build `pyyaml==6.0.3`
+  cause: Call to `_pyyaml_pep517.build_wheel` failed (exit code: 1)
+  ...
+  error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": ...
+hint: `pyyaml` (v6.0.3) was included because `claudia-monorepo:dev` (v0.0.0) depends on `myst-parser` (v5.1.0)
+      which depends on `pyyaml`
+```
+
+The `hint:` line names the actual problem precisely: `pyyaml` is pulled in by `myst-parser`, which is pulled in by
+the root `[dependency-groups] dev` group (Sphinx docs tooling, `pytest`/`mypy`/`ruff`/`vulture` alongside it) —
+`uv sync` installs that group by default, even though nothing in it is a runtime dependency of `claudia_server`,
+`claudia_client`, or any of this client's own code (checked directly: no `packages/*/pyproject.toml` depends on
+`pyyaml` or `myst-parser`). `pyyaml` tries to compile an optional Cython-accelerated extension unless told not to,
+and that compile needs a C toolchain — present on neither this VM nor, as far as this patch knows, assumed by
+anything else this client needs. The owner's Python here is **3.15**, released recently enough that `pyyaml`
+6.0.3 has no prebuilt Windows wheel for it yet on PyPI, forcing the source build that then hit the missing
+compiler. An older or more established Python/OS combination might well have found a prebuilt wheel and never
+noticed this at all — this is a supply-chain timing problem as much as a Windows one.
+
+Fixed by not installing the `dev` group in the first place: `uv sync --quiet` → `uv sync --quiet --no-dev` in
+`start-win-client.cmd`. Confirmed directly in this sandbox (Linux, not Windows, but `uv`'s dependency-group
+resolution is platform-independent): `uv tree --no-dev` lists no `pyyaml`, `myst-parser`, or `sphinx` anywhere;
+the default `uv tree` lists all three, each tagged `(group: dev)`. This is also simply the more correct
+invocation for what this script is for — starting a client to test it, not developing the repository's own
+Python code or building its docs — so it is not a workaround so much as a latent wrong default being corrected.
+
+**`start-client.sh` (Linux) and `start-mac-client.sh` (macOS) both call plain `uv sync --quiet` too**, with the
+same latent exposure to this — unhit so far only because neither of those OSes' own Python/compiler situation has
+triggered a source build of something in `dev` yet. Flagged for the owner to carry the same `--no-dev` flag to
+both, same as the `build-inject.mjs` flag from the first real run.
+
 ## Compatibility notes
 
 1. **No real `SIGTERM` on Windows, not even for the ordinary stop path.** Node's own docs are explicit that
