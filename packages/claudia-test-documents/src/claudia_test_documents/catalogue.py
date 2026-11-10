@@ -25,9 +25,9 @@ def load(path: Path) -> list[Entry]:
 
 
 def save(path: Path, entries: list[Entry]) -> None:
-    """The inverse of :func:`load`: entries, in the order given, with a trailing newline (consistent with every
-    other formatted file in this repo). Always writes the whole document back -- ``record_run`` is what keeps a
-    save from clobbering fields a run did not touch, not this function."""
+    """The inverse of :func:`~claudia_test_documents.load_catalogue`: entries, in the order given, with a trailing
+    newline (consistent with every other formatted file in this repo). Always writes the whole document back --
+    ``record_run`` is what keeps a save from clobbering fields a run did not touch, not this function."""
     data = {"schema_version": 1, "documents": entries}
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 

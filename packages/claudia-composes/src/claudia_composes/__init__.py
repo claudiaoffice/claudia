@@ -32,6 +32,7 @@ from claudia_core import (  # noqa: F401
 )
 
 from . import commands  # noqa: F401  (registers the commands)
+from ._version import __version__
 from .anchors import BlockAnchor
 from .commands import (
     AcceptSuggestion,
@@ -57,6 +58,7 @@ from .region import TextRange, word_window
 from .spans import TextCommand
 
 __all__ = [
+    "__version__",
     "AcceptSuggestion",
     "AddObject",
     "Block",

@@ -11,10 +11,11 @@ adapters   Adapter, ADAPTERS
 loader     load_case
 catalogue  Entry, load_catalogue, save_catalogue, select, record_run
 runner     RunResult, run_case
-render     render_first_page, perceptual_difference, visual_diff (Tier 3; not imported by default -- Pillow and
-           ``soffice`` are only needed once ``--visual`` is actually used)
+render     render_first_page, perceptual_difference, visual_diff (Tier 3; not imported by default -- Pillow
+and ``soffice`` are only needed once ``--visual`` is actually used)
 """
 
+from ._version import __version__
 from .adapters import ADAPTERS, Adapter
 from .case import Case, Model
 from .catalogue import Entry, record_run, select
@@ -24,6 +25,7 @@ from .loader import load_case
 from .runner import RunResult, run_case
 
 __all__ = [
+    "__version__",
     "ADAPTERS",
     "Adapter",
     "Case",

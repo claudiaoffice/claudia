@@ -189,6 +189,8 @@ class DeleteCols(StructuralEdit):
 # ------------------------------------------------------------------ CellRef
 @dataclass(frozen=True, slots=True)
 class CellRef:
+    """One cell, by 0-based row and column, optionally on a named sheet and with ``$``-absolute parts."""
+
     row: int
     col: int
     sheet: SheetId | None = None
@@ -197,9 +199,11 @@ class CellRef:
 
     @classmethod
     def parse(cls, text: str, sheet_ids: SheetIds | None = None) -> CellRef:
+        """Read an A1 reference such as ``B3``, ``$B$3`` or ``'My sheet'!B3``."""
         return parse_cell_ref(text, sheet_ids)
 
     def to_a1(self, sheet_names: SheetNames | None = None, include_sheet: bool = True) -> str:
+        """The reference in A1 notation; ``#REF!`` if it names a sheet that no longer exists."""
         body = f"{'$' if self.col_abs else ''}{column_name(self.col)}{'$' if self.row_abs else ''}{self.row + 1}"
         if self.sheet is None or not include_sheet:
             return body
@@ -209,9 +213,11 @@ class CellRef:
         return f"{quote_sheet_name(name)}!{body}"
 
     def with_row(self, row: int) -> CellRef:
+        """The same reference on another row."""
         return CellRef(row, self.col, self.sheet, self.row_abs, self.col_abs)
 
     def with_col(self, col: int) -> CellRef:
+        """The same reference in another column."""
         return CellRef(self.row, col, self.sheet, self.row_abs, self.col_abs)
 
     def resolved(self, home: SheetId) -> CellRef:
@@ -237,6 +243,7 @@ class CellRef:
         return None if new is None else CellRef(self.row, new, self.sheet, self.row_abs, self.col_abs)
 
     def to_dict(self) -> dict:
+        """The reference as plain data: row, column, sheet and the two absolute flags."""
         return {
             "row": self.row,
             "col": self.col,
@@ -247,6 +254,7 @@ class CellRef:
 
     @classmethod
     def from_dict(cls, data: dict) -> CellRef:
+        """Read a reference back from :meth:`to_dict`'s plain data."""
         return cls(
             data["row"],
             data["col"],
@@ -274,6 +282,7 @@ class RangeRef:
 
     @property
     def sheet(self) -> SheetId | None:
+        """The sheet the range is on (its first corner's), ``None`` for the formula's own sheet."""
         return self.first.sheet
 
     def intersects(self, other: RangeRef) -> bool:
@@ -292,9 +301,11 @@ class RangeRef:
                 yield row, col
 
     def resolved(self, home: SheetId) -> RangeRef:
+        """Same range with ``sheet`` filled in (``home`` if it was None)."""
         return RangeRef(self.first.resolved(home), self.last.resolved(home))
 
     def to_a1(self, sheet_names: SheetNames | None = None) -> str:
+        """The range in A1 notation (``A1:B4``, ``Sheet2!A1:B4``); ``#REF!`` if its sheet no longer exists."""
         head = self.first.to_a1(sheet_names)
         if head == "#REF!":
             return head
@@ -315,8 +326,10 @@ class RangeRef:
         return RangeRef(self.first.with_col(span[0]), self.last.with_col(span[1]))
 
     def to_dict(self) -> dict:
+        """The range as plain data (both corners as :meth:`CellRef.to_dict`)."""
         return {"first": self.first.to_dict(), "last": self.last.to_dict()}
 
     @classmethod
     def from_dict(cls, data: dict) -> RangeRef:
+        """Read a range back from :meth:`to_dict`'s plain data."""
         return cls(CellRef.from_dict(data["first"]), CellRef.from_dict(data["last"]))

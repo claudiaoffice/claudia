@@ -45,13 +45,13 @@ class RunResult:
 def run_case(
     entry: dict, library_root: Path, *, visual: bool = False, adapters: dict[str, Adapter] | None = None
 ) -> RunResult:
-    """Runs the catalogue entry ``entry`` (a dict as :func:`claudia_test_documents.catalogue.load` returns one)
+    """Runs the catalogue entry ``entry`` (a dict as :func:`~claudia_test_documents.load_catalogue` returns one)
     against the real files under ``library_root`` -- the catalogue's own directory (``entry["source"]``/
     ``entry["spec"]`` are relative to it, same as the catalogue file itself). Never raises for a finding about
     the test case itself -- a failed assertion or a format without the needed adapter capability becomes a
     stage result, not an exception -- but a genuinely broken spec file (:func:`load_case`'s own errors) or a
     missing source file does, since those are setup problems to fix, not results to record. ``adapters``
-    defaults to the real :data:`ADAPTERS` registry; a test passes its own to run against a fake format with no
+    defaults to the real ``ADAPTERS`` registry; a test passes its own to run against a fake format with no
     real io package."""
     start = time.monotonic()
     stages: dict[str, Status] = {"import": "n/a", "round_trip": "n/a", "preserve": "n/a", "visual": "not_run"}

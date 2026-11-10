@@ -53,6 +53,7 @@ class ChartsChanged:
     """The tab strip's charts changed (one was added or removed, or the tab order moved)."""
 
     def to_data(self) -> dict:
+        """The event as it goes to the clients: only its type, since they read the new tab strip off the state."""
         return {"type": "charts"}
 
 

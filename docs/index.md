@@ -29,8 +29,16 @@ changelog
 changelog-server
 changelog-client
 changelog-container
+changelog-computes
+changelog-composes
 changelog-creates
 changelog-fonts
 changelog-typeset
+changelog-ai
+changelog-opc-io
+changelog-computes-io
+changelog-composes-io
+changelog-creates-io
+changelog-test-documents
 changelog-linux-client
 ```

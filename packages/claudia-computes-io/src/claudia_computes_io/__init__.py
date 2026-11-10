@@ -9,9 +9,11 @@ nothing here is ODF, and D70 wants ods before xlsx when that story is built.
 xlsx   workbook_to_xlsx, xlsx_to_workbook, apply_edits_to_xlsx, UnsupportedEdit, add_pivot_table
 """
 
+from ._version import __version__
 from .xlsx import UnsupportedEdit, add_pivot_table, apply_edits_to_xlsx, workbook_to_xlsx, xlsx_to_workbook
 
 __all__ = [
+    "__version__",
     "UnsupportedEdit",
     "add_pivot_table",
     "apply_edits_to_xlsx",

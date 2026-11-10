@@ -337,7 +337,6 @@ wheels = [
 
 [[package]]
 name = "claudia-ai"
-version = "0.0.1"
 source = { editable = "packages/claudia-ai" }
 
 [package.optional-dependencies]
@@ -361,7 +360,6 @@ requires-dist = [{ name = "claudia-core", editable = "packages/claudia-core" }]
 
 [[package]]
 name = "claudia-composes"
-version = "0.0.1"
 source = { editable = "packages/claudia-composes" }
 dependencies = [
     { name = "claudia-core" },
@@ -372,7 +370,6 @@ requires-dist = [{ name = "claudia-core", editable = "packages/claudia-core" }]
 
 [[package]]
 name = "claudia-composes-io"
-version = "0.0.1"
 source = { editable = "packages/claudia-composes-io" }
 dependencies = [
     { name = "claudia-composes" },
@@ -391,7 +388,6 @@ requires-dist = [
 
 [[package]]
 name = "claudia-computes"
-version = "0.0.1"
 source = { editable = "packages/claudia-computes" }
 dependencies = [
     { name = "claudia-core" },
@@ -402,7 +398,6 @@ requires-dist = [{ name = "claudia-core", editable = "packages/claudia-core" }]
 
 [[package]]
 name = "claudia-computes-io"
-version = "0.0.1"
 source = { editable = "packages/claudia-computes-io" }
 dependencies = [
     { name = "claudia-computes" },
@@ -445,7 +440,6 @@ requires-dist = [{ name = "claudia-core", editable = "packages/claudia-core" }]
 
 [[package]]
 name = "claudia-creates-io"
-version = "0.0.1"
 source = { editable = "packages/claudia-creates-io" }
 dependencies = [
     { name = "claudia-core" },
@@ -547,7 +541,6 @@ dev = [
 
 [[package]]
 name = "claudia-opc-io"
-version = "0.0.1"
 source = { editable = "packages/claudia-opc-io" }
 
 [[package]]
@@ -597,7 +590,6 @@ provides-extras = ["openvino"]
 
 [[package]]
 name = "claudia-test-documents"
-version = "0.0.1"
 source = { editable = "packages/claudia-test-documents" }
 dependencies = [
     { name = "claudia-composes" },

@@ -105,3 +105,12 @@ A base pptx export and one additive extension python-pptx itself cannot write, s
 
 .. automodule:: claudia_creates_io
    :members:
+
+The test-document catalogue
+---------------------------
+
+The engine that runs the round-trip test documents of all three formats (D218); the documents themselves are data,
+in ``test-documents/`` at the repository root:
+
+.. automodule:: claudia_test_documents
+   :members:

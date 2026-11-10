@@ -1,0 +1,23 @@
+{
+ "version": "0.1.0",
+ "UnsupportedEdit": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "add_pivot_table": {
+  "function": "(xlsx_bytes: 'bytes', *, source_sheet: 'str', source_range: 'str', row_field: 'str', value_field: 'str', pivot_sheet_name: 'str' = 'Pivot') -> 'bytes'"
+ },
+ "apply_edits_to_xlsx": {
+  "function": "(original_bytes: 'bytes', baseline: 'WorkbookModel', current: 'WorkbookModel') -> 'bytes'"
+ },
+ "workbook_to_xlsx": {
+  "function": "(model: 'WorkbookModel') -> 'bytes'"
+ },
+ "xlsx_to_workbook": {
+  "function": "(xlsx_bytes: 'bytes') -> 'WorkbookModel'"
+ }
+}

@@ -51,6 +51,7 @@ from claudia_core import (  # noqa: F401
 )
 
 from . import commands  # noqa: F401  (registers the commands)
+from ._version import __version__
 from .charts import CHART_KINDS, ChartError, ChartSpec
 from .commands import AddChart, AddSheet, RemoveChart, RemoveSheet, ResizeLines, SetCells, Structure
 from .entry import parse_input
@@ -84,6 +85,7 @@ from .region import CellRegion
 from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 
 __all__ = [
+    "__version__",
     "AddChart",
     "AddObject",
     "AddSheet",
@@ -147,11 +149,7 @@ __all__ = [
     "UpdateDiagram",
     "VisualObject",
     "WorkbookModel",
-    "column_name",
-    "content_of",
     "function_catalog",
     "get_function",
-    "parse_input",
-    "parse_range_ref",
     "search_functions",
 ]

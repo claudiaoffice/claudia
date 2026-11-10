@@ -1,0 +1,769 @@
+{
+ "version": "0.1.0",
+ "AddChart": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', name: 'str', spec_id: 'str', index: 'int | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'AddChart'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "AddObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'AddObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "object_id",
+   "summary"
+  ]
+ },
+ "AddSheet": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'SheetId', name: 'str', index: 'int | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'AddSheet'",
+   "redacted": "(self) -> 'Command'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "BUILTIN_STYLES": {
+  "value": "(StyleDef(id='body-text', name='Body text', purpose='words in a floating text box or shape on a sheet', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '13px', 'line-height': '1.4', 'text-align': 'left'}, to_name=False), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that marks or annotates a part of the sheet, without drawing attention to itself', based_on='body-text', css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '2px', 'text-align': 'center'}, to_name=False), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the sheet; it carries its own colours, so no style properties apply to it', based_on='body-text', css={}, to_name=False))"
+ },
+ "CHART_KINDS": {
+  "value": "('bar',)"
+ },
+ "CellAnchor": {
+  "class": [
+   "object"
+  ],
+  "init": "(sheet: 'SheetId', row: 'int', col: 'int') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'CellAnchor'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "container"
+  ]
+ },
+ "CellRef": {
+  "class": [
+   "object"
+  ],
+  "init": "(row: 'int', col: 'int', sheet: 'SheetId | None' = None, row_abs: 'bool' = False, col_abs: 'bool' = False) -> None",
+  "methods": {
+   "adjusted": "(self, edit: 'StructuralEdit', home: 'SheetId') -> 'CellRef | None'",
+   "from_dict": "(data: 'dict') -> 'CellRef'",
+   "offset": "(self, d_row: 'int', d_col: 'int') -> 'CellRef | None'",
+   "parse": "(text: 'str', sheet_ids: 'SheetIds | None' = None) -> 'CellRef'",
+   "resolved": "(self, home: 'SheetId') -> 'CellRef'",
+   "to_a1": "(self, sheet_names: 'SheetNames | None' = None, include_sheet: 'bool' = True) -> 'str'",
+   "to_dict": "(self) -> 'dict'",
+   "with_col": "(self, col: 'int') -> 'CellRef'",
+   "with_row": "(self, row: 'int') -> 'CellRef'"
+  },
+  "properties": []
+ },
+ "CellRegion": {
+  "class": [
+   "object"
+  ],
+  "init": "(range: 'RangeRef') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'CellRegion'",
+   "of": "(sheet: 'SheetId', first_row: 'int', first_col: 'int', last_row: 'int', last_col: 'int') -> 'CellRegion'",
+   "overlaps": "(self, other) -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'CellRegion | None'"
+  },
+  "properties": [
+   "sheet"
+  ]
+ },
+ "Chart": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', spec_id: 'str') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Chart'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ChartError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "ChartSpec": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', kind: 'str', range: 'RangeRef', series_in: 'str' = 'columns', header_row: 'bool' = True, title: 'str' = '', x_title: 'str' = '', y_title: 'str' = '', legend: 'bool' = True, gridlines: 'bool' = True) -> None",
+  "methods": {
+   "from_data": "(data: 'object') -> 'ChartSpec'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ChartsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Content": {
+  "value": "<Union>"
+ },
+ "DEFAULT_STYLE": {
+  "value": "'body-text'"
+ },
+ "DefineDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(image: 'ImageAsset') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(shape: 'ShapeDefinition') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DeleteCols": {
+  "class": [
+   "StructuralEdit"
+  ],
+  "init": "(sheet: 'SheetId', at: 'int', count: 'int' = 1) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "DeleteRows": {
+  "class": [
+   "StructuralEdit"
+  ],
+  "init": "(sheet: 'SheetId', at: 'int', count: 'int' = 1) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "DiagramDefinition": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "id"
+  ]
+ },
+ "DiagramsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(diagram_id: 'str', definition: 'DiagramDefinition | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ForgetDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ForgetImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ForgetShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "FunctionHelp": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', signature: 'str', description: 'str', tooltip: 'str', help: 'str', source: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ImagesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(image_id: 'str', asset: 'ImageAsset | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "InsertCols": {
+  "class": [
+   "StructuralEdit"
+  ],
+  "init": "(sheet: 'SheetId', at: 'int', count: 'int' = 1) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "InsertRows": {
+  "class": [
+   "StructuralEdit"
+  ],
+  "init": "(sheet: 'SheetId', at: 'int', count: 'int' = 1) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "MAX_OBJECTS_PER_SHEET": {
+  "value": "500"
+ },
+ "MIN_OBJECT_SIZE": {
+  "value": "20"
+ },
+ "MoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'MoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "OBJECT_KINDS": {
+  "value": "('text', 'shape', 'image', 'diagram')"
+ },
+ "ObjectBody": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectBody'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
+  "properties": []
+ },
+ "ObjectSet": {
+  "class": [
+   "object"
+  ],
+  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectSet'",
+   "overlaps": "(self, other: 'object') -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'ObjectSet | None'"
+  },
+  "properties": []
+ },
+ "ObjectsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(container: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
+  "properties": []
+ },
+ "Paragraph": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Paragraph'",
+   "to_data": "(self) -> 'dict'",
+   "with_style": "(self, style: 'str') -> 'Paragraph'",
+   "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
+   "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
+  },
+  "properties": []
+ },
+ "RangeRef": {
+  "class": [
+   "object"
+  ],
+  "init": "(first: 'CellRef', last: 'CellRef') -> None",
+  "methods": {
+   "adjusted": "(self, edit: 'StructuralEdit', home: 'SheetId') -> 'RangeRef | None'",
+   "between": "(a: 'CellRef', b: 'CellRef') -> 'RangeRef'",
+   "cells": "(self) -> 'Iterator[Position]'",
+   "from_dict": "(data: 'dict') -> 'RangeRef'",
+   "intersects": "(self, other: 'RangeRef') -> 'bool'",
+   "resolved": "(self, home: 'SheetId') -> 'RangeRef'",
+   "to_a1": "(self, sheet_names: 'SheetNames | None' = None) -> 'str'",
+   "to_dict": "(self) -> 'dict'"
+  },
+  "properties": [
+   "sheet"
+  ]
+ },
+ "RefParseError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "RemoveChart": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RemoveChart'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RemoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RemoveSheet": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'SheetId') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RemoveSheet'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ResizeLines": {
+  "class": [
+   "Command"
+  ],
+  "init": "(sheet: 'SheetId', axis: 'str', sizes: 'tuple[tuple[int, float | None], ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'ResizeLines'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ResizeObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict', w: 'int', h: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ResizeObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RotateObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', rotation: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RotateObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "Run": {
+  "class": [
+   "object"
+  ],
+  "init": "(length: 'int', author: 'str | None', via: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "SetCells": {
+  "class": [
+   "Command"
+  ],
+  "init": "(sheet: 'SheetId', cells: 'tuple[tuple[int, int, Content], ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetCells'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model) -> 'tuple[CellRegion, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetParagraphStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetParagraphStyle'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetSnap": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', snap: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetSnap'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetText": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', text: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ShapesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(shape_id: 'str', definition: 'ShapeDefinition | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Sheet": {
+  "class": [
+   "object"
+  ],
+  "init": "(sheet_id: 'SheetId', name: 'str')",
+  "methods": {
+   "bump_all": "(self) -> 'None'",
+   "cells_in": "(self, row0: 'int', row1: 'int', col0: 'int', col1: 'int') -> 'list[Position]'",
+   "column_version": "(self, col: 'int') -> 'int'",
+   "extent": "(self) -> 'tuple[int, int]'",
+   "refit": "(self) -> 'None'",
+   "set_value": "(self, position: 'Position', value: 'Value') -> 'bool'",
+   "sizes": "(self, axis: 'str') -> 'dict[int, float]'",
+   "to_data": "(self) -> 'dict'",
+   "version": "(self) -> 'int'",
+   "view": "(self, position: 'Position') -> 'dict | None'"
+  },
+  "properties": []
+ },
+ "SheetId": {
+  "function": "(x, /)"
+ },
+ "SheetObject": {
+  "value": "<TypeAliasType>"
+ },
+ "Structure": {
+  "class": [
+   "Command"
+  ],
+  "init": "(edit: 'StructuralEdit') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'Structure'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model) -> 'tuple[CellRegion, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "UpdateDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "VisualObject": {
+  "class": [
+   "Generic"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'A') -> None",
+  "methods": {
+   "from_data": "(data: 'dict', read_anchor: 'ReadAnchor[A]') -> 'VisualObject[A]'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'",
+   "with_body": "(self, **changes: 'Any') -> 'Self'"
+  },
+  "properties": [
+   "container",
+   "id"
+  ]
+ },
+ "WorkbookModel": {
+  "class": [
+   "DocumentModel",
+   "ObjectModel"
+  ],
+  "init": "(functions: 'FunctionRegistry | None' = None, styles: 'StyleBook | None' = None, palette: 'Palette | None' = None)",
+  "methods": {
+   "add_chart": "(self, chart: 'Chart', index: 'int | None') -> 'None'",
+   "add_sheet": "(self, sheet: 'Sheet', index: 'int | None') -> 'None'",
+   "anchor_from_data": "(self, data: 'dict') -> 'CellAnchor'",
+   "chart": "(self, chart_id: 'str') -> 'Chart'",
+   "chart_figure": "(self, diagram_id: 'str') -> 'dict'",
+   "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
+   "check_anchor": "(self, anchor: 'CellAnchor', body: 'ObjectBody') -> 'None'",
+   "containers": "(self) -> 'list[str]'",
+   "diagram_from_data": "(self, data: 'dict') -> 'ChartSpec'",
+   "drop_sheet": "(self, sheet_id: 'SheetId') -> 'dict[SheetId, Cells]'",
+   "empty": "() -> 'Self'",
+   "get": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Content'",
+   "region_from_data": "(self, data: 'dict') -> 'Region'",
+   "remove_chart": "(self, chart_id: 'str') -> 'None'",
+   "restore": "(state: 'dict') -> 'Self'",
+   "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...]]'",
+   "serialize": "(self) -> 'dict'",
+   "settle": "(self, ctx) -> 'None'",
+   "sheet": "(self, sheet_id: 'SheetId') -> 'Sheet'",
+   "sheet_id_of": "(self, name: 'str') -> 'SheetId | None'",
+   "sheet_name_of": "(self, sheet_id: 'SheetId') -> 'str | None'",
+   "store": "(self, sheet: 'Sheet', row: 'int', col: 'int', content: 'Content') -> 'Content'",
+   "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
+   "value": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Value'"
+  },
+  "properties": []
+ },
+ "builtin_styles": {
+  "function": "() -> 'StyleBook'"
+ },
+ "column_name": {
+  "function": "(index: 'int') -> 'str'"
+ },
+ "content_of": {
+  "function": "(value) -> 'Content'"
+ },
+ "function_catalog": {
+  "function": "(registry: 'FunctionRegistry | None' = None) -> 'list[FunctionHelp]'"
+ },
+ "get_function": {
+  "function": "(name: 'str', catalog: 'list[FunctionHelp] | None' = None) -> 'FunctionHelp | None'"
+ },
+ "paragraph_for": {
+  "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"
+ },
+ "parse_input": {
+  "function": "(text: 'str') -> 'Content'"
+ },
+ "parse_range_ref": {
+  "function": "(text: 'str', sheet_ids: 'SheetIds | None' = None) -> 'RangeRef'"
+ },
+ "search_functions": {
+  "function": "(query: 'str', catalog: 'list[FunctionHelp] | None' = None) -> 'list[FunctionHelp]'"
+ }
+}

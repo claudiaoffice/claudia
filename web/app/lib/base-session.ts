@@ -407,6 +407,11 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return done !== false && done.applied
   }
 
+  /** Send whatever is still waiting to be sent, before something that must see all of it (a checkpoint, an
+   *  export). Nothing waits in an app that sends every change as it is made; composes overrides this for the
+   *  words it collects while someone types (`TextSession.flush`). */
+  async flush(): Promise<void> {}
+
   async saveCheckpoint(label: string | null): Promise<boolean> {
     const done = await this.attempt('save_checkpoint', { label })
     if (done !== false && !done.saved) this.notice('Nothing has changed since the last checkpoint.')

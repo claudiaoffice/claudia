@@ -29,6 +29,11 @@ WEB_SOURCES = {
     "computes": REPO / "web" / "app" / "components" / "Workspace.vue",
     "creates": REPO / "web" / "app" / "components" / "SlideWorkspace.vue",
 }
+# The items every app's window shares (File, the Edit and View blocks, Config, Help) are built once, here; each
+# workspace above assembles them with its own.
+WEB_SHARED_MENUS = REPO / "web" / "app" / "lib" / "document-menus.ts"
+# Config ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
+WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
 APPS = tuple(BUILDERS)
 
@@ -327,11 +332,20 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
     """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
     still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
     design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
-    source_path = WEB_SOURCES[app_name]
-    if not source_path.exists():
+    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_LANGUAGES)
+    if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    source = source_path.read_text(encoding="utf-8")
-    missing = [a.id for a in BUILDERS[app_name]().actions if a.kind is not Kind.SHELL and f"id: '{a.id}'" not in source]
+    app_source, shared_source, languages_source = (path.read_text(encoding="utf-8") for path in sources)
+
+    def in_web(action_id: str) -> bool:
+        if f"id: '{action_id}'" in app_source or f"id: '{action_id}'" in shared_source:
+            return True
+        tag = action_id.removeprefix("config.language.")
+        return (
+            tag != action_id and "id: `config.language.${tag}`" in shared_source and f"['{tag}', " in languages_source
+        )
+
+    missing = [a.id for a in BUILDERS[app_name]().actions if a.kind is not Kind.SHELL and not in_web(a.id)]
     assert not missing, f"{app_name}: the web app no longer has " + ", ".join(missing)
 
 

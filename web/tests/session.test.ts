@@ -630,6 +630,13 @@ describe('the recovery key', () => {
 })
 
 describe('the Manage menu (leaving, handing over ownership, deleting, exporting)', () => {
+  it('has nothing waiting to send before a checkpoint or an export: every change went out as it was made', async () => {
+    const { session, link } = await opened()
+    const before = link.calls.length
+    await session.flush()
+    expect(link.calls.length).toBe(before)
+  })
+
   it('lists everybody, not just who is connected', async () => {
     const link = new FakeLink()
     server(link)

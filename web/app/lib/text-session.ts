@@ -297,7 +297,7 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   /** Send what was typed; resolves when everything before it is done. */
-  async flush(): Promise<void> {
+  override async flush(): Promise<void> {
     do {
       await this.flushNow()
       await this.chain

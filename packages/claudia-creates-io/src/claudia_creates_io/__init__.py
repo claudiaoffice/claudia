@@ -10,9 +10,11 @@ dependency yet: nothing here is ODF, and D70 wants odp before pptx when that sto
 pptx   slides_to_pptx, pptx_to_slides, apply_edits_to_pptx, UnsupportedEdit, add_transition
 """
 
+from ._version import __version__
 from .pptx import UnsupportedEdit, add_transition, apply_edits_to_pptx, pptx_to_slides, slides_to_pptx
 
 __all__ = [
+    "__version__",
     "UnsupportedEdit",
     "add_transition",
     "apply_edits_to_pptx",

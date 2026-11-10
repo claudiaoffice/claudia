@@ -32,12 +32,8 @@ green run.
 
 ## Suggestions, not done
 
-* **Three workspaces, one frame.** `Workspace.vue`, `TextWorkspace.vue` and `SlideWorkspace.vue` share 85 identical
-  lines, 18 of them menu entries; only `SlideWorkspace` uses `DocumentFrame`. Moving computes and composes onto
-  `DocumentFrame`, and building Config ▸ App Language from `LANGUAGES` once, would remove most of that.
-* **The versioning policy has gaps.** `claudia-computes`, `claudia-composes`, `claudia-ai` and the five
-  `*-io`/`opc-io`/`test-documents` packages have no `__version__`, changelog or API snapshot, although the server
-  now depends on four of them (D212).
+* ~~**Three workspaces, one frame.**~~ and ~~**The versioning policy has gaps.**~~ Done the same day, see
+  `implementation-notes-one-frame-and-versions.md`.
 * **Dependencies.** `npm audit` in `web/` reports 2 critical (vitest 3 / tinypool, dev only; vitest 5 fixes them)
   and 12 moderate (nuxt's build tooling, no fixed nuxt 4 yet). SEC-08 (no audit in the gate or CI) is still open.
   Starlette warns that `TestClient` with `httpx` is deprecated in favour of `httpx2`.

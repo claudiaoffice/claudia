@@ -1,0 +1,20 @@
+{
+ "version": "0.1.0",
+ "UnsupportedEdit": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "apply_edits_to_docx": {
+  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True) -> 'bytes'"
+ },
+ "docx_to_text": {
+  "function": "(docx_bytes: 'bytes') -> 'TextModel'"
+ },
+ "text_to_docx": {
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True) -> 'bytes'"
+ }
+}

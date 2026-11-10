@@ -1,0 +1,23 @@
+{
+ "version": "0.1.0",
+ "UnsupportedEdit": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "add_transition": {
+  "function": "(pptx_bytes: 'bytes', *, slide_index: 'int', kind: 'str' = 'fade', speed: 'str' = 'slow', advance_on_click: 'bool' = True) -> 'bytes'"
+ },
+ "apply_edits_to_pptx": {
+  "function": "(original_bytes: 'bytes', baseline: 'SlideModel', current: 'SlideModel') -> 'bytes'"
+ },
+ "pptx_to_slides": {
+  "function": "(pptx_bytes: 'bytes') -> 'SlideModel'"
+ },
+ "slides_to_pptx": {
+  "function": "(model: 'SlideModel') -> 'bytes'"
+ }
+}

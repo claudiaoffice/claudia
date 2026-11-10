@@ -1,16 +1,27 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+// A text: the style bar, the page, the suggestions above the panel, and the counts along the bottom, inside the
+// document window every app shares (DocumentFrame).
+import { computed, ref, watch } from 'vue'
 import { countWords } from '~/lib/blocks'
 import { toMarkdown } from '~/lib/markdown'
 import { SAMPLE_TEXT } from '~/lib/sample'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
-import { copySelection, cutSelection } from '~/lib/clipboard'
-import { applyAction, collectStates } from '~/lib/menu-dispatch'
-import { chordLabel, installWindowShortcuts, sharedShortcuts } from '~/lib/shortcuts'
-import { createShellBridge } from '~/lib/shell-bridge'
+import {
+  askItem,
+  clipboardItems,
+  configMenu,
+  darkItem,
+  fileMenu,
+  helpMenu,
+  panelItem,
+  undoRedoItems,
+  type DocumentMenuContext,
+} from '~/lib/document-menus'
+import { chordLabel, type ShortcutDef } from '~/lib/shortcuts'
 import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
+import DocumentFrame from './DocumentFrame.vue'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
@@ -23,27 +34,13 @@ const { dark, toggle: toggleDark } = useTheme()
 // `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring.
 const { t, locale, choose } = useI18n()
 
-const dialog = ref<
-  | null
-  | 'checkpoint'
-  | 'share'
-  | 'shortcuts'
-  | 'about'
-  | 'styles'
-  | 'colours'
-  | 'assign-owner'
-  | 'accept-owner'
-  | 'leave'
-  | 'export'
-  | 'export-format'
-  | 'delete'
->(null)
+const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
+/** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
+const dialog = ref<null | 'styles' | 'colours'>(null)
 const styleMenu = ref<{ x: number; y: number } | null>(null)
 const styleHost = textStyleHost(session)
-const panelOpen = ref(true)
 const active = ref<string | null>(null)
 const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
-const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
 function remembered<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
@@ -76,32 +73,8 @@ function pick(id: string) {
   editor.value?.scrollToSuggestion(id)
 }
 
-async function checkpoint(label: string | null) {
-  dialog.value = null
-  await session.flush()
-  if (await session.saveCheckpoint(label || null)) session.notice('Checkpoint saved.')
-}
-
-function ask(text: string) {
-  panelOpen.value = true
-  setTimeout(() => panel.value?.ask(text), 0)
-}
-
-/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
-function help(mode: 'how-to' | 'docs') {
-  panelOpen.value = true
-  setTimeout(() => panel.value?.openHelp(mode), 0)
-}
-
-/** File ▸ Download opens Claudia's own file format dialog; File ▸ Export… (D212) opens this one. Both read the
- * document as it stands this instant, so pending typing is flushed to the server first — `ExportFormatDialog`'s
- * Markdown option builds straight from `state.blocks` here, and its Word option asks the server, which also
- * works from what has actually been applied. */
-async function openExportFormat() {
-  await session.flush()
-  dialog.value = 'export-format'
-}
-
+/** File ▸ Export… (D212): Markdown is built here from `state.blocks`, Word by the server. The window sends what is
+ * still being typed before it opens the dialog (`DocumentFrame.openDialog`), so both see the text as it stands. */
 const exportFormats = [
   { value: 'md', label: 'Markdown (.md)', mimeType: 'text/markdown', local: () => toMarkdown(state.blocks) },
   { value: 'docx', label: 'Word document (.docx)' },
@@ -144,163 +117,89 @@ async function pasteFromClipboard() {
   }
 }
 
-// ------------------------------------------------------------------------------ menus, shortcuts and the shell
-// D122: one structured list instead of a hand-rolled `keydown` handler; `hints` turns the same list into the menu's
-// `hint` labels, so a shortcut and what the menu claims about it cannot drift apart.
-const shortcuts = computed(() => [
-  ...sharedShortcuts({
-    undo: () => session.undo(),
-    redo: () => session.redo(),
-    save: () => {
-      if (!readonly.value) void checkpoint(null)
-    },
-  }),
-  { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => openStyleMenu() },
-])
-installWindowShortcuts(() => shortcuts.value)
-const hints = computed<Record<string, string>>(() => Object.fromEntries(shortcuts.value.map((s) => [s.id, chordLabel(s.chord)])))
+// ------------------------------------------------------------------------------ menus and shortcuts
+// D122: composes' one shortcut of its own, on top of the window's Undo, Redo and Save.
+const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => openStyleMenu() }
+const extraShortcuts = [LOOK]
 
-const menus = computed<Menu[]>(() => [
-  {
-    label: t('File'),
-    items: [
-      { id: 'file.new', label: t('New'), action: () => emit('leave', { startFresh: true }) },
-      { id: 'file.open', label: t('Open…'), action: () => emit('leave') },
-      { label: '', separator: true },
-      { id: 'file.save', label: t('Save'), hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
-      { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
-      { id: 'file.download', label: t('Download'), action: () => (dialog.value = 'export') },
-      { label: '', separator: true },
-      {
-        id: 'file.manage',
-        label: t('Manage'),
-        items: [
-          { id: 'file.manage.share', label: t('Share…'), action: () => (dialog.value = 'share'), disabled: state.me.role !== 'owner' },
-          {
-            id: 'file.manage.assign-owner',
-            label: t('Assign new owner…'),
-            action: () => (dialog.value = 'assign-owner'),
-            disabled: state.me.role !== 'owner',
-          },
-          { id: 'file.manage.accept-owner', label: t('Accept ownership…'), action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
-          { id: 'file.manage.leave', label: t('Leave document…'), action: () => (dialog.value = 'leave') },
-          { id: 'file.manage.export', label: t('Export…'), action: () => void openExportFormat() },
-          {
-            id: 'file.manage.delete',
-            label: t('Delete from server…'),
-            action: () => (dialog.value = 'delete'),
-            disabled: state.me.role !== 'owner',
-          },
-        ],
-      },
-      { label: '', separator: true },
-      { id: 'file.close', label: t('Close document'), action: () => emit('leave') },
-    ],
-  },
-  {
-    label: t('Edit'),
-    items: [
-      {
-        id: 'edit.undo',
-        label: state.canUndo ? t('Undo {label}', { label: state.undoLabel }) : t('Undo'),
-        hint: hints.value['edit.undo'],
-        action: () => session.undo(),
-        disabled: !state.canUndo,
-      },
-      {
-        id: 'edit.redo',
-        label: state.canRedo ? t('Redo {label}', { label: state.redoLabel }) : t('Redo'),
-        hint: hints.value['edit.redo'],
-        action: () => session.redo(),
-        disabled: !state.canRedo,
-      },
-      { label: '', separator: true },
-      { id: 'edit.copy', label: t('Copy'), hint: 'Ctrl+C', action: () => copySelection() },
-      { id: 'edit.cut', label: t('Cut'), hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
-      { id: 'edit.paste', label: t('Paste'), hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
-      {
-        id: 'edit.paste-as',
-        label: t('Paste as'),
-        disabled: readonly.value,
-        // The child's own `disabled` is what a shell actually reports per-action (`collectStates` walks each item on
-        // its own terms, not by inheriting a parent's); the parent's `disabled` above only keeps the web menu from
-        // opening the flyout at all — both need to agree, or a shell could show the leaf as enabled regardless.
-        items: [{ id: 'edit.paste-as-plain', label: t('Plain text'), action: () => pasteFromClipboard(), disabled: readonly.value }],
-      },
-    ],
-  },
-  {
-    label: t('Format'),
-    items:
-      state.styles.length === 0
-        ? [{ label: t('No styles yet'), disabled: true }]
-        : [
-            ...['title', 'heading-1', 'heading-2'].map((id) => styleItem(id)),
-            { label: '', separator: true },
-            ...['body'].map((id) => styleItem(id)),
-            { label: '', separator: true },
-            ...['quote', 'remark', 'definition'].map((id) => styleItem(id)),
-            ...customStyleItems(),
-            { label: '', separator: true },
-            { id: 'format.look', label: t('Edit this style…'), hint: hints.value['format.look'], action: () => openStyleMenu() },
-            { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
-            { label: '', separator: true },
-            // The palette reaches composes' paragraph styles from day one (D200): a heading's colour is a role.
-            { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
-          ],
-  },
-  {
-    label: t('View'),
-    items: [
-      { id: 'view.authors', label: t('Show who wrote what'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
-      { id: 'view.panel', label: t('History and chat'), checked: panelOpen.value, action: (x) => (panelOpen.value = x ? x === 'on' : !panelOpen.value) },
-      {
-        id: 'view.dark',
-        label: t('Dark mode'),
-        checked: dark(),
-        action: (x) => {
-          if (x === undefined || (x === 'on') !== dark()) toggleDark()
-        },
-      },
-      { label: '', separator: true },
-      { label: t('Flow'), checked: view.value === 'flow', action: () => (view.value = 'flow') },
-      // One boolean action (GTK has no notion of two radio items), set/cleared explicitly by a shell, toggled by a web click.
-      { id: 'view.page', label: t('Page'), checked: view.value === 'page', action: (x) => (view.value = x === 'off' ? 'flow' : 'page') },
-    ],
-  },
-  {
-    label: t('Tools'),
-    items: [
-      { id: 'tools.ask', label: t('Ask the assistant…'), action: () => ask('@ai ') },
-      { id: 'tools.review-text', label: t('Review this text'), action: () => ask('@ai review this text') },
-      { id: 'tools.review-paragraph', label: t('Review this paragraph'), action: () => ask('@ai check this paragraph') },
-      { label: '', separator: true },
-      { id: 'tools.insert-sample', label: t('Insert sample text'), action: insertSample, disabled: readonly.value },
-    ],
-  },
-  {
-    label: t('Config'),
-    items: [
-      { id: 'config.shortcuts', label: t('Shortcuts'), action: () => (dialog.value = 'shortcuts') },
-      {
-        label: t('App Language'),
-        items: [
-          { id: 'config.language.en', label: 'English', checked: locale.value === 'en', action: () => choose('en') },
-          { id: 'config.language.de', label: 'Deutsch', checked: locale.value === 'de', action: () => choose('de') },
-        ],
-      },
-    ],
-  },
-  {
-    label: t('Help'),
-    items: [
-      { id: 'help.ask', label: t('Ask ai'), action: () => ask('@ai ') },
-      { id: 'help.how-to', label: t('How do I…?'), action: () => help('how-to') },
-      { id: 'help.docs', label: t('Documentation'), action: () => help('docs') },
-      { id: 'help.about', label: t('About claudia'), action: () => (dialog.value = 'about') },
-    ],
-  },
-])
+/** What the shared menu items need from this window (`lib/document-menus.ts`). */
+const shared = computed<DocumentMenuContext>(() => ({
+  t,
+  role: state.me.role,
+  open: (name) => frame.value?.openDialog(name),
+  leave: (opts) => emit('leave', opts),
+  save: () => frame.value?.checkpoint(null),
+}))
+
+function ask(text: string) {
+  frame.value?.ask(text)
+}
+
+const menus = computed<Menu[]>(() => {
+  const c = shared.value
+  return [
+    fileMenu(c),
+    {
+      label: t('Edit'),
+      items: [
+        ...undoRedoItems(c, {
+          canUndo: state.canUndo,
+          undoLabel: state.undoLabel,
+          canRedo: state.canRedo,
+          redoLabel: state.redoLabel,
+          undo: () => session.undo(),
+          redo: () => session.redo(),
+        }),
+        { label: '', separator: true },
+        ...clipboardItems(c, () => pasteFromClipboard()),
+      ],
+    },
+    {
+      label: t('Format'),
+      items:
+        state.styles.length === 0
+          ? [{ label: t('No styles yet'), disabled: true }]
+          : [
+              ...['title', 'heading-1', 'heading-2'].map((id) => styleItem(id)),
+              { label: '', separator: true },
+              ...['body'].map((id) => styleItem(id)),
+              { label: '', separator: true },
+              ...['quote', 'remark', 'definition'].map((id) => styleItem(id)),
+              ...customStyleItems(),
+              { label: '', separator: true },
+              { id: 'format.look', label: t('Edit this style…'), hint: chordLabel(LOOK.chord), action: () => openStyleMenu() },
+              { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
+              { label: '', separator: true },
+              // The palette reaches composes' paragraph styles from day one (D200): a heading's colour is a role.
+              { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
+            ],
+    },
+    {
+      label: t('View'),
+      items: [
+        { id: 'view.authors', label: t('Show who wrote what'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
+        panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
+        darkItem(c, { on: dark, toggle: toggleDark }),
+        { label: '', separator: true },
+        { label: t('Flow'), checked: view.value === 'flow', action: () => (view.value = 'flow') },
+        // One boolean action (GTK has no notion of two radio items), set/cleared explicitly by a shell, toggled by a web click.
+        { id: 'view.page', label: t('Page'), checked: view.value === 'page', action: (x) => (view.value = x === 'off' ? 'flow' : 'page') },
+      ],
+    },
+    {
+      label: t('Tools'),
+      items: [
+        askItem(c, ask),
+        { id: 'tools.review-text', label: t('Review this text'), action: () => ask('@ai review this text') },
+        { id: 'tools.review-paragraph', label: t('Review this paragraph'), action: () => ask('@ai check this paragraph') },
+        { label: '', separator: true },
+        { id: 'tools.insert-sample', label: t('Insert sample text'), action: insertSample, disabled: readonly.value },
+      ],
+    },
+    configMenu(c, { current: locale.value, choose }),
+    helpMenu(c, { ask, openHelp: (mode) => frame.value?.openHelp(mode) }),
+  ]
+})
 
 /** One Format-menu entry for a built-in style, by id — kept as a function rather than inlining `state.styles.find`
  * three times over, since the three groups below (D127: structure · running text · called-out blocks) each pick a
@@ -338,19 +237,9 @@ function customStyleItems() {
   return [{ label: '', separator: true }, ...custom.map((s) => styleItem(s.id))]
 }
 
-// `reactive` as `createShellBridge`'s `wrap` (not wrapping its return value) so the template's `shell.nativeMenu`
-// re-renders once the shell's `welcome` message actually arrives: `window.__claudiaShell.receive` must call back
-// into the reactive bridge itself, or `welcome`'s capabilities land outside Vue's dependency tracking. The cast is
-// `reactive()`'s own return type (`Reactive<ShellBridge>`) structurally losing `ShellBridge`'s private fields --
-// still there at runtime, just invisible to this particular structural check.
-const shell = createShellBridge('composes', undefined, (bridge) => reactive(bridge) as typeof bridge)
-shell.onAction((id, target) => applyAction(menus.value, id, target))
-onBeforeUnmount(() => shell.detach())
-watch(menus, (m) => shell.reportStates(collectStates(m)), { immediate: true })
-
-// Config ▸ Shortcuts (D122/D126): the structured list above, plus the things that are not a `keydown` shortcut at
-// all — typing itself, and native Ctrl+C/X/V, which the browser already handles for whatever has focus.
-const EXTRA_SHORTCUTS: [string, string][] = [
+// Config ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native
+// Ctrl+C/X/V, which the browser already handles for whatever has focus.
+const SHORTCUT_NOTES: [string, string][] = [
   ['Type', 'write; a word is sent when it ends, and the others see where you are'],
   ['Enter', 'end the paragraph (after a heading the next one is body text)'],
   ['Backspace / Delete', 'delete; at the edge of a paragraph it joins the one next to it'],
@@ -358,101 +247,44 @@ const EXTRA_SHORTCUTS: [string, string][] = [
   ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
   ['@ai review this text', 'the assistant suggests changes; you accept or reject each'],
 ]
-
-// ------------------------------------------------------------------------------ notices
-let timer: ReturnType<typeof setTimeout> | undefined
-watch(
-  () => state.notice?.id,
-  (id) => {
-    clearTimeout(timer)
-    if (id !== undefined) timer = setTimeout(() => state.notice?.id === id && (state.notice = null), 6000)
-  },
-)
-onBeforeUnmount(() => clearTimeout(timer))
 </script>
 
 <template>
-  <div class="workspace" data-testid="text-workspace">
-    <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
-    <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you type now is not saved.</div>
-    <MenuBar :class="{ hidden: shell.nativeMenu }" :menus="menus" />
-    <StyleBar :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
-    <div class="main" :class="{ wide: !panelOpen }">
-      <TextEditor ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
-      <SidePanel v-show="panelOpen" ref="panel" :session="session">
-        <template #top><SuggestionList :session="session" :active="active" @pick="pick" /></template>
-      </SidePanel>
-    </div>
-    <footer class="foot">
-      <div class="stats mono" aria-live="polite">
-        <span><b data-testid="words">{{ words }}</b> {{ words === 1 ? 'word' : 'words' }}</span>
-        <span><b>{{ state.blocks.length }}</b> {{ state.blocks.length === 1 ? 'paragraph' : 'paragraphs' }}</span>
-        <span v-if="openSuggestions"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? 'suggestion' : 'suggestions' }}</span>
-      </div>
-      <span class="rev mono" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
-    </footer>
-
-    <PromptDialog
-      v-if="dialog === 'checkpoint'"
-      title="Save new checkpoint"
-      label="Name of this state (you can leave it empty)"
-      ok="Save"
-      placeholder="before the review"
-      @ok="checkpoint"
-      @close="dialog = null"
-    />
-    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
-    <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
-    <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
-    <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
-    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
-    <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
-    <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
-    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
-    <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="exportFormats" @close="dialog = null" />
-    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
-    <ShortcutsDialog
-      v-if="dialog === 'shortcuts'"
-      :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
-      :extra="EXTRA_SHORTCUTS"
-      @close="dialog = null"
-    />
-    <AboutDialog v-if="dialog === 'about'" app="composes" @close="dialog = null" />
-
-    <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
-
-    <div v-if="state.status === 'closed'" class="gone" role="alertdialog">
-      <div>
-        <h2>You are not connected any more</h2>
-        <p>{{ state.error || 'The connection was closed.' }}</p>
-        <button class="btn primary" type="button" @click="emit('leave')">Back to the documents</button>
-      </div>
-    </div>
-  </div>
+  <DocumentFrame
+    ref="frame"
+    app="composes"
+    data-testid="text-workspace"
+    :session="session"
+    :menus="menus"
+    :export-formats="exportFormats"
+    :extra-shortcuts="extraShortcuts"
+    :shortcut-notes="SHORTCUT_NOTES"
+    @leave="(opts) => emit('leave', opts)"
+  >
+    <template #toolbar>
+      <StyleBar :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
+    </template>
+    <TextEditor ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
+    <template #side-top><SuggestionList :session="session" :active="active" @pick="pick" /></template>
+    <template #footer>
+      <footer class="foot">
+        <div class="stats mono" aria-live="polite">
+          <span><b data-testid="words">{{ words }}</b> {{ words === 1 ? 'word' : 'words' }}</span>
+          <span><b>{{ state.blocks.length }}</b> {{ state.blocks.length === 1 ? 'paragraph' : 'paragraphs' }}</span>
+          <span v-if="openSuggestions"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? 'suggestion' : 'suggestions' }}</span>
+        </div>
+        <span class="rev mono" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
+      </footer>
+    </template>
+    <template #overlay>
+      <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
+      <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
+    </template>
+  </DocumentFrame>
 </template>
 
 <style scoped>
-.workspace {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-.main {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  min-height: 0;
-}
-.main.wide {
-  grid-template-columns: minmax(0, 1fr);
-}
-.banner {
-  background: var(--apricot);
-  color: var(--ink);
-  padding: 6px 16px;
-  font-weight: 500;
-}
 .foot {
   display: flex;
   justify-content: space-between;
@@ -472,46 +304,5 @@ onBeforeUnmount(() => clearTimeout(timer))
 .stats b {
   color: var(--text);
   font-weight: 500;
-}
-.toast {
-  position: absolute;
-  left: 50%;
-  bottom: 54px;
-  transform: translateX(-50%);
-  max-width: min(560px, calc(100% - 32px));
-  background: var(--ink);
-  color: var(--paper);
-  padding: 9px 16px;
-  border-radius: 999px;
-  box-shadow: var(--shadow);
-  z-index: 50;
-  cursor: pointer;
-}
-.toast.warning {
-  background: var(--apricot);
-  color: var(--ink);
-}
-.toast.error {
-  background: var(--rose);
-  color: #fff;
-}
-.gone {
-  position: absolute;
-  inset: 0;
-  z-index: 70;
-  display: grid;
-  place-items: center;
-  background: rgb(247 243 236 / 92%);
-  text-align: center;
-}
-.gone h2 {
-  font: 400 26px var(--font-display);
-  margin: 0 0 8px;
-}
-@media (max-width: 736px) {
-  .main {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) 40%;
-  }
 }
 </style>

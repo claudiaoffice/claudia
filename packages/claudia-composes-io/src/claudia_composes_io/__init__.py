@@ -10,9 +10,11 @@ story is built.
 docx   text_to_docx, docx_to_text, apply_edits_to_docx, UnsupportedEdit
 """
 
+from ._version import __version__
 from .docx import UnsupportedEdit, apply_edits_to_docx, docx_to_text, text_to_docx
 
 __all__ = [
+    "__version__",
     "UnsupportedEdit",
     "apply_edits_to_docx",
     "docx_to_text",

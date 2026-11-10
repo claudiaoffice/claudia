@@ -1,0 +1,61 @@
+{
+ "version": "0.1.0",
+ "ADAPTERS": {
+  "value": "{'docx': Adapter(import_fn=<function docx_to_text>, apply_edits_fn=<function apply_edits_to_docx>), 'pptx': Adapter(import_fn=<function pptx_to_slides>, apply_edits_fn=<function apply_edits_to_pptx>), 'xlsx': Adapter(import_fn=<function xlsx_to_workbook>, apply_edits_fn=<function apply_edits_to_xlsx>)}"
+ },
+ "Adapter": {
+  "class": [
+   "object"
+  ],
+  "init": "(import_fn: 'Callable[[bytes], Model]', apply_edits_fn: 'Callable[[bytes, Model, Model], bytes] | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Case": {
+  "class": [
+   "object"
+  ],
+  "init": "(import_checks: 'Callable[[Model], None] | None' = None, modify: 'Callable[[Model], Model] | None' = None, after_checks: 'Callable[[Model], None] | None' = None, export_checks: 'Callable[[bytes], None] | None' = None, preserve_parts: 'list[str]' = <factory>, preserve_elements: 'Callable[[bytes, bytes], None] | None' = None, visual: 'bool' = False) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Entry": {
+  "function": "(*args, **kwargs)"
+ },
+ "Model": {
+  "class": [
+   "object"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {},
+  "properties": []
+ },
+ "RunResult": {
+  "class": [
+   "object"
+  ],
+  "init": "(status: 'Status', stages: 'dict[str, Status]', duration_s: 'float', detail: 'str | None' = None) -> None",
+  "methods": {
+   "as_last_run": "(self, *, at: 'str', commit: 'str | None') -> 'dict'"
+  },
+  "properties": []
+ },
+ "load_case": {
+  "function": "(spec_path: 'Path', entry_id: 'str') -> 'Case'"
+ },
+ "load_catalogue": {
+  "function": "(path: 'Path') -> 'list[Entry]'"
+ },
+ "record_run": {
+  "function": "(entries: 'list[Entry]', entry_id: 'str', last_run: 'dict') -> 'None'"
+ },
+ "run_case": {
+  "function": "(entry: 'dict', library_root: 'Path', *, visual: 'bool' = False, adapters: 'dict[str, Adapter] | None' = None) -> 'RunResult'"
+ },
+ "save_catalogue": {
+  "function": "(path: 'Path', entries: 'list[Entry]') -> 'None'"
+ },
+ "select": {
+  "function": "(entries: 'list[Entry]', *, formats: 'set[str] | None' = None, features: 'set[str] | None' = None, ids: 'set[str] | None' = None, tags: 'set[str] | None' = None, include_disabled: 'bool' = False) -> 'list[Entry]'"
+ }
+}

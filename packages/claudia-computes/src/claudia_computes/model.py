@@ -204,6 +204,8 @@ class _LiveMax:
 
 
 class Sheet:
+    """One sheet of a workbook: its cells (sparse), the values they show, and its row heights and column widths."""
+
     def __init__(self, sheet_id: SheetId, name: str):
         self.id = sheet_id
         self.name = name
@@ -226,6 +228,7 @@ class Sheet:
         self._cols_live = _LiveMax()  # columns that hold something, for `extent`
 
     def to_data(self) -> dict:
+        """The sheet as plain data for a snapshot: id, name, cell contents and the resized rows and columns."""
         return {
             "id": self.id,
             "name": self.name,
@@ -341,6 +344,8 @@ class Sheet:
 
 
 class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
+    """The state of a computes document: its sheets, chart tabs, diagrams, objects, style book and palette."""
+
     app: ClassVar[str] = "computes"
     # 3: the workbook also carries images and objects anchored to cells (E6.17)
     # 4: objects are a shared body plus a CellAnchor, and the workbook carries a style book (E10.16)
@@ -447,17 +452,20 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     # -- chart tabs --------------------------------------------------------------
     def chart(self, chart_id: str) -> Chart:
+        """The chart tab ``chart_id``; raises :class:`ValueError` if there is none."""
         try:
             return self.charts[chart_id]
         except KeyError:
             raise ValueError(f"unknown chart {chart_id!r}") from None
 
     def add_chart(self, chart: Chart, index: int | None) -> None:
+        """Put a chart tab at ``index`` in the tab order, or last when ``index`` is ``None``."""
         ordered = list(self.charts.values())
         ordered.insert(len(ordered) if index is None else index, chart)
         self.charts = {c.id: c for c in ordered}
 
     def remove_chart(self, chart_id: str) -> None:
+        """Take the chart tab ``chart_id`` out; raises :class:`ValueError` if there is none."""
         self.chart(chart_id)
         self.charts = {c.id: c for c in self.charts.values() if c.id != chart_id}
 
@@ -548,22 +556,26 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     # -- names (formulas name sheets, the model knows them by id)
     def sheet_id_of(self, name: str) -> SheetId | None:
+        """The id of the sheet called ``name`` (case-insensitive), or ``None`` if no sheet has that name."""
         if self._ids is None:
             self._ids = {sheet.name.casefold(): sheet.id for sheet in self.sheets.values()}
         return self._ids.get(name.casefold())
 
     def sheet_name_of(self, sheet_id: SheetId) -> str | None:
+        """The name of sheet ``sheet_id``, or ``None`` if there is no such sheet."""
         sheet = self.sheets.get(sheet_id)
         return None if sheet is None else sheet.name
 
     # -- reading ---------------------------------------------------------------
     def sheet(self, sheet_id: SheetId) -> Sheet:
+        """The sheet ``sheet_id``; raises :class:`ValueError` if there is none."""
         try:
             return self.sheets[sheet_id]
         except KeyError:
             raise ValueError(f"unknown sheet {sheet_id!r}") from None
 
     def get(self, sheet_id: SheetId, row: int, col: int) -> Content:
+        """What a cell holds (its content as typed, ``None`` for an empty one); see :meth:`value` for what it shows."""
         return self.sheet(sheet_id).cells.get((row, col))
 
     def value(self, sheet_id: SheetId, row: int, col: int) -> Value:
@@ -608,6 +620,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return content
 
     def add_sheet(self, sheet: Sheet, index: int | None) -> None:
+        """Put a sheet at ``index`` in the tab order, or last when ``index`` is ``None``."""
         ordered = list(self.sheets.values())
         ordered.insert(len(ordered) if index is None else index, sheet)
         self.sheets = {s.id: s for s in ordered}

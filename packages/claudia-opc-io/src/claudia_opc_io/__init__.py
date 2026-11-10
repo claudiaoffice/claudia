@@ -8,7 +8,8 @@ python-pptx/odfdo (and claudia's own ``*_io`` packages built on them) stay exact
 all of them, patching their output back against the file they started from.
 """
 
+from ._version import __version__
 from .package import read_parts, write_parts
 from .reconcile import OwnedTest, owns, reconcile
 
-__all__ = ["OwnedTest", "owns", "read_parts", "reconcile", "write_parts"]
+__all__ = ["__version__", "OwnedTest", "owns", "read_parts", "reconcile", "write_parts"]

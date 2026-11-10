@@ -27,6 +27,14 @@ CHANGELOGS = {
     "claudia_creates": ROOT / "packages" / "claudia-creates" / "CHANGELOG.md",
     "claudia_fonts": ROOT / "packages" / "claudia-fonts" / "CHANGELOG.md",
     "claudia_typeset": ROOT / "packages" / "claudia-typeset" / "CHANGELOG.md",
+    "claudia_computes": ROOT / "packages" / "claudia-computes" / "CHANGELOG.md",
+    "claudia_composes": ROOT / "packages" / "claudia-composes" / "CHANGELOG.md",
+    "claudia_ai": ROOT / "packages" / "claudia-ai" / "CHANGELOG.md",
+    "claudia_opc_io": ROOT / "packages" / "claudia-opc-io" / "CHANGELOG.md",
+    "claudia_composes_io": ROOT / "packages" / "claudia-composes-io" / "CHANGELOG.md",
+    "claudia_computes_io": ROOT / "packages" / "claudia-computes-io" / "CHANGELOG.md",
+    "claudia_creates_io": ROOT / "packages" / "claudia-creates-io" / "CHANGELOG.md",
+    "claudia_test_documents": ROOT / "packages" / "claudia-test-documents" / "CHANGELOG.md",
 }
 
 
@@ -47,6 +55,19 @@ def test_the_api_matches_the_snapshot(name):
     now = SCRIPT.surface(importlib.import_module(name))
     then = json.loads(SCRIPT.snapshot_path(name).read_text())
     assert now == then, "the public API changed: see the docstring of this module for what to do"
+
+
+def test_a_snapshot_never_holds_a_memory_address():
+    """A constant that holds functions (``claudia_test_documents.ADAPTERS``) reprs with their addresses, which differ
+    on every run: the snapshot keeps the names only, on every platform's address format."""
+    import types
+
+    module = types.ModuleType("example")
+    module.__version__ = "1.0.0"
+    module.TABLE = {"a": load_script}
+    module.__all__ = ["__version__", "TABLE"]
+    assert SCRIPT.surface(module)["TABLE"] == {"value": "{'a': <function load_script>}"}
+    assert SCRIPT.portable("<function f at 000001ED86581A60>") == "<function f>"
 
 
 @packages
