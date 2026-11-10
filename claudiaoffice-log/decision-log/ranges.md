@@ -18,7 +18,8 @@ Unused numbers in a closed block stay unused.
 | D168–D182 | server settings, worker pool, shared object layer | 2026-11-07 | closed |
 | D200–D213 | colour roles, charts, styling dialogs, office export | 2026-11-08 | closed |
 | D214–D240 | the 2026-11-10 restructuring: renumbered duplicates (D214–D220), former open questions (D221–D240) | 2026-11-10 | closed |
-| D241–D260 | *free — next branch or agent to ask* | | open |
+| D241–D250 | E5.8 Linux client: three apps, other servers, HTTPS (branch `linux-client-complete`) | 2026-11-10 | open |
+| D251–D260 | *free — next branch or agent to ask* | | open |
 | D261–D280 | *free* | | open |
 
 ## Never to be used

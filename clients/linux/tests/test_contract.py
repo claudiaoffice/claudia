@@ -41,6 +41,7 @@ WELCOME = {
 VALID = [
     HELLO,
     {"type": "hello", "contract": 1, "app": "computes"},
+    {"type": "hello", "contract": 1},  # a page that does not know its server's app yet
     {**HELLO, "something_new": [1, 2, 3]},  # (additive evolution: unknown fields are ignored)
     ACTION,
     {**ACTION, "target": "page"},
@@ -49,13 +50,25 @@ VALID = [
     {"type": "error", "code": "unsupported_contract", "message": "no", "supported": [1]},
     {**WELCOME, "locale": "de"},  # (E5.7) shell -> page too, but the schema does not care which side sends what
     {**WELCOME, "locale": "de-DE"},
+    # (E5.8) the page asks the shell to connect to another server, and the shell says why it could not
+    {"type": "connect", "address": "https://demo.example.org:8420"},
+    {"type": "connect_failed", "code": "insecure", "message": "Use https://"},
+    {"type": "connect_failed", "code": "not_trusted", "message": "no", "something_new": 1},
+    # (E5.8) the list of servers goes both ways: the shell sends what it remembers, the page sends it back renamed
+    {"type": "servers", "servers": []},
+    {
+        "type": "servers",
+        "servers": [
+            {"origin": "http://127.0.0.1:41233", "label": "This computer", "custom": True, "local": True},
+            {"origin": "https://demo.example.org:8420", "label": "demo", "custom": False},
+        ],
+    },
 ]
 # ... and messages nobody may accept.
 INVALID = [
     {"type": "hello", "app": "composes"},  # no version
     {"type": "hello", "contract": "1", "app": "composes"},  # the version is a number
     {"type": "hello", "contract": 0, "app": "composes"},
-    {"type": "hello", "contract": 1},  # no app
     {"type": "hello", "contract": 1, "app": "Composes!"},
     {"type": "action"},
     {"type": "action", "action": "Save"},  # ids are namespaced and lower case
@@ -68,6 +81,21 @@ INVALID = [
     {"type": "error", "code": "internal"},
     {**WELCOME, "locale": 7},  # (E5.7) not a string
     {**WELCOME, "locale": "not a locale!"},
+    {"type": "connect"},  # (E5.8) to what?
+    {"type": "connect", "address": 7},
+    {"type": "connect", "address": ""},
+    {"type": "connect", "address": "x" * 300},
+    {"type": "connect_failed", "code": "nope", "message": "x"},
+    {"type": "connect_failed", "code": "insecure"},
+    {"type": "connect_failed", "code": "insecure", "message": "x" * 600},
+    {"type": "servers"},
+    {"type": "servers", "servers": "all of them"},
+    {"type": "servers", "servers": [{"label": "no origin", "custom": False}]},
+    {"type": "servers", "servers": [{"origin": 7, "label": "x", "custom": False}]},
+    {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x" * 200, "custom": False}]},
+    {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": "yes"}]},
+    {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "local": 1}]},
+    {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False}] * 65},
 ]
 
 
@@ -102,6 +130,24 @@ def test_what_the_shell_builds_is_valid_by_the_schema(schema: dict) -> None:
     jsonschema.validate(contract.action("file.save"), schema)
     jsonschema.validate(contract.error("bad_message", "what?"), schema)
     jsonschema.validate(contract.error("unsupported_contract", "too new", supported=[1]), schema)
+    for code in contract.CONNECT_FAILED_CODES:
+        jsonschema.validate(contract.connect_failed(code, "why"), schema)
+    jsonschema.validate(contract.servers([]), schema)
+    jsonschema.validate(
+        contract.servers([{"origin": "https://a.example.org", "label": "A", "custom": False}]),
+        schema,
+    )
+
+
+def test_the_schema_and_the_module_agree_on_why_a_connection_can_fail(schema: dict) -> None:
+    in_schema = set(schema["$defs"]["connect_failed"]["properties"]["code"]["enum"])
+    assert in_schema == set(contract.CONNECT_FAILED_CODES)
+
+
+def test_a_connect_failure_needs_a_known_reason_and_cuts_a_long_message() -> None:
+    with pytest.raises(ContractError):
+        contract.connect_failed("because", "x")
+    assert len(contract.connect_failed("unreachable", "x" * 900)["message"]) == 512
 
 
 def test_welcome_carries_a_locale_only_when_given_one() -> None:

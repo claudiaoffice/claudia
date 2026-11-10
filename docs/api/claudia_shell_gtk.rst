@@ -34,8 +34,32 @@ Local server
 .. automodule:: claudia_shell_gtk.launch
    :members:
 
-Paths, addresses and identity
------------------------------
+Connecting to other servers
+---------------------------
+
+.. automodule:: claudia_shell_gtk.servers
+   :members:
+
+.. automodule:: claudia_shell_gtk.connection
+   :members:
+
+.. automodule:: claudia_shell_gtk.connector
+   :members:
+
+.. automodule:: claudia_shell_gtk.trust
+   :members:
+
+.. automodule:: claudia_shell_gtk.x509
+   :members:
+
+.. automodule:: claudia_shell_gtk.settings
+   :members:
+
+Command line, paths, addresses and identity
+-------------------------------------------
+
+.. automodule:: claudia_shell_gtk.cli
+   :members:
 
 .. automodule:: claudia_shell_gtk.paths
    :members:

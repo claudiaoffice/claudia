@@ -62,10 +62,10 @@ def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
     monkeypatch.setenv("XDG_DOWNLOAD_DIR", str(tmp_path / "Downloads"))
     from claudia_shell_gtk._gi import Adw, Gio
-    from claudia_shell_gtk.app import ComposesApp
+    from claudia_shell_gtk.app import ClaudiaApp
 
     Adw.init()
-    application = ComposesApp(identity.get("composes"), flags=Gio.ApplicationFlags.NON_UNIQUE)
+    application = ClaudiaApp(identity.get("composes"), flags=Gio.ApplicationFlags.NON_UNIQUE)
     application.register(None)
     application.activate()
     yield application

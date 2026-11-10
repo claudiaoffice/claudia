@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
 import { appOfServer, fetchDocsListing, openSession, type AnySession, type Listed } from '~/lib/open'
 import { Session } from '~/lib/session'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
-import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, type Bookmark } from '~/lib/server-bookmarks'
+import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
+import { createShellBridge, detectHandler, isApp, type ShellBridge } from '~/lib/shell-bridge'
 
 const props = defineProps<{
   /** File ▸ New (D123): land with the document field blank and focused, instead of the one just closed. */
@@ -20,7 +21,19 @@ const emit = defineEmits<{ opened: [session: AnySession] }>()
 // so none of this has to think about a cross-origin fetch.
 const server = ref(new URLSearchParams(location.search).get('server') ?? location.host)
 const origin = computed(() => `${location.protocol}//${server.value}`)
-const bookmarks = ref<Bookmark[]>(listBookmarks())
+// Where the servers come from. In a plain browser they are this browser's own bookmarks (`localStorage`, per origin).
+// In a Claudia desktop shell the shell keeps them — one list per app, across servers, with "This computer" first when
+// the shell started a server — and connecting to one is the shell's job: it checks the server, then shows it in this
+// same window. (A page that navigated there itself would be handed to the person's browser: the shell never lets its
+// view leave the server it showed.)
+const stored = ref<Bookmark[]>(listBookmarks())
+const shell = ref<(ShellBridge & { detach: () => void }) | null>(null)
+const inShell = detectHandler() !== null
+const viaShell = computed(() => shell.value?.hasServerList === true)
+const bookmarks = computed<Bookmark[]>(() => (viaShell.value ? (shell.value?.servers ?? []) : stored.value))
+/** The label to give the server this page is on once it is clear where the list lives (see `settle`). */
+let pendingLabel = ''
+const connectPending = ref(false)
 const renamingOrigin = ref<string | null>(null)
 const renameText = ref('')
 const connecting = ref(false)
@@ -101,14 +114,49 @@ async function loadServer() {
   } catch {
     /* no hint this time — the bare host still makes a fine default label, and it's refreshed on the next visit */
   }
-  bookmarks.value = upsertBookmark(origin.value, defaultLabel(origin.value, administrator))
+  pendingLabel = defaultLabel(origin.value, administrator)
 }
+
+/** Remember this server under `pendingLabel`: in this browser's bookmarks, or — in a shell that keeps the list — by
+ * refreshing the label of its entry (the shell has added the server itself when it connected to it). Waits for the
+ * shell's `welcome` and its list first. */
+function settle() {
+  if (!pendingLabel) return
+  const bridge = shell.value
+  if (inShell && bridge && !bridge.ready) return
+  if (!inShell || !bridge || !bridge.hasServerList) {
+    stored.value = upsertBookmark(origin.value, pendingLabel)
+  } else {
+    if (bridge.servers === null) return
+    const entry = bridge.servers.find((b) => b.origin === origin.value)
+    if (entry && !entry.custom && !entry.local && entry.label !== pendingLabel) {
+      bridge.sendServers(withBookmark(bridge.servers, origin.value, pendingLabel))
+    }
+  }
+  pendingLabel = ''
+}
+
+/** Say hello to the shell, if there is one (not before this page knows which app its server runs, when it can). */
+function attachShell() {
+  if (!inShell) return
+  const bridge = createShellBridge(isApp(app.value) ? app.value : undefined, undefined, (b) => reactive(b) as typeof b)
+  bridge.onConnectFailed((_code, message) => {
+    connectPending.value = false
+    connectError.value = message
+  })
+  shell.value = bridge
+}
+
+watch(() => [shell.value?.ready, shell.value?.hasServerList, shell.value?.servers], settle)
+onBeforeUnmount(() => shell.value?.detach())
 
 onMounted(async () => {
   user.value = remembered('claudia.user')
   if (!doc.value && !props.startFresh) doc.value = remembered('claudia.doc')
   if (props.startFresh) docField.value?.focus()
   await loadServer()
+  attachShell()
+  settle()
 })
 
 function hostOf(bookmarkOrigin: string): string {
@@ -119,9 +167,19 @@ function hostOf(bookmarkOrigin: string): string {
   }
 }
 
-/** Go there: a full page navigation to that server's own address, never an in-page fetch to another origin. */
+/** Ask the shell to show another server in this window; it answers with that server's page, or with the reason why not. */
+function connectInShell(address: string) {
+  connectError.value = ''
+  connectPending.value = true
+  shell.value?.connect(address)
+}
+
+/** Go there: in a Claudia shell the shell connects (above); in a browser a full page navigation to that server's own
+ * address, never an in-page fetch to another origin. */
 function switchTo(bookmark: Bookmark) {
-  if (bookmark.origin !== origin.value) location.href = `${bookmark.origin}/`
+  if (bookmark.origin === origin.value) return
+  if (shell.value?.canConnect) connectInShell(bookmark.origin)
+  else location.href = `${bookmark.origin}/`
 }
 
 /** That server's settings pages — reachable from here even for a server nobody has opened a document on yet. */
@@ -135,7 +193,9 @@ function startRename(bookmark: Bookmark) {
 }
 
 function commitRename() {
-  if (renamingOrigin.value) bookmarks.value = renameBookmark(renamingOrigin.value, renameText.value)
+  const renaming = renamingOrigin.value
+  if (renaming && viaShell.value) shell.value?.sendServers(withRenamed(bookmarks.value, renaming, renameText.value))
+  else if (renaming) stored.value = renameBookmark(renaming, renameText.value)
   renamingOrigin.value = null
 }
 
@@ -149,9 +209,16 @@ function startConnect() {
   connectError.value = ''
 }
 
-/** "+ Connect to a server…": a full navigation to whatever address was typed, which lands back in this same dialog
- * at that server's own origin and bookmarks it there (`loadServer`, above) — nothing to connect to in-page. */
+/** "+ Connect to a server…". In a Claudia shell the address goes to the shell as typed (it knows what a bare host
+ * means and which addresses it accepts); in a browser it is a full navigation to whatever address was typed, which
+ * lands back in this same dialog at that server's own origin and bookmarks it there (`loadServer`, above). */
 function goToTyped() {
+  if (shell.value?.canConnect) {
+    const typed = connectAddress.value.trim()
+    if (typed) connectInShell(typed)
+    else connectError.value = 'Type a server address.'
+    return
+  }
   const target = normalizeServerInput(connectAddress.value, location.protocol)
   if (!target) {
     connectError.value = 'Type a server address.'
@@ -251,19 +318,19 @@ async function go(how: 'open' | 'create' | 'recover') {
               @blur="commitRename"
             >
             <template v-else>
-              <button type="button" class="server" :aria-current="b.origin === origin ? 'true' : undefined" @click="switchTo(b)">
+              <button type="button" class="server" :aria-current="b.origin === origin ? 'true' : undefined" :disabled="connectPending" @click="switchTo(b)">
                 <span class="server-dot" :class="{ current: b.origin === origin }" aria-hidden="true" />
                 <span class="server-text">
                   <span class="server-name">{{ b.label }}</span>
                   <span class="server-host">{{ hostOf(b.origin) }}</span>
                 </span>
               </button>
-              <button type="button" class="server-action" title="Rename" :aria-label="`Rename ${b.label}`" @click="startRename(b)">
+              <button v-if="!b.local" type="button" class="server-action" title="Rename" :aria-label="`Rename ${b.label}`" @click="startRename(b)">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
                 </svg>
               </button>
-              <button type="button" class="server-action" :title="`Manage ${b.label}…`" :aria-label="`Manage ${b.label}…`" @click="manage(b)">
+              <button v-if="!viaShell || b.origin === origin" type="button" class="server-action" :title="`Manage ${b.label}…`" :aria-label="`Manage ${b.label}…`" @click="manage(b)">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="3" />
                   <path
@@ -278,11 +345,12 @@ async function go(how: 'open' | 'create' | 'recover') {
         <form v-else class="connect-form" @submit.prevent="goToTyped">
           <input v-model="connectAddress" aria-label="Server address" placeholder="example.com:8420" autofocus >
           <div class="connect-buttons">
-            <button type="submit" class="btn primary small">Go</button>
+            <button type="submit" class="btn primary small" :disabled="connectPending">Go</button>
             <button type="button" class="btn small" @click="connecting = false">Cancel</button>
           </div>
-          <p v-if="connectError" class="error">{{ connectError }}</p>
         </form>
+        <p v-if="connectPending" class="hint" role="status">Connecting…</p>
+        <p v-if="connectError" class="error" role="alert">{{ connectError }}</p>
       </nav>
 
       <div class="main">

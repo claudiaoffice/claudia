@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- The layout of the window of a Claudia shell (D27). The menus are not written here: they come from the manifest and
-     replace the marker below when the window is created, so the manifest stays the one list of what the menus offer. -->
+<!-- The layout of the window of a Claudia shell (D27). The menus are not written here: each button below gets the menu
+     of the same name from the manifest of the app when the window is created (window.py, `_attach_menus`), so the
+     manifest stays the one list of what the menus offer and one layout serves every app. The id of a button is its
+     menu's id with "-" turned into "_". -->
 <interface>
   <requires lib="gtk" version="4.0"/>
   <requires lib="Adw" version="1.0"/>
-  <!-- menus -->
   <template class="ClaudiaWindow" parent="AdwApplicationWindow">
     <property name="default-width">1280</property>
     <property name="default-height">820</property>
@@ -15,45 +16,38 @@
             <child type="top">
               <object class="AdwHeaderBar">
                 <child type="start">
-                  <object class="GtkMenuButton">
+                  <object class="GtkMenuButton" id="menu_file">
                     <property name="label" translatable="yes">File</property>
-                    <property name="menu-model">menu-file</property>
                   </object>
                 </child>
                 <child type="start">
-                  <object class="GtkMenuButton">
+                  <object class="GtkMenuButton" id="menu_edit">
                     <property name="label" translatable="yes">Edit</property>
-                    <property name="menu-model">menu-edit</property>
                   </object>
                 </child>
                 <child type="start">
-                  <object class="GtkMenuButton">
+                  <object class="GtkMenuButton" id="menu_format">
                     <property name="label" translatable="yes">Format</property>
-                    <property name="menu-model">menu-format</property>
                   </object>
                 </child>
                 <child type="start">
-                  <object class="GtkMenuButton">
+                  <object class="GtkMenuButton" id="menu_view">
                     <property name="label" translatable="yes">View</property>
-                    <property name="menu-model">menu-view</property>
                   </object>
                 </child>
                 <child type="start">
-                  <object class="GtkMenuButton">
+                  <object class="GtkMenuButton" id="menu_tools">
                     <property name="label" translatable="yes">Tools</property>
-                    <property name="menu-model">menu-tools</property>
                   </object>
                 </child>
                 <child type="start">
-                  <object class="GtkMenuButton">
+                  <object class="GtkMenuButton" id="menu_config">
                     <property name="label" translatable="yes">Config</property>
-                    <property name="menu-model">menu-config</property>
                   </object>
                 </child>
                 <child type="start">
-                  <object class="GtkMenuButton">
+                  <object class="GtkMenuButton" id="menu_help">
                     <property name="label" translatable="yes">Help</property>
-                    <property name="menu-model">menu-help</property>
                   </object>
                 </child>
                 <child type="end">
@@ -71,8 +65,7 @@
                   <object class="GtkStackPage">
                     <property name="name">starting</property>
                     <property name="child">
-                      <object class="AdwStatusPage">
-                        <property name="title" translatable="yes">Starting Claudia Composes…</property>
+                      <object class="AdwStatusPage" id="starting_page">
                         <property name="child">
                           <object class="GtkSpinner">
                             <property name="spinning">true</property>

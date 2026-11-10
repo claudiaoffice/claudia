@@ -18,6 +18,7 @@ class FakePage:
         self.callbacks = callbacks
         self.sent: list[dict] = []
         self.loaded: list[str] = []
+        self.navigated: list[str] = []
         self.editing: list[str] = []
         self.widget = None
         self.closed = False
@@ -27,6 +28,9 @@ class FakePage:
 
     def load(self, url: str) -> None:
         self.loaded.append(url)
+
+    def navigate(self, origin: str) -> None:
+        self.navigated.append(origin)
 
     def run_editing_command(self, command: str) -> None:
         self.editing.append(command)
@@ -40,12 +44,20 @@ class FakePage:
 
 
 @pytest.fixture
-def window():
+def window(tmp_path):
     from claudia_shell_gtk._gi import Adw, Gtk
-    from claudia_shell_gtk.window import ComposesWindow
+    from claudia_shell_gtk.connector import ServerBook
+    from claudia_shell_gtk.trust import TrustStore
+    from claudia_shell_gtk.window import ClaudiaWindow
 
     Adw.init()
     pages: list[FakePage] = []
+    checked: list[tuple[str, str]] = []
+    answers: list = []
+
+    def check(address, app, *, trusted):
+        checked.append((address.origin, app))
+        return answers.pop(0)
 
     def factory(**callbacks):
         page = FakePage(**callbacks)
@@ -53,8 +65,19 @@ def window():
         pages.append(page)
         return page
 
-    win = ComposesWindow(identity.get("composes"), manifest.composes(), page_factory=factory)
+    path = tmp_path / "shell.json"
+    win = ClaudiaWindow(
+        identity.get("composes"),
+        manifest.composes(),
+        page_factory=factory,
+        book=ServerBook("composes", local_origin="http://127.0.0.1:1", local_label="This computer", path=path),
+        trust=TrustStore(path),
+        work=lambda job, done: done(job()),  # no thread: the test is the main loop
+        check=check,
+    )
     win.fake_pages = pages
+    win.checked = checked
+    win.answers = answers
     yield win
     win.destroy()
 
@@ -272,3 +295,121 @@ def test_releasing_the_page_twice_is_harmless(window) -> None:
     window.release_page()
     window.release_page()
     assert window.fake_pages[0].closed
+
+
+# --------------------------------------------------------------------------------------- one window class, any app
+
+
+@pytest.mark.parametrize("app", identity.names())
+def test_every_app_gets_its_own_title_menus_and_actions(app: str, tmp_path) -> None:
+    from claudia_shell_gtk._gi import Adw
+    from claudia_shell_gtk.connector import ServerBook
+    from claudia_shell_gtk.window import ClaudiaWindow
+
+    Adw.init()
+    spec = manifest.for_app(app)
+    win = ClaudiaWindow(
+        identity.get(app),
+        spec,
+        page_factory=lambda **_: FakePage(),
+        book=ServerBook(app, local_origin=None, local_label="x", path=tmp_path / "s.json"),
+    )
+    try:
+        assert win.get_title() == identity.get(app).title
+        for action in spec.actions:
+            assert win.lookup_action(action.id) is not None, action.id
+        for menu in spec.menus:
+            button = getattr(win, manifest.menu_button_id(menu.id))
+            assert button.get_menu_model() is not None, menu.id
+            assert button.get_menu_model().get_n_items() > 0, menu.id
+    finally:
+        win.destroy()
+
+
+@pytest.mark.parametrize("app", identity.names())
+def test_the_waiting_page_names_the_app(app: str, tmp_path) -> None:
+    from claudia_shell_gtk._gi import Adw
+    from claudia_shell_gtk.window import ClaudiaWindow
+
+    Adw.init()
+    win = ClaudiaWindow(identity.get(app), manifest.for_app(app), page_factory=lambda **_: FakePage())
+    try:
+        assert win.starting_page.get_title() == f"Starting {identity.get(app).title}…"
+    finally:
+        win.destroy()
+
+
+# ------------------------------------------------------------------------------------- connecting to another server
+
+
+def test_the_page_is_told_which_servers_there_are_when_it_says_hello(window) -> None:
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says({"type": "hello", "contract": 1, "app": "composes", "capabilities": ["connect", "servers"]})
+    sent = [m for m in page.sent if m["type"] == "servers"]
+    assert [e["origin"] for e in sent[0]["servers"]] == ["http://127.0.0.1:1"]
+    assert sent[0]["servers"][0]["local"] is True
+
+
+def test_a_server_the_page_asks_for_is_checked_for_this_app_and_shown_in_the_same_window(window) -> None:
+    from claudia_shell_gtk.connection import Reached
+
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says({"type": "hello", "contract": 1, "app": "composes", "capabilities": ["connect"]})
+    window.answers.append(Reached("https://demo.example.org:8420", "composes"))
+    page.says({"type": "connect", "address": "demo.example.org:8420"})
+    assert window.checked == [("https://demo.example.org:8420", "composes")]
+    assert page.navigated == ["https://demo.example.org:8420"]
+    assert len(window.fake_pages) == 1  # the same page, the same window
+    assert window.visible_page == "web"
+
+
+def test_a_server_that_is_refused_is_reported_to_the_page_and_nothing_is_switched(window) -> None:
+    from claudia_shell_gtk.connection import Refused
+
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says({"type": "hello", "contract": 1, "app": "composes", "capabilities": ["connect"]})
+    window.answers.append(Refused("wrong_app", "That server runs Claudia Computes."))
+    page.says({"type": "connect", "address": "demo.example.org"})
+    assert page.sent[-1] == {
+        "type": "connect_failed",
+        "code": "wrong_app",
+        "message": "That server runs Claudia Computes.",
+    }
+    assert page.navigated == []
+
+
+def test_plain_http_to_another_computer_is_refused_before_the_network_is_asked(window) -> None:
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says({"type": "hello", "contract": 1, "app": "composes", "capabilities": ["connect"]})
+    page.says({"type": "connect", "address": "http://192.0.2.7:8420"})
+    assert window.checked == []
+    assert page.sent[-1]["code"] == "insecure"
+
+
+def test_the_command_line_server_is_checked_like_a_typed_one_and_shown_without_a_page_before(window) -> None:
+    from claudia_shell_gtk.connection import Reached
+
+    window.answers.append(Reached("https://demo.example.org", "composes"))
+    window.connect_to("https://demo.example.org")
+    assert window.checked == [("https://demo.example.org", "composes")]
+    assert window.fake_pages[0].loaded == ["https://demo.example.org"]
+    assert window.visible_page == "web"
+
+
+def test_a_command_line_server_that_is_refused_is_shown_as_the_windows_error(window) -> None:
+    from claudia_shell_gtk.connection import Refused
+
+    window.answers.append(Refused("unreachable", "Could not reach demo.example.org."))
+    window.connect_to("https://demo.example.org")
+    assert window.visible_page == "error"
+    assert "Could not reach demo.example.org." in window.error_details
+
+
+def test_the_page_is_made_with_a_way_to_ask_for_the_trusted_certificates(window) -> None:
+    window.show_page("http://127.0.0.1:1")
+    pinned = window.fake_pages[0].callbacks["pinned"]
+    assert pinned("https://demo.example.org") is None

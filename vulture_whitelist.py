@@ -139,3 +139,11 @@ used.pytest_collection_modifyitems  # pytest hook, found by name (clients/linux/
 used.do_GET  # http.server calls it by name (the stub site of clients/linux/tests/test_webpage.py)
 used.log_message  # http.server calls it by name (silences the stub site's log)
 used.optionxform  # configparser reads this attribute to keep the case of keys (test_identity.py)
+used.protocol_version  # http.server reads it to answer HTTP/1.1 (stub server, clients/linux/tests/test_connection.py)
+used.menu_file  # Gtk.Template children of window.ui: GTK fills them by id; window.py's _attach_menus reads them by name
+used.menu_edit  # (same)
+used.menu_format  # (same)
+used.menu_view  # (same)
+used.menu_tools  # (same)
+used.menu_config  # (same)
+used.menu_help  # (same)

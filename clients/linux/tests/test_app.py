@@ -53,7 +53,7 @@ class FakePage:
 
 def make_app(server_factory, pages: list | None = None, locale: str | None = None):
     from claudia_shell_gtk._gi import Adw, Gio
-    from claudia_shell_gtk.app import ComposesApp
+    from claudia_shell_gtk.app import ClaudiaApp
 
     Adw.init()
 
@@ -63,7 +63,7 @@ def make_app(server_factory, pages: list | None = None, locale: str | None = Non
             pages.append(page)
         return page
 
-    return ComposesApp(
+    return ClaudiaApp(
         identity.get("composes"),
         server_factory=server_factory,
         page_factory=page_factory,

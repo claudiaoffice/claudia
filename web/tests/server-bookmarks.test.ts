@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { adminUrl, defaultLabel, list, normalizeServerInput, rename, upsert } from '~/lib/server-bookmarks'
+import { adminUrl, defaultLabel, isBookmark, list, normalizeServerInput, rename, upsert, withBookmark, withRenamed } from '~/lib/server-bookmarks'
 
 function memoryStorage() {
   const map = new Map<string, string>()
@@ -86,5 +86,34 @@ describe('normalizeServerInput', () => {
   })
   it('is null for blank input', () => {
     expect(normalizeServerInput('   ', 'https:')).toBeNull()
+  })
+})
+
+
+describe('withBookmark / withRenamed (the same rules on a list that is not in this browser)', () => {
+  const demo = { origin: 'https://demo.claudiaoffice.de', label: "tobi's server", custom: false }
+  it('adds a server without changing the list it was given', () => {
+    const before = [demo]
+    const after = withBookmark(before, 'http://127.0.0.1:8420', '127.0.0.1:8420')
+    expect(after).toHaveLength(2)
+    expect(before).toHaveLength(1)
+  })
+  it('refreshes an un-renamed label and keeps a renamed one', () => {
+    expect(withBookmark([demo], demo.origin, 'new')[0]?.label).toBe('new')
+    expect(withBookmark([{ ...demo, custom: true }], demo.origin, 'new')[0]?.label).toBe("tobi's server")
+  })
+  it('renames, and never touches the server on this computer, which is the shell\'s', () => {
+    const local = { origin: 'http://127.0.0.1:41233', label: 'This computer', custom: true, local: true }
+    const after = withRenamed([demo, local], local.origin, 'mine')
+    expect(after[1]).toEqual(local)
+    expect(withRenamed([demo, local], demo.origin, ' Demo ')[0]).toEqual({ ...demo, label: 'Demo', custom: true })
+  })
+})
+
+describe('isBookmark', () => {
+  it('accepts the shell\'s entry for this computer and refuses a malformed flag', () => {
+    expect(isBookmark({ origin: 'http://127.0.0.1:1', label: 'x', custom: true, local: true })).toBe(true)
+    expect(isBookmark({ origin: 'http://127.0.0.1:1', label: 'x', custom: true, local: 'yes' })).toBe(false)
+    expect(isBookmark({ origin: 'x', label: 'x' })).toBe(false)
   })
 })

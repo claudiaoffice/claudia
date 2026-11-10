@@ -15,7 +15,7 @@ env:
   PYTHONUTF8: "1" # Windows consoles default to a legacy encoding; the tests use non-ASCII text
 
 jobs:
-  # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, i18n extraction, pytest,
+  # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, i18n extraction, pytest with coverage floors,
   # Sphinx with warnings as errors, performance guards.
   python:
     name: Python (${{ matrix.os }})
@@ -72,10 +72,13 @@ jobs:
       # `web`, `e2e` and `linux-client` jobs below run them for real, with Node, a built web app, Chromium and GTK
       # installed. --ci fails on any OTHER skip (PROC-02), so a check that starts skipping for some new reason is
       # caught instead of waved through. (Before "e2e greeting" was listed here, it failed this job on every OS.)
+      # The coverage floors (CODE-01) are measured on Linux with TeX, where every test runs; on Windows and macOS
+      # whole groups of tests skip by design, so the check skips there too -- and only there may it.
       - run: >
           uv run python scripts/check_debt.py --ci
-          --allow-skip "web tests" --allow-skip "web types" --allow-skip "e2e greeting"
+          --allow-skip "web lint" --allow-skip "web tests" --allow-skip "web types" --allow-skip "e2e greeting"
           --allow-skip "linux client tests"
+          ${{ runner.os != 'Linux' && '--allow-skip coverage' || '' }}
 
   web:
     name: Web
@@ -93,7 +96,9 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npx nuxt prepare # vitest needs the generated .nuxt files
-      - run: npx vitest run
+      - run: npm run lint
+      # the unit tests, with app/lib's coverage held to the thresholds in vitest.config.ts (CODE-01)
+      - run: npm run coverage
       # `nuxt typecheck`, not a bare `vue-tsc --noEmit`: web/tsconfig.json has `files: []` and only references the
       # generated projects, so the bare call checked nothing and passed with a type error in any file.
       - run: npm run typecheck

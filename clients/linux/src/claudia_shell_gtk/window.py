@@ -1,11 +1,18 @@
 """The window of a Claudia shell: header bar with the native menus, and the page below it (D40, D42).
 
+One window class serves every app: the identity says which app it is and the manifest which menus and actions it has.
+
 The window owns the GIO actions of the manifest. What an action does depends on who carries it out (``Kind``): the web
 page (the window sends an ``action`` message through the :class:`~claudia_shell_gtk.bridge.Bridge`), the web view's own
 editing commands (cut, copy, paste), or the shell itself (quit, About).
 
 The page itself is made by a ``page_factory`` (see ``webpage.WebPage``); the window only needs a small interface from
 it, so the window is tested without WebKit.
+
+The window shows one server at a time. Which one is decided by the application (its own local server, or the one named
+on the command line) and afterwards by the person: the page's "Connect to a server…" and its list of servers send a
+``connect`` message, the :class:`~claudia_shell_gtk.connector.Connector` checks the server and the window switches to it
+(:meth:`ClaudiaWindow.switch_to`). A window never shows a server of another app.
 """
 
 from __future__ import annotations
@@ -18,12 +25,16 @@ from typing import Any, Protocol
 from ._gi import Adw, Gio, GLib, Gtk
 from ._version import __version__
 from .bridge import Bridge
+from .connection import Outcome
+from .connection import check as default_check
+from .connector import Connector, ServerBook, Work, run_threaded
 from .i18n import translate as _
 from .identity import AppIdentity
-from .manifest import Action, Kind, Manifest, about_links, composes, menu_elements
+from .manifest import Action, Kind, Manifest, about_links, menu_button_id, menu_xml
 from .settings import save_shell_locale
+from .trust import TrustStore
 
-__all__ = ["ComposesWindow", "Page", "PageFactory"]
+__all__ = ["ClaudiaWindow", "Page", "PageFactory"]
 
 log = logging.getLogger(__name__)
 
@@ -44,30 +55,42 @@ class Page(Protocol):
 
     def send(self, raw: str) -> None: ...
     def load(self, url: str) -> None: ...
+    def navigate(self, origin: str) -> None: ...
     def run_editing_command(self, command: str) -> None: ...
     def close(self) -> None: ...
 
 
 PageFactory = Callable[..., Page]
-"""``factory(origin=, on_message=, on_reset=, on_problem=, on_download=)`` makes the page for a server at ``origin``."""
+"""``factory(origin=, on_message=, on_reset=, on_problem=, on_download=, pinned=)`` makes the page for a server at
+``origin``; ``pinned(origin)`` is the fingerprint of the certificate trusted for an https origin, or ``None``."""
+
+
+def _on_main_thread(call: Callable[[], None]) -> None:
+    """Run ``call`` once on the GTK main loop (the connector's worker thread hands its results over this way)."""
+
+    def once() -> bool:
+        call()
+        return GLib.SOURCE_REMOVE
+
+    GLib.idle_add(once)
 
 
 def _layout() -> str:
-    """The window layout with the menus of the manifest merged in, translated into whatever ``i18n.translate``
-    answers with **right now** (``i18n.translate``, not a captured snapshot of it — but this still only runs once:
-    ``@Gtk.Template`` below calls this at class-*definition* time, when this module is first imported, so whoever
-    imports ``.window`` (``__main__.py``, before ``.app``) must already have called ``i18n.install_translation``
-    with the right locale, or this shell's native chrome bakes in English regardless of what gets chosen later from
-    its own Config ▸ App Language menu. That is also why a language chosen there only reaches the native chrome on
-    the *next* launch (``window.py``'s `_LANGUAGE_PREFIX`) — the page's own UI, which this window never bakes
-    anything for, switches at once instead (``web/app/lib/i18n.ts``'s ``useI18n``)."""
-    text = resources.files("claudia_shell_gtk").joinpath("data/window.ui").read_text(encoding="utf-8")
-    return text.replace("<!-- menus -->", menu_elements(composes(), translate=_))
+    """The window layout (``data/window.ui``). Its few texts are translated by GtkBuilder; the menus are not in it:
+    they are built from the manifest of the app, in the language installed **at that moment**, when a window is
+    created (:meth:`ClaudiaWindow._attach_menus`).
+
+    The layout is read once, when this module is first imported (``@Gtk.Template`` needs it at class-definition time),
+    so whoever imports ``.window`` (``__main__.py``, before ``.app``) must already have called
+    ``i18n.install_translation``. A language chosen later from Config ▸ App Language therefore reaches the native
+    chrome only on the *next* launch (:data:`_LANGUAGE_PREFIX`), while the page's own UI switches at once
+    (``web/app/lib/i18n.ts``'s ``useI18n``)."""
+    return resources.files("claudia_shell_gtk").joinpath("data/window.ui").read_text(encoding="utf-8")
 
 
 @Gtk.Template(string=_layout())
-class ComposesWindow(Adw.ApplicationWindow):
-    """The main window of claudia composes."""
+class ClaudiaWindow(Adw.ApplicationWindow):
+    """The main window of a Claudia app."""
 
     __gtype_name__ = "ClaudiaWindow"
 
@@ -76,6 +99,14 @@ class ComposesWindow(Adw.ApplicationWindow):
     error_page = Gtk.Template.Child()
     error_label = Gtk.Template.Child()
     web_slot = Gtk.Template.Child()
+    starting_page = Gtk.Template.Child()
+    menu_file = Gtk.Template.Child()
+    menu_edit = Gtk.Template.Child()
+    menu_format = Gtk.Template.Child()
+    menu_view = Gtk.Template.Child()
+    menu_tools = Gtk.Template.Child()
+    menu_config = Gtk.Template.Child()
+    menu_help = Gtk.Template.Child()
 
     def __init__(
         self,
@@ -84,6 +115,10 @@ class ComposesWindow(Adw.ApplicationWindow):
         *,
         page_factory: PageFactory,
         locale: str | None = None,
+        book: ServerBook | None = None,
+        trust: TrustStore | None = None,
+        work: Work[Any] | None = None,
+        check: Callable[..., Outcome] = default_check,
         **properties: Any,
     ):
         super().__init__(**properties)
@@ -93,6 +128,17 @@ class ComposesWindow(Adw.ApplicationWindow):
         self._page: Page | None = None
         self.about_dialog: Adw.Dialog | None = None
         self.last_toast = ""
+        self.book = book or ServerBook(identity.name, local_origin=None, local_label=_("This computer"))
+        self._trust = trust or TrustStore()
+        self.connector = Connector(
+            identity.name,
+            book=self.book,
+            trust=self._trust,
+            switch=self.switch_to,
+            fail=self._connect_failed,
+            work=work or run_threaded(_on_main_thread),
+            check=check,
+        )
         self._bridge = Bridge(
             manifest,
             self._send_to_page,
@@ -100,6 +146,9 @@ class ComposesWindow(Adw.ApplicationWindow):
             locale=locale,
             on_states=self.set_action_states,
             on_ready=self._page_is_ready,
+            on_connect=self.connector.connect,
+            on_servers=self.book.replace,
+            server_list=self.book.entries,
         )
         # GTK emits "destroy" only when the object is finally disposed, which can be long after the window is gone:
         # the page is released when the window is closed (and by the application on shutdown), "destroy" is the net.
@@ -107,8 +156,16 @@ class ComposesWindow(Adw.ApplicationWindow):
         self.connect("destroy", lambda _window: self.release_page())
         self.set_title(identity.title)
         self.set_icon_name(identity.application_id)
+        self.show_starting(_("Starting {app}…").format(app=identity.title))
+        self._attach_menus()
         for action in manifest.actions:
             self._add_action(action)
+
+    def _attach_menus(self) -> None:
+        """Give every menu button the menu of the app's manifest (see ``data/window.ui``)."""
+        builder = Gtk.Builder.new_from_string(menu_xml(self._manifest, translate=_), -1)
+        for menu in self._manifest.menus:
+            getattr(self, menu_button_id(menu.id)).set_menu_model(builder.get_object(menu.id))
 
     # ------------------------------------------------------------------------------------------------ what is shown
 
@@ -124,6 +181,11 @@ class ComposesWindow(Adw.ApplicationWindow):
     @property
     def error_details(self) -> str:
         return str(self.error_label.get_label())
+
+    def show_starting(self, title: str) -> None:
+        """Show the waiting page with ``title`` ("Starting …", "Connecting to …")."""
+        self.starting_page.set_title(title)
+        self.pages.set_visible_child_name("starting")
 
     def show_error(self, title: str, details: str = "") -> None:
         """Replace the window's content with a problem report that the person can read and copy from."""
@@ -142,11 +204,31 @@ class ComposesWindow(Adw.ApplicationWindow):
                 on_reset=self._page_is_reloading,
                 on_problem=self.show_error,
                 on_download=lambda path: self.toast(f"Saved {path.name} to {path.parent.name}"),
+                pinned=self._trust.pinned,
             )
             self.web_slot.append(self._page.widget)
             self._page.load(url)
             self._set_editing_enabled(True)
         self.pages.set_visible_child_name("web")
+
+    def switch_to(self, origin: str) -> None:
+        """Show the server at ``origin`` (a server this window has just been connected to)."""
+        if self._page is None:
+            self.show_page(origin)
+        else:
+            self._page.navigate(origin)
+            self.pages.set_visible_child_name("web")
+
+    def connect_to(self, address: str) -> None:
+        """Connect to the server at ``address`` on behalf of the command line (``--server``): the same checks as
+        when the page asks, with the waiting page shown meanwhile."""
+        self.show_starting(_("Connecting to {address}…").format(address=address))
+        self.connector.connect(address)
+
+    def _connect_failed(self, code: str, message: str) -> None:
+        """Tell the page why a connection was not made; without a page that can hear it, show the window's own error."""
+        if self._page is None or not self._bridge.send_connect_failed(code, message):
+            self.show_error(_("Could not connect"), message)
 
     def toast(self, text: str) -> None:
         """A short message at the bottom of the window."""

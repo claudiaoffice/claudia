@@ -12,10 +12,13 @@ All messages are JSON objects with a `type`. A message is at most 64 KiB. A rece
 
 | type | from | meaning |
 | --- | --- | --- |
-| `hello` | page | The page is there: `contract` (the highest version it speaks, a whole number), `app` (`composes`, `computes`, `creates`). May also list the versions it speaks (`supported`). |
-| `welcome` | shell | Answer to `hello`: the `contract` version both will use, the shell's version and its `capabilities` (`native-menu`, `actions`). |
+| `hello` | page | The page is there: `contract` (the highest version it speaks, a whole number), `app` (`composes`, `computes`, `creates`; left out by a page that does not know yet which app its server runs, in which case the shell takes it to be its own). May also list the versions it speaks (`supported`). |
+| `welcome` | shell | Answer to `hello`: the `contract` version both will use, the shell's version and its `capabilities` (`native-menu`, `actions`; `connect` and `servers` when the shell can connect the window to another server and keeps the list of servers). |
 | `action` | shell | Carry out the menu action `action` (an id such as `file.save`). `target` (`on` or `off`) is given for choices that are ticked or not: asking for the state that is there already does nothing. |
 | `action_state` | page | Which actions are `enabled`, `checked` or relabelled now. Only the actions named change. |
+| `connect` | page | Show the server at `address` (as a person typed it, or an origin from the list) in this window. The shell checks it and either loads that server's page or answers `connect_failed`. Only sent when the shell offers `connect`. |
+| `connect_failed` | shell | The connection asked for was not made: `code` (`bad_address`, `insecure`, `unreachable`, `not_claudia`, `wrong_app`, `certificate_expired`, `certificate_invalid`, `not_trusted`) and a `message` fit to show to the person. |
+| `servers` | shell, page | The list of servers of this window's app: entries of `origin`, `label`, `custom` (the person named it) and `local` (the server on this computer, which only the shell lists). The shell sends it after `welcome`; the page sends it back when the person changes it (renames, say) and never before it has received the shell's. Only exchanged when the shell offers `servers`. |
 | `error` | either | Something in the other side's message was wrong: `code` (`bad_json`, `bad_message`, `unsupported_contract`, `unknown_action`, `internal`) and a `message` for the log. `unsupported_contract` lists what the sender supports. |
 
 Action ids say what an action *does*, not where it sits in a menu (`file.save`, `view.page`, `assistant.ask`): lower
@@ -36,5 +39,13 @@ case, namespaced, so a menu can be rearranged in one shell without a change to t
 
 ## Who implements it
 
-The shell side is `claudia_shell_gtk.contract` and `bridge` (Linux). The web app does not speak the contract yet; for
-now the Linux shell injects a page adapter that does it on the page's behalf (`clients/linux/src/claudia_shell_gtk/data/shim.js`).
+The shell side is `claudia_shell_gtk.contract` and `bridge` (Linux). The web app speaks the contract itself
+(`web/app/lib/shell-bridge.ts`), on the start page as well as in a document.
+
+## Connecting to other servers
+
+A shell shows one server at a time and never lets the page navigate away from it (a link would be handed to the
+person's browser). The page therefore asks: `connect` with an address, and the shell answers by loading that server's
+page (a fresh `hello` follows) or with `connect_failed`. What the shell checks is the shell's business (the Linux
+shell: https or this computer, the certificate, the same app); the page only shows `message`. A window connects to
+servers of its own app only.

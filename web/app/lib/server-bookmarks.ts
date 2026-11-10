@@ -10,6 +10,8 @@ export interface Bookmark {
   label: string
   /** `true` once a person has renamed it: a renamed label is theirs to keep, and `upsert` stops refreshing it. */
   custom: boolean
+  /** `true` for the server on this very computer, which only a Linux shell lists (the entry is the shell's, not renameable). */
+  local?: boolean
 }
 
 const KEY = 'claudia.servers'
@@ -33,9 +35,9 @@ export function list(storage: Pick<Storage, 'getItem'> = safeStorage()): Bookmar
   }
 }
 
-function isBookmark(value: unknown): value is Bookmark {
+export function isBookmark(value: unknown): value is Bookmark {
   const b = value as Partial<Bookmark>
-  return typeof b?.origin === 'string' && typeof b?.label === 'string' && typeof b?.custom === 'boolean'
+  return typeof b?.origin === 'string' && typeof b?.label === 'string' && typeof b?.custom === 'boolean' && (b.local === undefined || typeof b.local === 'boolean')
 }
 
 function save(bookmarks: Bookmark[], storage: Pick<Storage, 'setItem'> = safeStorage()): void {
@@ -46,25 +48,38 @@ function save(bookmarks: Bookmark[], storage: Pick<Storage, 'setItem'> = safeSto
   }
 }
 
+/** `bookmarks` with `origin` added, or its label refreshed with `defaultLabel` — unless a person already renamed it
+ * (`custom`). Pure: the list it is given is not changed. */
+export function withBookmark(bookmarks: Bookmark[], origin: string, defaultLabel: string): Bookmark[] {
+  const next = bookmarks.map((b) => ({ ...b }))
+  const existing = next.find((b) => b.origin === origin)
+  if (!existing) next.push({ origin, label: defaultLabel, custom: false })
+  else if (!existing.custom) existing.label = defaultLabel
+  return next
+}
+
+/** `bookmarks` with a person's own name for one of them, from here on kept exactly as given (see `withBookmark`). */
+export function withRenamed(bookmarks: Bookmark[], origin: string, label: string): Bookmark[] {
+  const next = bookmarks.map((b) => ({ ...b }))
+  const existing = next.find((b) => b.origin === origin)
+  if (existing && !existing.local) {
+    existing.label = label.trim() || existing.label
+    existing.custom = true
+  }
+  return next
+}
+
 /** Remember `origin`, or refresh its label with `defaultLabel` — unless a person already renamed it (`custom`). */
 export function upsert(origin: string, defaultLabel: string, storage: Pick<Storage, 'getItem' | 'setItem'> = safeStorage()): Bookmark[] {
-  const bookmarks = list(storage)
-  const existing = bookmarks.find((b) => b.origin === origin)
-  if (!existing) bookmarks.push({ origin, label: defaultLabel, custom: false })
-  else if (!existing.custom) existing.label = defaultLabel
+  const bookmarks = withBookmark(list(storage), origin, defaultLabel)
   save(bookmarks, storage)
   return bookmarks
 }
 
 /** A person's own name for a bookmark, from here on kept exactly as given (see `upsert`). */
 export function rename(origin: string, label: string, storage: Pick<Storage, 'getItem' | 'setItem'> = safeStorage()): Bookmark[] {
-  const bookmarks = list(storage)
-  const existing = bookmarks.find((b) => b.origin === origin)
-  if (existing) {
-    existing.label = label.trim() || existing.label
-    existing.custom = true
-    save(bookmarks, storage)
-  }
+  const bookmarks = withRenamed(list(storage), origin, label)
+  save(bookmarks, storage)
   return bookmarks
 }
 

@@ -37,6 +37,8 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
+from .identity import UnknownApp
+
 __all__ = [
     "Action",
     "Kind",
@@ -47,6 +49,8 @@ __all__ = [
     "composes",
     "computes",
     "creates",
+    "for_app",
+    "menu_button_id",
     "menu_elements",
     "menu_xml",
     "about_links",
@@ -579,6 +583,20 @@ def creates() -> Manifest:
     )
 
 
+def for_app(name: str) -> Manifest:
+    """The manifest of the app called ``name`` — what a shell started for that app builds its menus from.
+
+    :class:`~claudia_shell_gtk.identity.UnknownApp` (naming the available apps) if there is none.
+    """
+    builders: dict[str, Callable[[], Manifest]] = {"composes": composes, "computes": computes, "creates": creates}
+    try:
+        return builders[name]()
+    except KeyError:
+        raise UnknownApp(
+            f"there is no Linux client for '{name}' yet; available: {', '.join(sorted(builders))}"
+        ) from None
+
+
 # ----------------------------------------------------------------------------------------------------- GtkBuilder XML
 
 
@@ -619,6 +637,11 @@ def _menu_tree(manifest: Manifest, translate: Translate) -> ET.Element:
                     _item_element(section_element, entry, translate)
     ET.indent(interface)
     return interface
+
+
+def menu_button_id(menu_id: str) -> str:
+    """The id that ``data/window.ui`` gives the menu button of the menu ``menu_id`` (``menu-file`` → ``menu_file``)."""
+    return menu_id.replace("-", "_")
 
 
 def menu_elements(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:

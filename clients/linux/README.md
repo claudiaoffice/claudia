@@ -2,9 +2,13 @@
 
 The native client of Claudia for the GNOME desktop: a thin shell of GTK 4, libadwaita and WebKitGTK 6.0 around the one
 web frontend (decisions D42–D44). The shell draws what a native application should draw (window, header bar, menus,
-About, dialogs, clipboard); everything inside the document is the web app. Today it contains **Claudia Composes** and
-starts its own server on this computer. Computes and creates follow, each as one more entry in `identity.py`, one more
-manifest and one more entry point; the directories are already laid out for it (`clients/linux/apps/<app>/`).
+About, dialogs, clipboard); everything inside the document is the web app.
+
+**One shell, three applications.** The shell itself knows no app: `identity.py` (the one table that names them),
+`manifest.py` (their menus) and `apps/<app>/` (desktop entry, icon, AppStream metadata) are all that tells
+**Claudia Composes**, **Claudia Computes** and **Claudia Creates** apart. A Linux install has three start buttons, one
+per app (`claudia-composes`, `claudia-computes`, `claudia-creates`; one `.deb` holds all three). A window is one app
+and talks only to servers of that app.
 
 ```
 clients/
@@ -16,12 +20,18 @@ clients/
       bridge.py        the conversation with the page                  (no GTK)
       server.py        start, wait for and stop the local server       (no GTK)
       launch.py        which server, which frontend, or what is missing (no GTK)
+      cli.py           the command line: --server, --debug, --version  (no GTK)
+      servers.py       which addresses may be connected to, the list   (no GTK)
+      connection.py    can this window connect to that server?         (no GTK, blocks: worker thread)
+      connector.py     connect, ask about a certificate, switch        (no GTK)
+      trust.py, x509.py  trusted certificates, reading a certificate   (no GTK)
+      settings.py      shell.json: language, servers, trusted certs    (no GTK)
       paths.py, urls.py, identity.py                                   (no GTK)
       window.py        the window: header bar, menus, pages            (GTK)
       app.py           the application, accelerators, start and stop   (GTK)
       webpage.py       the WebKit view and its rules                   (GTK + WebKit)
-      data/            window.ui (layout), shim.js, webroutes.json
-    apps/composes/     desktop entry, icon, AppStream metadata
+      data/            window.ui (layout), webroutes.json
+    apps/<app>/        desktop entry, icon, AppStream metadata, per app
     tests/
 ```
 
@@ -31,11 +41,52 @@ clients/
 uv sync                                   # the server's Python 3.14 environment: .venv
 (cd web && npm ci && npm run build)       # the web frontend: web/.output/public
 sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-webkit-6.0      # Fedora: python3-gobject gtk4 libadwaita webkitgtk6.0
-cd clients/linux && PYTHONPATH=src /usr/bin/python3 -m claudia_shell_gtk
+./start-client.sh computes                # or composes, creates; builds the frontend first
+# or, by hand:
+cd clients/linux && PYTHONPATH=src /usr/bin/python3 -m claudia_shell_gtk computes
 ```
 
-Documents are kept in `$XDG_DATA_HOME/claudia/composes/documents` and the server's state and log in
-`$XDG_STATE_HOME/claudia/composes` (`server.log` is where to look when the window says the server did not start).
+Installed (the `.deb`, or `pip install` of this directory) the same thing is `claudia-composes`, `claudia-computes` or
+`claudia-creates`. All take:
+
+| Option | Meaning |
+| --- | --- |
+| *(none)* | Start this app's own server on this computer and show it. |
+| `--server URL` | Start no server; connect to that one (`https://host[:port]`, or a bare `host[:port]`, which means https; plain `http://` is only accepted for this computer). It is checked like a server typed into the page and remembered in this app's list of servers. |
+| `--debug` | More logging and the web inspector. |
+| `--version` | `claudia-computes 0.1.0`. |
+
+There is no command that asks which app to open; `python3 -m claudia_shell_gtk` needs the app as its first argument.
+
+Documents are kept in `$XDG_DATA_HOME/claudia/<app>/documents` and the server's state and log in
+`$XDG_STATE_HOME/claudia/<app>` (`server.log` is where to look when the window says the server did not start).
+
+## Other servers
+
+On the start page, the **Servers** list shows **This computer** (the server this window started; not there with
+`--server`) and every server this app has connected to; **+ Connect to a server…** takes an address. In this shell the
+page does not navigate there itself (the shell never lets its view leave the server it shows): it sends the shell a
+`connect` message, and the shell, in this order, stops at the first step that fails (messages are in `connection.py`):
+
+1. **Address.** `https`, or `http` only for this computer (`servers.parse_address`).
+2. **Reach it, check the certificate.** The server answers `/api/health` over TLS. A certificate the system trusts is
+   fine. One nobody vouches for (self-signed, an unknown authority, a name that is not the server's) is offered to the
+   person ("Trust this server?", showing the SHA-256 fingerprint) and, once trusted, pinned **for that one origin**
+   (`trust.py`, `shell.json`); a different certificate later is asked about again. An expired or not-yet-valid one is
+   never offered.
+3. **Same app.** `/api/docs` names the app, which must be this window's (a server that keeps its list behind a secret
+   does not say; the page's `hello` is checked again when it loads).
+4. **Switch.** The window shows that server, and the address is remembered in the list of this app (`shell.json`: one
+   list per app; never a password or an access secret).
+
+The web view accepts a certificate the system does not trust only if it is exactly the pinned one
+(`trust.may_override`, `WebPage._load_failed_with_tls_errors`). The shell, not the page, owns the list: the page's own
+`localStorage` is per origin and cannot span servers. The page may rename entries and hands the list back; only what
+passes `servers.sanitize` is kept.
+
+**Open point:** the "Trust this server?" dialog is designed (`claudiaoffice-log/notes/mockups/connect-and-trust.svg`)
+but not built until the design is agreed. Until then a certificate that nobody vouches for is refused with an
+explanation, and nothing is trusted unasked.
 
 | Variable | Meaning |
 | --- | --- |
@@ -63,12 +114,9 @@ the same origin, so no cross-origin settings are needed. The connection is plain
   Paste there too, D74). Layout stays in GtkBuilder XML (D27), labels are marked translatable. An action is carried out
   by **the page** (the shell sends an `action` message), **the web view's editing commands** (cut, copy, paste) or
   **the shell** (quit, About).
-* **Page adapter (`data/shim.js`).** The web app does not speak the shell contract yet, so the shell injects a small
-  script that does, in its own script world and only on the server's origin. It carries out actions by using the web
-  app's own menus exactly as a person would (`data/webroutes.json` maps action ids to menu items), reads which items
-  are enabled or ticked and reports them, and hides the web menu bar (it keeps its place in the layout). The web app is
-  unchanged. When it implements the contract itself, `shim.js` and `webroutes.json` are deleted. A test compares the
-  routes with the menus in `TextWorkspace.vue`, so a renamed menu item fails a test instead of a person's click.
+* **One window class, any app.** `window.ui` has one menu button per menu id; the window gives each the menu of the
+  app's manifest when it is created (`ClaudiaWindow._attach_menus`), so the layout and the GTK class are the same for
+  every app. The web app speaks the shell contract itself (D121, `web/app/lib/shell-bridge.ts`).
 * **Rules of the web view (`webpage.py`, `urls.py`).** The view never leaves the server's origin; links to other sites
   open in the default browser (web and mail addresses only); permission requests are denied; nothing contacts another host by itself
   (no DNS prefetching, WebRTC or media streams); downloads go to the Downloads folder under a name the page cannot use to escape it and never overwrite a file.
@@ -99,8 +147,9 @@ Things that differ between the interpreters and libraries, found while building 
 2. **libadwaita 1.5 is the floor** (`Adw.AboutDialog`; Ubuntu 24.04 has 1.5.0). Nothing newer is used. `Adw.Spinner` and
    other 1.6 widgets are avoided; a `GtkSpinner` does the same.
 3. **`claudia-client` cannot be imported by the shell**: it needs Python 3.14 and depends on `claudia-core`. That is why
-   the shell does not talk to a server itself; the page does. (It matters for remote servers with their own TLS
-   certificate, which are not part of this first slice.)
+   the shell does not talk to a server itself; the page does. For remote servers the shell only *checks* them, with
+   what the standard library has (`ssl`, `http.client`), and reads certificates with its own small DER reader
+   (`x509.py`) instead of the client's `TlsPolicy`.
 4. **The root configuration is 3.14.** Ruff and mypy at the repository root target 3.14, so this directory has its own
    targets; `uv run mypy` is run from `clients/linux` with `--project` so that uv does not create an environment here.
 5. **Sphinx** documents the shell's GTK-free modules only; autodoc of the GTK modules would need `gi` mocked.
@@ -120,7 +169,8 @@ Things that differ between the interpreters and libraries, found while building 
 
 ## Not yet
 
-Windows and macOS shells (D44, Neutralino); remote servers and their certificates; the native *Save As* dialog (a
+Windows and macOS shells (D44, Neutralino); the "Trust this server?" dialog (designed, not built); removing a trusted
+certificate again; the native *Save As* dialog (a
 download goes to the Downloads folder with a message); native cut/copy/paste/Ctrl+S key bindings; translations (the
 labels are marked, no catalog exists); Flatpak or another way to ship the frontend and the 3.14 interpreter with the
 shell; Wayland and screen-reader behaviour, which were not checked outside Xvfb.
