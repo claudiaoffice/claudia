@@ -14,8 +14,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -23,7 +23,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.084,
+        "duration_s": 0.064,
         "detail": null
       }
     },
@@ -41,8 +41,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -50,7 +50,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.105,
+        "duration_s": 0.073,
         "detail": null
       }
     },
@@ -69,8 +69,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -78,7 +78,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.13,
+        "duration_s": 0.103,
         "detail": null
       }
     },
@@ -97,8 +97,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T16:10:53Z",
-        "commit": "f091d2e",
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -106,7 +106,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.157,
+        "duration_s": 0.107,
         "detail": null
       }
     },
@@ -123,8 +123,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T21:00:41Z",
-        "commit": "0792bbe",
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -132,7 +132,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.06,
+        "duration_s": 0.039,
         "detail": null
       }
     },
@@ -151,8 +151,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T21:00:41Z",
-        "commit": "0792bbe",
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -160,7 +160,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.062,
+        "duration_s": 0.041,
         "detail": null
       }
     },
@@ -179,8 +179,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-08T21:00:41Z",
-        "commit": "0792bbe",
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -188,7 +188,89 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.052,
+        "duration_s": 0.035,
+        "detail": null
+      }
+    },
+    {
+      "id": "xlsx-cells-and-formulas",
+      "format": "xlsx",
+      "feature": "cells-and-formulas",
+      "source": "xlsx/cells-and-formulas/source.xlsx",
+      "spec": "xlsx/cells-and-formulas/spec.py",
+      "summary": "A worksheet's cells and a formula import as typed cell contents, with the formula's value computed correctly; editing one cell leaves the recalculating formula and every other cell alone.",
+      "backlog": "E6.9",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.043,
+        "detail": null
+      }
+    },
+    {
+      "id": "xlsx-beyond-claudia-chart",
+      "format": "xlsx",
+      "feature": "beyond-claudia/chart",
+      "source": "xlsx/beyond-claudia/chart/source.xlsx",
+      "spec": "xlsx/beyond-claudia/chart/spec.py",
+      "summary": "A chart (no claudia model at all) lives in its own package parts, referenced from a sheet an edit never touches; those parts must come back byte-for-byte identical through an edit to the chart's own source data on another sheet.",
+      "backlog": "E6.9",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.029,
+        "detail": null
+      }
+    },
+    {
+      "id": "xlsx-beyond-claudia-image",
+      "format": "xlsx",
+      "feature": "beyond-claudia/image",
+      "source": "xlsx/beyond-claudia/image/source.xlsx",
+      "spec": "xlsx/beyond-claudia/image/spec.py",
+      "summary": "An embedded picture is its own package part (xl/media/image1.png) on a sheet an edit never touches; it must come back byte-for-byte identical even though openpyxl mutates its drawing XML on any load+resave.",
+      "backlog": "E6.9",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-09T17:32:52Z",
+        "commit": "257e575",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.033,
         "detail": null
       }
     }

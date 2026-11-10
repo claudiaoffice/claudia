@@ -31,9 +31,19 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 const dialog = ref<
-  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete' | 'image' | 'row-size' | 'col-size'
+  null | 'sheet' | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete' | 'image' | 'chart' | 'row-size' | 'col-size'
 >(null)
 const panelOpen = ref(true)
+/** The chart tab shown instead of a sheet, or `null` for a sheet (`FooterBar.vue`'s own docstring on why this
+ * is not part of `state`). Reset to `null` if its tab disappears (removed here, or by someone else). */
+const activeChart = ref<string | null>(null)
+const activeChartSpec = computed(() => state.charts.find((c) => c.id === activeChart.value)?.spec_id ?? null)
+watch(
+  () => state.charts,
+  (charts) => {
+    if (activeChart.value !== null && !charts.some((c) => c.id === activeChart.value)) activeChart.value = null
+  },
+)
 const grid = ref<{ focus: () => void; selectObject: (id: string) => void } | null>(null)
 const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
@@ -199,6 +209,17 @@ async function pickSheet(id: string) {
   pointed.value = false
 }
 
+/** `FooterBar`'s `pick`: a sheet tab behaves exactly as before; a chart tab just swaps what the main pane
+ * shows, with no selection, formula bar or editing of its own to settle first. */
+async function pickTab(id: string, kind: 'sheet' | 'chart') {
+  if (kind === 'chart') {
+    activeChart.value = id
+    return
+  }
+  activeChart.value = null
+  await pickSheet(id)
+}
+
 async function addSheet(name: string) {
   dialog.value = null
   await session.addSheet(name)
@@ -253,6 +274,22 @@ function anchorForImage(aspect: number) {
 }
 
 function imageInserted(id: string) {
+  dialog.value = null
+  grid.value?.selectObject(id)
+  grid.value?.focus()
+}
+
+// ------------------------------------------------------------------------------ charts (E6.6)
+const CHART_HEIGHT = 300 // pixels; a chart has no aspect of its own to keep, so this default is just a size
+const CHART_WIDTH = 480
+
+/** Anchor a new chart's floating object at the current selection's top-left cell — same corner as the data it
+ * charts, same precedent as `anchorForImage`; moving it off the data afterwards is a drag away. */
+function anchorForChart() {
+  return { row: b.value.r0, col: b.value.c0, w: CHART_WIDTH, h: CHART_HEIGHT }
+}
+
+function chartInserted(id: string) {
   dialog.value = null
   grid.value?.selectObject(id)
   grid.value?.focus()
@@ -352,6 +389,7 @@ const menus = computed<Menu[]>(() => [
       { label: '', separator: true },
       { id: 'edit.new-sheet', label: t('New sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
       { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
+      { id: 'edit.chart', label: t('Chart…'), action: () => (dialog.value = 'chart'), disabled: readonly.value },
       { label: '', separator: true },
       // D130 (Claude's recommendation, flagged unconfirmed in decision-log.md): grouped into Row ▸ / Column ▸ rather
       // than six flat items, reusing the submenu mechanism Edit ▸ Paste as ▸ already needed.
@@ -489,8 +527,12 @@ onBeforeUnmount(() => clearTimeout(timer))
     </div>
     </div>
     <div class="main" :class="{ wide: !panelOpen }">
+      <div v-if="activeChart" class="chart-tab">
+        <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" />
+        <div v-else class="nosheet">This chart's definition is gone.</div>
+      </div>
       <SheetGrid
-        v-if="state.activeSheet"
+        v-else-if="state.activeSheet"
         ref="grid"
         :session="session"
         :sheet="state.activeSheet"
@@ -514,7 +556,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       <div v-else class="nosheet">This document has no sheet yet.</div>
       <SidePanel v-show="panelOpen" ref="panel" :session="session" />
     </div>
-    <FooterBar :state="state" :summary="summary" :can-add="!readonly" @pick="pickSheet" @add="dialog = 'sheet'" />
+    <FooterBar :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" @pick="pickTab" @add="dialog = 'sheet'" />
 
     <PromptDialog v-if="dialog === 'sheet'" title="New sheet" label="Name" ok="Add sheet" required placeholder="Forecast" @ok="addSheet" @close="dialog = null" />
     <PromptDialog
@@ -540,6 +582,15 @@ onBeforeUnmount(() => clearTimeout(timer))
     />
     <AboutDialog v-if="dialog === 'about'" app="computes" @close="dialog = null" />
     <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
+    <SheetChartInsertDialog
+      v-if="dialog === 'chart'"
+      :session="session"
+      :sheet="state.activeSheet"
+      :range="b"
+      :anchor-for="anchorForChart"
+      @close="dialog = null"
+      @inserted="chartInserted"
+    />
     <LineSizeDialog
       v-if="dialog === 'row-size' || dialog === 'col-size'"
       :session="session"
@@ -629,6 +680,12 @@ onBeforeUnmount(() => clearTimeout(timer))
   display: grid;
   place-items: center;
   color: var(--muted);
+}
+.chart-tab {
+  min-width: 0;
+  min-height: 0;
+  padding: 16px;
+  background: var(--paper);
 }
 .toast {
   position: absolute;

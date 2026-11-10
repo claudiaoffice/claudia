@@ -11,6 +11,7 @@ from io import BytesIO
 import docx
 
 from claudia_composes import DEFAULT_STYLE, TextModel
+from claudia_core import Run
 from claudia_test_documents.case import Case
 
 
@@ -24,7 +25,11 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    model.blocks[0].text = "Status report (updated)."
+    # a block is immutable (D181); swap its whole text in through the same remove/insert the model builds
+    # character edits from.
+    block_id, new_text = model.blocks[0].id, "Status report (updated)."
+    model.remove(block_id, 0, len(model.block(block_id).text))
+    model.insert(block_id, 0, new_text, [Run(len(new_text), None)])
     return model
 
 

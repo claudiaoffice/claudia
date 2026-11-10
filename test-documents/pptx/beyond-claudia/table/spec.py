@@ -5,7 +5,6 @@ keeping the table's own graphic-frame element untouched while only the edited te
 
 from __future__ import annotations
 
-from dataclasses import replace
 from io import BytesIO
 
 import pptx
@@ -17,17 +16,20 @@ from claudia_test_documents.case import Case
 def import_checks(model: SlideModel) -> None:
     # the table is invisible to `pptx_to_slides`: only the text box becomes an object -- exactly the claim this
     # case is testing.
-    assert [(o.kind, o.text) for o in model.objects_on("s1")] == [("text", "Status report.")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Status report.")]
 
 
 def modify(model: SlideModel) -> SlideModel:
     obj = model.get("o1")
-    model.replace_object(replace(obj, text="Status report (updated)."))
+    new_paragraph = obj.body.paragraph.with_text("Status report (updated).", ()).written_by("ana")
+    model.replace_object(obj.with_body(paragraph=new_paragraph))
     return model
 
 
 def after_checks(model: SlideModel) -> None:
-    assert [(o.kind, o.text) for o in model.objects_on("s1")] == [("text", "Status report (updated).")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [
+        ("text", "Status report (updated).")
+    ]
 
 
 def preserve_table(original_bytes: bytes, edited_bytes: bytes) -> None:

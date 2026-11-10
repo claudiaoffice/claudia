@@ -40,6 +40,16 @@ def test_a_chart_definition_round_trips_through_plain_data():
     assert ChartSpec.from_data(spec.to_data()) == spec
 
 
+def test_a_chart_definition_defaults_to_a_header_row_but_may_say_it_has_none():
+    assert chart_spec().header_row is True  # the old, implied behaviour stays the default
+    turned_off = chart_spec(header_row=False)
+    assert turned_off.header_row is False
+    assert ChartSpec.from_data(turned_off.to_data()) == turned_off
+    assert ChartSpec.from_data({**chart_spec().to_data(), "header_row": False}) == turned_off
+    with pytest.raises(ChartError, match="header_row"):
+        ChartSpec.from_data({**chart_spec().to_data(), "header_row": "no"})
+
+
 def test_a_chart_definition_needs_a_known_kind():
     with pytest.raises(ChartError, match="kind"):
         ChartSpec.from_data({**chart_spec().to_data(), "kind": "pie"})  # not yet a kind this version offers
