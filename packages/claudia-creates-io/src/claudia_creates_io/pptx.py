@@ -1,9 +1,9 @@
 """Converting between a :class:`~claudia_creates.SlideModel` and pptx, and adding a slide transition additively.
 
-``slides_to_pptx`` is a minimal base export (text boxes, the three built-in shapes, best-effort styling) -- not the
-ODF-first, loss-reporting import/export story of E10.3 (D5, D70), only enough of a real deck for ``add_transition``
-to have something to attach to. Templates, layouts, images and groups (E10.4, E10.8) are not here yet, same as the
-model itself (model.py's own docstring).
+``slides_to_pptx`` is a minimal base export (text boxes, the three built-in shapes, pictures, best-effort styling)
+-- not the ODF-first, loss-reporting import/export story of E10.3 (D5, D70), only enough of a real deck for
+``add_transition`` to have something to attach to. Templates, layouts and groups (E10.4, E10.8) are not here yet,
+same as the model itself (model.py's own docstring).
 
 ``add_transition`` is the additive extension the spike validated: python-pptx cannot write a ``<p:transition>``, so
 this edits the slide's own already-written XML directly with ``lxml`` -- a transition lives inline in the slide
@@ -15,9 +15,10 @@ shape in the schema and are offered on that basis, not independently checked aga
 or one of the three built-in autoshapes becomes a :class:`~claudia_creates.SlideObject`, and re-exporting an
 *edited* import patches only the slides whose objects actually changed onto the original bytes (through
 ``claudia_opc_io.reconcile``), so a table, a picture, a slide claudia never modeled at all survives untouched. A
-picture is not imported as claudia's own "image" object kind: ``slides_to_pptx`` cannot write one yet either (the
-model.py docstring), so there would be nothing symmetrical to export it back out as -- it stays beyond-claudia
-content, same as a table or a chart.
+picture already in a pptx read this way is not imported as claudia's own "image" object kind either -- decoding
+an arbitrary embedded picture back into an :class:`~claudia_core.ImageAsset` is separate, not-yet-built work
+(unlike export, D213, this has no existing asset to fall back on) -- so it stays beyond-claudia content, same as
+a table or a chart.
 """
 
 from __future__ import annotations
@@ -185,7 +186,9 @@ def _look(model: SlideModel, style_id: str) -> dict[str, str]:
 
 def slides_to_pptx(model: SlideModel) -> bytes:
     """``model`` as pptx bytes: one slide per slide id, its objects added bottom to top so the stacking order
-    (the last one is in front) comes out the same as it is drawn in claudia-creates."""
+    (the last one is in front) comes out the same as it is drawn in claudia-creates. An image object is written
+    as a real picture, its asset's own bytes embedded as-is (D213) — python-pptx reads the format back out of
+    them itself, the same way it would for a file opened from disk."""
     prs = Presentation()
     prs.slide_width, prs.slide_height = _DECK_WIDTH, _DECK_HEIGHT
     scale_x, scale_y = _DECK_WIDTH / SLIDE_WIDTH, _DECK_HEIGHT / SLIDE_HEIGHT
@@ -210,6 +213,10 @@ def slides_to_pptx(model: SlideModel) -> bytes:
                 shape = slide.shapes.add_textbox(*box)
                 shape.text_frame.text = words
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
+            elif body.kind == "image":
+                asset = model.images.get(body.image) if body.image else None
+                if asset is not None:
+                    slide.shapes.add_picture(BytesIO(asset.data), *box)
             else:
                 definition = model.shapes.get(body.shape) if body.shape else None
                 auto_shape = _AUTOSHAPE.get(definition.id if definition else "", MSO_SHAPE.RECTANGLE)

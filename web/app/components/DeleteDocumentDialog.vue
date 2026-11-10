@@ -21,7 +21,7 @@ async function remove() {
   <Modal title="Delete this document" @close="emit('close')">
     <p class="lead warning">
       This removes <b>{{ session.state.doc }}</b> from the server for good — its content, its history and its chat, and everybody's access to it. There is
-      no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Manage ▸ Export…).
+      no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download).
     </p>
     <form class="form" @submit.prevent="remove">
       <label class="field">Your password, to confirm<input v-model="password" type="password" autocomplete="current-password" /></label>

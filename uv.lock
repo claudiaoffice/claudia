@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -556,10 +556,13 @@ source = { editable = "packages/claudia-server" }
 dependencies = [
     { name = "claudia-ai" },
     { name = "claudia-composes" },
+    { name = "claudia-composes-io" },
     { name = "claudia-computes" },
+    { name = "claudia-computes-io" },
     { name = "claudia-container" },
     { name = "claudia-core" },
     { name = "claudia-creates" },
+    { name = "claudia-creates-io" },
     { name = "claudia-typeset" },
     { name = "cryptography" },
     { name = "fastapi" },
@@ -577,10 +580,13 @@ requires-dist = [
     { name = "claudia-ai", editable = "packages/claudia-ai" },
     { name = "claudia-ai", extras = ["openvino"], marker = "extra == 'openvino'", editable = "packages/claudia-ai" },
     { name = "claudia-composes", editable = "packages/claudia-composes" },
+    { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
+    { name = "claudia-computes-io", editable = "packages/claudia-computes-io" },
     { name = "claudia-container", editable = "packages/claudia-container" },
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
+    { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
     { name = "claudia-typeset", editable = "packages/claudia-typeset" },
     { name = "cryptography", specifier = ">=44" },
     { name = "fastapi", specifier = ">=0.115" },

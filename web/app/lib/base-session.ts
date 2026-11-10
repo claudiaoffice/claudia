@@ -467,6 +467,13 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return await this.attempt('export_content')
   }
 
+  /** The document's current content as bytes of a Word, Excel or PowerPoint file (`format` is one of what the
+   * app supports: "docx", "xlsx" or "pptx"), as `{format, content_type, data}` with `data` base64 — no tracked
+   * changes, no history, no chat; just the document as it stands now. */
+  async exportOffice(format: string): Promise<{ format: string; content_type: string; data: string } | false> {
+    return await this.attempt('export_office', { format })
+  }
+
   // ------------------------------------------------------------------------------ help (E13.1, E13.3, E13.5)
   /** Help topics whose title, tags or what-they-explain mention `query`; every topic, by title, if `query` is
    * blank. The same for every app — a topic names the apps it is for itself. */

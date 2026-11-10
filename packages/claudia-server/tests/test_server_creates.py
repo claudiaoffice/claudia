@@ -406,3 +406,22 @@ def test_a_presentation_with_an_image_comes_back_after_a_restart(tmp_path):
     back = FileProvider(tmp_path, SlideModel).open("talk")
     assert objects(back) == before["objects"]
     assert call(back, "images") == before["images"]
+
+
+# ----------------------------------------------------------------------------- export to PowerPoint (D212)
+def test_export_office_returns_pptx_bytes_that_round_trip(deck):
+    from claudia_creates_io import pptx_to_slides
+
+    add_text(deck, text="Hello there")
+    answer = call(deck, "export_office", {"format": "pptx"})
+    assert answer["format"] == "pptx"
+    assert answer["content_type"] == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    raw = base64.b64decode(answer["data"])
+    assert raw[:2] == b"PK"  # a pptx is a zip
+    reloaded = pptx_to_slides(raw)
+    assert len(reloaded.slides) == 1
+
+
+def test_export_office_rejects_an_unknown_format(deck):
+    with pytest.raises(RequestError):
+        call(deck, "export_office", {"format": "odp"})

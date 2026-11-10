@@ -42,6 +42,7 @@ const dialog = ref<
   | 'accept-owner'
   | 'leave'
   | 'export'
+  | 'export-format'
   | 'delete'
   | 'image'
   | 'chart'
@@ -50,6 +51,8 @@ const dialog = ref<
   | 'styles'
   | 'colours'
 >(null)
+
+const EXPORT_FORMATS = [{ value: 'xlsx', label: 'Excel workbook (.xlsx)' }]
 const panelOpen = ref(true)
 /** The chart tab shown instead of a sheet, or `null` for a sheet (`FooterBar.vue`'s own docstring on why this
  * is not part of `state`). Reset to `null` if its tab disappears (removed here, or by someone else). */
@@ -416,7 +419,7 @@ const menus = computed<Menu[]>(() => [
       { label: '', separator: true },
       { id: 'file.save', label: t('Save'), hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
       { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
-      { id: 'file.download', label: t('Download'), disabled: true }, // D123: a stub here until computes has an export format
+      { id: 'file.download', label: t('Download'), action: () => (dialog.value = 'export') },
       { label: '', separator: true },
       {
         id: 'file.manage',
@@ -431,7 +434,7 @@ const menus = computed<Menu[]>(() => [
           },
           { id: 'file.manage.accept-owner', label: t('Accept ownership…'), action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
           { id: 'file.manage.leave', label: t('Leave document…'), action: () => (dialog.value = 'leave') },
-          { id: 'file.manage.export', label: t('Export…'), action: () => (dialog.value = 'export') },
+          { id: 'file.manage.export', label: t('Export…'), action: () => (dialog.value = 'export-format') },
           {
             id: 'file.manage.delete',
             label: t('Delete from server…'),
@@ -662,6 +665,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
     <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
     <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
+    <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="EXPORT_FORMATS" @close="dialog = null" />
     <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog
       v-if="dialog === 'shortcuts'"

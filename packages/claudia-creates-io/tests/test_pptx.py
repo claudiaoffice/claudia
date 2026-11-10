@@ -3,6 +3,7 @@ add_transition: a slide transition added additively."""
 
 from __future__ import annotations
 
+import struct
 import zipfile
 from dataclasses import replace
 from io import BytesIO
@@ -12,9 +13,10 @@ import pytest
 from claudia_creates_io import UnsupportedEdit, add_transition, apply_edits_to_pptx, pptx_to_slides, slides_to_pptx
 from lxml import etree
 from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.util import Emu
 
-from claudia_core import ObjectBody, VisualObject, paragraph_for
+from claudia_core import ImageAsset, ImageImport, ObjectBody, VisualObject, decode_image, paragraph_for
 from claudia_creates import ShapeDefinition, SlideAnchor, SlideModel
 
 
@@ -22,6 +24,30 @@ def _object(object_id, slide, kind, x, y, w, h, style, text="", shape=None):
     """A slide object from the flat fields these tests have always used: an ``ObjectBody`` plus a
     ``SlideAnchor`` (E10.16), its words a paragraph of their own (E10.17)."""
     body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text, "ana"), shape=shape)
+    return VisualObject(body, SlideAnchor(slide, x, y))
+
+
+def _image_asset(width: int = 40, height: int = 20) -> ImageAsset:
+    """A tiny, valid GIF, decoded through the real decoder (no pixels, just a header python-pptx needs to
+    recognise it as a picture) -- the same construction ``claudia-creates``' own test fixtures use."""
+    header = b"GIF89a" + struct.pack("<HHBBB", width, height, 0, 0, 0)
+    frame = b"\x2c" + struct.pack("<HHHH", 0, 0, width, height) + b"\x00" + b"\x02\x01\x00\x00"
+    return decode_image(header + frame + b"\x3b")
+
+
+def _image_object(object_id, slide, x, y, w, h, asset: ImageAsset) -> VisualObject:
+    imported = ImageImport.from_data(
+        {
+            "asset": asset.id,
+            "alt": "a sample picture",
+            "imported_by": "ana",
+            "imported_at": "2026-11-07T10:00:00.000Z",
+            "source": "disk",
+            "source_name": "pic.gif",
+            "source_path": None,
+        }
+    )
+    body = ObjectBody(object_id, "image", w, h, "plain-image", image=asset.id, imported=imported)
     return VisualObject(body, SlideAnchor(slide, x, y))
 
 
@@ -54,6 +80,27 @@ def test_shapes_map_to_the_right_autoshape():
     from pptx.enum.shapes import MSO_SHAPE
 
     assert prs.slides[1].shapes[0].auto_shape_type == MSO_SHAPE.OVAL
+
+
+def test_an_image_object_becomes_a_real_picture_not_a_blue_box():
+    model = SlideModel.empty()  # "s1"
+    asset = _image_asset()  # 40x20, aspect 2 -- the object's own w/h must keep that proportion
+    model.define_image(asset)
+    model.insert_object(_image_object("i1", "s1", 150, 300, 400, 200, asset))
+    prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
+    shape = prs.slides[0].shapes[0]
+    assert shape.shape_type == MSO_SHAPE_TYPE.PICTURE
+    assert shape.image.blob == asset.data
+
+
+def test_an_image_object_keeps_its_place_alongside_other_objects():
+    model = two_slide_deck()
+    asset = _image_asset()
+    model.define_image(asset)
+    model.insert_object(_image_object("i1", "s1", 150, 300, 400, 200, asset))
+    prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
+    kinds = [shape.shape_type for shape in prs.slides[0].shapes]
+    assert MSO_SHAPE_TYPE.PICTURE in kinds
 
 
 def test_an_empty_model_still_has_its_one_slide():

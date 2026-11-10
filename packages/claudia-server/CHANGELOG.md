@@ -3,6 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.21.0] - 2026-11-10
+
+Word, Excel and PowerPoint export, one method per app (D212).
+
+### Added
+- `export_office(format)` in composes (`"docx"`), computes (`"xlsx"`) and creates (`"pptx"`): the document as it
+  stands now — no history, no chat, no open suggestions — as `{format, content_type, data}`, `data` base64. Any
+  other format is `bad_request`.
+- `office_export.office_export(fmt, data)`: the one place that wraps those bytes for the wire.
+
+### Changed
+- `claudia-server` now depends on `claudia-composes-io`, `claudia-computes-io` and `claudia-creates-io`.
+
 ## [0.20.0] - 2026-11-09
 
 What the style menus in all three apps needed from the protocol (D203).

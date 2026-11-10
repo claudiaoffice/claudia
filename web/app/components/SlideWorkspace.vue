@@ -28,6 +28,7 @@ const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
 const dialog = ref<null | 'styles' | 'colours'>(null)
+const EXPORT_FORMATS = [{ value: 'pptx', label: 'PowerPoint presentation (.pptx)' }]
 
 const readonly = computed(() => state.me.role === 'viewer')
 const styleHost = objectStyleHost({
@@ -132,7 +133,7 @@ const menus = computed<Menu[]>(() => [
       { label: '', separator: true },
       { id: 'file.save', label: t('Save'), hint: 'Ctrl+S', action: () => frame.value?.checkpoint(null), disabled: readonly.value },
       { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => frame.value?.openDialog('checkpoint'), disabled: readonly.value },
-      { id: 'file.download', label: t('Download'), disabled: true }, // D123: a stub here until creates has an export format
+      { id: 'file.download', label: t('Download'), action: () => frame.value?.openDialog('export') },
       { label: '', separator: true },
       {
         id: 'file.manage',
@@ -152,7 +153,7 @@ const menus = computed<Menu[]>(() => [
             disabled: state.me.role === 'viewer',
           },
           { id: 'file.manage.leave', label: t('Leave document…'), action: () => frame.value?.openDialog('leave') },
-          { id: 'file.manage.export', label: t('Export…'), action: () => frame.value?.openDialog('export') },
+          { id: 'file.manage.export', label: t('Export…'), action: () => frame.value?.openDialog('export-format') },
           {
             id: 'file.manage.delete',
             label: t('Delete from server…'),
@@ -269,7 +270,7 @@ const menus = computed<Menu[]>(() => [
 </script>
 
 <template>
-  <DocumentFrame ref="frame" :session="session" :menus="menus" @leave="(opts) => emit('leave', opts)" @saved="canvas?.focus()">
+  <DocumentFrame ref="frame" :session="session" :menus="menus" :export-formats="EXPORT_FORMATS" @leave="(opts) => emit('leave', opts)" @saved="canvas?.focus()">
     <template #toolbar>
       <InsertBar
         :shapes="state.library"

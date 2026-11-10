@@ -185,6 +185,26 @@ def test_computes_has_everything_the_core_has(book):
     assert "sheets" not in core_methods.names()
 
 
+# ------------------------------------------------------------------ export to Excel (D212)
+def test_export_office_returns_xlsx_bytes_that_round_trip(book):
+    from claudia_computes_io import xlsx_to_workbook
+
+    call(book, "add_sheet", {"name": "Costs"})
+    typed(book, "s1", [(0, 0, "a"), (0, 1, "3")])
+    answer = call(book, "export_office", {"format": "xlsx"})
+    assert answer["format"] == "xlsx"
+    assert answer["content_type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    raw = base64.b64decode(answer["data"])
+    assert raw[:2] == b"PK"  # an xlsx is a zip
+    reloaded = xlsx_to_workbook(raw)
+    assert [s.name for s in reloaded.sheets.values()] == ["Costs"]
+
+
+def test_export_office_rejects_an_unknown_format(book):
+    with pytest.raises(RequestError):
+        call(book, "export_office", {"format": "ods"})
+
+
 # ------------------------------------------------------------------ row heights and column widths (D135)
 def test_a_new_sheet_has_no_resized_lines(book):
     call(book, "add_sheet", {"name": "S"})

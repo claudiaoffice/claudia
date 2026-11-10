@@ -32,6 +32,8 @@ from __future__ import annotations
 
 import secrets
 
+from claudia_computes_io import workbook_to_xlsx
+
 from claudia_computes import (
     AddChart,
     AddSheet,
@@ -76,6 +78,7 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 
 from .images import image_bytes
+from .office_export import office_export
 from .protocol import Context, RequestError, core_methods
 from .styles import add_style_methods
 
@@ -150,6 +153,16 @@ def _sheets(ctx):
         {"id": sheet.id, "name": sheet.name, **dict(zip(("rows", "cols"), sheet.extent(), strict=True))}
         for sheet in _workbook(ctx).sheets.values()
     ]
+
+
+@computes_methods.method("export_office", "format:str")
+def _export_office(ctx, *, format):
+    """The document's current content as bytes of an Excel file (`format` must be `"xlsx"`, the only one so
+    far), wrapped for the wire as `{format, content_type, data}` (`data` base64). No tracked changes, no
+    history, no chat — just the workbook as it stands now (D212)."""
+    if format != "xlsx":
+        raise RequestError("bad_request", 'export_office: format must be "xlsx"')
+    return office_export(format, workbook_to_xlsx(_workbook(ctx)))
 
 
 @computes_methods.method("cells", "sheet:str row0:int row1:int col0:int col1:int")

@@ -1,5 +1,7 @@
 """The methods a text view needs: the paragraphs, editing a range, styles, cursors and zones, suggestions (composes)."""
 
+import base64
+
 import pytest
 
 from claudia_composes import TextModel
@@ -404,3 +406,30 @@ def test_enter_at_the_end_of_a_deviated_heading_starts_body_text(paper):
     made = call(paper, "deviate_style", {"parent": "heading-1", "blocks": ["b1"], "set": {"color": "#D6477A"}})
     type_(paper, "\n", at=5)
     assert [b["style"] for b in call(paper, "blocks")["blocks"]] == [made["style"], "body"]
+
+
+# ----------------------------------------------------------------------------- export to Word (D212)
+def test_export_office_returns_docx_bytes_that_round_trip(paper):
+    from claudia_composes_io import docx_to_text
+
+    type_(paper, "Hello there")
+    answer = call(paper, "export_office", {"format": "docx"})
+    assert answer["format"] == "docx"
+    assert answer["content_type"] == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    raw = base64.b64decode(answer["data"])
+    assert raw[:2] == b"PK"  # a docx is a zip
+    assert [b.text for b in docx_to_text(raw).blocks] == ["Hello there"]
+
+
+def test_export_office_drops_open_suggestions_rather_than_tracking_them(paper):
+    from claudia_composes_io import docx_to_text
+
+    type_(paper, "Hello there")
+    call(paper, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    raw = base64.b64decode(call(paper, "export_office", {"format": "docx"})["data"])
+    assert [b.text for b in docx_to_text(raw).blocks] == ["Hello there"]
+
+
+def test_export_office_rejects_an_unknown_format(paper):
+    with pytest.raises(RequestError):
+        call(paper, "export_office", {"format": "odt"})

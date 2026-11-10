@@ -18,6 +18,8 @@ suggest, and people accept (D63).
 
 from __future__ import annotations
 
+from claudia_composes_io import text_to_docx
+
 from claudia_composes import (
     AcceptSuggestion,
     DeleteText,
@@ -40,6 +42,7 @@ from claudia_core import (
     validate_css,
 )
 
+from .office_export import office_export
 from .protocol import Context, RequestError, core_methods
 from .styles import add_style_methods, own_css
 
@@ -97,6 +100,16 @@ def _suggestions(ctx):
     """The suggestions that are still open, as `{id, author, block, start, end, original, replacement, reason,
     state, outdated}`. `replacement` is null for a remark. An outdated one cannot be accepted any more."""
     return _text(ctx).visible_suggestions()
+
+
+@composes_methods.method("export_office", "format:str")
+def _export_office(ctx, *, format):
+    """The document's current content as bytes of a Word file (`format` must be `"docx"`, the only one so far),
+    wrapped for the wire as `{format, content_type, data}` (`data` base64). No tracked changes: open suggestions
+    are not written in, same as `export_content` leaves out the history and the chat (D212)."""
+    if format != "docx":
+        raise RequestError("bad_request", 'export_office: format must be "docx"')
+    return office_export(format, text_to_docx(_text(ctx), track_suggestions=False))
 
 
 # ------------------------------------------------------------------------------ writing

@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import secrets
 
+from claudia_creates_io import slides_to_pptx
+
 from claudia_core import (
     OBJECT_KINDS,
     AddObject,
@@ -40,6 +42,7 @@ from claudia_core.clock import utc_now
 from claudia_creates import AddSlide, ShapeLibrary, SlideAnchor, SlideModel
 
 from .images import image_bytes
+from .office_export import office_export
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .styles import add_style_methods
 
@@ -207,6 +210,15 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         no library to pick from: an image always comes in through `add_image`."""
         deck = _deck(ctx)
         return [image.to_data() for _, image in sorted(deck.images.items())]
+
+    @table.method("export_office", "format:str")
+    def _export_office(ctx, *, format):
+        """The document's current content as bytes of a PowerPoint file (`format` must be `"pptx"`, the only
+        one so far), wrapped for the wire as `{format, content_type, data}` (`data` base64). No tracked
+        changes, no history, no chat — just the deck as it stands now (D212)."""
+        if format != "pptx":
+            raise RequestError("bad_request", 'export_office: format must be "pptx"')
+        return office_export(format, slides_to_pptx(_deck(ctx)))
 
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):

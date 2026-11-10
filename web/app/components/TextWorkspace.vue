@@ -35,6 +35,7 @@ const dialog = ref<
   | 'accept-owner'
   | 'leave'
   | 'export'
+  | 'export-format'
   | 'delete'
 >(null)
 const styleMenu = ref<{ x: number; y: number } | null>(null)
@@ -92,15 +93,19 @@ function help(mode: 'how-to' | 'docs') {
   setTimeout(() => panel.value?.openHelp(mode), 0)
 }
 
-async function download() {
+/** File ▸ Download opens Claudia's own file format dialog; File ▸ Export… (D212) opens this one. Both read the
+ * document as it stands this instant, so pending typing is flushed to the server first — `ExportFormatDialog`'s
+ * Markdown option builds straight from `state.blocks` here, and its Word option asks the server, which also
+ * works from what has actually been applied. */
+async function openExportFormat() {
   await session.flush()
-  const blob = new Blob([toMarkdown(state.blocks)], { type: 'text/markdown' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `${state.doc}.md`
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+  dialog.value = 'export-format'
 }
+
+const exportFormats = [
+  { value: 'md', label: 'Markdown (.md)', mimeType: 'text/markdown', local: () => toMarkdown(state.blocks) },
+  { value: 'docx', label: 'Word document (.docx)' },
+]
 
 function openStyleMenu(at = editor.value?.caretPoint() ?? { x: 80, y: 120 }) {
   styleMenu.value = at
@@ -164,7 +169,7 @@ const menus = computed<Menu[]>(() => [
       { label: '', separator: true },
       { id: 'file.save', label: t('Save'), hint: hints.value['file.save'], action: () => checkpoint(null), disabled: readonly.value },
       { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => (dialog.value = 'checkpoint'), disabled: readonly.value },
-      { id: 'file.download', label: t('Download'), action: download },
+      { id: 'file.download', label: t('Download'), action: () => (dialog.value = 'export') },
       { label: '', separator: true },
       {
         id: 'file.manage',
@@ -179,7 +184,7 @@ const menus = computed<Menu[]>(() => [
           },
           { id: 'file.manage.accept-owner', label: t('Accept ownership…'), action: () => (dialog.value = 'accept-owner'), disabled: state.me.role === 'viewer' },
           { id: 'file.manage.leave', label: t('Leave document…'), action: () => (dialog.value = 'leave') },
-          { id: 'file.manage.export', label: t('Export…'), action: () => (dialog.value = 'export') },
+          { id: 'file.manage.export', label: t('Export…'), action: () => void openExportFormat() },
           {
             id: 'file.manage.delete',
             label: t('Delete from server…'),
@@ -404,6 +409,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
     <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
     <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
+    <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="exportFormats" @close="dialog = null" />
     <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog
       v-if="dialog === 'shortcuts'"

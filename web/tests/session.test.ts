@@ -723,6 +723,19 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(await session.exportContent()).toEqual(exported)
   })
 
+  it('exports the current content as a Word, Excel or PowerPoint file', async () => {
+    const link = new FakeLink()
+    server(link)
+    const exported = { format: 'xlsx', content_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', data: 'AAAA' }
+    link.handlers.export_office = (params) => {
+      expect(params).toEqual({ format: 'xlsx' })
+      return exported
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.exportOffice('xlsx')).toEqual(exported)
+  })
+
   it('tells us when somebody else leaves', async () => {
     const { session, link } = await opened()
     link.push('ephemeral', { kind: 'person_left', sender: 'ben', data: { user: 'ben' } })
