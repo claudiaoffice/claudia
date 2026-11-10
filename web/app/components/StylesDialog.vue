@@ -30,7 +30,7 @@ async function save(id: string) {
     <label v-if="unnamed" class="filter"><input v-model="onlyUnnamed" type="checkbox" /> Only the {{ unnamed }} waiting for a name</label>
     <ul class="list" data-testid="styles-list">
       <li v-for="s in shown" :key="s.id" :data-style="s.id">
-        <div class="sample" :style="previewCss(s.computed)">{{ s.name }}</div>
+        <div class="sample" :style="previewCss(s.resolved)">{{ s.name }}</div>
         <form v-if="editing === s.id" class="rename" @submit.prevent="save(s.id)" @keydown.esc.stop="editing = null">
           <input v-model="typed" :aria-label="`New name of ${s.name}`" autofocus autocomplete="off" />
           <button class="btn primary" type="submit" :disabled="!typed.trim()">Save</button>

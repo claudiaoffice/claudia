@@ -1,8 +1,8 @@
 """Start the Claudia demo: build the web app if needed, run the server(s), open the browser.
 
-    ./start.sh                  # computes (tables) at http://127.0.0.1:8765/, documents in ./demo-docs
-    ./start.sh composes         # composes (text) at port 8765, documents in ./demo-docs-composes
-    ./start.sh creates          # creates (presentations) at port 8765, documents in ./demo-docs-creates
+    ./start.sh                  # computes (tables) at http://127.0.0.1:8765/, documents in ./docs-computes
+    ./start.sh composes         # composes (text) at port 8765, documents in ./docs-composes
+    ./start.sh creates          # creates (presentations) at port 8765, documents in ./docs-creates
     ./start.sh all              # all three at once: computes 8765, composes 8766, creates 8767
     ./start.sh all --dir ~/claudia-docs --port 9000 --no-browser
     ./start.sh --rebuild        # build the web app again first
@@ -67,7 +67,7 @@ class AppServer:
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """The options of the launcher. ``args.app`` is one app or ``all``."""
-    parser = argparse.ArgumentParser(description="Start the Claudia demo server and open it in the browser.")
+    parser = argparse.ArgumentParser(description="Start the Claudia server and open it in the browser.")
     parser.add_argument(
         "which",
         nargs="?",
@@ -77,7 +77,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--app", choices=[*APPS, "all"], help="the same as the word above")
     parser.add_argument(
-        "--dir", help="where the sealed (encrypted) documents are kept (default: demo-docs, one folder per app)"
+        "--dir", help="where the sealed (encrypted) documents are kept (default: docs-x, one folder per app)"
     )
     parser.add_argument(
         "--shapes", action="append", default=[], metavar="DIR", help="creates: more shapes (JSON files); repeatable"
@@ -95,7 +95,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         )
     args.app = args.which or args.app or "computes"
     if args.dir is None and args.app != "all":  # one directory holds the documents of one app
-        args.dir = str(ROOT / ("demo-docs" if args.app == "computes" else f"demo-docs-{args.app}"))
+        args.dir = str(ROOT / (f"docs-{args.app}"))
     return args
 
 
@@ -108,7 +108,7 @@ def app_servers(args: argparse.Namespace) -> list[AppServer]:
         own = copy.copy(args)
         own.app, own.port = app, args.port + offset
         if args.dir is None:
-            own.dir = str(ROOT / ("demo-docs" if app == "computes" else f"demo-docs-{app}"))
+            own.dir = str(ROOT / (f"docs-{app}"))
         else:
             own.dir = str(Path(args.dir) / app)
         servers.append(AppServer(app, own.port, own.dir, page_url(own), own))

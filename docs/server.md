@@ -73,6 +73,10 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   that waits for its name), `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
   and `accept_suggestion` / `reject_suggestion`. The assistant has no direct write path into a text: it suggests,
   people accept (D63).
+* **Help (E13).** `help_search` (an optional `query`, blank for everything) and `help_topic` (an id from a search result)
+  read the help topics, which every app inherits for free the moment it has its own `help/` folder; nothing here needs a
+  role, so the `ai` user can read it too. Workbooks add `functions` (the same kind of search, over every cell function,
+  library and core alike) and `function_help` (one function's signature, tooltip and full help text, by name).
 * The AI is a participant called `ai`, one per document: it shows up in `users` and `people` (in the colour Iris), hears
   messages that start with `@ai`, and answers the asker only. It edits through the same methods as everybody, so locks
   and roles apply and its work is in the history under its name. The model behind it is a plug-in (`Engine`, or
@@ -164,8 +168,12 @@ Not there yet: redaction in packed blocks (E2.6: a redacted text still rests in 
 
 A server started with `--model claudia_creates:SlideModel` hosts presentations. Its methods (see `GET /api/protocol`
 for every parameter) are `slides`, `slide`, `shapes`, `images`, `styles`, `add_slide`, `add_object`, `add_image`,
-`move_object`, `resize_object`, `set_text` and `remove_object`, plus the core ones. A selection is the region
-`{"kind": "objects", "slide": "s1", "ids": ["o1"]}` for `presence` and `lock`.
+`move_object`, `resize_object`, `set_text`, `set_snap` and `remove_object`, plus the core ones. A selection is the
+region `{"kind": "objects", "slide": "s1", "ids": ["o1"]}` for `presence` and `lock`.
+
+Each object also carries `snap` (E10.15): whether it holds to the grid, a helper the view draws on its own and
+never sends to the server. `set_snap` takes an object's id and a `snap` boolean; releasing or re-snapping an
+object is its own step in the document's history, independent of moving, resizing or editing it.
 
 Positions and sizes are whole units of a slide of 1600 by 900. Shapes are JSON files, one per shape (the format is
 described with `claudia_creates.shapes`); `--shapes DIR` adds a folder of them to the built-in rectangle, circle and

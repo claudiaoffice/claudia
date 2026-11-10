@@ -1,4 +1,5 @@
-"""Exporting a :class:`~claudia_composes.TextModel` to docx, with open suggestions as native tracked changes.
+"""Converting between a :class:`~claudia_composes.TextModel` and docx, with open suggestions as native tracked
+changes, and a real edit-and-reexport path that keeps what claudia never modeled (D135, D177).
 
 ``text_to_docx`` is a minimal base export (paragraphs, built-in styles mapped to Word's own) -- not the ODF-first,
 loss-reporting import/export story of E9.5 (D5, D70). What it adds beyond the base is the additive extension the
@@ -7,6 +8,12 @@ spike validated: python-docx has no way to read or write ``w:ins``/``w:del`` (tr
 with ``docx.oxml.OxmlElement`` -- python-docx's own documented escape hatch for markup it does not model -- and
 appending them to the paragraph's element. A suggestion becomes something a reviewer can Accept or Reject in Word
 like any other tracked change, even though Claudia's own UI shows it as a suggestion.
+
+``docx_to_text`` is the reverse: a docx's paragraphs become a :class:`TextModel`, Word's built-in styles mapped
+back. ``apply_edits_to_docx`` closes the loop D177 set out to fix: re-exporting an *edited* imported document by
+patching only the changed paragraphs onto the original bytes (through ``claudia_opc_io.reconcile``), instead of
+rebuilding the file from the model alone and losing everything claudia never modeled -- a table, an image, a
+custom style. See the implementation note for what it does not cover yet (adding or removing a paragraph).
 """
 
 from __future__ import annotations
@@ -22,7 +29,8 @@ from docx.oxml.ns import qn
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
-from claudia_composes import Suggestion, TextModel
+from claudia_composes import DEFAULT_STYLE, Block, Run, Suggestion, TextModel
+from claudia_opc_io import owns, reconcile
 
 #: The built-in styles (model.py's BUILTIN_STYLES) mapped to Word's own built-in style names; anything else
 #: (a deviated or custom style) falls back to Normal -- styling fidelity beyond this is E9.5's job, not this slice's.
@@ -32,6 +40,15 @@ _WORD_STYLE = {
     "heading-2": "Heading 2",
     "quote": "Quote",
 }
+#: The reverse of ``_WORD_STYLE``, for import: anything not one of these four names (including "Normal", a custom
+#: style, or no style at all) becomes body text -- the same fallback ``text_to_docx`` uses on the way out.
+_CLAUDIA_STYLE = {word_name: claudia_id for claudia_id, word_name in _WORD_STYLE.items()}
+
+
+class UnsupportedEdit(Exception):
+    """Raised by :func:`apply_edits_to_docx` for an edit it cannot patch onto the original file yet: adding or
+    removing a paragraph. Changing an existing paragraph's text or style is supported; see the implementation
+    note for what is still missing."""
 
 
 def text_to_docx(model: TextModel, *, track_suggestions: bool = True) -> bytes:
@@ -91,3 +108,65 @@ def _tracked_change(
     run.append(run_text)
     change.append(run)
     return change
+
+
+def docx_to_text(docx_bytes: bytes) -> TextModel:
+    """``docx_bytes`` as a :class:`TextModel`: one block per paragraph, in order, Word's built-in styles mapped
+    back to claudia's (anything else -- "Normal", a custom style, no style at all -- becomes body text, the
+    same fallback ``text_to_docx`` uses going the other way). A tracked change's own text is not seen here:
+    python-docx's own ``paragraph.text`` already skips it (only runs that are direct children of the paragraph
+    count), and re-importing an existing tracked change is not this slice's job."""
+    document = Document(BytesIO(docx_bytes))
+    blocks = []
+    for index, paragraph in enumerate(document.paragraphs, start=1):
+        style = paragraph.style
+        style_id = _CLAUDIA_STYLE.get(style.name, DEFAULT_STYLE) if style is not None else DEFAULT_STYLE
+        text = paragraph.text
+        blocks.append(Block(f"b{index}", style_id, text, [Run(len(text), None)] if text else []))
+    return TextModel(blocks) if blocks else TextModel()
+
+
+def apply_edits_to_docx(
+    original_bytes: bytes, baseline: TextModel, current: TextModel, *, track_suggestions: bool = True
+) -> bytes:
+    """Re-export ``current`` to docx by patching only what changed since ``baseline`` (the model as it stood
+    right after :func:`docx_to_text` imported ``original_bytes``) onto those same bytes, instead of rebuilding
+    the file from the model alone -- so a table, an image, a custom style, anything claudia never modeled,
+    survives untouched (D177). Reopens ``original_bytes`` fresh, rewrites the paragraphs whose text or style
+    changed (and any block an open suggestion now touches, rendered as a tracked change same as
+    ``text_to_docx``), then calls :func:`claudia_opc_io.reconcile` so every other part of the package -- and
+    every paragraph this call did not touch -- comes back exactly as it was.
+
+    Raises :class:`UnsupportedEdit` if a block was added or removed since ``baseline``: patching a paragraph's
+    own content onto the original is covered; inserting or deleting a paragraph in it is not, yet."""
+    baseline_by_id = {b.id: b for b in baseline.blocks}
+    current_by_id = {b.id: b for b in current.blocks}
+    added = current_by_id.keys() - baseline_by_id.keys()
+    removed = baseline_by_id.keys() - current_by_id.keys()
+    if added or removed:
+        raise UnsupportedEdit("adding or removing a paragraph cannot be patched onto the original file yet")
+    position_of = {block.id: index for index, block in enumerate(baseline.blocks)}
+    by_block: dict[str, list[Suggestion]] = {}
+    if track_suggestions:
+        for suggestion in current.suggestions.values():
+            if suggestion.state == "open" and suggestion.replacement is not None:
+                by_block.setdefault(suggestion.anchor.block, []).append(suggestion)
+    document = Document(BytesIO(original_bytes))
+    paragraphs = document.paragraphs
+    change_ids = count(1)
+    for block_id, after in current_by_id.items():
+        if baseline_by_id[block_id] == after and block_id not in by_block:
+            continue  # neither the text/style nor its suggestions changed: leave the paragraph exactly as is
+        paragraph = paragraphs[position_of[block_id]]
+        paragraph.style = _WORD_STYLE.get(after.style, "Normal")
+        for run in list(paragraph.runs):
+            # python-docx's own documented way to clear a paragraph; a run's ``w:r`` always has the paragraph's
+            # ``w:p`` as its parent, so this is never actually None -- lxml-stubs just cannot know that.
+            parent = run._element.getparent()
+            assert parent is not None
+            parent.remove(run._element)
+        ordered = sorted(by_block.get(block_id, ()), key=lambda s: s.anchor.start)
+        _fill_paragraph(paragraph, after.text, ordered, change_ids)
+    patched = BytesIO()
+    document.save(patched)
+    return reconcile(original_bytes, patched.getvalue(), owns(["word/document.xml"]))

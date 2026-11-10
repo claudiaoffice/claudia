@@ -52,6 +52,9 @@ statement in the docs or on the website).
 | UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open (not re-checked) |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
+| UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
+| UX-11 | P2 | UX | The admin sign-in screen had no way back except the browser's Back button | **fixed** |
+| UX-12 | P2 | UX | Open dialog goes blank if the server has an access secret | **fixed** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed (patch ready, not yet committed) |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed (patch ready, not yet committed) |
@@ -329,9 +332,83 @@ with each app and each new menu item.
 menu, and the web app implementing the shell contract directly. Then `shim.js` and `webroutes.json` are deleted.
 Settling UX-06 is a precondition.
 
+### UX-11 · The admin sign-in screen had no way back except the browser's Back button · P2 · fixed
+**Evidence (read, `441d6cb`).** Reported by the owner: opening the connectivity indicator's "Manage this server…"
+on a server that already has an administrator lands on `AdminLogin.vue`. `AdminShell.vue` (shown once signed in)
+has a `×` "Close" button (`location.href = '/'`); `FirstAdminSetup.vue` has "Skip for now" / "Keep this server
+local for now" (`keepLocal()`, same target). `AdminLogin.vue` had neither — nothing in its template emits a way
+out, so the browser's own Back button was the only escape. Investigated while trying to reproduce a related report
+that a freshly created document seemed to go missing after exactly this click-through-and-Back path; the document
+itself turned out fine (D5's "Open creates on the server, Save checkpoints" already means there is no unsaved-draft
+window to lose), but this dead end is real and independent of that.
+**Fix.** Gave `AdminLogin.vue` the same `close` emit and `×` button `AdminShell.vue` already uses (same markup,
+same `.close` styles), and wired it in `AdminApp.vue` to the existing `close()` → `location.href = '/'`.
+**Acceptance.** Verified with a real browser against a built app: an administrator account is already configured,
+`/admin/` renders the sign-in form with the `×` visible, clicking it returns to `/` (the Open dialog) without
+touching browser history.
+
+### UX-12 · Open dialog goes blank if the server has an access secret · P2 · fixed
+**Evidence (measured, `441d6cb`).** The backend correctly gates `GET /api/docs` behind the access secret
+(`Gateway.accepts_secret`, `app.py`): with one set, the endpoint answers `401 {"detail": "this server needs its
+access secret"}`. `OpenDialog.vue`'s `loadServer()` only special-cased a `404` from that fetch; every other status,
+401 included, fell into the same branch as success and ran `documents.value = said.documents` — `undefined` for an
+error body with no `documents` key. The template's `v-else-if="!documents.length"` then threw
+`TypeError: Cannot read properties of undefined (reading 'length')` on render. Confirmed with Playwright against a
+real server with an access secret set: page body text came back empty and the console showed exactly that
+`TypeError`. This blanks the *entire* Open dialog, not just one document, and needs no editing at all to trigger —
+just loading `/` on a secret-protected server. Backlog's E3.9/E3.1 status notes already flagged "the access-secret
+prompt" (a way to *supply* a secret from this dialog) as not built; this was the unhandled-exception shape of that
+same gap, not a separate missing feature.
+**Fix.** Pulled the whole "ask a server for its document list" step into a pure, testable function,
+`fetchDocsListing()` in `web/app/lib/open.ts` (mirroring `appOfServer()`'s own extraction for UX-10, and
+`admin-api.ts`'s `call()` for how it turns a `detail` field into a message): any non-OK status becomes a
+`{ error }` result using the server's own `detail` message when there is one, a 404 keeps its existing wording, and
+a 200 whose body has no `documents` array is treated as an error rather than assigned anyway. `OpenDialog.vue` now
+calls it and sets `listError` on the error branch, exactly as it already does for the old 404 case — no new UI,
+just no longer trusting an unexpected shape. The `Listed` interface moved from the component into `open.ts`
+alongside it, since it's now shared.
+**Acceptance.** `web/tests/open.test.ts`, `describe('fetchDocsListing', …)`: a normal 200, a 404 (unchanged
+wording), a 401 with a `detail` (surfaces it verbatim instead of crashing — this is the regression test), a 500
+with no usable `detail` (generic message), a 200 with no `documents` array, and a network failure — seven cases,
+all passing. Re-verified live: with an access secret set, `/` now renders the Open dialog's full chrome (servers
+sidebar, headline, create-document form) with "this server needs its access secret" where the list would be,
+instead of a blank page; zero JS `pageerror`s.
+
+### Note on PERF-04
+While reproducing the above, `bugtracker.md`'s own index still lists `PERF-04` as "fixed (listing cache)", but
+`SealedDocuments.documents()` — the provider the real server uses today — globs and re-reads every container
+file's manifest on every call (`sealed.py`, `documents()`). No cache currently exists in that path. Not a
+correctness bug (the listing is always fresh, which is why neither UX-11 nor UX-12 traces back to a stale cache),
+but whatever closed PERF-04 belonged to an earlier, now-replaced store, and the index entry is stale.
+
 ---
 
 ## Process and code
+
+### UX-10 · An empty server greets everybody as computes, whichever app it serves · P2 · fixed
+**Evidence (measured, `22d5fe4`).** `./start.sh all` runs three servers — computes 8765, composes 8766, creates 8767.
+All three landing pages showed the computes headline, "Think with your data. Open a table, or start a new one", and
+the top bar said only "claudia". Opening a document on each port gave the right app every time, so the servers and
+the launcher were never wrong; only the greeting was. The effect was worst on a fresh machine, where every folder is
+empty and all a person sees is three identical pages claiming to be the table app.
+**Cause.** `OpenDialog.vue` worked the app out as `documents.value[0]?.app ?? 'claudia'` — from the *first listed
+document*. With no documents there was nothing to read, and the copy fell through to the computes wording, which is
+the fallback branch. `/api/docs` has answered `{"app": ..., "documents": [...]}` all along; the page took the
+documents and dropped the app.
+**Fix.** `appOfServer()` in `web/app/lib/open.ts`: believe the server, fall back to a listed document for an older
+server that does not say, then to claudia in general. Extracted into `lib` rather than left in the component so it
+could be tested — the web tests cover `lib`, and there is no component harness. Four tests in `web/tests/open.test.ts`.
+Re-measured on all three ports with empty document folders: computes says "Think with your data", composes "Write
+together", creates "Say it on a slide", and each top bar names its own app.
+**Acceptance.** `tests/e2e/test_greeting.py` — the first test in the project that drives a real browser. It runs
+`./start.sh all`, opens each of the three ports in Chromium and reads `data-app` and the headline off the page.
+Confirmed to fail on `22d5fe4` for the right reason before the fix (all three said `app: claudia` and "Think with
+your data"), and to pass after it. `scripts/check_debt.py` runs it as the `e2e greeting` step and skips it, saying
+which is missing, where the web app is not built or there is no Chromium; CI has an `e2e` job that installs both.
+**Why nothing caught it.** Every layer below the rendered page was correct — the launcher, the three servers,
+`/api/docs` — and the web tests cover `web/app/lib`, not the page. The bug lived in the one place nothing looked.
+**Not the cause, though it looks like one.** computes and creates show "No styles yet" under *Format*: those menus
+are deliberately inert (D125) and the style UI for both is still to come.
 
 ### PROC-01 · No CI workflow in the repository · P1 · fixed
 `.github/workflows/ci.yml` exists at `54d1245`: a Python matrix over ubuntu, windows and macos running

@@ -43,11 +43,37 @@ def hello(user="ann", password=PASSWORD, create=True, **extra):
 def test_status_says_an_administrator_is_needed_only_when_exposed_and_none_exists(tmp_path):
     app, _, _ = serve(exposed=True, state_dir=tmp_path)
     with TestClient(app) as client:
-        assert client.get("/api/admin/status").json() == {"needs_administrator": True, "exposed": True}
+        assert client.get("/api/admin/status").json() == {
+            "needs_administrator": True,
+            "exposed": True,
+            "administrator": None,
+        }
 
     app, _, _ = serve(exposed=False, state_dir=tmp_path / "loopback")
     with TestClient(app) as client:
-        assert client.get("/api/admin/status").json() == {"needs_administrator": False, "exposed": False}
+        assert client.get("/api/admin/status").json() == {
+            "needs_administrator": False,
+            "exposed": False,
+            "administrator": None,
+        }
+
+
+def test_status_names_the_earliest_added_administrator_once_one_exists(tmp_path):
+    admins = AdminDirectory(cost=2**4)
+    admins.add("tobi", PASSWORD, added="2026-11-01T00:00:00Z")
+    app, _, _ = serve(exposed=True, admins=admins, state_dir=tmp_path)
+    with TestClient(app) as client:
+        assert client.get("/api/admin/status").json()["administrator"] == "tobi"
+
+    # a second administrator, added later, does not change the hint ...
+    admins.add("anna", PASSWORD, added="2026-11-05T00:00:00Z")
+    with TestClient(app) as client:
+        assert client.get("/api/admin/status").json()["administrator"] == "tobi"
+
+    # ... until the first one is removed, at which point the earliest of those remaining takes over
+    admins.remove("tobi")
+    with TestClient(app) as client:
+        assert client.get("/api/admin/status").json()["administrator"] == "anna"
 
 
 # -------------------------------------------------------------------------------------------- setup, login, me

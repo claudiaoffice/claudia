@@ -19,12 +19,22 @@ def test_state_lives_in_the_xdg_state_folder_of_the_app(tmp_path: Path, monkeypa
     assert paths.state_dir("composes") == tmp_path / "state" / "claudia" / "composes"
 
 
+def test_config_lives_in_the_xdg_config_folder_shared_by_every_app(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Unlike documents_dir/state_dir, this one takes no ``app`` — composes, computes and creates share it."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    assert paths.config_dir() == tmp_path / "config" / "claudia"
+
+
 def test_without_xdg_variables_the_home_folder_is_used(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     monkeypatch.delenv("XDG_STATE_HOME", raising=False)
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     assert paths.documents_dir("composes") == tmp_path / ".local" / "share" / "claudia" / "composes" / "documents"
     assert paths.state_dir("composes") == tmp_path / ".local" / "state" / "claudia" / "composes"
+    assert paths.config_dir() == tmp_path / ".config" / "claudia"
 
 
 def test_an_empty_xdg_variable_counts_as_unset(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

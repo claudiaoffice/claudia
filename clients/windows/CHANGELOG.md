@@ -14,6 +14,40 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
   (`tests/build-inject.test.ts`, 3 tests) pins down the exact scheme-parsing property that broke, independent of
   which OS actually runs it. The identical bug is present, unexercised, in `clients/macos/tools/build-inject.mjs`
   (POSIX absolute paths never trigger it) — worth the same one-line fix there.
+- `start-win-client.cmd`: `uv sync` (no flags) failed building `pyyaml` from source on a second real Windows run
+  (2026-11-09) with `error: Microsoft Visual C++ 14.0 or greater is required`. `pyyaml` is not a runtime
+  dependency of anything this client needs — it arrives only through the root `dev` dependency group's
+  `myst-parser` (Sphinx docs tooling), which `uv sync` installs by default alongside the actual server/client
+  packages. On a very recent Python (3.15) with no published Windows wheel yet, that group forces a source build
+  of `pyyaml`'s optional C extension, needing a C toolchain that is no part of this client's own requirements.
+  Fixed: `uv sync --quiet --no-dev` (confirmed directly: `uv tree --no-dev` shows no `pyyaml`/`myst-parser`/
+  `sphinx` at all, while the default tree lists all three under `(group: dev)`). `start-client.sh` and
+  `start-mac-client.sh` call plain `uv sync --quiet` too and carry the same latent risk, just not yet hit by
+  either OS's own Python/compiler situation — worth the same flag there.
+- `src/launch.ts`: the module's own `if (import.meta.url === ...) main(...)` entry guard silently evaluated
+  false on every real Windows run, so `node dist\launch.js composes` built and exited with no output and no
+  window at all — found on a third real run (2026-11-09), after the first two fixes let the build and `uv sync`
+  steps both succeed. The guard compared `import.meta.url` (a well-formed URL Node computes correctly) against
+  `` `file://${process.argv[1]}` `` (a bare string template) — on Windows, `process.argv[1]` is a backslashed,
+  drive-lettered path, and prepending `"file://"` to it produces a malformed URL that can never equal
+  `import.meta.url`'s real, forward-slashed form. This happened to work on POSIX by coincidence (an absolute
+  path already starts with `/`, so `"file://" + "/x"` is already the valid `"file:///x"`), which is exactly why
+  it shipped broken and untested for Windows. Fixed with `pathToFileURL(process.argv[1] ?? '').href`, the same
+  Node-documented fix as the first two bugs this real-run cycle found. Two new regression tests in
+  `tests/launch.test.ts` pin down the comparison's own correctness without running `main()` for real (which
+  spawns a server and, if found, a Neutralino binary — real side effects a unit test should not have). 62 vitest
+  tests now, up from 60. **The identical bug exists, unexercised, in `clients/macos/src/launch.ts`** (POSIX
+  argv[1] never triggers it) — worth the same one-line fix there, same as the other two Windows-only bugs this
+  real-run cycle found and macOS's own `build-inject.mjs` quietly shares.
+- `src/server.ts`: `defaultSpawn()` started the server with `detached: true` but no `windowsHide`, so a fourth
+  real Windows run (2026-11-09) saw the Python server pop up its own, separate, empty console window — nothing
+  was ever going to appear in it, since its stdout/stderr are already redirected to `logPath`, so the window was
+  only ever a confusing distraction. `windowsHide: true` is Node's own documented flag for exactly this (a no-op
+  on every other OS); added alongside `detached: true`, not instead of it — they solve two different halves of
+  the same Windows gap (this module's own top comment). New regression test in `tests/server.test.ts` spies on
+  `node:child_process`'s `spawn` (via `vi.mock`/`vi.hoisted`, wrapping the real implementation) to check the
+  actual options object passed, since `windowsHide`, unlike `detached`, leaves no trace on the `ChildProcess`
+  object afterwards for a test to read back. 63 vitest tests now, up from 62.
 
 ## [0.1.0] - unreleased
 

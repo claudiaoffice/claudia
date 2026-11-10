@@ -101,6 +101,35 @@ def test_extract_web_reports_a_call_it_cannot_read_as_one_plain_string(tmp_path,
     assert [p.line for p in problems] == [1, 2]
 
 
+# -------------------------------------------------------------------------------------------------------- manifest
+def test_extract_manifest_finds_a_menu_label_shared_by_every_app_only_once():
+    """ "Edit" is one of D120's seven menus in composes, computes and creates alike; it must not be listed three
+    times over just because it was built three times."""
+    found = extract_i18n.extract_manifest()
+    assert found["Edit"] == ["clients/linux/src/claudia_shell_gtk/manifest.py"]
+
+
+def test_extract_manifest_finds_submenu_labels_and_action_labels_and_tooltips():
+    found = extract_i18n.extract_manifest()
+    assert "App Language" in found  # the Submenu's own label (D160)
+    assert "Shortcuts" in found  # an Action label
+    assert "Start a new document" in found  # an Action tooltip
+
+
+def test_extract_manifest_never_collects_the_language_pickers_own_autonyms():
+    """ "English"/"Deutsch" are read as-is by every reader (manifest.py's docstring) -- asking a translator to
+    translate a language's own name into that very language would be nonsensical."""
+    found = extract_i18n.extract_manifest()
+    assert "English" not in found
+    assert "Deutsch" not in found
+
+
+def test_extract_manifest_drops_an_empty_tooltip():
+    """``config.language.*`` actions are the only ones with no tooltip at all; an empty string is not a msgid."""
+    found = extract_i18n.extract_manifest()
+    assert "" not in found
+
+
 # --------------------------------------------------------------------------------------------------------- the POT
 def test_render_pot_is_sorted_and_deterministic():
     catalog = {"Save": ["b.py:1"], "Cancel": ["a.py:3", "a.py:1"]}
@@ -125,6 +154,7 @@ def test_check_passes_when_the_pot_on_disk_already_matches(tmp_path, monkeypatch
     monkeypatch.setattr(extract_i18n, "POT_PATH", tmp_path / "po" / "claudia.pot")
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ())
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
+    monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
     extract_i18n.POT_PATH.parent.mkdir(parents=True)
     extract_i18n.POT_PATH.write_text(extract_i18n.HEADER, encoding="utf-8")
     assert extract_i18n.main(["--check"]) == 0
@@ -135,6 +165,7 @@ def test_check_fails_when_the_pot_on_disk_is_stale(tmp_path, monkeypatch, capsys
     monkeypatch.setattr(extract_i18n, "POT_PATH", tmp_path / "po" / "claudia.pot")
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ())
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
+    monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
     extract_i18n.POT_PATH.parent.mkdir(parents=True)
     extract_i18n.POT_PATH.write_text("stale\n", encoding="utf-8")
     assert extract_i18n.main(["--check"]) == 1
@@ -146,6 +177,7 @@ def test_check_fails_when_the_pot_does_not_exist_yet(tmp_path, monkeypatch):
     monkeypatch.setattr(extract_i18n, "POT_PATH", tmp_path / "po" / "claudia.pot")
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ())
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
+    monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
     assert extract_i18n.main(["--check"]) == 1
 
 
@@ -156,6 +188,16 @@ def test_main_writes_the_pot_and_exits_nonzero_on_an_unreadable_call(tmp_path, m
     src.mkdir()
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ("pkg",))
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
+    monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
     write(src, "a.py", '_("Save")\n_(f"bad {1}")\n')
     assert extract_i18n.main([]) == 1  # a problem was found: exits non-zero even though it wrote the file
     assert 'msgid "Save"' in extract_i18n.POT_PATH.read_text(encoding="utf-8")
+
+
+def test_collect_includes_the_manifest_strings_too(monkeypatch):
+    """Unlike the other ``collect()``/``main()`` isolation tests above, this one leaves ``ROOT`` alone: the real
+    repo's manifest.py is exactly what `extract_manifest` is meant to read, and `MANIFEST_PATH` is fixed to it."""
+    monkeypatch.setattr(extract_i18n, "PY_DIRS", ())
+    monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
+    catalog, problems = extract_i18n.collect()
+    assert "Edit" in catalog and problems == []

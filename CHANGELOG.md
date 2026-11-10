@@ -4,6 +4,81 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.11.0] - 2026-11-08
+
+A diagram joins the shared object layer as its own kind, so a chart can be a floating object on a slide, sheet
+or paragraph the same way an image or a shape is (E6.6). What a diagram draws is deliberately opaque to the
+kernel — the same split the object layer already draws between a body and an anchor, applied to a kind's own
+content instead of its placement, since only computes (today) knows what a chart's range and titles mean.
+
+### Added
+- `claudia_core.objects`: `"diagram"` joins `OBJECT_KINDS`; `ObjectBody` gained a `diagram` field (the id of a
+  definition, alongside its existing `shape`/`image`).
+- `DiagramDefinition`: a `Protocol` for what a diagram draws, mirroring `Anchor` — an app reads its own back
+  through the new `ObjectModel.diagram_from_data(data)` hook, the one door this data enters through.
+- `ObjectModel.diagrams`, `define_diagram`, `forget_diagram`, `replace_diagram`, `users_of_diagram`, and
+  `diagrams_to_data()`/the `diagrams` parameter of `restore_objects()` — the same shape as the existing
+  shape/image methods, except a diagram can also be redefined in place (`replace_diagram`), since unlike a
+  shape or an image, a diagram is meant to be edited after the fact.
+- `DefineDiagram`, `UpdateDiagram` and `ForgetDiagram`: the commands behind the above, each with its exact
+  inverse (mirroring `DefineShape`/`ForgetShape`).
+- `DiagramsChanged`: the event a view hears when a diagram definition is added, edited or forgotten.
+
+### Changed
+- `AddObject.label`/`summary` and `shifted_by` now cover `"diagram"` alongside `"text"`/`"shape"`/`"image"`.
+
+## [0.10.0] - 2026-11-08
+
+The document's palette: colours named by what they mean (D200–D203). **Breaking:** `StyleBook.views` gained a
+parameter and every style now travels with a third form of its CSS; a model that holds a style book is expected to
+hold a palette beside it.
+
+### Added
+- `claudia_core.palette`: `ColourRole` (id, name, purpose, colour), `Palette` (an ordered, extensible mapping of
+  them), `Reading` (how one role reads against another), `PaletteChanged`, and the commands `SetRole` and
+  `ReplacePalette`, each with its exact inverse. Plus `builtin_palette()`, `BUILTIN_ROLES` (nine roles), `PAIRINGS`,
+  `TEXT_FLOOR`, `UI_FLOOR`, `MAX_ROLES`, `contrast()` and `luminance()` (WCAG 2.2).
+- `resolve_css(css, colours)`, `roles_used(css)` and `rgb_of(colour)` in `claudia_core.css`.
+- `core.SetObjectStyle`: puts an object under another style of its own. An object's style was settled by
+  `AddObject` and could never be changed again, which left a style menu with nothing to do.
+- `claudia_core.styles.palette_colours(model)`: the role colours of a model that has a palette, asked of the model
+  rather than imported, so that the two modules can still be used apart.
+
+### Changed
+- **Breaking:** `CSS_VERSION` is 2. A colour may now be a role of the palette — `@accent`, or `@accent/55` for that
+  role at 55% opacity — wherever a colour is accepted, including inside a `border-*` shorthand. `@` is no longer
+  refused outright in a value; every value check other than the colour one refuses it anyway, so a role can only
+  land where a colour belongs. Nothing else about the allow-list changed: `url()`, `var()`, `calc()` and
+  `!important` are still refused, which is what `resolve_css` exists to protect.
+- **Breaking:** `StyleBook.views(colours=None)` now returns a `resolved` form of each style beside `computed`.
+  `computed` still names the roles, which is what a style menu shows; `resolved` has the literal colours, which is
+  what a client draws with. Without `colours`, a declaration naming a role is left out of `resolved`.
+- Changing the palette emits `StylesChanged` as well as `PaletteChanged`: a client is deliberately unable to
+  resolve a role itself, so the styles have to travel again.
+
+## [0.9.0] - 2026-11-08
+
+One shared object layer for shapes, images and text boxes, and an object's words as a paragraph (D177–D182). This
+release was built but never written down; it is recorded here after the fact, with the versioning policy's own
+rule in mind — the API changed, so it gets a version and an entry.
+
+### Added
+- `claudia_core.objects`: `ObjectBody`, `VisualObject[A]`, the `Anchor` protocol, `ObjectModel[A]`, `ObjectSet`,
+  `ObjectsChanged`, `ImagesChanged`, `ShapesChanged`, `paragraph_for()`, and the whole `core.*` object command
+  family — `DefineShape`, `ForgetShape`, `DefineImage`, `ForgetImage`, `AddObject`, `RemoveObject`, `MoveObject`,
+  `ResizeObject`, `RotateObject`, `SetText`, `SetParagraph`, `SetParagraphStyle`, `SetSnap`.
+- `claudia_core.paragraphs`: `Paragraph`, `Run` and the run arithmetic that used to be `claudia_composes.runs`, so
+  that one paragraph entity serves a document, a text box and a shape's label alike.
+- `claudia_core.shapes`: `ShapeDefinition`, `parse_shape`, `ShapeError`, `FORMAT`, `BOX` — the shape format only;
+  reading a library off a disk stays in `claudia_creates`, because the kernel does no I/O.
+- PNG among `SUPPORTED_IMAGE_FORMATS`, APNG included, with a still first frame taken without re-encoding.
+
+### Changed
+- **Breaking:** an object is a shared body plus a per-app anchor. `ObjectBody.text` became
+  `ObjectBody.paragraph: Paragraph | None`, so an object carries two styles: its own (`fill`, `stroke`,
+  `stroke-width`) and its paragraph's.
+- **Breaking:** `ObjectSet` names a `container`, not a slide or a sheet.
+
 ## [0.8.0] - 2026-11-07
 
 I18n groundwork (E5.7, D31, D148): the kernel gains stable error identity, without taking on gettext or any other

@@ -5,8 +5,9 @@
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
-import { CORNERS, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
+import { cssOf as computedCss, slideFrame, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
 import { colorOf, inkOn } from '~/lib/people'
 import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
@@ -14,7 +15,10 @@ import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
 
-const props = defineProps<{ session: SlideSession }>()
+// `showGrid` is the View menu's own preference (`lib/grid.ts`'s `useGrid`, held by SlideWorkspace.vue so the
+// menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
+// object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
+const props = defineProps<{ session: SlideSession; showGrid: boolean }>()
 const session = props.session
 const state = session.state
 
@@ -45,9 +49,13 @@ onBeforeUnmount(() => watcher?.disconnect())
 // ------------------------------------------------------------------------------ how objects look
 const px = (units: number) => `${Math.round(units * scale.value * 100) / 100}px`
 
+/** The grid lines, drawn with a CSS background rather than one element per line; absent entirely when hidden,
+ * so the slide prints and exports (D123, once that exists) exactly as it is without it. */
+const gridStyle = computed(() => (props.showGrid ? { backgroundSize: `${px(GRID_SIZE)} ${px(GRID_SIZE)}` } : {}))
+
 /** Where an object is on the screen; a frame being dragged replaces the one the server knows. */
 function frameOf(o: SlideObject): Frame {
-  return drag.value?.id === o.id ? drag.value.frame : o
+  return drag.value?.id === o.id ? drag.value.frame : slideFrame(o)
 }
 function boxStyle(o: SlideObject) {
   const f = frameOf(o)
@@ -56,7 +64,7 @@ function boxStyle(o: SlideObject) {
 function cssOf(o: SlideObject) {
   // withDisplayInk: a text object's default ink, genuinely black in the document (D28/2026-11-06), still needs to
   // read against a dark slide canvas in dark mode — display-only, same fix as composes' paragraphCss.
-  return withDisplayInk(scaleCss(state.styles[o.style]?.css ?? {}, scale.value))
+  return withDisplayInk(scaleCss(computedCss(state.styles, o), scale.value))
 }
 function outline(o: SlideObject) {
   return o.shape ? (state.shapes[o.shape] ?? null) : null
@@ -89,7 +97,7 @@ function pictureSrc(o: SlideObject): string {
   return asset ? imageDataUrl(asset) : ''
 }
 const label = (o: SlideObject) =>
-  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (o.text ? `: ${o.text}` : '')
+  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (wordsOf(o) ? `: ${wordsOf(o)}` : '')
 
 // ------------------------------------------------------------------------------ selection, dragging, resizing
 type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
@@ -126,7 +134,7 @@ async function onObjectDown(event: PointerEvent, o: SlideObject) {
   target.setPointerCapture(event.pointerId)
   await commitEdit()
   area.value?.focus({ preventScroll: true })
-  drag.value = { id: o.id, handle: 'move', from: where, start: { x: o.x, y: o.y, w: o.w, h: o.h }, frame: { x: o.x, y: o.y, w: o.w, h: o.h }, moved: false }
+  drag.value = { id: o.id, handle: 'move', from: where, start: slideFrame(o), frame: slideFrame(o), moved: false }
   session.select(o.id)
 }
 
@@ -135,7 +143,7 @@ function onHandleDown(event: PointerEvent, handle: Handle) {
   if (!o || event.button !== 0) return
   event.stopPropagation()
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
-  drag.value = { id: o.id, handle, from: point(event), start: { x: o.x, y: o.y, w: o.w, h: o.h }, frame: { x: o.x, y: o.y, w: o.w, h: o.h }, moved: false }
+  drag.value = { id: o.id, handle, from: point(event), start: slideFrame(o), frame: slideFrame(o), moved: false }
 }
 
 function onPointerMove(event: PointerEvent) {
@@ -147,7 +155,8 @@ function onPointerMove(event: PointerEvent) {
   d.moved = true
   const o = state.objects[d.id]
   if (!o) return
-  d.frame = d.handle === 'move' ? moveFrame(d.start, dx, dy) : resizeFrame(d.start, d.handle, dx, dy, aspectOf(o))
+  const grid = o.snap ? GRID_SIZE : null
+  d.frame = d.handle === 'move' ? moveFrame(d.start, dx, dy, grid) : resizeFrame(d.start, d.handle, dx, dy, aspectOf(o), grid)
 }
 
 async function onPointerUp() {
@@ -185,6 +194,7 @@ const contextItems = computed<MenuItem[]>(() => {
           contextMenu.value = null
           propertiesFor.value = o.id
         },
+        setSnap: (snap) => session.setSnap(o.id, snap),
       })
     : []
 })
@@ -223,10 +233,11 @@ async function beginEdit(id: string | null = state.selected) {
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
-  editing.value = { id: o.id, text: o.text }
+  editing.value = { id: o.id, text: wordsOf(o) }
   await nextTick()
   editor.value?.focus()
-  editor.value?.setSelectionRange(o.text.length, o.text.length)
+  const length = wordsOf(o).length
+  editor.value?.setSelectionRange(length, length)
 }
 
 async function commitEdit() {
@@ -234,7 +245,8 @@ async function commitEdit() {
   if (!e) return
   editing.value = null
   area.value?.focus({ preventScroll: true })
-  if (state.objects[e.id] && e.text !== state.objects[e.id]!.text) await session.setText(e.id, e.text)
+  const current = state.objects[e.id]
+  if (current && e.text !== wordsOf(current)) await session.setText(e.id, e.text)
 }
 
 function cancelEdit() {
@@ -276,8 +288,8 @@ async function onKey(event: KeyboardEvent) {
   if (arrow) {
     event.preventDefault()
     const step = event.shiftKey ? 1 : STEP
-    const f = moveFrame(o, arrow[0] * step, arrow[1] * step)
-    if (f.x !== o.x || f.y !== o.y) await session.move(o.id, f.x, f.y)
+    const f = moveFrame(slideFrame(o), arrow[0] * step, arrow[1] * step)
+    if (f.x !== o.anchor.x || f.y !== o.anchor.y) await session.move(o.id, f.x, f.y)
   }
 }
 
@@ -302,16 +314,17 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     <div
       ref="slideEl"
       class="slide"
+      :class="{ grid: props.showGrid }"
       data-testid="slide"
       :data-slide="state.activeSlide"
-      :style="{ width: px(SLIDE_W), height: px(SLIDE_H) }"
+      :style="{ width: px(SLIDE_W), height: px(SLIDE_H), ...gridStyle }"
       @pointerdown="onSlideDown"
     >
       <div
         v-for="o in objects"
         :key="o.id"
         class="obj"
-        :class="[o.kind, { selected: o.id === state.selected, empty: o.text === '' }]"
+        :class="[o.kind, { selected: o.id === state.selected, empty: wordsOf(o) === '' }]"
         :style="boxStyle(o)"
         :data-id="o.id"
         :aria-label="label(o)"
@@ -326,8 +339,8 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="pathCss(cssOf(o))" />
           </svg>
           <div class="words" :style="textStyle(o)">
-            <span v-if="o.text === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
-            <span v-else-if="editing?.id !== o.id" class="text">{{ o.text }}</span>
+            <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
+            <span v-else-if="editing?.id !== o.id" class="text">{{ wordsOf(o) }}</span>
           </div>
           <textarea
             v-if="editing?.id === o.id"
@@ -390,6 +403,12 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
   box-shadow: var(--shadow);
   overflow: hidden;
   user-select: none;
+}
+.slide.grid {
+  /* E10.15: a helper the view draws, never part of the slide itself — background-position/-size only, so it
+   * never shows up in anything that exports or prints the slide's own content. */
+  background-image: linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-position: -1px -1px;
 }
 .obj {
   position: absolute;

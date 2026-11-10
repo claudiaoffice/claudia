@@ -1,11 +1,12 @@
-"""Locale detection and gettext wiring for the shell (E5.7, D31): groundwork, nothing is translated with it yet.
+"""Locale detection and gettext wiring for the shell (E5.7, D31).
 
 A person's locale is always a client setting — there is no account profile to keep it on, since a document's users
 are scoped to that document (D35). This module works out a reasonable default the way gettext-based Linux software
-usually does, from the environment the shell runs in, and installs a translation so that ``_()`` works everywhere in
-the shell once strings are moved to it (manifest.py already marks GMenu labels translatable, E5.7). Until catalogs
-exist (``po/*.mo``), ``install_translation`` is the identity function: ``gettext.translation(..., fallback=True)``
-guarantees that, so wiring this in now changes nothing the person sees.
+usually does, from the environment the shell runs in, installs a translation so that process-wide ``_()`` works, and
+also keeps its own handle on the currently-installed one (:func:`translate`) for callers — ``manifest.py``'s
+``menu_xml``, chiefly — that take an explicit function rather than reach for a builtin, so they stay testable with
+no locale installed at all. ``fallback=True`` makes every call here safe before any catalog exists for a locale, or
+before ``po/`` has catalogs at all: :func:`translate` is then the identity, never an error.
 
 Nothing here imports GTK, so it is tested without a display.
 """
@@ -16,11 +17,26 @@ import gettext
 import os
 import re
 from collections.abc import Callable, Mapping, Sequence
+from importlib import resources
 
-__all__ = ["DEFAULT_LOCALE", "DOMAIN", "detect_system_locale", "install_translation", "negotiate"]
+__all__ = [
+    "DEFAULT_LOCALE",
+    "DOMAIN",
+    "detect_system_locale",
+    "install_translation",
+    "negotiate",
+    "translate",
+]
 
 DOMAIN = "claudia"
 DEFAULT_LOCALE = "en"
+
+
+def _identity(text: str) -> str:
+    return text
+
+
+_active: Callable[[str], str] = _identity  # replaced wholesale by install_translation, below
 
 _TAG = re.compile(r"[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*")
 _ENV_VARS = ("LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG")  # gettext's own precedence order
@@ -61,11 +77,32 @@ def negotiate(requested: str, available: Sequence[str]) -> str:
     return DEFAULT_LOCALE
 
 
+def bundled_localedir() -> str:
+    """Where this package ships its compiled catalogs: ``locale/<tag>/LC_MESSAGES/claudia.mo``, built from
+    ``po/<tag>.po`` by ``scripts/compile_mo.py`` and checked in next to this module exactly like ``data/style.css``
+    (D160's reasoning — no system ``msgfmt`` dependency, pure Python, portable)."""
+    return str(resources.files("claudia_shell_gtk").joinpath("locale"))
+
+
 def install_translation(locale: str, localedir: str | None = None) -> Callable[[str], str]:
-    """Bind ``_()`` for ``locale`` (process-wide, the usual gettext pattern) and return it too.
+    """Bind ``_()`` for ``locale`` (process-wide, the usual gettext pattern), remember it as :func:`translate`'s
+    answer from now on, and return it too. ``localedir`` defaults to :func:`bundled_localedir`; pass one explicitly
+    in a test instead of relying on what happens to be installed next to this module.
 
     ``fallback=True`` makes this safe before any catalog exists for ``locale``, or before ``po/`` has catalogs at
-    all: the returned function is then the identity, never an error."""
-    translation = gettext.translation(DOMAIN, localedir=localedir, languages=[locale, DEFAULT_LOCALE], fallback=True)
+    all: the installed function is then the identity, never an error."""
+    global _active  # noqa: PLW0603 (the one deliberate mutation point for translate()'s module-level state, above)
+    translation = gettext.translation(
+        DOMAIN, localedir=localedir or bundled_localedir(), languages=[locale, DEFAULT_LOCALE], fallback=True
+    )
     translation.install()
-    return translation.gettext
+    _active = translation.gettext
+    return _active
+
+
+def translate(text: str) -> str:
+    """The currently installed translation for ``text`` — read fresh on every call, not captured once, so a later
+    :func:`install_translation` call (a language switch, mid-process) changes what this returns without anyone
+    needing to re-import it. The identity function until the first :func:`install_translation` call, which is what
+    every test in this module (and most of ``test_manifest.py``) gets by just not calling it."""
+    return _active(text)

@@ -28,10 +28,14 @@ def _quote(text: str) -> str:
 
 
 def _moved(ctx: Context[TextModel], command: TextCommand) -> None:
-    """Let the open suggestions follow a text command, and tell the clients about those that moved."""
+    """Let the open suggestions and the floating objects follow a text command, and tell the clients about those
+    that moved (see :mod:`claudia_composes.anchors` for why an object's anchor follows the text here, where a
+    sheet's is deliberately frozen)."""
     moved = ctx.model.move_suggestions(command)
     if moved:
         ctx.emit(SuggestionsChanged(tuple(moved)))
+    for container in dict.fromkeys(obj["anchor"]["container"] for obj in ctx.model.move_objects(command)):
+        ctx.emit(ctx.model.objects_changed(container, changed=tuple(ctx.model.objects_on(container))))
 
 
 # ------------------------------------------------------------------------------ typing
@@ -299,7 +303,8 @@ class SetStyle(TextCommand):
         model = ctx.model
         model.check_style(self.style)
         block = model.block(self.block)
-        old, block.style = block.style, self.style
+        old = block.style
+        ctx.model.restyle(block.id, self.style)
         ctx.emit(StyleChanged(self.block, self.style))
         return SetStyle(self.block, old)
 

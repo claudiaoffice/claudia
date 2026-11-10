@@ -5,7 +5,12 @@ rem second system interpreter to hand off to here: the Windows client itself is 
 rem at all (clients\windows\README.md's "Running it from a checkout" is the step-by-step this script automates).
 rem
 rem   * .venv (via "uv sync") is what the *server* runs on -- same Python 3.14 requirement as Linux and macOS, same
-rem     reason (D116): the server is outside the uv workspace's own Node/TS half.
+rem     reason (D116): the server is outside the uv workspace's own Node/TS half. Synced with --no-dev: the root
+rem     "dev" dependency group (pytest, mypy, ruff, vulture, sphinx, myst-parser...) is for working on the repo's
+rem     own code and docs, not for running a client to test it, and myst-parser's own pyyaml dependency has no
+rem     prebuilt wheel yet for every Python/OS combination (hit on a real Windows run, 2026-11-09: PyYAML 6.0.3
+rem     tried to compile its optional C extension and failed with "Microsoft Visual C++ 14.0 or greater is
+rem     required" -- no C toolchain on that machine, and none should be needed just to start this client).
 rem   * The web frontend is rebuilt every run, not just built once and left stale -- see start-client.sh's own
 rem     comment on the 2026-11-06 report that caught exactly that bug for the Linux client. Skip with
 rem     CLAUDIA_SKIP_WEB_BUILD=1 once you know your build is current.
@@ -30,7 +35,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-call uv sync --quiet
+call uv sync --quiet --no-dev
 if errorlevel 1 exit /b 1
 
 if not "%CLAUDIA_SKIP_WEB_BUILD%"=="1" (

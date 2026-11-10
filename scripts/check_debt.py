@@ -16,10 +16,16 @@ checks are:
 * mypy       types of the sources
 * vulture    code nobody uses (``vulture_whitelist.py`` lists the reasoned exceptions)
 * i18n extraction   ``po/claudia.pot`` is current (E5.7, D31); run ``uv run python scripts/extract_i18n.py`` to fix it
+* mo compilation   the Gtk client's ``de`` catalog matches ``po/de.po`` (D160); run
+             ``uv run python scripts/compile_mo.py po/de.po de`` to fix it -- there was nothing worth drifting from
+             before this round's real German translations existed, which is why this check is new here
 * tests      the whole suite, with a note of the slowest ones
 * docs       the Sphinx build with warnings as errors (every cross reference must resolve)
 * perf       the scaling guards: the cost of hot paths must not grow with the history
 * web tests  the web app's unit tests (vitest) and its types (vue-tsc), when Node and `npm install` in web/ are there
+* e2e greeting  ``./start.sh all`` in a real browser: three servers, each greeting with its own app (UX-10). Needs
+             the web app built and a Chromium for Playwright (``uv run playwright install chromium``, or point
+             ``$CLAUDIA_CHROMIUM`` at one); it skips, saying which is missing, when they are not there
 * linux client  its types (for Python 3.12) and its tests on the distribution's Python (clients/linux/README.md);
              the tests are skipped where there is no Python 3.12+ with PyGObject, pytest and jsonschema
 """
@@ -42,6 +48,8 @@ PERF = (
     "packages/claudia-computes/tests/test_formula_performance.py",
     "packages/claudia-computes/tests/test_index_performance.py",
 )  # (each runs on its own: the packages' conftest files would clash)
+#: The one browser-driven test: it starts three servers and wants the web app built, so it is its own step (UX-10).
+E2E = "tests/e2e"
 DOCS_OUT = "docs/_build/html"
 
 
@@ -106,10 +114,15 @@ def checks() -> list[Check]:
         Check("mypy", (*run, "mypy", *SOURCES)),
         Check("vulture", (*run, "vulture")),
         Check("i18n extraction", (*run, "python", "scripts/extract_i18n.py", "--check")),
-        Check("tests", (*run, "pytest", "--durations=5", *[arg for path in PERF for arg in ("--deselect", path)])),
+        Check("mo compilation", (*run, "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")),
+        Check(
+            "tests",
+            (*run, "pytest", "--durations=5", "--ignore", E2E, *[a for p in PERF for a in ("--deselect", p)]),
+        ),
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
         *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],
         *web_checks(),
+        *e2e_checks(),
         *linux_client_checks(),
     ]
 
@@ -126,6 +139,22 @@ def web_checks() -> list[Check]:
         Check("web tests", ("npm", "test", "--silent"), cwd=web, skip_reason=reason),
         Check("web types", ("npm", "run", "typecheck", "--silent"), slow=True, cwd=web, skip_reason=reason),
     ]
+
+
+def e2e_checks() -> list[Check]:
+    """The one test that drives a real browser: ``./start.sh all``, and each server greeting with its own app.
+
+    It skips, saying which of the two is missing, when the web app is not built or there is no Chromium for
+    Playwright. The test works that out itself, so the reason is written once; this asks it.
+    """
+    try:
+        sys.path.insert(0, str(ROOT))
+        from tests.e2e.test_greeting import SKIP as reason
+    except Exception as exc:  # noqa: BLE001 - an import that cannot even answer is a skip with its own reason
+        reason = f"the browser test cannot load ({exc})"
+    finally:
+        sys.path.remove(str(ROOT))
+    return [Check("e2e greeting", ("uv", "run", "--quiet", "pytest", E2E), slow=True, skip_reason=reason)]
 
 
 def client_python() -> str | None:

@@ -27,7 +27,7 @@ sliders, encryption of the file store, column resizing.
 
 ## Writing in composes
 
-`./start.sh composes` serves texts (documents in `./demo-docs-composes`, because a directory holds one app's
+`./start.sh composes` serves texts (documents in `./docs-composes`, because a directory holds one app's
 documents). The text view lives in `TextWorkspace.vue` and `TextEditor.vue`; its state is `lib/text-session.ts`
 (`TextSession`, next to the workbook's `Session`, both built on `lib/base-session.ts`) and `lib/blocks.ts` (pure:
 the paragraphs, the events that change them, where a caret or zone goes when somebody else writes).
@@ -67,14 +67,14 @@ word is one undo step (the kernel has no grouping yet).
 ## Build and run
 
 The quick way (Linux, macOS: `./start.sh`, Windows: `start.cmd`) builds the web app when it is missing, starts the
-server and opens the browser. Documents are kept in `./demo-docs`, each one sealed (encrypted); a folder from an earlier version needs `--plain-dir`.
+server and opens the browser. Documents are kept in `./docs-x`, each one sealed (encrypted); a folder from an earlier version needs `--plain-dir`.
 
 One server serves one app. Name the app to choose it (`computes` is the default), or start all three at once:
 
 ```bash
 ./start.sh                       # computes (tables) at http://127.0.0.1:8765/; or: uv run python scripts/start.py
-./start.sh composes              # texts, port 8765 (documents in ./demo-docs-composes)
-./start.sh creates               # presentations, port 8765 (documents in ./demo-docs-creates)
+./start.sh composes              # texts, port 8765 (documents in ./docs-composes)
+./start.sh creates               # presentations, port 8765 (documents in ./docs-creates)
 ./start.sh all                   # computes 8765, composes 8766, creates 8767; --dir DIR keeps DIR/<app>
 ./start.sh --dir ~/claudia-docs --port 9000 --no-browser
 ./start.sh --rebuild             # build the web app again first
@@ -85,7 +85,7 @@ By hand (needs Node.js 22 or newer for the build):
 
 ```bash
 cd web && npm ci && npx nuxt generate          # writes web/.output/public
-cd .. && uv run python -m claudia_server --no-tls --dir ./demo-docs --web web/.output/public
+cd .. && uv run python -m claudia_server --no-tls --dir ./docs-computes --web web/.output/public
 ```
 
 Open <http://localhost:8765>, create a document (the creator is its owner), then share it and join from a second

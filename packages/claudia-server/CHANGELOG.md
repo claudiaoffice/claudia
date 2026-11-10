@@ -3,6 +3,68 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.18.0] - 2026-11-08
+
+A first, cross-app help system (E13): searchable help topics and, for `claudia_computes`, a searchable catalog of
+every cell function, both read-only and open to every role including the `ai` user.
+
+### Added
+- **`help.py`**: `Topic` — a help topic's id, title, apps, language, tags, `explains` and body. `parse_topic(text,
+  source=...)` reads the Markdown-with-frontmatter shape already drafted for `claudia_typeset` (D99/E13.1), raising
+  `HelpContentError` with the source for anything malformed. `HelpLibrary` holds topics loaded from a folder
+  (`load_folder`) or added directly (`add`), and answers `get(id)` and `search(query)`. `default_library()` is the
+  lazy, server-wide library, loaded once from every installed package's own `help/` folder (`claudia_typeset`,
+  `claudia_computes`, `claudia_composes`, `claudia_creates` — a package with no such folder, or that isn't
+  installed, is skipped).
+- **`core_methods.help_search`** (read, `query:str=""`): topic summaries (id/title/apps/tags) whose title, tags or
+  `explains` mention `query`, or every topic if `query` is blank. Inherited by `composes_methods`, `computes_methods`
+  and `creates_methods`, so any app gets it for free the moment it has a `help/` folder of its own.
+- **`core_methods.help_topic`** (read, `id:str`): one topic in full. `command_error` if `id` is unknown.
+- **`computes_methods.functions`** (read, `query:str=""`): the function catalog (library and core forms together,
+  via `claudia_computes.search_functions`), as name/signature/tooltip/source summaries.
+- **`computes_methods.function_help`** (read, `name:str`): one function's signature, tooltip and full help text, by
+  name, case-insensitively. `command_error` if `name` is unknown.
+
+claudia-computes (unversioned) gained the generating side of the function catalog: `FunctionHelp`, `function_catalog
+()`, `search_functions(query)` and `get_function(name)`, unifying the library functions' existing `Bound.get_tooltip`
+/`get_help` with the core forms' own docstrings — no new content was written for this; both halves already carried
+everything needed.
+
+
+Colour roles over the protocol, and the style methods shared by every app (D200–D203).
+
+### Added
+- `claudia_server.styles.add_style_methods(table, guard=None)`: registers `styles`, `palette`, `set_role`,
+  `replace_palette`, `set_object_style`, `change_style`, `rename_style` and `check_css` into an app's table. All
+  three apps call it, so a presentation and a workbook can now change their styles and not only read them.
+- `palette` returns `{roles, readings}`: a role is `{id, name, purpose, colour}`, a reading is
+  `{foreground, background, ratio, floor, ok, words}`. A reading carries **no verdict text** — each client says
+  what a failure means in its own words, and never shows the ratio to a reader.
+- `set_role` gives one role another colour; everything in the document that meant that role follows. Nothing is
+  refused for contrast: `palette` reports what a colour costs, it does not prevent it.
+- `replace_palette` puts a whole palette in place of the one the document has, which is what "replace palette" and,
+  later, a template will use. Refused while a style names a role the new palette has not.
+- `set_object_style` puts an object under another style of its own (`fill`, `stroke`, `stroke-width`), beside the
+  `set_paragraph_style` that already pointed its words elsewhere.
+
+### Changed
+- **Breaking:** every style in `styles` (and in composes' `blocks`) now carries a third form of its CSS,
+  `resolved`, with the palette's roles replaced by literal colours. **A client must draw from `resolved`**;
+  `computed` still names the roles, which is what a style menu shows. The role grammar deliberately stays on the
+  server, so what reaches a browser is always a literal colour.
+- `composes_methods` keeps only `set_style` and `deviate_style` of its style methods — the two that name
+  paragraphs. The rest are the shared ones, and composes passes `_people_only` as their guard, so in a text the
+  assistant still suggests and does not write (D63, SEC-10).
+
+## [0.17.0] - 2026-11-07
+
+The grid, and snapping to it (E10.15), on top of `claudia_creates`'s new `SetSnap` command.
+
+### Added
+- **`creates.set_snap`**: a write method taking an object's id and a `snap` boolean. Holds the object to the grid
+  or releases it; the grid itself is a view-only helper and has no method of its own here. `creates.slide`'s
+  objects each carry the new `snap` field.
+
 ## [0.16.0] - 2026-11-07
 
 Who may configure the server, as a question separate from any document's own users (D20/D35): server-side identity,
@@ -280,7 +342,7 @@ Security release: three findings of the first QA review (SEC-01, SEC-02, SEC-07)
   start-up report names the shapes and every file that was skipped, with the reason.
 - `GET /api/docs` also tells which `app` the server hosts, so that a client knows what kind of document to create.
 - `Hub.app`; `DocumentProvider.app` (a provider tells which kind of documents it holds; `MemoryProvider`, `FileProvider` and `SealedDocuments` do).
-- `scripts/start.py --app creates` starts the presentation server (documents in `demo-docs-creates`).
+- `scripts/start.py --app creates` starts the presentation server (documents in `docs-creates`).
 
 ### Changed
 - `methods_for(model_cls, *, shapes=None)` picks the presentation table for `creates` documents.

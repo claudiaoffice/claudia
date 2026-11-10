@@ -16,6 +16,10 @@ computes
 .. autoclass:: claudia_computes.AddSheet
 .. autoclass:: claudia_computes.RemoveSheet
 .. autoclass:: claudia_computes.CellRegion
+.. autoclass:: claudia_computes.CellAnchor
+
+``SheetObject`` is ``VisualObject[CellAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor.
+The object commands, region and events are shared by all three apps (:doc:`claudia_core`, E10.16, D177).
 
 Formulas
 ~~~~~~~~
@@ -32,6 +36,13 @@ core; every function that takes cell ranges and gives a value is a ``UserFunctio
 .. autoclass:: claudia_computes.values.FormulaError
 .. autoclass:: claudia_computes.functions.base.Bound
 .. autoclass:: claudia_computes.functions.range.Grid
+
+Every library function and core form, as one searchable catalog for the help system (E13.5/E13.6):
+
+.. autoclass:: claudia_computes.FunctionHelp
+.. autofunction:: claudia_computes.function_catalog
+.. autofunction:: claudia_computes.search_functions
+.. autofunction:: claudia_computes.get_function
 
 Types that appear in the signatures above:
 
@@ -54,6 +65,15 @@ composes
 
 .. automodule:: claudia_composes
    :members:
+   :exclude-members: AddObject, DefineImage, DefineShape, ForgetImage, ForgetShape, MoveObject, ObjectBody, ObjectSet, Paragraph, RemoveObject, ResizeObject, RotateObject, Run, SetParagraph, SetParagraphStyle, SetSnap, SetText, VisualObject, paragraph_for
+
+.. automodule:: claudia_composes.anchors
+   :no-members:
+
+.. currentmodule:: claudia_composes
+
+``BlockAnchor`` is documented with the rest of the package above. ``TextObject`` is ``VisualObject[BlockAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor
+(E10.16, D179). Unlike a sheet anchor, a block anchor follows the text.
 
 Import/export
 ~~~~~~~~~~~~~~

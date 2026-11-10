@@ -25,7 +25,7 @@ async function choose(id: string) {
       <ul class="gallery" role="listbox" aria-label="Styles">
         <li v-for="s in host.styles" :key="s.id" role="option" :aria-selected="s.id === host.current?.id">
           <button type="button" :class="{ on: s.id === host.current?.id }" :disabled="host.readOnly" :data-style="s.id" @click="choose(s.id)">
-            <span class="name" :style="previewCss(s.computed)">{{ s.name }}</span>
+            <span class="name" :style="previewCss(s.resolved)">{{ s.name }}</span>
             <span v-if="s.to_name" class="flag" title="Waiting for a name">to name</span>
             <span class="count mono">{{ uses[s.id] ?? 0 }}</span>
           </button>

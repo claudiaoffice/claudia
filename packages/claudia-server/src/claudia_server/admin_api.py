@@ -128,9 +128,18 @@ def _identity_routes(router: APIRouter, context: AdminContext, require_admin: Ca
     @router.get("/status")
     async def status():
         """Public: whether this server needs somebody to become its first administrator (``exposed`` and nobody
-        is one yet). A settings page checks this before anything else, since it decides what to show."""
+        is one yet). A settings page checks this before anything else, since it decides what to show.
+
+        ``administrator`` is the earliest-added administrator's name, or ``null`` if there is none yet — a hint a
+        client can turn into a friendly label ("<name>'s server") before anyone has signed in to this server in
+        this browser; it carries no authority and nothing here requires a session."""
         needs = needs_administrator(context.exposed, len(context.admins))
-        return {"needs_administrator": needs, "exposed": context.exposed}
+        first = context.admins.list_admins()
+        return {
+            "needs_administrator": needs,
+            "exposed": context.exposed,
+            "administrator": first[0].name if first else None,
+        }
 
     @router.post("/setup")
     async def setup(body: JsonBody):

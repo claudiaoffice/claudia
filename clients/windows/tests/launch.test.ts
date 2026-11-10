@@ -8,6 +8,7 @@
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   SetupProblem,
@@ -122,5 +123,21 @@ describe('buildShellCommand', () => {
       '--url=http://127.0.0.1:54321',
       '--enable-server=true',
     ])
+  })
+})
+
+describe('the entry-point guard\'s URL comparison (why `main()` was never reached on Windows)', () => {
+  it('a naive `file://${path}` template on a Windows-shaped argv[1] can never equal the well-formed URL import.meta.url actually is', () => {
+    const windowsArgv1 = 'C:\\Users\\dev\\claudia\\clients\\windows\\dist\\launch.js'
+    const naiveTemplate = `file://${windowsArgv1}`
+    expect(naiveTemplate).not.toBe(pathToFileURL(windowsArgv1).href)
+    expect(new URL(pathToFileURL(windowsArgv1).href).protocol).toBe('file:')
+  })
+
+  it('pathToFileURL(argv[1]).href is stable under its own round trip, on a POSIX-shaped path too', () => {
+    const posixArgv1 = '/home/dev/claudia/clients/windows/dist/launch.js'
+    const url = pathToFileURL(posixArgv1)
+    expect(url.href).toBe(pathToFileURL(posixArgv1).href)
+    expect(url.protocol).toBe('file:')
   })
 })
