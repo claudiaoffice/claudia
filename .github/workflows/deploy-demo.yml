@@ -1,4 +1,4 @@
-# Puts the image that CI built on main into the demo on Scaleway Serverless Containers (demo.claudiaoffice.de).
+# Puts the image that CI built on main into the demo on Scaleway Serverless Containers (demo.claudia-office.de).
 #
 # Starts by itself when "Docker image" has succeeded on main. By hand (Actions > Deploy demo > Run workflow) it can
 # deploy any tag the image has, which is also the way back to an earlier version: give e.g. sha-1a2b3c4.
@@ -110,10 +110,9 @@ jobs:
             [[ "$id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::'$id' is not a container id"; exit 1; }
             echo "::group::container $id"
             echo "status before: $(scw "$api/$id" | jq -r .status)"
-            # Point the container at the new image, then roll it out.
-            scw -X PATCH -d "{\"registry_image\": \"$TARGET\"}" "$api/$id" > /dev/null
-            scw -X POST -d '{}' "$api/$id/deploy" > /dev/null
-
+            body="$(scw -X PATCH -d "{\"registry_image\": \"$TARGET\"}" "$api/$id")"
+            echo "status after update: $(jq -r .status <<<"$body")"
+            
             status=
             for _ in $(seq 1 60); do
               body="$(scw "$api/$id")"
