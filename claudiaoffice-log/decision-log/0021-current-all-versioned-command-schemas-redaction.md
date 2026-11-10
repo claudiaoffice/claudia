@@ -14,3 +14,5 @@ superseded-by: []
 **Command schemas are versioned** (also for UserFunction/plugin extensions). **Redaction of history must be possible.**
 
 **Notes.** Redaction does not reach copies or backups made earlier. Open: what a redaction leaves in the log. Not yet true of the container (SEC-05).
+
+*Not applied before the first release, for the style model only: D308.*

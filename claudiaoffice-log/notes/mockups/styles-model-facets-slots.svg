@@ -1,0 +1,125 @@
+<svg viewBox="0 0 1320 920" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#6b6780"/></marker></defs>
+<rect width="1320" height="920" fill="#f3f1ea"/>
+<text x="40" y="46" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">The style model: facets, slots and bundles</text>
+<text x="40" y="70" font-size="12.5" font-weight="400" fill="#6b6780" text-anchor="start">D300–D310 · one model for composes, computes and creates · what is stored is one property bag in CSS notation; the facets say what each property means and how it is drawn or exported</text>
+<rect x="40" y="100" width="270" height="330" rx="12" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="60" y="128" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Style (a named bundle)</text>
+<text x="60" y="158" font-size="12.5" font-weight="600" fill="#5b4bc4" text-anchor="start">id, name, purpose</text>
+<text x="60" y="174" font-size="11.5" font-weight="400" fill="#6b6780" text-anchor="start"></text>
+<text x="60" y="196" font-size="12.5" font-weight="600" fill="#5b4bc4" text-anchor="start">based_on</text>
+<text x="60" y="212" font-size="11.5" font-weight="400" fill="#6b6780" text-anchor="start">parent; stores only differences</text>
+<text x="60" y="234" font-size="12.5" font-weight="600" fill="#5b4bc4" text-anchor="start">kind</text>
+<text x="60" y="250" font-size="11.5" font-weight="400" fill="#6b6780" text-anchor="start">words | box | outline</text>
+<text x="60" y="272" font-size="12.5" font-weight="600" fill="#5b4bc4" text-anchor="start">properties</text>
+<text x="60" y="288" font-size="11.5" font-weight="400" fill="#6b6780" text-anchor="start">CSS notation, one bag</text>
+<text x="60" y="310" font-size="12.5" font-weight="600" fill="#5b4bc4" text-anchor="start">to_name</text>
+<text x="60" y="326" font-size="11.5" font-weight="400" fill="#6b6780" text-anchor="start">provisional name (D75)</text>
+<text x="60" y="372" font-size="11.5" font-weight="400" fill="#6b6780" text-anchor="start">Named by what it is for (D62, D309):</text>
+<text x="60" y="388" font-size="11.5" font-weight="400" fill="#6b6780" text-anchor="start">one purpose = one bundle.</text>
+<text x="60" y="412" font-size="11" font-weight="400" fill="#6b6780" text-anchor="start">Calling it “CSS” is shorthand: see facets.</text>
+<text x="370" y="118" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Facets — every property is in exactly one (D303)</text>
+<rect x="370" y="134" width="330" height="134" rx="10" fill="#e8e4fb" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="386" y="158" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Text</text>
+<text x="386" y="178" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">font-family  font-size</text>
+<text x="386" y="194" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">font-weight  font-style</text>
+<text x="386" y="210" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">text-decoration  color</text>
+<text x="386" y="226" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">letter-spacing  word-spacing</text>
+<text x="386" y="258" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="start">web: CSS · docx/odf: run props · typeset</text>
+<rect x="370" y="278" width="330" height="118" rx="10" fill="#e1f0ea" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="386" y="302" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Paragraph</text>
+<text x="386" y="322" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">text-align  line-height</text>
+<text x="386" y="338" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">margin-top/right/bottom/left</text>
+<text x="386" y="354" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">(indent, wrap later)</text>
+<text x="386" y="386" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="start">web: CSS · docx/odf: paragraph props</text>
+<rect x="370" y="406" width="330" height="134" rx="10" fill="#fbe9d6" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="386" y="430" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Box</text>
+<text x="386" y="450" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">background-color</text>
+<text x="386" y="466" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">border-top/right/bottom/left</text>
+<text x="386" y="482" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">padding-top/right/bottom/left</text>
+<text x="386" y="498" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">vertical-align  white-space  (D307)</text>
+<text x="386" y="530" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="start">web: CSS · xlsx cell format · odf cell/frame</text>
+<rect x="370" y="550" width="330" height="86" rx="10" fill="#f9e0e6" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="386" y="574" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Outline</text>
+<text x="386" y="594" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">fill  stroke  stroke-width</text>
+<text x="386" y="626" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="start">web: SVG attributes · pptx/odf line+fill</text>
+<path d="M310 260 L368 260" stroke="#6b6780" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<text x="770" y="118" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Slots — each reads only the facets it understands (D304)</text>
+<rect x="770" y="134" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="162" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">composes paragraph</text>
+<rect x="970" y="147" width="39" height="22" rx="11" fill="#fbe9d6" stroke="#d9d5e8"/>
+<text x="989.5" y="162" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Box</text>
+<rect x="1015" y="147" width="81" height="22" rx="11" fill="#e1f0ea" stroke="#d9d5e8"/>
+<text x="1055.5" y="162" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Paragraph</text>
+<rect x="1102" y="147" width="46" height="22" rx="11" fill="#e8e4fb" stroke="#d9d5e8"/>
+<text x="1125.0" y="162" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Text</text>
+<text x="1246" y="162" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind words</text>
+<rect x="770" y="188" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="216" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">text box · words</text>
+<rect x="970" y="201" width="81" height="22" rx="11" fill="#e1f0ea" stroke="#d9d5e8"/>
+<text x="1010.5" y="216" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Paragraph</text>
+<rect x="1057" y="201" width="46" height="22" rx="11" fill="#e8e4fb" stroke="#d9d5e8"/>
+<text x="1080.0" y="216" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Text</text>
+<text x="1246" y="216" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind words</text>
+<rect x="770" y="242" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="270" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">text box · box</text>
+<rect x="970" y="255" width="39" height="22" rx="11" fill="#fbe9d6" stroke="#d9d5e8"/>
+<text x="989.5" y="270" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Box</text>
+<text x="1246" y="270" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind box</text>
+<rect x="770" y="296" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="324" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">shape · outline</text>
+<rect x="970" y="309" width="67" height="22" rx="11" fill="#f9e0e6" stroke="#d9d5e8"/>
+<text x="1003.5" y="324" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Outline</text>
+<text x="1246" y="324" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind outline</text>
+<rect x="770" y="350" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="378" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">shape · label</text>
+<rect x="970" y="363" width="81" height="22" rx="11" fill="#e1f0ea" stroke="#d9d5e8"/>
+<text x="1010.5" y="378" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Paragraph</text>
+<rect x="1057" y="363" width="46" height="22" rx="11" fill="#e8e4fb" stroke="#d9d5e8"/>
+<text x="1080.0" y="378" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Text</text>
+<text x="1246" y="378" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind words</text>
+<rect x="770" y="404" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="432" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">cell · box</text>
+<rect x="970" y="417" width="39" height="22" rx="11" fill="#fbe9d6" stroke="#d9d5e8"/>
+<text x="989.5" y="432" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Box</text>
+<text x="1246" y="432" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind box</text>
+<rect x="770" y="458" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="486" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">cell · words</text>
+<rect x="970" y="471" width="81" height="22" rx="11" fill="#e1f0ea" stroke="#d9d5e8"/>
+<text x="1010.5" y="486" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Paragraph</text>
+<rect x="1057" y="471" width="46" height="22" rx="11" fill="#e8e4fb" stroke="#d9d5e8"/>
+<text x="1080.0" y="486" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Text</text>
+<text x="1246" y="486" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind words</text>
+<rect x="770" y="512" width="490" height="46" rx="9" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="784" y="540" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">picture</text>
+<text x="1246" y="540" font-size="10.5" font-weight="400" fill="#6b6780" text-anchor="end">kind box (nothing read)</text>
+<path d="M702 260 L768 260" stroke="#6b6780" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<rect x="40" y="452" width="310" height="320" rx="12" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="60" y="480" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Rules that follow</text>
+<text x="60" y="506" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">A slot ignores facets it does not read.</text>
+<text x="60" y="528" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">One style per container text: no per-word</text>
+<text x="60" y="550" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">formatting (D306). Inline marks (Emphasis,</text>
+<text x="60" y="572" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">Strong, Code) are a later, opt-in exception.</text>
+<text x="60" y="594" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">“Change the box only” deviates one slot (D309).</text>
+<text x="60" y="616" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">Text boxes use Box; Outline is for shapes (D310).</text>
+<text x="60" y="638" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">Cells use the same Box style as a text box</text>
+<text x="60" y="660" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">and the same text properties as composes (D307).</text>
+<text x="60" y="682" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">No migration before release (D308).</text>
+<rect x="370" y="646" width="330" height="250" rx="12" fill="#fbfaf7" stroke="#d9d5e8" stroke-width="1.2"/>
+<text x="390" y="674" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Where a style is applied</text>
+<text x="390" y="700" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">ObjectBody.style      → the container slot</text>
+<text x="390" y="722" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">  (box, or outline for a shape)</text>
+<text x="390" y="744" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">Paragraph.style      → the words slot</text>
+<text x="390" y="766" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">  (text box, shape label, cell words)</text>
+<text x="390" y="788" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">Composes paragraph   → one slot, Box +</text>
+<text x="390" y="810" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">  Paragraph + Text</text>
+<text x="390" y="832" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start"></text>
+<text x="390" y="854" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">The menu offers a style only where its</text>
+<text x="390" y="876" font-size="11.8" font-weight="400" fill="#1f1a33" text-anchor="start">kind fits the slot (D305).</text>
+<text x="770" y="610" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Built-ins after the split (D310)</text>
+<text x="770" y="636" font-size="11.6" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">body-text, headings, quote, definition — words</text>
+<text x="770" y="660" font-size="11.6" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">plain-shape — outline</text>
+<text x="770" y="684" font-size="11.6" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">shape-label — words</text>
+<text x="770" y="708" font-size="11.6" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">plain-box (text box default) — box</text>
+<text x="770" y="732" font-size="11.6" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="ui-monospace, Menlo, monospace">plain-image — box</text>
+</svg>
