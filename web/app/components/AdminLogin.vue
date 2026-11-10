@@ -2,10 +2,16 @@
 // Signing in to a server that already has administrators (E3.11) — no mockup for this one; the first-admin-setup
 // screen's own visual language (dark bar, Fraunces heading, iris primary button), minus the one-time "Keep this
 // server local for now" escape, which only ever applies the moment a server is first bound to a real address.
+//
+// Unlike that screen, this one used to have no way out at all: `FirstAdminSetup.vue` has "Skip for now" and
+// `AdminShell.vue` (once signed in) has its `×`, but a person who isn't signing in right now had nothing except
+// the browser's own Back button (UX-11). `close`, below, is `AdminShell.vue`'s own `×` affordance, just reached
+// one screen earlier.
 import { ref } from 'vue'
 import type { useAdminSession } from '~/lib/admin-session'
 
 const props = defineProps<{ label: string; session: ReturnType<typeof useAdminSession> }>()
+const emit = defineEmits<{ close: [] }>()
 
 const name = ref('')
 const password = ref('')
@@ -24,7 +30,10 @@ async function signIn() {
 
 <template>
   <div class="login">
-    <header class="bar">Server settings</header>
+    <header class="bar">
+      Server settings
+      <button class="close" type="button" aria-label="Close" @click="emit('close')">×</button>
+    </header>
     <form class="body" @submit.prevent="signIn">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--iris)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shield">
         <path d="M12 2l8 3.5v5.3c0 5-3.4 8.9-8 10.2-4.6-1.3-8-5.2-8-10.2V5.5L12 2z" /><path d="M9.5 12l1.8 1.8 3.2-3.6" />
@@ -58,9 +67,25 @@ async function signIn() {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   background: var(--ink);
   color: var(--paper);
   font: 500 14px var(--font-ui);
+}
+.close {
+  position: absolute;
+  right: 10px;
+  top: 7px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--paper) 60%, transparent);
+  font-size: 16px;
+}
+.close:hover {
+  background: color-mix(in srgb, var(--paper) 12%, transparent);
 }
 .body {
   flex: 1 1 auto;

@@ -466,20 +466,22 @@ def _checkpoint(info) -> dict:
     }
 
 
-# -- help (E13.1, E13.3): the same two read-only methods for every app, since a topic names the apps it is for
-# itself (its ``apps`` front matter) rather than the method needing to know which app is asking. Not gated by
-# ``allowed_methods`` (nothing here writes), so the ``ai`` user gets the same read access as everybody (E13.4).
+# -- help (E13.1, E13.3): the same two read-only methods for every app. A topic names the apps it is for itself
+# (its ``apps`` front matter), so `_help_search` only has to pass the asking document's own app along; no table of
+# which id belongs to which app lives here. Not gated by ``allowed_methods`` (nothing here writes), so the ``ai``
+# user gets the same read access as everybody (E13.4).
 @core_methods.method("help_search", 'query:str=""')
 def _help_search(ctx, *, query):
-    """Help topics whose title, tags or ``explains`` mention ``query`` (case-insensitive); every topic, by title,
-    if ``query`` is blank. Each result is a summary (`id`, `title`, `apps`, `tags`); fetch the body with
-    `help_topic`."""
-    return [topic.summary() for topic in default_library().search(query)]
+    """Help topics for `ctx`'s own app whose title, tags or ``explains`` mention ``query`` (case-insensitive);
+    every topic for this app, by title, if ``query`` is blank. A topic that names no app at all is for every app.
+    Each result is a summary (`id`, `title`, `apps`, `tags`); fetch the body with `help_topic`."""
+    return [topic.summary() for topic in default_library().search(query, app=ctx.document.model.app)]
 
 
 @core_methods.method("help_topic", "id:str")
 def _help_topic(ctx, *, id):
-    """One help topic in full, by the id a `help_search` result gave."""
+    """One help topic in full, by the id a `help_search` result gave. Unlike `help_search`, not re-scoped to
+    `ctx`'s own app: an id already names one exact topic, the same way a direct link works wherever it came from."""
     topic = default_library().get(id)
     if topic is None:
         raise RequestError("command_error", f"no help topic {id!r}")

@@ -84,3 +84,54 @@ widening that contract for a single fixture; left out rather than forced in.
   looking at it.
 - Groups, templates, layouts and images (E10.4, E10.8) are not modeled by `SlideModel` at all yet, so none of
   this reaches them; they stay beyond-claudia content indefinitely until that work lands.
+
+## Repair: rebased onto the shared object layer (E10.16)
+
+This D179 work was built against the `xlsx-docx-pptx-additive-io` branch at `0792bbe`, before the independent
+`shapes-n-images` branch's shared-object-layer round (E10.16, see `implementation-notes-shared-object-layer.md`)
+landed on `main`. Both merged cleanly at the git level -- they touch non-overlapping lines -- but `main` ended up
+with `claudia_creates_io/pptx.py` calling an API that no longer exists: the flat `SlideObject(id, slide, kind, x,
+y, w, h, style, text, shape)` constructor, a module-level `Style`/`BUILTIN_STYLES: dict[str, Style]`, and direct
+attribute access (`obj.x`, `obj.text`, ...). The owner found this by running `scripts/run_test_documents.py` on a
+fresh checkout of `main` and hit an `ImportError` at the top of the traceback.
+
+Fixed in `pptx.py`, `tests/test_pptx.py` and the three pptx fixture `spec.py` files, by porting every object
+construction and every field read onto the shape E10.16 actually gave the model:
+
+- `SlideObject(...)` flat construction becomes `VisualObject(ObjectBody(id, kind, w, h, style, paragraph, shape=...,
+  rotation=...), SlideAnchor(slide, x, y))` -- `pptx_to_slides` now also reads a shape's rotation into the body
+  (E10.16 requires the field to exist; `slides_to_pptx` still does not write one, so a reimport of claudia's own
+  export always sees 0, same as before).
+- `obj.x`/`.y` move to `obj.anchor.x`/`.y`; `obj.w`/`.h`/`.style`/`.kind`/`.shape` move to `obj.body.w` etc.
+- `obj.text` becomes `obj.body.paragraph.text` (E10.17/D181 landed in the same round): a reimported text box or
+  shape gets a paragraph via `paragraph_for`, and `apply_edits_to_pptx` writes `body.paragraph.text` into the
+  shape's `text_frame` instead of a flat `body.text`.
+- `BUILTIN_STYLES.get(style_id)` becomes `current.styles.computed(style_id)` -- the document's own `StyleBook`,
+  not a module-level dict -- and the per-object loop now resolves the *object's* style and its *paragraph's* style
+  separately (D181's two-styles split), applying `_style_shape`/`_style_text` to each in turn.
+- A test or fixture that retexted an object by `dataclasses.replace(obj, text=...)` now does
+  `obj.with_body(paragraph=obj.body.paragraph.with_text(new_text, ()).written_by(author))`; one that moved or
+  resized it does `dataclasses.replace(obj, anchor=SlideAnchor(...)).with_body(w=..., h=...)` -- the same idiom
+  `ResizeObject.apply` itself uses in `claudia_core.objects`.
+
+Two of the three `test-documents/docx/*/spec.py` fixtures (D177/D178's own, not D179's) hit the same wall at
+runtime, one step further in: `TextModel.blocks[i].text = "..."` on what is now a frozen `Paragraph` (`Block =
+Paragraph`, D181). `scripts/run_test_documents.py` imports every format's adapter up front, so the broken pptx
+import had been masking this -- it failed first and the docx cases never got the chance to run and hit their own
+break. Fixed by swapping the direct mutation for `model.remove(block_id, 0, len(old_text))` +
+`model.insert(block_id, 0, new_text, [Run(len(new_text), None)])`, the same remove/insert the model itself builds
+character-level edits from -- `TextModel` exposes no whole-paragraph "set text" the way `creates`' `SetText`
+command does, consistent with the module docstring's point that a composes paragraph is edited by span, not set
+at once.
+
+All seven catalogue entries (four docx, three pptx) pass `scripts/run_test_documents.py` again, and
+`claudia-creates-io`'s 18 pptx tests pass. Gate: ruff, ruff format and ``claudia-creates-io``'s own mypy are clean
+after narrowing one `str | None` the import loop introduced (`_classify`'s return type, asserted non-`None` since
+the index it is called on already came from `_modeled_shape_indices`, which keeps only classified shapes). Three
+gate failures remain, none from this repair and none in a file it touches: the already-documented `D151`/`D160`
+decision-log collisions (now joined by `D177`/`D178`/`D179`, for the same reason -- `shapes-n-images` independently
+allocated the same numbers; see the numbering note at the end of `decision-log.md`), a `D163` citation in
+`web/app/components/ConnectionIndicator.vue`/`web/app/lib/connection.ts` not yet in the log, a pre-existing ruff
+import-order finding in `claudia_computes/__init__.py`, and a pre-existing mypy/test mismatch in
+`claudia_composes_io/docx.py`/`test_docx.py` over `list[Run]` vs. `tuple[Run, ...]` -- all from the same
+`shapes-n-images` round, outside pptx, and not touched here.

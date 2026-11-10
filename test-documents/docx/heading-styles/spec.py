@@ -4,8 +4,8 @@ and editing one paragraph's text leaves every other paragraph -- and its own sty
 from __future__ import annotations
 
 from claudia_composes import DEFAULT_STYLE, TextModel
+from claudia_core import Run
 from claudia_test_documents.case import Case
-from claudia_test_documents.edits import retext_block
 
 
 def import_checks(model: TextModel) -> None:
@@ -19,7 +19,13 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    return retext_block(model, 1, "Introduction (revised)")
+    # a block (a paragraph, D181) is immutable -- replace its whole text through the same remove/insert the
+    # model itself builds character edits from, rather than reaching for a private part of the model.
+    block_id = model.blocks[1].id
+    new_text = "Introduction (revised)"
+    model.remove(block_id, 0, len(model.block(block_id).text))
+    model.insert(block_id, 0, new_text, [Run(len(new_text), None)])
+    return model
 
 
 def after_checks(model: TextModel) -> None:

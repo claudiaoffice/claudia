@@ -1,4 +1,4 @@
-# The styling dialogs: one menu, three apps (D204–D206)
+# The styling dialogs: one menu, three apps (D209–D211)
 
 Branch `shapes-n-images`, the UI half of the colour-roles round. The model half (D200–D203) shipped first by the
 owner's choice; the four artboards it is built from were agreed before either.
@@ -67,10 +67,14 @@ The branch had `claudia_creates_io.pptx` dead on arrival: `ImportError` on a nam
 removed. Behind it, the importer called a type alias, `apply_edits_to_pptx` read the flat object, and the exporter
 dropped every colour because a built-in style now names a role rather than a hex. Nine package tests, six catalogue
 entries, three `ruff` errors and one `mypy` error, all from two branches that were each green on their own. Written
-up as UX-11; the colour-flattening decision is D206.
+up as UX-15; the colour-flattening decision is D211.
 
-The catalogue's `spec.py` files now share `claudia_test_documents.edits`, so there is one correct way to retext and
-move an object instead of four chances to get it wrong.
+`main` fixed the import half of that independently in the meantime (#23). When this branch was rebased onto `main`
+on 2026-11-10, `main`'s importer, `apply_edits_to_pptx` structure and catalogue `spec.py` files were kept; this
+branch's duplicates (`_object` in `pptx.py`, `claudia_test_documents.edits`, the `test-documents` vulture path) were
+dropped, and only the palette-resolving colour fix was carried over on top. The rebase also renumbered this branch's
+decisions D204–D206 to D209–D211, its bug UX-11 to UX-15, and its server release 0.19.0 to 0.20.0, because `main`
+had taken those numbers first.
 
 ## Still open
 

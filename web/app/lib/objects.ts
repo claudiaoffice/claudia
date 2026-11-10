@@ -33,18 +33,21 @@ export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
 /** What an object is and how it looks: the same fields in all three apps. */
 export interface ObjectBody {
   id: string
-  kind: 'text' | 'shape' | 'image'
+  kind: 'text' | 'shape' | 'image' | 'diagram'
   w: number
   h: number
   /** The id of a style in the document's style book: the object's own `fill`, `stroke` and `stroke-width`
    * (D178). What its *words* look like comes from the paragraph's own style instead. */
   style: string
   /** The words in it: a paragraph, the same entity composes uses (E10.17, D181), with its own style and the
-   * runs saying who wrote which part. `null` for an image, which carries no text. */
+   * runs saying who wrote which part. `null` for an image or a diagram, neither of which carries text. */
   paragraph: Paragraph | null
   shape: string | null
   image: string | null
   imported: ImageImport | null
+  /** The id of a chart definition this object shows (E6.6, `lib/charts.ts`'s `ChartSpec`), or `null` for every
+   * other kind. A floating object keeps no fixed aspect for a diagram, unlike a shape or an image. */
+  diagram: string | null
   /** Whole degrees clockwise. Persisted and validated by the model; no client surface yet. */
   rotation: number
   /** Whether this object holds to the grid (E10.15, D151): the document's own state, set with `setSnap`. The

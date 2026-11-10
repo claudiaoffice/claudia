@@ -7,20 +7,22 @@ from __future__ import annotations
 
 from claudia_creates import SlideModel
 from claudia_test_documents.case import Case
-from claudia_test_documents.edits import flat, retext_object
 
 
 def import_checks(model: SlideModel) -> None:
-    assert [(f["kind"], f["text"]) for f in map(flat, model.objects_on("s1"))] == [("text", "Photo attached.")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached.")]
     assert model.objects_on("s2") == []
 
 
 def modify(model: SlideModel) -> SlideModel:
-    return retext_object(model, "o1", "Photo attached below.")
+    obj = model.get("o1")
+    new_paragraph = obj.body.paragraph.with_text("Photo attached below.", ()).written_by("ana")
+    model.replace_object(obj.with_body(paragraph=new_paragraph))
+    return model
 
 
 def after_checks(model: SlideModel) -> None:
-    assert [(f["kind"], f["text"]) for f in map(flat, model.objects_on("s1"))] == [("text", "Photo attached below.")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached below.")]
     assert model.objects_on("s2") == []
 
 

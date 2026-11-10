@@ -53,7 +53,7 @@ function close() {
     <p v-if="loadError" class="load-error" role="alert">{{ loadError }}</p>
     <template v-else-if="!loading">
       <FirstAdminSetup v-if="noAdministrator" :host="host" :exposed="exposed" :session="session" />
-      <AdminLogin v-else-if="!session.name.value" :label="label" :session="session" />
+      <AdminLogin v-else-if="!session.name.value" :label="label" :session="session" @close="close" />
       <AdminShell v-else :label="label" :host="host" :signed-in-as="session.name.value" :active="active" @navigate="active = $event" @sign-out="session.logout()" @close="close">
         <AdminAiModel v-if="active === 'ai'" :token="session.token.value!" />
         <AdminTypesetting v-else-if="active === 'typeset'" :token="session.token.value!" />

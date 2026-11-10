@@ -53,7 +53,11 @@ statement in the docs or on the website).
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
 | UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
-| UX-11 | P1 | IO / pptx | The PowerPoint exporter cannot be imported, and loses every colour when it can | **fixed** |
+| UX-11 | P2 | UX | The admin sign-in screen had no way back except the browser's Back button | **fixed** |
+| UX-12 | P2 | UX | Open dialog goes blank if the server has an access secret | **fixed** |
+| UX-13 | P2 | UX | `help_search` leaks one app's topics into another's; composes has none of its own | **fixed** |
+| UX-14 | P2 | UX | "Edit this style…" gallery applies and closes on click instead of showing the style to inspect | **fixed** |
+| UX-15 | P1 | IO / pptx | The PowerPoint exporter cannot be imported, and loses every colour when it can | **fixed** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed (patch ready, not yet committed) |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed (patch ready, not yet committed) |
@@ -331,6 +335,114 @@ with each app and each new menu item.
 menu, and the web app implementing the shell contract directly. Then `shim.js` and `webroutes.json` are deleted.
 Settling UX-06 is a precondition.
 
+### UX-11 · The admin sign-in screen had no way back except the browser's Back button · P2 · fixed
+**Evidence (read, `441d6cb`).** Reported by the owner: opening the connectivity indicator's "Manage this server…"
+on a server that already has an administrator lands on `AdminLogin.vue`. `AdminShell.vue` (shown once signed in)
+has a `×` "Close" button (`location.href = '/'`); `FirstAdminSetup.vue` has "Skip for now" / "Keep this server
+local for now" (`keepLocal()`, same target). `AdminLogin.vue` had neither — nothing in its template emits a way
+out, so the browser's own Back button was the only escape. Investigated while trying to reproduce a related report
+that a freshly created document seemed to go missing after exactly this click-through-and-Back path; the document
+itself turned out fine (D5's "Open creates on the server, Save checkpoints" already means there is no unsaved-draft
+window to lose), but this dead end is real and independent of that.
+**Fix.** Gave `AdminLogin.vue` the same `close` emit and `×` button `AdminShell.vue` already uses (same markup,
+same `.close` styles), and wired it in `AdminApp.vue` to the existing `close()` → `location.href = '/'`.
+**Acceptance.** Verified with a real browser against a built app: an administrator account is already configured,
+`/admin/` renders the sign-in form with the `×` visible, clicking it returns to `/` (the Open dialog) without
+touching browser history.
+
+### UX-12 · Open dialog goes blank if the server has an access secret · P2 · fixed
+**Evidence (measured, `441d6cb`).** The backend correctly gates `GET /api/docs` behind the access secret
+(`Gateway.accepts_secret`, `app.py`): with one set, the endpoint answers `401 {"detail": "this server needs its
+access secret"}`. `OpenDialog.vue`'s `loadServer()` only special-cased a `404` from that fetch; every other status,
+401 included, fell into the same branch as success and ran `documents.value = said.documents` — `undefined` for an
+error body with no `documents` key. The template's `v-else-if="!documents.length"` then threw
+`TypeError: Cannot read properties of undefined (reading 'length')` on render. Confirmed with Playwright against a
+real server with an access secret set: page body text came back empty and the console showed exactly that
+`TypeError`. This blanks the *entire* Open dialog, not just one document, and needs no editing at all to trigger —
+just loading `/` on a secret-protected server. Backlog's E3.9/E3.1 status notes already flagged "the access-secret
+prompt" (a way to *supply* a secret from this dialog) as not built; this was the unhandled-exception shape of that
+same gap, not a separate missing feature.
+**Fix.** Pulled the whole "ask a server for its document list" step into a pure, testable function,
+`fetchDocsListing()` in `web/app/lib/open.ts` (mirroring `appOfServer()`'s own extraction for UX-10, and
+`admin-api.ts`'s `call()` for how it turns a `detail` field into a message): any non-OK status becomes a
+`{ error }` result using the server's own `detail` message when there is one, a 404 keeps its existing wording, and
+a 200 whose body has no `documents` array is treated as an error rather than assigned anyway. `OpenDialog.vue` now
+calls it and sets `listError` on the error branch, exactly as it already does for the old 404 case — no new UI,
+just no longer trusting an unexpected shape. The `Listed` interface moved from the component into `open.ts`
+alongside it, since it's now shared.
+**Acceptance.** `web/tests/open.test.ts`, `describe('fetchDocsListing', …)`: a normal 200, a 404 (unchanged
+wording), a 401 with a `detail` (surfaces it verbatim instead of crashing — this is the regression test), a 500
+with no usable `detail` (generic message), a 200 with no `documents` array, and a network failure — seven cases,
+all passing. Re-verified live: with an access secret set, `/` now renders the Open dialog's full chrome (servers
+sidebar, headline, create-document form) with "this server needs its access secret" where the list would be,
+instead of a blank page; zero JS `pageerror`s.
+
+### UX-13 · `help_search` leaks one app's topics into another's; composes has none of its own · P2 · fixed
+**Evidence (read + measured, `41f8f39`).** Reported by the owner, four composes inconsistencies in one batch; this
+is the help-system one. `core_methods.help_search` (`protocol.py`) called `default_library().search(query)` with
+no app at all, so the per-app `apps` front matter every topic file already carries (`help.py`'s `Topic.apps`,
+documented since E13.1) was simply never read back out. Confirmed by running a composes document's `help_search`
+against the real server code: it returned `computes.writing-a-formula`, `computes.looking-up-a-value` and
+`computes.summing-with-a-condition` — three spreadsheet topics, verbatim, inside a word-processor's own Help tab.
+The reverse leak (composes' own topics into computes) could not also be demonstrated at this commit because
+composes had zero topics of its own — an empty `help/` folder was the second half of the same report: scoping was
+missing *and* there was nothing yet to scope.
+**Fix.** `HelpLibrary.search(query, *, app=None)` gained the optional keyword: when given, it keeps a topic only
+if `app` is in that topic's own `apps`, or `apps` is empty (a topic naming no app is for every app — this is how
+`typeset.configure-latex` keeps showing up from every app that can embed LaTeX). `_help_search` now passes
+`ctx.document.model.app` along; `_help_topic` is deliberately left unscoped, since an id already names one exact
+topic the same way a direct link works from anywhere. This is a Minor, additive change to `claudia_server`'s
+public API (`docs/versioning.md`): version 0.18.0 → 0.19.0, changelog entry, snapshot regenerated
+(`tests/api/claudia_server.json`). Gave composes its first two topics (`composes.editing-a-style`,
+`composes.asking-ai-to-review`) so its Help tab is not merely correctly empty.
+**Acceptance.** `packages/claudia-server/tests/test_server_protocol.py`, the `help (E13.1, E13.3)` block: a
+computes document's `help_search` never returns composes' own topics and the reverse; a topic naming several apps
+(`typeset.configure-latex`) still shows from each of them; `query=""` on a scoped `help_search` gives every topic
+for that app, not every topic in the library; composes' own new topics are found by a `style` search;
+`help_topic`'s existing behaviour (full text by id, unknown-id error, every role including `ai` can read) is
+unchanged, and a new test confirms it is *not* re-scoped — fetching a computes topic's id from a composes document
+still works. 10 tests, all passing; the one that depends on composes' own content (`test_help_search_finds_composes
+_own_new_topics`) was red before the two topic files existed, green after.
+
+### UX-14 · "Edit this style…" gallery applies and closes on click instead of showing the style to inspect · P2 · fixed
+**Evidence (read + measured, `41f8f39`).** Second of the owner's four composes reports. `StyleMenu.vue`'s gallery
+click handler called `choose(id)`, which ran `host.apply(id)` — writing the clicked style onto the caret's current
+paragraph — and then `emit('close')`. There was no way to look at a style's CSS or controls without first applying
+it to whatever the cursor happened to be sitting in, and the menu vanished the instant you clicked, before the
+look below it could even be seen. Confirmed by reading `StyleMenu.vue`/`StyleSpec.vue`/`style-host.ts` together:
+`StyleSpec.vue` always read `props.host.current`, which is exactly the document's own current style — there was
+no separate notion of "the style I am looking at" distinct from "the style under the caret" anywhere in the three
+files. `StylesDialog.vue` ("All styles…") and `StyleBar.vue` (the toolbar's quick-apply list) were checked and
+confirmed unaffected — neither goes through this gallery-click path.
+**Fix.** `StyleEditor` (`web/app/lib/style-host.ts`) gained `pick(id)`, `isPicked` and `canDeviate`: picking a
+style only changes what `editor.current`/`editor.look` show, never the document, and the caret's own paragraph is
+left untouched. The gallery's click handler now calls `editor.pick(s.id)` directly — no `apply`, no `close`.
+Picking a style other than the caret's own forces scope to "every use" and disables "this paragraph only" (there
+is no selection to split off from a style that is merely being browsed); this is also how a change made while
+picking a style is written — to that style, for everyone, never as a deviation of whatever the cursor is really
+in. `StyleMenu.vue` now constructs the one `StyleEditor` and passes it down to `StyleSpec.vue` as a prop (moved
+from being constructed locally in `StyleSpec.vue`), so picking in the gallery and the controls below it share the
+same state; a small "here" badge marks which gallery row is the caret's real style whenever that differs from
+what is being inspected. **Decision taken:** "this paragraph only" is disabled, not merely defaulted away, while
+picking another style — the owner's choice between the two when asked.
+**Acceptance.** `web/tests/style-editor.test.ts`, `describe('picking a style to inspect, without applying it
+(UX-14)', …)`: picking sends nothing to the document and leaves the caret's own style alone; picking forces
+"every use" and disables deviation; an edit made while picking changes the picked style, never a deviation of the
+caret's own; picking the caret's own style back behaves exactly as not picking at all — 6 new tests, all red
+before `pick()` existed, green after; full suite 473/473, `vue-tsc --noEmit` clean. `web/e2e/styling.cjs` gained a
+matching browser scenario (pick Heading 1, confirm the paragraph is untouched and the "here" badge appears, edit
+while picked changes Heading 1 globally, undo and pick back restores the ordinary controls) — written against the
+real component source and existing selectors, but **not executed** in this sandbox: Playwright's browser-binary
+download host is outside the sandbox's network allowlist (confirmed via the proxy's own status endpoint). Running
+it for real, or in CI where Chromium is already installed, is the one piece of this fix not yet machine-verified.
+
+### Note on PERF-04
+While reproducing the above, `bugtracker.md`'s own index still lists `PERF-04` as "fixed (listing cache)", but
+`SealedDocuments.documents()` — the provider the real server uses today — globs and re-reads every container
+file's manifest on every call (`sealed.py`, `documents()`). No cache currently exists in that path. Not a
+correctness bug (the listing is always fresh, which is why neither UX-11 nor UX-12 traces back to a stale cache),
+but whatever closed PERF-04 belonged to an earlier, now-replaced store, and the index entry is stale.
+
 ---
 
 ## Process and code
@@ -360,7 +472,7 @@ which is missing, where the web app is not built or there is no Chromium; CI has
 **Not the cause, though it looks like one.** computes and creates show "No styles yet" under *Format*: those menus
 are deliberately inert (D125) and the style UI for both is still to come.
 
-### UX-11 · The PowerPoint exporter is dead, and loses every colour once it is not · P1 · fixed
+### UX-15 · The PowerPoint exporter is dead, and loses every colour once it is not · P1 · fixed
 **Evidence (measured, `441d6cb`).** `import claudia_creates_io.pptx` raised `ImportError: cannot import name
 'Style' from 'claudia_creates'` — so every .pptx export and import failed on the first call, and nine of the
 package's own tests failed. `ruff` had three errors at this commit for the same reason, and the catalogue's
@@ -374,12 +486,14 @@ did the same. Nothing caught it because neither branch's own gate ran against th
 **And a quieter one behind it.** Once it imported, `slides_to_pptx` read `computed` CSS and looked for a
 `#rrggbb`. Since D201 every built-in style names a role: `fill: @accent/14` holds no hex, `_rgb` found none, and
 the fill and the border were dropped silently. A deck exported from a brand-new presentation came out colourless.
-**Fix.** The importer builds a body and an anchor (`_object`); `apply_edits_to_pptx` reads `.body`/`.anchor` and
-resolves against the document's own style book and palette, not the built-in tuple; `_rgb` reads `rgb()` and
+**Fix.** The import half was fixed on `main` independently (the `xlsx-docx-pptx-additive-io` merge, #23): the
+importer builds a body and an anchor, `apply_edits_to_pptx` reads `.body`/`.anchor`, and the catalogue's
+`spec.py` files were rewritten the same way. When `shapes-n-images` was rebased onto `main` (2026-11-10) `main`'s
+version of all of that was kept and this branch's duplicate (`_object`, `claudia_test_documents.edits`) dropped.
+What this branch adds on top is the colour half: both `slides_to_pptx` and `apply_edits_to_pptx` resolve against
+the document's own style book and palette (`_look`) instead of reading `computed`; `_rgb` reads `rgb()` and
 `rgba()` as well as hex, and flattens a translucent colour over the palette's `page`, because a solid pptx fill
-has nowhere to keep an opacity and dropping the 14% would export a pale wash as full-strength iris (D206). The
-catalogue's edits now go through `claudia_test_documents.edits`, so the four `spec.py` files share one correct
-way to retext and move an object instead of four chances to get it wrong.
+has nowhere to keep an opacity and dropping the 14% would export a pale wash as full-strength iris (D211).
 **Two regression tests** pin the part no test covered: that a shape's colours reach the file at all, and that
 changing a role changes what the file holds.
 **Why nothing caught it.** The two branches were each green on their own. A merge that is clean to git can still

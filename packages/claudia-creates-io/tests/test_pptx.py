@@ -6,7 +6,6 @@ from __future__ import annotations
 import zipfile
 from dataclasses import replace
 from io import BytesIO
-from types import SimpleNamespace
 
 import pptx
 import pytest
@@ -102,65 +101,33 @@ def test_transition_survives_a_python_pptx_round_trip():
     assert slide1.find(f"{{{PNS}}}transition") is not None
 
 
-def flat(obj):
-    """An object's fields the way these tests were written to read them, before D177 split a body from an anchor.
-
-    `VisualObject` keeps what a thing *is* in `.body`, where it sits in `.anchor`, and its words in a `Paragraph`.
-    Reading that split out once here keeps the assertions below about pptx, which is what they are for."""
-    body, anchor = obj.body, obj.anchor
-    return SimpleNamespace(
-        id=body.id,
-        kind=body.kind,
-        text=body.paragraph.text if body.paragraph else "",
-        style=body.style,
-        shape=body.shape,
-        x=anchor.x,
-        y=anchor.y,
-        w=body.w,
-        h=body.h,
-    )
-
-
-def retexted(obj, text):
-    """The same object with other words in it. Its one paragraph carries them (D181), not the body itself."""
-    paragraph = obj.body.paragraph
-    assert paragraph is not None, "only a text box or a shape has words to change"
-    # `written_by` is what lays one run over the new words; a paragraph whose runs do not cover its text exactly
-    # is refused, which is the kernel keeping authorship honest (E10.17).
-    return obj.with_body(paragraph=paragraph.with_text(text, ()).written_by(None))
-
-
-def placed(obj, x, y, w, h):
-    """The same object moved and resized: the size is the body's, the position the slide anchor's (D177)."""
-    return replace(obj.with_body(w=w, h=h), anchor=replace(obj.anchor, x=x, y=y))
-
-
 # -- pptx_to_slides ----------------------------------------------------------------------------------------------
 
 
 def test_pptx_to_slides_imports_text_and_shape_objects_in_order():
     model = pptx_to_slides(slides_to_pptx(two_slide_deck()))
     assert model.slides == ["s1", "s2"]
-    assert [(f.kind, f.text) for f in map(flat, model.objects_on("s1"))] == [("text", "Hello")]
-    assert [(f.kind, f.text, f.shape) for f in map(flat, model.objects_on("s2"))] == [("shape", "Circle", "circle")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Hello")]
+    assert [(o.body.kind, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s2")] == [
+        ("shape", "Circle", "circle")
+    ]
 
 
 def test_pptx_to_slides_falls_back_to_the_default_styles():
     model = pptx_to_slides(slides_to_pptx(two_slide_deck()))
-    assert flat(model.objects_on("s1")[0]).style == "body-text"
-    assert flat(model.objects_on("s2")[0]).style == "plain-shape"
+    assert model.objects_on("s1")[0].body.style == "body-text"
+    assert model.objects_on("s2")[0].body.style == "plain-shape"
 
 
 def test_pptx_to_slides_keeps_position_and_size_through_a_round_trip():
     model = two_slide_deck()
     reimported = pptx_to_slides(slides_to_pptx(model))
-    original = flat(model.objects_on("s2")[0])
-    reimported_object = flat(reimported.objects_on("s2")[0])
-    assert (reimported_object.x, reimported_object.y, reimported_object.w, reimported_object.h) == (
-        original.x,
-        original.y,
-        original.w,
-        original.h,
+    original, again = model.objects_on("s2")[0], reimported.objects_on("s2")[0]
+    assert (again.anchor.x, again.anchor.y, again.body.w, again.body.h) == (
+        original.anchor.x,
+        original.anchor.y,
+        original.body.w,
+        original.body.h,
     )
 
 
@@ -174,8 +141,8 @@ def test_pptx_to_slides_reads_the_decks_own_slide_size_not_a_fixed_one():
     out = BytesIO()
     prs.save(out)
     model = pptx_to_slides(out.getvalue())
-    obj = flat(model.objects_on("s1")[0])
-    assert (obj.x, obj.y, obj.w, obj.h) == (100, 100, 400, 100)
+    obj = model.objects_on("s1")[0]
+    assert (obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h) == (100, 100, 400, 100)
 
 
 def test_pptx_to_slides_skips_a_table():
@@ -187,7 +154,7 @@ def test_pptx_to_slides_skips_a_table():
     out = BytesIO()
     prs.save(out)
     model = pptx_to_slides(out.getvalue())
-    assert [(f.kind, f.text) for f in map(flat, model.objects_on("s1"))] == [("text", "Hi")]
+    assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Hi")]
 
 
 # -- apply_edits_to_pptx -------------------------------------------------------------------------------------------
@@ -217,7 +184,7 @@ def test_apply_edits_patches_only_the_changed_object_and_preserves_a_table():
     baseline = pptx_to_slides(original_bytes)
     current = pptx_to_slides(original_bytes)
     obj = baseline.objects_on("s1")[0]
-    current.replace_object(retexted(obj, "First edited"))
+    current.replace_object(obj.with_body(paragraph=obj.body.paragraph.with_text("First edited", ()).written_by("ana")))
 
     out = apply_edits_to_pptx(original_bytes, baseline, current)
     reopened = pptx.Presentation(BytesIO(out))
@@ -232,12 +199,13 @@ def test_apply_edits_moves_and_resizes_an_object():
     baseline = pptx_to_slides(original_bytes)
     current = pptx_to_slides(original_bytes)
     obj = current.objects_on("s2")[0]
-    current.replace_object(placed(obj, 300, 300, 100, 100))
+    moved_obj = replace(obj, anchor=SlideAnchor("s2", 300, 300)).with_body(w=100, h=100)
+    current.replace_object(moved_obj)
 
     out = apply_edits_to_pptx(original_bytes, baseline, current)
     reimported = pptx_to_slides(out)
-    moved = flat(reimported.objects_on("s2")[0])
-    assert (moved.x, moved.y, moved.w, moved.h) == (300, 300, 100, 100)
+    moved = reimported.objects_on("s2")[0]
+    assert (moved.anchor.x, moved.anchor.y, moved.body.w, moved.body.h) == (300, 300, 100, 100)
 
 
 def test_apply_edits_leaves_an_untouched_slides_media_part_byte_identical():
@@ -255,7 +223,7 @@ def test_apply_edits_leaves_an_untouched_slides_media_part_byte_identical():
     baseline = pptx_to_slides(original_bytes)
     current = pptx_to_slides(original_bytes)
     obj = current.objects_on("s1")[0]
-    current.replace_object(retexted(obj, "First edited"))
+    current.replace_object(obj.with_body(paragraph=obj.body.paragraph.with_text("First edited", ()).written_by("ana")))
 
     edited_bytes = apply_edits_to_pptx(original_bytes, baseline, current)
     with zipfile.ZipFile(BytesIO(original_bytes)) as before, zipfile.ZipFile(BytesIO(edited_bytes)) as after:
@@ -268,8 +236,7 @@ def test_apply_edits_raises_unsupported_edit_when_an_object_is_added():
     original_bytes = slides_to_pptx(model)
     baseline = pptx_to_slides(original_bytes)
     current = pptx_to_slides(original_bytes)
-    body = ObjectBody("onew", "text", 300, 100, "body-text", paragraph_for("onew", "body-text", "New"))
-    current.insert_object(VisualObject(body, SlideAnchor("s1", 100, 500)))
+    current.insert_object(_object("onew", "s1", "text", 100, 500, 300, 100, "body-text", "New"))
 
     with pytest.raises(UnsupportedEdit):
         apply_edits_to_pptx(original_bytes, baseline, current)

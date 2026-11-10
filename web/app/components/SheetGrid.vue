@@ -733,7 +733,8 @@ defineExpose({
           @mousedown.stop="onObjectDown($event, o)"
           @dblclick.stop
         >
-          <img v-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="o.imported?.alt ?? ''" draggable="false" />
+          <ChartView v-if="o.kind === 'diagram' && o.diagram" :session="session" :diagram-id="o.diagram" :width="o.w" :height="o.h" />
+          <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="o.imported?.alt ?? ''" draggable="false" />
         </div>
 
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">

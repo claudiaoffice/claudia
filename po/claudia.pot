@@ -17,7 +17,7 @@ msgstr ""
 msgid "About Claudia Creates"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:265 web/app/components/TextWorkspace.vue:295 web/app/components/Workspace.vue:511
+#: web/app/components/SlideWorkspace.vue:265 web/app/components/TextWorkspace.vue:295 web/app/components/Workspace.vue:550
 msgid "About claudia"
 msgstr ""
 
@@ -29,7 +29,7 @@ msgstr ""
 msgid "Accept a document that was handed over to you"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:150 web/app/components/TextWorkspace.vue:180 web/app/components/Workspace.vue:394
+#: web/app/components/SlideWorkspace.vue:150 web/app/components/TextWorkspace.vue:180 web/app/components/Workspace.vue:432
 msgid "Accept ownership…"
 msgstr ""
 
@@ -49,15 +49,15 @@ msgstr ""
 msgid "All Styles…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:85 web/app/components/TextWorkspace.vue:241 web/app/components/Workspace.vue:291
+#: web/app/components/SlideWorkspace.vue:85 web/app/components/TextWorkspace.vue:241 web/app/components/Workspace.vue:313
 msgid "All styles…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:251 web/app/components/TextWorkspace.vue:281 web/app/components/Workspace.vue:497
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:251 web/app/components/TextWorkspace.vue:281 web/app/components/Workspace.vue:536
 msgid "App Language"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:262 web/app/components/TextWorkspace.vue:292 web/app/components/Workspace.vue:508
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:262 web/app/components/TextWorkspace.vue:292 web/app/components/Workspace.vue:547
 msgid "Ask ai"
 msgstr ""
 
@@ -65,7 +65,7 @@ msgstr ""
 msgid "Ask for an Example Budget"
 msgstr ""
 
-#: web/app/components/Workspace.vue:489
+#: web/app/components/Workspace.vue:528
 msgid "Ask for an example budget"
 msgstr ""
 
@@ -85,7 +85,7 @@ msgstr ""
 msgid "Ask the assistant to suggest improvements"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:245 web/app/components/TextWorkspace.vue:269 web/app/components/Workspace.vue:488
+#: web/app/components/SlideWorkspace.vue:245 web/app/components/TextWorkspace.vue:269 web/app/components/Workspace.vue:527
 msgid "Ask the assistant…"
 msgstr ""
 
@@ -93,7 +93,7 @@ msgstr ""
 msgid "Assign New Owner…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:144 web/app/components/TextWorkspace.vue:176 web/app/components/Workspace.vue:390
+#: web/app/components/SlideWorkspace.vue:144 web/app/components/TextWorkspace.vue:176 web/app/components/Workspace.vue:428
 msgid "Assign new owner…"
 msgstr ""
 
@@ -113,6 +113,10 @@ msgstr ""
 msgid "Change how this kind of paragraph looks"
 msgstr ""
 
+#: web/app/components/Workspace.vue:480
+msgid "Chart…"
+msgstr ""
+
 #: web/app/components/SidePanel.vue:185
 msgid "Chat"
 msgstr ""
@@ -121,7 +125,7 @@ msgstr ""
 msgid "Clear Cells"
 msgstr ""
 
-#: web/app/components/Workspace.vue:466
+#: web/app/components/Workspace.vue:505
 msgid "Clear cells"
 msgstr ""
 
@@ -145,7 +149,7 @@ msgstr ""
 msgid "Close Document"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:165 web/app/components/TextWorkspace.vue:192 web/app/components/Workspace.vue:406
+#: web/app/components/SlideWorkspace.vue:165 web/app/components/TextWorkspace.vue:192 web/app/components/Workspace.vue:444
 msgid "Close document"
 msgstr ""
 
@@ -153,19 +157,19 @@ msgstr ""
 msgid "Colour the text by the person who wrote it"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:87 web/app/components/TextWorkspace.vue:244 web/app/components/Workspace.vue:293
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:87 web/app/components/TextWorkspace.vue:244 web/app/components/Workspace.vue:315
 msgid "Colours…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:457
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:496
 msgid "Column"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:247 web/app/components/TextWorkspace.vue:277 web/app/components/Workspace.vue:493
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:247 web/app/components/TextWorkspace.vue:277 web/app/components/Workspace.vue:532
 msgid "Config"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:186 web/app/components/TextWorkspace.vue:213 web/app/components/Workspace.vue:427
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:186 web/app/components/TextWorkspace.vue:213 web/app/components/Workspace.vue:465
 msgid "Copy"
 msgstr ""
 
@@ -177,7 +181,7 @@ msgstr ""
 msgid "Create a document or open one from the server"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:187 web/app/components/TextWorkspace.vue:214 web/app/components/Workspace.vue:428
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:187 web/app/components/TextWorkspace.vue:214 web/app/components/Workspace.vue:466
 msgid "Cut"
 msgstr ""
 
@@ -185,11 +189,11 @@ msgstr ""
 msgid "Dark Mode"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:237 web/app/components/TextWorkspace.vue:254 web/app/components/Workspace.vue:477
+#: web/app/components/SlideWorkspace.vue:237 web/app/components/TextWorkspace.vue:254 web/app/components/Workspace.vue:516
 msgid "Dark mode"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:207 web/app/components/Workspace.vue:452 web/app/components/Workspace.vue:462
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:207 web/app/components/Workspace.vue:491 web/app/components/Workspace.vue:501
 msgid "Delete"
 msgstr ""
 
@@ -197,7 +201,7 @@ msgstr ""
 msgid "Delete From Server…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:158 web/app/components/TextWorkspace.vue:185 web/app/components/Workspace.vue:399
+#: web/app/components/SlideWorkspace.vue:158 web/app/components/TextWorkspace.vue:185 web/app/components/Workspace.vue:437
 msgid "Delete from server…"
 msgstr ""
 
@@ -213,11 +217,11 @@ msgstr ""
 msgid "Do your last undone step again"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:93 web/app/components/SlideWorkspace.vue:264 web/app/components/TextWorkspace.vue:294 web/app/components/Workspace.vue:510
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:93 web/app/components/SlideWorkspace.vue:264 web/app/components/TextWorkspace.vue:294 web/app/components/Workspace.vue:549
 msgid "Documentation"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:135 web/app/components/TextWorkspace.vue:167 web/app/components/Workspace.vue:381
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:135 web/app/components/TextWorkspace.vue:167 web/app/components/Workspace.vue:419
 msgid "Download"
 msgstr ""
 
@@ -225,7 +229,7 @@ msgstr ""
 msgid "Download the document to this computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:169 web/app/components/TextWorkspace.vue:196 web/app/components/Workspace.vue:410
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:169 web/app/components/TextWorkspace.vue:196 web/app/components/Workspace.vue:448
 msgid "Edit"
 msgstr ""
 
@@ -241,15 +245,15 @@ msgstr ""
 msgid "Edit text"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:81 web/app/components/TextWorkspace.vue:240 web/app/components/Workspace.vue:290
+#: web/app/components/SlideWorkspace.vue:81 web/app/components/TextWorkspace.vue:240 web/app/components/Workspace.vue:312
 msgid "Edit this style…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:155 web/app/components/TextWorkspace.vue:182 web/app/components/Workspace.vue:396
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:155 web/app/components/TextWorkspace.vue:182 web/app/components/Workspace.vue:434
 msgid "Export…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:128 web/app/components/TextWorkspace.vue:160 web/app/components/Workspace.vue:374
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:128 web/app/components/TextWorkspace.vue:160 web/app/components/Workspace.vue:412
 msgid "File"
 msgstr ""
 
@@ -261,11 +265,11 @@ msgstr ""
 msgid "Follow or override the system's light/dark setting"
 msgstr ""
 
-#: web/app/components/Workspace.vue:279
+#: web/app/components/Workspace.vue:301
 msgid "For the object you select"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:211 web/app/components/TextWorkspace.vue:228 web/app/components/Workspace.vue:469
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:211 web/app/components/TextWorkspace.vue:228 web/app/components/Workspace.vue:508
 msgid "Format"
 msgstr ""
 
@@ -273,7 +277,7 @@ msgstr ""
 msgid "Hand this document over to somebody else"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:126 web/app/components/SlideWorkspace.vue:260 web/app/components/TextWorkspace.vue:290 web/app/components/Workspace.vue:506
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:126 web/app/components/SlideWorkspace.vue:260 web/app/components/TextWorkspace.vue:290 web/app/components/Workspace.vue:545
 msgid "Help"
 msgstr ""
 
@@ -289,7 +293,7 @@ msgstr ""
 msgid "History and Chat"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:228 web/app/components/TextWorkspace.vue:251 web/app/components/Workspace.vue:474
+#: web/app/components/SlideWorkspace.vue:228 web/app/components/TextWorkspace.vue:251 web/app/components/Workspace.vue:513
 msgid "History and chat"
 msgstr ""
 
@@ -297,11 +301,11 @@ msgstr ""
 msgid "How Do I…?"
 msgstr ""
 
-#: web/app/components/HelpPanel.vue:106 web/app/components/SlideWorkspace.vue:263 web/app/components/TextWorkspace.vue:293 web/app/components/Workspace.vue:509
+#: web/app/components/HelpPanel.vue:106 web/app/components/SlideWorkspace.vue:263 web/app/components/TextWorkspace.vue:293 web/app/components/Workspace.vue:548
 msgid "How do I…?"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:203 web/app/components/Workspace.vue:441
+#: web/app/components/SlideWorkspace.vue:203 web/app/components/Workspace.vue:479
 msgid "Image…"
 msgstr ""
 
@@ -341,19 +345,19 @@ msgstr ""
 msgid "Insert a row below the selection"
 msgstr ""
 
-#: web/app/components/Workspace.vue:450
+#: web/app/components/Workspace.vue:489
 msgid "Insert above"
 msgstr ""
 
-#: web/app/components/Workspace.vue:451
+#: web/app/components/Workspace.vue:490
 msgid "Insert below"
 msgstr ""
 
-#: web/app/components/Workspace.vue:460
+#: web/app/components/Workspace.vue:499
 msgid "Insert left"
 msgstr ""
 
-#: web/app/components/Workspace.vue:461
+#: web/app/components/Workspace.vue:500
 msgid "Insert right"
 msgstr ""
 
@@ -373,7 +377,7 @@ msgstr ""
 msgid "Leave Document…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:154 web/app/components/TextWorkspace.vue:181 web/app/components/Workspace.vue:395
+#: web/app/components/SlideWorkspace.vue:154 web/app/components/TextWorkspace.vue:181 web/app/components/Workspace.vue:433
 msgid "Leave document…"
 msgstr ""
 
@@ -393,7 +397,7 @@ msgstr ""
 msgid "Make a checkpoint of the document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:139 web/app/components/TextWorkspace.vue:171 web/app/components/Workspace.vue:385
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:139 web/app/components/TextWorkspace.vue:171 web/app/components/Workspace.vue:423
 msgid "Manage"
 msgstr ""
 
@@ -401,7 +405,7 @@ msgstr ""
 msgid "Move the selection to the clipboard"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:130 web/app/components/TextWorkspace.vue:162 web/app/components/Workspace.vue:376
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:130 web/app/components/TextWorkspace.vue:162 web/app/components/Workspace.vue:414
 msgid "New"
 msgstr ""
 
@@ -413,7 +417,7 @@ msgstr ""
 msgid "New Slide"
 msgstr ""
 
-#: web/app/components/Workspace.vue:440
+#: web/app/components/Workspace.vue:478
 msgid "New sheet…"
 msgstr ""
 
@@ -421,7 +425,7 @@ msgstr ""
 msgid "New slide"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:69 web/app/components/TextWorkspace.vue:231 web/app/components/Workspace.vue:275
+#: web/app/components/SlideWorkspace.vue:69 web/app/components/TextWorkspace.vue:231 web/app/components/Workspace.vue:297
 msgid "No styles yet"
 msgstr ""
 
@@ -437,7 +441,7 @@ msgstr ""
 msgid "Open the chat with an empty prompt"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:131 web/app/components/TextWorkspace.vue:163 web/app/components/Workspace.vue:377
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:131 web/app/components/TextWorkspace.vue:163 web/app/components/Workspace.vue:415
 msgid "Open…"
 msgstr ""
 
@@ -445,7 +449,7 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:188 web/app/components/TextWorkspace.vue:215 web/app/components/Workspace.vue:429
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:188 web/app/components/TextWorkspace.vue:215 web/app/components/Workspace.vue:467
 msgid "Paste"
 msgstr ""
 
@@ -453,7 +457,7 @@ msgstr ""
 msgid "Paste As"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:191 web/app/components/TextWorkspace.vue:218 web/app/components/Workspace.vue:432
+#: web/app/components/SlideWorkspace.vue:191 web/app/components/TextWorkspace.vue:218 web/app/components/Workspace.vue:470
 msgid "Paste as"
 msgstr ""
 
@@ -461,7 +465,7 @@ msgstr ""
 msgid "Plain Text"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:196 web/app/components/TextWorkspace.vue:223 web/app/components/Workspace.vue:437
+#: web/app/components/SlideWorkspace.vue:196 web/app/components/TextWorkspace.vue:223 web/app/components/Workspace.vue:475
 msgid "Plain text"
 msgstr ""
 
@@ -473,11 +477,11 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:180 web/app/components/TextWorkspace.vue:207 web/app/components/Workspace.vue:421
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:180 web/app/components/TextWorkspace.vue:207 web/app/components/Workspace.vue:459
 msgid "Redo"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:180 web/app/components/TextWorkspace.vue:207 web/app/components/Workspace.vue:421
+#: web/app/components/SlideWorkspace.vue:180 web/app/components/TextWorkspace.vue:207 web/app/components/Workspace.vue:459
 msgid "Redo {label}"
 msgstr ""
 
@@ -505,11 +509,11 @@ msgstr ""
 msgid "Review this text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:447
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:486
 msgid "Row"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:133 web/app/components/TextWorkspace.vue:165 web/app/components/Workspace.vue:379
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:133 web/app/components/TextWorkspace.vue:165 web/app/components/Workspace.vue:417
 msgid "Save"
 msgstr ""
 
@@ -517,7 +521,7 @@ msgstr ""
 msgid "Save New Checkpoint…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:134 web/app/components/TextWorkspace.vue:166 web/app/components/Workspace.vue:380
+#: web/app/components/SlideWorkspace.vue:134 web/app/components/TextWorkspace.vue:166 web/app/components/Workspace.vue:418
 msgid "Save new checkpoint…"
 msgstr ""
 
@@ -529,11 +533,11 @@ msgstr ""
 msgid "Search help…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:141 web/app/components/TextWorkspace.vue:173 web/app/components/Workspace.vue:387
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:141 web/app/components/TextWorkspace.vue:173 web/app/components/Workspace.vue:425
 msgid "Share…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:249 web/app/components/TextWorkspace.vue:279 web/app/components/Workspace.vue:495
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:249 web/app/components/TextWorkspace.vue:279 web/app/components/Workspace.vue:534
 msgid "Shortcuts"
 msgstr ""
 
@@ -549,7 +553,7 @@ msgstr ""
 msgid "Show the text as pages instead of a flowing text"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:217 web/app/components/TextWorkspace.vue:250 web/app/components/Workspace.vue:473
+#: web/app/components/SlideWorkspace.vue:217 web/app/components/TextWorkspace.vue:250 web/app/components/Workspace.vue:512
 msgid "Show who wrote what"
 msgstr ""
 
@@ -581,15 +585,15 @@ msgstr ""
 msgid "The keyboard shortcuts this app uses"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:245 web/app/components/TextWorkspace.vue:267 web/app/components/Workspace.vue:486
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:245 web/app/components/TextWorkspace.vue:267 web/app/components/Workspace.vue:525
 msgid "Tools"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:173 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:414
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:173 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:452
 msgid "Undo"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:173 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:414
+#: web/app/components/SlideWorkspace.vue:173 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:452
 msgid "Undo {label}"
 msgstr ""
 
@@ -597,7 +601,7 @@ msgstr ""
 msgid "Version, authors and licence"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:215 web/app/components/TextWorkspace.vue:248 web/app/components/Workspace.vue:471
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:215 web/app/components/TextWorkspace.vue:248 web/app/components/Workspace.vue:510
 msgid "View"
 msgstr ""
 

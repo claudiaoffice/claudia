@@ -7,6 +7,8 @@ import type { ImageAsset, ImageImport } from './images'
 import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
+import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
+import { rangeTouchedBy } from './charts'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
 
@@ -21,6 +23,8 @@ export type {
 } from './base-session'
 export { BaseSession } from './base-session'
 export type { ImageAsset, ImageImport } from './images'
+export type { Chart, ChartDraft, ChartFigure, ChartRange, ChartSpec } from './charts'
+export { chartRange } from './charts'
 
 export const CHUNK_ROWS = 64
 export const CHUNK_COLS = 16
@@ -61,6 +65,12 @@ export interface State extends BaseState {
   objects: Record<string, SheetObject>
   order: Record<string, string[]> // sheet -> object ids, the one in front last
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id
+  diagrams: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
+  charts: Chart[] // chart tabs, in tab order
+  /** A diagram's Plotly figure, read live off its sheet, cached by diagram id until something that could
+   * change it happens — its own definition changing, or a `cells` event touching its range (`ensureFigure`,
+   * `onAppEvent`'s `'cells'`/`'diagram'` cases). Never persisted across a reload: `loadApp` starts it empty. */
+  figures: Record<string, ChartFigure>
   /** The document's styles: what a floating object looks like. Cell styling is a separate story (E6.13). */
   styles: Record<string, StyleDef>
   /** The document's colour roles and how they read against each other (D200); the styles are drawn from. */
@@ -74,6 +84,7 @@ export class Session extends BaseSession<State> {
   private inflight = new Map<string, Promise<void>>()
   private sizesLoaded = new Set<string>()
   private sizesInflight = new Map<string, Promise<void>>()
+  private figuresInflight = new Map<string, Promise<void>>()
   private editing = false
   private shown = ''
 
@@ -88,6 +99,9 @@ export class Session extends BaseSession<State> {
       objects: {},
       order: {},
       images: {},
+      diagrams: {},
+      charts: [],
+      figures: {},
       styles: {},
       palette: null,
     })
@@ -99,9 +113,11 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, styles, palette] = await Promise.all([
+    const [sheets, images, diagrams, charts, styles, palette] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
+      link.request<ChartSpec[]>('diagrams'),
+      link.request<Chart[]>('charts'),
       link.request<StyleDef[]>('styles'),
       link.request<PaletteEvent>('palette'),
     ])
@@ -115,6 +131,10 @@ export class Session extends BaseSession<State> {
     })
     s.sheets = sheets
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
+    s.diagrams = Object.fromEntries(diagrams.map((x) => [x.id, x]))
+    s.charts = charts
+    s.figures = {}
+    this.figuresInflight.clear()
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
     s.palette = palette
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
@@ -171,6 +191,39 @@ export class Session extends BaseSession<State> {
   /** The objects of a sheet, the one in front last. */
   objectsOn(sheet: string): SheetObject[] {
     return (this.state.order[sheet] ?? []).map((id) => this.state.objects[id]).filter((o): o is SheetObject => o !== undefined)
+  }
+
+  // -- charts (E6.6): a diagram definition, shown as a floating object, a tab, or both at once
+  /** The already-cached figure for a diagram, or `null` while it has not been asked for yet (call
+   * `ensureFigure` to start that, typically from the component that is about to draw it). */
+  figureOf(diagramId: string): ChartFigure | null {
+    return this.state.figures[diagramId] ?? null
+  }
+
+  /** Load (or reload, with `force`) a diagram's figure. Safe to call on every render of a chart view: a figure
+   * already cached and not invalidated resolves at once and does nothing. */
+  async ensureFigure(diagramId: string, force = false): Promise<void> {
+    if (!force && this.state.figures[diagramId]) return
+    const running = this.figuresInflight.get(diagramId)
+    if (!force && running) return running
+    const job = this.need()
+      .request<{ figure: ChartFigure }>('chart_figure', { diagram: diagramId })
+      .then((answer) => {
+        this.state.figures[diagramId] = answer.figure
+      })
+      .catch(() => {
+        /* the diagram may have just been forgotten under us; the next relevant event resolves it one way or
+         * the other, so a chart view that asked simply keeps showing its last good figure (if any) */
+      })
+      .finally(() => this.figuresInflight.delete(diagramId))
+    this.figuresInflight.set(diagramId, job)
+    return job
+  }
+
+  /** Re-fetch `charts` (the tab strip) without reloading the whole document — the `charts` push event carries
+   * no payload of its own (`claudia_computes.events.ChartsChanged`), unlike `objects`/`cells`. */
+  private async reloadCharts() {
+    this.state.charts = await this.need().request<Chart[]>('charts')
   }
 
   /** Forgets a sheet's cells, and with them its row/column sizes — a structural edit (rows or columns inserted or
@@ -284,6 +337,12 @@ export class Session extends BaseSession<State> {
           if (content === null) map.delete(key(r, c))
           else map.set(key(r, c), content)
         }
+        // A changed cell may feed a diagram's figure even on another sheet's screen (a chart tab, say), so
+        // every cached figure is checked, not only those for the active sheet.
+        const positions = data.positions as [number, number][]
+        for (const spec of Object.values(s.diagrams)) {
+          if (spec.id in s.figures && rangeTouchedBy(spec.range, data.sheet, positions)) delete s.figures[spec.id]
+        }
         return true
       }
       case 'structure':
@@ -310,6 +369,14 @@ export class Session extends BaseSession<State> {
       case 'image':
         if (data.asset) s.images[data.id] = data.asset
         else delete s.images[data.id]
+        return true
+      case 'diagram':
+        if (data.definition) s.diagrams[data.id] = data.definition as ChartSpec
+        else delete s.diagrams[data.id]
+        delete s.figures[data.id] // its range or titles may have changed (DefineDiagram/UpdateDiagram alike)
+        return true
+      case 'charts':
+        this.track(this.reloadCharts())
         return true
       case 'styles':
         // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
@@ -363,9 +430,51 @@ export class Session extends BaseSession<State> {
     return done === false ? null : done.object
   }
 
+  /** Take a new chart definition into the document (E6.6); its id, or `null` after telling the person why not.
+   * Show it with `addDiagramObject`, `addChart`, or both — neither is bundled into this call, since (unlike
+   * `addImage`) a definition may be placed more than once from the very start. */
+  async defineDiagram(draft: ChartDraft): Promise<string | null> {
+    const done = await this.attempt('define_diagram', { definition: { kind: 'bar', ...draft }, base: this.state.revision })
+    return done === false ? null : done.diagram
+  }
+
+  /** Redefine a chart in place: what a tab or floating object already showing `id` updates to. */
+  async updateDiagram(id: string, draft: ChartDraft): Promise<boolean> {
+    return (await this.attempt('update_diagram', { id, definition: { kind: 'bar', ...draft }, base: this.state.revision })) !== false
+  }
+
+  /** Let a chart definition go. Refused (returns `false`) while a tab or a floating object still shows it. */
+  async forgetDiagram(id: string): Promise<boolean> {
+    return (await this.attempt('forget_diagram', { id, base: this.state.revision })) !== false
+  }
+
+  /** Put a chart on the sheet that is shown, as a floating object showing `diagramId`; its id, or `null` after
+   * telling the person why not. `moveObject`/`resizeObject`/`removeObject` then work on it like any object. */
+  async addDiagramObject(diagramId: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
+    const done = await this.attempt('add_diagram_object', { sheet: this.state.activeSheet, diagram: diagramId, ...anchor, base: this.state.revision })
+    return done === false ? null : done.object
+  }
+
+  /** Add a chart tab showing `specId`; its id, or `null` after telling the person why not. */
+  async addChart(name: string, specId: string, index: number | null = null): Promise<string | null> {
+    const done = await this.attempt('add_chart', { name, spec_id: specId, index, base: this.state.revision })
+    return done === false ? null : done.chart
+  }
+
+  /** Remove a chart tab. The definition it showed is untouched (`forgetDiagram` is the separate step). */
+  async removeChart(id: string): Promise<boolean> {
+    return (await this.attempt('remove_chart', { id, base: this.state.revision })) !== false
+  }
+
   /** Drag an object to a new anchor cell; its size never changes. */
   async moveObject(id: string, row: number, col: number): Promise<boolean> {
     return (await this.attempt('move_object', { id, row, col, base: this.state.revision })) !== false
+  }
+
+  /** Give an object a new frame: its anchor cell and pixel size together, since dragging a corner moves the
+   * corner too. An image must keep its own proportions (the server refuses otherwise); a diagram keeps none. */
+  async resizeObject(id: string, frame: { row: number; col: number; w: number; h: number }): Promise<boolean> {
+    return (await this.attempt('resize_object', { id, ...frame, base: this.state.revision })) !== false
   }
 
   async removeObject(id: string): Promise<boolean> {

@@ -34,14 +34,15 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.util import Emu, Pt
 
-from claudia_core import ObjectBody, VisualObject, paragraph_for
 from claudia_creates import (
     SLIDE_HEIGHT,
     SLIDE_WIDTH,
+    ObjectBody,
     ShapeLibrary,
     SlideAnchor,
     SlideModel,
-    SlideObject,
+    VisualObject,
+    paragraph_for,
 )
 from claudia_opc_io import owns, reconcile
 
@@ -252,14 +253,15 @@ def _modeled_shape_indices(pptx_slide) -> list[int]:  # noqa: ANN001
 
 def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
     """``pptx_bytes`` as a :class:`~claudia_creates.SlideModel`: one slide per slide, in order, a text box or one
-    of the three built-in autoshapes on it becoming a :class:`~claudia_creates.SlideObject` (bottom to top, same
-    order ``pptx_bytes`` draws them in). Anything else on a slide -- a table, a picture, a chart, a group, an
-    autoshape outside the three built-in ones -- is simply not added: claudia has no model for it, same as a
-    table is invisible to ``docx_to_text``. Position and size are read back through the presentation's own slide
-    size (not a fixed 16:9 assumption), so a deck of any aspect ratio imports onto claudia's 1600x900 slide space.
-    An object's style cannot be recovered -- pptx carries no named-style concept the way Word does -- so every
-    text box becomes ``"body-text"`` and every autoshape ``"plain-shape"``, the same two styles ``slides_to_pptx``
-    itself falls back to."""
+    of the three built-in autoshapes on it becoming an object (bottom to top, same order ``pptx_bytes`` draws
+    them in). Anything else on a slide -- a table, a picture, a chart, a group, an autoshape outside the three
+    built-in ones -- is simply not added: claudia has no model for it, same as a table is invisible to
+    ``docx_to_text``. Position and size are read back through the presentation's own slide size (not a fixed
+    16:9 assumption), so a deck of any aspect ratio imports onto claudia's 1600x900 slide space. Rotation is read
+    back too (``slides_to_pptx`` does not write one yet, so it is always 0 for anything claudia itself exported).
+    Neither an object's own style nor its words' style can be recovered -- pptx carries no named-style concept
+    the way Word does -- so every text box becomes ``"body-text"`` and every autoshape ``"plain-shape"``, for
+    both, the same two styles ``slides_to_pptx`` itself falls back to."""
     prs = Presentation(BytesIO(pptx_bytes))
     model = SlideModel()
     if len(prs.slides) == 0:
@@ -274,44 +276,27 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
         for index in _modeled_shape_indices(pptx_slide):
             shape = pptx_slide.shapes[index]
             kind = _classify(shape)
+            assert kind is not None  # index came from _modeled_shape_indices, which keeps only classified shapes
             x, y = round(shape.left / scale_x), round(shape.top / scale_y)
             w, h = round(shape.width / scale_x), round(shape.height / scale_y)
             text = shape.text_frame.text if shape.has_text_frame else ""
+            rotation = round(shape.rotation) % 360
+            object_id = f"o{next(object_ids)}"
             if kind == "text":
-                obj = _object(next(object_ids), slide_id, "text", (x, y, w, h), _DEFAULT_TEXT_STYLE, text)
+                style, shape_id = _DEFAULT_TEXT_STYLE, None
             else:
-                shape_id = _SHAPE_ID[shape.auto_shape_type]
+                style, shape_id = _DEFAULT_SHAPE_STYLE, _SHAPE_ID[shape.auto_shape_type]
                 if shape_id not in defined:
                     definition = library.get(shape_id)
                     if definition is None:  # pragma: no cover -- the three ids in _SHAPE_ID are always shipped
                         raise ValueError(f"the built-in shape library has no shape {shape_id!r}")
                     model.define_shape(definition)
                     defined.add(shape_id)
-                obj = _object(next(object_ids), slide_id, "shape", (x, y, w, h), _DEFAULT_SHAPE_STYLE, text, shape_id)
-            model.insert_object(obj)
+            body = ObjectBody(
+                object_id, kind, w, h, style, paragraph_for(object_id, style, text), shape=shape_id, rotation=rotation
+            )
+            model.insert_object(VisualObject(body, SlideAnchor(slide_id, x, y)))
     return model
-
-
-def _object(
-    number: int,
-    slide: str,
-    kind: str,
-    frame: tuple[int, int, int, int],
-    style: str,
-    text: str,
-    shape: str | None = None,
-) -> SlideObject:
-    """One imported shape as this suite's own object: a shared body, and a slide anchor for where it sits.
-
-    An object stopped being one flat record when the three apps started sharing an object layer (D177): what it
-    *is* lives in ``ObjectBody``, where it sits lives in the anchor, and its words are a ``Paragraph`` of their own
-    (D181). ``SlideObject`` is a type alias for that pair (``VisualObject[SlideAnchor]``), and a PEP 695 alias is not
-    callable, so the pair is built here and the alias serves as the annotation alone.
-    """
-    x, y, w, h = frame
-    object_id = f"o{number}"
-    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text), shape=shape)
-    return VisualObject(body, SlideAnchor(slide, x, y))
 
 
 def _qn(tag: str, ns: str = PNS) -> str:
@@ -383,24 +368,23 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
             before, after = baseline_by_id[object_id], current_by_id[object_id]
             if before == after:
                 continue  # nothing about this object changed: leave its shape exactly as is
-            # An object is a shared body plus a slide anchor since D177: what it *is* and what it looks like are in
-            # the body, where it sits is in the anchor, and its words are a paragraph with a style of their own.
-            was, now, place = before.body, after.body, after.anchor
-            if was.kind != now.kind or was.shape != now.shape:
+            if before.body.kind != after.body.kind or before.body.shape != after.body.shape:
                 raise UnsupportedEdit(
                     "changing an object's kind or shape outline cannot be patched onto the original file yet"
                 )
             shape = prs.slides[slide_number].shapes[shape_indices[position]]
-            shape.left, shape.top = Emu(round(place.x * scale_x)), Emu(round(place.y * scale_y))
-            shape.width, shape.height = Emu(round(now.w * scale_x)), Emu(round(now.h * scale_y))
-            shape.text_frame.text = now.paragraph.text if now.paragraph else ""
-            # Resolved against the document's own palette and style book, exactly as `slides_to_pptx` does it: the
-            # built-in tuple this used to index could neither see a style somebody made nor turn a role into a
-            # colour, so a patched file came out with its colours missing.
-            words_css = _look(current, now.paragraph.style) if now.paragraph else {}
+            anchor, body = after.anchor, after.body
+            shape.left, shape.top = Emu(round(anchor.x * scale_x)), Emu(round(anchor.y * scale_y))
+            shape.width, shape.height = Emu(round(body.w * scale_x)), Emu(round(body.h * scale_y))
+            shape.rotation = body.rotation
+            shape.text_frame.text = body.paragraph.text if body.paragraph is not None else ""
+            # Resolved against the document's own palette and style book, exactly as `slides_to_pptx` does it:
+            # *computed* CSS still holds palette roles (``@accent/14``), which no file format can hold, so a
+            # patched file came out with its colours missing (bugtracker UX-15).
+            words_css = _look(current, body.paragraph.style) if body.paragraph is not None else {}
             _style_text(shape.text_frame, words_css, pt_per_unit, page)
-            if now.kind == "shape":
-                _style_shape(shape, _look(current, now.style), pt_per_unit, page)
+            if body.kind == "shape":
+                _style_shape(shape, _look(current, body.style), pt_per_unit, page)
             touched_parts.add(_slide_part(members, slide_number))
 
     patched = BytesIO()

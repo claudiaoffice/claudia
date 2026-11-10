@@ -4,33 +4,39 @@ every other object alone (D179, the pptx analogue of docx's heading-styles case)
 
 from __future__ import annotations
 
-from claudia_creates import SlideModel
+from dataclasses import replace
+
+from claudia_creates import SlideAnchor, SlideModel
 from claudia_test_documents.case import Case
-from claudia_test_documents.edits import flat, place_object, retext_object
 
 
 def import_checks(model: SlideModel) -> None:
     assert model.slides == ["s1", "s2"]
-    assert [(f["kind"], f["style"], f["text"], f["shape"]) for f in map(flat, model.objects_on("s1"))] == [
+    assert [(o.body.kind, o.body.style, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s1")] == [
         ("text", "body-text", "Welcome to Claudia", None),
         ("shape", "plain-shape", "Idea", "circle"),
     ]
-    places = [
-        (f["kind"], f["style"], f["text"], f["shape"], f["x"], f["y"], f["w"], f["h"])
-        for f in map(flat, model.objects_on("s2"))
+    s2_objects = [
+        (o.body.kind, o.body.style, o.body.paragraph.text, o.body.shape, o.anchor.x, o.anchor.y, o.body.w, o.body.h)
+        for o in model.objects_on("s2")
     ]
-    assert places == [("shape", "plain-shape", "Box", "rectangle", 100, 500, 400, 200)]
+    assert s2_objects == [("shape", "plain-shape", "Box", "rectangle", 100, 500, 400, 200)]
 
 
 def modify(model: SlideModel) -> SlideModel:
-    retext_object(model, "o2", "Idea (refined)")
-    return place_object(model, "o3", 150, 550, 300, 150)
+    circle = model.get("o2")
+    new_paragraph = circle.body.paragraph.with_text("Idea (refined)", ()).written_by("ana")
+    model.replace_object(circle.with_body(paragraph=new_paragraph))
+    box = model.get("o3")
+    moved = replace(box, anchor=SlideAnchor(box.anchor.slide, 150, 550)).with_body(w=300, h=150)
+    model.replace_object(moved)
+    return model
 
 
 def after_checks(model: SlideModel) -> None:
-    assert [flat(o)["text"] for o in model.objects_on("s1")] == ["Welcome to Claudia", "Idea (refined)"]
-    box = flat(model.objects_on("s2")[0])
-    assert (box["x"], box["y"], box["w"], box["h"]) == (150, 550, 300, 150)
+    assert [o.body.paragraph.text for o in model.objects_on("s1")] == ["Welcome to Claudia", "Idea (refined)"]
+    box = model.objects_on("s2")[0]
+    assert (box.anchor.x, box.anchor.y, box.body.w, box.body.h) == (150, 550, 300, 150)
 
 
 CASE = Case(import_checks=import_checks, modify=modify, after_checks=after_checks)

@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -407,6 +407,7 @@ source = { editable = "packages/claudia-computes-io" }
 dependencies = [
     { name = "claudia-computes" },
     { name = "claudia-core" },
+    { name = "claudia-opc-io" },
     { name = "openpyxl" },
 ]
 
@@ -414,6 +415,7 @@ dependencies = [
 requires-dist = [
     { name = "claudia-computes", editable = "packages/claudia-computes" },
     { name = "claudia-core", editable = "packages/claudia-core" },
+    { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "openpyxl", specifier = ">=3.1" },
 ]
 
@@ -594,6 +596,8 @@ source = { editable = "packages/claudia-test-documents" }
 dependencies = [
     { name = "claudia-composes" },
     { name = "claudia-composes-io" },
+    { name = "claudia-computes" },
+    { name = "claudia-computes-io" },
     { name = "claudia-creates" },
     { name = "claudia-creates-io" },
     { name = "claudia-opc-io" },
@@ -604,6 +608,8 @@ dependencies = [
 requires-dist = [
     { name = "claudia-composes", editable = "packages/claudia-composes" },
     { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
+    { name = "claudia-computes", editable = "packages/claudia-computes" },
+    { name = "claudia-computes-io", editable = "packages/claudia-computes-io" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
     { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
