@@ -72,7 +72,7 @@ defineExpose({ focus })
   <div class="help">
     <div class="searchRow">
       <svg class="icon" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M14 14l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
-      <input ref="searchBox" v-model="query" type="search" :placeholder="t('Search help…')" aria-label="search help" />
+      <input ref="searchBox" v-model="query" type="search" :placeholder="t('Search help…')" aria-label="search help" >
     </div>
 
     <div v-if="open" class="topic">

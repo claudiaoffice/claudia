@@ -143,3 +143,27 @@ def test_the_browser_test_does_not_also_run_inside_the_main_suite():
     """It starts three servers; the suite that runs on every save must not."""
     (tests,) = [c for c in check_debt.checks() if c.name == "tests"]
     assert "--ignore" in tests.command and check_debt.E2E in tests.command
+
+
+def test_the_suite_measures_coverage_and_the_floors_are_their_own_check():
+    """CODE-01: one run of the suite measures, and a check of its own holds each package to its floor."""
+    names = [c.name for c in check_debt.checks()]
+    (tests,) = [c for c in check_debt.checks() if c.name == "tests"]
+    assert "--cov" in tests.command
+    assert names.index("coverage") == names.index("tests") + 1, "the floors read what the suite just measured"
+
+
+def test_the_coverage_floors_skip_where_tests_cannot_all_run():
+    """Off Linux, or without TeX, whole groups of tests skip, so the floors would fail for nothing broken."""
+    everything = lambda program: f"/usr/bin/{program}"  # noqa: E731
+    assert check_debt.coverage_check("linux", everything).skip_reason == ""
+    assert "Linux" in check_debt.coverage_check("win32", everything).skip_reason
+    no_tex = check_debt.coverage_check("linux", lambda program: None)
+    assert "xelatex" in no_tex.skip_reason
+
+
+def test_the_web_app_is_linted_and_its_tests_held_to_their_coverage(tmp_path):
+    """CODE-01: ESLint is a check of its own, and the web unit tests run with their coverage thresholds."""
+    by_name = {c.name: c for c in check_debt.web_checks(tmp_path)}
+    assert by_name["web lint"].command == ("npm", "run", "lint", "--silent")
+    assert by_name["web tests"].command == ("npm", "run", "coverage", "--silent")

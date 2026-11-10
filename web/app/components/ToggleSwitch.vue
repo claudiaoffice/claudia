@@ -2,13 +2,13 @@
 // A single on/off control (the server settings pages' "Allow a remote model", "Require a secret…", and anywhere
 // else a plain checkbox would otherwise do) — a native checkbox underneath, for keyboard and screen readers, with
 // its own track-and-thumb look drawn on top (the mockups' switch; no such component existed before E3.11).
-const props = defineProps<{ modelValue: boolean; label: string; disabled?: boolean }>()
+defineProps<{ modelValue: boolean; label: string; disabled?: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 </script>
 
 <template>
   <label class="switch" :class="{ disabled }">
-    <input type="checkbox" role="switch" :checked="modelValue" :disabled="disabled" :aria-label="label" @change="emit('update:modelValue', ($event.target as HTMLInputElement).checked)" />
+    <input type="checkbox" role="switch" :checked="modelValue" :disabled="disabled" :aria-label="label" @change="emit('update:modelValue', ($event.target as HTMLInputElement).checked)" >
     <span class="track" aria-hidden="true"><span class="thumb" /></span>
   </label>
 </template>

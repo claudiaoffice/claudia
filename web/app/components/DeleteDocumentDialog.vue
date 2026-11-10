@@ -24,7 +24,7 @@ async function remove() {
       no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download).
     </p>
     <form class="form" @submit.prevent="remove">
-      <label class="field">Your password, to confirm<input v-model="password" type="password" autocomplete="current-password" /></label>
+      <label class="field">Your password, to confirm<input v-model="password" type="password" autocomplete="current-password" ></label>
       <div class="buttons">
         <button class="btn danger" type="submit" :disabled="busy || !password">Delete for good</button>
         <button class="btn" type="button" @click="emit('close')">Cancel</button>

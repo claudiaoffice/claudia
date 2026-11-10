@@ -322,6 +322,7 @@ Settling it is the first step of this item.
   being "proofs". Both are now large, real products with public APIs that other packages import.
 - **Coverage is not measured at all** (CODE-01). With ~1,321 Python tests the question is no longer whether tests
   exist but where the gaps are, and there is no way to see.
+  *(Measured and held to floors since 2026-11-10, see CODE-01.)*
 
 ---
 

@@ -103,7 +103,13 @@ export interface ObjectsRegion {
 }
 export type Region = CellsRegion | TextRegion | ObjectsRegion
 
-export type EventHandler = (name: string, data: any) => void
+/** A value as it came off the wire (parsed JSON), before the code that knows its event or method reads it.
+ *  Deliberately `any`, and the one place it is written: each reader knows the shape its event or method sends, and
+ *  `unknown` would only move the same cast into every one of them. Anything else typed `any` is a lint error. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type WireData = any
+
+export type EventHandler = (name: string, data: WireData) => void
 export type CloseHandler = (code: number, requested: boolean) => void
 
 export interface LinkOptions {
@@ -122,7 +128,7 @@ export interface LinkOptions {
 /** The things a session needs from a connection (a fake one stands in for it in tests). */
 export interface LinkLike {
   connect(): Promise<Welcome>
-  request<T = any>(method: string, params?: Record<string, unknown>): Promise<T>
+  request<T = WireData>(method: string, params?: Record<string, unknown>): Promise<T>
   onEvent(handler: EventHandler): void
   onClose(handler: CloseHandler): void
   close(): void
@@ -131,7 +137,7 @@ export interface LinkLike {
 export class Link implements LinkLike {
   private socket: SocketLike | null = null
   private nextId = 1
-  private pending = new Map<number, { resolve: (value: any) => void; reject: (error: ProtocolError) => void }>()
+  private pending = new Map<number, { resolve: (value: WireData) => void; reject: (error: ProtocolError) => void }>()
   private eventHandlers: EventHandler[] = []
   private closeHandlers: CloseHandler[] = []
   private requestedClose = false
@@ -172,7 +178,7 @@ export class Link implements LinkLike {
     })
   }
 
-  request<T = any>(method: string, params: Record<string, unknown> = {}): Promise<T> {
+  request<T = WireData>(method: string, params: Record<string, unknown> = {}): Promise<T> {
     if (!this.socket || this.closed) return Promise.reject(new ProtocolError('closed', 'not connected'))
     const id = this.nextId++
     const sent = new Promise<T>((resolve, reject) => this.pending.set(id, { resolve, reject }))
@@ -186,7 +192,7 @@ export class Link implements LinkLike {
   }
 
   private receive(text: string) {
-    let frame: any
+    let frame: WireData
     try {
       frame = JSON.parse(text)
     } catch {

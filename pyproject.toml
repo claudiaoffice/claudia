@@ -42,6 +42,7 @@ dev = [
     # The one browser-driven test (tests/e2e): the browser itself is a separate
     # `playwright install chromium`, and the test skips, saying so, where it is missing.
     "playwright>=1.47",
+    "pytest-cov>=6",
 ]
 
 [tool.pytest.ini_options]
@@ -96,3 +97,30 @@ paths = ["packages", "scripts", "clients/linux/src", "clients/linux/tests", "vul
 min_confidence = 60
 ignore_decorators = ["@form", "@builtin"]  # (they register the function in a table; nothing calls it by name)
 exclude = [".venv/", "docs/"]
+
+[tool.coverage.run]
+# CODE-01: what the test suite reaches of the packages' own code (not of the tests themselves). Measured by the gate's
+# `tests` step and held to the floors below by `scripts/check_coverage.py`.
+source = ["packages"]
+omit = ["packages/*/tests/*", "*/conftest.py"]
+branch = true
+data_file = ".coverage"
+
+[tool.claudia.coverage-floors]
+# CODE-01: the least each package's tests must reach, statements and branches together, as a whole percentage. A floor
+# only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.
+"claudia-ai" = 98
+"claudia-client" = 88
+"claudia-composes" = 83
+"claudia-composes-io" = 94
+"claudia-computes" = 91
+"claudia-computes-io" = 95
+"claudia-container" = 91
+"claudia-core" = 93
+"claudia-creates" = 93
+"claudia-creates-io" = 88
+"claudia-fonts" = 96
+"claudia-opc-io" = 100
+"claudia-server" = 92
+"claudia-test-documents" = 89
+"claudia-typeset" = 87

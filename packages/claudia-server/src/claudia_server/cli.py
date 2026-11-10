@@ -185,7 +185,9 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"only those who know the secret in FILE (at least {MIN_ACCESS_SECRET} characters) can make documents or "
         "read the list; without this option the environment variable CLAUDIA_ACCESS_SECRET is used if it is set",
     )
-    parser.add_argument("--state-dir", help="where the server keeps its certificate (default: a per-user folder)")
+    parser.add_argument(
+        "--state-dir", help="where the certificate and the admin settings are kept (default: a per-user folder)"
+    )
     tls = parser.add_argument_group("encryption")
     tls.add_argument("--no-tls", action="store_true", help="do not encrypt (only for this computer, or behind a proxy)")
     tls.add_argument(

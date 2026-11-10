@@ -37,6 +37,6 @@ green run.
 * **Dependencies.** `npm audit` in `web/` reports 2 critical (vitest 3 / tinypool, dev only; vitest 5 fixes them)
   and 12 moderate (nuxt's build tooling, no fixed nuxt 4 yet). SEC-08 (no audit in the gate or CI) is still open.
   Starlette warns that `TestClient` with `httpx` is deprecated in favour of `httpx2`.
-* **`.gitlab-ci.yml`** runs `pytest packages/` only — no gate, no web types, no clients. Either align it with GitHub's
-  or remove it.
-* **Still open from earlier rounds:** coverage and a web linter (CODE-01), the `state.py` docstring (CODE-05).
+* ~~**`.gitlab-ci.yml`**~~ Deleted (GitLab is abandoned, `ci-cd.md`).
+* ~~**Still open from earlier rounds:** coverage and a web linter (CODE-01), the `state.py` docstring (CODE-05).~~
+  Done, see `implementation-notes-coverage-and-lint.md`.

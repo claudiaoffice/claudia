@@ -160,7 +160,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
       </ol>
     </section>
 
-    <section class="lines" v-if="state.lines.length > 1 || hiddenLines.length">
+    <section v-if="state.lines.length > 1 || hiddenLines.length" class="lines">
       <h2>
         Lines <span class="count">{{ state.lines.length }}</span>
         <select v-if="isOwner" class="policy" :value="state.restorePolicy" title="What silence at a suggestion's deadline means" @change="setPolicy(($event.target as HTMLSelectElement).value as 'consensus' | 'veto')">
@@ -211,7 +211,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           placeholder="Message everyone, or @ai …"
           autocomplete="off"
           maxlength="2000"
-        />
+        >
         <button class="send" type="submit" aria-label="send" :disabled="!draft.trim()">
           <svg viewBox="0 0 20 20" width="16" height="16"><path d="M4 10h11m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>

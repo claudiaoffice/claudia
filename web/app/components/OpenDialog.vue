@@ -212,15 +212,16 @@ async function go(how: 'open' | 'create' | 'recover') {
     const key = session.justCreated ? await session.newRecoveryKey({ quiet: true }) : null
     if (key) fresh.value = { session, key }
     else await enter(session)
-  } catch (e: any) {
+  } catch (e) {
+    const failure = e as { code?: string; message?: string } | null // a ProtocolError, or whatever a link threw
     error.value =
-      e?.code === 'unauthorized'
+      failure?.code === 'unauthorized'
         ? how === 'create'
           ? 'That document exists already — or the name or password is not acceptable. Try Open.'
           : how === 'recover'
             ? 'That recovery key does not fit this document.'
             : 'The name or password is not right (or there is no such document).'
-        : (e?.message ?? 'Could not connect.')
+        : (failure?.message ?? 'Could not connect.')
     session?.close()
   } finally {
     busy.value = false
@@ -248,7 +249,7 @@ async function go(how: 'open' | 'create' | 'recover') {
               @keydown.enter="commitRename"
               @keydown.escape="cancelRename"
               @blur="commitRename"
-            />
+            >
             <template v-else>
               <button type="button" class="server" :aria-current="b.origin === origin ? 'true' : undefined" @click="switchTo(b)">
                 <span class="server-dot" :class="{ current: b.origin === origin }" aria-hidden="true" />
@@ -275,7 +276,7 @@ async function go(how: 'open' | 'create' | 'recover') {
         </ul>
         <button v-if="!connecting" type="button" class="connect-start" @click="startConnect">+ Connect to a server…</button>
         <form v-else class="connect-form" @submit.prevent="goToTyped">
-          <input v-model="connectAddress" aria-label="Server address" placeholder="example.com:8420" autofocus />
+          <input v-model="connectAddress" aria-label="Server address" placeholder="example.com:8420" autofocus >
           <div class="connect-buttons">
             <button type="submit" class="btn primary small">Go</button>
             <button type="button" class="btn small" @click="connecting = false">Cancel</button>
@@ -304,14 +305,14 @@ async function go(how: 'open' | 'create' | 'recover') {
         </div>
 
         <form @submit.prevent="go(recovering ? 'recover' : 'open')">
-          <label class="field">Document<input ref="docField" v-model="doc" name="document" autocomplete="off" placeholder="budget-2027" /></label>
-          <label class="field">Your name<input v-model="user" name="user" autocomplete="username" placeholder="ann" /></label>
+          <label class="field">Document<input ref="docField" v-model="doc" name="document" autocomplete="off" placeholder="budget-2027" ></label>
+          <label class="field">Your name<input v-model="user" name="user" autocomplete="username" placeholder="ann" ></label>
           <label v-if="recovering" class="field">
-            Recovery key<input v-model="recoveryKey" name="recovery-key" autocomplete="off" spellcheck="false" placeholder="ABCD-EFGH-…" />
+            Recovery key<input v-model="recoveryKey" name="recovery-key" autocomplete="off" spellcheck="false" placeholder="ABCD-EFGH-…" >
           </label>
           <label class="field">
             {{ recovering ? 'New password' : 'Password' }}
-            <input v-model="password" name="password" type="password" :autocomplete="recovering ? 'new-password' : 'current-password'" />
+            <input v-model="password" name="password" type="password" :autocomplete="recovering ? 'new-password' : 'current-password'" >
           </label>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
           <div class="buttons">

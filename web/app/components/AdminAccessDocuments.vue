@@ -197,7 +197,7 @@ async function applyDocs() {
           <div class="since">{{ a.you ? 'Administrator since' : 'Added' }} {{ ago(a.added) }}</div>
           <template v-if="changingPasswordFor === a.name">
             <form class="inline-form" @submit.prevent="confirmPasswordChange">
-              <input v-model="newOwnPassword" type="password" placeholder="New password (at least 8 characters)" autocomplete="new-password" autofocus />
+              <input v-model="newOwnPassword" type="password" placeholder="New password (at least 8 characters)" autocomplete="new-password" autofocus >
               <button class="btn primary small" type="submit" :disabled="passwordBusy">Save</button>
               <button class="btn small" type="button" :disabled="passwordBusy" @click="changingPasswordFor = null">Cancel</button>
             </form>
@@ -212,8 +212,8 @@ async function applyDocs() {
 
     <template v-if="adding">
       <form class="inline-form add-form" @submit.prevent="confirmAdd">
-        <input v-model="newName" placeholder="Name" autocomplete="off" autofocus />
-        <input v-model="newPassword" type="password" placeholder="Password (at least 8 characters)" autocomplete="new-password" />
+        <input v-model="newName" placeholder="Name" autocomplete="off" autofocus >
+        <input v-model="newPassword" type="password" placeholder="Password (at least 8 characters)" autocomplete="new-password" >
         <button class="btn primary small" type="submit" :disabled="addBusy">Add</button>
         <button class="btn small" type="button" :disabled="addBusy" @click="adding = false">Cancel</button>
       </form>
@@ -248,7 +248,7 @@ async function applyDocs() {
           <div class="title">Maximum documents</div>
           <div class="sub">A request beyond this number is refused before anything is written.</div>
         </div>
-        <input v-model.number="maxDocuments" type="number" min="1" class="mono narrow" />
+        <input v-model.number="maxDocuments" type="number" min="1" class="mono narrow" >
       </div>
     </div>
 

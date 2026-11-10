@@ -25,7 +25,9 @@ async function ready() {
   for (let i = 0; i < 50; i++) {
     try {
       if ((await fetch(URL + 'api/health')).ok) return
-    } catch {}
+    } catch {
+      // not up yet: try again
+    }
     await sleep(200)
   }
   throw new Error('the server did not start')

@@ -1,5 +1,5 @@
 // Opening a document: which app it belongs to decides which session shows it, and only the server knows.
-import { BaseSession, type SessionOptions } from './base-session'
+import type { SessionOptions } from './base-session'
 import type { LinkLike } from './protocol'
 import { Session } from './session'
 import { SlideSession } from './slide-session'
@@ -92,5 +92,5 @@ export async function openSession(makeLink: () => LinkLike, options: SessionOpti
   return session
 }
 
-export const isText = (session: BaseSession<any>): session is TextSession => session instanceof TextSession
-export const isSlides = (session: BaseSession<any>): session is SlideSession => session instanceof SlideSession
+export const isText = (session: AnySession): session is TextSession => session instanceof TextSession
+export const isSlides = (session: AnySession): session is SlideSession => session instanceof SlideSession

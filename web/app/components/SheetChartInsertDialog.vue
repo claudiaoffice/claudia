@@ -100,22 +100,22 @@ async function submit() {
       </p>
       <fieldset class="field">
         <legend>Show as</legend>
-        <label class="radio"><input type="radio" value="tab" v-model="placement" />A tab</label>
-        <label class="radio"><input type="radio" value="object" v-model="placement" />A floating object on the sheet</label>
+        <label class="radio"><input v-model="placement" type="radio" value="tab" >A tab</label>
+        <label class="radio"><input v-model="placement" type="radio" value="object" >A floating object on the sheet</label>
       </fieldset>
       <label class="field" :class="{ disabled: placement !== 'tab' }">
         Name (the tab it opens as)
-        <input v-model="name" autocomplete="off" maxlength="60" :disabled="placement !== 'tab'" />
+        <input v-model="name" autocomplete="off" maxlength="60" :disabled="placement !== 'tab'" >
       </label>
       <div class="two">
         <fieldset class="field" :disabled="!multiRow || !multiCol">
           <legend>Series are in</legend>
-          <label class="radio"><input type="radio" value="columns" v-model="seriesIn" />Columns</label>
-          <label class="radio"><input type="radio" value="rows" v-model="seriesIn" />Rows</label>
+          <label class="radio"><input v-model="seriesIn" type="radio" value="columns" >Columns</label>
+          <label class="radio"><input v-model="seriesIn" type="radio" value="rows" >Rows</label>
         </fieldset>
         <div class="field">
           <label class="check" :class="{ disabled: !multiRow }">
-            <input type="checkbox" v-model="headerRow" :disabled="!multiRow" />
+            <input v-model="headerRow" type="checkbox" :disabled="!multiRow" >
             First row is a header
           </label>
           <p class="subhint">
@@ -124,14 +124,14 @@ async function submit() {
           </p>
         </div>
       </div>
-      <label class="field">Title (optional)<input v-model="title" autocomplete="off" maxlength="120" /></label>
+      <label class="field">Title (optional)<input v-model="title" autocomplete="off" maxlength="120" ></label>
       <div class="two">
-        <label class="field">X axis (optional)<input v-model="xTitle" autocomplete="off" maxlength="120" /></label>
-        <label class="field">Y axis (optional)<input v-model="yTitle" autocomplete="off" maxlength="120" /></label>
+        <label class="field">X axis (optional)<input v-model="xTitle" autocomplete="off" maxlength="120" ></label>
+        <label class="field">Y axis (optional)<input v-model="yTitle" autocomplete="off" maxlength="120" ></label>
       </div>
       <div class="two">
-        <label class="check"><input type="checkbox" v-model="legend" />Legend</label>
-        <label class="check"><input type="checkbox" v-model="gridlines" />Gridlines</label>
+        <label class="check"><input v-model="legend" type="checkbox" >Legend</label>
+        <label class="check"><input v-model="gridlines" type="checkbox" >Gridlines</label>
       </div>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
       <div class="buttons">

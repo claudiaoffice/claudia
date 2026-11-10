@@ -52,7 +52,7 @@ function submitJump() {
       spellcheck="false"
       @keydown.enter.prevent="submitJump"
       @focus="($event.target as HTMLInputElement).select()"
-    />
+    >
     <div class="history">
       <button type="button" class="icon" :disabled="!canUndo" :title="canUndo ? `Undo ${undoLabel}` : 'Nothing to undo'" aria-label="undo" @click="$emit('undo')">
         <svg viewBox="0 0 20 20" width="18" height="18"><path d="M7 5 3 9l4 4M3 9h8a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -77,7 +77,7 @@ function submitJump() {
       @click="reportCaret"
       @keydown.enter.prevent="$emit('commit')"
       @keydown.esc.prevent="$emit('cancel')"
-    />
+    >
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 // The selected cells, moving around the sheet, and the text that travels through the clipboard.
-import { type Content } from './cells'
+import type { Content } from './cells'
 
 /** The selection is a rectangle between where it started (row, col) and where it was extended to (row2, col2). */
 export interface Sel {

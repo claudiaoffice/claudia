@@ -2,7 +2,7 @@
 // checkpoints, undo/redo. The replica of the document itself belongs to the app (Session: cells, TextSession: text).
 // All changes go to the server as requests; nothing is believed until the server's events say it happened.
 import { reactive } from 'vue'
-import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome } from './protocol'
+import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
@@ -148,7 +148,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Load what the app shows of the document (called with every (re)load, next to the common parts). */
   protected abstract loadApp(): Promise<void>
   /** Handle an event that only the app knows; `true` if it was one. */
-  protected abstract onAppEvent(name: string, data: any): boolean
+  protected abstract onAppEvent(name: string, data: WireData): boolean
 
   // ------------------------------------------------------------------------------ connecting
   async open(): Promise<void> {
@@ -289,7 +289,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   // ------------------------------------------------------------------------------ events
-  private onEvent(name: string, data: any) {
+  private onEvent(name: string, data: WireData) {
     if (this.onAppEvent(name, data)) return
     const s = this.state
     switch (name) {
@@ -339,7 +339,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
-  private onEphemeral(message: { kind: string; sender: string | null; data: any }) {
+  private onEphemeral(message: { kind: string; sender: string | null; data: WireData }) {
     const s = this.state
     const who = message.sender ?? ''
     if (message.kind === 'presence') {
@@ -370,7 +370,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   /** Run a request; `false` after telling the person why it did not work. */
-  protected async attempt(method: string, params: Record<string, unknown> = {}): Promise<any | false> {
+  protected async attempt(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
     try {
       return await this.need().request(method, params)
     } catch (error) {

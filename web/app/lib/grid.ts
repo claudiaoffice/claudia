@@ -3,6 +3,7 @@
 // draws: whether an object actually *snaps* to the grid is a different, real and persisted thing
 // (`SlideObject.snap`, set with `set_snap`); an object keeps snapping even while this preference hides the lines,
 // unless it has itself been released (object-menu.ts).
+import { ref } from 'vue' // only the Vue wiring at the end uses these
 
 const KEY = 'claudia.grid'
 
@@ -33,7 +34,6 @@ function safeStorage(): Pick<Storage, 'getItem' | 'setItem'> {
 }
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring
-import { ref } from 'vue'
 
 /** The View menu's "Show grid" checkbox. */
 export function useGrid() {

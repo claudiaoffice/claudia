@@ -90,11 +90,11 @@ const ALIGN = [
 
     <div class="scope" role="radiogroup" :aria-label="`Where a change goes`">
       <label :class="{ on: editor.scope === 'new' }" :title="editor.canDeviate ? undefined : `Go to the ${host.noun} where your cursor is to change this ${host.noun} only`">
-        <input type="radio" name="scope" value="new" :checked="editor.scope === 'new'" :disabled="off || !editor.canDeviate" @change="editor.setScope('new')" />
+        <input type="radio" name="scope" value="new" :checked="editor.scope === 'new'" :disabled="off || !editor.canDeviate" @change="editor.setScope('new')" >
         <span>This {{ host.noun }} only</span>
       </label>
       <label :class="{ on: editor.scope === 'every' }">
-        <input type="radio" name="scope" value="every" :checked="editor.scope === 'every'" :disabled="off" @change="editor.setScope('every')" />
+        <input type="radio" name="scope" value="every" :checked="editor.scope === 'every'" :disabled="off" @change="editor.setScope('every')" >
         <span>Every use of “{{ current.name }}”<em v-if="uses"> ({{ uses }})</em></span>
       </label>
     </div>
@@ -153,7 +153,7 @@ const ALIGN = [
     <form v-if="editor.invitesName" class="name" data-testid="name-invitation" @submit.prevent="name">
       <label>
         <span>This style is called “{{ current.name }}”. Give it a name that says what it is for?</span>
-        <input ref="nameField" v-model="naming" placeholder="Name" autocomplete="off" aria-label="Name of the style" />
+        <input ref="nameField" v-model="naming" placeholder="Name" autocomplete="off" aria-label="Name of the style" >
       </label>
       <div class="actions">
         <button class="btn primary" type="submit" :disabled="!naming.trim()">Name it</button>

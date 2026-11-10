@@ -403,7 +403,7 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
             <span v-else-if="seg.kind === 'reply'" data-skip contenteditable="false" class="reply" :class="{ hot: seg.id === active }" @click.stop="emit('suggestion', seg.id!)">{{ seg.text }}</span>
             <span v-else data-skip contenteditable="false" class="peer-caret" :style="{ '--c': seg.color }"><i /><b>{{ seg.text }}</b></span>
           </template>
-          <br v-if="!block.text && !hasOverlay(block)" data-skip />
+          <br v-if="!block.text && !hasOverlay(block)" data-skip >
         </component>
       </div>
     </div>

@@ -4,6 +4,8 @@
 //
 // The key carries no server address: these pages are only ever reached by navigating to that server's own origin
 // (server-bookmarks.ts), and sessionStorage is already scoped per origin by the browser, so one key is enough.
+import { ref } from 'vue' // only the Vue wiring at the end uses these
+import { AdminApiError, adminApi, type AdminApi } from './admin-api'
 
 const KEY = 'claudia.admin.token'
 
@@ -45,8 +47,6 @@ function safeStorage(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
 }
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring
-import { ref } from 'vue'
-import { AdminApiError, adminApi, type AdminApi } from './admin-api'
 
 /** One administrator's sitting on this server's settings pages: the token, who it is, and the actions that change
  * it. `name` is `null` until `refresh()` (or `setup`/`login`) confirms the stored token still resolves to somebody —

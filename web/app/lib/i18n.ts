@@ -3,6 +3,8 @@
 // build time, so there is one place to edit a string and no second catalog to keep in sync. `useI18n`, at the foot
 // of this file, is where the owner's second i18n round (D148's groundwork, D160) actually moved menu chrome into
 // this pipeline — before it, `loadCatalog` finding nothing was the normal case for every locale, not just 'en'.
+import { onMounted, ref, triggerRef } from 'vue' // only the Vue wiring at the end uses these
+import { currentLocale, setLocale as persistLocale } from './locale'
 
 export type Catalog = Record<string, string>
 
@@ -63,8 +65,6 @@ export function createTranslator(catalog: Catalog): (msgid: string, vars?: Recor
 }
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring
-import { onMounted, ref, triggerRef } from 'vue'
-import { currentLocale, setLocale as persistLocale } from './locale'
 
 /**
  * The Config ▸ App Language menu's own state (the owner's second i18n round, D160): a `locale` ref every

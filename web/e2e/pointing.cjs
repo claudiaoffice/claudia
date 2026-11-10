@@ -28,8 +28,6 @@ const bar = (page) => page.locator('input[aria-label="cell content"]').inputValu
 async function text(page, row, col) {
   const p = await cellAt(page, row, col)
   return page.evaluate(({ x, y }) => {
-    const box = document.querySelector('.stage').getBoundingClientRect()
-    const left = x - box.left - 40 - 0
     const cell = [...document.querySelectorAll('.cell')].find((c) => {
       const r = c.getBoundingClientRect()
       return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom

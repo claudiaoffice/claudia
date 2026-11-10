@@ -95,7 +95,9 @@ browser to see presence, locks and the assistant working.
 
 ```bash
 cd web && npm test           # vitest: protocol client, workbook and text sessions, text replica, selection, people
+npm run coverage             # the same, with app/lib's coverage against its thresholds
 npm run typecheck            # nuxt typecheck (vue-tsc over the generated projects)
+npm run lint                 # ESLint
 ```
 
 The browser scripts in `web/e2e/` drive real Chromium windows through Playwright (a dev dependency; fetch the
@@ -114,6 +116,10 @@ npm run e2e:recovery         # starts its own server on 8767: the recovery key, 
 
 The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. CI runs all of them in its `e2e` job,
 together with `tests/e2e` (the Python test that checks each server greets with its own app).
+
+`npm run lint` runs ESLint (`eslint.config.mjs`: Nuxt's recommended rules without the stylistic ones; every rule
+switched off or narrowed there says why), and `npm run coverage` runs the unit tests with `app/lib`'s coverage held to
+the thresholds in `vitest.config.ts`.
 
 `uv run python scripts/check_debt.py` runs the web checks too (skipped when npm or `web/node_modules` is missing, and
 named in the summary line either way: a skip is never reported as clean). `--ci` turns an unlisted skip into a

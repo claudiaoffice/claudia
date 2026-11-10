@@ -39,8 +39,8 @@ async function add() {
       password yourself: the server never shows it again.
     </p>
     <form class="form" @submit.prevent="add">
-      <label class="field">Name<input v-model="name" autocomplete="off" /></label>
-      <label class="field">Password (at least 8 characters, with a capital letter, a small letter and a digit)<input v-model="password" type="text" autocomplete="off" /></label>
+      <label class="field">Name<input v-model="name" autocomplete="off" ></label>
+      <label class="field">Password (at least 8 characters, with a capital letter, a small letter and a digit)<input v-model="password" type="text" autocomplete="off" ></label>
       <label class="field">
         May<select v-model="role"><option value="editor">edit</option><option value="viewer">only look</option></select>
       </label>

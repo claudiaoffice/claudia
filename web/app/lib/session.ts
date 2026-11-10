@@ -1,9 +1,9 @@
 // One person's view of one workbook: the replica the screen draws, kept up to date from the server's events.
 // The connection, history, chat and the rest that every app has live in BaseSession.
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
-import { type LinkLike, type Region } from './protocol'
-import { type Content } from './cells'
-import type { ImageAsset, ImageImport } from './images'
+import type { LinkLike, Region, WireData } from './protocol'
+import type { Content } from './cells'
+import type { ImageAsset } from './images'
 import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
@@ -328,7 +328,7 @@ export class Session extends BaseSession<State> {
   }
 
   // ------------------------------------------------------------------------------ events
-  protected onAppEvent(name: string, data: any): boolean {
+  protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
       case 'cells': {

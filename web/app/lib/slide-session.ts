@@ -1,9 +1,9 @@
 // One person's view of one presentation (creates): the slides, their objects and the shapes, kept up to date from the
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
-import { type LinkLike, type Region } from './protocol'
+import type { LinkLike, Region, WireData } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
-import type { ImageAsset, ImageImport } from './images'
+import type { ImageAsset } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 
@@ -108,7 +108,7 @@ export class SlideSession extends BaseSession<SlideState> {
   }
 
   // ------------------------------------------------------------------------------ events
-  protected onAppEvent(name: string, data: any): boolean {
+  protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
       case 'objects': {

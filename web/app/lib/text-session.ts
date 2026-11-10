@@ -23,7 +23,7 @@ import {
   type TextEvent,
 } from './blocks'
 import type { PaletteEvent } from './objects'
-import { type LinkLike, type Region } from './protocol'
+import type { LinkLike, Region, WireData } from './protocol'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
 export interface SuggestionInfo {
@@ -145,7 +145,7 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   // ------------------------------------------------------------------------------ events
-  protected onAppEvent(name: string, data: any): boolean {
+  protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
       case 'text':

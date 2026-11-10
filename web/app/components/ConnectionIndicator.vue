@@ -71,7 +71,7 @@ function close() {
           </svg>
           <span>{{ secure ? 'TLS verified' : 'Not encrypted' }}</span>
         </p>
-        <hr />
+        <hr >
         <!-- A link to this server's own settings only makes sense while its connection is actually open (D171
              covered a different gate — viewer permission — and deliberately left this one always visible; whether
              the link currently leads anywhere is a question this component already answers for itself, unlike

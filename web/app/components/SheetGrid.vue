@@ -722,7 +722,7 @@ defineExpose({
 
         <div class="selection" :class="{ picking: edit && pointing }" :style="selectionStyle" />
         <div class="active" :class="{ picking: edit && pointing }" :style="activeStyle" />
-        <div v-for="ref in referenced" :key="ref.key" class="reference" :style="{ ...ref.style, '--color': ref.color }" />
+        <div v-for="r in referenced" :key="r.key" class="reference" :style="{ ...r.style, '--color': r.color }" />
 
         <div
           v-for="o in objects"
@@ -734,7 +734,7 @@ defineExpose({
           @dblclick.stop
         >
           <ChartView v-if="o.kind === 'diagram' && o.diagram" :session="session" :diagram-id="o.diagram" :width="o.w" :height="o.h" />
-          <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="o.imported?.alt ?? ''" draggable="false" />
+          <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="o.imported?.alt ?? ''" draggable="false" >
         </div>
 
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
@@ -758,7 +758,7 @@ defineExpose({
           @keyup="reportCaret"
           @click="reportCaret"
           @keydown="onEditorKey"
-        />
+        >
 
         <div class="colheads">
           <div v-for="h in colHeads" :key="h.c" class="colhead" :class="{ on: h.on }" :style="{ left: `${h.left - HW}px`, width: `${h.width}px` }">{{ h.name }}</div>

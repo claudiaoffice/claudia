@@ -1,7 +1,16 @@
-"""Where the server keeps what is not a document: its encryption key and its TLS certificate.
+"""Where the server keeps what is not a document: its TLS certificate and its administration.
 
-Deliberately *not* the documents folder: a copy or backup of the documents must not carry the key that opens
-them. The folder is ``--state-dir``, else ``$CLAUDIA_STATE_DIR``, else a per-user place (``~/.local/share/claudia``,
+::
+
+    tls/cert.pem, tls/key.pem     the certificate the server made for itself (:mod:`claudia_server.certs`)
+    admin/settings.json           the server settings an administrator chose (:mod:`claudia_server.server_settings`)
+    admin/admins.json             who may change them
+
+Deliberately *not* the documents folder: a copy or backup of the documents must not carry the server's private key or
+who administers it. No document key is kept here or anywhere else on disk -- a document is opened by its people's
+passwords, and its keys live in memory only while it is open (:mod:`claudia_server.sealed`).
+
+The folder is ``--state-dir``, else ``$CLAUDIA_STATE_DIR``, else a per-user place (``~/.local/share/claudia``,
 ``~/Library/Application Support/claudia`` or ``%APPDATA%\\claudia``). In a container it is a volume of its own.
 """
 

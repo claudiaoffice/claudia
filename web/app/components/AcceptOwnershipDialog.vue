@@ -25,7 +25,7 @@ async function accept() {
     <template v-else>
       <p class="lead">If somebody asked you to take over <b>{{ session.state.doc }}</b>, confirm it is you with your own current password.</p>
       <form class="form" @submit.prevent="accept">
-        <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" /></label>
+        <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" ></label>
         <div class="buttons">
           <button class="btn primary" type="submit" :disabled="busy || !password">Accept</button>
           <button class="btn" type="button" @click="emit('close')">Cancel</button>

@@ -70,11 +70,11 @@ statement in the docs or on the website).
 | PROC-06 | P2 | Process / CI | No CI job runs a browser or the Windows client; the `web/e2e` scripts had rotted unnoticed | **fixed** |
 | PROC-07 | P3 | Process / tests | A performance guard measures the garbage collector and fails now and then | **fixed** |
 | PROC-08 | P3 | Process / tests | A test of the gate fails on every machine where `npm install` has been run | **fixed** |
-| CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | open (Playwright declared 2026-11-10) |
+| CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |
-| CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | branch: not dead, comment corrected; `state.py`: open |
+| CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |
 | CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed |
 | CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed |
@@ -595,7 +595,7 @@ to match what is now actually in the tree.
 **Acceptance — met.** The claim is true in the tree (`13d1c80`) and the note and `backlog.md` match it; the new guard
 would have caught the original false claim (proved by temporarily reintroducing it and watching the test fail).
 
-### CODE-01 · No coverage, no web lint; Playwright not declared · P2 · verified open
+### CODE-01 · No coverage, no web lint; Playwright not declared · P2 · fixed (2026-11-10)
 **Evidence (read, `54d1245`).** No `pytest-cov` or coverage settings in `pyproject.toml`; no eslint, prettier or Biome
 in `web/package.json`; the `e2e` scripts run `node e2e/*.cjs`, which needs Playwright, and Playwright is not in
 `devDependencies`.
@@ -604,6 +604,13 @@ that promise against — and the test suite is large enough (≈1,321 Python tes
 now about where the gaps are, not whether tests exist.
 **Fix.** `pytest-cov` with a floor per package, starting at the measured value and ratcheting up; a linter for `web/`;
 declare Playwright.
+**Done 2026-11-10.** Playwright was declared in the QA round. The gate's `tests` step now runs with `--cov` (it costs
+nothing measurable on Python 3.14) and a new `coverage` step holds each of the fifteen packages to a floor in
+`pyproject.toml` (`scripts/check_coverage.py`, `--ratchet` to raise them), from 83% (composes) to 100% (opc-io). The
+floors are held on Linux with TeX, where every test runs; the check skips elsewhere and CI allows that skip only off
+Linux. `web/` has ESLint (`@nuxt/eslint-config`, no stylistic rules; 172 findings fixed or turned off with a reason)
+and `npm run coverage`, which holds `app/lib` to thresholds of 88% statements, 90% branches, 80% functions. Both run
+in the gate and in CI's `web` job. Notes: `implementation-notes/implementation-notes-coverage-and-lint.md`.
 
 ### CODE-02 · 26 build files tracked in `web/dist` · P3 · fixed (2026-11-10)
 **Evidence (measured).** `git ls-files web/dist` returns 26 files. `.gitignore` names `web/.nuxt` and `web/.output` but
@@ -620,7 +627,7 @@ and `Gateway._hello` in `app.py`.
 **Fix.** Turn on `disallow_untyped_defs` for `claudia_core` first (nearly typed already), then package by package with
 per-module overrides.
 
-### CODE-05 · Dead branch in `Gateway.admit`; stale docstring in `state.py` · P3 · verified open
+### CODE-05 · Dead branch in `Gateway.admit`; stale docstring in `state.py` · P3 · fixed (2026-11-10)
 **Evidence (read, `54d1245`).** `app.py` lines 232–235 still hold the branch commented "(cannot happen; keeps verify's
 checks)".
 **Fix.** Remove the branch with its test, or replace the comment with an assertion that states the invariant.
@@ -628,6 +635,10 @@ checks)".
 died between adding the owner and writing the document leaves an account behind; `test_server_gateway_threads.py`
 reaches it with a directory that knows the user. An assertion broke that test. The comment now says what the branch
 is for. The `state.py` half is still open.
+**Update 2026-11-10, later.** `state.py` said the folder held the server's "encryption key and its TLS certificate".
+There is no server-wide encryption key — document keys live in memory only (`sealed.py`) — and the folder also holds
+the admin settings and the list of administrators (`admin/`). The docstring now lists what is there and why it is
+kept apart from the documents; `--state-dir`'s help said "its certificate" only and was corrected the same way.
 
 ### CODE-06 · `--max-connections` is per document, not per server · P3 · open
 Rename to `--max-connections-per-document`, document it, and keep the server-wide caps from SEC-02 separate.

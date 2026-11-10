@@ -5,6 +5,8 @@
 // calls exactly that, unchanged by this file); `window.webkit.messageHandlers.claudia.postMessage(raw)` is the one
 // thing this file assumes the shell set up. Neither exists in a plain browser tab, so `ShellBridge` works there too:
 // it just never becomes `ready` and `nativeMenu` stays `false`.
+import type { WireData } from './protocol'
+
 
 export const SHELL_CONTRACT_VERSION = 1
 export type App = 'composes' | 'computes' | 'creates'
@@ -34,9 +36,13 @@ interface MessageSink {
 }
 const NULL_SINK: MessageSink = { post: () => {} }
 
+/** Where a WebKit shell registers its handler, and where this page leaves its own entry point for the shell. */
+type WebKitRoot = { webkit?: { messageHandlers?: { claudia?: { postMessage(message: string): void } } } }
+type ShellRoot = typeof globalThis & { __claudiaShell?: { receive: (raw: string) => void; contract: number } }
+
 /** The `window.webkit.messageHandlers.claudia` handler the shell registers, or `null` outside a Claudia shell. */
 export function detectHandler(root: typeof globalThis = globalThis): MessageSink | null {
-  const handler = (root as any).webkit?.messageHandlers?.claudia
+  const handler = (root as WebKitRoot).webkit?.messageHandlers?.claudia
   return handler ? { post: (message) => handler.postMessage(JSON.stringify(message)) } : null
 }
 
@@ -70,7 +76,7 @@ export class ShellBridge {
 
   /** Call with whatever the shell hands `window.__claudiaShell.receive`. */
   receive(raw: string): void {
-    let message: any
+    let message: WireData
     try {
       message = JSON.parse(raw)
     } catch {
@@ -136,9 +142,10 @@ export function createShellBridge(
   const bridge = wrap(new ShellBridge(app, handler ?? NULL_SINK)) as ShellBridge & { detach: () => void }
   if (handler) {
     const receive = (raw: string) => bridge.receive(raw)
-    ;(globalThis as any).__claudiaShell = { receive, contract: SHELL_CONTRACT_VERSION }
+    const root = globalThis as ShellRoot
+    root.__claudiaShell = { receive, contract: SHELL_CONTRACT_VERSION }
     bridge.detach = () => {
-      if ((globalThis as any).__claudiaShell?.receive === receive) delete (globalThis as any).__claudiaShell
+      if (root.__claudiaShell?.receive === receive) delete root.__claudiaShell
     }
   } else {
     bridge.detach = () => {}

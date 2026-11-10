@@ -41,8 +41,8 @@ async function signIn() {
       <h1>Sign in to {{ label }}</h1>
       <p class="lead">These settings are for administrators only. Sign in with your name and password to continue.</p>
 
-      <label class="field">Your name<input v-model="name" type="text" autocomplete="username" autofocus /></label>
-      <label class="field">Password<input v-model="password" type="password" autocomplete="current-password" /></label>
+      <label class="field">Your name<input v-model="name" type="text" autocomplete="username" autofocus ></label>
+      <label class="field">Password<input v-model="password" type="password" autocomplete="current-password" ></label>
 
       <p v-if="formError" class="error" role="alert">{{ formError }}</p>
 

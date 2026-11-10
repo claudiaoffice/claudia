@@ -99,7 +99,7 @@ async function commit() {
         <span class="used">used by {{ uses[current.id] ?? 0 }} {{ (uses[current.id] ?? 0) === 1 ? 'style' : 'styles' }}</span>
         <label class="hex">
           <span>Hex</span>
-          <input v-model="typed" class="mono" spellcheck="false" :disabled="off" :aria-label="`${current.name} as hex`" @keydown.enter.prevent="commit" />
+          <input v-model="typed" class="mono" spellcheck="false" :disabled="off" :aria-label="`${current.name} as hex`" @keydown.enter.prevent="commit" >
         </label>
         <button class="btn primary" type="button" :disabled="off || !changed" data-testid="apply-role" @click="commit">Change it</button>
       </header>

@@ -19,10 +19,13 @@ checks are:
 * mo compilation   the Gtk client's ``de`` catalog matches ``po/de.po`` (D160); run
              ``uv run python scripts/compile_mo.py po/de.po de`` to fix it -- there was nothing worth drifting from
              before this round's real German translations existed, which is why this check is new here
-* tests      the whole suite, with a note of the slowest ones
+* tests      the whole suite, with a note of the slowest ones; it also measures coverage (``--cov``, CODE-01)
+* coverage   each package against its floor in ``pyproject.toml`` (``scripts/check_coverage.py``). The floors are
+             measured on Linux with TeX installed, where every test runs; elsewhere this check skips, saying why
 * docs       the Sphinx build with warnings as errors (every cross reference must resolve)
 * perf       the scaling guards: the cost of hot paths must not grow with the history
-* web tests  the web app's unit tests (vitest) and its types (vue-tsc), when Node and `npm install` in web/ are there
+* web lint   ESLint over web/ (``eslint.config.mjs``, CODE-01), when Node and `npm install` in web/ are there
+* web tests  the web app's unit tests (vitest) with their coverage thresholds, and its types (vue-tsc), likewise
 * e2e greeting  ``./start.sh all`` in a real browser: three servers, each greeting with its own app (UX-10). Needs
              the web app built and a Chromium for Playwright (``uv run playwright install chromium``, or point
              ``$CLAUDIA_CHROMIUM`` at one); it skips, saying which is missing, when they are not there
@@ -117,14 +120,39 @@ def checks() -> list[Check]:
         Check("mo compilation", (*run, "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")),
         Check(
             "tests",
-            (*run, "pytest", "--durations=5", "--ignore", E2E, *[a for p in PERF for a in ("--deselect", p)]),
+            (
+                *run,
+                "pytest",
+                "--durations=5",
+                "--cov",
+                "--cov-report=",
+                "--ignore",
+                E2E,
+                *[a for p in PERF for a in ("--deselect", p)],
+            ),
         ),
+        coverage_check(),
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
         *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],
         *web_checks(),
         *e2e_checks(),
         *linux_client_checks(),
     ]
+
+
+#: What the typesetting tests need to run the real engine (``packages/claudia-typeset/tests/conftest.py``).
+TEX_PROGRAMS = ("xelatex", "pdftocairo", "kpsewhich")
+
+
+def coverage_check(platform: str = sys.platform, which=shutil.which) -> Check:
+    """The floors hold where every test runs. On Windows or macOS, or without TeX, whole groups of tests skip
+    (POSIX permissions, the real typesetting engine), and a package would fall below a floor nothing broke."""
+    reason = ""
+    if platform != "linux":
+        reason = "the coverage floors are measured on Linux"
+    elif missing := [program for program in TEX_PROGRAMS if not which(program)]:
+        reason = f"the coverage floors are measured with TeX installed (missing: {', '.join(missing)})"
+    return Check("coverage", ("uv", "run", "--quiet", "python", "scripts/check_coverage.py"), skip_reason=reason)
 
 
 def web_checks(web: Path = ROOT / "web") -> list[Check]:
@@ -135,7 +163,9 @@ def web_checks(web: Path = ROOT / "web") -> list[Check]:
     elif not (web / "node_modules").is_dir():
         reason = "run `npm install` in web/ first"
     return [
-        Check("web tests", ("npm", "test", "--silent"), cwd=web, skip_reason=reason),
+        Check("web lint", ("npm", "run", "lint", "--silent"), cwd=web, skip_reason=reason),
+        # the unit tests, with app/lib's coverage held to the thresholds in vitest.config.ts (CODE-01)
+        Check("web tests", ("npm", "run", "coverage", "--silent"), cwd=web, skip_reason=reason),
         Check("web types", ("npm", "run", "typecheck", "--silent"), slow=True, cwd=web, skip_reason=reason),
     ]
 

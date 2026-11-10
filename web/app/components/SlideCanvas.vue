@@ -377,7 +377,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         @dblclick.stop="beginEdit(o.id)"
         @contextmenu="onObjectContext($event, o)"
       >
-        <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" />
+        <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
         <template v-else>
           <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="pathCss(cssOf(o))" />

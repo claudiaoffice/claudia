@@ -36,7 +36,7 @@ const importedByColor = computed(() => (imported.value ? colorOf(state, imported
   <Modal title="Image properties" :width="480" @close="emit('close')">
     <div v-if="asset && imported" class="props">
       <div class="head">
-        <img class="thumb" :src="thumbSrc" alt="" />
+        <img class="thumb" :src="thumbSrc" alt="" >
         <div class="names">
           <div class="filename">{{ imported.source_name }}</div>
           <div class="alt">“{{ imported.alt }}”</div>

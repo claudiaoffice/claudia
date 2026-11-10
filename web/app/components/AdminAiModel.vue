@@ -71,7 +71,7 @@ async function apply() {
     <label class="field">
       Model folder
       <div class="row">
-        <input v-model="modelDir" class="mono" placeholder="(none — @ai gets the scripted stand-in)" />
+        <input v-model="modelDir" class="mono" placeholder="(none — @ai gets the scripted stand-in)" >
       </div>
     </label>
 
@@ -83,11 +83,11 @@ async function apply() {
     <div class="pair">
       <label class="field">
         Max answer length (tokens)
-        <input v-model.number="maxTokens" type="number" min="1" class="mono narrow" />
+        <input v-model.number="maxTokens" type="number" min="1" class="mono narrow" >
       </label>
       <label class="field">
         Timeout (seconds)
-        <input v-model.number="timeout" type="number" min="1" class="mono narrow" />
+        <input v-model.number="timeout" type="number" min="1" class="mono narrow" >
       </label>
     </div>
 

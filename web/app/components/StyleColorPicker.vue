@@ -83,8 +83,8 @@ function adopt() {
       <button v-if="roles.length && !literal" class="leave" type="button" data-testid="off-palette" @click="literal = true">Off the palette…</button>
       <template v-else>
         <div class="row">
-          <input v-model="typed" class="hex mono" spellcheck="false" :aria-label="`${label} as hex`" placeholder="#5b4bc4" @keydown.enter.prevent="commit" @blur="commit" />
-          <input type="color" class="system" :value="hex ?? '#000000'" :aria-label="`${label}, system picker`" @change="pick(($event.target as HTMLInputElement).value)" />
+          <input v-model="typed" class="hex mono" spellcheck="false" :aria-label="`${label} as hex`" placeholder="#5b4bc4" @keydown.enter.prevent="commit" @blur="commit" >
+          <input type="color" class="system" :value="hex ?? '#000000'" :aria-label="`${label}, system picker`" @change="pick(($event.target as HTMLInputElement).value)" >
         </div>
         <div class="grid">
           <button v-for="s in SWATCHES" :key="s.value" type="button" class="chip" :class="{ on: hex?.toLowerCase() === s.value.toLowerCase() }" :title="s.name" :aria-label="s.name" :style="{ background: s.value }" @click="pick(s.value)" />
