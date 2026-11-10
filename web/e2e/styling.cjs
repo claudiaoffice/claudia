@@ -29,7 +29,7 @@ async function main() {
   await page.check('.modal input[type=checkbox]')
   await page.click('.modal button:text-is("Continue")')
   await page.waitForSelector('[data-testid=text]')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
 
   // three paragraphs: a title, two of body text
   await page.click('[data-testid=text]')
@@ -120,7 +120,7 @@ async function main() {
 
   // the next change goes into the deviation (it is the person’s own), colour and size
   await page.click('[data-testid=colour-text]')
-  await page.click('[data-testid=colour-text] .chip[title=Iris]')
+  await page.click('[data-testid=colour-text] [data-role=accent]') // a colour by what it means (D210): the accent, iris
   await page.click('[data-testid=size-field] button[aria-label=Larger]')
   await page.waitForFunction(() => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-block]')[1]).color === 'rgb(91, 75, 196)')
   const dev = await look(page, 1)
@@ -134,7 +134,7 @@ async function main() {
   const textarea = page.locator('[data-testid=css-view] textarea')
   const css = await textarea.inputValue()
   assert.match(css, /font-weight: bold;/)
-  assert.match(css, /color: #5B4BC4;/i)
+  assert.match(css, /color: @accent;/) // the style names the role, not the colour (D200)
   await page.screenshot({ path: `${SHOTS}/styling-3-css.png` })
   log('css view shows:', JSON.stringify(css))
 

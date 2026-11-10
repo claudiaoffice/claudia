@@ -245,9 +245,10 @@ class Gateway:
             if not (isinstance(credentials.user, str) and isinstance(credentials.password, str)):
                 return None, False
             await hub.ensure_room()  # before any hashing or disk: a refused document costs nothing
-            if (
-                reserved := await self._verify(doc_id, credentials)
-            ) is not None:  # (cannot happen; keeps verify's checks)
+            # The same work as for a document that exists (SEC-04). It usually finds nobody, but not always: the user
+            # directory is kept apart from the documents, so a creation that died between the two can leave this
+            # person's account behind without a document. They then get that account back, not a second owner.
+            if (reserved := await self._verify(doc_id, credentials)) is not None:
                 return reserved, False
             async with self._hashing:
                 account = await asyncio.to_thread(

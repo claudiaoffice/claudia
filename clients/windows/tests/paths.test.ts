@@ -8,7 +8,7 @@
 // paths.ts's own top comment explains why -- `join` is `path.win32` once this really runs on Windows, and building
 // both sides of an assertion from the same function is what keeps this file correct on whatever host runs it,
 // including this repository's own Linux-hosted `npm test`.
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -37,7 +37,9 @@ describe('defaultLocalAppData', () => {
 
 describe('defaultRepo', () => {
   it('is the repository this client was started from (4 levels up from src/paths.ts, like paths.py and the macOS client)', () => {
-    expect(defaultRepo().endsWith('claudia')).toBe(true)
+    // By what is in it, not by its folder's name: a clone may be called anything.
+    expect(existsSync(join(defaultRepo(), 'clients', 'windows', 'package.json'))).toBe(true)
+    expect(existsSync(join(defaultRepo(), 'pyproject.toml'))).toBe(true)
   })
 })
 

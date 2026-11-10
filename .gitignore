@@ -1,29 +1,36 @@
-docs-*
-*DS_Store*
-demo-docs
-demo-docs-*
-docs
-docs-*
+# Python
 .venv
 *__pycache__*
+
+# Documents a local server writes (./start.sh keeps them in docs-<app>/ and demo-docs*/)
+docs-*
+demo-docs
+demo-docs-*
+
+# Generated documentation; docs/ itself is source and tracked
+docs/_build
+
+# Web app: build output and dependencies (web/dist was an early build target, CODE-02)
 web/.nuxt
 web/.output
+web/dist
 web/node_modules
-clients/windows/node_modules
-clients/windows/dist
-clients/windows/apps/*/inject
-clients/windows/apps/*/bin
-docs/_build
-claudiaoffice-log/.obsidian/*
-claudiaoffice-log/.obsidian/workspace.json
-clients/windows/apps/composes/bin/
-clients/windows/apps/composes/inject/
-clients/windows/apps/composes/js/
-clients/windows/dist/
+
+# Windows client: dependencies, build output, Neutralino's downloads and logs
 clients/windows/node_modules/
-*.patch
+clients/windows/dist/
+clients/windows/apps/*/bin/
+clients/windows/apps/*/inject/
+clients/windows/apps/composes/js/
 clients/windows/apps/composes/.tmp/
 clients/windows/apps/composes/neutralinojs.log
-test-documents/_artifacts
-*.patch
 
+# The test-document library's run output
+test-documents/_artifacts
+
+# Obsidian: the vault's settings and plugins are shared; each person's window layout is not
+claudiaoffice-log/.obsidian/workspace*.json
+
+# Patches handed around in chat, and macOS litter
+*.patch
+*DS_Store*

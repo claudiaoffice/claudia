@@ -766,6 +766,9 @@ onBeforeUnmount(() => clearTimeout(timer))
   color: #e6e0f5;
   font-size: 11.5px;
   box-shadow: 0 4px 10px rgb(0 0 0 / 18%);
+  /* It sits over the column letters exactly while a formula is being typed — the moment a person clicks a letter
+     to pick a whole column (e2e/pointing.cjs). It only reads, so clicks go through it to the header beneath. */
+  pointer-events: none;
 }
 .formulaHelp .sig {
   color: #fff;

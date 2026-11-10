@@ -107,17 +107,18 @@ def test_mo_compilation_is_its_own_check():
     assert mo_check.command == ("uv", "run", "--quiet", "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")
 
 
-def test_ci_catches_the_real_bug_with_no_node_modules():
+def test_ci_catches_the_real_bug_with_no_node_modules(tmp_path):
     """The acceptance test asked for in the finding: with no ``node_modules``, ``--ci`` exits non-zero.
 
-    This checks it the cheap way, without running the whole gate: the real ``web_checks()`` against this checkout
-    (where ``web/node_modules`` is not installed) really does skip, and feeding that real skip through ``verdict``
-    under ``--ci`` with no allow-list really does fail.
+    This checks it the cheap way, without running the whole gate: the real ``web_checks()`` pointed at a web folder
+    without ``node_modules`` really does skip, and feeding that real skip through ``verdict`` under ``--ci`` with no
+    allow-list really does fail. (It used to look at this checkout's own ``web/``, and so failed on every machine
+    where somebody had run ``npm install``.)
     """
-    checks = check_debt.web_checks()
+    checks = check_debt.web_checks(tmp_path)
     assert checks, "web_checks() must return the two web checks even when they will skip"
     outcomes = [check_debt.Outcome(c.name, "skipped", c.skip_reason) for c in checks if c.skip_reason]
-    assert outcomes, "this test asserts the bug's own precondition: web/node_modules is not installed here"
+    assert outcomes, "a web folder without node_modules (or a machine without npm) must make the web checks skip"
     failed, _ = check_debt.verdict(outcomes, ci=True, allow_skip=set())
     assert failed, "check_debt.py --ci must exit non-zero when node_modules is missing and no skip is allowed"
 

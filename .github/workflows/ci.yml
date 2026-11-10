@@ -68,12 +68,14 @@ jobs:
         shell: pwsh
         run: Set-MpPreference -EnableControlledFolderAccess Disabled
       - run: uv sync --locked
-      # web tests/types and the Linux client's tests are skipped here on purpose: the separate `web` and
-      # `linux-client` jobs below run them for real, with Node and GTK installed. --ci fails on any OTHER skip
-      # (PROC-02), so a check that starts skipping for some new reason is caught instead of waved through.
+      # web tests/types, the browser test and the Linux client's tests are skipped here on purpose: the separate
+      # `web`, `e2e` and `linux-client` jobs below run them for real, with Node, a built web app, Chromium and GTK
+      # installed. --ci fails on any OTHER skip (PROC-02), so a check that starts skipping for some new reason is
+      # caught instead of waved through. (Before "e2e greeting" was listed here, it failed this job on every OS.)
       - run: >
           uv run python scripts/check_debt.py --ci
-          --allow-skip "web tests" --allow-skip "web types" --allow-skip "linux client tests"
+          --allow-skip "web tests" --allow-skip "web types" --allow-skip "e2e greeting"
+          --allow-skip "linux client tests"
 
   web:
     name: Web
@@ -92,7 +94,88 @@ jobs:
       - run: npm ci
       - run: npx nuxt prepare # vitest needs the generated .nuxt files
       - run: npx vitest run
-      - run: npx vue-tsc --noEmit
+      # `nuxt typecheck`, not a bare `vue-tsc --noEmit`: web/tsconfig.json has `files: []` and only references the
+      # generated projects, so the bare call checked nothing and passed with a type error in any file.
+      - run: npm run typecheck
+
+  # Real browsers against real servers: the one Python test that starts all three apps (tests/e2e), and the scripts
+  # in web/e2e that walk two people through each app. They are the only tests that see the rendered page.
+  e2e:
+    name: End to end (Chromium)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SHOTS: ${{ github.workspace }}/shots
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: web
+      - name: Chromium for Python's and Node's Playwright
+        run: |
+          uv run playwright install --with-deps chromium
+          (cd web && npx playwright install chromium)
+      - name: Three servers, each greeting with its own app
+        run: uv run pytest tests/e2e
+      - name: Two people in each app, against running servers
+        run: |
+          mkdir -p "$SHOTS"
+          uv run python scripts/start.py all --dir "$RUNNER_TEMP/documents" --no-browser > "$RUNNER_TEMP/servers.log" 2>&1 &
+          for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8767/api/health > /dev/null && break; sleep 1; done
+          cd web
+          URL=http://127.0.0.1:8765/ npm run e2e
+          URL=http://127.0.0.1:8765/ npm run e2e:pointing
+          URL=http://127.0.0.1:8766/ npm run e2e:composes
+          URL=http://127.0.0.1:8766/ npm run e2e:styling
+          URL=http://127.0.0.1:8767/ npm run e2e:slides
+          pkill -f claudia_server || true
+      # These two start (and restart) a server of their own, on ports the step above has freed.
+      - name: Losing the server, and the recovery key
+        working-directory: web
+        run: |
+          npm run e2e:resilience
+          npm run e2e:recovery
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: shots/
+          if-no-files-found: ignore
+
+  # The Windows client is TypeScript around Neutralino; its unit tests and its generated menu (made from the Linux
+  # client's manifest) are checked on Windows itself.
+  windows-client:
+    name: Windows client
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: clients/windows
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: clients/windows/package-lock.json
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - name: The generated menu matches the shared manifest
+        run: uv run --no-project python tools/generate_menu.py --all --check
+      - run: uv run --no-project --with pytest python -m pytest tools/tests
 
   # The Linux client runs on the distribution's Python (3.12 on Ubuntu 24.04) with GTK from the distribution, while the
   # server it starts runs on 3.14 (clients/linux/README.md, "Two interpreters"). Its end-to-end test starts the real

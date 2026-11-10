@@ -30,7 +30,7 @@ async function open(browser, [user, password], create) {
     await page.click('.modal button:text-is("Continue")')
   }
   await page.waitForSelector('[data-testid=text]')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
   return page
 }
 
@@ -61,9 +61,10 @@ async function waitParagraphs(page, expected, what) {
   }
   throw new Error(`${what}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(got)}`)
 }
-async function menu(page, title, item) {
+// A menu item by its path: `menu(page, 'File', 'Manage', 'Share')` opens File, then Manage ▸, then clicks Share….
+async function menu(page, title, ...path) {
   await page.click(`.menus .title:text-is("${title}")`)
-  await page.click(`.menus [role=menuitem]:has-text("${item}")`)
+  for (const item of path) await page.click(`.menus .drop [role=menuitem]:has-text("${item}")`)
 }
 
 ;(async () => {
@@ -92,7 +93,7 @@ async function menu(page, title, item) {
     log('style set: title')
 
     // ---- ann lets ben in
-    await menu(ann, 'File', 'Share')
+    await menu(ann, 'File', 'Manage', 'Share')
     await ann.fill('.modal input >> nth=0', BEN[0])
     await ann.fill('.modal input >> nth=1', BEN[1])
     await ann.click('.modal button:has-text("Add person")')

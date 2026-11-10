@@ -215,6 +215,20 @@ describe('picking a style to inspect, without applying it (UX-14)', () => {
     await editor.toggleBold()
     expect(host.sent).toEqual([['deviate', { set: { 'font-weight': 'bold' } }]])
   })
+
+  it('after picking back the caret’s own style, a deviation is followed: the new style is shown and named', async () => {
+    // e2e/styling.cjs: picking `body` back left `body` pinned, so after "this paragraph only" made `body-changed`
+    // the menu kept showing `body` (no invitation to name, and the next edit went to `body` for everyone).
+    const host = new FakeHost()
+    const editor = new StyleEditor(host)
+    editor.pick('quote')
+    editor.pick('body')
+    await editor.toggleBold()
+    expect(editor.current?.id).toBe('body-changed')
+    expect(editor.invitesName).toBe(true)
+    await editor.toggleItalic()
+    expect(host.sent.at(-1)).toEqual(['change', 'body-changed', { set: { 'font-style': 'italic' } }])
+  })
 })
 
 describe('naming', () => {

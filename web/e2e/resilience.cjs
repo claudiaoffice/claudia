@@ -46,7 +46,7 @@ async function login(browser, doc, user, password, create) {
     await page.click('.modal button:text-is("Continue")')
   }
   await page.waitForSelector('.viewport')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
   return page
 }
 const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 15000 }).catch(() => Promise.reject(new Error('timed out: ' + what)))
@@ -62,15 +62,16 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
     await ann.keyboard.press('Enter')
     await wait(ann, () => document.querySelector('.cell'), null, 'first cell')
 
-    // formulas are not there yet: said honestly, kept as text
+    // a formula is calculated (the toast that once said formulas were not there yet is long gone)
     await ann.keyboard.type('=1+1')
     await ann.keyboard.press('Enter')
-    await wait(ann, () => document.querySelector('.toast')?.textContent.includes('Formulas'), null, 'formula note')
-    console.log('formula note:', await ann.locator('.toast').textContent())
+    await wait(ann, () => [...document.querySelectorAll('.cell')].some((c) => c.textContent.trim() === '2'), null, 'formula result')
+    console.log('formula calculated: =1+1 shows 2')
 
     // ---- a viewer may look and not touch
     await ann.click('.menus .title:text-is("File")')
-    await ann.click('.menus [role=menuitem]:has-text("Share")')
+    await ann.click('.menus .drop [role=menuitem]:has-text("Manage")')
+    await ann.click('.menus .drop [role=menuitem]:has-text("Share")')
     await ann.fill('.modal input >> nth=0', 'vera')
     await ann.fill('.modal input >> nth=1', 'Vera-has-a-Password-3')
     await ann.selectOption('.modal select', 'viewer')
@@ -104,8 +105,8 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
     await sleep(1500)
     server = startServer()
     await ready()
-    await wait(ann, () => document.querySelector('.status.open') && !document.querySelector('.banner'), null, 'ann reconnected')
-    await wait(vera, () => document.querySelector('.status.open'), null, 'vera reconnected')
+    await wait(ann, () => document.querySelector('.health.open') && !document.querySelector('.banner'), null, 'ann reconnected')
+    await wait(vera, () => document.querySelector('.health.open'), null, 'vera reconnected')
     await wait(ann, () => [...document.querySelectorAll('.cell')].some((e) => e.textContent.trim() === 'hello'), null, 'the table is back')
     await ann.click('.viewport', { position: { x: 100, y: 120 } })
     await ann.keyboard.type('after the restart')

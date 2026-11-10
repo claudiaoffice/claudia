@@ -68,7 +68,7 @@ async function type(page, row, col, input) {
     await page.check('.modal input[type=checkbox]')
     await page.click('.modal button:text-is("Continue")')
     await page.waitForSelector('.viewport')
-    await page.waitForFunction(() => document.querySelector('.status.open'))
+    await page.waitForFunction(() => document.querySelector('.health.open'))
 
     for (const [i, n] of [1, 2, 3, 4].entries()) await type(page, i, 0, String(n)) // A1:A4
     for (const [i, n] of [10, 20, 30, 40].entries()) await type(page, i, 1, String(n)) // B1:B4

@@ -95,13 +95,25 @@ browser to see presence, locks and the assistant working.
 
 ```bash
 cd web && npm test           # vitest: protocol client, workbook and text sessions, text replica, selection, people
-npm run typecheck            # vue-tsc
-npm run e2e                  # two real browsers against a running server (needs Playwright)
-npm run e2e:composes         # the same for a text: URL=http://127.0.0.1:8766/ against a server started with
-                             #   --model claudia_composes:TextModel --no-tls --web web/.output/public
-npm run e2e:pointing         # picking cells with the mouse while typing a formula (one browser, a running server)
-npm run e2e:resilience       # starts its own server, restarts it, checks that both browsers come back
+npm run typecheck            # nuxt typecheck (vue-tsc over the generated projects)
 ```
+
+The browser scripts in `web/e2e/` drive real Chromium windows through Playwright (a dev dependency; fetch the
+browser once with `npx playwright install chromium`). Build the app (`npm run build`), start the three servers with
+`./start.sh all --no-browser` (computes 8765, composes 8766, creates 8767), then:
+
+```bash
+URL=http://127.0.0.1:8765/ npm run e2e            # two people and the assistant in one table
+URL=http://127.0.0.1:8765/ npm run e2e:pointing   # picking cells with the mouse while typing a formula
+URL=http://127.0.0.1:8766/ npm run e2e:composes   # two people and the assistant in one text
+URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour roles and the CSS view
+URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
+npm run e2e:resilience       # starts its own server on 8766, restarts it, checks that both browsers come back
+npm run e2e:recovery         # starts its own server on 8767: the recovery key, shown once, and a new one
+```
+
+The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. CI runs all of them in its `e2e` job,
+together with `tests/e2e` (the Python test that checks each server greets with its own app).
 
 `uv run python scripts/check_debt.py` runs the web checks too (skipped when npm or `web/node_modules` is missing, and
 named in the summary line either way: a skip is never reported as clean). `--ci` turns an unlisted skip into a

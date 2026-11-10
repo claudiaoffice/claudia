@@ -52,7 +52,7 @@ async function fill(page, doc, user, password) {
 }
 async function inside(page) {
   await page.waitForSelector('.viewport')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
 }
 const keyOf = (page) => page.$$eval('[data-testid=recovery-key] code', (els) => els.map((e) => e.textContent.trim()).join('-'))
 const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 15000 }).catch(() => Promise.reject(new Error('timed out: ' + what)))
@@ -89,7 +89,8 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
 
     // ---- the owner adds Ben, and makes a new key; the first one stops working
     await ann.click('.menus .title:text-is("File")')
-    await ann.click('.menus [role=menuitem]:has-text("Share")')
+    await ann.click('.menus .drop [role=menuitem]:has-text("Manage")')
+    await ann.click('.menus .drop [role=menuitem]:has-text("Share")')
     await ann.fill('.modal input >> nth=0', BEN[0])
     await ann.fill('.modal input >> nth=1', BEN[1])
     await ann.click('.modal button:has-text("Add person")')
@@ -110,7 +111,8 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
     await ben.click('button:text-is("Open")')
     await inside(ben)
     await ben.click('.menus .title:text-is("File")')
-    assert.ok(await ben.locator('.menus [role=menuitem]:has-text("Share")').isDisabled(), 'only the owner may share, and so make a key')
+    await ben.click('.menus .drop [role=menuitem]:has-text("Manage")')
+    assert.ok(await ben.locator('.menus .drop [role=menuitem]:has-text("Share")').isDisabled(), 'only the owner may share, and so make a key')
     await ben.close()
 
     // ---- the restart: everything sealed, nothing readable, then Ben forgets his password

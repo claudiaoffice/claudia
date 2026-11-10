@@ -16,13 +16,24 @@ export const LANGUAGES: ReadonlyArray<readonly [tag: string, autonym: string]> =
   ['de', 'Deutsch'],
 ]
 
-/** Fetch the catalog for `locale` (as `po_to_json.py` writes it, normally under `/i18n/<locale>.json`). An empty
- *  catalog — not an error — if there is none yet, the locale is 'en' (the source language needs no catalog), or the
- *  fetch fails for any reason (offline, 404, bad JSON): a missing translation must never block the app. */
+/** The App Language a locale tag means: the `LANGUAGES` entry with the same tag, else the one with its language
+ *  (`de-AT` reads German), else English, the source language. A browser reports a regional tag (`en-US`,
+ *  `de-DE`); catalogs and the Config ▸ App Language menu are per language. */
+export function appLanguage(locale: string): string {
+  const tags = LANGUAGES.map(([tag]) => tag)
+  const lower = locale.toLowerCase()
+  return tags.find((tag) => tag === lower) ?? tags.find((tag) => tag === lower.split('-')[0]) ?? 'en'
+}
+
+/** Fetch the catalog for `locale`'s App Language (as `po_to_json.py` writes it, under `/i18n/<language>.json`).
+ *  An empty catalog — not an error — for English (the source language needs no catalog, so nothing is fetched and
+ *  a browser in `en-US` asks for no `en-US.json` that does not exist), or when the fetch fails for any reason
+ *  (offline, 404, bad JSON): a missing translation must never block the app. */
 export async function loadCatalog(locale: string, base = '/i18n', fetchImpl: typeof fetch = fetch): Promise<Catalog> {
-  if (locale === 'en') return {}
+  const language = appLanguage(locale)
+  if (language === 'en') return {}
   try {
-    const response = await fetchImpl(`${base}/${locale}.json`)
+    const response = await fetchImpl(`${base}/${language}.json`)
     if (!response.ok) return {}
     const data: unknown = await response.json()
     return isCatalog(data) ? data : {}
@@ -68,7 +79,8 @@ import { currentLocale, setLocale as persistLocale } from './locale'
  * depends on together.
  */
 export function useI18n() {
-  const locale = ref(currentLocale())
+  // The App Language, not the raw browser tag: the menu checks one of its own entries, never none of them.
+  const locale = ref(appLanguage(currentLocale()))
   const catalog = ref<Catalog>({})
 
   async function loadFor(tag: string): Promise<void> {

@@ -83,9 +83,12 @@ export class StyleEditor {
 
   constructor(private readonly host: StyleHost) {}
 
-  /** Look at a style's own definition without applying it to anything. `null` goes back to following the caret. */
+  /** Look at a style's own definition without applying it to anything. `null`, or the caret's own style, goes back
+   * to following the caret. */
   pick(id: string | null) {
-    this.picked = id
+    // Picking the caret's own style is "follow the caret again", not "pin this style": otherwise a deviation made
+    // next ("this paragraph only") would leave the controls on the old style while the caret moved to the new one.
+    this.picked = id === this.host.current?.id ? null : id
   }
 
   /** Whether `current` is a style merely being looked at, not the one actually under the caret. */

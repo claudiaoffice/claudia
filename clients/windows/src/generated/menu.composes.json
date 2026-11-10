@@ -214,6 +214,16 @@
             "label": "All Styles\u2026",
             "role": null
           }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "format.colours",
+            "kind": "page",
+            "label": "Colours\u2026",
+            "role": null
+          }
         ]
       ]
     },
@@ -312,6 +322,29 @@
             "kind": "page",
             "label": "Shortcuts",
             "role": null
+          }
+        ],
+        [
+          {
+            "items": [
+              {
+                "accelerators": [],
+                "checkable": true,
+                "id": "config.language.en",
+                "kind": "page",
+                "label": "English",
+                "role": null
+              },
+              {
+                "accelerators": [],
+                "checkable": true,
+                "id": "config.language.de",
+                "kind": "page",
+                "label": "Deutsch",
+                "role": null
+              }
+            ],
+            "label": "App Language"
           }
         ]
       ]

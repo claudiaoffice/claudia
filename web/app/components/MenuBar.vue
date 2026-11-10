@@ -66,11 +66,12 @@ function titleId(i: number) {
 function choose(item: MenuItem) {
   if (item.disabled || item.separator) return
   if (item.items) {
-    // A click on a flyout parent (Paste as, Row, Column) opens or closes its own submenu — same thing hovering it
-    // does below — rather than doing nothing, which the owner's 2026-11-06 report read as the submenu being gone
-    // (mouse hover alone could set `activeTop` but never `activeSub`, so the flyout never appeared for a mouse user).
+    // A click on a flyout parent (Manage, Paste as, Row, Column) opens its own submenu — the same thing hovering it
+    // does below — rather than doing nothing, which the owner's 2026-11-06 report read as the submenu being gone.
+    // It only ever opens: a mouse reaches the item by hovering, which has already opened the flyout, so a click that
+    // toggled would close it again under the pointer (found by e2e/demo.cjs, File ▸ Manage ▸ Share…).
     activeItem.value = clickable.value.indexOf(item)
-    activeSub.value = activeSub.value === null ? 0 : null
+    activeSub.value = 0
     return
   }
   close()

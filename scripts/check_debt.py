@@ -127,9 +127,8 @@ def checks() -> list[Check]:
     ]
 
 
-def web_checks() -> list[Check]:
-    """The web app's own checks; they need Node and the packages of ``web/`` (``npm install``)."""
-    web = ROOT / "web"
+def web_checks(web: Path = ROOT / "web") -> list[Check]:
+    """The web app's own checks, run in ``web``; they need Node and its packages (``npm install``)."""
     reason = ""
     if shutil.which("npm") is None:
         reason = "npm is not installed"

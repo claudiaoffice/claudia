@@ -33,7 +33,7 @@ async function open(browser, [user, password], create) {
     await page.click('.modal button:text-is("Continue")')
   }
   await page.waitForSelector('[data-testid=slide]')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
   return page
 }
 
@@ -73,7 +73,7 @@ const centre = (b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 })
     const ann = await open(browser, ANN, true)
     assert.equal(await ann.locator('.doc').textContent(), DOC)
     assert.equal((await objects(ann)).length, 0)
-    assert.equal(await ann.locator('.tabs [role=tab]').count(), 1)
+    assert.equal(await ann.locator('[aria-label=slides] [role=tab]').count(), 1)
     log('ann created', DOC, 'with one empty slide')
 
     // ---- a text box: added, selected, written into
@@ -132,7 +132,8 @@ const centre = (b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 })
 
     // ---- ann shares the presentation with ben, and he comes in and sees all of it
     await ann.click('.menus .title:text-is("File")')
-    await ann.click('.menus [role=menuitem]:has-text("Share")')
+    await ann.click('.menus .drop [role=menuitem]:has-text("Manage")')
+    await ann.click('.menus .drop [role=menuitem]:has-text("Share")')
     await ann.fill('.modal input >> nth=0', BEN[0])
     await ann.fill('.modal input >> nth=1', BEN[1])
     await ann.click('.modal button:has-text("Add person")')
@@ -188,9 +189,9 @@ const centre = (b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 })
 
     // ---- a second slide
     await ann.click('button[aria-label="new slide"]')
-    await waitFor(ann, () => document.querySelectorAll('.tabs [role=tab]').length === 2, null, 'the second slide')
+    await waitFor(ann, () => document.querySelectorAll('[aria-label=slides] [role=tab]').length === 2, null, 'the second slide')
     assert.equal((await objects(ann)).length, 0, 'the new slide is empty')
-    await waitFor(ben, () => document.querySelectorAll('.tabs [role=tab]').length === 2, null, 'the second slide for ben')
+    await waitFor(ben, () => document.querySelectorAll('[aria-label=slides] [role=tab]').length === 2, null, 'the second slide for ben')
 
     await ben.screenshot({ path: `${SHOTS}/slides-ben.png` })
 

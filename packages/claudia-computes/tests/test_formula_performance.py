@@ -4,6 +4,7 @@ Scaling tests, not stopwatches: they compare the same operation on a small and a
 cost grows faster than it should, which is robust against slow machines (see the guards of claudia-core).
 """
 
+import gc
 import time
 
 from claudia_computes import AddSheet, InsertRows, SetCells, Structure, WorkbookModel, parse_input
@@ -14,12 +15,26 @@ S1 = "s1"
 
 
 def best_of(repeat, fn):
-    best = float("inf")
-    for _ in range(repeat):
-        started = time.perf_counter()
-        fn()
-        best = min(best, time.perf_counter() - started)
-    return best
+    """The fastest of ``repeat`` runs of ``fn``, with the cyclic garbage collector held off while they run.
+
+    A collection is triggered by how much has been allocated, not by the work being measured, so it lands in the
+    large case far more often than in the small one and reads as super-linear cost: reopening 8,000 formulas
+    measured 20-25x the time of 800 with it on, and 11x with it off (the guard's bound is 25x). ``timeit`` turns
+    it off for the same reason.
+    """
+    gc.collect()
+    was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        best = float("inf")
+        for _ in range(repeat):
+            started = time.perf_counter()
+            fn()
+            best = min(best, time.perf_counter() - started)
+        return best
+    finally:
+        if was_enabled:
+            gc.enable()
 
 
 def workbook():

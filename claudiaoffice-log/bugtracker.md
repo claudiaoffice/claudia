@@ -58,20 +58,31 @@ statement in the docs or on the website).
 | UX-13 | P2 | UX | `help_search` leaks one app's topics into another's; composes has none of its own | **fixed** |
 | UX-14 | P2 | UX | "Edit this style…" gallery applies and closes on click instead of showing the style to inspect | **fixed** |
 | UX-15 | P1 | IO / pptx | The PowerPoint exporter cannot be imported, and loses every colour when it can | **fixed** |
+| UX-16 | P2 | UX / Web | A submenu opened by hovering closes again when its item is clicked (File ▸ Manage ▸ …) | **fixed** |
+| UX-17 | P2 | UX / i18n | A browser in `en-US` asks for a catalog that does not exist; in `de-DE` it stays English with no language ticked | **fixed** |
+| UX-18 | P2 | UX / computes | The formula hint covers the column letters exactly when a whole column is to be picked | **fixed** |
+| UX-19 | P2 | UX | Picking the caret's own style back in the gallery pins it: a deviation is then not offered a name, and the next change goes to the old style everywhere | **fixed** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
-| PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed (patch ready, not yet committed) |
-| PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed (patch ready, not yet committed) |
-| CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | verified open |
-| CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | verified open |
+| PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |
+| PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |
+| PROC-04 | P1 | Process / CI | CI's Python job fails on every OS: "e2e greeting" skips and `--ci` does not allow it | **fixed** |
+| PROC-05 | P2 | Process / CI | CI's web type check checks nothing (`vue-tsc --noEmit` over a `files: []` tsconfig) | **fixed** |
+| PROC-06 | P2 | Process / CI | No CI job runs a browser or the Windows client; the `web/e2e` scripts had rotted unnoticed | **fixed** |
+| PROC-07 | P3 | Process / tests | A performance guard measures the garbage collector and fails now and then | **fixed** |
+| PROC-08 | P3 | Process / tests | A test of the gate fails on every machine where `npm install` has been run | **fixed** |
+| CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | open (Playwright declared 2026-11-10) |
+| CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |
-| CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | verified open |
+| CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | branch: not dead, comment corrected; `state.py`: open |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |
-| CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed (patch ready, not yet committed) |
-| CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed (patch ready, not yet committed) |
-| CODE-09 | P3 | Code | e2e scripts exist without `package.json` entries | **new, verified open** |
-| CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed (patch ready, not yet committed) |
-| DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed (patch ready, not yet committed) |
+| CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed |
+| CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed |
+| CODE-09 | P3 | Code | e2e scripts exist without `package.json` entries | fixed |
+| CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed |
+| CODE-11 | P3 | Code | Windows client: its generated menu is stale, and a test depends on the clone's folder name | **fixed** |
+| CODE-12 | P3 | Code | `.gitignore` ignores the tracked `docs/` sources; two test documents are committed | **fixed** |
+| DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -445,6 +456,32 @@ but whatever closed PERF-04 belonged to an earlier, now-replaced store, and the 
 
 ---
 
+### UX-16 · A submenu opened by hovering closes again when its item is clicked · P2 · fixed
+**Evidence (2026-11-10, `301ded6`).** `e2e/demo.cjs` could not reach File ▸ Manage ▸ Share…. In `MenuBar.vue`,
+hovering a flyout parent opens it (`enterItem` sets `activeSub`), and clicking the same parent *toggled* `activeSub`
+— so a mouse, which always hovers before it clicks, closed the flyout it had just opened.
+**Fix.** A click on a flyout parent only opens it. The keyboard path is unchanged.
+
+### UX-17 · A regional browser locale asks for a catalog that does not exist · P2 · fixed
+**Evidence.** Every page in a browser set to `en-US` logged `404 /i18n/en-US.json` (found as console errors by the
+e2e scripts). In `de-DE` the same lookup missed `de.json`, so the app stayed English, and Config ▸ App Language
+ticked neither entry, because it compared `en`/`de` with the full tag.
+**Fix.** `appLanguage(tag)` in `web/app/lib/i18n.ts` maps a tag to an App Language (exact, then by language, then
+English); the catalog and the menu use it. Tests in `web/tests/i18n.test.ts` (the no-fetch ones now count calls: a
+throwing stub could not tell, because `loadCatalog` swallows errors).
+
+### UX-18 · The formula hint covers the column letters while a formula is typed · P2 · fixed
+**Evidence.** `e2e/pointing.cjs` failed now and then on "a whole column from its header": the click landed on
+`.formulaHelp`, which appears under the formula bar exactly over the column letters while `=SUM(` is being typed.
+**Fix.** The hint takes no pointer events; it only reads.
+
+### UX-19 · Picking the caret's own style back pins it · P2 · fixed
+**Evidence.** `e2e/styling.cjs`: after looking at Heading 1 and picking Body text back (UX-14's gallery), making the
+paragraph bold "this paragraph only" created the new style, but the menu stayed on Body text — no invitation to name
+the new style, and the next change went to Body text for everyone.
+**Fix.** `StyleEditor.pick` treats the caret's own style as "follow the caret again". Test in
+`web/tests/style-editor.test.ts`.
+
 ## Process and code
 
 ### UX-10 · An empty server greets everybody as computes, whichever app it serves · P2 · fixed
@@ -505,7 +542,7 @@ nothing runs the other side's tests until both are on one branch.
 `scripts/check_debt.py`, a web job (`npm ci`, `nuxt prepare`, `vitest`, `vue-tsc`), a Monday schedule and
 `workflow_dispatch`. Whether it has ever run green on Windows and macOS is still unknown from the tree alone.
 
-### PROC-02 · The quality gate prints "everything is clean" when half of it was skipped · P2 · fixed (patch ready, not yet committed)
+### PROC-02 · The quality gate prints "everything is clean" when half of it was skipped · P2 · fixed
 **Evidence (measured, `54d1245`).** Run in a fresh clone without `npm install`:
 
 ```
@@ -532,7 +569,7 @@ real on their own runners; any other skip still fails the build. (D133)
 checkout's own real skip (no `web/node_modules`) through `verdict(..., ci=True, allow_skip=set())` and asserts it
 fails — the bug's own reproduction, now a standing regression test.
 
-### PROC-03 · Work described as delivered is not in the repository · P2 · fixed (patch ready, not yet committed)
+### PROC-03 · Work described as delivered is not in the repository · P2 · fixed
 **Evidence (measured, `54d1245`).** `e4-e6-formulas-notes.md` describes point-and-click cell references for E6.3 as
 built on 2026-11-03: `web/app/lib/pointing.ts`, `web/tests/pointing.test.ts` with 22 cases, `REFERENCE_COLORS`,
 `slotAt`, and a nine-case browser scenario `npm run e2e:pointing`. None of it exists:
@@ -568,7 +605,7 @@ now about where the gaps are, not whether tests exist.
 **Fix.** `pytest-cov` with a floor per package, starting at the measured value and ratcheting up; a linter for `web/`;
 declare Playwright.
 
-### CODE-02 · 26 build files tracked in `web/dist` · P3 · verified open
+### CODE-02 · 26 build files tracked in `web/dist` · P3 · fixed (2026-11-10)
 **Evidence (measured).** `git ls-files web/dist` returns 26 files. `.gitignore` names `web/.nuxt` and `web/.output` but
 not `web/dist`, and `docs/web.md` builds to `web/.output/public`, so `web/dist` is stale output.
 **Fix.** `git rm -r --cached web/dist` and add it to `.gitignore`.
@@ -587,11 +624,15 @@ per-module overrides.
 **Evidence (read, `54d1245`).** `app.py` lines 232–235 still hold the branch commented "(cannot happen; keeps verify's
 checks)".
 **Fix.** Remove the branch with its test, or replace the comment with an assertion that states the invariant.
+**Update 2026-11-10.** The branch is not dead: the user directory is kept apart from the documents, so a creation that
+died between adding the owner and writing the document leaves an account behind; `test_server_gateway_threads.py`
+reaches it with a directory that knows the user. An assertion broke that test. The comment now says what the branch
+is for. The `state.py` half is still open.
 
 ### CODE-06 · `--max-connections` is per document, not per server · P3 · open
 Rename to `--max-connections-per-document`, document it, and keep the server-wide caps from SEC-02 separate.
 
-### CODE-07 · `uv.lock.rej` committed at the repository root · P3 · fixed (patch ready, not yet committed)
+### CODE-07 · `uv.lock.rej` committed at the repository root · P3 · fixed
 **Evidence (measured).** `uv.lock.rej` is tracked at the root: rejected hunks from a failed `git apply` of a lock-file
 update. It shows two things that did not land: `claudia-creates` as a dependency of `claudia-server`, and a
 `cryptography` floor moving between `>=43` and `>=44`.
@@ -605,7 +646,7 @@ depends on it, so a `>=43` floor allows an install that cannot open a document.
 `tests/test_repo_hygiene.py::test_no_rej_or_orig_files_are_tracked` fails the gate if a `.rej` or `.orig` file is ever
 tracked again.
 
-### CODE-08 · `ruff format --check` fails; the gate does not run it · P3 · fixed (patch ready, not yet committed)
+### CODE-08 · `ruff format --check` fails; the gate does not run it · P3 · fixed
 **Evidence (measured, `54d1245`).** `uv run ruff format --check .` reports **1 file would be reformatted**
 (`docs/conf.py`). `scripts/check_debt.py` runs `ruff check` but never `ruff format --check`, so the repository has no
 enforced format and the drift is invisible.
@@ -615,14 +656,14 @@ an illustrative code fence in a notes file was tripping the formatter with no so
 **Acceptance — met.** `tests/test_check_debt.py::test_ruff_format_is_its_own_check` asserts the gate runs it as a
 named check; `uv run ruff format --check .` now passes clean.
 
-### CODE-09 · e2e scripts exist without `package.json` entries · P3 · new, verified open
+### CODE-09 · e2e scripts exist without `package.json` entries · P3 · fixed (2026-11-10)
 **Evidence (measured).** `web/e2e/` holds `composes.cjs`, `demo.cjs`, `recovery.cjs`, `resilience.cjs`, `slides.cjs`
 and `styling.cjs`. `web/package.json` has scripts for only four of them: `e2e`, `e2e:composes`, `e2e:slides`,
 `e2e:resilience`. `styling.cjs` and `recovery.cjs` — the scenarios for the two newest features — can only be run by
 typing the path.
 **Fix.** Add `e2e:styling` and `e2e:recovery`, or one `e2e:all`; and a test that every file in `e2e/` has a script.
 
-### CODE-10 · `main` at `558f429` has a real `SyntaxError` in 10 files: a buggy `ruff format` landed invalid syntax · P1 · fixed (patch ready, not yet committed)
+### CODE-10 · `main` at `558f429` has a real `SyntaxError` in 10 files: a buggy `ruff format` landed invalid syntax · P1 · fixed
 **Evidence (measured, a fresh clone of `main` at `558f429` — "QA finding fixed: quality signals work", the commit
 that landed D133/CODE-08).** Ten files parse with `python3 -c "import ast; ast.parse(open(f).read())"` to a real
 `SyntaxError: multiple exception types must be parenthesized`, not a lint opinion:
@@ -659,7 +700,20 @@ version and not the bug.
 scripts/check_debt.py --ci --allow-skip "web tests" --allow-skip "web types"` — CI's own invocation — exits 0, with
 `ruff format: ok`.
 
-### DOC-01 · Decision numbers are used twice for different decisions · P2 · fixed (patch ready, not yet committed)
+### CODE-11 · Windows client: stale generated menu, and a test that depends on the folder name · P3 · fixed
+**Evidence.** `generate_menu.py composes --check` failed (the manifest gained App Language and more since the file was
+generated), and `defaultRepo` was tested with `endsWith('claudia')`, which fails in a clone called anything else.
+**Fix.** Menus regenerated for all three apps (`--all`, as `npm run generate-menu` does); the test checks what is in
+the folder instead of its name.
+
+### CODE-12 · `.gitignore` ignored the tracked `docs/` sources · P3 · fixed
+**Evidence.** `.gitignore` listed `docs` (meaning a documents folder), which matches `docs/`, the Sphinx sources: a new
+page there would silently not be added. `docs-computes/docs/test125.claudia(.journal)` were committed although
+`docs-*` is ignored, and the Obsidian line ignored plugin files that are tracked on purpose.
+**Fix.** `.gitignore` rewritten by topic: `docs/_build` only, `web/dist` added (CODE-02), only Obsidian's per-person
+`workspace*.json` ignored. The two test documents and `web/dist` are untracked.
+
+### DOC-01 · Decision numbers are used twice for different decisions · P2 · fixed
 **Evidence (measured, project context and `54d1245`).** Two blocks of decision numbers were allocated twice:
 
 | Number | Meaning in `decision-log.md` | Meaning in the E2 / Linux-client notes |
@@ -691,6 +745,40 @@ changelogs resolves to exactly one row (it deliberately excludes `claudiaoffice-
 own historical account of the collision).
 
 ---
+
+### PROC-04 · CI's Python job fails on every OS · P1 · fixed
+**Evidence (2026-11-10, `301ded6`).** Run exactly as `.github/workflows/ci.yml` runs it, `check_debt.py --ci` ends
+"FAILED: e2e greeting": the browser test (UX-10) skips where the web app is not built, and the job allowed only the
+web and Linux-client skips. No job ran the browser test either.
+**Fix.** The Python job allows that skip; the new `e2e` job runs it for real (PROC-06).
+
+### PROC-05 · CI's web type check checks nothing · P2 · fixed
+**Evidence.** `web/tsconfig.json` is `files: []` plus references to the generated projects, so `npx vue-tsc --noEmit`
+(without `-b`) type-checks no file: with `export const broken: number = "x"` added it still exits 0, while
+`npm run typecheck` (`nuxt typecheck`) exits 2. The type error in `Workspace.vue`'s `chartInserted` passed CI this way.
+**Fix.** The web job runs `npm run typecheck`, as the gate does.
+
+### PROC-06 · No CI job ran a browser or the Windows client · P2 · fixed
+**Evidence.** Neither `tests/e2e` nor any `web/e2e/*.cjs` script ran anywhere, and Playwright was not a declared
+dependency of `web/` (CODE-01). All seven scripts failed on `main`: six on selectors from before the connection
+indicator and File ▸ Manage existed, one on a toast for formulas "not there yet". Behind them were four real bugs
+(UX-16 to UX-19). The Windows client's 63 vitest tests and its menu `--check`, which its own docstring says "a CI job
+runs", ran nowhere; one test and the generated menu were broken (CODE-11).
+**Fix.** New `e2e` job (Chromium; `tests/e2e`, then the five scripts against `./start.sh all`, then the two that start
+their own server; screenshots kept on failure) and `windows-client` job (vitest, `tsc`, menu `--check`, the tool's
+pytest). The scripts were brought up to date and all pass.
+
+### PROC-07 · A performance guard measures the garbage collector · P3 · fixed
+**Evidence.** `test_opening_from_a_snapshot_is_linear_in_the_formulas` failed with 25.07x against its 25x bound.
+Measured: 800 → 8,000 formulas takes 20–25x with the cyclic collector on and 11x with it off — a collection is
+triggered by how much is allocated, so it lands in the large case.
+**Fix.** Both timing helpers (`claudia-core`, `claudia-computes`) hold the collector off while timing, as `timeit`
+does.
+
+### PROC-08 · A test of the gate fails wherever `npm install` was run · P3 · fixed
+**Evidence.** `test_ci_catches_the_real_bug_with_no_node_modules` asserted that *this checkout* has no
+`web/node_modules`, so it failed on every developer machine and passed only in CI.
+**Fix.** `web_checks()` takes the web folder; the test points it at an empty one.
 
 ## Website
 
