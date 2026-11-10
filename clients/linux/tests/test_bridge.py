@@ -178,3 +178,142 @@ def test_an_action_that_the_page_does_not_carry_out_is_never_sent_to_it(rig) -> 
     bridge.receive(hello())
     with pytest.raises(ValueError, match="not by the page"):
         bridge.send_action("file.quit")
+
+
+# ----------------------------------------------------------------------- connecting to another server (E5.8)
+
+
+class ConnectRecorder(Recorder):
+    def __init__(self) -> None:
+        super().__init__()
+        self.connects: list[str] = []
+        self.lists: list[list] = []
+        self.remembered = [{"origin": "https://a.example.org", "label": "A", "custom": False}]
+
+    def on_connect(self, address: str) -> None:
+        self.connects.append(address)
+
+    def on_servers(self, entries: list) -> None:
+        self.lists.append(entries)
+
+    def server_list(self) -> list:
+        return self.remembered
+
+
+@pytest.fixture
+def server_rig() -> tuple[Bridge, ConnectRecorder]:
+    recorder = ConnectRecorder()
+    bridge = Bridge(
+        manifest.computes(),
+        recorder.send,
+        shell_version="0.1.0",
+        on_states=recorder.on_states,
+        on_ready=recorder.on_ready,
+        on_connect=recorder.on_connect,
+        on_servers=recorder.on_servers,
+        server_list=recorder.server_list,
+    )
+    return bridge, recorder
+
+
+def hello_computes() -> str:
+    return hello(app="computes")
+
+
+def test_a_shell_that_can_connect_says_so_and_then_sends_the_servers_it_remembers(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(hello_computes())
+    assert recorder.sent[0]["capabilities"] == ["native-menu", "actions", "connect", "servers"]
+    assert recorder.sent[1] == contract.servers(recorder.remembered)
+    assert len(recorder.sent) == 2
+
+
+def test_a_shell_without_these_abilities_does_not_claim_them(rig) -> None:
+    bridge, recorder = rig
+    bridge.receive(hello())
+    assert recorder.sent[0]["capabilities"] == ["native-menu", "actions"]
+    assert len(recorder.sent) == 1  # no servers message either
+
+
+def test_the_page_asking_to_connect_reaches_the_shell(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(hello_computes())
+    bridge.receive(json.dumps({"type": "connect", "address": "https://demo.example.org:8420"}))
+    assert recorder.connects == ["https://demo.example.org:8420"]
+
+
+def test_a_page_that_has_not_said_hello_cannot_make_the_shell_connect(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(json.dumps({"type": "connect", "address": "https://demo.example.org"}))
+    assert recorder.connects == []
+    assert recorder.sent[0]["type"] == "error"
+    assert recorder.sent[0]["code"] == "bad_message"
+
+
+def test_a_shell_that_cannot_connect_says_so_instead_of_silence(rig) -> None:
+    bridge, recorder = rig
+    bridge.receive(hello())
+    bridge.receive(json.dumps({"type": "connect", "address": "https://demo.example.org"}))
+    assert recorder.sent[-1]["type"] == "error"
+    assert "connect" in recorder.sent[-1]["message"]
+
+
+def test_the_list_the_page_hands_back_reaches_the_shell(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(hello_computes())
+    entries = [{"origin": "https://b.example.org", "label": "B", "custom": True}]
+    bridge.receive(json.dumps({"type": "servers", "servers": entries}))
+    assert recorder.lists == [entries]
+
+
+def test_a_list_before_hello_is_not_taken(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(json.dumps({"type": "servers", "servers": []}))
+    assert recorder.lists == []
+    assert recorder.sent[0]["code"] == "bad_message"
+
+
+def test_the_shell_can_tell_the_page_why_a_connection_failed(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(hello_computes())
+    recorder.sent.clear()
+    assert bridge.send_connect_failed("unreachable", "Could not reach demo.example.org.")
+    assert recorder.sent == [contract.connect_failed("unreachable", "Could not reach demo.example.org.")]
+
+
+def test_nothing_is_sent_to_a_page_that_is_not_there_any_more(server_rig) -> None:
+    bridge, recorder = server_rig  # no hello yet, or the page reloaded in the meantime
+    assert not bridge.send_connect_failed("unreachable", "x")
+    assert not bridge.send_servers([])
+    assert recorder.sent == []
+
+
+def test_the_shell_can_send_a_changed_list(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(hello_computes())
+    recorder.sent.clear()
+    assert bridge.send_servers(recorder.remembered)
+    assert recorder.sent == [contract.servers(recorder.remembered)]
+
+
+def test_the_page_may_not_send_what_only_the_shell_sends_with_a_server_list(server_rig) -> None:
+    bridge, recorder = server_rig
+    bridge.receive(hello_computes())
+    recorder.sent.clear()
+    bridge.receive(json.dumps({"type": "connect_failed", "code": "unreachable", "message": "x"}))
+    assert recorder.sent[0]["code"] == "bad_message"
+
+
+def test_a_page_that_does_not_know_its_apps_yet_is_welcomed_as_the_shells_own_app(rig) -> None:
+    """The start page of a server that keeps its document list behind a secret cannot say which app it shows."""
+    bridge, recorder = rig
+    bridge.receive(json.dumps({"type": "hello", "contract": 1}))
+    assert bridge.ready
+    assert recorder.sent[0]["type"] == "welcome"
+
+
+def test_a_page_that_names_another_app_is_still_refused(rig) -> None:
+    bridge, recorder = rig
+    bridge.receive(json.dumps({"type": "hello", "contract": 1, "app": "creates"}))
+    assert not bridge.ready
+    assert recorder.sent[0]["type"] == "error"

@@ -84,3 +84,23 @@ def test_an_existing_file_is_not_overwritten(tmp_path: Path) -> None:
     (tmp_path / "notes (1).md").write_text("mine too")
     assert urls.unique_path(tmp_path, "notes.md") == tmp_path / "notes (2).md"
     assert urls.unique_path(tmp_path, "fresh.md") == tmp_path / "fresh.md"
+
+
+@pytest.mark.parametrize(
+    ("uri", "origin"),
+    [
+        ("https://demo.example.org:8420/doc/1?x=2#top", "https://demo.example.org:8420"),
+        ("https://Demo.Example.ORG/", "https://demo.example.org"),
+        ("https://demo.example.org:443/a", "https://demo.example.org"),
+        ("https://[2001:db8::1]:8420/", "https://[2001:db8::1]:8420"),
+        ("http://127.0.0.1:41233/", None),  # only an https address has a certificate
+        ("https://user:pw@demo.example.org/", None),
+        ("https://demo.example.org:abc/", None),
+        ("file:///etc/passwd", None),
+        ("", None),
+    ],
+)
+def test_the_origin_of_an_https_address_is_the_key_its_certificate_is_trusted_by(uri: str, origin: str | None) -> None:
+    from claudia_shell_gtk.urls import origin_of
+
+    assert origin_of(uri) == origin

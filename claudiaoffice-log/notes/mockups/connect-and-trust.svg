@@ -1,0 +1,184 @@
+<svg viewBox="0 0 1400 1268" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="1268" rx="0" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — connecting to a server and trusting its certificate, proposed (E5.8, Linux shell)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Native dialogs are Adw.AlertDialog (libadwaita 1.5, the shell&#x27;s floor). They follow the system light/dark setting. Everything else stays in the web page: the Servers list and the Connect box are the page&#x27;s own.</text>
+<rect x="40" y="96" width="640" height="632" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">A · First connection, certificate from no known authority</text>
+<text x="62" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Appears after Connect, only when the server answers over https with a certificate the system does not trust.</text>
+<rect x="62" y="176" width="596" height="508" rx="12" fill="#ffffff"/>
+<rect x="62" y="176" width="596" height="30" rx="0" fill="#fafafa"/>
+<text x="78" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">File</text>
+<text x="134" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Edit</text>
+<text x="190" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Format</text>
+<text x="246" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">View</text>
+<text x="302" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Tools</text>
+<text x="358" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Config</text>
+<text x="414" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Help</text>
+<line x1="62" y1="206" x2="658" y2="206" stroke="#e3dfee" stroke-width="1"/>
+<rect x="86" y="232" width="548" height="10" rx="5" fill="#efece6"/>
+<rect x="86" y="258" width="478" height="10" rx="5" fill="#efece6"/>
+<rect x="86" y="284" width="408" height="10" rx="5" fill="#efece6"/>
+<rect x="86" y="310" width="548" height="10" rx="5" fill="#efece6"/>
+<rect x="86" y="336" width="478" height="10" rx="5" fill="#efece6"/>
+<rect x="86" y="362" width="408" height="10" rx="5" fill="#efece6"/>
+<rect x="86" y="388" width="548" height="10" rx="5" fill="#efece6"/>
+<rect x="62" y="176" width="596" height="508" rx="12" fill="#1f1a33" opacity="0.38"/>
+<rect x="104" y="209" width="516" height="440" rx="18" fill="#1f1a33" opacity="0.18"/>
+<rect x="102" y="204" width="516" height="440" rx="18" fill="#ffffff" stroke="#1f1a33" stroke-width="1"/>
+<rect x="102" y="204" width="516" height="440" rx="18" fill="none" stroke="#1f1a33" stroke-opacity="0.08"/>
+<rect x="349.0" y="235" width="22" height="17" rx="4" fill="#5b4bc4"/>
+<path d="M354.0 235 v-5 a6 6 0 0 1 12 0 v5" fill="none" stroke="#5b4bc4" stroke-width="3"/>
+<circle cx="360.0" cy="243" r="2.4" fill="#fff"/>
+<text x="360.0" y="288" font-family="Fraunces, Georgia, serif" font-size="19" font-weight="500" fill="#1f1a33" text-anchor="middle">Trust this server?</text>
+<text x="360.0" y="312" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">demo.example.org:8420 identifies itself with a certificate that no</text>
+<text x="360.0" y="330" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">certificate authority has signed. Continue only if this is your own server</text>
+<text x="360.0" y="348" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">or its administrator gave you the fingerprint below.</text>
+<rect x="126" y="378" width="468" height="158" rx="10" fill="#f6f4ef"/>
+<text x="142" y="404" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Address</text>
+<text x="230" y="404" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">demo.example.org:8420</text>
+<text x="142" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Issued by</text>
+<text x="230" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">demo.example.org (self-signed)</text>
+<text x="142" y="448" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Valid until</text>
+<text x="230" y="448" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">14 Mar 2027</text>
+<text x="142" y="476" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">SHA-256</text>
+<text x="230" y="476" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">4A:1F:C3:9D:07:B2:5E:88</text>
+<text x="230" y="492" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">A1:3C:F0:6B:92:D4:17:E9</text>
+<text x="230" y="508" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">5D:80:2A:C6:BB:31:7F:04</text>
+<text x="230" y="524" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">E2:96:48:1D:AC:73:0B:F5</text>
+<text x="360.0" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">Claudia remembers this certificate for this server only,</text>
+<text x="360.0" y="567" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">and warns you if it ever changes.</text>
+<rect x="123" y="577" width="232" height="46" rx="11" fill="none" stroke="#0f7d6e" stroke-width="2"/>
+<rect x="126" y="580" width="226" height="40" rx="8" fill="#ebe8f2"/>
+<text x="239.0" y="604.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="368" y="580" width="226" height="40" rx="8" fill="#ebe8f2"/>
+<text x="481.0" y="604.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Trust this server</text>
+<text x="62" y="702" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">Esc and the default button (focused first) are Cancel. If the certificate was issued for another name,</text>
+<text x="62" y="716" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">an amber line “Issued for another address” is added under “Issued by”.</text>
+<rect x="720" y="96" width="640" height="632" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="742" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">B · The trusted certificate has changed</text>
+<text x="742" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Same address, different certificate than the one you trusted. Stronger wording; Cancel stays the default.</text>
+<rect x="742" y="176" width="596" height="508" rx="12" fill="#ffffff"/>
+<rect x="742" y="176" width="596" height="30" rx="0" fill="#fafafa"/>
+<text x="758" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">File</text>
+<text x="814" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Edit</text>
+<text x="870" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Format</text>
+<text x="926" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">View</text>
+<text x="982" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Tools</text>
+<text x="1038" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Config</text>
+<text x="1094" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Help</text>
+<line x1="742" y1="206" x2="1338" y2="206" stroke="#e3dfee" stroke-width="1"/>
+<rect x="766" y="232" width="548" height="10" rx="5" fill="#efece6"/>
+<rect x="766" y="258" width="478" height="10" rx="5" fill="#efece6"/>
+<rect x="766" y="284" width="408" height="10" rx="5" fill="#efece6"/>
+<rect x="766" y="310" width="548" height="10" rx="5" fill="#efece6"/>
+<rect x="766" y="336" width="478" height="10" rx="5" fill="#efece6"/>
+<rect x="766" y="362" width="408" height="10" rx="5" fill="#efece6"/>
+<rect x="766" y="388" width="548" height="10" rx="5" fill="#efece6"/>
+<rect x="742" y="176" width="596" height="508" rx="12" fill="#1f1a33" opacity="0.38"/>
+<rect x="784" y="209" width="516" height="440" rx="18" fill="#1f1a33" opacity="0.18"/>
+<rect x="782" y="204" width="516" height="440" rx="18" fill="#ffffff" stroke="#1f1a33" stroke-width="1"/>
+<rect x="782" y="204" width="516" height="440" rx="18" fill="none" stroke="#1f1a33" stroke-opacity="0.08"/>
+<path d="M1040.0 224 L1055.0 250 H1025.0 Z" fill="#b3261e" stroke="#b3261e" stroke-width="3" stroke-linejoin="round"/>
+<text x="1040.0" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">!</text>
+<text x="1040.0" y="288" font-family="Fraunces, Georgia, serif" font-size="19" font-weight="500" fill="#1f1a33" text-anchor="middle">This server’s certificate has changed</text>
+<text x="1040.0" y="312" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">demo.example.org:8420 now shows a different certificate from the one</text>
+<text x="1040.0" y="330" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">you trusted on 10 Nov 2026. Someone may be intercepting your connection,</text>
+<text x="1040.0" y="348" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">or the administrator may have renewed it. Ask them before you go on.</text>
+<rect x="806" y="378" width="468" height="158" rx="10" fill="#f6f4ef"/>
+<text x="822.0" y="404" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#6e6880" text-anchor="start">Trusted before</text>
+<text x="822.0" y="432" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">4A:1F:C3:9D:07:B2:5E:88</text>
+<rect x="821.0" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="840.8" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="860.6" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="939.8" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<text x="822.0" y="450" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">A1:3C:F0:6B:92:D4:17:E9</text>
+<text x="822.0" y="468" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">5D:80:2A:C6:BB:31:7F:04</text>
+<rect x="821.0" y="475" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="959.6" y="475" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<text x="822.0" y="486" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">E2:96:48:1D:AC:73:0B:F5</text>
+<text x="1040.0" y="404" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#6e6880" text-anchor="start">Offered now</text>
+<text x="1040.0" y="432" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">4A:1F:C3:9D:07:B2:5E:88</text>
+<rect x="1039.0" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="1058.8" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="1078.6" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="1157.8" y="439" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<text x="1040.0" y="450" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">9C:52:E7:6B:92:D4:31:E9</text>
+<text x="1040.0" y="468" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">5D:80:2A:C6:BB:31:7F:04</text>
+<rect x="1039.0" y="475" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<rect x="1177.6" y="475" width="15.2" height="15" rx="3" fill="#fbd5e1"/>
+<text x="1040.0" y="486" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">17:96:48:1D:AC:73:0B:AA</text>
+<text x="822" y="522" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Differences are marked.</text>
+<text x="1040.0" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">Not offered when the new certificate has expired.</text>
+<rect x="803" y="577" width="232" height="46" rx="11" fill="none" stroke="#0f7d6e" stroke-width="2"/>
+<rect x="806" y="580" width="226" height="40" rx="8" fill="#ebe8f2"/>
+<text x="919.0" y="604.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="1048" y="580" width="226" height="40" rx="8" fill="#b3261e"/>
+<text x="1161.0" y="604.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#ffffff" text-anchor="middle">Replace trusted certificate</text>
+<text x="742" y="702" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">The second button is Adwaita’s destructive style. There is no “always trust” and no “ignore once”.</text>
+<rect x="40" y="752" width="640" height="480" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="786" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">C · When Connect cannot go through</text>
+<text x="62" y="806" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The page’s own error line under the address field (the one that says “Type a server address.” today).</text>
+<rect x="62" y="830" width="596" height="28" rx="8" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<text x="76" y="848.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">http://demo.example.org:8420</text>
+<text x="62" y="876" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#b3261e" text-anchor="start">Use https:// — plain http is only allowed for this computer.</text>
+<text x="646" y="848.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="end">1</text>
+<rect x="62" y="894" width="596" height="28" rx="8" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<text x="76" y="912.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">demo.example.org:8420</text>
+<text x="62" y="940" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#b3261e" text-anchor="start">That server runs Claudia Composes. This window is Claudia Computes — open it there.</text>
+<text x="646" y="912.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="end">2</text>
+<rect x="62" y="958" width="596" height="28" rx="8" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<text x="76" y="976.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">192.0.2.7:8420</text>
+<text x="62" y="1004" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#b3261e" text-anchor="start">Could not reach 192.0.2.7:8420.</text>
+<text x="646" y="976.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="end">3</text>
+<rect x="62" y="1022" width="596" height="28" rx="8" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<text x="76" y="1040.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">old.example.org</text>
+<text x="62" y="1068" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#b3261e" text-anchor="start">The certificate of old.example.org has expired. Ask its administrator to renew it.</text>
+<text x="646" y="1040.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="end">4</text>
+<rect x="62" y="1086" width="596" height="28" rx="8" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<text x="76" y="1104.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">files.example.org</text>
+<text x="62" y="1132" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#b3261e" text-anchor="start">That does not look like a Claudia server.</text>
+<text x="646" y="1104.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="end">5</text>
+<rect x="62" y="1150" width="596" height="28" rx="8" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<text x="76" y="1168.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">demo.example.org:8420</text>
+<text x="62" y="1196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#b3261e" text-anchor="start">Not connected: you did not trust this server’s certificate.</text>
+<text x="646" y="1168.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="end">6</text>
+<text x="62" y="1218" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">Cases 1–5 never reach the trust dialog; 6 follows Cancel in A or B. Messages are translatable like the rest.</text>
+<rect x="720" y="752" width="640" height="480" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="742" y="786" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">D · What happens after Connect, in this order</text>
+<text x="742" y="806" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The same for a typed address and for a click in the Servers list. The first failing step stops it.</text>
+<rect x="742" y="832" width="400" height="50" rx="10" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<circle cx="766" cy="857" r="12" fill="#1f1a33"/>
+<text x="766" y="861.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="788" y="853" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Scheme</text>
+<text x="788" y="870" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">https, or http only for this computer</text>
+<line x1="766" y1="882" x2="766" y2="898" stroke="#6e6880" stroke-width="1.5"/>
+<line x1="1142" y1="857" x2="1172" y2="857" stroke="#b3261e" stroke-width="1.5"/>
+<text x="1180" y="861" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#b3261e" text-anchor="start">message 1</text>
+<rect x="742" y="898" width="400" height="50" rx="10" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<circle cx="766" cy="923" r="12" fill="#1f1a33"/>
+<text x="766" y="927.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="788" y="919" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Reach it, check the certificate</text>
+<text x="788" y="936" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">answers on /api/docs over TLS</text>
+<line x1="766" y1="948" x2="766" y2="964" stroke="#6e6880" stroke-width="1.5"/>
+<line x1="1142" y1="923" x2="1172" y2="923" stroke="#b3261e" stroke-width="1.5"/>
+<text x="1180" y="927" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#b3261e" text-anchor="start">3 · 4 · 5, or dialog A / B</text>
+<rect x="742" y="964" width="400" height="50" rx="10" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<circle cx="766" cy="989" r="12" fill="#1f1a33"/>
+<text x="766" y="993.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="788" y="985" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Same app</text>
+<text x="788" y="1002" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the server’s app equals this window’s</text>
+<line x1="766" y1="1014" x2="766" y2="1030" stroke="#6e6880" stroke-width="1.5"/>
+<line x1="1142" y1="989" x2="1172" y2="989" stroke="#b3261e" stroke-width="1.5"/>
+<text x="1180" y="993" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#b3261e" text-anchor="start">message 2</text>
+<rect x="742" y="1030" width="400" height="50" rx="10" fill="#ffffff" stroke="#cfc8e0" stroke-width="1"/>
+<circle cx="766" cy="1055" r="12" fill="#1f1a33"/>
+<text x="766" y="1059.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="788" y="1051" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Switch</text>
+<text x="788" y="1068" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">this window now shows that server</text>
+<text x="742" y="1112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">After 4, the address is saved in this app’s own server list (never a password or secret).</text>
+<text x="742" y="1130" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">“This computer” stays in the list and always means this window’s own local server.</text>
+<text x="742" y="1160" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Open for you to decide:</text>
+<text x="742" y="1178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">· Forgetting a trusted certificate: proposed as “Remove” on a server in the list (which also</text>
+<text x="742" y="1194" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">  forgets its certificate). The list has no remove action yet, so it is not drawn here.</text>
+<text x="742" y="1210" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">· An expired or not-yet-valid certificate is never offered for trust (message 4).</text>
+</svg>

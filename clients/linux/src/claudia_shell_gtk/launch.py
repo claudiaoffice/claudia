@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .identity import AppIdentity
 from .paths import documents_dir, find_frontend, state_dir
-from .server import LOOPBACK, LocalServer, composes_command, find_server_python, free_port
+from .server import LOOPBACK, LocalServer, find_server_python, free_port, server_command
 
 __all__ = ["SetupProblem", "prepare_server"]
 
@@ -44,5 +44,5 @@ def prepare_server(identity: AppIdentity, *, repo: Path | None = None) -> LocalS
     state = state_dir(identity.name)
     state.mkdir(parents=True, exist_ok=True)
     port = free_port()
-    command = composes_command(python, port=port, documents=documents, web=web, state=state)
+    command = server_command(python, model=identity.model, port=port, documents=documents, web=web, state=state)
     return LocalServer(command, url=f"http://{LOOPBACK}:{port}", log=state / "server.log")

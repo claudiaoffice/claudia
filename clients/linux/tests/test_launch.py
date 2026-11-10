@@ -38,6 +38,16 @@ def test_a_server_is_prepared_for_the_app_on_a_free_loopback_port(checkout: Path
     assert server.log_path == tmp_path / "state" / "claudia" / "composes" / "server.log"
 
 
+@pytest.mark.parametrize("app", identity.names())
+def test_every_app_gets_its_own_model_folders_and_log(app: str, checkout: Path, tmp_path: Path) -> None:
+    """The server an app starts is that app's own: the model comes from the identity, never from a default."""
+    server = launch.prepare_server(identity.get(app), repo=checkout)
+    command = server._command  # noqa: SLF001
+    assert command[command.index("--model") + 1] == identity.get(app).model
+    assert command[command.index("--dir") + 1] == str(tmp_path / "data" / "claudia" / app / "documents")
+    assert server.log_path == tmp_path / "state" / "claudia" / app / "server.log"
+
+
 def test_the_documents_folder_exists_when_the_server_starts(checkout: Path, tmp_path: Path) -> None:
     launch.prepare_server(identity.get("composes"), repo=checkout)
     assert (tmp_path / "data" / "claudia" / "composes" / "documents").is_dir()

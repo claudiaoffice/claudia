@@ -1,5 +1,5 @@
-# Builds the Debian package of the Linux client (Claudia Composes with its server and web app inside), installs it
-# on a clean runner and starts it.
+# Builds the Debian package of the Linux client (Claudia Composes, Computes and Creates, each with its own start
+# button, with their server and web app inside), installs it on a clean runner and starts every app.
 #
 #   pull request / push to main   build, check, install, test; the .deb is kept as a workflow artifact for 30 days
 #   tag v1.2.3                    the same, and the .deb is attached to the GitHub release of the tag
@@ -57,8 +57,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends desktop-file-utils appstream
-          desktop-file-validate clients/linux/apps/composes/de.claudiaoffice.composes.desktop
-          appstreamcli validate --no-net clients/linux/apps/composes/de.claudiaoffice.composes.metainfo.xml
+          for app in composes computes creates; do
+            desktop-file-validate "clients/linux/apps/$app/de.claudiaoffice.$app.desktop"
+            appstreamcli validate --no-net "clients/linux/apps/$app/de.claudiaoffice.$app.metainfo.xml"
+          done
 
       - name: Build
         run: |
@@ -75,24 +77,33 @@ jobs:
         run: |
           sudo rm -rf /opt/claudia
           sudo apt-get install -y --no-install-recommends ./dist/*.deb xvfb
-          test -x /usr/bin/claudia-composes
-          xvfb-run -a claudia-composes --version
-          # The server the shell would start, on the Python that comes with the package.
-          /opt/claudia/venv/bin/python -m claudia_server --model claudia_composes:TextModel \
-            --host 127.0.0.1 --port 8765 --no-tls --web /opt/claudia/web --max-documents 5 &
-          pid=$!
-          ok=
-          for _ in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8765/api/health; then ok=1; break; fi
-            sleep 1
+          version="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' clients/linux/src/claudia_shell_gtk/_version.py)"
+          port=8765
+          # Every app: its start button (command, desktop entry), and the server it would start, on the Python
+          # that comes with the package. (The models are those the apps name in identity.py.)
+          for app in composes computes creates; do
+            test -x "/usr/bin/claudia-$app"
+            test -f "/usr/share/applications/de.claudiaoffice.$app.desktop"
+            test -f "/usr/share/icons/hicolor/scalable/apps/de.claudiaoffice.$app.svg"
+            [ "$(xvfb-run -a "claudia-$app" --version)" = "claudia-$app $version" ]
+            model="$(cd clients/linux/src && python3 -c "from claudia_shell_gtk import identity; print(identity.get('$app').model)")"
+            /opt/claudia/venv/bin/python -m claudia_server --model "$model" \
+              --host 127.0.0.1 --port "$port" --no-tls --web /opt/claudia/web --max-documents 5 &
+            pid=$!
+            ok=
+            for _ in $(seq 1 30); do
+              if curl -fsS http://127.0.0.1:$port/api/health; then ok=1; break; fi
+              sleep 1
+            done
+            kill "$pid"
+            wait "$pid" || true
+            [ -n "$ok" ]
+            port=$((port + 1))
           done
-          kill "$pid"
-          [ -n "$ok" ]
-          curl -fsS -o /dev/null http://127.0.0.1:8765/ 2>/dev/null || true
 
       - uses: actions/upload-artifact@v4
         with:
-          name: claudia-composes-deb
+          name: claudia-office-deb
           path: dist/*.deb
           if-no-files-found: error
           retention-days: 30
@@ -106,7 +117,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: claudia-composes-deb
+          name: claudia-office-deb
           path: dist
       - name: Attach to the release
         env:

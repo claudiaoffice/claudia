@@ -13,6 +13,8 @@ dependencies = []
 
 [project.scripts]
 claudia-composes = "claudia_shell_gtk.__main__:composes"
+claudia-computes = "claudia_shell_gtk.__main__:computes"
+claudia-creates = "claudia_shell_gtk.__main__:creates"
 
 [build-system]
 requires = ["hatchling"]

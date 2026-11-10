@@ -472,3 +472,26 @@ def test_about_links_are_website_then_report_an_issue_then_legal() -> None:
     # linked, not reproduced in full — claudiaoffice-log/notes/README.md's reason for not duplicating generated
     # content applies here too: a second copy of the licence text cannot be kept true.
     assert urls["Legal"] == "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"
+
+
+# ----------------------------------------------------------------------------------- the registry (one shell, any app)
+
+
+@pytest.mark.parametrize("app", APPS)
+def test_for_app_gives_the_manifest_of_that_app(app: str) -> None:
+    assert manifest.for_app(app).app == app
+    assert manifest.for_app(app).describe() == BUILDERS[app]().describe()
+
+
+def test_the_registry_knows_exactly_the_apps_that_have_an_identity() -> None:
+    from claudia_shell_gtk import identity
+
+    assert set(identity.names()) == set(APPS)
+
+
+def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() -> None:
+    from claudia_shell_gtk import identity
+
+    with pytest.raises(identity.UnknownApp) as problem:
+        manifest.for_app("drawbook")
+    assert "composes" in str(problem.value)

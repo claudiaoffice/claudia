@@ -15,6 +15,7 @@ web/.nuxt
 web/.output
 web/dist
 web/node_modules
+web/coverage
 
 # Windows client: dependencies, build output, Neutralino's downloads and logs
 clients/windows/node_modules/
@@ -34,3 +35,7 @@ claudiaoffice-log/.obsidian/workspace*.json
 # Patches handed around in chat, and macOS litter
 *.patch
 *DS_Store*
+
+# Coverage data the gate's `tests` step writes (CODE-01)
+.coverage
+.coverage.*

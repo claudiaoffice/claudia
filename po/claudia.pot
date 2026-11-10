@@ -169,12 +169,24 @@ msgstr ""
 msgid "Config"
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/window.py:225
+msgid "Connecting to {address}…"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:118
 msgid "Copy"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Copy the selection to the clipboard"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/window.py:231
+msgid "Could not connect"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:275 clients/linux/src/claudia_shell_gtk/connector.py:130
+msgid "Could not reach {address}."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -433,6 +445,10 @@ msgstr ""
 msgid "Not available yet"
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/connector.py:162
+msgid "Not connected: you did not trust this server's certificate."
+msgstr ""
+
 #: web/app/components/HelpPanel.vue:118
 msgid "Not finding it? Say"
 msgstr ""
@@ -561,6 +577,10 @@ msgstr ""
 msgid "Start a new document"
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/window.py:159
+msgid "Starting {app}…"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Take back your last step"
 msgstr ""
@@ -577,6 +597,26 @@ msgstr ""
 msgid "Text box"
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/connection.py:189
+msgid "That does not look like a Claudia server."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:219
+msgid "That server runs {other}. This window is {this} — open it there."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:230
+msgid "The certificate of {host} has expired. Ask its administrator to renew it."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/connector.py:146
+msgid "The certificate of {host} is not issued by an authority this computer trusts."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:232
+msgid "The certificate of {host} is not valid."
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "The colours of this document, by what each one means"
 msgstr ""
@@ -585,8 +625,16 @@ msgstr ""
 msgid "The keyboard shortcuts this app uses"
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/window.py:131
+msgid "This computer"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:194 web/app/components/TextWorkspace.vue:190 web/app/components/Workspace.vue:453
 msgid "Tools"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/servers.py:98
+msgid "Type the address of a server, such as demo.example.org:8420."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:98
@@ -595,6 +643,10 @@ msgstr ""
 
 #: web/app/lib/document-menus.ts:98
 msgid "Undo {label}"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/servers.py:149
+msgid "Use https:// — plain http is only allowed for this computer."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -615,4 +667,12 @@ msgstr ""
 
 #: web/app/components/HelpPanel.vue:118
 msgid "in the chat."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/app.py:127
+msgid "{app} cannot start yet"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/app.py:130 clients/linux/src/claudia_shell_gtk/app.py:161
+msgid "{app} could not start its server"
 msgstr ""

@@ -192,13 +192,21 @@ def test_the_server_dies_when_the_shell_is_killed_without_a_chance_to_clean_up(t
 # --------------------------------------------------------------------------------------------- the command line
 
 
-def test_the_composes_command_serves_the_bundled_frontend_on_loopback_only(tmp_path: Path) -> None:
-    command = server.composes_command(
-        "/opt/claudia/python", port=8123, documents=tmp_path / "docs", web=tmp_path / "web", state=tmp_path / "state"
+@pytest.mark.parametrize(
+    "model", ["claudia_composes:TextModel", "claudia_computes:WorkbookModel", "claudia_creates:SlideModel"]
+)
+def test_the_server_command_serves_the_bundled_frontend_on_loopback_only(tmp_path: Path, model: str) -> None:
+    command = server.server_command(
+        "/opt/claudia/python",
+        model=model,
+        port=8123,
+        documents=tmp_path / "docs",
+        web=tmp_path / "web",
+        state=tmp_path / "state",
     )
     assert command[:3] == ["/opt/claudia/python", "-m", "claudia_server"]
     joined = " ".join(command)
-    assert "--model claudia_composes:TextModel" in joined
+    assert f"--model {model}" in joined
     assert "--host 127.0.0.1" in joined
     assert "--port 8123" in joined
     assert f"--dir {tmp_path / 'docs'}" in joined

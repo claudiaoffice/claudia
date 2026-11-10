@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive, watchEffect } from 'vue'
-import { ShellBridge, createShellBridge, detectHandler, tabTitle } from '~/lib/shell-bridge'
+import { ShellBridge, createShellBridge, detectHandler, isApp, tabTitle } from '~/lib/shell-bridge'
 
 function fakeSink() {
   const posted: Record<string, unknown>[] = []
@@ -78,6 +78,87 @@ describe('ShellBridge', () => {
     bridge.reportStates({ 'edit.undo': { enabled: false } })
     bridge.reportStates({ 'edit.undo': { enabled: false } })
     expect(posted).toHaveLength(2) // hello, and the one real action_state
+  })
+})
+
+const WELCOME = (capabilities: string[]) =>
+  JSON.stringify({ type: 'welcome', contract: 1, shell: { name: 'gtk', platform: 'linux', version: '1' }, capabilities })
+const LOCAL = { origin: 'http://127.0.0.1:41233', label: 'This computer', custom: true, local: true }
+const DEMO = { origin: 'https://demo.example.org:8420', label: 'Demo', custom: false }
+
+describe('ShellBridge without an app yet', () => {
+  it('says hello without an app when the page does not know which app its server runs', () => {
+    const { sink, posted } = fakeSink()
+    new ShellBridge(undefined, sink)
+    expect(posted).toEqual([{ type: 'hello', contract: 1 }])
+  })
+  it('knows the three apps', () => {
+    expect(['composes', 'computes', 'creates'].every(isApp)).toBe(true)
+    expect([isApp('claudia'), isApp(''), isApp(undefined)]).toEqual([false, false, false])
+  })
+})
+
+describe('ShellBridge connecting to another server', () => {
+  it('cannot connect before welcome, or when the shell does not offer it', () => {
+    const { sink } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    expect(bridge.canConnect).toBe(false)
+    bridge.receive(WELCOME(['native-menu']))
+    expect(bridge.canConnect).toBe(false)
+    expect(bridge.hasServerList).toBe(false)
+  })
+  it('posts the address as it was typed', () => {
+    const { sink, posted } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    bridge.receive(WELCOME(['connect', 'servers']))
+    expect(bridge.canConnect).toBe(true)
+    bridge.connect('demo.example.org:8420')
+    expect(posted.at(-1)).toEqual({ type: 'connect', address: 'demo.example.org:8420' })
+  })
+  it('tells whoever listens why the shell refused, and listeners can be removed', () => {
+    const { sink } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    const seen: Array<[string, string]> = []
+    const remove = bridge.onConnectFailed((code, message) => seen.push([code, message]))
+    bridge.receive(JSON.stringify({ type: 'connect_failed', code: 'wrong_app', message: 'That server runs Claudia Composes.' }))
+    remove()
+    bridge.receive(JSON.stringify({ type: 'connect_failed', code: 'unreachable', message: 'Could not reach x.' }))
+    expect(seen).toEqual([['wrong_app', 'That server runs Claudia Composes.']])
+  })
+})
+
+describe('ShellBridge server list', () => {
+  it('has no list until the shell sends one, then keeps only well-formed entries', () => {
+    const { sink } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    expect(bridge.servers).toBeNull()
+    bridge.receive(JSON.stringify({ type: 'servers', servers: [LOCAL, DEMO, { origin: 3 }, 'x'] }))
+    expect(bridge.servers).toEqual([LOCAL, DEMO])
+  })
+  it('never sends a list before the shell has sent its own (an empty page must not wipe what the shell keeps)', () => {
+    const { sink, posted } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    bridge.receive(WELCOME(['servers']))
+    bridge.sendServers([DEMO])
+    expect(posted.filter((m) => m.type === 'servers')).toEqual([])
+  })
+  it('sends a changed list back and shows it at once', () => {
+    const { sink, posted } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    bridge.receive(WELCOME(['servers']))
+    bridge.receive(JSON.stringify({ type: 'servers', servers: [LOCAL, DEMO] }))
+    const renamed = [LOCAL, { ...DEMO, label: 'Mine', custom: true }]
+    bridge.sendServers(renamed)
+    expect(posted.at(-1)).toEqual({ type: 'servers', servers: renamed })
+    expect(bridge.servers).toEqual(renamed)
+  })
+  it('sends nothing to a shell that does not keep the list', () => {
+    const { sink, posted } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    bridge.receive(WELCOME(['native-menu']))
+    bridge.receive(JSON.stringify({ type: 'servers', servers: [DEMO] }))
+    bridge.sendServers([DEMO])
+    expect(posted.filter((m) => m.type === 'servers')).toEqual([])
   })
 })
 

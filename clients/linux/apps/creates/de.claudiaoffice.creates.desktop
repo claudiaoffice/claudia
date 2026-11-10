@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Claudia Creates
+GenericName=Presentation
+Comment=Create presentations with an assistant that runs on your own computer
+Exec=claudia-creates
+Icon=de.claudiaoffice.creates
+Terminal=false
+StartupNotify=true
+StartupWMClass=de.claudiaoffice.creates
+Categories=Office;Presentation;GTK;
+Keywords=presentation;slides;talk;design;assistant;

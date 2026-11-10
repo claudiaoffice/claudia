@@ -10,7 +10,10 @@
     { "$ref": "#/$defs/welcome" },
     { "$ref": "#/$defs/action" },
     { "$ref": "#/$defs/action_state" },
-    { "$ref": "#/$defs/error" }
+    { "$ref": "#/$defs/error" },
+    { "$ref": "#/$defs/connect" },
+    { "$ref": "#/$defs/connect_failed" },
+    { "$ref": "#/$defs/servers" }
   ],
   "$defs": {
     "actionId": {
@@ -25,9 +28,9 @@
       "maxLength": 32
     },
     "hello": {
-      "description": "Page to shell, first message: the page says which contract it speaks and which app it shows.",
+      "description": "Page to shell, first message: the page says which contract it speaks and which app it shows. A page that does not know yet which app its server runs (the server asks for a secret before it says) leaves 'app' out; the shell, which was connected to a server of its own app, takes it to be that app.",
       "type": "object",
-      "required": ["type", "contract", "app"],
+      "required": ["type", "contract"],
       "properties": {
         "type": { "const": "hello" },
         "contract": { "type": "integer", "minimum": 1 },
@@ -52,7 +55,7 @@
           }
         },
         "capabilities": {
-          "description": "What this shell offers. 'native-menu': the shell shows File, Edit, Tools and Help itself, the page should not draw its own menu bar. 'actions': the shell sends 'action' messages for its menu.",
+          "description": "What this shell offers. 'native-menu': the shell shows File, Edit, Tools and Help itself, the page should not draw its own menu bar. 'actions': the shell sends 'action' messages for its menu. 'connect': the shell connects to another server when the page sends 'connect' (the page does not navigate there itself: the shell keeps its view on one server's origin). 'servers': the shell keeps the list of servers and sends it as 'servers'; the page sends the list back when it changes.",
           "type": "array",
           "items": { "$ref": "#/$defs/token" },
           "uniqueItems": true
@@ -109,6 +112,56 @@
           "type": "array",
           "items": { "type": "integer", "minimum": 1 }
         }
+      }
+    },
+    "serverEntry": {
+      "description": "One server in the list that the shell remembers for an app. The shape of the web app's own bookmark.",
+      "type": "object",
+      "required": ["origin", "label", "custom"],
+      "properties": {
+        "origin": { "description": "scheme://host[:port], nothing else.", "type": "string", "minLength": 1, "maxLength": 255 },
+        "label": { "type": "string", "maxLength": 128 },
+        "custom": { "description": "True once a person has named it: a refreshed default name no longer replaces it.", "type": "boolean" },
+        "local": { "description": "True for this computer's own server, which the shell adds itself and never remembers.", "type": "boolean" }
+      }
+    },
+    "connect": {
+      "description": "Page to shell: the person asked to connect to the server at this address. The shell checks it (plain http only for this computer, the server answers, it serves this same app, its certificate) and then shows that server in this window, or answers 'connect_failed'.",
+      "type": "object",
+      "required": ["type", "address"],
+      "properties": {
+        "type": { "const": "connect" },
+        "address": { "type": "string", "minLength": 1, "maxLength": 255 }
+      }
+    },
+    "connect_failed": {
+      "description": "Shell to page: the connection asked for with 'connect' was not made. 'message' is written for the person and already translated; 'code' says why.",
+      "type": "object",
+      "required": ["type", "code", "message"],
+      "properties": {
+        "type": { "const": "connect_failed" },
+        "code": {
+          "enum": [
+            "bad_address",
+            "insecure",
+            "unreachable",
+            "not_claudia",
+            "wrong_app",
+            "certificate_expired",
+            "certificate_invalid",
+            "not_trusted"
+          ]
+        },
+        "message": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "servers": {
+      "description": "Either direction. Shell to page: the servers this app remembers, this computer's own first, sent after 'welcome'. Page to shell: the list after the person renamed a server or the page learned a name; it replaces the shell's list, except for this computer's own entry, which the shell never keeps.",
+      "type": "object",
+      "required": ["type", "servers"],
+      "properties": {
+        "type": { "const": "servers" },
+        "servers": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/serverEntry" } }
       }
     }
   }
