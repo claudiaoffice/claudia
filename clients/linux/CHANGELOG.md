@@ -21,6 +21,11 @@ First slice of the native Linux client (epic 5).
 - A GTK-free reader for the facts of a certificate (`x509.py`) and `shell.json` now holds the language, the servers
   and the trusted certificates, each saved without touching the others.
 
+### Fixed
+- A window showed the web app of an earlier visit after the server had been updated: WebKit keeps its HTTP cache
+  between runs and decides for itself how long a page stays fresh. The page cache is now emptied before a server's
+  page is loaded (D248).
+
 ### Changed
 - `ComposesApp`/`ComposesWindow` are `ClaudiaApp`/`ClaudiaWindow`; the window's menus are attached at runtime.
 - The `.deb` is `claudia-office` (replaces `claudia-composes`).

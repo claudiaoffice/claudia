@@ -1,6 +1,6 @@
 """The web page of a Claudia shell: a WebKit web view that shows the frontend of one Claudia server and nothing else.
 
-Five jobs, each one a rule of the shell:
+Six jobs, each one a rule of the shell:
 
 * the page speaks the shell contract itself (D121, ``web/app/lib/shell-bridge.ts``) through one named script message
   handler, registered in the view's main world — the page's own compiled JavaScript posts to it directly, so there is
@@ -13,6 +13,9 @@ Five jobs, each one a rule of the shell:
   trusted for that address (``trust.may_override``); any other certificate problem is a failed load;
 * files the page downloads go to the Downloads folder, under a name the page cannot use to escape it, and never
   overwrite another file;
+* a page is never taken from the HTTP cache of an earlier visit (D248): WebKit keeps that cache on disk between runs and
+  decides for itself how long a page without ``Cache-Control`` stays fresh, so after a server was updated a window could
+  keep showing the previous web app (old menus, no shell contract) — a shell shows what the server serves *now*;
 * the page is not asked for permissions (camera, location, notifications): all requests are denied, and the browser
   features that contact other hosts by themselves (DNS prefetching, WebRTC, media streams) are off.
 
@@ -68,6 +71,8 @@ class WebPage:
         self._on_download = on_download
         self._open_external = open_external or self._launch_default_application
         self._pinned = pinned
+        self._loads = 0  # which load is the newest: a load waits for the cache to be emptied and may be overtaken
+        self._closed = False
 
         # D121: the web app speaks the shell contract itself now (`shell-bridge.ts`) — it calls
         # `window.webkit.messageHandlers.claudia.postMessage(...)` and reads `window.__claudiaShell` from its own,
@@ -114,13 +119,30 @@ class WebPage:
         return self._view
 
     def load(self, url: str) -> None:
-        self._view.load_uri(url)
+        self._load_current(url)
 
     def navigate(self, origin: str) -> None:
         """Show the frontend of the server at ``origin`` instead of the current one. From this moment only that
         origin is internal: messages of the page that was shown before are no longer accepted."""
         self._origin = origin.rstrip("/")
-        self._view.load_uri(self._origin + "/")
+        self._load_current(self._origin + "/")
+
+    def _load_current(self, url: str) -> None:
+        """Load ``url`` after the cached copies of earlier pages are gone. If emptying the cache fails the page is
+        loaded anyway (an old page is worse than none only when we knew about it); a newer call overtakes this one."""
+        self._loads += 1
+        this_load = self._loads
+        types = WebKit.WebsiteDataTypes.DISK_CACHE | WebKit.WebsiteDataTypes.MEMORY_CACHE
+
+        def emptied(manager: WebKit.WebsiteDataManager, result: Gio.AsyncResult) -> None:
+            try:
+                manager.clear_finish(result)
+            except GLib.Error as problem:
+                log.warning("could not empty the page cache: %s", problem.message)
+            if not self._closed and this_load == self._loads:
+                self._view.load_uri(url)
+
+        self._session.get_website_data_manager().clear(types, 0, None, emptied)
 
     def send(self, raw: str) -> None:
         """Hand a shell-contract message to the page, which sets ``window.__claudiaShell`` itself (D121)."""
@@ -132,6 +154,7 @@ class WebPage:
 
     def close(self) -> None:
         """Let go of the shared network session. Call when the window that shows the page is destroyed."""
+        self._closed = True
         if self._download_handler:
             self._session.disconnect(self._download_handler)
             self._download_handler = 0

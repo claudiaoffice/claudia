@@ -172,3 +172,20 @@ and a real self-signed server in WebKit.
 - The "Manage…" button of a server is hidden for servers other than the current one in a shell (the admin pages are on
   the other origin and cannot be opened from here).
 - `hello.app` optional (D246) and the package name (D247).
+
+## A stale page in the shell's cache (D248, 2026-11-10, branch `linux-client-complete`)
+
+**Seen.** After the demo server (Scaleway) was updated, the desktop client showed the old web app: four menus instead of
+seven, the old connection indicator, and — because that page never sent `hello` — the native menus stayed disabled.
+A browser showed the new app from the same address. Emptying WebKit's cache (`~/.cache/.../WebKitCache`) fixed it.
+
+**Cause.** WebKitGTK keeps its HTTP cache on disk between runs; the server sent no `Cache-Control` for the web app, so
+WebKit applied its own freshness guess.
+
+**Fix, two parts.** `SinglePageApp` (server) sends `no-cache` for pages and unhashed files and `immutable` for
+`_nuxt/`; `WebPage._load_current` (shell) empties the disk and memory page cache before `load` and `navigate`.
+
+**Verified here.** `packages/claudia-server/tests/test_server_web.py` (headers, 304, 404). **Not verified:** the shell
+part — `test_webpage.py` has two gtk tests for it (a server that changes its page while allowing an hour of caching),
+not run in the sandbox. Run `xvfb-run -a pytest -m gtk tests/test_webpage.py`. Also unverified: the PyGObject call
+signature of `WebsiteDataManager.clear` with a plain callback.

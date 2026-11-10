@@ -3,6 +3,14 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Changed
+- The built web app is served with `Cache-Control` (D248): pages and every file not named by its content are
+  revalidated on each load (`no-cache`, a cheap `304` when nothing changed), the content-hashed files under `_nuxt/`
+  are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the
+  WebKit view of the Linux client) could show the previous web app for a long time after the server was updated.
+
 ## [0.21.0] - 2026-11-10
 
 Word, Excel and PowerPoint export, one method per app (D212).

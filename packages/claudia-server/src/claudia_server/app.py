@@ -84,13 +84,32 @@ MIN_ACCESS_SECRET = 16
 _CLOSE = {"not_found": 4404, "bad_request": 4400, "unavailable": 1013, "internal": 1011, "sealed": 4423}
 
 
+_REVALIDATE = "no-cache"
+"""Keep a copy, but ask the server before every use (a cheap ``304`` when nothing changed)."""
+_FOR_GOOD = "public, max-age=31536000, immutable"
+"""For files whose name changes with their content: the copy can never be out of date."""
+_HASHED_ASSETS = "_nuxt/"
+"""Where the web build puts the files it names by content hash."""
+
+
 class SinglePageApp(StaticFiles):
     """The built web app. A path that is neither a file nor under /api gets the start page (so a bookmark like
     /budget, or a reload on any address, still ends up on the welcome form); a missing file with an extension stays a
-    404."""
+    404.
+
+    Every answer says how long it may be kept (D248). Without that a client (a browser, the WebKit view of a desktop
+    shell) decides for itself and may show the previous version of the app for a long time after the server was
+    updated.
+    Pages and any file not named by its content are revalidated on each load; the content-hashed files under
+    ``_nuxt/`` are kept for good."""
 
     async def get_response(self, path, scope):
         """The file, or the start page for an address of the app."""
+        response = await self._found_or_start_page(path, scope)
+        response.headers["Cache-Control"] = _FOR_GOOD if path.startswith(_HASHED_ASSETS) else _REVALIDATE
+        return response
+
+    async def _found_or_start_page(self, path, scope):
         try:
             response = await super().get_response(path, scope)
         except StarletteHTTPException as exc:
