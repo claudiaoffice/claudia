@@ -1,4 +1,4 @@
-"""claudia-test-documents: the test-document catalogue's engine (D178).
+"""claudia-test-documents: the test-document catalogue's engine (D218).
 
 The library itself -- the catalogue, the per-feature directories, their ``source.docx``/``spec.py`` pairs -- is
 data, kept at the repo root in ``test-documents/``, not in this package. This package is the part that reads

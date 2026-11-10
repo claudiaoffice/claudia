@@ -1,7 +1,7 @@
 # Claudia — product vision and design notes
 
 Created 2026-11-02 from the owner's notes of that day; moved here 2026-11-05. The decisions taken are D58–D72 in
-`decision-log.md`. This file keeps the reasoning and the owner's own pictures in one place. Where something is
+`decision-log/`. This file keeps the reasoning and the owner's own pictures in one place. Where something is
 Claude's proposal and not yet agreed, it says so.
 
 ## The idea in one paragraph
@@ -103,7 +103,7 @@ software helps the author question the story as well as tell it."*
 
 ## Where the open questions are
 
-See "Open design questions" in `decision-log.md`. Answered: how apps exchange material (D72), where goal and plan live
+See "Open design questions" in `decision-log/`. Answered: how apps exchange material (D72), where goal and plan live
 (D71), the order of file formats (D70). Still open: claim-and-evidence links, how suggestions and the authorship view
 work on the log, the naming of styles, the rendering of Mermaid and LaTeX, the slide template model, and what public
 organisations need.

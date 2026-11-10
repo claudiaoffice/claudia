@@ -1,7 +1,7 @@
-# pptx import/edit/export, and a second format in the test-document library (D179)
+# pptx import/edit/export, and a second format in the test-document library (D219)
 
-Follows D177's docx design, for pptx: `claudia_creates_io.pptx_to_slides` imports, `apply_edits_to_pptx` closes the
-loop by patching an edit back onto the original bytes. The implementation note for D177 explains the general
+Follows D217's docx design, for pptx: `claudia_creates_io.pptx_to_slides` imports, `apply_edits_to_pptx` closes the
+loop by patching an edit back onto the original bytes. The implementation note for D217 explains the general
 shape of the problem (why model-state diffing beat command replay, why a retained original blob beat reopening a
 path); this note is about what pptx's own structure changes.
 
@@ -9,14 +9,14 @@ path); this note is about what pptx's own structure changes.
 
 docx has one big part (`word/document.xml`) holding every paragraph, so `apply_edits_to_docx` always declares
 that one part owned, whatever it actually touched. pptx keeps each slide in its own part
-(`ppt/slides/slideN.xml`), confirmed empirically before writing any code (the same discipline D177 used for
+(`ppt/slides/slideN.xml`), confirmed empirically before writing any code (the same discipline D217 used for
 docx's own save-behaviour surprise): building a three-slide deck with a table on one slide and a picture on
 another, editing one slide's text box and resaving with python-pptx leaves every other slide, every slide layout
 and master, the theme, table styles and the picture's own media part byte-identical, untouched by `save()`
 itself. `apply_edits_to_pptx` takes advantage of this directly -- the parts it tells `reconcile` claudia owns are
 computed fresh each call, from exactly the slides an edit actually reaches (resolved through
 `ppt/presentation.xml` and its relationships, reusing `add_transition`'s own `_slide_part` helper), not one fixed
-part declared once. `reconcile` is kept anyway, as the same defensive stance D177 took: nothing here should
+part declared once. `reconcile` is kept anyway, as the same defensive stance D217 took: nothing here should
 depend on a library's `save()` happening to leave other parts alone, even when, empirically, it does.
 
 ## What becomes an object, and what does not
@@ -79,15 +79,15 @@ widening that contract for a single fixture; left out rather than forced in.
 
 ## Not done, on purpose
 
-- xlsx/odt/ods/odp still have no adapter -- same position D177/D178 already stated, one format closer.
-- No case opts into Tier 3 (`visual`) yet, same reasoning as D178: nothing here has a property only checkable by
+- xlsx/odt/ods/odp still have no adapter -- same position D217/D218 already stated, one format closer.
+- No case opts into Tier 3 (`visual`) yet, same reasoning as D218: nothing here has a property only checkable by
   looking at it.
 - Groups, templates, layouts and images (E10.4, E10.8) are not modeled by `SlideModel` at all yet, so none of
   this reaches them; they stay beyond-claudia content indefinitely until that work lands.
 
 ## Repair: rebased onto the shared object layer (E10.16)
 
-This D179 work was built against the `xlsx-docx-pptx-additive-io` branch at `0792bbe`, before the independent
+This D219 work was built against the `xlsx-docx-pptx-additive-io` branch at `0792bbe`, before the independent
 `shapes-n-images` branch's shared-object-layer round (E10.16, see `implementation-notes-shared-object-layer.md`)
 landed on `main`. Both merged cleanly at the git level -- they touch non-overlapping lines -- but `main` ended up
 with `claudia_creates_io/pptx.py` calling an API that no longer exists: the flat `SlideObject(id, slide, kind, x,
@@ -114,7 +114,7 @@ construction and every field read onto the shape E10.16 actually gave the model:
   resized it does `dataclasses.replace(obj, anchor=SlideAnchor(...)).with_body(w=..., h=...)` -- the same idiom
   `ResizeObject.apply` itself uses in `claudia_core.objects`.
 
-Two of the three `test-documents/docx/*/spec.py` fixtures (D177/D178's own, not D179's) hit the same wall at
+Two of the three `test-documents/docx/*/spec.py` fixtures (D217/D218's own, not D219's) hit the same wall at
 runtime, one step further in: `TextModel.blocks[i].text = "..."` on what is now a frozen `Paragraph` (`Block =
 Paragraph`, D181). `scripts/run_test_documents.py` imports every format's adapter up front, so the broken pptx
 import had been masking this -- it failed first and the docx cases never got the chance to run and hit their own

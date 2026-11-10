@@ -1,8 +1,8 @@
 # Claudia — bug tracker
 
 Moved here from the project context on 2026-11-05 (was `qa-bug-tracker.md`). This file is the tracker; the review that
-produced the current round is `qa-recommendations.md`. Stories are in `backlog.md` (E-numbers), decisions in
-`decision-log.md` (D-numbers).
+produced the current round is `qa-recommendations.md`. Stories are in `Projects/claudia-office/_tasks/` (E-numbers), decisions in
+`decision-log/` (D-numbers).
 
 **Review rounds:** first 2026-11-02 at `f8df891`; second 2026-11-05 at `54d1245` ("E5 desktop clients: linux first
 draft"). Statuses below were re-checked against `54d1245` on 2026-11-05 — every item marked *verified open* or *verified

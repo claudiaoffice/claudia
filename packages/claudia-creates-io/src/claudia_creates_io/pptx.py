@@ -11,7 +11,7 @@ part, so no new parts, relationships or content-type overrides are needed, the s
 ``fade`` is the one the spike checked against LibreOffice; ``wipe`` and ``push`` share the identical empty-element
 shape in the schema and are offered on that basis, not independently checked against a real reader.
 
-``pptx_to_slides`` and ``apply_edits_to_pptx`` close the loop D177 opened for docx, now for pptx (D179): a text box
+``pptx_to_slides`` and ``apply_edits_to_pptx`` close the loop D217 opened for docx, now for pptx (D219): a text box
 or one of the three built-in autoshapes becomes a :class:`~claudia_creates.SlideObject`, and re-exporting an
 *edited* import patches only the slides whose objects actually changed onto the original bytes (through
 ``claudia_opc_io.reconcile``), so a table, a picture, a slide claudia never modeled at all survives untouched. A
@@ -337,7 +337,7 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
     """Re-export ``current`` to pptx by patching only the slides whose objects actually changed since
     ``baseline`` (the model as it stood right after :func:`pptx_to_slides` imported ``original_bytes``) onto
     those same bytes, instead of rebuilding the file from the model alone -- so a table, a picture, any slide
-    claudia never touched survives untouched (D179, following D177's docx design). Unlike docx's single
+    claudia never touched survives untouched (D219, following D217's docx design). Unlike docx's single
     ``word/document.xml``, pptx keeps each slide in its own part, so the parts :func:`claudia_opc_io.reconcile`
     is told claudia owns are exactly the slides an edit actually reaches, computed fresh each call -- every other
     slide, layout, master, theme and media part comes back byte-for-byte as it was, not just semantically

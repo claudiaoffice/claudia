@@ -1,6 +1,6 @@
 """Zip-as-parts: an OPC package (docx/xlsx/pptx, and ods/odt/odp once those are added) is a zip archive of named
 parts. ``read_parts``/``write_parts`` move between that and a plain ``dict[str, bytes]``; nothing here knows or
-cares what any part actually contains -- that is exactly the point (D177)."""
+cares what any part actually contains -- that is exactly the point (D217)."""
 
 from __future__ import annotations
 

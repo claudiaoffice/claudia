@@ -1,5 +1,5 @@
 """A real coworker file (plain text, no tracked changes yet) gets an open suggestion added in claudia and
-re-exported as a native Word tracked change (D177) -- which ``docx_to_text`` cannot reimport, by design
+re-exported as a native Word tracked change (D217) -- which ``docx_to_text`` cannot reimport, by design
 (python-docx's own ``paragraph.text`` already skips a tracked change's text), so the round-trip leg checks the
 raw exported XML directly instead of the reimported model."""
 

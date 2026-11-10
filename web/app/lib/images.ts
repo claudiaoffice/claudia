@@ -1,5 +1,5 @@
 // Reading a picture file for an `add_image`-like method, and showing a decoded `ImageAsset` back: shared by every
-// app that can put a picture on a document (creates and computes today, E10.8/E10.11; composes the same way).
+// app that can put a picture on a document (creates and computes today, E10.8/E6.17; composes the same way).
 // No format sniffing or dimension reading here — the server decodes and validates the bytes
 // (`claudia_core.decode_image`); a browser reads a chosen file's own width/height for free once it is shown as a
 // preview `<img>`, so there is nothing for this module to duplicate beyond getting the bytes across the wire and

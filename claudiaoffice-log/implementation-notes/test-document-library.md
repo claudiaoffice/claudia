@@ -1,6 +1,6 @@
-# The test-document library (D178)
+# The test-document library (D218)
 
-Revisits the test-strategy discussion from before D177 now that a real import/edit/export path (docx) exists to
+Revisits the test-strategy discussion from before D217 now that a real import/edit/export path (docx) exists to
 test against. The design question that drove this: once whole-file byte comparison is ruled out as unrealistic,
 what replaces it, and how does visual comparison work with no PDF/print export yet?
 
@@ -99,7 +99,7 @@ generator ships alongside so nobody has to hand-edit a `.docx` to change or exte
 ## Not done, on purpose
 
 - Only docx is catalogued -- xlsx/pptx/odt/ods/odp have no `apply_edits_fn` yet (D135 covers base export only),
-  so there is nothing for Tier 2/round-trip to run against until each gets its own D177-equivalent.
+  so there is nothing for Tier 2/round-trip to run against until each gets its own D217-equivalent.
 - No case opts into Tier 3 yet (see above) -- kept honest rather than contrived, until a feature actually needs
   it (layout, a pivot table's rendered shape, a transition).
 - The "venn diagram" angle from the original test-strategy discussion (content inside LibreOffice/MS Office's

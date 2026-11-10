@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Edit ▸ Image… (E10.11): choose a picture from disk, describe it, anchor it to the current cell. Only the
+// Edit ▸ Image… (E6.17): choose a picture from disk, describe it, anchor it to the current cell. Only the
 // "browse a file" path, same as creates' own `ImageImportDialog.vue` — clipboard and drag-and-drop import are not
 // built yet. A plain web browser cannot tell us a chosen file's full path (only its name), so `sourcePath` is
 // always null from here; a desktop client that can read the real path would pass it instead, and the server

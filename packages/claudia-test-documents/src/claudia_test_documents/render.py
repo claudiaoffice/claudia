@@ -1,4 +1,4 @@
-"""Tier 3: a visual backstop for a property that is only meaningful as rendered appearance (D178).
+"""Tier 3: a visual backstop for a property that is only meaningful as rendered appearance (D218).
 
 Not run by default (``--visual``), and not a replacement for Tiers 1-2: a table or an image that is missing
 entirely is caught exactly and far more cheaply by :mod:`claudia_test_documents.runner`'s own preserve checks

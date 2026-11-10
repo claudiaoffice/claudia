@@ -108,8 +108,8 @@ class Action:
     editing: str | None = None
     """For :attr:`Kind.EDITING`: the name of the WebKit editing command (``Cut``, ``Copy``, ``Paste``, ...)."""
     role: str | None = None
-    """D158: the Cocoa selector (``copy:``, ``cut:``, ``paste:``, ``undo:``, ``redo:``) a macOS shell puts on this
-    item next to its accelerator. GTK ignores it; it is carried here, rather than kept only in the macOS client, so
+    """The Cocoa selector (``copy:``, ``cut:``, ``paste:``, ``undo:``, ``redo:``) a macOS shell puts on this item
+    next to its accelerator (D158). GTK ignores it; it is carried here, rather than kept only in the macOS client, so
     one manifest stays the single source for every shell (the module docstring's reason for existing at all) and
     ``describe()`` can hand it to a shell that never imports this package (``clients/macos``). Unset for everything
     that is not a standard editing command — macOS has no selector for "paste as plain text" or an app's own
@@ -460,7 +460,7 @@ def computes() -> Manifest:
             _shared_clipboard_block(native=False),
             (_page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document"),),
             (
-                # D130 (Claude's recommendation, not yet confirmed — decision-log.md): grouped into Row ▸ /
+                # D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ /
                 # Column ▸ rather than six flat items, reusing the same submenu mechanism Paste as ▸ already needed.
                 Submenu(
                     "Row",

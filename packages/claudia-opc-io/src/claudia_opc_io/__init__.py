@@ -1,4 +1,4 @@
-"""claudia-opc-io: generic Open Packaging Conventions mechanics shared by every format's io package (D177).
+"""claudia-opc-io: generic Open Packaging Conventions mechanics shared by every format's io package (D217).
 
 package     read_parts/write_parts -- a zip package as a plain dict of its parts, and back
 reconcile   owns/reconcile -- restore whatever a format library's save() was not asked to touch

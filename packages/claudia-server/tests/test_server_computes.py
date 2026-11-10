@@ -313,7 +313,7 @@ def test_inserting_rows_moves_formulas_and_what_they_read(book):
     assert window(book)[(2, 0)] == {"t": "int", "v": 10, "f": "=A2*2"}
 
 
-# -- images and floating objects (E10.11): add_image, move_object, remove_object, and the never-resize guarantee
+# -- images and floating objects (E6.17): add_image, move_object, remove_object, and the never-resize guarantee
 def test_an_image_is_imported_and_anchored_to_a_cell(book):
     call(book, "add_sheet", {"name": "S"})
     added = add_image(book)

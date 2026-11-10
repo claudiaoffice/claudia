@@ -1,4 +1,4 @@
-"""Every enabled entry in the test-document library (``test-documents/``, D178) runs clean as part of the
+"""Every enabled entry in the test-document library (``test-documents/``, D218) runs clean as part of the
 normal gate -- Tiers 1-2 only (no ``soffice``, no network, no catalogue write-back: that is
 ``scripts/run_test_documents.py``'s job, run on purpose, not a side effect of ``pytest``).
 """

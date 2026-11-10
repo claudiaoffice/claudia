@@ -3,7 +3,7 @@ from a sheet the edit never touches at all -- xlsx's own analogue of pptx's beyo
 table: unlike a pptx table (embedded directly in the slide part it shares with the edited text box), a chart's
 definition is never inline in any worksheet's own XML, so this is a whole-part guarantee either way. openpyxl has
 no object model for a pivot chart or a cell's content behind one -- ``xlsx_to_workbook`` cannot see it, same as a
-picture is invisible to ``pptx_to_slides`` (D179)."""
+picture is invisible to ``pptx_to_slides`` (D219)."""
 
 from __future__ import annotations
 

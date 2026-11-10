@@ -1,9 +1,9 @@
 """A picture lives in its own package part (``xl/media/image1.png``), on a sheet the edit never touches at all --
-the mechanic D204's implementation note calls out as the one that actually needs the touched-sheets-only reconcile
+the mechanic D220's implementation note calls out as the one that actually needs the touched-sheets-only reconcile
 strategy: openpyxl mutates an embedded picture's drawing XML on ANY load+resave, even with zero related edits, so
 only owning the edited sheet's own worksheet part (never the whole package) lets this picture's parts survive
 byte-for-byte identical. ``xlsx_to_workbook`` has no model for a picture at all, same as a picture is invisible to
-``pptx_to_slides`` (D179) and a table to ``docx_to_text`` (D177)."""
+``pptx_to_slides`` (D219) and a table to ``docx_to_text`` (D217)."""
 
 from __future__ import annotations
 

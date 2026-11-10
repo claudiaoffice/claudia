@@ -1,4 +1,4 @@
-"""Floating objects anchored to a sheet's cells: images, and the anchor's resistance to structural edits (E10.11)."""
+"""Floating objects anchored to a sheet's cells: images, and the anchor's resistance to structural edits (E6.17)."""
 
 import pytest
 from conftest import S1, add, image_asset, image_import, image_object, move, put_image, reopen

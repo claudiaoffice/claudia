@@ -1,6 +1,6 @@
 """A worksheet's cells and a formula import as a Sheet's typed cell contents, with the formula's computed value
 read back correctly through the model's own calculator; editing one cell leaves the formula -- which recalculates
-against the new value -- and every other cell alone (D204, the xlsx analogue of pptx's shapes-and-text and docx's
+against the new value -- and every other cell alone (D220, the xlsx analogue of pptx's shapes-and-text and docx's
 heading-styles)."""
 
 from __future__ import annotations

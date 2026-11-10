@@ -1,4 +1,4 @@
-"""What one catalogue entry's ``spec.py`` declares about its test case (D178).
+"""What one catalogue entry's ``spec.py`` declares about its test case (D218).
 
 A ``spec.py`` is loaded dynamically (:mod:`claudia_test_documents.loader`) and must define a module-level
 ``CASE = Case(...)``. Every field is optional because a case tests only what it is for: a "beyond claudia"

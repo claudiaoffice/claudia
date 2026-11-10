@@ -2,8 +2,7 @@
 
 refs      CellRef / RangeRef / structural edits (from the demo)
 model     WorkbookModel, CellAnchor, SheetObject, Chart: sheets, typed cells, and this app's own part of an object
-commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, AddChart, RemoveChart (objects and diagram
-          definitions are shared: see ``claudia_core``)
+commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, AddChart, RemoveChart (objects and diagrams: core)
 charts    ChartSpec: what a diagram draws, computes' own ``DiagramDefinition`` (E6.6)
 region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
 styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book

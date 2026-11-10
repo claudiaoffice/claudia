@@ -1,5 +1,5 @@
 """load_case loads each spec.py by its own path -- every one is named the same, so this is the one thing that
-must not get confused by Python's own module cache (D178)."""
+must not get confused by Python's own module cache (D218)."""
 
 from __future__ import annotations
 

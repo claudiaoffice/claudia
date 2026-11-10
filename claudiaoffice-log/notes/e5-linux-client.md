@@ -3,7 +3,7 @@
 Written 2026-11-03; moved here 2026-11-05. What was built for the native Linux client of **composes**, how it was
 checked, what deviates from the plan, and the decisions that came from it. The decisions were originally proposed as
 D97–D103 and collided with the typesetting decisions of the same numbers; they are now **D113–D119** in
-`decision-log.md`.
+`decision-log/`.
 
 Code: `clients/linux/` (package `claudia-shell-gtk`) and `clients/contract/` (the shell contract). Human
 documentation: `clients/linux/README.md` and `clients/contract/README.md`, both also in the Sphinx docs.

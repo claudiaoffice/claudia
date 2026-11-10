@@ -11,8 +11,8 @@ layer openpyxl itself writes to, not a fork of it. The result is read as a norma
 LibreOffice, and survives an openpyxl load-edit-save round trip (the library renumbers the relationship id but keeps
 it internally consistent).
 
-``xlsx_to_workbook`` and ``apply_edits_to_xlsx`` close the loop D177 opened for docx and D179 closed for pptx, now
-for xlsx (D204): a worksheet becomes a :class:`~claudia_computes.Sheet` of cell contents, and re-exporting an
+``xlsx_to_workbook`` and ``apply_edits_to_xlsx`` close the loop D217 opened for docx and D219 closed for pptx, now
+for xlsx (D220): a worksheet becomes a :class:`~claudia_computes.Sheet` of cell contents, and re-exporting an
 *edited* import patches only the sheets whose cells actually changed onto the original bytes (through
 ``claudia_opc_io.reconcile``), so a chart, an embedded image, a sheet claudia never touched survives untouched. The
 reconcile strategy owns only the touched sheets' own worksheet XML parts, never ``xl/styles.xml`` or
@@ -95,7 +95,7 @@ def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
     """``xlsx_bytes`` as a :class:`~claudia_computes.WorkbookModel`: one sheet per worksheet, in order, each
     non-empty cell becoming a constant or formula content. Styles, number formats, charts, pivot tables, images
     and anything else a worksheet can carry are simply not modeled -- claudia has no model for them, same as a
-    table is invisible to ``docx_to_text`` (D177) or a picture to ``pptx_to_slides`` (D179)."""
+    table is invisible to ``docx_to_text`` (D217) or a picture to ``pptx_to_slides`` (D219)."""
     wb = openpyxl.load_workbook(BytesIO(xlsx_bytes))
     model = WorkbookModel()
     for index, name in enumerate(wb.sheetnames, start=1):
@@ -121,7 +121,7 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
     """Re-export ``current`` to xlsx by patching only the sheets whose cells actually changed since ``baseline``
     (the model as it stood right after :func:`xlsx_to_workbook` imported ``original_bytes``) onto those same
     bytes, instead of rebuilding the file from the model alone -- so a chart, an embedded image, a sheet claudia
-    never touched survives untouched (D204, following D177's docx and D179's pptx design). The parts
+    never touched survives untouched (D220, following D217's docx and D219's pptx design). The parts
     :func:`claudia_opc_io.reconcile` is told claudia owns are exactly the touched sheets' own worksheet XML
     parts, resolved fresh each call through ``xl/workbook.xml`` and its rels -- never ``xl/styles.xml`` or
     ``xl/sharedStrings.xml`` (see this module's own docstring for why that is safe without the per-entry merge

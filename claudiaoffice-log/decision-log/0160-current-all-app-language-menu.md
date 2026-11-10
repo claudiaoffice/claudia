@@ -1,0 +1,16 @@
+---
+id: D160
+title: "`Config ▸ App Language` lists `manifest.LANGUAGES`/`web/app/lib/i18n.ts`'s `LANGUAGES` (`[('en', 'English'), ('de', 'Deutsch')]`, kept in sync by hand) as…"
+status: current
+applies-to: all
+date: 2026-11-07
+round: "App Language, the first real catalog (twenty-ninth round)"
+supersedes: []
+superseded-by: []
+---
+
+# D160 · `Config ▸ App Language` lists `manifest.LANGUAGES`/`web/app/lib/i18n.ts`'s `LANGUAGES` (`[('en', 'English'), ('de', 'Deutsch')]`, kept in sync by hand) as…
+
+**`Config ▸ App Language` lists `manifest.LANGUAGES`/`web/app/lib/i18n.ts`'s `LANGUAGES` (`[('en', 'English'), ('de', 'Deutsch')]`, kept in sync by hand) as one checkable action per entry, each showing its own autonym, never translated.** Scope for this round, confirmed with the owner via `AskUserQuestion`: every manifest menu/action label and tooltip (all three apps, both shells) plus one hand-picked pair outside the manifest — `SidePanel.vue`'s "History"/"Chat" headers — all now flow through `_()`/`t()`, with a real `po/de.po` behind them (146 msgids). Compiled with a new pure-Python `scripts/compile_mo.py` (D160) rather than system `msgfmt`, which is not on every contributor's machine or in this project's own sandboxes; reuses `po_to_json.py`'s existing `.po` parser rather than a second one. `scripts/extract_i18n.py` gained a third extraction technique, walking the already-built `Manifest`/`Menu`/`Submenu`/`Action` objects directly (`extract_manifest`) rather than parsing `manifest.py`'s source, since its menu/action data is built as Python objects, not written as `_("...")` calls. The two shells apply a language switch differently, also confirmed with the owner: the **web page's own UI switches live**, no restart, in the browser and inside the GTK shell alike (`useI18n()` reloads the chosen locale's catalog and re-renders); the **GTK shell's native chrome (menu bar labels, title text) only re-translates on next launch** — the choice is persisted (`settings.py`'s `shell.json`, one key) and read back by `__main__.py`'s `_resolve_locale()` before the window is built, rather than live-retranslating a running `Gtk.Application`'s already-built menu XML.
+
+**Notes.** Mutual exclusion between the language entries is enforced nowhere in the data — just `LANGUAGES`-many independent checkable actions whose `checked` all derive from the one `locale` ref/`Context.locale`-equivalent, the same primitive `view.dark` already uses (`manifest.py`'s and `i18n.ts`'s own docstrings); `window.py`'s `set_action_states` needed no special case. **Noticed, not fixed:** `manifest.py`'s English labels are GNOME HIG Title Case ("Paste As", "Dark Mode") while the web app's are sentence case ("Paste as", "Dark mode") for the same ~28 menu items, a pre-existing, systematic split (unrelated to D130–D131's native-chrome work) that this round left alone — in scope here was switching the client's language, not normalizing its English; both forms are translated identically in `po/de.po` so German is unaffected either way. CI gained a new "mo compilation" gate (`check_debt.py`, mirroring "i18n extraction") now that `po/de.po` is real content worth protecting from drift; `po/xx.po`'s pseudolocale was regenerated to match the larger `claudia.pot`.

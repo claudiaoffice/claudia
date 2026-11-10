@@ -50,7 +50,7 @@ export interface ObjectBody {
   diagram: string | null
   /** Whole degrees clockwise. Persisted and validated by the model; no client surface yet. */
   rotation: number
-  /** Whether this object holds to the grid (E10.15, D151): the document's own state, set with `setSnap`. The
+  /** Whether this object holds to the grid (E10.15, D214): the document's own state, set with `setSnap`. The
    * grid itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is
    * shown. */
   snap: boolean

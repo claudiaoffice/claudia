@@ -9,8 +9,10 @@
    no flag arguments that switch behaviour, no hidden state. Comments explain *why*. If code needs a long comment
    to be understood, change the code.
 3. **The code is the documentation.** Every public class, function and method has a docstring; the API reference
-   (`docs/`) is generated from them with Sphinx. Design decisions go to the decision log of the project, not into
-   code comments.
+   (`docs/`) is generated from them with Sphinx. Design decisions go to the decision log
+   (`claudiaoffice-log/decision-log/`, one file per decision, numbers from `ranges.md`), not into code comments;
+   stories go to the backlog (`claudiaoffice-log/Projects/claudia-office/_tasks/`). `claudiaoffice-log/README.md`
+   explains both.
 4. **APIs are versioned and documented.** What a package lists in `__all__` is its public API. A change to it needs a new
    version, a changelog entry and a regenerated snapshot (`docs/versioning.md`). The network API is versioned in its URL.
 5. **Debt is looked for regularly.** `uv run python scripts/check_debt.py` runs lint, types, dead-code detection,

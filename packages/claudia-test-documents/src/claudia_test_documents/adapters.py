@@ -1,4 +1,4 @@
-"""Per-format adapters: the two functions the runner needs from a format's own io package (D178).
+"""Per-format adapters: the two functions the runner needs from a format's own io package (D218).
 
 A format with no ``apply_edits_fn`` yet (every format except docx, today) can still be catalogued for Tier 1
 (import) checks; the runner reports the round-trip and preserve stages as ``"skipped"`` rather than failing a
@@ -29,8 +29,8 @@ class Adapter:
 
 
 #: One entry per format the catalogue can test. odt/ods/odp are not here yet -- there is no adapter to register
-#: until each gets its own real import and edit-and-reexport path, the same way docx (D177), pptx (D179) and now
-#: xlsx (D204) did.
+#: until each gets its own real import and edit-and-reexport path, the same way docx (D217), pptx (D219) and now
+#: xlsx (D220) did.
 ADAPTERS: dict[str, Adapter] = {
     "docx": Adapter(import_fn=docx_to_text, apply_edits_fn=apply_edits_to_docx),
     "pptx": Adapter(import_fn=pptx_to_slides, apply_edits_fn=apply_edits_to_pptx),

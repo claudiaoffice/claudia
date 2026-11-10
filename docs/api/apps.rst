@@ -17,6 +17,11 @@ computes
 .. autoclass:: claudia_computes.RemoveSheet
 .. autoclass:: claudia_computes.CellRegion
 .. autoclass:: claudia_computes.CellAnchor
+.. autoclass:: claudia_computes.Chart
+.. autoclass:: claudia_computes.ChartSpec
+.. autoclass:: claudia_computes.ChartError
+.. autoclass:: claudia_computes.AddChart
+.. autoclass:: claudia_computes.RemoveChart
 
 ``SheetObject`` is ``VisualObject[CellAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor.
 The object commands, region and events are shared by all three apps (:doc:`claudia_core`, E10.16, D177).
@@ -54,6 +59,11 @@ Types that appear in the signatures above:
 
 Import/export
 ~~~~~~~~~~~~~~
+
+Every format package shares the Open Packaging Conventions mechanics of ``claudia_opc_io`` (D217):
+
+.. automodule:: claudia_opc_io
+   :members:
 
 A base xlsx export and one additive extension openpyxl itself cannot write, pivot tables (D135):
 

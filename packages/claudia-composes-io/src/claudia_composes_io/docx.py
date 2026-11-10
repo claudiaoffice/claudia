@@ -1,5 +1,5 @@
 """Converting between a :class:`~claudia_composes.TextModel` and docx, with open suggestions as native tracked
-changes, and a real edit-and-reexport path that keeps what claudia never modeled (D135, D177).
+changes, and a real edit-and-reexport path that keeps what claudia never modeled (D135, D217).
 
 ``text_to_docx`` is a minimal base export (paragraphs, built-in styles mapped to Word's own) -- not the ODF-first,
 loss-reporting import/export story of E9.5 (D5, D70). What it adds beyond the base is the additive extension the
@@ -10,7 +10,7 @@ appending them to the paragraph's element. A suggestion becomes something a revi
 like any other tracked change, even though Claudia's own UI shows it as a suggestion.
 
 ``docx_to_text`` is the reverse: a docx's paragraphs become a :class:`TextModel`, Word's built-in styles mapped
-back. ``apply_edits_to_docx`` closes the loop D177 set out to fix: re-exporting an *edited* imported document by
+back. ``apply_edits_to_docx`` closes the loop D217 set out to fix: re-exporting an *edited* imported document by
 patching only the changed paragraphs onto the original bytes (through ``claudia_opc_io.reconcile``), instead of
 rebuilding the file from the model alone and losing everything claudia never modeled -- a table, an image, a
 custom style. See the implementation note for what it does not cover yet (adding or removing a paragraph).
@@ -111,11 +111,11 @@ def _tracked_change(
 
 
 def docx_to_text(docx_bytes: bytes) -> TextModel:
-    """``docx_bytes`` as a :class:`TextModel`: one block per paragraph, in order, Word's built-in styles mapped
-    back to claudia's (anything else -- "Normal", a custom style, no style at all -- becomes body text, the
-    same fallback ``text_to_docx`` uses going the other way). A tracked change's own text is not seen here:
-    python-docx's own ``paragraph.text`` already skips it (only runs that are direct children of the paragraph
-    count), and re-importing an existing tracked change is not this slice's job."""
+    """``docx_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph, in order, Word's
+    built-in styles mapped back to claudia's (anything else -- "Normal", a custom style, no style at all --
+    becomes body text, the same fallback ``text_to_docx`` uses going the other way). A tracked change's own text
+    is not seen here: python-docx's own ``paragraph.text`` already skips it (only runs that are direct children
+    of the paragraph count), and re-importing an existing tracked change is not this slice's job."""
     document = Document(BytesIO(docx_bytes))
     blocks = []
     for index, paragraph in enumerate(document.paragraphs, start=1):
@@ -132,7 +132,7 @@ def apply_edits_to_docx(
     """Re-export ``current`` to docx by patching only what changed since ``baseline`` (the model as it stood
     right after :func:`docx_to_text` imported ``original_bytes``) onto those same bytes, instead of rebuilding
     the file from the model alone -- so a table, an image, a custom style, anything claudia never modeled,
-    survives untouched (D177). Reopens ``original_bytes`` fresh, rewrites the paragraphs whose text or style
+    survives untouched (D217). Reopens ``original_bytes`` fresh, rewrites the paragraphs whose text or style
     changed (and any block an open suggestion now touches, rendered as a tracked change same as
     ``text_to_docx``), then calls :func:`claudia_opc_io.reconcile` so every other part of the package -- and
     every paragraph this call did not touch -- comes back exactly as it was.

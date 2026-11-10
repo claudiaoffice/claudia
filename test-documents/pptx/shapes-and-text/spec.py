@@ -1,6 +1,6 @@
 """A text box and the two autoshapes claudia ships (circle, rectangle) import as objects on the right slides,
 with their position and size read back exactly; editing one object's text and moving/resizing another leaves
-every other object alone (D179, the pptx analogue of docx's heading-styles case)."""
+every other object alone (D219, the pptx analogue of docx's heading-styles case)."""
 
 from __future__ import annotations
 

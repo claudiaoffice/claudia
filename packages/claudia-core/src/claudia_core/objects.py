@@ -145,7 +145,7 @@ class ObjectBody:
     :class:`~claudia_core.ImageAsset` and ``imported`` the record of how that image got there. ``diagram`` is the
     id of a :class:`DiagramDefinition` the document knows (E6.6) — opaque to the kernel, the way an anchor is.
     ``rotation`` is whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15,
-    D151): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
+    D214): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
     document state."""
 
     id: str
@@ -1454,7 +1454,7 @@ class SetParagraphStyle(Command):
 @core_commands.register
 @dataclass(frozen=True)
 class SetSnap(Command):
-    """Hold or release an object's snap to the grid (E10.15, D151). The grid itself is only a helper the view
+    """Hold or release an object's snap to the grid (E10.15, D214). The grid itself is only a helper the view
     draws, never part of the document, but whether an object follows it is a real, persisted choice with its own
     history entry — so it keeps holding (or not) even if the grid is hidden, and survives for everyone who opens
     the document."""

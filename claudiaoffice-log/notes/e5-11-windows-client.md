@@ -283,7 +283,7 @@ it is confirming the actual delay and, if AV scanning is it, either accepting th
 6. **`nativeAllowList` trimmed to four exact method names** (`app.exit`, `window.setMainMenu`, `window.print`,
    `events.on`) — two fewer than macOS's six, because there is no `file-dialog.ts` here and so no
    `os.showOpenDialog`/`filesystem.readBinaryFile` call to allow (see point 7). `filesystemScopes` stays empty.
-7. **No `file-dialog.ts` (D160) — a reasoned omission, not yet confirmed.** macOS needs this module because
+7. **No `file-dialog.ts` (D216) — a reasoned omission, not yet confirmed.** macOS needs this module because
    WKWebView shows no native Open panel for `<input type="file">` without a WKUIDelegate method Neutralino's
    generic binary does not implement. WebView2, the engine behind Neutralino's Windows binary, is Chromium, and
    Chromium has had its own native `<input type="file">` picker since long before Neutralino existed — so the
@@ -308,7 +308,7 @@ run narrowed this list, everything below is still exactly as open as it was befo
 
 1. **D159's core mechanic on Windows** — expected to carry over unchanged from macOS's confirmed result, not
    independently confirmed.
-2. **D160's hypothesis**: whether `<input type="file">` truly needs no workaround on WebView2.
+2. **D216's hypothesis**: whether `<input type="file">` truly needs no workaround on WebView2.
 3. **The native-menu-plus-page-dispatch interaction** on composes' actual document editor, not just a generic text
    field.
 4. **What happens to the server if the Neutralino window is killed outright** (D161) — untested, and, per

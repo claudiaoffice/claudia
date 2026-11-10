@@ -1,8 +1,8 @@
 """Reconcile two versions of the same OPC package: the original bytes an app wrote, and a "naive" rewrite a
 format library just produced from it after one or more edits. ``reconcile`` keeps the naive rewrite's bytes for
 parts the caller says claudia meant to touch (``owned``), and restores every other part's bytes from the
-original -- because a library's ``save()`` is a whole-package operation (D177; see
-claudiaoffice-log/decision-log.md): nothing here can assume it leaves alone what it did not need to change, the
+original -- because a library's ``save()`` is a whole-package operation (D217; see
+claudiaoffice-log/decision-log/): nothing here can assume it leaves alone what it did not need to change, the
 same way openpyxl's own save() silently dropped a pivot table it never touched.
 
 This first version reconciles whole parts only. A part that is itself a shared, indexed table referenced from

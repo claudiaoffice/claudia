@@ -183,7 +183,7 @@ const outlines = computed(() => {
 })
 
 // ------------------------------------------------------------------------------ floating objects (images)
-/** Selecting an image is local to this view (not shared with colleagues, unlike cell presence): E10.11 only
+/** Selecting an image is local to this view (not shared with colleagues, unlike cell presence): E6.17 only
  * asked that an image never resizes on a structural edit and takes click priority over the cells beneath it. */
 const selectedObject = ref<string | null>(null)
 

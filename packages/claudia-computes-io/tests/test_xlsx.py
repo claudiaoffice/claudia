@@ -145,7 +145,7 @@ def test_apply_edits_leaves_an_untouched_sheet_byte_identical():
 
 def test_apply_edits_preserves_an_image_on_an_untouched_sheet():
     # openpyxl mutates an embedded picture's drawing XML on ANY load+resave, even with zero related edits --
-    # a pure round-trip artifact, confirmed empirically (D204's implementation note). Only owning the touched
+    # a pure round-trip artifact, confirmed empirically (D220's implementation note). Only owning the touched
     # sheet's own worksheet part (never the whole package) is what lets this survive byte-identical.
     wb = openpyxl.Workbook()
     data_sheet = wb.active

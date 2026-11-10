@@ -41,7 +41,7 @@ export function indicatorLabel(label: string, status: ConnectionStatus): string 
 }
 
 /** Whether "Manage this server…" should be a live link right now, rather than an inert, dimmed one — true only
- * once the connection is actually open. A different question from D163's gate (viewer permission, deliberately
+ * once the connection is actually open. A different question from D171's gate (viewer permission, deliberately
  * left unchecked since this component can't verify it without a cross-origin fetch): this one the component
  * already has the answer to, for free, in `state.status` — so there is no reason to show an action that implies
  * the server is reachable right next to a status line saying it currently is not. */

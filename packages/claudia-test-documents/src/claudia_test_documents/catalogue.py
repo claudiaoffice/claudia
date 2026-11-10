@@ -1,5 +1,5 @@
 """The catalogue: the single file deciding which test documents exist and get run, plus the status of their last
-run (D178). A ``source.docx``/``spec.py`` pair sitting on disk with no entry here is not part of the library --
+run (D218). A ``source.docx``/``spec.py`` pair sitting on disk with no entry here is not part of the library --
 staged, not wired in.
 
 Two writers share one file: a person hand-edits every field except ``last_run``, which only

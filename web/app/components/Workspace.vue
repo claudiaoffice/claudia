@@ -355,7 +355,7 @@ async function checkpoint(label: string | null) {
   grid.value?.focus()
 }
 
-// ------------------------------------------------------------------------------ images (E10.11)
+// ------------------------------------------------------------------------------ images (E6.17)
 const IMAGE_HEIGHT = 240 // pixels; an image is sized to this height and whatever width keeps its own aspect
 
 /** Anchor a new image at the current selection's top-left cell, sized to keep its own aspect (the server rejects
@@ -380,10 +380,16 @@ function anchorForChart() {
   return { row: b.value.r0, col: b.value.c0, w: CHART_WIDTH, h: CHART_HEIGHT }
 }
 
-function chartInserted(id: string) {
+/** The insert dialog places a chart as a floating object or as a tab of its own (D204): select the object, or
+ * show the tab. */
+function chartInserted(objectId: string | null, chartId: string | null) {
   dialog.value = null
-  grid.value?.selectObject(id)
-  grid.value?.focus()
+  if (objectId) {
+    grid.value?.selectObject(objectId)
+    grid.value?.focus()
+  } else if (chartId) {
+    activeChart.value = chartId
+  }
 }
 
 function ask(text: string) {
@@ -482,7 +488,7 @@ const menus = computed<Menu[]>(() => [
       { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
       { id: 'edit.chart', label: t('Chart…'), action: () => (dialog.value = 'chart'), disabled: readonly.value },
       { label: '', separator: true },
-      // D130 (Claude's recommendation, flagged unconfirmed in decision-log.md): grouped into Row ▸ / Column ▸ rather
+      // D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ / Column ▸ rather
       // than six flat items, reusing the submenu mechanism Edit ▸ Paste as ▸ already needed.
       {
         id: 'edit.row',

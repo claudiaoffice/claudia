@@ -1,10 +1,10 @@
-"""claudia-composes-io: docx import/export for the text app, outside the kernel (E9.5, D147, D177).
+"""claudia-composes-io: docx import/export for the text app, outside the kernel (E9.5, D147, D217).
 
 This is a first slice, not the ODF-first import/export story of E9.5 (D5, D70): a minimal base export
 (``text_to_docx``) with tracked changes as an additive extension python-docx itself cannot write (D147), a real
 import (``docx_to_text``), and an edit-and-reexport path (``apply_edits_to_docx``) that patches only what
 changed onto the original bytes instead of rebuilding from the model alone, so content claudia never modeled
-survives (D177). odfdo is not a dependency yet: nothing here is ODF, and D70 wants odt before docx when that
+survives (D217). odfdo is not a dependency yet: nothing here is ODF, and D70 wants odt before docx when that
 story is built.
 
 docx   text_to_docx, docx_to_text, apply_edits_to_docx, UnsupportedEdit

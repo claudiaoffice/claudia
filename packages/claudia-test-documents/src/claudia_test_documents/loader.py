@@ -1,4 +1,4 @@
-"""Loading a catalogue entry's ``spec.py`` (D178).
+"""Loading a catalogue entry's ``spec.py`` (D218).
 
 Every entry's spec file is named ``spec.py`` -- that is the point of the catalogue (the directory layout is for
 people browsing the library, not for Python's import system) -- so a plain ``import spec`` would have every

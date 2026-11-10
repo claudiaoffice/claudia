@@ -61,6 +61,8 @@ An object is a shared body and a per-app anchor; everything but the anchor is wr
 .. autoclass:: claudia_core.ObjectsChanged
 .. autoclass:: claudia_core.ImagesChanged
 .. autoclass:: claudia_core.ShapesChanged
+.. autoclass:: claudia_core.DiagramDefinition
+.. autoclass:: claudia_core.DiagramsChanged
 
 The object commands, the same in all three apps:
 
@@ -78,6 +80,9 @@ The object commands, the same in all three apps:
 .. autoclass:: claudia_core.ForgetShape
 .. autoclass:: claudia_core.DefineImage
 .. autoclass:: claudia_core.ForgetImage
+.. autoclass:: claudia_core.DefineDiagram
+.. autoclass:: claudia_core.UpdateDiagram
+.. autoclass:: claudia_core.ForgetDiagram
 
 Shape outlines
 --------------

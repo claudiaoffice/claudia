@@ -1,4 +1,4 @@
-# claudia-opc-io, and a first real docx import/edit/export (D177)
+# claudia-opc-io, and a first real docx import/edit/export (D217)
 
 A new workspace package, `claudia-opc-io`, and `claudia-composes-io` built on top of it for a first real docx
 import-and-reexport path — the design the preceding multi-round discussion settled on: diff model *state* (not

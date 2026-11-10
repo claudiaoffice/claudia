@@ -1,5 +1,5 @@
 """Regenerates every checked-in ``source.docx``/``source.pptx``/``source.xlsx`` in this library, deterministically
-(D178, D179, D204).
+(D218, D219, D220).
 
 A test document is checked in as a real, openable binary -- not just a Python function that builds one on the
 fly, the way every other format test in this repo does -- because the whole point of a *library* is files a

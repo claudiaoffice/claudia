@@ -1,7 +1,7 @@
 # Fonts and typesetting libraries — E3.3, E3.4, E3.10
 
 Built 2026-11-03 as two packages outside the kernel (D89): `claudia-fonts` 0.1.0 and `claudia-typeset` (0.1.0, then
-0.2.0 the same day). Moved here 2026-11-05. Decisions D89–D99 are in `decision-log.md`. Both packages are in the uv
+0.2.0 the same day). Moved here 2026-11-05. Decisions D89–D99 are in `decision-log/`. Both packages are in the uv
 workspace, in the API snapshot, in the Sphinx site and in the quality gate.
 
 ## How the two fit together

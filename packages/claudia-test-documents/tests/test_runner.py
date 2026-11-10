@@ -1,4 +1,4 @@
-"""run_case's own logic, against a fake format so these tests need no real office file (D178): a fake document
+"""run_case's own logic, against a fake format so these tests need no real office file (D218): a fake document
 is just a zip of two text parts, ``doc.txt`` (what the fake model holds) and ``untouched.txt`` (what a
 preserve check should catch going missing). Real formats are exercised by the real catalogue instead
 (``tests/test_test_documents_catalogue.py`` at the repo root).

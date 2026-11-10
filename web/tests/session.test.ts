@@ -242,7 +242,7 @@ describe('cells', () => {
   })
 })
 
-describe('floating objects (images, E10.11)', () => {
+describe('floating objects (images, E6.17)', () => {
   it('loads the decoded pictures and the objects of every sheet, on top of the cells', async () => {
     const link = new FakeLink()
     server(link)

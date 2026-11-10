@@ -1,4 +1,4 @@
-"""Running one catalogue entry through the three tiers (D178): import checks, an edit-and-reexport round trip,
+"""Running one catalogue entry through the three tiers (D218): import checks, an edit-and-reexport round trip,
 targeted preservation, and (opt-in) the visual backstop. See :mod:`claudia_test_documents.case` for what a
 ``spec.py`` declares and :mod:`claudia_test_documents.adapters` for what a format needs to support which stages.
 """

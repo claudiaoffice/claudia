@@ -56,7 +56,7 @@ MAX_ROW_HEIGHT = 1_000
 MIN_COL_WIDTH = 16
 MAX_COL_WIDTH = 2_000
 
-# Floating objects anchored to a cell (E10.11, E10.16): a shared ``ObjectBody`` plus a ``CellAnchor``. The
+# Floating objects anchored to a cell (E6.17, E10.16): a shared ``ObjectBody`` plus a ``CellAnchor``. The
 # body — kind, size, style, text, shape, image, rotation, snap — is ``claudia_core``'s and the same in all three
 # apps; the anchor is the only part that is a sheet's own.
 #
@@ -342,7 +342,7 @@ class Sheet:
 
 class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     app: ClassVar[str] = "computes"
-    # 3: the workbook also carries images and objects anchored to cells (E10.11)
+    # 3: the workbook also carries images and objects anchored to cells (E6.17)
     # 4: objects are a shared body plus a CellAnchor, and the workbook carries a style book (E10.16)
     # 5: the workbook carries its own colour palette (D200)
     # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
@@ -367,9 +367,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         #: The colours of this workbook, by what they mean. Part of the document, so it looks the same on
         #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
         self.palette: Palette = palette if palette is not None else builtin_palette()
-        #: Chart tabs, in tab order (E6.6): a name plus the id of the diagram definition (``self.diagrams``,
-        #: from :class:`~claudia_core.ObjectModel`) it shows. A floating diagram object may show the very same
-        #: definition — see ``Chart``'s own docstring.
+        #: The chart tabs in tab order (E6.6), each a name plus the id of the diagram definition
+        #: (``self.diagrams``, from :class:`~claudia_core.ObjectModel`) it shows. A floating diagram object may
+        #: show the very same definition — see ``Chart``'s own docstring.
         self.charts: dict[str, Chart] = {}
 
     @classmethod

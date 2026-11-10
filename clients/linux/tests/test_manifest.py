@@ -211,7 +211,7 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
 
 
 def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(computes: manifest.Manifest) -> None:
-    """D123 (where new items land) and D130 (Claude's recommendation — not yet confirmed, decision-log.md — grouped
+    """D123 (where new items land) and D130 (confirmed by the owner 2026-11-10 — grouped
     into two submenus of three items each, not six flat items)."""
     edit = computes.menu("Edit")
     tail = entries(edit)[6:]  # past the shared Undo…Paste-as block

@@ -2,8 +2,10 @@
 
 ``e4-e6-formulas-notes.md`` once described point-and-click cell references as built on 2026-11-03, naming
 ``web/app/lib/pointing.ts`` and two test files; none of it was in any commit on any branch — the patch had not been
-pushed, and nothing caught it until this was checked by hand. The rule going forward: status lives in `backlog.md`
-and is derived from the code, and a note never gets to outrun the commit that proves its claim.
+pushed, and nothing caught it until this was checked by hand. The rule going forward: status lives in the backlog
+(`claudiaoffice-log/Projects/claudia-office/_tasks/`) and is derived from the code, and a note never gets to outrun
+the commit that proves its claim. A path that exists on another branch only is written `branch:path`, which this
+check does not read as a claim about the tree.
 
 This is the cheap guard the fix asked for: every paragraph in `claudiaoffice-log/` that says "built" and names a
 root-relative path (`web/…`, `packages/…`, `clients/…`, `scripts/…`, `docs/…`) must have that path actually in the

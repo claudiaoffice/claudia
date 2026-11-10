@@ -46,7 +46,7 @@ export interface FunctionSummary {
 export interface FunctionHelp extends FunctionSummary {
   help: string
 }
-/** A floating object anchored to a cell of a sheet (E10.11, E10.16): the shared `ObjectBody` plus a
+/** A floating object anchored to a cell of a sheet (E6.17, E10.16): the shared `ObjectBody` plus a
  * `CellAnchor` — the only part of it that is this app's own (D177). `anchor.row`/`anchor.col` pin its top left
  * corner; `w`/`h` are its pixel size. Neither the anchor nor the size ever changes because of a structural edit
  * (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject` (dragging it) moves it and
@@ -409,7 +409,7 @@ export class Session extends BaseSession<State> {
 
   // -- floating objects (images, today): anchored to a cell, a fixed pixel size, never touched by `structure`
   // or `resizeLines`
-  /** Import a picture from disk and anchor it to a cell of the sheet that is shown (E10.11); its id, or null
+  /** Import a picture from disk and anchor it to a cell of the sheet that is shown (E6.17); its id, or null
    * after telling the person why not. `data` is the file's bytes, base64 (`lib/images.ts`'s `fileToBase64`);
    * `sourcePath` is the file's full path if the caller could get one — a plain web browser cannot, and passes
    * `null`. `anchor` fixes the object's cell and its pixel size for good: there is no resize yet, and no

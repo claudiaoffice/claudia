@@ -15,7 +15,7 @@ An object is a shared ``ObjectBody`` plus a ``CellAnchor`` (E10.16): the body �
 image, rotation, snap — travels the wire identically in all three apps, and only ``anchor`` differs, as
 ``{"kind": "cell", "container": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
 anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
-to another cell) moves it, and ``resize_object`` resizes it (E10.11).
+to another cell) moves it, and ``resize_object`` resizes it (E6.17).
 
 A chart (E6.6) is a :class:`~claudia_computes.ChartSpec` *definition* — a cell range plus how to read it and its
 titles — shown as a floating ``"diagram"`` object (``add_diagram_object``), a tab (``add_chart``), or both from

@@ -7,7 +7,7 @@ import type { ImageAsset, ImageImport } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 
-// `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
+// `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
 export type { ImageAsset, ImageImport } from './images'
 export type { ColourRole, ObjectBody, PaletteEvent, Reading, SlideAnchor, StyleDef, VisualObject } from './objects'

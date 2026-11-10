@@ -1,7 +1,7 @@
 # Implementation notes
 
 Moved from the project context on 2026-11-05. One file per epic or theme; the project context is no longer the place
-for these. Companion files one level up: `backlog.md` (stories, E-numbers), `decision-log.md` (D-numbers, including the
+for these. Companion files one level up: `Projects/claudia-office/_tasks/` (stories, E-numbers), `decision-log/` (D-numbers, including the
 renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-recommendations.md`.
 
 | File | Covers | Written |
@@ -47,4 +47,4 @@ limitations" sections are the valuable part and should not be trimmed when a not
 
 One rule added after this round (see PROC-03 in `bugtracker.md`): **a note may only say a thing is built when a commit
 carries it.** `e4-e6-formulas.md` claimed a feature that exists in no commit on any branch, and the claim survived
-because nobody checked it against the tree. Status belongs in `backlog.md` and is derived from the code.
+because nobody checked it against the tree. Status belongs in the backlog (`Projects/claudia-office/_tasks/`) and is derived from the code.
