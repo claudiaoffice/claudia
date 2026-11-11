@@ -120,6 +120,7 @@
    "from_data": "(data: 'Iterable[list]') -> 'CellStyles'",
    "names": "(self, style_id: 'str') -> 'bool'",
    "pieces": "(self, slot: 'str', layer: 'str', area: 'Area') -> 'tuple[Piece, ...]'",
+   "plan": "(self, slot: 'str', area: 'Area', style: 'str | None') -> 'list[tuple[str, Area, tuple[Piece, ...]]]'",
    "ranges_in": "(self, window: 'Area') -> 'list[dict]'",
    "replace": "(self, slot: 'str', layer: 'str', area: 'Area', pieces: 'Iterable[Piece]') -> 'None'",
    "restructure": "(self, edit: 'StructuralEdit') -> 'list[tuple[str, str, Piece]]'",
@@ -592,6 +593,7 @@
   "init": "(sheet: 'SheetId', slot: 'str', layer: 'str', area: 'Area', pieces: 'tuple[Piece, ...]') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "applying": "(model: 'WorkbookModel', sheet: 'SheetId', slot: 'str', area: 'Area', style: 'str | None') -> 'Command'",
    "from_data": "(data, registry) -> 'SetCellStyle'",
    "put": "(sheet: 'SheetId', slot: 'str', area: 'Area', style: 'str | None') -> 'SetCellStyle'",
    "redacted": "(self) -> 'Command'",

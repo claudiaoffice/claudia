@@ -23,6 +23,9 @@ The styling-suite plan, steps 1.2 to 1.6.
 - **Breaking:** `WorkbookModel.restructure` also moves the style ranges and returns the pieces that lay on
   deleted lines as a fourth value; `Structure`'s undo and `RemoveSheet`'s undo put the styles back.
 - `WorkbookModel.style_in_use` counts style ranges.
+- The last action wins (D317): `CellStyles.plan` and `SetCellStyle.applying(model, sheet, slot, area, style)` turn
+  one styling action into the replacements that give every cell of the area the style (or, with `None`, clear it
+  so that what lies beneath shows through), in one undo step. `SetCellStyle.put` writes one layer only.
 
 ## [0.2.0] - 2026-11-10
 

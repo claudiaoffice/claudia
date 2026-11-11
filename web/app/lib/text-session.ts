@@ -22,7 +22,7 @@ import {
   type Pos,
   type TextEvent,
 } from './blocks'
-import type { PaletteEvent } from './objects'
+import type { PaletteEvent, StyleModel } from './objects'
 import type { LinkLike, Region, WireData } from './protocol'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
@@ -53,6 +53,8 @@ export interface TextState extends BaseState {
   /** The document's colour roles and how they read against each other (D200); a paragraph style names them, and
    * the resolved colours arrive with the styles themselves. */
   palette: PaletteEvent | null
+  /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
+  styleModel: StyleModel | null
   blocks: Block[]
   suggestions: SuggestionInfo[]
   selection: Selection | null
@@ -81,7 +83,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null })
   }
 
   get readOnly(): boolean {
@@ -91,14 +93,16 @@ export class TextSession extends BaseSession<TextState> {
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions, palette] = await Promise.all([
+    const [answer, suggestions, palette, styleModel] = await Promise.all([
       link.request<{ styles: StyleView[]; blocks: Block[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
+      link.request<StyleModel>('style_model'),
     ])
     const s = this.state
     s.styles = answer.styles
     s.palette = palette
+    s.styleModel = styleModel
     s.blocks = answer.blocks.map((b) => ({ ...b, runs: runsToUnits(b.text, b.runs) }))
     s.suggestions = suggestions.map((x) => this.suggestionInUnits(x))
     s.pending = null

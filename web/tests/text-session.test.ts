@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { IDLE_FLUSH_MS, PLACE_MS, TextSession } from '~/lib/text-session'
 
@@ -57,6 +58,7 @@ function server(link: FakeLink, text = 'hello world') {
     blocks: () => ({ revision: 'main:2', styles: STYLES, blocks: [{ id: 'b1', style: 'body', text: doc.text, runs: doc.text ? [[[...doc.text].length, 'ann', null]] : [] }] }),
     suggestions: () => [],
     // The palette reaches composes' paragraph styles from day one (D200): a style names `@text`, not a hex.
+    style_model: () => STYLE_MODEL,
     palette: () => ({
       type: 'palette',
       roles: [{ id: 'text', name: 'Text', purpose: 'the words you read', colour: '#1F1A33' }],

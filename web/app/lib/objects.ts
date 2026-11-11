@@ -200,19 +200,6 @@ export interface StyleModel {
 /** Something a style is put into, in the app's own terms (`apply_style`, `deviate`). */
 export type StyleTarget = { object: string } | { block: string } | { sheet: string; range: [number, number, number, number] }
 
-/** The slot of an object that the style menu works on: a shape's outline, a text box's words, and the box of a
- * picture or a chart. `null` while the server's style model has not arrived. */
-export function menuSlot(model: StyleModel | null, kind: string): SlotView | null {
-  const slots = model?.slots[kind] ?? []
-  const wanted = kind === 'text' ? 'words' : kind === 'shape' ? 'outline' : 'box'
-  return slots.find((s) => s.name === wanted) ?? null
-}
-
-/** The styles that fit a slot: those whose kind the slot takes (D316). */
-export function stylesFitting(styles: StyleDef[], slot: SlotView | null | undefined): StyleDef[] {
-  return slot ? styles.filter((s) => slot.takes.includes(s.kind)) : []
-}
-
 /** What an object's *words* look like: its paragraph's own style, resolved — not the object's style, which is its
  * box or outline (D181, D304). A shape's outline and its words are two slots with a style each (D310). Empty for an
  * object without words. */

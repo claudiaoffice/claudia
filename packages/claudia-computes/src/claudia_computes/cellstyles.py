@@ -13,9 +13,16 @@ Ranges live in four **layers**, and a range's layer follows from its shape (:fun
 * ``range``  — anything else, a single cell included.
 
 A cell's style in a slot is the one of its most specific layer that has a range covering it: range, then row, then
-column, then sheet, then the sheet's built-in default (``DEFAULT_CELL_STYLE``). That order is fixed (D307), so
-there is no "which came later" to reason about. *Inside* a layer ranges never overlap: putting a range in subtracts
-it from whatever the layer had there, which leaves at most four pieces of each range it cut.
+column, then sheet, then the sheet's built-in default (``DEFAULT_CELL_STYLE``). *Inside* a layer ranges never
+overlap: putting a range in subtracts it from whatever the layer had there, which leaves at most four pieces of
+each range it cut.
+
+To a person **the last action wins** (D317): styling a whole column after some of its cells gives every cell of
+the column the new style. :meth:`claudia_computes.CellStyles.plan` turns one action into the replacements that
+make it so — the action's own layer, and the more specific layers inside its area cleared (or, where a whole row's
+style crosses a column, overridden by a piece of the range layer). The layers remain, so that empty and future cells
+of a styled column or row take its style, and taking a cell's own style away lets the row's, column's or sheet's
+show through.
 
 Rows and columns move the ranges (D135's lesson for sizes, applied to styles):
 :meth:`claudia_computes.CellStyles.restructure` maps every range with the edit's own
@@ -152,8 +159,8 @@ class CellStyles:
         the sheet would hold more than ``MAX_STYLE_RANGES`` ranges."""
         if slot not in CELL_SLOTS:
             raise ValueError(f"a cell has no slot “{slot}”; it has {', '.join(CELL_SLOTS)}")
-        if layer not in LAYERS or layer_of(area) != layer:
-            raise ValueError(f"the area {list(area)} is not of the layer {layer!r}")
+        if layer not in LAYERS:
+            raise ValueError(f"there is no layer {layer!r}; there are {', '.join(LAYERS)}")
         given = list(pieces)
         for where, _ in given:
             if not _contains(area, where) or layer_of(where) != layer:
@@ -167,11 +174,43 @@ class CellStyles:
                     raise ValueError("the pieces of one change may not overlap")
         kept: list[Piece] = []
         for where, style in self._ranges[(slot, layer)]:
-            kept.extend((rest, style) for rest in subtract(where, area))
+            rests = subtract(where, area)
+            if rests != [where] and any(layer_of(rest) != layer for rest in rests):
+                raise ValueError(
+                    f"cutting {list(area)} out of {list(where)} would leave pieces not of the layer {layer!r}"
+                )
+            kept.extend((rest, style) for rest in rests)
         kept.extend(given)
         if len(self) - len(self._ranges[(slot, layer)]) + len(kept) > MAX_STYLE_RANGES:
             raise ValueError(f"a sheet holds at most {MAX_STYLE_RANGES} style ranges")
         self._ranges[(slot, layer)] = kept
+
+    def plan(self, slot: str, area: Area, style: str | None) -> list[tuple[str, Area, tuple[Piece, ...]]]:
+        """The replacements — ``(layer, area, pieces)``, in order, for :meth:`replace` — that make ``style`` the look
+        of every cell of ``area`` in ``slot``, the last action winning (D317). ``None`` takes the style of ``area``
+        away instead, so that what lies beneath shows through.
+
+        * a range: its cells, in the range layer;
+        * whole rows: the rows, and the range layer inside them cleared;
+        * whole columns: the columns, and the range layer inside them cleared — except where a whole row's style
+          crosses them, which a piece of the range layer overrides (a row is more specific than a column);
+        * the whole sheet: the sheet, and every other layer cleared."""
+        layer = layer_of(area)
+        own = () if style is None else ((area, style),)
+        if layer == "range":
+            return [("range", area, own)]
+        if layer == "row":
+            return [("row", area, own), ("range", area, ())]
+        if layer == "column":
+            crossing: tuple[Piece, ...] = ()
+            if style is not None:
+                crossing = tuple(
+                    (met, style)
+                    for where, _ in self._ranges[(slot, "row")]
+                    if (met := overlap(where, area)) is not None
+                )
+            return [("column", area, own), ("range", area, tuple(sorted(crossing)))]
+        return [("sheet", area, own), ("column", area, ()), ("row", area, ()), ("range", area, ())]
 
     def restructure(self, edit: StructuralEdit) -> list[tuple[str, str, Piece]]:
         """Move the ranges with an insert or a delete of rows or columns. Returns, for a delete, the pieces that lay

@@ -1,13 +1,13 @@
 // A floating object as a StyleHost: the shape, text box, picture or chart a person has selected is what the style
 // menu styles. The same menu composes uses for a paragraph (E9.7, D203) — it knows nothing of either app.
 //
-// An object has slots (D304): a shape its outline and its words, a text box its box and its words, a picture and a
-// chart a box. Until the menu edits each slot with a section per facet (the styling-suite plan, step 2.2), this host
-// works on the one slot that the old menu's controls fit: a shape's outline (fill, stroke — the "box" controls), a
-// text box's words (the "words" controls), and the box of a picture or a chart, for which those controls write
-// nothing. It talks to the server through the one style API every app has (`apply_style`, `deviate`).
-import type { Parts, StyleHost } from './style-host'
-import type { ColourRole, ObjectBody, Reading, StyleTarget } from './objects'
+// An object has slots (D304), as the server's `style_model` says: a text box its box and its words, a shape its
+// outline and its label, a picture and a chart a box. The menu opens on the slot a person most often means — a text
+// box's words, a shape's outline (`slotOf`) — and the switcher of `style-editor-two-slots.svg` chooses the other.
+// Everything goes through the one style API every app has (`apply_style`, `deviate`), for the chosen slot only.
+import { ref } from 'vue'
+import type { HostSlot, StyleHost } from './style-host'
+import type { ColourRole, ObjectBody, Reading, StyleModel, StyleTarget } from './objects'
 import type { CssCheck, CssEdit, StyleView } from './style-css'
 
 /** What this host needs of a session, so that creates and computes can both supply it. */
@@ -16,6 +16,8 @@ export interface ObjectStyling {
   styles: StyleView[]
   roles: ColourRole[]
   readings: Reading[]
+  /** The server's facets, kinds and slots (`style_model`); null until it has arrived. */
+  model: StyleModel | null
   /** The object a person has selected, or null. */
   selected: ObjectBody | null
   /** Every object of the document, for the use counts. */
@@ -30,27 +32,22 @@ export interface ObjectStyling {
   setRole(role: string, colour: string): Promise<boolean>
 }
 
-/** The slot of a kind of object that this host works on (see the header of this file). */
+/** The words a person reads for a slot. */
+export const SLOT_LABELS: Record<string, string> = { box: 'Box', words: 'Words', outline: 'Outline', label: 'Label', paragraph: 'Paragraph' }
+
+/** The slot the menu opens on for a kind of object: a text box's words, a shape's outline, the box of the rest. */
 export function slotOf(kind: string | undefined): string {
   return kind === 'text' ? 'words' : kind === 'shape' ? 'outline' : 'box'
 }
 
-/** The style an object has in the slot this host works on: a text box's words have their paragraph's style. */
-export function styleInSlot(body: ObjectBody): string {
-  return slotOf(body.kind) === 'words' ? (body.paragraph?.style ?? body.style) : body.style
+/** The style an object holds in a slot: the container's slot is the object's own style, the other its words'. */
+export function styleInSlot(body: ObjectBody, slot: string = slotOf(body.kind)): string {
+  return slot === 'words' || slot === 'label' ? (body.paragraph?.style ?? body.style) : body.style
 }
 
-/** Which controls the menu offers for that slot: a shape's outline takes the fill and border controls (D178), a
- * text box's words the font controls; a picture's or a chart's box takes neither. Left out, not disabled (D209). */
-export function partsOf(kind: string | undefined): Parts {
-  switch (kind) {
-    case 'shape':
-      return { words: false, box: true }
-    case 'text':
-      return { words: true, box: false }
-    default:
-      return { words: false, box: false }
-  }
+/** The slots of a kind of object, as the server's table has them, with their labels. */
+export function slotsOf(model: StyleModel | null, kind: string | undefined): HostSlot[] {
+  return (model?.slots[kind ?? ''] ?? []).map((slot) => ({ ...slot, label: SLOT_LABELS[slot.name] ?? slot.name }))
 }
 
 /** What to call the selected object in a sentence: “shape”, “text box”, “picture”, “chart”. */
@@ -70,13 +67,21 @@ export function objectUses(bodies: ObjectBody[]): Record<string, number> {
 
 export function objectStyleHost(session: ObjectStyling): StyleHost {
   const selected = () => session.selected
+  // Which slot a person switched to; forgotten when the selection moves to an object that does not have it.
+  const chosen = ref<string | null>(null)
+  const slots = () => slotsOf(session.model, selected()?.kind)
+  const slot = (): HostSlot | undefined => {
+    const all = slots()
+    return all.find((s) => s.name === chosen.value) ?? all.find((s) => s.name === slotOf(selected()?.kind)) ?? all[0]
+  }
   return {
     get styles() {
       return session.styles
     },
     get current() {
       const body = selected()
-      return body ? session.styles.find((s) => s.id === styleInSlot(body)) : undefined
+      const where = slot()
+      return body && where ? session.styles.find((s) => s.id === styleInSlot(body, where.name)) : undefined
     },
     get readOnly() {
       // Only ever "you may not write to this document". Nothing-selected is *not* read-only, however much it
@@ -88,8 +93,17 @@ export function objectStyleHost(session: ObjectStyling): StyleHost {
     get noun() {
       return nounOf(selected()?.kind)
     },
-    get parts() {
-      return partsOf(selected()?.kind)
+    get slots() {
+      return slots()
+    },
+    get slot() {
+      return slot()
+    },
+    chooseSlot(name: string) {
+      chosen.value = name
+    },
+    get model() {
+      return session.model
     },
     get roles() {
       return session.roles
@@ -100,12 +114,14 @@ export function objectStyleHost(session: ObjectStyling): StyleHost {
     uses: () => objectUses(session.bodies),
     apply: async (style) => {
       const body = selected()
-      return body ? session.applyStyle([{ object: body.id }], style, slotOf(body.kind)) : false
+      const where = slot()
+      return body && where ? session.applyStyle([{ object: body.id }], style, where.name) : false
     },
     change: (style, edit) => session.changeStyle(style, edit),
     deviate: async (edit) => {
       const body = selected()
-      return body ? session.deviateStyle(styleInSlot(body), [{ object: body.id }], slotOf(body.kind), edit) : false
+      const where = slot()
+      return body && where ? session.deviateStyle(styleInSlot(body, where.name), [{ object: body.id }], where.name, edit) : false
     },
     rename: (style, name) => session.renameStyle(style, name),
     check: (text) => session.checkCss(text),

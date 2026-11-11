@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { alignment, columnName, inputOf, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
 import { imageDataUrl } from '~/lib/images'
+import { besideRect } from '~/lib/geometry'
 import {
   buildSizeTable,
   DEFAULT_COL_WIDTH,
@@ -646,7 +647,7 @@ function onPaste(event: ClipboardEvent) {
 // ------------------------------------------------------------------------------ the style menu (E9.7, D203)
 /** A floating object's own look: its fill, its border. The same menu composes and creates use — what it styles is
  * whatever `objectStyleHost` says is selected, which here is this grid's own `selectedObject`. */
-const styleMenu = ref<{ x: number; y: number } | null>(null)
+const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = objectStyleHost({
   get readOnly() {
     return props.session.readOnly
@@ -664,6 +665,9 @@ const styleHost = objectStyleHost({
     const id = selectedObject.value
     return id ? props.session.state.objects[id] ?? null : null
   },
+  get model() {
+    return props.session.state.styleModel
+  },
   get bodies() {
     return props.session.bodies()
   },
@@ -675,8 +679,12 @@ const styleHost = objectStyleHost({
   setRole: (role, colour) => props.session.setRole(role, colour),
 })
 
-function openStyleMenu(at: { x: number; y: number } = { x: 160, y: 180 }) {
-  if (selectedObject.value) styleMenu.value = at
+/** Format ▸ Edit this style…, Apply style…: beside the selected object, so it stays in view. */
+function openStyleMenu(at?: { x: number; y: number }, mode: 'edit' | 'apply' = 'edit') {
+  if (!selectedObject.value) return
+  const el = viewport.value?.querySelector(`[data-object="${CSS.escape(selectedObject.value)}"]`)
+  const where = at ?? (el ? besideRect(el.getBoundingClientRect(), mode === 'apply' ? 280 : 360, window.innerWidth) : { x: 160, y: 180 })
+  styleMenu.value = { ...where, mode }
 }
 
 defineExpose({
@@ -728,6 +736,7 @@ defineExpose({
           :key="o.id"
           class="object"
           :class="{ selected: o.id === selectedObject }"
+          :data-object="o.id"
           :style="objectStyle(o)"
           @mousedown.stop="onObjectDown($event, o)"
           @dblclick.stop
@@ -768,7 +777,7 @@ defineExpose({
         <div class="corner" />
       </div>
     </div>
-    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
+    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
   </div>
 </template>
 

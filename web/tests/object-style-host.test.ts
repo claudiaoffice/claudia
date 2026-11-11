@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { nounOf, objectStyleHost, objectUses, partsOf, slotOf, styleInSlot, type ObjectStyling } from '~/lib/object-style-host'
+import { nounOf, objectStyleHost, objectUses, slotOf, slotsOf, styleInSlot, type ObjectStyling } from '~/lib/object-style-host'
+import { STYLE_MODEL } from './style-model.fixture'
 import type { ColourRole, ObjectBody, Reading } from '~/lib/objects'
 import type { StyleView } from '~/lib/style-css'
 
@@ -35,6 +36,7 @@ function styling(over: Partial<ObjectStyling> = {}) {
     styles: [style('body-text', 'Body text'), style('plain-shape', 'Plain shape')],
     roles: ROLES,
     readings: READINGS,
+    model: STYLE_MODEL,
     selected: BODY(),
     bodies: [BODY(), BODY({ id: 'o2' }), BODY({ id: 'o3', style: 'body-text', kind: 'text' })],
     applyStyle: spy('applyStyle'),
@@ -49,20 +51,14 @@ function styling(over: Partial<ObjectStyling> = {}) {
 }
 
 describe('what a kind of object has', () => {
-  it('gives a picture no fill and no words: it carries its own colours and holds no text', () => {
-    expect(partsOf('image')).toEqual({ words: false, box: false })
-  })
-
-  it('gives a chart nothing: its box style reads none of the outline controls (D304, D305)', () => {
-    expect(partsOf('diagram')).toEqual({ words: false, box: false })
-  })
-
-  it('gives a shape its outline only: its words have a style of their own (D310)', () => {
-    expect(partsOf('shape')).toEqual({ words: false, box: true })
-  })
-
-  it('gives a text box its words: the slot the font controls fit (D304)', () => {
-    expect(partsOf('text')).toEqual({ words: true, box: false })
+  it('has the slots the server’s table gives it, with the words a person reads for them (D304)', () => {
+    expect(slotsOf(STYLE_MODEL, 'text').map((s) => [s.name, s.label, s.reads])).toEqual([
+      ['box', 'Box', ['box']],
+      ['words', 'Words', ['text', 'paragraph']],
+    ])
+    expect(slotsOf(STYLE_MODEL, 'shape').map((s) => s.label)).toEqual(['Outline', 'Label'])
+    expect(slotsOf(STYLE_MODEL, 'image')[0]!.reads).toEqual([]) // a picture carries its own colours
+    expect(slotsOf(null, 'text')).toEqual([]) // nothing until the server's table has arrived
   })
 
   it('calls each kind what a person would call it', () => {
@@ -81,7 +77,8 @@ describe('the object as a style host', () => {
     const { host } = styling()
     expect(host.current?.id).toBe('plain-shape')
     expect(host.noun).toBe('shape')
-    expect(host.parts).toEqual({ words: false, box: true }) // an outline: its words have a style of their own (D310)
+    expect(host.slot?.name).toBe('outline') // the menu opens on a shape's outline (D310)
+    expect(host.slots.map((s) => s.name)).toEqual(['outline', 'label'])
   })
 
   it('counts how many objects have each style', () => {
@@ -139,7 +136,8 @@ describe('the object as a style host', () => {
     const { host, session } = styling()
     session.selected = BODY({ id: 'o9', kind: 'image', style: 'plain-image' })
     expect(host.noun).toBe('picture')
-    expect(host.parts).toEqual({ words: false, box: false })
+    expect(host.slots.map((s) => s.name)).toEqual(['box'])
+    expect(host.slot?.reads).toEqual([]) // nothing to set: the popover shows the gallery only
   })
 })
 
@@ -167,5 +165,28 @@ describe('the slots an object is styled in (D304)', () => {
   it('counts an object’s words as a use of their style', () => {
     const box = BODY({ kind: 'text', style: 'plain-box', paragraph: { id: 'o1', style: 'body-text', text: '', runs: [] } })
     expect(objectUses([box])).toEqual({ 'plain-box': 1, 'body-text': 1 })
+  })
+})
+
+describe('switching the slot (style-editor-two-slots.svg)', () => {
+  const box = () =>
+    BODY({ kind: 'text', style: 'plain-box', paragraph: { id: 'o1', style: 'body-text', text: '', runs: [] } })
+
+  it('works on the other slot once a person switches, and puts styles there', async () => {
+    const { host, calls } = styling({ selected: box(), styles: [style('body-text', 'Body text'), { ...style('plain-box', 'Plain box'), kind: 'box' }] })
+    expect(host.slot?.name).toBe('words')
+    host.chooseSlot('box')
+    expect(host.slot?.name).toBe('box')
+    expect(host.current?.id).toBe('plain-box')
+    await host.apply('body-text')
+    expect(calls.applyStyle).toEqual([[{ object: 'o1' }], 'body-text', 'box'])
+    await host.deviate({ set: { 'background-color': '@accent/14' } })
+    expect(calls.deviateStyle).toEqual(['plain-box', [{ object: 'o1' }], 'box', { set: { 'background-color': '@accent/14' } }])
+  })
+
+  it('goes back to the object’s usual slot when the selection has no slot of that name', () => {
+    const { host } = styling()
+    host.chooseSlot('words') // a shape has none
+    expect(host.slot?.name).toBe('outline')
   })
 })

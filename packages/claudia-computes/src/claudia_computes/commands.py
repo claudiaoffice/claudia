@@ -20,7 +20,7 @@ from typing import ClassVar
 
 from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagram, fits
 
-from .cellstyles import CELL_SLOTS, Area, Piece, check_area, layer_of
+from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
 from .events import CellsChanged, CellStylesChanged, ChartsChanged, LinesResized, SheetsChanged, StructureChanged
 from .formula import parse_formula
 from .formula.rewrite import adjusted
@@ -408,8 +408,18 @@ class SetCellStyle(Command):
 
     @classmethod
     def put(cls, sheet: SheetId, slot: str, area: Area, style: str | None) -> SetCellStyle:
-        """Give the cells of ``area`` the style ``style`` in ``slot`` (``None``: no style of this layer there)."""
+        """Put ``style`` into the layer of ``area``'s shape only (``None``: no style of this layer there). What a
+        person does is :meth:`applying`, where the last action wins."""
         return cls(sheet, slot, layer_of(area), area, () if style is None else ((area, style),))
+
+    @classmethod
+    def applying(cls, model: WorkbookModel, sheet: SheetId, slot: str, area: Area, style: str | None) -> Command:
+        """What styling ``area`` in ``slot`` means to a person: every cell of it takes ``style``, whatever was there
+        before — the last action wins (D317). One step, undone as one. ``None`` clears ``area`` so that what lies
+        beneath shows through (“Clear cell style”)."""
+        plan = model.sheet(sheet).cell_styles.plan(slot, check_area(area), style)
+        steps = [cls(sheet, slot, layer, where, pieces) for layer, where, pieces in plan]
+        return steps[0] if len(steps) == 1 else Batch(tuple(steps), "Cell style")
 
     @property
     def label(self) -> str:
@@ -427,6 +437,8 @@ class SetCellStyle(Command):
         area = check_area(self.area)
         if self.slot not in CELL_SLOTS:
             raise ValueError(f"a cell has no slot “{self.slot}”; it has {', '.join(CELL_SLOTS)}")
+        if self.layer not in LAYERS:
+            raise ValueError(f"there is no layer {self.layer!r}; there are {', '.join(LAYERS)}")
         slot = SLOTS.slot("cell", self.slot)
         for _, style_id in self.pieces:
             if style_id not in model.styles:

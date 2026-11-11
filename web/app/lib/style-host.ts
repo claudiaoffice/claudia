@@ -14,28 +14,33 @@ import {
   type StyleView,
 } from './style-css'
 import { stackFor } from './fonts'
-import type { ColourRole, Reading } from './objects'
+import type { ColourRole, Reading, SlotView, StyleModel } from './objects'
 
-/** What the thing being styled actually has, and so which controls the menu offers.
- *
- * A paragraph has words. A shape has words *and* a box — a fill and a border, in SVG's vocabulary because a shape
- * is an outline and not a rectangle (D178). A picture has neither: it carries its own colours and holds no text, so
- * those controls are left out rather than shown dead. An empty control that can never do anything is worse than no
- * control at all. */
-export interface Parts {
-  words: boolean
-  box: boolean
+/** One slot of the thing being styled (D304), as the style menu shows it: the server's slot and the words a person
+ * reads for it ("Box", "Words", "Outline", "Label"). */
+export interface HostSlot extends SlotView {
+  label: string
 }
+
+/** The four facets in the order every editor shows them (D303). */
+export const FACET_ORDER = ['text', 'paragraph', 'box', 'outline'] as const
 
 export interface StyleHost {
   styles: StyleView[]
-  /** The style of what the caret is in; undefined while nothing is open. */
+  /** The style the chosen slot holds; undefined while nothing is selected. */
   current: StyleView | undefined
   readOnly: boolean
-  /** What is styled, singular: “paragraph”, “cell”, “shape”. */
+  /** What is styled, singular: “paragraph”, “cell”, “shape”, “text box”. */
   noun: string
-  /** Which groups of controls apply to it. */
-  parts: Parts
+  /** The slots of what is selected (D304): one for a paragraph, two for a text box, a shape or a cell; none while
+   * nothing is selected. */
+  slots: HostSlot[]
+  /** The slot the menu works on now; `current`, `apply` and `deviate` are about it. */
+  slot: HostSlot | undefined
+  /** Work on another of `slots` (by name). */
+  chooseSlot(name: string): void
+  /** The server's table of facets, kinds and slots (`style_model`), null until it has arrived. */
+  model: StyleModel | null
   /** The document's colour roles, so a control can offer a meaning instead of a hex (D200). Empty for a document
    * whose palette has not arrived (or that has none), and the controls then fall back to plain colours. */
   roles: ColourRole[]
@@ -55,12 +60,48 @@ export interface StyleHost {
   setRole(role: string, colour: string): Promise<boolean>
 }
 
+/** What a gallery offers for a slot (D316, `style-editor-two-slots.svg`): the styles of the slot's own kind, and
+ * — for a box — the whole styles that also set a box, whose box part is what the slot would use. A whole style that
+ * sets nothing the slot reads is not offered: putting it there would change nothing. */
+export function galleryFor(styles: StyleView[], slot: SlotView | undefined, model: StyleModel | null): { own: StyleView[]; bundles: StyleView[] } {
+  if (!slot) return { own: [], bundles: [] }
+  const own = styles.filter((s) => s.kind === slot.kind)
+  const read = new Set(slot.reads.flatMap((facet) => model?.facets[facet] ?? []))
+  const bundles = styles.filter((s) => s.kind !== slot.kind && slot.takes.includes(s.kind) && Object.keys(s.computed).some((p) => read.has(p)))
+  return { own, bundles }
+}
+
+/** The facets a style can hold, by its kind — what the All styles editor shows, where no slot is chosen. */
+export function facetsOfKind(model: StyleModel | null, kind: string): string[] {
+  const held = new Set(model?.kinds[kind] ?? [])
+  return FACET_ORDER.filter((facet) => held.has(facet))
+}
+
+/** The facets a slot reads, in the editor's order. */
+export function facetsOfSlot(slot: SlotView | undefined): string[] {
+  const read = new Set(slot?.reads ?? [])
+  return FACET_ORDER.filter((facet) => read.has(facet))
+}
+
+/** The four sides of a box, in CSS's order. */
+export const SIDES = ['top', 'right', 'bottom', 'left'] as const
+export type Side = (typeof SIDES)[number]
+
+/** A border value as its three parts; `null` where the style sets none. */
+export function borderOf(value: string | undefined): { width: number; colour: string } | null {
+  if (!value) return null
+  const match = /^\s*([\d.]+)px\s+solid\s+(.+?)\s*$/.exec(value)
+  return match ? { width: Math.round(Number(match[1])), colour: match[2]! } : null
+}
+
 export type Scope = 'new' | 'every'
 
 const STEP: Record<string, number> = { pt: 1, px: 1, em: 0.1, rem: 0.1, '%': 10 }
 const START = 12
 /** As thick a border as the allow-list will take; past this it is a filled shape with a hole in it. */
 const MAX_STROKE = 24
+/** As much padding as a box sensibly takes; the allow-list itself goes further. */
+const MAX_PADDING = 96
 const none: Css = {}
 
 /**
@@ -81,14 +122,19 @@ export class StyleEditor {
   declined: string[] = []
   private picked: string | null = null
 
-  constructor(private readonly host: StyleHost) {}
+  /** `everyUse`: every change goes to every use of the style — the All styles dialog, where nothing is selected
+   * (D302); a picked style then stays picked even when it is the caret's own. */
+  constructor(
+    private readonly host: StyleHost,
+    private readonly everyUse = false,
+  ) {}
 
   /** Look at a style's own definition without applying it to anything. `null`, or the caret's own style, goes back
    * to following the caret. */
   pick(id: string | null) {
     // Picking the caret's own style is "follow the caret again", not "pin this style": otherwise a deviation made
     // next ("this paragraph only") would leave the controls on the old style while the caret moved to the new one.
-    this.picked = id === this.host.current?.id ? null : id
+    this.picked = id === this.host.current?.id && !this.everyUse ? null : id
   }
 
   /** Whether `current` is a style merely being looked at, not the one actually under the caret. */
@@ -125,14 +171,14 @@ export class StyleEditor {
   }
 
   get scope(): Scope {
-    if (this.isPicked) return 'every'
+    if (this.everyUse || this.isPicked) return 'every'
     const current = this.current
     if (this.choice && current && this.choice.style === current.id) return this.choice.scope
     return current?.to_name ? 'every' : 'new'
   }
 
   setScope(scope: Scope) {
-    if (scope === 'new' && !this.canDeviate) return
+    if (scope === 'new' && (!this.canDeviate || this.everyUse)) return
     const current = this.current
     if (current) this.choice = { style: current.id, scope }
   }
@@ -231,6 +277,37 @@ export class StyleEditor {
 
   setStrokeWidth(px: number) {
     return this.set('stroke-width', `${Math.max(0, Math.min(MAX_STROKE, Math.round(px)))}px`)
+  }
+
+  // -- a box: background, a border per side, padding (D303, D310)
+  /** Give the chosen sides a border of `width` px in `colour` (a role or a literal); width 0 takes it away. */
+  setBorder(sides: readonly Side[], width: number, colour: string) {
+    const clean = Math.max(0, Math.min(MAX_STROKE, Math.round(width)))
+    if (clean === 0) return this.edit({ unset: sides.map((side) => `border-${side}`) })
+    return this.edit({ set: Object.fromEntries(sides.map((side) => [`border-${side}`, `${clean}px solid ${colour}`])) })
+  }
+
+  /** The border one side has, as the style names it (a role stays a role). */
+  border(side: Side): { width: number; colour: string } | null {
+    return borderOf(this.named(`border-${side}`))
+  }
+
+  /** The side the border controls open on: "all" when the four sides agree, otherwise the first side that has a
+   *  border — a quote's rule on the left shows as itself, not as "all sides: none". */
+  borderSide(): 'all' | Side {
+    const four = SIDES.map((side) => this.named(`border-${side}`) ?? '')
+    return four.every((value) => value === four[0]) ? 'all' : SIDES.find((_, i) => four[i]) ?? 'all'
+  }
+
+  /** The same padding on all four sides, in px. */
+  setPadding(px: number) {
+    const clean = Math.max(0, Math.min(MAX_PADDING, Math.round(px)))
+    return this.edit({ set: Object.fromEntries(SIDES.map((side) => [`padding-${side}`, `${clean}px`])) })
+  }
+
+  get padding(): number {
+    const match = /([\d.]+)/.exec(this.look['padding-top'] ?? '')
+    return match ? Math.round(Number(match[1])) : 0
   }
 
   get strokeWidth(): number {

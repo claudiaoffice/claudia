@@ -123,7 +123,7 @@ class _CellTargets:
         return model.sheet(SheetId(target["sheet"])).cell_styles.style_at(r0, c0, slot)[0]
 
     def command(self, model: WorkbookModel, target: dict, slot: str, style: str) -> Command:
-        return SetCellStyle.put(SheetId(target["sheet"]), slot, check_area(target["range"]), style)
+        return SetCellStyle.applying(model, SheetId(target["sheet"]), slot, check_area(target["range"]), style)
 
     def uses(self, model: WorkbookModel) -> Counter[str]:
         counted: Counter[str] = Counter()
@@ -254,6 +254,26 @@ def _cell_styles(ctx, *, sheet, row0, row1, col0, col1):
         raise RequestError("bad_request", "cell_styles: the window must not end before it starts")
     found = _workbook(ctx).sheet(sheet)
     return {"revision": _rev(ctx), "ranges": found.cell_styles.ranges_in((row0, col0, row1, col1))}
+
+
+@computes_methods.method("clear_cell_style", "sheet:str range:list slot:str? base:revision?", write=True)
+def _clear_cell_style(ctx, *, sheet, range, slot, base):
+    """“Clear cell style” (D317): take the style of `range` away — in one slot, or in both — so that what lies
+    beneath shows through: the row's, the column's or the sheet's style, or Body text. One undo step."""
+    try:
+        area = check_area(range)
+        slots = CELL_SLOTS if slot is None else (slot,)
+        if slot is not None and slot not in CELL_SLOTS:
+            raise ValueError(f"a cell has no slot “{slot}”; it has {', '.join(CELL_SLOTS)}")
+        model = _workbook(ctx)
+        steps = [SetCellStyle.applying(model, SheetId(sheet), one, area, None) for one in slots]
+    except (KeyError, ValueError) as exc:
+        raise RequestError("command_error", str(exc)) from None
+    try:
+        applied = ctx.document.execute(Batch(tuple(steps), "Clear cell style"), author=ctx.user, base=base)
+    except ValueError as exc:
+        raise RequestError("command_error", str(exc)) from None
+    return {"revision": applied.revision.to_data()}
 
 
 @computes_methods.method("cell_style_at", "sheet:str row:int col:int")

@@ -5,7 +5,7 @@
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
-import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, besideRect, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
@@ -227,7 +227,7 @@ const contextItems = computed<MenuItem[]>(() => {
 // ------------------------------------------------------------------------------ the style menu (E9.7, D203)
 /** Where the style menu is open, if it is. The menu itself is the one every app uses; what it styles is whatever
  * `objectStyleHost` says is selected, so this component only has to say where to put it. */
-const styleMenu = ref<{ x: number; y: number } | null>(null)
+const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = objectStyleHost({
   get readOnly() {
     return session.readOnly
@@ -244,6 +244,9 @@ const styleHost = objectStyleHost({
   get selected() {
     return state.selected ? state.objects[state.selected] ?? null : null
   },
+  get model() {
+    return state.styleModel
+  },
   get bodies() {
     return session.bodies()
   },
@@ -255,9 +258,12 @@ const styleHost = objectStyleHost({
   setRole: (role, colour) => session.setRole(role, colour),
 })
 
-/** Open the style menu for the object a person has selected — what the Format menu and F10 do. */
-function openStyleMenu(at: { x: number; y: number } = { x: 120, y: 160 }) {
-  if (state.selected) styleMenu.value = at
+/** Format ▸ Edit this style…, Apply style… and Shift+F10: beside the selected object, so it stays in view. */
+function openStyleMenu(at?: { x: number; y: number }, mode: 'edit' | 'apply' = 'edit') {
+  if (!state.selected) return
+  const el = area.value?.querySelector(`[data-id="${CSS.escape(state.selected)}"]`)
+  const where = at ?? (el ? besideRect(el.getBoundingClientRect(), mode === 'apply' ? 280 : 360, window.innerWidth) : { x: 120, y: 160 })
+  styleMenu.value = { ...where, mode }
 }
 function closeContextMenu() {
   contextMenu.value = null
@@ -443,7 +449,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     </div>
 
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" label="Object menu" @close="closeContextMenu" />
-    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
+    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>
 </template>

@@ -39,8 +39,9 @@ def styles(doc) -> CellStyles:
 
 
 def put(doc, area, style, slot="both", author="ana"):
+    """What a person does: style an area, the last action winning (D317)."""
     for one in ("box", "words") if slot == "both" else (slot,):
-        doc.execute(SetCellStyle.put(S1, one, area, style), author=author)
+        doc.execute(SetCellStyle.applying(doc.model, S1, one, area, style), author=author)
 
 
 def at(doc, row, col, slot="words"):
@@ -71,15 +72,38 @@ def test_a_cell_no_range_covers_is_body_text():
     assert at(d, 0, 0) == ("body-text", "default") and at(d, 0, 0, "box") == ("body-text", "default")
 
 
-def test_the_most_specific_layer_wins_whatever_came_first(doc):
+def test_the_last_action_wins_whatever_layer_it_is_in(doc):
+    """D317: styling a whole column after some of its cells gives every cell of the column the new style."""
     put(doc, (2, 2, 3, 3), "input")  # a range first
-    put(doc, column(2), "header")  # then the whole column
-    put(doc, (0, 0, LAST_ROW, LAST_COL), "note")  # then the sheet
-    assert at(doc, 2, 2) == ("input", "range")
-    assert at(doc, 9, 2) == ("header", "column")
-    assert at(doc, 9, 5) == ("note", "sheet")
-    put(doc, row(9), "result")
-    assert at(doc, 9, 2) == ("result", "row") and at(doc, 2, 2) == ("input", "range")
+    put(doc, column(2), "header")  # then the whole column: the range's cells too
+    assert at(doc, 2, 2) == ("header", "column") and at(doc, 9, 2) == ("header", "column")
+    put(doc, (2, 2, 2, 2), "input")  # then one cell again
+    assert at(doc, 2, 2) == ("input", "range") and at(doc, 3, 2) == ("header", "column")
+    put(doc, row(9), "result")  # a whole row, crossing the column
+    assert at(doc, 9, 2) == ("result", "row") and at(doc, 9, 7) == ("result", "row")
+    put(doc, column(2), "note")  # the column again, crossing the row: the column wins where they cross
+    assert at(doc, 9, 2)[0] == "note" and at(doc, 9, 7) == ("result", "row") and at(doc, 2, 2) == ("note", "column")
+    put(doc, (0, 0, LAST_ROW, LAST_COL), "body-text")  # the whole sheet: everything
+    assert {at(doc, r, c) for r in range(12) for c in range(8)} == {("body-text", "sheet")}
+
+
+def test_one_action_is_one_undo_step(doc):
+    put(doc, (2, 2, 3, 3), "input", slot="words")
+    put(doc, row(3), "result", slot="words")
+    before = look(doc)
+    put(doc, column(2), "header", slot="words")
+    doc.undo("ana")
+    assert look(doc) == before
+
+
+def test_clearing_lets_what_lies_beneath_show_through(doc):
+    """“Clear cell style” (D317): the cells' own style goes, the column's shows again."""
+    put(doc, column(1), "input", slot="words")
+    put(doc, (4, 1, 5, 1), "note", slot="words")
+    put(doc, (4, 1, 5, 1), None, slot="words")
+    assert at(doc, 4, 1) == ("input", "column")
+    put(doc, column(1), None, slot="words")
+    assert at(doc, 4, 1) == ("body-text", "default")
 
 
 def test_inside_a_layer_a_new_range_cuts_what_was_there(doc):
@@ -113,7 +137,8 @@ def test_a_cells_box_takes_a_box_style_or_a_bundle_and_its_words_only_a_paragrap
     "command",
     [
         SetCellStyle(S1, "border", "range", (0, 0, 0, 0), ()),
-        SetCellStyle(S1, "box", "column", (0, 0, 0, 0), ()),
+        SetCellStyle(S1, "box", "column", (0, 0, 0, 0), (((0, 0, 0, 0), "header"),)),
+        SetCellStyle(S1, "box", "sheet-ish", (0, 0, 0, 0), ()),
         SetCellStyle(S1, "box", "range", (0, 0, 2, 2), (((0, 0, 3, 3), "header"),)),
         SetCellStyle(S1, "box", "range", (3, 3, 1, 1), ()),
         SetCellStyle(S1, "box", "range", (0, 0, 2, 2), (((0, 0, 1, 1), "header"), ((1, 1, 2, 2), "note"))),
@@ -272,19 +297,30 @@ class Brute:
         self.cells = {"box": {}, "words": {}}
 
     def put(self, slot, area, style):
+        """The last action wins (D317), the layers kept: the action's layer takes the style, and what is more
+        specific inside the area goes — except a whole row crossing a styled column, which the cell overrides."""
         r0, c0, r1, c1 = area
         layer = layer_of(area)
+        cells = self.cells[slot]
+        inside = [(r, c) for (r, c) in cells if r0 <= r <= r1 and c0 <= c <= c1]
         if layer == "sheet":
             self.sheet[slot] = style
+            self.rows[slot], self.columns[slot], self.cells[slot] = {}, {}, {}
             return
-        target = {"column": self.columns, "row": self.rows, "range": self.cells}[layer][slot]
-        keys = (
-            range(c0, c1 + 1)
-            if layer == "column"
-            else range(r0, r1 + 1)
-            if layer == "row"
-            else [(r, c) for r in range(r0, r1 + 1) for c in range(c0, c1 + 1)]
-        )
+        if layer == "range":
+            self._assign(cells, [(r, c) for r in range(r0, r1 + 1) for c in range(c0, c1 + 1)], style)
+            return
+        for key in inside:
+            del cells[key]
+        if layer == "row":
+            self._assign(self.rows[slot], range(r0, r1 + 1), style)
+            return
+        self._assign(self.columns[slot], range(c0, c1 + 1), style)
+        if style is not None:
+            self._assign(cells, [(r, c) for r in self.rows[slot] for c in range(c0, c1 + 1)], style)
+
+    @staticmethod
+    def _assign(target, keys, style):
         for key in keys:
             if style is None:
                 target.pop(key, None)
@@ -333,8 +369,13 @@ def test_ranges_behave_exactly_like_styling_every_cell_and_undo_takes_it_all_bac
             brute.delete(axis, at_, count)
         else:
             slot, area, style = rng.choice(("box", "words")), _random_area(rng), rng.choice(PICK)
-            doc.execute(SetCellStyle.put(S1, slot, area, style), author="ana")
+            doc.execute(SetCellStyle.applying(doc.model, S1, slot, area, style), author="ana")
             brute.put(slot, area, style)
+            if style is not None:  # D317 itself: every cell of the area now has the style
+                r0, c0, r1, c1 = area
+                for r in range(r0, min(r1, WINDOW_ROWS - 1) + 1):
+                    for c in range(c0, min(c1, WINDOW_COLS - 1) + 1):
+                        assert at(doc, r, c, slot)[0] == style, (seed, steps, r, c)
         steps += 1
         for r in range(WINDOW_ROWS):
             for c in range(WINDOW_COLS):

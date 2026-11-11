@@ -290,6 +290,39 @@ no change to `clients/contract/` (D301).
 **Done when (2.3–2.5)** every row of the slot table except cells can be styled in each app, in the browser and both
 shells, checked against the mock-ups with a screenshot per row in the PR.
 
+**Progress (2026-11-11): 2.1 is agreed and 2.2 to 2.5 are built**, in two commits (the shared components, then
+the three apps and the shells). The owner's review of the 2.1 drawings: a shape's label may show in lists of
+objects; the quick list in the formula-bar row is right; and styling cells, the last action wins (D317). What
+differs from the text above, and what 2.6 starts from:
+
+* **No generic `styleHost(session, target)`.** The hosts stay three (`text-style-host.ts`, `object-style-host.ts`,
+  and the cell host to come in 2.6); what they share is the shape of `StyleHost`: `slots` (each with the label a
+  person reads: Box, Words, Outline, Label, Paragraph), `slot`, `chooseSlot(name)` and `model` (the server's
+  `style_model`). `parts` is gone. The object host keeps the slot a person chose until the selection has no slot
+  of that name, then falls back to the object's usual one (a text box's words, a shape's outline, otherwise box).
+* **`stylesForSlot` is `galleryFor(styles, slot, model)`** in `style-host.ts`, and returns two lists: `own` (the
+  styles of the slot's own kind) and `bundles` (styles of another kind the slot takes, D316, that set at least one
+  property of the facets it reads — "Whole styles that also set a box — their box part"). The Format flyout and
+  the popover both use it, so they offer the same thing.
+* **The Format menu builder is `lib/format-menu.ts`** (`formatItems(t, menu)`). An entry is drawn in its style by
+  `menuCss` (`style-css.ts`): `previewCss` plus borders capped at 2px and, when the style has a box, a chip — never
+  the size. `MenuBar.vue` learned styled labels, ticks, separators in flyouts and a flyout parent with an `action`
+  (what a shell's single "Apply Style…" runs). Computes' flyout has a first inert line, "For the chart" now and
+  "For the 6 selected cells" in 2.6.
+* **`StyleSpec.vue`** has one section per facet with `data-facet`; the Box section has background, a border per
+  side (all, top, right, bottom, left; width stepper and colour; it opens on the side that has a border) and one
+  padding for four sides (0–96px). Vertical alignment and wrapping wait for 2.6, the only slot that reads them.
+* **`StylesDialog.vue`**: Edit beside Rename; the editor pane shows the facets of the style's *kind*
+  (`facetsOfKind`), always "every use" (`StyleEditor(host, true)`); under 760px the editor replaces the list.
+* **The popover opens beside the selected object** (`besideRect` in `geometry.ts`), to its right or, without room,
+  its left; it used to open at a fixed place when called from the menu.
+* **Shells:** `format.apply-style` "Apply Style…" first in the three Format menus of the manifest; the Windows menus
+  are regenerated. Nothing in `clients/contract/`.
+* Checked in a browser against the mock-ups: composes (flyout, popover, All styles with Edit), creates (a text
+  box's Box and Words, a shape's Outline, All styles), computes (a floating chart: flyout with its box styles and
+  bundles, popover beside the chart). Not checked by hand: the GTK and Windows shells themselves — their manifest
+  and menu tests are green.
+
 ### 2.6 Cells in the grid
 
 * The cell host (target `{sheet, range}` from the selection); which host the menus use follows the selection

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Css, CssCheck, CssEdit, StyleView } from '~/lib/style-css'
-import { StyleEditor, type StyleHost } from '~/lib/style-host'
+import { SIDES, StyleEditor, borderOf, facetsOfKind, facetsOfSlot, galleryFor, type StyleHost } from '~/lib/style-host'
+import { STYLE_MODEL } from './style-model.fixture'
 
 const view = (id: string, css: Css, based_on: string | null = null, to_name = false, name = id): StyleView => ({ id, name, purpose: '', based_on, css, computed: css, resolved: css, to_name })
 
@@ -249,5 +250,90 @@ describe('naming', () => {
     expect(await editor.name('  Accent ')).toBe(true)
     expect(host.sent.at(-1)).toEqual(['rename', 'body-changed', 'Accent'])
     expect(await editor.name('   ')).toBe(false)
+  })
+})
+
+describe('the gallery of a slot (D316, style-editor-two-slots.svg)', () => {
+  const s = (id: string, kind: string, computed: Css = {}): StyleView => ({ ...view(id, computed), kind })
+  const styles = [
+    s('body-text', 'paragraph'),
+    s('definition', 'paragraph', { 'background-color': '#eee', 'border-left': '3px solid #13917f' }),
+    s('plain-box', 'box'),
+    s('callout', 'box', { 'background-color': '#e9e6f6' }),
+    s('plain-shape', 'outline', { fill: '#eee' }),
+  ]
+
+  it('offers a box its own box styles, then the whole styles that set a box', () => {
+    const { own, bundles } = galleryFor(styles, STYLE_MODEL.slots.text[0], STYLE_MODEL)
+    expect(own.map((x) => x.id)).toEqual(['plain-box', 'callout'])
+    expect(bundles.map((x) => x.id)).toEqual(['definition']) // Body text sets no box: nothing would change
+  })
+
+  it('offers words only paragraph styles, and an outline only outline styles', () => {
+    expect(galleryFor(styles, STYLE_MODEL.slots.text[1], STYLE_MODEL)).toEqual({ own: [styles[0], styles[1]], bundles: [] })
+    expect(galleryFor(styles, STYLE_MODEL.slots.shape[0], STYLE_MODEL).own.map((x) => x.id)).toEqual(['plain-shape'])
+  })
+
+  it('offers nothing without a slot', () => {
+    expect(galleryFor(styles, undefined, STYLE_MODEL)).toEqual({ own: [], bundles: [] })
+  })
+
+  it('shows the facets of a slot and of a kind in the editor’s order', () => {
+    expect(facetsOfSlot(STYLE_MODEL.slots.text[1])).toEqual(['text', 'paragraph'])
+    expect(facetsOfSlot(STYLE_MODEL.slots.paragraph[0])).toEqual(['text', 'paragraph', 'box'])
+    expect(facetsOfKind(STYLE_MODEL, 'outline')).toEqual(['outline'])
+    expect(facetsOfKind(null, 'paragraph')).toEqual([])
+  })
+})
+
+describe('a box: borders per side and padding', () => {
+  it('reads a border as width and colour, and nothing for what is not a plain solid line', () => {
+    expect(borderOf('3px solid @accent')).toEqual({ width: 3, colour: '@accent' })
+    expect(borderOf(undefined)).toBeNull()
+    expect(borderOf('thin dotted red')).toBeNull()
+  })
+
+  it('sets a border on the chosen sides, and takes it away at width 0', async () => {
+    const host = new FakeHost()
+    host.currentId = 'quote'
+    const editor = new StyleEditor(host)
+    editor.setScope('every')
+    await editor.setBorder(['left'], 3, '@accent')
+    await editor.setBorder(SIDES, 0, '@accent')
+    expect(host.sent).toEqual([
+      ['change', 'quote', { set: { 'border-left': '3px solid @accent' } }],
+      ['change', 'quote', { unset: ['border-top', 'border-right', 'border-bottom', 'border-left'] }],
+    ])
+  })
+
+  it('opens the border controls on the side that has one, or on all four when they agree', () => {
+    // Found in a browser: Quote's rule on the left showed as "all sides: 0, none".
+    const host = new FakeHost()
+    host.styles = [view('body', {}), view('quote', { 'border-left': '3px solid @accent' }, 'body')]
+    const editor = new StyleEditor(host)
+    expect(editor.borderSide()).toBe('all')
+    editor.pick('quote')
+    expect(editor.borderSide()).toBe('left')
+  })
+
+  it('sets the same padding on all four sides, never below 0', async () => {
+    const host = new FakeHost()
+    const editor = new StyleEditor(host)
+    editor.setScope('every')
+    await editor.setPadding(-4)
+    expect(host.sent[0]).toEqual(['change', 'body', { set: { 'padding-top': '0px', 'padding-right': '0px', 'padding-bottom': '0px', 'padding-left': '0px' } }])
+  })
+})
+
+describe('the All styles editor (D302)', () => {
+  it('sends every change to every use, even of the caret’s own style', async () => {
+    const host = new FakeHost()
+    const editor = new StyleEditor(host, true)
+    editor.pick('body')
+    expect(editor.scope).toBe('every')
+    editor.setScope('new')
+    expect(editor.scope).toBe('every')
+    await editor.set('color', '#123456')
+    expect(host.sent).toEqual([['change', 'body', { set: { color: '#123456' } }]])
   })
 })

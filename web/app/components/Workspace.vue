@@ -20,8 +20,9 @@ import {
 } from '~/lib/document-menus'
 import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
-import { objectStyleHost, slotOf, styleInSlot } from '~/lib/object-style-host'
-import { menuSlot, stylesFitting } from '~/lib/objects'
+import { objectStyleHost } from '~/lib/object-style-host'
+import { galleryFor } from '~/lib/style-host'
+import { formatItems } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
 import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
@@ -61,7 +62,7 @@ watch(
 const grid = ref<{
   focus: () => void
   selectObject: (id: string) => void
-  openStyleMenu: (at?: { x: number; y: number }) => void
+  openStyleMenu: (at?: { x: number; y: number }, mode?: 'edit' | 'apply') => void
   selectedObject: () => string | null
 } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
@@ -269,6 +270,9 @@ const styleHost = objectStyleHost({
     const id = grid.value?.selectedObject() ?? null
     return id ? state.objects[id] ?? null : null
   },
+  get model() {
+    return state.styleModel
+  },
   get bodies() {
     return session.bodies()
   },
@@ -281,37 +285,27 @@ const styleHost = objectStyleHost({
 })
 
 /**
- * The Format menu. A workbook's styles are its floating objects' — a shape, a text box, a picture, a chart. Cell
- * styling is a separate story (E6.13) and will take its colours from this same palette when it arrives, which is
- * why the menu says what these styles are for rather than reading as the whole of "Format".
- *
- * The per-object items need something selected; the colours are the document's and never do.
+ * The Format menu (D300). Until cells take styles in the grid (the styling-suite plan, step 2.6), what a workbook's
+ * Format menu styles is the floating object selected — a shape, a text box, a picture, a chart — in the slot the
+ * style menu works on (D304, D316); the flyout's first line says so. The colours are the document's and need no
+ * selection.
  */
 function styleItems() {
-  const all = session.styleViews()
-  if (all.length === 0) return [{ label: t('No styles yet'), disabled: true }]
+  if (session.styleViews().length === 0) return [{ label: t('No styles yet'), disabled: true }]
   const selected = grid.value?.selectedObject()
   const body = selected ? state.objects[selected] : undefined
-  // Only the styles that fit the slot the style menu works on (D304, D316): a shape's outline, a text box's words.
-  const styles = body ? stylesFitting(all, menuSlot(state.styleModel, body.kind)) : all
-  const chosen = body ? styleInSlot(body) : undefined
-  const nothing = !body
-  return [
-    { label: t('For the object you select'), disabled: true },
-    ...styles.map((s) => ({
-      label: s.name,
-      checked: s.id === chosen,
-      disabled: readonly.value || nothing,
-      action: () => {
-        if (body) void session.applyStyle([{ object: body.id }], s.id, slotOf(body.kind))
-      },
-    })),
-    { label: '', separator: true },
-    { id: 'format.look', label: t('Edit this style…'), disabled: nothing, action: () => grid.value?.openStyleMenu() },
-    { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
-    { label: '', separator: true },
-    { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
-  ]
+  const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)
+  return formatItems(t, {
+    groups: body ? [offered.own, offered.bundles] : [],
+    heading: body ? t('For the {thing}', { thing: styleHost.noun }) : t('Select an object to style it'),
+    current: styleHost.current?.id,
+    canApply: !readonly.value && !!body,
+    apply: (id) => void styleHost.apply(id),
+    openApply: () => grid.value?.openStyleMenu(undefined, 'apply'),
+    look: { disabled: !body, open: () => grid.value?.openStyleMenu() },
+    allStyles: () => (dialog.value = 'styles'),
+    colours: () => (dialog.value = 'colours'),
+  })
 }
 
 /** Put the colours the document started with back, as the server itself states them. */

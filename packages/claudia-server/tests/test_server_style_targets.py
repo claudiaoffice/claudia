@@ -424,3 +424,30 @@ def test_cell_targets_that_do_not_hold_together_are_refused(book):
 def test_uses_count_each_range_once(book):
     call(book, "apply_style", {"targets": [cells(book, (0, 0, 99, 9))], "style": "input"}, methods=computes_methods)
     assert call(book, "style_uses", methods=computes_methods)["uses"]["input"] == 2  # one range, two slots
+
+
+def test_the_last_action_wins_and_clearing_shows_what_lies_beneath(book):
+    """D317 through the API: a whole column after some of its cells styles them all; clearing cells shows the
+    column's style again."""
+    from claudia_computes.limits import MAX_ROWS
+
+    call(book, "apply_style", {"targets": [cells(book, (2, 1, 3, 1))], "style": "note"}, methods=computes_methods)
+    call(
+        book,
+        "apply_style",
+        {"targets": [cells(book, (0, 1, MAX_ROWS - 1, 1))], "style": "input"},
+        methods=computes_methods,
+    )
+    assert look_at(book, 2, 1)["words"] == {"style": "input", "layer": "column"}
+    call(book, "apply_style", {"targets": [cells(book, (2, 1, 2, 1))], "style": "header"}, methods=computes_methods)
+    call(book, "clear_cell_style", {"sheet": sheet_id(book), "range": [2, 1, 2, 1]}, methods=computes_methods)
+    assert look_at(book, 2, 1)["box"] == {"style": "input", "layer": "column"}
+    call(book, "undo", methods=computes_methods)
+    assert look_at(book, 2, 1)["box"]["style"] == "header"
+    with pytest.raises(RequestError, match="no slot"):
+        call(
+            book,
+            "clear_cell_style",
+            {"sheet": sheet_id(book), "range": [2, 1, 2, 1], "slot": "border"},
+            methods=computes_methods,
+        )

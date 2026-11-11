@@ -17,6 +17,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   row or sheet goes into the layer of its shape. `cell_styles(sheet, row0, row1, col0, col1)` returns the style
   ranges of a window, cut to it, for a client to paint; `cell_style_at(sheet, row, col)` says where a cell's look
   comes from, slot by slot.
+- computes: styling cells lets the last action win (D317); `clear_cell_style(sheet, range, slot?)` takes the
+  cells' own style away so that the row's, column's or sheet's style shows through.
 
 ### Changed
 - `set_paragraph_style` is one of the shared style methods (`add_style_methods`), so computes and composes have it

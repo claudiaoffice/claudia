@@ -202,6 +202,25 @@ export function previewCss(computed: Css): Css {
   return withDisplayInk(Object.fromEntries(Object.entries(computed).filter(([name]) => PREVIEW.includes(name))))
 }
 
+const BORDERS = ['border-top', 'border-right', 'border-bottom', 'border-left']
+
+/** How a style is drawn as an entry of a menu or a gallery (D300, `format-menu-apply-style.svg`): its font, weight,
+ * slant, decoration and colour as in `previewCss`, and — where it has them — its background and borders, as a small
+ * chip around the name. Never its size: a 40 px title would break the menu. A border wider than 2 px is drawn as
+ * 2 px, enough to see which side it is on. */
+export function menuCss(resolved: Css): Css {
+  const out: Css = { ...previewCss(resolved) }
+  let boxed = 'background-color' in out
+  for (const side of BORDERS) {
+    const value = resolved[side]
+    if (!value) continue
+    out[side] = value.replace(/^\s*([\d.]+)px/, (_, w: string) => `${Math.min(2, Number(w))}px`)
+    boxed = true
+  }
+  if (boxed) Object.assign(out, { padding: '0 6px', 'border-radius': '5px' })
+  return out
+}
+
 const TAGS: Record<string, string> = { title: 'h1', 'heading-1': 'h2', 'heading-2': 'h3', quote: 'blockquote' }
 
 /** The element a paragraph is: a heading or a quote if its style comes from one, a plain paragraph otherwise. */
