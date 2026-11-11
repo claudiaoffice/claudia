@@ -106,8 +106,10 @@ answers `unknown_action` each time; the web app should not report them, or the c
 
 ## Follow-ups
 
-0. Make that Chromium end-to-end run a repo test (it needs Playwright, the built web app and the Python environment, so
-   it belongs next to `web/e2e`), and let it also click through the whole menu.
+0. ~~Make that Chromium end-to-end run a repo test~~ -- done (patch 0008): `web/e2e/macos-shell.cjs`, `npm run e2e:macos-shell`,
+   in CI's `e2e` job (the CI step is untested until it runs on GitHub). Per app: handshake, web menu bar gone, a native
+   "Save New Checkpoint…" click opens the dialog, the server stops with the window; plus `--server`. Still to add: click
+   through every native item, a server whose web app is too old (the page never says hello), and a certificate check.
 
 1. **Windows**: the same injection gap very likely exists in `clients/windows`; the same design (D251) applies. Verify on
    the Windows VM first, then port `shell-page.ts` and the core.

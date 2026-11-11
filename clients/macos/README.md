@@ -114,9 +114,11 @@ real local servers for the checks. What a Linux run cannot show, and what the fi
    Apple logo, the frame shows the web app (local http, and a remote https server), and the web app's menu bar is
    replaced by the native one. Spike 5 proved each part separately (page with token, menu, frame of an https page,
    extension round trip); this is the first time they run together.
-2. ~~The conversation between the frame and the shell page~~ -- shown on 2026-11-11 in Chromium with the real shell page,
-   the real core as a process, the real local server and the real web app (only Neutralino faked): the web app's menu bar
-   collapses and a native "Save New Checkpoint…" click opens the web app's dialog. What remains is WKWebView itself, and a
+2. ~~The conversation between the frame and the shell page~~ -- shown in Chromium by `web/e2e/macos-shell.cjs`
+   (`cd web && npm run e2e:macos-shell`; CI runs it) with the real shell page, the real core as a process, a real server
+   and the real web app, only Neutralino's client library faked: for each of the three apps the web app's menu bar
+   collapses and a native "Save New Checkpoint…" click opens the web app's dialog, and the window's end stops the server it
+   started; with `--server` the given server is shown and left running. What remains is WKWebView itself, and a
    **remote server whose web app predates the framed-page support** (web commit 55a9742): there the page never says
    hello, keeps its own menu bar, and the native menu cannot drive it; the window's console says so after five seconds.
 3. **HTTPS with a certificate from a certificate authority that macOS trusts**, through the Node core's own check

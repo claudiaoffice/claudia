@@ -23,6 +23,9 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
   `clients/macos/package.json`; tested for `src/`, `dist/` and `apps/<app>/ext/`.
 - The shell page's console says when a loaded page has not said hello after five seconds (an older web app, see the
   README) and when a native menu click had nobody to go to; both used to be silent.
+- **A browser test of the whole window**, `web/e2e/macos-shell.cjs` (`npm run e2e:macos-shell` in `web/`, in CI's `e2e` job): the
+  built shell page and core as a real process, a real server and the real web app in the frame; only Neutralino's client
+  library is faked. It would have failed on the repository-root bug above (checked by putting the bug back).
 - The core logs from its first line (`~/Library/Application Support/Claudia/<app>/state/shell.log`, or `shell.log` in that
   `Claudia` folder while it does not know its app), including its arguments, what its stdin is, crashes, Node without `WebSocket`, the tokens it got, the
   link to Neutralino and every request and answer.
