@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from claudia_core import ChatPosted, ChatRecord, Document
 
-from .ai_mode import ACT, LEGACY_MODE, SUGGEST, AiMode, parse_mode
+from .ai_mode import ACT, DEFAULT_MODE, SUGGEST, AiMode, parse_mode
 from .auth import AI_USER, Account, is_reserved
 from .hub import HubError
 from .protocol import Context, RequestError
@@ -48,8 +48,12 @@ class Task:
     sender: str
     text: str
     document: Document
-    mode: AiMode = ACT  # how the asker wants it treated (D262)
+    mode: AiMode = DEFAULT_MODE  # how the asker wants it treated (D262)
     writes: frozenset[str] | None = None  # the methods the AI may write through for this asker; ``None``: no limit
+    # Makes a request of the document as the AI under this question's account (reads and writes alike) and returns
+    # its result; ``RequestError`` if it is refused or fails. An engine that acts while it thinks (the model's loop)
+    # uses it.
+    call: Callable[[str, dict], Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -182,14 +186,21 @@ class Assistant:
         writes = self.allowed_methods if mode == ACT else self.suggest_methods
         return self.connection.account.acting_for(role, writes)
 
-    async def _answer(self, record: ChatRecord, mode: AiMode = LEGACY_MODE) -> None:
+    async def _answer(self, record: ChatRecord, mode: AiMode = DEFAULT_MODE) -> None:
         assert self.hosted is not None
         document = self.hosted.document
         account = self.account_for(record.author, mode)
         document.publish("typing", AI_USER, {"on": True})
         try:
             try:
-                task = Task(record.author, record.text, document, mode, account.allowed_methods)
+                task = Task(
+                    record.author,
+                    record.text,
+                    document,
+                    mode,
+                    account.allowed_methods,
+                    call=lambda method, params: self._call(method, params, account),
+                )
                 steps = await self._plan(task)
             except Exception as exc:  # the engine is a plug-in: whatever it does wrong, the asker is told
                 log.exception("the engine failed")
@@ -206,7 +217,7 @@ class Assistant:
             return await self.engine.plan_async(task)
         return self.engine.plan(task)
 
-    def _run(self, step: Step, asker: str, account: Account | None = None, mode: AiMode = LEGACY_MODE) -> bool:
+    def _run(self, step: Step, asker: str, account: Account | None = None, mode: AiMode = DEFAULT_MODE) -> bool:
         """Do one step as ``account`` (the AI's own when none is given); ``False`` if the rest of the plan should be
         dropped."""
         if isinstance(step, Say):

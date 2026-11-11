@@ -11,6 +11,30 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the
   WebKit view of the Linux client) could show the previous web app for a long time after the server was updated.
 
+## [0.23.0] - 2026-11-11
+
+The AI looks, acts, checks and corrects (E7.5), and a request that names no mode is a *suggest* request (D262).
+
+### Added
+- The model's loop (`ModelEngine`): a question takes rounds on the shared runner. The model asks to look at the document
+  or change it; the server makes the requests as the asker's AI under the question's account and sends back what came of
+  them: what it saw, and after a change the effect report (every cell that changed, recalculated dependents included,
+  and which of them show an error); the model carries on until it answers without requests. `Budget` (rounds, requests,
+  characters shown) ends a model that never answers, and the asker is told what was done before it stopped.
+- The lens, an app's side of the loop (`lens.Lens`, `lens.fence`, `lens.cut`): the orientation the model starts with, the
+  read requests written for a model (`B2: 24 (=B1*2)`, errors marked) and the effect report. `WorkbookLens` is the one
+  for computes. Everything that comes out of a document is handed to the model fenced as data.
+- `Task.call`: an engine can make requests as the AI under the question's account while it plans.
+
+### Changed
+- **Breaking:** a `chat` that sends no `ai_mode` is a *suggest* request (0.22.0 treated it as *act*): `ai_mode.LEGACY_MODE`
+  is gone, `DEFAULT_MODE` is what it means. A client that wants the AI to change the document must say `"act"`.
+- **Breaking:** `ModelEngine(runner, tools, lens, ...)` takes a lens, not a function describing the workbook;
+  `steps_of` is gone (the model's answers are no longer turned into steps once, the loop makes the requests itself);
+  `tools_of(..., kind=)` and `model_assistant_for(..., budget=)` are new. `model_assistant_for` knows the apps that
+  have a lens (computes); for composes it returns `None`, so `--ai` on a composes server now says so at start-up
+  instead of starting an AI that failed on its first question.
+
 ## [0.22.0] - 2026-11-11
 
 The AI works under the account of the person who asked, in the mode she chose (D261, D262; E7.4, E7.7).

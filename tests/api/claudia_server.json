@@ -1,5 +1,5 @@
 {
- "version": "0.22.0",
+ "version": "0.23.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -371,7 +371,7 @@
   "class": [
    "object"
   ],
-  "init": "(runner: 'ModelRunner', tools: 'tuple[ToolSpec, ...]', describe: 'Callable[..., str]', *, memory_turns: 'int' = 6)",
+  "init": "(runner: 'ModelRunner', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory_turns: 'int' = 6, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000))",
   "methods": {
    "plan_async": "(self, task: 'Task') -> 'list[Step]'"
   },
@@ -523,7 +523,7 @@
   "class": [
    "object"
   ],
-  "init": "(sender: 'str', text: 'str', document: 'Document', mode: 'AiMode' = 'act', writes: 'frozenset[str] | None' = None) -> None",
+  "init": "(sender: 'str', text: 'str', document: 'Document', mode: 'AiMode' = 'suggest', writes: 'frozenset[str] | None' = None, call: 'Callable[[str, dict], Any] | None' = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -616,7 +616,7 @@
   "function": "(model_cls: 'type[DocumentModel]', *, shapes: 'ShapeLibrary | None' = None) -> 'MethodTable'"
  },
  "model_assistant_for": {
-  "function": "(model_cls: 'type[DocumentModel]', runner: 'ModelRunner', *, max_waiting: 'int' = 4) -> 'Callable[[], Assistant] | None'"
+  "function": "(model_cls: 'type[DocumentModel]', runner: 'ModelRunner', *, max_waiting: 'int' = 4, budget: 'Budget | None' = None) -> 'Callable[[], Assistant] | None'"
  },
  "needs_administrator": {
   "function": "(exposed: 'bool', admin_count: 'int') -> 'bool'"

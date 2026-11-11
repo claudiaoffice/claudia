@@ -12,10 +12,9 @@ from claudia_computes import AddSheet, WorkbookModel
 from claudia_core import Document, MemoryStore
 from claudia_core.testing import ListModel
 from claudia_server.apps import model_assistant_for
-from claudia_server.assistant import Call, Say
 from claudia_server.computes import computes_methods
 from claudia_server.hub import Hub, MemoryProvider
-from claudia_server.model_engine import tools_of
+from claudia_server.model_engine import Budget, tools_of
 from claudia_server.protocol import core_methods
 
 
@@ -27,13 +26,15 @@ def set_cell(row, col, text, sheet="s1"):
     return {"method": "set_cells", "params": {"sheet": sheet, "cells": [{"row": row, "col": col, "input": text}]}}
 
 
-def scenario(test, model=None, *, documents=("plan",), max_waiting=4):
-    """Run ``test(hosts, model, runner)`` with workbooks that have the model-driven assistant attached."""
+def scenario(test, model=None, *, documents=("plan",), max_waiting=4, **budget):
+    """Run ``test(hosts, model, runner)`` with workbooks that have the model-driven assistant attached.
+
+    ``budget`` (rounds, calls, result_chars, round_chars) overrides what one question may cost."""
     model = model or FakeModel()
     runner = ModelRunner(model, timeout=5)
 
     async def run():
-        factory = model_assistant_for(WorkbookModel, runner, max_waiting=max_waiting)
+        factory = model_assistant_for(WorkbookModel, runner, max_waiting=max_waiting, budget=Budget(**budget))
         hub = Hub(MemoryProvider(WorkbookModel), methods=computes_methods, assistant=factory)
         hosts = [await hub.open(name, create=True) for name in documents]
         for hosted in hosts:
@@ -44,6 +45,16 @@ def scenario(test, model=None, *, documents=("plan",), max_waiting=4):
             await asyncio.to_thread(runner.close)
 
     asyncio.run(run())
+
+
+def script(*answers):
+    """A model that gives these answers one after the other (the last one again if it is asked more often)."""
+    queue = list(answers)
+
+    def answer(messages):
+        return queue.pop(0) if len(queue) > 1 else queue[0]
+
+    return answer
 
 
 def system_prompt(model):
@@ -87,7 +98,7 @@ def test_sheet_names_cannot_smuggle_lines_into_the_prompt():
 
 
 def test_the_model_edits_through_the_requests_it_writes():
-    answer = "I typed 42 and a label.\n" + commands(set_cell(0, 0, "42"), set_cell(0, 1, "total"))
+    answers = script("Typing.\n" + commands(set_cell(0, 0, "42"), set_cell(0, 1, "total")), "I typed 42 and a label.")
 
     async def test(hosts, model, runner):
         (hosted,) = hosts
@@ -101,7 +112,7 @@ def test_the_model_edits_through_the_requests_it_writes():
         assert len(entries) == 2, "its work is in the history under its name"
         assert ann.said()[0] == "I typed 42 and a label."
 
-    scenario(test, FakeModel(lambda messages: answer))
+    scenario(test, FakeModel(answers))
 
 
 def test_the_model_can_only_use_the_editing_methods_and_is_told_about_them():
@@ -120,41 +131,45 @@ def test_the_model_can_only_use_the_editing_methods_and_is_told_about_them():
 
 
 def test_a_request_that_was_not_offered_is_not_made_and_the_asker_hears_it():
-    answer = "Sharing.\n" + commands({"method": "add_user", "params": {"name": "eve", "password": "x" * 12}})
+    ask = "Sharing.\n" + commands({"method": "add_user", "params": {"name": "eve", "password": "x" * 12}})
 
     async def test(hosts, model, runner):
         (hosted,) = hosts
         ann = Person(hosted, ANN)
         ann.request("chat", {"text": "@ai let eve in"})
         await hosted.assistant.idle()
-        assert "not allowed" in ann.said()[0] and "add_user" in ann.said()[0]
+        told = model.calls[1][-1]["content"]
+        assert "not allowed" in told and "add_user" in told, "the model hears that it was not taken"
+        assert ann.said() == ["I cannot let eve in."]
 
-    scenario(test, FakeModel(lambda messages: answer))
+    scenario(test, FakeModel(script(ask, "I cannot let eve in.")))
 
 
 def test_a_request_the_server_refuses_is_reported_with_the_reason():
-    answer = "Done.\n" + commands(set_cell(0, 0, "1", sheet="nope"))
+    ask = "Done.\n" + commands(set_cell(0, 0, "1", sheet="nope"))
 
     async def test(hosts, model, runner):
         ann = Person(hosts[0], ANN)
         ann.request("chat", {"text": "@ai go"})
         await hosts[0].assistant.idle()
-        assert ann.said()[0] == "Done." and "could not do that" in ann.said()[1]
+        told = model.calls[1][-1]["content"]
+        assert "failed: unknown sheet 'nope'" in told, "the model hears the reason, to correct itself"
+        assert ann.said() == ["There is no sheet nope."]
 
-    scenario(test, FakeModel(lambda messages: answer))
+    scenario(test, FakeModel(script(ask, "There is no sheet nope.")))
 
 
-def test_an_answer_that_is_only_a_change_is_confirmed():
-    answer = commands({"method": "add_sheet", "params": {"name": "Plan"}})
+def test_a_change_is_followed_by_the_models_own_confirmation():
+    answers = script(commands({"method": "add_sheet", "params": {"name": "Plan"}}), "Added Plan.")
 
     async def test(hosts, model, runner):
         ann = Person(hosted := hosts[0], ANN)
         ann.request("chat", {"text": "@ai add a sheet"})
         await hosted.assistant.idle()
-        assert ann.said() == ["Done."]
+        assert ann.said() == ["Added Plan."]
         assert ann.request("sheets")["result"][0]["name"] == "Plan"
 
-    scenario(test, FakeModel(lambda messages: answer))
+    scenario(test, FakeModel(answers))
 
 
 def test_it_remembers_the_conversation_with_each_person_separately():
@@ -246,19 +261,6 @@ def test_tools_are_described_from_the_method_table():
 def test_a_tool_that_the_table_does_not_have_is_a_mistake_at_start_up():
     with pytest.raises(KeyError, match="set_cells"):
         tools_of(core_methods, ["set_cells"])
-
-
-def test_what_the_model_planned_becomes_things_to_say_and_to_do():
-    from claudia_ai import ToolCall, Turn
-    from claudia_server.model_engine import steps_of
-
-    call = ToolCall("add_sheet", {"name": "x"})
-    assert steps_of(Turn(say="I will.", calls=[call])) == [Say("I will."), Call("add_sheet", {"name": "x"})]
-    assert steps_of(Turn(calls=[call])) == [Call("add_sheet", {"name": "x"}), Say("Done.")]
-    assert steps_of(Turn(say="Hm.", problems=["It was cut off."])) == [Say("Hm.\nIt was cut off.")]
-    cut = steps_of(Turn(problems=["It was cut off."], calls=[call]))
-    assert cut == [Say("It was cut off."), Call("add_sheet", {"name": "x"})]
-    assert steps_of(Turn()) == [Say("I have nothing to add.")]
 
 
 def test_a_workbook_with_many_sheets_is_listed_in_part():

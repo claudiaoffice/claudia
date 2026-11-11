@@ -1,8 +1,8 @@
 """How a person wants the AI to treat her requests: *act* or *suggest* (D262, E7.7).
 
 The choice is hers, per document, and lives on her client; each ``@ai`` request carries it (``chat``'s ``ai_mode``) and
-the server stores nothing. A client that sends none is one from before the switch existed, which could not choose, and
-gets what it always got: *act*. The default a client starts with is *suggest*, in all three apps.
+the server stores nothing. *Suggest* is the default everywhere (D262): a request that names no mode, from a client that
+has no switch yet or from a script, is treated as *suggest* too.
 """
 
 from __future__ import annotations
@@ -14,14 +14,13 @@ AiMode = Literal["act", "suggest"]
 ACT: AiMode = "act"
 SUGGEST: AiMode = "suggest"
 
-DEFAULT_MODE: AiMode = SUGGEST  # what a client starts with (D262)
-LEGACY_MODE: AiMode = ACT  # what a request with no mode means: an older client
+DEFAULT_MODE: AiMode = SUGGEST  # what a client starts with, and what a request with no mode means (D262)
 
 
 def parse_mode(raw: object) -> AiMode:
-    """The mode a request names; ``None`` (not sent) is the legacy one. ``ValueError`` for anything else."""
+    """The mode a request names; ``None`` (not sent) is the default. ``ValueError`` for anything else."""
     if raw is None:
-        return LEGACY_MODE
+        return DEFAULT_MODE
     if raw == ACT:
         return ACT
     if raw == SUGGEST:
