@@ -25,12 +25,12 @@ Facet  = a named set of properties, with their value checks and their render/exp
            Box        background-color border-top/right/bottom/left padding-top/right/bottom/left vertical-align*
            Outline    fill stroke stroke-width
 Slot   = a place that reads a style: it names the facets it reads and the kind a style must have to be offered
-           composes paragraph   Box + Paragraph + Text   kind words
-           object words         Paragraph + Text         kind words    (text box, shape label, and a cell's words)
+           composes paragraph   Box + Paragraph + Text   kind paragraph
+           object words         Paragraph + Text         kind paragraph (text box, shape label, and a cell's words)
            object box           Box                      kind box      (text box, cell box, chart)
            object outline       Outline                  kind outline  (shape)
            picture              nothing                  kind box      (a picture carries its own colours)
-Kind   = words | box | outline : which facets a style may hold, and so which slots may use it
+Kind   = paragraph | box | outline (D312) : which facets a style may hold, and so which slots may use it
 ```
 
 `*` `vertical-align` and `white-space` are new (D307, allow-list `CSS_VERSION` 3, phase 5 only).
@@ -80,7 +80,7 @@ Goal: no behaviour change a user can see, except that a style has a `kind` and a
 
 1. **Facet table.** New module `claudia_core/facets.py`:
    `Facet(name, properties)` frozen dataclass; the four instances `TEXT`, `PARAGRAPH`, `BOX`, `OUTLINE`; `FACETS`;
-   `facet_of(prop) -> Facet`; `KINDS: dict[str, tuple[Facet, ...]]` (`words` → Text, Paragraph, Box; `box` → Box;
+   `facet_of(prop) -> Facet`; `KINDS: dict[str, tuple[Facet, ...]]` (`paragraph` → Text, Paragraph, Box; `box` → Box;
    `outline` → Outline); `SLOTS` (see the table above) with `reads` and `kind`.
    Value checks stay where they are, in `css.py` (they are CSS value syntax); `facets.py` holds names only and
    `css.py` builds `_CHECKS` from the facets. Add an import-time assertion and a test that the set of facet
@@ -93,16 +93,16 @@ Goal: no behaviour change a user can see, except that a style has a `kind` and a
 3. **`StyleDef.kind: str`.** Add the field (after `based_on`), to `to_data` and `from_data` (no upcast: D308), to
    `CreateStyle`'s data, to `StyleBook.views` (`kind` in each view), and to the `StylesChanged` event. `StyleBook.add`
    and `ChangeStyle` refuse a property whose facet the style's kind does not allow, with a sentence that names the
-   property and the kind (“`fill` is not a property of a words style”). A style made by deviating gets its parent's
+   property and the kind (“`fill` is not a property of a paragraph style”). A style made by deviating gets its parent's
    kind (`deviate_style`, `deviate_object_style`).
 4. **Built-ins carry a kind** in all three apps. The split (D310):
    * `plain-shape` → kind `outline`: `fill`, `stroke`, `stroke-width` only.
-   * new `shape-label` → kind `words`, based on `body-text`: `text-align: center`, and where the app had them
+   * new `shape-label` → kind `paragraph`, based on `body-text`: `text-align: center`, and where the app had them
      `font-size`/`line-height` (creates: `36px`, `1.25`).
    * new `plain-box` → kind `box`, no properties: what a text box has by default; it exists so that the object box
-     slot of a text box does not have to point at a words style.
+     slot of a text box does not have to point at a paragraph style.
    * `plain-image` → kind `box`, no properties (unchanged otherwise).
-   * `body-text` and the rest of composes' styles → kind `words`; composes' `definition` is `words` (it holds Box
+   * `body-text` and the rest of composes' styles → kind `paragraph`; composes' `definition` is `paragraph` (it holds Box
      properties, which composes' paragraph slot reads).
 5. **Slots in objects.** `paragraph_for` keeps its signature; its caller decides the style. Add
    `PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}` next to `STYLE_OF_KIND` in
@@ -110,7 +110,7 @@ Goal: no behaviour change a user can see, except that a style has a `kind` and a
    `claudia_creates_io/pptx.py`, which defaults to `body-text`/`plain-shape` and must now give a shape a
    `shape-label` paragraph) and change `STYLE_OF_KIND["text"]` to `plain-box`. An object's `style` is then **only**
    its box/outline; its `paragraph.style` is **only** its words. `SetObjectStyle` and `SetParagraphStyle` check the
-   kind of the style they are given against the slot (a `words` style cannot become an object's box).
+   kind of the style they are given against the slot (a `paragraph` style cannot become an object's box).
 6. **Server.** `styles` answers `kind` per style. New read method `style_model` (additive, no `write`): `{version,
    facets: {name: [props]}, kinds: {kind: [facet names]}, slots: {slot: {reads: [...], kind}}}` — the web must not
    keep its own copy of these tables (the lesson of `palette`: the copy is the one that drifts). Document it in the
@@ -121,7 +121,7 @@ Goal: no behaviour change a user can see, except that a style has a `kind` and a
 Tests first, in `packages/claudia-core/tests/` (`test_facets.py` new, `test_css.py`, `test_style_book.py`,
 `test_objects.py`): every allowed property is in exactly one facet; each kind allows what the table says and refuses
 the rest with the property named; deviation inherits kind; `to_data`/`from_data` round-trip with `kind`; creating a
-style of a wrong kind is refused as `command_error` through the server; `SetObjectStyle` with a `words` style is
+style of a wrong kind is refused as `command_error` through the server; `SetObjectStyle` with a `paragraph` style is
 refused; two-author conflict case for `ChangeStyle` stays green; every built-in of each app passes its own kind
 (this test catches the split). Server: `style_model` answer matches the core tables.
 
@@ -182,7 +182,7 @@ Mock-up: `all-styles-edit.svg`.
   of this text box” / “Body text of this text box”).
 * Rename keeps its rules (`rename_style`); deleting styles is still **undecided** (D226). Do not build it.
 
-Tests: `style-editor.test.ts` additions: the editor for a `words` style in an `object words` slot shows Text and
+Tests: `style-editor.test.ts` additions: the editor for a `paragraph` style in an `object words` slot shows Text and
 Paragraph sections and no Box section; Edit opens, Rename still works; the deviation target is the slot, not the
 object. Server: `deviate_object_words` creates one style, points one paragraph, nothing else (undo restores).
 
@@ -209,8 +209,10 @@ not: a cell opens the same menu through a `cellStyleHost`).
 * Core allow-list: add `vertical-align` (`top|middle|bottom`) and `white-space` (`normal|nowrap|pre-wrap`) to the
   Box facet and bump `CSS_VERSION` to 3 (`test_css.py` asserts the number; update with a comment like the existing
   one). Both only in `box` kind.
-* `claudia_computes`: a per-sheet table of **style ranges in layers** (sheet default, column, row, range, cell;
-  later layers win), stored as ranges, not per cell; a command `SetCellStyle(sheet, range, box_style, words_style)`
+* `claudia_computes`: a per-sheet table of **style ranges in layers by shape** (sheet default, column, row, range;
+  a single cell is a range), looked up in that fixed order with the most specific winning (D307), and
+  non-overlapping inside a layer (applying a range subtracts it from what is there); stored as ranges, not per cell;
+  a command `SetCellStyle(sheet, range, box_style, words_style)` — applying a style fills both (D311)
   that respects locks and has an inverse built from the state it found (see `SetObjectStyle` for the shape of
   such a command), logged and undoable per author; ranges **move with row and column insertions and deletions**
   (D135 — look at how line sizes move today and do the same). Property tests for the range table: any sequence of
@@ -250,9 +252,10 @@ A decision that this work makes obsolete is replaced, not edited (`git mv`, `sta
 
 ## Questions that are the owner's, not yours
 
-* **GTK and Apply style** (D301): the owner agreed the popover for Windows and macOS; GTK was proposed in the same
-  words. If GTK shows a reason to want a native flyout, stop and ask.
-* **Kind names and the closed list** (`words | box | outline`) are this note's proposal for the table D305 leaves
-  open. If phase 1 shows a better list, change it in the code *and* write a decision (D311+) — do not drift.
+* Settled since this note was written: GTK opens the popover too (D301); the kinds are `paragraph | box | outline`
+  (D312); cells fill both slots (D311); the built-in cell styles (D313); no xlsx for cell styles in this round
+  (D314); the slot table is open for later slots (D315). The order of work is in
+  `implementation-notes-styling-suite-plan.md`, which takes precedence over the phase order here.
+* If phase 1 shows a better closed list of kinds, change it in the code *and* write a decision — do not drift.
 * The exact label of the first entry (“Apply style” in the web menu, “Apply Style…” in a native menu, which uses
   title case and an ellipsis for entries that open something).
