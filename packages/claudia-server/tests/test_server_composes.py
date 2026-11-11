@@ -344,6 +344,7 @@ def test_deviating_makes_a_style_with_a_provisional_name_and_applies_it_in_one_s
     assert answer["style"] == "heading-1-changed" and answer["name"] == "Heading 1 (changed)"
     made = style(paper, answer["style"])
     assert (made["based_on"], made["to_name"], made["css"]) == ("heading-1", True, {"color": "#D6477A"})
+    assert made["kind"] == "paragraph"  # a deviation keeps its parent's kind (D305)
     assert call(paper, "blocks")["blocks"][0]["style"] == answer["style"]
     call(paper, "undo")
     assert call(paper, "blocks")["blocks"][0]["style"] == "body"

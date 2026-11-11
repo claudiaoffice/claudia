@@ -18,6 +18,8 @@ export interface StyleView {
   resolved: Css
   /** Made by deviating and still carrying the name it was given: it invites a name (E9.7). */
   to_name: boolean
+  /** Which facets the style may hold, and so which slots it fits: `paragraph`, `box` or `outline` (D305, D312). */
+  kind: string
 }
 
 export interface CssProblem {

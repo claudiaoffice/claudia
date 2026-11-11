@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 
@@ -89,13 +90,15 @@ function server(link: FakeLink) {
         id: 'plain-shape',
         name: 'Plain shape',
         purpose: '',
-        based_on: 'body-text',
+        based_on: null,
         css: { fill: '@accent/14' },
         computed: { fill: '@accent/14' },
         resolved: { fill: 'rgba(91, 75, 196, 0.14)' },
         to_name: false,
+        kind: 'outline',
       },
     ],
+    style_model: () => STYLE_MODEL,
     palette: () => ({
       type: 'palette',
       roles: [{ id: 'accent', name: 'Accent', purpose: 'the one thing to notice', colour: '#5B4BC4' }],

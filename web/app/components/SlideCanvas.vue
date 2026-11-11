@@ -7,11 +7,11 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
 import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
-import { cssOf as computedCss, slideFrame, wordsOf } from '~/lib/objects'
+import { cssOf as computedCss, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
-import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
+import { facetCss, scaleCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
@@ -69,6 +69,10 @@ function cssOf(o: SlideObject) {
   // read against a dark slide canvas in dark mode — display-only, same fix as composes' paragraphCss.
   return withDisplayInk(scaleCss(computedCss(state.styles, o), scale.value))
 }
+/** The look of an object's words: its paragraph's style, not the object's own (D304, D310). */
+function wordsCss(o: SlideObject) {
+  return withDisplayInk(scaleCss(wordsCssOf(state.styles, o), scale.value))
+}
 function outline(o: SlideObject) {
   return o.shape ? (state.shapes[o.shape] ?? null) : null
 }
@@ -83,12 +87,25 @@ function textBox(o: SlideObject) {
     height: `calc(${(area.h / 100) * f.h * scale.value}px - ${2 * pad * scale.value}px)`,
   }
 }
+/** Each slot draws only the facets it reads (D304), by the server's own table (`style_model`): the words their
+ * text and paragraph, a text box's box its box, a shape's outline its paint. */
+const facets = computed(() => state.styleModel?.facets)
+function words(o: SlideObject): Record<string, string> {
+  return facetCss(wordsCss(o), facets.value, ['text', 'paragraph'])
+}
+/** A text box's box — background, padding, a border per side (D310); a shape's box is its outline instead. */
+function frameCss(o: SlideObject): Record<string, string> {
+  return o.kind === 'text' ? { ...facetCss(cssOf(o), facets.value, ['box']), 'box-sizing': 'border-box' } : {}
+}
+function paintCss(o: SlideObject): Record<string, string> {
+  return facetCss(cssOf(o), facets.value, ['outline'])
+}
 function textStyle(o: SlideObject): Record<string, string> {
   const centered = o.kind === 'shape'
-  return { ...textCss(cssOf(o)), display: 'flex', 'flex-direction': 'column', 'justify-content': centered ? 'center' : 'flex-start', ...textBox(o) }
+  return { ...words(o), ...frameCss(o), display: 'flex', 'flex-direction': 'column', 'justify-content': centered ? 'center' : 'flex-start', ...textBox(o) }
 }
 function editorStyle(o: SlideObject): Record<string, string> {
-  return { ...textCss(cssOf(o)), ...textBox(o) }
+  return { ...words(o), ...frameCss(o), ...textBox(o) }
 }
 function pictureOf(o: SlideObject) {
   return o.image ? (state.images[o.image] ?? null) : null
@@ -230,9 +247,9 @@ const styleHost = objectStyleHost({
   get bodies() {
     return session.bodies()
   },
-  setObjectStyle: (id, style) => session.setObjectStyle(id, style),
+  applyStyle: (targets, style, slot) => session.applyStyle(targets, style, slot),
   changeStyle: (style, edit) => session.changeStyle(style, edit),
-  deviateObjectStyle: (parent, ids, edit) => session.deviateObjectStyle(parent, ids, edit),
+  deviateStyle: (parent, targets, slot, edit) => session.deviateStyle(parent, targets, slot, edit),
   renameStyle: (style, name) => session.renameStyle(style, name),
   checkCss: (text) => session.checkCss(text),
   setRole: (role, colour) => session.setRole(role, colour),
@@ -380,7 +397,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
         <template v-else>
           <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="pathCss(cssOf(o))" />
+            <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="paintCss(o)" />
           </svg>
           <div class="words" :style="textStyle(o)">
             <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>

@@ -63,10 +63,13 @@ _AUTOSHAPE = {
 #: The reverse of ``_AUTOSHAPE``, for import: an autoshape of any other type (a star, a custom geometry) is not
 #: one of claudia's three built-in shapes, so it is left as beyond-claudia content, same as a table or a picture.
 _SHAPE_ID = {autoshape: claudia_id for claudia_id, autoshape in _AUTOSHAPE.items()}
-#: The two default styles a reimported object is given: pptx carries no named-style concept to map back from
-#: (unlike docx's own style names), so every text box becomes "body-text" and every autoshape "plain-shape" --
-#: the same fallback ``slides_to_pptx`` itself falls back to when an object's style id is not a built-in one.
-_DEFAULT_TEXT_STYLE, _DEFAULT_SHAPE_STYLE = "body-text", "plain-shape"
+#: The default styles a reimported object is given: pptx carries no named-style concept to map back from
+#: (unlike docx's own style names), so every text box's words become "body-text" and every autoshape "plain-shape"
+#: -- the same fallback ``slides_to_pptx`` itself falls back to when an object's style id is not a built-in one.
+#: The other slot of each gets its own default (D304, D310): a text box's box "plain-box", a shape's words
+#: "shape-label".
+_DEFAULT_TEXT_STYLE, _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE = "body-text", "plain-shape", "shape-label"
+_DEFAULT_BOX_STYLE = "plain-box"
 
 _TRANSITIONS = ("fade", "wipe", "push", "none")
 _SPEEDS = ("fast", "med", "slow")
@@ -290,9 +293,9 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             rotation = round(shape.rotation) % 360
             object_id = f"o{next(object_ids)}"
             if kind == "text":
-                style, shape_id = _DEFAULT_TEXT_STYLE, None
+                style, words, shape_id = _DEFAULT_BOX_STYLE, _DEFAULT_TEXT_STYLE, None
             else:
-                style, shape_id = _DEFAULT_SHAPE_STYLE, _SHAPE_ID[shape.auto_shape_type]
+                style, words, shape_id = _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE, _SHAPE_ID[shape.auto_shape_type]
                 if shape_id not in defined:
                     definition = library.get(shape_id)
                     if definition is None:  # pragma: no cover -- the three ids in _SHAPE_ID are always shipped
@@ -300,7 +303,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                     model.define_shape(definition)
                     defined.add(shape_id)
             body = ObjectBody(
-                object_id, kind, w, h, style, paragraph_for(object_id, style, text), shape=shape_id, rotation=rotation
+                object_id, kind, w, h, style, paragraph_for(object_id, words, text), shape=shape_id, rotation=rotation
             )
             model.insert_object(VisualObject(body, SlideAnchor(slide_id, x, y)))
     return model

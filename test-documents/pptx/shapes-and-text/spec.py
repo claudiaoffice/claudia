@@ -13,7 +13,7 @@ from claudia_test_documents.case import Case
 def import_checks(model: SlideModel) -> None:
     assert model.slides == ["s1", "s2"]
     assert [(o.body.kind, o.body.style, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s1")] == [
-        ("text", "body-text", "Welcome to Claudia", None),
+        ("text", "plain-box", "Welcome to Claudia", None),  # a text box's box; its words are body text (D310)
         ("shape", "plain-shape", "Idea", "circle"),
     ]
     s2_objects = [

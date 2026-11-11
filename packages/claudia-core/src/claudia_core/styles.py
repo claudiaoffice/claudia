@@ -1,9 +1,11 @@
 """Named styles: how things look, named by what they are for, written in CSS (E1.10, D62, D73, D75).
 
-A ``StyleDef`` is a name, a sentence about its purpose, an optional parent (``based_on``) and the CSS properties in
-which it differs from that parent. The look of something is its *computed* style: the chain of parents, resolved. The
-``StyleBook`` is what an app's model holds; the commands below are the only ways to change it, so every change is in the
-log, can be undone, and is seen by everybody.
+A ``StyleDef`` is a name, a sentence about its purpose, an optional parent (``based_on``), a *kind* and the CSS
+properties in which it differs from that parent. The kind (``paragraph``, ``box`` or ``outline``) says which facets
+of :mod:`claudia_core.facets` the style may hold, and so which slots it can be put into (D303-D305, D312); a style
+and its parent are always of the same kind. The look of something is its *computed* style: the chain of parents,
+resolved. The ``StyleBook`` is what an app's model holds; the commands below are the only ways to change it, so every
+change is in the log, can be undone, and is seen by everybody.
 
 An app's model that wants styles has a ``styles`` attribute (a ``StyleBook``) and may have a method
 ``style_in_use(style_id) -> bool`` that tells the commands whether anything refers to a style.
@@ -19,6 +21,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from .commands import Command, CommandRegistry, core_commands
 from .css import resolve_css, validate_css
+from .facets import check_kind
 
 if TYPE_CHECKING:
     from .context import Context
@@ -32,7 +35,9 @@ _CHANGED = re.compile(r" \(changed(?: \d+)?\)$")
 @dataclass(frozen=True)
 class StyleDef:
     """One style: ``css`` holds only what differs from ``based_on``. ``to_name`` marks a style that was made by
-    deviating and still has the provisional name it was given (E9.7)."""
+    deviating and still has the provisional name it was given (E9.7). ``kind`` says which facets ``css`` may hold
+    (:data:`claudia_core.facets.KINDS`); a style written without one is a ``paragraph`` style, which is what text
+    has."""
 
     id: str
     name: str
@@ -40,6 +45,7 @@ class StyleDef:
     based_on: str | None
     css: dict[str, str]
     to_name: bool = False
+    kind: str = "paragraph"
 
     def to_data(self) -> dict:
         """The plain-data form that goes into snapshots and commands."""
@@ -50,12 +56,22 @@ class StyleDef:
             "based_on": self.based_on,
             "css": dict(self.css),
             "to_name": self.to_name,
+            "kind": self.kind,
         }
 
     @classmethod
     def from_data(cls, data: dict) -> StyleDef:
-        """Inverse of ``to_data``."""
-        return cls(data["id"], data["name"], data["purpose"], data["based_on"], dict(data["css"]), data["to_name"])
+        """Inverse of ``to_data``. Data without a ``kind`` is refused (``KeyError``) rather than guessed at: there
+        is no upcast of documents from before kinds existed (D308)."""
+        return cls(
+            data["id"],
+            data["name"],
+            data["purpose"],
+            data["based_on"],
+            dict(data["css"]),
+            data["to_name"],
+            data["kind"],
+        )
 
 
 def _clean_name(name: str) -> str:
@@ -181,7 +197,8 @@ class StyleBook:
 
     # -- changing (used by the commands) -----------------------------------------
     def add(self, style: StyleDef) -> None:
-        """Add a style: a new id and name, an existing parent, CSS that is allowed. Stores the cleaned CSS."""
+        """Add a style: a new id and name, an existing parent of the same kind, CSS that is allowed and belongs to
+        the style's kind. Stores the cleaned CSS."""
         if not _ID.fullmatch(style.id):
             raise ValueError(f"A style id is lower-case letters, digits and hyphens (up to 40), got {style.id!r}")
         if style.id in self._styles:
@@ -191,13 +208,21 @@ class StyleBook:
             raise ValueError(f"There is already a style named “{name}”")
         if style.based_on is not None and style.based_on not in self._styles:
             raise ValueError(f"The style {style.id!r} is based on {style.based_on!r}: no style {style.based_on!r}")
+        check_kind(style.kind, style.css)
+        if style.based_on is not None and (parent := self._styles[style.based_on]).kind != style.kind:
+            raise ValueError(
+                f"The {style.kind} style {style.id!r} cannot be based on “{parent.name}”, a {parent.kind} style: "
+                "a style and its parent are of the same kind"
+            )
         if len(style.purpose) > _MAX_PURPOSE or "\n" in style.purpose:
             raise ValueError(f"The purpose of a style is one line of up to {_MAX_PURPOSE} characters")
         self._styles[style.id] = replace(style, name=name, css=validate_css(style.css))
 
     def set_css(self, style_id: str, css: dict[str, str]) -> None:
-        """Give a style these own properties (instead of what it had)."""
-        self._styles[style_id] = replace(self.get(style_id), css=validate_css(css))
+        """Give a style these own properties (instead of what it had); they must belong to its kind."""
+        style = self.get(style_id)
+        check_kind(style.kind, css)
+        self._styles[style_id] = replace(style, css=validate_css(css))
 
     def rename(self, style_id: str, name: str, *, to_name: bool = False) -> None:
         """Give a style another name that no other style has; ``to_name`` says whether it is still provisional."""

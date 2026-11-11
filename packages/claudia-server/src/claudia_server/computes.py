@@ -31,10 +31,12 @@ generic object commands do not care what kind an object is).
 from __future__ import annotations
 
 import secrets
+from collections import Counter
 
 from claudia_computes_io import workbook_to_xlsx
 
 from claudia_computes import (
+    CELL_SLOTS,
     AddChart,
     AddSheet,
     CellAnchor,
@@ -45,6 +47,7 @@ from claudia_computes import (
     RemoveChart,
     ResizeLines,
     SetCells,
+    SetCellStyle,
     SheetId,
     Structure,
     WorkbookModel,
@@ -52,6 +55,7 @@ from claudia_computes import (
     parse_input,
     search_functions,
 )
+from claudia_computes.cellstyles import check_area
 from claudia_computes.model import (
     MAX_COL_WIDTH,
     MAX_COLS,
@@ -63,6 +67,7 @@ from claudia_computes.model import (
 from claudia_core import (
     AddObject,
     Batch,
+    Command,
     DefineDiagram,
     DefineImage,
     ForgetDiagram,
@@ -80,6 +85,7 @@ from claudia_core.clock import utc_now
 from .images import image_bytes
 from .office_export import office_export
 from .protocol import Context, RequestError, core_methods
+from .style_targets import OBJECTS
 from .styles import add_style_methods
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
@@ -94,10 +100,43 @@ AXES = {
 }
 SIZE_LIMITS = {"row": (MIN_ROW_HEIGHT, MAX_ROW_HEIGHT), "col": (MIN_COL_WIDTH, MAX_COL_WIDTH)}
 
+
+class _CellTargets:
+    """Cells as a style target, ``{"sheet": id, "range": [r0, c0, r1, c1]}`` (E6.13, D307, D311): the two slots of a
+    cell, through the shared ``apply_style`` and ``deviate`` (:mod:`claudia_server.style_targets`). A whole sheet,
+    whole columns or whole rows are ranges of the sheet's own size, and go into the layer of their shape."""
+
+    key = "sheet"
+
+    def thing(self, model: WorkbookModel, target: dict) -> str:
+        sheet = target.get("sheet")
+        if not isinstance(sheet, str):
+            raise ValueError("a target names its sheet by id")
+        check_area(target.get("range"))
+        if SheetId(sheet) not in model.sheets:
+            raise KeyError(f"no sheet {sheet!r}")
+        return "cell"
+
+    def style_in(self, model: WorkbookModel, target: dict, slot: str) -> str | None:
+        # The style of the range's first cell: what the menu shows for a selection is its anchor cell's.
+        r0, c0, _, _ = target["range"]
+        return model.sheet(SheetId(target["sheet"])).cell_styles.style_at(r0, c0, slot)[0]
+
+    def command(self, model: WorkbookModel, target: dict, slot: str, style: str) -> Command:
+        return SetCellStyle.put(SheetId(target["sheet"]), slot, check_area(target["range"]), style)
+
+    def uses(self, model: WorkbookModel) -> Counter[str]:
+        counted: Counter[str] = Counter()
+        for sheet in model.sheets.values():
+            counted.update(sheet.cell_styles.uses())
+        return counted
+
+
 computes_methods = core_methods.extended()
-# ``styles``, ``palette``, ``change_style``, ``rename_style``, ``check_css`` and ``set_object_style`` are the
-# same in every app (E1.10, D200). A workbook has no rule of its own about who may change them.
-add_style_methods(computes_methods)
+# ``styles``, ``palette``, ``change_style``, ``rename_style``, ``check_css``, ``set_object_style`` and the one style
+# API (``apply_style``, ``deviate``) are the same in every app (E1.10, D200); a workbook's targets are its floating
+# objects and its cells. A workbook has no rule of its own about who may change them.
+add_style_methods(computes_methods, targets=(OBJECTS, _CellTargets()))
 computes_methods.kind("image")(image_bytes)
 
 
@@ -200,6 +239,30 @@ def _typed(ctx, items: list) -> tuple[tuple[int, int, dict | None], ...]:
             )
         cells.append((_index(item["row"], MAX_ROWS, "row"), _index(item["col"], MAX_COLS, "col"), parse_input(text)))
     return tuple(cells)
+
+
+@computes_methods.method("cell_styles", "sheet:str row0:int row1:int col0:int col1:int")
+def _cell_styles(ctx, *, sheet, row0, row1, col0, col1):
+    """The style ranges that meet a window of a sheet, cut to it (E6.13, D307): `{revision, ranges: [{slot, layer,
+    area, style}]}`, least specific layer first, so a client paints them in order and a later one wins. `slot` is
+    `box` or `words`, `layer` is `sheet`, `column`, `row` or `range`, `area` is `[r0, c0, r1, c1]`. A cell no range
+    covers has `body-text` (D313). Unlike `cells`, the window may be as large as the sheet: a range is one entry
+    however many cells it covers."""
+    row0, row1 = _index(row0, MAX_ROWS, "row0"), _index(row1, MAX_ROWS, "row1")
+    col0, col1 = _index(col0, MAX_COLS, "col0"), _index(col1, MAX_COLS, "col1")
+    if row1 < row0 or col1 < col0:
+        raise RequestError("bad_request", "cell_styles: the window must not end before it starts")
+    found = _workbook(ctx).sheet(sheet)
+    return {"revision": _rev(ctx), "ranges": found.cell_styles.ranges_in((row0, col0, row1, col1))}
+
+
+@computes_methods.method("cell_style_at", "sheet:str row:int col:int")
+def _cell_style_at(ctx, *, sheet, row, col):
+    """Where a cell's look comes from: `{box: {style, layer}, words: {style, layer}}`, the layer being `range`,
+    `row`, `column`, `sheet` or `default` (no range covers it) — what the style menu says about a cell (D307)."""
+    row, col = _index(row, MAX_ROWS, "row"), _index(col, MAX_COLS, "col")
+    styles = _workbook(ctx).sheet(sheet).cell_styles
+    return {slot: dict(zip(("style", "layer"), styles.style_at(row, col, slot), strict=True)) for slot in CELL_SLOTS}
 
 
 @computes_methods.method("set_cells", "sheet:str cells:list base:revision?", write=True)

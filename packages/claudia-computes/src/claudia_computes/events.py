@@ -67,3 +67,15 @@ class LinesResized:
 
     def to_data(self) -> dict:
         return {"type": "sizes", "sheet": self.sheet, "axis": self.axis, "sizes": [[i, s] for i, s in self.sizes]}
+
+
+@dataclass(frozen=True)
+class CellStylesChanged:
+    """The style ranges of one sheet changed in ``area`` (E6.13, D307): a client fetches the ranges it shows again."""
+
+    sheet: SheetId
+    area: tuple[int, int, int, int]
+
+    def to_data(self) -> dict:
+        """The event as it goes to the clients: the sheet and the area whose styles changed."""
+        return {"type": "cell_styles", "sheet": self.sheet, "area": list(self.area)}

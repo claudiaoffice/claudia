@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cssOf, type ObjectBody, type StyleDef } from '~/lib/objects'
+import { cssOf, wordsCssOf, type ObjectBody, type StyleDef } from '~/lib/objects'
 
 // A style as the server sends it: `computed` still names the palette's roles, `resolved` has the colours (D200).
 const plainShape: StyleDef = {
@@ -9,6 +9,7 @@ const plainShape: StyleDef = {
   based_on: 'body-text',
   css: { fill: '@accent/14', stroke: '@accent' },
   to_name: false,
+  kind: 'outline',
   computed: { fill: '@accent/14', stroke: '@accent', 'font-size': '36px' },
   resolved: { fill: 'rgba(91, 75, 196, 0.14)', stroke: '#5B4BC4', 'font-size': '36px' },
 }
@@ -30,5 +31,32 @@ describe('cssOf', () => {
 
   it('is empty for a style the document does not have', () => {
     expect(cssOf({}, body)).toEqual({})
+  })
+})
+
+// D310: a shape's outline and its words are two slots. The words follow the paragraph's own style.
+const shapeLabel: StyleDef = {
+  id: 'shape-label',
+  name: 'Shape label',
+  purpose: 'the words inside a shape',
+  based_on: 'body-text',
+  css: { 'text-align': 'center' },
+  to_name: false,
+  kind: 'paragraph',
+  computed: { 'text-align': 'center', color: '@text' },
+  resolved: { 'text-align': 'center', color: '#1F1A33' },
+}
+
+describe('wordsCssOf', () => {
+  const styles = { 'plain-shape': plainShape, 'shape-label': shapeLabel }
+  const withWords: ObjectBody = { ...body, paragraph: { id: 'o1', style: 'shape-label', text: 'hi', runs: [{ length: 2, author: 'ann', via: null }] } }
+
+  it('draws the words of an object with its paragraph’s style, not the object’s own', () => {
+    expect(wordsCssOf(styles, withWords)).toEqual({ 'text-align': 'center', color: '#1F1A33' })
+  })
+
+  it('is empty for an object without words, or words under a style the document does not have', () => {
+    expect(wordsCssOf(styles, body)).toEqual({})
+    expect(wordsCssOf({}, withWords)).toEqual({})
   })
 })

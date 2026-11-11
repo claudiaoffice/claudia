@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { nounOf, objectStyleHost, objectUses, partsOf, type ObjectStyling } from '~/lib/object-style-host'
+import { nounOf, objectStyleHost, objectUses, partsOf, slotOf, styleInSlot, type ObjectStyling } from '~/lib/object-style-host'
 import type { ColourRole, ObjectBody, Reading } from '~/lib/objects'
 import type { StyleView } from '~/lib/style-css'
 
@@ -15,6 +15,7 @@ const style = (id: string, name: string): StyleView => ({
   computed: { fill: '@accent/14' },
   resolved: { fill: 'rgba(91, 75, 196, 0.14)' },
   to_name: false,
+  kind: id === 'body-text' ? 'paragraph' : 'outline',
 })
 
 const ROLES: ColourRole[] = [{ id: 'accent', name: 'Accent', purpose: '', colour: '#5B4BC4' }]
@@ -36,9 +37,9 @@ function styling(over: Partial<ObjectStyling> = {}) {
     readings: READINGS,
     selected: BODY(),
     bodies: [BODY(), BODY({ id: 'o2' }), BODY({ id: 'o3', style: 'body-text', kind: 'text' })],
-    setObjectStyle: spy('setObjectStyle'),
+    applyStyle: spy('applyStyle'),
     changeStyle: spy('changeStyle'),
-    deviateObjectStyle: spy('deviateObjectStyle'),
+    deviateStyle: spy('deviateStyle'),
     renameStyle: spy('renameStyle'),
     checkCss: vi.fn(async () => null),
     setRole: spy('setRole'),
@@ -52,13 +53,16 @@ describe('what a kind of object has', () => {
     expect(partsOf('image')).toEqual({ words: false, box: false })
   })
 
-  it('gives a chart a box but no words: it draws itself from the data', () => {
-    expect(partsOf('diagram')).toEqual({ words: false, box: true })
+  it('gives a chart nothing: its box style reads none of the outline controls (D304, D305)', () => {
+    expect(partsOf('diagram')).toEqual({ words: false, box: false })
   })
 
-  it('gives a shape and a text box both', () => {
-    expect(partsOf('shape')).toEqual({ words: true, box: true })
-    expect(partsOf('text')).toEqual({ words: true, box: true })
+  it('gives a shape its outline only: its words have a style of their own (D310)', () => {
+    expect(partsOf('shape')).toEqual({ words: false, box: true })
+  })
+
+  it('gives a text box its words: the slot the font controls fit (D304)', () => {
+    expect(partsOf('text')).toEqual({ words: true, box: false })
   })
 
   it('calls each kind what a person would call it', () => {
@@ -77,7 +81,7 @@ describe('the object as a style host', () => {
     const { host } = styling()
     expect(host.current?.id).toBe('plain-shape')
     expect(host.noun).toBe('shape')
-    expect(host.parts).toEqual({ words: true, box: true })
+    expect(host.parts).toEqual({ words: false, box: true }) // an outline: its words have a style of their own (D310)
   })
 
   it('counts how many objects have each style', () => {
@@ -95,14 +99,14 @@ describe('the object as a style host', () => {
   it('points the selected object at another style', async () => {
     const { host, calls } = styling()
     expect(await host.apply('body-text')).toBe(true)
-    expect(calls.setObjectStyle).toEqual(['o1', 'body-text'])
+    expect(calls.applyStyle).toEqual([[{ object: 'o1' }], 'body-text', 'outline'])
   })
 
   it('deviates from the selected object’s own style, for that object alone', async () => {
     // "This shape only": the change must not reach every other shape that shares the style (D75).
     const { host, calls } = styling()
     expect(await host.deviate({ set: { fill: '@attention' } })).toBe(true)
-    expect(calls.deviateObjectStyle).toEqual(['plain-shape', ['o1'], { set: { fill: '@attention' } }])
+    expect(calls.deviateStyle).toEqual(['plain-shape', [{ object: 'o1' }], 'outline', { set: { fill: '@attention' } }])
   })
 
   it('changes a role for the whole document', async () => {
@@ -136,5 +140,32 @@ describe('the object as a style host', () => {
     session.selected = BODY({ id: 'o9', kind: 'image', style: 'plain-image' })
     expect(host.noun).toBe('picture')
     expect(host.parts).toEqual({ words: false, box: false })
+  })
+})
+
+describe('the slots an object is styled in (D304)', () => {
+  it('works on a shape’s outline, a text box’s words and everything else’s box', () => {
+    expect([slotOf('shape'), slotOf('text'), slotOf('image'), slotOf('diagram')]).toEqual(['outline', 'words', 'box', 'box'])
+  })
+
+  it('reads a text box’s style from its words', () => {
+    const box = BODY({ kind: 'text', style: 'plain-box', paragraph: { id: 'o1', style: 'body-text', text: '', runs: [] } })
+    expect(styleInSlot(box)).toBe('body-text')
+    expect(styleInSlot(BODY())).toBe('plain-shape')
+  })
+
+  it('applies and deviates in a text box’s words, not its box', async () => {
+    const box = BODY({ kind: 'text', style: 'plain-box', paragraph: { id: 'o1', style: 'body-text', text: '', runs: [] } })
+    const { host, calls } = styling({ selected: box })
+    expect(host.current?.id).toBe('body-text')
+    await host.apply('body-text')
+    expect(calls.applyStyle).toEqual([[{ object: 'o1' }], 'body-text', 'words'])
+    await host.deviate({ set: { 'font-weight': 'bold' } })
+    expect(calls.deviateStyle).toEqual(['body-text', [{ object: 'o1' }], 'words', { set: { 'font-weight': 'bold' } }])
+  })
+
+  it('counts an object’s words as a use of their style', () => {
+    const box = BODY({ kind: 'text', style: 'plain-box', paragraph: { id: 'o1', style: 'body-text', text: '', runs: [] } })
+    expect(objectUses([box])).toEqual({ 'plain-box': 1, 'body-text': 1 })
   })
 })

@@ -87,6 +87,30 @@ and styles it end to end through the API. That test is what keeps the later rows
 still run because 1.2–1.4 land in the same PR or right after — give every existing built-in a kind in this PR so
 nothing breaks in between.
 
+**Progress (2026-11-10): step 1.1 is built.** What it took beyond the list above, so the next steps start from the
+real state:
+
+* **The shape split came forward from 1.2.** `plain-shape` mixed outline and words properties in all three apps, so
+  no kind could hold it once kinds were checked. It is now an `outline` root (`fill`, `stroke`, `stroke-width`) and
+  the words' look moved to a new built-in `shape-label` (paragraph, on Body text) — the two compute exactly what the
+  one did. That meant, also from 1.2: a new shape's words start under `shape-label` (`PARAGRAPH_STYLE_OF_KIND` in
+  `claudia_server/creates.py`, `_DEFAULT_LABEL_STYLE` in `claudia_creates_io/pptx.py`), and creates draws an
+  object's words from its paragraph's style (`wordsCssOf` in `web/app/lib/objects.ts`, used by `SlideCanvas.vue`).
+  Still for 1.2: `plain-box`, the text box's box slot, and the slot checks in `SetObjectStyle`/`SetParagraphStyle`.
+* **A style and its parent are of the same kind**, so `plain-shape` and `plain-image` are roots now, not children
+  of Body text.
+* **The object style menu offers fewer controls until 2.2.** `partsOf` (`web/app/lib/object-style-host.ts`) now
+  offers only what the object's own style can take: a shape its outline (no font controls — its words have their
+  own style), a text box its words (no fill/border — they never drew on a text box), a chart and a picture nothing
+  (their box style reads none of the outline controls). The menu that edits each slot is step 2.2.
+* **`shape-label` is hidden from composes' Format list** by adding it to `OBJECT_STYLE_IDS`; the list by slot
+  replaces that in 1.3. In creates and computes the object style list shows "Shape label" as a new entry until then.
+* `StyleDef.kind` defaults to `"paragraph"`, so code that makes a text style needs no change; `from_data` requires
+  the field (D308). The facet constants are `TEXT_FACET`, `PARAGRAPH_FACET`, `BOX_FACET`, `OUTLINE_FACET` because
+  `claudia_core.BOX` is already the shapes' 100-unit box.
+* The D315 test registers a "slide" with a `box` slot through `SlotTable.with_row` at core level; the end-to-end
+  version through the server API comes with 1.5.
+
 ### 1.2 Objects: slots instead of one style per object (core + all three apps)
 
 The floating objects are core's (`ObjectModel`, one object layer for all three apps), so this is done once.
@@ -177,6 +201,35 @@ brute-force per-cell model (the repo has no Hypothesis; ask before adding it); l
 
 **Done when** all of that is green and a cell can be styled, deviated, undone and moved through the server API —
 with no UI yet.
+
+**Progress (2026-11-10): steps 1.2 to 1.6 are built**, one commit each on top of 1.1. What differs from the
+text above, and what the next steps start from:
+
+* **The fit rule is wider than "same kind" (D316).** A slot takes every style whose kind holds all the facets it
+  reads: a box slot takes a box style *or* a paragraph style (a bundle). Without that, one style could not fill
+  both slots of a cell (D311). `Slot.to_data()` sends `takes`, so clients filter without a copy of the rule.
+* **1.2** `ObjectModel.check_object` checks both slots of an object against the table; `style_in_use` counts an
+  object's words. `plain-box` exists in all three apps; new and imported text boxes get it. In between 1.2 and 1.5
+  the object style menu had no controls for a text box; 1.5 gave them back.
+* **1.3** `TextModel.check_style` refuses a style that does not fit a paragraph; `style_in_use` counts the objects
+  in a text. composes' Format list filters by kind; `shape-label` stays out by name — *which slots a style is meant
+  for*, beyond which it fits, is a question for step 2.2. `StyleView`/`StyleDef` in the web carry `kind`.
+* **1.4** `set_paragraph_style` is a shared method in all three apps.
+* **1.5** `claudia_server.style_targets`: `style_model`, `apply_style(targets, style, slot?)`,
+  `deviate(parent, targets, slot?, set|text)`, `style_uses`, with an adapter per target kind
+  (`ObjectTargets`; composes' `_BlockTargets`; computes' `_CellTargets`, whose key is `"sheet"`). The method
+  names differ from the plan's: `deviate`, because composes already has a `deviate_style` with other parameters.
+  The old methods stay; they are removed in 3.4. The web already uses the new ones for objects: the object host
+  works on a shape's outline and a text box's words (`slotOf`, `styleInSlot` in `object-style-host.ts`), the
+  Format lists of creates and computes offer only fitting styles, and `SlideCanvas` draws each slot from its
+  facets (`facetCss` replaces the `PAINT` list) — so a text box's box would show a background now.
+* **1.6** `claudia_computes.cellstyles` and `SetCellStyle` as in the plan, with these choices: the two slots are
+  separate range sets (so "only the box" is natural); a whole sheet, column or row is a range of that size and
+  its layer follows from its shape; a deviation without a slot uses the style of the range's first cell;
+  `style_uses` counts a range once, not its cells (a whole column would otherwise be a million). An undo that
+  puts styles back restores how every cell looks, not the identical list of ranges (a hole cut into a range stays
+  as its pieces). `CSS_VERSION` is 3. The web knows the new facet properties but draws no cell styles yet (2.6).
+* No Hypothesis: the property test is a seeded random sequence checked against a cell-by-cell model.
 
 ---
 

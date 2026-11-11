@@ -1,13 +1,13 @@
 // A floating object as a StyleHost: the shape, text box, picture or chart a person has selected is what the style
 // menu styles. The same menu composes uses for a paragraph (E9.7, D203) — it knows nothing of either app.
 //
-// Two styles meet on one object and must not be confused (D181):
-//   * the object's own says what the *box* looks like — fill, stroke, stroke-width (D178);
-//   * its paragraph's says what the *words* look like.
-// This host is about the first. Pointing an object's words at another paragraph style is `set_paragraph_style`,
-// which the menu reaches through the same `apply` once a person is editing the text rather than the shape.
+// An object has slots (D304): a shape its outline and its words, a text box its box and its words, a picture and a
+// chart a box. Until the menu edits each slot with a section per facet (the styling-suite plan, step 2.2), this host
+// works on the one slot that the old menu's controls fit: a shape's outline (fill, stroke — the "box" controls), a
+// text box's words (the "words" controls), and the box of a picture or a chart, for which those controls write
+// nothing. It talks to the server through the one style API every app has (`apply_style`, `deviate`).
 import type { Parts, StyleHost } from './style-host'
-import type { ColourRole, ObjectBody, Reading } from './objects'
+import type { ColourRole, ObjectBody, Reading, StyleTarget } from './objects'
 import type { CssCheck, CssEdit, StyleView } from './style-css'
 
 /** What this host needs of a session, so that creates and computes can both supply it. */
@@ -20,26 +20,36 @@ export interface ObjectStyling {
   selected: ObjectBody | null
   /** Every object of the document, for the use counts. */
   bodies: ObjectBody[]
-  setObjectStyle(id: string, style: string): Promise<boolean>
+  /** Put a style into one slot of the targets (`apply_style`). */
+  applyStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean>
   changeStyle(style: string, edit: CssEdit): Promise<boolean>
-  deviateObjectStyle(parent: string, ids: string[], edit: CssEdit): Promise<boolean>
+  /** Make a new style from `parent` for one slot of the targets only (`deviate`, D75, D309). */
+  deviateStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean>
   renameStyle(style: string, name: string): Promise<boolean>
   checkCss(text: string): Promise<CssCheck | null>
   setRole(role: string, colour: string): Promise<boolean>
 }
 
-/** What a kind of object has: a picture carries its own colours and holds no words (D178, D181). */
+/** The slot of a kind of object that this host works on (see the header of this file). */
+export function slotOf(kind: string | undefined): string {
+  return kind === 'text' ? 'words' : kind === 'shape' ? 'outline' : 'box'
+}
+
+/** The style an object has in the slot this host works on: a text box's words have their paragraph's style. */
+export function styleInSlot(body: ObjectBody): string {
+  return slotOf(body.kind) === 'words' ? (body.paragraph?.style ?? body.style) : body.style
+}
+
+/** Which controls the menu offers for that slot: a shape's outline takes the fill and border controls (D178), a
+ * text box's words the font controls; a picture's or a chart's box takes neither. Left out, not disabled (D209). */
 export function partsOf(kind: string | undefined): Parts {
   switch (kind) {
-    case 'image':
-      return { words: false, box: false }
-    case 'diagram':
-      // A chart draws itself from the data; what a style can still say is the box it sits in.
+    case 'shape':
       return { words: false, box: true }
     case 'text':
-      return { words: true, box: true }
+      return { words: true, box: false }
     default:
-      return { words: true, box: true }
+      return { words: false, box: false }
   }
 }
 
@@ -51,7 +61,10 @@ export function nounOf(kind: string | undefined): string {
 /** How many objects have each style — the counts beside the names in the style gallery. */
 export function objectUses(bodies: ObjectBody[]): Record<string, number> {
   const counted: Record<string, number> = {}
-  for (const body of bodies) counted[body.style] = (counted[body.style] ?? 0) + 1
+  for (const body of bodies) {
+    // One count per slot that holds a style: the object's own, and its words' (D304).
+    for (const style of body.paragraph ? [body.style, body.paragraph.style] : [body.style]) counted[style] = (counted[style] ?? 0) + 1
+  }
   return counted
 }
 
@@ -63,7 +76,7 @@ export function objectStyleHost(session: ObjectStyling): StyleHost {
     },
     get current() {
       const body = selected()
-      return body ? session.styles.find((s) => s.id === body.style) : undefined
+      return body ? session.styles.find((s) => s.id === styleInSlot(body)) : undefined
     },
     get readOnly() {
       // Only ever "you may not write to this document". Nothing-selected is *not* read-only, however much it
@@ -87,12 +100,12 @@ export function objectStyleHost(session: ObjectStyling): StyleHost {
     uses: () => objectUses(session.bodies),
     apply: async (style) => {
       const body = selected()
-      return body ? session.setObjectStyle(body.id, style) : false
+      return body ? session.applyStyle([{ object: body.id }], style, slotOf(body.kind)) : false
     },
     change: (style, edit) => session.changeStyle(style, edit),
     deviate: async (edit) => {
       const body = selected()
-      return body ? session.deviateObjectStyle(body.style, [body.id], edit) : false
+      return body ? session.deviateStyle(styleInSlot(body), [{ object: body.id }], slotOf(body.kind), edit) : false
     },
     rename: (style, name) => session.renameStyle(style, name),
     check: (text) => session.checkCss(text),

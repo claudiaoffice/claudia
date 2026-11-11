@@ -25,7 +25,7 @@ autodoc_default_options = {"members": True, "undoc-members": False, "show-inheri
 nitpicky = True
 # Standard-library types are not linked (the build needs no network); everything of ours must resolve.
 nitpick_ignore_regex = [
-    (r"py:.*", r"(typing|collections\.abc|abc|builtins|enum|datetime)\..*"),
+    (r"py:.*", r"(typing|collections|collections\.abc|abc|builtins|enum|datetime)\..*"),
     # TypeVars and type parameters: M (DocumentModel), A (the anchor of VisualObject/ObjectModel)
     (r"py:class", r"abc\.ABC|M|A"),
     (r"py:class", r"'Mapping\[str"),  # (Sphinx cannot split the quoted Mapping[str, int])

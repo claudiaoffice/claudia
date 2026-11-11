@@ -20,7 +20,8 @@ import {
 } from '~/lib/document-menus'
 import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
-import { objectStyleHost } from '~/lib/object-style-host'
+import { objectStyleHost, slotOf, styleInSlot } from '~/lib/object-style-host'
+import { menuSlot, stylesFitting } from '~/lib/objects'
 import { useTheme } from '~/lib/theme'
 import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
@@ -62,7 +63,6 @@ const grid = ref<{
   selectObject: (id: string) => void
   openStyleMenu: (at?: { x: number; y: number }) => void
   selectedObject: () => string | null
-  selectedStyle: () => string | undefined
 } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
@@ -272,9 +272,9 @@ const styleHost = objectStyleHost({
   get bodies() {
     return session.bodies()
   },
-  setObjectStyle: (id, style) => session.setObjectStyle(id, style),
+  applyStyle: (targets, style, slot) => session.applyStyle(targets, style, slot),
   changeStyle: (style, edit) => session.changeStyle(style, edit),
-  deviateObjectStyle: (parent, ids, edit) => session.deviateObjectStyle(parent, ids, edit),
+  deviateStyle: (parent, targets, slot, edit) => session.deviateStyle(parent, targets, slot, edit),
   renameStyle: (style, name) => session.renameStyle(style, name),
   checkCss: (text) => session.checkCss(text),
   setRole: (role, colour) => session.setRole(role, colour),
@@ -288,10 +288,14 @@ const styleHost = objectStyleHost({
  * The per-object items need something selected; the colours are the document's and never do.
  */
 function styleItems() {
-  const styles = session.styleViews()
-  if (styles.length === 0) return [{ label: t('No styles yet'), disabled: true }]
-  const chosen = grid.value?.selectedStyle()
-  const nothing = !grid.value?.selectedObject()
+  const all = session.styleViews()
+  if (all.length === 0) return [{ label: t('No styles yet'), disabled: true }]
+  const selected = grid.value?.selectedObject()
+  const body = selected ? state.objects[selected] : undefined
+  // Only the styles that fit the slot the style menu works on (D304, D316): a shape's outline, a text box's words.
+  const styles = body ? stylesFitting(all, menuSlot(state.styleModel, body.kind)) : all
+  const chosen = body ? styleInSlot(body) : undefined
+  const nothing = !body
   return [
     { label: t('For the object you select'), disabled: true },
     ...styles.map((s) => ({
@@ -299,8 +303,7 @@ function styleItems() {
       checked: s.id === chosen,
       disabled: readonly.value || nothing,
       action: () => {
-        const id = grid.value?.selectedObject()
-        if (id) void session.setObjectStyle(id, s.id)
+        if (body) void session.applyStyle([{ object: body.id }], s.id, slotOf(body.kind))
       },
     })),
     { label: '', separator: true },

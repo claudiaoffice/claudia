@@ -7,7 +7,7 @@ from claudia_core import ALLOWED_CSS, CSS_VERSION, CssError, format_css, parse_c
 
 # ----------------------------------------------------------------------------- the list
 def test_the_list_is_versioned_and_has_what_the_style_menu_needs():
-    assert CSS_VERSION == 2  # 2: a colour may be a role of the palette (D200)
+    assert CSS_VERSION == 3  # 2: a colour may be a role of the palette (D200); 3: a cell's box (D307)
     assert {
         "color",
         "background-color",
@@ -198,3 +198,17 @@ def test_problems_are_plain_data():
         validate_css({"color": "nope"})
     data = caught.value.problems[0].to_data()
     assert data["property"] == "color" and data["line"] is None and "color" in data["message"]
+
+
+@pytest.mark.parametrize(
+    ("prop", "value"), [("vertical-align", "middle"), ("white-space", "pre-wrap"), ("white-space", "nowrap")]
+)
+def test_a_cells_box_may_say_where_its_content_sits_and_whether_it_wraps(prop, value):
+    """CSS_VERSION 3 (D307): two keywords a cell needs and no style had."""
+    assert validate_css({prop: value}) == {prop: value}
+
+
+@pytest.mark.parametrize(("prop", "value"), [("vertical-align", "baseline"), ("white-space", "pre")])
+def test_only_the_keywords_a_cell_uses_are_allowed(prop, value):
+    with pytest.raises(CssError, match=prop):
+        validate_css({prop: value})

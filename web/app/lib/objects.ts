@@ -98,6 +98,8 @@ export interface StyleDef {
   based_on: string | null
   css: Record<string, string>
   to_name: boolean
+  /** `paragraph`, `box` or `outline` (D305, D312). */
+  kind: string
   computed: Record<string, string>
   resolved: Record<string, string>
 }
@@ -174,4 +176,46 @@ export function slideAnchor(container: string, frame: Frame): SlideAnchor {
  * (see `StyleDef`). */
 export function cssOf(styles: Record<string, StyleDef>, body: ObjectBody): Record<string, string> {
   return styles[body.style]?.resolved ?? {}
+}
+
+/** One slot of a kind of thing, as the server's `style_model` sends it (D304, D316). */
+export interface SlotView {
+  name: string
+  /** The facets the slot reads. */
+  reads: string[]
+  /** The kind of a style made for this slot alone. */
+  kind: string
+  /** The kinds of style that fit it. */
+  takes: string[]
+}
+
+/** What a style property means and where a style can go: the server's `style_model`. A client keeps no copy. */
+export interface StyleModel {
+  facets: Record<string, string[]>
+  kinds: Record<string, string[]>
+  slots: Record<string, SlotView[]>
+  targets: string[]
+}
+
+/** Something a style is put into, in the app's own terms (`apply_style`, `deviate`). */
+export type StyleTarget = { object: string } | { block: string } | { sheet: string; range: [number, number, number, number] }
+
+/** The slot of an object that the style menu works on: a shape's outline, a text box's words, and the box of a
+ * picture or a chart. `null` while the server's style model has not arrived. */
+export function menuSlot(model: StyleModel | null, kind: string): SlotView | null {
+  const slots = model?.slots[kind] ?? []
+  const wanted = kind === 'text' ? 'words' : kind === 'shape' ? 'outline' : 'box'
+  return slots.find((s) => s.name === wanted) ?? null
+}
+
+/** The styles that fit a slot: those whose kind the slot takes (D316). */
+export function stylesFitting(styles: StyleDef[], slot: SlotView | null | undefined): StyleDef[] {
+  return slot ? styles.filter((s) => slot.takes.includes(s.kind)) : []
+}
+
+/** What an object's *words* look like: its paragraph's own style, resolved — not the object's style, which is its
+ * box or outline (D181, D304). A shape's outline and its words are two slots with a style each (D310). Empty for an
+ * object without words. */
+export function wordsCssOf(styles: Record<string, StyleDef>, body: ObjectBody): Record<string, string> {
+  return body.paragraph ? (styles[body.paragraph.style]?.resolved ?? {}) : {}
 }

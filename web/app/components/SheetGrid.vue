@@ -667,9 +667,9 @@ const styleHost = objectStyleHost({
   get bodies() {
     return props.session.bodies()
   },
-  setObjectStyle: (id, style) => props.session.setObjectStyle(id, style),
+  applyStyle: (targets, style, slot) => props.session.applyStyle(targets, style, slot),
   changeStyle: (style, edit) => props.session.changeStyle(style, edit),
-  deviateObjectStyle: (parent, ids, edit) => props.session.deviateObjectStyle(parent, ids, edit),
+  deviateStyle: (parent, targets, slot, edit) => props.session.deviateStyle(parent, targets, slot, edit),
   renameStyle: (style, name) => props.session.renameStyle(style, name),
   checkCss: (text) => props.session.checkCss(text),
   setRole: (role, colour) => props.session.setRole(role, colour),
@@ -685,7 +685,6 @@ defineExpose({
   openStyleMenu,
   /** What the Format menu ticks and disables itself by. */
   selectedObject: () => selectedObject.value,
-  selectedStyle: () => (selectedObject.value ? props.session.state.objects[selectedObject.value]?.style : undefined),
 })
 </script>
 

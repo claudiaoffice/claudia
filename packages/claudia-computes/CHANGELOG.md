@@ -3,6 +3,35 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-10
+
+The styling-suite plan, steps 1.2 to 1.6.
+
+### Added
+- The built-in **`plain-box`**, a `box` style without properties: the box of a text box on a sheet (D310).
+- **Cell styles** (E6.13, D307, D311, D313): `claudia_computes.cellstyles` — `CellStyles`, a sheet's style ranges
+  for the `box` and the `words` slot of its cells, in four layers by shape (`sheet`, `column`, `row`, `range`,
+  `layer_of`), non-overlapping inside a layer, looked up most specific first and `body-text` where no range
+  covers a cell; `MAX_STYLE_RANGES` per sheet. `Sheet.cell_styles`, in snapshots.
+- `SetCellStyle(sheet, slot, layer, area, pieces)` and `SetCellStyle.put(sheet, slot, area, style)`: a logged,
+  undoable change of one slot and layer, with regions (cell locks hold it) and a refusal of a style that does not
+  fit the slot. Event `CellStylesChanged`.
+- The cell styles a workbook starts with (D313): **Header**, **Input**, **Result**, **Note**, paragraph styles on
+  Body text written in palette roles.
+
+### Changed
+- **Breaking:** `WorkbookModel.restructure` also moves the style ranges and returns the pieces that lay on
+  deleted lines as a fourth value; `Structure`'s undo and `RemoveSheet`'s undo put the styles back.
+- `WorkbookModel.style_in_use` counts style ranges.
+
+## [0.2.0] - 2026-11-10
+
+Every built-in style has a kind (D305, D312), and a shape's outline and its words are two styles (D310).
+
+### Changed
+- **Breaking:** `plain-shape` is an `outline` style (`fill`, `stroke`, `stroke-width` only, no parent); its words'
+  centring moved to the new built-in **`shape-label`**, based on Body text. `plain-image` is a `box` style.
+
 ## [0.1.0] - 2026-11-10
 
 The first version under the versioning policy. Until now the package had a placeholder version (0.0.1), no

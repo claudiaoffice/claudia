@@ -5,7 +5,30 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- One style API for all three apps (`claudia_server.style_targets`, the styling-suite plan step 1.5):
+  `style_model` (facets, kinds, slots with the kinds each takes, and the target keys this app accepts),
+  `apply_style(targets, style, slot?)`, `deviate(parent, targets, slot?, set|text)` and `style_uses`. A target is
+  `{"object": id}` in every app, `{"block": id}` in composes (and `{"sheet": id, "range": [...]}` in computes);
+  without a `slot`, a style fills every slot it fits (D309, D311, D316) and a deviation every slot that held the
+  parent. `add_style_methods` takes the app's `targets`; a later kind of thing is a row of the slot table and an
+  adapter (D315). The narrower methods stay until every client uses these.
+- computes: cells are a style target, `{"sheet": id, "range": [r0, c0, r1, c1]}` (D307, D311); a whole column,
+  row or sheet goes into the layer of its shape. `cell_styles(sheet, row0, row1, col0, col1)` returns the style
+  ranges of a window, cut to it, for a client to paint; `cell_style_at(sheet, row, col)` says where a cell's look
+  comes from, slot by slot.
+
 ### Changed
+- `set_paragraph_style` is one of the shared style methods (`add_style_methods`), so computes and composes have it
+  as creates did: the objects of a sheet or a text can have their words restyled too.
+- A new text box's own style is `plain-box`, the box slot (D310); its words stay `body-text`.
+- `set_object_style` and `set_paragraph_style` refuse, as `command_error`, a style that does not fit the slot
+  (D316): a paragraph style on a shape's outline, an outline style on its words.
+- A new shape's words start under `shape-label`, not under the shape's own style: a shape's outline and its words
+  are two styles of two kinds (D310). A text box's words stay under `body-text`.
+- `deviate_style` and `deviate_object_style` make a style of the parent's kind (D305), and refuse, as
+  `command_error`, a property the kind cannot hold (changing the font of an outline, say).
+- `styles` answers each style's `kind` (D305).
 - The built web app is served with `Cache-Control` (D248): pages and every file not named by its content are
   revalidated on each load (`no-cache`, a cheap `304` when nothing changed), the content-hashed files under `_nuxt/`
   are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the

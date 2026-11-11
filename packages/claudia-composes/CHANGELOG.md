@@ -3,6 +3,28 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-10
+
+The styling-suite plan, steps 1.2 to 1.6.
+
+### Added
+- The built-in **`plain-box`**, a `box` style without properties: the box of a text box on the text (D310).
+
+### Changed
+- **Breaking:** a paragraph takes only a style that fits it — a `paragraph` style (D304, D316); `SetStyle` and
+  `split` refuse `plain-shape`, `plain-box` and `plain-image`.
+- `TextModel.style_in_use` also counts the objects in the text and their words, so a style only an object uses
+  cannot be taken back.
+
+## [0.2.0] - 2026-11-10
+
+Every built-in style has a kind (D305, D312), and a shape's outline and its words are two styles (D310).
+
+### Changed
+- **Breaking:** the paragraph styles are `paragraph` styles (Definition keeps its box: a paragraph style may hold
+  one). `plain-shape` is an `outline` style (`fill`, `stroke`, `stroke-width` only, no parent); its words' centring
+  moved to the new built-in **`shape-label`**. `plain-image` is a `box` style.
+
 ## [0.1.0] - 2026-11-10
 
 The first version under the versioning policy. Until now the package had a placeholder version (0.0.1), no

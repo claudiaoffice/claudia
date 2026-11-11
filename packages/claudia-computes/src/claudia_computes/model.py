@@ -35,6 +35,7 @@ from claudia_core import (
 )
 
 from .calc import Calculator
+from .cellstyles import CellStyles, Piece
 from .charts import ChartSeries, ChartSpec, figure_of, in_bounds
 from .formula.rewrite import adjusted, without_sheet
 from .functions.registry import FunctionRegistry
@@ -213,6 +214,7 @@ class Sheet:
         self.grid: dict[Position, Value] = {}  # sparse: the values they show
         self.rows_used = 0  # rows and columns beyond these hold nothing
         self.cols_used = 0
+        self.cell_styles = CellStyles()  # the style ranges of the cells' two slots (E6.13, D307)
         self.row_heights: dict[int, float] = {}  # sparse: only rows resized away from DEFAULT_ROW_HEIGHT
         self.col_widths: dict[int, float] = {}  # sparse: only columns resized away from DEFAULT_COL_WIDTH
         self._tick = 0
@@ -235,6 +237,7 @@ class Sheet:
             "cells": [[r, c, content] for (r, c), content in sorted(self.cells.items())],
             "row_heights": [[r, h] for r, h in sorted(self.row_heights.items())],
             "col_widths": [[c, w] for c, w in sorted(self.col_widths.items())],
+            "cell_styles": self.cell_styles.to_data(),
         }
 
     def sizes(self, axis: str) -> dict[int, float]:
@@ -401,6 +404,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.cells = {(r, c): content for r, c, content in item["cells"]}
             sheet.row_heights = dict(item["row_heights"])
             sheet.col_widths = dict(item["col_widths"])
+            sheet.cell_styles = CellStyles.from_data(item["cell_styles"])  # no upcast before the first release (D308)
             model.sheets[sheet.id] = sheet
             model.open_container(str(sheet.id))
         model.restore_objects(state["objects"], state["images"], state["shapes"], state["diagrams"])
@@ -409,6 +413,12 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return model
 
     # -- the object seam -------------------------------------------------------
+    def style_in_use(self, style_id: str) -> bool:
+        """Does an object, its words, or a style range of any sheet name this style? (Asked by the core style
+        commands before they take a style back.)"""
+        in_cells = any(sheet.cell_styles.names(style_id) for sheet in self.sheets.values())
+        return in_cells or ObjectModel.style_in_use(self, style_id)
+
     def containers(self) -> list[str]:
         """The sheets objects may sit on, in order."""
         return [str(sheet) for sheet in self.sheets]
@@ -627,13 +637,17 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self._ids = None
         self.open_container(str(sheet.id))
 
-    def restructure(self, edit: StructuralEdit) -> tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...]]:
+    def restructure(
+        self, edit: StructuralEdit
+    ) -> tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]]]:
         """Insert or delete rows or columns: cells move, formulas follow them and keep pointing at what they pointed
-        at, and the edited axis' sizes (``Sheet.row_heights`` or ``col_widths``) move with their lines.
+        at, and the edited axis' sizes (``Sheet.row_heights`` or ``col_widths``) and the sheet's style ranges move
+        with their lines.
 
         Returns the cells that were deleted, for every sheet the formulas whose text had to change (as they were),
-        and the sizes of the lines that were deleted (on ``edit``'s own axis only) — all three are what an undo needs
-        to put back exactly (deleting what a formula pointed at, or a line's size, cannot be undone by a reference)."""
+        the sizes of the lines that were deleted (on ``edit``'s own axis only), and the pieces of style ranges that
+        lay on deleted lines — all four are what an undo needs to put back exactly (deleting what a formula pointed
+        at, a line's size or its style cannot be undone by a reference)."""
         sheet = self.sheet(edit.sheet)
         limit = MAX_ROWS if edit.axis == "row" else MAX_COLS
         if edit.at >= limit or (not edit.insert and edit.at + edit.count > limit):
@@ -675,11 +689,12 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.row_heights = remapped_sizes
         else:
             sheet.col_widths = remapped_sizes
+        cut_styles = sheet.cell_styles.restructure(edit)
         sheet.refit()
         sheet.bump_all()
         restores = self._redefine(edit, plan)
         calc.everything = True
-        return destroyed, restores, destroyed_sizes
+        return destroyed, restores, destroyed_sizes, cut_styles
 
     def _plan_restructure(self, edit: StructuralEdit, remap) -> list:
         """The formulas a structural edit touches: (old key, new key, formula after the edit, compiled before)."""

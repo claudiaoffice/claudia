@@ -18,6 +18,8 @@ suggest, and people accept (D63).
 
 from __future__ import annotations
 
+from collections import Counter
+
 from claudia_composes_io import text_to_docx
 
 from claudia_composes import (
@@ -44,6 +46,7 @@ from claudia_core import (
 
 from .office_export import office_export
 from .protocol import Context, RequestError, core_methods
+from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
 
 MAX_ZONE_WORDS = 10  # the widest ± n words zone a cursor may ask for
@@ -68,7 +71,30 @@ def _people_only(ctx: Context) -> None:
         raise RequestError("forbidden", "the assistant can only make suggestions; people write the text")
 
 
-add_style_methods(composes_methods, guard=_people_only)
+class _BlockTargets:
+    """A paragraph of the text as a style target, ``{"block": id}``: one slot that reads text, paragraph and box
+    (D304), for the shared ``apply_style`` and ``deviate`` (:mod:`claudia_server.style_targets`)."""
+
+    key = "block"
+
+    def thing(self, model: TextModel, target: dict) -> str:
+        block = target.get("block")
+        if not isinstance(block, str):
+            raise ValueError("a target names its block by id")
+        model.block(block)  # KeyError: no such paragraph
+        return "paragraph"
+
+    def style_in(self, model: TextModel, target: dict, slot: str) -> str | None:
+        return model.block(target["block"]).style
+
+    def command(self, model: TextModel, target: dict, slot: str, style: str) -> Command:
+        return SetStyle(target["block"], style)
+
+    def uses(self, model: TextModel) -> Counter[str]:
+        return Counter(block.style for block in model.blocks)
+
+
+add_style_methods(composes_methods, guard=_people_only, targets=(_BlockTargets(), OBJECTS))
 
 
 def _rev(ctx: Context) -> str | None:
@@ -215,7 +241,8 @@ def _deviate_style(ctx, *, parent, blocks, set, text, base):
             "command_error", "the new style would look just like “" + model.styles.get(parent).name + "”"
         )
     name = model.styles.provisional_name(parent)
-    created = StyleDef(model.styles.unique_id(name), name, "", parent, own, to_name=True)
+    kind = model.styles.get(parent).kind  # a deviation is of its parent's kind (D305)
+    created = StyleDef(model.styles.unique_id(name), name, "", parent, own, to_name=True, kind=kind)
     commands: list[Command] = [CreateStyle(created), *(SetStyle(block, created.id) for block in blocks)]
     applied = ctx.document.execute(Batch(tuple(commands), "Deviate style"), author=ctx.user, base=base)
     return {"style": created.id, "name": name, "revision": applied.revision.to_data()}

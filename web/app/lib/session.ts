@@ -4,7 +4,7 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import type { LinkLike, Region, WireData } from './protocol'
 import type { Content } from './cells'
 import type { ImageAsset } from './images'
-import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, VisualObject } from './objects'
+import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
@@ -75,6 +75,8 @@ export interface State extends BaseState {
   styles: Record<string, StyleDef>
   /** The document's colour roles and how they read against each other (D200); the styles are drawn from. */
   palette: PaletteEvent | null
+  /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
+  styleModel: StyleModel | null
 }
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
@@ -104,6 +106,7 @@ export class Session extends BaseSession<State> {
       figures: {},
       styles: {},
       palette: null,
+      styleModel: null,
     })
   }
 
@@ -113,13 +116,14 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, charts, styles, palette] = await Promise.all([
+    const [sheets, images, diagrams, charts, styles, palette, styleModel] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
       link.request<ChartSpec[]>('diagrams'),
       link.request<Chart[]>('charts'),
       link.request<StyleDef[]>('styles'),
       link.request<PaletteEvent>('palette'),
+      link.request<StyleModel>('style_model'),
     ])
     this.forgetCells()
     const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
@@ -137,6 +141,7 @@ export class Session extends BaseSession<State> {
     this.figuresInflight.clear()
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
     s.palette = palette
+    s.styleModel = styleModel
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
   }
 
@@ -155,18 +160,22 @@ export class Session extends BaseSession<State> {
     return Object.values(this.state.objects)
   }
 
-  async setObjectStyle(id: string, style: string): Promise<boolean> {
-    return (await this.attempt('set_object_style', { id, style, base: this.state.revision })) !== false
+
+  /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). */
+  async applyStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
+    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+  }
+
+  /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
+  async deviateStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
+    const params = { parent, targets, slot, ...edit, base: this.state.revision }
+    return (await this.attempt('deviate', params)) !== false
   }
 
   async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
     return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
   }
 
-  async deviateObjectStyle(parent: string, ids: string[], edit: CssEdit): Promise<boolean> {
-    const params = { parent, objects: ids, ...edit, base: this.state.revision }
-    return (await this.attempt('deviate_object_style', params)) !== false
-  }
 
   async renameStyle(style: string, name: string): Promise<boolean> {
     return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false

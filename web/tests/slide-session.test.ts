@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { SlideSession } from '~/lib/slide-session'
 
@@ -24,8 +25,8 @@ const RECT = { format: 1, id: 'rectangle', name: 'Rectangle', path: 'M0 0 L100 0
 const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z', aspect: 1, text_area: { x: 15, y: 15, w: 70, h: 70 } }
 // A style names the palette's roles in `css`/`computed` and carries the colours in `resolved`, which is what the
 // page is drawn from (D200).
-const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', based_on: null, to_name: false, css: { color: '@text' }, computed: { color: '@text' }, resolved: { color: '#1f1a33' } }
-const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', based_on: 'body-text', to_name: false, css: { fill: '@accent/14' }, computed: { color: '@text', fill: '@accent/14' }, resolved: { color: '#1f1a33', fill: 'rgba(91, 75, 196, 0.14)' } }
+const BODY = { id: 'body-text', name: 'Body text', purpose: 'Running text', based_on: null, to_name: false, kind: 'paragraph', css: { color: '@text' }, computed: { color: '@text' }, resolved: { color: '#1f1a33' } }
+const SHAPE_STYLE = { id: 'plain-shape', name: 'Plain shape', purpose: 'A shape', based_on: null, to_name: false, kind: 'outline', css: { fill: '@accent/14' }, computed: { color: '@text', fill: '@accent/14' }, resolved: { color: '#1f1a33', fill: 'rgba(91, 75, 196, 0.14)' } }
 const PALETTE = {
   type: 'palette',
   roles: [
@@ -117,6 +118,7 @@ function server(link: FakeLink, objects: any[] = []) {
     shapes: () => ({ library: [CIRCLE, RECT], document: [] }),
     images: () => [],
     styles: () => [BODY, SHAPE_STYLE],
+    style_model: () => STYLE_MODEL,
     palette: () => PALETTE,
     log: () => [],
     chat_log: () => [],

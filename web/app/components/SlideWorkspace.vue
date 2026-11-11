@@ -17,7 +17,8 @@ import {
   type DocumentMenuContext,
 } from '~/lib/document-menus'
 import { useI18n } from '~/lib/i18n'
-import { objectStyleHost } from '~/lib/object-style-host'
+import { objectStyleHost, slotOf, styleInSlot } from '~/lib/object-style-host'
+import { menuSlot, stylesFitting } from '~/lib/objects'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
@@ -62,9 +63,9 @@ const styleHost = objectStyleHost({
   get bodies() {
     return session.bodies()
   },
-  setObjectStyle: (id, style) => session.setObjectStyle(id, style),
+  applyStyle: (targets, style, slot) => session.applyStyle(targets, style, slot),
   changeStyle: (style, edit) => session.changeStyle(style, edit),
-  deviateObjectStyle: (parent, ids, edit) => session.deviateObjectStyle(parent, ids, edit),
+  deviateStyle: (parent, targets, slot, edit) => session.deviateStyle(parent, targets, slot, edit),
   renameStyle: (style, name) => session.renameStyle(style, name),
   checkCss: (text) => session.checkCss(text),
   setRole: (role, colour) => session.setRole(role, colour),
@@ -78,15 +79,18 @@ const styleHost = objectStyleHost({
  * per-object items say so rather than failing quietly. Colours are the document's and never need a selection.
  */
 function styleItems() {
-  const styles = session.styleViews()
-  if (styles.length === 0) return [{ label: t('No styles yet'), disabled: true }]
-  const chosen = state.selected ? state.objects[state.selected]?.style : undefined
+  const all = session.styleViews()
+  if (all.length === 0) return [{ label: t('No styles yet'), disabled: true }]
+  const body = state.selected ? state.objects[state.selected] : undefined
+  // Only the styles that fit the slot the style menu works on (D304, D316): a shape's outline, a text box's words.
+  const styles = body ? stylesFitting(all, menuSlot(state.styleModel, body.kind)) : all
+  const chosen = body ? styleInSlot(body) : undefined
   return [
     ...styles.map((s) => ({
       label: s.name,
       checked: s.id === chosen,
-      disabled: readonly.value || !state.selected,
-      action: () => session.setObjectStyle(state.selected ?? '', s.id),
+      disabled: readonly.value || !body,
+      action: () => (body ? session.applyStyle([{ object: body.id }], s.id, slotOf(body.kind)) : undefined),
     })),
     { label: '', separator: true },
     {

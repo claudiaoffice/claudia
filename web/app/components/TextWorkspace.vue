@@ -7,6 +7,7 @@ import { toMarkdown } from '~/lib/markdown'
 import { SAMPLE_TEXT } from '~/lib/sample'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
+import type { StyleView } from '~/lib/style-css'
 import {
   askItem,
   clipboardItems,
@@ -219,20 +220,21 @@ function styleItem(id: string) {
 const BUILTIN_STYLE_IDS = new Set(['body', 'title', 'heading-1', 'heading-2', 'quote', 'remark', 'definition'])
 /**
  * A text's style book holds the floating objects' styles too, since one object layer serves all three apps
- * (E10.16): `plain-shape` and `plain-image` live here beside the paragraph styles. The *Format* menu marks a
- * paragraph, and giving a paragraph "Plain shape" means nothing, so they are left out of this list — the style
- * menu on the object itself is where they belong (D203).
+ * (E10.16). The *Format* menu marks a paragraph, so it lists only the styles that fit a paragraph: a paragraph is
+ * one slot that takes paragraph styles (D304, D316), which leaves out `plain-shape`, `plain-box` and `plain-image`
+ * by their kind, and with them every style somebody deviated from one of them.
  *
- * By id, because a `StyleDef` carries no `kind` yet: the real fix is that field on the style itself, which is
- * already on the backlog (E1.10, "Not done: kind"). A style somebody makes by deviating from one of these keeps
- * its parent's shape and would want the same treatment; until `kind` exists there is nothing honest to test for.
+ * `shape-label` is a paragraph style by kind but was made for the words in a shape, not for a paragraph of the text
+ * (D310), so it is left out by name. Which slots a style is *meant* for, beyond which it fits, is a question for the
+ * new style menu (the styling-suite plan, step 2.2).
  */
-const OBJECT_STYLE_IDS = new Set(['plain-shape', 'plain-image'])
+const OBJECT_WORDS_STYLE_IDS = new Set(['shape-label'])
+const forParagraphs = (s: StyleView) => s.kind === 'paragraph' && !OBJECT_WORDS_STYLE_IDS.has(s.id)
 /** A style made by deviating from a built-in (`next_style` in `model.py`) is not one of the three fixed groups above
  * — D127 only grouped the seven built-ins, so anything else gets its own trailing group rather than being folded
  * silently into one of them. */
 function customStyleItems() {
-  const custom = state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && !OBJECT_STYLE_IDS.has(s.id))
+  const custom = state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && forParagraphs(s))
   if (!custom.length) return []
   return [{ label: '', separator: true }, ...custom.map((s) => styleItem(s.id))]
 }

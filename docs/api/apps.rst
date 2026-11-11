@@ -23,6 +23,22 @@ computes
 .. autoclass:: claudia_computes.AddChart
 .. autoclass:: claudia_computes.RemoveChart
 
+Cell styles
+~~~~~~~~~~~
+
+A cell has a box and words, two slots of the style model (D304, D307, D311); a sheet keeps style ranges in layers,
+not a style per cell.
+
+.. automodule:: claudia_computes.cellstyles
+   :no-members:
+
+.. currentmodule:: claudia_computes
+
+.. autoclass:: claudia_computes.CellStyles
+.. autoclass:: claudia_computes.SetCellStyle
+.. autoclass:: claudia_computes.CellStylesChanged
+.. autofunction:: claudia_computes.layer_of
+
 ``SheetObject`` is ``VisualObject[CellAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor.
 The object commands, region and events are shared by all three apps (:doc:`claudia_core`, E10.16, D177).
 
