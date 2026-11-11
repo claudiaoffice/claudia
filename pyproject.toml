@@ -106,6 +106,14 @@ omit = ["packages/*/tests/*", "*/conftest.py"]
 branch = true
 data_file = ".coverage"
 
+# SEC-08: advisories the npm audit (`scripts/check_npm_audit.py`, a step of the gate) may let through, one entry per
+# advisory with the reason. There are none: the audit fails on every advisory of moderate severity or worse. An entry
+# that nothing needs any more fails the audit, so this table only ever holds what it must.
+#
+# [[tool.claudia.npm-audit-allow]]
+# advisory = "GHSA-xxxx-xxxx-xxxx"
+# reason = "why this is acceptable, and what to wait for before removing the entry"
+
 [tool.claudia.coverage-floors]
 # CODE-01: the least each package's tests must reach, statements and branches together, as a whole percentage. A floor
 # only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.

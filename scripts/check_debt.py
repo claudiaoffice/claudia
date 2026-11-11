@@ -24,6 +24,9 @@ checks are:
              measured on Linux with TeX installed, where every test runs; elsewhere this check skips, saying why
 * docs       the Sphinx build with warnings as errors (every cross reference must resolve)
 * perf       the scaling guards: the cost of hot paths must not grow with the history
+* npm audit  known vulnerabilities in every package-lock.json, development tools included (SEC-08,
+             ``scripts/check_npm_audit.py``). It asks the npm registry, so it is skipped, saying why, where npm is not
+             installed or the registry does not answer; ``--ci`` fails on that skip like any other
 * web lint   ESLint over web/ (``eslint.config.mjs``, CODE-01), when Node and `npm install` in web/ are there
 * web tests  the web app's unit tests (vitest) with their coverage thresholds, and its types (vue-tsc), likewise
 * e2e greeting  ``./start.sh all`` in a real browser: three servers, each greeting with its own app (UX-10). Needs
@@ -63,6 +66,7 @@ class Check:
     slow: bool = False
     cwd: Path = ROOT
     skip_reason: str = ""  # a check that cannot run here is skipped, not failed
+    skip_returncode: int = 0  # ...and so is one that finds out only while running, by exiting with this status
 
 
 @dataclass(frozen=True)
@@ -134,6 +138,7 @@ def checks() -> list[Check]:
         coverage_check(),
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
         *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],
+        npm_audit_check(),
         *web_checks(),
         *e2e_checks(),
         *linux_client_checks(),
@@ -153,6 +158,22 @@ def coverage_check(platform: str = sys.platform, which=shutil.which) -> Check:
     elif missing := [program for program in TEX_PROGRAMS if not which(program)]:
         reason = f"the coverage floors are measured with TeX installed (missing: {', '.join(missing)})"
     return Check("coverage", ("uv", "run", "--quiet", "python", "scripts/check_coverage.py"), skip_reason=reason)
+
+
+#: What ``scripts/check_npm_audit.py`` exits with when it could not ask the registry (its ``UNREACHABLE``).
+NPM_AUDIT_UNREACHABLE = 3
+
+
+def npm_audit_check(which=shutil.which) -> Check:
+    """The dependency audit (SEC-08). It reads the lockfiles only, so unlike the web checks it needs no ``npm install``;
+    it needs npm itself, and the registry, which the script reports with its own exit status."""
+    reason = "" if which("npm") else "npm is not installed"
+    return Check(
+        "npm audit",
+        ("uv", "run", "--quiet", "python", "scripts/check_npm_audit.py"),
+        skip_reason=reason,
+        skip_returncode=NPM_AUDIT_UNREACHABLE,
+    )
 
 
 def web_checks(web: Path = ROOT / "web") -> list[Check]:
@@ -219,6 +240,12 @@ def linux_client_checks() -> list[Check]:
     ]
 
 
+def last_line(text: str) -> str:
+    """The last non-empty line: where a check that skips itself says why."""
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return lines[-1] if lines else ""
+
+
 def run_checks(the_checks: list[Check], *, fast: bool) -> list[Outcome]:
     """Run each check in turn, printing its line as it finishes, and collect what happened."""
     outcomes = []
@@ -234,6 +261,11 @@ def run_checks(the_checks: list[Check], *, fast: bool) -> list[Outcome]:
         started = time.perf_counter()
         result = subprocess.run(check.command, cwd=check.cwd, capture_output=True, text=True, check=False)
         seconds = time.perf_counter() - started
+        if check.skip_returncode and result.returncode == check.skip_returncode:
+            reason = last_line(result.stdout) or "the check could not run here"
+            print(f"-- {check.name}: skipped ({reason})")
+            outcomes.append(Outcome(check.name, "skipped", reason))
+            continue
         ok = result.returncode == 0
         print(f"-- {check.name}: {'ok' if ok else 'FAILED'} ({seconds:.1f}s)")
         if ok:

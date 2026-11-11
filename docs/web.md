@@ -128,6 +128,14 @@ the thresholds in `vitest.config.ts`.
 named in the summary line either way: a skip is never reported as clean). `--ci` turns an unlisted skip into a
 failure; CI's Python job allows this one because the separate `web` job covers it with Node installed.
 
+The gate also audits the lockfiles of `web/` and of every client with `npm audit` (`scripts/check_npm_audit.py`, SEC-08).
+It needs no `node_modules`, only npm and the registry; an advisory of moderate severity or worse fails it (`--level high`
+for a narrower look), development tools included. Fix one by updating the direct dependency that brings the package in,
+or with an `overrides` entry in `package.json` where the dependent has no newer release. What cannot be fixed is
+recorded in `pyproject.toml` under `[[tool.claudia.npm-audit-allow]]`, one entry per advisory with its reason; an entry
+that nothing needs any more fails the audit. Where npm or the registry cannot be reached the check is skipped and says
+so, and `--ci` fails on that skip.
+
 
 ## Presentations (creates)
 

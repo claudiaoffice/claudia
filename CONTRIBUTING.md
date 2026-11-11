@@ -18,8 +18,9 @@
 4. **APIs are versioned and documented.** What a package lists in `__all__` is its public API. A change to it needs a new
    version, a changelog entry and a regenerated snapshot (`docs/versioning.md`). The network API is versioned in its URL.
 5. **Debt is looked for regularly.** `uv run python scripts/check_debt.py` runs lint, types, dead-code detection,
-   the tests with their coverage floors, the docs build, the performance guards and the web app's lint, tests and
-   types. CI runs it on every push and once a week. A finding is fixed, or recorded in `vulture_whitelist.py`, the ruff
+   the tests with their coverage floors, the docs build, the performance guards, the web app's lint, tests and
+   types, and an `npm audit` of every lockfile (`scripts/check_npm_audit.py`: moderate or worse fails; what cannot be
+   fixed goes into `[[tool.claudia.npm-audit-allow]]` in `pyproject.toml` with the reason). CI runs it on every push and once a week. A finding is fixed, or recorded in `vulture_whitelist.py`, the ruff
    config or `web/eslint.config.mjs` *with the reason*; it is never just silenced.
 6. **The kernel stays pure.** `claudia-core` does no I/O, knows no app, and imports only the standard library
    (a test enforces it).
