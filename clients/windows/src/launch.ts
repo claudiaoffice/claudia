@@ -1,88 +1,55 @@
-// Putting a local server together for an app, finding the Neutralino binary, and the command line that starts it
-// pointed at that server's own loopback page -- D159 option 2, the same choice the owner made explicitly for
-// macOS, now carried over to Windows rather than asked again: the transport question was "how does a Neutralino
-// shell reach the frontend", not "how does a *macOS* Neutralino shell reach it", and nothing in the spike or the
-// build found a platform split in the answer. Mirrors clients/macos/src/launch.ts, itself mirroring
-// clients/linux/src/claudia_shell_gtk/launch.py's prepare_server() (same two SetupProblem messages, same
-// "documents/state folders exist before the server starts").
+// Starting a window: find the Neutralino binary and the built files of the app, say to the shell which app it is and
+// which server it was told to use, and run it. The Windows counterpart of clients/linux/.../launch.py and of
+// clients/macos/src/launch.ts, but much thinner than the first: the server, the checks and the settings live in the
+// native core (core.ts), which Neutralino starts together with the window (D251), so this launcher knows nothing about
+// servers except the one on the command line.
 //
-// Unlike macOS, there is no app-bundle.ts step here: that module exists purely to fix a CFBundleName problem (the
-// macOS Dock and menu-bar heading read a bundle's Info.plist, not argv0) that has no Windows equivalent -- the
-// taskbar and the window's own title bar both read `neutralino.config.json`'s `modes.window.title`, which this
-// client already sets per app, same as it always did on Linux and macOS.
+//     node dist\launch.js creates [--server https://demo.claudia-office.de]
+//     claudia-creates [--server ...]          (the .cmd shim npm makes from package.json's `bin`)
+//
+// What it hands to the window: the command that Neutralino runs as the core (core-command.ts), which names the
+// absolute path of the node that runs this launcher and carries, as arguments and not as environment, which app this
+// window is, which server it was given with --server (as a canonical origin; absent: the core starts its own) and
+// `--use-system-ca` where Node knows it, so that HTTPS trusts what this computer's certificate store trusts. The
+// launcher puts the command into the app's neutralino.config.json for the run and the default back afterwards.
+//
+// What is Windows' own, against macOS:
+//  - the binary is `neutralino-win_x64.exe` (Neutralino 6.8.0 publishes one Windows binary, no architecture choice);
+//  - no `.app` bundle: the taskbar and the title bar read the title from the config (notes/e5-11-windows-client.md);
+//  - the path of node usually has a space in it (`C:\Program Files\nodejs\node.exe`), and Neutralino cannot pass a
+//    space to the core: `commandSafePath` uses the 8.3 short name, and the launcher falls back to a plain `node` from
+//    PATH when there is none;
+//  - environment variable names are not case-sensitive on Windows, and `process.env` keeps the name it was given
+//    (`Path`): a copy into a plain object that then sets `PATH` would hold both (`environmentWith`).
 
-import { accessSync, constants } from 'node:fs'
-import { mkdir } from 'node:fs/promises'
-import { spawn as nodeSpawn } from 'node:child_process'
-import { join } from 'node:path'
-import { env as processEnv } from 'node:process'
-import { pathToFileURL } from 'node:url'
-import { getIdentity, UnknownAppError, type App } from './identity.js'
-import { defaultRepo, documentsDir, findFrontend, findServerPython, stateDir, type Env } from './paths.js'
-import { LOOPBACK, LocalServer, ServerStartError, buildServerCommand, freePort } from './server.js'
+import { accessSync, constants, existsSync, readFileSync } from 'node:fs'
+import { spawn as nodeSpawn, spawnSync } from 'node:child_process'
+import { delimiter, dirname, join } from 'node:path'
+import { argv as processArgv, env as processEnv, execPath, platform as hostPlatform } from 'node:process'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand } from './core-command.js'
+import { parseCommand, splitAppArgument, type Options } from './cli.js'
+import { getIdentity } from './identity.js'
+import { SetupProblem } from './local-server.js'
+import { defaultRepo, stateDir, type Env } from './paths.js'
 
-export class SetupProblem extends Error {}
+export { SetupProblem }
 
-export interface PrepareServerOptions {
-  repo?: string
-  localAppData?: string
-  env?: Env
-}
-
-/** A LocalServer for `app`, not started yet -- same contract as launch.py's and the macOS launch.ts's
- * prepareServer(): say plainly what is missing (and how to fix it) rather than handing back an empty window. */
-export async function prepareServer(app: App, options: PrepareServerOptions = {}): Promise<LocalServer> {
-  const env = options.env ?? processEnv
-  const python = findServerPython({ repo: options.repo, env })
-  if (python === null) {
-    throw new SetupProblem(
-      "Claudia's server needs Python 3.14, and none was found.\n" +
-        'Set CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed ' +
-        "(in a checkout: run 'uv sync' and the interpreter is .venv\\Scripts\\python.exe).",
-    )
-  }
-  const web = findFrontend({ repo: options.repo, env })
-  if (web === null) {
-    const wrong = env.CLAUDIA_WEB_DIR
-    throw new SetupProblem(
-      wrong
-        ? `CLAUDIA_WEB_DIR is set to ${wrong}, but there is no built frontend (index.html) in it.`
-        : "The web frontend has not been built.\nBuild it ('npm run build' in the web folder) or set CLAUDIA_WEB_DIR to a folder that holds it.",
-    )
-  }
-  const identity = getIdentity(app)
-  const documents = documentsDir(identity.name, options.localAppData)
-  const state = stateDir(identity.name, options.localAppData)
-  await mkdir(documents, { recursive: true })
-  await mkdir(state, { recursive: true })
-  const port = await freePort()
-  const command = buildServerCommand(python, { model: identity.model, port, documents, web, state })
-  return new LocalServer(command, { url: `http://${LOOPBACK}:${port}`, log: join(state, 'server.log') })
-}
-
-/** The one binary name Neutralino 6.8.0 publishes for Windows (notes/e0-3-neutralino-windows-macos.md §5: "and the
- * Linux ones, not used" lists no separate win_arm64 either) -- unlike macOS's `neutralinoBinaryName`, there is no
- * architecture branch here, because there is nothing to branch on yet. If Neutralino ever publishes a Windows ARM64
- * binary this becomes wrong silently rather than loudly, same trade-off the macOS function's own doc comment
- * accepts for an unpublished macOS architecture. */
+/** Neutralino 6.8.0 publishes exactly one Windows binary (notes/e0-3-neutralino-windows-macos.md §5): the x64 one,
+ * which also runs on Windows on ARM. */
 export function neutralinoBinaryName(): string {
   return 'neutralino-win_x64.exe'
 }
 
 export interface FindNeutralinoBinaryOptions {
-  /** apps/<app>/, the project `neu update` (or `neu run`) is pointed at -- it writes the binary into `bin/`
-   * underneath this, not into this folder directly (confirmed against the E0.3 spike's own `run_windows.cmd`,
-   * which downloads with `npx @neutralinojs/neu update` and then runs `bin\neutralino-win_x64.exe`). Not checked
-   * into the repo -- D157 pins the binary and client-library versions together, re-checked on every upgrade. */
+  /** apps\<app>\, the project `neu update` is pointed at: it writes the binary into `bin\` underneath this. Not
+   * checked into the repo; D157 pins the binary and client-library versions together. */
   appDir: string
   env?: Env
 }
 
-/** `$CLAUDIA_NEUTRALINO_BIN`, else `<appDir>\bin\neutralino-win_x64.exe` if it exists, else `null` -- same shape as
- * paths.ts's findServerPython and the macOS client's findNeutralinoBinary: an explicit override is trusted as-is,
- * a wrong default is reported by main() rather than silently skipped. `constants.X_OK` is accepted on Windows (the
- * file just needs to exist and be readable; Windows has no execute bit), the same assumption findServerPython
- * already makes for python.exe. */
+/** `$CLAUDIA_NEUTRALINO_BIN`, else `<appDir>\bin\neutralino-win_x64.exe` if it exists, else `null`. (On Windows
+ * `accessSync(..., X_OK)` only asks whether the file is there; there is no executable bit.) */
 export function findNeutralinoBinary(options: FindNeutralinoBinaryOptions): string | null {
   const env = options.env ?? processEnv
   const explicit = env.CLAUDIA_NEUTRALINO_BIN
@@ -96,98 +63,231 @@ export function findNeutralinoBinary(options: FindNeutralinoBinaryOptions): stri
   }
 }
 
-export interface ShellCommandOptions {
-  /** Where the document server's own loopback page already is (LocalServer.url after start()). */
-  url: string
-  /** apps/<app>/ -- `--path` so the binary still reads this app's neutralino.config.json, icon and injected
-   * script, even though the *page* it shows comes from `url`, not from anything under this folder. */
-  appDir: string
-}
-
-/** The Neutralino binary's own command line for D159 option 2: load the document server's loopback page instead
- * of anything Neutralino ships, while `--path` keeps this app's own config (and the injection settings inside it)
- * in effect. Identical to macOS's buildShellCommand -- these flags are Neutralino's own, not OS-specific. */
-export function buildShellCommand(binary: string, options: ShellCommandOptions): string[] {
-  return [binary, `--path=${options.appDir}`, `--url=${options.url}`, '--enable-server=true']
-}
-
-/** Starts `app` end to end: the local server, then the Neutralino binary pointed at it, then waits for the window
- * to close and stops the server. The untested half of this module -- the real binary spawn and exit wait -- is
- * this launcher's equivalent of the GTK main loop launch.py leaves to Application.run(): wiring that needs a real
- * window, not a unit test. Returns the process exit code. */
-export async function main(argv: readonly string[]): Promise<number> {
-  const appName = (argv[0] ?? 'composes') as App
-  let identity
-  try {
-    identity = getIdentity(appName)
-  } catch (error) {
-    if (error instanceof UnknownAppError) {
-      console.error(error.message)
-      return 1
-    }
-    throw error
+/** The files a window needs: what is generated by `npm run build` and what `neu update` fetches. `null` if all are
+ * there, else a message that says which command makes them. */
+export function missingFiles(appDir: string, exists: (path: string) => boolean = existsSync): string | null {
+  const built = ['index.html', join('shell', 'shell.js'), join('ext', 'core.mjs')].filter((f) => !exists(join(appDir, f)))
+  if (built.length > 0) {
+    return `This app has not been built (missing ${built.join(', ')} in ${appDir}).\nRun 'npm ci && npm run build' in clients\\windows.`
   }
-  if (!identity.packaged) {
-    console.error(`'${appName}' has no Windows client yet -- this first version only covers composes.`)
+  if (!exists(join(appDir, 'js', 'neutralino.js'))) {
+    return `Neutralino's client library is missing (${join(appDir, 'js', 'neutralino.js')}).\nFetch it with: cd ${appDir} && npx @neutralinojs/neu update`
+  }
+  return null
+}
+
+/** Sets `name` to `value` (or removes it when `value` is `null`) in `base`, leaving no second spelling of the name:
+ * variable names are case-insensitive on Windows, and `process.env` keeps the spelling it was given (`Path`), so
+ * setting `PATH` on a plain copy would put two variables into the environment of the child, and which of them it
+ * sees is not defined. */
+export function environmentWith(base: Record<string, string>, name: string, value: string | null): void {
+  for (const key of Object.keys(base)) if (key.toUpperCase() === name.toUpperCase()) delete base[key]
+  if (value !== null) base[name] = value
+}
+
+function valueOf(base: Readonly<Record<string, string>>, name: string): string | undefined {
+  const key = Object.keys(base).find((k) => k.toUpperCase() === name.toUpperCase())
+  return key === undefined ? undefined : base[key]
+}
+
+/** The environment of the Neutralino process (and so of the core it starts). */
+export function buildShellEnvironment(
+  options: Options,
+  base: Env,
+  nodeBinary: string,
+  supportsSystemCa: boolean,
+): Record<string, string> {
+  const environment: Record<string, string> = {}
+  for (const [key, value] of Object.entries(base)) if (value !== undefined) environment[key] = value
+  const path = valueOf(environment, 'PATH')
+  const nodeOptions = valueOf(environment, 'NODE_OPTIONS') ?? ''
+  environmentWith(environment, 'CLAUDIA_SHELL_APP', options.app)
+  environmentWith(environment, 'CLAUDIA_SHELL_SERVER', options.server !== null ? options.server.origin : null)
+  environmentWith(environment, 'CLAUDIA_SHELL_DEBUG', options.debug ? '1' : null)
+  // The node that runs this launcher comes first, so a plain `node` in the core's command finds the same one.
+  environmentWith(environment, 'PATH', [dirname(nodeBinary), ...(path ? [path] : [])].join(delimiter))
+  // Node uses its own list of certificate authorities unless told to use the system's (Node 22.15 and newer; an
+  // older Node does not know the flag and would refuse to start with it).
+  if (supportsSystemCa && !nodeOptions.includes('--use-system-ca')) {
+    environmentWith(environment, 'NODE_OPTIONS', `${nodeOptions} --use-system-ca`.trim())
+  }
+  return environment
+}
+
+/** The Neutralino binary's command line: only where the app is. The page is the one in that folder (`url: "/"` in
+ * its neutralino.config.json), and Neutralino reads everything else from there too. */
+export function buildShellCommand(binary: string, appDir: string): string[] {
+  return [binary, `--path=${appDir}`]
+}
+
+/** The 8.3 short name of a path (`C:\PROGRA~1\nodejs\node.exe`), or `null` when there is none (short names can be
+ * switched off per volume) or this is not Windows. Asked of `cmd`, whose `%~sI` is the documented way. */
+export function shortPathOf(path: string, platform: string = hostPlatform): string | null {
+  if (platform !== 'win32' || /["%]/.test(path)) return null
+  try {
+    const done = spawnSync(processEnv.ComSpec ?? 'cmd.exe', ['/d', '/c', `for %I in ("${path}") do @echo %~sI`], {
+      encoding: 'utf8',
+      windowsHide: true,
+      windowsVerbatimArguments: true,
+      timeout: 5000,
+    })
+    if (done.status !== 0) return null
+    const short = done.stdout.trim().split(/\r?\n/).pop()?.trim() ?? ''
+    return short === '' ? null : short
+  } catch {
+    return null
+  }
+}
+
+/** `path` in a form that Neutralino can put into the core's command line, which it splits at spaces and cannot quote:
+ * the path itself when it has no whitespace, else its short name if that has none, else `null`. */
+export function commandSafePath(path: string, shortName: (path: string) => string | null = shortPathOf): string | null {
+  if (!/\s/.test(path)) return path
+  const short = shortName(path)
+  return short !== null && !/\s/.test(short) ? short : null
+}
+
+export interface RunDeps {
+  spawn?: typeof nodeSpawn
+  env?: Env
+  appDir?: (app: string) => string
+  nodeBinary?: string
+  supportsSystemCa?: boolean
+  exists?: (path: string) => boolean
+  findBinary?: (appDir: string, env: Env) => string | null
+  /** The short name of a path for the core's command (default: asked of `cmd`). */
+  shortName?: (path: string) => string | null
+  /** Sets the core's command in the app's config (default: in neutralino.config.json). */
+  setCommand?: (appDir: string, command: string) => void
+  out?: (line: string) => void
+  err?: (line: string) => void
+}
+
+/** Runs one window to its end. Returns the exit code. */
+export async function run(options: Options, deps: RunDeps = {}): Promise<number> {
+  const env = deps.env ?? processEnv
+  const out = deps.out ?? ((line) => console.log(line))
+  const err = deps.err ?? ((line) => console.error(line))
+  getIdentity(options.app) // refuses an app that does not exist, before anything is looked for
+  const appDir = (deps.appDir ?? ((app) => join(defaultRepo(), 'clients', 'windows', 'apps', app)))(options.app)
+
+  const missing = missingFiles(appDir, deps.exists)
+  if (missing !== null) {
+    err(missing)
     return 1
   }
-
-  let server: LocalServer
-  try {
-    server = await prepareServer(appName)
-  } catch (error) {
-    if (error instanceof SetupProblem) {
-      console.error(error.message)
-      return 1
-    }
-    throw error
+  if (appDir.includes(' ')) {
+    // Neutralino starts the core with a command line that has this folder in it (`${NL_PATH}`), and cannot tell a
+    // space in a folder name from a space between words.
+    err(`The folder of the app has a space in its path (${appDir}).\nMove the checkout to a path without spaces and start it again.`)
+    return 1
   }
-
-  const appDir = join(defaultRepo(), 'clients', 'windows', 'apps', appName)
-  const binary = findNeutralinoBinary({ appDir })
+  const binary = (deps.findBinary ?? ((dir, e) => findNeutralinoBinary({ appDir: dir, env: e })))(appDir, env)
   if (binary === null) {
-    console.error(
-      `No Neutralino binary found for Windows (expected ${join(appDir, 'bin', neutralinoBinaryName())}).\n` +
+    err(
+      `No Neutralino binary found for this computer (expected ${join(appDir, 'bin', neutralinoBinaryName())}).\n` +
         `Fetch it with: cd ${appDir} && npx @neutralinojs/neu update\n` +
-        '(reads neutralino.config.json\'s pinned cli.binaryVersion, 6.8.0 today -- D157).\n' +
-        'Or set CLAUDIA_NEUTRALINO_BIN to an existing binary\'s path.',
+        '(it reads the pinned cli.binaryVersion in neutralino.config.json, D157).\n' +
+        "Or set CLAUDIA_NEUTRALINO_BIN to an existing binary's path.",
     )
     return 1
   }
 
-  let url: string
-  try {
-    url = await server.start()
-  } catch (error) {
-    if (error instanceof ServerStartError) {
-      console.error(error.message)
-      return 1
-    }
-    throw error
+  const supportsSystemCa = deps.supportsSystemCa ?? process.allowedNodeEnvironmentFlags.has('--use-system-ca')
+  const nodeBinary = deps.nodeBinary ?? execPath
+  const environment = buildShellEnvironment(options, env, nodeBinary, supportsSystemCa)
+  let nodeForCore = commandSafePath(nodeBinary, deps.shortName ?? shortPathOf)
+  if (nodeForCore === null) {
+    // No short name either: the core's command cannot hold this path. The launcher already put node's folder first in
+    // the PATH of the window, so a plain `node` is the same program -- if Neutralino looks it up there.
+    nodeForCore = 'node'
+    out(`Note: ${nodeBinary} has a space in it and no short name; the core will be started as a plain 'node' from PATH.`)
   }
-  const [shellBinary, ...shellArgs] = buildShellCommand(binary, { url, appDir })
-  if (!shellBinary) throw new Error('empty shell command') // unreachable: buildShellCommand always returns at least the binary
-  const shell = nodeSpawn(shellBinary, shellArgs, { stdio: 'inherit' })
-
-  const exitCode = await new Promise<number>((resolve) => {
-    shell.once('exit', (code) => resolve(code ?? 0))
-    shell.once('error', () => resolve(1))
-  })
-  await server.stop()
-  return exitCode
+  const setCommand = deps.setCommand ?? ((dir, command) => setCoreCommand(join(dir, 'neutralino.config.json'), command))
+  try {
+    setCommand(
+      appDir,
+      buildCoreCommand({ nodeBinary: nodeForCore, systemCa: supportsSystemCa, app: options.app, server: options.server?.origin ?? null, debug: options.debug }),
+    )
+  } catch (problem) {
+    err(`Could not set up the core's command: ${(problem as Error).message}`)
+    return 1
+  }
+  if (options.debug) {
+    out(`app folder: ${appDir}`)
+    out(`logs: ${join(stateDir(options.app), 'shell.log')} and ${join(stateDir(options.app), 'server.log')}`)
+  }
+  const [shellBinary, ...shellArgs] = buildShellCommand(binary, appDir)
+  try {
+    return await runWindow(shellBinary as string, shellArgs, environment, deps, err)
+  } finally {
+    // The checkout is left as it was found (the checked-in config holds the default command).
+    try {
+      setCommand(appDir, DEFAULT_COMMAND)
+    } catch (problem) {
+      err(`Could not put the default core command back: ${(problem as Error).message}`)
+    }
+  }
 }
 
-// Run directly (`node dist/launch.js composes`) rather than only imported, matching launch.py's and the macOS
-// launch.ts's own `if __name__ == "__main__"`/import.meta.url guard. `pathToFileURL(...).href` on process.argv[1],
-// not a bare `file://${...}` template -- on Windows, argv[1] is a backslashed, drive-lettered path
-// ("C:\...\dist\launch.js"), and simply prepending "file://" to it produces an invalid, malformed URL that can
-// never equal import.meta.url's own well-formed one (forward slashes, "file:///C:/..."). The naive template
-// happens to work on POSIX, where an absolute path already starts with "/" and "file://" + "/x" is a valid
-// "file:///x" -- which is exactly why this shipped broken and untested: this guard silently evaluated false on
-// every real Windows run so far, so `main()` was never called at all, and `node dist\launch.js composes` just
-// exited immediately with no output and no window -- found on the owner's third real run, 2026-11-09.
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
-  main(process.argv.slice(2)).then((code) => {
+function runWindow(
+  binary: string,
+  args: string[],
+  environment: Record<string, string>,
+  deps: RunDeps,
+  err: (line: string) => void,
+): Promise<number> {
+  const child = (deps.spawn ?? nodeSpawn)(binary, args, { stdio: 'inherit', env: environment })
+  // A terminated launcher ends the window too. Ctrl-C reaches both already (they share the console); SIGHUP is what
+  // Node makes of a closed console window on Windows. Neither signal is real there, and kill() ends the window outright.
+  const forward = () => child.kill()
+  process.once('SIGTERM', forward)
+  process.once('SIGHUP', forward)
+  return new Promise<number>((resolve) => {
+    child.once('exit', (code) => resolve(code ?? 0))
+    child.once('error', (problem) => {
+      err(`Could not start ${binary}: ${problem.message}`)
+      resolve(1)
+    })
+  })
+}
+
+function ownVersion(): string {
+  try {
+    const file = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
+    return (JSON.parse(readFileSync(file, 'utf8')) as { version: string }).version
+  } catch {
+    return 'unknown'
+  }
+}
+
+/** The whole program: `argv` is what follows `node dist\launch.js` (the app name first). */
+export async function main(argv: readonly string[], deps: RunDeps = {}): Promise<number> {
+  const err = deps.err ?? ((line) => console.error(line))
+  const out = deps.out ?? ((line) => console.log(line))
+  const split = splitAppArgument(argv)
+  if ('error' in split) {
+    err(split.error)
+    return 2
+  }
+  const command = parseCommand(split.app, split.rest, ownVersion())
+  if (command.kind === 'print') {
+    out(command.text)
+    return command.code
+  }
+  if (command.kind === 'usage_error') {
+    err(command.text)
+    return command.code
+  }
+  return run(command.options, deps)
+}
+
+// Run as a program, not when imported (by a test or by the bin shims). `pathToFileURL`, not a hand-made `file://`
+// string: on Windows `process.argv[1]` is `C:\...\launch.js`, and `file://` + that is not the URL Node reports in
+// `import.meta.url`, so the comparison was never true and this program exited at once without a word (third real run
+// on a Windows VM, 2026-11-09, notes/e5-11-windows-client.md).
+if (processArgv[1] && import.meta.url === pathToFileURL(processArgv[1]).href) {
+  main(processArgv.slice(2)).then((code) => {
     process.exitCode = code
   })
 }

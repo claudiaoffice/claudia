@@ -149,6 +149,12 @@ jobs:
         run: |
           npm run e2e:resilience
           npm run e2e:recovery
+      # The Windows client's window, minus Neutralino itself: its built shell page and core, the real web app in the
+      # frame. Starts servers of its own (8791 for --server), on ports the steps above have freed.
+      - name: The Windows client's window (shell page, core, server and web app, Neutralino faked)
+        run: |
+          (cd clients/windows && npm ci && npm run build)
+          cd web && npm run e2e:windows-shell
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -156,8 +162,9 @@ jobs:
           path: shots/
           if-no-files-found: ignore
 
-  # The Windows client is TypeScript around Neutralino; its unit tests and its generated menu (made from the Linux
-  # client's manifest) are checked on Windows itself.
+  # The Windows client is TypeScript around Neutralino; its unit tests, its build (the shell page and the core of each
+  # app) and its generated menu (made from the Linux client's manifest) are checked on Windows itself. Its window is
+  # run in Chromium by the `e2e` job above.
   windows-client:
     name: Windows client
     runs-on: windows-latest
@@ -178,6 +185,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
+      - run: npm run build
       - name: The generated menu matches the shared manifest
         run: uv run --no-project python tools/generate_menu.py --all --check
       - run: uv run --no-project --with pytest python -m pytest tools/tests

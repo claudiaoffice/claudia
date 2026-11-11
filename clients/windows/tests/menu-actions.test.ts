@@ -1,17 +1,12 @@
-// page-bridge.ts is the thin adapter D159 (option 2) calls for: injected into the externally-loaded page so its
-// shell-bridge.ts (unchanged, D121) can speak the contract through Neutralino instead of WebKit's messageHandlers.
-// The pure decision logic lives here, separate from the handful of real Neutralino/window calls installBridge()
-// makes, because those can only really be checked by hand on a Windows machine (see this package's README "Open"
-// section) -- everything that does NOT need a live Neutralino is tested here instead. Nearly identical to
-// clients/macos/tests/page-bridge.test.ts, because the module it tests is nearly identical (page-bridge.ts's own
-// top comment).
+// menu-actions.ts holds the pure decisions of the shell page: what a menu click means and how an `action_state` from
+// the web app changes the menu. The few real Neutralino calls that use it are in shell-page.ts (tested with fakes).
 import { describe, expect, it } from 'vitest'
 import {
   applyActionStates,
   nextCheckedTarget,
   routeMenuClick,
   type KnownAction,
-} from '../src/page-bridge.js'
+} from '../src/menu-actions.js'
 import type { WindowMenuItem } from '../src/menu.js'
 
 const KNOWN: KnownAction[] = [
@@ -22,11 +17,11 @@ const KNOWN: KnownAction[] = [
 ]
 
 describe('routeMenuClick', () => {
-  it('routes file.quit to the shell itself, not the page (the shell ends the process either way, whether or not Quit sits in an application menu)', () => {
+  it('routes file.quit to the shell itself, not the page (D44: Quit lives in the application menu)', () => {
     expect(routeMenuClick('file.quit', KNOWN)).toEqual({ kind: 'quit' })
   })
 
-  it('routes help.about to the page despite being Kind.SHELL in the manifest (D158 point 3: no native About on Windows)', () => {
+  it('routes help.about to the page despite being Kind.SHELL in the manifest (D158 point 4: no native About on macOS)', () => {
     expect(routeMenuClick('help.about', KNOWN)).toEqual({ kind: 'forward', action: 'help.about', target: undefined })
   })
 

@@ -1,11 +1,11 @@
 // Mirrors clients/linux/src/claudia_shell_gtk/identity.py's and clients/macos/tests/identity.test.ts's own tests:
-// which Claudia app this shell can show, its bundle id and the server model behind it (D113's "an app is an entry
+// which Claudia app this shell can show, its application id and the server model behind it (D113's "an app is an entry
 // point, an identity, a menu manifest").
 import { describe, expect, it } from 'vitest'
-import { APPS, UnknownAppError, getIdentity } from '../src/identity.js'
+import { APPS, UnknownAppError, appFromPath, commandOf, getIdentity, isApp } from '../src/identity.js'
 
 describe('getIdentity', () => {
-  it('returns composes with its bundle id and server model', () => {
+  it('returns composes with its application id and server model', () => {
     const identity = getIdentity('composes')
     expect(identity.name).toBe('composes')
     expect(identity.title).toBe('Claudia Composes')
@@ -38,9 +38,17 @@ describe('getIdentity', () => {
     expect(APPS).toEqual(['composes', 'computes', 'creates'])
   })
 
-  it("only composes has a packaged app directory today (this epic's scope cut for Windows, like E5.11 cut to creates on macOS)", () => {
-    expect(getIdentity('composes').packaged).toBe(true)
-    expect(getIdentity('computes').packaged).toBe(false)
-    expect(getIdentity('creates').packaged).toBe(false)
+  it('knows what is an app, and which app a built file belongs to by its place (the core uses it when nobody told it)', () => {
+    expect(isApp('creates')).toBe(true)
+    expect(isApp('toString')).toBe(false) // not an inherited property of the table
+    expect(isApp(undefined)).toBe(false)
+    expect(appFromPath('C:\\repo\\clients\\windows\\apps\\computes\\ext\\core.mjs')).toBe('computes')
+    expect(appFromPath('/repo/clients/windows/apps/creates/shell/shell.js')).toBe('creates')
+    expect(appFromPath('C:\\somewhere\\core.mjs')).toBeNull()
+    expect(appFromPath('/repo/apps/spreadsheets/ext/core.mjs')).toBeNull()
+  })
+
+  it('names the command of an app like the Linux and macOS clients do', () => {
+    expect(commandOf(getIdentity('composes'))).toBe('claudia-composes')
   })
 })

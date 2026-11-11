@@ -49,12 +49,30 @@ export function stateDir(app: string, localAppData: string = defaultLocalAppData
   return join(appData(localAppData), app, 'state')
 }
 
-/** The repository this client was started from (development only; a packaged client has none). Four levels up
- * from this file (src/paths.ts -> src -> windows -> clients -> repo root), the same depth paths.py and the macOS
- * paths.ts count from. */
-export function defaultRepo(): string {
-  const here = dirname(fileURLToPath(import.meta.url))
-  return resolve(here, '..', '..', '..')
+/** Where the shell keeps its own settings (`shell.json`, see settings.ts): suite-wide, not one per app, so a choice
+ * made in one app is found again in the other two -- the same reasoning as the Linux client's `config_dir()`. */
+export function configDir(localAppData: string = defaultLocalAppData()): string {
+  return appData(localAppData)
+}
+
+/** The repository root above `start`: the nearest folder that has `clients/windows/package.json` in it, or `null`. */
+export function findRepo(start: string): string | null {
+  let folder = start
+  for (;;) {
+    if (existsSync(join(folder, 'clients', 'windows', 'package.json'))) return folder
+    const parent = dirname(folder)
+    if (parent === folder) return null
+    folder = parent
+  }
+}
+
+/** The repository this client was started from (development only; a packaged client has none). Found by walking up
+ * from this file, because this code runs from three places at three depths: `src/` (tests), `dist/` (the launcher)
+ * and `apps/<app>/ext/` (the core, bundled by esbuild into one file). A fixed number of levels is right for the
+ * first two and wrong for the third -- the macOS client's core could not find the server's Python and the web build
+ * for exactly that reason (its first run on a real Mac, 2026-11-11). The fallback is the old guess. */
+export function defaultRepo(from: string = dirname(fileURLToPath(import.meta.url))): string {
+  return findRepo(from) ?? resolve(from, '..', '..', '..')
 }
 
 function isFrontend(folder: string | null): folder is string {

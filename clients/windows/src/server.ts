@@ -16,10 +16,14 @@
 //    stop() path, not only of an abnormal shell death). Whether that matters depends on what claudia_server's own
 //    signal handler does on shutdown today, which this client does not know and has not checked.
 //  - `detached: true` on Windows makes the child "not share its console with the parent" (Node's own docs) but, per
-//    the same docs, does *not* give it its own killable process group the way POSIX does -- so unlike server.ts's
-//    POSIX `child.kill(signal)` reaching a negative pid (the whole group) for free, there is nothing here to reach
-//    a `claudia_server` that has itself spawned children. Not solved here either: flagged in the implementation
-//    notes next to the point above, both left for whoever picks up E5.11's "not done" list for Windows.
+//    the same docs, does *not* give it its own killable process group the way POSIX does. And the interpreter that
+//    `uv sync` puts in `.venv\Scripts\python.exe` is, for a venv, a small launcher that starts the real interpreter
+//    as its own child process -- so `ChildProcess.kill()` (TerminateProcess on that one pid) can end the launcher and
+//    leave the real server running. `stop()` therefore ends the whole tree with `taskkill /pid <pid> /T /F` (the
+//    documented Windows way to do what POSIX gets from a negative pid), and falls back to `kill()` where taskkill
+//    cannot be run or does not know the pid. Not verified on a real Windows machine (README, "Not verified").
+//    Still open, as on macOS: if the *core* that owns this server is itself killed outright, nothing stops the server
+//    (D161) -- the core ends with its window, which is what makes that rare (D251), not impossible.
 //  - No `--lifeline` on the real server (server.ts's own comment on this already applies unchanged: only the
 //    spike's stand-in server had one).
 
@@ -29,6 +33,7 @@ import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { randomBytes } from 'node:crypto'
+import { platform as hostPlatform } from 'node:process'
 
 export const LOOPBACK = '127.0.0.1'
 const HEALTH_PATH = '/api/health'
@@ -88,6 +93,24 @@ export function buildServerCommand(python: string, options: ServerCommandOptions
 
 type SpawnFn = (command: string[], logPath: string) => ChildProcess
 type HealthFn = (url: string) => Promise<boolean>
+/** Ends the process `pid` and everything it started; `true` if that was done, `false` if the caller has to fall back
+ * to `kill()` (not Windows, taskkill missing, or it did not know the pid). */
+export type KillTreeFn = (pid: number) => Promise<boolean>
+
+/** `taskkill /pid <pid> /T /F`: the tree, forcibly -- there is no gentler signal on Windows (see the top comment).
+ * `windowsHide`, because a console tool started from a GUI process gets its own window otherwise. */
+export function defaultKillTree(pid: number, platform: string = hostPlatform): Promise<boolean> {
+  if (platform !== 'win32') return Promise.resolve(false)
+  return new Promise((resolve) => {
+    try {
+      const killer = nodeSpawn('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true })
+      killer.once('error', () => resolve(false))
+      killer.once('exit', (code) => resolve(code === 0))
+    } catch {
+      resolve(false)
+    }
+  })
+}
 
 /** Starts `command` with its stdout and stderr both appended to `logPath` (merged, like server.py's own
  * `stderr=subprocess.STDOUT`) -- the thing a start-up failure is otherwise silent about. The fd is opened and
@@ -148,6 +171,8 @@ export interface LocalServerOptions {
    * deliberate stop() call elsewhere defaults to. Kept for interface parity with server.ts even though, per this
    * module's top comment, nothing on Windows actually happens during the wait. */
   stopGraceMs?: number
+  /** How the process tree is ended (tests hand in a fake; the default is `defaultKillTree`). */
+  killTree?: KillTreeFn
   /** Where the server's stdout/stderr are appended (mirrors server.py's and server.ts's own `log`). Defaults to a
    * fresh file under the OS temp directory, so there is always somewhere to look even when the caller does not
    * pick one. */
@@ -164,6 +189,7 @@ export class LocalServer {
   private readonly startupTimeoutMs: number
   private readonly nowFn: () => number
   private readonly stopGraceMs: number
+  private readonly killTree: KillTreeFn
   private process: ChildProcess | null = null
   private spawnedAt = 0
   private ready = false
@@ -181,6 +207,7 @@ export class LocalServer {
     this.startupTimeoutMs = options.startupTimeoutMs ?? 30_000
     this.nowFn = options.nowFn ?? (() => Date.now())
     this.stopGraceMs = options.stopGraceMs ?? 3000
+    this.killTree = options.killTree ?? defaultKillTree
   }
 
   get pid(): number | undefined {
@@ -253,9 +280,9 @@ export class LocalServer {
     }
   }
 
-  /** End the server. On every other OS this is SIGTERM, then SIGKILL after `graceMs`; on Windows (this module's
-   * top comment) the first `kill()` already is the hard stop, so `graceMs` only bounds how long this waits for the
-   * 'exit' event to arrive, not a second, harder attempt. Safe to call before spawn(), twice, and after the
+  /** End the server and everything it started. On every other OS this is SIGTERM, then SIGKILL after `graceMs`; on
+   * Windows (this module's top comment) there is no softer first step: the tree is ended outright, and `graceMs` only
+   * bounds how long this waits for the 'exit' event to arrive. Safe to call before spawn(), twice, and after the
    * server died on its own. Resolves as soon as the process is gone, not necessarily after the full grace period. */
   async stop(graceMs = 3000): Promise<void> {
     const process = this.process
@@ -271,9 +298,15 @@ export class LocalServer {
         resolve()
       }
       process.once('exit', finish)
-      process.kill() // signal argument ignored on Windows (Node's own docs); this is already the hard stop
-      // Nothing a second call could do differently -- kept only so a hung 'exit' event (the process gone from the
-      // OS's view but Node slow to report it) does not leave this promise unsettled forever.
+      const pid = process.pid
+      if (pid === undefined) process.kill()
+      else {
+        void this.killTree(pid).then((done) => {
+          if (!done) process.kill() // the signal argument is ignored on Windows (Node's own docs): already the hard stop
+        })
+      }
+      // Only so that a hung 'exit' event (the process gone from the OS's view but Node slow to report it) does not
+      // leave this promise unsettled for ever.
       const timer = setTimeout(finish, graceMs)
     })
   }

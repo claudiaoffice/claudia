@@ -19,8 +19,9 @@ Unused numbers in a closed block stay unused.
 | D200–D213 | colour roles, charts, styling dialogs, office export | 2026-11-08 | closed |
 | D214–D240 | the 2026-11-10 restructuring: renumbered duplicates (D214–D220), former open questions (D221–D240) | 2026-11-10 | closed |
 | D241–D250 | E5.8 Linux client: three apps, other servers, HTTPS (branch `linux-client-complete`) | 2026-11-10 | open |
-| D251–D260 | *free — next branch or agent to ask* | | open |
-| D261–D280 | *free* | | open |
+| D251–D260 | E5.11 macOS client: three apps, command line, server flow (branch `macos-client-complete`) | 2026-11-10 | open |
+| D261–D270 | E5.11 Windows client: three apps, command line, server flow (branch `win-client-complete`) | 2026-11-11 | open |
+| D271–D280 | *free — next branch or agent to ask* | | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D310 used) | 2026-11-10 | open |
 
 ## Never to be used

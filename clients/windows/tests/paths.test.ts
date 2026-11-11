@@ -10,9 +10,10 @@
 // including this repository's own Linux-hosted `npm test`.
 import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { defaultLocalAppData, defaultRepo, documentsDir, findFrontend, findServerPython, stateDir } from '../src/paths.js'
+import { configDir, defaultLocalAppData, defaultRepo, documentsDir, findFrontend, findRepo, findServerPython, stateDir } from '../src/paths.js'
 
 describe('documentsDir / stateDir', () => {
   it("live under <LOCALAPPDATA>/Claudia/<app>, Windows's own convention", () => {
@@ -35,11 +36,42 @@ describe('defaultLocalAppData', () => {
   })
 })
 
-describe('defaultRepo', () => {
-  it('is the repository this client was started from (4 levels up from src/paths.ts, like paths.py and the macOS client)', () => {
-    // By what is in it, not by its folder's name: a clone may be called anything.
-    expect(existsSync(join(defaultRepo(), 'clients', 'windows', 'package.json'))).toBe(true)
-    expect(existsSync(join(defaultRepo(), 'pyproject.toml'))).toBe(true)
+describe('configDir', () => {
+  it('is the folder of the whole suite, not of one app: the server lists of every app share one shell.json', () => {
+    expect(configDir('C:\\Users\\me\\AppData\\Local')).toBe(join('C:\\Users\\me\\AppData\\Local', 'Claudia'))
+    expect(documentsDir('computes', 'L')).toBe(join(configDir('L'), 'computes', 'documents'))
+  })
+})
+
+describe('findRepo / defaultRepo', () => {
+  let dir = ''
+  afterEach(() => rmSync(dir, { recursive: true, force: true }))
+
+  it('finds the repository from every place the code runs from: src, dist and the bundled core in apps/<app>/ext', () => {
+    dir = mkdtempSync(join(tmpdir(), 'claudia-repo-'))
+    mkdirSync(join(dir, 'clients', 'windows', 'apps', 'computes', 'ext'), { recursive: true })
+    mkdirSync(join(dir, 'clients', 'windows', 'dist'), { recursive: true })
+    mkdirSync(join(dir, 'clients', 'windows', 'src'), { recursive: true })
+    writeFileSync(join(dir, 'clients', 'windows', 'package.json'), '{}')
+    for (const place of ['src', 'dist', join('apps', 'computes', 'ext')]) {
+      expect(findRepo(join(dir, 'clients', 'windows', place))).toBe(dir)
+      expect(defaultRepo(join(dir, 'clients', 'windows', place))).toBe(dir)
+    }
+  })
+
+  it('knows nothing outside a checkout, and defaultRepo then falls back to the old three-levels-up guess', () => {
+    dir = mkdtempSync(join(tmpdir(), 'claudia-norepo-'))
+    mkdirSync(join(dir, 'a', 'b', 'c'), { recursive: true })
+    expect(findRepo(join(dir, 'a', 'b', 'c'))).toBeNull()
+    expect(defaultRepo(join(dir, 'a', 'b', 'c'))).toBe(dir)
+  })
+
+  it('is this very checkout for this very file (the real layout, not only a model of it), whatever the clone is called', () => {
+    const here = dirname(fileURLToPath(import.meta.url))
+    const repo = defaultRepo(join(here, '..', 'apps', 'creates', 'ext'))
+    expect(existsSync(join(repo, 'clients', 'windows', 'package.json'))).toBe(true)
+    expect(existsSync(join(repo, 'pyproject.toml'))).toBe(true)
+    expect(defaultRepo()).toBe(repo)
   })
 })
 

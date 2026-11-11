@@ -16,7 +16,9 @@
     "e2e:pointing": "node e2e/pointing.cjs",
     "e2e:resilience": "node e2e/resilience.cjs",
     "e2e:styling": "node e2e/styling.cjs",
-    "e2e:recovery": "node e2e/recovery.cjs"
+    "e2e:recovery": "node e2e/recovery.cjs",
+    "e2e:macos-shell": "node e2e/macos-shell.cjs",
+    "e2e:windows-shell": "node e2e/windows-shell.cjs"
   },
   "dependencies": {
     "nuxt": "^4.6.3",

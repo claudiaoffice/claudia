@@ -2,7 +2,50 @@
 
 Newest first. The shell contract has its own version (`clients/contract/`); this file does not repeat it.
 
-## [unreleased]
+## [0.2.0] - unreleased
+
+The Windows client is rebuilt on D251 (the design the macOS client proved on a real Mac, 2026-11-10) and brought to
+parity with the Linux and macOS clients: all three apps, the same command line, the remote-server flow of
+D241-D248. Branch `win-client-complete`. Everything here ran on Linux only; see the README's "Not verified".
+
+### Changed
+- **Architecture (D251, replaces D159).** Neutralino now shows its own static shell page
+  (`apps/<app>/index.html`), the Claudia web app is framed in it, and the native parts (server checks, server
+  list, settings, the local server) run in a Node extension (`ext/core.mjs`, `commandWindows` in the Neutralino
+  config). The injection path (`injectScript`, `window.webkit` shim) is gone: on a page Neutralino did not serve,
+  the one-time token is empty and no API call can be made.
+- `web/app/lib/shell-bridge.ts` (`detectParentSink`) carried over unchanged from `macos-client-complete`, so the
+  web app speaks the shell contract to its parent frame; it is the same file on both branches.
+- `server.ts`: `stop()` ends the whole process tree with `taskkill /pid N /T /F` (the venv's `python.exe` is a
+  launcher stub that starts the real interpreter as a child; killing the stub alone left the server running).
+  Falls back to `process.kill()`. Tests never run a real `taskkill`.
+- `launch.ts`: environment variables are set and removed case-insensitively (`Path` vs `PATH` on Windows);
+  `NODE_OPTIONS=--use-system-ca` makes Node trust the Windows certificate store for HTTPS servers; Neutralino
+  splits an extension command at spaces, so a Node path with spaces (`C:\Program Files\nodejs\node.exe`) is
+  replaced by its 8.3 short name for the run, with a plain `node` fallback and a note on the console. The
+  Neutralino config is changed only for the run and restored afterwards.
+- `paths.ts`: `configDir`, and a walk up from the bundled core to the repository root (`findRepo`/`defaultRepo`),
+  so the core finds the server's Python and the web build.
+- `.gitignore`, CI (`windows-client` job builds the shell; the `e2e` job runs `e2e:windows-shell`).
+
+### Added
+- Composes, computes and creates (`apps/<app>/neutralino.config.json`, icons); a window is one app (D242).
+- Command line, same as Linux and macOS: `claudia-<app> [--server URL] [--debug]`, `node dist\launch.js <app> ...`,
+  `bin/<app>.mjs` shims, and `start-win-client.cmd [composes|computes|creates] [--server URL] [--debug]`.
+- The server flow of the Linux client: `contract.ts` (all eight message types, checked against the JSON schema),
+  `servers.ts`, `settings.ts` (`shell.json`, same format as Linux), `connection.ts`, `connector.ts`, `bridge.ts`,
+  `core.ts`, `core-entry.ts`, `core-command.ts`, `core-protocol.ts`, `extension.ts`, `shell-page.ts`,
+  `shell-page-entry.ts`, `tools/build-shell.mjs`, `tools/shell-page.template.html`.
+- `web/e2e/windows-shell.cjs` (`npm run e2e:windows-shell`): the real shell page, the real core process, the real
+  local server and the real web app in Chromium, with only Neutralino's client object faked; per app, plus `--server`.
+- Tests: 335 vitest tests (was 63).
+
+### Removed
+- `page-bridge.ts`, `inject-entry.ts`, `tools/build-inject.mjs` and their tests (D159 path). This also retires the
+  three Windows-only fixes of the old `[unreleased]` section for `build-inject.mjs`; the entry guard
+  (`pathToFileURL`) and `windowsHide` fixes live on in the new code.
+
+## [0.1.1] - unreleased (fixes found on real runs; carried into 0.2.0)
 
 ### Fixed
 - `tools/build-inject.mjs`: `npm run build:inject` failed on a real Windows machine with

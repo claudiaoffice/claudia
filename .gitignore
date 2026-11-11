@@ -17,14 +17,17 @@ web/dist
 web/node_modules
 web/coverage
 
-# Windows client: dependencies, build output, Neutralino's downloads and logs
+# Windows client: dependencies, build output, what `npm run build` generates per app, Neutralino's downloads and logs.
+# (`clients/windows/bin/` -- the `claudia-<app>` command shims -- is source and is tracked.)
 clients/windows/node_modules/
 clients/windows/dist/
 clients/windows/apps/*/bin/
-clients/windows/apps/*/inject/
-clients/windows/apps/composes/js/
-clients/windows/apps/composes/.tmp/
-clients/windows/apps/composes/neutralinojs.log
+clients/windows/apps/*/js/
+clients/windows/apps/*/index.html
+clients/windows/apps/*/shell/
+clients/windows/apps/*/ext/
+clients/windows/apps/*/.tmp/
+clients/windows/apps/*/neutralinojs.log
 
 # The test-document library's run output
 test-documents/_artifacts

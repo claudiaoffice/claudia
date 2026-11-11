@@ -8,7 +8,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { LocalServer, ServerStartError, buildServerCommand, defaultSpawn, freePort } from '../src/server.js'
+import { LocalServer, ServerStartError, buildServerCommand, defaultKillTree, defaultSpawn, freePort } from '../src/server.js'
 
 // Wraps the real `spawn` so defaultSpawn's own tests below still get a genuine child process (and the log-capture
 // test still sees genuine output), while letting one test inspect exactly what options defaultSpawn passed it --
@@ -279,5 +279,67 @@ describe('stop() on Windows: one kill() call, no softer SIGTERM step', () => {
     await server.stop(5) // the fake never emits 'exit'; this waits out the grace period and resolves anyway
     expect(child.kill).toHaveBeenCalledTimes(1)
     expect(child.kill).toHaveBeenCalledWith()
+  })
+})
+
+describe('stop() ends the whole tree (the venv launcher of `.venv\\Scripts\\python.exe` has the real server as its child)', () => {
+  it('uses the tree kill when it has the pid, and does not kill() the launcher alone', async () => {
+    const child = new FakeChildProcess()
+    ;(child as unknown as { pid: number }).pid = 4242
+    const killed: number[] = []
+    const server = new LocalServer(['python'], {
+      url: 'http://127.0.0.1:1',
+      spawnFn: () => child as never,
+      killTree: async (pid) => {
+        killed.push(pid)
+        queueMicrotask(() => child.exit(1))
+        return true
+      },
+    })
+    server.spawn()
+    await server.stop(1000)
+    expect(killed).toEqual([4242])
+    expect(child.kill).not.toHaveBeenCalled()
+  })
+
+  it('falls back to kill() when the tree kill could not be done', async () => {
+    const child = new FakeChildProcess()
+    ;(child as unknown as { pid: number }).pid = 4242
+    const server = new LocalServer(['python'], { url: 'http://127.0.0.1:1', spawnFn: () => child as never, killTree: async () => false })
+    server.spawn()
+    await server.stop(20)
+    expect(child.kill).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('defaultKillTree', () => {
+  it('is not available off Windows, and then runs nothing', async () => {
+    spawnSpy.mockClear()
+    expect(await defaultKillTree(4242, 'linux')).toBe(false)
+    expect(spawnSpy).not.toHaveBeenCalled()
+  })
+
+  it('asks taskkill for the tree, forcibly and without a console window, and reports whether it worked', async () => {
+    // A stand-in for taskkill: never run the real one in a test (on a Windows host it would end process 4242).
+    const fake = (code: number) => () => {
+      const killer = new EventEmitter()
+      queueMicrotask(() => killer.emit('exit', code))
+      return killer as never
+    }
+    spawnSpy.mockClear()
+    spawnSpy.mockImplementationOnce(fake(0))
+    expect(await defaultKillTree(4242, 'win32')).toBe(true)
+    expect(spawnSpy).toHaveBeenCalledWith('taskkill', ['/pid', '4242', '/T', '/F'], expect.objectContaining({ windowsHide: true }))
+    spawnSpy.mockImplementationOnce(fake(128)) // "process not found": already gone, the caller falls back to kill()
+    expect(await defaultKillTree(4242, 'win32')).toBe(false)
+  })
+
+  it('reports false when taskkill cannot be started', async () => {
+    spawnSpy.mockImplementationOnce(() => {
+      const killer = new EventEmitter()
+      queueMicrotask(() => killer.emit('error', new Error('ENOENT')))
+      return killer as never
+    })
+    expect(await defaultKillTree(4242, 'win32')).toBe(false)
   })
 })

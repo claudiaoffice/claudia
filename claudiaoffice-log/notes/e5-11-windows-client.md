@@ -1,5 +1,7 @@
 # Windows client (E5.11), first slice: Claudia Composes
 
+> **Superseded in architecture (2026-11-11):** the D159 injection design described below was replaced by D251; see `e5-11-windows-client-complete.md`. This file stays as history, including the four real runs of 2026-11-09.
+
 Written 2026-11-08. What was built for the native Windows client of **composes**, how it was checked, what it
 carries over unchanged from the macOS slice (`e5-11-macos-client.md`) versus what is genuinely different on this
 OS, and where it stands on D159 — the same transport question the macOS slice closed for its own platform.

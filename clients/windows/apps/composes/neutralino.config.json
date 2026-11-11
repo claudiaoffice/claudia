@@ -1,15 +1,32 @@
 {
   "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
   "applicationId": "de.claudiaoffice.composes",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "defaultMode": "window",
   "port": 0,
   "url": "/",
   "enableServer": true,
   "enableNativeAPI": true,
   "tokenSecurity": "one-time",
-  "logging": { "enabled": true, "writeToLogFile": true },
-  "nativeAllowList": ["app.exit", "window.setMainMenu", "window.print", "events.on"],
+  "enableExtensions": true,
+  "extensions": [
+    {
+      "id": "de.claudiaoffice.core",
+      "commandWindows": "node ${NL_PATH}/ext/core.mjs"
+    }
+  ],
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": true
+  },
+  "nativeAllowList": [
+    "app.exit",
+    "window.setMainMenu",
+    "events.on",
+    "extensions.dispatch",
+    "extensions.getStats",
+    "app.broadcast"
+  ],
   "modes": {
     "window": {
       "title": "claudia composes",
@@ -22,10 +39,7 @@
       "enableInspector": true,
       "borderless": false,
       "resizable": true,
-      "exitProcessOnClose": true,
-      "injectGlobals": true,
-      "injectClientLibrary": true,
-      "injectScript": "/inject/claudia-bridge.js"
+      "exitProcessOnClose": true
     }
   },
   "cli": {

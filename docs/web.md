@@ -112,9 +112,13 @@ URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour r
 URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
 npm run e2e:resilience       # starts its own server on 8766, restarts it, checks that both browsers come back
 npm run e2e:recovery         # starts its own server on 8767: the recovery key, shown once, and a new one
+npm run e2e:macos-shell      # the macOS client's window: its shell page and core in Chromium, the web app in the frame
+npm run e2e:windows-shell    # the same for the Windows client
 ```
 
-The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. CI runs all of them in its `e2e` job,
+The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. `e2e:macos-shell` needs the macOS client built
+(`cd clients/macos && npm ci && npm run build`) as well as the web app (`e2e:windows-shell` the same in `clients/windows`), starts a server of its own for each app and one on 8791
+for `--server`, and fakes only Neutralino's client library; `CHROMIUM=/path/to/chrome` picks a browser binary other than Playwright's. CI runs all of them in its `e2e` job,
 together with `tests/e2e` (the Python test that checks each server greets with its own app).
 
 `npm run lint` runs ESLint (`eslint.config.mjs`: Nuxt's recommended rules without the stylistic ones; every rule

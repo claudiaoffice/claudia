@@ -11,7 +11,7 @@
 //  - "On Windows no Cocoa actions exist; the Edit items worked through `document.execCommand` in the page" -- the
 //    manifest's `role` field (D158) exists only to give macOS's `NSMenuItem` a Cocoa selector so Cmd+C is claimed
 //    by the menu at all. Windows has no such requirement: every item, Edit's standard ones included, is forwarded
-//    to the page as a plain `action` message (page-bridge.ts's routeMenuClick does not special-case them either),
+//    to the page as a plain `action` message (menu-actions.ts's routeMenuClick does not special-case them either),
 //    and the page's own shortcut handling (`web/app/lib/shortcuts.ts`, D122) is what actually runs the command --
 //    the same path Linux already uses for Undo/Redo (`_shared_edit_block`'s own comment: "page-handled, not
 //    shell-handled"). So this file reads `role` from nothing; the field stays in the shared manifest for macOS
@@ -123,7 +123,7 @@ function buildMenu(menu: ManifestMenu): WindowMenuItem {
  * The full native window menu for one app: the manifest's own menus, unchanged in order and content (unlike
  * macOS's buildMainMenu(), nothing is relocated into a leading application menu -- see this module's top comment).
  * `appTitle` is accepted for interface parity with the macOS build (both are called the same way from
- * page-bridge.ts/inject-entry.ts) even though this function does not use it.
+ * shell-page-entry.ts) even though this function does not use it.
  */
 export function buildMainMenu(listing: ManifestListing, _appTitle: string): WindowMenuItem[] {
   return listing.menus.map(buildMenu)
