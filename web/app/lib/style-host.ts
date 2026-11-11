@@ -58,6 +58,23 @@ export interface StyleHost {
   check(text: string): Promise<CssCheck | null>
   /** Give a colour role another colour: everything in the document that meant it follows (D200). */
   setRole(role: string, colour: string): Promise<boolean>
+
+  // -- what only some hosts have (cells, today: `computes-cell-style-popover.svg`)
+  /** The popover's heading, when the noun alone says too little: “Cells B2:D3”. */
+  title?: string
+  /** The "only" choice in a person's words, when “This {noun} only” would be wrong: “These 6 cells only”. */
+  these?: string
+  /** A narrower "only": the change goes to one slot of the selection (“only their box”, D309). */
+  narrow?: { label: string; on: boolean; set(on: boolean): void }
+  /** Where the look of the selection comes from, a line or two (D307). */
+  origin?: string[]
+  /** Box properties this host's things have beyond the usual: a cell's vertical alignment and wrapping. */
+  extras?: string[]
+  /** Take the selection's own style away, so what lies beneath shows (“Clear cell style”, D317). */
+  clear?(): Promise<boolean>
+  /** Where alignment can also be "by content" (a cell, D318): the alignment a style really gives, undefined for
+   * "by content". The editor then offers Auto beside left, centre, right and justify. */
+  alignOf?(style: string): string | undefined
 }
 
 /** What a gallery offers for a slot (D316, `style-editor-two-slots.svg`): the styles of the slot's own kind, and
@@ -308,6 +325,25 @@ export class StyleEditor {
   get padding(): number {
     const match = /([\d.]+)/.exec(this.look['padding-top'] ?? '')
     return match ? Math.round(Number(match[1])) : 0
+  }
+
+  // -- what only a cell's box has (CSS_VERSION 3, D307)
+  setVertical(value: 'top' | 'middle' | 'bottom') {
+    return this.set('vertical-align', value)
+  }
+
+  get vertical(): string {
+    return this.look['vertical-align'] ?? 'middle'
+  }
+
+  /** Long text runs onto more lines in the cell, or stays on one and is cut off. */
+  setWrap(on: boolean) {
+    return this.set('white-space', on ? 'pre-wrap' : 'nowrap')
+  }
+
+  get wraps(): boolean {
+    const value = this.look['white-space']
+    return value === 'pre-wrap' || value === 'normal'
   }
 
   get strokeWidth(): number {

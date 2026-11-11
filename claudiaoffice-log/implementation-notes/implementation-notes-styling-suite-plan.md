@@ -1,4 +1,4 @@
-# Plan: the styling suite (branch `styling-suite`; D300–D315)
+# Plan: the styling suite (branch `styling-suite`; D300–D318)
 
 **The goal.** The style model of D300–D310 — facets, kinds, slots, purpose bundles, no direct formatting — is how
 *everything* in claudia is styled: every kind of thing that can be styled declares its slots, the server offers
@@ -350,6 +350,48 @@ differs from the text above, and what 2.6 starts from:
 | undo per author; locks; the AI is another user | the same |
 
 …and a styled column of a million rows scrolls as smoothly as an unstyled one (measured).
+
+
+**Progress (2026-11-11): 2.6 is built** — a cell does what a composes paragraph does, as in the table above, and
+was checked in a browser against `computes-cell-styles.svg` and `computes-cell-style-popover.svg`. What differs
+from the text above, and what step 3 starts from:
+
+* **A sheet's ranges are loaded whole** (`Session.ensureCellStyles`, `cell_styles` with the sheet as its window),
+  not with each chunk of cells: they are sparse, like the row and column sizes, and loaded the same way. A
+  `cell_styles` event loads the sheet again if it is loaded; a structure event forgets it; `style_uses` is asked
+  again after `cell_styles`, `objects` and `styles` events (`state.styleUses`).
+* **`lib/cell-styles.ts`** holds the pure functions: `styleAt`/`layersAt` (most specific layer wins, Body text
+  under all), `within` (the ranges that meet the window), `whereFrom` (the popover's "Input — these cells' own
+  style … / Under it: column D is Note; the sheet is Body text", and "Box … · Words … — the two slots now differ"),
+  `cellLook` (box from the box facet, words from the text facet, vertical alignment and wrapping) and `sheetArea`.
+* **A header selects the whole line.** The grid shows the first `VIEW_ROWS` rows and `VIEW_COLS` columns, so a
+  column header used to select C1:C10000; `sheetArea` stretches a selection that spans the view to the sheet's last
+  row or column, so it goes into the column, row or sheet layer (D307) and the 1 048 576th row has the style too.
+* **The grid** (`SheetGrid.vue`, `painted`) looks up only the cells on screen, against only the ranges that meet
+  the window; a cell whose box paints something gets one element under its words (`.cellbox`), empty cells
+  included. That is one element per visible styled cell rather than one per visible range — still bounded by the
+  screen — because a border belongs to every cell of a range, not to the range. Words: font, size, weight, slant,
+  decoration, colour (`withDisplayInk`); padding from the box.
+* **Alignment (D318):** a cell aligns by its content unless its own style (or a parent short of Body text) sets an
+  alignment; the editor shows **Auto** for that (`StyleHost.alignOf`). Decided while building, for the owner's
+  review.
+* **The cell host** (`lib/cell-style-host.ts`) shows a cell as one slot, `cell`, reading Text, Paragraph and Box and
+  taking what fits both slots (D311). "These 6 cells only" deviates both slots; "only their box" deviates the box
+  slot from the box's own style (D309), and while it is ticked the popover shows only the Box section and works on
+  the box's style, so a second change goes into the new style instead of deviating again. The tick is reset when
+  the popover closes. The optional `StyleHost` fields this needed — `title`, `these`, `narrow`, `origin`, `extras`
+  (vertical alignment and wrapping), `clear`, `alignOf` — are left out by the other hosts.
+* **Menus:** which host the menus use follows the selection (`SheetGrid` emits `object`); the Format flyout says
+  "For the 6 selected cells" / "For cell B2" and ends with Clear cell style; Edit this style… and Shift+F10 open the
+  popover beside the selected cells; the quick list is `StylePicker.vue` at the end of the formula-bar row; All
+  styles… in computes uses the cell host, so its counts are the server's (cells and objects). `StylePicker` is
+  generic, but composes' `StyleBar` keeps its own list (name and purpose) — moving composes onto it is left for 3.x.
+* **Measured** (headless Chromium, 300 frames scrolling 700 px each, to row 8 077): unstyled sheet median 16.7 ms,
+  95th percentile 18.2 ms, at most 46 elements on the stage; columns B and C styled whole (two column ranges of
+  1 048 576 rows): median 16.7 ms, 95th percentile 17.9 ms, at most 100 elements. The styled grid keeps the frame
+  rate; the elements grow with the styled cells on screen only.
+* Not checked by hand: dark mode on a styled sheet (the words go through `withDisplayInk`, as composes'
+  paragraphs do).
 
 ---
 

@@ -245,6 +245,72 @@ describe('cells', () => {
   })
 })
 
+describe('cell styles (E6.13, D307, D317)', () => {
+  const INPUT = { slot: 'box', layer: 'range', area: [1, 1, 2, 3], style: 'input' }
+  function styled(link: FakeLink) {
+    link.handlers.cell_styles = () => ({ revision: 'main:3', ranges: [INPUT, { ...INPUT, slot: 'words' }] })
+    link.handlers.style_uses = () => ({ uses: { input: 2 } })
+    link.handlers.apply_style = () => ({ revision: 'main:4' })
+    link.handlers.deviate = () => ({ style: 'input-changed', name: 'Input (changed)', revision: 'main:4' })
+    link.handlers.clear_cell_style = () => ({ revision: 'main:4' })
+  }
+
+  it('loads a sheet’s style ranges once, all of them: a range is one entry however many cells it covers', async () => {
+    const { session, link } = await opened()
+    styled(link)
+    await session.ensureCellStyles('s1')
+    await session.ensureCellStyles('s1')
+    expect(link.count('cell_styles')).toBe(1)
+    expect(link.last('cell_styles')).toEqual({ sheet: 's1', row0: 0, row1: 1_048_575, col0: 0, col1: 16_383 })
+    expect(session.cellStyles('s1').map((r) => r.slot)).toEqual(['box', 'words'])
+    expect(session.cellStyles('s2')).toEqual([])
+  })
+
+  it('loads them again when they changed, and forgets them when rows or columns moved', async () => {
+    const { session, link } = await opened()
+    styled(link)
+    await session.ensureCellStyles('s1')
+    link.push('cell_styles', { sheet: 's1', area: [0, 0, 0, 0] })
+    await session.settled()
+    expect(link.count('cell_styles')).toBe(2)
+    link.push('structure', { sheet: 's1', axis: 'row', insert: true, at: 0, count: 1 })
+    expect(session.cellStyles('s1')).toEqual([])
+    await session.ensureCellStyles('s1')
+    expect(link.count('cell_styles')).toBe(3)
+  })
+
+  it('does not load a sheet nobody has looked at when its styles change', async () => {
+    const { session, link } = await opened()
+    styled(link)
+    link.push('cell_styles', { sheet: 's1', area: [0, 0, 0, 0] })
+    await session.settled()
+    expect(link.count('cell_styles')).toBe(0)
+  })
+
+  it('counts the uses of every style from the server, and again when styles, cells or objects change', async () => {
+    const { session, link } = await opened()
+    styled(link)
+    await session.refreshUses()
+    expect(session.state.styleUses).toEqual({ input: 2 })
+    const before = link.count('style_uses')
+    for (const event of ['cell_styles', 'objects', 'styles']) link.push(event, event === 'objects' ? { changed: [], removed: [], order: [], container: 's1' } : { sheet: 's1', area: [0, 0, 0, 0], styles: [] })
+    await session.settled()
+    expect(link.count('style_uses')).toBe(before + 3)
+  })
+
+  it('styles cells in both slots, deviates them, and clears them, against the revision it is looking at', async () => {
+    const { session, link } = await opened()
+    styled(link)
+    const cells = { sheet: 's1', range: [1, 1, 2, 3] as [number, number, number, number] }
+    expect(await session.applyStyle([cells], 'input')).toBe(true)
+    expect(link.last('apply_style')).toEqual({ targets: [cells], style: 'input', slot: undefined, base: 'main:3' })
+    expect(await session.deviateStyle('input', [cells], 'box', { set: { 'background-color': '@attention/14' } })).toBe(true)
+    expect(link.last('deviate')).toMatchObject({ parent: 'input', targets: [cells], slot: 'box', set: { 'background-color': '@attention/14' } })
+    expect(await session.clearCellStyle('s1', [1, 1, 2, 3])).toBe(true)
+    expect(link.last('clear_cell_style')).toEqual({ sheet: 's1', range: [1, 1, 2, 3], slot: undefined, base: 'main:3' })
+  })
+})
+
 describe('floating objects (images, E6.17)', () => {
   it('loads the decoded pictures and the objects of every sheet, on top of the cells', async () => {
     const link = new FakeLink()

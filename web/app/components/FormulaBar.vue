@@ -78,6 +78,8 @@ function submitJump() {
       @keydown.enter.prevent="$emit('commit')"
       @keydown.esc.prevent="$emit('cancel')"
     >
+    <!-- The end of the row: computes puts the quick style list here (`computes-cell-styles.svg`). -->
+    <slot />
   </div>
 </template>
 

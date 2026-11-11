@@ -7,7 +7,7 @@
 //   which style the panel shows and edits next (UX-14) — a look, not an instruction — and never closes the menu.
 // * `apply` (Format ▸ Apply style…, the shells' entry, D301): the styles that fit the slot, each drawn in its look;
 //   a click applies it and closes. Nothing to edit.
-import { computed, reactive } from 'vue'
+import { computed, onBeforeUnmount, reactive } from 'vue'
 import { menuCss } from '~/lib/style-css'
 import { StyleEditor, galleryFor, type StyleHost } from '~/lib/style-host'
 
@@ -17,11 +17,18 @@ const emit = defineEmits<{ close: []; styles: [] }>()
 const uses = computed(() => props.host.uses())
 const editor = reactive(new StyleEditor(props.host)) as StyleEditor
 const gallery = computed(() => galleryFor(props.host.styles, props.host.slot, props.host.model))
-const title = computed(() => props.host.noun.toUpperCase())
+const title = computed(() => props.host.title ?? props.host.noun)
+
+// "Only their box" is a choice for this one change, not a setting: the next popover starts on the whole cell again.
+onBeforeUnmount(() => props.host.narrow?.set(false))
 
 function choose(name: string) {
   props.host.chooseSlot(name)
   editor.pick(null)
+}
+
+async function clear() {
+  if (await props.host.clear?.()) emit('close')
 }
 
 async function clicked(id: string) {
@@ -37,6 +44,9 @@ async function clicked(id: string) {
         <h3>{{ mode === 'apply' ? 'Apply style' : title }}</h3>
         <button class="all" type="button" data-testid="all-styles" @click="emit('styles')">All styles…</button>
       </header>
+      <div v-if="mode === 'edit' && host.origin?.length" class="origin" data-testid="style-origin">
+        <p v-for="(line, i) in host.origin" :key="i">{{ line }}</p>
+      </div>
       <div v-if="host.slots.length > 1" class="slots" role="tablist" aria-label="Which part is styled" data-testid="slot-switcher">
         <button
           v-for="s in host.slots"
@@ -70,6 +80,7 @@ async function clicked(id: string) {
           </li>
         </template>
       </ul>
+      <button v-if="mode === 'apply' && host.clear" type="button" class="clear" :disabled="host.readOnly" data-testid="clear-style" @click="clear">Clear {{ host.noun }} style</button>
       <StyleSpec v-if="mode === 'edit' && host.slot?.reads.length" :host="host" :editor="editor" />
     </div>
   </Popover>
@@ -91,6 +102,34 @@ h3 {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
+}
+.origin {
+  margin: 0 8px 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--app) 9%, transparent);
+  font-size: 12.5px;
+}
+.origin p {
+  margin: 0;
+}
+.origin p + p {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.clear {
+  margin: 0 8px 8px;
+  padding: 6px 8px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  font-size: 13px;
+}
+.clear:hover:not(:disabled) {
+  background: var(--mist);
+  color: var(--ink);
 }
 .all {
   border: 0;

@@ -21,6 +21,9 @@ import {
 import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
 import { objectStyleHost } from '~/lib/object-style-host'
+import { cellStyleHost } from '~/lib/cell-style-host'
+import { sheetArea } from '~/lib/cell-styles'
+import { chordLabel, type ShortcutDef } from '~/lib/shortcuts'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
@@ -284,27 +287,95 @@ const styleHost = objectStyleHost({
   setRole: (role, colour) => session.setRole(role, colour),
 })
 
+/** The selected cells as a style host (E6.13, D311): what the Format menu, the quick list, the popover at the active
+ * cell and the All styles dialog style while no object is selected. */
+const cellHost = cellStyleHost({
+  get readOnly() {
+    return session.readOnly
+  },
+  get styles() {
+    return session.styleViews()
+  },
+  get roles() {
+    return state.palette?.roles ?? []
+  },
+  get readings() {
+    return state.palette?.readings ?? []
+  },
+  get model() {
+    return state.styleModel
+  },
+  get sheet() {
+    return state.activeSheet
+  },
+  get area(): [number, number, number, number] | null {
+    if (!state.activeSheet || activeChart.value || objectSelected.value) return null
+    return sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
+  },
+  get anchor() {
+    return { row: sel.value.row, col: sel.value.col }
+  },
+  ranges: () => session.cellStyles(state.activeSheet),
+  uses: () => state.styleUses,
+  applyStyle: (targets, style, slot) => session.applyStyle(targets, style, slot),
+  changeStyle: (style, edit) => session.changeStyle(style, edit),
+  deviateStyle: (parent, targets, slot, edit) => session.deviateStyle(parent, targets, slot, edit),
+  renameStyle: (style, name) => session.renameStyle(style, name),
+  clearCellStyle: (sheet, range, slot) => session.clearCellStyle(sheet, range, slot),
+  checkCss: (text) => session.checkCss(text),
+  setRole: (role, colour) => session.setRole(role, colour),
+})
+
+/** Whether a floating object is selected: then it, not the cells, is what the menus style (D209). The grid keeps
+ * the selection; this mirrors it so that the menus follow it. */
+const objectSelected = ref(false)
+/** The host the menus use: the selected object's, or the selected cells'. */
+const activeHost = computed(() => (objectSelected.value ? styleHost : cellHost))
+
+/** Edit this style… at the active cell, or beside the selected object (D300, D302). */
+const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => grid.value?.openStyleMenu() }
+const extraShortcuts = [LOOK]
+
 /**
- * The Format menu (D300). Until cells take styles in the grid (the styling-suite plan, step 2.6), what a workbook's
- * Format menu styles is the floating object selected — a shape, a text box, a picture, a chart — in the slot the
- * style menu works on (D304, D316); the flyout's first line says so. The colours are the document's and need no
- * selection.
+ * The Format menu (D300): what it styles follows the selection — the selected cells (`computes-cell-styles.svg`,
+ * panel B: both slots, D311, and Clear cell style, D317), or the floating object selected, in the slot the style
+ * menu works on (D304, D316); the flyout's first line says which. The colours are the document's.
  */
 function styleItems() {
   if (session.styleViews().length === 0) return [{ label: t('No styles yet'), disabled: true }]
   const selected = grid.value?.selectedObject()
   const body = selected ? state.objects[selected] : undefined
-  const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)
-  return formatItems(t, {
-    groups: body ? [offered.own, offered.bundles] : [],
-    heading: body ? t('For the {thing}', { thing: styleHost.noun }) : t('Select an object to style it'),
-    current: styleHost.current?.id,
-    canApply: !readonly.value && !!body,
-    apply: (id) => void styleHost.apply(id),
+  const look = { hint: chordLabel(LOOK.chord), open: () => grid.value?.openStyleMenu() }
+  const common = {
     openApply: () => grid.value?.openStyleMenu(undefined, 'apply'),
-    look: { disabled: !body, open: () => grid.value?.openStyleMenu() },
     allStyles: () => (dialog.value = 'styles'),
     colours: () => (dialog.value = 'colours'),
+  }
+  if (body) {
+    const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)
+    return formatItems(t, {
+      ...common,
+      groups: [offered.own, offered.bundles],
+      heading: t('For the {thing}', { thing: styleHost.noun }),
+      current: styleHost.current?.id,
+      canApply: !readonly.value,
+      apply: (id) => void styleHost.apply(id),
+      look: { ...look, disabled: false },
+    })
+  }
+  const offered = galleryFor(cellHost.styles, cellHost.slot, state.styleModel)
+  const [r0, c0, r1, c1] = sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
+  const cells = (r1 - r0 + 1) * (c1 - c0 + 1)
+  const some = !!state.activeSheet && !activeChart.value
+  return formatItems(t, {
+    ...common,
+    groups: some ? [offered.own] : [],
+    heading: !some ? t('Select cells or an object to style them') : cells === 1 ? t('For cell {cell}', { cell: label.value }) : t('For the {count} selected cells', { count: cells.toLocaleString('en-US') }),
+    current: cellHost.current?.id,
+    canApply: !readonly.value && some,
+    apply: (id) => void cellHost.apply(id),
+    look: { ...look, disabled: !some },
+    more: some ? [{ id: 'format.clear-cell-style', label: t('Clear cell style'), disabled: readonly.value, action: () => void cellHost.clear?.() }] : [],
   })
 }
 
@@ -475,6 +546,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     :menus="menus"
     :export-formats="EXPORT_FORMATS"
     :shortcut-notes="SHORTCUT_NOTES"
+    :extra-shortcuts="extraShortcuts"
     @leave="(opts) => emit('leave', opts)"
     @saved="grid?.focus()"
   >
@@ -497,7 +569,9 @@ const SHORTCUT_NOTES: [string, string][] = [
           @cancel="cancel"
           @undo="session.undo()"
           @redo="session.redo()"
-        />
+        >
+          <StylePicker v-if="state.activeSheet && !activeChart" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
+        </FormulaBar>
         <div v-if="formulaHelp" class="formulaHelp" role="status">
           <span class="sig mono">{{ formulaHelp.signature }}</span>
           <span v-if="formulaExample" class="example mono">{{ formulaExample }}</span>
@@ -517,6 +591,8 @@ const SHORTCUT_NOTES: [string, string][] = [
       :edit="edit"
       :pointing="pointing"
       :anchored="pointed"
+      :cell-host="cellHost"
+      @object="objectSelected = $event"
       @styles="dialog = 'styles'"
       @select="select"
       @move="moveBy"
@@ -547,7 +623,7 @@ const SHORTCUT_NOTES: [string, string][] = [
         @close="dialog = null"
         @inserted="chartInserted"
       />
-      <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <StylesDialog v-if="dialog === 'styles'" :host="cellHost" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
       <LineSizeDialog
         v-if="dialog === 'row-size' || dialog === 'col-size'"

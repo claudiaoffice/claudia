@@ -35,6 +35,9 @@ const isItalic = computed(() => italicIn(editor.look))
 const shown = computed(() => new Set(props.facets ?? facetsOfSlot(props.host.slot)))
 
 const SIDE_CHOICES = ['all', ...SIDES] as const
+const VERTICAL = ['top', 'middle', 'bottom'] as const
+/** Box properties only some things have: a cell's vertical alignment and wrapping. */
+const extras = computed(() => new Set(props.host.extras ?? []))
 /** The sides the border controls work on: all four, or one. */
 const side = ref<'all' | Side>(editor.borderSide())
 // A different style picked (gallery, All styles list): open the border controls on the side it has a border on.
@@ -92,6 +95,9 @@ async function name() {
   if (await editor.name(naming.value)) naming.value = ''
 }
 
+/** The alignment shown pressed: the style's, or — where a thing can align by its content — none of the four. */
+const alignNow = computed(() => (props.host.alignOf ? (current.value ? props.host.alignOf(current.value.id) : undefined) : (editor.look['text-align'] ?? 'left')))
+
 const ALIGN = [
   ['left', 'Left'],
   ['center', 'Centre'],
@@ -113,7 +119,11 @@ const ALIGN = [
     <div v-if="!fixed" class="scope" role="radiogroup" :aria-label="`Where a change goes`">
       <label :class="{ on: editor.scope === 'new' }" :title="editor.canDeviate ? undefined : `Go to the ${host.noun} where your cursor is to change this ${host.noun} only`">
         <input type="radio" name="scope" value="new" :checked="editor.scope === 'new'" :disabled="off || !editor.canDeviate" @change="editor.setScope('new')" >
-        <span>This {{ host.noun }} only</span>
+        <span>{{ host.these ?? `This ${host.noun} only` }}</span>
+      </label>
+      <label v-if="host.narrow" class="narrow" :class="{ off: editor.scope !== 'new' }">
+        <input type="checkbox" :checked="host.narrow.on" :disabled="off || editor.scope !== 'new'" data-testid="narrow" @change="host.narrow.set(($event.target as HTMLInputElement).checked)" >
+        <span>{{ host.narrow.label }}</span>
       </label>
       <label :class="{ on: editor.scope === 'every' }">
         <input type="radio" name="scope" value="every" :checked="editor.scope === 'every'" :disabled="off" @change="editor.setScope('every')" >
@@ -144,7 +154,8 @@ const ALIGN = [
         <h4>Paragraph</h4>
         <div class="row">
           <div class="marks" role="group" aria-label="Alignment">
-            <button v-for="[value, label] in ALIGN" :key="value" type="button" :aria-pressed="(editor.look['text-align'] ?? 'left') === value" :disabled="off" :title="label" :data-align="value" @click="run(editor.setAlign(value))">
+            <button v-if="host.alignOf" type="button" class="auto" :aria-pressed="alignNow === undefined" :disabled="off" title="By content: numbers right, text left" data-align="auto" @click="run(editor.reset('text-align'))">Auto</button>
+            <button v-for="[value, label] in ALIGN" :key="value" type="button" :aria-pressed="alignNow === value" :disabled="off" :title="label" :data-align="value" @click="run(editor.setAlign(value))">
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <path :d="value === 'left' ? 'M2 3h12M2 6.5h8M2 10h12M2 13.5h8' : value === 'center' ? 'M2 3h12M4 6.5h8M2 10h12M4 13.5h8' : value === 'right' ? 'M2 3h12M6 6.5h8M2 10h12M6 13.5h8' : 'M2 3h12M2 6.5h12M2 10h12M2 13.5h12'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
               </svg>
@@ -171,6 +182,16 @@ const ALIGN = [
           </span>
           <StyleColorPicker label="Border" :value="borderNow?.colour" :own="!!borderNow" :disabled="off" :roles="host.roles" @pick="run(editor.setBorder(sidesNow, Math.max(1, borderNow?.width ?? 1), $event))" @reset="run(editor.setBorder(sidesNow, 0, borderColour))" />
         </div>
+        <div v-if="extras.has('vertical-align')" class="row">
+          <span class="label">Vertical</span>
+          <div class="marks words" role="group" aria-label="Vertical alignment" data-testid="vertical">
+            <button v-for="v in VERTICAL" :key="v" type="button" :aria-pressed="editor.vertical === v" :disabled="off" :data-vertical="v" @click="run(editor.setVertical(v))">{{ v }}</button>
+          </div>
+        </div>
+        <label v-if="extras.has('white-space')" class="row check">
+          <input type="checkbox" :checked="editor.wraps" :disabled="off" data-testid="wrap" @change="run(editor.setWrap(($event.target as HTMLInputElement).checked))" >
+          <span>Wrap long text</span>
+        </label>
         <div class="row">
           <label class="width">
             <span>Padding</span>
@@ -282,6 +303,36 @@ h3 {
   color: var(--muted);
 }
 .scope input {
+  accent-color: var(--app);
+}
+.scope label.narrow {
+  padding-left: 30px; /* under its "only" choice, which it narrows */
+}
+.scope label.narrow.off {
+  color: var(--muted);
+  cursor: default;
+}
+.row .label {
+  align-self: center;
+  min-width: 56px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.marks button.auto {
+  width: auto;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.marks.words button {
+  width: auto;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+.row.check {
+  align-items: center;
+  font-size: 13px;
+}
+.row.check input {
   accent-color: var(--app);
 }
 .controls {

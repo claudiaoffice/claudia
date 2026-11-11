@@ -2,7 +2,8 @@
 // The connection, history, chat and the rest that every app has live in BaseSession.
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { LinkLike, Region, WireData } from './protocol'
-import type { Content } from './cells'
+import { MAX_COLS, MAX_ROWS, type Content } from './cells'
+import type { CellRange } from './cell-styles'
 import type { ImageAsset } from './images'
 import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
@@ -77,6 +78,12 @@ export interface State extends BaseState {
   palette: PaletteEvent | null
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
   styleModel: StyleModel | null
+  /** The style ranges of each sheet that has been looked at (E6.13, D307), least specific layer first, as the
+   * server's `cell_styles` sends them. A sheet's ranges are few — a whole column is one — so a sheet is loaded whole,
+   * as its sizes are. */
+  cellStyles: Record<string, CellRange[]>
+  /** How many things use each style — cells counted by range, objects by slot (`style_uses`). */
+  styleUses: Record<string, number>
 }
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
@@ -87,6 +94,7 @@ export class Session extends BaseSession<State> {
   private sizesLoaded = new Set<string>()
   private sizesInflight = new Map<string, Promise<void>>()
   private figuresInflight = new Map<string, Promise<void>>()
+  private stylesInflight = new Map<string, Promise<void>>()
   private editing = false
   private shown = ''
 
@@ -107,6 +115,8 @@ export class Session extends BaseSession<State> {
       styles: {},
       palette: null,
       styleModel: null,
+      cellStyles: {},
+      styleUses: {},
     })
   }
 
@@ -142,6 +152,7 @@ export class Session extends BaseSession<State> {
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
     s.palette = palette
     s.styleModel = styleModel
+    this.track(this.refreshUses())
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
   }
 
@@ -161,15 +172,56 @@ export class Session extends BaseSession<State> {
   }
 
 
-  /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). */
-  async applyStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
+  /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). Without a
+   * slot, into every slot of them the style fits: both slots of a cell (D311). */
+  async applyStyle(targets: StyleTarget[], style: string, slot?: string): Promise<boolean> {
     return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
   }
 
-  /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
-  async deviateStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
+  /** Change these targets only, in one slot or (without) in every slot that held `parent`: a new style from
+   * `parent`, named later (`deviate`, D75, D309). */
+  async deviateStyle(parent: string, targets: StyleTarget[], slot: string | undefined, edit: CssEdit): Promise<boolean> {
     const params = { parent, targets, slot, ...edit, base: this.state.revision }
     return (await this.attempt('deviate', params)) !== false
+  }
+
+  /** "Clear cell style" (D317): take the cells' own style away, in one slot or both, so what lies beneath shows. */
+  async clearCellStyle(sheet: string, range: [number, number, number, number], slot?: string): Promise<boolean> {
+    return (await this.attempt('clear_cell_style', { sheet, range, slot, base: this.state.revision })) !== false
+  }
+
+  /** The style ranges of a sheet that are loaded; none until `ensureCellStyles` has run for it. */
+  cellStyles(sheet: string): CellRange[] {
+    return this.state.cellStyles[sheet] ?? []
+  }
+
+  /** Load a sheet's style ranges, all of them, unless they are here already. */
+  async ensureCellStyles(sheet: string): Promise<void> {
+    if (sheet in this.state.cellStyles) return
+    return this.loadCellStyles(sheet)
+  }
+
+  private loadCellStyles(sheet: string): Promise<void> {
+    const running = this.stylesInflight.get(sheet)
+    if (running) return running
+    const generation = this.state.generation
+    const job = this.need()
+      .request<{ revision: string; ranges: CellRange[] }>('cell_styles', { sheet, row0: 0, row1: MAX_ROWS - 1, col0: 0, col1: MAX_COLS - 1 })
+      .then((answer) => {
+        if (generation === this.state.generation) this.state.cellStyles[sheet] = answer.ranges
+      })
+      .finally(() => this.stylesInflight.delete(sheet))
+    this.stylesInflight.set(sheet, job)
+    return job
+  }
+
+  /** Ask the server again how often each style is used. Quietly keeps the old counts if it cannot say. */
+  async refreshUses(): Promise<void> {
+    try {
+      this.state.styleUses = (await this.need().request<{ uses: Record<string, number> }>('style_uses')).uses
+    } catch {
+      /* a server without the counts: the gallery shows none */
+    }
   }
 
   async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
@@ -243,6 +295,8 @@ export class Session extends BaseSession<State> {
       s.cells = {}
       s.rowHeights = {}
       s.colWidths = {}
+      s.cellStyles = {}
+      this.stylesInflight.clear()
       this.loaded.clear()
       this.inflight.clear() // what was asked of a connection that is gone will never be answered
       this.sizesLoaded.clear()
@@ -251,6 +305,8 @@ export class Session extends BaseSession<State> {
       delete s.cells[sheet]
       delete s.rowHeights[sheet]
       delete s.colWidths[sheet]
+      delete s.cellStyles[sheet]
+      this.stylesInflight.delete(sheet)
       for (const k of [...this.loaded]) if (k.startsWith(`${sheet}:`)) this.loaded.delete(k)
       this.sizesLoaded.delete(sheet)
       this.sizesInflight.delete(sheet)
@@ -373,6 +429,7 @@ export class Session extends BaseSession<State> {
         for (const o of e.changed as SheetObject[]) s.objects[o.id] = o
         for (const id of e.removed) delete s.objects[id]
         s.order[e.container] = e.order
+        this.track(this.refreshUses())
         return true
       }
       case 'image':
@@ -391,6 +448,12 @@ export class Session extends BaseSession<State> {
         // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
         // resolved colours a sheet is drawn with, and a client cannot work them out for itself (D200).
         s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
+        this.track(this.refreshUses())
+        return true
+      case 'cell_styles':
+        // Only a sheet somebody looks at is loaded again; another is loaded when it comes into view.
+        if (data.sheet in s.cellStyles) this.track(this.loadCellStyles(data.sheet).catch(() => undefined))
+        this.track(this.refreshUses())
         return true
       case 'palette':
         s.palette = data as PaletteEvent
