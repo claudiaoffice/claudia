@@ -28,6 +28,7 @@ from lxml import etree
 from .names import NS
 
 _NAME = re.compile(rb"<([^\s/>]+)")
+_ATTRIBUTE = re.compile(rb"""\s+([^\s=/>]+)\s*=\s*("[^"]*"|'[^']*')""")
 
 
 class OdfError(Exception):
@@ -156,11 +157,12 @@ class XmlPart:
     def _edit(self, start: int, end: int, new: bytes) -> None:
         self._edits.append((start, end, len(self._edits), new))
 
-    def replace(self, element: etree._Element, new: etree._Element | bytes) -> None:
+    def replace(self, element: etree._Element, new: etree._Element | bytes, *more: etree._Element | bytes) -> None:
         """Put ``new`` (an element made with :meth:`make` or copied and changed, or markup as bytes) in place of
-        ``element``."""
+        ``element``; with ``more``, those after it, as siblings in the order given (a run of repeated cells split
+        in three is one replacement)."""
         span = self._span(element)
-        self._edit(span.start, span.end, self._bytes_of(new))
+        self._edit(span.start, span.end, b"".join(self._bytes_of(item) for item in (new, *more)))
 
     def remove(self, element: etree._Element) -> None:
         """Take ``element`` out, with what is inside it."""
@@ -194,6 +196,45 @@ class XmlPart:
         else:
             self._edit(span.close, span.close, data)
 
+    def set_attributes(self, element: etree._Element, values: Mapping[str, str]) -> None:
+        """Change (or add) attributes of ``element``, named with the prefixes this layer knows (``"svg:x"``), and
+        touch nothing else: not the other attributes of the tag, not their order, spacing or quoting, not what is
+        inside the element. The prefix written is the one the file binds to that namespace; the edit can be made
+        together with edits inside the element. Moving a shape is this, and a person who opens the file in the
+        program it came from finds nothing else changed."""
+        span = self._span(element)
+        tag = self.raw[span.start : span.open_end]
+        empty = tag.endswith(b"/>")
+        body = tag[:-2] if empty else tag[:-1]
+        name_end = _NAME.match(body)
+        assert name_end is not None  # expat has parsed this tag
+        found = {match.group(1): match for match in _ATTRIBUTE.finditer(body, name_end.end())}
+        pending: list[bytes] = []
+        replacements: list[tuple[int, int, bytes]] = []
+        for name, value in values.items():
+            qualified = self._written_name(element, name)
+            existing = found.get(qualified)
+            if existing is None:
+                pending.append(b" " + qualified + b'="' + _attribute_text(value, b'"') + b'"')
+                continue
+            quote = existing.group(2)[:1]
+            start, end = existing.span(2)
+            replacements.append((start, end, quote + _attribute_text(value, quote) + quote))
+        for start, end, text in sorted(replacements, reverse=True):
+            body = body[:start] + text + body[end:]
+        trailing = body[len(body.rstrip()) :]
+        body = body.rstrip() + b"".join(pending) + trailing
+        self._edit(span.start, span.open_end, body + (b"/>" if empty else b">"))
+
+    @staticmethod
+    def _written_name(element: etree._Element, prefixed: str) -> bytes:
+        prefix, _, local = prefixed.partition(":")
+        uri = NS[prefix]
+        written = next((p for p, u in element.nsmap.items() if u == uri and p), None)
+        if written is None:
+            raise OdfError(f"the file does not declare the namespace {uri} where this attribute goes")
+        return f"{written}:{local}".encode()
+
     # -- the result ------------------------------------------------------------------
     def result(self) -> bytes:
         """The part with every recorded edit made. ``OdfError`` if two edits overlap (one replaces an element,
@@ -211,6 +252,13 @@ class XmlPart:
 
     def __iter__(self) -> Iterator[etree._Element]:
         return iter(self._elements)
+
+
+def _attribute_text(value: str, quote: bytes) -> bytes:
+    """``value`` as it is written between ``quote`` marks."""
+    text = value.replace("&", "&amp;").replace("<", "&lt;")
+    text = text.replace('"', "&quot;") if quote == b'"' else text.replace("'", "&apos;")
+    return text.replace("\n", "&#10;").replace("\t", "&#9;").encode()
 
 
 def qname_in(prefixed: str, nsmap: Mapping[str, str]) -> str:

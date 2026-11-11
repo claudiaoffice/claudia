@@ -422,6 +422,31 @@ def test_export_office_returns_pptx_bytes_that_round_trip(deck):
     assert len(reloaded.slides) == 1
 
 
+def test_export_office_returns_an_odp_that_round_trips_and_says_who_made_it_when(deck):
+    from claudia_creates_io import odp_to_slides
+
+    from claudia_odf_io import problems, read_info
+    from claudia_opc_io import read_parts
+
+    add_text(deck, text="Hello there")
+    answer = call(deck, "export_office", {"format": "odp"})
+    assert answer["format"] == "odp"
+    assert answer["content_type"] == "application/vnd.oasis.opendocument.presentation"
+    raw = base64.b64decode(answer["data"])
+    assert problems(raw) == []
+    assert [o.body.paragraph.text for o in odp_to_slides(raw).objects.values()] == ["Hello there"]
+    info = read_info(read_parts(raw)["meta.xml"])
+    assert info.creator == "ann" and info.modifier == "ann"
+    assert info.created and info.modified
+    # who typed which words is not something an odp keeps
+    assert {"kind": "authorship", "detail": "", "count": 1} in answer["losses"]
+
+
+def test_export_office_to_pptx_has_no_loss_list(deck):
+    add_text(deck, text="Hello there")
+    assert "losses" not in call(deck, "export_office", {"format": "pptx"})
+
+
 def test_export_office_rejects_an_unknown_format(deck):
     with pytest.raises(RequestError):
-        call(deck, "export_office", {"format": "odp"})
+        call(deck, "export_office", {"format": "key"})

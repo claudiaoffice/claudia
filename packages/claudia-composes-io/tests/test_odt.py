@@ -17,7 +17,18 @@ from claudia_composes_io import (
 from lxml import etree
 
 from claudia_composes import DEFAULT_STYLE, Block, Suggestion, TextModel, TextRange
-from claudia_odf_io import MIME, NS, Loss, LossLog, OdfError, new_package, problems, xml_safe
+from claudia_odf_io import (
+    MIME,
+    NS,
+    DocumentInfo,
+    Loss,
+    LossLog,
+    OdfError,
+    new_package,
+    problems,
+    read_info,
+    xml_safe,
+)
 from claudia_opc_io import read_parts
 
 DECLS = " ".join(f'xmlns:{p}="{u}"' for p, u in NS.items() if p != "xml")
@@ -562,3 +573,110 @@ def test_random_edits_of_a_rich_file_always_give_the_edited_text_and_leave_the_r
         new = content(edited)
         assert new.endswith("</office:text></office:body></office:document-content>")
         assert old[old.index("<table:table") : old.index("</table:table>")] in new  # the table is never touched
+
+
+# -- dates and people (D411) ----------------------------------------------------------------------------------------
+INFO = DocumentInfo("Plan", "2026-01-02T03:04:05Z", "Ann", "2026-11-11T17:13:05Z", "Bob")
+
+
+def change_dates(data: bytes) -> list[str | None]:
+    return [d.text for d in body_of(data).iterfind(".//office:change-info/dc:date", NS)]
+
+
+def test_a_new_file_has_the_title_the_dates_and_the_people_of_the_document():
+    data = text_to_odt(suggestion_model(), info=INFO)
+    assert read_info(read_parts(data)["meta.xml"]) == INFO
+    assert problems(data) == []
+
+
+def test_a_new_file_without_information_has_no_dates_at_all():
+    assert read_info(read_parts(text_to_odt(model_of(("body", "x"))))["meta.xml"]) == DocumentInfo()
+
+
+def test_a_tracked_change_has_the_time_its_suggestion_was_made():
+    data = text_to_odt(suggestion_model(), change_times={"s1": "2026-11-10T09:30:00+01:00"})
+    assert change_dates(data) == ["2026-11-10T08:30:00Z", "2026-11-10T08:30:00Z"]
+
+
+def test_a_suggestion_with_no_time_gets_the_day_the_document_was_last_changed():
+    assert change_dates(text_to_odt(suggestion_model(), info=INFO)) == ["2026-11-11T17:13:05Z"] * 2
+    assert (
+        change_dates(text_to_odt(suggestion_model(), info=INFO, change_times={"other": "2020-01-01T00:00:00Z"}))
+        == ["2026-11-11T17:13:05Z"] * 2
+    )
+
+
+def test_each_suggestion_has_its_own_time():
+    model = model_of((DEFAULT_STYLE, "one two three"))
+    model.suggestions["s1"] = Suggestion("s1", "A", TextRange("b1", 0, 3), "one", "1", "")
+    model.suggestions["s2"] = Suggestion("s2", "B", TextRange("b1", 8, 13), "three", "3", "")
+    data = text_to_odt(model, change_times={"s1": "2026-01-01T00:00:00Z", "s2": "2026-02-02T00:00:00Z"})
+    assert change_dates(data) == ["2026-01-01T00:00:00Z"] * 2 + ["2026-02-02T00:00:00Z"] * 2
+
+
+def test_the_losses_do_not_depend_on_the_dates():
+    model = suggestion_model()
+    assert odt_export_losses(model) == odt_export_losses(model)
+
+
+def edited_with(original: bytes, **options) -> bytes:
+    baseline, current = odt_to_text(original), odt_to_text(original)
+    retext(current, "b1", "Changed")
+    return apply_edits_to_odt(original, baseline, current, **options)
+
+
+def an_odt_with_meta(meta: str) -> bytes:
+    original = an_odt('<text:p text:style-name="Standard">First</text:p>')
+    parts = read_parts(original)
+    parts["meta.xml"] = meta.encode()
+    from claudia_opc_io import write_parts
+
+    return write_parts(parts)
+
+
+META = (
+    f'{HEAD}<office:document-meta {DECLS} office:version="1.3"><office:meta><meta:generator>Word</meta:generator>'
+    "<meta:initial-creator>Ann</meta:initial-creator><meta:creation-date>2020-01-01T00:00:00</meta:creation-date>"
+    "<dc:date>2020-02-02T00:00:00</dc:date><meta:editing-cycles>3</meta:editing-cycles>"
+    '<meta:document-statistic meta:paragraph-count="1"/></office:meta></office:document-meta>'
+)
+
+
+def test_an_edit_updates_who_saved_the_file_and_when():
+    edited = edited_with(an_odt_with_meta(META), info=INFO)
+    meta = read_parts(edited)["meta.xml"]
+    assert read_info(meta).modified == "2026-11-11T17:13:05Z"
+    assert read_info(meta).modifier == "Bob"
+    assert read_info(meta).creator == "Ann" and read_info(meta).created == "2020-01-01T00:00:00Z"
+    assert b"<meta:editing-cycles>4</meta:editing-cycles>" in meta
+    assert b'<meta:document-statistic meta:paragraph-count="1"/>' in meta
+    assert problems(edited) == []
+
+
+def test_without_information_the_metadata_is_left_alone():
+    original = an_odt_with_meta(META)
+    assert read_parts(edited_with(original))["meta.xml"] == META.encode()
+
+
+def test_a_file_that_was_not_changed_is_not_touched_even_with_information():
+    original = an_odt_with_meta(META)
+    assert apply_edits_to_odt(original, odt_to_text(original), odt_to_text(original), info=INFO) == original
+
+
+def test_an_edited_file_with_no_metadata_gets_some():
+    original = an_odt('<text:p text:style-name="Standard">First</text:p>')
+    parts = read_parts(original)
+    del parts["meta.xml"]
+    from claudia_opc_io import write_parts
+
+    edited = edited_with(write_parts(parts), info=INFO)
+    assert read_info(read_parts(edited)["meta.xml"]).modifier == "Bob"
+    assert problems(edited) == []
+
+
+def test_tracked_changes_added_to_an_existing_file_have_their_times():
+    original = an_odt(RICH)
+    baseline, current = odt_to_text(original), odt_to_text(original)
+    current.suggestions["s1"] = Suggestion("s1", "Claudia AI", TextRange("b2", 6, 10), "bold", "plain", "")
+    edited = apply_edits_to_odt(original, baseline, current, info=INFO, change_times={"s1": "2026-11-10T08:30:00Z"})
+    assert change_dates(edited) == ["2026-11-10T08:30:00Z"] * 2

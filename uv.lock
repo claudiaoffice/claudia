@@ -405,6 +405,7 @@ source = { editable = "packages/claudia-computes-io" }
 dependencies = [
     { name = "claudia-computes" },
     { name = "claudia-core" },
+    { name = "claudia-odf-io" },
     { name = "claudia-opc-io" },
     { name = "openpyxl" },
 ]
@@ -413,6 +414,7 @@ dependencies = [
 requires-dist = [
     { name = "claudia-computes", editable = "packages/claudia-computes" },
     { name = "claudia-core", editable = "packages/claudia-core" },
+    { name = "claudia-odf-io", editable = "packages/claudia-odf-io" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "openpyxl", specifier = ">=3.1" },
 ]
@@ -447,6 +449,7 @@ source = { editable = "packages/claudia-creates-io" }
 dependencies = [
     { name = "claudia-core" },
     { name = "claudia-creates" },
+    { name = "claudia-odf-io" },
     { name = "claudia-opc-io" },
     { name = "python-pptx" },
 ]
@@ -455,6 +458,7 @@ dependencies = [
 requires-dist = [
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
+    { name = "claudia-odf-io", editable = "packages/claudia-odf-io" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "python-pptx", specifier = ">=1.0" },
 ]

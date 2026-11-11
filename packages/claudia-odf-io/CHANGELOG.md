@@ -5,7 +5,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [0.1.0] - 2026-11-11
 
-The OpenDocument layer shared by the three apps' io packages (D401): odt now, odp and ods to follow (D70).
+The OpenDocument layer shared by the three apps' io packages (D401): odt, odp and ods (D70).
 
 ### Added
 - `XmlPart`: edit one XML part by splicing bytes into the original, so everything outside the edited elements stays
@@ -17,3 +17,9 @@ The OpenDocument layer shared by the three apps' io packages (D401): odt now, od
   that a file is one.
 - `NS`, `qname`, `local_name`, `encode_style_name`, `decode_style_name`: how ODF names things.
 - `Loss`, `LossLog`: what could not be kept, as codes for the interface to put into words.
+- `XmlPart.replace` takes more than one replacement (an element becomes several, D413); `NS` knows `calcext` (cell
+  error values) and `of` (OpenFormula, which a file must declare or LibreOffice reads every formula as an error).
+- `XmlPart.set_attributes`: change the attributes of one start tag and nothing else of the element (D411, D412).
+- `DocumentInfo`, `new_meta`, `update_meta`, `update_package_meta`, `read_info`, `odf_date`, `GENERATOR`: `meta.xml`,
+  who made a document and when, written for a new file and kept true in an edited one by splicing, so what the file
+  came with (statistics, keywords, user-defined properties) stays; dates are UTC with a `Z` (D411).

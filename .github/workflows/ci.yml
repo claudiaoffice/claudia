@@ -160,7 +160,8 @@ jobs:
           if-no-files-found: ignore
 
   # What the OpenDocument code writes is also opened in LibreOffice, the reference implementation (D409): the library's
-  # odt cases and a file made from a model are converted with `soffice` and the text that comes out is compared. It
+  # odt, odp and ods cases and a file made from a model each are converted with `soffice` and what comes out is
+  # compared (the words of an odt or odp, the value of every cell of an ods). It
   # may fail without failing the build until it has a track record, so that a LibreOffice release that reads a little
   # differently does not stop anyone's work (`continue-on-error`); read its result like any other job's.
   odf-libreoffice:
@@ -174,10 +175,10 @@ jobs:
         with:
           python-version: "3.14"
           enable-cache: true
-      - name: LibreOffice Writer, from the distribution
+      - name: LibreOffice Writer, Impress and Calc, from the distribution
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libreoffice-writer
+          sudo apt-get install -y --no-install-recommends libreoffice-writer libreoffice-impress libreoffice-calc
       - run: uv sync --locked
       - run: uv run python scripts/odf_libreoffice_check.py
 

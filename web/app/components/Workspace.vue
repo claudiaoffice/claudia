@@ -46,7 +46,10 @@ let original = ''
 const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'row-size' | 'col-size' | 'styles' | 'colours'>(null)
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 
-const EXPORT_FORMATS = [{ value: 'xlsx', label: 'Excel workbook (.xlsx)' }]
+const EXPORT_FORMATS = [
+  { value: 'xlsx', label: 'Excel workbook (.xlsx)' },
+  { value: 'ods', label: 'OpenDocument spreadsheet (.ods)' },
+]
 /** The chart tab shown instead of a sheet, or `null` for a sheet (`FooterBar.vue`'s own docstring on why this
  * is not part of `state`). Reset to `null` if its tab disappears (removed here, or by someone else). */
 const activeChart = ref<string | null>(null)

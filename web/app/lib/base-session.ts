@@ -488,12 +488,13 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   /** The document's current content as bytes of a Word, Excel, PowerPoint or OpenDocument file (`format` is one of
-   * what the app supports: "docx", "odt", "xlsx" or "pptx"), as `{format, content_type, data}` with `data` base64
-   * — no tracked changes, no history, no chat; just the document as it stands now. An OpenDocument answer also
-   * has `losses`: what the file could not hold, as `{kind, detail, count}` codes (nothing shows them yet: the
-   * screen for that is designed first). */
-  async exportOffice(format: string): Promise<ExportedFile | false> {
-    return await this.attempt('export_office', { format })
+   * what the app supports: "docx", "odt", "xlsx", "ods", "pptx" or "odp"), as `{format, content_type, data}` with
+   * `data` base64 — no history, no chat; just the document as it stands now. With `trackedChanges` the text app also writes its
+   * open suggestions as tracked changes, dated and signed (D411); the parameter is only sent when asked for, because
+   * the other apps do not know it. An OpenDocument answer also has `losses`: what the file could not hold, as
+   * `{kind, detail, count}` codes (nothing shows them yet: the screen for that is designed first). */
+  async exportOffice(format: string, options: { trackedChanges?: boolean } = {}): Promise<ExportedFile | false> {
+    return await this.attempt('export_office', options.trackedChanges ? { format, tracked_changes: true } : { format })
   }
 
   // ------------------------------------------------------------------------------ help (E13.1, E13.3, E13.5)

@@ -23,7 +23,7 @@ same name; every other style is body text -- and named in the losses, so that no
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from itertools import count
 from zipfile import BadZipFile
@@ -35,6 +35,7 @@ from claudia_odf_io import (
     MIME,
     NS,
     VERSION,
+    DocumentInfo,
     Loss,
     LossLog,
     OdfError,
@@ -42,20 +43,22 @@ from claudia_odf_io import (
     decode_style_name,
     hidden_content,
     insert_elements,
+    new_meta,
     new_package,
     read_text,
     set_text,
+    update_package_meta,
     xml_safe,
 )
 from claudia_opc_io import read_parts, write_parts
 
-from ._suggestions import open_replacements
+from ._suggestions import WhenMade, open_replacements, when_made
 from .docx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
-#: What a tracked change is dated, since the model knows no time (D147 does not invent one) but a program needs a date
-#: before it reads the change at all (LibreOffice drops one without): the earliest date there is, the way it writes
-#: a change that came from a file with no date.
+#: What a tracked change is dated when nobody knows when its suggestion was made (the model keeps no time; the server
+#: reads it from the log and passes it in, D411), since a program needs a date before it reads the change at all
+#: (LibreOffice drops one without): the earliest date there is, the way it writes a change from a file with no date.
 _NO_DATE = "1970-01-01T00:00:00"
 _DEFAULT_AUTHOR = "Claudia AI"
 
@@ -298,10 +301,11 @@ class _Change:
     author: str
     at: int
     end: int
+    date: str
     text: str = ""
 
 
-def _plan(text: str, suggestions: list[Suggestion]) -> tuple[str, list[_Change], int]:
+def _plan(text: str, suggestions: list[Suggestion], when: WhenMade | None = None) -> tuple[str, list[_Change], int]:
     """The text a paragraph with these suggestions has (their replacements in, what they replace out), the changes to
     write for them, and how many suggestions could not be placed because their anchor no longer matches the text."""
     out, changes, position, skipped = "", [], 0, 0
@@ -312,11 +316,12 @@ def _plan(text: str, suggestions: list[Suggestion]) -> tuple[str, list[_Change],
             continue
         out += text[position:start]
         author = suggestion.author or _DEFAULT_AUTHOR
+        date = (when(suggestion) if when else None) or _NO_DATE
         if end > start:
-            changes.append(_Change("deletion", author, len(out), len(out), text[start:end]))
+            changes.append(_Change("deletion", author, len(out), len(out), date, text[start:end]))
         if suggestion.replacement:
             replacement = xml_safe(suggestion.replacement)
-            changes.append(_Change("insertion", author, len(out), len(out) + len(replacement)))
+            changes.append(_Change("insertion", author, len(out), len(out) + len(replacement), date))
             out += replacement
         position = end
     return out + text[position:], changes, skipped
@@ -338,7 +343,7 @@ def _region(change: _Change, change_id: str, style_name: str) -> etree._Element:
     holder = etree.SubElement(region, _q("text", change.kind))
     info = etree.SubElement(holder, _q("office", "change-info"))
     etree.SubElement(info, _q("dc", "creator")).text = change.author
-    etree.SubElement(info, _q("dc", "date")).text = _NO_DATE
+    etree.SubElement(info, _q("dc", "date")).text = change.date
     if change.kind == "deletion":
         deleted = etree.SubElement(holder, _P)
         deleted.set(_STYLE_NAME, style_name)
@@ -371,7 +376,7 @@ def _ids(used: set[str]) -> Iterator[str]:
 
 # -- writing a paragraph ---------------------------------------------------------------------------------------------
 def _new_paragraph(
-    style_id: str, text: str, suggestions: list[Suggestion], ids: Iterator[str]
+    style_id: str, text: str, suggestions: list[Suggestion], ids: Iterator[str], when: WhenMade
 ) -> tuple[etree._Element, list[etree._Element]]:
     """A paragraph element for a block, and the tracked-change regions of its suggestions."""
     name = _ODF_NAME.get(style_id, _STANDARD)
@@ -380,7 +385,7 @@ def _new_paragraph(
     paragraph.set(_STYLE_NAME, name)
     if level:
         paragraph.set(_OUTLINE, str(level))
-    body, changes, _ = _plan(text, suggestions)
+    body, changes, _ = _plan(text, suggestions, when)
     set_text(paragraph, body)
     return paragraph, _write_changes(paragraph, changes, ids, name)
 
@@ -402,12 +407,24 @@ def _styles_part() -> bytes:
     ).encode()
 
 
-def text_to_odt(model: TextModel, *, track_suggestions: bool = True) -> bytes:
+def text_to_odt(
+    model: TextModel,
+    *,
+    track_suggestions: bool = True,
+    info: DocumentInfo | None = None,
+    change_times: Mapping[str, str] | None = None,
+) -> bytes:
     """``model`` as odt bytes: one paragraph (or heading) per block, the built-in styles written as the styles of the
     same name. When ``track_suggestions`` (the default), every open suggestion that proposes a replacement is written
     as a tracked change a reviewer can accept or reject in any OpenDocument program; a remark has no text to track and
     is left out, as is one that is resolved or withdrawn. Anything else not in the file is in
-    :func:`odt_export_losses`."""
+    :func:`odt_export_losses`.
+
+    ``info`` is what the file says about the document in ``meta.xml`` (title, who made it and when, who saved it last
+    and when). ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one it has no
+    time for is dated by ``info.modified`` (the suggestion is not younger than that), and one with neither by the
+    earliest date there is (D411)."""
+    when = when_made(change_times, info.modified if info else None)
     by_block = open_replacements(model, track=track_suggestions)
     ids = _ids(set())
     root = etree.Element(
@@ -419,7 +436,7 @@ def text_to_odt(model: TextModel, *, track_suggestions: bool = True) -> bytes:
     text = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "text"))
     regions: list[etree._Element] = []
     for block in model.blocks:
-        paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids)
+        paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when)
         text.append(paragraph)
         regions += found
     if regions:
@@ -427,7 +444,7 @@ def text_to_odt(model: TextModel, *, track_suggestions: bool = True) -> bytes:
         tracked.extend(regions)
         text.insert(0, tracked)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
-    return new_package("text", content.encode(), _styles_part())
+    return new_package("text", content.encode(), _styles_part(), meta=new_meta(info or DocumentInfo()))
 
 
 def odt_export_losses(model: TextModel, *, track_suggestions: bool = True) -> tuple[Loss, ...]:
@@ -465,9 +482,19 @@ class _Patch:
     """One run of :func:`apply_edits_to_odt`: the original's parts, what is to change and the edits recorded so far."""
 
     def __init__(
-        self, original: bytes, baseline: TextModel, current: TextModel, *, track: bool, losses: LossLog | None
+        self,
+        original: bytes,
+        baseline: TextModel,
+        current: TextModel,
+        *,
+        track: bool,
+        losses: LossLog | None,
+        info: DocumentInfo | None,
+        when: WhenMade,
     ) -> None:
         self.original = original
+        self.info = info
+        self.when = when
         self.parts = _read(original)
         self.part = XmlPart(self.parts["content.xml"])
         self.body = _text_body(self.part.root)
@@ -506,6 +533,8 @@ class _Patch:
             return self.original
         self.parts["content.xml"] = self.part.result()
         self._add_missing_styles()
+        if self.info is not None:
+            update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
 
     def _style_name(self, style_id: str) -> str:
@@ -544,7 +573,7 @@ class _Patch:
     def _add(self, block: Block, anchor: etree._Element | None, suggestions: list[Suggestion]) -> None:
         """A new block goes next to the paragraph before it, in whatever holds that (a list item, a section), or before
         the first paragraph, or at the end of a text that has none."""
-        paragraph, found = _new_paragraph(block.style, block.text, suggestions, self.ids)
+        paragraph, found = _new_paragraph(block.style, block.text, suggestions, self.ids, self.when)
         self._style_name(block.style)
         self.regions += found
         if anchor is not None:
@@ -560,7 +589,7 @@ class _Patch:
         if old.text == block.text and old.style == block.style and not suggestions:
             return
         edited = copy.deepcopy(element)
-        text, changes, _ = _plan(block.text, suggestions)
+        text, changes, _ = _plan(block.text, suggestions, self.when)
         set_text(edited, text)
         name = edited.get(_STYLE_NAME) or _STANDARD
         if old.style != block.style:
@@ -619,6 +648,8 @@ def apply_edits_to_odt(
     *,
     track_suggestions: bool = True,
     losses: LossLog | None = None,
+    info: DocumentInfo | None = None,
+    change_times: Mapping[str, str] | None = None,
 ) -> bytes:
     """Re-export ``current`` to odt by patching what changed since ``baseline`` (the model as :func:`odt_to_text` read
     it from ``original_bytes``) onto those same bytes -- so a table, a picture, a footnote, a style, anything the text
@@ -631,6 +662,12 @@ def apply_edits_to_odt(
     file does not have yet is added to it), blocks that were added or removed (``losses`` gets a ``removed-...`` entry
     for each note, frame or comment that went with a removed block), and open suggestions, as tracked changes.
 
+    ``info`` and ``change_times`` are as for :func:`text_to_odt`. With ``info``, a file that was changed also has its
+    ``meta.xml`` brought up to date (:func:`claudia_odf_io.update_package_meta`: when and by whom it was saved, one more
+    edit counted; the rest of it as it was); a file that was not changed is not touched, and without ``info`` the
+    metadata is left alone (D411).
+
     Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, and blocks
     moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know)."""
-    return _Patch(original_bytes, baseline, current, track=track_suggestions, losses=losses).run()
+    when = when_made(change_times, info.modified if info else None)
+    return _Patch(original_bytes, baseline, current, track=track_suggestions, losses=losses, info=info, when=when).run()

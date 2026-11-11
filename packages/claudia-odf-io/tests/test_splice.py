@@ -7,8 +7,9 @@ becomes ``'``, the quotes of the declaration change); an ODF file keeps every sh
 from __future__ import annotations
 
 import pytest
+from lxml import etree
 
-from claudia_odf_io import OdfError, XmlPart
+from claudia_odf_io import NS, OdfError, XmlPart
 
 HEAD = b'<?xml version="1.0" encoding="UTF-8"?>\n'
 DOC = (
@@ -222,3 +223,51 @@ def test_an_empty_element_right_before_the_end_tag_of_its_parent_has_its_own_spa
     assert raw[slice(*spans["a"])] == b"<a><b/></a>"
     part.remove(part.elements()[2])
     assert part.result() == b"<r><a></a><c>x</c></r>"
+
+
+# -- set_attributes: change a start tag and nothing else (D412) -----------------------------------------------------
+class TestSetAttributes:
+    SOURCE = (
+        f'<?xml version="1.0" encoding="UTF-8"?>\n<root xmlns:a="{NS["draw"]}" xmlns:s="{NS["svg"]}">'
+        '<a:frame s:x=\'1cm\'  s:y="2cm" a:name="A &amp; B">text &apos;kept&apos;</a:frame>'
+        '<a:frame s:x="3cm"/></root>'
+    ).encode()
+
+    def edited(self, which: int, values: dict[str, str]) -> bytes:
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[which], values)
+        return part.result()
+
+    def test_changes_the_value_and_leaves_the_rest_of_the_tag_and_the_part_alone(self):
+        result = self.edited(0, {"svg:x": "9cm"})
+        assert b'<a:frame s:x=\'9cm\'  s:y="2cm" a:name="A &amp; B">text &apos;kept&apos;</a:frame>' in result
+        assert result.endswith(b'<a:frame s:x="3cm"/></root>')
+
+    def test_uses_the_prefixes_the_file_chose(self):
+        assert b's:y="7cm"' in self.edited(0, {"svg:y": "7cm"})
+
+    def test_adds_an_attribute_the_tag_lacks(self):
+        result = self.edited(0, {"svg:width": "5cm"})
+        assert b"svg:width" not in result and b's:width="5cm"' in result
+        assert etree.fromstring(result)[0].get(f"{{{NS['svg']}}}width") == "5cm"
+
+    def test_works_on_an_empty_element(self):
+        result = self.edited(1, {"svg:x": "4cm", "svg:y": "5cm"})
+        element = etree.fromstring(result)[1]
+        assert (element.get(f"{{{NS['svg']}}}x"), element.get(f"{{{NS['svg']}}}y")) == ("4cm", "5cm")
+        assert result.endswith(b"/></root>")
+
+    def test_escapes_the_value(self):
+        result = self.edited(0, {"draw:name": 'A "quoted" <b> & c'})
+        assert etree.fromstring(result)[0].get(f"{{{NS['draw']}}}name") == 'A "quoted" <b> & c'
+
+    def test_can_be_combined_with_an_edit_inside_the_element(self):
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[0], {"svg:x": "9cm"})
+        part.insert_into(part.root[0], b"<a:inner/>")
+        assert b"<a:inner/></a:frame>" in part.result() and b"s:x='9cm'" in part.result()
+
+    def test_a_namespace_the_file_does_not_declare_is_an_error(self):
+        part = XmlPart(b'<root xmlns:a="x"><a:e/></root>')
+        with pytest.raises(OdfError, match="namespace"):
+            part.set_attributes(part.root[0], {"svg:x": "1cm"})

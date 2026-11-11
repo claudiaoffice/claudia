@@ -23,7 +23,7 @@ Unused numbers in a closed block stay unused.
 | D281–D290 | *free — next branch or agent to ask* | | open |
 | D261–D280 | *free* | | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D315 used) | 2026-11-10 | open |
-| D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D410 used) | 2026-11-11 | open |
+| D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
 
 ## Never to be used
 

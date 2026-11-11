@@ -11,8 +11,10 @@ file could not hold in each direction (``odt_export_losses``, ``odt_import_losse
 
 docx   text_to_docx, docx_to_text, apply_edits_to_docx, UnsupportedEdit
 odt    text_to_odt, odt_to_text, apply_edits_to_odt, odt_import_losses, odt_export_losses (D401)
+log    export_info -- the dates and people of a document, and when each suggestion was made, from its log (D411)
 """
 
+from ._history import export_info
 from ._version import __version__
 from .docx import UnsupportedEdit, apply_edits_to_docx, docx_to_text, text_to_docx
 from .odt import apply_edits_to_odt, odt_export_losses, odt_import_losses, odt_to_text, text_to_odt
@@ -23,6 +25,7 @@ __all__ = [
     "apply_edits_to_docx",
     "apply_edits_to_odt",
     "docx_to_text",
+    "export_info",
     "odt_export_losses",
     "odt_import_losses",
     "odt_to_text",

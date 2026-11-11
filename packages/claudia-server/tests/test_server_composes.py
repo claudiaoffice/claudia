@@ -472,3 +472,64 @@ def test_export_office_to_odt_drops_open_suggestions_rather_than_tracking_them(p
 def test_export_office_rejects_an_unknown_format(paper):
     with pytest.raises(RequestError):
         call(paper, "export_office", {"format": "pdf"})
+
+
+# ---------------------------------------------------------------- tracked changes and dates in an export (D411)
+@pytest.fixture
+def dated_paper():
+    """A text with known times: typed 2026-01-02, a suggestion 2026-03-04, typed again 2026-11-11."""
+    times = iter(["2026-01-02T03:04:05Z", "2026-03-04T05:06:07Z", "2026-11-11T17:13:05Z"])
+    doc = Document(TextModel(), store=MemoryStore(), clock=lambda: next(times))
+    type_(doc, "Hello there")
+    call(doc, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    type_(doc, "!", at=11)
+    return doc
+
+
+def exported(doc, fmt, **params):
+    return base64.b64decode(call(doc, "export_office", {"format": fmt, **params})["data"])
+
+
+def test_tracked_changes_are_written_when_asked_for_and_dated_when_the_suggestion_was_made(dated_paper):
+    from lxml import etree
+
+    from claudia_odf_io import NS
+
+    raw = exported(dated_paper, "odt", tracked_changes=True)
+    root = etree.fromstring(read_parts(raw)["content.xml"])
+    dates = {d.text for d in root.iterfind(".//office:change-info/dc:date", NS)}
+    assert dates == {"2026-03-04T05:06:07Z"}
+    authors = {a.text for a in root.iterfind(".//office:change-info/dc:creator", NS)}
+    assert authors == {AI.user}
+
+
+def test_an_odt_says_when_it_was_made_and_last_changed_and_by_whom(dated_paper):
+    from claudia_odf_io import read_info
+
+    info = read_info(read_parts(exported(dated_paper, "odt"))["meta.xml"])
+    assert (info.created, info.creator) == ("2026-01-02T03:04:05Z", ANN.user)
+    assert (info.modified, info.modifier) == ("2026-11-11T17:13:05Z", ANN.user)
+
+
+def test_tracked_changes_in_an_odt_leave_no_suggestion_loss(dated_paper):
+    losses = call(dated_paper, "export_office", {"format": "odt", "tracked_changes": True})["losses"]
+    assert not [loss for loss in losses if loss["kind"] == "suggestion"]
+
+
+def test_without_tracked_changes_the_open_suggestion_is_a_loss(dated_paper):
+    losses = call(dated_paper, "export_office", {"format": "odt"})["losses"]
+    assert {"kind": "suggestion", "detail": "", "count": 1} in losses
+
+
+def test_a_docx_with_tracked_changes_dates_them_too(dated_paper):
+    import re
+
+    raw = exported(dated_paper, "docx", tracked_changes=True)
+    xml = read_parts(raw)["word/document.xml"].decode()
+    assert set(re.findall(r'w:date="([^"]*)"', xml)) == {"2026-03-04T05:06:07Z"}
+    assert "<w:ins " in xml
+
+
+def test_tracked_changes_default_to_off(dated_paper):
+    assert b"tracked-changes" not in read_parts(exported(dated_paper, "odt"))["content.xml"]
+    assert "<w:ins " not in read_parts(exported(dated_paper, "docx"))["word/document.xml"].decode()

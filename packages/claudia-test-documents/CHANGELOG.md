@@ -8,6 +8,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ### Added
 - `ADAPTERS["odt"]`: odt cases run through import, edit-and-reexport and preservation like docx, pptx and xlsx (D401).
   The library gains six odt cases: three files written by LibreOffice itself, three made by `_build_fixtures.py`.
+- `ADAPTERS["odp"]` likewise (D412), and four odp cases: three written by LibreOffice (converted from the pptx
+  fixtures), one made by `_build_fixtures.py` for a group, a line, notes, a transition and an animation.
+- `ADAPTERS["ods"]` likewise (D413), and four ods cases: three written by LibreOffice (converted from the xlsx
+  fixtures: cells and a formula, a chart, a picture), one made by `_build_fixtures.py` for repeated rows, a merged
+  title, a comment, a date, a union formula, an error cell, a named range and validations.
 
 ## [0.1.0] - 2026-11-10
 

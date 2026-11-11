@@ -1,5 +1,5 @@
 """Wrapping a Word, Excel, PowerPoint or OpenDocument export for the wire, shared by all three apps'
-``export_office`` (D212, D401).
+``export_office`` (D212, D401, D411).
 
 Each app converts its own model to bytes with its own converter (``claudia_composes_io.text_to_docx`` and the
 like, no tracked changes: just the document as it stands now) and hands the result here to be wrapped the same
@@ -14,14 +14,28 @@ from __future__ import annotations
 import base64
 from collections.abc import Iterable
 
-from claudia_odf_io import Loss
+from claudia_core import CommandLog
+from claudia_odf_io import DocumentInfo, Loss
 
 CONTENT_TYPES = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "odt": "application/vnd.oasis.opendocument.text",
+    "odp": "application/vnd.oasis.opendocument.presentation",
+    "ods": "application/vnd.oasis.opendocument.spreadsheet",
 }
+
+
+def document_info(log: CommandLog, branch: str | None = None) -> DocumentInfo:
+    """When a document was made and last changed, and by whom, from the log of the line ``branch`` (the active one
+    when none): the first entry made it, the last changed it (D411). An empty log knows neither. The text app's
+    ``export_info`` also dates its suggestions; the others have nothing else to date."""
+    path = log.path(log.head(branch if branch is not None else log.active))
+    if not path:
+        return DocumentInfo()
+    first, last = path[0], path[-1]
+    return DocumentInfo(None, first.time, first.author, last.time, last.author)
 
 
 def office_export(fmt: str, data: bytes, losses: Iterable[Loss] | None = None) -> dict:

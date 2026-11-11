@@ -18,7 +18,7 @@ suggest, and people accept (D63).
 
 from __future__ import annotations
 
-from claudia_composes_io import odt_export_losses, text_to_docx, text_to_odt
+from claudia_composes_io import export_info, odt_export_losses, text_to_docx, text_to_odt
 
 from claudia_composes import (
     AcceptSuggestion,
@@ -102,20 +102,24 @@ def _suggestions(ctx):
     return _text(ctx).visible_suggestions()
 
 
-@composes_methods.method("export_office", "format:str")
-def _export_office(ctx, *, format):
+@composes_methods.method("export_office", "format:str tracked_changes:bool=false")
+def _export_office(ctx, *, format, tracked_changes):
     """The document's current content as bytes of a Word file (`format` `"docx"`) or an OpenDocument text (`"odt"`),
     wrapped for the wire as `{format, content_type, data}` (`data` base64); an odt's answer also has `losses`, what
-    the file could not hold, as `{kind, detail, count}` codes. No tracked changes: open suggestions are not written
-    in, same as `export_content` leaves out the history and the chat (D212)."""
+    the file could not hold, as `{kind, detail, count}` codes.
+
+    With `tracked_changes` (default off, so a clean copy is the default, D212), every open suggestion that proposes a
+    replacement is written as a tracked change a reviewer can accept or reject in Word or any OpenDocument program,
+    dated with when it was proposed, by whom. An odt also says in its metadata when the document was made and last
+    changed, and by whom: all read from the document's log (D411)."""
+    if format not in ("docx", "odt"):
+        raise RequestError("bad_request", 'export_office: format must be "docx" or "odt"')
     model = _text(ctx)
+    info, times = export_info(ctx.document.log, ctx.document.branch)
     if format == "docx":
-        return office_export(format, text_to_docx(model, track_suggestions=False))
-    if format == "odt":
-        return office_export(
-            format, text_to_odt(model, track_suggestions=False), odt_export_losses(model, track_suggestions=False)
-        )
-    raise RequestError("bad_request", 'export_office: format must be "docx" or "odt"')
+        return office_export(format, text_to_docx(model, track_suggestions=tracked_changes, change_times=times))
+    data = text_to_odt(model, track_suggestions=tracked_changes, info=info, change_times=times)
+    return office_export(format, data, odt_export_losses(model, track_suggestions=tracked_changes))
 
 
 # ------------------------------------------------------------------------------ writing

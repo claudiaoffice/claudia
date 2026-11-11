@@ -20,6 +20,10 @@ NS: dict[str, str] = {
     "meta": "urn:oasis:names:tc:opendocument:xmlns:meta:1.0",
     "manifest": "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0",
     "xlink": "http://www.w3.org/1999/xlink",
+    "anim": "urn:oasis:names:tc:opendocument:xmlns:animation:1.0",
+    "smil": "urn:oasis:names:tc:opendocument:xmlns:smil-compatible:1.0",
+    "calcext": "urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0",
+    "of": "urn:oasis:names:tc:opendocument:xmlns:of:1.2",
     "dc": "http://purl.org/dc/elements/1.1/",
     "xml": "http://www.w3.org/XML/1998/namespace",
 }

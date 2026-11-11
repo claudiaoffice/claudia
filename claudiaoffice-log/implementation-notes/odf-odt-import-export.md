@@ -60,7 +60,7 @@ snapshots, decision log, coverage floors.
 ## Open
 
 * The loss-list screen (SVG first), the import screen (another agent), Save As .odt of an edited import in the app
-  (the app does not keep the original bytes), styles beyond names (D407), odp (E10.3) and ods (E6.9, formulas D408).
+  (the app does not keep the original bytes), styles beyond names (D407), odp and ods are done, see `odf-ods-import-export.md` (D412–D414).
 * Making the LibreOffice job blocking once it has a track record, and schema validation (D409). The OASIS schema was unreachable from the sandbox.
-* `meta.xml` is not touched by an edit (the file does not say Claudia edited it); a decision for later whether it should.
+* `meta.xml` is now made and kept true from the log (D411); the checkbox for tracked changes in the Export dialog is designed in SVG and waits for approval before it is built.
 * Whether `export_office` should offer tracked changes for odt (D212 says no for docx; the converter can).

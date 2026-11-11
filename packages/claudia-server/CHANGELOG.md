@@ -9,6 +9,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `export_office` also writes `"odt"` for the text app (D401), and its answer then has `losses`: what the file could
   not hold, as a list of `{kind, detail, count}` codes (nothing yet puts them into words; the screen is designed
   first). A format that cannot say has no `losses` in the answer. The error for an unknown format names both.
+- `export_office` of the presentation app also writes `"odp"` (D412), with `losses`, and the file says in its metadata
+  when the deck was made and last changed and by whom, read from the log (D411).
+- `export_office` of the spreadsheet app also writes `"ods"` (D413), with `losses` and the metadata from the log (D411).
+- The text app's `export_office` takes `tracked_changes` (default `false`, a clean copy, D212): the open suggestions
+  that propose a replacement are written as tracked changes, dated with when they were proposed and signed by their
+  author (docx and odt); an odt's metadata is filled from the log (D411).
 
 ### Changed
 - The built web app is served with `Cache-Control` (D248): pages and every file not named by its content are

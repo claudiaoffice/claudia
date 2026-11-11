@@ -1,0 +1,78 @@
+<svg viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="800" rx="0" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — File ▸ Export…, with tracked changes and what the file could not hold, proposed (E12.6, D411)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">ExportFormatDialog.vue. The server side exists (export_office(format, tracked_changes), losses); nothing of this screen is built until it is agreed.</text>
+<rect x="40" y="96" width="420" height="660" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">A · Text, OpenDocument chosen</text>
+<text x="62" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The checkbox is there for Word and OpenDocument, and only</text>
+<text x="62" y="166" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">when the document has open suggestions.</text>
+<rect x="490" y="96" width="420" height="660" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="512" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">B · After Export: the loss list</text>
+<text x="512" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The list appears once the file is saved. Nothing lost → one</text>
+<text x="512" y="166" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">calm line instead.</text>
+<rect x="940" y="96" width="420" height="660" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="962" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">C · Text, Word chosen</text>
+<text x="962" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Same checkbox. The server gives no loss list for Word yet,</text>
+<text x="962" y="166" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">so none is shown.</text>
+<rect x="62" y="196" width="376" height="380" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="80" y="226" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Export this document</text>
+<line x1="62" y1="240" x2="438" y2="240" stroke="#e3dfee" stroke-width="1"/>
+<text x="80" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">This saves “plan” to this computer, in the format you pick.</text>
+<text x="80" y="282" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">History and chat are not included.</text>
+<text x="80" y="312" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Save as</text>
+<rect x="80" y="320" width="340" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="92" y="340" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">OpenDocument text (.odt)</text>
+<text x="404" y="341" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<rect x="80" y="372" width="16" height="16" rx="4" fill="#13917f" stroke="#13917f" stroke-width="1"/>
+<text x="88" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">✓</text>
+<text x="106" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Include open suggestions as tracked changes</text>
+<text x="106" y="402" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">2 open suggestions, dated when proposed, signed.</text>
+<rect x="262" y="506" width="78" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="301" y="526" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="346" y="506" width="74" height="30" rx="6" fill="#13917f"/>
+<text x="383" y="526" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle">Export</text>
+<rect x="512" y="196" width="376" height="520" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="530" y="226" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Export this document</text>
+<line x1="512" y1="240" x2="888" y2="240" stroke="#e3dfee" stroke-width="1"/>
+<text x="530" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">This saves “plan” to this computer, in the format you pick.</text>
+<text x="530" y="282" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">History and chat are not included.</text>
+<text x="530" y="312" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Save as</text>
+<rect x="530" y="320" width="340" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="542" y="340" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">OpenDocument text (.odt)</text>
+<text x="854" y="341" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<rect x="530" y="372" width="16" height="16" rx="4" fill="#13917f" stroke="#13917f" stroke-width="1"/>
+<text x="538" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">✓</text>
+<text x="556" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Include open suggestions as tracked changes</text>
+<text x="556" y="402" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">2 open suggestions, dated when proposed, signed.</text>
+<line x1="530" y1="428" x2="870" y2="428" stroke="#e3dfee" stroke-width="1"/>
+<text x="530" y="454" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Saved. The file does not hold:</text>
+<circle cx="536" cy="482" r="3" fill="#b3841a"/>
+<text x="548" y="486" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Who typed which words (3 paragraphs)</text>
+<text x="548" y="501" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">OpenDocument text has no place to keep it.</text>
+<circle cx="536" cy="521" r="3" fill="#b3841a"/>
+<text x="548" y="525" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Style “remark” is saved as body text</text>
+<text x="548" y="540" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Rename it to Body text, Heading or Quote to keep it.</text>
+<circle cx="536" cy="560" r="3" fill="#b3841a"/>
+<text x="548" y="564" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">1 remark is not in the file</text>
+<text x="548" y="579" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">A remark proposes no change, so there is nothing to track.</text>
+<text x="530" y="605" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Everything else is in the file.</text>
+<rect x="792" y="646" width="78" height="30" rx="6" fill="#13917f"/>
+<text x="831" y="666" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle">Done</text>
+<rect x="962" y="196" width="376" height="380" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="980" y="226" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Export this document</text>
+<line x1="962" y1="240" x2="1338" y2="240" stroke="#e3dfee" stroke-width="1"/>
+<text x="980" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">This saves “plan” to this computer, in the format you pick.</text>
+<text x="980" y="282" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">History and chat are not included.</text>
+<text x="980" y="312" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Save as</text>
+<rect x="980" y="320" width="340" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="992" y="340" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Word (.docx)</text>
+<text x="1304" y="341" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<rect x="980" y="372" width="16" height="16" rx="4" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1006" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Include open suggestions as tracked changes</text>
+<text x="1006" y="402" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">2 open suggestions would be written as tracked changes.</text>
+<rect x="1162" y="506" width="78" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1201" y="526" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="1246" y="506" width="74" height="30" rx="6" fill="#13917f"/>
+<text x="1283" y="526" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle">Export</text>
+<text x="40" y="786" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Wording of the codes: authorship · style · remark · suggestion (switched off) · suggestion-anchor (no longer matches its text) — each one sentence, a count, and what to do if there is something to do.</text>
+</svg>

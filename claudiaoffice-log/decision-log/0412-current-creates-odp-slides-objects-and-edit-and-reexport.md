@@ -1,0 +1,18 @@
+---
+id: D412
+title: "`claudia-creates-io` reads and writes odp: a page is a slide, three kinds of drawn thing are objects, and an edit is patched onto the original bytes"
+status: current
+applies-to: creates
+date: 2026-11-11
+round: "OpenDocument import and export: odt first, maximum preservation (branch openoffice)"
+supersedes: []
+superseded-by: []
+---
+
+# D412 · `claudia-creates-io` reads and writes odp: a page is a slide, three kinds of drawn thing are objects, and an edit is patched onto the original bytes
+
+**`slides_to_odp`, `odp_to_slides`, `apply_edits_to_odp`, `odp_import_losses` and `odp_export_losses` are the odp counterpart of the pptx functions of D219.** A `draw:page` is a slide (`s1`, `s2`... by its place); on it a text box (a `draw:frame` with a `draw:text-box`), an ellipse, a rectangle or a triangle (a `draw:ellipse`, `draw:rect` or `draw:custom-shape` of that outline) is an object (`o1`, `o2`... by its place over the whole deck, in drawing order, so deleting one renumbers the later ones, as with odt blocks, D402). LibreOffice's names for PowerPoint's preset outlines (`ooxml-rect`, `ooxml-ellipse`, `ooxml-triangle`) count; **a rectangle with words and neither fill nor outline is a text box**, because that is how LibreOffice writes one that came from PowerPoint. Everything else on a page (pictures, tables, groups, lines, other outlines, notes with words, transitions, animations) is not in the model and is reported by `odp_import_losses` as a code (`picture`, `table`, `group`, `shape:<outline>`, `notes`, `transition`, `animation`, `rotated-object`, `off-slide-object`, `unfit-object`...); a table or an object comes before the preview picture it carries. An empty notes page is nothing. An object is modeled only if the model would hold it (a place and size in lengths, not rotated, on the slide, at least the minimum size, a round circle, at most 500 on a slide): the same probe decides on the way in and the way back, so an id means the same thing in both. Sizes come from the master page's page layout, scaled to the 1600 by 900 units of the model; a new file is 28 by 15.75 cm.
+
+**`apply_edits_to_odp(original, baseline, current)` patches the original bytes (D401): a moved or resized object changes its start tag (`set_attributes`, D411) and nothing else, a changed text is edited in place, a new object goes in front of the others on its slide and before the notes, a removed object goes with what it holds (`removed-<kind>` in the optional `losses`), a new slide goes after its neighbour with that neighbour's master, and a changed look gets a style of its own (`clg*` for graphics, `clp*` for paragraphs).** With nothing changed the result is the original bytes. **It raises `UnsupportedEdit`** for a change of an object's kind or outline, for slides in another order, and for a baseline that is not what the file holds. The look of an object is not mapped (D407): text boxes come in as "body-text", shapes as "plain-shape".
+
+**Notes.** The style handling both converters need moved to `_styling.py`; pptx uses it too and its output is unchanged. `export_office` for the presentation app takes `"odp"` besides `"pptx"` and answers with `losses`; the Export dialog lists it. The metadata comes from the log (D411). Checked against LibreOffice 24.2.7: a file made from a model converts to pptx with the right shapes and words, a LibreOffice-written deck (converted from the pptx fixtures) reads as above, and an edited copy opens (`scripts/odf_libreoffice_check.py` now covers odt and odp; 22 of 22). The test-document library gets four odp entries: three written by LibreOffice, one made by hand for a group, a line, notes, a transition and an animation.

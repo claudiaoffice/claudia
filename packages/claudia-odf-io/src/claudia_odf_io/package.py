@@ -12,6 +12,7 @@ from lxml import etree
 
 from claudia_opc_io import write_parts
 
+from .meta import DocumentInfo, new_meta
 from .names import NS
 
 #: The media types of the three kinds of document, by the name of the kind.
@@ -25,12 +26,6 @@ VERSION = "1.3"
 _MANIFEST = "META-INF/manifest.xml"
 _XML_PARTS = ("content.xml", "styles.xml", "meta.xml", "settings.xml")
 _DECLARATION = b'<?xml version="1.0" encoding="UTF-8"?>\n'
-
-_META = (
-    _DECLARATION
-    + f'<office:document-meta xmlns:office="{NS["office"]}" xmlns:meta="{NS["meta"]}" office:version="{VERSION}">'
-    "<office:meta><meta:generator>Claudia</meta:generator></office:meta></office:document-meta>".encode()
-)
 
 
 def _manifest(kind: str, entries: list[tuple[str, str]]) -> bytes:
@@ -61,7 +56,7 @@ def new_package(
     -- pictures, embedded objects -- by name, each with its bytes and media type. The same input always gives the
     same bytes."""
     parts: dict[str, bytes] = {"mimetype": MIME[kind].encode(), "content.xml": content, "styles.xml": styles}
-    parts["meta.xml"] = meta if meta is not None else _META
+    parts["meta.xml"] = meta if meta is not None else new_meta(DocumentInfo())
     entries = [("content.xml", "text/xml"), ("styles.xml", "text/xml"), ("meta.xml", "text/xml")]
     for name, (data, media_type) in (extra or {}).items():
         parts[name] = data

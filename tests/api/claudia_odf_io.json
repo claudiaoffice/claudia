@@ -1,5 +1,16 @@
 {
  "version": "0.1.0",
+ "DocumentInfo": {
+  "class": [
+   "object"
+  ],
+  "init": "(title: 'str | None' = None, created: 'str | None' = None, creator: 'str | None' = None, modified: 'str | None' = None, modifier: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "GENERATOR": {
+  "value": "'Claudia'"
+ },
  "Loss": {
   "class": [
    "object"
@@ -23,7 +34,7 @@
   "value": "{'text': 'application/vnd.oasis.opendocument.text', 'spreadsheet': 'application/vnd.oasis.opendocument.spreadsheet', 'presentation': 'application/vnd.oasis.opendocument.presentation'}"
  },
  "NS": {
-  "value": "{'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0', 'style': 'urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'draw': 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'presentation': 'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0', 'fo': 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'svg': 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'number': 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0', 'meta': 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0', 'manifest': 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0', 'xlink': 'http://www.w3.org/1999/xlink', 'dc': 'http://purl.org/dc/elements/1.1/', 'xml': 'http://www.w3.org/XML/1998/namespace'}"
+  "value": "{'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0', 'style': 'urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'draw': 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'presentation': 'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0', 'fo': 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'svg': 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'number': 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0', 'meta': 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0', 'manifest': 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0', 'xlink': 'http://www.w3.org/1999/xlink', 'anim': 'urn:oasis:names:tc:opendocument:xmlns:animation:1.0', 'smil': 'urn:oasis:names:tc:opendocument:xmlns:smil-compatible:1.0', 'calcext': 'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0', 'of': 'urn:oasis:names:tc:opendocument:xmlns:of:1.2', 'dc': 'http://purl.org/dc/elements/1.1/', 'xml': 'http://www.w3.org/XML/1998/namespace'}"
  },
  "OdfError": {
   "class": [
@@ -56,8 +67,9 @@
    "insert_into": "(self, parent: 'etree._Element', *new: 'etree._Element | bytes', at_start: 'bool' = False) -> 'None'",
    "make": "(self, tag: 'str', attrib: 'Mapping[str, str] | None' = None, text: 'str | None' = None) -> 'etree._Element'",
    "remove": "(self, element: 'etree._Element') -> 'None'",
-   "replace": "(self, element: 'etree._Element', new: 'etree._Element | bytes') -> 'None'",
+   "replace": "(self, element: 'etree._Element', new: 'etree._Element | bytes', *more: 'etree._Element | bytes') -> 'None'",
    "result": "(self) -> 'bytes'",
+   "set_attributes": "(self, element: 'etree._Element', values: 'Mapping[str, str]') -> 'None'",
    "span": "(self, element: 'etree._Element') -> 'tuple[int, int]'"
   },
   "properties": []
@@ -77,14 +89,23 @@
  "local_name": {
   "function": "(tag: 'str') -> 'str'"
  },
+ "new_meta": {
+  "function": "(info: 'DocumentInfo') -> 'bytes'"
+ },
  "new_package": {
   "function": "(kind: 'str', content: 'bytes', styles: 'bytes', *, meta: 'bytes | None' = None, extra: 'dict[str, tuple[bytes, str]] | None' = None) -> 'bytes'"
+ },
+ "odf_date": {
+  "function": "(moment: 'str') -> 'str'"
  },
  "problems": {
   "function": "(data: 'bytes') -> 'list[str]'"
  },
  "qname": {
   "function": "(prefixed: 'str') -> 'str'"
+ },
+ "read_info": {
+  "function": "(meta_xml: 'bytes') -> 'DocumentInfo'"
  },
  "read_manifest": {
   "function": "(manifest_xml: 'bytes') -> 'dict[str, str]'"
@@ -94,6 +115,12 @@
  },
  "set_text": {
   "function": "(paragraph: 'etree._Element', text: 'str') -> 'None'"
+ },
+ "update_meta": {
+  "function": "(meta_xml: 'bytes | None', info: 'DocumentInfo') -> 'bytes'"
+ },
+ "update_package_meta": {
+  "function": "(parts: 'dict[str, bytes]', info: 'DocumentInfo') -> 'None'"
  },
  "xml_safe": {
   "function": "(text: 'str') -> 'str'"
