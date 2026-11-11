@@ -52,3 +52,5 @@ claudiaoffice-log/.obsidian/workspace*.json
 # Coverage data the gate's `tests` step writes (CODE-01)
 .coverage
 .coverage.*
+
+ai-models/*
