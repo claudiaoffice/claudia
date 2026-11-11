@@ -102,6 +102,7 @@ class Document:
         self.store = store
         self.branch = branch if branch is not None else self.log.active
         self.bus = EventBus()
+        self._lock_clock = lock_clock
         self.presence = Presence(lock_clock)
         self.chat: list[ChatRecord] = list(chat)
         self._clock = clock
@@ -376,6 +377,25 @@ class Document:
         if model is None:
             model = type(self.model).empty()
         return replay(model, path[start:])
+
+    def scratch(self, at: Revision | None = None) -> Document:
+        """A throwaway document that starts from the state now (or at ``at``) and goes nowhere (E7.8, D263).
+
+        It runs commands like any document (``execute``, ``undo``, its own events and locks) on a copy of the model,
+        with a log of its own that starts empty and no store, so nothing it does reaches the live document, the live
+        log, the disk or anybody's undo steps, and nothing the live document does afterwards reaches it. This is how an
+        AI proposal is previewed and how the AI checks the effect of a change it has only proposed: apply the commands
+        here, read the result, drop the copy. ``at`` is any revision on any line; ``KernelError`` for one that does not
+        exist. Building the copy costs the size of the state (the current state is copied, not replayed); for an older
+        revision it costs the replay since the nearest cached snapshot, as ``materialize`` does."""
+        if at is None:
+            model = type(self.model).restore(self.model.serialize())
+        else:
+            try:
+                model = self.materialize(at)
+            except KeyError as exc:
+                raise KernelError(f"there is no revision {at}") from exc
+        return Document(model, clock=self._clock, lock_clock=self._lock_clock)
 
     # ------------------------------------------------------------------ checkpoints (E1.7)
     @property

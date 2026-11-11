@@ -31,12 +31,15 @@ _ENGINES: dict[str, Callable[[], Engine]] = {"computes": ScriptedEngine, "compos
 # dispatch for both the model-driven engine and the scripted stand-in alike (SEC-10). An app with no entry here gets
 # none, so an assistant for it can write nothing until somebody decides what it may do.
 MODEL_METHODS = {"computes": ("set_cells", "add_sheet", "structure", "resize_lines"), "composes": ("suggest",)}
+# What it may write for a person who chose *suggest* (D262). Composes' ``suggest`` *is* its suggest mode; computes and
+# creates have no way to propose yet (E7.8), so there it may write nothing until a person switches to *act*.
+SUGGEST_METHODS = {"computes": (), "composes": ("suggest",), "creates": ()}
 MAX_LISTED_SHEETS = 50  # sheets named to the model; a small model has little room
-WORKBOOK_CONTEXT = (
-    "Rows and columns are counted from 0. A request looks like "
-    '{{"method": "set_cells", "params": {{"sheet": "s1", "cells": [{{"row": 0, "col": 0, "input": "42"}}]}}}}.\n'
-    "{sheets}"
-)
+WORKBOOK_CONTEXT = "Rows and columns are counted from 0.{example}\n{sheets}"
+WORKBOOK_EXAMPLE = (
+    ' A request looks like {{"method": "set_cells", "params": {{"sheet": "s1", "cells": '
+    '[{{"row": 0, "col": 0, "input": "42"}}]}}}}.'
+)  # left out when the asker's mode or role lets the AI change nothing: it would only invite a refused request
 
 
 def methods_for(model_cls: type[DocumentModel], *, shapes: ShapeLibrary | None = None) -> MethodTable:
@@ -59,7 +62,8 @@ def stand_in_assistant_for(model_cls: type[DocumentModel]) -> Callable[[], Assis
         return None
     engine = engine_class()
     allowed = MODEL_METHODS.get(model_cls.app, ())
-    return lambda: Assistant(engine, allowed_methods=allowed)
+    proposes = SUGGEST_METHODS.get(model_cls.app, ())
+    return lambda: Assistant(engine, allowed_methods=allowed, suggest_methods=proposes)
 
 
 def model_assistant_for(
@@ -73,13 +77,18 @@ def model_assistant_for(
     if names is None:
         return None
     tools = tools_of(methods_for(model_cls), names)
+    proposes = SUGGEST_METHODS.get(model_cls.app, ())
     return lambda: Assistant(
-        ModelEngine(runner, tools, workbook_context), max_waiting=max_waiting, allowed_methods=names
+        ModelEngine(runner, tools, workbook_context),
+        max_waiting=max_waiting,
+        allowed_methods=names,
+        suggest_methods=proposes,
     )
 
 
-def workbook_context(document: Document) -> str:
-    """What the model is told about a workbook: how to count, an example request and the sheets (id: name)."""
+def workbook_context(document: Document, *, can_write: bool = True) -> str:
+    """What the model is told about a workbook: how to count, an example request (only if it may make requests) and the
+    sheets (id: name)."""
     model = document.model
     assert isinstance(model, WorkbookModel)
     sheets = list(model.sheets.values())
@@ -90,4 +99,4 @@ def workbook_context(document: Document) -> str:
         if len(sheets) > MAX_LISTED_SHEETS:
             lines.append(f"... and {len(sheets) - MAX_LISTED_SHEETS} more")
         listing = "Sheets in this document (id: name):\n" + "\n".join(lines)
-    return WORKBOOK_CONTEXT.format(sheets=listing)
+    return WORKBOOK_CONTEXT.format(example=WORKBOOK_EXAMPLE if can_write else "", sheets=listing)

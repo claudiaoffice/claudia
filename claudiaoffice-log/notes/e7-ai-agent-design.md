@@ -291,9 +291,7 @@ to E7.9.
   a running server. The creates behaviour and the settings page's "Apply" success for composes are read from code.
 - That `CellsChanged` reaches an engine subscribed for one request, dependents included, is read from `calc.py` and
   `events.py`; the first slice proves it with a test.
-- **That a throwaway document over `materialize` can execute commands** (D263): `peek_line` returns a model, not something
-  that runs them. Also open: what a scratch copy costs on a large workbook (build it on demand), and how proposals look for
-  objects in creates.
+- ~~That a throwaway document over `materialize` can execute commands~~ **Verified 2026-11-11** with `Document.scratch` (E7.8 story): it can, once wrapped in a `Document`; the cost is the size of the state (60,000 cells with formulas: 1.9 s). Still open: how proposals look for objects in creates.
 - The tool-use loop shape is from a web search result and my own knowledge (the documentation site is not reachable from the build sandbox); the SDK's package name and extras were not checked.
 - Web and GTK clients are untouched by this note beyond the three mock-ups; they show whatever the server's `ai` status
   says, so the status event (E7.1's open "queue position") is the one protocol addition to design with the panel. The mode

@@ -1,5 +1,5 @@
 {
- "version": "0.12.0",
+ "version": "0.13.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -394,6 +394,7 @@
    "redo": "(self, author: 'str | None') -> 'Applied | None'",
    "restore_checkpoint": "(self, number: 'int', author: 'str | None' = None) -> 'Applied | None'",
    "save_checkpoint": "(self, author: 'str | None' = None, label: 'str | None' = None) -> 'CheckpointInfo | None'",
+   "scratch": "(self, at: 'Revision | None' = None) -> 'Document'",
    "show_presence": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Ephemeral'",
    "side_revisions": "(self) -> 'list[Revision]'",
    "snapshot": "(self) -> 'Snapshot | None'",

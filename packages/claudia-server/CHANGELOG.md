@@ -11,6 +11,26 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the
   WebKit view of the Linux client) could show the previous web app for a long time after the server was updated.
 
+## [0.22.0] - 2026-11-11
+
+The AI works under the account of the person who asked, in the mode she chose (D261, D262; E7.4, E7.7).
+
+### Added
+- `chat` takes an optional `ai_mode` (`"act"` or `"suggest"`): how the sender wants the AI to treat this request. It is
+  not stored; a client that sends none gets `"act"` (it is an older one and could not choose). Anything else is a
+  `bad_request` and nothing is posted. The mode a client starts with is *suggest* (`ai_mode.DEFAULT_MODE`).
+- `Account.acting_for(asker_role, writes)`: the account the AI answers one question under: the weaker of its role and
+  the asker's, with the allow-list narrowed to `writes`. `Assistant.account_for(asker, mode)` builds it per question;
+  `Assistant(suggest_methods=...)` is what it may write for *suggest*; `apps.SUGGEST_METHODS` lists that per app (only
+  composes' `suggest` today, since computes and creates cannot propose before E7.8).
+- `Task.mode` and `Task.writes`: what an engine is told about the question. `ModelEngine` offers the model only the
+  tools in `writes`, and leaves the example request out of the prompt when there is none.
+- `HostedDocument.role_of`, `note_ai_mode`, `ai_mode_of`.
+
+### Changed
+- In *suggest* mode in computes the AI writes nothing and says so (a chosen mode, not an error). Clients that do not send
+  `ai_mode` are unaffected.
+
 ## [0.21.0] - 2026-11-10
 
 Word, Excel and PowerPoint export, one method per app (D212).

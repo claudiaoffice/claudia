@@ -15,7 +15,6 @@ from collections import deque
 from collections.abc import Callable, Iterable
 
 from claudia_ai import Message, ModelRunner, Request, ToolSpec, Turn
-from claudia_core import Document
 
 from .assistant import Call, Say, Step, Task
 from .protocol import MethodTable
@@ -60,7 +59,7 @@ class ModelEngine:
         self,
         runner: ModelRunner,
         tools: tuple[ToolSpec, ...],
-        describe: Callable[[Document], str],
+        describe: Callable[..., str],
         *,
         memory_turns: int = MEMORY_TURNS,
     ):
@@ -74,7 +73,8 @@ class ModelEngine:
         """The steps for what the asker wrote. Raises ``ModelError`` (the assistant tells the asker)."""
         key = task.sender.casefold()
         history = tuple(self._memory.get(key, ()))
-        request = Request(task.sender, task.text, self._describe(task.document), self._tools, history)
+        tools = self._tools if task.writes is None else tuple(t for t in self._tools if t.name in task.writes)
+        request = Request(task.sender, task.text, self._describe(task.document, can_write=bool(tools)), tools, history)
         turn = await self._runner.answer(request)
         memory = self._memory.setdefault(key, deque(maxlen=2 * self._memory_turns))
         memory.append({"role": "user", "content": task.text})

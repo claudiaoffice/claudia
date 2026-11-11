@@ -40,7 +40,7 @@ from claudia_core import (
 )
 from claudia_core.clock import utc_now
 
-from .auth import AI_COLOR, Account, UserDirectory
+from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .protocol import (
     DEFAULT_LOCALE,
     PROTOCOL_VERSION,
@@ -238,6 +238,7 @@ class Connection:
                 hosted.editors,
                 hosted.restore,
                 hosted.broadcast,
+                hosted.note_ai_mode,
             )
             result = hosted.methods.dispatch(context, name, params)
             frame = {"id": request_id, "ok": True, "result": result}
@@ -297,7 +298,29 @@ class HostedDocument:
         self._connection_ids = 0
         self._locked: set[str] = set()  # who held a lock at the last look, to tell the others when one lapses
         self.restore = RestoreCoordinator(self._apply_proposal, clock=clock)
+        self._ai_modes: dict[str, str] = {}  # the mode of a person's next request to the AI (D262), until it is heard
         document.subscribe(self._on_event)
+
+    # -- how a person wants the AI to treat her request (D262) --------------------------------
+    def note_ai_mode(self, user: str, mode: str | None) -> None:
+        """Remember the mode a person sent with the message she is about to post, for the moment the AI hears it;
+        ``None`` forgets it again (the ``chat`` method does, right after posting, so a message that was not for the AI
+        leaves nothing behind)."""
+        if mode is None:
+            self._ai_modes.pop(user, None)
+        else:
+            self._ai_modes[user] = mode
+
+    def ai_mode_of(self, user: str) -> str | None:
+        """The mode noted for the message ``user`` is posting now (``None``: none was noted)."""
+        return self._ai_modes.get(user)
+
+    def role_of(self, user: str) -> str | None:
+        """The role of a person connected now (the strongest of her windows); ``None`` when she is not connected."""
+        roles = [c.account.role for c in self.connections if c.account.user == user and not c.account.system]
+        if not roles:
+            return None
+        return min(roles, key=ROLES.index)  # ROLES run from the strongest to the weakest
 
     # -- people ------------------------------------------------------------------------
     def new_connection_id(self) -> int:

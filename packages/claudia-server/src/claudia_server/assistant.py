@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from claudia_core import ChatPosted, ChatRecord, Document
 
+from .ai_mode import ACT, LEGACY_MODE, SUGGEST, AiMode, parse_mode
 from .auth import AI_USER, Account, is_reserved
 from .hub import HubError
 from .protocol import Context, RequestError
@@ -47,6 +48,8 @@ class Task:
     sender: str
     text: str
     document: Document
+    mode: AiMode = ACT  # how the asker wants it treated (D262)
+    writes: frozenset[str] | None = None  # the methods the AI may write through for this asker; ``None``: no limit
 
 
 @dataclass(frozen=True)
@@ -66,6 +69,11 @@ class Call:
 
 
 Step = Say | Call
+
+SUGGEST_REFUSAL = (
+    "You asked me in suggest mode, and I cannot prepare a proposal in this app yet, so I changed nothing. "
+    "Switch to act mode to let me make the change."
+)
 
 
 class Engine(Protocol):
@@ -100,15 +108,17 @@ class Assistant:
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         max_waiting: int | None = None,
         allowed_methods: Iterable[str] = (),
+        suggest_methods: Iterable[str] = (),
     ):
         self.engine = engine
         self.pause = pause  # seconds between steps, so that people can follow what happens
         self.max_waiting = max_waiting
         self.allowed_methods = frozenset(allowed_methods)
+        self.suggest_methods = frozenset(suggest_methods) & self.allowed_methods  # what it may write for *suggest*
         self._sleep = sleep
         self.hosted: HostedDocument | None = None
         self.connection: Connection | None = None
-        self._queue: deque[ChatRecord] = deque()
+        self._queue: deque[tuple[ChatRecord, AiMode]] = deque()
         self._worker: asyncio.Task | None = None
 
     # -- joining ---------------------------------------------------------------------------
@@ -132,7 +142,9 @@ class Assistant:
             busy = f"I am busy with {len(self._queue)} other questions here. Ask me again in a moment."
             self._say(record.author, busy)
             return
-        self._queue.append(record)
+        assert self.hosted is not None
+        mode = parse_mode(self.hosted.ai_mode_of(record.author))  # noted by ``chat``, for this very message
+        self._queue.append((record, mode))
         self._start()
 
     def _start(self) -> None:
@@ -153,27 +165,38 @@ class Assistant:
     async def _work(self) -> None:
         try:
             while self._queue:
-                record = self._queue.popleft()
+                record, mode = self._queue.popleft()
                 try:
-                    await self._answer(record)
+                    await self._answer(record, mode)
                 except Exception:
                     log.exception("the assistant failed on a question")
         finally:
             self._worker = None
 
-    async def _answer(self, record: ChatRecord) -> None:
+    def account_for(self, asker: str, mode: AiMode) -> Account:
+        """The account one question is answered under (D261, D262): the AI's own, narrowed to what the asker may do
+        (her role; nothing at all if she has left) and to what her mode allows (*suggest*: only what it may write as a
+        proposal)."""
+        assert self.connection is not None and self.hosted is not None
+        role = self.hosted.role_of(asker) or "viewer"
+        writes = self.allowed_methods if mode == ACT else self.suggest_methods
+        return self.connection.account.acting_for(role, writes)
+
+    async def _answer(self, record: ChatRecord, mode: AiMode = LEGACY_MODE) -> None:
         assert self.hosted is not None
         document = self.hosted.document
+        account = self.account_for(record.author, mode)
         document.publish("typing", AI_USER, {"on": True})
         try:
             try:
-                steps = await self._plan(Task(record.author, record.text, document))
+                task = Task(record.author, record.text, document, mode, account.allowed_methods)
+                steps = await self._plan(task)
             except Exception as exc:  # the engine is a plug-in: whatever it does wrong, the asker is told
                 log.exception("the engine failed")
                 steps = [Say(f"I could not answer: {exc}")]
             for step in steps:
                 await self._sleep(self.pause)
-                if not self._run(step, record.author):
+                if not self._run(step, record.author, account, mode):
                     break
         finally:
             document.publish("typing", AI_USER, {"on": False})
@@ -183,24 +206,31 @@ class Assistant:
             return await self.engine.plan_async(task)
         return self.engine.plan(task)
 
-    def _run(self, step: Step, asker: str) -> bool:
-        """Do one step; ``False`` if the rest of the plan should be dropped."""
+    def _run(self, step: Step, asker: str, account: Account | None = None, mode: AiMode = LEGACY_MODE) -> bool:
+        """Do one step as ``account`` (the AI's own when none is given); ``False`` if the rest of the plan should be
+        dropped."""
         if isinstance(step, Say):
             self._say(asker, step.text)
             return True
+        if mode == SUGGEST and step.method in self.allowed_methods - self.suggest_methods:
+            # D262: not an error, a choice she made; say so and where to change it, before anything is shown or tried
+            self._say(asker, SUGGEST_REFUSAL)
+            return False
         try:
             if step.focus:
-                self._call("presence", {"regions": list(step.focus)})
-            self._call(step.method, step.params)
+                self._call("presence", {"regions": list(step.focus)}, account)
+            self._call(step.method, step.params, account)
         except RequestError as error:
             self._say(asker, f"I could not do that: {error.message}")
             return False
         return True
 
-    def _call(self, method: str, params: dict) -> Any:
+    def _call(self, method: str, params: dict, account: Account | None = None) -> Any:
         assert self.hosted is not None and self.connection is not None
         hosted = self.hosted
-        context = Context(hosted.document, self.connection.account, hosted.limits, hosted.users, hosted.edit_timeout)
+        context = Context(
+            hosted.document, account or self.connection.account, hosted.limits, hosted.users, hosted.edit_timeout
+        )
         return hosted.methods.dispatch(context, method, params)
 
     def _say(self, asker: str, text: str) -> None:
