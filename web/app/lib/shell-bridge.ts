@@ -1,10 +1,13 @@
 // The page's side of the shell contract (E5.12, `clients/contract/shell-contract.v1.schema.json`), D121: the web app
 // speaks it directly instead of being driven through the DOM by `shim.js`, which this replaces.
 //
-// `window.__claudiaShell.receive(raw)` is the one thing a shell is allowed to assume exists (`webpage.py`'s `send()`
-// calls exactly that, unchanged by this file); `window.webkit.messageHandlers.claudia.postMessage(raw)` is the one
-// thing this file assumes the shell set up. Neither exists in a plain browser tab, so `ShellBridge` works there too:
-// it just never becomes `ready` and `nativeMenu` stays `false`.
+// Two ways to reach a shell, both carrying the same JSON text:
+//  - the GTK shell (WebKit) sets up `window.webkit.messageHandlers.claudia` and calls
+//    `window.__claudiaShell.receive(raw)` (`webpage.py`'s `send()`, unchanged by this file);
+//  - the Neutralino shells (macOS, later Windows) show this page in a frame of their own page, so the two talk with
+//    `postMessage` (`detectParentSink`): this page posts to its parent window and hears only the parent.
+// Neither exists in a plain browser tab, so `ShellBridge` works there too: it just never becomes `ready` and
+// `nativeMenu` stays `false`.
 import type { WireData } from './protocol'
 import { isBookmark, type Bookmark } from './server-bookmarks'
 
@@ -39,6 +42,9 @@ type ConnectFailedHandler = (code: string, message: string) => void
 
 interface MessageSink {
   post(message: Record<string, unknown>): void
+  /** For a shell that does not call `window.__claudiaShell.receive` itself: start passing what the shell sends to
+   * `receive`; returns the function that stops it. */
+  listen?(receive: (raw: string) => void): () => void
 }
 const NULL_SINK: MessageSink = { post: () => {} }
 
@@ -50,6 +56,36 @@ type ShellRoot = typeof globalThis & { __claudiaShell?: { receive: (raw: string)
 export function detectHandler(root: typeof globalThis = globalThis): MessageSink | null {
   const handler = (root as WebKitRoot).webkit?.messageHandlers?.claudia
   return handler ? { post: (message) => handler.postMessage(JSON.stringify(message)) } : null
+}
+
+/** Origins a Neutralino shell page can have: its own static server on this computer, plain http, any port. */
+export function isShellOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin)
+    return url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)
+  } catch {
+    return false
+  }
+}
+
+/** The sink for a page that a shell shows in a frame (`null` when the page is the top window, as in a browser tab).
+ * Messages go to the parent window; they hold nothing secret, and the page cannot know the parent's port before the
+ * parent has answered, so the target origin is `*`. What the page *accepts* is strict: only text from the parent
+ * window itself, and only when the parent is a page on this computer's loopback (the shell's own). */
+export function detectParentSink(root: typeof globalThis = globalThis): MessageSink | null {
+  const win = root as unknown as Window
+  if (!win.parent || win.parent === win) return null
+  return {
+    post: (message) => win.parent.postMessage(JSON.stringify(message), '*'),
+    listen: (receive) => {
+      const onMessage = (event: MessageEvent) => {
+        if (event.source !== win.parent || typeof event.data !== 'string' || !isShellOrigin(event.origin)) return
+        receive(event.data)
+      }
+      win.addEventListener('message', onMessage)
+      return () => win.removeEventListener('message', onMessage)
+    },
+  }
 }
 
 /**
@@ -177,7 +213,7 @@ export class ShellBridge {
  */
 export function createShellBridge(
   app: App | undefined,
-  handler: MessageSink | null = detectHandler(),
+  handler: MessageSink | null = detectHandler() ?? detectParentSink(),
   // Typed as `ShellBridge => ShellBridge`, even though Vue's `reactive()` (the intended `wrap`) actually returns
   // `Reactive<ShellBridge>` -- a type that structurally drops `ShellBridge`'s private fields and so is never
   // assignable back to it. Callers pass an inline `(bridge) => reactive(bridge) as ShellBridge` to paper over that
@@ -190,7 +226,9 @@ export function createShellBridge(
     const receive = (raw: string) => bridge.receive(raw)
     const root = globalThis as ShellRoot
     root.__claudiaShell = { receive, contract: SHELL_CONTRACT_VERSION }
+    const stopListening = handler.listen?.(receive)
     bridge.detach = () => {
+      stopListening?.()
       if (root.__claudiaShell?.receive === receive) delete root.__claudiaShell
     }
   } else {
