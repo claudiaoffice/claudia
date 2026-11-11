@@ -23,7 +23,7 @@ LibreOffice and compares them perceptually -- reserved for a property that is on
 ```
 test-documents/
   catalogue.json          the list of what actually gets tested -- see below
-  _build_fixtures.py       regenerates every source.docx/source.pptx deterministically
+  _build_fixtures.py       regenerates every source.docx/pptx/xlsx and the hand-built source.odt deterministically
   docx/
     heading-styles/
       source.docx          a real, openable file
@@ -32,6 +32,10 @@ test-documents/
       table/
         source.docx
         spec.py
+  odt/
+    heading-styles/         (and beyond-claudia/table, beyond-claudia/image: written by LibreOffice, checked in;
+      source.odt             rich-paragraph, tracked-change-suggestion, lists-and-sections: made by the script)
+      spec.py
   pptx/
     shapes-and-text/
       source.pptx
@@ -76,6 +80,6 @@ on purpose and updating the catalogue's own record of how it went, not for CI's 
    actually testing and why, the backlog epic it belongs to, and `tags`.
 4. Run `uv run python scripts/run_test_documents.py --id <your-id>` to see it recorded.
 
-A format with no `apply_edits_fn` yet (everything except docx and pptx, today -- see
+A format with no `apply_edits_fn` yet (everything except docx, odt, pptx and xlsx, today -- see
 `claudia_test_documents.adapters.ADAPTERS`) can still be catalogued for Tier 1: the round-trip and preserve
 stages come back `"skipped"`, not failed, until that format gets its own real edit-and-reexport path.

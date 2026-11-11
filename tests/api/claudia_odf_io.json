@@ -1,0 +1,101 @@
+{
+ "version": "0.1.0",
+ "Loss": {
+  "class": [
+   "object"
+  ],
+  "init": "(kind: 'str', detail: 'str' = '', count: 'int' = 1) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "LossLog": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "add": "(self, kind: 'str', detail: 'str' = '', count: 'int' = 1) -> 'None'",
+   "result": "(self) -> 'tuple[Loss, ...]'"
+  },
+  "properties": []
+ },
+ "MIME": {
+  "value": "{'text': 'application/vnd.oasis.opendocument.text', 'spreadsheet': 'application/vnd.oasis.opendocument.spreadsheet', 'presentation': 'application/vnd.oasis.opendocument.presentation'}"
+ },
+ "NS": {
+  "value": "{'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0', 'style': 'urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'draw': 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'presentation': 'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0', 'fo': 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'svg': 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'number': 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0', 'meta': 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0', 'manifest': 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0', 'xlink': 'http://www.w3.org/1999/xlink', 'dc': 'http://purl.org/dc/elements/1.1/', 'xml': 'http://www.w3.org/XML/1998/namespace'}"
+ },
+ "OdfError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Span": {
+  "class": [
+   "object"
+  ],
+  "init": "(start: 'int', end: 'int', open_end: 'int', close: 'int') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "VERSION": {
+  "value": "'1.3'"
+ },
+ "XmlPart": {
+  "class": [
+   "object"
+  ],
+  "init": "(data: 'bytes')",
+  "methods": {
+   "elements": "(self) -> 'list[etree._Element]'",
+   "insert_after": "(self, element: 'etree._Element', new: 'etree._Element | bytes') -> 'None'",
+   "insert_before": "(self, element: 'etree._Element', new: 'etree._Element | bytes') -> 'None'",
+   "insert_into": "(self, parent: 'etree._Element', *new: 'etree._Element | bytes', at_start: 'bool' = False) -> 'None'",
+   "make": "(self, tag: 'str', attrib: 'Mapping[str, str] | None' = None, text: 'str | None' = None) -> 'etree._Element'",
+   "remove": "(self, element: 'etree._Element') -> 'None'",
+   "replace": "(self, element: 'etree._Element', new: 'etree._Element | bytes') -> 'None'",
+   "result": "(self) -> 'bytes'",
+   "span": "(self, element: 'etree._Element') -> 'tuple[int, int]'"
+  },
+  "properties": []
+ },
+ "decode_style_name": {
+  "function": "(name: 'str') -> 'str'"
+ },
+ "encode_style_name": {
+  "function": "(display_name: 'str') -> 'str'"
+ },
+ "hidden_content": {
+  "function": "(paragraph: 'etree._Element') -> 'list[str]'"
+ },
+ "insert_elements": {
+  "function": "(paragraph: 'etree._Element', placements: 'Sequence[tuple[int, etree._Element]]') -> 'None'"
+ },
+ "local_name": {
+  "function": "(tag: 'str') -> 'str'"
+ },
+ "new_package": {
+  "function": "(kind: 'str', content: 'bytes', styles: 'bytes', *, meta: 'bytes | None' = None, extra: 'dict[str, tuple[bytes, str]] | None' = None) -> 'bytes'"
+ },
+ "problems": {
+  "function": "(data: 'bytes') -> 'list[str]'"
+ },
+ "qname": {
+  "function": "(prefixed: 'str') -> 'str'"
+ },
+ "read_manifest": {
+  "function": "(manifest_xml: 'bytes') -> 'dict[str, str]'"
+ },
+ "read_text": {
+  "function": "(paragraph: 'etree._Element') -> 'str'"
+ },
+ "set_text": {
+  "function": "(paragraph: 'etree._Element', text: 'str') -> 'None'"
+ },
+ "xml_safe": {
+  "function": "(text: 'str') -> 'str'"
+ }
+}

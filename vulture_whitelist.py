@@ -147,3 +147,7 @@ used.menu_view  # (same)
 used.menu_tools  # (same)
 used.menu_config  # (same)
 used.menu_help  # (same)
+
+# claudia-odf-io
+used.StartElementHandler  # expat calls the handlers assigned to these attributes (splice.py's `_spans`)
+used.EndElementHandler  # (same)

@@ -18,7 +18,7 @@ suggest, and people accept (D63).
 
 from __future__ import annotations
 
-from claudia_composes_io import text_to_docx
+from claudia_composes_io import odt_export_losses, text_to_docx, text_to_odt
 
 from claudia_composes import (
     AcceptSuggestion,
@@ -104,12 +104,18 @@ def _suggestions(ctx):
 
 @composes_methods.method("export_office", "format:str")
 def _export_office(ctx, *, format):
-    """The document's current content as bytes of a Word file (`format` must be `"docx"`, the only one so far),
-    wrapped for the wire as `{format, content_type, data}` (`data` base64). No tracked changes: open suggestions
-    are not written in, same as `export_content` leaves out the history and the chat (D212)."""
-    if format != "docx":
-        raise RequestError("bad_request", 'export_office: format must be "docx"')
-    return office_export(format, text_to_docx(_text(ctx), track_suggestions=False))
+    """The document's current content as bytes of a Word file (`format` `"docx"`) or an OpenDocument text (`"odt"`),
+    wrapped for the wire as `{format, content_type, data}` (`data` base64); an odt's answer also has `losses`, what
+    the file could not hold, as `{kind, detail, count}` codes. No tracked changes: open suggestions are not written
+    in, same as `export_content` leaves out the history and the chat (D212)."""
+    model = _text(ctx)
+    if format == "docx":
+        return office_export(format, text_to_docx(model, track_suggestions=False))
+    if format == "odt":
+        return office_export(
+            format, text_to_odt(model, track_suggestions=False), odt_export_losses(model, track_suggestions=False)
+        )
+    raise RequestError("bad_request", 'export_office: format must be "docx" or "odt"')
 
 
 # ------------------------------------------------------------------------------ writing

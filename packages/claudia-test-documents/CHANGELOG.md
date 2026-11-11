@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.2.0] - 2026-11-11
+
+### Added
+- `ADAPTERS["odt"]`: odt cases run through import, edit-and-reexport and preservation like docx, pptx and xlsx (D401).
+  The library gains six odt cases: three files written by LibreOffice itself, three made by `_build_fixtures.py`.
+
 ## [0.1.0] - 2026-11-10
 
 The first version under the versioning policy. Until now the package had a placeholder version (0.0.1), no

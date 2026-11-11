@@ -6,6 +6,7 @@ import pytest
 
 from claudia_composes import TextModel
 from claudia_core import Document, MemoryStore
+from claudia_opc_io import read_parts
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.protocol import Context, Limits, RequestError, core_methods
@@ -430,6 +431,44 @@ def test_export_office_drops_open_suggestions_rather_than_tracking_them(paper):
     assert [b.text for b in docx_to_text(raw).blocks] == ["Hello there"]
 
 
+def test_export_office_returns_an_odt_that_round_trips_and_says_what_it_lost(paper):
+    from claudia_composes_io import odt_to_text
+
+    from claudia_odf_io import problems
+
+    type_(paper, "Hello there")
+    answer = call(paper, "export_office", {"format": "odt"})
+    assert answer["format"] == "odt"
+    assert answer["content_type"] == "application/vnd.oasis.opendocument.text"
+    raw = base64.b64decode(answer["data"])
+    assert problems(raw) == []
+    assert [b.text for b in odt_to_text(raw).blocks] == ["Hello there"]
+    # who typed which words is not something an odt keeps: the one thing this text loses
+    assert answer["losses"] == [{"kind": "authorship", "detail": "", "count": 1}]
+
+
+def test_export_office_to_odt_names_a_style_it_cannot_write(paper):
+    type_(paper, "Hello there")
+    call(paper, "set_style", {"block": "b1", "style": "remark"})
+    losses = call(paper, "export_office", {"format": "odt"})["losses"]
+    assert {"kind": "style", "detail": "remark", "count": 1} in losses
+
+
+def test_export_office_to_docx_has_no_loss_list(paper):
+    type_(paper, "Hello there")
+    assert "losses" not in call(paper, "export_office", {"format": "docx"})
+
+
+def test_export_office_to_odt_drops_open_suggestions_rather_than_tracking_them(paper):
+    from claudia_composes_io import odt_to_text
+
+    type_(paper, "Hello there")
+    call(paper, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    raw = base64.b64decode(call(paper, "export_office", {"format": "odt"})["data"])
+    assert [b.text for b in odt_to_text(raw).blocks] == ["Hello there"]
+    assert b"tracked-changes" not in read_parts(raw)["content.xml"]
+
+
 def test_export_office_rejects_an_unknown_format(paper):
     with pytest.raises(RequestError):
-        call(paper, "export_office", {"format": "odt"})
+        call(paper, "export_office", {"format": "pdf"})

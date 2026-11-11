@@ -1,5 +1,5 @@
-"""Regenerates every checked-in ``source.docx``/``source.pptx``/``source.xlsx`` in this library, deterministically
-(D218, D219, D220).
+"""Regenerates every checked-in ``source.docx``/``source.pptx``/``source.xlsx`` and hand-built ``source.odt`` in this
+library, deterministically (D218, D219, D220, D401).
 
 A test document is checked in as a real, openable binary -- not just a Python function that builds one on the
 fly, the way every other format test in this repo does -- because the whole point of a *library* is files a
@@ -23,6 +23,8 @@ from openpyxl.drawing.image import Image as XLImage
 from PIL import Image
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Emu
+
+from claudia_odf_io import NS, new_package
 
 ROOT = Path(__file__).resolve().parent
 #: EMU per claudia slide unit on a 16:9 deck (``12_192_000 / 1600`` == ``6_858_000 / 900``, both exact) -- the
@@ -185,6 +187,64 @@ def _xlsx_bytes(wb: openpyxl.Workbook) -> bytes:
     return out.getvalue()
 
 
+_ODT_DECLS = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in NS.items() if prefix != "xml")
+_ODT_STYLES = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:styles>'
+    '<style:style style:name="Standard" style:family="paragraph" style:class="text"/>'
+    '<style:style style:name="Text_20_body" style:display-name="Text body" style:family="paragraph" '
+    'style:parent-style-name="Standard" style:class="text"/>'
+    '<style:style style:name="Heading_20_1" style:display-name="Heading 1" style:family="paragraph" '
+    'style:parent-style-name="Standard" style:default-outline-level="1" style:class="text"/>'
+    '<style:style style:name="Strong" style:display-name="Strong" style:family="text"/>'
+    "</office:styles></office:document-styles>"
+).encode()
+
+
+def _odt(body: str, *, automatic: str = "", extra: dict[str, tuple[bytes, str]] | None = None) -> bytes:
+    """An odt written by hand, the way LibreOffice lays a file out, for what no library here can build: a paragraph
+    full of links, notes and bookmarks, a list, a section. (The three LibreOffice-written odt fixtures were made by
+    ``soffice --convert-to odt`` from the docx ones above and checked in as they came out: its files carry the
+    time they were made in, so this script cannot make them again.)"""
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        f"<office:automatic-styles>{automatic}</office:automatic-styles>"
+        f"<office:body><office:text>{body}</office:text></office:body></office:document-content>"
+    )
+    return new_package("text", content.encode(), _ODT_STYLES, extra=extra)
+
+
+def build_odt_rich_paragraph() -> bytes:
+    return _odt(
+        '<text:h text:style-name="Heading_20_1" text:outline-level="1">Reading list</text:h>'
+        '<text:p text:style-name="Text_20_body">Read the <text:a xlink:href="https://example.org/manual" '
+        'xlink:type="simple">manual</text:a> and <text:span text:style-name="Strong">note</text:span> '
+        'the examples<text:bookmark text:name="examples"/> carefully'
+        '<text:note text:id="ftn1" text:note-class="footnote"><text:note-citation>1</text:note-citation>'
+        "<text:note-body><text:p>See chapter two.</text:p></text:note-body></text:note>.</text:p>"
+        '<text:p text:style-name="Text_20_body">Nothing here changes.</text:p>'
+    )
+
+
+def build_odt_tracked_change_suggestion() -> bytes:
+    return _odt('<text:p text:style-name="Standard">The committee rejected the proposal.</text:p>')
+
+
+def build_odt_lists_and_sections() -> bytes:
+    return _odt(
+        '<text:p text:style-name="Standard">Shopping.</text:p>'
+        '<text:list text:style-name="L1"><text:list-item><text:p text:style-name="Standard">Bread</text:p>'
+        '</text:list-item><text:list-item><text:p text:style-name="Standard">Milk</text:p></text:list-item></text:list>'
+        '<text:section text:style-name="Sect1" text:name="Notes"><text:p text:style-name="Standard">'
+        "Remember the bag.</text:p></text:section>"
+        '<text:p text:style-name="Standard">Done.</text:p>',
+        automatic='<style:style style:name="Sect1" style:family="section"/>'
+        '<text:list-style style:name="L1"><text:list-level-style-bullet text:level="1" text:bullet-char="•"/>'
+        "</text:list-style>",
+    )
+
+
 FIXTURES = {
     "docx/heading-styles/source.docx": build_heading_styles,
     "docx/tracked-change-suggestion/source.docx": build_tracked_change_suggestion,
@@ -193,6 +253,9 @@ FIXTURES = {
     "pptx/shapes-and-text/source.pptx": build_shapes_and_text,
     "pptx/beyond-claudia/table/source.pptx": build_pptx_beyond_claudia_table,
     "pptx/beyond-claudia/image/source.pptx": build_pptx_beyond_claudia_image,
+    "odt/rich-paragraph/source.odt": build_odt_rich_paragraph,
+    "odt/tracked-change-suggestion/source.odt": build_odt_tracked_change_suggestion,
+    "odt/lists-and-sections/source.odt": build_odt_lists_and_sections,
     "xlsx/cells-and-formulas/source.xlsx": build_cells_and_formulas,
     "xlsx/beyond-claudia/chart/source.xlsx": build_xlsx_beyond_claudia_chart,
     "xlsx/beyond-claudia/image/source.xlsx": build_xlsx_beyond_claudia_image,

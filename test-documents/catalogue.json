@@ -273,6 +273,170 @@
         "duration_s": 0.033,
         "detail": null
       }
+    },
+    {
+      "id": "odt-heading-styles",
+      "format": "odt",
+      "feature": "heading-styles",
+      "source": "odt/heading-styles/source.odt",
+      "spec": "odt/heading-styles/spec.py",
+      "summary": "A file written by LibreOffice itself: Title/Heading 1/Heading 2 map to claudia's style ids on import; an edit to one paragraph leaves every other byte of content.xml and every other part as it was.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T17:13:38Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.016,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-beyond-claudia-table",
+      "format": "odt",
+      "feature": "beyond-claudia/table",
+      "source": "odt/beyond-claudia/table/source.odt",
+      "spec": "odt/beyond-claudia/table/spec.py",
+      "summary": "A table (LibreOffice-written) shares content.xml with the paragraph an edit rewrites; the table's own markup survives byte for byte because an edit replaces only the bytes of the changed paragraph.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T17:13:38Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.015,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-beyond-claudia-image",
+      "format": "odt",
+      "feature": "beyond-claudia/image",
+      "source": "odt/beyond-claudia/image/source.odt",
+      "spec": "odt/beyond-claudia/image/spec.py",
+      "summary": "A picture (LibreOffice-written) in its own Pictures/ part plus the draw:frame that anchors it in a paragraph: the part and the frame paragraph both survive an edit of the paragraph next to it.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T17:13:38Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.017,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-rich-paragraph",
+      "format": "odt",
+      "feature": "rich-paragraph",
+      "source": "odt/rich-paragraph/source.odt",
+      "spec": "odt/rich-paragraph/spec.py",
+      "summary": "A paragraph with a link, a formatted word, a bookmark and a footnote: changing a word of its text is done in place, so none of them is lost, and the neighbouring paragraph is not touched.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "preservation"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T17:13:38Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.003,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-tracked-change-suggestion",
+      "format": "odt",
+      "feature": "tracked-change-suggestion",
+      "source": "odt/tracked-change-suggestion/source.odt",
+      "spec": "odt/tracked-change-suggestion/spec.py",
+      "summary": "An open suggestion added in claudia is exported as a real OpenDocument tracked change (text:deletion/text:insertion, with the marks in the text and the date LibreOffice needs); the paragraph then reads as the replacement.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1",
+        "export-check"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T17:13:38Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.002,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-lists-and-sections",
+      "format": "odt",
+      "feature": "lists-and-sections",
+      "source": "odt/lists-and-sections/source.odt",
+      "spec": "odt/lists-and-sections/spec.py",
+      "summary": "Paragraphs in a list and in a section are blocks of the model; a block added after the list and a paragraph emptied inside the section leave the list, its list style and the section exactly as they were.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "preservation"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T17:13:38Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.003,
+        "detail": null
+      }
     }
   ]
 }

@@ -49,7 +49,7 @@ msgstr ""
 msgid "All Styles…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:98 web/app/components/TextWorkspace.vue:171 web/app/components/Workspace.vue:308
+#: web/app/components/SlideWorkspace.vue:98 web/app/components/TextWorkspace.vue:172 web/app/components/Workspace.vue:308
 msgid "All styles…"
 msgstr ""
 
@@ -157,7 +157,7 @@ msgstr ""
 msgid "Colour the text by the person who wrote it"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:100 web/app/components/TextWorkspace.vue:174 web/app/components/Workspace.vue:310
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:100 web/app/components/TextWorkspace.vue:175 web/app/components/Workspace.vue:310
 msgid "Colours…"
 msgstr ""
 
@@ -241,7 +241,7 @@ msgstr ""
 msgid "Download the document to this computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:153 web/app/components/TextWorkspace.vue:143 web/app/components/Workspace.vue:400
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:153 web/app/components/TextWorkspace.vue:144 web/app/components/Workspace.vue:400
 msgid "Edit"
 msgstr ""
 
@@ -257,7 +257,7 @@ msgstr ""
 msgid "Edit text"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:94 web/app/components/TextWorkspace.vue:170 web/app/components/Workspace.vue:307
+#: web/app/components/SlideWorkspace.vue:94 web/app/components/TextWorkspace.vue:171 web/app/components/Workspace.vue:307
 msgid "Edit this style…"
 msgstr ""
 
@@ -269,7 +269,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:184
+#: web/app/components/TextWorkspace.vue:185
 msgid "Flow"
 msgstr ""
 
@@ -281,7 +281,7 @@ msgstr ""
 msgid "For the object you select"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:177 web/app/components/TextWorkspace.vue:158 web/app/components/Workspace.vue:443
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:177 web/app/components/TextWorkspace.vue:159 web/app/components/Workspace.vue:443
 msgid "Format"
 msgstr ""
 
@@ -373,7 +373,7 @@ msgstr ""
 msgid "Insert right"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:196
+#: web/app/components/TextWorkspace.vue:197
 msgid "Insert sample text"
 msgstr ""
 
@@ -437,7 +437,7 @@ msgstr ""
 msgid "New slide"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:82 web/app/components/TextWorkspace.vue:161 web/app/components/Workspace.vue:292
+#: web/app/components/SlideWorkspace.vue:82 web/app/components/TextWorkspace.vue:162 web/app/components/Workspace.vue:292
 msgid "No styles yet"
 msgstr ""
 
@@ -461,7 +461,7 @@ msgstr ""
 msgid "Open…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:186
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:187
 msgid "Page"
 msgstr ""
 
@@ -517,11 +517,11 @@ msgstr ""
 msgid "Review This Text"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:194
+#: web/app/components/TextWorkspace.vue:195
 msgid "Review this paragraph"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:193
+#: web/app/components/TextWorkspace.vue:194
 msgid "Review this text"
 msgstr ""
 
@@ -569,7 +569,7 @@ msgstr ""
 msgid "Show the text as pages instead of a flowing text"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:180 web/app/lib/document-menus.ts:148
+#: web/app/components/TextWorkspace.vue:181 web/app/lib/document-menus.ts:148
 msgid "Show who wrote what"
 msgstr ""
 
@@ -629,7 +629,7 @@ msgstr ""
 msgid "This computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:194 web/app/components/TextWorkspace.vue:190 web/app/components/Workspace.vue:453
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:194 web/app/components/TextWorkspace.vue:191 web/app/components/Workspace.vue:453
 msgid "Tools"
 msgstr ""
 
@@ -653,7 +653,7 @@ msgstr ""
 msgid "Version, authors and licence"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:179 web/app/components/TextWorkspace.vue:178 web/app/components/Workspace.vue:445
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:179 web/app/components/TextWorkspace.vue:179 web/app/components/Workspace.vue:445
 msgid "View"
 msgstr ""
 

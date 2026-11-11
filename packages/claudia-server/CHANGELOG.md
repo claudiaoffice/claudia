@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- `export_office` also writes `"odt"` for the text app (D401), and its answer then has `losses`: what the file could
+  not hold, as a list of `{kind, detail, count}` codes (nothing yet puts them into words; the screen is designed
+  first). A format that cannot say has no `losses` in the answer. The error for an unknown format names both.
+
 ### Changed
 - The built web app is served with `Cache-Control` (D248): pages and every file not named by its content are
   revalidated on each load (`no-cache`, a cheap `304` when nothing changed), the content-hashed files under `_nuxt/`

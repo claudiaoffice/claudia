@@ -7,6 +7,21 @@ import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region,
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
 
+/** One thing an export could not put into the file, as a code for the interface to put into words (E12.6). */
+export interface ExportLoss {
+  kind: string
+  detail: string
+  count: number
+}
+
+/** What `export_office` answers: the file as base64, and for formats that can tell, what it could not hold. */
+export interface ExportedFile {
+  format: string
+  content_type: string
+  data: string
+  losses?: ExportLoss[]
+}
+
 export interface Person {
   id: number
   user: string
@@ -472,10 +487,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return await this.attempt('export_content')
   }
 
-  /** The document's current content as bytes of a Word, Excel or PowerPoint file (`format` is one of what the
-   * app supports: "docx", "xlsx" or "pptx"), as `{format, content_type, data}` with `data` base64 — no tracked
-   * changes, no history, no chat; just the document as it stands now. */
-  async exportOffice(format: string): Promise<{ format: string; content_type: string; data: string } | false> {
+  /** The document's current content as bytes of a Word, Excel, PowerPoint or OpenDocument file (`format` is one of
+   * what the app supports: "docx", "odt", "xlsx" or "pptx"), as `{format, content_type, data}` with `data` base64
+   * — no tracked changes, no history, no chat; just the document as it stands now. An OpenDocument answer also
+   * has `losses`: what the file could not hold, as `{kind, detail, count}` codes (nothing shows them yet: the
+   * screen for that is designed first). */
+  async exportOffice(format: string): Promise<ExportedFile | false> {
     return await this.attempt('export_office', { format })
   }
 

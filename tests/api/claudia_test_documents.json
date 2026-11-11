@@ -1,7 +1,7 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
  "ADAPTERS": {
-  "value": "{'docx': Adapter(import_fn=<function docx_to_text>, apply_edits_fn=<function apply_edits_to_docx>), 'pptx': Adapter(import_fn=<function pptx_to_slides>, apply_edits_fn=<function apply_edits_to_pptx>), 'xlsx': Adapter(import_fn=<function xlsx_to_workbook>, apply_edits_fn=<function apply_edits_to_xlsx>)}"
+  "value": "{'docx': Adapter(import_fn=<function docx_to_text>, apply_edits_fn=<function apply_edits_to_docx>), 'odt': Adapter(import_fn=<function odt_to_text>, apply_edits_fn=<function apply_edits_to_odt>), 'pptx': Adapter(import_fn=<function pptx_to_slides>, apply_edits_fn=<function apply_edits_to_pptx>), 'xlsx': Adapter(import_fn=<function xlsx_to_workbook>, apply_edits_fn=<function apply_edits_to_xlsx>)}"
  },
  "Adapter": {
   "class": [

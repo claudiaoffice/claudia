@@ -32,6 +32,8 @@ from docx.text.paragraph import Paragraph
 from claudia_composes import DEFAULT_STYLE, Block, Run, Suggestion, TextModel
 from claudia_opc_io import owns, reconcile
 
+from ._suggestions import open_replacements
+
 #: The built-in styles (model.py's BUILTIN_STYLES) mapped to Word's own built-in style names; anything else
 #: (a deviated or custom style) falls back to Normal -- styling fidelity beyond this is E9.5's job, not this slice's.
 _WORD_STYLE = {
@@ -56,16 +58,11 @@ def text_to_docx(model: TextModel, *, track_suggestions: bool = True) -> bytes:
     suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
     remark (no replacement) carries no text to track and is left out, same as a withdrawn or resolved suggestion."""
     document = Document()
-    by_block: dict[str, list[Suggestion]] = {}
-    if track_suggestions:
-        for suggestion in model.suggestions.values():
-            if suggestion.state == "open" and suggestion.replacement is not None:
-                by_block.setdefault(suggestion.anchor.block, []).append(suggestion)
+    by_block = open_replacements(model, track=track_suggestions)
     change_ids = count(1)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=_WORD_STYLE.get(block.style, "Normal"))
-        ordered = sorted(by_block.get(block.id, ()), key=lambda s: s.anchor.start)
-        _fill_paragraph(paragraph, block.text, ordered, change_ids)
+        _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids)
     out = BytesIO()
     document.save(out)
     return out.getvalue()
@@ -146,11 +143,7 @@ def apply_edits_to_docx(
     if added or removed:
         raise UnsupportedEdit("adding or removing a paragraph cannot be patched onto the original file yet")
     position_of = {block.id: index for index, block in enumerate(baseline.blocks)}
-    by_block: dict[str, list[Suggestion]] = {}
-    if track_suggestions:
-        for suggestion in current.suggestions.values():
-            if suggestion.state == "open" and suggestion.replacement is not None:
-                by_block.setdefault(suggestion.anchor.block, []).append(suggestion)
+    by_block = open_replacements(current, track=track_suggestions)
     document = Document(BytesIO(original_bytes))
     paragraphs = document.paragraphs
     change_ids = count(1)
@@ -165,8 +158,7 @@ def apply_edits_to_docx(
             parent = run._element.getparent()
             assert parent is not None
             parent.remove(run._element)
-        ordered = sorted(by_block.get(block_id, ()), key=lambda s: s.anchor.start)
-        _fill_paragraph(paragraph, after.text, ordered, change_ids)
+        _fill_paragraph(paragraph, after.text, by_block.get(block_id, []), change_ids)
     patched = BytesIO()
     document.save(patched)
     return reconcile(original_bytes, patched.getvalue(), owns(["word/document.xml"]))

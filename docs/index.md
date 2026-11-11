@@ -36,6 +36,7 @@ changelog-fonts
 changelog-typeset
 changelog-ai
 changelog-opc-io
+changelog-odf-io
 changelog-computes-io
 changelog-composes-io
 changelog-creates-io
