@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive, watchEffect } from 'vue'
-import { ShellBridge, createShellBridge, detectHandler, isApp, tabTitle } from '~/lib/shell-bridge'
+import { ShellBridge, createShellBridge, detectHandler, detectParentSink, isApp, isShellOrigin, tabTitle } from '~/lib/shell-bridge'
 
 function fakeSink() {
   const posted: Record<string, unknown>[] = []
@@ -236,5 +236,87 @@ describe('tabTitle', () => {
   it('falls back to the generic title for anything that is not one of the three known apps', () => {
     expect(tabTitle('')).toBe('Claudia')
     expect(tabTitle('bogus')).toBe('Claudia')
+  })
+})
+
+/** A window that has a parent, as a page in a Neutralino shell's frame does. */
+function framedWindow() {
+  const parent = { postMessage: vi.fn() }
+  const listeners = new Set<(event: any) => void>()
+  const win: any = {
+    parent,
+    addEventListener: (_type: string, listener: (event: any) => void) => listeners.add(listener),
+    removeEventListener: (_type: string, listener: (event: any) => void) => listeners.delete(listener),
+  }
+  const deliver = (event: { source: unknown; origin: string; data: unknown }) => listeners.forEach((l) => l(event))
+  return { win, parent, listeners, deliver }
+}
+
+describe('isShellOrigin', () => {
+  it('accepts a Neutralino shell page (plain http, on this computer, any port)', () => {
+    expect(isShellOrigin('http://127.0.0.1:51234')).toBe(true)
+    expect(isShellOrigin('http://localhost:8080')).toBe(true)
+  })
+
+  it('refuses https, other hosts, and rubbish', () => {
+    expect(isShellOrigin('https://127.0.0.1:51234')).toBe(false)
+    expect(isShellOrigin('http://evil.example')).toBe(false)
+    expect(isShellOrigin('http://127.0.0.1.evil.example')).toBe(false)
+    expect(isShellOrigin('null')).toBe(false)
+    expect(isShellOrigin('')).toBe(false)
+  })
+})
+
+describe('detectParentSink', () => {
+  it('is null for a top window (a browser tab, or the GTK shell)', () => {
+    const top: any = {}
+    top.parent = top
+    expect(detectParentSink(top)).toBeNull()
+    expect(detectParentSink({} as any)).toBeNull()
+  })
+
+  it('posts each message to the parent window, as JSON text', () => {
+    const { win, parent } = framedWindow()
+    detectParentSink(win)!.post({ type: 'hello', contract: 1 })
+    expect(parent.postMessage).toHaveBeenCalledWith('{"type":"hello","contract":1}', '*')
+  })
+
+  it('passes on text from the parent when it is a shell page on this computer', () => {
+    const { win, parent, deliver } = framedWindow()
+    const received: string[] = []
+    detectParentSink(win)!.listen!((raw) => received.push(raw))
+    deliver({ source: parent, origin: 'http://127.0.0.1:5000', data: '{"type":"welcome"}' })
+    expect(received).toEqual(['{"type":"welcome"}'])
+  })
+
+  it('ignores a message from another window, from another origin, or that is not text', () => {
+    const { win, parent, deliver } = framedWindow()
+    const received: string[] = []
+    detectParentSink(win)!.listen!((raw) => received.push(raw))
+    deliver({ source: {}, origin: 'http://127.0.0.1:5000', data: 'x' })
+    deliver({ source: parent, origin: 'https://evil.example', data: 'x' })
+    deliver({ source: parent, origin: 'http://127.0.0.1:5000', data: { type: 'welcome' } })
+    expect(received).toEqual([])
+  })
+
+  it('stops listening when told to', () => {
+    const { win, listeners } = framedWindow()
+    const stop = detectParentSink(win)!.listen!(() => {})
+    expect(listeners.size).toBe(1)
+    stop()
+    expect(listeners.size).toBe(0)
+  })
+})
+
+describe('createShellBridge with a sink that listens', () => {
+  it('feeds what the sink hears into the bridge, and stops on detach', () => {
+    let feed: ((raw: string) => void) | null = null
+    const stop = vi.fn()
+    const sink = { post: () => {}, listen: (receive: (raw: string) => void) => ((feed = receive), stop) }
+    const bridge = createShellBridge('composes', sink)
+    feed!(JSON.stringify({ type: 'welcome', contract: 1, shell: { name: 'neutralino', platform: 'macos', version: '1' }, capabilities: ['native-menu'] }))
+    expect(bridge.nativeMenu).toBe(true)
+    bridge.detach()
+    expect(stop).toHaveBeenCalled()
   })
 })

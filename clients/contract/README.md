@@ -37,10 +37,23 @@ case, namespaced, so a menu can be rearranged in one shell without a change to t
 * A change to the schema needs a line in `clients/linux/CHANGELOG.md` and a test in `clients/linux/tests/test_contract.py`
   (which checks the Python code and the schema against the same messages).
 
+## Transports
+
+The messages are the same JSON text on every platform; what carries them differs with the shell's web view.
+
+* **WebKitGTK (Linux).** The shell registers `window.webkit.messageHandlers.claudia`, which the page posts to, and
+  calls `window.__claudiaShell.receive(text)`, which the page registers.
+* **Neutralino (macOS; Windows to follow), D251.** The web app is shown in a frame of the shell's own page, so the two
+  use `postMessage` with the message as text. The shell page accepts a message only from its own frame and only from
+  the origin it opened there; the web app accepts one only from its parent window and only when that is a page on
+  this computer's loopback (the shell page is served by Neutralino from there).
+* A plain browser tab has neither: the page never becomes ready and draws its own menus.
+
 ## Who implements it
 
-The shell side is `claudia_shell_gtk.contract` and `bridge` (Linux). The web app speaks the contract itself
-(`web/app/lib/shell-bridge.ts`), on the start page as well as in a document.
+The shell side is `claudia_shell_gtk.contract` and `bridge` (Linux) and `clients/macos/src/contract.ts` and `bridge.ts`
+(macOS; its tests judge every message by this schema and by the code, and the two must agree). The web app speaks the
+contract itself (`web/app/lib/shell-bridge.ts`), on the start page as well as in a document.
 
 ## Connecting to other servers
 
