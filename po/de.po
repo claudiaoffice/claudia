@@ -33,6 +33,10 @@ msgstr "Ein Dokument annehmen, das Ihnen übergeben wurde"
 msgid "Accept ownership…"
 msgstr "Eigentümerschaft annehmen…"
 
+#: web/app/components/SidePanel.vue
+msgid "Act at once"
+msgstr "Sofort ausführen"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Add a new sheet to the document"
 msgstr "Dem Dokument ein neues Blatt hinzufügen"
@@ -533,6 +537,10 @@ msgstr "Anzeigen, wer was geschrieben hat"
 msgid "Start a new document"
 msgstr "Ein neues Dokument beginnen"
 
+#: web/app/components/SidePanel.vue
+msgid "Suggest first"
+msgstr "Erst vorschlagen"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Take back your last step"
 msgstr "Den letzten Schritt zurücknehmen"
@@ -548,6 +556,10 @@ msgstr "Textfeld"
 #: web/app/components/SlideWorkspace.vue:134
 msgid "Text box"
 msgstr "Textfeld"
+
+#: web/app/components/SidePanel.vue
+msgid "Text documents: the AI suggests either way."
+msgstr "Textdokumente: Die KI schlägt in beiden Fällen nur vor."
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "The keyboard shortcuts this app uses"
@@ -572,6 +584,10 @@ msgstr "Version, Autoren und Lizenz"
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:144 web/app/components/TextWorkspace.vue:220 web/app/components/Workspace.vue:316
 msgid "View"
 msgstr "Ansicht"
+
+#: web/app/components/SidePanel.vue
+msgid "When I ask the AI, in this document:"
+msgstr "Wenn ich die KI bitte, in diesem Dokument:"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Write in the selected text box"

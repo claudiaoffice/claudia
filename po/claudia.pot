@@ -33,6 +33,10 @@ msgstr ""
 msgid "Accept ownership…"
 msgstr ""
 
+#: web/app/components/SidePanel.vue:22
+msgid "Act at once"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Add a new sheet to the document"
 msgstr ""
@@ -125,7 +129,7 @@ msgstr ""
 msgid "Chart…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:185
+#: web/app/components/SidePanel.vue:193
 msgid "Chat"
 msgstr ""
 
@@ -313,15 +317,15 @@ msgstr ""
 msgid "Hand this document over to somebody else"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:126 web/app/lib/document-menus.ts:184
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:134 web/app/lib/document-menus.ts:184
 msgid "Help"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:143
+#: web/app/components/SidePanel.vue:151
 msgid "History"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:125
+#: web/app/components/SidePanel.vue:133
 msgid "History & Chat"
 msgstr ""
 
@@ -625,6 +629,10 @@ msgstr ""
 msgid "Starting {app}…"
 msgstr ""
 
+#: web/app/components/SidePanel.vue:23
+msgid "Suggest first"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Take back your last step"
 msgstr ""
@@ -639,6 +647,10 @@ msgstr ""
 
 #: web/app/components/SlideWorkspace.vue:168
 msgid "Text box"
+msgstr ""
+
+#: web/app/components/SidePanel.vue:206
+msgid "Text documents: the AI suggests either way."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/connection.py:189
@@ -699,6 +711,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:178 web/app/components/TextWorkspace.vue:182 web/app/components/Workspace.vue:749
 msgid "View"
+msgstr ""
+
+#: web/app/components/SidePanel.vue:195
+msgid "When I ask the AI, in this document:"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py

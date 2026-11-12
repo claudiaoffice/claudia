@@ -17,7 +17,7 @@ msgstr "[Àbôût Clàûdîà Cômpûtés~~~~~~~~~]"
 msgid "About Claudia Creates"
 msgstr "[Àbôût Clàûdîà Créàtés~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:186 web/app/components/TextWorkspace.vue:267 web/app/components/Workspace.vue:356
+#: web/app/lib/document-menus.ts:189
 msgid "About claudia"
 msgstr "[Àbôût clàûdîà~~~~~]"
 
@@ -29,9 +29,13 @@ msgstr "[Àccépt Ôwnérshîp…~~~~~~~]"
 msgid "Accept a document that was handed over to you"
 msgstr "[Àccépt à dôcûmént thàt wàs hàndéd ôvér tô yôû~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:82 web/app/components/TextWorkspace.vue:155 web/app/components/Workspace.vue:240
+#: web/app/lib/document-menus.ts:77
 msgid "Accept ownership…"
 msgstr "[Àccépt ôwnérshîp…~~~~~~~]"
+
+#: web/app/components/SidePanel.vue:22
+msgid "Act at once"
+msgstr "[Àct àt ôncé~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Add a new sheet to the document"
@@ -49,15 +53,15 @@ msgstr "[Àdd à téxt bôx tô thé slîdé~~~~~~~~~~~]"
 msgid "All Styles…"
 msgstr "[Àll Stylés…~~~~]"
 
-#: web/app/components/TextWorkspace.vue:216
+#: web/app/components/SlideWorkspace.vue:98 web/app/components/TextWorkspace.vue:171 web/app/components/Workspace.vue:308
 msgid "All styles…"
 msgstr "[Àll stylés…~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:172 web/app/components/TextWorkspace.vue:253 web/app/components/Workspace.vue:342
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:165
 msgid "App Language"
 msgstr "[Àpp Làngûàgé~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:183 web/app/components/TextWorkspace.vue:264 web/app/components/Workspace.vue:353
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:186
 msgid "Ask ai"
 msgstr "[Àsk àî~~]"
 
@@ -65,7 +69,7 @@ msgstr "[Àsk àî~~]"
 msgid "Ask for an Example Budget"
 msgstr "[Àsk fôr àn Éxàmplé Bûdgét~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:334
+#: web/app/components/Workspace.vue:454
 msgid "Ask for an example budget"
 msgstr "[Àsk fôr àn éxàmplé bûdgét~~~~~~~~~~]"
 
@@ -85,7 +89,7 @@ msgstr "[Àsk thé àssîstànt tô bûîld àn éxàmplé bûdgét~~~~~~~~~~~~~
 msgid "Ask the assistant to suggest improvements"
 msgstr "[Àsk thé àssîstànt tô sûggést împrôvéménts~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:166 web/app/components/TextWorkspace.vue:241 web/app/components/Workspace.vue:333
+#: web/app/lib/document-menus.ts:154
 msgid "Ask the assistant…"
 msgstr "[Àsk thé àssîstànt…~~~~~~~]"
 
@@ -93,19 +97,31 @@ msgstr "[Àsk thé àssîstànt…~~~~~~~]"
 msgid "Assign New Owner…"
 msgstr "[Àssîgn Néw Ôwnér…~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:76 web/app/components/TextWorkspace.vue:151 web/app/components/Workspace.vue:236
+#: web/app/lib/document-menus.ts:76
 msgid "Assign new owner…"
 msgstr "[Àssîgn néw ôwnér…~~~~~~~]"
+
+#: web/app/components/HelpPanel.vue:79
+msgid "Back to results"
+msgstr "[Bàck tô résûlts~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Back to the list of documents"
 msgstr "[Bàck tô thé lîst ôf dôcûménts~~~~~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Change how the object you have selected looks"
+msgstr "[Chàngé hôw thé ôbjéct yôû hàvé séléctéd lôôks~~~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Change how this kind of paragraph looks"
 msgstr "[Chàngé hôw thîs kînd ôf pàràgràph lôôks~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:165
+#: web/app/components/Workspace.vue:415
+msgid "Chart…"
+msgstr "[Chàrt…~~]"
+
+#: web/app/components/SidePanel.vue:193
 msgid "Chat"
 msgstr "[Chàt~~]"
 
@@ -113,7 +129,7 @@ msgstr "[Chàt~~]"
 msgid "Clear Cells"
 msgstr "[Cléàr Célls~~~~]"
 
-#: web/app/components/Workspace.vue:311
+#: web/app/components/Workspace.vue:440
 msgid "Clear cells"
 msgstr "[Cléàr célls~~~~]"
 
@@ -137,7 +153,7 @@ msgstr "[Clôsé Clàûdîà Créàtés~~~~~~~~]"
 msgid "Close Document"
 msgstr "[Clôsé Dôcûmént~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:97 web/app/components/TextWorkspace.vue:167 web/app/components/Workspace.vue:252
+#: web/app/lib/document-menus.ts:84
 msgid "Close document"
 msgstr "[Clôsé dôcûmént~~~~~~]"
 
@@ -145,15 +161,23 @@ msgstr "[Clôsé dôcûmént~~~~~~]"
 msgid "Colour the text by the person who wrote it"
 msgstr "[Côlôûr thé téxt by thé pérsôn whô wrôté ît~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:302
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:100 web/app/components/TextWorkspace.vue:174 web/app/components/Workspace.vue:310
+msgid "Colours…"
+msgstr "[Côlôûrs…~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:431
 msgid "Column"
 msgstr "[Côlûmn~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:168 web/app/components/TextWorkspace.vue:249 web/app/components/Workspace.vue:338
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:161
 msgid "Config"
 msgstr "[Cônfîg~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:118 web/app/components/TextWorkspace.vue:188 web/app/components/Workspace.vue:273
+#: clients/linux/src/claudia_shell_gtk/window.py:225
+msgid "Connecting to {address}…"
+msgstr "[Cônnéctîng tô {address}…~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:118
 msgid "Copy"
 msgstr "[Côpy~~]"
 
@@ -161,11 +185,19 @@ msgstr "[Côpy~~]"
 msgid "Copy the selection to the clipboard"
 msgstr "[Côpy thé séléctîôn tô thé clîpbôàrd~~~~~~~~~~~~~~]"
 
+#: clients/linux/src/claudia_shell_gtk/window.py:231
+msgid "Could not connect"
+msgstr "[Côûld nôt cônnéct~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:275 clients/linux/src/claudia_shell_gtk/connector.py:130
+msgid "Could not reach {address}."
+msgstr "[Côûld nôt réàch {address}.~~~~~~~~~~]"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Create a document or open one from the server"
 msgstr "[Créàté à dôcûmént ôr ôpén ôné frôm thé sérvér~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:119 web/app/components/TextWorkspace.vue:189 web/app/components/Workspace.vue:274
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:119
 msgid "Cut"
 msgstr "[Cût~]"
 
@@ -173,11 +205,11 @@ msgstr "[Cût~]"
 msgid "Dark Mode"
 msgstr "[Dàrk Môdé~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:158 web/app/components/TextWorkspace.vue:226 web/app/components/Workspace.vue:322
+#: web/app/lib/document-menus.ts:142
 msgid "Dark mode"
 msgstr "[Dàrk môdé~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:139 web/app/components/Workspace.vue:297 web/app/components/Workspace.vue:307
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:174 web/app/components/Workspace.vue:426 web/app/components/Workspace.vue:436
 msgid "Delete"
 msgstr "[Délété~~]"
 
@@ -185,7 +217,7 @@ msgstr "[Délété~~]"
 msgid "Delete From Server…"
 msgstr "[Délété Frôm Sérvér…~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:90 web/app/components/TextWorkspace.vue:160 web/app/components/Workspace.vue:245
+#: web/app/lib/document-menus.ts:80
 msgid "Delete from server…"
 msgstr "[Délété frôm sérvér…~~~~~~~~]"
 
@@ -201,11 +233,11 @@ msgstr "[Délété thé séléctéd rôws~~~~~~~~~~]"
 msgid "Do your last undone step again"
 msgstr "[Dô yôûr làst ûndôné stép àgàîn~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:185 web/app/components/TextWorkspace.vue:266 web/app/components/Workspace.vue:355
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:93 web/app/lib/document-menus.ts:188
 msgid "Documentation"
 msgstr "[Dôcûméntàtîôn~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:67 web/app/components/TextWorkspace.vue:142 web/app/components/Workspace.vue:227
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:69
 msgid "Download"
 msgstr "[Dôwnlôàd~~~]"
 
@@ -213,7 +245,7 @@ msgstr "[Dôwnlôàd~~~]"
 msgid "Download the document to this computer"
 msgstr "[Dôwnlôàd thé dôcûmént tô thîs cômpûtér~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:101 web/app/components/TextWorkspace.vue:171 web/app/components/Workspace.vue:256
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:153 web/app/components/TextWorkspace.vue:143 web/app/components/Workspace.vue:400
 msgid "Edit"
 msgstr "[Édît~~]"
 
@@ -225,23 +257,23 @@ msgstr "[Édît Téxt~~~~]"
 msgid "Edit This Style…"
 msgstr "[Édît Thîs Stylé…~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:133
+#: web/app/components/SlideWorkspace.vue:168
 msgid "Edit text"
 msgstr "[Édît téxt~~~~]"
 
-#: web/app/components/TextWorkspace.vue:215
+#: web/app/components/SlideWorkspace.vue:94 web/app/components/TextWorkspace.vue:170 web/app/components/Workspace.vue:307
 msgid "Edit this style…"
 msgstr "[Édît thîs stylé…~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:87 web/app/components/TextWorkspace.vue:157 web/app/components/Workspace.vue:242
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:79
 msgid "Export…"
 msgstr "[Éxpôrt…~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:60 web/app/components/TextWorkspace.vue:135 web/app/components/Workspace.vue:220
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:62
 msgid "File"
 msgstr "[Fîlé~~]"
 
-#: web/app/components/TextWorkspace.vue:233
+#: web/app/components/TextWorkspace.vue:184
 msgid "Flow"
 msgstr "[Flôw~~]"
 
@@ -249,7 +281,11 @@ msgstr "[Flôw~~]"
 msgid "Follow or override the system's light/dark setting"
 msgstr "[Fôllôw ôr ôvérrîdé thé systém's lîght/dàrk séttîng~~~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:142 web/app/components/TextWorkspace.vue:203 web/app/components/Workspace.vue:314
+#: web/app/components/Workspace.vue:296
+msgid "For the object you select"
+msgstr "[Fôr thé ôbjéct yôû séléct~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:177 web/app/components/TextWorkspace.vue:158 web/app/components/Workspace.vue:443
 msgid "Format"
 msgstr "[Fôrmàt~~]"
 
@@ -257,19 +293,23 @@ msgstr "[Fôrmàt~~]"
 msgid "Hand this document over to somebody else"
 msgstr "[Hànd thîs dôcûmént ôvér tô sômébôdy élsé~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:181 web/app/components/TextWorkspace.vue:262 web/app/components/Workspace.vue:351
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:134 web/app/lib/document-menus.ts:184
 msgid "Help"
 msgstr "[Hélp~~]"
 
-#: web/app/components/SidePanel.vue:123
+#: web/app/components/SidePanel.vue:151
 msgid "History"
 msgstr "[Hîstôry~~~]"
+
+#: web/app/components/SidePanel.vue:133
+msgid "History & Chat"
+msgstr "[Hîstôry & Chàt~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "History and Chat"
 msgstr "[Hîstôry ànd Chàt~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:149 web/app/components/TextWorkspace.vue:223 web/app/components/Workspace.vue:319
+#: web/app/lib/document-menus.ts:136
 msgid "History and chat"
 msgstr "[Hîstôry ànd chàt~~~~~~]"
 
@@ -277,11 +317,11 @@ msgstr "[Hîstôry ànd chàt~~~~~~]"
 msgid "How Do I…?"
 msgstr "[Hôw Dô Î…?~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:184 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:354
+#: web/app/components/HelpPanel.vue:106 web/app/lib/document-menus.ts:187
 msgid "How do I…?"
 msgstr "[Hôw dô Î…?~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:135
+#: web/app/components/SlideWorkspace.vue:170 web/app/components/Workspace.vue:414
 msgid "Image…"
 msgstr "[Îmàgé…~~]"
 
@@ -321,23 +361,23 @@ msgstr "[Însért à rôw àbôvé thé séléctîôn~~~~~~~~~~~~~]"
 msgid "Insert a row below the selection"
 msgstr "[Însért à rôw bélôw thé séléctîôn~~~~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:295
+#: web/app/components/Workspace.vue:424
 msgid "Insert above"
 msgstr "[Însért àbôvé~~~~~]"
 
-#: web/app/components/Workspace.vue:296
+#: web/app/components/Workspace.vue:425
 msgid "Insert below"
 msgstr "[Însért bélôw~~~~~]"
 
-#: web/app/components/Workspace.vue:305
+#: web/app/components/Workspace.vue:434
 msgid "Insert left"
 msgstr "[Însért léft~~~~]"
 
-#: web/app/components/Workspace.vue:306
+#: web/app/components/Workspace.vue:435
 msgid "Insert right"
 msgstr "[Însért rîght~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:245
+#: web/app/components/TextWorkspace.vue:196
 msgid "Insert sample text"
 msgstr "[Însért sàmplé téxt~~~~~~~]"
 
@@ -353,7 +393,7 @@ msgstr "[Însért thé clîpbôàrd wîthôût fôrmàttîng~~~~~~~~~~~~~~~~]"
 msgid "Leave Document…"
 msgstr "[Léàvé Dôcûmént…~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:86 web/app/components/TextWorkspace.vue:156 web/app/components/Workspace.vue:241
+#: web/app/lib/document-menus.ts:78
 msgid "Leave document…"
 msgstr "[Léàvé dôcûmént…~~~~~~]"
 
@@ -373,7 +413,7 @@ msgstr "[Màké à chéckpôînt ànd gîvé ît à nàmé~~~~~~~~~~~~~~]"
 msgid "Make a checkpoint of the document"
 msgstr "[Màké à chéckpôînt ôf thé dôcûmént~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:71 web/app/components/TextWorkspace.vue:146 web/app/components/Workspace.vue:231
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:73
 msgid "Manage"
 msgstr "[Mànàgé~~]"
 
@@ -381,7 +421,7 @@ msgstr "[Mànàgé~~]"
 msgid "Move the selection to the clipboard"
 msgstr "[Môvé thé séléctîôn tô thé clîpbôàrd~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:62 web/app/components/TextWorkspace.vue:137 web/app/components/Workspace.vue:222
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:64
 msgid "New"
 msgstr "[Néw~]"
 
@@ -393,19 +433,15 @@ msgstr "[Néw Shéét…~~~~]"
 msgid "New Slide"
 msgstr "[Néw Slîdé~~~~]"
 
-#: web/app/components/Workspace.vue:286
+#: web/app/components/Workspace.vue:413
 msgid "New sheet…"
 msgstr "[Néw shéét…~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:131
+#: web/app/components/SlideWorkspace.vue:166
 msgid "New slide"
 msgstr "[Néw slîdé~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
-msgid "No Styles Yet"
-msgstr "[Nô Stylés Yét~~~~~]"
-
-#: web/app/components/SlideWorkspace.vue:142 web/app/components/TextWorkspace.vue:206 web/app/components/Workspace.vue:314
+#: web/app/components/SlideWorkspace.vue:82 web/app/components/TextWorkspace.vue:161 web/app/components/Workspace.vue:292
 msgid "No styles yet"
 msgstr "[Nô stylés yét~~~~~]"
 
@@ -413,19 +449,27 @@ msgstr "[Nô stylés yét~~~~~]"
 msgid "Not available yet"
 msgstr "[Nôt àvàîlàblé yét~~~~~~~]"
 
+#: clients/linux/src/claudia_shell_gtk/connector.py:162
+msgid "Not connected: you did not trust this server's certificate."
+msgstr "[Nôt cônnéctéd: yôû dîd nôt trûst thîs sérvér's cértîfîcàté.~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/HelpPanel.vue:118
+msgid "Not finding it? Say"
+msgstr "[Nôt fîndîng ît? Sày~~~~~~~~]"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Open the chat with an empty prompt"
 msgstr "[Ôpén thé chàt wîth àn émpty prômpt~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:63 web/app/components/TextWorkspace.vue:138 web/app/components/Workspace.vue:223
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:65
 msgid "Open…"
 msgstr "[Ôpén…~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:235
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:186
 msgid "Page"
 msgstr "[Pàgé~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:120 web/app/components/TextWorkspace.vue:190 web/app/components/Workspace.vue:275
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:120
 msgid "Paste"
 msgstr "[Pàsté~~]"
 
@@ -433,7 +477,7 @@ msgstr "[Pàsté~~]"
 msgid "Paste As"
 msgstr "[Pàsté Às~~~]"
 
-#: web/app/components/SlideWorkspace.vue:123 web/app/components/TextWorkspace.vue:193 web/app/components/Workspace.vue:278
+#: web/app/lib/document-menus.ts:123
 msgid "Paste as"
 msgstr "[Pàsté às~~~]"
 
@@ -441,7 +485,7 @@ msgstr "[Pàsté às~~~]"
 msgid "Plain Text"
 msgstr "[Plàîn Téxt~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:128 web/app/components/TextWorkspace.vue:198 web/app/components/Workspace.vue:283
+#: web/app/lib/document-menus.ts:128
 msgid "Plain text"
 msgstr "[Plàîn téxt~~~~]"
 
@@ -453,11 +497,11 @@ msgstr "[Pût à sàmplé téxt întô thé dôcûmént tô try thé àssîstàn
 msgid "Quit"
 msgstr "[Qûît~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:112 web/app/components/TextWorkspace.vue:182 web/app/components/Workspace.vue:267
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:105
 msgid "Redo"
 msgstr "[Rédô~~]"
 
-#: web/app/components/SlideWorkspace.vue:112 web/app/components/TextWorkspace.vue:182 web/app/components/Workspace.vue:267
+#: web/app/lib/document-menus.ts:105
 msgid "Redo {label}"
 msgstr "[Rédô {label}~~~~~]"
 
@@ -477,19 +521,19 @@ msgstr "[Révîéw Thîs Pàràgràph~~~~~~~~]"
 msgid "Review This Text"
 msgstr "[Révîéw Thîs Téxt~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:243
+#: web/app/components/TextWorkspace.vue:194
 msgid "Review this paragraph"
 msgstr "[Révîéw thîs pàràgràph~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:242
+#: web/app/components/TextWorkspace.vue:193
 msgid "Review this text"
 msgstr "[Révîéw thîs téxt~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:292
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:421
 msgid "Row"
 msgstr "[Rôw~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:65 web/app/components/TextWorkspace.vue:140 web/app/components/Workspace.vue:225
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:67
 msgid "Save"
 msgstr "[Sàvé~~]"
 
@@ -497,7 +541,7 @@ msgstr "[Sàvé~~]"
 msgid "Save New Checkpoint…"
 msgstr "[Sàvé Néw Chéckpôînt…~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:66 web/app/components/TextWorkspace.vue:141 web/app/components/Workspace.vue:226
+#: web/app/lib/document-menus.ts:68
 msgid "Save new checkpoint…"
 msgstr "[Sàvé néw chéckpôînt…~~~~~~~~]"
 
@@ -505,11 +549,15 @@ msgstr "[Sàvé néw chéckpôînt…~~~~~~~~]"
 msgid "Save the document's content in Claudia's own format"
 msgstr "[Sàvé thé dôcûmént's côntént în Clàûdîà's ôwn fôrmàt~~~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:73 web/app/components/TextWorkspace.vue:148 web/app/components/Workspace.vue:233
+#: web/app/components/HelpPanel.vue:75
+msgid "Search help…"
+msgstr "[Séàrch hélp…~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:75
 msgid "Share…"
 msgstr "[Shàré…~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:170 web/app/components/TextWorkspace.vue:251 web/app/components/Workspace.vue:340
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:163
 msgid "Shortcuts"
 msgstr "[Shôrtcûts~~~~]"
 
@@ -525,13 +573,21 @@ msgstr "[Shôw ôr hîdé thé hîstôry ànd thé chàt~~~~~~~~~~~~~~~]"
 msgid "Show the text as pages instead of a flowing text"
 msgstr "[Shôw thé téxt às pàgés înstéàd ôf à flôwîng téxt~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:146 web/app/components/TextWorkspace.vue:222 web/app/components/Workspace.vue:318
+#: web/app/components/TextWorkspace.vue:180 web/app/lib/document-menus.ts:148
 msgid "Show who wrote what"
 msgstr "[Shôw whô wrôté whàt~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Start a new document"
 msgstr "[Stàrt à néw dôcûmént~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/window.py:159
+msgid "Starting {app}…"
+msgstr "[Stàrtîng {app}…~~~~~~]"
+
+#: web/app/components/SidePanel.vue:23
+msgid "Suggest first"
+msgstr "[Sûggést fîrst~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Take back your last step"
@@ -545,33 +601,77 @@ msgstr "[Tàké thé séléctéd ôbjéct ôff thé slîdé~~~~~~~~~~~~~~~]"
 msgid "Text Box"
 msgstr "[Téxt Bôx~~~]"
 
-#: web/app/components/SlideWorkspace.vue:134
+#: web/app/components/SlideWorkspace.vue:169
 msgid "Text box"
 msgstr "[Téxt bôx~~~]"
+
+#: web/app/components/SidePanel.vue:206
+msgid "Text documents: the AI suggests either way."
+msgstr "[Téxt dôcûménts: thé ÀÎ sûggésts éîthér wày.~~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:189
+msgid "That does not look like a Claudia server."
+msgstr "[Thàt dôés nôt lôôk lîké à Clàûdîà sérvér.~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:219
+msgid "That server runs {other}. This window is {this} — open it there."
+msgstr "[Thàt sérvér rûns {other}. Thîs wîndôw îs {this} — ôpén ît théré.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:230
+msgid "The certificate of {host} has expired. Ask its administrator to renew it."
+msgstr "[Thé cértîfîcàté ôf {host} hàs éxpîréd. Àsk îts àdmînîstràtôr tô rénéw ît.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/connector.py:146
+msgid "The certificate of {host} is not issued by an authority this computer trusts."
+msgstr "[Thé cértîfîcàté ôf {host} îs nôt îssûéd by àn àûthôrîty thîs cômpûtér trûsts.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/connection.py:232
+msgid "The certificate of {host} is not valid."
+msgstr "[Thé cértîfîcàté ôf {host} îs nôt vàlîd.~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "The colours of this document, by what each one means"
+msgstr "[Thé côlôûrs ôf thîs dôcûmént, by whàt éàch ôné méàns~~~~~~~~~~~~~~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "The keyboard shortcuts this app uses"
 msgstr "[Thé kéybôàrd shôrtcûts thîs àpp ûsés~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:166 web/app/components/TextWorkspace.vue:239 web/app/components/Workspace.vue:331
+#: clients/linux/src/claudia_shell_gtk/window.py:131
+msgid "This computer"
+msgstr "[Thîs cômpûtér~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:194 web/app/components/TextWorkspace.vue:190 web/app/components/Workspace.vue:453
 msgid "Tools"
 msgstr "[Tôôls~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:105 web/app/components/TextWorkspace.vue:175 web/app/components/Workspace.vue:260
+#: clients/linux/src/claudia_shell_gtk/servers.py:98
+msgid "Type the address of a server, such as demo.example.org:8420."
+msgstr "[Typé thé àddréss ôf à sérvér, sûch às démô.éxàmplé.ôrg:8420.~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:98
 msgid "Undo"
 msgstr "[Ûndô~~]"
 
-#: web/app/components/SlideWorkspace.vue:105 web/app/components/TextWorkspace.vue:175 web/app/components/Workspace.vue:260
+#: web/app/lib/document-menus.ts:98
 msgid "Undo {label}"
 msgstr "[Ûndô {label}~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/servers.py:149
+msgid "Use https:// — plain http is only allowed for this computer."
+msgstr "[Ûsé https:// — plàîn http îs ônly àllôwéd fôr thîs cômpûtér.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Version, authors and licence"
 msgstr "[Vérsîôn, àûthôrs ànd lîcéncé~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:144 web/app/components/TextWorkspace.vue:220 web/app/components/Workspace.vue:316
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:179 web/app/components/TextWorkspace.vue:178 web/app/components/Workspace.vue:445
 msgid "View"
 msgstr "[Vîéw~~]"
+
+#: web/app/components/SidePanel.vue:195
+msgid "When I ask the AI, in this document:"
+msgstr "[Whén Î àsk thé ÀÎ, în thîs dôcûmént:~~~~~~~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Write in the selected text box"
@@ -581,10 +681,14 @@ msgstr "[Wrîté în thé séléctéd téxt bôx~~~~~~~~~~~~]"
 msgid "Write to the assistant in the chat"
 msgstr "[Wrîté tô thé àssîstànt în thé chàt~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
-msgid "computes has no style system yet"
-msgstr "[cômpûtés hàs nô stylé systém yét~~~~~~~~~~~~~]"
+#: web/app/components/HelpPanel.vue:118
+msgid "in the chat."
+msgstr "[în thé chàt.~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
-msgid "creates has no style system yet"
-msgstr "[créàtés hàs nô stylé systém yét~~~~~~~~~~~~]"
+#: clients/linux/src/claudia_shell_gtk/app.py:127
+msgid "{app} cannot start yet"
+msgstr "[{app} cànnôt stàrt yét~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/app.py:130 clients/linux/src/claudia_shell_gtk/app.py:161
+msgid "{app} could not start its server"
+msgstr "[{app} côûld nôt stàrt îts sérvér~~~~~~~~~~~~~]"
