@@ -14,6 +14,9 @@ page, `tokens.css`).
 * The grid, a formula bar, undo/redo (per author, refused when a colleague wrote the same cell after you).
 * A panel docked on the right with the **history** (every command: who, what, when) and the **chat**; `@name`
   mentions people, `@ai` asks the assistant.
+  Above the chat box a switch, **Act at once | Suggest first**, says how the AI treats *your* requests in *this*
+  document (D262). It is kept in the browser (`lib/ai-mode.ts`, one key per server and document), is *suggest* until
+  you choose, and goes with every chat message as `ai_mode`; a colleague can choose differently.
 * Presence: other people's cursors and locks are outlined with their colour and name.
 * File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`) and make a new recovery key (`new_recovery_key`). A new document shows its recovery key once, before it opens (`created` in the answer to `hello`); "I forgot my password" on the start page comes in with it (`hello` with `recovery_key`).
 * A banner while the connection is lost; the app reconnects by itself and reloads what it shows.

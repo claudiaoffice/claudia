@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { clock, colorOf, inkOn } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 import type { BaseSession } from '~/lib/base-session'
+import type { AiMode } from '~/lib/ai-mode'
 
 const props = defineProps<{ session: BaseSession }>()
 const state = props.session.state
@@ -15,6 +16,13 @@ const history = ref<HTMLElement | null>(null)
 const chatLog = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
 const draft = ref('')
+
+/** The two ways the AI can treat a request (D262); text documents have no direct way yet, the AI suggests there. */
+const modes: { mode: AiMode; label: string }[] = [
+  { mode: 'act', label: t('Act at once') },
+  { mode: 'suggest', label: t('Suggest first') },
+]
+const suggestsOnly = computed(() => state.app === 'composes')
 
 // ------------------------------------------------------------------------------ the two tabs (E13.5; the chat/history
 // redesign discussed alongside the help system is deferred — this tab strip is the one piece of that discussion
@@ -183,6 +191,20 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
 
     <section class="chat">
       <h2>{{ t('Chat') }}</h2>
+      <div class="aiMode">
+        <span id="ai-mode-label">{{ t('When I ask the AI, in this document:') }}</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="ai-mode-label">
+          <button
+            v-for="m in modes"
+            :key="m.mode"
+            type="button"
+            role="radio"
+            :aria-checked="state.aiMode === m.mode"
+            @click="session.setAiMode(m.mode)"
+          >{{ m.label }}</button>
+        </div>
+        <small v-if="suggestsOnly">{{ t('Text documents: the AI suggests either way.') }}</small>
+      </div>
       <ol ref="chatLog" class="messages" aria-live="polite">
         <li v-if="!state.chat.length" class="empty">Write to everybody, or <b>@ai</b> to ask the assistant. Say <b>@ai help</b> to see what it can do.</li>
         <li
@@ -561,6 +583,40 @@ time {
   40% {
     opacity: 1;
   }
+}
+.aiMode {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.aiMode small {
+  font-size: 11px;
+}
+.segmented {
+  display: flex;
+  border: 1px solid var(--line-field);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.segmented button {
+  flex: 1;
+  padding: 6px 4px;
+  border: none;
+  border-left: 1px solid var(--line-field);
+  background: transparent;
+  color: var(--text);
+  font: 500 12px var(--font-ui);
+  cursor: pointer;
+}
+.segmented button:first-child {
+  border-left: none;
+}
+.segmented button[aria-checked='true'] {
+  background: var(--iris);
+  color: var(--paper);
 }
 .write {
   display: flex;

@@ -139,11 +139,17 @@ function server(link: FakeLink) {
   }
 }
 
-async function opened() {
+function memoryStorage() {
+  const map = new Map<string, string>()
+  return { getItem: (k: string) => map.get(k) ?? null, setItem: (k: string, v: string) => void map.set(k, v) }
+}
+
+async function opened(options: { storage?: ReturnType<typeof memoryStorage>; doc?: string } = {}) {
   const link = new FakeLink()
   server(link)
+  if (options.doc) link.welcome = { ...WELCOME, doc: options.doc }
   const links = [link]
-  const session = new Session(() => links.shift() ?? link, { retryDelays: [0] })
+  const session = new Session(() => links.shift() ?? link, { retryDelays: [0], storage: options.storage ?? memoryStorage() })
   await session.open()
   return { link, session }
 }
@@ -570,10 +576,43 @@ describe('doing things', () => {
     expect(session.state.notice?.text).toMatch(/ben/)
   })
 
-  it('sends chat as it is typed', async () => {
+  it('sends chat as it is typed, with how the person wants the AI to treat it', async () => {
     const { session, link } = await opened()
     await session.say('@ai hello')
-    expect(link.calls.find((c) => c.method === 'chat')!.params).toEqual({ text: '@ai hello' })
+    expect(link.calls.find((c) => c.method === 'chat')!.params).toEqual({ text: '@ai hello', ai_mode: 'suggest' })
+  })
+
+  it('lets the person choose act, from then on, and tells the server with every message', async () => {
+    const { session, link } = await opened()
+    expect(session.state.aiMode).toBe('suggest')
+    session.setAiMode('act')
+    expect(session.state.aiMode).toBe('act')
+    await session.say('@ai fill A1')
+    await session.say('hello everybody')
+    const sent = link.calls.filter((c) => c.method === 'chat').map((c) => c.params)
+    expect(sent).toEqual([
+      { text: '@ai fill A1', ai_mode: 'act' },
+      { text: 'hello everybody', ai_mode: 'act' },
+    ])
+  })
+
+  it('remembers the choice for this document in this browser, and not for another', async () => {
+    const storage = memoryStorage()
+    const first = await opened({ storage })
+    first.session.setAiMode('act')
+    const again = await opened({ storage })
+    expect(again.session.state.aiMode).toBe('act')
+    const elsewhere = await opened({ storage, doc: 'budget' })
+    expect(elsewhere.session.state.aiMode).toBe('suggest')
+  })
+
+  it('keeps the choice across a reconnect', async () => {
+    const { session, link } = await opened()
+    session.setAiMode('act')
+    link.drop(1006)
+    await session.settled()
+    expect(session.state.status).toBe('open')
+    expect(session.state.aiMode).toBe('act')
   })
 })
 
