@@ -93,9 +93,12 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   message that says what to do. Nothing leaves the machine. The questions of all documents wait in one queue and are
   answered one at a time, in order (`ModelRunner`); a document refuses more than four waiting questions. While the model
   works the event loop serves everybody else and the others see "ai is typing". A failure is answered in the chat
-  ("I could not answer: ..."), never silently. The model may ask for `set_cells`, `add_sheet` and `structure`
-  (it is told how in its prompt, built from the method table) and nothing else; each request that fails is reported
-  to the asker with the reason. It remembers the last six exchanges with each person while the document is loaded.
+  ("I could not answer: ..."), never silently. In a workbook the model may ask for `set_cells`, `add_sheet`,
+  `structure` and `resize_lines`; in a presentation (E7.9, D265) for `add_slide`, `add_object` (text boxes and
+  shapes), `set_text`, `set_paragraph_style`, `move_object`, `resize_object` and `remove_object`, and it reads
+  `slides`, `slide`, `shapes` and `styles` (`claudia_server.slide_lens`); it is told how in its prompt, built from
+  the method table, and may ask for nothing else (`apps.MODEL_METHODS`). Each request that fails is reported to the
+  asker with the reason. A presentation server without a model answers `@ai` that it has none. It remembers the last six exchanges with each person while the document is loaded.
   What is provisional: the prompt names the sheets but does not show cell contents yet (E7.5), and the answer is
   read as text with an optional fenced `commands` block (`claudia_ai.Agent`).
 * Restoring a checkpoint and switching lines are **not on the wire yet**: the rules for who may do that in a live

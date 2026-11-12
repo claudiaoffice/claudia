@@ -277,6 +277,14 @@
       "sections": [
         [
           {
+            "accelerators": [],
+            "checkable": false,
+            "id": "format.apply-style",
+            "kind": "page",
+            "label": "Apply Style\u2026",
+            "role": null
+          },
+          {
             "accelerators": [
               "<Shift>F10"
             ],
@@ -348,14 +356,6 @@
             "id": "tools.ask",
             "kind": "page",
             "label": "Ask the Assistant\u2026",
-            "role": null
-          },
-          {
-            "accelerators": [],
-            "checkable": false,
-            "id": "tools.example-budget",
-            "kind": "page",
-            "label": "Ask for an Example Budget",
             "role": null
           }
         ]

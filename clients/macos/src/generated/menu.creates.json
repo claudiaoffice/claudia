@@ -235,6 +235,14 @@
       "sections": [
         [
           {
+            "accelerators": [],
+            "checkable": false,
+            "id": "format.apply-style",
+            "kind": "page",
+            "label": "Apply Style\u2026",
+            "role": null
+          },
+          {
             "accelerators": [
               "<Shift>F10"
             ],

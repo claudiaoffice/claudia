@@ -161,7 +161,7 @@ def _model(folder: Path, name: str) -> Path:
 
 
 def test_the_ai_model_goes_to_the_app_that_can_use_it(tmp_path):
-    """``all --ai``: computes loads the model; composes and creates have no lens yet and keep the stand-in, and a
+    """``all --ai``: computes and creates load the model (E7.9); composes has no lens yet and keeps the stand-in, and a
     server that is handed one refuses to start (``--ai: the AI assistant does not know documents of this kind``)."""
     model = _model(tmp_path, "qwen-ov")
     servers = start.app_servers(start.parse_args(["all", "--ai", str(model), "--ai-device", "CPU"]))
@@ -169,7 +169,7 @@ def test_the_ai_model_goes_to_the_app_that_can_use_it(tmp_path):
     assert commands["computes"][commands["computes"].index("--ai") + 1] == str(model)
     assert commands["computes"][commands["computes"].index("--ai-device") + 1] == "CPU"
     assert "--ai" not in commands["composes"]
-    assert "--ai" not in commands["creates"]
+    assert commands["creates"][commands["creates"].index("--ai") + 1] == str(model)
     assert "qwen-ov" in start.guide(servers)
     assert "--ai" not in start.server_command(start.parse_args([])), "no model unless asked for"
 
@@ -195,7 +195,7 @@ def test_ai_without_a_folder_says_what_to_do_when_it_cannot_choose(tmp_path, mon
 
 
 def test_ai_is_refused_where_no_app_can_use_it(capsys):
-    for argv in (["composes", "--ai", "m"], ["creates", "--ai", "m"], ["--ai-device", "CPU"]):
+    for argv in (["composes", "--ai", "m"], ["--ai-device", "CPU"]):
         with pytest.raises(SystemExit):
             start.parse_args(argv)
         assert "--ai" in capsys.readouterr().err, argv

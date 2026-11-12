@@ -4,7 +4,6 @@
 import { computed, ref, watch } from 'vue'
 import { countWords } from '~/lib/blocks'
 import { toMarkdown } from '~/lib/markdown'
-import { SAMPLE_TEXT } from '~/lib/sample'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
 import type { StyleView } from '~/lib/style-css'
@@ -70,9 +69,33 @@ const words = computed(() => countWords(state.blocks))
 const openSuggestions = computed(() => state.suggestions.filter((s) => s.state === 'open').length)
 
 // ------------------------------------------------------------------------------ doing things
+/** The suggestion opened where it is marked (`SuggestionPopover.vue`), and where its card shows. */
+const opened = ref<{ id: string; x: number; y: number } | null>(null)
+
 function pick(id: string) {
   active.value = id
   editor.value?.scrollToSuggestion(id)
+  // Under its mark once the scroll has settled; in the middle of the text if the mark is not on screen.
+  setTimeout(() => {
+    const mark = document.querySelector<HTMLElement>(`[data-testid=text] [data-sug="${CSS.escape(id)}"]`)
+    const r = mark?.getBoundingClientRect()
+    opened.value = r ? { id, x: r.left, y: r.bottom + 6 } : { id, x: window.innerWidth / 3, y: window.innerHeight / 3 }
+  }, 250)
+}
+
+/** The bottom bar's count, and the card's "Next": the first open suggestion after `after`, in the order of the text. */
+function pickNext(after?: string) {
+  const open = state.suggestions.filter((s) => s.state === 'open')
+  const order = state.blocks.map((b) => b.id)
+  open.sort((a, b) => order.indexOf(a.block) - order.indexOf(b.block) || a.start - b.start)
+  const at = after ? open.findIndex((s) => s.id === after) : -1
+  const next = open[(at + 1) % Math.max(open.length, 1)]
+  if (next) pick(next.id)
+  else closeSuggestion()
+}
+function closeSuggestion() {
+  opened.value = null
+  active.value = null
 }
 
 /** File ▸ Export… (D212, D401): Markdown is built here from `state.blocks`, Word and OpenDocument text by the server. The window sends what is
@@ -97,11 +120,6 @@ async function resetPalette() {
 
 function closeStyleMenu() {
   styleMenu.value = null
-  editor.value?.focus()
-}
-
-function insertSample() {
-  session.paste(SAMPLE_TEXT)
   editor.value?.focus()
 }
 
@@ -193,11 +211,9 @@ const menus = computed<Menu[]>(() => {
     {
       label: t('Tools'),
       items: [
+        // Only the generic "Ask ai" (D126). The canned demo requests ("Review this text", "Review this paragraph") and
+        // "Insert sample text" were taken out at the owner's request (2026-11-12): demo props, not features.
         askItem(c, ask),
-        { id: 'tools.review-text', label: t('Review this text'), action: () => ask('@ai review this text') },
-        { id: 'tools.review-paragraph', label: t('Review this paragraph'), action: () => ask('@ai check this paragraph') },
-        { label: '', separator: true },
-        { id: 'tools.insert-sample', label: t('Insert sample text'), action: insertSample, disabled: readonly.value },
       ],
     },
     configMenu(c, { current: locale.value, choose }),
@@ -257,18 +273,18 @@ const SHORTCUT_NOTES: [string, string][] = [
       <StyleBar :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <TextEditor ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
-    <template #side-top><SuggestionList :session="session" :active="active" @pick="pick" /></template>
     <template #footer>
       <footer class="foot">
         <div class="stats mono" aria-live="polite">
           <span><b data-testid="words">{{ words }}</b> {{ words === 1 ? 'word' : 'words' }}</span>
           <span><b>{{ state.blocks.length }}</b> {{ state.blocks.length === 1 ? 'paragraph' : 'paragraphs' }}</span>
-          <span v-if="openSuggestions"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? 'suggestion' : 'suggestions' }}</span>
+          <button v-if="openSuggestions" type="button" class="sugs" data-testid="open-suggestions" title="Open the first suggestion" @click="pickNext()"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? 'suggestion' : 'suggestions' }}</button>
         </div>
         <span class="rev mono" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
       </footer>
     </template>
     <template #overlay>
+      <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
@@ -277,6 +293,16 @@ const SHORTCUT_NOTES: [string, string][] = [
 </template>
 
 <style scoped>
+.sugs {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
 .foot {
   display: flex;
   justify-content: space-between;

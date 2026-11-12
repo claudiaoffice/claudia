@@ -7,7 +7,7 @@ produced the current round is `qa-recommendations.md`. Stories are in `Projects/
 **Review rounds:** first 2026-11-02 at `f8df891`; second 2026-11-05 at `54d1245` ("E5 desktop clients: linux first
 draft"). Statuses below were re-checked against `54d1245` on 2026-11-05 — every item marked *verified open* or *verified
 fixed* was re-tested or re-read in that tree, not carried over on trust. Fourth round 2026-11-12 at `7e619a2` (all
-feature branches merged): new items UX-20 to UX-23, SEC-12 to SEC-17, PERF-08, PROC-09 to PROC-16, CODE-13 to CODE-15;
+feature branches merged): new items UX-20 to UX-23, SEC-12 to SEC-17, PERF-08, PROC-09 to PROC-16, CODE-13 to CODE-15 (and in the follow-up on `e56e8f9`: UX-24 to UX-27, PROC-17, CODE-16);
 the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-checked in that tree
 (`qa-recommendations.md`).
 
@@ -75,7 +75,11 @@ statement in the docs or on the website).
 | UX-20 | **P1** | UX / AI | The AI in computes does nothing and points at an act/suggest switch no client has | **fixed** 2026-11-12 |
 | UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **new, open** |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |
-| UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | **new, open** |
+| UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |
+| UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |
+| UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |
+| UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |
+| UX-27 | P3 | UX / creates | A new object lands exactly on the previous one, so the second hides the first | **new, open** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |
@@ -92,6 +96,7 @@ statement in the docs or on the website).
 | PROC-14 | P2 | Process / CI | Two web browser scripts fail on `main` (a stale selector, and UX-20) | **fixed** 2026-11-12 |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | **new, partly fixed** |
 | PROC-16 | P3 | Process / tests | The undo performance guard measured one sample and failed now and then | **fixed** 2026-11-12 |
+| PROC-17 | P2 | Process / CI | `web/e2e/demo.cjs` fails again once the client sends *suggest*: it never switched to *act* | **fixed** 2026-11-12 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |
@@ -107,6 +112,7 @@ statement in the docs or on the website).
 | CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | **new, open** |
 | CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | **new, open** |
 | CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
+| CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
@@ -1035,6 +1041,41 @@ keeps `~/.local/share/claudia/<app>/documents`. **Fix (agreed 2026-11-12).** `.c
 `.claudia/<app>/state` per checkout (ignored); `--dir DIR` means `DIR/<app>/…` always; old folders are named at start,
 never moved. Not changed: the server's own default state folder on Windows is `%APPDATA%` (roaming) while the Windows
 shell uses `%LOCALAPPDATA%`; and every server puts a `docs/` folder inside `--dir`, one level more than anybody expects.
+
+### UX-24 · A named style could not be applied to another text box from where people look for it · P1 · fixed 2026-11-12
+**Evidence (measured, `e56e8f9`, owner's report).** Restyle a text box, name the new style "Callout", select another
+text box: right-click ▸ Style… or Format ▸ Edit this style… opens the style popover, and clicking "Callout" there only
+*shows* its look (UX-14, as in composes) — nothing is applied, and a click on B next changes Callout everywhere. The
+only working way was Format ▸ Apply style ▸, which nobody found, because composes ("Body text ▾") and computes
+("Style ▾") have a picker in their bar and creates had none. **Fix (agreed).** `StylePicker` in creates' insert bar
+(`InsertBar.vue` has a slot for it, `SlideWorkspace.vue`): the selected object's main slot (a text box's words, a
+shape's outline, a picture's box), and a second picker "Label" for a shape's words (`objectStyleHost(styling,
+'label')`). The popover stays preview-only, consistent with the other apps. **Test:** `web/e2e/creates-styles.cjs`
+(the reported case, a shape's two pickers, the counts of UX-25).
+
+### UX-25 · All styles… counted uses with the selection's noun · P3 · fixed 2026-11-12
+"Body text … 1 shape" (used by a text box) whenever a shape was selected: `StylesDialog` used `host.noun` for every
+row. `StyleHost.usesNoun` ("object" for an object host) now names what the counts count.
+
+### UX-26 · The AI mode switch · P2 · fixed 2026-11-12
+**Evidence (owner's report, measured).** The segmented control used the page's `--text`, ink, on the always-dark
+panel: with *suggest* chosen, "Act at once" was ink on ink in the light theme. And it sat inside the chat section.
+**Fix.** Directly above the History & Chat | Help tabs, in the panel's own light inks (unchosen half ≥ 4.5:1, checked
+by `demo.cjs`), a real radio group (arrow keys, one tab stop).
+
+### UX-27 · A new object lands exactly on the previous one · P3 · new, open
+**Evidence (measured).** Text ▸ Text puts the second text box on the first; the browser scripts move them apart by
+dragging. **Fix.** Offset each new object by one grid step (or place it in the first free spot) when another object
+sits exactly there.
+
+### PROC-17 · `demo.cjs` fails once the client sends *suggest* · P2 · fixed 2026-11-12
+The switch (E7.7) made every client send *suggest* by default; computes cannot propose yet, so `@ai build an example
+budget` was refused and the script waited for "Done." in vain. It now chooses "Act at once" first and checks the switch.
+
+### CODE-16 · The macOS client's generated creates menu was stale · P2 · fixed 2026-11-12
+`clients/macos/src/generated/menu.creates.json` had no Format ▸ Apply Style… (the Linux manifest has had it); the
+Windows job runs `generate_menu.py --all --check`, but no job does that for macOS. Regenerated with this round's menu
+changes, and the `windows-client` job now runs the same `--check` for `clients/macos` (Python, no Mac needed).
 
 ## Website
 

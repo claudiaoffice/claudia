@@ -756,8 +756,8 @@ const menus = computed<Menu[]>(() => {
     {
       label: t('Tools'),
       items: [
+        // "Ask for an example budget" was a demo prop, taken out at the owner's request (2026-11-12, D126 keeps "Ask ai").
         askItem(c, ask),
-        { id: 'tools.example-budget', label: t('Ask for an example budget'), action: () => ask('@ai build an example budget') },
         { label: '', separator: true },
         { id: 'tools.names', label: t('Names…'), action: () => (dialog.value = 'names') },
         { id: 'tools.sql', label: t('SQL query…'), action: () => openSql(), disabled: readonly.value },

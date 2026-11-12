@@ -38,7 +38,8 @@ function edit(id: string) {
 }
 function count(id: string) {
   const n = uses.value[id] ?? 0
-  return `${n} ${n === 1 ? props.host.noun : `${props.host.noun}s`}`
+  const noun = props.host.usesNoun ?? props.host.noun
+  return `${n} ${n === 1 ? noun : `${noun}s`}`
 }
 </script>
 

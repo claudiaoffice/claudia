@@ -181,3 +181,24 @@ a test for it, Linux e2e wait, Python pin with a test, stale e2e selector). Beha
 the launcher's AI option and folder layout (CODE-15). Tests added: objects following text in composes, the server's
 default state folder and private files, the launcher's new options. Tracker: statuses re-checked, 22 new items. No
 other behaviour changed.
+
+---
+
+## Follow-up on `e56e8f9` (the same day): the owner's usability list
+
+Reviewed what had been merged: the security headers are this round's patch unchanged; the act/suggest switch
+(`SidePanel.vue`, `lib/ai-mode.ts`) works and is kept per person and document, but its unchosen half was ink on the
+dark panel (invisible in the light theme), it sat inside the chat, it was not a keyboard radio group, a comment and
+the E7.7 note still said a missing mode means *suggest*, and `demo.cjs` failed again because the client now sends
+*suggest* (UX-26, PROC-17). Fixed, together with the owner's list:
+
+| Asked for | Done |
+|---|---|
+| Creates styles broken: a named style could not be applied to another text box | A style picker in creates' bar like composes' and computes', plus a "Label" picker for a shape's words; All styles… counts "objects" (UX-24, UX-25); `web/e2e/creates-styles.cjs` |
+| Apply style in creates' Format menu like the other apps | The flyout was there and worked; what was missing was the bar picker above. The macOS client's generated creates menu lacked Apply Style… (CODE-16, now checked in CI) |
+| The AI agent in creates | Model-driven per E7.9/D265 (`slide_lens.py`, `MODEL_METHODS["creates"]`); without a model `@ai` says how to give it one; `./start.sh creates --ai`, `all --ai` |
+| Remove Insert sample text, Review this text / paragraph (composes), Ask for an example budget (computes) | Gone from the web menus, the native manifest and the generated Windows/macOS menus; D126 annotated |
+| AI switch directly above History & Chat \| Help, unchosen half visible | Done, contrast checked in `demo.cjs` |
+| Remove the Suggestions block above the tabs (composes) | Removed; a suggestion opens where it is marked in the text (card with Accept / Reject / Next), and the count in the bottom bar opens the first (`SuggestionPopover.vue`) |
+
+New, open: UX-27 (a new object lands exactly on the previous one).

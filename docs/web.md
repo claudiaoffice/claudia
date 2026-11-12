@@ -58,10 +58,11 @@ the paragraphs, the events that change them, where a caret or zone goes when som
   while they write there. Your own zone is held the same way.
 * **Who wrote what** (View ▸ Show who wrote what): runs coloured by author; text that came from a suggestion is
   dotted and says whose it was.
-* **The assistant only suggests** (D63). `@ai review this text` (or `check this paragraph`) makes suggestions; they are
-  listed above the history, marked in the text, and accepted or rejected by a person. Accepting is an ordinary edit by
-  the accepter. A suggestion whose text changed cannot be accepted any more.
-* Flow and Page views, Save as Markdown (current text only), Insert sample text (Tools) to try the assistant.
+* **The assistant suggests** in texts (D262: both modes suggest here for now). `@ai review this text` (or `check this
+  paragraph`) makes suggestions; they are marked in the text, and clicking a mark opens it: what would change and why,
+  with Accept and Reject (or Dismiss for a remark). The count in the bottom bar opens the first one. Accepting is an
+  ordinary edit by the accepter. A suggestion whose text changed cannot be accepted any more.
+* Flow and Page views, Save as Markdown (current text only).
 
 Known gaps: bold/italic and lists, windowing of very long texts (the whole text is loaded), an exact page layout
 (Page is a sheet with margins), input methods are minimal (the composed text is sent when composition ends), and each

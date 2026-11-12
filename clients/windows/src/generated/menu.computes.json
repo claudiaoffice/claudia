@@ -357,14 +357,6 @@
             "kind": "page",
             "label": "Ask the Assistant\u2026",
             "role": null
-          },
-          {
-            "accelerators": [],
-            "checkable": false,
-            "id": "tools.example-budget",
-            "kind": "page",
-            "label": "Ask for an Example Budget",
-            "role": null
           }
         ]
       ]

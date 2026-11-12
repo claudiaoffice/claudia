@@ -75,6 +75,9 @@ export interface StyleHost {
   /** Where alignment can also be "by content" (a cell, D318): the alignment a style really gives, undefined for
    * "by content". The editor then offers Auto beside left, centre, right and justify. */
   alignOf?(style: string): string | undefined
+  /** What the use counts of All styles… count, where that is not `noun`: on a slide the counts are of every kind of
+   * object, so “1 shape” beside Body text (used by a text box) was wrong whenever a shape was selected. */
+  usesNoun?: string
 }
 
 /** What a gallery offers for a slot (D316, `style-editor-two-slots.svg`): the styles of the slot's own kind, and

@@ -17,7 +17,7 @@ import {
   type DocumentMenuContext,
 } from '~/lib/document-menus'
 import { useI18n } from '~/lib/i18n'
-import { objectStyleHost } from '~/lib/object-style-host'
+import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
@@ -48,7 +48,7 @@ const EXPORT_FORMATS = [
 ]
 
 const readonly = computed(() => state.me.role === 'viewer')
-const styleHost = objectStyleHost({
+const styling: ObjectStyling = {
   get readOnly() {
     return session.readOnly
   },
@@ -76,7 +76,13 @@ const styleHost = objectStyleHost({
   renameStyle: (style, name) => session.renameStyle(style, name),
   checkCss: (text) => session.checkCss(text),
   setRole: (role, colour) => session.setRole(role, colour),
-})
+}
+/** The Format menu's and the bar's host: the slot an object is mostly styled by (a text box's words, a shape's
+ * outline, a picture's box). */
+const styleHost = objectStyleHost(styling)
+/** The bar's second picker, for a shape's words (D310: the outline and the label are two slots). */
+const labelHost = objectStyleHost(styling, 'label')
+const selectedKind = computed(() => (state.selected ? state.objects[state.selected]?.kind : undefined))
 
 /**
  * The Format menu (D300): Apply style ▸ with the styles that fit the selected object's slot — the one the style
@@ -232,7 +238,12 @@ const SHORTCUT_NOTES: [string, string][] = [
         @remove="remove"
         @undo="session.undo()"
         @redo="session.redo()"
-      />
+      >
+        <!-- Applying a style where composes and computes have it (owner's report, 2026-11-12): the popover only shows a
+             style's look (UX-14), so without this a named style could be applied only from Format ▸ Apply style. -->
+        <StylePicker :host="styleHost" :hint="'Shift+F10'" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
+        <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" caption="Label" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
+      </InsertBar>
     </template>
     <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
     <div v-else class="noslide">This presentation has no slide.</div>

@@ -23,6 +23,16 @@ const modes: { mode: AiMode; label: string }[] = [
   { mode: 'suggest', label: t('Suggest first') },
 ]
 const suggestsOnly = computed(() => state.app === 'composes')
+/** A radio group moves with the arrow keys and is one tab stop (WAI-ARIA radio group): the checked one. */
+function onModeKey(event: KeyboardEvent) {
+  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key]
+  if (!step) return
+  event.preventDefault()
+  const at = modes.findIndex((m) => m.mode === state.aiMode)
+  const next = modes[(at + step + modes.length) % modes.length]!
+  props.session.setAiMode(next.mode)
+  void nextTick(() => (event.currentTarget as HTMLElement | null)?.querySelector<HTMLElement>(`[data-mode="${next.mode}"]`)?.focus())
+}
 
 // ------------------------------------------------------------------------------ the two tabs (E13.5; the chat/history
 // redesign discussed alongside the help system is deferred — this tab strip is the one piece of that discussion
@@ -129,6 +139,25 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
   <aside class="panel" aria-label="document panel">
     <slot name="top" />
 
+    <!-- How the AI treats my requests here (D262): directly above the tabs, so it reads as a setting of the whole
+         panel rather than of one chat message (owner's request, 2026-11-12). -->
+    <div class="aiMode" data-testid="ai-mode">
+      <span id="ai-mode-label">{{ t('When I ask the AI, in this document:') }}</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="ai-mode-label" @keydown="onModeKey">
+        <button
+          v-for="m in modes"
+          :key="m.mode"
+          type="button"
+          role="radio"
+          :data-mode="m.mode"
+          :aria-checked="state.aiMode === m.mode"
+          :tabindex="state.aiMode === m.mode ? 0 : -1"
+          @click="session.setAiMode(m.mode)"
+        >{{ m.label }}</button>
+      </div>
+      <small v-if="suggestsOnly">{{ t('Text documents: the AI suggests either way.') }}</small>
+    </div>
+
     <div class="tabs" role="tablist">
       <button type="button" role="tab" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">{{ t('History & Chat') }}</button>
       <button type="button" role="tab" :aria-selected="tab === 'help'" :class="{ active: tab === 'help' }" @click="tab = 'help'">{{ t('Help') }}</button>
@@ -191,20 +220,6 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
 
     <section class="chat">
       <h2>{{ t('Chat') }}</h2>
-      <div class="aiMode">
-        <span id="ai-mode-label">{{ t('When I ask the AI, in this document:') }}</span>
-        <div class="segmented" role="radiogroup" aria-labelledby="ai-mode-label">
-          <button
-            v-for="m in modes"
-            :key="m.mode"
-            type="button"
-            role="radio"
-            :aria-checked="state.aiMode === m.mode"
-            @click="session.setAiMode(m.mode)"
-          >{{ m.label }}</button>
-        </div>
-        <small v-if="suggestsOnly">{{ t('Text documents: the AI suggests either way.') }}</small>
-      </div>
       <ol ref="chatLog" class="messages" aria-live="polite">
         <li v-if="!state.chat.length" class="empty">Write to everybody, or <b>@ai</b> to ask the assistant. Say <b>@ai help</b> to see what it can do.</li>
         <li
@@ -584,20 +599,24 @@ time {
     opacity: 1;
   }
 }
+/* The panel is dark in both themes (`.panel`: --ink), so these use the panel's own light inks, not the page's
+ * --text/--muted: with those the unchosen half was ink on ink, invisible in the light theme (owner's report). */
 .aiMode {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
-  font-size: 12px;
-  color: var(--muted);
+  gap: 5px;
+  padding: 10px 14px 4px;
+  font-size: 11.5px;
+  color: rgb(230 224 245 / 62%);
 }
 .aiMode small {
   font-size: 11px;
+  color: rgb(230 224 245 / 55%);
 }
 .segmented {
   display: flex;
-  border: 1px solid var(--line-field);
+  border: 1px solid rgb(231 225 244 / 28%);
   border-radius: 9px;
   overflow: hidden;
 }
@@ -605,18 +624,26 @@ time {
   flex: 1;
   padding: 6px 4px;
   border: none;
-  border-left: 1px solid var(--line-field);
+  border-left: 1px solid rgb(231 225 244 / 28%);
   background: transparent;
-  color: var(--text);
+  color: rgb(230 224 245 / 85%);
   font: 500 12px var(--font-ui);
   cursor: pointer;
 }
 .segmented button:first-child {
   border-left: none;
 }
+.segmented button:hover {
+  background: rgb(255 255 255 / 7%);
+  color: #fff;
+}
 .segmented button[aria-checked='true'] {
   background: var(--iris);
-  color: var(--paper);
+  color: #fff;
+}
+.segmented button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
 }
 .write {
   display: flex;

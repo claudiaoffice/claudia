@@ -8,7 +8,8 @@ import { computed, ref } from 'vue'
 import { menuCss } from '~/lib/style-css'
 import { galleryFor, type StyleHost } from '~/lib/style-host'
 
-const props = defineProps<{ host: StyleHost; hint?: string }>()
+/** `caption`: the word before the button (“Style”; creates' second picker on a shape says “Label”). */
+const props = withDefaults(defineProps<{ host: StyleHost; hint?: string; caption?: string; testid?: string }>(), { hint: undefined, caption: 'Style', testid: 'style-picker' })
 const emit = defineEmits<{ look: []; styled: [] }>()
 
 const at = ref<{ x: number; y: number } | null>(null)
@@ -35,7 +36,7 @@ function look() {
 
 <template>
   <div class="picker">
-    <span class="caption" aria-hidden="true">Style</span>
+    <span class="caption" aria-hidden="true">{{ caption }}</span>
     <button
       ref="button"
       class="btn"
@@ -43,8 +44,8 @@ function look() {
       aria-haspopup="listbox"
       :aria-expanded="!!at"
       :disabled="off"
-      :title="`Style: mark the ${host.noun} by what it is for`"
-      data-testid="style-picker"
+      :title="`${caption}: mark the ${host.noun} by what it is for`"
+      :data-testid="testid"
       @mousedown.prevent
       @click="toggle"
     >

@@ -62,8 +62,9 @@ APPS = tuple(MODELS)
 #: Where ``--ai`` without a folder looks for a model: one folder per model, converted for OpenVINO (ignored by git).
 MODELS_DIR = ROOT / "ai-models"
 #: The apps whose server can answer with a language model: an app needs a lens for that (``claudia_server.apps``).
-#: The others keep the scripted stand-in, and are not given the model (each server would load a copy of its own).
-AI_APPS = ("computes",)
+#: composes keeps its scripted stand-in and is not given the model. Each server loads a copy of its own (one AI server
+#: for all apps, D2, is not built yet), so ``all --ai`` needs the memory of the model twice.
+AI_APPS = ("computes", "creates")
 #: Loading a model of several GB before the server listens takes minutes on a slow disk, not seconds.
 AI_WAIT_SECONDS = 900.0
 #: How a model folder is made, for the message when there is none.
@@ -125,7 +126,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--tls", action="store_true", help="encrypt the connection (default: plain, localhost only)")
     parser.add_argument("--rebuild", action="store_true", help="build the web app again before starting")
     parser.add_argument("--no-browser", action="store_true", help="do not open the browser")
-    ai = parser.add_argument_group("AI model (computes; composes and creates keep the scripted stand-in)")
+    ai = parser.add_argument_group("AI model (computes and creates; composes keeps the scripted stand-in)")
     ai.add_argument(
         "--ai",
         nargs="?",

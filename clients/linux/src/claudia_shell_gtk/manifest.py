@@ -432,20 +432,8 @@ def composes() -> Manifest:
     tools_menu = Menu(
         "Tools",
         (
-            (
-                _page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),
-                _page("tools.review-text", "Review This Text", "Ask the assistant to suggest improvements"),
-                _page(
-                    "tools.review-paragraph", "Review This Paragraph", "Ask the assistant about the current paragraph"
-                ),
-            ),
-            (
-                _page(
-                    "tools.insert-sample",
-                    "Insert Sample Text",
-                    "Put a sample text into the document to try the assistant",
-                ),
-            ),
+            # Only the generic entry (D126): the canned demo requests and Insert Sample Text went (2026-11-12).
+            (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
         ),
     )
     return Manifest(
@@ -521,14 +509,8 @@ def computes() -> Manifest:
     tools_menu = Menu(
         "Tools",
         (
-            (
-                _page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),
-                _page(
-                    "tools.example-budget",
-                    "Ask for an Example Budget",
-                    "Ask the assistant to build an example budget",
-                ),
-            ),
+            # Only the generic entry (D126): "Ask for an Example Budget" was taken out (2026-11-12).
+            (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
         ),
     )
     return Manifest(

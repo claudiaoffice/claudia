@@ -145,6 +145,7 @@ jobs:
           URL=http://127.0.0.1:8766/ npm run e2e:composes
           URL=http://127.0.0.1:8766/ npm run e2e:styling
           URL=http://127.0.0.1:8767/ npm run e2e:slides
+          URL=http://127.0.0.1:8767/ npm run e2e:creates-styles
           pkill -f claudia_server || true
       # These two start (and restart) a server of their own, on ports the step above has freed.
       - name: Losing the server, and the recovery key
@@ -215,6 +216,11 @@ jobs:
       - name: The generated menu matches the shared manifest
         run: uv run --no-project python tools/generate_menu.py --all --check
       - run: uv run --no-project --with pytest python -m pytest tools/tests
+      # The macOS client's menu is generated the same way, and went stale unnoticed (CODE-16): the check is Python
+      # and needs no Mac, so it runs here.
+      - name: The macOS client's generated menu matches the shared manifest
+        working-directory: clients/macos
+        run: uv run --no-project python tools/generate_menu.py --all --check
 
   # The Linux client runs on the distribution's Python (3.12 on Ubuntu 24.04) with GTK from the distribution, while the
   # server it starts runs on 3.14 (clients/linux/README.md, "Two interpreters"). Its end-to-end test starts the real

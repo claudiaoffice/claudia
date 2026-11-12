@@ -442,8 +442,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return done !== false && done.saved
   }
 
-  /** Says `text` in the chat. The server needs to know, with every message, how the person wants the AI to treat it
-   *  if it is for the AI (D262): a server never guesses, and a message without a mode counts as *suggest*. */
+  /** Says `text` in the chat, with how the person wants the AI to treat it if it is for the AI (D262). Always sent:
+   *  a message without a mode means a client without the switch, which the server answers as *act* (UNSAID_MODE). */
   async say(text: string): Promise<boolean> {
     return (await this.attempt('chat', { text, ai_mode: this.state.aiMode })) !== false
   }

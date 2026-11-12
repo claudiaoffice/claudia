@@ -65,10 +65,12 @@ export function objectUses(bodies: ObjectBody[]): Record<string, number> {
   return counted
 }
 
-export function objectStyleHost(session: ObjectStyling): StyleHost {
+/** `fixedSlot`: a host that always works on that slot of the selection when it has one (creates' bar has one picker
+ * for a shape's outline and one for its label); without it the slot is the person's choice, as in the style menu. */
+export function objectStyleHost(session: ObjectStyling, fixedSlot?: string): StyleHost {
   const selected = () => session.selected
   // Which slot a person switched to; forgotten when the selection moves to an object that does not have it.
-  const chosen = ref<string | null>(null)
+  const chosen = ref<string | null>(fixedSlot ?? null)
   const slots = () => slotsOf(session.model, selected()?.kind)
   const slot = (): HostSlot | undefined => {
     const all = slots()
@@ -93,6 +95,7 @@ export function objectStyleHost(session: ObjectStyling): StyleHost {
     get noun() {
       return nounOf(selected()?.kind)
     },
+    usesNoun: 'object',
     get slots() {
       return slots()
     },
