@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // File ▸ Export… (D212). Picks a target file format and saves the document's current content to this computer in
-// it — Word, Excel or PowerPoint, or (composes only) plain Markdown — without tracked changes, history or chat.
+// it — Word, Excel, PowerPoint or OpenDocument, or (composes only) plain Markdown — without tracked changes, history or chat.
 // Claudia's own file format moved to File ▸ Download (`ExportDialog.vue`); this is the new home of "Export…".
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'

@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
  "Agent": {
   "class": [
    "object"
@@ -66,7 +66,7 @@
   "class": [
    "object"
   ],
-  "init": "(asker: 'str', text: 'str', context: 'str' = '', tools: 'tuple[ToolSpec, ...]' = (), history: 'Sequence[Message]' = ()) -> None",
+  "init": "(asker: 'str', text: 'str', context: 'str' = '', tools: 'tuple[ToolSpec, ...]' = (), history: 'Sequence[Message]' = (), exchange: 'Sequence[Message]' = ()) -> None",
   "methods": {},
   "properties": []
  },
@@ -82,7 +82,7 @@
   "class": [
    "object"
   ],
-  "init": "(name: 'str', signature: 'str', summary: 'str') -> None",
+  "init": "(name: 'str', signature: 'str', summary: 'str', kind: 'str' = 'change') -> None",
   "methods": {},
   "properties": []
  },
@@ -90,7 +90,7 @@
   "class": [
    "object"
   ],
-  "init": "(say: 'str' = '', calls: 'list[ToolCall]' = <factory>, problems: 'list[str]' = <factory>) -> None",
+  "init": "(say: 'str' = '', calls: 'list[ToolCall]' = <factory>, problems: 'list[str]' = <factory>, raw: 'str' = '') -> None",
   "methods": {},
   "properties": []
  }

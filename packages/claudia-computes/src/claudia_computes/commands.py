@@ -18,9 +18,18 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import AddObject, Batch, Command, Context, ForgetDiagram
+from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagram, fits
 
-from .events import CellsChanged, ChartsChanged, LinesResized, SheetsChanged, StructureChanged
+from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
+from .events import (
+    CellsChanged,
+    CellStylesChanged,
+    ChartsChanged,
+    LinesResized,
+    NamesChanged,
+    SheetsChanged,
+    StructureChanged,
+)
 from .formula import parse_formula
 from .formula.rewrite import adjusted
 from .model import (
@@ -168,8 +177,12 @@ class RemoveSheet(Command):
         for obj in objects:
             model.delete_object(obj.id)
         model.close_container(str(self.id))
-        restores = model.drop_sheet(self.id)  # formulas elsewhere that pointed here, as they were
+        restores, name_restores = model.drop_sheet(
+            self.id
+        )  # formulas elsewhere that pointed here, and names, as they were
         ctx.emit(SheetsChanged())
+        if name_restores:
+            ctx.emit(NamesChanged())
         undo: list[Command] = [AddSheet(sheet.id, sheet.name, index)]
         if cells:
             undo.append(SetCells(sheet.id, cells))
@@ -177,8 +190,16 @@ class RemoveSheet(Command):
             undo.append(ResizeLines(sheet.id, "row", row_heights))
         if col_widths:
             undo.append(ResizeLines(sheet.id, "col", col_widths))
+        undo.extend(
+            SetCellStyle(sheet.id, slot, layer, (r0, c0, r1, c1), (((r0, c0, r1, c1), style),))
+            for slot, layer, r0, c0, r1, c1, style in sheet.cell_styles.to_data()
+        )
         undo.extend(AddObject(obj.body, obj.anchor.to_data(), place) for place, obj in enumerate(objects))
         undo.extend(SetCells(other, tuple(sorted(items))) for other, items in restores.items())
+        if name_restores:  # (after the sheet is back: a name needs its sheet)
+            from .name_commands import RestoreNames
+
+            undo.append(RestoreNames(tuple(reversed(name_restores))))
         return undo[0] if len(undo) == 1 else Batch(tuple(undo))
 
     def to_data(self) -> dict:
@@ -229,11 +250,20 @@ class SetCells(Command):
             _check_position(row, col)
         previous = tuple((r, c, sheet.cells.get((r, c))) for r, c, _ in self.cells)
         model = ctx.model
+        model.check_writable(sheet, [(r, c) for r, c, _ in self.cells])
         final = {(r, c): model.store(sheet, r, c, content) for r, c, content in self.cells}  # later duplicates win
+        model.header_edited(self.sheet, list(final))  # (formulas that name a table's columns read the new headers)
+        grown = model.grow_names(self.sheet, [position for position, v in final.items() if v is not None])
         # Formulas are told by ``settle``, with the value they give; the event here carries what needs no calculating.
         shown = tuple((r, c, v) for (r, c), v in final.items() if v is None or v["t"] != "formula")
         ctx.emit(CellsChanged(self.sheet, frozenset(final), shown))
-        return SetCells(self.sheet, tuple(reversed(previous)))  # reversed: later duplicates restore first
+        undo = SetCells(self.sheet, tuple(reversed(previous)))  # reversed: later duplicates restore first
+        if not grown:
+            return undo
+        from .name_commands import RestoreNames  # (a table that took in the new rows lets them go again)
+
+        ctx.emit(NamesChanged())
+        return Batch((undo, RestoreNames(tuple(grown))))
 
     def to_data(self) -> dict:
         return {"sheet": self.sheet, "cells": [[r, c, content] for r, c, content in self.cells]}
@@ -308,7 +338,7 @@ class Structure(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         edit = self.edit
-        destroyed, restores, destroyed_sizes = ctx.model.restructure(edit)
+        destroyed, restores, destroyed_sizes, cut_styles, name_restores = ctx.model.restructure(edit)
         ctx.emit(StructureChanged(edit))
         undo = Structure(_OPPOSITE[type(edit)](edit.sheet, edit.at, edit.count))
         # Deleted cells come back, and so do the formulas that pointed at them, as they were typed.
@@ -318,6 +348,17 @@ class Structure(Command):
         ]
         if destroyed_sizes:  # the deleted lines' own sizes, which a reference can't bring back
             sets.append(ResizeLines(edit.sheet, edit.axis, destroyed_sizes))
+        # The style ranges that lay on the deleted lines, put back where the lines come back (E6.13, D307).
+        sets.extend(
+            SetCellStyle(edit.sheet, slot, layer, area, ((area, style),)) for slot, layer, (area, style) in cut_styles
+        )
+        if cut_styles:
+            ctx.emit(CellStylesChanged(edit.sheet, (0, 0, MAX_ROWS - 1, MAX_COLS - 1)))
+        if name_restores:  # names that moved or went, as they were (last: they are about the cells put back above)
+            from .name_commands import RestoreNames
+
+            ctx.emit(NamesChanged())
+            sets.append(RestoreNames(tuple(reversed(name_restores))))
         return Batch((undo, *sets)) if sets else undo
 
     def to_data(self) -> dict:
@@ -361,6 +402,118 @@ class Structure(Command):
 
     def redacted(self) -> Command:
         return self
+
+
+# ------------------------------------------------------------------------------ cell styles
+def _area_name(area: Area) -> str:
+    r0, c0, r1, c1 = area
+    layer = layer_of(area)
+    if layer == "sheet":
+        return "the whole sheet"
+    if layer == "column":
+        first, last = column_name(c0), column_name(c1)
+        return f"column {first}" if c0 == c1 else f"columns {first}:{last}"
+    if layer == "row":
+        return f"row {r0 + 1}" if r0 == r1 else f"rows {r0 + 1}:{r1 + 1}"
+    start = f"{column_name(c0)}{r0 + 1}"
+    return start if (r0, c0) == (r1, c1) else f"{start}:{column_name(c1)}{r1 + 1}"
+
+
+@register
+@dataclass(frozen=True)
+class SetCellStyle(Command):
+    """Make ``area`` of one slot and layer of a sheet's style ranges hold exactly ``pieces`` (E6.13, D307, D311).
+
+    The ordinary case is one piece, the area itself, and a style: "these cells are Header" in the ``box`` or the
+    ``words`` slot (:meth:`put`). No piece clears the area, so the layers below show through. The inverse is the
+    same command with the pieces the area held before, which is also how a row delete's undo puts styles back.
+    Every style must exist and fit the slot of a cell (D304, D316)."""
+
+    kind: ClassVar[str] = "computes.SetCellStyle"
+    sheet: SheetId
+    slot: str
+    layer: str
+    area: Area
+    pieces: tuple[Piece, ...]
+
+    @classmethod
+    def put(cls, sheet: SheetId, slot: str, area: Area, style: str | None) -> SetCellStyle:
+        """Put ``style`` into the layer of ``area``'s shape only (``None``: no style of this layer there). What a
+        person does is :meth:`applying`, where the last action wins."""
+        return cls(sheet, slot, layer_of(area), area, () if style is None else ((area, style),))
+
+    @classmethod
+    def applying(cls, model: WorkbookModel, sheet: SheetId, slot: str, area: Area, style: str | None) -> Command:
+        """What styling ``area`` in ``slot`` means to a person: every cell of it takes ``style``, whatever was there
+        before — the last action wins (D317). One step, undone as one. ``None`` clears ``area`` so that what lies
+        beneath shows through (“Clear cell style”)."""
+        plan = model.sheet(sheet).cell_styles.plan(slot, check_area(area), style)
+        steps = [cls(sheet, slot, layer, where, pieces) for layer, where, pieces in plan]
+        return steps[0] if len(steps) == 1 else Batch(tuple(steps), "Cell style")
+
+    @property
+    def label(self) -> str:
+        return "Cell style"
+
+    @property
+    def summary(self) -> str:
+        styles = sorted({style for _, style in self.pieces})
+        what = ", ".join(styles) if styles else "no style"
+        return f"{_area_name(self.area)} {self.slot}: {what}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        sheet = model.sheet(self.sheet)
+        area = check_area(self.area)
+        if self.slot not in CELL_SLOTS:
+            raise ValueError(f"a cell has no slot “{self.slot}”; it has {', '.join(CELL_SLOTS)}")
+        if self.layer not in LAYERS:
+            raise ValueError(f"there is no layer {self.layer!r}; there are {', '.join(LAYERS)}")
+        slot = SLOTS.slot("cell", self.slot)
+        for _, style_id in self.pieces:
+            if style_id not in model.styles:
+                raise ValueError(f"no style {style_id!r}")
+            style = model.styles.get(style_id)
+            if not fits(style.kind, slot):
+                raise ValueError(
+                    f"“{style.name}” is a {style.kind} style and cannot be put into the {self.slot} of a cell"
+                )
+        before = sheet.cell_styles.pieces(self.slot, self.layer, area)
+        sheet.cell_styles.replace(self.slot, self.layer, area, self.pieces)
+        ctx.emit(CellStylesChanged(self.sheet, area))
+        return SetCellStyle(self.sheet, self.slot, self.layer, area, before)
+
+    def to_data(self) -> dict:
+        return {
+            "sheet": self.sheet,
+            "slot": self.slot,
+            "layer": self.layer,
+            "area": list(self.area),
+            "pieces": [[*area, style] for area, style in self.pieces],
+        }
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetCellStyle:
+        pieces = tuple(((r0, c0, r1, c1), style) for r0, c0, r1, c1, style in data["pieces"])
+        return cls(SheetId(data["sheet"]), data["slot"], data["layer"], tuple(data["area"]), pieces)
+
+    def regions(self, model) -> tuple[CellRegion, ...]:
+        r0, c0, r1, c1 = self.area
+        return (CellRegion.of(self.sheet, r0, c0, r1, c1),)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        if isinstance(other, Structure) and other.edit.sheet == self.sheet:
+            return None  # the cells moved under the style: undoing by position would style the wrong cells
+        if isinstance(other, SetCellStyle) and (other.sheet, other.slot) == (self.sheet, self.slot):
+            a, b = self.area, other.area
+            if other.layer == self.layer and a[0] <= b[2] and b[0] <= a[2] and a[1] <= b[3] and b[1] <= a[3]:
+                return None  # a colleague styled some of the same cells after us
+        if isinstance(other, RemoveSheet) and other.id == self.sheet:
+            return None
+        return self
+
+    def redacted(self) -> Command:
+        return self  # a style name is a name the document's own style book carries anyway
 
 
 # ------------------------------------------------------------------------------ layout

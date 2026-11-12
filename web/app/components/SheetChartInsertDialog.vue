@@ -11,6 +11,7 @@
 // inserting again — there is no "move" action, same as before either revision.
 import { computed, onMounted, ref, watch } from 'vue'
 import { show } from '~/lib/cells'
+import { nameAt, purposeLabel, referLabel, visibleNames, type NameInfo } from '~/lib/names'
 import { chartRange, type Session } from '~/lib/session'
 
 const props = defineProps<{
@@ -24,6 +25,14 @@ const props = defineProps<{
 const emit = defineEmits<{ close: []; inserted: [objectId: string | null, chartId: string | null] }>()
 
 const name = ref('Chart')
+// Where the chart reads from (E6.5, mock 6): the cells that are selected, or the table or query result of a name — which
+// the chart follows as it grows or moves. A selection that is exactly a name starts as that name.
+const sources = computed(() => visibleNames(props.session.state.names, props.sheet).filter((n) => n.header && n.region !== null))
+const picked = ref<string | null>(
+  nameAt(props.session.state.names, props.sheet, props.range.r0, props.range.c0, props.range.r1, props.range.c1)?.name ?? null,
+)
+const source = computed<NameInfo | null>(() => sources.value.find((n) => n.name === picked.value) ?? null)
+const onNamed = computed(() => source.value !== null)
 const seriesIn = ref<'columns' | 'rows'>('columns')
 const headerRow = ref(true)
 const title = ref('')
@@ -35,8 +44,8 @@ const placement = ref<'tab' | 'object'>('tab')
 const busy = ref(false)
 const error = ref('')
 
-const multiRow = computed(() => props.range.r1 > props.range.r0)
-const multiCol = computed(() => props.range.c1 > props.range.c0)
+const multiRow = computed(() => (source.value ? true : props.range.r1 > props.range.r0))
+const multiCol = computed(() => (source.value ? source.value.columns.length > 1 : props.range.c1 > props.range.c0))
 /** The first data column — the one past the category column, when there's room for a category column at all
  * (`chart_figure`'s own convention: a header *column* always goes by the range's shape). */
 const dataCol0 = computed(() => props.range.c0 + (multiCol.value ? 1 : 0))
@@ -48,6 +57,13 @@ const canSubmit = computed(() => (placement.value !== 'tab' || name.value.trim()
  * it never clobbers something already typed. Needs the header row's own cells loaded, which they usually are
  * already (the person just selected them), but `ensure` makes that true rather than assumed. */
 async function autofillTitles() {
+  if (source.value) {
+    // a table has its column names already
+    const [first, second] = source.value.columns
+    if (!xTitle.value.trim() && first) xTitle.value = first.name
+    if (!yTitle.value.trim() && second) yTitle.value = second.name
+    return
+  }
   if (!multiRow.value) return
   await props.session.ensure(props.sheet, props.range.r0, props.range.r0, props.range.c0, props.range.c1)
   const x = show(props.session.cell(props.sheet, props.range.r0, props.range.c0))
@@ -56,20 +72,28 @@ async function autofillTitles() {
   if (!yTitle.value.trim() && y) yTitle.value = y
 }
 onMounted(() => {
-  if (headerRow.value) void autofillTitles()
+  if (headerRow.value || source.value) void autofillTitles()
 })
 watch(headerRow, (now) => {
   if (now) void autofillTitles()
+})
+watch(picked, () => {
+  xTitle.value = ''
+  yTitle.value = ''
+  void autofillTitles()
 })
 
 async function submit() {
   if (!canSubmit.value) return
   busy.value = true
   error.value = ''
+  const where = source.value
+    ? { source: source.value.name, source_scope: source.value.scope }
+    : { range: chartRange(props.sheet, props.range.r0, props.range.c0, props.range.r1, props.range.c1) }
   const draft = {
-    range: chartRange(props.sheet, props.range.r0, props.range.c0, props.range.r1, props.range.c1),
+    ...where,
     series_in: seriesIn.value,
-    header_row: headerRow.value,
+    header_row: source.value ? true : headerRow.value,
     title: title.value.trim(),
     x_title: xTitle.value.trim(),
     y_title: yTitle.value.trim(),
@@ -93,7 +117,31 @@ async function submit() {
 <template>
   <Modal title="Insert chart" :width="520" @close="emit('close')">
     <form class="form" @submit.prevent="submit">
-      <p class="hint">
+      <fieldset class="field kinds" aria-label="chart type">
+        <legend>Chart</legend>
+        <span class="kind on">Bar</span>
+        <span class="kind soon" aria-disabled="true">Line · soon</span>
+        <span class="kind soon" aria-disabled="true">Scatter · soon</span>
+      </fieldset>
+      <fieldset class="field sourcelist" data-testid="chart-source">
+        <legend>Data from</legend>
+        <label v-for="n in sources" :key="`${n.scope}:${n.name}`" class="radio source" :class="{ on: picked === n.name }">
+          <input v-model="picked" type="radio" :value="n.name" >
+          <span class="mono strong">{{ n.name }}</span>
+          <span v-if="n.kind === 'result'" class="badge">SQL</span>
+          <span class="dim">{{ referLabel(n) }} · {{ n.rows }} rows · {{ purposeLabel(n.purpose) }}</span>
+        </label>
+        <label class="radio source" :class="{ on: picked === null }">
+          <input v-model="picked" type="radio" :value="null" >
+          <span>Pick cells instead…</span>
+          <span class="dim">the selection, as it is now</span>
+        </label>
+      </fieldset>
+      <p v-if="onNamed" class="hint">
+        Bar chart of <strong class="mono">{{ picked }}</strong>: it follows the table as rows are added, and as a query result changes size.
+        <template v-if="multiCol">The first column is read as category names.</template>
+      </p>
+      <p v-else class="hint">
         Bar chart over <strong>{{ range.r1 - range.r0 + 1 }}</strong> rows × <strong>{{ range.c1 - range.c0 + 1 }}</strong> columns.
         <template v-if="multiCol">The first column is read as category or series names.</template>
         <template v-else>Only one column — no room for a header there; a label is made up.</template>
@@ -115,11 +163,12 @@ async function submit() {
         </fieldset>
         <div class="field">
           <label class="check" :class="{ disabled: !multiRow }">
-            <input v-model="headerRow" type="checkbox" :disabled="!multiRow" >
+            <input v-model="headerRow" type="checkbox" :disabled="!multiRow || onNamed" >
             First row is a header
           </label>
           <p class="subhint">
-            <template v-if="multiRow">Off reads every row as data — no row is skipped. On fills the axis titles below, for a field still blank.</template>
+            <template v-if="onNamed">A table always has its header row.</template>
+            <template v-else-if="multiRow">Off reads every row as data — no row is skipped. On fills the axis titles below, for a field still blank.</template>
             <template v-else>Only one row — no room for a header there either.</template>
           </p>
         </div>
@@ -179,6 +228,54 @@ fieldset.field legend {
 .check.disabled,
 .field.disabled {
   color: var(--muted);
+}
+fieldset.field.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.kind {
+  padding: 4px 12px;
+  border: 1px solid var(--line-field);
+  border-radius: 999px;
+  font-size: 12px;
+}
+.kind.on {
+  border-color: var(--app);
+  box-shadow: 0 0 0 1px var(--app);
+}
+.kind.soon {
+  color: var(--muted);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+.sourcelist {
+  max-height: 170px;
+  overflow: auto;
+}
+.source {
+  flex-wrap: wrap;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.source.on {
+  border-color: var(--app);
+  box-shadow: 0 0 0 1px var(--app);
+}
+.strong {
+  font-weight: 600;
+}
+.dim {
+  color: var(--muted);
+  font-size: 12px;
+}
+.badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--purpose-result);
+  font-size: 10px;
 }
 .subhint {
   margin: 4px 0 0;

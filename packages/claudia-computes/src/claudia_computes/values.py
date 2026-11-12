@@ -19,8 +19,10 @@ NA = "#N/A"
 NULL = "#NULL!"
 SYNTAX = "#ERROR!"  # the text is not a formula at all
 CIRC = "#CIRC!"  # the formula depends on itself
+SPILL = "#SPILL!"  # a result that fills cells has something in its way
+SQL = "#SQL!"  # a query was refused or failed
 
-ERROR_CODES = frozenset({DIV0, VALUE, NAME, REF, NUM, NA, NULL, SYNTAX, CIRC})
+ERROR_CODES = frozenset({DIV0, VALUE, NAME, REF, NUM, NA, NULL, SYNTAX, CIRC, SPILL, SQL})
 INT_LIMIT = 2**53  # beyond this a float holds the number as exactly as a person can use it
 
 

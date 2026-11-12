@@ -25,7 +25,12 @@ export function chartRange(sheet: string, r0: number, c0: number, r1: number, c1
 /** The fields a person edits in the insert/properties dialog; `defineDiagram`/`updateDiagram` add `kind` (bar
  * only so far, E6.6) and send this straight on — the id and format are the server's to assign (`computes.py`). */
 export interface ChartDraft {
-  range: ChartRange
+  /** The cells to draw — or, instead, `source` names a table or query result to follow (E6.5): one of the two. */
+  range?: ChartRange
+  /** The name of a named range, table or `SQL()` result the chart reads live, and `source_scope` the sheet it is
+   * scoped to (`null` for a workbook-wide name). */
+  source?: string
+  source_scope?: string | null
   series_in: 'columns' | 'rows'
   /** Whether the range's first row is a header (the series' names, or the category labels when `series_in` is
    * "rows") rather than a row of data like every other — on by default, matching the usual "select your data

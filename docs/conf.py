@@ -25,7 +25,7 @@ autodoc_default_options = {"members": True, "undoc-members": False, "show-inheri
 nitpicky = True
 # Standard-library types are not linked (the build needs no network); everything of ours must resolve.
 nitpick_ignore_regex = [
-    (r"py:.*", r"(typing|collections\.abc|abc|builtins|enum|datetime)\..*"),
+    (r"py:.*", r"(typing|collections|collections\.abc|abc|builtins|enum|datetime)\..*"),
     # TypeVars and type parameters: M (DocumentModel), A (the anchor of VisualObject/ObjectModel)
     (r"py:class", r"abc\.ABC|M|A"),
     (r"py:class", r"'Mapping\[str"),  # (Sphinx cannot split the quoted Mapping[str, int])
@@ -33,6 +33,8 @@ nitpick_ignore_regex = [
     (r"py:class", r"(Callable|dict|list|tuple)\[.*"),
     # standard library and FastAPI types in signatures (no network for intersphinx)
     (r"py:class", r"(os|pathlib|ssl)\.\w+|(fastapi|starlette)\..*"),
+    # lxml's element type in the signatures of claudia-odf-io (no network for intersphinx)
+    (r"py:class", r"lxml\..*"),
     # the Linux client's connector: the TypeVar of its worker alias
     (r"py:class", r"claudia_shell_gtk\.connector\.T"),
     # WorkerPool.submit's own TypeVar/ParamSpec (P, R): not a class to link to

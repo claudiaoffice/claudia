@@ -200,9 +200,37 @@ def test_export_office_returns_xlsx_bytes_that_round_trip(book):
     assert [s.name for s in reloaded.sheets.values()] == ["Costs"]
 
 
+def test_export_office_returns_an_ods_that_round_trips_with_its_values_and_says_who_made_it_when(book):
+    from claudia_computes_io import ods_to_workbook
+
+    from claudia_odf_io import problems, read_info
+    from claudia_opc_io import read_parts
+
+    call(book, "add_sheet", {"name": "Costs"})
+    typed(book, "s1", [(0, 0, "2"), (0, 1, "=A1*3"), (0, 2, "words")])
+    answer = call(book, "export_office", {"format": "ods"})
+    assert answer["format"] == "ods"
+    assert answer["content_type"] == "application/vnd.oasis.opendocument.spreadsheet"
+    raw = base64.b64decode(answer["data"])
+    assert problems(raw) == []
+    reloaded = ods_to_workbook(raw)
+    sheet = reloaded.sheets["s1"]
+    assert [s.name for s in reloaded.sheets.values()] == ["Costs"]
+    assert sheet.cells[(0, 1)] == {"t": "formula", "v": "=A1*3"} and sheet.grid[(0, 1)] == 6
+    info = read_info(read_parts(raw)["meta.xml"])
+    assert info.creator == "ann" and info.modifier == "ann"
+    assert info.created and info.modified
+    assert answer["losses"] == []
+
+
+def test_export_office_to_xlsx_has_no_loss_list(book):
+    call(book, "add_sheet", {"name": "Costs"})
+    assert "losses" not in call(book, "export_office", {"format": "xlsx"})
+
+
 def test_export_office_rejects_an_unknown_format(book):
     with pytest.raises(RequestError):
-        call(book, "export_office", {"format": "ods"})
+        call(book, "export_office", {"format": "numbers"})
 
 
 # ------------------------------------------------------------------ row heights and column widths (D135)

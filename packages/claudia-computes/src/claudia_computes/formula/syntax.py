@@ -41,8 +41,10 @@ from .nodes import (
     Percent,
     Ref,
     Str,
+    TableRef,
     Unary,
 )
+from .tablespec import SpecError, parse_spec
 
 MAX_LENGTH = 8192  # characters, like Excel
 MAX_DEPTH = 64  # nested brackets and signs, like Excel's nesting of functions
@@ -51,18 +53,21 @@ DYNAMIC_FUNCTIONS = frozenset({"OFFSET", "INDIRECT"})  # read cells that the tex
 SheetIds = Callable[[str], SheetId | None]
 
 _SHEET = r"(?:'(?:[^']|'')+'|[A-Za-z_][A-Za-z0-9_.]*)!"
+_IDENT = r"[^\W\d][\w.]*"  # a name: letters of any alphabet, digits, "_" and "."
+_BRACKETS = r"\[(?:[^\[\]']|'.|\[(?:[^\[\]']|'.)*\])*\]"  # [..] with at most one level inside; ' escapes
 _TOKEN = re.compile(
     rf"""
     \s*(?:
-        (?P<ref>(?P<rs>{_SHEET})?(?P<ca>\$?)(?P<cl>[A-Za-z]{{1,3}})(?P<ra>\$?)(?P<rw>[0-9]+))(?![A-Za-z0-9_(])
+        (?P<sref>(?P<sn>{_IDENT})(?P<sb>{_BRACKETS}))
+      | (?P<ref>(?P<rs>{_SHEET})?(?P<ca>\$?)(?P<cl>[A-Za-z]{{1,3}})(?P<ra>\$?)(?P<rw>[0-9]+))(?![A-Za-z0-9_(])
       | (?P<str>"(?:[^"]|"")*")
       | (?P<rows>(?:{_SHEET})?\$?[0-9]+:\$?[0-9]+)(?![A-Za-z0-9_(.])
       | (?P<num>(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?)
       | (?P<op><>|<=|>=|[-+*/^&%(),:=<>])
       | (?P<cols>(?:{_SHEET})?\$?[A-Za-z]{{1,3}}:\$?[A-Za-z]{{1,3}})(?![A-Za-z0-9_(])
-      | (?P<func>[A-Za-z_][A-Za-z0-9_.]*)(?=\s*\()
-      | (?P<ident>[A-Za-z_][A-Za-z0-9_.]*)
-      | (?P<err>\#(?:REF!|DIV/0!|VALUE!|NAME\?|NUM!|N/A|NULL!))
+      | (?P<func>{_IDENT})(?=\s*\()
+      | (?P<ident>{_IDENT})
+      | (?P<err>\#(?:REF!|DIV/0!|VALUE!|NAME\?|NUM!|N/A|NULL!|SPILL!|SQL!))
       | (?P<junk>.)
     )
     """,
@@ -138,6 +143,8 @@ def _tokens(text: str) -> list[Token]:
         kind = found.lastgroup or ""
         if kind == "ref":
             tokens.append((kind, found[kind], found.group("rs", "ca", "cl", "ra", "rw")))
+        elif kind == "sref":
+            tokens.append((kind, found[kind], found.group("sn", "sb")))
         elif kind == "junk":
             raise _Syntax(f"unexpected {found[kind]!r}")
         else:
@@ -237,6 +244,8 @@ class _Parser:
                 return BadRef() if text == REF else ErrorLit(text if text in ERROR_CODES else SYNTAX)
             case "ref":
                 return self.reference(parts or ())
+            case "sref":
+                return self.table_ref(parts or ())
             case "cols":
                 return self.whole(text, columns=True)
             case "rows":
@@ -254,6 +263,15 @@ class _Parser:
                     raise _Syntax("a bracket is not closed")
                 return Paren(inner)
         raise _Syntax(f"unexpected {text!r}")
+
+    @staticmethod
+    def table_ref(parts: tuple[str | None, ...]) -> Node:
+        table, body = parts[0] or "", parts[1] or ""
+        try:
+            items, first, last = parse_spec(body)
+        except SpecError as problem:
+            raise _Syntax(f"{table}{body}: {problem}") from None
+        return TableRef(table, items, first, last)
 
     def call(self, name: str) -> Node:
         if not self.accept("("):  # (the tokenizer only says "func" when a bracket follows)

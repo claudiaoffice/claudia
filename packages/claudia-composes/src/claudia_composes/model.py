@@ -13,6 +13,7 @@ from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
 from claudia_core import (
+    SLOTS,
     CommandRegistry,
     DocumentModel,
     ObjectBody,
@@ -27,6 +28,7 @@ from claudia_core import (
     VisualObject,
     builtin_palette,
     delete_runs,
+    fits,
     insert_runs,
     new_registry,
     runs_from_data,
@@ -51,12 +53,16 @@ _SERIF = "Fraunces, Georgia, serif"
 _INK = "@text"
 
 
-def _style(style_id: str, name: str, purpose: str, **css: str) -> StyleDef:
-    return StyleDef(style_id, name, purpose, None if style_id == DEFAULT_STYLE else DEFAULT_STYLE, css)
+def _style(style_id: str, name: str, purpose: str, *, kind: str = "paragraph", **css: str) -> StyleDef:
+    # A paragraph style is based on Body text, so a change to Body text reaches it (D73); a box or outline style is
+    # a root of its own, because a style and its parent are always of the same kind (D305).
+    parent = DEFAULT_STYLE if kind == "paragraph" and style_id != DEFAULT_STYLE else None
+    return StyleDef(style_id, name, purpose, parent, css, kind=kind)
 
 
-#: The styles every text starts with, all based on Body text (D73): a change to Body text reaches the others where they
-#: have not set the property themselves. They are made by the model, not by commands, so they are in every log's past.
+#: The styles every text starts with. The paragraph styles are all based on Body text (D73): a change to Body text
+#: reaches the others where they have not set the property themselves. The outline and the picture's box are styles
+#: of their own kinds (D305). They are made by the model, not by commands, so they are in every log's past.
 BUILTIN_STYLES: tuple[StyleDef, ...] = (
     _style(
         "body",
@@ -141,25 +147,39 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "padding-right": "0.9em",
         },
     ),
-    # The two object styles, with the same ids in all three apps (E10.16), so that a shape or a picture carried
+    # The object styles, with the same ids in all three apps (E10.16), so that a shape or a picture carried
     # from a slide or a sheet into a text keeps a style that exists here. A shape's background and border are
     # ``fill``/``stroke``/``stroke-width``, not ``background-color``/``border-*`` (D178): a shape is an outline in
-    # a 100 by 100 box, not a rectangle, so only the SVG vocabulary can give a circle or a triangle a border.
+    # a 100 by 100 box, not a rectangle, so only the SVG vocabulary can give a circle or a triangle a border. Its
+    # outline and its words are two slots, each with a style of its own kind (D304, D310).
+    _style(
+        "shape-label",
+        "Shape label",
+        "the words inside a shape floating over the text",
+        **{"text-align": "center"},
+    ),
     _style(
         "plain-shape",
         "Plain shape",
         "a shape floating over the text, carrying a thought or marking a passage",
+        kind="outline",
         **{
             "fill": "@accent/8",
             "stroke": "@accent",
             "stroke-width": "2px",
-            "text-align": "center",
         },
+    ),
+    _style(
+        "plain-box",
+        "Plain box",
+        "the box of a text box floating over the text: no background and no border, so only its words show",
+        kind="box",
     ),
     _style(
         "plain-image",
         "Plain image",
         "a picture floating over the text; it carries its own colours, so no style properties apply to it",
+        kind="box",
     ),
     _style(
         "definition",
@@ -355,8 +375,9 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return self.fresh_ids(1)[0]
 
     def style_in_use(self, style_id: str) -> bool:
-        """Does any paragraph have this style? (Asked by the style commands before they take a style back.)"""
-        return any(b.style == style_id for b in self.blocks)
+        """Does any paragraph, or any object in the text (itself or its words), have this style? (Asked by the
+        style commands before they take a style back.)"""
+        return any(b.style == style_id for b in self.blocks) or ObjectModel.style_in_use(self, style_id)
 
     def style_uses(self) -> dict[str, int]:
         """How many paragraphs have each style that is in use."""
@@ -475,9 +496,13 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             self._stack[source].remove(object_id)
 
     def check_style(self, style: str) -> None:
-        """``ValueError`` unless the document has a style with this id."""
+        """``ValueError`` unless the document has a style with this id that fits a paragraph: a composes paragraph
+        is one slot that reads text, paragraph and box, so only a paragraph style fits it (D304, D316)."""
         if style not in self.styles:
             raise ValueError(f"no style {style!r}")
+        found = self.styles.get(style)
+        if not fits(found.kind, SLOTS.slot("paragraph", "paragraph")):
+            raise ValueError(f"“{found.name}” is a {found.kind} style and cannot be put on a paragraph")
 
     # -- suggestions (used by the commands) --------------------------------------
     def add_suggestion(self, suggestion: Suggestion) -> None:

@@ -49,6 +49,7 @@ from claudia_core import (
     UnknownCommand,
 )
 
+from .ai_mode import parse_mode
 from .auth import (
     Account,
     DeletableDirectory,
@@ -285,6 +286,8 @@ class Context:
         default_factory=lambda: RestoreCoordinator(lambda record: None, clock=lambda: 0.0)
     )
     broadcast: Callable[[dict], None] = field(default=lambda message: None)  # tell every window of this document
+    # Tell the AI of this document how the next request of a person is to be treated (D262); nothing if there is none.
+    note_ai_mode: Callable[[str, str | None], None] = field(default=lambda user, mode: None)
 
     @property
     def user(self) -> str:
@@ -899,9 +902,18 @@ def _export_content(ctx):
 
 
 # -- chat
-@core_methods.method("chat", "text:text", write=True)
-def _chat(ctx, text):
+@core_methods.method("chat", "text:text ai_mode:str?", write=True)
+def _chat(ctx, text, ai_mode):
     """`@username message` for one person who is connected (names may contain spaces; case does not matter), a message
     without a leading @ (or `@all message`) for everybody. Chat is kept apart from the document's changes. Returns the
-    record."""
-    return ctx.document.post_chat(ctx.user, text, users=ctx.users()).to_data()
+    record. `ai_mode` (`act` or `suggest`) is how the sender wants the AI to treat this request if it is for the AI: it
+    is not stored, and a client that sends none gets `act`."""
+    try:
+        mode = parse_mode(ai_mode)
+    except ValueError as exc:
+        raise RequestError("bad_request", f"chat: {exc}") from None
+    ctx.note_ai_mode(ctx.user, mode)  # before the message: the AI hears it as it is posted
+    try:
+        return ctx.document.post_chat(ctx.user, text, users=ctx.users()).to_data()
+    finally:
+        ctx.note_ai_mode(ctx.user, None)  # whether or not the AI took it

@@ -3,6 +3,7 @@ import {
   GRID_SIZE,
   SLIDE_H,
   SLIDE_W,
+  besideRect,
   fitScale,
   insertFrame,
   moveFrame,
@@ -154,5 +155,15 @@ describe('insertFrame', () => {
       expect(f.x + f.w).toBeLessThanOrEqual(SLIDE_W)
       expect(f.y + f.h).toBeLessThanOrEqual(SLIDE_H)
     }
+  })
+})
+
+describe('besideRect: where the style popover opens for a selected object', () => {
+  it('goes to the right of the object, top-aligned', () => {
+    expect(besideRect({ left: 420, top: 425, right: 555 }, 360, 1280)).toEqual({ x: 567, y: 425 })
+  })
+
+  it('goes to the left when the right would leave the window', () => {
+    expect(besideRect({ left: 700, top: 300, right: 1000 }, 360, 1280)).toEqual({ x: 328, y: 300 })
   })
 })

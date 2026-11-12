@@ -6,6 +6,7 @@ import pytest
 
 from claudia_composes import TextModel
 from claudia_core import Document, MemoryStore
+from claudia_opc_io import read_parts
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.protocol import Context, Limits, RequestError, core_methods
@@ -344,6 +345,7 @@ def test_deviating_makes_a_style_with_a_provisional_name_and_applies_it_in_one_s
     assert answer["style"] == "heading-1-changed" and answer["name"] == "Heading 1 (changed)"
     made = style(paper, answer["style"])
     assert (made["based_on"], made["to_name"], made["css"]) == ("heading-1", True, {"color": "#D6477A"})
+    assert made["kind"] == "paragraph"  # a deviation keeps its parent's kind (D305)
     assert call(paper, "blocks")["blocks"][0]["style"] == answer["style"]
     call(paper, "undo")
     assert call(paper, "blocks")["blocks"][0]["style"] == "body"
@@ -430,6 +432,105 @@ def test_export_office_drops_open_suggestions_rather_than_tracking_them(paper):
     assert [b.text for b in docx_to_text(raw).blocks] == ["Hello there"]
 
 
+def test_export_office_returns_an_odt_that_round_trips_and_says_what_it_lost(paper):
+    from claudia_composes_io import odt_to_text
+
+    from claudia_odf_io import problems
+
+    type_(paper, "Hello there")
+    answer = call(paper, "export_office", {"format": "odt"})
+    assert answer["format"] == "odt"
+    assert answer["content_type"] == "application/vnd.oasis.opendocument.text"
+    raw = base64.b64decode(answer["data"])
+    assert problems(raw) == []
+    assert [b.text for b in odt_to_text(raw).blocks] == ["Hello there"]
+    # who typed which words is not something an odt keeps: the one thing this text loses
+    assert answer["losses"] == [{"kind": "authorship", "detail": "", "count": 1}]
+
+
+def test_export_office_to_odt_names_a_style_it_cannot_write(paper):
+    type_(paper, "Hello there")
+    call(paper, "set_style", {"block": "b1", "style": "remark"})
+    losses = call(paper, "export_office", {"format": "odt"})["losses"]
+    assert {"kind": "style", "detail": "remark", "count": 1} in losses
+
+
+def test_export_office_to_docx_has_no_loss_list(paper):
+    type_(paper, "Hello there")
+    assert "losses" not in call(paper, "export_office", {"format": "docx"})
+
+
+def test_export_office_to_odt_drops_open_suggestions_rather_than_tracking_them(paper):
+    from claudia_composes_io import odt_to_text
+
+    type_(paper, "Hello there")
+    call(paper, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    raw = base64.b64decode(call(paper, "export_office", {"format": "odt"})["data"])
+    assert [b.text for b in odt_to_text(raw).blocks] == ["Hello there"]
+    assert b"tracked-changes" not in read_parts(raw)["content.xml"]
+
+
 def test_export_office_rejects_an_unknown_format(paper):
     with pytest.raises(RequestError):
-        call(paper, "export_office", {"format": "odt"})
+        call(paper, "export_office", {"format": "pdf"})
+
+
+# ---------------------------------------------------------------- tracked changes and dates in an export (D411)
+@pytest.fixture
+def dated_paper():
+    """A text with known times: typed 2026-01-02, a suggestion 2026-03-04, typed again 2026-11-11."""
+    times = iter(["2026-01-02T03:04:05Z", "2026-03-04T05:06:07Z", "2026-11-11T17:13:05Z"])
+    doc = Document(TextModel(), store=MemoryStore(), clock=lambda: next(times))
+    type_(doc, "Hello there")
+    call(doc, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    type_(doc, "!", at=11)
+    return doc
+
+
+def exported(doc, fmt, **params):
+    return base64.b64decode(call(doc, "export_office", {"format": fmt, **params})["data"])
+
+
+def test_tracked_changes_are_written_when_asked_for_and_dated_when_the_suggestion_was_made(dated_paper):
+    from lxml import etree
+
+    from claudia_odf_io import NS
+
+    raw = exported(dated_paper, "odt", tracked_changes=True)
+    root = etree.fromstring(read_parts(raw)["content.xml"])
+    dates = {d.text for d in root.iterfind(".//office:change-info/dc:date", NS)}
+    assert dates == {"2026-03-04T05:06:07Z"}
+    authors = {a.text for a in root.iterfind(".//office:change-info/dc:creator", NS)}
+    assert authors == {AI.user}
+
+
+def test_an_odt_says_when_it_was_made_and_last_changed_and_by_whom(dated_paper):
+    from claudia_odf_io import read_info
+
+    info = read_info(read_parts(exported(dated_paper, "odt"))["meta.xml"])
+    assert (info.created, info.creator) == ("2026-01-02T03:04:05Z", ANN.user)
+    assert (info.modified, info.modifier) == ("2026-11-11T17:13:05Z", ANN.user)
+
+
+def test_tracked_changes_in_an_odt_leave_no_suggestion_loss(dated_paper):
+    losses = call(dated_paper, "export_office", {"format": "odt", "tracked_changes": True})["losses"]
+    assert not [loss for loss in losses if loss["kind"] == "suggestion"]
+
+
+def test_without_tracked_changes_the_open_suggestion_is_a_loss(dated_paper):
+    losses = call(dated_paper, "export_office", {"format": "odt"})["losses"]
+    assert {"kind": "suggestion", "detail": "", "count": 1} in losses
+
+
+def test_a_docx_with_tracked_changes_dates_them_too(dated_paper):
+    import re
+
+    raw = exported(dated_paper, "docx", tracked_changes=True)
+    xml = read_parts(raw)["word/document.xml"].decode()
+    assert set(re.findall(r'w:date="([^"]*)"', xml)) == {"2026-03-04T05:06:07Z"}
+    assert "<w:ins " in xml
+
+
+def test_tracked_changes_default_to_off(dated_paper):
+    assert b"tracked-changes" not in read_parts(exported(dated_paper, "odt"))["content.xml"]
+    assert "<w:ins " not in read_parts(exported(dated_paper, "docx"))["word/document.xml"].decode()

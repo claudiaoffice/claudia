@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from claudia_ai import ModelRunner
-from claudia_computes import WorkbookModel
 from claudia_core import Document, DocumentModel
 from claudia_creates import ShapeLibrary
 
@@ -13,10 +12,12 @@ from .assistant import Assistant, Engine
 from .composes import composes_methods
 from .computes import computes_methods
 from .creates import creates_methods, creates_methods_with
-from .model_engine import ModelEngine, tools_of
+from .lens import Lens
+from .model_engine import Budget, ModelEngine, tools_of
 from .protocol import MethodTable, core_methods
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
+from .workbook_lens import WorkbookLens
 
 _METHODS: dict[str, MethodTable] = {
     "computes": computes_methods,
@@ -31,12 +32,12 @@ _ENGINES: dict[str, Callable[[], Engine]] = {"computes": ScriptedEngine, "compos
 # dispatch for both the model-driven engine and the scripted stand-in alike (SEC-10). An app with no entry here gets
 # none, so an assistant for it can write nothing until somebody decides what it may do.
 MODEL_METHODS = {"computes": ("set_cells", "add_sheet", "structure", "resize_lines"), "composes": ("suggest",)}
-MAX_LISTED_SHEETS = 50  # sheets named to the model; a small model has little room
-WORKBOOK_CONTEXT = (
-    "Rows and columns are counted from 0. A request looks like "
-    '{{"method": "set_cells", "params": {{"sheet": "s1", "cells": [{{"row": 0, "col": 0, "input": "42"}}]}}}}.\n'
-    "{sheets}"
-)
+# What it may write for a person who chose *suggest* (D262). Composes' ``suggest`` *is* its suggest mode; computes and
+# creates have no way to propose yet (E7.8), so there it may write nothing until a person switches to *act*.
+SUGGEST_METHODS = {"computes": (), "composes": ("suggest",), "creates": ()}
+# The apps whose documents the model can be shown and its changes reported on (E7.5): without a lens there is no
+# model-driven AI for an app, and its stand-in (if it has one) answers instead.
+_LENSES: dict[str, Lens] = {"computes": WorkbookLens()}
 
 
 def methods_for(model_cls: type[DocumentModel], *, shapes: ShapeLibrary | None = None) -> MethodTable:
@@ -59,35 +60,32 @@ def stand_in_assistant_for(model_cls: type[DocumentModel]) -> Callable[[], Assis
         return None
     engine = engine_class()
     allowed = MODEL_METHODS.get(model_cls.app, ())
-    return lambda: Assistant(engine, allowed_methods=allowed)
+    proposes = SUGGEST_METHODS.get(model_cls.app, ())
+    return lambda: Assistant(engine, allowed_methods=allowed, suggest_methods=proposes)
 
 
 def model_assistant_for(
-    model_cls: type[DocumentModel], runner: ModelRunner, *, max_waiting: int = 4
+    model_cls: type[DocumentModel], runner: ModelRunner, *, max_waiting: int = 4, budget: Budget | None = None
 ) -> Callable[[], Assistant] | None:
-    """Makes assistants that ask a language model, for the apps it knows (workbooks); ``None`` for the others.
+    """Makes assistants that ask a language model, for the apps that have a lens (workbooks); ``None`` for the others.
 
     All assistants share the one ``runner``: one model for the server. ``max_waiting`` questions of a document may
-    wait behind the one being answered."""
+    wait behind the one being answered; ``budget`` is what one question may cost (rounds, requests)."""
+    lens = _LENSES.get(model_cls.app)
     names = MODEL_METHODS.get(model_cls.app)
-    if names is None:
+    if lens is None or names is None:
         return None
-    tools = tools_of(methods_for(model_cls), names)
+    table = methods_for(model_cls)
+    tools = (*tools_of(table, lens.look_methods, kind="look"), *tools_of(table, names))
+    proposes = SUGGEST_METHODS.get(model_cls.app, ())
     return lambda: Assistant(
-        ModelEngine(runner, tools, workbook_context), max_waiting=max_waiting, allowed_methods=names
+        ModelEngine(runner, tools, lens, budget=budget or Budget()),
+        max_waiting=max_waiting,
+        allowed_methods=names,
+        suggest_methods=proposes,
     )
 
 
-def workbook_context(document: Document) -> str:
-    """What the model is told about a workbook: how to count, an example request and the sheets (id: name)."""
-    model = document.model
-    assert isinstance(model, WorkbookModel)
-    sheets = list(model.sheets.values())
-    if not sheets:
-        listing = "There are no sheets yet: add one with add_sheet."
-    else:
-        lines = [f"{sheet.id}: {' '.join(sheet.name.split())}" for sheet in sheets[:MAX_LISTED_SHEETS]]
-        if len(sheets) > MAX_LISTED_SHEETS:
-            lines.append(f"... and {len(sheets) - MAX_LISTED_SHEETS} more")
-        listing = "Sheets in this document (id: name):\n" + "\n".join(lines)
-    return WORKBOOK_CONTEXT.format(sheets=listing)
+def workbook_context(document: Document, *, can_write: bool = True) -> str:
+    """What the model is told about a workbook before it is asked anything (see ``WorkbookLens.orient``)."""
+    return _LENSES["computes"].orient(document, can_write=can_write)

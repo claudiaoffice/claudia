@@ -19,3 +19,5 @@ superseded-by: []
 * **Number formats stay separate from styles** (D75); row height and column width stay layout (D135).
 
 **Notes.** Answers the owner's question what it takes for a cell to use composes' Paragraph class: nothing special in the cell, but the style model of D303–D305 first, because otherwise computes would get a second way of saying what a paragraph looks like. Cell styles are the last phase of the round, after the core facet table and the menu and dialog work.
+
+*Refined on 2026-11-11 by D317: the layer order is the lookup order; what a person sees after an action is decided by the last action.*

@@ -32,6 +32,8 @@ WEB_SOURCES = {
 # The items every app's window shares (File, the Edit and View blocks, Config, Help) are built once, here; each
 # workspace above assembles them with its own.
 WEB_SHARED_MENUS = REPO / "web" / "app" / "lib" / "document-menus.ts"
+# The Format menu's four entries are built in one place for all three apps (D300).
+WEB_FORMAT_MENU = REPO / "web" / "app" / "lib" / "format-menu.ts"
 # Config ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
 WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
@@ -197,7 +199,7 @@ def test_helps_shared_shape_is_identical_in_every_app(app: manifest.Manifest) ->
 
 
 def test_composes_format_offers_the_style_actions_and_the_document_colours(composes: manifest.Manifest) -> None:
-    assert labels(composes.menu("Format")) == ["Edit This Style…", "All Styles…", "Colours…"]
+    assert labels(composes.menu("Format")) == ["Apply Style…", "Edit This Style…", "All Styles…", "Colours…"]
 
 
 def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manifest) -> None:
@@ -212,7 +214,19 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
     colours a document is painted from are the same dialog everywhere (D200), so the menu is the same everywhere
     too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two."""
     m = request.getfixturevalue(app_name)
-    assert action_ids(m.menu("Format")) == ["format.look", "format.all-styles", "format.colours"]
+    assert action_ids(m.menu("Format")) == ["format.apply-style", "format.look", "format.all-styles", "format.colours"]
+
+
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_apply_style_is_one_page_action_that_opens_the_pages_popover(
+    app_name: str, request: pytest.FixtureRequest
+) -> None:
+    """D301: no native list of styles and no new contract message — one page action, as All Styles… is."""
+    m = request.getfixturevalue(app_name)
+    (apply,) = [a for a in m.menu("Format").all_actions() if a.id == "format.apply-style"]
+    assert apply.kind is Kind.PAGE and apply.label == "Apply Style…"
+    first = m.menu("Format").sections[0]
+    assert [a.id for a in first] == ["format.apply-style", "format.look", "format.all-styles"]
 
 
 def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(computes: manifest.Manifest) -> None:
@@ -332,10 +346,12 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
     """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
     still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
     design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_LANGUAGES)
+    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES)
     if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    app_source, shared_source, languages_source = (path.read_text(encoding="utf-8") for path in sources)
+    app_source, shared_menus, format_menu, languages_source = (path.read_text(encoding="utf-8") for path in sources)
+    assert "formatItems(" in app_source, "every app builds its Format menu with lib/format-menu.ts"
+    shared_source = shared_menus + format_menu
 
     def in_web(action_id: str) -> bool:
         if f"id: '{action_id}'" in app_source or f"id: '{action_id}'" in shared_source:

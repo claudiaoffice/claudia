@@ -1,8 +1,13 @@
-// The text as a StyleHost: its paragraphs are what the style menu styles.
-import type { StyleHost } from './style-host'
+// The text as a StyleHost: its paragraphs are what the style menu styles. A paragraph is one slot that reads text,
+// paragraph and box (D304), so there is no switcher.
+import type { HostSlot, StyleHost } from './style-host'
 import type { TextSession } from './text-session'
 
 export function textStyleHost(session: TextSession): StyleHost {
+  const slot = (): HostSlot | undefined => {
+    const found = session.state.styleModel?.slots.paragraph?.[0]
+    return found ? { ...found, label: 'Paragraph' } : undefined
+  }
   return {
     get styles() {
       return session.state.styles
@@ -14,8 +19,17 @@ export function textStyleHost(session: TextSession): StyleHost {
       return session.readOnly
     },
     noun: 'paragraph',
-    // A paragraph has words and no box of its own: no fill, no border. A shape has both (D178, D181).
-    parts: { words: true, box: false },
+    get slots() {
+      const one = slot()
+      return one ? [one] : []
+    },
+    get slot() {
+      return slot()
+    },
+    chooseSlot: () => undefined,
+    get model() {
+      return session.state.styleModel
+    },
     get roles() {
       return session.state.palette?.roles ?? []
     },

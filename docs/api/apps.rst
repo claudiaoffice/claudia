@@ -22,6 +22,29 @@ computes
 .. autoclass:: claudia_computes.ChartError
 .. autoclass:: claudia_computes.AddChart
 .. autoclass:: claudia_computes.RemoveChart
+.. autoclass:: claudia_computes.NamedRange
+.. autoclass:: claudia_computes.Names
+.. autoclass:: claudia_computes.DefineName
+.. autoclass:: claudia_computes.RenameName
+.. autoclass:: claudia_computes.RemoveName
+.. autoclass:: claudia_computes.RestoreNames
+.. autoclass:: claudia_computes.spill.Table
+
+Cell styles
+~~~~~~~~~~~
+
+A cell has a box and words, two slots of the style model (D304, D307, D311); a sheet keeps style ranges in layers,
+not a style per cell.
+
+.. automodule:: claudia_computes.cellstyles
+   :no-members:
+
+.. currentmodule:: claudia_computes
+
+.. autoclass:: claudia_computes.CellStyles
+.. autoclass:: claudia_computes.SetCellStyle
+.. autoclass:: claudia_computes.CellStylesChanged
+.. autofunction:: claudia_computes.layer_of
 
 ``SheetObject`` is ``VisualObject[CellAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor.
 The object commands, region and events are shared by all three apps (:doc:`claudia_core`, E10.16, D177).
@@ -65,6 +88,13 @@ Every format package shares the Open Packaging Conventions mechanics of ``claudi
 .. automodule:: claudia_opc_io
    :members:
 
+and the OpenDocument formats (odt, ods, odp) share ``claudia_odf_io``: a package from its parts, a part edited
+by splicing bytes so that everything outside the edit stays the original's, the text of one paragraph changed in
+place, and the list of what a file could not hold (D401):
+
+.. automodule:: claudia_odf_io
+   :members:
+
 A base xlsx export and one additive extension openpyxl itself cannot write, pivot tables (D135):
 
 .. automodule:: claudia_computes_io
@@ -88,7 +118,8 @@ composes
 Import/export
 ~~~~~~~~~~~~~~
 
-A base docx export, with open suggestions written as native Word tracked changes (D135):
+A base docx export, with open suggestions written as native Word tracked changes (D135), and odt import, export and
+edit-and-reexport that keeps everything the text app does not model (D401):
 
 .. automodule:: claudia_composes_io
    :members:

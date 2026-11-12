@@ -1,0 +1,135 @@
+<svg viewBox="0 0 1400 1010" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="1010" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — Server settings ▸ AI: choosing who answers @ai, with Claude as a provider, proposed (E7.3)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Same shell as AdminShell.vue: ink bar and sidebar, the server's name always visible. The page is the server's own, reached by URL plus the access secret.</text>
+<rect x="40" y="96" width="920" height="880" rx="14" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="40" y="96" width="920" height="46" rx="14" fill="#1f1a33"/>
+<rect x="40" y="126" width="920" height="16" rx="0" fill="#1f1a33"/>
+<text x="500.0" y="124" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="500" fill="#f7f3ec" text-anchor="middle">Server settings</text>
+<text x="938" y="125" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="17" font-weight="400" fill="#a9a3bd" text-anchor="middle">×</text>
+<rect x="40" y="142" width="220" height="834" rx="0" fill="#1f1a33"/>
+<rect x="40" y="962" width="220" height="14" rx="14" fill="#1f1a33"/>
+<rect x="40" y="948" width="14" height="14" rx="0" fill="#1f1a33"/>
+<rect x="58" y="162" width="18" height="18" rx="3" fill="none" stroke="#cfc9e3" stroke-width="1.5"/>
+<text x="86" y="176" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#f7f3ec" text-anchor="start">Studio server</text>
+<text x="86" y="194" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#a9a3bd" text-anchor="start">claudia.example.org</text>
+<text x="86" y="212" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#a9a3bd" text-anchor="start">Signed in as anna</text>
+<line x1="54" y1="230" x2="246" y2="230" stroke="#3a3358" stroke-width="1"/>
+<rect x="50" y="242" width="200" height="36" rx="9" fill="#3a3358"/>
+<text x="86" y="265" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#f7f3ec" text-anchor="start">AI model</text>
+<path d="M68 250 l2.6 8.4 8.4 2.6 -8.4 2.6 -2.6 8.4 -2.6 -8.4 -8.4 -2.6 8.4 -2.6z" fill="#f7f3ec" transform="scale(0.7) translate(29.24 107.5)"/>
+<text x="86" y="303" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#cfc9e3" text-anchor="start">Typesetting</text>
+<text x="86" y="341" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#cfc9e3" text-anchor="start">Access &amp; documents</text>
+<text x="150" y="942" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#a9a3bd" text-anchor="middle">Sign out</text>
+<text x="300" y="186" font-family="Fraunces, Georgia, serif" font-size="23" font-weight="500" fill="#1f1a33" text-anchor="start">AI model</text>
+<text x="300" y="210" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#6e6880" text-anchor="start">What answers @ai in every document on this server.</text>
+<rect x="300" y="230" width="640" height="44" rx="10" fill="#e7e1f4"/>
+<circle cx="320" cy="252" r="5" fill="#5b4bc4"/>
+<text x="334" y="257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Answering now:</text>
+<text x="440" y="257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Claude · claude-sonnet-5-5</text>
+<rect x="640" y="241" width="74" height="22" rx="11" fill="#5b4bc4"/>
+<text x="677" y="256" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">remote</text>
+<text x="926" y="257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">Last changed by anna, today 09:12</text>
+<circle cx="278" cy="252" r="11" fill="#5b4bc4"/>
+<text x="278" y="256.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">1</text>
+<text x="300" y="304" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#6e6880" text-anchor="start">Provider</text>
+<rect x="300" y="314" width="520" height="38" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="386.6666666666667" y="338" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Scripted stand-in</text>
+<line x1="473.33333333333337" y1="314" x2="473.33333333333337" y2="352" stroke="#b9b2d1" stroke-width="1"/>
+<text x="560.0" y="338" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Local model</text>
+<rect x="646.6666666666667" y="314" width="173.33333333333334" height="38" rx="9" fill="#5b4bc4"/>
+<line x1="646.6666666666667" y1="314" x2="646.6666666666667" y2="352" stroke="#b9b2d1" stroke-width="1"/>
+<text x="733.3333333333334" y="338" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#f7f3ec" text-anchor="middle">Claude</text>
+<circle cx="278" cy="333" r="11" fill="#5b4bc4"/>
+<text x="278" y="337.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">2</text>
+<text x="300" y="376" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start">API key</text>
+<rect x="300" y="384" width="420" height="40" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="314" y="409" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">sk-ant-•••••••••••••••••••• a7Q2</text>
+<rect x="732" y="384" width="88" height="40" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="776" y="409" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Replace</text>
+<rect x="830" y="384" width="88" height="40" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="874" y="409" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#d6477a" text-anchor="middle">Remove</text>
+<text x="300" y="442" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Kept on this server only. It is never shown again, never sent to a client or into a document.</text>
+<circle cx="278" cy="404" r="11" fill="#5b4bc4"/>
+<text x="278" y="408.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">3</text>
+<text x="300" y="470" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start">Model</text>
+<rect x="300" y="478" width="300" height="40" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="314" y="503" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">claude-sonnet-5-5</text>
+<rect x="616" y="484" width="80.0" height="28" rx="14" fill="none" stroke="#b9b2d1" stroke-width="1"/>
+<text x="656.0" y="503" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">sonnet-5-5</text>
+<rect x="702.0" y="484" width="66.8" height="28" rx="14" fill="none" stroke="#b9b2d1" stroke-width="1"/>
+<text x="735.4" y="503" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">opus-5-5</text>
+<rect x="774.8" y="484" width="73.4" height="28" rx="14" fill="none" stroke="#b9b2d1" stroke-width="1"/>
+<text x="811.5" y="503" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">haiku-5-5</text>
+<rect x="854.1999999999999" y="484" width="73.4" height="28" rx="14" fill="none" stroke="#b9b2d1" stroke-width="1"/>
+<text x="890.9" y="503" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">fable-5-2</text>
+<text x="300" y="536" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Type any model id: the list of models changes faster than this app does.</text>
+<text x="300" y="564" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start">Longest answer (tokens)</text>
+<rect x="300" y="572" width="130" height="38" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="314" y="596" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">1024</text>
+<text x="514" y="564" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start">Timeout (seconds)</text>
+<rect x="514" y="572" width="130" height="38" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="528" y="596" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">60</text>
+<text x="728" y="564" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start">Questions at once</text>
+<rect x="728" y="572" width="130" height="38" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="742" y="596" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">4</text>
+<rect x="300" y="640" width="640" height="140" rx="12" fill="#fdf3e6" stroke="#f2a057" stroke-width="1.5"/>
+<rect x="318" y="660" width="20" height="20" rx="5" fill="#5b4bc4"/>
+<path d="M323 670 l4.5 4.5 8 -9" stroke="#f7f3ec" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="350" y="676" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Document content is sent to Anthropic when someone asks @ai.</text>
+<text x="350" y="698" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Documents are encrypted on this server; Claude would read what it is shown in plain text.</text>
+<line x1="318" y1="714" x2="922" y2="714" stroke="#f0cfa6" stroke-width="1"/>
+<text x="318" y="734" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">This is not enough on its own: each document's owners must also allow it</text>
+<text x="318" y="752" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">(File ▸ Manage ▸ AI, off by default). Until they do, @ai in that document uses the</text>
+<text x="318" y="767" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">local model or the stand-in, and says so.</text>
+<text x="926" y="660" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="end">recorded: anna, today 09:12</text>
+<circle cx="278" cy="676" r="11" fill="#5b4bc4"/>
+<text x="278" y="680.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
+<line x1="300" y1="794" x2="940" y2="794" stroke="#d8d2e6" stroke-width="1"/>
+<path d="M302 821 l5 5 9 -10" stroke="#13917f" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="326" y="826" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#13917f" text-anchor="start">Test answered in 1.4 s</text>
+<text x="326" y="844" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Apply asks Claude one test question first.</text>
+<rect x="770" y="810" width="80" height="38" rx="9" fill="#ffffff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="810" y="834" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="860" y="810" width="80" height="38" rx="9" fill="#5b4bc4"/>
+<text x="900" y="834" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#f7f3ec" text-anchor="middle">Apply</text>
+<circle cx="278" cy="829" r="11" fill="#5b4bc4"/>
+<text x="278" y="833.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">5</text>
+<text x="992" y="126" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">What the numbers mean</text>
+<circle cx="1000" cy="160" r="11" fill="#5b4bc4"/>
+<text x="1000" y="164.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">1</text>
+<text x="1022" y="165" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">What is answering</text>
+<text x="1022" y="185" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Always said in words and with the</text>
+<text x="1022" y="202" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">'remote' badge, so the page tells</text>
+<text x="1022" y="219" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the truth about where content goes</text>
+<text x="1022" y="236" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">(D32). Same badge in the panel.</text>
+<circle cx="1000" cy="275" r="11" fill="#5b4bc4"/>
+<text x="1000" y="279.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">2</text>
+<text x="1022" y="280" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">One switch, three providers</text>
+<text x="1022" y="300" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Stand-in, local model (today's folder,</text>
+<text x="1022" y="317" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">device, limits) and Claude. The local</text>
+<text x="1022" y="334" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">fields stay as they are, so an old</text>
+<text x="1022" y="351" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">settings file loads unchanged.</text>
+<circle cx="1000" cy="390" r="11" fill="#5b4bc4"/>
+<text x="1000" y="394.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">3</text>
+<text x="1022" y="395" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">The key is write-only</text>
+<text x="1022" y="415" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Unlike the access secret there is no</text>
+<text x="1022" y="432" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Reveal: only the last four characters.</text>
+<text x="1022" y="449" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">An operator can give it as an</text>
+<text x="1022" y="466" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">environment variable, which wins (D154).</text>
+<circle cx="1000" cy="505" r="11" fill="#5b4bc4"/>
+<text x="1000" y="509.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
+<text x="1022" y="510" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Two opt-ins, not one</text>
+<text x="1022" y="530" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The administrator is not the owner of</text>
+<text x="1022" y="547" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the documents, and cannot open sealed</text>
+<text x="1022" y="564" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">ones. The server opt-in is recorded with</text>
+<text x="1022" y="581" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">who and when; owners decide per document.</text>
+<circle cx="1000" cy="620" r="11" fill="#5b4bc4"/>
+<text x="1000" y="624.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">5</text>
+<text x="1022" y="625" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Test before apply</text>
+<text x="1022" y="645" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">One question through the new provider.</text>
+<text x="1022" y="662" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A bad key or an unreachable API is</text>
+<text x="1022" y="679" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">refused here with its reason, not found</text>
+<text x="1022" y="696" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">out by the first person who asks @ai.</text>
+<text x="40" y="1000" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">State shown: Claude selected. Local model shows today's page (folder, device, tokens, timeout); the stand-in shows no fields.</text>
+</svg>

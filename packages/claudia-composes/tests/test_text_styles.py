@@ -2,32 +2,50 @@
 
 import pytest
 
-from claudia_composes import BUILTIN_STYLES, Block, SetStyle, TextModel, next_style
+from claudia_composes import BUILTIN_STYLES, Block, BlockAnchor, SetStyle, TextModel, next_style
 from claudia_core import (
     Batch,
     ChangeStyle,
     CreateStyle,
     Document,
     MemoryStore,
+    ObjectBody,
     RenameStyle,
     StyleDef,
     UndoConflict,
+    VisualObject,
+    paragraph_for,
 )
 
 
 # ----------------------------------------------------------------------------- the built-in styles
-def test_a_new_text_has_the_built_in_styles_and_they_are_all_based_on_body_text():
+def test_a_new_text_has_the_built_in_styles_and_its_paragraph_styles_are_all_based_on_body_text():
     model = TextModel()
     ids = model.styles.ids()
     assert ids[0] == "body" and {"title", "heading-1", "heading-2", "quote", "remark", "definition"} <= set(ids)
-    assert all(model.styles.get(i).based_on == "body" for i in ids[1:])
+    paragraphs = [i for i in ids if model.styles.get(i).kind == "paragraph"]
+    assert all(model.styles.get(i).based_on == "body" for i in paragraphs[1:])
     assert all(style.name and style.purpose for style in model.styles)
     assert [s.id for s in BUILTIN_STYLES] == ids
 
 
-def test_the_look_of_every_built_in_style_is_valid_css_with_a_size_and_a_font():
+def test_the_object_styles_have_the_kind_of_the_slot_they_are_for():
+    """D305, D310: a shape's outline is an outline style of its own, the words in it a paragraph style; a picture's
+    style is a box. The same ids in all three apps (E10.16)."""
+    styles = TextModel().styles
+    kinds = {style.id: style.kind for style in styles}
+    assert (kinds["plain-shape"], kinds["shape-label"], kinds["plain-image"]) == ("outline", "paragraph", "box")
+    assert set(styles.get("plain-shape").css) <= {"fill", "stroke", "stroke-width"}
+    assert styles.get("plain-shape").based_on is None and styles.get("plain-image").based_on is None
+    assert styles.get("shape-label").based_on == "body"
+    assert all(kind == "paragraph" for sid, kind in kinds.items() if not sid.startswith(("plain-",)))
+
+
+def test_the_look_of_every_built_in_paragraph_style_is_valid_css_with_a_size_and_a_font():
     model = TextModel()
     for style in model.styles:
+        if style.kind != "paragraph":
+            continue
         look = model.styles.computed(style.id)
         assert look["font-size"].endswith("pt") and look["font-family"] and look["color"]
 
@@ -82,6 +100,27 @@ def test_setting_a_style_made_by_a_command_and_refusing_one_that_does_not_exist(
     assert d.model.block("b1").style == "note"
     with pytest.raises(ValueError, match="no style"):
         d.execute(SetStyle("b1", "sparkly"), author="ann")
+
+
+def test_a_paragraph_takes_only_a_paragraph_style():
+    """A composes paragraph is one slot that reads text, paragraph and box (D304): an outline or a box style does
+    not fit it (D316)."""
+    d = Document(TextModel(), store=MemoryStore())
+    for style in ("plain-shape", "plain-box", "plain-image"):
+        with pytest.raises(ValueError, match="cannot be put on a paragraph"):
+            d.execute(SetStyle("b1", style), author="ann")
+    assert d.model.block("b1").style == "body"
+
+
+def test_a_style_only_an_object_in_the_text_uses_is_in_use():
+    """The model's own paragraphs are not the only users of its styles: the objects in the text are too — the
+    object's own style and its words' style (D304)."""
+    model = TextModel()
+    assert not model.style_in_use("plain-box") and not model.style_in_use("body-text")
+    box = ObjectBody("t1", "text", 200, 80, "plain-box", paragraph_for("t1", "quote", "hi"))
+    model.insert_object(VisualObject(box, BlockAnchor("b1", 0)))
+    assert model.style_in_use("plain-box") and model.style_in_use("quote")
+    assert not model.style_in_use("remark")
 
 
 # ----------------------------------------------------------------------------- deviating

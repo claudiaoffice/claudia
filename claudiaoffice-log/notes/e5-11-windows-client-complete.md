@@ -2,8 +2,8 @@
 
 Written 2026-11-11 on the branch `win-client-complete` (created by the owner; handed over as patches, no push access
 from this session). Scope as asked: bring the Windows client to what Linux and macOS now do (all three apps, the remote
-server flow with HTTPS), with the same command-line parameters. Decisions: **D261** (follows D251, same CLI and server
-flow), **D262** (process-tree stop, a proposal). Code: `clients/windows/`; `web/app/lib/shell-bridge.ts`,
+server flow with HTTPS), with the same command-line parameters. Decisions: **D271** (follows D251, same CLI and server
+flow), **D272** (process-tree stop, a proposal). Code: `clients/windows/`; `web/app/lib/shell-bridge.ts`,
 `web/e2e/` and the contract README carried over from `macos-client-complete` unchanged. Read
 `e5-11-macos-client-complete.md` first: it holds the spikes and the reasoning for D251, which are not repeated here.
 
@@ -23,7 +23,7 @@ covered by the new code or kept.
 | Binary | `neutralino-win_x64.exe` | the only Windows build of 6.8.0 |
 | Menu | no application menu, no Cocoa roles, Quit in File | D44, D158 |
 | Data dir, Python | `%LOCALAPPDATA%\Claudia\<app>`, `.venv\Scripts\python.exe` | Windows convention, uv layout |
-| Stop the server | `taskkill /pid N /T /F`, fallback `kill()` | venv launcher stub spawns the real interpreter (D262) |
+| Stop the server | `taskkill /pid N /T /F`, fallback `kill()` | venv launcher stub spawns the real interpreter (D272) |
 | Environment | set/remove variables case-insensitively | `Path` vs `PATH` — a lookup of `PATH` in an object copied from `process.env` misses on Windows |
 | Node path with spaces | 8.3 short name via `cmd /c for %I … %~sI`, else plain `node`, with a console note | Neutralino splits the extension command at spaces; `C:\Program Files\nodejs\node.exe` breaks it |
 | Console | `windowsHide: true` on every spawned child | a console window would flash for server and core |

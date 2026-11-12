@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STYLE_MODEL } from './style-model.fixture'
 import { appOfServer, fetchDocsListing, isSlides, openSession } from '~/lib/open'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
@@ -60,8 +61,12 @@ class FakeLink implements LinkLike {
       case 'diagrams':
       case 'charts':
         return []
+      case 'names':
+        return { revision: null, names: [] }
       case 'palette':
         return { type: 'palette', roles: [], readings: [] }
+      case 'style_model':
+        return STYLE_MODEL
       case 'styles':
       case 'log':
       case 'chat_log':

@@ -68,13 +68,14 @@ def test_a_new_presentation_has_one_empty_slide(deck):
     assert call(deck, "slide", {"slide": "s1"}) == {"revision": None, "slide": "s1", "objects": []}
 
 
-def test_a_text_box_is_added_with_the_body_text_style(deck):
+def test_a_text_box_is_added_with_a_plain_box_and_body_text_words(deck):
     added = call(deck, "add_object", {"slide": "s1", "kind": "text", "x": 100, "y": 80, "w": 400, "h": 120})
     assert added["revision"] == "main:1"
     (box,) = objects(deck)
     assert box["id"] == added["object"]
     assert (box["kind"], box["anchor"]["x"], box["anchor"]["y"], box["w"], box["h"]) == ("text", 100, 80, 400, 120)
-    assert box["style"] == "body-text" and box["paragraph"]["text"] == "" and box["shape"] is None
+    assert box["style"] == "plain-box" and box["paragraph"]["style"] == "body-text"  # two slots (D304, D310)
+    assert box["paragraph"]["text"] == "" and box["shape"] is None
     assert call(deck, "slides") == [{"id": "s1", "objects": 1}]
 
 
@@ -104,7 +105,13 @@ def test_the_library_lists_the_shapes_to_insert_and_the_styles(deck):
     shapes = call(deck, "shapes")
     assert [s["id"] for s in shapes["library"]] == ["circle", "rectangle", "triangle"]
     assert shapes["library"][0]["aspect"] == 1
-    assert [s["id"] for s in call(deck, "styles")] == ["body-text", "plain-shape", "plain-image"]
+    assert [s["id"] for s in call(deck, "styles")] == [
+        "body-text",
+        "shape-label",
+        "plain-shape",
+        "plain-box",
+        "plain-image",
+    ]
     assert call(deck, "styles")[0]["css"]["font-size"]
 
 
@@ -422,6 +429,71 @@ def test_export_office_returns_pptx_bytes_that_round_trip(deck):
     assert len(reloaded.slides) == 1
 
 
+def test_export_office_returns_an_odp_that_round_trips_and_says_who_made_it_when(deck):
+    from claudia_creates_io import odp_to_slides
+
+    from claudia_odf_io import problems, read_info
+    from claudia_opc_io import read_parts
+
+    add_text(deck, text="Hello there")
+    answer = call(deck, "export_office", {"format": "odp"})
+    assert answer["format"] == "odp"
+    assert answer["content_type"] == "application/vnd.oasis.opendocument.presentation"
+    raw = base64.b64decode(answer["data"])
+    assert problems(raw) == []
+    assert [o.body.paragraph.text for o in odp_to_slides(raw).objects.values()] == ["Hello there"]
+    info = read_info(read_parts(raw)["meta.xml"])
+    assert info.creator == "ann" and info.modifier == "ann"
+    assert info.created and info.modified
+    # who typed which words is not something an odp keeps
+    assert {"kind": "authorship", "detail": "", "count": 1} in answer["losses"]
+
+
+def test_export_office_to_pptx_has_no_loss_list(deck):
+    add_text(deck, text="Hello there")
+    assert "losses" not in call(deck, "export_office", {"format": "pptx"})
+
+
 def test_export_office_rejects_an_unknown_format(deck):
     with pytest.raises(RequestError):
-        call(deck, "export_office", {"format": "odp"})
+        call(deck, "export_office", {"format": "key"})
+
+
+def test_a_new_shapes_words_start_under_shape_label_and_a_text_boxs_under_body_text(deck):
+    """D310: a shape has an outline style and its words a paragraph style of their own (``shape-label``)."""
+    shape, text = add_shape(deck, text="a label"), add_text(deck, text="words")
+    assert (deck.model.get(shape).body.style, deck.model.get(shape).body.paragraph.style) == (
+        "plain-shape",
+        "shape-label",
+    )
+    assert deck.model.get(text).body.paragraph.style == "body-text"
+
+
+def test_deviating_a_shapes_style_keeps_its_kind(deck):
+    """A deviation is a style of the same kind as its parent (D305): changing a shape's outline makes an outline."""
+    shape = add_shape(deck)
+    made = call(
+        deck, "deviate_object_style", {"parent": "plain-shape", "objects": [shape], "set": {"stroke-width": "9px"}}
+    )
+    assert deck.model.styles.get(made["style"]).kind == "outline"
+    with pytest.raises(RequestError, match="font-size"):
+        call(deck, "deviate_object_style", {"parent": "plain-shape", "objects": [shape], "set": {"font-size": "9px"}})
+
+
+def test_the_words_of_an_object_are_restyled_through_the_shared_method(deck):
+    """`set_paragraph_style` is one of the shared style methods now, so all three apps have it (plan, step 1.4)."""
+    shape = add_shape(deck, text="a label")
+    call(deck, "set_paragraph_style", {"id": shape, "style": "body-text"})
+    assert deck.model.get(shape).body.paragraph.style == "body-text"
+    with pytest.raises(RequestError, match="cannot be put into the label"):
+        call(deck, "set_paragraph_style", {"id": shape, "style": "plain-shape"})
+    with pytest.raises(RequestError, match="nope"):
+        call(deck, "set_paragraph_style", {"id": "nope", "style": "body-text"})
+
+
+def test_every_app_offers_the_same_object_style_methods():
+    from claudia_server.composes import composes_methods
+    from claudia_server.computes import computes_methods
+
+    for methods in (creates_methods, computes_methods, composes_methods):
+        assert {"set_object_style", "set_paragraph_style", "deviate_object_style"} <= set(methods.names())

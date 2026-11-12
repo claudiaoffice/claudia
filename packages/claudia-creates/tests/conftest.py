@@ -42,7 +42,10 @@ def build(**fields) -> SlideObject:
     anchor = SlideAnchor(fields.pop("slide", SLIDE), fields.pop("x", 0), fields.pop("y", 0))
     text, author = fields.pop("text", ""), fields.pop("author", "ana")
     if fields.get("kind") != "image" and "paragraph" not in fields:
-        fields["paragraph"] = paragraph_for(fields["id"], fields.get("style", DEFAULT_STYLE), text, author)
+        # A text box's words follow its own style here, as they always did in these tests; a shape's words have a
+        # style of their own kind, since a shape's own style is an outline (D310).
+        words = fields.get("style", DEFAULT_STYLE) if fields.get("kind") == "text" else "shape-label"
+        fields["paragraph"] = paragraph_for(fields["id"], words, text, author)
     return VisualObject(ObjectBody(**fields), anchor)
 
 

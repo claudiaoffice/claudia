@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -8,11 +8,40 @@
   "methods": {},
   "properties": []
  },
+ "Untranslatable": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(reason: 'str', detail: 'str' = '')",
+  "methods": {},
+  "properties": []
+ },
  "add_pivot_table": {
   "function": "(xlsx_bytes: 'bytes', *, source_sheet: 'str', source_range: 'str', row_field: 'str', value_field: 'str', pivot_sheet_name: 'str' = 'Pivot') -> 'bytes'"
  },
+ "apply_edits_to_ods": {
+  "function": "(original_bytes: 'bytes', baseline: 'WorkbookModel', current: 'WorkbookModel', *, losses: 'LossLog | None' = None, info: 'DocumentInfo | None' = None) -> 'bytes'"
+ },
  "apply_edits_to_xlsx": {
   "function": "(original_bytes: 'bytes', baseline: 'WorkbookModel', current: 'WorkbookModel') -> 'bytes'"
+ },
+ "from_openformula": {
+  "function": "(attribute: 'str', functions: 'Container[str] | None' = None) -> 'str'"
+ },
+ "ods_export_losses": {
+  "function": "(model: 'WorkbookModel') -> 'tuple[Loss, ...]'"
+ },
+ "ods_import_losses": {
+  "function": "(ods_bytes: 'bytes') -> 'tuple[Loss, ...]'"
+ },
+ "ods_to_workbook": {
+  "function": "(ods_bytes: 'bytes') -> 'WorkbookModel'"
+ },
+ "to_openformula": {
+  "function": "(formula: 'str') -> 'str'"
+ },
+ "workbook_to_ods": {
+  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None) -> 'bytes'"
  },
  "workbook_to_xlsx": {
   "function": "(model: 'WorkbookModel') -> 'bytes'"

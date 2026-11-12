@@ -47,6 +47,10 @@ D241-D248. Branch `win-client-complete`. Everything here ran on Linux only; see 
 
 ## [0.1.1] - unreleased (fixes found on real runs; carried into 0.2.0)
 
+### Changed
+- `src/generated/menu.*.json` regenerated: Format starts with **Apply Style…** (`format.apply-style`, D301), which
+  opens the page's style popover in its apply mode, as in the GTK shell.
+
 ### Fixed
 - `tools/build-inject.mjs`: `npm run build:inject` failed on a real Windows machine with
   `Error [ERR_UNSUPPORTED_ESM_URL_SCHEME] ... Received protocol 'c:'`, found on the owner's first real run

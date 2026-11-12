@@ -4,6 +4,60 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.13.0] - 2026-11-11
+
+A throwaway copy of a document, for previewing what the AI proposes (E7.8, D263).
+
+### Added
+- `Document.scratch(at=None)`: a new `Document` that starts from the state now (or at the revision `at`, on any line),
+  with a log of its own and no store. Commands run on it like on any document, with its own events, locks and undo; the
+  live document, its log, the disk and everybody's undo steps never notice it, and it never sees what happens live
+  afterwards. The current state is copied (cost: the size of the state, not the length of the history); an older
+  revision costs a replay from the nearest cached snapshot, as `materialize` does. `KernelError` for a revision that
+  does not exist.
+## [0.14.0] - 2026-11-10
+
+The styling-suite plan, steps 1.2 to 1.6: every styled thing reads its slots.
+
+### Changed
+- **Breaking:** `fits(kind, slot)` is true when the kind can hold every facet the slot reads (D316): a box slot
+  takes a box style and a paragraph style (a bundle, D309, D311); a slot that reads nothing takes only its own kind.
+- **Breaking:** an object's own style must fit its container's slot and its words' style the words' slot
+  (`ObjectModel.check_object`, so `AddObject`, `SetObjectStyle` and `SetParagraphStyle`): a shape's style is an
+  outline, its words a paragraph style.
+- `ObjectModel.style_in_use` counts the style of an object's words too, so a style only a shape's label uses
+  cannot be taken back.
+
+### Added
+- `object_styles(body)`: the styles an object uses, one per slot.
+- `CSS_VERSION` 3: `vertical-align` (`top`, `middle`, `bottom`) and `white-space` (`normal`, `nowrap`,
+  `pre-wrap`) in the Box facet, for the box of a cell (D307).
+- `Slot.to_data()` carries `takes`: the kinds of style that fit the slot.
+
+## [0.13.0] - 2026-11-10
+
+Facets, kinds and slots: what a style property means and where a style can be put (D303-D305, D312, D315; the
+styling-suite plan, step 1.1).
+
+### Added
+- `claudia_core.facets`: the four facets (`TEXT_FACET`, `PARAGRAPH_FACET`, `BOX_FACET`, `OUTLINE_FACET`, all in
+  `FACETS`), each a `Facet(name, properties)`; `facet_of(prop)`; `FACET_PROPERTIES`. Every property of
+  `ALLOWED_CSS` belongs to exactly one facet, and `ALLOWED_CSS` is now *derived* from them — the list of
+  properties is unchanged, and `CSS_VERSION` stays 2.
+- `KINDS`: the kinds of style and the facets each may hold — `paragraph` (text, paragraph and box), `box`,
+  `outline` (D312). `check_kind(kind, properties)` refuses, in one sentence, every property outside the kind.
+- `Slot(name, reads, kind)`, `SlotTable` and `SLOTS`: the slots of everything that can be styled today — a composes
+  paragraph, a text box, a shape, an image, a diagram, a cell (D304, D311). `fits(kind, slot)`.
+  `SlotTable.with_row(thing, slots)` adds a later kind of thing without touching anything else (D315);
+  `SlotTable.to_data()` is the plain-data form a server will send.
+- `StyleDef.kind` (default `"paragraph"`), in `to_data`, in `StyleBook.views` and so in `StylesChanged`.
+
+### Changed
+- **Breaking:** `StyleBook.add` and `StyleBook.set_css` (so `CreateStyle` and `ChangeStyle`) refuse a property that
+  is not of the style's kind, and a style based on a style of another kind.
+- **Breaking:** `StyleDef.from_data` requires `kind`. There is no upcast of documents or logs from before kinds
+  existed (D308, until the first release).
+
 ## [0.12.0] - 2026-11-09
 
 The style surface the menus in all three apps are built on (D203).

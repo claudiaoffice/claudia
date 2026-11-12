@@ -273,3 +273,81 @@ def test_the_models_requirement_is_clear_when_it_has_no_style_book():
 
 def test_remove_is_an_ordinary_command_with_a_sentence():
     assert RemoveStyle("quote").summary == "took back the style quote"
+
+
+# ----------------------------------------------------------------------------- kinds (D305, D312)
+FRAME = StyleDef("frame", "Frame", "a box around something", None, {"border-top": "1px solid @structure"}, kind="box")
+SHAPE = StyleDef("shape", "Shape", "an outline", None, {"fill": "@accent/14", "stroke": "@accent"}, kind="outline")
+
+
+def test_a_style_has_a_kind_and_a_paragraph_style_is_what_text_has_unless_said_otherwise():
+    assert BODY.kind == "paragraph"
+    assert FRAME.kind == "box" and SHAPE.kind == "outline"
+
+
+def test_the_kind_travels_with_the_style_and_comes_back():
+    data = SHAPE.to_data()
+    assert data["kind"] == "outline"
+    assert StyleDef.from_data(data) == SHAPE
+
+
+def test_a_style_without_a_kind_in_its_data_is_not_guessed_at():
+    """No upcast before the first release (D308): a style written before kinds existed does not load."""
+    data = BODY.to_data()
+    del data["kind"]
+    with pytest.raises(KeyError, match="kind"):
+        StyleDef.from_data(data)
+
+
+def test_a_style_may_only_hold_the_properties_of_its_kind():
+    s = StyleBook([BODY, FRAME, SHAPE])
+    with pytest.raises(ValueError, match="“fill”.*paragraph style"):
+        s.add(StyleDef("odd", "Odd", "", None, {"fill": "red"}))
+    with pytest.raises(ValueError, match="“font-size”.*outline style"):
+        s.add(StyleDef("odd", "Odd", "", None, {"font-size": "9pt"}, kind="outline"))
+    with pytest.raises(ValueError, match="kind"):
+        s.add(StyleDef("odd", "Odd", "", None, {}, kind="character"))
+    assert "odd" not in s
+
+
+def test_changing_a_style_keeps_it_inside_its_kind():
+    s = StyleBook([BODY, SHAPE])
+    with pytest.raises(ValueError, match="“text-align”.*outline style"):
+        s.set_css("shape", {"fill": "red", "text-align": "center"})
+    assert s.get("shape").css == {"fill": "@accent/14", "stroke": "@accent"}
+
+
+def test_a_style_is_based_only_on_a_style_of_its_own_kind():
+    """Otherwise the computed look of an outline would carry a font it can never use."""
+    s = StyleBook([BODY, SHAPE])
+    with pytest.raises(ValueError, match="outline.*based on.*paragraph"):
+        s.add(StyleDef("thick", "Thick", "", "body", {"stroke-width": "4px"}, kind="outline"))
+    s.add(StyleDef("thick", "Thick", "", "shape", {"stroke-width": "4px"}, kind="outline"))
+    assert s.computed("thick") == {"fill": "@accent/14", "stroke": "@accent", "stroke-width": "4px"}
+
+
+def test_the_clients_are_told_the_kind_of_every_style(paper):
+    events = seen(paper)
+    paper.execute(CreateStyle(FRAME), author="ann")
+    (event,) = events
+    assert {view["id"]: view["kind"] for view in event.styles} == {
+        "body": "paragraph",
+        "heading": "paragraph",
+        "frame": "box",
+    }
+    assert paper.model.styles.views()[0]["kind"] == "paragraph"
+
+
+def test_a_command_that_breaks_the_kind_changes_nothing(paper):
+    paper.execute(CreateStyle(SHAPE), author="ann")
+    before = paper.model.serialize()
+    with pytest.raises(ValueError, match="“color”.*outline style"):
+        paper.execute(ChangeStyle("shape", {"color": "red"}, ()), author="ann")
+    assert paper.model.serialize() == before
+
+
+def test_a_kind_survives_the_log(paper):
+    paper.execute(CreateStyle(FRAME), author="ann")
+    replayed = CreateStyle.from_data(CreateStyle(FRAME).to_data(), new_registry())
+    assert replayed.style.kind == "box"
+    assert StyleBook.from_data(paper.model.styles.to_data()).get("frame").kind == "box"

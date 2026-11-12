@@ -43,7 +43,7 @@ The messages are the same JSON text on every platform; what carries them differs
 
 * **WebKitGTK (Linux).** The shell registers `window.webkit.messageHandlers.claudia`, which the page posts to, and
   calls `window.__claudiaShell.receive(text)`, which the page registers.
-* **Neutralino (macOS and Windows), D251, D261.** The web app is shown in a frame of the shell's own page, so the two
+* **Neutralino (macOS and Windows), D251, D271.** The web app is shown in a frame of the shell's own page, so the two
   use `postMessage` with the message as text. The shell page accepts a message only from its own frame and only from
   the origin it opened there; the web app accepts one only from its parent window and only when that is a page on
   this computer's loopback (the shell page is served by Neutralino from there).

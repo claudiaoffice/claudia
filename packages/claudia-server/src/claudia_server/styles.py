@@ -25,6 +25,7 @@ from claudia_core import (
     RenameStyle,
     ReplacePalette,
     SetObjectStyle,
+    SetParagraphStyle,
     SetRole,
     StyleBook,
     StyleDef,
@@ -34,6 +35,7 @@ from claudia_core import (
 )
 
 from .protocol import Context, MethodTable, RequestError
+from .style_targets import OBJECTS, StyleTarget, add_target_methods
 
 #: A palette may not be replaced with more roles than the kernel would take anyway.
 MAX_SENT_ROLES = 64
@@ -176,6 +178,19 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
         except (KeyError, ValueError) as exc:
             raise RequestError("command_error", str(exc)) from None
 
+    @table.method("set_paragraph_style", "id:str style:str base:revision?", write=True)
+    def _set_paragraph_style(ctx, *, id, style, base):
+        """Put an object's words under another style: the *words* slot of a text box, the label of a shape (D304).
+
+        Not the object's own style, which `set_object_style` points elsewhere. The same in all three apps.
+        `command_error` if there is no such object or style, or the style does not fit the words — an outline or a
+        box style (D316)."""
+        allowed(ctx)
+        try:
+            return _changed(ctx, SetParagraphStyle(id, style), base)
+        except (KeyError, ValueError) as exc:
+            raise RequestError("command_error", str(exc)) from None
+
     @table.method("deviate_object_style", "parent:str objects:list set:dict? text:text? base:revision?", write=True)
     def _deviate_object_style(ctx, *, parent, objects, set, text, base):
         """Make a new style from `parent` that differs in the CSS given (`set` properties, or `text`) and give it to
@@ -202,30 +217,41 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
         if not own:
             raise RequestError("command_error", f"the new style would look just like “{book.get(parent).name}”")
         name = book.provisional_name(parent)
-        made = StyleDef(book.unique_id(name), name, "", parent, own, to_name=True)
+        kind = book.get(parent).kind  # a deviation is of its parent's kind (D305)
+        made = StyleDef(book.unique_id(name), name, "", parent, own, to_name=True, kind=kind)
         steps: list[Command] = [CreateStyle(made), *(SetObjectStyle(one, made.id) for one in objects)]
         applied = ctx.document.execute(Batch(tuple(steps), "Deviate style"), author=ctx.user, base=base)
         return {"style": made.id, "name": name, "revision": applied.revision.to_data()}
 
 
-def add_style_methods(table: MethodTable, *, guard: Callable[[Context], None] | None = None) -> None:
+def add_style_methods(
+    table: MethodTable,
+    *,
+    guard: Callable[[Context], None] | None = None,
+    targets: Iterable[StyleTarget] = (OBJECTS,),
+) -> None:
     """Register the shared style and palette methods in ``table``.
 
-    ``guard`` runs before every one that writes; see the module docstring.
+    ``guard`` runs before every one that writes; see the module docstring. ``targets`` are the kinds of thing the
+    app's ``apply_style`` and ``deviate`` accept (:mod:`claudia_server.style_targets`): every app has floating
+    objects; composes adds its paragraphs, computes its cells.
     """
     allowed = guard if guard is not None else (lambda ctx: None)
     _add_palette_methods(table, allowed)
     _add_object_style_methods(table, allowed)
+    add_target_methods(table, allowed, targets, own_css=own_css)
 
     @table.method("styles")
     def _styles(ctx):
-        """The document's styles, each as `{id, name, purpose, based_on, css, computed, resolved, to_name}`.
+        """The document's styles, each as `{id, name, purpose, based_on, css, computed, resolved, to_name, kind}`.
 
         `css` is what the style sets itself, `computed` the CSS it really has once its parents (`based_on`) are
         taken in (D73), and `resolved` the same again with every palette role (`@accent`) replaced by the literal
         colour the palette gives it — that last one is what a client draws with, so the CSS it puts on a page is
         always literal. `to_name` is true for a style that was made by deviating and still has the provisional
-        name it was given (E9.7). A shape's background and border are `fill`/`stroke`/`stroke-width` (D178)."""
+        name it was given (E9.7). A shape's background and border are `fill`/`stroke`/`stroke-width` (D178).
+        `kind` is `paragraph`, `box` or `outline`: which facets the style may hold, and so which slots it can be
+        put into (D305, D312)."""
         return _book(ctx).views(_palette_colours(ctx))
 
     @table.method("change_style", "style:str set:dict? unset:list? text:text? base:revision?", write=True)

@@ -16,6 +16,9 @@ background is ``fill`` and its border is ``stroke`` plus ``stroke-width``, not `
 ``border-*``. That is the one vocabulary for shapes in all three apps (D178): a triangle or a circle can carry a
 border this way and cannot the other. A client's property dialog may of course call them "background" and
 "border" in plain words.
+
+A shape has two slots (D304, D310): its outline, under an ``outline`` style (``plain-shape``), and its words, under a
+``paragraph`` style (``shape-label``). Together they look exactly as the one mixed style did before they were split.
 """
 
 from __future__ import annotations
@@ -38,12 +41,16 @@ _IRIS = "@accent"
 _MIST = "@accent/14"
 
 
-def _style(style_id: str, name: str, purpose: str, **css: str) -> StyleDef:
-    return StyleDef(style_id, name, purpose, None if style_id == DEFAULT_STYLE else DEFAULT_STYLE, css)
+def _style(style_id: str, name: str, purpose: str, *, kind: str = "paragraph", **css: str) -> StyleDef:
+    # A paragraph style is based on Body text, so a change to Body text reaches it (D73); a box or outline style is
+    # a root of its own, because a style and its parent are always of the same kind (D305).
+    parent = DEFAULT_STYLE if kind == "paragraph" and style_id != DEFAULT_STYLE else None
+    return StyleDef(style_id, name, purpose, parent, css, kind=kind)
 
 
-#: The styles every presentation starts with, all based on Body text: a change to Body text reaches the others
-#: where they have not set the property themselves (D73). Sizes are in slide units (1 unit = 1 CSS pixel of the
+#: The styles every presentation starts with. The paragraph styles are based on Body text: a change to Body text
+#: reaches the others where they have not set the property themselves (D73). The outline and the picture's box are
+#: styles of their own kinds (D305). Sizes are in slide units (1 unit = 1 CSS pixel of the
 #: 1600 by 900 stage).
 BUILTIN_STYLES: tuple[StyleDef, ...] = (
     _style(
@@ -59,22 +66,37 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
         },
     ),
     _style(
-        "plain-shape",
-        "Plain shape",
-        "a shape that carries a thought or marks a part of the slide, without drawing attention to itself",
+        "shape-label",
+        "Shape label",
+        "the words inside a shape on a slide",
         **{
-            "fill": _MIST,
-            "stroke": _IRIS,
-            "stroke-width": "4px",
             "font-size": "36px",
             "line-height": "1.25",
             "text-align": "center",
         },
     ),
     _style(
+        "plain-shape",
+        "Plain shape",
+        "a shape that carries a thought or marks a part of the slide, without drawing attention to itself",
+        kind="outline",
+        **{
+            "fill": _MIST,
+            "stroke": _IRIS,
+            "stroke-width": "4px",
+        },
+    ),
+    _style(
+        "plain-box",
+        "Plain box",
+        "the box of a text box on a slide: no background and no border, so only its words show",
+        kind="box",
+    ),
+    _style(
         "plain-image",
         "Plain image",
         "a picture placed on the slide; it carries its own colours, so no style properties apply to it",
+        kind="box",
     ),
 )
 

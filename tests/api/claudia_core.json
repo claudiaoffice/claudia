@@ -1,5 +1,5 @@
 {
- "version": "0.12.0",
+ "version": "0.14.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -49,6 +49,9 @@
  "BOX": {
   "value": "100"
  },
+ "BOX_FACET": {
+  "value": "<Facet>"
+ },
  "BUILTIN_ROLES": {
   "value": "(ColourRole(id='text', name='Text', purpose='the words you read', colour='#1F1A33'), ColourRole(id='muted', name='Muted', purpose='captions and secondary words', colour='#6B6578'), ColourRole(id='page', name='Page', purpose='the page, slide or sheet itself', colour='#F7F3EC'), ColourRole(id='surface', name='Surface', purpose='the fill of a box or a shape', colour='#FFFFFF'), ColourRole(id='structure', name='Structure', purpose='borders, rules and dividers', colour='#8A82A0'), ColourRole(id='accent', name='Accent', purpose='the one thing to notice', colour='#5B4BC4'), ColourRole(id='accent-text', name='Accent text', purpose='words on top of the accent', colour='#FFFFFF'), ColourRole(id='attention', name='Attention', purpose='something addressed to the reader', colour='#D6477A'), ColourRole(id='highlight', name='Highlight', purpose='a passage set apart from the rest', colour='#F2A057'))"
  },
@@ -94,7 +97,7 @@
   "properties": []
  },
  "CSS_VERSION": {
-  "value": "2"
+  "value": "3"
  },
  "ChangeStyle": {
   "class": [
@@ -394,6 +397,7 @@
    "redo": "(self, author: 'str | None') -> 'Applied | None'",
    "restore_checkpoint": "(self, number: 'int', author: 'str | None' = None) -> 'Applied | None'",
    "save_checkpoint": "(self, author: 'str | None' = None, label: 'str | None' = None) -> 'CheckpointInfo | None'",
+   "scratch": "(self, at: 'Revision | None' = None) -> 'Document'",
    "show_presence": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Ephemeral'",
    "side_revisions": "(self) -> 'list[Revision]'",
    "snapshot": "(self) -> 'Snapshot | None'",
@@ -494,8 +498,22 @@
   },
   "properties": []
  },
+ "FACETS": {
+  "value": "(Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')), Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')))"
+ },
+ "FACET_PROPERTIES": {
+  "value": "<frozenset>"
+ },
  "FORMAT": {
   "value": "1"
+ },
+ "Facet": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', properties: 'tuple[str, ...]') -> None",
+  "methods": {},
+  "properties": []
  },
  "FontRequirement": {
   "class": [
@@ -657,6 +675,9 @@
   },
   "properties": []
  },
+ "KINDS": {
+  "value": "{'paragraph': (Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space'))), 'box': (Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')),), 'outline': (Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')),)}"
+ },
  "KernelError": {
   "class": [
    "Exception"
@@ -750,6 +771,9 @@
  "OBJECT_KINDS": {
   "value": "('text', 'shape', 'image', 'diagram')"
  },
+ "OUTLINE_FACET": {
+  "value": "<Facet>"
+ },
  "ObjectBody": {
   "class": [
    "object"
@@ -828,6 +852,9 @@
  },
  "PAIRINGS": {
   "value": "(('text', 'page', 4.5), ('text', 'surface', 4.5), ('muted', 'page', 4.5), ('muted', 'surface', 4.5), ('accent-text', 'accent', 4.5), ('structure', 'page', 3.0), ('structure', 'surface', 3.0), ('accent', 'page', 3.0), ('accent', 'surface', 3.0))"
+ },
+ "PARAGRAPH_FACET": {
+  "value": "<Facet>"
  },
  "Palette": {
   "class": [
@@ -1169,6 +1196,9 @@
   "methods": {},
   "properties": []
  },
+ "SLOTS": {
+  "value": "<SlotTable>"
+ },
  "SUPPORTED_IMAGE_FORMATS": {
   "value": "('jpeg', 'png', 'gif', 'bmp', 'svg')"
  },
@@ -1317,6 +1347,30 @@
   },
   "properties": []
  },
+ "Slot": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', reads: 'tuple[Facet, ...]', kind: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "SlotTable": {
+  "class": [
+   "object"
+  ],
+  "init": "(rows: 'Mapping[str, Iterable[Slot]]')",
+  "methods": {
+   "slot": "(self, thing: 'str', name: 'str') -> 'Slot'",
+   "slots_of": "(self, thing: 'str') -> 'tuple[Slot, ...]'",
+   "things": "(self) -> 'list[str]'",
+   "to_data": "(self) -> 'dict'",
+   "with_row": "(self, thing: 'str', slots: 'Iterable[Slot]') -> 'SlotTable'"
+  },
+  "properties": []
+ },
  "Snapshot": {
   "class": [
    "object"
@@ -1373,7 +1427,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False) -> None",
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'StyleDef'",
    "to_data": "(self) -> 'dict'"
@@ -1404,6 +1458,9 @@
   "properties": [
    "label"
   ]
+ },
+ "TEXT_FACET": {
+  "value": "<Facet>"
  },
  "TEXT_FLOOR": {
   "value": "4.5"
@@ -1474,6 +1531,9 @@
  "check": {
   "function": "(manifest: 'Manifest', env: 'Environment') -> 'RequirementReport'"
  },
+ "check_kind": {
+  "function": "(kind: 'str', properties: 'Iterable[str]') -> 'None'"
+ },
  "contrast": {
   "function": "(one: 'str', other: 'str') -> 'float'"
  },
@@ -1488,6 +1548,12 @@
  },
  "environment_of": {
   "function": "(model_cls: 'type[DocumentModel]', *, functions=None, fonts=(), providable_fonts=()) -> 'Environment'"
+ },
+ "facet_of": {
+  "function": "(prop: 'str') -> 'Facet'"
+ },
+ "fits": {
+  "function": "(kind: 'str', slot: 'Slot') -> 'bool'"
  },
  "format_css": {
   "function": "(css: 'Mapping[str, str]') -> 'str'"

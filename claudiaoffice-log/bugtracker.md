@@ -32,7 +32,7 @@ statement in the docs or on the website).
 | SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | verified open |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |
 | SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |
-| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | verified open |
+| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` open |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
 | SEC-11 | P3 | Security | No per-address back-off on failed logins | verified open |
@@ -134,7 +134,12 @@ signed by the same key fails.
 ### SEC-07 · Plain-text passwords on non-loopback addresses · P2 · fixed
 Verified at `54d1245`: `--no-tls` with a non-loopback `--host` raises `UsageError` unless `--behind-proxy`.
 
-### SEC-08 · Dependency audits are not run by the gate or CI · P3 · verified open
+### SEC-08 · Dependency audits are not run by the gate or CI · P3 · npm fixed 2026-11-11; `pip-audit` open
+**Update 2026-11-11.** The npm half is done: `scripts/check_npm_audit.py` is a step of the gate (so also of CI, on every
+push and weekly) and audits every `package-lock.json`, development tools included, failing on moderate or worse; the
+allow-list is `[[tool.claudia.npm-audit-allow]]` in `pyproject.toml` (empty; a reason is required, an unneeded entry
+fails). The findings that had piled up were fixed first (`implementation-notes/implementation-notes-npm-audit-2026-11-11.md`).
+Open: the same for the Python dependencies (`pip-audit` or `uv pip audit` against `uv.lock`).
 **Evidence (read, `54d1245`).** `scripts/check_debt.py` runs ruff, mypy, vulture, pytest, Sphinx, perf guards and the
 web checks. It runs no `npm audit`, no `pip-audit`. `.github/workflows/ci.yml` adds none either.
 **Fix.** Add `npm audit --omit=dev` and `pip-audit` (or `uv pip audit`) to the gate, with an allow-list that needs a

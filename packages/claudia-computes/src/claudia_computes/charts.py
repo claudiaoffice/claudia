@@ -10,6 +10,11 @@ Deliberately minimal for the first chart kind, the bar chart (E6.6's starting sc
 and every other field is generic, so a line, pie or scatter chart can join ``CHART_KINDS`` later without changing
 anything already stored.
 
+A chart may instead read a **named result or table** (E6.5): ``source`` names it, ``source_scope`` says which sheet's
+own name is meant (``None`` for a workbook-wide one), and the chart follows the name live — a ``SQL()`` result that
+grows or moves is still the chart's data, which a frozen range could never be. A chart has exactly one of ``range``
+and ``source``.
+
 A chart's range is frozen at the cells it was given, the same policy ``model.py`` already states for a floating
 object's anchor: nothing here makes it follow a row or column insert or delete. Unlike an object's position, which
 is a visual choice the model deliberately leaves alone, a chart's range is a *data reference* — closer in kind to
@@ -30,7 +35,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from .limits import MAX_COLS, MAX_ROWS
-from .refs import RangeRef
+from .refs import RangeRef, SheetId
 
 #: The version of this definition's own data format (mirrors ``shapes.FORMAT``).
 FORMAT = 1
@@ -48,6 +53,8 @@ _KEYS = {
     "id",
     "kind",
     "range",
+    "source",
+    "source_scope",
     "series_in",
     "header_row",
     "title",
@@ -56,7 +63,7 @@ _KEYS = {
     "legend",
     "gridlines",
 }
-_REQUIRED = ("format", "id", "kind", "range")
+_REQUIRED = ("format", "id", "kind")
 
 
 class ChartError(ValueError):
@@ -110,6 +117,20 @@ def _check_range(value: object) -> RangeRef:
     return range_
 
 
+def _check_source(value: object) -> str:
+    if not isinstance(value, str) or not value.strip() or not value.isprintable():
+        raise ChartError("source: must be the name of a named range or table")
+    return value
+
+
+def _check_source_scope(value: object) -> SheetId | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        raise ChartError("source_scope: a sheet id, or null for a name of the whole workbook")
+    return SheetId(value)
+
+
 @dataclass(frozen=True)
 class ChartSpec:
     """What one chart draws: a range of cells and how to read it, plus its titles and whether it carries a
@@ -119,9 +140,20 @@ class ChartSpec:
     allow; :meth:`~claudia_computes.WorkbookModel.diagram_from_data` additionally checks that ``range`` fits a
     sheet this document actually has, which this class alone cannot know."""
 
+    def __post_init__(self) -> None:
+        if (self.range is None) == (not self.source):
+            raise ChartError("a chart reads either a range or a named source, one of the two")
+        if self.source_scope is not None and not self.source:
+            raise ChartError("source_scope: only a named source has a scope")
+
     id: str
     kind: str
-    range: RangeRef
+    range: RangeRef | None = None
+    #: The name of a named range or table (or a ``SQL()`` result) to read instead of ``range``; empty when the
+    #: chart reads a range. A named source always has a header row — a name is a table, and a table has headers.
+    source: str = ""
+    #: The sheet a sheet-scoped ``source`` belongs to; ``None`` for a name of the whole workbook.
+    source_scope: SheetId | None = None
     series_in: str = "columns"
     #: Whether the range's first row is a header — the series' names when ``series_in`` is "columns", the
     #: category labels when it is "rows" — rather than a row of data like every other (E6.6, header-row bug).
@@ -138,11 +170,14 @@ class ChartSpec:
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
+        where: dict = {"range": self.range.to_dict()} if self.range is not None else {}
+        if self.source:
+            where = {"source": self.source, "source_scope": self.source_scope}
         return {
             "format": FORMAT,
             "id": self.id,
             "kind": self.kind,
-            "range": self.range.to_dict(),
+            **where,
             "series_in": self.series_in,
             "header_row": self.header_row,
             "title": self.title,
@@ -171,7 +206,9 @@ class ChartSpec:
         return cls(
             id=_check_id(data["id"]),
             kind=_check_kind(data["kind"]),
-            range=_check_range(data["range"]),
+            range=_check_range(data["range"]) if data.get("range") is not None else None,
+            source=_check_source(data["source"]) if data.get("source") is not None else "",
+            source_scope=_check_source_scope(data.get("source_scope")),
             series_in=_check_series_in(data.get("series_in", "columns")),
             header_row=_check_bool(data.get("header_row", True), "header_row"),
             title=_check_title(data.get("title", ""), "title"),

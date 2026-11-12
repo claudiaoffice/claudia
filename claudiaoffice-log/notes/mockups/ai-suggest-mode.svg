@@ -1,0 +1,232 @@
+<svg viewBox="0 0 1400 1010" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="1010" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — suggest mode: the AI's proposal, previewed on a scratch copy (E7.7, E7.8)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Suggest is the default mode in all three apps. Nothing is written until anna accepts; nobody else sees the preview; nothing is locked.</text>
+<rect x="40" y="100" width="560" height="64" rx="12" fill="#1f1a33"/>
+<circle cx="62" cy="124" r="5" fill="#5b4bc4"/>
+<text x="76" y="129" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#f7f3ec" text-anchor="start">Previewing the AI's proposal — only you see this</text>
+<text x="76" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#a9a3bd" text-anchor="start">Computed at revision 42 · 1 other change since, outside it</text>
+<rect x="432" y="114" width="72" height="32" rx="8" fill="#5b4bc4"/>
+<text x="468" y="135" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">Accept</text>
+<rect x="512" y="114" width="72" height="32" rx="8" fill="none" stroke="#6a6288" stroke-width="1"/>
+<text x="548" y="135" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">Reject</text>
+<circle cx="18" cy="132" r="11" fill="#5b4bc4"/>
+<text x="18" y="136.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">2</text>
+<rect x="40" y="180" width="560" height="396" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="58" y="208" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Budget</text>
+<rect x="40" y="224" width="40" height="34" rx="0" fill="#f4f1fa"/>
+<rect x="80" y="224" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="121.0" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">A</text>
+<rect x="162" y="224" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="203.0" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">B</text>
+<rect x="244" y="224" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="285.0" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">C</text>
+<rect x="326" y="224" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="367.0" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">D</text>
+<rect x="408" y="224" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="449.0" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">E</text>
+<rect x="490" y="224" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="531.0" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">F</text>
+<rect x="40" y="258" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="280" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">1</text>
+<rect x="80" y="258" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="280" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Item</text>
+<rect x="162" y="258" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="172" y="280" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Amount</text>
+<rect x="244" y="258" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="254" y="280" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Months</text>
+<rect x="326" y="258" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="336" y="280" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Total</text>
+<rect x="408" y="258" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="258" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="292" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="314" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">2</text>
+<rect x="80" y="292" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="314" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Rent</text>
+<rect x="162" y="292" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="314" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">1,200</text>
+<rect x="244" y="292" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="314" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="292" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="314" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">14,400</text>
+<rect x="408" y="292" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="292" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="326" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="348" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">3</text>
+<rect x="80" y="326" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="348" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Food</text>
+<rect x="162" y="326" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="348" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">450</text>
+<rect x="244" y="326" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="348" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="326" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="348" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">5,400</text>
+<rect x="408" y="326" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="326" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="360" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">4</text>
+<rect x="80" y="360" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Transport</text>
+<rect x="162" y="360" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">120</text>
+<rect x="244" y="360" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="360" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">1,440</text>
+<rect x="408" y="360" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="360" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="394" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="416" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">5</text>
+<rect x="80" y="394" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="416" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Savings</text>
+<rect x="162" y="394" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="416" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">300</text>
+<rect x="244" y="394" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="416" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="394" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="416" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">3,600</text>
+<rect x="408" y="394" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="394" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="428" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="450" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">6</text>
+<rect x="80" y="428" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="450" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Sum</text>
+<rect x="162" y="428" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="450" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">2,070</text>
+<rect x="244" y="428" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="326" y="428" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="450" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">24,840</text>
+<rect x="408" y="428" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="428" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="462" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="484" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">7</text>
+<rect x="80" y="462" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="484" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Per week</text>
+<rect x="162" y="462" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="484" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">477.69</text>
+<rect x="244" y="462" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="326" y="462" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="408" y="462" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="462" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="326" y="326" width="82" height="34" rx="0" fill="none" stroke="#f2a057" stroke-width="2"/>
+<rect x="412" y="335" width="34" height="16" rx="4" fill="#f2a057"/>
+<text x="429" y="347" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#1f1a33" text-anchor="middle">ben</text>
+<rect x="162" y="462" width="82" height="34" rx="0" fill="#e9e5f8" stroke="#5b4bc4" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="234" y="484" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#5b4bc4" text-anchor="end">477.69</text>
+<text x="252" y="484" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">was #DIV/0!</text>
+<circle cx="578" cy="479" r="11" fill="#5b4bc4"/>
+<text x="578" y="483.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">3</text>
+<text x="58" y="558" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">B7 is marked, not locked: ben can still edit anywhere, including B7.</text>
+<text x="40" y="600" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">If B7 changes before she accepts</text>
+<rect x="40" y="614" width="560" height="268" rx="16" fill="#ffffff" stroke="#1f1a33" stroke-width="1"/>
+<text x="64" y="646" font-family="Fraunces, Georgia, serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">B7 changed since the AI looked</text>
+<text x="64" y="668" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">The proposal is out of date. Nothing has been merged or overwritten.</text>
+<rect x="64" y="684" width="512" height="74" rx="10" fill="#f4f1fa"/>
+<text x="80" y="708" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="start">B7 now</text>
+<text x="170" y="708" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">=D6/50   →  480</text>
+<text x="370" y="708" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">ben, 09:31</text>
+<text x="80" y="736" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="start">AI proposes</text>
+<text x="170" y="736" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#5b4bc4" text-anchor="start">=D6/52   →  477.69</text>
+<rect x="64" y="784" width="110" height="36" rx="9" fill="none" stroke="#b9b2d1" stroke-width="1"/>
+<text x="119.0" y="807" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Keep ben's</text>
+<rect x="184" y="784" width="124" height="36" rx="9" fill="none" stroke="#b9b2d1" stroke-width="1"/>
+<text x="246.0" y="807" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Use the AI's</text>
+<rect x="318" y="784" width="150" height="36" rx="9" fill="#5b4bc4"/>
+<text x="393.0" y="807" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">Ask the AI again</text>
+<text x="64" y="850" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">It asks instead of rebasing, as for a restore in the middle of editing.</text>
+<circle cx="18" cy="740" r="11" fill="#5b4bc4"/>
+<text x="18" y="744.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
+<rect x="640" y="100" width="380" height="880" rx="14" fill="#1f1a33"/>
+<text x="660" y="134" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#f7f3ec" text-anchor="start">History &amp; Chat</text>
+<text x="780" y="134" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="400" fill="#a9a3bd" text-anchor="start">Help</text>
+<line x1="654" y1="146" x2="740" y2="146" stroke="#5b4bc4" stroke-width="2"/>
+<text x="660" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#a9a3bd" text-anchor="start">When I ask the AI, in this document:</text>
+<rect x="660" y="182" width="340" height="34" rx="9" fill="#2a2444" stroke="#4a4268" stroke-width="1"/>
+<rect x="830.0" y="182" width="170.0" height="34" rx="9" fill="#5b4bc4"/>
+<text x="745.0" y="204" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#cfc9e3" text-anchor="middle">Act at once</text>
+<text x="915.0" y="204" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#f7f3ec" text-anchor="middle">Suggest first</text>
+<circle cx="618" cy="199" r="11" fill="#5b4bc4"/>
+<text x="618" y="203.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">1</text>
+<rect x="654" y="228" width="352" height="30" rx="9" fill="#2a2444"/>
+<circle cx="672" cy="243" r="6" fill="#5b4bc4"/>
+<text x="686" y="248" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#f7f3ec" text-anchor="start">ai</text>
+<rect x="718" y="233" width="104" height="20" rx="10" fill="#5b4bc4"/>
+<text x="770" y="247" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#f7f3ec" text-anchor="middle">Claude · remote</text>
+<circle cx="668" cy="290" r="5" fill="#d6477a"/>
+<text x="680" y="294" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#cfc9e3" text-anchor="start">anna</text>
+<rect x="664" y="304" width="300" height="40" rx="10" fill="#3a3358"/>
+<text x="678" y="329" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">@ai why is B7 an error?</text>
+<rect x="660" y="364" width="340" height="26" rx="7" fill="#2a2444"/>
+<circle cx="674" cy="377" r="4" fill="#5b4bc4"/>
+<text x="686" y="381" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#a9a3bd" text-anchor="start">read  Budget!A1:F8 · 25 cells</text>
+<circle cx="668" cy="410" r="5" fill="#5b4bc4"/>
+<text x="680" y="414" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#cfc9e3" text-anchor="start">ai</text>
+<rect x="664" y="424" width="330" height="84" rx="10" fill="#3a3358"/>
+<text x="678" y="447" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">B7 divides by C7, which is empty. I'd</text>
+<text x="678" y="467" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">change it to =D6/52. I tried it on a</text>
+<text x="678" y="487" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">preview: no errors.</text>
+<rect x="660" y="528" width="340" height="132" rx="10" fill="#2a2444" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="676" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#cfc9e3" text-anchor="start">ai proposal · for anna</text>
+<text x="984" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#4fd1b8" text-anchor="end">open</text>
+<text x="676" y="576" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#f7f3ec" text-anchor="start">set_cells  Budget!B7  =D6/52</text>
+<text x="676" y="596" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#a9a3bd" text-anchor="start">checked on a preview: B7 = 477.69, no errors</text>
+<rect x="676" y="612" width="86" height="32" rx="8" fill="none" stroke="#6a6288" stroke-width="1"/>
+<text x="719" y="633" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">Preview</text>
+<rect x="772" y="612" width="86" height="32" rx="8" fill="#5b4bc4"/>
+<text x="815" y="633" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">Accept</text>
+<rect x="868" y="612" width="86" height="32" rx="8" fill="none" stroke="#6a6288" stroke-width="1"/>
+<text x="911" y="633" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">Reject</text>
+<circle cx="618" cy="628" r="11" fill="#5b4bc4"/>
+<text x="618" y="632.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">5</text>
+<text x="664" y="684" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#a9a3bd" text-anchor="start">earlier, 09:31</text>
+<rect x="660" y="694" width="340" height="118" rx="10" fill="#2a2444" stroke="#6a6288" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="676" y="718" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#a9a3bd" text-anchor="start">ai proposal · for anna</text>
+<rect x="912" y="704" width="72" height="20" rx="10" fill="#f2a057"/>
+<text x="948" y="718" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#1f1a33" text-anchor="middle">outdated</text>
+<text x="676" y="742" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#a9a3bd" text-anchor="start">set_cells  Budget!B7  =D6/52</text>
+<text x="676" y="760" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#f2a057" text-anchor="start">B7 changed by ben at 09:31</text>
+<rect x="676" y="772" width="96" height="30" rx="8" fill="#5b4bc4"/>
+<text x="724.0" y="792" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#f7f3ec" text-anchor="middle">Ask again</text>
+<rect x="782" y="772" width="130" height="30" rx="8" fill="none" stroke="#6a6288" stroke-width="1"/>
+<text x="847.0" y="792" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#f7f3ec" text-anchor="middle">Accept anyway…</text>
+<circle cx="618" cy="754" r="11" fill="#5b4bc4"/>
+<text x="618" y="758.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
+<rect x="654" y="922" width="352" height="42" rx="10" fill="#2a2444" stroke="#4a4268" stroke-width="1"/>
+<text x="670" y="948" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#a9a3bd" text-anchor="start">@ai …</text>
+<text x="1062" y="126" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">What the numbers mean</text>
+<circle cx="1070" cy="160" r="11" fill="#5b4bc4"/>
+<text x="1070" y="164.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">1</text>
+<text x="1092" y="165" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">The mode is yours alone</text>
+<text x="1092" y="185" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Per person, per document, kept on your</text>
+<text x="1092" y="202" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">client and sent with each request.</text>
+<text x="1092" y="219" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A colleague in the same document may</text>
+<text x="1092" y="236" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">have 'Act at once'. In composes, suggest</text>
+<text x="1092" y="253" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">is the anchored suggestion as today.</text>
+<circle cx="1070" cy="292" r="11" fill="#5b4bc4"/>
+<text x="1070" y="296.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">2</text>
+<text x="1092" y="297" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">A preview, not a branch</text>
+<text x="1092" y="317" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A scratch copy that only you see. No</text>
+<text x="1092" y="334" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">checkpoint, no fork, no merge, nothing</text>
+<text x="1092" y="351" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">in the history until you accept.</text>
+<circle cx="1070" cy="390" r="11" fill="#5b4bc4"/>
+<text x="1070" y="394.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">3</text>
+<text x="1092" y="395" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Marked, not locked</text>
+<text x="1092" y="415" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The cells it would change get a dashed</text>
+<text x="1092" y="432" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">frame in the AI's colour. Colleagues keep</text>
+<text x="1092" y="449" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">editing, including there.</text>
+<circle cx="1070" cy="488" r="11" fill="#5b4bc4"/>
+<text x="1070" y="492.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
+<text x="1092" y="493" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Out of date asks, never merges</text>
+<text x="1092" y="513" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">If anything in its footprint changes (in</text>
+<text x="1092" y="530" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the first version also any row, column or</text>
+<text x="1092" y="547" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">sheet change) it turns outdated. 'Accept</text>
+<text x="1092" y="564" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">anyway' opens the prompt, and the AI can</text>
+<text x="1092" y="581" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">redo it on the current state.</text>
+<circle cx="1070" cy="620" r="11" fill="#5b4bc4"/>
+<text x="1070" y="624.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">5</text>
+<text x="1092" y="625" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Accept = replay, as you</text>
+<text x="1092" y="645" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The same commands run on the current</text>
+<text x="1092" y="662" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">document as you, tagged 'via ai'. Undo</text>
+<text x="1092" y="679" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">works like for any change you make.</text>
+<text x="40" y="1000" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Act at once looks like the earlier panel mock-up: the same loop on the live document, one undo step per answer, 'undo the AI's last answer' on the answer's footer.</text>
+</svg>
