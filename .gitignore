@@ -29,6 +29,19 @@ clients/windows/apps/*/ext/
 clients/windows/apps/*/.tmp/
 clients/windows/apps/*/neutralinojs.log
 
+# macOS client: dependencies, build output, what `npm run build` generates per app, Neutralino's downloads and logs
+clients/macos/node_modules/
+clients/macos/dist/
+clients/macos/apps/*/bin/
+clients/macos/apps/*/js/
+clients/macos/apps/*/index.html
+clients/macos/apps/*/shell/
+clients/macos/apps/*/ext/
+clients/macos/apps/*/neutralinojs.log
+
+clients/macos/apps/creates/neutralino-mac_arm64
+clients/macos/bin/
+
 # The test-document library's run output
 test-documents/_artifacts
 
@@ -42,3 +55,5 @@ claudiaoffice-log/.obsidian/workspace*.json
 # Coverage data the gate's `tests` step writes (CODE-01)
 .coverage
 .coverage.*
+
+ai-models/*

@@ -16,7 +16,10 @@ env:
 
 jobs:
   # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, i18n extraction, pytest with coverage floors,
-  # Sphinx with warnings as errors, performance guards.
+  # Sphinx with warnings as errors, performance guards, and `npm audit` of every package-lock.json (SEC-08). The audit
+  # runs here on every push and in the weekly run, so a new advisory turns this job red even when nobody pushed. It
+  # asks the npm registry; an unreachable registry is a skip, which --ci fails (PROC-02): re-run the job. An advisory
+  # that cannot be fixed is recorded with its reason in pyproject.toml (`[[tool.claudia.npm-audit-allow]]`).
   python:
     name: Python (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -161,6 +164,29 @@ jobs:
           name: e2e-screenshots
           path: shots/
           if-no-files-found: ignore
+
+  # What the OpenDocument code writes is also opened in LibreOffice, the reference implementation (D409): the library's
+  # odt, odp and ods cases and a file made from a model each are converted with `soffice` and what comes out is
+  # compared (the words of an odt or odp, the value of every cell of an ods). It
+  # may fail without failing the build until it has a track record, so that a LibreOffice release that reads a little
+  # differently does not stop anyone's work (`continue-on-error`); read its result like any other job's.
+  odf-libreoffice:
+    name: OpenDocument in LibreOffice
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - name: LibreOffice Writer, Impress and Calc, from the distribution
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-writer libreoffice-impress libreoffice-calc
+      - run: uv sync --locked
+      - run: uv run python scripts/odf_libreoffice_check.py
 
   # The Windows client is TypeScript around Neutralino; its unit tests, its build (the shell page and the core of each
   # app) and its generated menu (made from the Linux client's manifest) are checked on Windows itself. Its window is
