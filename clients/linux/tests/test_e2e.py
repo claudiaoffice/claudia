@@ -80,6 +80,9 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     pump(lambda: window.visible_page == "web", timeout=60, what="the server to answer")
     bridge = window._bridge  # noqa: SLF001
     view = window._page.widget  # noqa: SLF001
+    # The page is loaded only once its cache has been emptied (``WebPage._load_current``, asynchronous): until then
+    # the view is shown but has no address yet (PROC-12).
+    pump(lambda: view.get_uri() is not None, timeout=15, what="the page to start loading")
     assert view.get_uri().startswith("http://127.0.0.1:")
 
     # Before a document is open the page has no menus, so the page actions are disabled. The page itself has

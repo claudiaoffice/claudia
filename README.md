@@ -34,10 +34,18 @@ starts one server per app and prints how to find each in the browser:
 | composes (text) | http://127.0.0.1:8766/ | `./start.sh composes` |
 | creates (presentations) | http://127.0.0.1:8767/ | `./start.sh creates` |
 
-Alone, every app uses port 8765 (`--port` changes it). Documents are kept sealed in `docs*`; `./start.sh --help`
-lists all options. The first start builds the web app (needs Node.js 22 or newer).
+Alone, every app uses port 8765 (`--port` changes it). Each app keeps its sealed documents in
+`.claudia/<app>/documents` and its server's certificate and settings in `.claudia/<app>/state` (`--dir DIR` puts both
+under `DIR/<app>/` instead); `./start.sh --help` lists all options. The first start builds the web app (needs Node.js
+22 or newer).
 
-Requires Python 3.14 (`uv` fetches it). Design notes: `docs/core-kernel.md`.
+**With the AI model.** `./start.sh all --ai` lets the AI user of computes answer with the language model in
+`ai-models/` (one folder, converted for OpenVINO; `--ai MODEL_DIR` names another, `--ai-device CPU` runs it without a
+GPU). The first time, OpenVINO GenAI is added to the environment. composes and creates keep the scripted stand-in until
+they have a lens for the model (E7.5, E7.9).
+
+Requires Python 3.14 exactly: `.python-version` makes `uv` use it even where a newer Python is installed (OpenVINO
+GenAI publishes no wheels for 3.15 yet). Design notes: `docs/core-kernel.md`.
 
 ## Run with Docker
 

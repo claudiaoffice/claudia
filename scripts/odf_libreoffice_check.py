@@ -192,10 +192,13 @@ def new_deck() -> tuple[bytes, list[str]]:
 
     from claudia_core import ObjectBody, VisualObject, paragraph_for
     from claudia_creates import ShapeLibrary, SlideAnchor, SlideModel
+    from claudia_server.creates import PARAGRAPH_STYLE_OF_KIND, STYLE_OF_KIND
 
     def put(model, object_id, slide, kind, x, y, w, h, text="", shape=None):
-        style = "body-text" if kind == "text" else "plain-shape"
-        body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text, "ana"), shape=shape)
+        # The styles the server gives a new object (D304, D310): its container's and its words' are two slots, so a
+        # shape is "plain-shape" (an outline) with "shape-label" words, a text box "plain-box" with "body-text".
+        style, words = STYLE_OF_KIND[kind], PARAGRAPH_STYLE_OF_KIND[kind]
+        body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, words, text, "ana"), shape=shape)
         model.insert_object(VisualObject(body, SlideAnchor(slide, x, y)))
 
     model, library = SlideModel(), ShapeLibrary.load()

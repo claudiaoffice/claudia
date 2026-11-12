@@ -83,11 +83,15 @@ def test_executing_does_not_slow_down_with_the_length_of_the_history():
 
 def test_undoing_the_latest_step_does_not_depend_on_the_history_before_it():
     def per_undo(n: int) -> float:
-        log = build_log(n)
-        doc = Document.open(ListModel, log, store=MemoryStore())
-        for i in range(50):
-            doc.execute(Insert(n + i, 1), author="ben")
-        return best_of(1, lambda: [doc.undo("ben") for _ in range(50)])
+        # Undo uses its steps up, so each sample needs a fresh document; one sample alone failed now and then at
+        # 4.04x on a loaded machine (QA 2026-11-12, the PROC-07 kind of flake): the best of three is measured.
+        samples = []
+        for _ in range(3):
+            doc = Document.open(ListModel, build_log(n), store=MemoryStore())
+            for i in range(50):
+                doc.execute(Insert(n + i, 1), author="ben")
+            samples.append(best_of(1, lambda doc=doc: [doc.undo("ben") for _ in range(50)]))
+        return min(samples)
 
     ratio = per_undo(LARGE) / per_undo(SMALL)
     assert ratio < TOLERATED_GROWTH, f"undo() grew {ratio:.1f}x for 10x more history"

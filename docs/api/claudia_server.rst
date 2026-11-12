@@ -81,6 +81,13 @@ Assistant
 .. autoclass:: claudia_server.ModelEngine
 .. autofunction:: claudia_server.model_assistant_for
 
+What ``ModelEngine`` is given (not in ``__all__``; documented so its signature resolves): one question's limits, and the
+app's view of its documents for the model.
+
+.. autoclass:: claudia_server.model_engine.Budget
+.. autoclass:: claudia_server.lens.Lens
+.. autoclass:: claudia_server.lens.Recorder
+
 Users
 -----
 

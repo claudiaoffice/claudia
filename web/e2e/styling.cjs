@@ -102,7 +102,7 @@ async function main() {
   assert.equal(await page.locator('[data-testid=style-menu] [data-style=body] .here').count(), 1, 'the gallery marks which style the cursor is really in')
   assert.equal(await page.locator('[data-testid=style-spec] input[value=new]').isDisabled(), true, '"this paragraph only" is unavailable while browsing another style’s look')
   await page.click('[data-testid=bold]') // edits a picked style for "every use" — there is no selection to deviate
-  await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid=style-menu] [data-style=heading-1] .name')).fontWeight === '700')
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid=style-menu] [data-style=heading-1] .name .look')).fontWeight === '700')
   assert.equal((await look(page, 1)).weight, '400', 'the body paragraph is still untouched: the edit changed Heading 1 itself, everywhere')
   await page.keyboard.press('Control+z') // undo the Heading 1 experiment before the rest of the scenario continues
   await page.click('[data-testid=style-menu] [data-style=body]') // pick the caret's own style back

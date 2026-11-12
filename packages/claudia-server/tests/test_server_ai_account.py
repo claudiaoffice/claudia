@@ -11,7 +11,7 @@ from test_server_model_engine import commands, set_cell, system_prompt
 from test_server_model_engine import scenario as model_scenario
 
 from claudia_ai.testing import FakeModel
-from claudia_server.ai_mode import ACT, DEFAULT_MODE, SUGGEST, parse_mode
+from claudia_server.ai_mode import ACT, DEFAULT_MODE, SUGGEST, UNSAID_MODE, parse_mode
 from claudia_server.apps import MODEL_METHODS, SUGGEST_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
@@ -28,9 +28,10 @@ def cell(person, row=0, col=0):
 
 
 # -- the mode itself
-def test_the_default_is_suggest_and_a_request_that_names_no_mode_gets_it():
+def test_a_client_starts_with_suggest_and_a_request_that_names_no_mode_gets_act():
     assert DEFAULT_MODE == SUGGEST, "D262: what a person gets who never touches the switch"
-    assert parse_mode(None) == SUGGEST
+    assert UNSAID_MODE == ACT, "E7.7: a client without the switch gets the AI that acts, as before modes existed"
+    assert parse_mode(None) == ACT
     assert parse_mode("act") == ACT and parse_mode("suggest") == SUGGEST
 
 
@@ -95,9 +96,9 @@ def test_the_mode_belongs_to_the_request_not_to_the_person_for_ever():
         sheet_with_a1(ann)
         ann.request("chat", {"text": "@ai fill A1 with 1", "ai_mode": "act"})
         ann.request("chat", {"text": "@ai fill B1 with 2", "ai_mode": "suggest"})
-        ann.request("chat", {"text": "@ai fill C1 with 3"})  # no mode: suggest, like a client that has no switch yet
+        ann.request("chat", {"text": "@ai fill C1 with 3"})  # no mode: act, like a client that has no switch yet
         await assistant.idle()
-        assert (cell(ann, 0, 0), cell(ann, 0, 1), cell(ann, 0, 2)) == (1, None, None)
+        assert (cell(ann, 0, 0), cell(ann, 0, 1), cell(ann, 0, 2)) == (1, None, 3)
 
     scenario(test)
 
@@ -110,10 +111,10 @@ def test_a_message_that_is_not_for_the_ai_leaves_no_mode_behind():
         ann.request("chat", {"text": "@ai fill A1 with 1", "ai_mode": "act"})
         await assistant.idle()
         assert cell(ann) == 1
-        ann.request("chat", {"text": "hello again", "ai_mode": "act"})
-        ann.request("chat", {"text": "@ai fill B1 with 2"})
+        ann.request("chat", {"text": "hello again", "ai_mode": "suggest"})
+        ann.request("chat", {"text": "@ai fill B1 with 2"})  # no mode of its own: act (UNSAID_MODE)
         await assistant.idle()
-        assert cell(ann, 0, 1) is None, "the earlier message was not for the AI; its mode must not govern the next one"
+        assert cell(ann, 0, 1) == 2, "the earlier message was not for the AI; its mode must not govern the next one"
 
     scenario(test)
 

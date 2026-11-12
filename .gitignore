@@ -2,7 +2,9 @@
 .venv
 *__pycache__*
 
-# Documents a local server writes (./start.sh keeps them in docs-<app>/ and demo-docs*/)
+# Documents and server state a local server writes: ./start.sh keeps them in .claudia/<app>/ (docs-<app>/ and
+# demo-docs*/ are where earlier versions of it did; still ignored, so nobody commits a leftover by accident)
+.claudia/
 docs-*
 demo-docs
 demo-docs-*

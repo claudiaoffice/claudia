@@ -5,6 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Security
+- Every HTTP answer carries a `Content-Security-Policy` (scripts from this server and the start page's inline scripts
+  by hash, connections to this server and its WebSocket, `object-src 'none'`, `base-uri 'none'`, framing only by the
+  server itself or a page on this computer for the desktop shells, D251), `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: no-referrer` and a `Permissions-Policy` (`claudia_server.security_headers`, SEC-13).
+
+### Fixed
+- `chat` without `ai_mode` gets *act* (`ai_mode.UNSAID_MODE`), as the method's own description and E7.7 say; it had got
+  *suggest*, so with no client sending a mode yet the AI in computes changed nothing and pointed at a switch that no
+  client had (QA 2026-11-12, UX-20). A client still starts with *suggest* (`DEFAULT_MODE`, D262) once it has the switch.
+
 ### Added
 - One style API for all three apps (`claudia_server.style_targets`, the styling-suite plan step 1.5):
   `style_model` (facets, kinds, slots with the kinds each takes, and the target keys this app accepts),

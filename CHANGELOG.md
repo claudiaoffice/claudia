@@ -4,7 +4,7 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
-## [0.13.0] - 2026-11-11
+## [0.15.0] - 2026-11-11
 
 A throwaway copy of a document, for previewing what the AI proposes (E7.8, D263).
 
@@ -15,6 +15,7 @@ A throwaway copy of a document, for previewing what the AI proposes (E7.8, D263)
   afterwards. The current state is copied (cost: the size of the state, not the length of the history); an older
   revision costs a replay from the nearest cached snapshot, as `materialize` does. `KernelError` for a revision that
   does not exist.
+
 ## [0.14.0] - 2026-11-10
 
 The styling-suite plan, steps 1.2 to 1.6: every styled thing reads its slots.

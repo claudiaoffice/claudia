@@ -6,7 +6,10 @@ produced the current round is `qa-recommendations.md`. Stories are in `Projects/
 
 **Review rounds:** first 2026-11-02 at `f8df891`; second 2026-11-05 at `54d1245` ("E5 desktop clients: linux first
 draft"). Statuses below were re-checked against `54d1245` on 2026-11-05 — every item marked *verified open* or *verified
-fixed* was re-tested or re-read in that tree, not carried over on trust.
+fixed* was re-tested or re-read in that tree, not carried over on trust. Fourth round 2026-11-12 at `7e619a2` (all
+feature branches merged): new items UX-20 to UX-23, SEC-12 to SEC-17, PERF-08, PROC-09 to PROC-16, CODE-13 to CODE-15;
+the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-checked in that tree
+(`qa-recommendations.md`).
 
 ## How to add a bug
 
@@ -35,19 +38,26 @@ statement in the docs or on the website).
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` open |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
-| SEC-11 | P3 | Security | No per-address back-off on failed logins | verified open |
-| PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | verified open (re-measured) |
-| PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open |
+| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12) |
+| SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |
+| SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |
+| SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |
+| SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **new, open** (P1 once import is on the wire) |
+| SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |
+| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked** |
+| PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |
+| PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |
 | PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |
 | PERF-04 | P3 | Performance | `GET /api/docs` scans the disk on every request | fixed (listing cache) |
-| PERF-05 | P2 | Performance | `sheets` recomputes the extent by scanning every cell | **new, verified open** |
+| PERF-05 | P2 | Performance | `sheets` recomputes the extent by scanning every cell | **fixed** (re-measured 2026-11-12) |
 | PERF-06 | P3 | Performance | Packing rewrites the whole zip; threshold packing on the event loop | verified open |
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |
-| UX-01 | P2 | UX | Menus cannot be operated with the keyboard | verified open |
-| UX-02 | P2 | UX | The grid has no accessible structure | verified open |
-| UX-03 | P2 | UX | Dialogs do not manage focus | verified open |
-| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | verified open (re-measured) |
-| UX-05 | P3 | UX | No dark mode | verified open |
+| PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |
+| UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |
+| UX-02 | P2 | UX | The grid has no accessible structure | verified open (2026-11-12) |
+| UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |
+| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | mostly fixed; one residue (re-measured 2026-11-12) |
+| UX-05 | P3 | UX | No dark mode | fixed (2026-11-12) |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |
 | UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open (not re-checked) |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
@@ -62,6 +72,10 @@ statement in the docs or on the website).
 | UX-17 | P2 | UX / i18n | A browser in `en-US` asks for a catalog that does not exist; in `de-DE` it stays English with no language ticked | **fixed** |
 | UX-18 | P2 | UX / computes | The formula hint covers the column letters exactly when a whole column is to be picked | **fixed** |
 | UX-19 | P2 | UX | Picking the caret's own style back in the gallery pins it: a deviation is then not offered a name, and the next change goes to the old style everywhere | **fixed** |
+| UX-20 | **P1** | UX / AI | The AI in computes does nothing and points at an act/suggest switch no client has | **fixed** 2026-11-12 |
+| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **new, open** |
+| UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |
+| UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | **new, open** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |
@@ -70,6 +84,14 @@ statement in the docs or on the website).
 | PROC-06 | P2 | Process / CI | No CI job runs a browser or the Windows client; the `web/e2e` scripts had rotted unnoticed | **fixed** |
 | PROC-07 | P3 | Process / tests | A performance guard measures the garbage collector and fails now and then | **fixed** |
 | PROC-08 | P3 | Process / tests | A test of the gate fails on every machine where `npm install` has been run | **fixed** |
+| PROC-09 | P1 | Process / CI | Two branches both released claudia-core 0.13.0; the gate fails on the duplicate | **fixed** 2026-11-12 |
+| PROC-10 | P1 | Process / CI | The Sphinx build fails: `Budget`, `Lens`, `Recorder` are in signatures but not in the reference | **fixed** 2026-11-12 |
+| PROC-11 | P2 | Process / CI | The LibreOffice check broke silently: its job may fail and nothing else runs its code | **fixed** 2026-11-12 |
+| PROC-12 | P1 | Process / CI | The Linux client's end-to-end test reads the page address before the page starts loading | **fixed** 2026-11-12 |
+| PROC-13 | P2 | Process | Nothing pins Python 3.14: `uv` takes 3.15 where it is installed, and OpenVINO cannot be installed there | **fixed** 2026-11-12 |
+| PROC-14 | P2 | Process / CI | Two web browser scripts fail on `main` (a stale selector, and UX-20) | **fixed** 2026-11-12 |
+| PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | **new, partly fixed** |
+| PROC-16 | P3 | Process / tests | The undo performance guard measured one sample and failed now and then | **fixed** 2026-11-12 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |
@@ -82,6 +104,9 @@ statement in the docs or on the website).
 | CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed |
 | CODE-11 | P3 | Code | Windows client: its generated menu is stale, and a test depends on the clone's folder name | **fixed** |
 | CODE-12 | P3 | Code | `.gitignore` ignores the tracked `docs/` sources; two test documents are committed | **fixed** |
+| CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | **new, open** |
+| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | **new, open** |
+| CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
@@ -197,6 +222,82 @@ logs in once, fails, disconnects and repeats. Named as the remaining part of E2.
 **Fix.** Per-address and per-(document, name) back-off with a cap, on top of the hashing semaphore.
 
 ---
+**Re-checked 2026-11-12:** still no back-off, and the new administrator sign-in (`POST /api/admin/login`) has none
+either; with SEC-12 fixed it becomes the way in, so it needs the same per-address back-off as documents.
+
+### SEC-12 · Anyone who reaches an exposed server with no administrator can become its administrator · P1 · new, open
+**Evidence (measured, `7e619a2`).** `admin_api.py` `setup` needs nothing but a name and a password while
+`len(context.admins) == 0`. A server bound beyond loopback (`exposed`: every Docker container, the Scaleway demo) asks
+for its first administrator, and the first anonymous visitor wins. Reproduced with
+`CLAUDIA_ACCESS_SECRET=… python -m claudia_server --host 0.0.0.0 --no-tls --behind-proxy`: `POST /api/admin/setup`
+answered 200 with a session; the access secret is not asked for. As that administrator one can then remove the
+access secret (`PUT /settings/access-secret` `null` replaces even the one from the environment), point the AI at any
+folder on the machine (`PUT /settings/ai`) and name any executable as `xelatex` (SEC-16). On a platform without a
+persistent `/data/state` (the serverless demo) the window opens again on every cold start.
+**Fix (not built: recommendation, agreed 2026-11-12).** The usual bootstrap: at start, an exposed server with no
+administrator makes a one-time setup code, prints it in its banner and log only (never over HTTP), and `setup`
+requires it (constant-time compare; the code dies with the first administrator or at restart). When an access secret
+is set, `setup` also requires it. `FirstAdminSetup.vue` gets one field, "Setup code (printed in the server's log)",
+mock-up first. Optional: `--admin NAME` / `CLAUDIA_ADMIN_PASSWORD_FILE` to make the first administrator at start, for
+deployments. Until then: on the demo, sign up the administrator right after every deploy, or block `/api/admin/` at
+the proxy.
+**Acceptance.** `test_admin_api`: on an exposed server `setup` without the code → 403, with a wrong code → 403 and the
+same time as a right one, with the code → 200 once; with an access secret, the code alone → 403. The banner test shows
+the code exactly once.
+
+### SEC-13 · The web app is served without security headers · P2 · fixed 2026-11-12
+**Evidence (measured).** `curl -I /` on a server with `--web`: only `cache-control`, `etag`, `content-type`. No
+`Content-Security-Policy`, no `frame-ancestors`/`X-Frame-Options`, no `X-Content-Type-Options`, no `Referrer-Policy`.
+Any site can frame a document page or the server settings (click-jacking); nothing limits where a script may come from.
+**Fix.** In `SinglePageApp` (and the landing page): `Content-Security-Policy: default-src 'self'; connect-src 'self'
+ws: wss:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none';
+object-src 'none'`, plus `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer`. Check Plotly and the
+typeset images against it in the browser scripts (Firefox and Chromium) before tightening further.
+**Acceptance.** A server test asserts the headers on `/`, an asset and `/admin`; the web e2e scripts pass with them.
+**Fixed 2026-11-12** in `claudia_server/security_headers.py`, an ASGI layer inside `HostGuard`: the policy above with
+`script-src 'self'` plus the SHA-256 of the start page's two inline scripts (Nuxt's import map and runtime config,
+read from the build's `*.html` at start, so no `'unsafe-inline'` for scripts), `connect-src` naming the request's own
+host for `ws:`/`wss:`, `worker-src 'self' blob:`, `form-action 'self'`, and `frame-ancestors 'self'
+http://127.0.0.1:* http://localhost:*` instead of `'none'`, because the Windows and macOS clients show the web app
+in a frame of their local shell page (D251); `X-Frame-Options` is left out, as it cannot name two origins. Plus
+`Permissions-Policy: camera=(), microphone=(), geolocation=()`. `/api/swagger` keeps only the framing rule while it
+loads from a CDN (SEC-14). Tests: `test_server_security_headers.py`. Checked in Chrome for Testing 153: the seven
+browser scripts, the Windows and macOS shell windows (the frame), a Plotly chart and the settings page run with no
+CSP report, and an injected inline script is refused; the Linux client's end-to-end test (WebKitGTK 6.0) passes
+with it. Not yet checked in Firefox.
+
+### SEC-14 · `/api/swagger` loads from a CDN · P3 · new, open
+**Evidence (measured).** FastAPI's default page pulls `swagger-ui-bundle.js` and its CSS from `cdn.jsdelivr.net`, so
+opening it tells a third party about the server and runs a script from there, against the privacy promise. It is
+linked from the landing page and public on every server.
+**Fix.** `docs_url=None` by default (`--api-docs` turns it on), or serve the Swagger assets from the package.
+
+### SEC-15 · Office import reads every part whole and parses some XML with defaults · P2 · new, open
+**Evidence (read).** `claudia_opc_io.read_parts` and the odf readers `zf.read()` every member with no limit on
+uncompressed size or member count: a few-MB zip bomb exhausts the server's memory. Most ODF parsing uses
+`XMLParser(resolve_entities=False, no_network=True)`, but `odt.py:235` (styles), `xlsx.py` and
+`odf_io/package.py:70` use lxml's defaults (lxml 6 resolves internal entities). Import is not on the wire yet (only
+export is), which is why this is P2; it becomes P1 the day the import UI (E2.9, E6.9, E9.5, E10.3) sends a file.
+**Fix.** One `safe_parts(data, max_members, max_total, max_ratio)` in `claudia-opc-io` that checks `ZipInfo.file_size`
+and the ratio before reading, used by every reader; one module-level hardened `XMLParser` used everywhere.
+**Acceptance.** A zip of one 2 GB part of zeros (~2 MB on disk) is refused with a sentence before 50 MB of memory are
+used; an entity-expansion document is refused or read without expansion, in each of the six readers.
+
+### SEC-16 · The LaTeX program setting accepts any executable · P3 · new, open
+**Evidence (read).** `PUT /api/admin/settings/typeset` stores any path; `resolve_program` accepts any runnable file.
+An administrator is trusted, but with SEC-12 that is anyone, and even without it a stolen admin session becomes
+"run this binary on every formula". **Fix.** Accept the setting only after the program answers `--version` with an
+XeTeX / pdftocairo banner (in the sandbox), and show what it answered on the settings page.
+
+### SEC-17 · A viewer's connection receives the whole history and chat · P2 · open (found 2026-11-05, tracked now)
+**Evidence (read, `7e619a2`).** The container gives a viewer no key to history and chat blocks (E2.4), but the live
+session ignores roles: `HostedDocument._audience` (`hub.py`) filters events by author, recipient and sender only, and
+the `log` and `chat_log` methods (`protocol.py`) answer any account. The 2026-11-05 review described this but it never
+got a number, so it was never picked up. **Fix.** In `_audience`, history-bearing events and chat go to editors and
+owners only; `log`/`chat_log` refuse a viewer with `forbidden`; the web panel shows a viewer "History and chat are
+for the document's editors". Decide first whether a viewer may at least see the *document's* public chat (product
+call, not a security one). **Acceptance.** Server tests: a viewer's connection receives no `log`/`chat` event and is
+refused `log` and `chat_log`; an editor's is unchanged.
 
 ## Performance
 
@@ -217,6 +318,9 @@ Linear in the size of the sheet, not in the size of the window. The grid asks fo
 **Fix.** Keep an index per sheet (rows → sorted columns) in `claudia-computes`, maintained by the commands; or cache
 chunks per revision.
 **Acceptance.** A guard in `scripts/check_debt.py`: window cost at 500k cells ≤ 2 ms and within 2× of the cost at 10k.
+
+**Re-checked 2026-11-12 (`7e619a2`): fixed.** `Sheet.cells_in` keeps a row → sorted-columns index; one 64×16 window
+costs 0.11 ms at 10k cells and 0.06 ms at 500k (was 21 ms). Guarded in `test_index_performance.py`.
 
 ### PERF-02 · Journal `fsync` on the event loop for every edit · P2 · verified open
 **Evidence (read, `54d1245`).** `claudia_container/journal.py` `append` does `flush()` then `os.fsync()`
@@ -243,6 +347,9 @@ PERF-01 and on the same event loop. The client calls `sheets` on open and after 
 column), or cache it per revision.
 **Acceptance.** A guard: `sheets` on a 500k-cell workbook costs ≤ 2 ms.
 
+**Re-checked 2026-11-12: fixed.** `Sheet.extent()` is amortized O(1) (`_rows_live`/`_cols_live`); 0.001 ms at 500k
+cells.
+
 ### PERF-06 · Packing rewrites the whole zip; threshold packing on the event loop · P3 · verified open
 **Evidence (documented, E2 slice 3 notes).** Packing writes the whole zip again every 500 changes and at release.
 Release runs in a thread; threshold packing does not. Fine up to some tens of megabytes; larger documents need
@@ -255,6 +362,13 @@ formula is rewritten and recalculated. Ordinary edits are incremental and fast (
 
 ---
 
+### PERF-08 · The first chart downloads all of Plotly · P3 · new, open
+**Evidence (measured).** `ChartView.vue` lazy-loads `plotly.js-dist-min` (good), but that is the full bundle: a 4.6 MB
+chunk (`web/.output/public/_nuxt/`), most of it map and 3-D code, for one bar chart. It also carries tile-server URLs
+(only used by map traces, never fetched today). **Fix.** A custom Plotly bundle with `bar` (and the next planned
+types) via `plotly.js/lib/core` + `plotly.js/lib/bar`, about 1 MB. **Acceptance.** The chart chunk ≤ 1.2 MB, guarded by
+a size check in the web job.
+
 ## UX and UI
 
 ### UX-01 · Menus cannot be operated with the keyboard · P2 · verified open
@@ -266,6 +380,9 @@ exist, which is worse for a screen-reader user than plain buttons would be.
 the first item on open; Up/Down/Left/Right/Home/End/typeahead; Escape closes and restores focus; Alt or F10 reaches the
 bar.
 **Acceptance.** A browser test opens File, moves with arrows, activates an item, and ends with focus back on the grid.
+
+**Re-checked 2026-11-12: fixed (read).** `MenuBar.vue` now has `aria-haspopup`/`aria-expanded` and arrow-key
+handling (commit 47519fa). Not yet tried with Orca or NVDA.
 
 ### UX-02 · The grid has no accessible structure · P2 · verified open
 **Evidence (read, `54d1245`).** `SheetGrid.vue` has exactly two ARIA attributes: `role="grid"` and
@@ -281,6 +398,10 @@ cell, and a live region for values changed by other people.
 **Acceptance.** axe in the browser run passes on the workspace page; an NVDA/Orca script joins the release checklist
 (E5.10).
 
+**Re-checked 2026-11-12: still open.** `SheetGrid.vue` has `role="grid"` and still no `row`/`gridcell`,
+`aria-rowindex`/`aria-colindex` or `aria-activedescendant`. The grid is the one part of computes a screen-reader user
+cannot work with; E5.10 (accessibility baseline) is `todo`.
+
 ### UX-03 · Dialogs do not manage focus · P2 · verified open
 **Evidence (read, `54d1245`).** `Modal.vue` is a plain element with a global `keydown` listener for Escape. No
 `<dialog>`, no `showModal()`, no focus trap, no `inert` on the background, no focus restored to the opener. Every
@@ -289,6 +410,9 @@ dialog in the app uses it (Share, Prompt, Help, Styles, Recovery key).
 move focus to the first field; restore focus to the opening control on close.
 **Acceptance.** After open, `document.activeElement` is inside the dialog; Tab cycles inside it; after close focus is
 on the control that opened it.
+
+**Re-checked 2026-11-12: fixed.** `Modal.vue` is a native `<dialog>` opened with `showModal()` (focus trap, inert
+background, Escape).
 
 ### UX-04 · Text and border colours fail WCAG contrast · P2 · verified open (re-measured)
 **Evidence (measured from `web/app/assets/tokens.css` at `54d1245`.)** Ratios computed by the WCAG 2.1 formula, with
@@ -316,11 +440,20 @@ add a `--line-field` at about 50% ink for input and control boundaries. The dark
 **Acceptance.** A token test (a script in `scripts/`) computes every pair and fails below the thresholds, so the
 palette cannot regress silently.
 
+**Re-measured 2026-11-12 (`tokens.css`): mostly fixed.** `--muted` 5.26:1 on white, 5.03:1 on paper, 6.31:1 dark;
+`--line-field` ≥ 3:1 in both themes. Residue: creates' `--app-dark` `#b9651c` is 4.25:1 on white, used as normal-size
+text (`FooterBar.vue` `.tabs button.on`, `StyleSpec.vue`, `SlideWorkspace.vue`): needs ≥ 4.5:1 (e.g. `#a75a17`). And
+`--iris` as text on the dark surface is 2.44:1 — nothing uses it that way today, but nothing stops it. **Acceptance.**
+A vitest that reads `tokens.css` and checks every text token against both surfaces, so the next colour cannot regress.
+
 ### UX-05 · No dark mode · P3 · verified open
 **Evidence (measured).** `web/app/assets/tokens.css` contains **zero** `prefers-color-scheme` rules, and `--surface` is
 a hard-coded `#ffffff`. E0.3 lists a dark/light switch as an acceptance criterion and GNOME apps follow the system
 setting. (The server's own fallback landing page in `app.py` does implement dark mode, which makes the gap visible.)
 **Fix.** Define dark values for every token, follow the system setting, and let the shell contract pass the OS value.
+
+**Re-checked 2026-11-12: fixed.** `theme.ts` follows `prefers-color-scheme` with a person's override;
+`:root[data-theme='dark']` in `tokens.css`.
 
 ### UX-06 · Web menu differs from decisions D4/D5 · needs decision
 D4 says four header-bar menu buttons: File, Edit, Tools, Help. The web app has six menus (File, Edit, Format, View,
@@ -486,6 +619,40 @@ paragraph bold "this paragraph only" created the new style, but the menu stayed 
 the new style, and the next change went to Body text for everyone.
 **Fix.** `StyleEditor.pick` treats the caret's own style as "follow the caret again". Test in
 `web/tests/style-editor.test.ts`.
+
+### UX-20 · The AI in computes does nothing and points at a switch no client has · P1 · fixed 2026-11-12
+**Evidence (measured, `7e619a2`).** `web/e2e/demo.cjs` failed at "ai done": `@ai build an example budget` was
+answered "You asked me in suggest mode … Switch to act mode". No client sends `ai_mode` yet, and `ai_mode.parse_mode`
+read a missing mode as *suggest*, although `chat`'s own description and the E7.7 build note say "a client that sends
+none gets act"; computes cannot propose yet (E7.8), so the AI wrote nothing, ever. **Fix (agreed 2026-11-12).**
+`UNSAID_MODE = ACT` for a request without a mode; `DEFAULT_MODE` stays *suggest* for a client with the switch (D262).
+Tests in `test_server_ai_account.py`; `demo.cjs` passes again.
+
+### UX-21 · The chat promises an AI where none answers · P2 · new, open
+**Evidence (measured, screenshots of `slides.cjs`).** creates' chat says "Write to everybody, or @ai to ask the
+assistant. Say @ai help to see what it can do", but creates has no AI user (no `ai` avatar; E7.9 is `todo`). Until
+UX-20 the computes refusal also named "act mode", a switch that exists in no client. **Fix.** The hint comes from what
+the server says it has (`hello`/`people` already list `ai`): no `ai` participant, no `@ai` in the hint. Any message
+that names a control must name one the person can see. **Acceptance.** A web unit test of the chat hint with and
+without an `ai` participant.
+
+### UX-22 · The history speaks three dialects · P2 · new, open
+**Evidence (measured, the three apps side by side).** computes: `ann A1 = Item`, `add sheet Sheet1` (terse, formula
+style); composes: `typed "…"`, `new paragraph`, `style title`, `changed the style heading-1…` (lower case, ids instead
+of names); creates: `Added a text box`, `Wrote Hello slide`, but `Add shape` (capitalised, past tense and imperative
+mixed). The panel tab says "History & Chat", the header button "History & chat". **Fix.** One rule in the design
+system (`notes/design-system.md`): past tense, lower case, the thing's *name* not its id, the value last; e.g.
+`added a text box`, `added a circle`, `set A1 to Item`, `changed the style Heading 1`. The label strings live in one
+place per app (`describe` of each command), so this is a wording pass plus a test that every command kind has a
+description in that form. **Acceptance.** A test per app that walks every command kind's description.
+
+### UX-23 · Panel layout and undo placement differ between the apps · P3 · new, open
+**Evidence (screenshots).** In composes the suggestions sit above the History & Chat / Help tabs, so the tabs move
+to the middle of the panel; in computes and creates they are at the top. Undo/redo: in the formula bar on the left
+(computes), at the right end of the insert bar (creates, with Delete), absent from the bar in composes. The decided
+History filter row (All / Conversation / Changes) is not built yet. **Fix.** Tabs always at the top; composes'
+suggestions become a section inside "History & Chat" (or a third tab only in composes, by decision); undo/redo in the
+same place in all three bars, mock-up first (`notes/mockups/`).
 
 ## Process and code
 
@@ -796,6 +963,79 @@ does.
 `web/node_modules`, so it failed on every developer machine and passed only in CI.
 **Fix.** `web_checks()` takes the web folder; the test points it at an empty one.
 
+### PROC-09 · Two branches both released claudia-core 0.13.0 · P1 · fixed 2026-11-12
+`ai_server` added `Document.scratch` as 0.13.0 while `styling-suite` had released 0.13.0 and 0.14.0; the merge kept
+both 0.13.0 headers and `_version.py` at 0.14.0, so `test_changelog_versions.py` failed the gate. Renumbered the
+scratch release 0.15.0, raised `_version.py`, regenerated `tests/api/claudia_core.json`, fixed the reference in the
+E7.8 story. **Prevention:** the version is the last thing a branch sets, after merging `main` (CONTRIBUTING).
+
+### PROC-10 · The Sphinx build fails on three unresolved types · P1 · fixed 2026-11-12
+`ModelEngine`'s signature names `model_engine.Budget` and `lens.Lens` (and `Lens.recorder` names `lens.Recorder`);
+none was in `docs/api/claudia_server.rst`, and `nitpicky` turns that into an error. Added the three under
+"Assistant".
+
+### PROC-11 · The LibreOffice check broke silently · P2 · fixed 2026-11-12
+`scripts/odf_libreoffice_check.py` built its deck by hand and gave a shape's words the outline style `plain-shape`;
+since D310/D316 an outline cannot style words, so `new_deck()` raised. Its CI job is `continue-on-error` and nothing
+else ran the script, so nothing turned red. It now takes the styles the server gives a new object
+(`STYLE_OF_KIND`, `PARAGRAPH_STYLE_OF_KIND`), and `tests/test_odf_libreoffice_check.py` builds the three new files and
+every library case in the normal suite, without LibreOffice. Verified with LibreOffice 24.2: 31 of 31 read.
+
+### PROC-12 · The Linux client's end-to-end test reads the address too early · P1 · fixed 2026-11-12
+Since the page cache is emptied before every load (`WebPage._load_current`, asynchronous, commit 08ffcb9) the window
+shows the web view before the view has an address, and `view.get_uri()` is `None` for a moment. The test now waits for
+the address. 558 passed, 6 skipped under `xvfb-run` on Python 3.12 with GTK 4 and WebKitGTK 6.0.
+
+### PROC-13 · Nothing pinned Python 3.14 · P2 · fixed 2026-11-12
+`requires-python = ">=3.14"` lets `uv` take the newest Python it finds; with 3.15 on a machine the environment was
+made with it, and `openvino-genai` has only cp314 wheels and no sdist in `uv.lock`, so `--ai` could not be installed.
+`.python-version` (`3.14`) now decides, and `tests/test_python_version.py` keeps it, every `requires-python`, the CI
+workflows, the Dockerfile and `build-deb.sh` on the same version.
+
+### PROC-14 · Two browser scripts fail on `main` · P2 · fixed 2026-11-12
+`web/e2e/styling.cjs` read the gallery's font weight from `.name`; the look moved to `.name .look`. `demo.cjs` failed
+on UX-20. All seven scripts and `tests/e2e` pass against `./start.sh all` (Chrome for Testing 153).
+
+### PROC-16 · The undo guard measured one sample and failed now and then · P3 · fixed 2026-11-12
+`test_undoing_the_latest_step_does_not_depend_on_the_history_before_it` (claudia-core perf) timed a single run of 50
+undos and failed once in this round at 4.04x against a 4.0x limit (0 of 15 reruns). Undo uses up its steps, so it could
+not repeat on one document; it now takes the best of three fresh documents per size. Same kind as PROC-07.
+
+### PROC-15 · The tracker and the backlog lag the code · P2 · new, partly fixed
+**Evidence.** In this file PERF-01, PERF-05, UX-01, UX-03 and UX-05 were "verified open" although fixed in the tree
+(corrected above). In the backlog, E7.7 is `todo`, 0 % with a "Built 2026-11-11" paragraph; 64 of 90 stories that are
+`in-progress` sit at exactly 50 %, which the README calls "an estimate from the code, not from hope" — 50 is a
+placeholder. **Fix.** A branch that fixes a tracked item changes its row in the same commit (CONTRIBUTING rule);
+`test_backlog.py` could refuse `progress: 50` on a story without a status-evidence paragraph.
+
+### CODE-13 · `WorkerPool` has no callers · P2 · new, open
+**Evidence (read).** `workers.py` (E3.5) says it exists for PERF-02 and D37, `Hub` makes one and stops it, but nothing
+in `packages/*/src` calls `submit`. Meanwhile every edit still `fsync`s on the event loop (PERF-02) and threshold
+packing runs there (PERF-06). **Fix.** Either use it — journal append and packing via `asyncio.to_thread` (I/O, a thread
+is enough), formula recalculation of large structure edits via the pool (PERF-07, E4.4) — or remove it until a caller
+exists. **Acceptance.** A test that a slow `fsync` (monkeypatched to sleep 50 ms) on one document does not delay a
+`cells` request on another.
+
+### CODE-14 · The Windows and macOS shells are one design kept as two copies · P2 · new, open
+**Evidence (read, `d696927`).** At `7e619a2` the Windows shell (7 files, 975 lines) had none of macOS's connection,
+trust or server list. The branch `win-client-complete` (merged as `d696927`) rebuilt it on the macOS design, which
+closes that feature gap, by copying: `clients/windows/src` and `clients/macos/src` now have the same 22 file names,
+11 of them byte-identical (bridge, connection, connector, contract, core, core-entry, core-protocol, extension,
+servers, settings, shell-page-entry: about 1,550 lines) and the rest differing only where the OS does
+(paths, launch, server, menu). Every fix to the shared part now has to be made twice, and nothing checks that it is.
+**Recommendation:** move the identical files into one `clients/neutralino/` package (or `clients/shared/`) that both
+build from, keeping per-OS `paths`, `launch`, `server`, `menu`; until then, a test that the shared files stay
+byte-identical, so a fix in one copy fails the build until it is in the other.
+
+### CODE-15 · `./start.sh` folder layout · P2 · fixed 2026-11-12
+**Evidence.** Documents in `<repo>/docs-<app>` (before 2938f0a: `demo-docs`, `demo-docs-<app>` — the folders people
+still find), `--dir X` meaning X for one app but `X/<app>` for `all`, and no `--state-dir`, so the three dev servers
+shared one certificate and one administrator list in `~/.local/share/claudia`, the tree where the Linux desktop app
+keeps `~/.local/share/claudia/<app>/documents`. **Fix (agreed 2026-11-12).** `.claudia/<app>/documents` and
+`.claudia/<app>/state` per checkout (ignored); `--dir DIR` means `DIR/<app>/…` always; old folders are named at start,
+never moved. Not changed: the server's own default state folder on Windows is `%APPDATA%` (roaming) while the Windows
+shell uses `%LOCALAPPDATA%`; and every server puts a `docs/` folder inside `--dir`, one level more than anybody expects.
+
 ## Website
 
 ### WEB-01 · The website describes features the product does not have · P1 · needs decision
@@ -833,7 +1073,14 @@ passwords and encryption at rest, recovery keys, formulas, styles, three apps, a
 - Credentials travel in the first WebSocket frame, never in a URL; the name `ai` is protected Unicode-aware; message
   size, text length, region count and `set_cells` size are limited; slow clients are dropped rather than buffered.
 
-## Not reviewed (and why)
+## Not reviewed (and why), round of 2026-11-12
+
+A real language model (no model could be downloaded here; `./start.sh --ai` was run up to loading a stand-in folder,
+which OpenVINO GenAI 2026.4 then refused as expected); Windows and macOS clients (nothing runs them here; the Windows
+client is reviewed by reading only); the live demo at demo.claudia-office.de (not reachable from here, so SEC-12 there
+is likely, not seen); screen readers; Firefox (the browser scripts ran in Chrome for Testing 153).
+
+## Not reviewed (and why), round of 2026-11-05
 
 The website (out of scope this round); the Neutralino shell (does not exist); a real language model (no model could be
 downloaded); Windows and macOS (nothing was run there, and the Windows sandbox layer has still never executed); the

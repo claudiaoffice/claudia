@@ -106,6 +106,13 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
 * TLS by default. The server's own certificate is self-signed; its fingerprint is printed at start-up. The desktop
   client trusts it like an SSH host (`claudia_client.TlsPolicy`): shown once, remembered, a changed certificate refused
   loudly. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
+* Every HTTP answer says what a browser may do with the page (`claudia_server.security_headers`, SEC-13): a
+  `Content-Security-Policy` with scripts from this server only (the start page's two inline scripts by their hash,
+  read from the build at start), connections only to this server and its WebSocket, no plugins, and framing only by
+  the server itself or a page on this computer (`http://127.0.0.1:*`, `http://localhost:*`: the Windows and macOS
+  clients frame the web app in their local shell page, D251); plus `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: no-referrer` and a `Permissions-Policy` without camera, microphone and location. `/api/swagger`
+  keeps only the framing rule while it loads from a CDN (SEC-14).
 * A browser page cannot use a user's local server (see *Who can reach the server*).
 * With `--dir DIR` every document is a sealed file (`docs/<id>.claudia` and a journal next to it): the content, the
   history, the chat and the names of the people are encrypted (AES-256-GCM), and the keys are opened by each person's

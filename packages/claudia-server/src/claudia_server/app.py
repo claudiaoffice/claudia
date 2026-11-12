@@ -75,6 +75,7 @@ from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserD
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
+from .security_headers import SecurityHeaders, web_script_hashes
 
 HELLO_TIMEOUT = 10.0
 OUTGOING_QUEUE = 1000  # frames waiting for a slow client before it is dropped
@@ -482,6 +483,8 @@ def create_app(
             allow_methods=["GET"],
             allow_headers=["Content-Type", "Authorization"],
         )
+    # SEC-13: CSP, nosniff, referrer and permissions on every answer; the start page's inline scripts by hash.
+    app.add_middleware(SecurityHeaders, script_hashes=web_script_hashes(web_dir))
     app.add_middleware(HostGuard, hosts=hosts)  # added last, so it is the first to see a request (even a preflight)
     if hub.directory is None:
         hub.directory = directory  # owners add people to their documents through it
