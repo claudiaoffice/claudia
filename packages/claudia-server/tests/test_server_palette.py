@@ -35,6 +35,11 @@ def call(doc, name, params=None, account=ANN, methods=creates_methods):
     return methods.dispatch(ctx, name, params)
 
 
+def add_text(doc, **params):
+    given = {"slide": "s1", "kind": "text", "x": 10, "y": 10, "w": 300, "h": 120, **params}
+    return call(doc, "add_object", given)["object"]
+
+
 def add_shape(doc, **params):
     given = {"slide": "s1", "kind": "shape", "shape": "rectangle", "x": 10, "y": 10, "w": 300, "h": 200, **params}
     return call(doc, "add_object", given)["object"]
@@ -131,18 +136,26 @@ def test_a_malformed_role_is_a_bad_request(deck, roles):
 
 # ----------------------------------------------------------------------------- an object's own style
 def test_an_object_can_be_put_under_another_style(deck):
-    shape = add_shape(deck)
-    call(deck, "set_object_style", {"id": shape, "style": "body-text"})
-    (obj,) = [o for o in call(deck, "slide", {"slide": "s1"})["objects"] if o["id"] == shape]
+    # A text box's box takes a paragraph style too: the box slot reads only the box part of it (D316).
+    box = add_text(deck)
+    call(deck, "set_object_style", {"id": box, "style": "body-text"})
+    (obj,) = [o for o in call(deck, "slide", {"slide": "s1"})["objects"] if o["id"] == box]
     assert obj["style"] == "body-text"
 
 
 def test_putting_an_object_under_another_style_can_be_undone(deck):
-    shape = add_shape(deck)
-    call(deck, "set_object_style", {"id": shape, "style": "body-text"})
+    box = add_text(deck)
+    call(deck, "set_object_style", {"id": box, "style": "body-text"})
     call(deck, "undo")
-    (obj,) = [o for o in call(deck, "slide", {"slide": "s1"})["objects"] if o["id"] == shape]
-    assert obj["style"] == "plain-shape"
+    (obj,) = [o for o in call(deck, "slide", {"slide": "s1"})["objects"] if o["id"] == box]
+    assert obj["style"] == "plain-box"
+
+
+def test_a_shape_cannot_be_put_under_a_style_its_outline_cannot_read(deck):
+    """A shape's own slot is its outline: a paragraph style holds no outline, so it does not fit (D304, D316)."""
+    shape = add_shape(deck)
+    with pytest.raises(RequestError, match="cannot be put into the outline"):
+        call(deck, "set_object_style", {"id": shape, "style": "body-text"})
 
 
 @pytest.mark.parametrize(("key", "value"), [("id", "nope"), ("style", "nope")])

@@ -13,7 +13,7 @@ import pytest
 from claudia_core import ALLOWED_CSS, ChangeStyle, Document, MemoryStore
 from claudia_creates import BUILTIN_STYLES, DEFAULT_STYLE, SlideModel, builtin_styles
 
-STYLE_IDS = {"body-text", "plain-shape", "plain-image"}
+STYLE_IDS = {"body-text", "shape-label", "plain-shape", "plain-box", "plain-image"}
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def doc():
     return Document(SlideModel.empty(), store=MemoryStore())
 
 
-def test_a_new_presentation_has_one_style_each_for_text_shapes_and_images():
+def test_a_new_presentation_has_styles_for_text_shapes_their_words_and_images():
     assert {style.id for style in BUILTIN_STYLES} == STYLE_IDS
     assert set(builtin_styles().ids()) == STYLE_IDS
 
@@ -46,14 +46,31 @@ def test_the_built_in_styles_pass_the_shared_validator():
     assert len(book) == len(STYLE_IDS)
 
 
-def test_every_style_is_based_on_body_text_so_one_change_reaches_them_all():
+def test_every_paragraph_style_is_based_on_body_text_so_one_change_reaches_them_all():
     book = builtin_styles()
     assert book.get(DEFAULT_STYLE).based_on is None
     for style in book:
-        if style.id != DEFAULT_STYLE:
+        if style.kind == "paragraph" and style.id != DEFAULT_STYLE:
             assert style.based_on == DEFAULT_STYLE
-    # a shape inherits the font it never sets itself
-    assert book.computed("plain-shape")["font-family"] == book.computed(DEFAULT_STYLE)["font-family"]
+    # the words in a shape inherit the font they never set themselves
+    assert book.computed("shape-label")["font-family"] == book.computed(DEFAULT_STYLE)["font-family"]
+
+
+def test_a_shape_has_an_outline_style_and_its_words_a_paragraph_style():
+    """D310: the outline and the words of a shape were one style; now each slot has a style of its own kind, and
+    together they look exactly as the one did (36px, centred, 1.25, iris on a pale wash)."""
+    book = builtin_styles()
+    kinds = {style.id: style.kind for style in book}
+    assert kinds == {
+        "body-text": "paragraph",
+        "shape-label": "paragraph",
+        "plain-shape": "outline",
+        "plain-box": "box",
+        "plain-image": "box",
+    }
+    assert book.computed("plain-shape") == {"fill": "@accent/14", "stroke": "@accent", "stroke-width": "4px"}
+    label = book.computed("shape-label")
+    assert (label["font-size"], label["line-height"], label["text-align"]) == ("36px", "1.25", "center")
 
 
 def test_a_shape_says_its_background_and_border_in_the_svg_vocabulary():
@@ -92,7 +109,7 @@ def test_the_roles_resolve_to_exactly_the_colours_the_styles_used_to_hold(doc):
 
 def test_a_style_travels_as_plain_data():
     data = builtin_styles().get(DEFAULT_STYLE).to_data()
-    assert set(data) == {"id", "name", "purpose", "based_on", "css", "to_name"}
+    assert set(data) == {"id", "name", "purpose", "based_on", "css", "to_name", "kind"}
     assert data["css"]["font-family"]
 
 

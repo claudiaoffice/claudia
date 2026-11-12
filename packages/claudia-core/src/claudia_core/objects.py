@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime
 
 from .assets import ImageAsset, ImageImport
 from .commands import Command, CommandRegistry, core_commands
+from .facets import SLOTS, fits
 from .paragraphs import Paragraph
 from .shapes import ShapeDefinition
 
@@ -73,12 +74,15 @@ def _is_whole(value: object) -> TypeIs[int]:
 
 
 def paragraph_for(object_id: str, style: str, text: str = "", author: str | None = None) -> Paragraph:
-    """The paragraph a new text box or shape starts with.
-
-    It takes the object's own id (it is the only paragraph in there, so nothing else can collide with it) and,
-    to begin with, the object's own style — so a new object looks exactly as it did before paragraphs existed,
-    and pointing its words at a different style later is a deliberate act rather than a migration."""
+    """The paragraph a new text box or shape starts with: the object's own id (it is the only paragraph in there,
+    so nothing else can collide with it) and ``style``, the style of the object's words — a paragraph style, not
+    the object's own box or outline style (D304, D310)."""
     return Paragraph(object_id, style, text).written_by(author)
+
+
+def object_styles(body: ObjectBody) -> tuple[str, ...]:
+    """The styles an object uses, one per slot: its own, then its words' if it has any (D304)."""
+    return (body.style,) if body.paragraph is None else (body.style, body.paragraph.style)
 
 
 def _quote(text: str) -> str:
@@ -453,8 +457,9 @@ class ObjectModel[A: Anchor]:
         return [obj.id for obj in self.objects.values() if obj.body.diagram == diagram_id]
 
     def style_in_use(self, style_id: str) -> bool:
-        """Does any object have this style? (Asked by the core style commands before they take a style back.)"""
-        return any(obj.body.style == style_id for obj in self.objects.values())
+        """Does any object have this style, for itself or for its words? (Asked by the core style commands before
+        they take a style back.)"""
+        return any(style_id in object_styles(obj.body) for obj in self.objects.values())
 
     # -- shapes ------------------------------------------------------------------
     def define_shape(self, shape: ShapeDefinition) -> None:
@@ -529,8 +534,8 @@ class ObjectModel[A: Anchor]:
         if body.kind not in self.object_kinds:
             raise ValueError(f"unknown kind {body.kind!r}: an object is one of {', '.join(self.object_kinds)}")
         styles = getattr(self, "styles", None)
-        if styles is not None and body.style not in styles:
-            raise ValueError(f"unknown style {body.style!r}")
+        if styles is not None:
+            self._check_slot(styles, body.kind, 0, body.style)
         aspect = self._check_visual(body)
         self._check_size(body, aspect)
         if body.kind in ("image", "diagram"):
@@ -540,14 +545,26 @@ class ObjectModel[A: Anchor]:
             if body.paragraph is None:
                 raise ValueError(f"a {body.kind} object carries a paragraph, even an empty one")
             body.paragraph.check()
-            styles = getattr(self, "styles", None)
-            if styles is not None and body.paragraph.style not in styles:
-                raise ValueError(f"unknown paragraph style {body.paragraph.style!r}")
+            if styles is not None:
+                self._check_slot(styles, body.kind, 1, body.paragraph.style)
         if not _is_whole(body.rotation) or not 0 <= body.rotation < 360:
             raise ValueError("the rotation must be whole degrees from 0 to 359")
         if type(body.snap) is not bool:
             raise ValueError("snap must be true or false")
         self.check_anchor(obj.anchor, body)
+
+    @staticmethod
+    def _check_slot(styles: Any, kind: str, index: int, style_id: str) -> None:
+        """``ValueError`` unless ``style_id`` exists and fits slot ``index`` of an object of ``kind``: the
+        container's slot (0) or the words' (1) — see :data:`claudia_core.facets.SLOTS` (D304, D316)."""
+        if style_id not in styles:
+            raise ValueError(f"unknown {'paragraph ' if index else ''}style {style_id!r}")
+        slot = SLOTS.slots_of(kind)[index]
+        style = styles.get(style_id)
+        if not fits(style.kind, slot):
+            raise ValueError(
+                f"“{style.name}” is a {style.kind} style and cannot be put into the {slot.name} of a {kind} object"
+            )
 
     def _check_visual(self, body: ObjectBody) -> float | None:
         """What ``body.kind`` requires of ``shape``/``image``/``imported``/``diagram``, and the aspect ratio (if

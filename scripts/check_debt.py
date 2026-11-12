@@ -53,6 +53,7 @@ PERF = (
     "packages/claudia-core/tests/test_performance.py",
     "packages/claudia-computes/tests/test_formula_performance.py",
     "packages/claudia-computes/tests/test_index_performance.py",
+    "packages/claudia-computes/tests/test_cellstyle_performance.py",
 )  # (each runs on its own: the packages' conftest files would clash)
 #: The one browser-driven test: it starts three servers and wants the web app built, so it is its own step (UX-10).
 E2E = "tests/e2e"

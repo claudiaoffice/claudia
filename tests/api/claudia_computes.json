@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.3.0",
  "AddChart": {
   "class": [
    "Command"
@@ -56,7 +56,10 @@
   ]
  },
  "BUILTIN_STYLES": {
-  "value": "(StyleDef(id='body-text', name='Body text', purpose='words in a floating text box or shape on a sheet', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '13px', 'line-height': '1.4', 'text-align': 'left'}, to_name=False), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that marks or annotates a part of the sheet, without drawing attention to itself', based_on='body-text', css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '2px', 'text-align': 'center'}, to_name=False), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the sheet; it carries its own colours, so no style properties apply to it', based_on='body-text', css={}, to_name=False))"
+  "value": "(StyleDef(id='body-text', name='Body text', purpose='words in a floating text box or shape on a sheet', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '13px', 'line-height': '1.4', 'text-align': 'left'}, to_name=False, kind='paragraph'), StyleDef(id='shape-label', name='Shape label', purpose='the words inside a shape on a sheet', based_on='body-text', css={'text-align': 'center'}, to_name=False, kind='paragraph'), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that marks or annotates a part of the sheet, without drawing attention to itself', based_on=None, css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '2px'}, to_name=False, kind='outline'), StyleDef(id='plain-box', name='Plain box', purpose='the box of a text box on a sheet: no background and no border, so only its words show', based_on=None, css={}, to_name=False, kind='box'), StyleDef(id='header', name='Header', purpose='the labels at the top of a table or the start of a row', based_on='body-text', css={'font-weight': '600', 'background-color': '@accent/14', 'border-bottom': '1px solid @accent'}, to_name=False, kind='paragraph'), StyleDef(id='input', name='Input', purpose='a number someone is meant to change: an assumption of the model', based_on='body-text', css={'color': '@accent', 'background-color': '@highlight/14'}, to_name=False, kind='paragraph'), StyleDef(id='result', name='Result', purpose='a number the model works out and someone reads', based_on='body-text', css={'font-weight': '600', 'border-top': '1px solid @structure'}, to_name=False, kind='paragraph'), StyleDef(id='note', name='Note', purpose='a remark beside the numbers', based_on='body-text', css={'font-style': 'italic', 'color': '@muted'}, to_name=False, kind='paragraph'), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the sheet; it carries its own colours, so no style properties apply to it', based_on=None, css={}, to_name=False, kind='box'))"
+ },
+ "CELL_SLOTS": {
+  "value": "('box', 'words')"
  },
  "CHART_KINDS": {
   "value": "('bar',)"
@@ -108,6 +111,35 @@
    "sheet"
   ]
  },
+ "CellStyles": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "from_data": "(data: 'Iterable[list]') -> 'CellStyles'",
+   "names": "(self, style_id: 'str') -> 'bool'",
+   "pieces": "(self, slot: 'str', layer: 'str', area: 'Area') -> 'tuple[Piece, ...]'",
+   "plan": "(self, slot: 'str', area: 'Area', style: 'str | None') -> 'list[tuple[str, Area, tuple[Piece, ...]]]'",
+   "ranges_in": "(self, window: 'Area') -> 'list[dict]'",
+   "replace": "(self, slot: 'str', layer: 'str', area: 'Area', pieces: 'Iterable[Piece]') -> 'None'",
+   "restructure": "(self, edit: 'StructuralEdit') -> 'list[tuple[str, str, Piece]]'",
+   "style_at": "(self, row: 'int', col: 'int', slot: 'str') -> 'tuple[str, str]'",
+   "to_data": "(self) -> 'list[list]'",
+   "uses": "(self) -> 'Counter[str]'"
+  },
+  "properties": []
+ },
+ "CellStylesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(sheet: 'SheetId', area: 'tuple[int, int, int, int]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Chart": {
   "class": [
    "object"
@@ -131,7 +163,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', range: 'RangeRef', series_in: 'str' = 'columns', header_row: 'bool' = True, title: 'str' = '', x_title: 'str' = '', y_title: 'str' = '', legend: 'bool' = True, gridlines: 'bool' = True) -> None",
+  "init": "(id: 'str', kind: 'str', range: 'RangeRef | None' = None, source: 'str' = '', source_scope: 'SheetId | None' = None, series_in: 'str' = 'columns', header_row: 'bool' = True, title: 'str' = '', x_title: 'str' = '', y_title: 'str' = '', legend: 'bool' = True, gridlines: 'bool' = True) -> None",
   "methods": {
    "from_data": "(data: 'object') -> 'ChartSpec'",
    "to_data": "(self) -> 'dict'"
@@ -150,6 +182,9 @@
  },
  "Content": {
   "value": "<Union>"
+ },
+ "DEFAULT_CELL_STYLE": {
+  "value": "'body-text'"
  },
  "DEFAULT_STYLE": {
   "value": "'body-text'"
@@ -180,6 +215,23 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
    "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineName": {
+  "class": [
+   "Command"
+  ],
+  "init": "(name: 'NamedRange') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'DefineName'",
+   "regions": "(self, model) -> 'tuple[CellRegion, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -328,8 +380,14 @@
   "methods": {},
   "properties": []
  },
+ "LAYERS": {
+  "value": "('sheet', 'column', 'row', 'range')"
+ },
  "MAX_OBJECTS_PER_SHEET": {
   "value": "500"
+ },
+ "MAX_STYLE_RANGES": {
+  "value": "20000"
  },
  "MIN_OBJECT_SIZE": {
   "value": "20"
@@ -351,6 +409,49 @@
    "label",
    "summary"
   ]
+ },
+ "NamedRange": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', scope: 'SheetId | None', range: 'RangeRef | None' = None, header: 'bool' = False, grows: 'bool' = False, purpose: 'str' = 'data', column_purposes: 'tuple[tuple[int, str], ...]' = (), anchor: 'Anchor | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'NamedRange'",
+   "purpose_of": "(self, offset: 'int') -> 'str'",
+   "to_data": "(self) -> 'dict'",
+   "with_range": "(self, area: 'RangeRef') -> 'NamedRange'"
+  },
+  "properties": [
+   "is_result",
+   "key",
+   "sheet"
+  ]
+ },
+ "Names": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "clear": "(self) -> 'None'",
+   "from_data": "(data: 'Sequence[dict]') -> 'Names'",
+   "get": "(self, key: 'NameKey') -> 'NamedRange | None'",
+   "put": "(self, name: 'NamedRange | None', key: 'NameKey | None' = None) -> 'None'",
+   "resolve": "(self, home: 'SheetId', text: 'str') -> 'NamedRange | None'",
+   "sorted": "(self) -> 'list[NamedRange]'",
+   "to_data": "(self) -> 'list[dict]'"
+  },
+  "properties": []
+ },
+ "NamesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "OBJECT_KINDS": {
   "value": "('text', 'shape', 'image', 'diagram')"
@@ -390,6 +491,9 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": []
+ },
+ "PURPOSES": {
+  "value": "('input', 'data', 'calc', 'result')"
  },
  "Paragraph": {
   "class": [
@@ -449,6 +553,22 @@
    "summary"
   ]
  },
+ "RemoveName": {
+  "class": [
+   "Command"
+  ],
+  "init": "(scope: 'SheetId | None', name: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RemoveName'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "RemoveObject": {
   "class": [
    "Command"
@@ -477,6 +597,22 @@
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'RemoveSheet'",
    "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RenameName": {
+  "class": [
+   "Command"
+  ],
+  "init": "(scope: 'SheetId | None', old: 'str', new: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RenameName'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -519,6 +655,22 @@
    "summary"
   ]
  },
+ "RestoreNames": {
+  "class": [
+   "Command"
+  ],
+  "init": "(entries: 'tuple[tuple[NameKey, NamedRange | None], ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RestoreNames'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "RotateObject": {
   "class": [
    "Command"
@@ -544,6 +696,26 @@
   "init": "(length: 'int', author: 'str | None', via: 'str | None' = None) -> None",
   "methods": {},
   "properties": []
+ },
+ "SetCellStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(sheet: 'SheetId', slot: 'str', layer: 'str', area: 'Area', pieces: 'tuple[Piece, ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "applying": "(model: 'WorkbookModel', sheet: 'SheetId', slot: 'str', area: 'Area', style: 'str | None') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetCellStyle'",
+   "put": "(sheet: 'SheetId', slot: 'str', area: 'Area', style: 'str | None') -> 'SetCellStyle'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model) -> 'tuple[CellRegion, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "SetCells": {
   "class": [
@@ -635,6 +807,7 @@
   ],
   "init": "(sheet_id: 'SheetId', name: 'str')",
   "methods": {
+   "blocker": "(self, first: 'Position', last: 'Position', owner: 'tuple[SheetId, int, int]') -> 'Position | None'",
    "bump_all": "(self) -> 'None'",
    "cells_in": "(self, row0: 'int', row1: 'int', col0: 'int', col1: 'int') -> 'list[Position]'",
    "column_version": "(self, col: 'int') -> 'int'",
@@ -642,6 +815,8 @@
    "refit": "(self) -> 'None'",
    "set_value": "(self, position: 'Position', value: 'Value') -> 'bool'",
    "sizes": "(self, axis: 'str') -> 'dict[int, float]'",
+   "spill_clear": "(self, position: 'Position') -> 'bool'",
+   "spill_value": "(self, position: 'Position', value: 'Value', owner: 'tuple[SheetId, int, int]') -> 'bool'",
    "to_data": "(self) -> 'dict'",
    "version": "(self) -> 'int'",
    "view": "(self, position: 'Position') -> 'dict | None'"
@@ -719,21 +894,32 @@
    "chart_figure": "(self, diagram_id: 'str') -> 'dict'",
    "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
    "check_anchor": "(self, anchor: 'CellAnchor', body: 'ObjectBody') -> 'None'",
+   "check_name": "(self, named: 'NamedRange') -> 'None'",
+   "check_writable": "(self, sheet: 'Sheet', positions) -> 'None'",
+   "columns_of": "(self, named: 'NamedRange', sample: 'int' = 2000) -> 'list[tuple[str, str]]'",
    "containers": "(self) -> 'list[str]'",
    "diagram_from_data": "(self, data: 'dict') -> 'ChartSpec'",
-   "drop_sheet": "(self, sheet_id: 'SheetId') -> 'dict[SheetId, Cells]'",
+   "drop_sheet": "(self, sheet_id: 'SheetId') -> 'tuple[dict[SheetId, Cells], NameRestores]'",
    "empty": "() -> 'Self'",
    "get": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Content'",
+   "grow_names": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'NameRestores'",
+   "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
+   "header_texts": "(self, region: 'Rect') -> 'list[str]'",
+   "put_names": "(self, entries: 'Sequence[tuple[NameKey, NamedRange | None]]') -> 'NameRestores'",
+   "query": "(self, text: 'str', home: 'SheetId', parameters: 'Sequence[object]' = ()) -> 'Table'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
+   "region_of": "(self, named: 'NamedRange') -> 'Rect | None'",
    "remove_chart": "(self, chart_id: 'str') -> 'None'",
+   "rename_name": "(self, scope: 'SheetId | None', old: 'str', new: 'str') -> 'dict[SheetId, Cells]'",
    "restore": "(state: 'dict') -> 'Self'",
-   "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...]]'",
+   "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
    "serialize": "(self) -> 'dict'",
    "settle": "(self, ctx) -> 'None'",
    "sheet": "(self, sheet_id: 'SheetId') -> 'Sheet'",
    "sheet_id_of": "(self, name: 'str') -> 'SheetId | None'",
    "sheet_name_of": "(self, sheet_id: 'SheetId') -> 'str | None'",
    "store": "(self, sheet: 'Sheet', row: 'int', col: 'int', content: 'Content') -> 'Content'",
+   "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "value": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Value'"
   },
@@ -753,6 +939,9 @@
  },
  "get_function": {
   "function": "(name: 'str', catalog: 'list[FunctionHelp] | None' = None) -> 'FunctionHelp | None'"
+ },
+ "layer_of": {
+  "function": "(area: 'Area') -> 'str'"
  },
  "paragraph_for": {
   "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"

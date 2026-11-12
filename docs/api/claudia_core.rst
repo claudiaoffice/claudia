@@ -187,6 +187,41 @@ reaches a browser is always literal.
 .. autoclass:: claudia_core.RenameStyle
 .. autoclass:: claudia_core.RemoveStyle
 
+Facets, kinds and slots
+-----------------------
+
+.. automodule:: claudia_core.facets
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+Every property a style may set belongs to one of four facets (text, paragraph, box, outline); a style's kind says which
+facets it may hold; a slot is a place in a thing that reads a style, and the slot table says which slots everything that
+can be styled has (D303-D305, D312, D315).
+
+.. autoclass:: claudia_core.Facet
+.. autodata:: claudia_core.facets.TEXT_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.PARAGRAPH_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.BOX_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.OUTLINE_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.FACETS
+   :no-value:
+.. autodata:: claudia_core.facets.FACET_PROPERTIES
+   :no-value:
+.. autofunction:: claudia_core.facet_of
+.. autodata:: claudia_core.facets.KINDS
+   :no-value:
+.. autofunction:: claudia_core.check_kind
+.. autoclass:: claudia_core.Slot
+.. autoclass:: claudia_core.SlotTable
+.. autodata:: claudia_core.facets.SLOTS
+   :no-value:
+.. autofunction:: claudia_core.fits
+
 The palette: colours by what they mean
 --------------------------------------
 

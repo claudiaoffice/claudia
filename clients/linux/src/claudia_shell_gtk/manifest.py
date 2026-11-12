@@ -15,7 +15,9 @@ never listed a style by name): nothing data-driven gets a static entry. Dynamic,
 and computes' style names, creates' shape library — has no id and no `Action` of its own on the web side either
 (``lib/menu-dispatch.ts``'s `collectStates`/`findMenuItem` walk explicitly skip id-less items); a shell reaches that
 content through its one real submenu-shaped escape hatch (composes: "All Styles…") rather than the static menu
-growing one entry per document. The same reasoning drops the "visible but inert" stub items (D125) from the
+growing one entry per document. Format ▸ Apply Style… is the same escape hatch for applying a style: one page action
+that opens the page's own popover with the styles drawn in their looks (D300, D301), never a native list of them.
+The same reasoning drops the "visible but inert" stub items (D125) from the
 *accelerator* story but not from the menu itself: ``help.how-to`` and ``help.docs`` below are
 ordinary ``Kind.PAGE`` actions the shell greys out the moment the page connects (``set_action_states``, driven by the
 page's own ``collectStates`` — nothing shell-side needs to know they are permanent stubs rather than temporarily
@@ -405,6 +407,11 @@ def composes() -> Manifest:
         (
             (
                 _page(
+                    "format.apply-style",
+                    "Apply Style…",
+                    "Choose a style for the selection, each drawn in its own look",
+                ),
+                _page(
                     "format.look",
                     "Edit This Style…",
                     "Change how this kind of paragraph looks",
@@ -495,6 +502,11 @@ def computes() -> Manifest:
         (
             (
                 _page(
+                    "format.apply-style",
+                    "Apply Style…",
+                    "Choose a style for the selection, each drawn in its own look",
+                ),
+                _page(
                     "format.look",
                     "Edit This Style…",
                     "Change how the object you have selected looks",
@@ -556,6 +568,11 @@ def creates() -> Manifest:
         "Format",
         (
             (
+                _page(
+                    "format.apply-style",
+                    "Apply Style…",
+                    "Choose a style for the selection, each drawn in its own look",
+                ),
                 _page(
                     "format.look",
                     "Edit This Style…",

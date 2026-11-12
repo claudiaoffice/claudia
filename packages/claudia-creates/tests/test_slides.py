@@ -12,13 +12,16 @@ from claudia_core import (
     Document,
     MemoryStore,
     RegionHeld,
+    RemoveStyle,
     Revision,
+    SetObjectStyle,
     SetParagraphStyle,
     SetText,
     StyleDef,
     UndoConflict,
     UndoRefused,
     encode,
+    paragraph_for,
 )
 from claudia_creates import (
     AddSlide,
@@ -609,15 +612,16 @@ def test_undoing_someone_elses_words_gives_the_text_back_to_whoever_wrote_it(doc
 def test_an_objects_own_style_and_its_paragraphs_style_are_separate(doc):
     """A shape's style says what its background and border look like, its paragraph's what the words do."""
     put(doc, shape_object("r1", text="a label"), author="ana")
-    doc.execute(CreateStyle(StyleDef("shape-label", "Shape label", "words in a shape", "body-text", {})), author="ana")
-    doc.execute(SetParagraphStyle("r1", "shape-label"), author="ana")
+    doc.execute(CreateStyle(StyleDef("big-label", "Big label", "loud words in a shape", "body-text", {})), author="ana")
+    before = doc.model.get("r1").body.paragraph.style
+    doc.execute(SetParagraphStyle("r1", "big-label"), author="ana")
 
     obj = doc.model.get("r1")
     assert obj.body.style == "plain-shape"
-    assert obj.body.paragraph.style == "shape-label"
+    assert obj.body.paragraph.style == "big-label"
 
     doc.undo("ana")
-    assert doc.model.get("r1").body.paragraph.style == "plain-shape"
+    assert doc.model.get("r1").body.paragraph.style == before
 
 
 def test_an_image_carries_no_paragraph(doc):
@@ -635,3 +639,37 @@ def test_redacting_an_objects_text_keeps_the_object_and_its_style(doc):
     assert redacted.body.paragraph is not None
     assert redacted.body.paragraph.text == ""
     assert redacted.body.paragraph.style == "body-text"
+
+
+# ----------------------------------------------------------------------------- slots (D304, D310, D316)
+def test_a_shapes_own_style_must_be_an_outline(doc):
+    put(doc, shape_object("r1"), author="ana")
+    for style in ("body-text", "plain-box"):
+        with pytest.raises(ValueError, match="cannot be put into the outline of a shape"):
+            doc.execute(SetObjectStyle("r1", style), author="ana")
+    assert doc.model.get("r1").body.style == "plain-shape"
+
+
+def test_a_text_boxs_box_takes_a_box_style_or_a_whole_bundle(doc):
+    """The box reads only the box part of a style, so a paragraph style fits there too (D316)."""
+    put(doc, text_box("t1"), author="ana")
+    doc.execute(SetObjectStyle("t1", "plain-box"), author="ana")
+    doc.execute(SetObjectStyle("t1", "body-text"), author="ana")
+    with pytest.raises(ValueError, match="cannot be put into the box of a text"):
+        doc.execute(SetObjectStyle("t1", "plain-shape"), author="ana")
+
+
+def test_words_take_only_a_paragraph_style(doc):
+    put(doc, shape_object("r1", text="hi"), author="ana")
+    with pytest.raises(ValueError, match="cannot be put into the label of a shape"):
+        doc.execute(SetParagraphStyle("r1", "plain-shape"), author="ana")
+    with pytest.raises(ValueError, match="cannot be put into the label"):
+        put(doc, shape_object("r2", paragraph=paragraph_for("r2", "plain-box")), author="ana")
+
+
+def test_a_style_only_an_objects_words_use_is_still_in_use(doc):
+    put(doc, shape_object("r1", text="hi"), author="ana")
+    doc.execute(CreateStyle(StyleDef("loud", "Loud", "words that shout", "body-text", {})), author="ana")
+    doc.execute(SetParagraphStyle("r1", "loud"), author="ana")
+    with pytest.raises(ValueError, match="in use"):
+        doc.execute(RemoveStyle("loud"), author="ana")

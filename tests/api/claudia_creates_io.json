@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -11,11 +11,26 @@
  "add_transition": {
   "function": "(pptx_bytes: 'bytes', *, slide_index: 'int', kind: 'str' = 'fade', speed: 'str' = 'slow', advance_on_click: 'bool' = True) -> 'bytes'"
  },
+ "apply_edits_to_odp": {
+  "function": "(original_bytes: 'bytes', baseline: 'SlideModel', current: 'SlideModel', *, losses: 'LossLog | None' = None, info: 'DocumentInfo | None' = None) -> 'bytes'"
+ },
  "apply_edits_to_pptx": {
   "function": "(original_bytes: 'bytes', baseline: 'SlideModel', current: 'SlideModel') -> 'bytes'"
  },
+ "odp_export_losses": {
+  "function": "(model: 'SlideModel') -> 'tuple[Loss, ...]'"
+ },
+ "odp_import_losses": {
+  "function": "(odp_bytes: 'bytes') -> 'tuple[Loss, ...]'"
+ },
+ "odp_to_slides": {
+  "function": "(odp_bytes: 'bytes') -> 'SlideModel'"
+ },
  "pptx_to_slides": {
   "function": "(pptx_bytes: 'bytes') -> 'SlideModel'"
+ },
+ "slides_to_odp": {
+  "function": "(model: 'SlideModel', *, info: 'DocumentInfo | None' = None) -> 'bytes'"
  },
  "slides_to_pptx": {
   "function": "(model: 'SlideModel') -> 'bytes'"

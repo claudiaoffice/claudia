@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import secrets
 
-from claudia_creates_io import slides_to_pptx
+from claudia_creates_io import odp_export_losses, slides_to_odp, slides_to_pptx
 
 from claudia_core import (
     OBJECT_KINDS,
@@ -32,7 +32,6 @@ from claudia_core import (
     RemoveObject,
     ResizeObject,
     RotateObject,
-    SetParagraphStyle,
     SetSnap,
     SetText,
     decode_image,
@@ -42,11 +41,16 @@ from claudia_core.clock import utc_now
 from claudia_creates import AddSlide, ShapeLibrary, SlideAnchor, SlideModel
 
 from .images import image_bytes
-from .office_export import office_export
+from .office_export import document_info, office_export
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .styles import add_style_methods
 
-STYLE_OF_KIND = {"text": "body-text", "shape": "plain-shape", "image": "plain-image"}
+#: The style a new object of each kind starts with: its container's slot (D304). A text box's box is a box style
+#: of its own (D310), so a change to it never has to deviate from Body text.
+STYLE_OF_KIND = {"text": "plain-box", "shape": "plain-shape", "image": "plain-image"}
+#: The style a new object's words start with: its words' slot. A shape's outline and its words are two styles of
+#: two kinds (D310).
+PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}
 
 
 def _deck(ctx: Context) -> SlideModel:
@@ -117,12 +121,6 @@ def _resize_object(ctx, *, id, x, y, w, h, base):
     return _done(ctx, ResizeObject(id, SlideAnchor(slide, x, y).to_data(), w, h), base)
 
 
-def _set_paragraph_style(ctx, *, id, style, base):
-    """Put an object's words under another paragraph style. This is the style of the *text* inside the object,
-    not the object's own, which says what its background and border look like (D178, D181)."""
-    return _done(ctx, SetParagraphStyle(id, style), base)
-
-
 def _rotate_object(ctx, *, id, rotation, base):
     """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
     return _done(ctx, RotateObject(id, rotation), base)
@@ -157,7 +155,6 @@ def _add_object_methods(table: MethodTable) -> None:
     table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
     table.method("resize_object", "id:str x:int y:int w:int h:int base:revision?", write=True)(_resize_object)
     table.method("rotate_object", "id:str rotation:int base:revision?", write=True)(_rotate_object)
-    table.method("set_paragraph_style", "id:str style:str base:revision?", write=True)(_set_paragraph_style)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
@@ -213,12 +210,18 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
 
     @table.method("export_office", "format:str")
     def _export_office(ctx, *, format):
-        """The document's current content as bytes of a PowerPoint file (`format` must be `"pptx"`, the only
-        one so far), wrapped for the wire as `{format, content_type, data}` (`data` base64). No tracked
-        changes, no history, no chat — just the deck as it stands now (D212)."""
-        if format != "pptx":
-            raise RequestError("bad_request", 'export_office: format must be "pptx"')
-        return office_export(format, slides_to_pptx(_deck(ctx)))
+        """The document's current content as bytes of a PowerPoint file (`format` `"pptx"`) or an OpenDocument
+        presentation (`"odp"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); an odp's
+        answer also has `losses`, what the file could not hold, as `{kind, detail, count}` codes. No tracked
+        changes, no history, no chat -- just the deck as it stands now (D212); an odp says in its metadata when the
+        deck was made and last changed, and by whom, read from the log (D411)."""
+        if format not in ("pptx", "odp"):
+            raise RequestError("bad_request", 'export_office: format must be "pptx" or "odp"')
+        deck = _deck(ctx)
+        if format == "pptx":
+            return office_export(format, slides_to_pptx(deck))
+        info = document_info(ctx.document.log, ctx.document.branch)
+        return office_export(format, slides_to_odp(deck, info=info), odp_export_losses(deck))
 
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):
@@ -249,7 +252,8 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             steps.append(DefineShape(outline))
         object_id = _fresh("o", deck.objects)
         style = STYLE_OF_KIND[kind]
-        body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text, ctx.user), shape=shape)
+        words = paragraph_for(object_id, PARAGRAPH_STYLE_OF_KIND[kind], text, ctx.user)
+        body = ObjectBody(object_id, kind, w, h, style, words, shape=shape)
         steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return _done(ctx, command, base, object=object_id)

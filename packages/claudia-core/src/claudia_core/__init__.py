@@ -15,6 +15,8 @@
     store        what the kernel needs from storage (implemented by E2)
     document     Document: ties it all together
     events       what a Document tells its subscribers
+    facets       what a style property means: the four facets, the kinds of style, and the slots of everything
+                 that can be styled (D303-D305, D312, D315)
     css          the CSS a style may hold: a versioned allow-list, a validator, the text form of a style
     styles       StyleBook and the commands that change it (E1.10)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
@@ -85,6 +87,22 @@ from .events import (
     ResultsStale,
 )
 from .events import Redacted as RedactedEvent
+from .facets import (
+    BOX_FACET,
+    FACET_PROPERTIES,
+    FACETS,
+    KINDS,
+    OUTLINE_FACET,
+    PARAGRAPH_FACET,
+    SLOTS,
+    TEXT_FACET,
+    Facet,
+    Slot,
+    SlotTable,
+    check_kind,
+    facet_of,
+    fits,
+)
 from .history import History, Step
 from .log import CommandLog, Entry
 from .manifest import (
@@ -179,6 +197,7 @@ __all__ = [
     "ASPECT_TOLERANCE",
     "Batch",
     "BOX",
+    "BOX_FACET",
     "Branch",
     "BranchSwitched",
     "builtin_palette",
@@ -187,6 +206,7 @@ __all__ = [
     "ChatPosted",
     "ChatRecord",
     "check",
+    "check_kind",
     "Checkpoint",
     "CheckpointInfo",
     "CheckpointSaved",
@@ -218,6 +238,11 @@ __all__ = [
     "Ephemeral",
     "EphemeralPublished",
     "EventBus",
+    "Facet",
+    "facet_of",
+    "FACET_PROPERTIES",
+    "FACETS",
+    "fits",
     "FontRequirement",
     "ForgetDiagram",
     "ForgetImage",
@@ -235,6 +260,7 @@ __all__ = [
     "ImagesChanged",
     "insert_runs",
     "KernelError",
+    "KINDS",
     "Line",
     "luminance",
     "MAIN",
@@ -255,10 +281,12 @@ __all__ = [
     "ObjectModel",
     "ObjectsChanged",
     "ObjectSet",
+    "OUTLINE_FACET",
     "PAIRINGS",
     "Palette",
     "PaletteChanged",
     "Paragraph",
+    "PARAGRAPH_FACET",
     "paragraph_for",
     "parse_chat",
     "parse_css",
@@ -303,6 +331,9 @@ __all__ = [
     "ShapeError",
     "ShapesChanged",
     "slice_runs",
+    "Slot",
+    "SLOTS",
+    "SlotTable",
     "Snapshot",
     "StaleEdit",
     "Step",
@@ -311,6 +342,7 @@ __all__ = [
     "StylesChanged",
     "SUPPORTED_IMAGE_FORMATS",
     "Switch",
+    "TEXT_FACET",
     "TEXT_FLOOR",
     "total",
     "transform",

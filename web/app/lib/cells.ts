@@ -7,6 +7,10 @@ export type Content = {
   v: number | string | boolean
   f?: string
   d?: string
+  /** The cell shows a part of a query result: it is not stored and cannot be typed into (E6.5). */
+  spill?: boolean
+  /** For such a cell, the `[row, col]` of the formula that fills it. */
+  from?: [number, number]
 } | null
 
 export const MAX_ROWS = 1_048_576

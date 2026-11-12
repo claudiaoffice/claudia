@@ -3,6 +3,23 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.7.0] - 2026-11-10
+
+The styling-suite plan, steps 1.2 to 1.6.
+
+### Added
+- The built-in **`plain-box`**, a `box` style without properties: the box of a text box on a slide (D310).
+
+## [0.6.0] - 2026-11-10
+
+Every built-in style has a kind (D305, D312), and a shape's outline and its words are two styles (D310).
+
+### Changed
+- **Breaking:** `plain-shape` is an `outline` style that holds only `fill`, `stroke` and `stroke-width`, and is no
+  longer based on Body text (a style and its parent are of the same kind). Its words' look (`36px`, `1.25`,
+  centred) moved to the new built-in **`shape-label`**, a paragraph style based on Body text; together the two look
+  exactly as the one did. `plain-image` is a `box` style, also a root.
+
 ## [0.5.0] - 2026-11-08
 
 The presentation carries its own colour palette (D200, D201).

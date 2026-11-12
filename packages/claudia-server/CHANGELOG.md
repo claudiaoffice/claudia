@@ -5,7 +5,43 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- One style API for all three apps (`claudia_server.style_targets`, the styling-suite plan step 1.5):
+  `style_model` (facets, kinds, slots with the kinds each takes, and the target keys this app accepts),
+  `apply_style(targets, style, slot?)`, `deviate(parent, targets, slot?, set|text)` and `style_uses`. A target is
+  `{"object": id}` in every app, `{"block": id}` in composes (and `{"sheet": id, "range": [...]}` in computes);
+  without a `slot`, a style fills every slot it fits (D309, D311, D316) and a deviation every slot that held the
+  parent. `add_style_methods` takes the app's `targets`; a later kind of thing is a row of the slot table and an
+  adapter (D315). The narrower methods stay until every client uses these.
+- computes: cells are a style target, `{"sheet": id, "range": [r0, c0, r1, c1]}` (D307, D311); a whole column,
+  row or sheet goes into the layer of its shape. `cell_styles(sheet, row0, row1, col0, col1)` returns the style
+  ranges of a window, cut to it, for a client to paint; `cell_style_at(sheet, row, col)` says where a cell's look
+  comes from, slot by slot.
+- computes: styling cells lets the last action win (D317); `clear_cell_style(sheet, range, slot?)` takes the
+  cells' own style away so that the row's, column's or sheet's style shows through.
+- `export_office` also writes `"odt"` for the text app (D401), and its answer then has `losses`: what the file could
+  not hold, as a list of `{kind, detail, count}` codes (nothing yet puts them into words; the screen is designed
+  first). A format that cannot say has no `losses` in the answer. The error for an unknown format names both.
+- `export_office` of the presentation app also writes `"odp"` (D412), with `losses`, and the file says in its metadata
+  when the deck was made and last changed and by whom, read from the log (D411).
+- `export_office` of the spreadsheet app also writes `"ods"` (D413), with `losses` and the metadata from the log (D411).
+- The text app's `export_office` takes `tracked_changes` (default `false`, a clean copy, D212): the open suggestions
+  that propose a replacement are written as tracked changes, dated with when they were proposed and signed by their
+  author (docx and odt); an odt's metadata is filled from the log (D411).
+- computes: `names`, `define_name`, `rename_name`, `remove_name`, `sql_preview`, `define_sql` (D600–D609), and a pushed
+  `names` event; `diagrams`/`define_diagram` accept a chart that reads a named `source`. They are not yet in the AI's allow-list.
+
 ### Changed
+- `set_paragraph_style` is one of the shared style methods (`add_style_methods`), so computes and composes have it
+  as creates did: the objects of a sheet or a text can have their words restyled too.
+- A new text box's own style is `plain-box`, the box slot (D310); its words stay `body-text`.
+- `set_object_style` and `set_paragraph_style` refuse, as `command_error`, a style that does not fit the slot
+  (D316): a paragraph style on a shape's outline, an outline style on its words.
+- A new shape's words start under `shape-label`, not under the shape's own style: a shape's outline and its words
+  are two styles of two kinds (D310). A text box's words stay under `body-text`.
+- `deviate_style` and `deviate_object_style` make a style of the parent's kind (D305), and refuse, as
+  `command_error`, a property the kind cannot hold (changing the font of an outline, say).
+- `styles` answers each style's `kind` (D305).
 - The built web app is served with `Cache-Control` (D248): pages and every file not named by its content are
   revalidated on each load (`no-cache`, a cheap `304` when nothing changed), the content-hashed files under `_nuxt/`
   are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the

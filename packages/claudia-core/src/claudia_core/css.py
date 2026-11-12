@@ -28,9 +28,12 @@ import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from .facets import FACET_PROPERTIES
+
 #: Bumped whenever the list or the meaning of a value changes; an old document is upcast, never broken (E1.3).
 #: 2: a colour may be a role of the palette (``@accent``, ``@accent/55``).
-CSS_VERSION = 2
+#: 3: ``vertical-align`` and ``white-space``, for the box of a cell (E6.13, D307).
+CSS_VERSION = 3
 
 _MAX_LENGTH = 1000.0
 _MAX_FAMILIES = 20
@@ -365,7 +368,9 @@ def _split_families(value: str) -> list[str]:
 
 
 #: Property -> the check that accepts a value and returns it in its clean form. The order of the entries is the
-#: order in which ``format_css`` writes a style.
+#: order in which ``format_css`` writes a style. *Which* properties exist is the facets' business
+#: (:mod:`claudia_core.facets`, D303): every property here belongs to exactly one facet and every facet property has
+#: a check here, which is checked below when the module loads, so the two lists cannot drift apart.
 _CHECKS: dict[str, Callable[[str], str]] = {
     "font-family": _family,
     "font-size": _size,
@@ -390,13 +395,18 @@ _CHECKS: dict[str, Callable[[str], str]] = {
     "border-right": _border,
     "border-bottom": _border,
     "border-left": _border,
+    "vertical-align": _keywords("top", "middle", "bottom"),
+    "white-space": _keywords("normal", "nowrap", "pre-wrap"),
     "fill": _paint,
     "stroke": _paint,
     "stroke-width": _stroke_width,
 }
 
-#: The CSS properties a style may set (``CSS_VERSION``).
-ALLOWED_CSS = frozenset(_CHECKS)
+if set(_CHECKS) != FACET_PROPERTIES:  # pragma: no cover - a mistake in this file or in facets.py
+    raise RuntimeError(f"the value checks and the facets disagree: {sorted(set(_CHECKS) ^ FACET_PROPERTIES)}")
+
+#: The CSS properties a style may set (``CSS_VERSION``): those of the four facets.
+ALLOWED_CSS = FACET_PROPERTIES
 _ORDER = {name: place for place, name in enumerate(_CHECKS)}
 
 

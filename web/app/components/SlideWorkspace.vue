@@ -18,6 +18,8 @@ import {
 } from '~/lib/document-menus'
 import { useI18n } from '~/lib/i18n'
 import { objectStyleHost } from '~/lib/object-style-host'
+import { galleryFor } from '~/lib/style-host'
+import { formatItems } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
@@ -40,7 +42,10 @@ const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
 const dialog = ref<null | 'styles' | 'colours'>(null)
-const EXPORT_FORMATS = [{ value: 'pptx', label: 'PowerPoint presentation (.pptx)' }]
+const EXPORT_FORMATS = [
+  { value: 'pptx', label: 'PowerPoint presentation (.pptx)' },
+  { value: 'odp', label: 'OpenDocument presentation (.odp)' },
+]
 
 const readonly = computed(() => state.me.role === 'viewer')
 const styleHost = objectStyleHost({
@@ -59,46 +64,40 @@ const styleHost = objectStyleHost({
   get selected() {
     return state.selected ? state.objects[state.selected] ?? null : null
   },
+  get model() {
+    return state.styleModel
+  },
   get bodies() {
     return session.bodies()
   },
-  setObjectStyle: (id, style) => session.setObjectStyle(id, style),
+  applyStyle: (targets, style, slot) => session.applyStyle(targets, style, slot),
   changeStyle: (style, edit) => session.changeStyle(style, edit),
-  deviateObjectStyle: (parent, ids, edit) => session.deviateObjectStyle(parent, ids, edit),
+  deviateStyle: (parent, targets, slot, edit) => session.deviateStyle(parent, targets, slot, edit),
   renameStyle: (style, name) => session.renameStyle(style, name),
   checkCss: (text) => session.checkCss(text),
   setRole: (role, colour) => session.setRole(role, colour),
 })
 
 /**
- * The Format menu: the styles by purpose first, because you mark a thing by what it is *for* (D62), then the two
- * ways in — this object's own look, and the document's colours.
- *
- * Styling needs something selected: with nothing selected there is nothing for a change to be about, so the
- * per-object items say so rather than failing quietly. Colours are the document's and never need a selection.
+ * The Format menu (D300): Apply style ▸ with the styles that fit the selected object's slot — the one the style
+ * menu works on, a shape's outline or a text box's words (D304, D316) — then this object's own look, all the
+ * styles, and the document's colours. Styling needs something selected; colours never do.
  */
 function styleItems() {
-  const styles = session.styleViews()
-  if (styles.length === 0) return [{ label: t('No styles yet'), disabled: true }]
-  const chosen = state.selected ? state.objects[state.selected]?.style : undefined
-  return [
-    ...styles.map((s) => ({
-      label: s.name,
-      checked: s.id === chosen,
-      disabled: readonly.value || !state.selected,
-      action: () => session.setObjectStyle(state.selected ?? '', s.id),
-    })),
-    { label: '', separator: true },
-    {
-      id: 'format.look',
-      label: t('Edit this style…'),
-      disabled: !state.selected,
-      action: () => canvas.value?.openStyleMenu(),
-    },
-    { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
-    { label: '', separator: true },
-    { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
-  ]
+  if (session.styleViews().length === 0) return [{ label: t('No styles yet'), disabled: true }]
+  const body = state.selected ? state.objects[state.selected] : undefined
+  const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)
+  return formatItems(t, {
+    groups: body ? [offered.own, offered.bundles] : [],
+    heading: body ? undefined : t('Select an object to style it'),
+    current: styleHost.current?.id,
+    canApply: !readonly.value && !!body,
+    apply: (id) => void styleHost.apply(id),
+    openApply: () => canvas.value?.openStyleMenu(undefined, 'apply'),
+    look: { disabled: !body, open: () => canvas.value?.openStyleMenu() },
+    allStyles: () => (dialog.value = 'styles'),
+    colours: () => (dialog.value = 'colours'),
+  })
 }
 
 /** Put the colours the document started with back, as the server itself states them (no second copy to drift). */

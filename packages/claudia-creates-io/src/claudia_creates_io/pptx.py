@@ -24,7 +24,6 @@ a table or a chart.
 from __future__ import annotations
 
 import posixpath
-import re
 import zipfile
 from io import BytesIO
 from itertools import count
@@ -47,6 +46,8 @@ from claudia_creates import (
 )
 from claudia_opc_io import owns, reconcile
 
+from ._styling import colour_of, look, page_colour, points_of
+
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 RNS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 
@@ -63,17 +64,16 @@ _AUTOSHAPE = {
 #: The reverse of ``_AUTOSHAPE``, for import: an autoshape of any other type (a star, a custom geometry) is not
 #: one of claudia's three built-in shapes, so it is left as beyond-claudia content, same as a table or a picture.
 _SHAPE_ID = {autoshape: claudia_id for claudia_id, autoshape in _AUTOSHAPE.items()}
-#: The two default styles a reimported object is given: pptx carries no named-style concept to map back from
-#: (unlike docx's own style names), so every text box becomes "body-text" and every autoshape "plain-shape" --
-#: the same fallback ``slides_to_pptx`` itself falls back to when an object's style id is not a built-in one.
-_DEFAULT_TEXT_STYLE, _DEFAULT_SHAPE_STYLE = "body-text", "plain-shape"
+#: The default styles a reimported object is given: pptx carries no named-style concept to map back from
+#: (unlike docx's own style names), so every text box's words become "body-text" and every autoshape "plain-shape"
+#: -- the same fallback ``slides_to_pptx`` itself falls back to when an object's style id is not a built-in one.
+#: The other slot of each gets its own default (D304, D310): a text box's box "plain-box", a shape's words
+#: "shape-label".
+_DEFAULT_TEXT_STYLE, _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE = "body-text", "plain-shape", "shape-label"
+_DEFAULT_BOX_STYLE = "plain-box"
 
 _TRANSITIONS = ("fade", "wipe", "push", "none")
 _SPEEDS = ("fast", "med", "slow")
-_HEX = re.compile(r"#([0-9a-fA-F]{6})\b")
-_SHORT_HEX = re.compile(r"#([0-9a-fA-F]{3})\b")
-_RGB_FUNCTION = re.compile(r"rgba?\(([^)]*)\)")
-_NUMBER = re.compile(r"[\d.]+")
 
 
 class UnsupportedEdit(Exception):
@@ -85,61 +85,15 @@ class UnsupportedEdit(Exception):
 
 
 def _pt(css: dict[str, str], prop: str, pt_per_unit: float) -> Pt | None:
-    """``css[prop]`` (CSS pixels, a unit of the slide's own 1600x900 space) as points, or ``None``."""
-    value = css.get(prop)
-    match = _NUMBER.search(value) if value else None
-    return Pt(float(match.group()) * pt_per_unit) if match else None
+    """``css[prop]`` as python-pptx points, or ``None`` (see :func:`._styling.points_of`)."""
+    found = points_of(css, prop, pt_per_unit)
+    return Pt(found) if found is not None else None
 
 
 def _rgb(css: dict[str, str], prop: str, over: str | None = None) -> RGBColor | None:
-    """``css[prop]`` as a pptx colour, or ``None`` if it holds no colour this can read.
-
-    Hexadecimal **and** ``rgb()``/``rgba()``, because a palette role at an opacity resolves to the latter: a shape's
-    fill is ``@accent/14``, which becomes ``rgba(91, 75, 196, 0.14)`` and holds no hex at all. Reading only hex
-    dropped the fill and the stroke of every built-in shape without a word of complaint.
-
-    A solid pptx fill has no alpha to put the opacity in, so a translucent colour is composited over ``over`` (the
-    slide's own colour, the palette's ``page``) and the flattened result is written. Keeping the colour and
-    discarding the opacity instead would turn a 14% wash into full-strength iris — a shape that looks nothing like
-    the one on the screen, which is the opposite of what an export is for.
-    """
-    value = css.get(prop)
-    if not value:
-        return None
-    parsed = _parse_colour(value)
-    if parsed is None:
-        return None
-    red, green, blue, alpha = parsed
-    if alpha < 1:
-        behind = _parse_colour(over or "") or (255, 255, 255, 1.0)
-        red, green, blue = (
-            round(alpha * near + (1 - alpha) * far) for near, far in zip((red, green, blue), behind[:3], strict=True)
-        )
-    return RGBColor(red, green, blue)
-
-
-def _parse_colour(value: str) -> tuple[int, int, int, float] | None:
-    """``#rgb``, ``#rrggbb``, ``rgb(r, g, b)`` or ``rgba(r, g, b, a)`` as red, green, blue and opacity."""
-    hex_match = _HEX.search(value)
-    if hex_match:
-        text = hex_match.group(1)
-        return int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16), 1.0
-    short = _SHORT_HEX.search(value)
-    if short:
-        text = short.group(1)
-        return (*(int(char * 2, 16) for char in text), 1.0)  # type: ignore[return-value]
-    func = _RGB_FUNCTION.search(value)
-    if not func:
-        return None
-    parts = [part.strip() for part in func.group(1).split(",")]
-    if len(parts) not in (3, 4):
-        return None
-    try:
-        red, green, blue = (min(255, max(0, round(float(part)))) for part in parts[:3])
-        alpha = min(1.0, max(0.0, float(parts[3]))) if len(parts) == 4 else 1.0
-    except ValueError:
-        return None
-    return red, green, blue, alpha
+    """``css[prop]`` as a pptx colour, or ``None`` (see :func:`._styling.colour_of`)."""
+    found = colour_of(css, prop, over)
+    return RGBColor(*found) if found is not None else None
 
 
 def _style_text(text_frame, css: dict[str, str], pt_per_unit: float, over: str | None = None) -> None:
@@ -166,24 +120,6 @@ def _style_shape(shape, css: dict[str, str], pt_per_unit: float, over: str | Non
         shape.line.width = width
 
 
-def _page_colour(model: SlideModel) -> str | None:
-    """The slide's own colour, which a translucent fill is flattened over on the way into a file (see ``_rgb``)."""
-    return model.palette.colours().get("page")
-
-
-def _look(model: SlideModel, style_id: str) -> dict[str, str]:
-    """What a style really looks like, ready to write into a file: its parents taken in and its palette roles
-    turned into colours (D73, D200).
-
-    *Resolved*, not computed. A built-in style says ``fill: @accent/14``, and a role is not a colour a file format
-    can hold: ``_rgb`` would find no hex in it and the fill would go missing without a word of complaint. The
-    document's palette is what turns it into one.
-    """
-    if style_id not in model.styles:
-        return {}
-    return model.styles.resolved(style_id, model.palette.colours())
-
-
 def slides_to_pptx(model: SlideModel) -> bytes:
     """``model`` as pptx bytes: one slide per slide id, its objects added bottom to top so the stacking order
     (the last one is in front) comes out the same as it is drawn in claudia-creates. An image object is written
@@ -194,7 +130,7 @@ def slides_to_pptx(model: SlideModel) -> bytes:
     scale_x, scale_y = _DECK_WIDTH / SLIDE_WIDTH, _DECK_HEIGHT / SLIDE_HEIGHT
     pt_per_unit = (_DECK_HEIGHT / 914_400 * 72) / SLIDE_HEIGHT
     layout = prs.slide_layouts[_BLANK_LAYOUT]
-    page = _page_colour(model)
+    page = page_colour(model)
     for slide_id in model.slides:
         slide = prs.slides.add_slide(layout)
         for obj in model.objects_on(slide_id):
@@ -206,9 +142,9 @@ def slides_to_pptx(model: SlideModel) -> bytes:
                 Emu(round(body.h * scale_y)),
             )
 
-            css = _look(model, body.style)
+            css = look(model, body.style)
             words = body.paragraph.text if body.paragraph else ""
-            text_css = _look(model, body.paragraph.style) if body.paragraph else {}
+            text_css = look(model, body.paragraph.style) if body.paragraph else {}
             if body.kind == "text":
                 shape = slide.shapes.add_textbox(*box)
                 shape.text_frame.text = words
@@ -290,9 +226,9 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             rotation = round(shape.rotation) % 360
             object_id = f"o{next(object_ids)}"
             if kind == "text":
-                style, shape_id = _DEFAULT_TEXT_STYLE, None
+                style, words, shape_id = _DEFAULT_BOX_STYLE, _DEFAULT_TEXT_STYLE, None
             else:
-                style, shape_id = _DEFAULT_SHAPE_STYLE, _SHAPE_ID[shape.auto_shape_type]
+                style, words, shape_id = _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE, _SHAPE_ID[shape.auto_shape_type]
                 if shape_id not in defined:
                     definition = library.get(shape_id)
                     if definition is None:  # pragma: no cover -- the three ids in _SHAPE_ID are always shipped
@@ -300,7 +236,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                     model.define_shape(definition)
                     defined.add(shape_id)
             body = ObjectBody(
-                object_id, kind, w, h, style, paragraph_for(object_id, style, text), shape=shape_id, rotation=rotation
+                object_id, kind, w, h, style, paragraph_for(object_id, words, text), shape=shape_id, rotation=rotation
             )
             model.insert_object(VisualObject(body, SlideAnchor(slide_id, x, y)))
     return model
@@ -366,7 +302,7 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
     slide_height = prs.slide_height
     assert slide_height is not None
     pt_per_unit = (slide_height / 914_400 * 72) / SLIDE_HEIGHT
-    page = _page_colour(current)
+    page = page_colour(current)
 
     touched_parts: set[str] = set()
     for slide_number, slide_id in enumerate(baseline.slides):
@@ -388,10 +324,10 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
             # Resolved against the document's own palette and style book, exactly as `slides_to_pptx` does it:
             # *computed* CSS still holds palette roles (``@accent/14``), which no file format can hold, so a
             # patched file came out with its colours missing (bugtracker UX-15).
-            words_css = _look(current, body.paragraph.style) if body.paragraph is not None else {}
+            words_css = look(current, body.paragraph.style) if body.paragraph is not None else {}
             _style_text(shape.text_frame, words_css, pt_per_unit, page)
             if body.kind == "shape":
-                _style_shape(shape, _look(current, body.style), pt_per_unit, page)
+                _style_shape(shape, look(current, body.style), pt_per_unit, page)
             touched_parts.add(_slide_part(members, slide_number))
 
     patched = BytesIO()

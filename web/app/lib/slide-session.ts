@@ -4,7 +4,7 @@ import type { LinkLike, Region, WireData } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
-import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, VisualObject } from './objects'
+import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
@@ -40,6 +40,8 @@ export interface SlideState extends BaseState {
   styles: Record<string, StyleDef>
   /** The document's colour roles and how they read against each other (D200); the styles are what is drawn from. */
   palette: PaletteEvent | null
+  /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
+  styleModel: StyleModel | null
   selected: string | null
 }
 
@@ -58,6 +60,7 @@ export class SlideSession extends BaseSession<SlideState> {
       images: {},
       styles: {},
       palette: null,
+      styleModel: null,
       selected: null,
     })
   }
@@ -66,12 +69,13 @@ export class SlideSession extends BaseSession<SlideState> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [slides, shapes, images, styles, palette] = await Promise.all([
+    const [slides, shapes, images, styles, palette, styleModel] = await Promise.all([
       link.request<SlideInfo[]>('slides'),
       link.request<{ library: ShapeDef[]; document: ShapeDef[] }>('shapes'),
       link.request<ImageAsset[]>('images'),
       link.request<StyleDef[]>('styles'),
       link.request<PaletteEvent>('palette'),
+      link.request<StyleModel>('style_model'),
     ])
     const loaded = await Promise.all(slides.map((slide) => link.request<{ objects: SlideObject[] }>('slide', { slide: slide.id })))
     s.objects = {}
@@ -86,6 +90,7 @@ export class SlideSession extends BaseSession<SlideState> {
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
     s.palette = palette
+    s.styleModel = styleModel
     if (!slides.some((x) => x.id === s.activeSlide)) s.activeSlide = slides[0]?.id ?? ''
     if (s.selected && !s.objects[s.selected]) s.selected = null
   }
@@ -237,9 +242,16 @@ export class SlideSession extends BaseSession<SlideState> {
     return Object.values(this.state.objects)
   }
 
-  /** Put one object under another style of its own: its fill, its border (D178). */
-  async setObjectStyle(id: string, style: string): Promise<boolean> {
-    return (await this.attempt('set_object_style', { id, style, base: this.state.revision })) !== false
+
+  /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). */
+  async applyStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
+    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+  }
+
+  /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
+  async deviateStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
+    const params = { parent, targets, slot, ...edit, base: this.state.revision }
+    return (await this.attempt('deviate', params)) !== false
   }
 
   /** Change a style for everything that has it — and for the styles based on it, where they say nothing (D73). */
@@ -247,11 +259,6 @@ export class SlideSession extends BaseSession<SlideState> {
     return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
   }
 
-  /** Change these objects only: they get a new style, made from `parent`, which is named later (D75). */
-  async deviateObjectStyle(parent: string, ids: string[], edit: CssEdit): Promise<boolean> {
-    const params = { parent, objects: ids, ...edit, base: this.state.revision }
-    return (await this.attempt('deviate_object_style', params)) !== false
-  }
 
   async renameStyle(style: string, name: string): Promise<boolean> {
     return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false

@@ -27,6 +27,9 @@ First slice of the native Linux client (epic 5).
   page is loaded (D248).
 
 ### Changed
+- Format menu of all three apps (D300, D301): **Apply Style…** first, a page action (`format.apply-style`) that opens
+  the page's own style popover in its apply mode — the styles that fit what is selected, each drawn in its look. No
+  new contract message: it is one action like All Styles….
 - `ComposesApp`/`ComposesWindow` are `ClaudiaApp`/`ClaudiaWindow`; the window's menus are attached at runtime.
 - The `.deb` is `claudia-office` (replaces `claudia-composes`).
 

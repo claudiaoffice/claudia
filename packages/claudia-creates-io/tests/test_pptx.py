@@ -23,7 +23,8 @@ from claudia_creates import ShapeDefinition, SlideAnchor, SlideModel
 def _object(object_id, slide, kind, x, y, w, h, style, text="", shape=None):
     """A slide object from the flat fields these tests have always used: an ``ObjectBody`` plus a
     ``SlideAnchor`` (E10.16), its words a paragraph of their own (E10.17)."""
-    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, style, text, "ana"), shape=shape)
+    words = "shape-label" if kind == "shape" else style  # a shape's words have a style of their own (D310)
+    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, words, text, "ana"), shape=shape)
     return VisualObject(body, SlideAnchor(slide, x, y))
 
 
@@ -162,8 +163,15 @@ def test_pptx_to_slides_imports_text_and_shape_objects_in_order():
 
 def test_pptx_to_slides_falls_back_to_the_default_styles():
     model = pptx_to_slides(slides_to_pptx(two_slide_deck()))
-    assert model.objects_on("s1")[0].body.style == "body-text"
+    assert model.objects_on("s1")[0].body.style == "plain-box"  # a text box's box (D310)
     assert model.objects_on("s2")[0].body.style == "plain-shape"
+
+
+def test_pptx_to_slides_gives_a_shapes_words_the_shape_label_style():
+    """D310: a shape's outline and its words are two slots; the words start under ``shape-label``."""
+    model = pptx_to_slides(slides_to_pptx(two_slide_deck()))
+    assert model.objects_on("s1")[0].body.paragraph.style == "body-text"
+    assert model.objects_on("s2")[0].body.paragraph.style == "shape-label"
 
 
 def test_pptx_to_slides_keeps_position_and_size_through_a_round_trip():

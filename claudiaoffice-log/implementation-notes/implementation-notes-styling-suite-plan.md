@@ -1,4 +1,4 @@
-# Plan: the styling suite (branch `styling-suite`; D300–D315)
+# Plan: the styling suite (branch `styling-suite`; D300–D318)
 
 **The goal.** The style model of D300–D310 — facets, kinds, slots, purpose bundles, no direct formatting — is how
 *everything* in claudia is styled: every kind of thing that can be styled declares its slots, the server offers
@@ -86,6 +86,30 @@ and styles it end to end through the API. That test is what keeps the later rows
 **Done when** core's tests (new `test_facets.py`, extended `test_css.py`, `test_style_book.py`) are green; the apps
 still run because 1.2–1.4 land in the same PR or right after — give every existing built-in a kind in this PR so
 nothing breaks in between.
+
+**Progress (2026-11-10): step 1.1 is built.** What it took beyond the list above, so the next steps start from the
+real state:
+
+* **The shape split came forward from 1.2.** `plain-shape` mixed outline and words properties in all three apps, so
+  no kind could hold it once kinds were checked. It is now an `outline` root (`fill`, `stroke`, `stroke-width`) and
+  the words' look moved to a new built-in `shape-label` (paragraph, on Body text) — the two compute exactly what the
+  one did. That meant, also from 1.2: a new shape's words start under `shape-label` (`PARAGRAPH_STYLE_OF_KIND` in
+  `claudia_server/creates.py`, `_DEFAULT_LABEL_STYLE` in `claudia_creates_io/pptx.py`), and creates draws an
+  object's words from its paragraph's style (`wordsCssOf` in `web/app/lib/objects.ts`, used by `SlideCanvas.vue`).
+  Still for 1.2: `plain-box`, the text box's box slot, and the slot checks in `SetObjectStyle`/`SetParagraphStyle`.
+* **A style and its parent are of the same kind**, so `plain-shape` and `plain-image` are roots now, not children
+  of Body text.
+* **The object style menu offers fewer controls until 2.2.** `partsOf` (`web/app/lib/object-style-host.ts`) now
+  offers only what the object's own style can take: a shape its outline (no font controls — its words have their
+  own style), a text box its words (no fill/border — they never drew on a text box), a chart and a picture nothing
+  (their box style reads none of the outline controls). The menu that edits each slot is step 2.2.
+* **`shape-label` is hidden from composes' Format list** by adding it to `OBJECT_STYLE_IDS`; the list by slot
+  replaces that in 1.3. In creates and computes the object style list shows "Shape label" as a new entry until then.
+* `StyleDef.kind` defaults to `"paragraph"`, so code that makes a text style needs no change; `from_data` requires
+  the field (D308). The facet constants are `TEXT_FACET`, `PARAGRAPH_FACET`, `BOX_FACET`, `OUTLINE_FACET` because
+  `claudia_core.BOX` is already the shapes' 100-unit box.
+* The D315 test registers a "slide" with a `box` slot through `SlotTable.with_row` at core level; the end-to-end
+  version through the server API comes with 1.5.
 
 ### 1.2 Objects: slots instead of one style per object (core + all three apps)
 
@@ -178,6 +202,35 @@ brute-force per-cell model (the repo has no Hypothesis; ask before adding it); l
 **Done when** all of that is green and a cell can be styled, deviated, undone and moved through the server API —
 with no UI yet.
 
+**Progress (2026-11-10): steps 1.2 to 1.6 are built**, one commit each on top of 1.1. What differs from the
+text above, and what the next steps start from:
+
+* **The fit rule is wider than "same kind" (D316).** A slot takes every style whose kind holds all the facets it
+  reads: a box slot takes a box style *or* a paragraph style (a bundle). Without that, one style could not fill
+  both slots of a cell (D311). `Slot.to_data()` sends `takes`, so clients filter without a copy of the rule.
+* **1.2** `ObjectModel.check_object` checks both slots of an object against the table; `style_in_use` counts an
+  object's words. `plain-box` exists in all three apps; new and imported text boxes get it. In between 1.2 and 1.5
+  the object style menu had no controls for a text box; 1.5 gave them back.
+* **1.3** `TextModel.check_style` refuses a style that does not fit a paragraph; `style_in_use` counts the objects
+  in a text. composes' Format list filters by kind; `shape-label` stays out by name — *which slots a style is meant
+  for*, beyond which it fits, is a question for step 2.2. `StyleView`/`StyleDef` in the web carry `kind`.
+* **1.4** `set_paragraph_style` is a shared method in all three apps.
+* **1.5** `claudia_server.style_targets`: `style_model`, `apply_style(targets, style, slot?)`,
+  `deviate(parent, targets, slot?, set|text)`, `style_uses`, with an adapter per target kind
+  (`ObjectTargets`; composes' `_BlockTargets`; computes' `_CellTargets`, whose key is `"sheet"`). The method
+  names differ from the plan's: `deviate`, because composes already has a `deviate_style` with other parameters.
+  The old methods stay; they are removed in 3.4. The web already uses the new ones for objects: the object host
+  works on a shape's outline and a text box's words (`slotOf`, `styleInSlot` in `object-style-host.ts`), the
+  Format lists of creates and computes offer only fitting styles, and `SlideCanvas` draws each slot from its
+  facets (`facetCss` replaces the `PAINT` list) — so a text box's box would show a background now.
+* **1.6** `claudia_computes.cellstyles` and `SetCellStyle` as in the plan, with these choices: the two slots are
+  separate range sets (so "only the box" is natural); a whole sheet, column or row is a range of that size and
+  its layer follows from its shape; a deviation without a slot uses the style of the range's first cell;
+  `style_uses` counts a range once, not its cells (a whole column would otherwise be a million). An undo that
+  puts styles back restores how every cell looks, not the identical list of ranges (a hole cut into a range stays
+  as its pieces). `CSS_VERSION` is 3. The web knows the new facet properties but draws no cell styles yet (2.6).
+* No Hypothesis: the property test is a seeded random sequence checked against a cell-by-cell model.
+
 ---
 
 ## Step 2 — the new UI, in all three apps
@@ -237,6 +290,39 @@ no change to `clients/contract/` (D301).
 **Done when (2.3–2.5)** every row of the slot table except cells can be styled in each app, in the browser and both
 shells, checked against the mock-ups with a screenshot per row in the PR.
 
+**Progress (2026-11-11): 2.1 is agreed and 2.2 to 2.5 are built**, in two commits (the shared components, then
+the three apps and the shells). The owner's review of the 2.1 drawings: a shape's label may show in lists of
+objects; the quick list in the formula-bar row is right; and styling cells, the last action wins (D317). What
+differs from the text above, and what 2.6 starts from:
+
+* **No generic `styleHost(session, target)`.** The hosts stay three (`text-style-host.ts`, `object-style-host.ts`,
+  and the cell host to come in 2.6); what they share is the shape of `StyleHost`: `slots` (each with the label a
+  person reads: Box, Words, Outline, Label, Paragraph), `slot`, `chooseSlot(name)` and `model` (the server's
+  `style_model`). `parts` is gone. The object host keeps the slot a person chose until the selection has no slot
+  of that name, then falls back to the object's usual one (a text box's words, a shape's outline, otherwise box).
+* **`stylesForSlot` is `galleryFor(styles, slot, model)`** in `style-host.ts`, and returns two lists: `own` (the
+  styles of the slot's own kind) and `bundles` (styles of another kind the slot takes, D316, that set at least one
+  property of the facets it reads — "Whole styles that also set a box — their box part"). The Format flyout and
+  the popover both use it, so they offer the same thing.
+* **The Format menu builder is `lib/format-menu.ts`** (`formatItems(t, menu)`). An entry is drawn in its style by
+  `menuCss` (`style-css.ts`): `previewCss` plus borders capped at 2px and, when the style has a box, a chip — never
+  the size. `MenuBar.vue` learned styled labels, ticks, separators in flyouts and a flyout parent with an `action`
+  (what a shell's single "Apply Style…" runs). Computes' flyout has a first inert line, "For the chart" now and
+  "For the 6 selected cells" in 2.6.
+* **`StyleSpec.vue`** has one section per facet with `data-facet`; the Box section has background, a border per
+  side (all, top, right, bottom, left; width stepper and colour; it opens on the side that has a border) and one
+  padding for four sides (0–96px). Vertical alignment and wrapping wait for 2.6, the only slot that reads them.
+* **`StylesDialog.vue`**: Edit beside Rename; the editor pane shows the facets of the style's *kind*
+  (`facetsOfKind`), always "every use" (`StyleEditor(host, true)`); under 760px the editor replaces the list.
+* **The popover opens beside the selected object** (`besideRect` in `geometry.ts`), to its right or, without room,
+  its left; it used to open at a fixed place when called from the menu.
+* **Shells:** `format.apply-style` "Apply Style…" first in the three Format menus of the manifest; the Windows menus
+  are regenerated. Nothing in `clients/contract/`.
+* Checked in a browser against the mock-ups: composes (flyout, popover, All styles with Edit), creates (a text
+  box's Box and Words, a shape's Outline, All styles), computes (a floating chart: flyout with its box styles and
+  bundles, popover beside the chart). Not checked by hand: the GTK and Windows shells themselves — their manifest
+  and menu tests are green.
+
 ### 2.6 Cells in the grid
 
 * The cell host (target `{sheet, range}` from the selection); which host the menus use follows the selection
@@ -264,6 +350,48 @@ shells, checked against the mock-ups with a screenshot per row in the PR.
 | undo per author; locks; the AI is another user | the same |
 
 …and a styled column of a million rows scrolls as smoothly as an unstyled one (measured).
+
+
+**Progress (2026-11-11): 2.6 is built** — a cell does what a composes paragraph does, as in the table above, and
+was checked in a browser against `computes-cell-styles.svg` and `computes-cell-style-popover.svg`. What differs
+from the text above, and what step 3 starts from:
+
+* **A sheet's ranges are loaded whole** (`Session.ensureCellStyles`, `cell_styles` with the sheet as its window),
+  not with each chunk of cells: they are sparse, like the row and column sizes, and loaded the same way. A
+  `cell_styles` event loads the sheet again if it is loaded; a structure event forgets it; `style_uses` is asked
+  again after `cell_styles`, `objects` and `styles` events (`state.styleUses`).
+* **`lib/cell-styles.ts`** holds the pure functions: `styleAt`/`layersAt` (most specific layer wins, Body text
+  under all), `within` (the ranges that meet the window), `whereFrom` (the popover's "Input — these cells' own
+  style … / Under it: column D is Note; the sheet is Body text", and "Box … · Words … — the two slots now differ"),
+  `cellLook` (box from the box facet, words from the text facet, vertical alignment and wrapping) and `sheetArea`.
+* **A header selects the whole line.** The grid shows the first `VIEW_ROWS` rows and `VIEW_COLS` columns, so a
+  column header used to select C1:C10000; `sheetArea` stretches a selection that spans the view to the sheet's last
+  row or column, so it goes into the column, row or sheet layer (D307) and the 1 048 576th row has the style too.
+* **The grid** (`SheetGrid.vue`, `painted`) looks up only the cells on screen, against only the ranges that meet
+  the window; a cell whose box paints something gets one element under its words (`.cellbox`), empty cells
+  included. That is one element per visible styled cell rather than one per visible range — still bounded by the
+  screen — because a border belongs to every cell of a range, not to the range. Words: font, size, weight, slant,
+  decoration, colour (`withDisplayInk`); padding from the box.
+* **Alignment (D318):** a cell aligns by its content unless its own style (or a parent short of Body text) sets an
+  alignment; the editor shows **Auto** for that (`StyleHost.alignOf`). Decided while building, for the owner's
+  review.
+* **The cell host** (`lib/cell-style-host.ts`) shows a cell as one slot, `cell`, reading Text, Paragraph and Box and
+  taking what fits both slots (D311). "These 6 cells only" deviates both slots; "only their box" deviates the box
+  slot from the box's own style (D309), and while it is ticked the popover shows only the Box section and works on
+  the box's style, so a second change goes into the new style instead of deviating again. The tick is reset when
+  the popover closes. The optional `StyleHost` fields this needed — `title`, `these`, `narrow`, `origin`, `extras`
+  (vertical alignment and wrapping), `clear`, `alignOf` — are left out by the other hosts.
+* **Menus:** which host the menus use follows the selection (`SheetGrid` emits `object`); the Format flyout says
+  "For the 6 selected cells" / "For cell B2" and ends with Clear cell style; Edit this style… and Shift+F10 open the
+  popover beside the selected cells; the quick list is `StylePicker.vue` at the end of the formula-bar row; All
+  styles… in computes uses the cell host, so its counts are the server's (cells and objects). `StylePicker` is
+  generic, but composes' `StyleBar` keeps its own list (name and purpose) — moving composes onto it is left for 3.x.
+* **Measured** (headless Chromium, 300 frames scrolling 700 px each, to row 8 077): unstyled sheet median 16.7 ms,
+  95th percentile 18.2 ms, at most 46 elements on the stage; columns B and C styled whole (two column ranges of
+  1 048 576 rows): median 16.7 ms, 95th percentile 17.9 ms, at most 100 elements. The styled grid keeps the frame
+  rate; the elements grow with the styled cells on screen only.
+* Not checked by hand: dark mode on a styled sheet (the words go through `withDisplayInk`, as composes'
+  paragraphs do).
 
 ---
 

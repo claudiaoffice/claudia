@@ -7,6 +7,8 @@ import { toMarkdown } from '~/lib/markdown'
 import { SAMPLE_TEXT } from '~/lib/sample'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
+import type { StyleView } from '~/lib/style-css'
+import { formatItems } from '~/lib/format-menu'
 import {
   askItem,
   clipboardItems,
@@ -37,7 +39,7 @@ const { t, locale, choose } = useI18n()
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 /** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
 const dialog = ref<null | 'styles' | 'colours'>(null)
-const styleMenu = ref<{ x: number; y: number } | null>(null)
+const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
 const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
@@ -73,15 +75,16 @@ function pick(id: string) {
   editor.value?.scrollToSuggestion(id)
 }
 
-/** File ▸ Export… (D212): Markdown is built here from `state.blocks`, Word by the server. The window sends what is
+/** File ▸ Export… (D212, D401): Markdown is built here from `state.blocks`, Word and OpenDocument text by the server. The window sends what is
  * still being typed before it opens the dialog (`DocumentFrame.openDialog`), so both see the text as it stands. */
 const exportFormats = [
   { value: 'md', label: 'Markdown (.md)', mimeType: 'text/markdown', local: () => toMarkdown(state.blocks) },
   { value: 'docx', label: 'Word document (.docx)' },
+  { value: 'odt', label: 'OpenDocument text (.odt)' },
 ]
 
-function openStyleMenu(at = editor.value?.caretPoint() ?? { x: 80, y: 120 }) {
-  styleMenu.value = at
+function openStyleMenu(at = editor.value?.caretPoint() ?? { x: 80, y: 120 }, mode: 'edit' | 'apply' = 'edit') {
+  styleMenu.value = { ...at, mode }
 }
 
 /** Put the colours the document started with back: a real `replace_palette`, in the history like any edit.
@@ -159,20 +162,21 @@ const menus = computed<Menu[]>(() => {
       items:
         state.styles.length === 0
           ? [{ label: t('No styles yet'), disabled: true }]
-          : [
-              ...['title', 'heading-1', 'heading-2'].map((id) => styleItem(id)),
-              { label: '', separator: true },
-              ...['body'].map((id) => styleItem(id)),
-              { label: '', separator: true },
-              ...['quote', 'remark', 'definition'].map((id) => styleItem(id)),
-              ...customStyleItems(),
-              { label: '', separator: true },
-              { id: 'format.look', label: t('Edit this style…'), hint: chordLabel(LOOK.chord), action: () => openStyleMenu() },
-              { id: 'format.all-styles', label: t('All styles…'), action: () => (dialog.value = 'styles') },
-              { label: '', separator: true },
+          : formatItems(t, {
+              // D127's groups — structure · running text · called-out blocks — and then any style of the text's own.
+              groups: [builtins(['title', 'heading-1', 'heading-2']), builtins(['body']), builtins(['quote', 'remark', 'definition']), customStyles()],
+              current: session.currentStyle(),
+              canApply: !readonly.value,
+              apply: (id) => {
+                void session.setStyle(id)
+                editor.value?.focus()
+              },
+              openApply: () => openStyleMenu(undefined, 'apply'),
+              look: { disabled: false, hint: chordLabel(LOOK.chord), open: () => openStyleMenu() },
+              allStyles: () => (dialog.value = 'styles'),
               // The palette reaches composes' paragraph styles from day one (D200): a heading's colour is a role.
-              { id: 'format.colours', label: t('Colours…'), action: () => (dialog.value = 'colours') },
-            ],
+              colours: () => (dialog.value = 'colours'),
+            }),
     },
     {
       label: t('View'),
@@ -201,40 +205,28 @@ const menus = computed<Menu[]>(() => {
   ]
 })
 
-/** One Format-menu entry for a built-in style, by id — kept as a function rather than inlining `state.styles.find`
- * three times over, since the three groups below (D127: structure · running text · called-out blocks) each pick a
- * fixed subset of the seven built-in ids, not a contiguous slice. */
-function styleItem(id: string) {
-  const s = state.styles.find((s) => s.id === id)
-  return {
-    label: s?.name ?? id,
-    checked: session.currentStyle() === id,
-    action: () => {
-      void session.setStyle(id)
-      editor.value?.focus()
-    },
-    disabled: readonly.value || !s,
-  }
+/** The built-in styles of one of D127's groups (structure · running text · called-out blocks), by id, in order. */
+function builtins(ids: string[]): StyleView[] {
+  return ids.map((id) => state.styles.find((s) => s.id === id)).filter((s): s is StyleView => !!s)
 }
 const BUILTIN_STYLE_IDS = new Set(['body', 'title', 'heading-1', 'heading-2', 'quote', 'remark', 'definition'])
 /**
  * A text's style book holds the floating objects' styles too, since one object layer serves all three apps
- * (E10.16): `plain-shape` and `plain-image` live here beside the paragraph styles. The *Format* menu marks a
- * paragraph, and giving a paragraph "Plain shape" means nothing, so they are left out of this list — the style
- * menu on the object itself is where they belong (D203).
+ * (E10.16). The *Format* menu marks a paragraph, so it lists only the styles that fit a paragraph: a paragraph is
+ * one slot that takes paragraph styles (D304, D316), which leaves out `plain-shape`, `plain-box` and `plain-image`
+ * by their kind, and with them every style somebody deviated from one of them.
  *
- * By id, because a `StyleDef` carries no `kind` yet: the real fix is that field on the style itself, which is
- * already on the backlog (E1.10, "Not done: kind"). A style somebody makes by deviating from one of these keeps
- * its parent's shape and would want the same treatment; until `kind` exists there is nothing honest to test for.
+ * `shape-label` is a paragraph style by kind but was made for the words in a shape, not for a paragraph of the text
+ * (D310), so it is left out by name. Which slots a style is *meant* for, beyond which it fits, is a question for the
+ * new style menu (the styling-suite plan, step 2.2).
  */
-const OBJECT_STYLE_IDS = new Set(['plain-shape', 'plain-image'])
+const OBJECT_WORDS_STYLE_IDS = new Set(['shape-label'])
+const forParagraphs = (s: StyleView) => s.kind === 'paragraph' && !OBJECT_WORDS_STYLE_IDS.has(s.id)
 /** A style made by deviating from a built-in (`next_style` in `model.py`) is not one of the three fixed groups above
  * — D127 only grouped the seven built-ins, so anything else gets its own trailing group rather than being folded
  * silently into one of them. */
-function customStyleItems() {
-  const custom = state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && !OBJECT_STYLE_IDS.has(s.id))
-  if (!custom.length) return []
-  return [{ label: '', separator: true }, ...custom.map((s) => styleItem(s.id))]
+function customStyles(): StyleView[] {
+  return state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && forParagraphs(s))
 }
 
 // Config ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native
@@ -277,7 +269,7 @@ const SHORTCUT_NOTES: [string, string][] = [
       </footer>
     </template>
     <template #overlay>
-      <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
+      <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
