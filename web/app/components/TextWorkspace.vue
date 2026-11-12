@@ -75,11 +75,12 @@ function pick(id: string) {
   editor.value?.scrollToSuggestion(id)
 }
 
-/** File ▸ Export… (D212): Markdown is built here from `state.blocks`, Word by the server. The window sends what is
+/** File ▸ Export… (D212, D401): Markdown is built here from `state.blocks`, Word and OpenDocument text by the server. The window sends what is
  * still being typed before it opens the dialog (`DocumentFrame.openDialog`), so both see the text as it stands. */
 const exportFormats = [
   { value: 'md', label: 'Markdown (.md)', mimeType: 'text/markdown', local: () => toMarkdown(state.blocks) },
   { value: 'docx', label: 'Word document (.docx)' },
+  { value: 'odt', label: 'OpenDocument text (.odt)' },
 ]
 
 function openStyleMenu(at = editor.value?.caretPoint() ?? { x: 80, y: 120 }, mode: 'edit' | 'apply' = 'edit') {

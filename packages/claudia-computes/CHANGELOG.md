@@ -3,9 +3,9 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [0.3.0] - 2026-11-10
+## [0.3.0] - 2026-11-12
 
-The styling-suite plan, steps 1.2 to 1.6.
+The styling-suite plan, steps 1.1 to 2.6 (D300–D318).
 
 ### Added
 - The built-in **`plain-box`**, a `box` style without properties: the box of a text box on a sheet (D310).
@@ -20,6 +20,8 @@ The styling-suite plan, steps 1.2 to 1.6.
   Body text written in palette roles.
 
 ### Changed
+- **Breaking:** `plain-shape` is an `outline` style (`fill`, `stroke`, `stroke-width` only, no parent); its words'
+  centring moved to the new built-in **`shape-label`**, based on Body text. `plain-image` is a `box` style.
 - **Breaking:** `WorkbookModel.restructure` also moves the style ranges and returns the pieces that lay on
   deleted lines as a fourth value; `Structure`'s undo and `RemoveSheet`'s undo put the styles back.
 - `WorkbookModel.style_in_use` counts style ranges.
@@ -27,13 +29,24 @@ The styling-suite plan, steps 1.2 to 1.6.
   one styling action into the replacements that give every cell of the area the style (or, with `None`, clear it
   so that what lies beneath shows through), in one undo step. `SetCellStyle.put` writes one layer only.
 
-## [0.2.0] - 2026-11-10
+## [0.2.0] - 2026-11-11
 
-Every built-in style has a kind (D305, D312), and a shape's outline and its words are two styles (D310).
+Names, tables and `SQL()` (D600–D609).
+
+### Added
+- Names: `DefineName`, `RenameName`, `RemoveName` commands (with `RestoreNames`, their shared inverse); a name is a
+  region (`CellRegion`) or a `SQL()` anchor, with an optional header, growth with its last row, a purpose per table
+  and per column, and a workbook or sheet scope. The registry is `WorkbookModel.names`; `{"type": "names"}` events
+  announce changes.
+- Excel structured references in formulas: `Sales[Amount]`, `Sales[[#Headers],[Amount]]`, quoted identifiers.
+- `SQL(query)`: the first spilling function — SQLite in memory, read-only, one statement, a 1 s limit and 100,000
+  rows; its result is a table that can be named. New errors `#SQL!` and `#SPILL!`.
+- `ChartSpec.source` and `source_scope`: a chart may read a named table instead of a range (exactly one of the two).
+- Spilled cells are returned by `Sheet.view` with `"spill": true` and `"from": [row, col]`.
 
 ### Changed
-- **Breaking:** `plain-shape` is an `outline` style (`fill`, `stroke`, `stroke-width` only, no parent); its words'
-  centring moved to the new built-in **`shape-label`**, based on Body text. `plain-image` is a `box` style.
+- **Breaking:** `ChartSpec.range` is optional; code that read it unconditionally must check `source` too.
+- `Sheet` and `WorkbookModel` gained the members the snapshot lists; see `tests/api/claudia_computes.json`.
 
 ## [0.1.0] - 2026-11-10
 

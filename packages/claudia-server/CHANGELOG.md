@@ -19,6 +19,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   comes from, slot by slot.
 - computes: styling cells lets the last action win (D317); `clear_cell_style(sheet, range, slot?)` takes the
   cells' own style away so that the row's, column's or sheet's style shows through.
+- `export_office` also writes `"odt"` for the text app (D401), and its answer then has `losses`: what the file could
+  not hold, as a list of `{kind, detail, count}` codes (nothing yet puts them into words; the screen is designed
+  first). A format that cannot say has no `losses` in the answer. The error for an unknown format names both.
+- `export_office` of the presentation app also writes `"odp"` (D412), with `losses`, and the file says in its metadata
+  when the deck was made and last changed and by whom, read from the log (D411).
+- `export_office` of the spreadsheet app also writes `"ods"` (D413), with `losses` and the metadata from the log (D411).
+- The text app's `export_office` takes `tracked_changes` (default `false`, a clean copy, D212): the open suggestions
+  that propose a replacement are written as tracked changes, dated with when they were proposed and signed by their
+  author (docx and odt); an odt's metadata is filled from the log (D411).
+- computes: `names`, `define_name`, `rename_name`, `remove_name`, `sql_preview`, `define_sql` (D600–D609), and a pushed
+  `names` event; `diagrams`/`define_diagram` accept a chart that reads a named `source`. They are not yet in the AI's allow-list.
 
 ### Changed
 - `set_paragraph_style` is one of the shared style methods (`add_style_methods`), so computes and composes have it

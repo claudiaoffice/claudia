@@ -18,6 +18,7 @@ import {
   type Axis,
   type SizeTable,
 } from '~/lib/line-sizes'
+import { purposeVar, tableBoxes, type NameInfo, type TableBox } from '~/lib/names'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
@@ -64,6 +65,8 @@ const emit = defineEmits<{
   headerMenu: [axis: Axis, index: number, x: number, y: number]
   /** A floating object was selected (true) or let go of (false): the menus style it instead of the cells (D209). */
   object: [selected: boolean]
+  /** The purpose chip on a table's header was pressed (mock 2): open the purpose menu for that column at this point. */
+  tableMenu: [table: NameInfo, offset: number, x: number, y: number]
 }>()
 
 const W = DEFAULT_COL_WIDTH // a column's width when it has no size of its own
@@ -129,6 +132,25 @@ const y = (row: number) => HH + lineStart(rowTable.value, H, row) - scroll.value
 
 const editHere = computed(() => props.edit !== null && props.edit.sheet === props.sheet)
 
+// ------------------------------------------------------------------------------ tables (E6.5, mock 2)
+/** What is drawn under the cells of each table in view: the tint of each column's purpose, the header, the frame and
+ * the ghost row that says a table grows when something is typed below it. */
+const tables = computed(() => tableBoxes(state.names, props.sheet, range.value))
+const headCells = computed(() => {
+  const keys = new Set<number>()
+  for (const t of tables.value) if (t.kind === 'head') keys.add(t.r0 * 100_000 + t.c0)
+  return keys
+})
+function tableStyle(t: TableBox): Record<string, string> {
+  const style: Record<string, string> = box(t.r0, t.c0, t.r1, t.c1)
+  if (t.kind === 'column' || t.kind === 'head') style['--tint'] = purposeVar(t.purpose)
+  return style
+}
+function onChip(event: MouseEvent, t: TableBox) {
+  event.stopPropagation() // (the grid's own mousedown would move the selection)
+  emit('tableMenu', t.table, t.offset, event.clientX, event.clientY)
+}
+
 /** The cells on screen as they are drawn (E6.13, D307): the filled ones with their words, and every one whose box
  * paints something — a background or a border, empty cells included, so a styled column shows to its last row.
  * Only the window is looked at, against only the style ranges that meet it: the number of elements and the work
@@ -148,7 +170,8 @@ const painted = computed(() => {
   }
   type Drawn = { key: number; left: number; top: number; width: number; height: number }
   const boxes: (Drawn & { css: Record<string, string> })[] = []
-  const texts: (Drawn & { text: string; kind: string; look: CellLook })[] = []
+  const texts: (Drawn & { text: string; kind: string; look: CellLook; spill: boolean; head: boolean })[] = []
+  const heads = headCells.value
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const content = props.session.cell(props.sheet, r, c)
@@ -158,7 +181,7 @@ const painted = computed(() => {
       const at = { key: r * 100_000 + c, left: x(c), top: y(r), width: colWidthAt(c), height: rowHeightAt(r) }
       if (!look.plain) boxes.push({ ...at, css: look.box })
       if (content === null || (editHere.value && props.edit!.row === r && props.edit!.col === c)) continue
-      texts.push({ ...at, text: show(content), kind: content.t, look })
+      texts.push({ ...at, text: show(content), kind: content.t, look, spill: content.spill === true, head: heads.has(at.key) })
     }
   }
   return { boxes, texts }
@@ -728,7 +751,18 @@ function openStyleMenu(at?: { x: number; y: number }, mode: 'edit' | 'apply' = '
   styleMenu.value = { ...where, mode, cells }
 }
 
+/** Where a popover about a cell goes: just under it, in window coordinates; `null` while the cell is not in view. */
+function anchorPoint(row: number, col: number): { x: number; y: number } | null {
+  const el = viewport.value
+  if (!el) return null
+  const { r0, r1, c0, c1 } = range.value
+  if (row < r0 || row > r1 || col < c0 || col > c1) return null
+  const at = el.getBoundingClientRect()
+  return { x: at.left + x(col), y: at.top + y(row) + rowHeightAt(row) + 4 }
+}
+
 defineExpose({
+  anchorPoint,
   focus: () => viewport.value?.focus(),
   selectObject: (id: string) => (selectedObject.value = id),
   openStyleMenu,
@@ -756,6 +790,16 @@ defineExpose({
   >
     <div class="canvas" :style="{ width: `${totalW}px`, height: `${totalH}px` }">
       <div class="stage" :style="{ width: `${size.w}px`, height: `${size.h}px` }">
+        <div
+          v-for="t in tables"
+          :key="t.key"
+          class="table"
+          :class="[t.kind, t.kind === 'frame' || t.kind === 'ghost' ? `purpose-${t.purpose}` : '']"
+          :style="tableStyle(t)"
+          :data-table="t.table.name"
+        >
+          <span v-if="t.kind === 'ghost'" class="ghost-label">type here to add a row</span>
+        </div>
         <div v-for="rl in rowLines" :key="`r${rl.key}`" class="gridline horiz" :style="{ top: `${rl.top}px` }" />
         <div v-for="cl in colLines" :key="`c${cl.key}`" class="gridline vert" :style="{ left: `${cl.left}px` }" />
         <div
@@ -768,11 +812,24 @@ defineExpose({
           v-for="cell in painted.texts"
           :key="cell.key"
           class="cell"
-          :class="[cell.kind, cell.look.align, cell.look.valign, { wrap: cell.look.wrap }]"
+          :class="[cell.kind, cell.look.align, cell.look.valign, { wrap: cell.look.wrap, spill: cell.spill, head: cell.head }]"
           :style="textStyle(cell)"
         >
           <span class="words">{{ cell.text }}</span>
         </div>
+
+        <template v-for="t in tables" :key="`chip-${t.key}`">
+          <button
+            v-if="t.kind === 'head' && t.table.kind === 'range'"
+            type="button"
+            class="chip"
+            :style="{ left: `${x(t.c0) + colWidthAt(t.c0) - 20}px`, top: `${y(t.r0) + 5}px` }"
+            :title="`${t.table.name} · ${t.purpose} — change what this column is for`"
+            :aria-label="`purpose of ${t.table.name} column ${t.offset + 1}`"
+            @mousedown.stop.prevent
+            @click="onChip($event, t)"
+          >▾</button>
+        </template>
 
         <div class="selection" :class="{ picking: edit && pointing }" :style="selectionStyle" />
         <div class="active" :class="{ picking: edit && pointing }" :style="activeStyle" />
@@ -918,6 +975,63 @@ defineExpose({
 }
 .cell.error {
   color: var(--rose);
+}
+.cell.head {
+  font-weight: 600;
+}
+.cell.spill {
+  cursor: default; /* part of a query result: not typed into (it is not stored) */
+}
+.table {
+  position: absolute;
+  pointer-events: none;
+}
+.table.column,
+.table.head {
+  background: var(--tint);
+}
+.table.head {
+  background: color-mix(in srgb, var(--tint) 100%, var(--ink) 6%);
+  border-bottom: 2px solid color-mix(in srgb, var(--app) 55%, transparent);
+}
+.table.frame {
+  border: 1.5px solid color-mix(in srgb, var(--iris) 70%, transparent);
+  border-radius: 2px;
+}
+.table.frame.purpose-result {
+  border-color: color-mix(in srgb, var(--teal) 80%, transparent);
+}
+.table.ghost {
+  border: 1px dashed var(--line-field);
+  background: color-mix(in srgb, var(--mist) 35%, transparent);
+}
+.ghost-label {
+  display: block;
+  padding: 0 8px;
+  line-height: 24px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.chip {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+  z-index: 3;
+}
+.chip:hover {
+  background: color-mix(in srgb, var(--app) 18%, transparent);
+  color: var(--text);
 }
 .selection {
   position: absolute;

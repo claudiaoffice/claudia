@@ -1,0 +1,19 @@
+[project]
+name = "claudia-odf-io"
+dynamic = ["version"]
+description = "claudia-odf-io"
+requires-python = ">=3.14"
+dependencies = ["claudia-opc-io", "lxml>=5"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_odf_io/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_odf_io"]
+
+[tool.uv.sources]
+claudia-opc-io = { workspace = true }

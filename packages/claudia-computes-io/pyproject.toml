@@ -3,7 +3,7 @@ name = "claudia-computes-io"
 dynamic = ["version"]
 description = "claudia-computes-io"
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-opc-io", "openpyxl>=3.1"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-opc-io", "claudia-odf-io", "openpyxl>=3.1"]
 
 [build-system]
 requires = ["hatchling"]
@@ -19,3 +19,4 @@ packages = ["src/claudia_computes_io"]
 claudia-core = { workspace = true }
 claudia-computes = { workspace = true }
 claudia-opc-io = { workspace = true }
+claudia-odf-io = { workspace = true }

@@ -1,5 +1,5 @@
-"""Regenerates every checked-in ``source.docx``/``source.pptx``/``source.xlsx`` in this library, deterministically
-(D218, D219, D220).
+"""Regenerates every checked-in ``source.docx``/``source.pptx``/``source.xlsx`` and the hand-built
+``source.odt``/``source.odp``/``source.ods`` in this library, deterministically (D218, D219, D220, D401, D412, D413).
 
 A test document is checked in as a real, openable binary -- not just a Python function that builds one on the
 fly, the way every other format test in this repo does -- because the whole point of a *library* is files a
@@ -23,6 +23,8 @@ from openpyxl.drawing.image import Image as XLImage
 from PIL import Image
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Emu
+
+from claudia_odf_io import NS, new_package
 
 ROOT = Path(__file__).resolve().parent
 #: EMU per claudia slide unit on a 16:9 deck (``12_192_000 / 1600`` == ``6_858_000 / 900``, both exact) -- the
@@ -185,6 +187,198 @@ def _xlsx_bytes(wb: openpyxl.Workbook) -> bytes:
     return out.getvalue()
 
 
+_ODT_DECLS = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in NS.items() if prefix != "xml")
+_ODT_STYLES = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:styles>'
+    '<style:style style:name="Standard" style:family="paragraph" style:class="text"/>'
+    '<style:style style:name="Text_20_body" style:display-name="Text body" style:family="paragraph" '
+    'style:parent-style-name="Standard" style:class="text"/>'
+    '<style:style style:name="Heading_20_1" style:display-name="Heading 1" style:family="paragraph" '
+    'style:parent-style-name="Standard" style:default-outline-level="1" style:class="text"/>'
+    '<style:style style:name="Strong" style:display-name="Strong" style:family="text"/>'
+    "</office:styles></office:document-styles>"
+).encode()
+
+
+def _odt(body: str, *, automatic: str = "", extra: dict[str, tuple[bytes, str]] | None = None) -> bytes:
+    """An odt written by hand, the way LibreOffice lays a file out, for what no library here can build: a paragraph
+    full of links, notes and bookmarks, a list, a section. (The three LibreOffice-written odt fixtures were made by
+    ``soffice --convert-to odt`` from the docx ones above and checked in as they came out: its files carry the
+    time they were made in, so this script cannot make them again.)"""
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        f"<office:automatic-styles>{automatic}</office:automatic-styles>"
+        f"<office:body><office:text>{body}</office:text></office:body></office:document-content>"
+    )
+    return new_package("text", content.encode(), _ODT_STYLES, extra=extra)
+
+
+def build_odt_rich_paragraph() -> bytes:
+    return _odt(
+        '<text:h text:style-name="Heading_20_1" text:outline-level="1">Reading list</text:h>'
+        '<text:p text:style-name="Text_20_body">Read the <text:a xlink:href="https://example.org/manual" '
+        'xlink:type="simple">manual</text:a> and <text:span text:style-name="Strong">note</text:span> '
+        'the examples<text:bookmark text:name="examples"/> carefully'
+        '<text:note text:id="ftn1" text:note-class="footnote"><text:note-citation>1</text:note-citation>'
+        "<text:note-body><text:p>See chapter two.</text:p></text:note-body></text:note>.</text:p>"
+        '<text:p text:style-name="Text_20_body">Nothing here changes.</text:p>'
+    )
+
+
+def build_odt_tracked_change_suggestion() -> bytes:
+    return _odt('<text:p text:style-name="Standard">The committee rejected the proposal.</text:p>')
+
+
+def build_odt_lists_and_sections() -> bytes:
+    return _odt(
+        '<text:p text:style-name="Standard">Shopping.</text:p>'
+        '<text:list text:style-name="L1"><text:list-item><text:p text:style-name="Standard">Bread</text:p>'
+        '</text:list-item><text:list-item><text:p text:style-name="Standard">Milk</text:p></text:list-item></text:list>'
+        '<text:section text:style-name="Sect1" text:name="Notes"><text:p text:style-name="Standard">'
+        "Remember the bag.</text:p></text:section>"
+        '<text:p text:style-name="Standard">Done.</text:p>',
+        automatic='<style:style style:name="Sect1" style:family="section"/>'
+        '<text:list-style style:name="L1"><text:list-level-style-bullet text:level="1" text:bullet-char="•"/>'
+        "</text:list-style>",
+    )
+
+
+_ODP_STYLES = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:automatic-styles>'
+    '<style:page-layout style:name="PM1"><style:page-layout-properties fo:page-width="28cm" fo:page-height="15.75cm"/>'
+    "</style:page-layout></office:automatic-styles><office:master-styles>"
+    '<style:master-page style:name="Default" style:page-layout-name="PM1"/></office:master-styles>'
+    "</office:document-styles>"
+).encode()
+
+
+def build_odp_groups_notes_transitions() -> bytes:
+    """An odp written by hand for what a PowerPoint conversion does not give: a group, a line, speaker notes with
+    words, a slide transition and an animation, around a text box and a circle the model does hold."""
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        '<office:automatic-styles><style:style style:name="dp1" style:family="drawing-page">'
+        '<style:drawing-page-properties presentation:transition-type="automatic" presentation:duration="PT00H00M05S"/>'
+        "</style:style></office:automatic-styles><office:body><office:presentation>"
+        '<draw:page draw:name="page1" draw:style-name="dp1" draw:master-page-name="Default">'
+        '<draw:frame svg:x="2cm" svg:y="1cm" svg:width="14cm" svg:height="2cm"><draw:text-box>'
+        "<text:p>Quarterly plan</text:p></draw:text-box></draw:frame>"
+        '<draw:g><draw:rect svg:x="2cm" svg:y="5cm" svg:width="3cm" svg:height="2cm"/>'
+        '<draw:rect svg:x="6cm" svg:y="5cm" svg:width="3cm" svg:height="2cm"/></draw:g>'
+        '<draw:line svg:x1="2cm" svg:y1="9cm" svg:x2="12cm" svg:y2="9cm"/>'
+        '<draw:ellipse svg:x="18cm" svg:y="4cm" svg:width="4cm" svg:height="4cm"><text:p>Goal</text:p></draw:ellipse>'
+        '<anim:par smil:begin="next"><anim:set smil:targetElement="x" smil:attributeName="visibility" '
+        'smil:to="visible"/>'
+        "</anim:par>"
+        "<presentation:notes><draw:page-thumbnail/><draw:frame><draw:text-box>"
+        "<text:p>Mention the budget first.</text:p></draw:text-box></draw:frame></presentation:notes>"
+        "</draw:page></office:presentation></office:body></office:document-content>"
+    )
+    return new_package("presentation", content.encode(), _ODP_STYLES)
+
+
+_ODS_STYLES = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:styles/></office:document-styles>'
+).encode()
+
+
+def build_ods_repeated_and_styled() -> bytes:
+    """An ods written by hand for what a file keeps and the model does not show: runs of equal rows and cells, a
+    merged title, styled cells, a date, a comment, a formula the model cannot read (a union), a named range and a
+    validation -- around the numbers and formulas the model does hold."""
+    automatic = (
+        '<style:style style:name="co1" style:family="table-column"><style:table-column-properties '
+        'style:column-width="2.5cm"/></style:style>'
+        '<style:style style:name="ro1" style:family="table-row"><style:table-row-properties style:row-height="0.5cm"/>'
+        "</style:style>"
+        '<style:style style:name="ce1" style:family="table-cell"><style:text-properties fo:font-weight="bold"/>'
+        "</style:style>"
+        '<style:style style:name="ce2" style:family="table-cell"><style:text-properties fo:font-size="16pt"/>'
+        "</style:style>"
+        '<number:date-style style:name="N37"><number:day number:style="long"/><number:text>.</number:text>'
+        '<number:month number:style="long"/><number:text>.</number:text><number:year/></number:date-style>'
+        '<style:style style:name="ce3" style:family="table-cell" style:data-style-name="N37"/>'
+    )
+
+    def number(value: int, formula: str | None = None, extra: str = "") -> str:
+        attribute = f' table:formula="{formula}"' if formula else ""
+        return (
+            f'<table:table-cell{attribute} office:value-type="float" office:value="{value}"{extra}>'
+            f"<text:p>{value}</text:p></table:table-cell>"
+        )
+
+    def words(text: str, extra: str = "") -> str:
+        return f'<table:table-cell office:value-type="string"{extra}><text:p>{text}</text:p></table:table-cell>'
+
+    blank = "<table:table-cell/>"
+    rows = (
+        '<table:table-row table:style-name="ro1">'
+        + words(
+            "Household budget",
+            ' table:style-name="ce2" table:number-columns-spanned="4" table:number-rows-spanned="1"',
+        )
+        + '<table:covered-table-cell table:number-columns-repeated="3"/></table:table-row>'
+        + '<table:table-row table:style-name="ro1">'
+        + "".join(words(label, ' table:style-name="ce1"') for label in ("Item", "Q1", "Q2", "Total"))
+        + "</table:table-row>"
+        + "<table:table-row>"
+        + words("Rent")
+        + number(1000)
+        + number(1000)
+        + number(2000, "of:=SUM([.B3:.C3])")
+        + "</table:table-row>"
+        + '<table:table-row table:number-rows-repeated="3">'
+        + words("Reserve")
+        + number(50)
+        + number(50)
+        + blank
+        + "</table:table-row>"
+        + "<table:table-row>"
+        + '<table:table-cell office:value-type="string"><office:annotation><dc:creator>Ana</dc:creator>'
+        "<text:p>The sum of the lines above.</text:p></office:annotation><text:p>Total</text:p></table:table-cell>"
+        + number(1150, "of:=SUM([.B3:.B6])")
+        + number(1150, "of:=SUM([.C3:.C6])")
+        + number(2300, "of:=SUM([.B7:.C7])")
+        + "</table:table-row>"
+        + "<table:table-row>"
+        + words("Due")
+        + '<table:table-cell table:style-name="ce3" office:value-type="date" office:date-value="2026-12-31">'
+        "<text:p>31.12.2026</text:p></table:table-cell>"
+        + "</table:table-row>"
+        + "<table:table-row>"
+        + words("Second quarter")
+        + number(1150, "of:=SUM(([.C3:.C4]~[.C5:.C6]))")
+        + '<table:table-cell table:formula="of:=1/0" office:value-type="string" office:string-value="" '
+        'calcext:value-type="error"><text:p>#DIV/0!</text:p></table:table-cell>'
+        + "</table:table-row>"
+        + '<table:table-row table:number-rows-repeated="1000"><table:table-cell table:number-columns-repeated="4"/>'
+        "</table:table-row>"
+    )
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        f"<office:automatic-styles>{automatic}</office:automatic-styles><office:body><office:spreadsheet>"
+        '<table:content-validations><table:content-validation table:name="val1" '
+        'table:condition="of:cell-content-is-whole-number()" table:allow-empty-cell="true"/>'
+        "</table:content-validations>"
+        '<table:table table:name="Budget" table:style-name="ta1">'
+        '<table:table-column table:style-name="co1" table:number-columns-repeated="4"/>'
+        f"{rows}</table:table>"
+        '<table:table table:name="Notes"><table:table-column/><table:table-row>'
+        + words("Amounts in euros.")
+        + "</table:table-row></table:table>"
+        '<table:named-expressions><table:named-range table:name="Total_Q1" '
+        'table:base-cell-address="$Budget.$B$7" table:cell-range-address="$Budget.$B$7"/></table:named-expressions>'
+        "</office:spreadsheet></office:body></office:document-content>"
+    )
+    return new_package("spreadsheet", content.encode(), _ODS_STYLES)
+
+
 FIXTURES = {
     "docx/heading-styles/source.docx": build_heading_styles,
     "docx/tracked-change-suggestion/source.docx": build_tracked_change_suggestion,
@@ -193,6 +387,11 @@ FIXTURES = {
     "pptx/shapes-and-text/source.pptx": build_shapes_and_text,
     "pptx/beyond-claudia/table/source.pptx": build_pptx_beyond_claudia_table,
     "pptx/beyond-claudia/image/source.pptx": build_pptx_beyond_claudia_image,
+    "odt/rich-paragraph/source.odt": build_odt_rich_paragraph,
+    "odt/tracked-change-suggestion/source.odt": build_odt_tracked_change_suggestion,
+    "odt/lists-and-sections/source.odt": build_odt_lists_and_sections,
+    "odp/groups-notes-transitions/source.odp": build_odp_groups_notes_transitions,
+    "ods/repeated-and-styled/source.ods": build_ods_repeated_and_styled,
     "xlsx/cells-and-formulas/source.xlsx": build_cells_and_formulas,
     "xlsx/beyond-claudia/chart/source.xlsx": build_xlsx_beyond_claudia_chart,
     "xlsx/beyond-claudia/image/source.xlsx": build_xlsx_beyond_claudia_image,

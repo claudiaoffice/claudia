@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import secrets
 
-from claudia_creates_io import slides_to_pptx
+from claudia_creates_io import odp_export_losses, slides_to_odp, slides_to_pptx
 
 from claudia_core import (
     OBJECT_KINDS,
@@ -41,7 +41,7 @@ from claudia_core.clock import utc_now
 from claudia_creates import AddSlide, ShapeLibrary, SlideAnchor, SlideModel
 
 from .images import image_bytes
-from .office_export import office_export
+from .office_export import document_info, office_export
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .styles import add_style_methods
 
@@ -210,12 +210,18 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
 
     @table.method("export_office", "format:str")
     def _export_office(ctx, *, format):
-        """The document's current content as bytes of a PowerPoint file (`format` must be `"pptx"`, the only
-        one so far), wrapped for the wire as `{format, content_type, data}` (`data` base64). No tracked
-        changes, no history, no chat — just the deck as it stands now (D212)."""
-        if format != "pptx":
-            raise RequestError("bad_request", 'export_office: format must be "pptx"')
-        return office_export(format, slides_to_pptx(_deck(ctx)))
+        """The document's current content as bytes of a PowerPoint file (`format` `"pptx"`) or an OpenDocument
+        presentation (`"odp"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); an odp's
+        answer also has `losses`, what the file could not hold, as `{kind, detail, count}` codes. No tracked
+        changes, no history, no chat -- just the deck as it stands now (D212); an odp says in its metadata when the
+        deck was made and last changed, and by whom, read from the log (D411)."""
+        if format not in ("pptx", "odp"):
+            raise RequestError("bad_request", 'export_office: format must be "pptx" or "odp"')
+        deck = _deck(ctx)
+        if format == "pptx":
+            return office_export(format, slides_to_pptx(deck))
+        info = document_info(ctx.document.log, ctx.document.branch)
+        return office_export(format, slides_to_odp(deck, info=info), odp_export_losses(deck))
 
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):

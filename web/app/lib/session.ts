@@ -10,6 +10,7 @@ import type { CssCheck, CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
+import type { NameDraft, NameInfo } from './names'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
 
@@ -53,6 +54,10 @@ export interface FunctionHelp extends FunctionSummary {
  * (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject` (dragging it) moves it and
  * `resizeObject` resizes it. Mirrors `claudia_computes.SheetObject`. */
 export type SheetObject = VisualObject<CellAnchor>
+/** What `sql_preview` answers: the table a query gives (at most the asked rows of it), or the `#SQL!` it would show. */
+export type SqlPreview =
+  | { ok: true; columns: string[]; rows: (string | number | boolean | null)[][]; row_count: number; ms: number }
+  | { ok: false; error: { code: string; detail: string } }
 export interface State extends BaseState {
   sheets: SheetInfo[]
   activeSheet: string
@@ -68,6 +73,8 @@ export interface State extends BaseState {
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id
   diagrams: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
   charts: Chart[] // chart tabs, in tab order
+  /** The workbook's names: named ranges, tables and the results of `SQL()` cells (E6.5), as `names` sends them. */
+  names: NameInfo[]
   /** A diagram's Plotly figure, read live off its sheet, cached by diagram id until something that could
    * change it happens — its own definition changing, or a `cells` event touching its range (`ensureFigure`,
    * `onAppEvent`'s `'cells'`/`'diagram'` cases). Never persisted across a reload: `loadApp` starts it empty. */
@@ -111,6 +118,7 @@ export class Session extends BaseSession<State> {
       images: {},
       diagrams: {},
       charts: [],
+      names: [],
       figures: {},
       styles: {},
       palette: null,
@@ -126,11 +134,12 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, charts, styles, palette, styleModel] = await Promise.all([
+    const [sheets, images, diagrams, charts, names, styles, palette, styleModel] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
       link.request<ChartSpec[]>('diagrams'),
       link.request<Chart[]>('charts'),
+      link.request<{ names: NameInfo[] }>('names'),
       link.request<StyleDef[]>('styles'),
       link.request<PaletteEvent>('palette'),
       link.request<StyleModel>('style_model'),
@@ -147,6 +156,7 @@ export class Session extends BaseSession<State> {
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.diagrams = Object.fromEntries(diagrams.map((x) => [x.id, x]))
     s.charts = charts
+    s.names = names.names
     s.figures = {}
     this.figuresInflight.clear()
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
@@ -287,6 +297,14 @@ export class Session extends BaseSession<State> {
     this.state.charts = await this.need().request<Chart[]>('charts')
   }
 
+  /** Re-fetch the names; the `names` push event carries no payload of its own (`claudia_computes.events.NamesChanged`).
+   * What a chart that reads a name shows may have changed with them, so those figures are asked for again. */
+  private async reloadNames() {
+    const answer = await this.need().request<{ names: NameInfo[] }>('names')
+    this.state.names = answer.names
+    for (const spec of Object.values(this.state.diagrams)) if (spec.source !== undefined) delete this.state.figures[spec.id]
+  }
+
   /** Forgets a sheet's cells, and with them its row/column sizes — a structural edit (rows or columns inserted or
    * deleted) shifts both the same way, and the server does not echo the shifted sizes back as their own event. */
   private forgetCells(sheet?: string) {
@@ -406,7 +424,9 @@ export class Session extends BaseSession<State> {
         // every cached figure is checked, not only those for the active sheet.
         const positions = data.positions as [number, number][]
         for (const spec of Object.values(s.diagrams)) {
-          if (spec.id in s.figures && rangeTouchedBy(spec.range, data.sheet, positions)) delete s.figures[spec.id]
+          // A chart that reads a name follows whatever the name is on, which may be a query result that moves: any
+          // change of cells may touch it, so it is asked for again.
+          if (spec.id in s.figures && (spec.range ? rangeTouchedBy(spec.range, data.sheet, positions) : true)) delete s.figures[spec.id]
         }
         return true
       }
@@ -443,6 +463,9 @@ export class Session extends BaseSession<State> {
         return true
       case 'charts':
         this.track(this.reloadCharts())
+        return true
+      case 'names':
+        this.track(this.reloadNames())
         return true
       case 'styles':
         // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
@@ -536,6 +559,32 @@ export class Session extends BaseSession<State> {
   /** Remove a chart tab. The definition it showed is untouched (`forgetDiagram` is the separate step). */
   async removeChart(id: string): Promise<boolean> {
     return (await this.attempt('remove_chart', { id, base: this.state.revision })) !== false
+  }
+
+  // -- names, tables and queries (E6.5)
+  /** Give cells a name (or point an existing one, same scope, somewhere else); `false` after telling the person why not. */
+  async defineName(draft: NameDraft): Promise<boolean> {
+    return (await this.attempt('define_name', { definition: draft, base: this.state.revision })) !== false
+  }
+
+  /** Call a name something else; the formulas that use it are rewritten. */
+  async renameName(old: string, next: string, scope: string | null): Promise<boolean> {
+    return (await this.attempt('rename_name', { old, new: next, scope, base: this.state.revision })) !== false
+  }
+
+  /** Take a name away; the cells stay. */
+  async removeName(name: string, scope: string | null): Promise<boolean> {
+    return (await this.attempt('remove_name', { name, scope, base: this.state.revision })) !== false
+  }
+
+  /** Run a query as a `SQL()` cell on `sheet` would, without changing the document (what the SQL editor previews). */
+  async sqlPreview(query: string, sheet: string, limit = 20): Promise<SqlPreview> {
+    return this.need().request<SqlPreview>('sql_preview', { query, sheet, limit })
+  }
+
+  /** Put a query into a cell as `=SQL("…")`, and with `name` make its result a table of that name. */
+  async defineSql(sheet: string, row: number, col: number, query: string, name: string | null): Promise<boolean> {
+    return (await this.attempt('define_sql', { sheet, row, col, query, name, base: this.state.revision })) !== false
   }
 
   /** Drag an object to a new anchor cell; its size never changes. */

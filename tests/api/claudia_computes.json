@@ -163,7 +163,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', range: 'RangeRef', series_in: 'str' = 'columns', header_row: 'bool' = True, title: 'str' = '', x_title: 'str' = '', y_title: 'str' = '', legend: 'bool' = True, gridlines: 'bool' = True) -> None",
+  "init": "(id: 'str', kind: 'str', range: 'RangeRef | None' = None, source: 'str' = '', source_scope: 'SheetId | None' = None, series_in: 'str' = 'columns', header_row: 'bool' = True, title: 'str' = '', x_title: 'str' = '', y_title: 'str' = '', legend: 'bool' = True, gridlines: 'bool' = True) -> None",
   "methods": {
    "from_data": "(data: 'object') -> 'ChartSpec'",
    "to_data": "(self) -> 'dict'"
@@ -215,6 +215,23 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
    "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineName": {
+  "class": [
+   "Command"
+  ],
+  "init": "(name: 'NamedRange') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'DefineName'",
+   "regions": "(self, model) -> 'tuple[CellRegion, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -393,6 +410,49 @@
    "summary"
   ]
  },
+ "NamedRange": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', scope: 'SheetId | None', range: 'RangeRef | None' = None, header: 'bool' = False, grows: 'bool' = False, purpose: 'str' = 'data', column_purposes: 'tuple[tuple[int, str], ...]' = (), anchor: 'Anchor | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'NamedRange'",
+   "purpose_of": "(self, offset: 'int') -> 'str'",
+   "to_data": "(self) -> 'dict'",
+   "with_range": "(self, area: 'RangeRef') -> 'NamedRange'"
+  },
+  "properties": [
+   "is_result",
+   "key",
+   "sheet"
+  ]
+ },
+ "Names": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "clear": "(self) -> 'None'",
+   "from_data": "(data: 'Sequence[dict]') -> 'Names'",
+   "get": "(self, key: 'NameKey') -> 'NamedRange | None'",
+   "put": "(self, name: 'NamedRange | None', key: 'NameKey | None' = None) -> 'None'",
+   "resolve": "(self, home: 'SheetId', text: 'str') -> 'NamedRange | None'",
+   "sorted": "(self) -> 'list[NamedRange]'",
+   "to_data": "(self) -> 'list[dict]'"
+  },
+  "properties": []
+ },
+ "NamesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "OBJECT_KINDS": {
   "value": "('text', 'shape', 'image', 'diagram')"
  },
@@ -431,6 +491,9 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": []
+ },
+ "PURPOSES": {
+  "value": "('input', 'data', 'calc', 'result')"
  },
  "Paragraph": {
   "class": [
@@ -490,6 +553,22 @@
    "summary"
   ]
  },
+ "RemoveName": {
+  "class": [
+   "Command"
+  ],
+  "init": "(scope: 'SheetId | None', name: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RemoveName'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "RemoveObject": {
   "class": [
    "Command"
@@ -525,6 +604,22 @@
    "summary"
   ]
  },
+ "RenameName": {
+  "class": [
+   "Command"
+  ],
+  "init": "(scope: 'SheetId | None', old: 'str', new: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RenameName'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "ResizeLines": {
   "class": [
    "Command"
@@ -552,6 +647,22 @@
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ResizeObject'",
    "redacted": "(self) -> 'Command'",
    "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RestoreNames": {
+  "class": [
+   "Command"
+  ],
+  "init": "(entries: 'tuple[tuple[NameKey, NamedRange | None], ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RestoreNames'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -696,6 +807,7 @@
   ],
   "init": "(sheet_id: 'SheetId', name: 'str')",
   "methods": {
+   "blocker": "(self, first: 'Position', last: 'Position', owner: 'tuple[SheetId, int, int]') -> 'Position | None'",
    "bump_all": "(self) -> 'None'",
    "cells_in": "(self, row0: 'int', row1: 'int', col0: 'int', col1: 'int') -> 'list[Position]'",
    "column_version": "(self, col: 'int') -> 'int'",
@@ -703,6 +815,8 @@
    "refit": "(self) -> 'None'",
    "set_value": "(self, position: 'Position', value: 'Value') -> 'bool'",
    "sizes": "(self, axis: 'str') -> 'dict[int, float]'",
+   "spill_clear": "(self, position: 'Position') -> 'bool'",
+   "spill_value": "(self, position: 'Position', value: 'Value', owner: 'tuple[SheetId, int, int]') -> 'bool'",
    "to_data": "(self) -> 'dict'",
    "version": "(self) -> 'int'",
    "view": "(self, position: 'Position') -> 'dict | None'"
@@ -780,15 +894,25 @@
    "chart_figure": "(self, diagram_id: 'str') -> 'dict'",
    "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
    "check_anchor": "(self, anchor: 'CellAnchor', body: 'ObjectBody') -> 'None'",
+   "check_name": "(self, named: 'NamedRange') -> 'None'",
+   "check_writable": "(self, sheet: 'Sheet', positions) -> 'None'",
+   "columns_of": "(self, named: 'NamedRange', sample: 'int' = 2000) -> 'list[tuple[str, str]]'",
    "containers": "(self) -> 'list[str]'",
    "diagram_from_data": "(self, data: 'dict') -> 'ChartSpec'",
-   "drop_sheet": "(self, sheet_id: 'SheetId') -> 'dict[SheetId, Cells]'",
+   "drop_sheet": "(self, sheet_id: 'SheetId') -> 'tuple[dict[SheetId, Cells], NameRestores]'",
    "empty": "() -> 'Self'",
    "get": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Content'",
+   "grow_names": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'NameRestores'",
+   "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
+   "header_texts": "(self, region: 'Rect') -> 'list[str]'",
+   "put_names": "(self, entries: 'Sequence[tuple[NameKey, NamedRange | None]]') -> 'NameRestores'",
+   "query": "(self, text: 'str', home: 'SheetId', parameters: 'Sequence[object]' = ()) -> 'Table'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
+   "region_of": "(self, named: 'NamedRange') -> 'Rect | None'",
    "remove_chart": "(self, chart_id: 'str') -> 'None'",
+   "rename_name": "(self, scope: 'SheetId | None', old: 'str', new: 'str') -> 'dict[SheetId, Cells]'",
    "restore": "(state: 'dict') -> 'Self'",
-   "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]]]'",
+   "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
    "serialize": "(self) -> 'dict'",
    "settle": "(self, ctx) -> 'None'",
    "sheet": "(self, sheet_id: 'SheetId') -> 'Sheet'",

@@ -30,6 +30,7 @@ PACKAGES = (
     "claudia_composes",
     "claudia_ai",
     "claudia_opc_io",
+    "claudia_odf_io",
     "claudia_composes_io",
     "claudia_computes_io",
     "claudia_creates_io",

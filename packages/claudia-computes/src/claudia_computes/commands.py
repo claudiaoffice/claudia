@@ -21,7 +21,15 @@ from typing import ClassVar
 from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagram, fits
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
-from .events import CellsChanged, CellStylesChanged, ChartsChanged, LinesResized, SheetsChanged, StructureChanged
+from .events import (
+    CellsChanged,
+    CellStylesChanged,
+    ChartsChanged,
+    LinesResized,
+    NamesChanged,
+    SheetsChanged,
+    StructureChanged,
+)
 from .formula import parse_formula
 from .formula.rewrite import adjusted
 from .model import (
@@ -169,8 +177,12 @@ class RemoveSheet(Command):
         for obj in objects:
             model.delete_object(obj.id)
         model.close_container(str(self.id))
-        restores = model.drop_sheet(self.id)  # formulas elsewhere that pointed here, as they were
+        restores, name_restores = model.drop_sheet(
+            self.id
+        )  # formulas elsewhere that pointed here, and names, as they were
         ctx.emit(SheetsChanged())
+        if name_restores:
+            ctx.emit(NamesChanged())
         undo: list[Command] = [AddSheet(sheet.id, sheet.name, index)]
         if cells:
             undo.append(SetCells(sheet.id, cells))
@@ -184,6 +196,10 @@ class RemoveSheet(Command):
         )
         undo.extend(AddObject(obj.body, obj.anchor.to_data(), place) for place, obj in enumerate(objects))
         undo.extend(SetCells(other, tuple(sorted(items))) for other, items in restores.items())
+        if name_restores:  # (after the sheet is back: a name needs its sheet)
+            from .name_commands import RestoreNames
+
+            undo.append(RestoreNames(tuple(reversed(name_restores))))
         return undo[0] if len(undo) == 1 else Batch(tuple(undo))
 
     def to_data(self) -> dict:
@@ -234,11 +250,20 @@ class SetCells(Command):
             _check_position(row, col)
         previous = tuple((r, c, sheet.cells.get((r, c))) for r, c, _ in self.cells)
         model = ctx.model
+        model.check_writable(sheet, [(r, c) for r, c, _ in self.cells])
         final = {(r, c): model.store(sheet, r, c, content) for r, c, content in self.cells}  # later duplicates win
+        model.header_edited(self.sheet, list(final))  # (formulas that name a table's columns read the new headers)
+        grown = model.grow_names(self.sheet, [position for position, v in final.items() if v is not None])
         # Formulas are told by ``settle``, with the value they give; the event here carries what needs no calculating.
         shown = tuple((r, c, v) for (r, c), v in final.items() if v is None or v["t"] != "formula")
         ctx.emit(CellsChanged(self.sheet, frozenset(final), shown))
-        return SetCells(self.sheet, tuple(reversed(previous)))  # reversed: later duplicates restore first
+        undo = SetCells(self.sheet, tuple(reversed(previous)))  # reversed: later duplicates restore first
+        if not grown:
+            return undo
+        from .name_commands import RestoreNames  # (a table that took in the new rows lets them go again)
+
+        ctx.emit(NamesChanged())
+        return Batch((undo, RestoreNames(tuple(grown))))
 
     def to_data(self) -> dict:
         return {"sheet": self.sheet, "cells": [[r, c, content] for r, c, content in self.cells]}
@@ -313,7 +338,7 @@ class Structure(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         edit = self.edit
-        destroyed, restores, destroyed_sizes, cut_styles = ctx.model.restructure(edit)
+        destroyed, restores, destroyed_sizes, cut_styles, name_restores = ctx.model.restructure(edit)
         ctx.emit(StructureChanged(edit))
         undo = Structure(_OPPOSITE[type(edit)](edit.sheet, edit.at, edit.count))
         # Deleted cells come back, and so do the formulas that pointed at them, as they were typed.
@@ -329,6 +354,11 @@ class Structure(Command):
         )
         if cut_styles:
             ctx.emit(CellStylesChanged(edit.sheet, (0, 0, MAX_ROWS - 1, MAX_COLS - 1)))
+        if name_restores:  # names that moved or went, as they were (last: they are about the cells put back above)
+            from .name_commands import RestoreNames
+
+            ctx.emit(NamesChanged())
+            sets.append(RestoreNames(tuple(reversed(name_restores))))
         return Batch((undo, *sets)) if sets else undo
 
     def to_data(self) -> dict:

@@ -58,6 +58,15 @@ class ChartsChanged:
 
 
 @dataclass(frozen=True)
+class NamesChanged:
+    """A name (a named range, a table or a query result) was defined, changed, renamed, grown or removed."""
+
+    def to_data(self) -> dict:
+        """The event as it goes to the clients: only its type, since they read the names off the state."""
+        return {"type": "names"}
+
+
+@dataclass(frozen=True)
 class LinesResized:
     """Rows or columns of one sheet were given a size, or returned to the sheet's default (``size`` is ``None``)."""
 

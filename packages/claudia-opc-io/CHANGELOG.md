@@ -3,6 +3,15 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.2.0] - 2026-11-11
+
+### Changed
+- `write_parts` follows the one rule of OpenDocument packages that is a rule of the zip (ODF 1.3 part 3, 3.3; D401):
+  a part named `mimetype` is written first and stored, not compressed, so that `file`, browsers and upload filters can
+  read the type of a document at a fixed place in it. A package without that part is written as before.
+- Every part is written with the same timestamp (1980-01-01), so the same parts always give the same bytes: an OOXML
+  or OpenDocument file no longer differs from its twin by the clock. The parts themselves are unchanged.
+
 ## [0.1.0] - 2026-11-10
 
 The first version under the versioning policy. Until now the package had a placeholder version (0.0.1), no

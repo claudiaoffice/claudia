@@ -19,9 +19,11 @@ from .nodes import (
     Percent,
     Ref,
     Str,
+    TableRef,
     Unary,
 )
 from .syntax import Formula
+from .tablespec import print_spec
 
 
 def print_formula(formula: Formula, sheet_names: SheetNames | None = None) -> str:
@@ -61,6 +63,7 @@ _PRINTERS = {
     Area: lambda node, names: _print_range(node.ref, names),
     BadRef: lambda node, names: "#REF!",
     Name: lambda node, names: node.text,
+    TableRef: lambda node, names: node.table + print_spec(node.items, node.first, node.last),
     Missing: lambda node, names: "",
     Unary: lambda node, names: node.op + print_node(node.operand, names),
     Percent: lambda node, names: print_node(node.operand, names) + "%",

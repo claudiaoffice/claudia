@@ -112,9 +112,12 @@ URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour r
 URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
 npm run e2e:resilience       # starts its own server on 8766, restarts it, checks that both browsers come back
 npm run e2e:recovery         # starts its own server on 8767: the recovery key, shown once, and a new one
+npm run e2e:macos-shell      # the macOS client's window: its shell page and core in Chromium, the web app in the frame
 ```
 
-The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. CI runs all of them in its `e2e` job,
+The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. `e2e:macos-shell` needs the macOS client built
+(`cd clients/macos && npm ci && npm run build`) as well as the web app, starts a server of its own for each app and one on 8791
+for `--server`, and fakes only Neutralino's client library; `CHROMIUM=/path/to/chrome` picks a browser binary other than Playwright's. CI runs all of them in its `e2e` job,
 together with `tests/e2e` (the Python test that checks each server greets with its own app).
 
 `npm run lint` runs ESLint (`eslint.config.mjs`: Nuxt's recommended rules without the stylistic ones; every rule
@@ -124,6 +127,14 @@ the thresholds in `vitest.config.ts`.
 `uv run python scripts/check_debt.py` runs the web checks too (skipped when npm or `web/node_modules` is missing, and
 named in the summary line either way: a skip is never reported as clean). `--ci` turns an unlisted skip into a
 failure; CI's Python job allows this one because the separate `web` job covers it with Node installed.
+
+The gate also audits the lockfiles of `web/` and of every client with `npm audit` (`scripts/check_npm_audit.py`, SEC-08).
+It needs no `node_modules`, only npm and the registry; an advisory of moderate severity or worse fails it (`--level high`
+for a narrower look), development tools included. Fix one by updating the direct dependency that brings the package in,
+or with an `overrides` entry in `package.json` where the dependent has no newer release. What cannot be fixed is
+recorded in `pyproject.toml` under `[[tool.claudia.npm-audit-allow]]`, one entry per advisory with its reason; an entry
+that nothing needs any more fails the audit. Where npm or the registry cannot be reached the check is skipped and says
+so, and `--ci` fails on that skip.
 
 
 ## Presentations (creates)

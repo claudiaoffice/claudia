@@ -11,9 +11,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from claudia_composes_io import apply_edits_to_docx, docx_to_text
-from claudia_computes_io import apply_edits_to_xlsx, xlsx_to_workbook
-from claudia_creates_io import apply_edits_to_pptx, pptx_to_slides
+from claudia_composes_io import apply_edits_to_docx, apply_edits_to_odt, docx_to_text, odt_to_text
+from claudia_computes_io import apply_edits_to_ods, apply_edits_to_xlsx, ods_to_workbook, xlsx_to_workbook
+from claudia_creates_io import apply_edits_to_odp, apply_edits_to_pptx, odp_to_slides, pptx_to_slides
 
 from .case import Model
 
@@ -28,11 +28,13 @@ class Adapter:
     apply_edits_fn: Callable[[bytes, Model, Model], bytes] | None = None
 
 
-#: One entry per format the catalogue can test. odt/ods/odp are not here yet -- there is no adapter to register
-#: until each gets its own real import and edit-and-reexport path, the same way docx (D217), pptx (D219) and now
-#: xlsx (D220) did.
+#: One entry per format the catalogue can test, each registered once it has its own real import and
+#: edit-and-reexport path: docx (D217), pptx (D219), xlsx (D220), odt (D401), odp (D412) and ods (D413).
 ADAPTERS: dict[str, Adapter] = {
     "docx": Adapter(import_fn=docx_to_text, apply_edits_fn=apply_edits_to_docx),
+    "odt": Adapter(import_fn=odt_to_text, apply_edits_fn=apply_edits_to_odt),
+    "odp": Adapter(import_fn=odp_to_slides, apply_edits_fn=apply_edits_to_odp),
+    "ods": Adapter(import_fn=ods_to_workbook, apply_edits_fn=apply_edits_to_ods),
     "pptx": Adapter(import_fn=pptx_to_slides, apply_edits_fn=apply_edits_to_pptx),
     "xlsx": Adapter(import_fn=xlsx_to_workbook, apply_edits_fn=apply_edits_to_xlsx),
 }
