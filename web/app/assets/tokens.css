@@ -16,6 +16,12 @@
   --ink: #1f1a33;
   --iris: #5b4bc4;
   --mist: #e7e1f4;
+  /* What a table's cells are for (E6.5, mock 2): input is Apricot-tinted, calculation Iris-tinted, a query result
+   * Teal-tinted; plain data stays the surface. Tints, not fills: the cell text keeps its contrast in both schemes. */
+  --purpose-input: #fce8cf;
+  --purpose-data: transparent;
+  --purpose-calc: #ede8f7;
+  --purpose-result: #d9eee9;
   --paper: #f7f3ec;
   --rose: #d6477a;
   --teal: #13917f;
@@ -114,6 +120,9 @@
   --page: var(--page-dark);
   --wordmark: var(--rose-light);
   --app-text: var(--teal-light); /* computes' own accent-as-text; composes/creates override below */
+  --purpose-input: color-mix(in srgb, #f2a057 24%, var(--surface-dark));
+  --purpose-calc: color-mix(in srgb, #5b4bc4 34%, var(--surface-dark));
+  --purpose-result: color-mix(in srgb, #13917f 30%, var(--surface-dark));
 }
 :root[data-theme='dark'][data-app='composes'] {
   --app-text: var(--rose-light);

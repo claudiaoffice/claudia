@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="sh2" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dy="3" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#F7F3EC"/>
+<rect x="24.0" y="24.0" width="720.0" height="370.0" rx="14" fill="#FFFFFF" stroke="#DDD6CC" stroke-width="1"/>
+<circle cx="50.0" cy="52.0" r="11" fill="#5B4BC4"/>
+<text x="50.0" y="56.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">a</text>
+<text x="70.0" y="57.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500">Typing a formula: Excel's table notation, with completion</text>
+<rect x="44.0" y="80.0" width="680.0" height="32.0" rx="7" fill="#FBF9F5" stroke="#13917F" stroke-width="2"/>
+<text x="58.0" y="101.0" font-family="Fraunces, Georgia, serif" font-size="13" fill="#6B6580" font-weight="400" font-style="italic">fx</text>
+<text x="86.0" y="101.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">=SUM(Sales[</text>
+<line x1="172.8" y1="87.0" x2="172.8" y2="105.0" stroke="#13917F" stroke-width="1.6"/>
+<rect x="132.8" y="118.0" width="300.0" height="258.0" rx="10" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<text x="146.8" y="140.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="500">FIELDS OF SALES</text>
+<rect x="138.8" y="150.0" width="288.0" height="26.0" rx="6" fill="#E6F3F0"/>
+<circle cx="152.8" cy="163.0" r="4.5" fill="#5B4BC4"/>
+<text x="166.8" y="168.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Amount</text>
+<text x="416.8" y="168.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#6B6580" font-weight="400" text-anchor="end">real</text>
+<circle cx="152.8" cy="191.0" r="4.5" fill="#9A93B5"/>
+<text x="166.8" y="196.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Quarter</text>
+<text x="416.8" y="196.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#6B6580" font-weight="400" text-anchor="end">text</text>
+<circle cx="152.8" cy="219.0" r="4.5" fill="#9A93B5"/>
+<text x="166.8" y="224.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Region</text>
+<text x="416.8" y="224.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#6B6580" font-weight="400" text-anchor="end">text</text>
+<circle cx="152.8" cy="247.0" r="4.5" fill="#9A93B5"/>
+<text x="166.8" y="252.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Product</text>
+<text x="416.8" y="252.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#6B6580" font-weight="400" text-anchor="end">text</text>
+<circle cx="152.8" cy="275.0" r="4.5" fill="#F2A057"/>
+<text x="166.8" y="280.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Units</text>
+<text x="416.8" y="280.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#6B6580" font-weight="400" text-anchor="end">int</text>
+<circle cx="152.8" cy="303.0" r="4.5" fill="#F2A057"/>
+<text x="166.8" y="308.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Unit price</text>
+<text x="416.8" y="308.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#6B6580" font-weight="400" text-anchor="end">real</text>
+<line x1="142.8" y1="323.0" x2="422.8" y2="323.0" stroke="#EEE9F4" stroke-width="1"/>
+<text x="146.8" y="346.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#6B6580" font-weight="400">[#Headers]   [#Data]   [#All]   [@ this row]</text>
+<text x="484.0" y="134.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="500">ALSO WORKS</text>
+<text x="484.0" y="154.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11" fill="#1F1A33" font-weight="400">=SUM(Sales[Amount])</text>
+<text x="484.0" y="170.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">a field of a table</text>
+<text x="484.0" y="200.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11" fill="#1F1A33" font-weight="400">=[@Units]*[@[Unit price]]</text>
+<text x="484.0" y="216.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">this row, inside the table</text>
+<text x="484.0" y="246.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11" fill="#1F1A33" font-weight="400">=COUNTIF(Sales[Region],"North")</text>
+<text x="484.0" y="262.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">any function</text>
+<text x="484.0" y="292.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11" fill="#1F1A33" font-weight="400">=SUM(SalesByRegion[Revenue])</text>
+<text x="484.0" y="308.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">a query result</text>
+<text x="484.0" y="338.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11" fill="#1F1A33" font-weight="400">=Rate*B2</text>
+<text x="484.0" y="354.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">a name; a sheet-scoped</text>
+<text x="484.0" y="368.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">Rate wins on its own sheet</text>
+<rect x="764.0" y="24.0" width="492.0" height="370.0" rx="14" fill="#FFFFFF" stroke="#DDD6CC" stroke-width="1"/>
+<circle cx="790.0" cy="52.0" r="11" fill="#5B4BC4"/>
+<text x="790.0" y="56.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">b</text>
+<text x="810.0" y="57.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500">Clicking inside a result</text>
+<clipPath id="clip1"><rect x="784" y="80" width="228" height="258"/></clipPath><g clip-path="url(#clip1)">
+<rect x="784.0" y="80.0" width="228.0" height="258.0" rx="0" fill="#FFFFFF"/>
+<rect x="828.0" y="156.0" width="92.0" height="26.0" rx="0" fill="#C7E5DF"/>
+<rect x="920.0" y="156.0" width="92.0" height="26.0" rx="0" fill="#C7E5DF"/>
+<rect x="828.0" y="182.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="920.0" y="182.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="828.0" y="208.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="920.0" y="208.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="828.0" y="234.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="920.0" y="234.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="828.0" y="260.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="920.0" y="260.0" width="92.0" height="26.0" rx="0" fill="#D9EEE9"/>
+<rect x="784.0" y="80.0" width="228.0" height="24.0" rx="0" fill="#EFEBE3"/>
+<rect x="784.0" y="80.0" width="44.0" height="258.0" rx="0" fill="#EFEBE3"/>
+<text x="874.0" y="96.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">A</text>
+<text x="966.0" y="96.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">B</text>
+<text x="806.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">1</text>
+<text x="806.0" y="147.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">2</text>
+<text x="806.0" y="173.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">3</text>
+<text x="806.0" y="199.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">4</text>
+<text x="806.0" y="225.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">5</text>
+<text x="806.0" y="251.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">6</text>
+<text x="806.0" y="277.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">7</text>
+<text x="806.0" y="303.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">8</text>
+<text x="806.0" y="329.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">9</text>
+<line x1="828.0" y1="80.0" x2="828.0" y2="338.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="920.0" y1="80.0" x2="920.0" y2="338.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="1012.0" y1="80.0" x2="1012.0" y2="338.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="104.0" x2="1012.0" y2="104.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="130.0" x2="1012.0" y2="130.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="156.0" x2="1012.0" y2="156.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="182.0" x2="1012.0" y2="182.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="208.0" x2="1012.0" y2="208.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="234.0" x2="1012.0" y2="234.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="260.0" x2="1012.0" y2="260.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="286.0" x2="1012.0" y2="286.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="312.0" x2="1012.0" y2="312.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="338.0" x2="1012.0" y2="338.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="784.0" y1="104.0" x2="1012.0" y2="104.0" stroke="#D3CCBF" stroke-width="1"/>
+<line x1="828.0" y1="80.0" x2="828.0" y2="338.0" stroke="#D3CCBF" stroke-width="1"/>
+<text x="836.0" y="121.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Revenue by region</text>
+<text x="836.0" y="173.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Region</text>
+<text x="1004.0" y="173.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="end">Revenue</text>
+<text x="836.0" y="199.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">South</text>
+<text x="1004.0" y="199.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">4,780</text>
+<text x="836.0" y="225.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">East</text>
+<text x="1004.0" y="225.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">2,775</text>
+<text x="836.0" y="251.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">North</text>
+<text x="1004.0" y="251.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">2,700</text>
+<text x="836.0" y="277.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">West</text>
+<text x="1004.0" y="277.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">1,200</text>
+</g>
+<rect x="828.0" y="156.0" width="184.0" height="130.0" rx="0" fill="none" stroke="#13917F" stroke-width="1.2"/>
+<rect x="828.0" y="208.0" width="92.0" height="26.0" rx="0" fill="none" stroke="#0F7D6E" stroke-width="2.5"/>
+<rect x="1026.0" y="178.0" width="214.0" height="176.0" rx="12" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<path d="M1026.5 213 L1018 221 L1026.5 229" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round"/>
+<line x1="1026.8" y1="214.0" x2="1026.8" y2="228.0" stroke="#FFFFFF" stroke-width="2"/>
+<path d="M1046 209 v-4 a4 4 0 0 1 8 0 v4 M1044 209 h12 v9 h-12 z" fill="none" stroke="#0F7D6E" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1064.0" y="214.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">SalesByRegion</text>
+<text x="1044.0" y="238.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Filled by =SQL() in A3.</text>
+<text x="1044.0" y="255.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Cells in a result can't be</text>
+<text x="1044.0" y="272.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">typed over.</text>
+<text x="1044.0" y="306.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#5B4BC4" font-weight="500">Edit query…</text>
+<text x="1044.0" y="330.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#5B4BC4" font-weight="500">Copy as values</text>
+<rect x="24.0" y="410.0" width="492.0" height="370.0" rx="14" fill="#FFFFFF" stroke="#DDD6CC" stroke-width="1"/>
+<circle cx="50.0" cy="438.0" r="11" fill="#5B4BC4"/>
+<text x="50.0" y="442.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">c</text>
+<text x="70.0" y="443.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500">Result is blocked: #SPILL!</text>
+<clipPath id="clip2"><rect x="44" y="466" width="228" height="258"/></clipPath><g clip-path="url(#clip2)">
+<rect x="44.0" y="466.0" width="228.0" height="258.0" rx="0" fill="#FFFFFF"/>
+<rect x="88.0" y="542.0" width="92.0" height="26.0" rx="0" fill="#FBE3EC"/>
+<rect x="180.0" y="594.0" width="92.0" height="26.0" rx="0" fill="#FFF7E8"/>
+<rect x="44.0" y="466.0" width="228.0" height="24.0" rx="0" fill="#EFEBE3"/>
+<rect x="44.0" y="466.0" width="44.0" height="258.0" rx="0" fill="#EFEBE3"/>
+<text x="134.0" y="482.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">A</text>
+<text x="226.0" y="482.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">B</text>
+<text x="66.0" y="507.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">1</text>
+<text x="66.0" y="533.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">2</text>
+<text x="66.0" y="559.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">3</text>
+<text x="66.0" y="585.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">4</text>
+<text x="66.0" y="611.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">5</text>
+<text x="66.0" y="637.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">6</text>
+<text x="66.0" y="663.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">7</text>
+<text x="66.0" y="689.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">8</text>
+<text x="66.0" y="715.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">9</text>
+<line x1="88.0" y1="466.0" x2="88.0" y2="724.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="180.0" y1="466.0" x2="180.0" y2="724.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="272.0" y1="466.0" x2="272.0" y2="724.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="490.0" x2="272.0" y2="490.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="516.0" x2="272.0" y2="516.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="542.0" x2="272.0" y2="542.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="568.0" x2="272.0" y2="568.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="594.0" x2="272.0" y2="594.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="620.0" x2="272.0" y2="620.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="646.0" x2="272.0" y2="646.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="672.0" x2="272.0" y2="672.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="698.0" x2="272.0" y2="698.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="724.0" x2="272.0" y2="724.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="44.0" y1="490.0" x2="272.0" y2="490.0" stroke="#D3CCBF" stroke-width="1"/>
+<line x1="88.0" y1="466.0" x2="88.0" y2="724.0" stroke="#D3CCBF" stroke-width="1"/>
+<text x="96.0" y="507.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Revenue by region</text>
+<text x="96.0" y="559.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#D6477A" font-weight="500">#SPILL!</text>
+<text x="264.0" y="611.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">n/a</text>
+</g>
+<rect x="88.0" y="542.0" width="184.0" height="130.0" rx="0" fill="none" stroke="#D6477A" stroke-width="1.3" stroke-dasharray="5 3"/>
+<rect x="180.0" y="594.0" width="92.0" height="26.0" rx="0" fill="none" stroke="#D6477A" stroke-width="2.2"/>
+<rect x="286.0" y="540.0" width="214.0" height="150.0" rx="12" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<path d="M286.5 545 L278 553 L286.5 561" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round"/>
+<line x1="286.8" y1="546.0" x2="286.8" y2="560.0" stroke="#FFFFFF" stroke-width="2"/>
+<text x="304.0" y="570.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#D6477A" font-weight="500">⚠  SalesByRegion is blocked</text>
+<text x="304.0" y="592.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">It needs A3:B7, but B5 holds</text>
+<text x="304.0" y="609.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">a value. Clear B5 and the</text>
+<text x="304.0" y="626.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">result appears.</text>
+<text x="304.0" y="658.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#5B4BC4" font-weight="500">Select B5</text>
+<text x="386.0" y="658.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#5B4BC4" font-weight="500">Move result…</text>
+<rect x="536.0" y="410.0" width="720.0" height="370.0" rx="14" fill="#FFFFFF" stroke="#DDD6CC" stroke-width="1"/>
+<circle cx="562.0" cy="438.0" r="11" fill="#5B4BC4"/>
+<text x="562.0" y="442.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">d</text>
+<text x="582.0" y="443.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500">A query that doesn't run: #SQL!</text>
+<rect x="556.0" y="466.0" width="680.0" height="140.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<rect x="556.0" y="466.0" width="40.0" height="140.0" rx="8" fill="#F6F3FA"/>
+<rect x="586.0" y="466.0" width="10.0" height="140.0" rx="0" fill="#F6F3FA"/>
+<text x="576.0" y="496.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#B0A9C4" font-weight="400" text-anchor="end">1</text>
+<text x="610.0" y="496.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">SELECT</text>
+<text x="664.6" y="496.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">Region</text>
+<text x="711.4" y="496.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">,</text>
+<text x="576.0" y="518.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#B0A9C4" font-weight="400" text-anchor="end">2</text>
+<text x="664.6" y="518.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#0F7D6E" font-weight="500">SUM</text>
+<text x="688.0" y="518.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">(</text>
+<text x="695.8" y="518.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">Amount</text>
+<text x="742.6" y="518.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">)</text>
+<text x="758.2" y="518.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">AS</text>
+<text x="781.6" y="518.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">Revenue</text>
+<text x="576.0" y="540.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#B0A9C4" font-weight="400" text-anchor="end">3</text>
+<text x="610.0" y="540.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">FROM</text>
+<text x="664.6" y="540.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="500">Sales</text>
+<text x="576.0" y="562.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#B0A9C4" font-weight="400" text-anchor="end">4</text>
+<text x="610.0" y="562.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">GROUP</text>
+<text x="656.8" y="562.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">BY</text>
+<text x="680.2" y="562.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">Region</text>
+<text x="576.0" y="584.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#B0A9C4" font-weight="400" text-anchor="end">5</text>
+<text x="610.0" y="584.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">ORDER</text>
+<text x="656.8" y="584.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">BY</text>
+<text x="680.2" y="584.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">Revnue</text>
+<text x="734.8" y="584.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#5B4BC4" font-weight="700">DESC</text>
+<path d="M680.2 589 L684.1 591.6 L688.0 589 L691.9 591.6 L695.8 589 L699.7 591.6 L703.6 589 L707.5 591.6 L711.4 589 L715.3 591.6 L719.2 589 L723.1 591.6 L727.0 589" fill="none" stroke="#D6477A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="556.0" y="620.0" width="680.0" height="66.0" rx="8" fill="#FBE3EC" stroke="#F0B9CC" stroke-width="1"/>
+<text x="572.0" y="646.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#D6477A" font-weight="500">no such column: Revnue</text>
+<text x="572.0" y="670.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400">Did you mean Revenue?</text>
+<rect x="1106.0" y="632.0" width="114.0" height="30.0" rx="7" fill="#FFFFFF" stroke="#CFC8DC" stroke-width="1"/>
+<text x="1163.0" y="651.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="middle">Use Revenue</text>
+<text x="556.0" y="704.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500">In the sheet</text>
+<rect x="556.0" y="714.0" width="110.0" height="28.0" rx="0" fill="#FBE3EC" stroke="#D3CCBF" stroke-width="1"/>
+<text x="566.0" y="733.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#D6477A" font-weight="500">#SQL!</text>
+<text x="680.0" y="733.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">The cell shows #SQL!; hovering it shows the same message.</text>
+<text x="556.0" y="758.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">A table that disappears or a result over the row limit is reported the same way.</text>
+</svg>

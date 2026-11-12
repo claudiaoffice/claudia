@@ -60,6 +60,8 @@ class FakeLink implements LinkLike {
       case 'diagrams':
       case 'charts':
         return []
+      case 'names':
+        return { revision: null, names: [] }
       case 'palette':
         return { type: 'palette', roles: [], readings: [] }
       case 'styles':

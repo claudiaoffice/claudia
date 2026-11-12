@@ -132,6 +132,7 @@ function server(link: FakeLink) {
     resize_lines: () => ({ revision: 'main:4' }),
     diagrams: () => [],
     charts: () => [],
+    names: () => ({ revision: 'main:3', names: [] }),
   }
 }
 
@@ -872,5 +873,76 @@ describe('lines, and restoring with consent', () => {
     const session = new Session(() => link)
     await session.open()
     expect(session.state.notice?.text).toMatch(/ben restored to checkpoint “good”/i)
+  })
+})
+
+describe('names, tables and queries (E6.5)', () => {
+  const SALES = {
+    name: 'Sales',
+    scope: null,
+    kind: 'range',
+    header: true,
+    grows: true,
+    purpose: 'input',
+    column_purposes: [],
+    sheet: 's1',
+    sheet_name: 'Budget',
+    region: { sheet: 's1', row0: 0, col0: 0, row1: 3, col1: 2 },
+    a1: 'Budget!A1:C4',
+    anchor: null,
+    columns: [],
+    rows: 3,
+  }
+
+  it('loads the names with the document and loads them again when they change', async () => {
+    const { session, link } = await opened()
+    expect(session.state.names).toEqual([])
+    link.handlers.names = () => ({ revision: 'main:4', names: [SALES] })
+    link.push('names', { type: 'names' })
+    await session.settled()
+    expect(session.state.names.map((n) => n.name)).toEqual(['Sales'])
+  })
+
+  it('defines, renames and removes a name with the revision it saw', async () => {
+    const { session, link } = await opened()
+    link.handlers.define_name = () => ({ revision: 'main:4' })
+    link.handlers.rename_name = () => ({ revision: 'main:5' })
+    link.handlers.remove_name = () => ({ revision: 'main:6' })
+    const draft = { name: 'Sales', scope: null, range: SALES.region, header: true, grows: true, purpose: 'input' as const }
+    expect(await session.defineName(draft)).toBe(true)
+    expect(link.last('define_name')).toEqual({ definition: draft, base: 'main:3' })
+    expect(await session.renameName('Sales', 'Revenue', null)).toBe(true)
+    expect(link.last('rename_name')).toMatchObject({ old: 'Sales', new: 'Revenue', scope: null })
+    expect(await session.removeName('Revenue', null)).toBe(true)
+    expect(link.last('remove_name')).toMatchObject({ name: 'Revenue', scope: null })
+  })
+
+  it('says why a name was refused and answers false', async () => {
+    const { session, link } = await opened()
+    link.handlers.define_name = () => {
+      throw new ProtocolError('bad_request', 'define_name: B3 is a cell, not a name')
+    }
+    expect(await session.defineName({ name: 'B3', scope: null, header: false, grows: false, purpose: 'data' })).toBe(false)
+    expect(session.state.notice?.text).toMatch(/cell, not a name/)
+  })
+
+  it('previews a query and puts one into a cell', async () => {
+    const { session, link } = await opened()
+    link.handlers.sql_preview = () => ({ ok: true, columns: ['Region'], rows: [['North']], row_count: 1, ms: 0.4 })
+    link.handlers.define_sql = () => ({ revision: 'main:4' })
+    expect(await session.sqlPreview('SELECT Region FROM Sales', 's1')).toMatchObject({ ok: true, row_count: 1 })
+    expect(link.last('sql_preview')).toEqual({ query: 'SELECT Region FROM Sales', sheet: 's1', limit: 20 })
+    expect(await session.defineSql('s1', 5, 0, 'SELECT 1', 'ByRegion')).toBe(true)
+    expect(link.last('define_sql')).toEqual({ sheet: 's1', row: 5, col: 0, query: 'SELECT 1', name: 'ByRegion', base: 'main:3' })
+  })
+
+  it('asks again for the figure of a chart that reads a name when any cell changes', async () => {
+    const { session, link } = await opened()
+    link.handlers.chart_figure = () => ({ revision: 'main:3', figure: { data: [], layout: {} } })
+    link.push('diagram', { id: 'c1', definition: { format: 1, id: 'c1', kind: 'bar', source: 'Sales', source_scope: null } })
+    await session.ensureFigure('c1')
+    expect(session.figureOf('c1')).not.toBeNull()
+    link.push('cells', { sheet: 's2', positions: [[40, 40]], cells: [] })
+    expect(session.figureOf('c1')).toBeNull()
   })
 })

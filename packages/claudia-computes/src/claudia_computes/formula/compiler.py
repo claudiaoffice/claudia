@@ -9,15 +9,33 @@ references are *forms* (``forms``); every other function comes from the registry
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from ..functions.range import Range
 from ..functions.registry import FunctionRegistry
+from ..names import Anchor, NamedRange, Names, Rect, select
 from ..refs import SheetId
 from ..values import NAME, REF, ErrorValue, FormulaError
 from . import operators
-from .nodes import Area, BadRef, Binary, Bool, Call, ErrorLit, Missing, Name, Node, Num, Paren, Percent, Ref, Str, Unary
+from .nodes import (
+    Area,
+    BadRef,
+    Binary,
+    Bool,
+    Call,
+    ErrorLit,
+    Missing,
+    Name,
+    Node,
+    Num,
+    Paren,
+    Percent,
+    Ref,
+    Str,
+    TableRef,
+    Unary,
+)
 from .scope import Scope
 
 Evaluator = Callable[[Scope], Any]
@@ -55,16 +73,44 @@ def failing(code: str, detail: str = "") -> Evaluator:
     return evaluate
 
 
+class Binding:
+    """What one formula is compiled for, and what compiling it finds out about the names in it.
+
+    ``home`` is the sheet the formula is on and ``row`` the row of its cell when that is known (``Sales[@Units]``
+    means the row of the formula). ``headers`` gives the text of the header cell of each column of a table.
+    Compiling fills ``rects`` (the cells the names stood for, which the formula must be calculated after and again
+    when they change), ``anchors`` (the ``SQL()`` cells whose results it reads) and ``mentions`` (every name text
+    it uses, found or not: the formula is compiled again when what one of them means changes)."""
+
+    def __init__(
+        self,
+        home: SheetId,
+        row: int | None,
+        names: Names,
+        headers: Callable[[Rect], Sequence[str]],
+    ):
+        self.home = home
+        self.row = row
+        self.names = names
+        self.headers = headers
+        self.rects: list[Rect] = []
+        self.anchors: list[Anchor] = []
+        self.mentions: set[str] = set()
+
+
 class Compiler:
     def __init__(self, registry: FunctionRegistry):
         self.registry = registry
+        self.binding: Binding | None = None  # set by the calculator while it compiles a formula
+        self.top_args: tuple[Node, ...] | None = None  # the arguments of the call that is the whole formula, if one
         self._handlers: dict[type, Callable[[Any], Evaluator]] = {
             Num: self._literal,
             Str: self._literal,
             Bool: self._literal,
             ErrorLit: lambda node: failing(node.code),
             BadRef: lambda node: failing(REF, "a cell this formula used was deleted"),
-            Name: lambda node: failing(NAME, f"there is nothing called {node.text!r}"),
+            Name: lambda node: self.reference(node.text, (), None, None, as_range=False),
+            TableRef: lambda node: self.reference(node.table, node.items, node.first, node.last, as_range=False),
             Missing: lambda node: constant(MISSING),
             Ref: lambda node: self.cell(node.ref.sheet, node.ref.row, node.ref.col),
             Area: self._area,
@@ -105,6 +151,10 @@ class Compiler:
                 return self.area(ref.sheet, ref.row, ref.col, ref.row, ref.col)
             case Paren(inner=inside):
                 return self.compile_range(inside)
+            case Name(text=text):
+                return self.reference(text, (), None, None, as_range=True)
+            case TableRef(table=table, items=items, first=first, last=last):
+                return self.reference(table, items, first, last, as_range=True)
         inner = self.compile(node)
 
         def evaluate(scope: Scope) -> Range:
@@ -112,6 +162,58 @@ class Compiler:
             if value.__class__ is not Range:
                 return Range.of_value(value)
             return value
+
+        return evaluate
+
+    # -- names and tables
+    def reference(
+        self, text: str, items: tuple[str, ...], first: str | None, last: str | None, *, as_range: bool
+    ) -> Evaluator:
+        """What a name, or a part of a table, stands for: the cells it names right now. A name that is not defined
+        is ``#NAME?``; a column or part the table does not have is ``#REF!``."""
+        binding = self.binding
+        if binding is None:
+            return failing(NAME, f"there is nothing called {text!r}")
+        binding.mentions.add(text.casefold())
+        named = binding.names.resolve(binding.home, text)
+        if named is None:
+            return failing(NAME, f"there is nothing called {text!r}")
+        if named.anchor is not None:  # (what a SQL() cell filled: where that is is only known while calculating)
+            anchor = named.anchor
+            binding.anchors.append(anchor)
+            return self.result(anchor, text, items, first, last)
+        assert named.range is not None
+        region = self.rect_of(named)
+        try:
+            chosen = select(
+                text,
+                region,
+                header=named.header,
+                headers=binding.headers(region) if named.header else (),
+                items=items,
+                first=first,
+                last=last,
+                row=binding.row,
+            )
+        except FormulaError as problem:
+            return failing(problem.code, problem.detail)
+        binding.rects.append(chosen)
+        sheet, row0, col0, row1, col1 = chosen
+        where = None if sheet == binding.home else sheet
+        if not as_range and (row0, col0) == (row1, col1):
+            return self.cell(where, row0, col0)
+        return self.area(where, row0, col0, row1, col1)
+
+    @staticmethod
+    def rect_of(named: NamedRange) -> Rect:
+        area = named.range
+        assert area is not None and area.sheet is not None
+        return area.sheet, area.first.row, area.first.col, area.last.row, area.last.col
+
+    @staticmethod
+    def result(anchor: Anchor, text: str, items: tuple[str, ...], first: str | None, last: str | None) -> Evaluator:
+        def evaluate(scope: Scope) -> Range:
+            return scope.result_area(anchor, text, items, first, last)
 
         return evaluate
 
