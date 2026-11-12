@@ -3,6 +3,20 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.2.0] - 2026-11-11
+
+A question can take several rounds: the model looks, acts, is told what came of it, and carries on (E7.5).
+
+### Added
+- `ToolSpec.kind` (`"change"` by default, or `"look"` for a request that only reads), `Request.exchange` (the messages
+  of the question after the person's text, in the rounds so far) and `Turn.raw` (exactly what the model wrote, to send
+  back to it in the next round).
+
+### Changed
+- The prompt keeps requests that look apart from requests that change, says that the server sends back what came of the
+  requests and that an answer without a `commands` block is the final one, and that what the document holds is data,
+  never instructions. A model with only looking requests is told it cannot change the document.
+
 ## [0.1.0] - 2026-11-10
 
 The first version under the versioning policy. Until now the package had a placeholder version (0.0.1), no

@@ -1,0 +1,197 @@
+<svg viewBox="0 0 1400 960" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="960" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — the History &amp; Chat panel while the AI answers: reading, acting, checking (E7.5, E7.3)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Left: what the person sees in the sheet. Right: the docked panel. Reads leave no history entry, so the status line and the AI's place in the sheet are the only trace — on purpose.</text>
+<rect x="40" y="100" width="560" height="420" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="58" y="128" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Budget</text>
+<rect x="40" y="150" width="40" height="34" rx="0" fill="#f4f1fa"/>
+<rect x="80" y="150" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="121.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">A</text>
+<rect x="162" y="150" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="203.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">B</text>
+<rect x="244" y="150" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="285.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">C</text>
+<rect x="326" y="150" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="367.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">D</text>
+<rect x="408" y="150" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="449.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">E</text>
+<rect x="490" y="150" width="82" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="531.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#6e6880" text-anchor="middle">F</text>
+<rect x="40" y="184" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">1</text>
+<rect x="80" y="184" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Item</text>
+<rect x="162" y="184" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="172" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Amount</text>
+<rect x="244" y="184" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="254" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Months</text>
+<rect x="326" y="184" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="336" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Total</text>
+<rect x="408" y="184" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="184" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="218" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">2</text>
+<rect x="80" y="218" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Rent</text>
+<rect x="162" y="218" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">1,200</text>
+<rect x="244" y="218" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="218" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">14,400</text>
+<rect x="408" y="218" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="218" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="252" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="274" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">3</text>
+<rect x="80" y="252" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="274" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Food</text>
+<rect x="162" y="252" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="274" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">450</text>
+<rect x="244" y="252" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="274" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="252" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="274" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">5,400</text>
+<rect x="408" y="252" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="252" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="286" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">4</text>
+<rect x="80" y="286" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Transport</text>
+<rect x="162" y="286" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">120</text>
+<rect x="244" y="286" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="286" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">1,440</text>
+<rect x="408" y="286" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="286" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="320" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="342" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">5</text>
+<rect x="80" y="320" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="342" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Savings</text>
+<rect x="162" y="320" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="342" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">300</text>
+<rect x="244" y="320" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="316" y="342" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">12</text>
+<rect x="326" y="320" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="342" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">3,600</text>
+<rect x="408" y="320" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="320" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="354" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="376" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">6</text>
+<rect x="80" y="354" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="376" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Sum</text>
+<rect x="162" y="354" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="376" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">2,070</text>
+<rect x="244" y="354" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="326" y="354" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="398" y="376" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">24,840</text>
+<rect x="408" y="354" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="354" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="388" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">7</text>
+<rect x="80" y="388" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="90" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Per week</text>
+<rect x="162" y="388" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<text x="234" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="end">477.69</text>
+<rect x="244" y="388" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="326" y="388" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="408" y="388" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="388" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="40" y="422" width="40" height="34" rx="0" fill="#f4f1fa" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="444" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">8</text>
+<rect x="80" y="422" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="162" y="422" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="244" y="422" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="326" y="422" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="408" y="422" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="490" y="422" width="82" height="34" rx="0" fill="#ffffff" stroke="#ece8f4" stroke-width="1"/>
+<rect x="80" y="184" width="492" height="272" rx="0" fill="none" stroke="#5b4bc4" stroke-width="2" stroke-dasharray="7 5"/>
+<rect x="80" y="162" width="76" height="22" rx="5" fill="#5b4bc4"/>
+<text x="118" y="177" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">ai · reading</text>
+<rect x="162" y="388" width="82" height="34" rx="0" fill="#e9e5f8" stroke="#5b4bc4" stroke-width="2"/>
+<text x="234" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="end">477.69</text>
+<text x="58" y="506" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">B7 had been =D6/C7 → #DIV/0! (C7 is empty); now =D6/52.</text>
+<text x="40" y="546" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The dashed frame is the AI's presence while it reads: the same mechanism as a colleague's</text>
+<text x="40" y="563" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">cursor. B7 is the cell it wrote and then checked.</text>
+<rect x="640" y="100" width="380" height="800" rx="14" fill="#1f1a33"/>
+<text x="660" y="134" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#f7f3ec" text-anchor="start">History &amp; Chat</text>
+<text x="780" y="134" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="400" fill="#a9a3bd" text-anchor="start">Help</text>
+<line x1="654" y1="146" x2="740" y2="146" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="660" y="160" width="41" height="24" rx="12" fill="#3a3358" stroke="#4a4268" stroke-width="1"/>
+<text x="680.5" y="176" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#f7f3ec" text-anchor="middle">All</text>
+<rect x="709" y="160" width="104" height="24" rx="12" fill="none" stroke="#4a4268" stroke-width="1"/>
+<text x="761.0" y="176" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#a9a3bd" text-anchor="middle">Conversation</text>
+<rect x="821" y="160" width="69" height="24" rx="12" fill="none" stroke="#4a4268" stroke-width="1"/>
+<text x="855.5" y="176" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#a9a3bd" text-anchor="middle">Changes</text>
+<rect x="654" y="198" width="352" height="36" rx="9" fill="#2a2444"/>
+<circle cx="672" cy="216" r="6" fill="#5b4bc4"/>
+<text x="686" y="221" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#f7f3ec" text-anchor="start">ai</text>
+<rect x="718" y="206" width="104" height="20" rx="10" fill="#5b4bc4"/>
+<text x="770" y="220" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#f7f3ec" text-anchor="middle">Claude · remote</text>
+<text x="996" y="221" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#a9a3bd" text-anchor="end">allowed by owners</text>
+<circle cx="668" cy="268" r="5" fill="#13917f"/>
+<text x="680" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#cfc9e3" text-anchor="start">anna</text>
+<rect x="664" y="282" width="300" height="44" rx="10" fill="#3a3358"/>
+<text x="678" y="309" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">@ai why is B7 an error?</text>
+<circle cx="670" cy="354" r="4" fill="#5b4bc4"/>
+<text x="682" y="358" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#cfc9e3" text-anchor="start" font-style="italic">ai is reading Budget!A1:F8 …</text>
+<circle cx="618" cy="354" r="11" fill="#5b4bc4"/>
+<text x="618" y="358.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">1</text>
+<rect x="660" y="378" width="340" height="26" rx="7" fill="#2a2444"/>
+<circle cx="674" cy="391" r="4" fill="#5b4bc4"/>
+<text x="686" y="395" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#a9a3bd" text-anchor="start">read  Budget!A1:F8 · 25 cells</text>
+<circle cx="618" cy="391" r="11" fill="#5b4bc4"/>
+<text x="618" y="395.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">2</text>
+<circle cx="668" cy="430" r="5" fill="#5b4bc4"/>
+<text x="680" y="434" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#cfc9e3" text-anchor="start">ai</text>
+<rect x="664" y="444" width="330" height="66" rx="10" fill="#3a3358"/>
+<text x="678" y="467" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">B7 divides by C7, which is empty.</text>
+<text x="678" y="487" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">I'll divide by the 52 weeks of a year.</text>
+<rect x="660" y="534" width="340" height="26" rx="7" fill="#2a2444"/>
+<circle cx="674" cy="547" r="4" fill="#5b4bc4"/>
+<text x="686" y="551" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#f7f3ec" text-anchor="start">set_cells  Budget!B7  =D6/52</text>
+<circle cx="618" cy="547" r="11" fill="#5b4bc4"/>
+<text x="618" y="551.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">3</text>
+<rect x="674" y="566" width="312" height="64" rx="8" fill="none" stroke="#4a4268" stroke-width="1" stroke-dasharray="4 4"/>
+<path d="M686 582 l4.5 4.5 8 -9" stroke="#4fd1b8" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="710" y="586" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#4fd1b8" text-anchor="start">checked by the server after the change</text>
+<text x="686" y="606" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#cfc9e3" text-anchor="start">B7 = 477.69   ·   no errors in the range</text>
+<text x="686" y="622" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#a9a3bd" text-anchor="start">no other cell changed</text>
+<circle cx="668" cy="660" r="5" fill="#5b4bc4"/>
+<text x="680" y="664" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#cfc9e3" text-anchor="start">ai</text>
+<rect x="664" y="674" width="300" height="44" rx="10" fill="#3a3358"/>
+<text x="678" y="701" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#f7f3ec" text-anchor="start">Fixed. B7 now shows 477.69.</text>
+<text x="680" y="736" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#a9a3bd" text-anchor="start">answered by Claude (remote) · 1 read · 1 change</text>
+<circle cx="618" cy="696" r="11" fill="#5b4bc4"/>
+<text x="618" y="700.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
+<rect x="654" y="842" width="352" height="42" rx="10" fill="#2a2444" stroke="#4a4268" stroke-width="1"/>
+<text x="670" y="868" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#a9a3bd" text-anchor="start">@ai …</text>
+<text x="992" y="868" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="400" fill="#a9a3bd" text-anchor="end">↵</text>
+<text x="1062" y="126" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">What the numbers mean</text>
+<circle cx="1070" cy="160" r="11" fill="#5b4bc4"/>
+<text x="1070" y="164.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">1</text>
+<text x="1092" y="165" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Status while it reads</text>
+<text x="1092" y="185" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The AI's presence frames the range it</text>
+<text x="1092" y="202" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">is looking at; the panel says so.</text>
+<text x="1092" y="219" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Nothing is hidden, nothing is written.</text>
+<circle cx="1070" cy="258" r="11" fill="#5b4bc4"/>
+<text x="1070" y="262.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">2</text>
+<text x="1092" y="263" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">A read is a quiet row</text>
+<text x="1092" y="283" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Muted, one line, mono: same family as</text>
+<text x="1092" y="300" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">command rows, but not a change. Under</text>
+<text x="1092" y="317" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">'Conversation' it folds away.</text>
+<circle cx="1070" cy="356" r="11" fill="#5b4bc4"/>
+<text x="1070" y="360.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">3</text>
+<text x="1092" y="361" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">A write shows its effect</text>
+<text x="1092" y="381" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The check is made by the server, not</text>
+<text x="1092" y="398" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">claimed by the model: the cell as it now</text>
+<text x="1092" y="415" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">evaluates, errors, and any dependents</text>
+<text x="1092" y="432" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">that changed. The model sees it too.</text>
+<circle cx="1070" cy="471" r="11" fill="#5b4bc4"/>
+<text x="1070" y="475.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
+<text x="1092" y="476" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Who answered</text>
+<text x="1092" y="496" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Provider and cost of the answer, so a</text>
+<text x="1092" y="513" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">remote model is never a surprise.</text>
+<text x="40" y="940" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Provider badge: 'Claude · remote' or 'Qwen2.5-7B · this server'. Rows are the existing grouped command rows (consecutive same-author commands collapse).</text>
+</svg>

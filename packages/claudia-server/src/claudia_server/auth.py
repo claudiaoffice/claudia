@@ -31,6 +31,7 @@ from typing import Protocol, runtime_checkable
 
 ROLES = ("owner", "editor", "viewer")
 WRITE_ROLES = ("owner", "editor")
+_RANK = {"viewer": 0, "editor": 1, "owner": 2}
 MIN_PASSWORD = 8
 AI_USER = "ai"  # the assistant's name in every document: nobody else may use it
 AI_COLOR = "#5b4bc4"  # Iris, the colour of the assistant everywhere
@@ -92,6 +93,21 @@ class Account:
         means no limit beyond the role and is for tests that are not about this boundary."""
         names = None if allowed_methods is None else frozenset(allowed_methods)
         return cls(AI_USER, "editor", system=True, allowed_methods=names)
+
+    def acting_for(self, asker_role: str, writes: Iterable[str] | None) -> Account:
+        """The account this one works under for one request (D261): never stronger than the person who asked.
+
+        The role is the weaker of this account's and the asker's (so the AI is never an owner, and never an editor
+        for a viewer), and the methods it may write through are the ones of its own allow-list that ``writes`` also
+        names (``writes=None`` adds no limit). An account with no allow-list of its own (``None``) takes ``writes``
+        as it is."""
+        weaker = self.role if _RANK[self.role] <= _RANK[asker_role] else asker_role
+        if writes is None:
+            allowed = self.allowed_methods
+        else:
+            names = frozenset(writes)
+            allowed = names if self.allowed_methods is None else self.allowed_methods & names
+        return Account(self.user, weaker, system=self.system, allowed_methods=allowed)
 
 
 class UserDirectory(Protocol):
