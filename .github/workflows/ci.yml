@@ -16,7 +16,10 @@ env:
 
 jobs:
   # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, i18n extraction, pytest with coverage floors,
-  # Sphinx with warnings as errors, performance guards.
+  # Sphinx with warnings as errors, performance guards, and `npm audit` of every package-lock.json (SEC-08). The audit
+  # runs here on every push and in the weekly run, so a new advisory turns this job red even when nobody pushed. It
+  # asks the npm registry; an unreachable registry is a skip, which --ci fails (PROC-02): re-run the job. An advisory
+  # that cannot be fixed is recorded with its reason in pyproject.toml (`[[tool.claudia.npm-audit-allow]]`).
   python:
     name: Python (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

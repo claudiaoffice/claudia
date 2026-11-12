@@ -22,6 +22,13 @@ computes
 .. autoclass:: claudia_computes.ChartError
 .. autoclass:: claudia_computes.AddChart
 .. autoclass:: claudia_computes.RemoveChart
+.. autoclass:: claudia_computes.NamedRange
+.. autoclass:: claudia_computes.Names
+.. autoclass:: claudia_computes.DefineName
+.. autoclass:: claudia_computes.RenameName
+.. autoclass:: claudia_computes.RemoveName
+.. autoclass:: claudia_computes.RestoreNames
+.. autoclass:: claudia_computes.spill.Table
 
 ``SheetObject`` is ``VisualObject[CellAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor.
 The object commands, region and events are shared by all three apps (:doc:`claudia_core`, E10.16, D177).

@@ -22,6 +22,7 @@ Unused numbers in a closed block stay unused.
 | D251–D260 | E5.11 macOS client: three apps, command line, server flow (branch `macos-client-complete`) | 2026-11-10 | open |
 | D281–D290 | *free — next branch or agent to ask* | | open |
 | D261–D280 | *free* | | open |
+| D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D315 used) | 2026-11-10 | open |
 
 ## Never to be used

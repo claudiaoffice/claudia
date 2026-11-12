@@ -51,6 +51,21 @@ class Name:
 
 
 @dataclass(frozen=True, slots=True)
+class TableRef:
+    """A structured reference, as Excel writes it: ``Sales[Amount]``, ``Sales[@[Unit price]]``, ``Sales[#Headers]``.
+
+    ``items`` are the parts of the table asked for (``"#Headers"``, ``"#Data"``, ``"#All"``, ``"#This Row"``;
+    none means the data rows), ``first`` and ``last`` the columns (``last`` only for a span ``[[A]:[B]]``; none at
+    all means every column). Which cells that is depends on the table's definition in the workbook, so the tree
+    only says what was typed (E6.5)."""
+
+    table: str
+    items: tuple[str, ...] = ()
+    first: str | None = None
+    last: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class Missing:
     """An argument left out: ``IF(A1,,2)``."""
 
@@ -84,7 +99,23 @@ class Call:
     args: tuple[Node, ...]
 
 
-Node = Num | Str | Bool | ErrorLit | Ref | Area | BadRef | Name | Missing | Unary | Percent | Binary | Paren | Call
+Node = (
+    Num
+    | Str
+    | Bool
+    | ErrorLit
+    | Ref
+    | Area
+    | BadRef
+    | Name
+    | TableRef
+    | Missing
+    | Unary
+    | Percent
+    | Binary
+    | Paren
+    | Call
+)
 
 
 def children(node: Node) -> tuple[Node, ...]:

@@ -3,6 +3,25 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.2.0] - 2026-11-11
+
+Names, tables and `SQL()` (D600–D609).
+
+### Added
+- Names: `DefineName`, `RenameName`, `RemoveName` commands (with `RestoreNames`, their shared inverse); a name is a
+  region (`CellRegion`) or a `SQL()` anchor, with an optional header, growth with its last row, a purpose per table
+  and per column, and a workbook or sheet scope. The registry is `WorkbookModel.names`; `{"type": "names"}` events
+  announce changes.
+- Excel structured references in formulas: `Sales[Amount]`, `Sales[[#Headers],[Amount]]`, quoted identifiers.
+- `SQL(query)`: the first spilling function — SQLite in memory, read-only, one statement, a 1 s limit and 100,000
+  rows; its result is a table that can be named. New errors `#SQL!` and `#SPILL!`.
+- `ChartSpec.source` and `source_scope`: a chart may read a named table instead of a range (exactly one of the two).
+- Spilled cells are returned by `Sheet.view` with `"spill": true` and `"from": [row, col]`.
+
+### Changed
+- **Breaking:** `ChartSpec.range` is optional; code that read it unconditionally must check `source` too.
+- `Sheet` and `WorkbookModel` gained the members the snapshot lists; see `tests/api/claudia_computes.json`.
+
 ## [0.1.0] - 2026-11-10
 
 The first version under the versioning policy. Until now the package had a placeholder version (0.0.1), no

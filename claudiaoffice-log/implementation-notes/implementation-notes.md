@@ -82,3 +82,30 @@ the dragged (anchor) line's own border — the mockups also show dashed/solid gu
 line's border moving as you drag. The resize itself is fully proportional regardless; only that secondary live
 preview for the *other* lines' borders during the drag was cut for scope. A reasonable follow-up, not a correctness
 gap.
+
+## Names, tables and SQL() (E6.5, E4.9, D600–D609)
+
+Delivered as a patch against `named-ranges-sql`. A name and a table are one thing: a region (`CellRegion`, so it moves
+with structure edits) or a `SQL()` anchor, with an optional header. Excel notation (`Sales[Amount]`) is compiled to
+the name, bound when the formula is compiled (D602). Built, in `packages/claudia-computes/src/claudia_computes/`:
+`names.py` (the registry, keyed by sheet or workbook and case-folded name), `name_commands.py` (`DefineName`,
+`RenameName`, `RemoveName` and their shared inverse `RestoreNames`), `sql.py` (SQLite in memory with an authorizer, 1 s
+and 100,000 rows), `spill.py`, `formula/tablespec.py` (the bracket part of a reference) and `charts.py` (a chart's
+`source`). The server methods are in `packages/claudia-server/src/claudia_server/computes.py`; the web half is
+`web/app/lib/names.ts`, `web/app/lib/sql.ts`, `web/app/components/SqlEditor.vue`, `NamesDialog.vue`,
+`NameDefinePopover.vue`, `TableMenu.vue` and `ResultNote.vue`. Mocks: `claudiaoffice-log/notes/mockups/`.
+
+Tests: `packages/claudia-computes/tests/test_names.py`, `test_sql.py`, `test_formula_tablerefs.py`,
+`test_chart_sources.py`, `packages/claudia-server/tests/test_server_names.py`, `web/tests/names.test.ts`,
+`web/tests/sql.test.ts`. The web client was also driven in real Chrome against a real server: define a name, sum a
+column, grow a table, change a purpose, run and apply a query, the `#SQL!` fix, the `#SPILL!` note and a chart from a
+name.
+
+Found on the way: a Popover that prevents the default of mouse-down also stopped labels activating their input in
+Chrome (D608); `\w` in a JavaScript regular expression is not Unicode-aware, so name checks use `\p{L}`.
+
+Not done, and said so rather than hidden: typing over a table header does not rewrite formulas that name the column
+(D602); renaming a name does not rewrite chart sources (D609); "Copy as values" copies text and does not convert the
+cells to constants; "Move result…" from the `#SPILL!` mock; Tools ▸ Names… and SQL query… are not in the GTK, macOS
+and Windows menu manifests (nothing yet forces parity, as for `edit.chart`); the AI cannot call the new methods; SQL
+does not yet run in a worker; user functions are not SQL aggregates.

@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- computes: `names`, `define_name`, `rename_name`, `remove_name`, `sql_preview`, `define_sql` (D600–D609), and a pushed
+  `names` event; `diagrams`/`define_diagram` accept a chart that reads a named `source`. They are not yet in the AI's allow-list.
+
 ### Changed
 - The built web app is served with `Cache-Control` (D248): pages and every file not named by its content are
   revalidated on each load (`no-cache`, a cheap `304` when nothing changed), the content-hashed files under `_nuxt/`
