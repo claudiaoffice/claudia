@@ -60,8 +60,20 @@ def test_every_answer_carries_the_headers(client, path):
 
 def test_only_the_start_pages_own_inline_scripts_may_run(client):
     rules = directives(client.get("/"))
-    assert rules["script-src"].split() == ["'self'", *sorted((sha(CONFIG), sha(IMPORT_MAP)))]
+    assert rules["script-src"].split() == ["'self'", "'wasm-unsafe-eval'", *sorted((sha(CONFIG), sha(IMPORT_MAP)))]
     assert "'unsafe-inline'" not in rules["script-src"] and "'unsafe-eval'" not in rules["script-src"]
+
+
+def test_webassembly_may_be_compiled_but_no_javascript_evaluated(client):
+    """The layout library compiles HarfBuzz from bytes it fetched from this server (D903); `'wasm-unsafe-eval'`
+    allows exactly that and no `eval()` of JavaScript, which only `'unsafe-eval'` would."""
+    rules = directives(client.get("/"))
+    assert "'wasm-unsafe-eval'" in rules["script-src"].split()
+
+
+def test_frames_show_only_this_server_and_documents_the_page_made_itself(client):
+    """The print preview hands its PDF to the browser in a frame of a `blob:` address it made (D906)."""
+    assert directives(client.get("/"))["frame-src"] == "'self' blob:"
 
 
 def test_connections_go_to_this_server_and_its_websocket_only(client):
@@ -91,7 +103,7 @@ def test_without_a_web_app_the_landing_page_is_covered_too():
     app = create_app(Hub(MemoryProvider(ListModel)), ScryptDirectory(cost=2**4))
     with TestClient(app) as c:
         rules = directives(c.get("/"))
-    assert rules["script-src"] == "'self'"
+    assert rules["script-src"] == "'self' 'wasm-unsafe-eval'"
     assert rules["frame-ancestors"] == FRAME_ANCESTORS
 
 

@@ -37,6 +37,7 @@ from claudia_core import (
 )
 
 from .anchors import BlockAnchor
+from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
 
@@ -249,7 +250,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     app: ClassVar[str] = "composes"
     # 4: a text also carries objects, images and shapes (E10.16)
     # 5: the text carries its own colour palette (D200)
-    state_schema: ClassVar[int] = 5
+    # 6: the text says which page it is printed on (D904)
+    state_schema: ClassVar[int] = 6
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -257,6 +259,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         blocks: list[Block] | None = None,
         styles: StyleBook | None = None,
         palette: Palette | None = None,
+        page: PageSetup | None = None,
     ):
         super().__init__()
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
@@ -264,6 +267,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         #: The colours of this document, by what they mean. Part of the document, so it looks the same on
         #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
         self.palette: Palette = palette if palette is not None else builtin_palette()
+        #: The page the text is laid out on for the print preview and PDF (D904); laid out in the client (D901).
+        self.page: PageSetup = page if page is not None else PageSetup()
         self.suggestions: dict[str, Suggestion] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
         for block in self.blocks:
@@ -281,6 +286,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "blocks": [b.to_data() for b in self.blocks],
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
+            "page": self.page.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
@@ -298,7 +304,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         styles = StyleBook.from_data(state["styles"]) if "styles" in state else None  # schema 2 had the built-in ones
         blocks = [Block(b["id"], b["style"], b["text"], tuple(runs_from_data(b["runs"]))) for b in raw]
         palette = Palette.from_data(state["palette"]) if "palette" in state else None  # schema 4 and earlier
-        model = cls(blocks, styles, palette)
+        page = PageSetup.from_data(state["page"]) if "page" in state else None  # schema 5 and earlier: A4
+        model = cls(blocks, styles, palette, page)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects

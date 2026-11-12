@@ -3,6 +3,9 @@
 Every HTTP answer gets
 
 * ``Content-Security-Policy``: scripts only from this server (and the start page's own inline scripts, by hash),
+  WebAssembly compiled from bytes the page fetched from this server (``'wasm-unsafe-eval'``: the layout library's
+  HarfBuzz, D903; it allows no JavaScript ``eval``), frames only of this server's pages and of ``blob:`` documents
+  the page made itself (the PDF handed to the browser's print dialog, D906),
   connections only to this server and its WebSocket, no plugins, no ``<base>``, and **framing** only by this server
   itself or by a page on this computer (``http://127.0.0.1:*``, ``http://localhost:*``): the Windows and macOS
   desktop clients show the web app in a frame of their own local shell page (D251), and any other site that frames a
@@ -78,7 +81,7 @@ def content_security_policy(host: str, script_hashes: Iterable[str] = ()) -> str
     """The policy for a page that was asked for under ``host`` (``name`` or ``name:port``). Anything in ``host`` that
     is not part of a host name, an IPv6 literal or a port is dropped, so it cannot add a directive."""
     host = re.sub(r"[^A-Za-z0-9.\-:\[\]]", "", host)
-    scripts = " ".join(("'self'", *script_hashes))
+    scripts = " ".join(("'self'", "'wasm-unsafe-eval'", *script_hashes))
     return "; ".join(
         (
             "default-src 'self'",
@@ -88,6 +91,7 @@ def content_security_policy(host: str, script_hashes: Iterable[str] = ()) -> str
             "font-src 'self' data:",
             f"connect-src 'self' ws://{host} wss://{host}" if host else "connect-src 'self'",
             "worker-src 'self' blob:",
+            "frame-src 'self' blob:",
             "object-src 'none'",
             "base-uri 'none'",
             "form-action 'self'",

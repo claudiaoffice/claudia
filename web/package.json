@@ -4,7 +4,9 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
+    "predev": "node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
     "dev": "nuxt dev",
+    "prebuild": "node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
     "build": "nuxt generate",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
@@ -19,9 +21,11 @@
     "e2e:styling": "node e2e/styling.cjs",
     "e2e:recovery": "node e2e/recovery.cjs",
     "e2e:macos-shell": "node e2e/macos-shell.cjs",
-    "e2e:windows-shell": "node e2e/windows-shell.cjs"
+    "e2e:windows-shell": "node e2e/windows-shell.cjs",
+    "e2e:print": "node e2e/print.cjs"
   },
   "dependencies": {
+    "@claudia/layout": "file:../layout",
     "nuxt": "^4.6.4",
     "plotly.js-dist-min": "^4.2.0",
     "vue": "^3.5.0"

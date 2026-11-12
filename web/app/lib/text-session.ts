@@ -23,6 +23,7 @@ import {
   type TextEvent,
 } from './blocks'
 import type { PaletteEvent, StyleModel } from './objects'
+import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
@@ -62,6 +63,21 @@ export interface TextState extends BaseState {
   pending: Unwritten | null
   /** On its way to the server. */
   sending: Unwritten | null
+  /** The page the text is printed on (D904); `null` until loaded or for a server that does not know pages. */
+  page: PageSetupData | null
+}
+
+/** An image of the text as the server sends it (`images`): base64 data. */
+export interface TextImage {
+  id: string
+  format: string
+  data: string
+}
+/** What the print preview needs beyond the paragraphs: the floating objects and what they are drawn with (D907). */
+export interface PrintExtras {
+  objects: TextObject[]
+  shapes: ShapeOutline[]
+  images: TextImage[]
 }
 
 export const IDLE_FLUSH_MS = 700
@@ -83,7 +99,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null, page: null })
   }
 
   get readOnly(): boolean {
@@ -93,13 +109,16 @@ export class TextSession extends BaseSession<TextState> {
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions, palette, styleModel] = await Promise.all([
+    const [answer, suggestions, palette, styleModel, page] = await Promise.all([
       link.request<{ styles: StyleView[]; blocks: Block[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
       link.request<StyleModel>('style_model'),
+      // an older server has no pages: the preview then starts from A4 and cannot store a change
+      link.request<PageSetupData>('page').catch(() => null),
     ])
     const s = this.state
+    s.page = page
     s.styles = answer.styles
     s.palette = palette
     s.styleModel = styleModel
@@ -163,6 +182,9 @@ export class TextSession extends BaseSession<TextState> {
       }
       case 'styles':
         s.styles = data.styles as StyleView[]
+        return true
+      case 'page':
+        s.page = data.setup as PageSetupData
         return true
       case 'palette':
         // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls
@@ -461,6 +483,23 @@ export class TextSession extends BaseSession<TextState> {
       }
       return true
     })
+  }
+
+  /** Lay the text out on another page (D904): one step in the history, for everybody. */
+  setPage(setup: PageSetupData): Promise<boolean> | undefined {
+    if (this.denied()) return undefined
+    return this.act(async () => (await this.attempt('set_page', { setup, base: this.state.revision })) !== false)
+  }
+
+  /** The floating objects, their outlines and their images, for printing (D907). Read when the preview opens. */
+  async printExtras(): Promise<PrintExtras> {
+    const link = this.need()
+    const [objects, shapes, images] = await Promise.all([
+      link.request<{ objects: TextObject[] }>('objects').then((a) => a.objects).catch(() => []),
+      link.request<ShapeOutline[]>('shapes').catch(() => []),
+      link.request<TextImage[]>('images').catch(() => []),
+    ])
+    return { objects, shapes, images }
   }
 
   /** The style of the paragraph the caret is in. */

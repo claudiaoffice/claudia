@@ -65,6 +65,17 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
     expect(calls).toEqual(['leave:fresh', 'leave', 'save', 'open:checkpoint', 'open:export', 'open:export-format', 'leave'])
   })
 
+  it('has Print… after Download only in an app that can print (composes, D906), with its shortcut', () => {
+    const { c, calls } = context()
+    const printing = fileMenu({ ...c, print: () => calls.push('print') })
+    expect(ids(printing.items)).toEqual(['file.new', 'file.open', 'file.save', 'file.save-as', 'file.download', 'file.print', 'file.manage', 'file.close'])
+    const print = byId(printing.items, 'file.print')
+    expect([print.label, print.hint]).toEqual(['Print…', 'Ctrl+P'])
+    print.action!()
+    expect(calls).toEqual(['print'])
+    expect(ids(fileMenu(c).items)).not.toContain('file.print')
+  })
+
   it('shows the save shortcut the window really listens for', () => {
     expect(byId(fileMenu(context().c).items, 'file.save').hint).toBe(SHARED_HINTS['file.save'])
     expect(SHARED_HINTS).toEqual({ 'edit.undo': 'Ctrl+Z', 'edit.redo': 'Ctrl+Shift+Z', 'file.save': 'Ctrl+S' })

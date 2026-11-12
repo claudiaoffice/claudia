@@ -2,7 +2,8 @@
 
 model      TextModel, TextObject: paragraphs, authorship, open suggestions, styles, and floating objects (E10.16)
 anchors    BlockAnchor: where an object hangs in a text, and why it follows the text where a sheet's is frozen
-commands   InsertText, DeleteText, SplitBlock, JoinBlocks, SetStyle and the suggestion commands (D63)
+commands   InsertText, DeleteText, SplitBlock, JoinBlocks, SetStyle, SetPageSetup and the suggestion commands (D63)
+page       PageSetup: the paper, orientation, margins and page numbers a text is printed with (D904)
 region     TextRange, and ``word_window``: the ± n words zone around a cursor (D11)
 runs       authorship runs (E9.10), kept by the commands so that the log alone rebuilds them
 events     what a client that holds the paragraphs needs to follow them
@@ -41,6 +42,7 @@ from .commands import (
     JoinBlocks,
     ProposeSuggestion,
     ResolveSuggestion,
+    SetPageSetup,
     SetStyle,
     SplitBlock,
 )
@@ -54,6 +56,7 @@ from .model import (
     builtin_styles,
     next_style,
 )
+from .page import PAPERS, PageSetup, PageSetupError
 from .region import TextRange, word_window
 from .spans import TextCommand
 
@@ -77,6 +80,9 @@ __all__ = [
     "next_style",
     "ObjectBody",
     "ObjectSet",
+    "PageSetup",
+    "PageSetupError",
+    "PAPERS",
     "Paragraph",
     "paragraph_for",
     "ProposeSuggestion",
@@ -85,6 +91,7 @@ __all__ = [
     "ResolveSuggestion",
     "RotateObject",
     "Run",
+    "SetPageSetup",
     "SetParagraphStyle",
     "SetSnap",
     "SetStyle",

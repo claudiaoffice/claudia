@@ -13,8 +13,9 @@ from typing import ClassVar
 
 from claudia_core import Batch, Command, Context, Region
 
-from .events import BlocksJoined, BlockSplit, StyleChanged, SuggestionsChanged, TextChanged
+from .events import BlocksJoined, BlockSplit, PageSetupChanged, StyleChanged, SuggestionsChanged, TextChanged
 from .model import Suggestion, TextModel
+from .page import PageSetup
 from .region import TextRange
 from .runs import Run, runs_from_data, runs_to_data
 from .spans import Span, TextCommand
@@ -323,6 +324,38 @@ class SetStyle(TextCommand):
         if isinstance(other, JoinBlocks) and other.block == self.block:
             return None  # the paragraph is part of another one now; its style is that one's
         return self
+
+
+# ------------------------------------------------------------------------------ the page (D904)
+@register
+@dataclass(frozen=True)
+class SetPageSetup(Command):
+    """Lay the text out on another page: paper, orientation, margins, page numbers. One step in the history, shared
+    by everybody, so every preview and every PDF of the document uses the same page."""
+
+    kind: ClassVar[str] = "composes.SetPageSetup"
+    setup: PageSetup
+
+    @property
+    def label(self) -> str:
+        return "Page setup"
+
+    @property
+    def summary(self) -> str:
+        return f"set the page to {self.setup.describe()}"
+
+    def apply(self, ctx: Context[TextModel]) -> Command:
+        old = ctx.model.page
+        ctx.model.page = self.setup
+        ctx.emit(PageSetupChanged(self.setup.to_data()))
+        return SetPageSetup(old)
+
+    def to_data(self) -> dict:
+        return {"setup": self.setup.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetPageSetup:
+        return cls(PageSetup.from_data(data["setup"]))
 
 
 # ------------------------------------------------------------------------------ suggestions (D63)

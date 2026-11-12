@@ -167,3 +167,13 @@ def test_the_web_app_is_linted_and_its_tests_held_to_their_coverage(tmp_path):
     by_name = {c.name: c for c in check_debt.web_checks(tmp_path)}
     assert by_name["web lint"].command == ("npm", "run", "lint", "--silent")
     assert by_name["web tests"].command == ("npm", "run", "coverage", "--silent")
+
+
+def test_the_layout_library_has_its_types_and_tests_checked(tmp_path):
+    """D902: the TypeScript layout library is held to its own types (no DOM, no Node) and tests."""
+    by_name = {c.name: c for c in check_debt.layout_checks(tmp_path)}
+    assert by_name["layout types"].command == ("npm", "run", "typecheck", "--silent")
+    assert by_name["layout tests"].command == ("npm", "test", "--silent")
+    assert all(c.skip_reason for c in by_name.values()), "a layout folder without node_modules skips, saying why"
+    names = [c.name for c in check_debt.checks()]
+    assert names.index("layout types") < names.index("web lint")

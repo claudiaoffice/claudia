@@ -38,7 +38,12 @@ export interface DocumentMenuContext {
   leave: (opts?: { startFresh?: boolean }) => void
   /** File ▸ Save: a checkpoint without a name. */
   save: () => void
+  /** File ▸ Print…: open the print preview (D906). Only an app that can lay out pages gives it; composes does. */
+  print?: () => void
 }
+
+/** The shortcut of File ▸ Print… (D906). */
+export const PRINT_CHORD = { key: 'p', ctrl: true } as const
 
 /** The menu hints for the shortcuts every window listens for (`sharedShortcuts`), so the two cannot drift apart. */
 export const SHARED_HINTS: Readonly<Record<string, string>> = Object.fromEntries(
@@ -67,6 +72,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
       { id: 'file.save', label: t('Save'), hint: SHARED_HINTS['file.save'], action: () => c.save(), disabled: viewer },
       { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => c.open('checkpoint'), disabled: viewer },
       { id: 'file.download', label: t('Download'), action: () => c.open('export') },
+      ...(c.print ? [{ id: 'file.print', label: t('Print…'), hint: chordLabel(PRINT_CHORD), action: c.print }] : []),
       separator,
       {
         id: 'file.manage',

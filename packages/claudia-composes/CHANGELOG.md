@@ -3,6 +3,16 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-12
+
+The page a text is printed on (E9.14 first step; print preview, D904).
+
+### Added
+- `PageSetup`, `PageSetupError`, `PAPERS`: paper (a preset such as `a4` or `letter`, or `custom`), orientation,
+  margins and page numbers, every length in mpt (the layout library's unit); checked so the margins leave room.
+- `SetPageSetup`: one step that changes the page, with its exact inverse; it raises a `page` event.
+- `TextModel.page`, stored with the text (state schema 6; an older state gets A4 portrait, 2.5 cm margins).
+
 ## [0.3.0] - 2026-11-10
 
 The styling-suite plan, steps 1.2 to 1.6.

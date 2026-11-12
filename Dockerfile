@@ -9,12 +9,15 @@
 #   docker build --build-arg WITH_OPENVINO=true -t claudia-server:ai .                        # with --ai support
 
 # ---- web: the Nuxt single-page app, built to static files --------------------------------------
+# It links the layout library (../layout, D902), so both folders are copied; `npm run build` also copies the
+# pinned HarfBuzz WebAssembly into the app (D903).
 FROM node:22-bookworm-slim AS web
 WORKDIR /build/web
+COPY layout/ /build/layout/
 COPY web/package.json web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 COPY web/ ./
-RUN npx nuxt generate
+RUN npm run build
 
 # ---- python: the workspace packages and their locked dependencies, in one virtual environment --
 FROM python:3.14-slim-bookworm AS python
@@ -31,6 +34,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     set -- --locked --no-dev --no-editable --package claudia-server; \
     if [ "$WITH_OPENVINO" = "true" ]; then set -- "$@" --extra openvino; fi; \
     uv sync "$@"
+# The starter set of open fonts, pinned by SHA-256 (D905): what the clients lay out and print with.
+RUN /app/.venv/bin/python -m claudia_fonts fetch /app/fonts
 
 # ---- runtime ----------------------------------------------------------------------------------
 FROM python:3.14-slim-bookworm
@@ -41,6 +46,7 @@ RUN groupadd --system --gid 10001 claudia \
 
 COPY --from=python /app/.venv /app/.venv
 COPY --from=web /build/web/.output/public /app/web
+COPY --from=python /app/fonts /app/fonts
 COPY --chmod=755 docker/entrypoint.sh /app/entrypoint.sh
 COPY docker/healthcheck.py /app/healthcheck.py
 

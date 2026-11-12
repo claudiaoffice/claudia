@@ -70,8 +70,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
+from claudia_fonts import DEFAULT_SUBSTITUTIONS
+
 from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
+from .fonts import FontService, font_router
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
@@ -441,6 +444,7 @@ def create_app(
     web_dir: str | Path | None = None,
     list_documents: bool = True,
     admin: AdminContext | None = None,
+    fonts: FontService | None = None,
 ) -> FastAPI:
     """The server for ``hub``, with the users of each document in ``directory``.
 
@@ -512,6 +516,8 @@ def create_app(
 
     if admin is not None:
         app.include_router(admin_router(hub, gateway.set_secret, admin))
+    if fonts is not None:
+        app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS))
 
     # The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed origin
     # is needed. Mounted last so /api/... wins.

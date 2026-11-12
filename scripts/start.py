@@ -19,6 +19,7 @@ app's sealed documents and its server's own state (certificate, administrators, 
     .claudia/computes/documents   .claudia/computes/state
     .claudia/composes/documents   .claudia/composes/state
     .claudia/creates/documents    .claudia/creates/state
+    .claudia/fonts                the fonts every app hands to its clients for print and PDF (fetched once)
 
 ``--dir DIR`` means the same for one app and for ``all``: ``DIR/<app>/documents``. The installed desktop apps keep
 theirs elsewhere, in the system's place for user data, so a development checkout never touches them. Folders that
@@ -212,6 +213,7 @@ def server_command(args: argparse.Namespace, python: str = sys.executable, built
     command = [python, "-m", "claudia_server", "--dir", str(args.documents), "--state-dir", str(args.state)]
     command += ["--web", Path(built).as_posix()]
     command += ["--host", args.host, "--port", str(args.port)]
+    command += ["--fonts", fonts_folder(args.root).as_posix()]
     if MODELS[args.app]:
         command += ["--model", MODELS[args.app]]
     for folder in args.shapes:
@@ -223,6 +225,34 @@ def server_command(args: argparse.Namespace, python: str = sys.executable, built
         if args.ai_device:
             command += ["--ai-device", args.ai_device]
     return command
+
+
+def fonts_folder(root: str | Path) -> Path:
+    """The fonts all the servers of a checkout share: ``ROOT/fonts`` (D905)."""
+    return Path(root) / "fonts"
+
+
+def ensure_fonts(root: str | Path, fetch=None) -> bool:
+    """Fetch the starter set of open fonts into :func:`fonts_folder` once, the first time it is missing; print preview
+    and PDF export lay out with them (D901, D905). A failed fetch (no network) is reported and the servers start
+    anyway, with whatever fonts are there. ``True`` when the folder holds fonts afterwards."""
+    from claudia_fonts import FetchError, collection_folders
+    from claudia_fonts import fetch as fetch_starter
+
+    folder = fonts_folder(root)
+    if collection_folders(folder):
+        return True
+    print(f"Fetching the starter fonts into {folder} (once; about 6 MB) …", flush=True)
+    try:
+        (fetch or fetch_starter)(folder)
+    except (FetchError, OSError) as problem:
+        print(
+            f"Could not fetch the fonts ({problem}); print preview needs them. Try again later, or run "
+            f"`uv run python -m claudia_fonts fetch {folder}`.",
+            flush=True,
+        )
+        return False
+    return True
 
 
 def page_url(args: argparse.Namespace) -> str:
@@ -311,6 +341,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         build_web()
     if args.ai and not has_openvino():
         install_openvino()
+    ensure_fonts(args.root)
     servers = app_servers(args)
     processes: list[subprocess.Popen] = []
     try:

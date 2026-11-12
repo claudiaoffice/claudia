@@ -298,14 +298,15 @@ def test_a_failed_first_attempt_is_tried_once_more(tmp_path):
 # -- which lockfiles ---------------------------------------------------------------------------------------------------
 
 
-def test_the_lockfiles_found_are_the_web_app_and_each_client(tmp_path):
-    for name in ("web", "clients/windows", "clients/macos", "clients/linux"):
+def test_the_lockfiles_found_are_the_web_app_the_layout_library_and_each_client(tmp_path):
+    for name in ("web", "layout", "clients/windows", "clients/macos", "clients/linux"):
         (tmp_path / name).mkdir(parents=True)
-    for name in ("web", "clients/windows", "clients/macos"):
+    for name in ("web", "layout", "clients/windows", "clients/macos"):
         (tmp_path / name / "package-lock.json").write_text("{}", encoding="utf-8")
     assert [str(p.relative_to(tmp_path)).replace("\\", "/") for p in audit.lockfiles(tmp_path)] == [
         "clients/macos/package-lock.json",
         "clients/windows/package-lock.json",
+        "layout/package-lock.json",
         "web/package-lock.json",
     ]
 

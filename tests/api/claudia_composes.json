@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.4.0",
  "AcceptSuggestion": {
   "class": [
    "TextCommand"
@@ -245,6 +245,30 @@
   },
   "properties": []
  },
+ "PAPERS": {
+  "value": "{'a3': (841890, 1190551), 'a4': (595276, 841890), 'a5': (419528, 595276), 'a6': (297638, 419528), 'b5': (498898, 708661), 'letter': (612000, 792000), 'legal': (612000, 1008000), 'tabloid': (792000, 1224000), 'executive': (522000, 756000)}"
+ },
+ "PageSetup": {
+  "class": [
+   "object"
+  ],
+  "init": "(paper: 'str' = 'a4', width: 'int' = 595276, height: 'int' = 841890, orientation: 'str' = 'portrait', margin_top: 'int' = 70866, margin_right: 'int' = 70866, margin_bottom: 'int' = 70866, margin_left: 'int' = 70866, page_numbers: 'bool' = False) -> None",
+  "methods": {
+   "describe": "(self) -> 'str'",
+   "from_data": "(data: 'object') -> 'Self'",
+   "preset": "(paper: 'str', **changes: 'object') -> 'Self'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PageSetupError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
  "Paragraph": {
   "class": [
    "object"
@@ -356,6 +380,21 @@
   "init": "(length: 'int', author: 'str | None', via: 'str | None' = None) -> None",
   "methods": {},
   "properties": []
+ },
+ "SetPageSetup": {
+  "class": [
+   "Command"
+  ],
+  "init": "(setup: 'PageSetup') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetPageSetup'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "SetParagraphStyle": {
   "class": [
@@ -473,7 +512,7 @@
    "DocumentModel",
    "ObjectModel"
   ],
-  "init": "(blocks: 'list[Block] | None' = None, styles: 'StyleBook | None' = None, palette: 'Palette | None' = None)",
+  "init": "(blocks: 'list[Block] | None' = None, styles: 'StyleBook | None' = None, palette: 'Palette | None' = None, page: 'PageSetup | None' = None)",
   "methods": {
    "add_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
    "anchor_from_data": "(self, data: 'dict') -> 'BlockAnchor'",

@@ -18,6 +18,8 @@ web/.output
 web/dist
 web/node_modules
 web/coverage
+# the HarfBuzz WebAssembly the build copies from harfbuzzjs (npm run build/dev, D903)
+web/public/wasm
 
 # Windows client: dependencies, build output, what `npm run build` generates per app, Neutralino's downloads and logs.
 # (`clients/windows/bin/` -- the `claudia-<app>` command shims -- is source and is tracked.)

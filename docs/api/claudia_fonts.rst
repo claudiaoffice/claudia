@@ -22,6 +22,8 @@ Fonts
 .. autoexception:: claudia_fonts.FontProblem
 .. autoclass:: claudia_fonts.FontFile
    :members:
+.. autoclass:: claudia_fonts.Axis
+   :members:
 .. autofunction:: claudia_fonts.read_font
 
 The catalogue
@@ -46,3 +48,16 @@ For the typesetting engine
 
 .. autoclass:: claudia_fonts.JobFonts
 .. autofunction:: claudia_fonts.write_fontconfig
+
+The starter set
+---------------
+
+A pinned set of open fonts an operator fetches once (``python -m claudia_fonts fetch DIR``), each file checked by its
+SHA-256 against ``starter.lock.json`` (D905).
+
+.. autofunction:: claudia_fonts.fetch
+.. autofunction:: claudia_fonts.read_lock
+.. autofunction:: claudia_fonts.collection_folders
+.. autoclass:: claudia_fonts.LockedCollection
+.. autoclass:: claudia_fonts.LockedFile
+.. autoexception:: claudia_fonts.FetchError

@@ -27,6 +27,8 @@ checks are:
 * npm audit  known vulnerabilities in every package-lock.json, development tools included (SEC-08,
              ``scripts/check_npm_audit.py``). It asks the npm registry, so it is skipped, saying why, where npm is not
              installed or the registry does not answer; ``--ci`` fails on that skip like any other
+* layout     the layout library's types (ES2022 only, no DOM, no Node) and its tests, read back by pdf.js (D902);
+             when Node and `npm install` in layout/ are there. Its tests fetch the starter fonts once (pinned by hash)
 * web lint   ESLint over web/ (``eslint.config.mjs``, CODE-01), when Node and `npm install` in web/ are there
 * web tests  the web app's unit tests (vitest) with their coverage thresholds, and its types (vue-tsc), likewise
 * e2e greeting  ``./start.sh all`` in a real browser: three servers, each greeting with its own app (UX-10). Needs
@@ -140,6 +142,7 @@ def checks() -> list[Check]:
         Check("docs", (*run, "sphinx-build", "-W", "--keep-going", "-q", "-b", "html", "docs", DOCS_OUT), slow=True),
         *[Check(f"perf {Path(path).parts[1]}", (*run, "pytest", path), slow=True) for path in PERF],
         npm_audit_check(),
+        *layout_checks(),
         *web_checks(),
         *e2e_checks(),
         *linux_client_checks(),
@@ -175,6 +178,19 @@ def npm_audit_check(which=shutil.which) -> Check:
         skip_reason=reason,
         skip_returncode=NPM_AUDIT_UNREACHABLE,
     )
+
+
+def layout_checks(layout: Path = ROOT / "layout") -> list[Check]:
+    """The layout library's own checks (D902), run in ``layout``; they need Node and its packages (``npm install``)."""
+    reason = ""
+    if shutil.which("npm") is None:
+        reason = "npm is not installed"
+    elif not (layout / "node_modules").is_dir():
+        reason = "run `npm install` in layout/ first"
+    return [
+        Check("layout types", ("npm", "run", "typecheck", "--silent"), cwd=layout, skip_reason=reason),
+        Check("layout tests", ("npm", "test", "--silent"), cwd=layout, skip_reason=reason),
+    ]
 
 
 def web_checks(web: Path = ROOT / "web") -> list[Check]:

@@ -211,3 +211,29 @@ def test_openvino_is_installed_into_the_environment_without_removing_anything(mo
     assert "--inexact" in command and "--locked" in command
     assert command[command.index("--extra") + 1] == "openvino"
     assert kw["cwd"] == start.ROOT
+
+
+def test_every_server_gets_the_checkouts_fonts_folder():
+    command = start.server_command(start.parse_args(["--app", "composes", "--dir", "mine"]))
+    assert Path(command[command.index("--fonts") + 1]) == Path("mine", "fonts")
+
+
+def test_the_starter_fonts_are_fetched_once_and_a_failure_does_not_stop_the_start(tmp_path, capsys):
+    from claudia_fonts import FetchError
+
+    calls = []
+
+    def fetched(folder):
+        calls.append(folder)
+        (folder / "inter").mkdir(parents=True)
+        (folder / "inter" / "collection.json").write_text("{}")
+
+    assert start.ensure_fonts(tmp_path, fetch=fetched) is True
+    assert start.ensure_fonts(tmp_path, fetch=fetched) is True
+    assert calls == [tmp_path / "fonts"], "fetched the first time only"
+
+    def offline(folder):
+        raise FetchError("no network")
+
+    assert start.ensure_fonts(tmp_path / "other", fetch=offline) is False
+    assert "Could not fetch the fonts" in capsys.readouterr().out

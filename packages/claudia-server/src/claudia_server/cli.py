@@ -72,6 +72,7 @@ from .assistant import Assistant
 from .auth import ScryptDirectory, UserDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
 from .filestore import FileDirectory, FileProvider
+from .fonts import FontService
 from .hosts import AllowedHosts, is_loopback, machine_names
 from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
 from .protocol import Limits
@@ -128,6 +129,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="presentations: offer the shapes (JSON files) in DIR besides the built-in ones; can be repeated",
     )
     parser.add_argument("--no-list", action="store_true", help="do not serve the list of documents (/api/docs)")
+    parser.add_argument(
+        "--fonts",
+        action="append",
+        default=[],
+        metavar="DIR",
+        help="font collections to hand to clients for layout and PDF export (/api/fonts): a collection folder or a "
+        "folder of them; repeatable. Default: STATE_DIR/fonts if it exists. "
+        "Fill one with python -m claudia_fonts fetch",
+    )
     parser.add_argument(
         "--no-assistant", action="store_true", help="do not give workbooks the scripted stand-in for the AI"
     )
@@ -306,6 +316,16 @@ def _shapes(args: argparse.Namespace, model: type[DocumentModel]) -> ShapeLibrar
     return ShapeLibrary.load([Path(folder) for folder in args.shapes])
 
 
+def _fonts(args: argparse.Namespace, state_dir: Path) -> FontService:
+    """The fonts this server hands to its clients: the folders of ``--fonts``, else ``STATE_DIR/fonts`` if there is
+    one. ``UsageError`` for a folder given on the command line that does not exist."""
+    for folder in args.fonts:
+        if not Path(folder).is_dir():
+            raise UsageError(f"--fonts: {folder} is not a folder")
+    folders = [Path(f) for f in args.fonts] or [state_dir / "fonts"]
+    return FontService.from_folders(folders, state_dir / "webfonts")
+
+
 def _what_is_loaded(library: ShapeLibrary | None, runner: ModelRunner | None) -> list[str]:
     """The lines of the start-up report about the shapes (and the files skipped) and the AI model."""
     lines: list[str] = []
@@ -429,6 +449,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     provider, directory = _storage(args, model)
     assistant, ai = _build_assistant(args, model, settings)
     library = _shapes(args, model)
+    fonts = _fonts(args, state_dir)
     hub = Hub(
         provider,
         methods=methods_for(model, shapes=library),
@@ -453,6 +474,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         web_dir=args.web,
         list_documents=not args.no_list,
         admin=admin,
+        fonts=fonts,
     )
     scheme = "http" if certificate is None else "https"
     ws_scheme = "ws" if certificate is None else "wss"
@@ -476,6 +498,8 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         )
     else:
         banner.append("documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)")
+    banner.append(fonts.summary())
+    banner += [f"  not used, {problem.path}: {problem.reason}" for problem in fonts.catalogue.problems]
     banner += _what_is_loaded(library, ai.runner)
     options = {
         "host": args.host,

@@ -58,6 +58,23 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the
   WebKit view of the Linux client) could show the previous web app for a long time after the server was updated.
 
+## [0.24.0] - 2026-11-12
+
+Print preview and PDF in the client (D901–D907): the server hands out what the client lays out with.
+
+### Added
+- `GET /api/fonts`, `GET /api/fonts/{sha256}` and `GET /api/fonts/{sha256}.woff2` (`claudia_server.fonts`, D905): the
+  font catalogue as data (family, style, weight, slant, variation axes, outline kind, hash, licence, substitutions)
+  and the font files themselves under their hash, cached for good; only fonts whose collection may be redistributed.
+- `--fonts DIR` (repeatable; default `STATE_DIR/fonts`) and `create_app(fonts=...)`: where those fonts come from.
+- composes: `page` and `set_page` (D904), the page a text is printed on; `objects`, `images` and `shapes` (D907),
+  the floating objects of a text and what they are drawn with, for the print preview.
+
+### Security
+- The Content-Security-Policy allows `'wasm-unsafe-eval'` (WebAssembly compiled from bytes the page fetched from this
+  server: HarfBuzz, D903; no JavaScript `eval`) and `frame-src 'self' blob:` (the PDF a page made, handed to the
+  browser's print dialog, D906).
+
 ## [0.23.0] - 2026-11-11
 
 The AI looks, acts, checks and corrects (E7.5), and a request that names no mode is a *suggest* request (D262).

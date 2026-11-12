@@ -108,19 +108,26 @@ branch = true
 data_file = ".coverage"
 
 # SEC-08: advisories the npm audit (`scripts/check_npm_audit.py`, a step of the gate) may let through, one entry per
-# advisory with the reason. There are none: the audit fails on every advisory of moderate severity or worse. An entry
+# advisory with the reason. The audit fails on every other advisory of moderate severity or worse. An entry
 # that nothing needs any more fails the audit, so this table only ever holds what it must.
 #
 # [[tool.claudia.npm-audit-allow]]
 # advisory = "GHSA-xxxx-xxxx-xxxx"
 # reason = "why this is acceptable, and what to wait for before removing the entry"
 
+[[tool.claudia.npm-audit-allow]]
+advisory = "GHSA-g3hv-75wg-m249"
+reason = """minimatch <11.0.1 (denial of service by glob-part amplification) reaches layout/ only through TypeDoc, a
+development tool that matches the globs of our own typedoc.json and never untrusted input. TypeDoc 0.28.20, the
+latest, calls Minimatch.matchOne, which minimatch 11 no longer has, so it cannot be overridden. Remove when a TypeDoc
+release accepts minimatch 11."""
+
 [tool.claudia.coverage-floors]
 # CODE-01: the least each package's tests must reach, statements and branches together, as a whole percentage. A floor
 # only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.
 "claudia-ai" = 99
 "claudia-client" = 88
-"claudia-composes" = 88
+"claudia-composes" = 90
 "claudia-composes-io" = 95
 "claudia-computes" = 91
 "claudia-computes-io" = 95
@@ -128,7 +135,7 @@ data_file = ".coverage"
 "claudia-core" = 94
 "claudia-creates" = 93
 "claudia-creates-io" = 91
-"claudia-fonts" = 96
+"claudia-fonts" = 97
 "claudia-odf-io" = 96
 "claudia-opc-io" = 100
 "claudia-server" = 94

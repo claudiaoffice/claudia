@@ -162,6 +162,71 @@ def test_setting_a_style(paper):
         assert caught.value.code == "command_error"
 
 
+# ----------------------------------------------------------------------------- the page (D904)
+def test_the_page_is_read_and_set_in_one_step_for_everybody(paper):
+    assert call(paper, "page") == {
+        "paper": "a4",
+        "width": 595276,
+        "height": 841890,
+        "orientation": "portrait",
+        "margins": [70866, 70866, 70866, 70866],
+        "page_numbers": False,
+    }
+    letter = {
+        "paper": "letter",
+        "width": 612000,
+        "height": 792000,
+        "orientation": "landscape",
+        "margins": [72000, 72000, 72000, 72000],
+        "page_numbers": True,
+    }
+    answer = call(paper, "set_page", {"setup": letter}, BEN)
+    assert "revision" in answer
+    assert call(paper, "page", account=VERA) == letter
+    assert list(paper.log)[-1].command.summary == "set the page to Letter, landscape, page numbers"
+    call(paper, "undo", account=BEN)
+    assert call(paper, "page")["paper"] == "a4"
+
+
+def test_a_page_that_cannot_be_used_is_refused_and_so_is_the_assistant(paper):
+    with pytest.raises(RequestError) as caught:
+        call(paper, "set_page", {"setup": {"paper": "a4", "width": 1, "height": 2}})
+    assert caught.value.code == "command_error"
+    a5 = {"paper": "a5", "width": 419528, "height": 595276}
+    with pytest.raises(RequestError) as caught:
+        call(paper, "set_page", {"setup": a5}, VERA)
+    assert caught.value.code == "forbidden"
+    with pytest.raises(RequestError) as caught:
+        call(paper, "set_page", {"setup": a5}, AI)
+    assert caught.value.code == "forbidden"
+
+
+def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing(paper):
+    from pathlib import Path
+
+    from claudia_composes import BlockAnchor
+    from claudia_core import DefineImage, ImageImport, ObjectBody, VisualObject, decode_image, paragraph_for
+
+    type_(paper, "a text with a note")
+    png = (Path(__file__).parents[3] / "layout" / "tests" / "images" / "rgb.png").read_bytes()
+    asset = decode_image(png)
+    paper.execute(DefineImage(asset), author="ann")
+    box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
+    record = ImageImport(asset.id, "a picture", "ann", "2026-11-12T10:00:00Z", "disk", "rgb.png")
+    picture = ObjectBody("o2", "image", 70, 50, "plain-image", image=asset.id, imported=record)
+    paper.model.insert_object(VisualObject(box, BlockAnchor("b1", 2)))
+    paper.model.insert_object(VisualObject(picture, BlockAnchor("b1", 7)))
+    objects = call(paper, "objects", account=VERA)["objects"]
+    assert [(o["id"], o["anchor"]) for o in objects] == [
+        ("o1", {"kind": "block", "container": "b1", "offset": 2}),
+        ("o2", {"kind": "block", "container": "b1", "offset": 7}),
+    ]
+    assert objects[0]["paragraph"]["text"] == "a note"
+    images = call(paper, "images", account=VERA)
+    assert [(i["id"], i["format"]) for i in images] == [(asset.id, "png")]
+    assert call(paper, "shapes") == []
+
+
 # ----------------------------------------------------------------------------- cursors and zones
 def test_looking_shows_the_zone_and_the_caret_but_locks_nothing(paper):
     type_(paper, "the quick brown fox jumps")

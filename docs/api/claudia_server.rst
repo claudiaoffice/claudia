@@ -88,6 +88,17 @@ app's view of its documents for the model.
 .. autoclass:: claudia_server.lens.Lens
 .. autoclass:: claudia_server.lens.Recorder
 
+Fonts
+-----
+
+What ``create_app`` is given to serve fonts to clients (not in ``__all__``; documented so its signature resolves):
+``GET /api/fonts``, ``/api/fonts/{sha256}`` and ``/api/fonts/{sha256}.woff2`` (D905).
+
+.. autoclass:: claudia_server.fonts.FontService
+   :members:
+.. autofunction:: claudia_server.fonts.font_router
+.. autodata:: claudia_server.fonts.FONTS_FORMAT
+
 Users
 -----
 

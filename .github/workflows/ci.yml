@@ -71,16 +71,16 @@ jobs:
         shell: pwsh
         run: Set-MpPreference -EnableControlledFolderAccess Disabled
       - run: uv sync --locked
-      # web tests/types, the browser test and the Linux client's tests are skipped here on purpose: the separate
-      # `web`, `e2e` and `linux-client` jobs below run them for real, with Node, a built web app, Chromium and GTK
-      # installed. --ci fails on any OTHER skip (PROC-02), so a check that starts skipping for some new reason is
+      # web tests/types, the layout library, the browser test and the Linux client's tests are skipped here on
+      # purpose: the separate `web`, `layout`, `e2e` and `linux-client` jobs below run them for real, with Node, a
+      # built web app, Chromium and GTK installed. --ci fails on any OTHER skip (PROC-02), so a check that starts skipping for some new reason is
       # caught instead of waved through. (Before "e2e greeting" was listed here, it failed this job on every OS.)
       # The coverage floors (CODE-01) are measured on Linux with TeX, where every test runs; on Windows and macOS
       # whole groups of tests skip by design, so the check skips there too -- and only there may it.
       - run: >
           uv run python scripts/check_debt.py --ci
           --allow-skip "web lint" --allow-skip "web tests" --allow-skip "web types" --allow-skip "e2e greeting"
-          --allow-skip "linux client tests"
+          --allow-skip "layout types" --allow-skip "layout tests" --allow-skip "linux client tests"
           ${{ runner.os != 'Linux' && '--allow-skip coverage' || '' }}
 
   web:
@@ -105,6 +105,27 @@ jobs:
       # `nuxt typecheck`, not a bare `vue-tsc --noEmit`: web/tsconfig.json has `files: []` and only references the
       # generated projects, so the bare call checked nothing and passed with a type error in any file.
       - run: npm run typecheck
+
+  # The layout library (D902): its types (ES2022 only, no DOM, no Node) and its tests, which fetch the starter fonts
+  # (pinned by SHA-256) and read every PDF back with pdf.js.
+  layout:
+    name: Layout library
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: layout
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: layout/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run docs # TypeDoc: the API documentation is generated from the source
 
   # Real browsers against real servers: the one Python test that starts all three apps (tests/e2e), and the scripts
   # in web/e2e that walk two people through each app. They are the only tests that see the rendered page.
@@ -144,6 +165,7 @@ jobs:
           URL=http://127.0.0.1:8765/ npm run e2e:pointing
           URL=http://127.0.0.1:8766/ npm run e2e:composes
           URL=http://127.0.0.1:8766/ npm run e2e:styling
+          URL=http://127.0.0.1:8766/ npm run e2e:print
           URL=http://127.0.0.1:8767/ npm run e2e:slides
           URL=http://127.0.0.1:8767/ npm run e2e:creates-styles
           pkill -f claudia_server || true

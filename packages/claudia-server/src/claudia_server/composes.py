@@ -6,6 +6,10 @@
 * ``replace_text``: the one way people write. It replaces a range (it may span paragraphs) by some text, and a line
   break in the text starts a new paragraph. A single request is a single step to undo;
 * ``set_style``: give a paragraph a named style (D62);
+* ``page`` and ``set_page``: the page the text is printed on (paper, orientation, margins, page numbers; D904). The
+  pages themselves are laid out in the client (D901);
+* ``objects``, ``images`` and ``shapes``: the floating objects of the text and what they are drawn with, for the
+  print preview, which draws them where they hang (D907);
 * ``styles``, ``change_style``, ``deviate_style``, ``rename_style`` and ``check_css``: the styles are CSS in the
   document (E1.10, D73). Changing a style changes every paragraph that has it; deviating makes a new style, with a
   provisional name, from an old one and applies it, in one step (D75); naming ends the invitation to name it;
@@ -27,8 +31,11 @@ from claudia_composes import (
     DeleteText,
     InsertText,
     JoinBlocks,
+    PageSetup,
+    PageSetupError,
     ProposeSuggestion,
     ResolveSuggestion,
+    SetPageSetup,
     SetStyle,
     SplitBlock,
     TextModel,
@@ -223,6 +230,55 @@ def _set_style(ctx, *, block, style, base):
     _people_only(ctx)
     applied = ctx.document.execute(SetStyle(block, style), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
+
+
+# ------------------------------------------------------------------------------ the page (D904)
+@composes_methods.method("page")
+def _page(ctx):
+    """The page the text is printed on: `{paper, width, height, orientation, margins, page_numbers}`, lengths in
+    mpt (thousandths of a point), `width` the short side, `margins` top, right, bottom, left."""
+    return _text(ctx).page.to_data()
+
+
+@composes_methods.method("set_page", "setup:dict base:revision?", write=True)
+def _set_page(ctx, *, setup, base):
+    """Lay the text out on another page (`setup` as `page` returns it). One step for everybody, in the history.
+    `command_error` names what is wrong with a page that cannot be used."""
+    _people_only(ctx)
+    try:
+        page = PageSetup.from_data(setup)
+    except PageSetupError as exc:
+        raise RequestError("command_error", str(exc)) from None
+    applied = ctx.document.execute(SetPageSetup(page), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+# ------------------------------------------------------------------------------ floating objects, for printing (D907)
+@composes_methods.method("objects")
+def _objects(ctx):
+    """The floating objects of the text, the one in front last, as `{revision, objects}`. An object is the shape all
+    three apps share (`{id, kind, w, h, style, paragraph, shape, image, imported, diagram, rotation, snap,
+    anchor}`), with `anchor` `{kind: "block", container: <paragraph id>, offset}`: the character it hangs from.
+    `w` and `h` are CSS pixels. `imported`'s `source_path` is only sent to the person who imported that image."""
+    model = _text(ctx)
+    objects = [obj.to_data_for(ctx.user) for block in model.blocks for obj in model.objects_on(block.id)]
+    return {"revision": _rev(ctx), "objects": objects}
+
+
+@composes_methods.method("images")
+def _images(ctx):
+    """The image assets the text's objects are drawn with, each as `{id, format, width, height, animated, data,
+    first_frame}` (`data`/`first_frame` base64)."""
+    model = _text(ctx)
+    return [image.to_data() for _, image in sorted(model.images.items())]
+
+
+@composes_methods.method("shapes")
+def _shapes(ctx):
+    """The shape outlines the text's objects use, each as `{format, id, name, path, aspect, text_area}`: an SVG
+    path in a box of 100 by 100."""
+    model = _text(ctx)
+    return [shape.to_data() for _, shape in sorted(model.shapes.items())]
 
 
 # ------------------------------------------------------------------------------ styles (E1.10, E9.7)

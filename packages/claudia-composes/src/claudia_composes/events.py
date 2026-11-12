@@ -81,3 +81,14 @@ class SuggestionsChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "suggestions", "items": list(self.items)}
+
+
+@dataclass(frozen=True)
+class PageSetupChanged:
+    """The page the text is printed on changed (D904)."""
+
+    setup: dict
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "page", "setup": dict(self.setup)}

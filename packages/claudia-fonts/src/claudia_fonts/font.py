@@ -23,6 +23,20 @@ class FontProblem(ValueError):
 
 
 @dataclass(frozen=True)
+class Axis:
+    """A variation axis of a variable font (``fvar``): its tag and range, in the axis' own units (wght: 100-900)."""
+
+    tag: str
+    minimum: float
+    default: float
+    maximum: float
+
+    def to_data(self) -> dict:
+        """The axis as plain data, with the short key names the layout library reads (``min``, ``max``)."""
+        return {"tag": self.tag, "min": self.minimum, "default": self.default, "max": self.maximum}
+
+
+@dataclass(frozen=True)
 class FontFile:
     """A font of the catalogue. Its ``sha256`` is that of the file's bytes: the same bytes in the browser (as WOFF2)
     and in the typesetting engine give the same letter shapes."""
@@ -37,6 +51,10 @@ class FontFile:
     licence: str
     redistributable: bool
     math: bool
+    axes: tuple[Axis, ...] = ()
+    """The variation axes of a variable font; empty for a static one."""
+    outlines: str = "truetype"
+    """``truetype`` (``glyf`` outlines) or ``cff``. Layout and PDF export in the clients can use TrueType only."""
 
     def to_data(self) -> dict:
         """The font as plain data for clients: everything but the place on the server's disk."""
@@ -50,6 +68,8 @@ class FontFile:
             "licence": self.licence,
             "redistributable": self.redistributable,
             "math": self.math,
+            "axes": [axis.to_data() for axis in self.axes],
+            "outlines": self.outlines,
         }
 
 
@@ -75,6 +95,14 @@ def read_font(path: str | Path, collection: Collection) -> FontFile:
         fs_type = int(os2.fsType)
         italic = bool(os2.fsSelection & ITALIC_SELECTION) or bool(head.macStyle & ITALIC_MAC_STYLE)
         math = "MATH" in font
+        axes = (
+            tuple(
+                Axis(a.axisTag, float(a.minValue), float(a.defaultValue), float(a.maxValue)) for a in font["fvar"].axes
+            )
+            if "fvar" in font
+            else ()
+        )
+        outlines = "truetype" if "glyf" in font else "cff"
     except Exception as error:  # noqa: BLE001 - fontTools raises many kinds of errors on damaged files
         raise FontProblem(f"{path.name}: not a font that can be read ({error})") from error
     if not family:
@@ -93,4 +121,6 @@ def read_font(path: str | Path, collection: Collection) -> FontFile:
         licence=record.licence,
         redistributable=record.redistributable,
         math=math,
+        axes=axes,
+        outlines=outlines,
     )
