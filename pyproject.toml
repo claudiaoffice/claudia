@@ -3,7 +3,7 @@ name = "claudia-monorepo"
 version = "0.0.0"
 description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-test-documents"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents"]
 
 [tool.uv]
 package = false
@@ -26,6 +26,7 @@ claudia-computes-io = { workspace = true }
 claudia-composes-io = { workspace = true }
 claudia-creates-io = { workspace = true }
 claudia-opc-io = { workspace = true }
+claudia-odf-io = { workspace = true }
 claudia-test-documents = { workspace = true }
 
 [dependency-groups]
@@ -70,7 +71,7 @@ ignore = [
 "vulture_whitelist.py" = ["B018"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_opc_io", "claudia_test_documents"]
+known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents"]
 
 [tool.mypy]
 python_version = "3.14"
@@ -128,6 +129,7 @@ data_file = ".coverage"
 "claudia-creates" = 93
 "claudia-creates-io" = 88
 "claudia-fonts" = 96
+"claudia-odf-io" = 95
 "claudia-opc-io" = 100
 "claudia-server" = 92
 "claudia-test-documents" = 89

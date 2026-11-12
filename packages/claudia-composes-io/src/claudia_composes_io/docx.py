@@ -18,7 +18,7 @@ custom style. See the implementation note for what it does not cover yet (adding
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from io import BytesIO
 from itertools import count
 from typing import cast
@@ -31,6 +31,8 @@ from docx.text.paragraph import Paragraph
 
 from claudia_composes import DEFAULT_STYLE, Block, Run, Suggestion, TextModel
 from claudia_opc_io import owns, reconcile
+
+from ._suggestions import WhenMade, open_replacements, when_made
 
 #: The built-in styles (model.py's BUILTIN_STYLES) mapped to Word's own built-in style names; anything else
 #: (a deviated or custom style) falls back to Normal -- styling fidelity beyond this is E9.5's job, not this slice's.
@@ -51,27 +53,28 @@ class UnsupportedEdit(Exception):
     note for what is still missing."""
 
 
-def text_to_docx(model: TextModel, *, track_suggestions: bool = True) -> bytes:
+def text_to_docx(
+    model: TextModel, *, track_suggestions: bool = True, change_times: Mapping[str, str] | None = None
+) -> bytes:
     """``model`` as docx bytes: one paragraph per block. When ``track_suggestions`` (the default), every open
     suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
-    remark (no replacement) carries no text to track and is left out, same as a withdrawn or resolved suggestion."""
+    remark (no replacement) carries no text to track and is left out, same as a withdrawn or resolved suggestion.
+    ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one with no time is
+    written without a date, which Word shows as undated (D411)."""
     document = Document()
-    by_block: dict[str, list[Suggestion]] = {}
-    if track_suggestions:
-        for suggestion in model.suggestions.values():
-            if suggestion.state == "open" and suggestion.replacement is not None:
-                by_block.setdefault(suggestion.anchor.block, []).append(suggestion)
-    change_ids = count(1)
+    by_block = open_replacements(model, track=track_suggestions)
+    change_ids, when = count(1), when_made(change_times)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=_WORD_STYLE.get(block.style, "Normal"))
-        ordered = sorted(by_block.get(block.id, ()), key=lambda s: s.anchor.start)
-        _fill_paragraph(paragraph, block.text, ordered, change_ids)
+        _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when)
     out = BytesIO()
     document.save(out)
     return out.getvalue()
 
 
-def _fill_paragraph(paragraph: Paragraph, text: str, suggestions: list[Suggestion], change_ids: Iterator[int]) -> None:
+def _fill_paragraph(
+    paragraph: Paragraph, text: str, suggestions: list[Suggestion], change_ids: Iterator[int], when: WhenMade
+) -> None:
     position = 0
     element = paragraph._p  # python-docx's own documented way to reach markup it does not model (its FAQ)
     for suggestion in suggestions:
@@ -82,16 +85,20 @@ def _fill_paragraph(paragraph: Paragraph, text: str, suggestions: list[Suggestio
             paragraph.add_run(text[position:start])
         deleted = text[start:end]
         if deleted:
-            element.append(_tracked_change("w:del", next(change_ids), suggestion.author, deleted, deleted=True))
+            element.append(
+                _tracked_change("w:del", next(change_ids), suggestion.author, deleted, when(suggestion), deleted=True)
+            )
         if suggestion.replacement:
-            element.append(_tracked_change("w:ins", next(change_ids), suggestion.author, suggestion.replacement))
+            element.append(
+                _tracked_change("w:ins", next(change_ids), suggestion.author, suggestion.replacement, when(suggestion))
+            )
         position = end
     if position < len(text):
         paragraph.add_run(text[position:])
 
 
 def _tracked_change(
-    tag: str, change_id: int, author: str | None, text: str, *, deleted: bool = False
+    tag: str, change_id: int, author: str | None, text: str, date: str | None, *, deleted: bool = False
 ) -> BaseOxmlElement:
     """A ``w:ins`` or ``w:del`` wrapping one run of ``text`` (``w:delText`` when ``deleted``, per the schema)."""
     # OxmlElement's own return type is `BaseOxmlElement | etree._Element`: the fallback branch is for a tag python-
@@ -101,6 +108,8 @@ def _tracked_change(
     change = cast(BaseOxmlElement, OxmlElement(tag))
     change.set(qn("w:id"), str(change_id))
     change.set(qn("w:author"), author or "Claudia AI")
+    if date:
+        change.set(qn("w:date"), date)
     run = OxmlElement("w:r")
     run_text = OxmlElement("w:delText" if deleted else "w:t")
     run_text.set(qn("xml:space"), "preserve")
@@ -127,7 +136,12 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
 
 
 def apply_edits_to_docx(
-    original_bytes: bytes, baseline: TextModel, current: TextModel, *, track_suggestions: bool = True
+    original_bytes: bytes,
+    baseline: TextModel,
+    current: TextModel,
+    *,
+    track_suggestions: bool = True,
+    change_times: Mapping[str, str] | None = None,
 ) -> bytes:
     """Re-export ``current`` to docx by patching only what changed since ``baseline`` (the model as it stood
     right after :func:`docx_to_text` imported ``original_bytes``) onto those same bytes, instead of rebuilding
@@ -146,14 +160,10 @@ def apply_edits_to_docx(
     if added or removed:
         raise UnsupportedEdit("adding or removing a paragraph cannot be patched onto the original file yet")
     position_of = {block.id: index for index, block in enumerate(baseline.blocks)}
-    by_block: dict[str, list[Suggestion]] = {}
-    if track_suggestions:
-        for suggestion in current.suggestions.values():
-            if suggestion.state == "open" and suggestion.replacement is not None:
-                by_block.setdefault(suggestion.anchor.block, []).append(suggestion)
+    by_block = open_replacements(current, track=track_suggestions)
     document = Document(BytesIO(original_bytes))
     paragraphs = document.paragraphs
-    change_ids = count(1)
+    change_ids, when = count(1), when_made(change_times)
     for block_id, after in current_by_id.items():
         if baseline_by_id[block_id] == after and block_id not in by_block:
             continue  # neither the text/style nor its suggestions changed: leave the paragraph exactly as is
@@ -165,8 +175,7 @@ def apply_edits_to_docx(
             parent = run._element.getparent()
             assert parent is not None
             parent.remove(run._element)
-        ordered = sorted(by_block.get(block_id, ()), key=lambda s: s.anchor.start)
-        _fill_paragraph(paragraph, after.text, ordered, change_ids)
+        _fill_paragraph(paragraph, after.text, by_block.get(block_id, []), change_ids, when)
     patched = BytesIO()
     document.save(patched)
     return reconcile(original_bytes, patched.getvalue(), owns(["word/document.xml"]))

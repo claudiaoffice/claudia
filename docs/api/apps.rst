@@ -72,6 +72,13 @@ Every format package shares the Open Packaging Conventions mechanics of ``claudi
 .. automodule:: claudia_opc_io
    :members:
 
+and the OpenDocument formats (odt, ods, odp) share ``claudia_odf_io``: a package from its parts, a part edited
+by splicing bytes so that everything outside the edit stays the original's, the text of one paragraph changed in
+place, and the list of what a file could not hold (D401):
+
+.. automodule:: claudia_odf_io
+   :members:
+
 A base xlsx export and one additive extension openpyxl itself cannot write, pivot tables (D135):
 
 .. automodule:: claudia_computes_io
@@ -95,7 +102,8 @@ composes
 Import/export
 ~~~~~~~~~~~~~~
 
-A base docx export, with open suggestions written as native Word tracked changes (D135):
+A base docx export, with open suggestions written as native Word tracked changes (D135), and odt import, export and
+edit-and-reexport that keeps everything the text app does not model (D401):
 
 .. automodule:: claudia_composes_io
    :members:

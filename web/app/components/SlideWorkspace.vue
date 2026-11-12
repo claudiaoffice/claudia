@@ -40,7 +40,10 @@ const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
 const dialog = ref<null | 'styles' | 'colours'>(null)
-const EXPORT_FORMATS = [{ value: 'pptx', label: 'PowerPoint presentation (.pptx)' }]
+const EXPORT_FORMATS = [
+  { value: 'pptx', label: 'PowerPoint presentation (.pptx)' },
+  { value: 'odp', label: 'OpenDocument presentation (.odp)' },
+]
 
 const readonly = computed(() => state.me.role === 'viewer')
 const styleHost = objectStyleHost({

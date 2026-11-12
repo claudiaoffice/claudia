@@ -213,3 +213,37 @@ def test_apply_edits_raises_unsupported_edit_when_a_block_is_removed():
 
     with pytest.raises(UnsupportedEdit):
         apply_edits_to_docx(original_bytes, baseline, current)
+
+
+# -- when a tracked change was made (D411) ---------------------------------------------------------------------------
+def suggestion_text() -> TextModel:
+    model = model_with_blocks("The committee rejected the proposal.")
+    model.suggestions["s1"] = Suggestion("s1", "Claudia AI", TextRange("b1", 14, 22), "rejected", "approved", "tone")
+    return model
+
+
+def dates_in(data: bytes) -> list[str]:
+    import re
+
+    xml = docx.Document(BytesIO(data)).paragraphs[0]._p.xml
+    return re.findall(r'w:date="([^"]*)"', xml)
+
+
+def test_a_tracked_change_has_the_time_its_suggestion_was_made():
+    data = text_to_docx(suggestion_text(), change_times={"s1": "2026-11-10T09:30:00+01:00"})
+    assert dates_in(data) == ["2026-11-10T08:30:00Z"] * 2
+
+
+def test_a_tracked_change_without_a_known_time_has_no_date():
+    assert dates_in(text_to_docx(suggestion_text())) == []
+
+
+def test_apply_edits_dates_a_tracked_change_too():
+    document = docx.Document()
+    document.add_paragraph("The committee rejected the proposal.")
+    original_bytes = _docx_bytes(document)
+    baseline = docx_to_text(original_bytes)
+    current = TextModel([Block("b1", baseline.blocks[0].style, baseline.blocks[0].text)])
+    current.suggestions["s1"] = suggestion_text().suggestions["s1"]
+    out = apply_edits_to_docx(original_bytes, baseline, current, change_times={"s1": "2026-11-10T08:30:00Z"})
+    assert dates_in(out) == ["2026-11-10T08:30:00Z"] * 2

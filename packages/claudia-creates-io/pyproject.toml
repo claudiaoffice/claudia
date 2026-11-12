@@ -3,7 +3,7 @@ name = "claudia-creates-io"
 dynamic = ["version"]
 description = "claudia-creates-io"
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-creates", "claudia-opc-io", "python-pptx>=1.0"]
+dependencies = ["claudia-core", "claudia-creates", "claudia-opc-io", "claudia-odf-io", "python-pptx>=1.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -19,3 +19,4 @@ packages = ["src/claudia_creates_io"]
 claudia-core = { workspace = true }
 claudia-creates = { workspace = true }
 claudia-opc-io = { workspace = true }
+claudia-odf-io = { workspace = true }

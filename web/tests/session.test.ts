@@ -744,6 +744,21 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(await session.exportOffice('xlsx')).toEqual(exported)
   })
 
+  it('asks for tracked changes only when told to, so apps without them see no new parameter', async () => {
+    const link = new FakeLink()
+    server(link)
+    const seen: unknown[] = []
+    link.handlers.export_office = (params) => {
+      seen.push(params)
+      return { format: 'odt', content_type: 'application/vnd.oasis.opendocument.text', data: 'AAAA' }
+    }
+    const session = new Session(() => link)
+    await session.open()
+    await session.exportOffice('odt', { trackedChanges: true })
+    await session.exportOffice('odt', { trackedChanges: false })
+    expect(seen).toEqual([{ format: 'odt', tracked_changes: true }, { format: 'odt' }])
+  })
+
   it('tells us when somebody else leaves', async () => {
     const { session, link } = await opened()
     link.push('ephemeral', { kind: 'person_left', sender: 'ben', data: { user: 'ben' } })

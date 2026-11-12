@@ -31,6 +31,7 @@ CHANGELOGS = {
     "claudia_composes": ROOT / "packages" / "claudia-composes" / "CHANGELOG.md",
     "claudia_ai": ROOT / "packages" / "claudia-ai" / "CHANGELOG.md",
     "claudia_opc_io": ROOT / "packages" / "claudia-opc-io" / "CHANGELOG.md",
+    "claudia_odf_io": ROOT / "packages" / "claudia-odf-io" / "CHANGELOG.md",
     "claudia_composes_io": ROOT / "packages" / "claudia-composes-io" / "CHANGELOG.md",
     "claudia_computes_io": ROOT / "packages" / "claudia-computes-io" / "CHANGELOG.md",
     "claudia_creates_io": ROOT / "packages" / "claudia-creates-io" / "CHANGELOG.md",
