@@ -1,8 +1,27 @@
 <script setup lang="ts">
 // A workbook: the formula bar, the grid (or a chart tab), the sheet tabs, inside the document window every app shares
 // (DocumentFrame).
-import { computed, nextTick, ref, watch } from 'vue'
-import { inputOf, rangeLabel, parseCell, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { cellLabel, inputOf, rangeLabel, parseCell, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
+import {
+  applyCompletion,
+  blockerOf,
+  completionsAt,
+  didYouMean,
+  guessHeader,
+  nameAt,
+  nameBoxAction,
+  replaceWord,
+  visibleNames,
+  withPurpose,
+  type Completion,
+  type NameBoxAction,
+  type NameDraft,
+  type NameInfo,
+  type NameRegion,
+  type Purpose,
+} from '~/lib/names'
+import { queryOfFormula } from '~/lib/sql'
 import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
@@ -43,7 +62,7 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 /** computes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'row-size' | 'col-size' | 'styles' | 'colours'>(null)
+const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours'>(null)
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 
 const EXPORT_FORMATS = [
@@ -66,12 +85,18 @@ const grid = ref<{
   openStyleMenu: (at?: { x: number; y: number }) => void
   selectedObject: () => string | null
   selectedStyle: () => string | undefined
+  anchorPoint: (row: number, col: number) => { x: number; y: number } | null
 } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
 const readonly = computed(() => state.me.role === 'viewer')
 const b = computed(() => bounds(sel.value))
-const label = computed(() => (edit.value ? rangeLabel(edit.value.row, edit.value.col, edit.value.row, edit.value.col) : rangeLabel(b.value.r0, b.value.c0, b.value.r1, b.value.c1)))
+const sheetNames = computed(() => visibleNames(state.names, state.activeSheet))
+/** The Name Box shows the name of the cells that are selected when they are exactly a name's (E6.5), else their address. */
+const label = computed(() => {
+  if (edit.value) return rangeLabel(edit.value.row, edit.value.col, edit.value.row, edit.value.col)
+  return nameAt(state.names, state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)?.name ?? rangeLabel(b.value.r0, b.value.c0, b.value.r1, b.value.c1)
+})
 const formulaText = computed(() => (edit.value ? edit.value.text : inputOf(session.cell(state.activeSheet, sel.value.row, sel.value.col))))
 /** Does a click pick cells for the formula being typed (the caret is where a reference fits)? */
 const pointing = computed(() => edit.value !== null && slotAt(edit.value.text, edit.value.caret) !== null)
@@ -124,10 +149,217 @@ function moveBy(dr: number, dc: number, extend: boolean, jumping: boolean) {
     : move(sel.value, dr, dc, extend, SIZE)
 }
 
-function goto(text: string) {
-  const cell = parseCell(text)
-  if (cell) sel.value = single(cell[0], cell[1])
+/** Everything typed into the Name Box (mock 1): a cell or range to go to, a name to go to, a new word to name the
+ * selected cells by, or a name that exists to move to the selection. */
+async function goto(text: string) {
+  const one = b.value.r0 === b.value.r1 && b.value.c0 === b.value.c1
+  if (text.trim().toLowerCase() === label.value.toLowerCase()) return grid.value?.focus() // (nothing was changed)
+  const action = nameBoxAction(text, state.activeSheet, state.names, one, parseCell)
+  switch (action.kind) {
+    case 'cell':
+      sel.value = single(action.row, action.col)
+      break
+    case 'range':
+      sel.value = { row: action.row, col: action.col, row2: action.row2, col2: action.col2 }
+      break
+    case 'goto':
+      await selectName(action.name)
+      break
+    case 'define':
+    case 'redefine':
+      return openDefine(action)
+    case 'problem':
+      session.notice(action.message, 'warning')
+      break
+  }
   grid.value?.focus()
+}
+
+/** Select the cells of a name, on the sheet they are on. */
+async function selectName(name: NameInfo) {
+  const g = name.region
+  if (!g) return
+  if (g.sheet !== state.activeSheet || activeChart.value) await pickTab(g.sheet, 'sheet')
+  sel.value = { row: g.row0, col: g.col0, row2: g.row1, col2: g.col1 }
+}
+
+// ------------------------------------------------------------------------------ completing names and columns (E6.5, mock 5)
+// While a formula is typed, the names (and, after `Table[`, the columns) that fit what is typed are listed under the
+// formula bar. Tab takes the marked one, the arrows move the mark, Esc closes the list; Enter still ends the edit, so a
+// formula can always be finished without the list in the way.
+const completion = computed(() => (edit.value ? completionsAt(edit.value.text, edit.value.caret, sheetNames.value, edit.value.sheet) : null))
+const choice = ref(0)
+const closed = ref(false) // Esc closed the list for what is typed so far
+watch(completion, (now, before) => {
+  choice.value = 0
+  if (!now || now.from !== before?.from) closed.value = false
+})
+const completing = computed(() => (completion.value && !closed.value ? completion.value : null))
+
+function takeCompletion(item?: Completion) {
+  const found = completion.value
+  const e = edit.value
+  const picked = item ?? found?.items[choice.value]
+  if (!found || !e || !picked) return
+  const next = applyCompletion(e.text, e.caret, found, picked)
+  e.text = next.text
+  e.caret = next.caret
+  pointed.value = false
+  void nextTick(() => putCaret(next.caret))
+}
+function onCompletionKey(event: KeyboardEvent) {
+  const open = completing.value
+  if (!open) return
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    choice.value = (choice.value + (event.key === 'ArrowDown' ? 1 : open.items.length - 1)) % open.items.length
+  } else if (event.key === 'Tab' && !event.shiftKey) {
+    takeCompletion()
+  } else if (event.key === 'Escape') {
+    closed.value = true
+  } else {
+    return
+  }
+  event.preventDefault()
+  event.stopPropagation()
+}
+watch(completing, (now) => {
+  if (now) window.addEventListener('keydown', onCompletionKey, true)
+  else window.removeEventListener('keydown', onCompletionKey, true)
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onCompletionKey, true))
+
+// ------------------------------------------------------------------------------ names, tables and queries (E6.5)
+const defining = ref<{ x: number; y: number; name: string; existing: NameInfo | null; region: NameRegion; refersTo: string; headerGuess: boolean } | null>(null)
+const tableMenu = ref<{ table: NameInfo; offset: number; x: number; y: number } | null>(null)
+const sqlEditor = ref<{ row: number; col: number; x: number; y: number; query: string; resultName: string } | null>(null)
+const note = ref<{ x: number; y: number; row: number; col: number; kind: 'spill' | 'blocked' | 'sql'; from: string; detail: string } | null>(null)
+
+const sheetName = (id: string) => state.sheets.find((s) => s.id === id)?.name ?? ''
+const scopeName = (scope: string | null) => (scope === null ? 'Workbook' : sheetName(scope) || 'Sheet')
+
+function openDefine(action: Extract<NameBoxAction, { kind: 'define' | 'redefine' }>) {
+  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  const box = document.querySelector<HTMLInputElement>('input[aria-label="cell"]')?.getBoundingClientRect()
+  const region: NameRegion = { sheet: state.activeSheet, row0: b.value.r0, col0: b.value.c0, row1: b.value.r1, col1: b.value.c1 }
+  const rows = Math.min(2, b.value.r1 - b.value.r0 + 1)
+  const kinds: (string | null)[][] = []
+  const texts: string[][] = []
+  for (let r = 0; r < rows; r++) {
+    kinds.push([])
+    texts.push([])
+    for (let c = b.value.c0; c <= b.value.c1; c++) {
+      const one = session.cell(state.activeSheet, b.value.r0 + r, c)
+      kinds[r]!.push(one?.t ?? null)
+      texts[r]!.push(one === null ? '' : String(one.v))
+    }
+  }
+  defining.value = {
+    x: box?.left ?? 12,
+    y: (box?.bottom ?? 80) + 6,
+    name: action.kind === 'define' ? action.name : action.name.name,
+    existing: action.kind === 'redefine' ? action.name : null,
+    region,
+    refersTo: `${sheetName(state.activeSheet)}!${rangeLabel(region.row0, region.col0, region.row1, region.col1)}`,
+    headerGuess: guessHeader(kinds, texts),
+  }
+}
+
+async function define(draft: NameDraft) {
+  if (await session.defineName(draft)) {
+    defining.value = null
+    grid.value?.focus()
+  }
+}
+
+function openTableMenu(table: NameInfo, offset: number, x: number, y: number) {
+  tableMenu.value = { table, offset, x, y }
+}
+async function pickPurpose(offset: number | null, purpose: Purpose) {
+  const open = tableMenu.value
+  tableMenu.value = null
+  if (open) await session.defineName(withPurpose(open.table, offset, purpose))
+}
+
+/** The cell the SQL editor writes to: the active cell, or the cell of the query that fills it when it is a part of a
+ * result — with what is already in it. */
+function openSql(at?: { row: number; col: number }) {
+  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  let row = at?.row ?? sel.value.row
+  let col = at?.col ?? sel.value.col
+  const here = session.cell(state.activeSheet, row, col)
+  if (here?.spill && here.from) [row, col] = here.from
+  const content = session.cell(state.activeSheet, row, col)
+  const place = grid.value?.anchorPoint(row, col)
+  const owned = state.names.find((n) => n.anchor?.sheet === state.activeSheet && n.anchor.row === row && n.anchor.col === col)
+  note.value = null
+  sqlEditor.value = {
+    row,
+    col,
+    x: place?.x ?? 120,
+    y: place?.y ?? 140,
+    query: queryOfFormula(content?.f) ?? '',
+    resultName: owned?.name ?? '',
+  }
+}
+
+/** What to say about the active cell when it is a part of a query result or a query's failure (mock 5). */
+function noteFor(row: number, col: number) {
+  const content = session.cell(state.activeSheet, row, col)
+  note.value = null
+  if (!content || edit.value) return
+  const place = grid.value?.anchorPoint(row, col)
+  if (!place) return
+  const kind = content.spill ? 'spill' : content.t === 'error' && content.v === '#SPILL!' ? 'blocked' : content.t === 'error' && content.v === '#SQL!' ? 'sql' : null
+  if (kind === null) return
+  const from = content.from ? cellLabel(content.from[0], content.from[1]) : cellLabel(row, col)
+  note.value = { ...place, row, col, kind, from, detail: content.d ?? '' }
+}
+watch([() => sel.value.row, () => sel.value.col, () => state.activeSheet], ([row, col]) => noteFor(row, col))
+const noteView = computed(() => {
+  const n = note.value
+  if (!n) return null
+  if (n.kind === 'spill') return { kind: 'spill' as const, from: n.from }
+  if (n.kind === 'blocked') {
+    const blocker = blockerOf(n.detail, parseCell)
+    return { kind: 'blocked' as const, detail: n.detail, blocker: blocker ? cellLabel(blocker[0], blocker[1]) : null }
+  }
+  return { kind: 'sql' as const, detail: n.detail, mend: didYouMean(n.detail, state.names) }
+})
+function noteSelectBlocker() {
+  const found = blockerOf(note.value?.detail ?? '', parseCell)
+  note.value = null
+  if (found) sel.value = single(found[0], found[1])
+  grid.value?.focus()
+}
+async function noteUseWord() {
+  const n = note.value
+  const mend = noteView.value?.kind === 'sql' ? noteView.value.mend : null
+  const query = n ? queryOfFormula(session.cell(state.activeSheet, n.row, n.col)?.f) : null
+  note.value = null
+  if (!n || !mend || query === null) return
+  const owned = state.names.find((x) => x.anchor?.sheet === state.activeSheet && x.anchor.row === n.row && x.anchor.col === n.col)
+  await session.defineSql(state.activeSheet, n.row, n.col, replaceWord(query, mend.wrong, mend.right), owned?.name ?? null)
+}
+/** Copy the whole result a spilled cell belongs to as tab-separated values (what a paste elsewhere takes). */
+async function noteCopyValues() {
+  const n = note.value
+  note.value = null
+  const owner = n ? session.cell(state.activeSheet, n.row, n.col)?.from : undefined
+  const name = owner ? state.names.find((x) => x.anchor?.row === owner[0] && x.anchor.col === owner[1] && x.anchor.sheet === state.activeSheet) : undefined
+  const g = name?.region
+  if (!g) return session.notice('This result has no name to take its cells from: select them and copy (Ctrl+C).', 'info')
+  const rows: string[] = []
+  for (let r = g.row0; r <= Math.min(g.row1, g.row0 + 10_000); r++) {
+    const line: string[] = []
+    for (let c = g.col0; c <= g.col1; c++) line.push(show(session.cell(g.sheet, r, c)))
+    rows.push(line.join('\t'))
+  }
+  try {
+    await navigator.clipboard.writeText(rows.join('\n'))
+    session.notice('Copied the result as values.', 'info')
+  } catch {
+    session.notice('The browser did not allow copying.', 'warning')
+  }
 }
 
 // ------------------------------------------------------------------------------ editing
@@ -135,6 +367,7 @@ async function beginEdit(initial?: string) {
   if (edit.value) return
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   const { row, col } = sel.value
+  if (session.cell(state.activeSheet, row, col)?.spill) return noteFor(row, col) // (part of a query result: say so)
   original = inputOf(session.cell(state.activeSheet, row, col))
   const text = initial ?? original
   pointed.value = false
@@ -454,7 +687,13 @@ const menus = computed<Menu[]>(() => {
     },
     {
       label: t('Tools'),
-      items: [askItem(c, ask), { id: 'tools.example-budget', label: t('Ask for an example budget'), action: () => ask('@ai build an example budget') }],
+      items: [
+        askItem(c, ask),
+        { id: 'tools.example-budget', label: t('Ask for an example budget'), action: () => ask('@ai build an example budget') },
+        { label: '', separator: true },
+        { id: 'tools.names', label: t('Names…'), action: () => (dialog.value = 'names') },
+        { id: 'tools.sql', label: t('SQL query…'), action: () => openSql(), disabled: readonly.value },
+      ],
     },
     configMenu(c, { current: locale.value, choose }),
     helpMenu(c, { ask, openHelp: (mode) => frame.value?.openHelp(mode) }),
@@ -495,7 +734,10 @@ const SHORTCUT_NOTES: [string, string][] = [
           :undo-label="state.undoLabel"
           :redo-label="state.redoLabel"
           :readonly="readonly"
+          :names="sheetNames"
           @goto="goto"
+          @goto-name="selectName"
+          @manage-names="dialog = 'names'"
           @focus-text="beginEdit()"
           @update:text="updateText"
           @caret="moveCaret"
@@ -504,6 +746,18 @@ const SHORTCUT_NOTES: [string, string][] = [
           @undo="session.undo()"
           @redo="session.redo()"
         />
+        <ul v-if="completing" class="completion" :class="{ below: formulaHelp }" role="listbox" aria-label="completions" data-testid="completion">
+          <li
+            v-for="(item, i) in completing.items"
+            :key="item.label"
+            role="option"
+            :aria-selected="i === choice"
+            :class="{ on: i === choice }"
+            @mousedown.prevent="takeCompletion(item)"
+          >
+            <span class="mono">{{ item.label }}</span><small>{{ item.detail }}</small>
+          </li>
+        </ul>
         <div v-if="formulaHelp" class="formulaHelp" role="status">
           <span class="sig mono">{{ formulaHelp.signature }}</span>
           <span v-if="formulaExample" class="example mono">{{ formulaExample }}</span>
@@ -536,6 +790,7 @@ const SHORTCUT_NOTES: [string, string][] = [
       @paste="paste"
       @select-all="sel = { row: 0, col: 0, row2: VIEW_ROWS - 1, col2: VIEW_COLS - 1 }"
       @header-menu="openHeaderMenu"
+      @table-menu="openTableMenu"
     />
     <div v-else class="nosheet">This document has no sheet yet.</div>
     <template #footer>
@@ -552,6 +807,57 @@ const SHORTCUT_NOTES: [string, string][] = [
         :anchor-for="anchorForChart"
         @close="dialog = null"
         @inserted="chartInserted"
+      />
+      <NamesDialog
+        v-if="dialog === 'names'"
+        :session="session"
+        :readonly="readonly"
+        :scope-name="scopeName"
+        @close="dialog = null"
+        @goto="selectName"
+        @edit-query="(n) => n.anchor && openSql({ row: n.anchor.row, col: n.anchor.col })"
+      />
+      <NameDefinePopover
+        v-if="defining"
+        :x="defining.x"
+        :y="defining.y"
+        :name="defining.name"
+        :existing="defining.existing"
+        :region="defining.region"
+        :refers-to="defining.refersTo"
+        :sheet-name="sheetName(state.activeSheet)"
+        :sheet="state.activeSheet"
+        :header-guess="defining.headerGuess"
+        :taken="(name, scope) => state.names.some((n) => n.scope === scope && n.name.toLowerCase() === name.toLowerCase())"
+        @define="define"
+        @close="((defining = null), grid?.focus())"
+      />
+      <TableMenu v-if="tableMenu" :table="tableMenu.table" :offset="tableMenu.offset" :x="tableMenu.x" :y="tableMenu.y" :readonly="readonly" @pick="pickPurpose" @close="tableMenu = null" />
+      <SqlEditor
+        v-if="sqlEditor"
+        :session="session"
+        :sheet="state.activeSheet"
+        :row="sqlEditor.row"
+        :col="sqlEditor.col"
+        :x="sqlEditor.x"
+        :y="sqlEditor.y"
+        :query="sqlEditor.query"
+        :result-name="sqlEditor.resultName"
+        :readonly="readonly"
+        @close="((sqlEditor = null), grid?.focus())"
+        @applied="((sqlEditor = null), grid?.focus())"
+      />
+      <ResultNote
+        v-if="note && noteView"
+        :x="note.x"
+        :y="note.y"
+        :note="noteView"
+        :readonly="readonly"
+        @close="note = null"
+        @edit-query="openSql({ row: note.row, col: note.col })"
+        @copy-values="noteCopyValues"
+        @select-blocker="noteSelectBlocker"
+        @use-word="noteUseWord"
       />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
@@ -582,6 +888,42 @@ const SHORTCUT_NOTES: [string, string][] = [
 <style scoped>
 .formulaRow {
   position: relative;
+}
+.completion {
+  position: absolute;
+  z-index: 6;
+  top: 100%;
+  left: 118px;
+  margin: 2px 0 0;
+  padding: 4px;
+  min-width: 240px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line-field);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(31 26 51 / 16%);
+}
+.completion.below {
+  top: calc(100% + 30px);
+}
+.completion li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.completion li small {
+  color: var(--muted);
+}
+.completion li.on {
+  background: var(--mist);
+  color: var(--ink);
+}
+.completion li.on small {
+  color: var(--ink);
 }
 .formulaHelp {
   position: absolute;

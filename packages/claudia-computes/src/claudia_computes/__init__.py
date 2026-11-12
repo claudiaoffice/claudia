@@ -3,6 +3,8 @@
 refs      CellRef / RangeRef / structural edits (from the demo)
 model     WorkbookModel, CellAnchor, SheetObject, Chart: sheets, typed cells, and this app's own part of an object
 commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, AddChart, RemoveChart (objects and diagrams: core)
+name_commands  DefineName, RemoveName, RenameName, RestoreNames: named ranges and tables (E6.5)
+names     NamedRange, Names: what a name is, where it is looked up, and which cells ``Sales[Amount]`` means
 charts    ChartSpec: what a diagram draws, computes' own ``DiagramDefinition`` (E6.6)
 region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
 styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
@@ -50,12 +52,12 @@ from claudia_core import (  # noqa: F401
     paragraph_for,
 )
 
-from . import commands  # noqa: F401  (registers the commands)
+from . import commands, name_commands  # noqa: F401  (registers the commands)
 from ._version import __version__
 from .charts import CHART_KINDS, ChartError, ChartSpec
 from .commands import AddChart, AddSheet, RemoveChart, RemoveSheet, ResizeLines, SetCells, Structure
 from .entry import parse_input
-from .events import ChartsChanged, DiagramsChanged, ImagesChanged, ObjectsChanged, ShapesChanged
+from .events import ChartsChanged, DiagramsChanged, ImagesChanged, NamesChanged, ObjectsChanged, ShapesChanged
 from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
 from .model import (
     MAX_OBJECTS_PER_SHEET,
@@ -69,6 +71,8 @@ from .model import (
     WorkbookModel,
     content_of,
 )
+from .name_commands import DefineName, RemoveName, RenameName, RestoreNames
+from .names import PURPOSES, NamedRange, Names
 from .refs import (
     CellRef,
     DeleteCols,
@@ -104,6 +108,7 @@ __all__ = [
     "content_of",
     "DEFAULT_STYLE",
     "DefineDiagram",
+    "DefineName",
     "DefineImage",
     "DefineShape",
     "DeleteCols",
@@ -120,7 +125,11 @@ __all__ = [
     "MAX_OBJECTS_PER_SHEET",
     "MIN_OBJECT_SIZE",
     "MoveObject",
+    "NamedRange",
+    "Names",
+    "NamesChanged",
     "OBJECT_KINDS",
+    "PURPOSES",
     "ObjectBody",
     "ObjectsChanged",
     "ObjectSet",
@@ -131,6 +140,9 @@ __all__ = [
     "RangeRef",
     "RefParseError",
     "RemoveChart",
+    "RemoveName",
+    "RenameName",
+    "RestoreNames",
     "RemoveObject",
     "RemoveSheet",
     "ResizeLines",

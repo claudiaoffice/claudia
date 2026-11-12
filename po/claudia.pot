@@ -417,6 +417,10 @@ msgstr ""
 msgid "Move the selection to the clipboard"
 msgstr ""
 
+#: web/app/components/Workspace.vue:691
+msgid "Names…"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:64
 msgid "New"
 msgstr ""
@@ -527,6 +531,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:424
 msgid "Row"
+msgstr ""
+
+#: web/app/components/Workspace.vue:692
+msgid "SQL query…"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:67
