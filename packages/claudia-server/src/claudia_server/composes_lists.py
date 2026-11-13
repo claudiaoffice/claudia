@@ -28,6 +28,7 @@ from claudia_core import (
     Revision,
 )
 
+from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
 
 MAX_LISTED = 2_000  # paragraphs one request may touch
@@ -36,7 +37,7 @@ MAX_LISTED = 2_000  # paragraphs one request may touch
 def _blocks(model: TextModel, ids: list) -> list[str]:
     """The paragraphs these ids name, in the order of the text and each once."""
     if not ids or len(ids) > MAX_LISTED or not all(isinstance(i, str) for i in ids):
-        raise RequestError("bad_request", f"blocks must be a list of 1 to {MAX_LISTED} paragraph ids")
+        raise RequestError("bad_request", msg("blocks must be a list of 1 to {limit} paragraph ids", limit=MAX_LISTED))
     wanted = set(ids)
     for block_id in wanted:
         model.block(block_id)  # KeyError -> command_error: the paragraph must exist
@@ -60,7 +61,10 @@ def _plan_make_list(model: TextModel, ids: list[str], scheme: str | None) -> tup
     if scheme is None:
         return [SetListItem(i, None) for i, item in items.items() if item is not None], "Remove list"
     if scheme not in SCHEMES:
-        raise RequestError("command_error", f"there is no list scheme {scheme!r}; there are {', '.join(SCHEMES)}")
+        raise RequestError(
+            "command_error",
+            msg("there is no list scheme {scheme!r}; there are {schemes}", scheme=scheme, schemes=", ".join(SCHEMES)),
+        )
     name = "Numbered list" if SCHEMES[scheme].counts else "Bulleted list"
     held = [item for item in items.values() if item is not None]
     if len(held) == len(items) and all(model.lists.get(item.list).scheme == scheme for item in held):
@@ -104,14 +108,14 @@ def _plan_indent(model: TextModel, ids: list[str], by: int) -> list[Command]:
 def _plan_continue(model: TextModel, block_id: str) -> list[Command]:
     item = model.block(block_id).item
     if item is None:
-        raise RequestError("command_error", "this paragraph is not a list item")
+        raise RequestError("command_error", msg("this paragraph is not a list item"))
     scheme = model.lists.get(item.list).scheme
     members = [b for b in model.blocks if b.item is not None and b.item.list == item.list]
     first = model.index_of(members[0].id)
     before = [b for b in model.blocks[:first] if b.item is not None and b.item.list != item.list]
     target = next((b.item.list for b in reversed(before) if model.lists.get(b.item.list).scheme == scheme), None)  # type: ignore[union-attr]
     if target is None:
-        raise RequestError("command_error", "there is no earlier list of this kind to continue")
+        raise RequestError("command_error", msg("there is no earlier list of this kind to continue"))
     moved: list[Command] = [SetListItem(b.id, ListItem(target, b.item.level)) for b in members]  # type: ignore[union-attr]
     return [*moved, RemoveList(item.list)]
 
@@ -140,7 +144,7 @@ def add_list_methods(table: MethodTable, *, guard: Callable[[Context], None]) ->
         items that cannot move, stay. Returns `{revision, changed}`: how many items moved (none: no step is made)."""
         guard(ctx)
         if by not in (1, -1):
-            raise RequestError("bad_request", "by is 1 (in) or -1 (out)")
+            raise RequestError("bad_request", msg("by is 1 (in) or -1 (out)"))
         model = ctx.document.model
         assert isinstance(model, TextModel)
         commands = _plan_indent(model, _blocks(model, blocks), by)

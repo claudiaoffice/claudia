@@ -2,6 +2,7 @@
 import type { BaseState } from './base-session'
 import { currentLocale } from './locale'
 
+import { translate as t } from './i18n'
 export const IRIS = '#5b4bc4'
 const GREY = '#8a8697'
 
@@ -40,9 +41,9 @@ export function clock(iso: string, locale: string = currentLocale()): string {
 export function ago(iso: string, now = Date.now(), locale: string = currentLocale()): string {
   const seconds = Math.round((now - new Date(iso).getTime()) / 1000)
   if (Number.isNaN(seconds)) return ''
-  if (seconds < 45) return 'just now'
-  if (seconds < 3600) return `${Math.round(seconds / 60)} min ago`
-  if (seconds < 86400) return `${Math.round(seconds / 3600)} h ago`
+  if (seconds < 45) return t('just now')
+  if (seconds < 3600) return t('{n} min ago', { n: Math.round(seconds / 60) })
+  if (seconds < 86400) return t('{n} h ago', { n: Math.round(seconds / 3600) })
   if (seconds < 172800) return 'yesterday'
   return new Date(iso).toLocaleDateString(locale)
 }

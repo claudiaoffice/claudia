@@ -82,7 +82,7 @@ async function write(page, id, words) {
     // ---- the first one gets bolder words, only for itself, and the new style a name
     await select(page, first)
     await page.click('.menus .title:text-is("Format")')
-    await page.click('.menus .drop [role=menuitem]:has-text("Edit this style")')
+    await page.click('.menus .drop [role=menuitem]:has-text("Edit This Style")')
     await page.waitForSelector('[data-testid=style-menu]')
     await page.locator('[data-testid=style-spec] input[value=new]').check()
     await page.click('[data-testid=bold]')
@@ -125,7 +125,7 @@ async function write(page, id, words) {
     // ---- All styles… counts objects, whatever is selected (it said "1 shape" beside Body text)
     await select(page, rect)
     await page.click('.menus .title:text-is("Format")')
-    await page.click('.menus .drop [role=menuitem]:has-text("All styles")')
+    await page.click('.menus .drop [role=menuitem]:has-text("All Styles")')
     const rows = await page.$$eval('.modal li', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()))
     assert.ok(rows.some((r) => r.startsWith('Callout') && r.includes('3 objects')), rows.join(' | '))
     assert.ok(!rows.some((r) => /\d shapes?\b/.test(r)), 'no count names one kind for all: ' + rows.join(' | '))

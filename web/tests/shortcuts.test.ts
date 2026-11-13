@@ -117,8 +117,8 @@ describe('regionShortcuts', () => {
   it('shows as F6 and Shift+F6 in Config ▸ Shortcuts', () => {
     const labels = regionShortcuts({ next: vi.fn(), previous: vi.fn() }).map((d) => [d.label, chordLabel(d.chord)])
     expect(labels).toEqual([
-      ['Next part of the window', 'F6'],
-      ['Previous part of the window', 'Shift+F6'],
+      ['Next Part of the Window', 'F6'],
+      ['Previous Part of the Window', 'Shift+F6'],
     ])
   })
 })

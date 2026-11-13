@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 
 from . import identity
 from ._version import __version__
+from .i18n import translate as _
 from .servers import Address, AddressRefused, parse_address
 
 __all__ = ["Options", "parse", "split_module_arguments"]
@@ -50,17 +51,19 @@ def parse(app: str, argv: Sequence[str]) -> Options:
     who = identity.get(app)
     parser = argparse.ArgumentParser(
         prog=who.command,
-        description=f"{who.title} for the Linux desktop",
-        epilog="Other arguments are handed to GTK.",
+        description=_("{app} for the Linux desktop").format(app=who.title),
+        epilog=_("Other arguments are handed to GTK."),
     )
     parser.add_argument("--version", action="version", version=f"{who.command} {__version__}")
-    parser.add_argument("--debug", action="store_true", help="log more and enable the web inspector")
+    parser.add_argument("--debug", action="store_true", help=_("log more and enable the web inspector"))
     parser.add_argument(
         "--server",
         metavar="URL",
         type=_address,
-        help="connect to this server instead of starting one on this computer "
-        "(https://host[:port]; plain http is only accepted for this computer)",
+        help=_(
+            "connect to this server instead of starting one on this computer "
+            "(https://host[:port]; plain http is only accepted for this computer)"
+        ),
     )
     args, rest = parser.parse_known_args(list(argv))
     return Options(app=app, server=args.server, debug=args.debug, rest=rest)

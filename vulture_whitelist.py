@@ -32,6 +32,7 @@ used.rotate_access_secret  # POST /api/admin/settings/access-secret/rotate
 used.set_ai  # PUT /api/admin/settings/ai
 used.set_typeset  # PUT /api/admin/settings/typeset
 used._ping  # core_methods.method("ping")
+used._set_locale  # core_methods.method("set_locale") (D323)
 used._snapshot  # core_methods.method("snapshot")
 used._changes_since  # core_methods.method("changes_since")
 used._history  # core_methods.method("history")
@@ -115,6 +116,7 @@ used.should_exit  # uvicorn.Server reads it to stop (tests/test_client_trust.py)
 used.redirect_request  # urllib calls it on a redirect (tests/test_server_redirect.py)
 used._test_client_calls_the_server_by_a_name_it_answers_to  # autouse fixture of packages/claudia-server/tests
 used._restore_active_translation  # autouse fixture of clients/linux/tests/test_i18n.py (D160)
+used._german  # autouse fixture of clients/linux/tests/test_shell_strings_german.py (D160)
 used._slides  # creates_methods_with(...).method("slides")
 used._peek_line  # core_methods.method("peek_line")
 used._restore_policy  # core_methods.method("restore_policy")

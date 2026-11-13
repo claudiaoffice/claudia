@@ -1259,3 +1259,36 @@ describe('random numbers, alternatives and following a computation (E6.21–E6.2
     expect(session.state.trace).toBeNull()
   })
 })
+
+describe('the language of the server’s own messages (D323)', () => {
+  const openWith = async () => {
+    const link = new FakeLink()
+    link.handlers.set_locale = (params) => ({ locale: params.locale })
+    link.handlers.snapshot = () => ({ state: { sheets: [], order: [] }, revision: 'main:3', app: 'computes' })
+    const session = new Session(() => link, {})
+    return { link, session }
+  }
+
+  it('tells the server when the person picks another language, and stops when the session closes', async () => {
+    const { useI18n } = await import('~/lib/i18n')
+    await useI18n().choose('en')
+    const { link, session } = await openWith()
+    await session.open().catch(() => undefined) // what the other handlers lack is not what this is about
+    await useI18n().choose('de')
+    expect(link.calls.filter((c) => c.method === 'set_locale')).toEqual([{ method: 'set_locale', params: { locale: 'de' } }])
+    session.close()
+    await useI18n().choose('en')
+    expect(link.calls.filter((c) => c.method === 'set_locale')).toHaveLength(1)
+  })
+
+  it('tells a renewed connection the language that was chosen since the first one began', async () => {
+    const { useI18n } = await import('~/lib/i18n')
+    await useI18n().choose('de')
+    const { link, session } = await openWith()
+    link.welcome = { ...WELCOME, locale: 'en' }
+    await session.open().catch(() => undefined)
+    expect(link.calls.filter((c) => c.method === 'set_locale')).toEqual([{ method: 'set_locale', params: { locale: 'de' } }])
+    session.close()
+    await useI18n().choose('en')
+  })
+})

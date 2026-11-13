@@ -6,6 +6,10 @@
 import { computed, reactive, ref } from 'vue'
 import { menuCss, previewCss } from '~/lib/style-css'
 import { StyleEditor, facetsOfKind, type StyleHost } from '~/lib/style-host'
+import { useI18n } from '~/lib/i18n'
+import { usesCount } from '~/lib/noun-phrases'
+
+const { t } = useI18n()
 
 const props = defineProps<{ host: StyleHost }>()
 const emit = defineEmits<{ close: [] }>()
@@ -38,16 +42,15 @@ function edit(id: string) {
 }
 function count(id: string) {
   const n = uses.value[id] ?? 0
-  const noun = props.host.usesNoun ?? props.host.noun
-  return `${n} ${n === 1 ? noun : `${noun}s`}`
+  return usesCount(props.host.usesNoun ?? props.host.noun, n)
 }
 </script>
 
 <template>
-  <Modal title="Styles" :width="editing && !narrow ? 780 : 520" @close="emit('close')">
+  <Modal :title="t('Styles')" :width="editing && !narrow ? 780 : 520" @close="emit('close')">
     <div class="panes" :class="{ two: editing && !narrow }">
       <div v-if="!(editing && narrow)" class="list-pane">
-        <label v-if="unnamed && !editing" class="filter"><input v-model="onlyUnnamed" type="checkbox" > Only the {{ unnamed }} waiting for a name</label>
+        <label v-if="unnamed && !editing" class="filter"><input v-model="onlyUnnamed" type="checkbox" > {{ t('Only the {unnamed} waiting for a name', { unnamed }) }}</label>
         <ul class="list" :class="{ compact: !!editing }" data-testid="styles-list">
           <li v-for="s in shown" :key="s.id" :data-style="s.id" :class="{ on: s.id === editing }">
             <template v-if="editing">
@@ -59,35 +62,35 @@ function count(id: string) {
             <template v-else>
               <div class="sample" :style="previewCss(s.resolved)">{{ s.name }}</div>
               <form v-if="renaming === s.id" class="rename" @submit.prevent="save(s.id)" @keydown.esc.stop="renaming = null">
-                <input v-model="typed" :aria-label="`New name of ${s.name}`" autofocus autocomplete="off" >
-                <button class="btn primary" type="submit" :disabled="!typed.trim()">Save</button>
+                <input v-model="typed" :aria-label="t('New name of {name}', { name: s.name })" autofocus autocomplete="off" >
+                <button class="btn primary" type="submit" :disabled="!typed.trim()">{{ t('Save') }}</button>
               </form>
               <div v-else class="meta">
-                <span v-if="s.to_name" class="flag">to name</span>
+                <span v-if="s.to_name" class="flag">{{ t('to name') }}</span>
                 <span v-else-if="s.purpose" class="purpose">{{ s.purpose }}</span>
                 <span class="count mono">{{ count(s.id) }}</span>
                 <span v-if="!host.readOnly" class="links">
-                  <button type="button" class="link" :data-rename="s.id" @click="rename(s.id, s.to_name ? '' : s.name)">{{ s.to_name ? 'Name it' : 'Rename' }}</button>
-                  <button type="button" class="link strong" :data-edit="s.id" @click="edit(s.id)">Edit</button>
+                  <button type="button" class="link" :data-rename="s.id" @click="rename(s.id, s.to_name ? '' : s.name)">{{ s.to_name ? t('Name it') : t('Rename') }}</button>
+                  <button type="button" class="link strong" :data-edit="s.id" @click="edit(s.id)">{{ t('Edit') }}</button>
                 </span>
               </div>
             </template>
           </li>
         </ul>
       </div>
-      <section v-if="edited" class="editor-pane" data-testid="style-editor-pane" :aria-label="`Edit ${edited.name}`">
-        <button v-if="narrow" type="button" class="link back" @click="editing = null">← Styles</button>
+      <section v-if="edited" class="editor-pane" data-testid="style-editor-pane" :aria-label="t('Edit {name}', { name: edited.name })">
+        <button v-if="narrow" type="button" class="link back" @click="editing = null">{{ t('← Styles') }}</button>
         <header>
           <div>
             <h3 :style="previewCss(edited.resolved)">{{ edited.name }}</h3>
             <p v-if="edited.purpose" class="purpose">{{ edited.purpose }}</p>
           </div>
-          <button v-if="!host.readOnly" type="button" class="link" :data-rename="edited.id" @click="(editing = null), rename(edited.id, edited.to_name ? '' : edited.name)">{{ edited.to_name ? 'Name it' : 'Rename' }}</button>
+          <button v-if="!host.readOnly" type="button" class="link" :data-rename="edited.id" @click="(editing = null), rename(edited.id, edited.to_name ? '' : edited.name)">{{ edited.to_name ? t('Name it') : t('Rename') }}</button>
         </header>
         <StyleSpec :host="host" :editor="editor" :facets="facets" fixed />
       </section>
     </div>
-    <div class="buttons"><button class="btn" type="button" @click="emit('close')">Close</button></div>
+    <div class="buttons"><button class="btn" type="button" @click="emit('close')">{{ t('Close') }}</button></div>
   </Modal>
 </template>
 

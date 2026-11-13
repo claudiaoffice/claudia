@@ -3,6 +3,7 @@
 // kept for the life of the page: a font file never changes under its hash.
 import { type Catalogue, FontResolver, FontSet, HARFBUZZ_PIN, HarfBuzz, type HyphenationEntry, Hyphenator, pickHyphenation, readSfnt, UnusableFont } from '@claudia/layout'
 
+import { translate as t } from '../i18n'
 // Copied into public/wasm by `npm run build` (and `dev`) from harfbuzzjs, checked there and again here (D903).
 const shapingUrl = `/wasm/${HARFBUZZ_PIN.shaping.file}`
 const subsetUrl = `/wasm/${HARFBUZZ_PIN.subset.file}`
@@ -45,11 +46,11 @@ export class PrintAssets {
 
   /** Load the shaping engine and the server's catalogue. `Error` with a message for people if either fails. */
   static async load(): Promise<PrintAssets> {
-    if (!globalThis.crypto?.subtle) throw new Error('printing needs a secure connection (https, or this computer)')
+    if (!globalThis.crypto?.subtle) throw new Error(t('printing needs a secure connection (https, or this computer)'))
     const [shaping, subset, listing, hyphenation] = await Promise.all([
       bytesOf(shapingUrl),
       bytesOf(subsetUrl),
-      fetch('/api/fonts', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`the server lists no fonts (${r.status})`)))),
+      fetch('/api/fonts', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(t('the server lists no fonts ({status})', { status: r.status }))))),
       // a server without patterns (or an older one) hyphenates nothing; the preview says so
       fetch('/api/hyphenation', { credentials: 'same-origin' })
         .then((r) => (r.ok ? r.json() : { languages: [] }))
@@ -57,7 +58,7 @@ export class PrintAssets {
     ])
     const harfbuzz = await HarfBuzz.load({ shaping, subset }, sha256)
     const fonts: ListedFont[] = listing.fonts ?? []
-    if (!fonts.length) throw new Error('the server has no fonts to lay out with; its administrator can add some (python -m claudia_fonts fetch)')
+    if (!fonts.length) throw new Error(t('the server has no fonts to lay out with; its administrator can add some (python -m claudia_fonts fetch)'))
     const catalogue: Catalogue = { fonts, substitutions: listing.substitutions ?? {} }
     const languages: HyphenationEntry[] = Array.isArray(hyphenation?.languages) ? hyphenation.languages : []
     return new PrintAssets(new FontSet(harfbuzz), new FontResolver(catalogue), catalogue, new Map(fonts.map((f) => [f.sha256, f])), languages)
@@ -71,9 +72,9 @@ export class PrintAssets {
         if (!pending) {
           pending = (async () => {
             const listed = this.listed.get(h)
-            if (!listed) throw new Error(`font ${h.slice(0, 12)}… is not in the server's catalogue`)
+            if (!listed) throw new Error(t('font {hash}… is not in the server\'s catalogue', { hash: h.slice(0, 12) }))
             const bytes = await bytesOf(listed.file)
-            if ((await sha256(bytes)) !== h) throw new Error(`the font ${listed.family} ${listed.style} did not arrive intact`)
+            if ((await sha256(bytes)) !== h) throw new Error(t('the font {family} {style} did not arrive intact', { family: listed.family, style: listed.style }))
             try {
               this.fonts.add(h, bytes)
             } catch (e) {
@@ -98,7 +99,7 @@ export class PrintAssets {
     if (!pending) {
       const text = async (file: { sha256: string }) => {
         const bytes = await bytesOf(`/api/hyphenation/${file.sha256}`)
-        if ((await sha256(bytes)) !== file.sha256) throw new Error(`the hyphenation patterns for ${entry.name} did not arrive intact`)
+        if ((await sha256(bytes)) !== file.sha256) throw new Error(t('the hyphenation patterns for {name} did not arrive intact', { name: entry.name }))
         return new TextDecoder().decode(bytes)
       }
       pending = Promise.all([text(entry.patterns), entry.exceptions ? text(entry.exceptions) : Promise.resolve('')]).then(([p, e]) => new Hyphenator(entry.patterns.sha256, p, e))

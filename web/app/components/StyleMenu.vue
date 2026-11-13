@@ -10,6 +10,10 @@
 import { computed, onBeforeUnmount, reactive } from 'vue'
 import { menuCss } from '~/lib/style-css'
 import { StyleEditor, galleryFor, type StyleHost } from '~/lib/style-host'
+import { useI18n } from '~/lib/i18n'
+import { clearStyle, nounName } from '~/lib/noun-phrases'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{ host: StyleHost; x: number; y: number; mode?: 'edit' | 'apply' }>(), { mode: 'edit' })
 const emit = defineEmits<{ close: []; styles: [] }>()
@@ -17,7 +21,7 @@ const emit = defineEmits<{ close: []; styles: [] }>()
 const uses = computed(() => props.host.uses())
 const editor = reactive(new StyleEditor(props.host)) as StyleEditor
 const gallery = computed(() => galleryFor(props.host.styles, props.host.slot, props.host.model))
-const title = computed(() => props.host.title ?? props.host.noun)
+const title = computed(() => props.host.title ?? nounName(props.host.noun))
 
 // "Only their box" is a choice for this one change, not a setting: the next popover starts on the whole cell again.
 onBeforeUnmount(() => props.host.narrow?.set(false))
@@ -38,16 +42,16 @@ async function clicked(id: string) {
 </script>
 
 <template>
-  <Popover :x="x" :y="y" :width="mode === 'apply' ? 280 : 360" :label="mode === 'apply' ? 'Apply style' : 'Style'" @close="emit('close')">
+  <Popover :x="x" :y="y" :width="mode === 'apply' ? 280 : 360" :label="mode === 'apply' ? t('Apply style') : t('Style')" @close="emit('close')">
     <div class="menu" :data-mode="mode" data-testid="style-menu">
       <header>
-        <h3>{{ mode === 'apply' ? 'Apply style' : title }}</h3>
-        <button class="all" type="button" data-testid="all-styles" @click="emit('styles')">All styles…</button>
+        <h3>{{ mode === 'apply' ? t('Apply style') : title }}</h3>
+        <button class="all" type="button" data-testid="all-styles" @click="emit('styles')">{{ t('All Styles…') }}</button>
       </header>
       <div v-if="mode === 'edit' && host.origin?.length" class="origin" data-testid="style-origin">
         <p v-for="(line, i) in host.origin" :key="i">{{ line }}</p>
       </div>
-      <div v-if="host.slots.length > 1" class="slots" role="tablist" aria-label="Which part is styled" data-testid="slot-switcher">
+      <div v-if="host.slots.length > 1" class="slots" role="tablist" :aria-label="t('Which part is styled')" data-testid="slot-switcher">
         <button
           v-for="s in host.slots"
           :key="s.name"
@@ -60,27 +64,27 @@ async function clicked(id: string) {
           {{ s.label }}<span v-if="s.name === host.slot?.name && host.current" class="held"> · {{ host.current.name }}</span>
         </button>
       </div>
-      <ul class="gallery" role="listbox" aria-label="Styles">
+      <ul class="gallery" role="listbox" :aria-label="t('Styles')">
         <li v-for="s in gallery.own" :key="s.id" role="option" :aria-selected="s.id === editor.current?.id">
           <button type="button" :class="{ on: mode === 'edit' && s.id === editor.current?.id }" :disabled="host.readOnly && mode === 'apply'" :data-style="s.id" @click="clicked(s.id)">
             <span class="name"><span class="look" :style="menuCss(s.resolved)">{{ s.name }}</span></span>
-            <span v-if="s.to_name" class="flag" title="Waiting for a name">to name</span>
-            <span v-if="s.id === host.current?.id && (mode === 'apply' || s.id !== editor.current?.id)" class="here" title="This is the style of what you selected">here</span>
+            <span v-if="s.to_name" class="flag" :title="t('Waiting for a name')">{{ t('to name') }}</span>
+            <span v-if="s.id === host.current?.id && (mode === 'apply' || s.id !== editor.current?.id)" class="here" :title="t('This is the style of what you selected')">{{ t('here') }}</span>
             <span class="count mono">{{ uses[s.id] ?? 0 }}</span>
           </button>
         </li>
         <template v-if="gallery.bundles.length">
-          <li class="also" role="presentation">Whole styles that also set a {{ host.slot?.label.toLowerCase() }} — their {{ host.slot?.label.toLowerCase() }} part:</li>
+          <li class="also" role="presentation">{{ t('Whole styles that also set a {slot} — their {slot} part:', { slot: host.slot?.label ?? '' }) }}</li>
           <li v-for="s in gallery.bundles" :key="s.id" role="option" :aria-selected="s.id === editor.current?.id">
             <button type="button" :class="{ on: mode === 'edit' && s.id === editor.current?.id }" :disabled="host.readOnly && mode === 'apply'" :data-style="s.id" @click="clicked(s.id)">
               <span class="name"><span class="look" :style="menuCss(s.resolved)">{{ s.name }}</span></span>
-              <span v-if="s.id === host.current?.id" class="here">here</span>
+              <span v-if="s.id === host.current?.id" class="here">{{ t('here') }}</span>
               <span class="count mono">{{ uses[s.id] ?? 0 }}</span>
             </button>
           </li>
         </template>
       </ul>
-      <button v-if="mode === 'apply' && host.clear" type="button" class="clear" :disabled="host.readOnly" data-testid="clear-style" @click="clear">Clear {{ host.noun }} style</button>
+      <button v-if="mode === 'apply' && host.clear" type="button" class="clear" :disabled="host.readOnly" data-testid="clear-style" @click="clear">{{ clearStyle() }}</button>
       <StyleSpec v-if="mode === 'edit' && host.slot?.reads.length" :host="host" :editor="editor" />
     </div>
   </Popover>

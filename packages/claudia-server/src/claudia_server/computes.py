@@ -43,6 +43,7 @@ from __future__ import annotations
 import secrets
 import time
 from collections import Counter
+from functools import lru_cache
 
 from claudia_computes_io import (
     Untranslatable,
@@ -61,6 +62,7 @@ from claudia_computes import (
     DefineName,
     DeleteCols,
     DeleteRows,
+    FunctionHelp,
     InsertCols,
     InsertRows,
     NamedRange,
@@ -75,6 +77,7 @@ from claudia_computes import (
     SheetId,
     Structure,
     WorkbookModel,
+    function_catalog,
     get_function,
     parse_input,
     search_functions,
@@ -123,6 +126,7 @@ from claudia_core import (
 )
 from claudia_core.clock import utc_now
 
+from .i18n import msg, translate
 from .images import image_bytes
 from .office_export import document_info, office_export
 from .protocol import Context, RequestError, core_methods
@@ -187,13 +191,15 @@ computes_methods.kind("image")(image_bytes)
 def _workbook(ctx: Context) -> WorkbookModel:
     model = ctx.document.model
     if not isinstance(model, WorkbookModel):
-        raise RequestError("command_error", "this document is not a workbook")
+        raise RequestError("command_error", msg("this document is not a workbook"))
     return model
 
 
 def _index(value, limit: int, what: str):
     if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < limit:
-        raise RequestError("bad_request", f"{what} must be a whole number from 0 to {limit - 1}")
+        raise RequestError(
+            "bad_request", msg("{what} must be a whole number from 0 to {last}", what=what, last=limit - 1)
+        )
     return value
 
 
@@ -226,7 +232,10 @@ def _fresh_chart_id(taken) -> str:
 
 def _diagram_definition(workbook: WorkbookModel, diagram_id: str, what: str) -> None:
     if diagram_id not in workbook.diagrams:
-        raise RequestError("command_error", f"{what}: this document does not know the diagram {diagram_id!r}")
+        raise RequestError(
+            "command_error",
+            msg("{what}: this document does not know the diagram {diagram_id!r}", what=what, diagram_id=diagram_id),
+        )
 
 
 @computes_methods.method("sheets")
@@ -248,7 +257,7 @@ def _export_office(ctx, *, format):
     made and last changed, and by whom, read from the log (D411), and holds every formula with the value it shows
     (D413)."""
     if format not in ("xlsx", "ods"):
-        raise RequestError("bad_request", 'export_office: format must be "xlsx" or "ods"')
+        raise RequestError("bad_request", msg('export_office: format must be "xlsx" or "ods"'))
     book = _workbook(ctx)
     if format == "xlsx":
         return office_export(format, workbook_to_xlsx(book), xlsx_export_losses(book))
@@ -262,7 +271,9 @@ MAX_SEED = 2**53  # a seed a JSON number holds exactly
 
 def _whole(value, low: int, high: int, what: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
-        raise RequestError("bad_request", f"{what} must be a whole number from {low} to {high}")
+        raise RequestError(
+            "bad_request", msg("{what} must be a whole number from {low} to {high}", what=what, low=low, high=high)
+        )
     return value
 
 
@@ -305,7 +316,7 @@ def _limit(value, what: str) -> float | None:
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise RequestError("bad_request", f"random_preview: {what} must be a number or null")
+        raise RequestError("bad_request", msg("random_preview: {what} must be a number or null", what=what))
     return value
 
 
@@ -319,16 +330,18 @@ def _random_preview(ctx, *, distribution, params, low, high, draws):
     approximation. Nothing in the document is read or changed."""
     draws = _whole(draws, 1, MAX_PREVIEW_DRAWS, "random_preview: draws")
     if any(isinstance(p, bool) or not isinstance(p, (int, float)) for p in params):
-        raise RequestError("bad_request", "random_preview: params must be numbers")
+        raise RequestError("bad_request", msg("random_preview: params must be numbers"))
     low, high = _limit(low, "low"), _limit(high, "high")
     known = DISTRIBUTIONS.get(distribution.casefold()) if isinstance(distribution, str) else None
     if known is None:
-        raise RequestError("bad_request", f"random_preview: there is no distribution {distribution!r}")
+        raise RequestError(
+            "bad_request", msg("random_preview: there is no distribution {distribution!r}", distribution=distribution)
+        )
     try:
         check_parameters(known, params)
         points = [quantile(known.name, (i + 0.5) / draws, params, low=low, high=high) for i in range(draws)]
     except FormulaError as exc:
-        raise RequestError("command_error", f"random_preview: {exc.detail or exc.code}") from None
+        raise RequestError("command_error", msg("random_preview: {problem}", problem=exc.detail or exc.code)) from None
     arguments = [_number_text(p) for p in params]
     if low is not None or high is not None:
         arguments += ["" if low is None else _number_text(low), "" if high is None else _number_text(high)]
@@ -349,7 +362,7 @@ def _outcome_table(ctx, *, sheet, row, col, combine):
     inputs have different numbers of alternatives). `table` is null for a cell that depends on none."""
     row, col = _index(row, MAX_ROWS, "row"), _index(col, MAX_COLS, "col")
     if combine not in ("all", "pair"):
-        raise RequestError("bad_request", 'outcome_table: combine must be "all" or "pair"')
+        raise RequestError("bad_request", msg('outcome_table: combine must be "all" or "pair"'))
     try:
         table = _workbook(ctx).outcome_table(SheetId(sheet), row, col, combine=combine)
     except (KeyError, ValueError) as exc:
@@ -367,17 +380,19 @@ def _trace(ctx, *, sheet, row, col, reach, window):
     positions). Nothing is changed: lighting up cells is a view, not an edit."""
     row, col = _index(row, MAX_ROWS, "row"), _index(col, MAX_COLS, "col")
     if reach not in REACHES:
-        raise RequestError("bad_request", f"trace: reach must be one of {', '.join(REACHES)}")
+        raise RequestError("bad_request", msg("trace: reach must be one of {reaches}", reaches=", ".join(REACHES)))
     area = None
     if window is not None:
         if not isinstance(window, list) or len(window) != 4:
-            raise RequestError("bad_request", "trace: window is [row0, col0, row1, col1]")
+            raise RequestError("bad_request", msg("trace: window is [row0, col0, row1, col1]"))
         r0, c0 = _index(window[0], MAX_ROWS, "window row0"), _index(window[1], MAX_COLS, "window col0")
         r1, c1 = _index(window[2], MAX_ROWS, "window row1"), _index(window[3], MAX_COLS, "window col1")
         if r1 < r0 or c1 < c0:
-            raise RequestError("bad_request", "trace: the window must not end before it starts")
+            raise RequestError("bad_request", msg("trace: the window must not end before it starts"))
         if (r1 - r0 + 1) * (c1 - c0 + 1) > MAX_WINDOW_CELLS:
-            raise RequestError("bad_request", f"trace: window too large (at most {MAX_WINDOW_CELLS} positions)")
+            raise RequestError(
+                "bad_request", msg("trace: window too large (at most {limit} positions)", limit=MAX_WINDOW_CELLS)
+            )
         area = (r0, c0, r1, c1)
     try:
         found = _workbook(ctx).trace(SheetId(sheet), row, col, reach=reach, window=area)
@@ -394,9 +409,12 @@ def _cells(ctx, *, sheet, row0, row1, col0, col1):
     row0, row1 = _index(row0, MAX_ROWS, "row0"), _index(row1, MAX_ROWS, "row1")
     col0, col1 = _index(col0, MAX_COLS, "col0"), _index(col1, MAX_COLS, "col1")
     if row1 < row0 or col1 < col0:
-        raise RequestError("bad_request", "cells: the window must not end before it starts")
+        raise RequestError("bad_request", msg("cells: the window must not end before it starts"))
     if (row1 - row0 + 1) * (col1 - col0 + 1) > MAX_WINDOW_CELLS:
-        raise RequestError("bad_request", f"cells: window too large (at most {MAX_WINDOW_CELLS} positions)")
+        raise RequestError(
+            "bad_request",
+            msg("cells: window too large (at most {limit} positions)", limit=MAX_WINDOW_CELLS),
+        )
     found = _workbook(ctx).sheet(sheet)
     inside = found.cells_in(row0, row1, col0, col1)
     return {"revision": _rev(ctx), "cells": [[r, c, found.view((r, c))] for r, c in inside]}
@@ -409,15 +427,16 @@ def _rev(ctx) -> str | None:
 
 def _typed(ctx, items: list) -> tuple[tuple[int, int, dict | None], ...]:
     if len(items) > MAX_TYPED_CELLS:
-        raise RequestError("bad_request", f"set_cells: at most {MAX_TYPED_CELLS} cells at a time")
+        raise RequestError("bad_request", msg("set_cells: at most {limit} cells at a time", limit=MAX_TYPED_CELLS))
     cells = []
     for item in items:
         if not isinstance(item, dict) or set(item) != {"row", "col", "input"}:
-            raise RequestError("bad_request", "set_cells: each cell is an object with row, col and input")
+            raise RequestError("bad_request", msg("set_cells: each cell is an object with row, col and input"))
         text = item["input"]
         if not isinstance(text, str) or len(text) > ctx.limits.max_text:
             raise RequestError(
-                "bad_request", f"set_cells: input must be text of at most {ctx.limits.max_text} characters"
+                "bad_request",
+                msg("set_cells: input must be text of at most {limit} characters", limit=ctx.limits.max_text),
             )
         cells.append((_index(item["row"], MAX_ROWS, "row"), _index(item["col"], MAX_COLS, "col"), parse_input(text)))
     return tuple(cells)
@@ -433,7 +452,7 @@ def _cell_styles(ctx, *, sheet, row0, row1, col0, col1):
     row0, row1 = _index(row0, MAX_ROWS, "row0"), _index(row1, MAX_ROWS, "row1")
     col0, col1 = _index(col0, MAX_COLS, "col0"), _index(col1, MAX_COLS, "col1")
     if row1 < row0 or col1 < col0:
-        raise RequestError("bad_request", "cell_styles: the window must not end before it starts")
+        raise RequestError("bad_request", msg("cell_styles: the window must not end before it starts"))
     found = _workbook(ctx).sheet(sheet)
     return {"revision": _rev(ctx), "ranges": found.cell_styles.ranges_in((row0, col0, row1, col1))}
 
@@ -481,7 +500,10 @@ def _add_sheet(ctx, name, base):
     and the revision."""
     name = name.strip()
     if not name or len(name) > MAX_SHEET_NAME:
-        raise RequestError("bad_request", f"add_sheet: the name must have 1 to {MAX_SHEET_NAME} characters")
+        raise RequestError(
+            "bad_request",
+            msg("add_sheet: the name must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
+        )
     taken = _workbook(ctx).sheets
     number = len(taken) + 1
     while f"s{number}" in taken:
@@ -497,7 +519,7 @@ def _structure(ctx, *, sheet, axis, insert, at, count, base):
     Colleagues' places in the sheet move too."""
     edit = AXES.get((axis, insert))
     if edit is None:
-        raise RequestError("bad_request", 'structure: axis must be "row" or "col"')
+        raise RequestError("bad_request", msg('structure: axis must be "row" or "col"'))
     applied = ctx.document.execute(Structure(edit(sheet, at, count)), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
@@ -517,20 +539,23 @@ def _sizes(ctx, *, sheet):
 
 def _sized(axis: str, items: list) -> tuple[tuple[int, float | None], ...]:
     if len(items) > MAX_RESIZED_LINES:
-        raise RequestError("bad_request", f"resize_lines: at most {MAX_RESIZED_LINES} lines at a time")
+        raise RequestError(
+            "bad_request",
+            msg("resize_lines: at most {limit} lines at a time", limit=MAX_RESIZED_LINES),
+        )
     limit = MAX_ROWS if axis == "row" else MAX_COLS
     lo, hi = SIZE_LIMITS[axis]
     sizes = []
     for item in items:
         if not (isinstance(item, list) and len(item) == 2):
-            raise RequestError("bad_request", "resize_lines: each line is [index, size]")
+            raise RequestError("bad_request", msg("resize_lines: each line is [index, size]"))
         index, size = item
         index = _index(index, limit, "index")
         if size is not None:
             if isinstance(size, bool) or not isinstance(size, (int, float)):
-                raise RequestError("bad_request", "resize_lines: size must be a number or null")
+                raise RequestError("bad_request", msg("resize_lines: size must be a number or null"))
             if not lo <= size <= hi:
-                raise RequestError("bad_request", f"resize_lines: size must be between {lo} and {hi}")
+                raise RequestError("bad_request", msg("resize_lines: size must be between {lo} and {hi}", lo=lo, hi=hi))
         sizes.append((index, None if size is None else float(size)))
     return tuple(sizes)
 
@@ -540,7 +565,7 @@ def _resize_lines(ctx, *, sheet, axis, sizes, base):
     """Set (or clear, with `null`) the height of rows or the width of columns: `axis` is "row" or "col", `sizes` a
     list of `[index, size]`. One change in the history. Same errors as `apply`."""
     if axis not in SIZE_LIMITS:
-        raise RequestError("bad_request", 'resize_lines: axis must be "row" or "col"')
+        raise RequestError("bad_request", msg('resize_lines: axis must be "row" or "col"'))
     applied = ctx.document.execute(ResizeLines(sheet, axis, _sized(axis, sizes)), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
@@ -554,7 +579,7 @@ def _objects(ctx, *, sheet):
     (everyone else sees `null` there, not the path)."""
     workbook = _workbook(ctx)
     if sheet not in workbook.sheets:
-        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(sheet)]
     return {"revision": _rev(ctx), "sheet": sheet, "objects": objects}
 
@@ -605,7 +630,7 @@ def _define_diagram(ctx, *, definition, base):
     server's to assign, not the client's, so neither is sent. Returns the new definition's id and the revision;
     show it with `add_diagram_object`, `add_chart`, or both."""
     if "id" in definition or "format" in definition:
-        raise RequestError("bad_request", "define_diagram: id and format are assigned by the server")
+        raise RequestError("bad_request", msg("define_diagram: id and format are assigned by the server"))
     workbook = _workbook(ctx)
     diagram_id = _fresh_diagram_id(workbook.diagrams)
     command = DefineDiagram({**definition, "id": diagram_id, "format": 1})
@@ -640,7 +665,7 @@ def _add_diagram_object(ctx, *, sheet, row, col, w, h, diagram, base):
     `rotate_object`/`remove_object` then work on it exactly as they do on any other object."""
     workbook = _workbook(ctx)
     if sheet not in workbook.sheets:
-        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     _diagram_definition(workbook, diagram, "add_diagram_object")
     object_id = _fresh_object_id(workbook.objects)
     body = ObjectBody(object_id, "diagram", w, h, "plain-image", diagram=diagram)
@@ -655,7 +680,10 @@ def _add_chart(ctx, *, name, spec_id, index, base):
     the tab order (the end, if omitted). Returns the new tab's id and the revision."""
     name = name.strip()
     if not name or len(name) > MAX_SHEET_NAME:
-        raise RequestError("bad_request", f"add_chart: the name must have 1 to {MAX_SHEET_NAME} characters")
+        raise RequestError(
+            "bad_request",
+            msg("add_chart: the name must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
+        )
     workbook = _workbook(ctx)
     _diagram_definition(workbook, spec_id, "add_chart")
     chart_id = _fresh_chart_id(workbook.charts)
@@ -684,7 +712,7 @@ def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_pat
     and its pixel size (and anchor) never change on their own afterwards — only `move_object` moves it."""
     workbook = _workbook(ctx)
     if sheet not in workbook.sheets:
-        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     asset = decode_image(data)
     steps: list = [] if asset.id in workbook.images else [DefineImage(asset)]
     imported = ImageImport.from_data(
@@ -739,6 +767,13 @@ def _remove_object(ctx, *, id, base):
     return {"revision": applied.revision.to_data()}
 
 
+@lru_cache(maxsize=8)
+def _catalog_in(locale: str) -> list[FunctionHelp]:
+    """The function catalog with its words in the language of ``locale`` (English where there is no translation);
+    built once per language, since it is the same for every document and every window."""
+    return [entry.translated(lambda text: translate(text, locale)) for entry in function_catalog()]
+
+
 def _function_summary(entry) -> dict:
     return {"name": entry.name, "signature": entry.signature, "tooltip": entry.tooltip}
 
@@ -747,17 +782,19 @@ def _function_summary(entry) -> dict:
 def _functions(ctx, *, query):
     """Every cell function whose name or description mentions `query` (case-insensitive), closest name match
     first; every function, alphabetically, if `query` is blank (E13.5/E13.6: the searchable function list). Each
-    result is `{name, signature, tooltip}`; fetch the full help text with `function_help`."""
-    return [_function_summary(entry) for entry in search_functions(query)]
+    result is `{name, signature, tooltip}`; fetch the full help text with `function_help`. The descriptions are in
+    the language of the connection where they have been translated (E13.8), English where not."""
+    return [_function_summary(entry) for entry in search_functions(query, _catalog_in(ctx.locale))]
 
 
 @computes_methods.method("function_help", "name:str")
 def _function_help(ctx, *, name):
     """One function's full help text, by the name a `functions` result gave (while typing, the formula bar asks
-    for this itself: E13.5's "in context" is the signature and a short example shown as you type)."""
-    entry = get_function(name)
+    for this itself: E13.5's "in context" is the signature and a short example shown as you type). In the language
+    of the connection where it has been translated, English where not."""
+    entry = get_function(name, _catalog_in(ctx.locale))
     if entry is None:
-        raise RequestError("command_error", f"no function named {name!r}")
+        raise RequestError("command_error", msg("no function named {name!r}", name=name))
     return {"name": entry.name, "signature": entry.signature, "tooltip": entry.tooltip, "help": entry.help}
 
 
@@ -769,26 +806,30 @@ def _scope_of(workbook: WorkbookModel, value, what: str) -> SheetId | None:
     if value is None:
         return None
     if not isinstance(value, str) or value not in workbook.sheets:
-        raise RequestError("bad_request", f"{what}: scope must be a sheet id or null")
+        raise RequestError("bad_request", msg("{what}: scope must be a sheet id or null", what=what))
     return SheetId(value)
 
 
 def _cell_range(workbook: WorkbookModel, data, what: str) -> RangeRef:
     if not isinstance(data, dict) or set(data) != {"sheet", "row0", "col0", "row1", "col1"}:
-        raise RequestError("bad_request", f"{what}: range is {{sheet, row0, col0, row1, col1}}")
+        raise RequestError("bad_request", msg("{what}: range is {{sheet, row0, col0, row1, col1}}", what=what))
     sheet = data["sheet"]
     if sheet not in workbook.sheets:
-        raise RequestError("bad_request", f"{what}: this document does not know the sheet {sheet!r}")
+        raise RequestError(
+            "bad_request", msg("{what}: this document does not know the sheet {sheet!r}", what=what, sheet=sheet)
+        )
     r0, c0 = _index(data["row0"], MAX_ROWS, "row0"), _index(data["col0"], MAX_COLS, "col0")
     r1, c1 = _index(data["row1"], MAX_ROWS, "row1"), _index(data["col1"], MAX_COLS, "col1")
     if r1 < r0 or c1 < c0:
-        raise RequestError("bad_request", f"{what}: the range must not end before it starts")
+        raise RequestError("bad_request", msg("{what}: the range must not end before it starts", what=what))
     return RangeRef(CellRef(r0, c0, SheetId(sheet)), CellRef(r1, c1, SheetId(sheet)))
 
 
 def _anchor_of(workbook: WorkbookModel, data, what: str) -> tuple[SheetId, int, int]:
     if not isinstance(data, dict) or set(data) != {"sheet", "row", "col"} or data["sheet"] not in workbook.sheets:
-        raise RequestError("bad_request", f"{what}: anchor is {{sheet, row, col}} on a sheet of this document")
+        raise RequestError(
+            "bad_request", msg("{what}: anchor is {{sheet, row, col}} on a sheet of this document", what=what)
+        )
     return SheetId(data["sheet"]), _index(data["row"], MAX_ROWS, "row"), _index(data["col"], MAX_COLS, "col")
 
 
@@ -796,10 +837,14 @@ def _name_from(workbook: WorkbookModel, definition: dict, what: str) -> NamedRan
     """A :class:`NamedRange` from what a client sends; ``bad_request`` for anything that is not one."""
     allowed = {"name", "scope", "range", "anchor", "header", "grows", "purpose", "column_purposes"}
     if not isinstance(definition, dict) or not set(definition) <= allowed or "name" not in definition:
-        raise RequestError("bad_request", f"{what}: the definition is an object with {sorted(allowed)}")
+        raise RequestError(
+            "bad_request", msg("{what}: the definition is an object with {allowed}", what=what, allowed=sorted(allowed))
+        )
     anchor, given = definition.get("anchor"), definition.get("range")
     if (given is None) == (anchor is None):
-        raise RequestError("bad_request", f"{what}: give a range or an anchor (the cell of a SQL() formula), not both")
+        raise RequestError(
+            "bad_request", msg("{what}: give a range or an anchor (the cell of a SQL() formula), not both", what=what)
+        )
     try:
         return NamedRange(
             str(definition["name"]),
@@ -812,7 +857,7 @@ def _name_from(workbook: WorkbookModel, definition: dict, what: str) -> NamedRan
             None if anchor is None else _anchor_of(workbook, anchor, what),
         )
     except (ValueError, TypeError) as problem:
-        raise RequestError("bad_request", f"{what}: {problem}") from None
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
 
 
 def _name_data(workbook: WorkbookModel, named: NamedRange) -> dict:
@@ -893,9 +938,15 @@ def _sql_preview(ctx, *, query, sheet, limit):
     show. The same limits apply as in a cell (read only, one second, 100000 rows)."""
     workbook = _workbook(ctx)
     if sheet not in workbook.sheets:
-        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     if not isinstance(limit, int) or isinstance(limit, bool) or not 0 <= limit <= MAX_PREVIEW_ROWS:
-        raise RequestError("bad_request", f"sql_preview: limit must be a whole number from 0 to {MAX_PREVIEW_ROWS}")
+        raise RequestError(
+            "bad_request",
+            msg(
+                "sql_preview: limit must be a whole number from 0 to {limit}",
+                limit=MAX_PREVIEW_ROWS,
+            ),
+        )
     started = time.perf_counter()
     try:
         table = workbook.query(query, SheetId(sheet))
@@ -917,10 +968,13 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
     result already had is replaced."""
     workbook = _workbook(ctx)
     if sheet not in workbook.sheets:
-        raise RequestError("command_error", f"unknown sheet {sheet!r}")
+        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     row, col = _index(row, MAX_ROWS, "row"), _index(col, MAX_COLS, "col")
     if not isinstance(query, str) or not query.strip() or len(query) > ctx.limits.max_text:
-        raise RequestError("bad_request", f"define_sql: query must be text of at most {ctx.limits.max_text} characters")
+        raise RequestError(
+            "bad_request",
+            msg("define_sql: query must be text of at most {limit} characters", limit=ctx.limits.max_text),
+        )
     formula = '=SQL("' + query.replace('"', '""') + '")'
     steps: list = [SetCells(SheetId(sheet), ((row, col, parse_input(formula)),))]
     anchor = (SheetId(sheet), row, col)
@@ -933,7 +987,7 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
         try:
             steps.append(DefineName(NamedRange(name, None, None, True, False, "result", (), anchor)))
         except ValueError as problem:
-            raise RequestError("bad_request", f"define_sql: {problem}") from None
+            raise RequestError("bad_request", msg("define_sql: {problem}", problem=problem)) from None
     applied = ctx.document.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
@@ -947,7 +1001,9 @@ def _search_of(raw: dict) -> CompiledSearch:
 def _kinds_of(kinds: list | None, method: str) -> tuple[str, ...]:
     chosen = ["text"] if kinds is None else kinds
     if not chosen or not all(isinstance(k, str) and k in KINDS for k in chosen):
-        raise RequestError("bad_request", f"{method}: kinds is a list of {', '.join(KINDS)}")
+        raise RequestError(
+            "bad_request", msg("{method}: kinds is a list of {kinds}", method=method, kinds=", ".join(KINDS))
+        )
     return tuple(k for k in KINDS if k in chosen)
 
 
@@ -956,20 +1012,22 @@ def _search_scope(ctx, scope: dict | None, method: str) -> tuple[list[str] | Non
     a selection on it."""
     scope = scope or {}
     if set(scope) - {"sheet", "range"}:
-        raise RequestError("bad_request", f"{method}: a scope has a sheet and, on it, a range")
+        raise RequestError("bad_request", msg("{method}: a scope has a sheet and, on it, a range", method=method))
     sheet, area = scope.get("sheet"), scope.get("range")
     if area is not None and sheet is None:
-        raise RequestError("bad_request", f"{method}: a range is on a sheet: say which")
+        raise RequestError("bad_request", msg("{method}: a range is on a sheet: say which", method=method))
     if sheet is None:
         return None, None
     if not isinstance(sheet, str):
-        raise RequestError("bad_request", f"{method}: a sheet is named by its id")
+        raise RequestError("bad_request", msg("{method}: a sheet is named by its id", method=method))
     _workbook(ctx).sheet(SheetId(sheet))  # (command_error for a sheet this document does not have)
     if area is None:
         return [sheet], None
     ok = isinstance(area, list) and len(area) == 4 and all(isinstance(n, int) and not isinstance(n, bool) for n in area)
     if not ok or not (0 <= area[0] <= area[2] < MAX_ROWS and 0 <= area[1] <= area[3] < MAX_COLS):
-        raise RequestError("bad_request", f"{method}: a range is [first row, first column, last row, last column]")
+        raise RequestError(
+            "bad_request", msg("{method}: a range is [first row, first column, last row, last column]", method=method)
+        )
     return [sheet], (area[0], area[1], area[2], area[3])
 
 
@@ -1053,10 +1111,12 @@ def _left(items: list | None) -> dict[tuple[str, int, int], set[int] | None]:
     for item in items or []:
         ok = isinstance(item, dict) and set(item) == {"sheet", "row", "col", "match"}
         if not ok or not isinstance(item["sheet"], str):
-            raise RequestError("bad_request", "leave: each is {sheet, row, col, match}, match being a number or null")
+            raise RequestError(
+                "bad_request", msg("leave: each is {sheet, row, col, match}, match being a number or null")
+            )
         row, col, match = _index(item["row"], MAX_ROWS, "row"), _index(item["col"], MAX_COLS, "col"), item["match"]
         if match is not None and (isinstance(match, bool) or not isinstance(match, int) or match < 0):
-            raise RequestError("bad_request", "leave: match is the number of a match in the cell, or null for all")
+            raise RequestError("bad_request", msg("leave: match is the number of a match in the cell, or null for all"))
         key = (item["sheet"], row, col)
         if match is None:
             leave[key] = None
@@ -1139,8 +1199,11 @@ def _search_replace(ctx, *, query, kinds, scope, leave, base):
     if len(plan.changes) > MAX_REPLACED_CELLS:
         raise RequestError(
             "bad_request",
-            f"search_replace: that would change {len(plan.changes)} cells, at most {MAX_REPLACED_CELLS} at a time: "
-            "narrow the search",
+            msg(
+                "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search",
+                count=len(plan.changes),
+                limit=MAX_REPLACED_CELLS,
+            ),
         )
     command = replace_command(plan)
     if command is None:

@@ -1,4 +1,4 @@
-// Edit ▸ Search & replace… in a real browser (E5.15): the quick field, the marks in the grid, the builder with its
+// Edit ▸ Search & Replace… in a real browser (E5.15): the quick field, the marks in the grid, the builder with its
 // sentence, replacing in one undoable step, and the person's own pattern with its error in words.
 const { chromium } = require('playwright')
 const { spawn } = require('node:child_process')

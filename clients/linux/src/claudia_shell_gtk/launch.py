@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from .i18n import translate as _
 from .identity import AppIdentity
 from .paths import documents_dir, find_frontend, state_dir
 from .server import LOOPBACK, LocalServer, find_server_python, free_port, server_command
@@ -26,18 +27,26 @@ def prepare_server(identity: AppIdentity, *, repo: Path | None = None) -> LocalS
     python = find_server_python(repo=repo)
     if python is None:
         raise SetupProblem(
-            "Claudia's server needs Python 3.14, and none was found.\n"
-            "Set CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed "
-            "(in a checkout: run 'uv sync' and the interpreter is .venv/bin/python)."
+            _(
+                "Claudia's server needs Python 3.14, and none was found.\n"
+                "Set CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed "
+                "(in a checkout: run 'uv sync' and the interpreter is .venv/bin/python)."
+            )
         )
     web = find_frontend(repo=repo)
     if web is None:
         wrong = os.environ.get("CLAUDIA_WEB_DIR")
+        if wrong:
+            raise SetupProblem(
+                _("CLAUDIA_WEB_DIR is set to {wrong}, but there is no built frontend (index.html) in it.").format(
+                    wrong=wrong
+                )
+            )
         raise SetupProblem(
-            f"CLAUDIA_WEB_DIR is set to {wrong}, but there is no built frontend (index.html) in it."
-            if wrong
-            else "The web frontend has not been built.\n"
-            "Build it ('npm run build' in the web folder) or set CLAUDIA_WEB_DIR to a folder that holds it."
+            _(
+                "The web frontend has not been built.\n"
+                "Build it ('npm run build' in the web folder) or set CLAUDIA_WEB_DIR to a folder that holds it."
+            )
         )
     documents = documents_dir(identity.name)
     documents.mkdir(parents=True, exist_ok=True)

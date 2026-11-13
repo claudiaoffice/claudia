@@ -2,6 +2,9 @@
 import { computed } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { colorOf, initial, inkOn } from '~/lib/people'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: BaseSession; panelOpen: boolean }>()
 defineEmits<{ togglePanel: [] }>()
@@ -19,13 +22,13 @@ const everybody = computed(() => [
       <Wordmark />
       <span class="app"><AppIcon :size="22" :app="state.app" /> {{ state.app || 'claudia' }}</span>
     </div>
-    <h1 class="doc" :title="`document ${state.doc}`">{{ state.doc }}</h1>
+    <h1 class="doc" :title="t('document {doc}', { doc: state.doc })">{{ state.doc }}</h1>
     <div class="right">
-      <ul class="people" aria-label="people in this document">
+      <ul class="people" :aria-label="t('people in this document')">
         <li
           v-for="p in everybody"
           :key="p.user"
-          :title="p.me ? `${p.user} (you)` : p.user"
+          :title="p.me ? t('{user} (you)', { user: p.user }) : p.user"
           :style="{ background: p.color, color: inkOn(p.color) }"
           :class="{ ai: p.user.toLowerCase() === 'ai' }"
         >
@@ -33,7 +36,7 @@ const everybody = computed(() => [
         </li>
       </ul>
       <ConnectionIndicator :session="session" />
-      <button class="btn panel" type="button" :aria-pressed="panelOpen" @click="$emit('togglePanel')">History &amp; chat</button>
+      <button class="btn panel" type="button" :aria-pressed="panelOpen" @click="$emit('togglePanel')">{{ t('History & chat') }}</button>
     </div>
   </header>
 </template>

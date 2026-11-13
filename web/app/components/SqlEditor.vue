@@ -8,6 +8,9 @@ import { cellLabel } from '~/lib/cells'
 import { didYouMean, nameProblem, quoteIdentifier, replaceWord, visibleNames } from '~/lib/names'
 import { insertAt, previewCell, previewSummary } from '~/lib/sql'
 import type { Session, SqlPreview } from '~/lib/session'
+import { useI18n } from '~/lib/i18n'
+
+const { t, locale } = useI18n()
 
 const props = defineProps<{
   session: Session
@@ -52,7 +55,7 @@ async function run() {
     const answer = await props.session.sqlPreview(query, props.sheet, PREVIEW_ROWS)
     if (mine === asked) preview.value = answer
   } catch {
-    if (mine === asked) preview.value = { ok: false, error: { code: '#SQL!', detail: 'The server could not be asked right now.' } }
+    if (mine === asked) preview.value = { ok: false, error: { code: '#SQL!', detail: t('The server could not be asked right now.') } }
   } finally {
     if (mine === asked) busy.value = false
   }
@@ -99,23 +102,23 @@ function onKey(event: KeyboardEvent) {
 </script>
 
 <template>
-  <Popover :x="x" :y="y" :width="640" label="SQL editor" @close="emit('close')">
+  <Popover :x="x" :y="y" :width="640" :label="t('SQL editor')" @close="emit('close')">
     <div class="sql" data-testid="sql-editor" @keydown="onKey">
       <header>
-        <h3>Query in <span class="mono">{{ target }}</span></h3>
+        <h3><TransText :text="t('Query in {target}')"><template #target><span class="mono">{{ target }}</span></template></TransText></h3>
         <label class="result">
-          Result name
-          <input v-model="name" class="mono" placeholder="(none)" autocomplete="off" spellcheck="false" aria-label="result name" >
+          {{ t('Result name') }}
+          <input v-model="name" class="mono" :placeholder="t('(none)')" autocomplete="off" spellcheck="false" :aria-label="t('result name')" >
         </label>
       </header>
       <p v-if="nameProblemText" class="problem" role="alert">{{ nameProblemText }}</p>
       <div class="body">
-        <aside aria-label="tables">
-          <p class="cap">Tables</p>
-          <p v-if="!tables.length" class="none">Name some cells with a header row to query them.</p>
-          <div v-for="t in tables" :key="`${t.scope}:${t.name}`" class="table">
-            <button type="button" class="mono tname" @click="put(quoteIdentifier(t.name))">{{ t.name }}</button>
-            <button v-for="c in t.columns" :key="c.name" type="button" class="col" :title="c.type" @click="put(quoteIdentifier(c.name))">
+        <aside :aria-label="t('tables')">
+          <p class="cap">{{ t('Tables') }}</p>
+          <p v-if="!tables.length" class="none">{{ t('Name some cells with a header row to query them.') }}</p>
+          <div v-for="tb in tables" :key="`${tb.scope}:${tb.name}`" class="table">
+            <button type="button" class="mono tname" @click="put(quoteIdentifier(tb.name))">{{ tb.name }}</button>
+            <button v-for="c in tb.columns" :key="c.name" type="button" class="col" :title="c.type" @click="put(quoteIdentifier(c.name))">
               <span class="mono">{{ c.name }}</span><small>{{ c.type }}</small>
             </button>
           </div>
@@ -128,16 +131,16 @@ function onKey(event: KeyboardEvent) {
             rows="6"
             spellcheck="false"
             autocomplete="off"
-            aria-label="query"
-            placeholder="SELECT Region, SUM(Amount) AS Revenue FROM Sales GROUP BY Region"
+            :aria-label="t('query')"
+            :placeholder="t('SELECT Region, SUM(Amount) AS Revenue FROM Sales GROUP BY Region')"
           />
           <div class="preview" :class="{ stale: busy }" aria-live="polite">
-            <template v-if="preview === null"><p class="hint">The first rows show here as you type.</p></template>
+            <template v-if="preview === null"><p class="hint">{{ t('The first rows show here as you type.') }}</p></template>
             <template v-else-if="preview.ok">
               <p class="chips">
                 <span class="chip ok">{{ previewSummary(preview.row_count, preview.ms, preview.row_count >= MAX_RESULT_ROWS) }}</span>
-                <span class="chip">{{ preview.columns.length }} column{{ preview.columns.length === 1 ? '' : 's' }}</span>
-                <span v-if="preview.row_count > preview.rows.length" class="chip">first {{ preview.rows.length }} shown</span>
+                <span class="chip">{{ preview.columns.length === 1 ? t('1 column') : t('{count} columns', { count: preview.columns.length }) }}</span>
+                <span v-if="preview.row_count > preview.rows.length" class="chip">{{ t('first {length} shown', { length: preview.rows.length }) }}</span>
               </p>
               <div class="grid">
                 <table>
@@ -151,15 +154,15 @@ function onKey(event: KeyboardEvent) {
             <template v-else>
               <p class="chips"><span class="chip bad">{{ preview.error.code }}</span></p>
               <p class="error mono" role="alert">{{ preview.error.detail }}</p>
-              <p v-if="mend" class="mend">Did you mean <b class="mono">{{ mend.right }}</b>? <button type="button" class="use" @click="useRight">Use {{ mend.right }}</button></p>
+              <p v-if="mend" class="mend"><TransText :text="t('Did you mean {word}?')"><template #word><b class="mono">{{ mend.right }}</b></template></TransText> <button type="button" class="use" @click="useRight">{{ t('Use {right}', { right: mend.right }) }}</button></p>
             </template>
           </div>
         </div>
       </div>
       <footer>
-        <span class="note">Reads only · one second · {{ MAX_RESULT_ROWS.toLocaleString('en-US') }} rows at most</span>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
-        <button class="btn primary" type="button" :disabled="!canApply" @click="apply">Apply <span class="kbd">Ctrl+Enter</span></button>
+        <span class="note">{{ t('Reads only · one second · {rows} rows at most', { rows: MAX_RESULT_ROWS.toLocaleString(locale) }) }}</span>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
+        <button class="btn primary" type="button" :disabled="!canApply" @click="apply">{{ t('Apply') }} <span class="kbd">{{ t('Ctrl+Enter') }}</span></button>
       </footer>
     </div>
   </Popover>

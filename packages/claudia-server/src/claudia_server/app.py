@@ -78,6 +78,7 @@ from .fonts import FontService, font_router
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
 from .hyphenation import HyphenationService, hyphenation_router
+from .i18n import localized, msg
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, web_script_hashes
 
@@ -289,10 +290,10 @@ class Gateway:
         """The account of a person who came in with a recovery key and chose a new password (they are logged in)."""
         key, user, password = params.get("recovery_key"), params.get("user"), params.get("password")
         if not (isinstance(key, str) and isinstance(user, str) and isinstance(password, str)):
-            raise HubError("bad_request", "a recovery key, a name and a new password are needed")
+            raise HubError("bad_request", msg("a recovery key, a name and a new password are needed"))
         directory = self.directory
         if not isinstance(directory, RecoverableDirectory):
-            raise HubError("unavailable", "this server does not keep recovery keys")
+            raise HubError("unavailable", msg("this server does not keep recovery keys"))
         async with self._hashing:
             return await asyncio.to_thread(directory.recover, doc_id, key, user, password)
 
@@ -330,7 +331,9 @@ class Gateway:
             await _refuse(websocket, None, exc.code, exc.message, 4400)
             return None
         if name != "hello" or not isinstance(params, dict):
-            await _refuse(websocket, request_id, "bad_request", "the first message must be hello with params", 4400)
+            await _refuse(
+                websocket, request_id, "bad_request", msg("the first message must be hello with params"), 4400
+            )
             return None
         locale = normalize_locale(params.get("locale"))
         try:
@@ -343,21 +346,24 @@ class Gateway:
                     doc_id, credentials, params.get("create") is True, params.get("access")
                 )
             if account is None:
-                await _refuse(websocket, request_id, "unauthorized", "missing or wrong credentials", 4401)
+                await _refuse(websocket, request_id, "unauthorized", msg("missing or wrong credentials"), 4401, locale)
                 return None
             return request_id, account, await self.hub.open(doc_id), created, locale
         except HubError as exc:
-            await _refuse(websocket, request_id, exc.code, exc.message, _CLOSE.get(exc.code, 4400))
+            await _refuse(websocket, request_id, exc.code, exc.message, _CLOSE.get(exc.code, 4400), locale)
         except AuthRefused as exc:
-            await _refuse(websocket, request_id, "unauthorized", str(exc), 4401)
+            await _refuse(websocket, request_id, "unauthorized", exc.args[0], 4401, locale)
         except ValueError as exc:  # the name or password of a new document is not acceptable
             await _refuse(websocket, request_id, "bad_request", str(exc), 4400)
         return None
 
 
-async def _refuse(websocket: WebSocket, request_id, code: str, message: str, close_code: int) -> None:
-    """Answer the first frame with an error and close the socket with ``close_code``."""
-    frame = {"id": request_id, "ok": False, "error": {"code": code, "message": message}}
+async def _refuse(
+    websocket: WebSocket, request_id, code: str, message: str, close_code: int, locale: str = DEFAULT_LOCALE
+) -> None:
+    """Answer the first frame with an error (its message in ``locale``, once the person has said which) and close the
+    socket with ``close_code``."""
+    frame = {"id": request_id, "ok": False, "error": {"code": code, "message": localized(message, locale)}}
     await websocket.send_text(json.dumps(frame))
     await websocket.close(code=close_code)
 
@@ -406,7 +412,9 @@ class _Live:
         try:
             connection = self.document.connect(self.account, self.send, locale=self.locale)
         except HubError as exc:
-            await _refuse(self.websocket, self.request_id, exc.code, exc.message, _CLOSE.get(exc.code, 1013))
+            await _refuse(
+                self.websocket, self.request_id, exc.code, exc.message, _CLOSE.get(exc.code, 1013), self.locale
+            )
             return
         welcome = {"id": self.request_id, "ok": True, "result": {**connection.welcome(), "created": self.created}}
         self.send(json.dumps(welcome, separators=(",", ":")))

@@ -41,6 +41,7 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 from claudia_creates import AddSlide, PrintSetup, PrintSetupError, SetPrintSetup, ShapeLibrary, SlideAnchor, SlideModel
 
+from .i18n import msg
 from .images import image_bytes
 from .office_export import document_info, office_export
 from .printing import add_language_methods, people_only
@@ -58,7 +59,7 @@ PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}
 def _deck(ctx: Context) -> SlideModel:
     model = ctx.document.model
     if not isinstance(model, SlideModel):
-        raise RequestError("command_error", "this document is not a presentation")
+        raise RequestError("command_error", msg("this document is not a presentation"))
     return model
 
 
@@ -216,7 +217,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         `set_snap`."""
         deck = _deck(ctx)
         if slide not in deck.slides:
-            raise RequestError("command_error", f"unknown slide {slide!r}")
+            raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
         objects = [obj.to_data_for(ctx.user) for obj in deck.objects_on(slide)]
         return {"revision": _rev(ctx), "slide": slide, "objects": objects}
 
@@ -247,7 +248,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         changes, no history, no chat -- just the deck as it stands now (D212); an odp says in its metadata when the
         deck was made and last changed, and by whom, read from the log (D411)."""
         if format not in ("pptx", "odp"):
-            raise RequestError("bad_request", 'export_office: format must be "pptx" or "odp"')
+            raise RequestError("bad_request", msg('export_office: format must be "pptx" or "odp"'))
         deck = _deck(ctx)
         if format == "pptx":
             return office_export(format, slides_to_pptx(deck))
@@ -270,16 +271,18 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         style of its kind. Returns the new object's id and the revision. A circle must keep its proportions."""
         deck = _deck(ctx)
         if kind not in OBJECT_KINDS:
-            raise RequestError("bad_request", f"add_object: kind must be one of {', '.join(OBJECT_KINDS)}")
+            raise RequestError(
+                "bad_request", msg("add_object: kind must be one of {kinds}", kinds=", ".join(OBJECT_KINDS))
+            )
         if kind == "shape" and shape is None:
-            raise RequestError("bad_request", "add_object: a shape needs the id of its outline")
+            raise RequestError("bad_request", msg("add_object: a shape needs the id of its outline"))
         if kind == "image":
-            raise RequestError("bad_request", "add_object: use add_image to put a picture on a slide")
+            raise RequestError("bad_request", msg("add_object: use add_image to put a picture on a slide"))
         steps: list = []
         if shape is not None and shape not in deck.shapes:
             outline = library.get(shape)
             if outline is None:
-                raise RequestError("bad_request", f"add_object: this server has no shape {shape!r}")
+                raise RequestError("bad_request", msg("add_object: this server has no shape {shape!r}", shape=shape))
             steps.append(DefineShape(outline))
         object_id = _fresh("o", deck.objects)
         style = STYLE_OF_KIND[kind]

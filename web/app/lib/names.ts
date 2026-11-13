@@ -5,14 +5,15 @@
 
 import { cellLabel, rangeLabel } from './cells'
 
+import { translate as t } from './i18n'
 /** What a table (or one of its columns) is for; the cells of it are tinted by it (mock 2). `calc` is shown as
  * "Calculation". */
 export type Purpose = 'input' | 'data' | 'calc' | 'result'
 export const PURPOSES: { value: Purpose; label: string; hint: string }[] = [
-  { value: 'input', label: 'Input', hint: 'Values people type and change' },
-  { value: 'data', label: 'Data', hint: 'Plain data, nothing to tell' },
-  { value: 'calc', label: 'Calculation', hint: 'Cells that are worked out from others' },
-  { value: 'result', label: 'Result', hint: 'What a query gave' },
+  { value: 'input', get label() { return t('Input') }, get hint() { return t('Values people type and change') } },
+  { value: 'data', get label() { return t('Data') }, get hint() { return t('Plain data, nothing to tell') } },
+  { value: 'calc', get label() { return t('Calculation') }, get hint() { return t('Cells that are worked out from others') } },
+  { value: 'result', get label() { return t('Result') }, get hint() { return t('What a query gave') } },
 ]
 
 export function purposeLabel(purpose: Purpose): string {
@@ -76,12 +77,12 @@ function columnOf(letters: string): number {
 /** Why `text` cannot be a name, or `null` when it can — the server's own rule (`claudia_computes.names`), asked
  * here too so the Name Box can tell a name from a cell address or a typo without a round trip. */
 export function nameProblem(text: string): string | null {
-  if (text === '') return 'a name needs some text'
-  if (text.length > MAX_NAME) return `a name has at most ${MAX_NAME} characters`
-  if (!NAME.test(text)) return 'a name starts with a letter and has only letters, digits, _ and .'
-  if (text.toUpperCase() === 'TRUE' || text.toUpperCase() === 'FALSE') return `${text} is a value, not a name`
+  if (text === '') return t('a name needs some text')
+  if (text.length > MAX_NAME) return t('a name has at most {max} characters', { max: MAX_NAME })
+  if (!NAME.test(text)) return t('a name starts with a letter and has only letters, digits, _ and .')
+  if (text.toUpperCase() === 'TRUE' || text.toUpperCase() === 'FALSE') return t('{text} is a value, not a name', { text })
   const cell = CELL_LIKE.exec(text)
-  if (cell && columnOf(cell[1]!) < MAX_COLS && Number(cell[2]) > 0 && Number(cell[2]) <= MAX_ROWS) return `${text} is a cell, not a name`
+  if (cell && columnOf(cell[1]!) < MAX_COLS && Number(cell[2]) > 0 && Number(cell[2]) <= MAX_ROWS) return t('{text} is a cell, not a name', { text })
   return null
 }
 
@@ -181,7 +182,7 @@ export function nameBoxAction(
   const last = to === undefined ? null : parseCell(to)
   if (first && last && rest.length === 0) return { kind: 'range', row: first[0], col: first[1], row2: last[0], col2: last[1] }
   const known = resolveName(names, sheet, text)
-  if (known && (selectionIsOneCell || known.kind === 'result')) return known.region ? { kind: 'goto', name: known } : { kind: 'problem', message: `${known.name} has no cells right now` }
+  if (known && (selectionIsOneCell || known.kind === 'result')) return known.region ? { kind: 'goto', name: known } : { kind: 'problem', message: t('{name} has no cells right now', { name: known.name }) }
   if (known) return { kind: 'redefine', name: known }
   const problem = nameProblem(text)
   return problem ? { kind: 'problem', message: problem } : { kind: 'define', name: text, scope: null }
@@ -190,7 +191,7 @@ export function nameBoxAction(
 /** A short label for a region, as the Names manager's "Refers to" column shows it: `Data!A1:D4`. */
 export function referLabel(info: NameInfo): string {
   if (info.a1) return info.a1
-  return info.anchor ? `${info.sheet_name}!${cellLabel(info.anchor.row, info.anchor.col)} (no table right now)` : '—'
+  return info.anchor ? t('{cell} (no table right now)', { cell: `${info.sheet_name}!${cellLabel(info.anchor.row, info.anchor.col)}` }) : '—'
 }
 
 /** One piece of how a table is drawn under its cells (mock 2). */
@@ -330,10 +331,10 @@ export interface Completions {
 }
 
 const SPECIAL_ITEMS: Completion[] = [
-  { label: '#All', insert: '#All', detail: 'the whole table, header included', closes: true },
-  { label: '#Data', insert: '#Data', detail: 'the rows without the header', closes: true },
-  { label: '#Headers', insert: '#Headers', detail: 'the header row', closes: true },
-  { label: '@', insert: '@', detail: 'this row', closes: false },
+  { label: '#All', insert: '#All', get detail() { return t('the whole table, header included') }, closes: true },
+  { label: '#Data', insert: '#Data', get detail() { return t('the rows without the header') }, closes: true },
+  { label: '#Headers', insert: '#Headers', get detail() { return t('the header row') }, closes: true },
+  { label: '@', insert: '@', get detail() { return t('this row') }, closes: false },
 ]
 const MAX_COMPLETIONS = 8
 
@@ -366,7 +367,7 @@ export function completionsAt(text: string, caret: number, names: NameInfo[], sh
   const typed = word[1]!.toLowerCase()
   const items = visibleNames(names, sheet)
     .filter((n) => n.region !== null && n.name.toLowerCase().startsWith(typed) && n.name.toLowerCase() !== typed)
-    .map((n) => ({ label: n.name, insert: n.name, detail: n.kind === 'result' ? 'query result' : n.header ? `table · ${n.rows} rows` : 'cells', closes: false }))
+    .map((n) => ({ label: n.name, insert: n.name, detail: n.kind === 'result' ? t('query result') : n.header ? t('table · {rows} rows', { rows: n.rows }) : t('cells'), closes: false }))
   return items.length ? { from: before.length - word[1]!.length, items: items.slice(0, MAX_COMPLETIONS) } : null
 }
 

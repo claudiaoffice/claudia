@@ -5,6 +5,7 @@ import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
+import { languageNow, onLanguageChange, translate as t } from './i18n'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
 
@@ -157,6 +158,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   private retryDelays: number[]
   private storage: ModeStorage
 
+  private stopLanguage: (() => void) | null = null
+
   /** `app` is the app's own part of the state (it becomes reactive together with the common part). */
   constructor(
     private makeLink: () => LinkLike,
@@ -187,6 +190,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   close() {
     this.closing = true
+    this.stopLanguage?.()
+    this.stopLanguage = null
     this.link?.close()
     this.state.status = 'closed'
   }
@@ -202,6 +207,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     link.onClose((code, requested) => this.onClose(link, code, requested))
     const welcome = await link.connect()
     this.link = link
+    this.stopLanguage ??= onLanguageChange((tag) => void this.tellLanguage(tag))
     this.applyWelcome(welcome)
     await this.reload()
     this.state.status = 'open'
@@ -222,20 +228,33 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.typing = []
     s.proposal = w.proposal
     if (w.returned) this.notice(this.returnedText(w.returned))
+    if (w.locale && w.locale !== languageNow()) void this.tellLanguage(languageNow()) // chosen since this link began
     this.onWelcome()
+  }
+
+  /** The person chose another App Language: the server speaks it to this window from now on (D323). A server that
+   * does not know the request, or no answer, changes nothing the person would notice, so it is not reported. */
+  private async tellLanguage(tag: string): Promise<void> {
+    try {
+      await this.link?.request('set_locale', { locale: tag })
+    } catch {
+      // the interface is already in the new language; only the server's own messages stay in the old one
+    }
   }
 
   /** The one-time notice of what happened, while this person was away, to the line they were on (E3.7). */
   private returnedText(r: RestoreResolution): string {
-    const verb = r.kind === 'restore' ? 'restored' : 'switched'
-    return `While you were away, ${r.by} ${verb} to ${r.label} (agreed: ${r.agreed.join(', ')}).`
+    const vars = { by: r.by, label: r.label, agreed: r.agreed.join(', ') }
+    return r.kind === 'restore'
+      ? t('While you were away, {by} restored to {label} (agreed: {agreed}).', vars)
+      : t('While you were away, {by} switched to {label} (agreed: {agreed}).', vars)
   }
 
   /** What became of the suggestion that was open, for the notice everybody sees once it resolves (E3.7). */
   private resolvedText(p: RestoreProposal, outcome: string): string {
-    if (outcome === 'agreed') return `Everybody agreed: now at ${p.label}.`
-    if (outcome === 'declined') return `The suggestion to go to ${p.label} was declined.`
-    return `The suggestion to go to ${p.label} was withdrawn.`
+    if (outcome === 'agreed') return t('Everybody agreed: now at {label}.', { label: p.label })
+    if (outcome === 'declined') return t('The suggestion to go to {label} was declined.', { label: p.label })
+    return t('The suggestion to go to {label} was withdrawn.', { label: p.label })
   }
 
   /** Where the app counts differently from the server it converts the regions people send (default: as they are). */
@@ -357,7 +376,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       case 'branch':
       case 'rebuilt':
       case 'redacted':
-        this.notice('The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded.', 'warning')
+        this.notice(t('The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded.'), 'warning')
         this.track(this.reload())
         break
     }
@@ -373,12 +392,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       const others = s.typing.filter((u) => u !== who)
       s.typing = message.data.on ? [...others, who] : others
     } else if (message.kind === 'person_left') {
-      this.notice(`${message.data.user} left this document.`)
+      this.notice(t('{user} left this document.', { user: message.data.user }))
     } else if (message.kind === 'owner_changed') {
-      this.notice(`${message.data.owner} is now the owner of this document.`)
+      this.notice(t('{owner} is now the owner of this document.', { owner: message.data.owner }))
       this.track(this.reconnectNow())  // our own role may have just changed (we may have been the old owner)
     } else if (message.kind === 'document_deleted') {
-      this.notice('This document was deleted by its owner.', 'warning')
+      this.notice(t('This document was deleted by its owner.'), 'warning')
       this.close()
     }
   }
@@ -404,18 +423,18 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   protected explain(error: unknown) {
-    if (!(error instanceof ProtocolError)) return this.notice('Something went wrong.', 'error')
+    if (!(error instanceof ProtocolError)) return this.notice(t('Something went wrong.'), 'error')
     switch (error.code) {
       case 'locked':
       case 'conflict':
         return this.notice(error.message, 'warning')
       case 'stale':
-        this.notice('Your change was not applied: the document changed under you. It was reloaded.', 'warning')
+        this.notice(t('Your change was not applied: the document changed under you. It was reloaded.'), 'warning')
         return void this.track(this.reload())
       case 'forbidden':
-        return this.notice('You can only look at this document.', 'warning')
+        return this.notice(t('You can only look at this document.'), 'warning')
       case 'closed':
-        return this.notice('Not connected to the server.', 'error')
+        return this.notice(t('Not connected to the server.'), 'error')
       default:
         return this.notice(error.message, 'error')
     }
@@ -438,7 +457,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   async saveCheckpoint(label: string | null): Promise<boolean> {
     const done = await this.attempt('save_checkpoint', { label })
-    if (done !== false && !done.saved) this.notice('Nothing has changed since the last checkpoint.')
+    if (done !== false && !done.saved) this.notice(t('Nothing has changed since the last checkpoint.'))
     return done !== false && done.saved
   }
 

@@ -163,12 +163,12 @@ describe('View, Tools, Config and Help pieces', () => {
   })
 })
 
-describe('searchItem: Edit ▸ Search & replace… (D281, E5.15)', () => {
+describe('searchItem: Edit ▸ Search & Replace… (D281, E5.15)', () => {
   it('is one entry with its shortcut, and opens the panel', () => {
     const { c } = context()
     const opened: string[] = []
     const item = searchItem(c, { open: () => opened.push('open') })
-    expect([item.id, item.label, item.hint]).toEqual(['edit.search-replace', 'Search & replace…', 'Ctrl+F'])
+    expect([item.id, item.label, item.hint]).toEqual(['edit.search-replace', 'Search & Replace…', 'Ctrl+F'])
     item.action!()
     expect(opened).toEqual(['open'])
   })

@@ -5,6 +5,9 @@
 // author of the new text, and the suggestion's author is remembered with it.
 import { computed } from 'vue'
 import type { TextSession } from '~/lib/text-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: TextSession; id: string; x: number; y: number }>()
 const emit = defineEmits<{ close: []; next: [] }>()
@@ -28,19 +31,19 @@ async function reject() {
 </script>
 
 <template>
-  <Popover v-if="s" :x="x" :y="y" :width="320" label="Suggestion" @close="emit('close')">
+  <Popover v-if="s" :x="x" :y="y" :width="320" :label="t('Suggestion')" @close="emit('close')">
     <div class="suggestion" :class="{ outdated: s.outdated }" data-testid="suggestion" :data-suggestion="s.id">
-      <p class="who">{{ s.author ?? 'ai' }} suggests</p>
+      <p class="who">{{ t('{author} suggests', { author: s.author ?? 'ai' }) }}</p>
       <p class="reason">{{ s.reason }}</p>
       <p v-if="s.replacement !== null" class="change">
-        <del>{{ s.original || '·' }}</del> <span class="arrow" aria-hidden="true">→</span> <ins>{{ s.replacement || '(delete)' }}</ins>
+        <del>{{ s.original || '·' }}</del> <span class="arrow" aria-hidden="true">→</span> <ins>{{ s.replacement || t('(delete)') }}</ins>
       </p>
       <p v-else class="change remark">“{{ s.original.length > 60 ? s.original.slice(0, 60) + '…' : s.original }}”</p>
-      <p v-if="s.outdated" class="note">The text under it changed. It cannot be accepted any more.</p>
+      <p v-if="s.outdated" class="note">{{ t('The text under it changed. It cannot be accepted any more.') }}</p>
       <div class="buttons">
-        <button v-if="s.replacement !== null" type="button" class="accept" :disabled="s.outdated || session.readOnly" @click="accept">Accept</button>
-        <button type="button" class="reject" :disabled="session.readOnly" @click="reject">{{ s.replacement === null ? 'Dismiss' : 'Reject' }}</button>
-        <button v-if="others" type="button" class="next" data-testid="next-suggestion" @click="emit('next')">Next ({{ others }})</button>
+        <button v-if="s.replacement !== null" type="button" class="accept" :disabled="s.outdated || session.readOnly" @click="accept">{{ t('Accept') }}</button>
+        <button type="button" class="reject" :disabled="session.readOnly" @click="reject">{{ s.replacement === null ? t('Dismiss') : t('Reject') }}</button>
+        <button v-if="others" type="button" class="next" data-testid="next-suggestion" @click="emit('next')">{{ t('Next ({others})', { others }) }}</button>
       </div>
     </div>
   </Popover>

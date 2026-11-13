@@ -1,5 +1,5 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
  "AddChart": {
   "class": [
    "Command"
@@ -360,8 +360,10 @@
   "class": [
    "object"
   ],
-  "init": "(name: 'str', signature: 'str', description: 'str', tooltip: 'str', help: 'str', source: 'str') -> None",
-  "methods": {},
+  "init": "(name: 'str', signature: 'str', description: 'str', tooltip: 'str', help: 'str', source: 'str', examples: 'tuple[Example, ...]' = ()) -> None",
+  "methods": {
+   "translated": "(self, translate: 'Translate') -> 'FunctionHelp'"
+  },
   "properties": []
  },
  "ImagesChanged": {
@@ -1049,5 +1051,8 @@
  },
  "search_functions": {
   "function": "(query: 'str', catalog: 'list[FunctionHelp] | None' = None) -> 'list[FunctionHelp]'"
+ },
+ "translatable_texts": {
+  "function": "(catalog: 'list[FunctionHelp] | None' = None) -> 'list[str]'"
  }
 }

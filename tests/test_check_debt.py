@@ -107,6 +107,19 @@ def test_mo_compilation_is_its_own_check():
     assert mo_check.command == ("uv", "run", "--quiet", "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")
 
 
+def test_the_servers_catalog_is_checked_like_the_shells():
+    """D322: the server has its own compiled ``de`` catalog, and the gate keeps it in step with ``po/de.po``."""
+    check = next(c for c in check_debt.checks() if c.name == "mo compilation server")
+    assert check.command[-3:] == ("--locale-dir", check_debt.SERVER_LOCALE_DIR, "--check")
+
+
+def test_i18n_merge_is_its_own_check():
+    """A translation file that lacks a string the template has, or still holds one the code no longer uses, is
+    caught by the gate, as the template itself is by "i18n extraction"."""
+    merge_check = next(c for c in check_debt.checks() if c.name == "i18n merge")
+    assert merge_check.command == ("uv", "run", "--quiet", "python", "scripts/update_po.py", "--check")
+
+
 def test_ci_catches_the_real_bug_with_no_node_modules(tmp_path):
     """The acceptance test asked for in the finding: with no ``node_modules``, ``--ci`` exits non-zero.
 

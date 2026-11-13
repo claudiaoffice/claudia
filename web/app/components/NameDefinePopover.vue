@@ -4,6 +4,9 @@
 // A first row of text defaults to a header — that makes the cells a table, which grows with its last row.
 import { computed, onMounted, ref } from 'vue'
 import { draftOf, nameProblem, PURPOSES, type NameDraft, type NameInfo, type NameRegion, type Purpose } from '~/lib/names'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   x: number
@@ -41,28 +44,28 @@ function submit() {
 </script>
 
 <template>
-  <Popover :x="x" :y="y" :width="340" :label="existing ? `move ${existing.name}` : 'name these cells'" @close="emit('close')">
+  <Popover :x="x" :y="y" :width="340" :label="existing ? t('move {name}', { name: existing.name }) : t('name these cells')" @close="emit('close')">
     <form class="define" data-testid="name-define" @submit.prevent="submit">
-      <h3>{{ existing ? `Move “${existing.name}” here` : 'Name these cells' }}</h3>
+      <h3>{{ existing ? t('Move “{name}” here', { name: existing.name }) : t('Name these cells') }}</h3>
       <label class="field">
-        Name
-        <input ref="field" v-model="name" class="mono" autocomplete="off" spellcheck="false" aria-label="name" >
+        {{ t('Name') }}
+        <input ref="field" v-model="name" class="mono" autocomplete="off" spellcheck="false" :aria-label="t('name')" >
       </label>
       <p v-if="problem" class="problem" role="alert">{{ problem }}</p>
-      <p v-else-if="replaces" class="problem soft" role="status">A name like this exists already and will point here.</p>
-      <p class="refers">Refers to <span class="mono">{{ refersTo }}</span></p>
-      <label class="check"><input v-model="header" type="checkbox" ><span>First row is a header <small>— a table: <span class="mono">{{ name.trim() || 'Name' }}[Column]</span>, <span class="mono">FROM {{ name.trim() || 'Name' }}</span></small></span></label>
-      <label class="check" :class="{ off: !header }"><input v-model="grows" type="checkbox" :disabled="!header" ><span>Grows with its last row</span></label>
+      <p v-else-if="replaces" class="problem soft" role="status">{{ t('A name like this exists already and will point here.') }}</p>
+      <TransText tag="p" class="refers" :text="t('Refers to {range}')"><template #range><span class="mono">{{ refersTo }}</span></template></TransText>
+      <label class="check"><input v-model="header" type="checkbox" ><span>{{ t('First row is a header') }} <small><TransText :text="t('— a table: {structured}, {sql}')"><template #structured><span class="mono">{{ name.trim() || t('Name') }}[Column]</span></template><template #sql><span class="mono">FROM {{ name.trim() || t('Name') }}</span></template></TransText></small></span></label>
+      <label class="check" :class="{ off: !header }"><input v-model="grows" type="checkbox" :disabled="!header" ><span>{{ t('Grows with its last row') }}</span></label>
       <fieldset class="purpose">
-        <legend>Cells are</legend>
+        <legend>{{ t('Cells are') }}</legend>
         <label v-for="p in PURPOSES.filter((q) => q.value !== 'result')" :key="p.value" class="pill" :class="{ on: purpose === p.value }">
           <input v-model="purpose" type="radio" :value="p.value" ><span class="swatch" :style="{ background: `var(--purpose-${p.value})` }" />{{ p.label }}
         </label>
       </fieldset>
-      <label class="check"><input v-model="onlyHere" type="checkbox" ><span>Only on {{ sheetName }} <small>— other sheets can have a name of their own</small></span></label>
+      <label class="check"><input v-model="onlyHere" type="checkbox" ><span>{{ t('Only on {sheet}', { sheet: sheetName }) }} <small>{{ t('— other sheets can have a name of their own') }}</small></span></label>
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="problem !== null">{{ existing ? 'Move name' : 'Define' }}</button>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
+        <button class="btn primary" type="submit" :disabled="problem !== null">{{ existing ? t('Move name') : t('Define') }}</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
       </div>
     </form>
   </Popover>

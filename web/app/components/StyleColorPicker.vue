@@ -5,6 +5,9 @@ import { computed, ref, watch } from 'vue'
 import { SWATCHES } from '~/lib/palette'
 import { nameOf, nearestRole, offPalette, roleValue, swatchFor, type ColourRole } from '~/lib/roles'
 import { toHex } from '~/lib/style-css'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   label: string
@@ -56,7 +59,7 @@ function adopt() {
 
 <template>
   <div class="colour" :data-testid="`colour-${label.toLowerCase().replace(/\s/g, '-')}`">
-    <button class="swatch-btn" type="button" :disabled="disabled" :aria-expanded="open" :aria-label="`${label}: ${shown}`" :title="label" @click="open = !open">
+    <button class="swatch-btn" type="button" :disabled="disabled" :aria-expanded="open" :aria-label="t('{label}: {value}', { label, value: shown })" :title="label" @click="open = !open">
       <i :style="{ background: paint || 'transparent' }" :class="{ empty: !paint || paint === 'transparent' }" />
       <span class="what">{{ label }}</span>
       <span class="is">{{ shown }}</span>
@@ -64,7 +67,7 @@ function adopt() {
     <div v-if="open" class="drop">
       <!-- the palette: a colour by what it means -->
       <template v-if="roles.length">
-        <ul class="roles" role="listbox" :aria-label="`${label}, from the palette`">
+        <ul class="roles" role="listbox" :aria-label="t('{label}, from the palette', { label })">
           <li v-for="r in roles" :key="r.id" role="option" :aria-selected="value === `@${r.id}`">
             <button type="button" :class="{ on: value?.startsWith(`@${r.id}`) }" :data-role="r.id" @click="chooseRole(r.id, null)">
               <i :style="{ background: r.colour }" />
@@ -73,18 +76,18 @@ function adopt() {
             </button>
           </li>
         </ul>
-        <div v-if="washes" class="washes" role="group" :aria-label="`${label}, how strong`">
-          <span class="legend">How strong</span>
+        <div v-if="washes" class="washes" role="group" :aria-label="t('{label}, how strong', { label })">
+          <span class="legend">{{ t('How strong') }}</span>
           <button v-for="w in WASHES" :key="w" type="button" class="wash" :class="{ on: (value ?? '').endsWith(w === 100 ? '' : `/${w}`) && value?.startsWith('@') }" :disabled="!value?.startsWith('@')" :data-wash="w" @click="chooseRole((value ?? '').replace(/^@/, '').split('/')[0] ?? '', w === 100 ? null : w)">{{ w }}%</button>
         </div>
       </template>
 
       <!-- a colour of its own: allowed, one step further in, and told what it costs -->
-      <button v-if="roles.length && !literal" class="leave" type="button" data-testid="off-palette" @click="literal = true">Off the palette…</button>
+      <button v-if="roles.length && !literal" class="leave" type="button" data-testid="off-palette" @click="literal = true">{{ t('Off the palette…') }}</button>
       <template v-else>
         <div class="row">
-          <input v-model="typed" class="hex mono" spellcheck="false" :aria-label="`${label} as hex`" placeholder="#5b4bc4" @keydown.enter.prevent="commit" @blur="commit" >
-          <input type="color" class="system" :value="hex ?? '#000000'" :aria-label="`${label}, system picker`" @change="pick(($event.target as HTMLInputElement).value)" >
+          <input v-model="typed" class="hex mono" spellcheck="false" :aria-label="t('{label} as hex', { label })" placeholder="#5b4bc4" @keydown.enter.prevent="commit" @blur="commit" >
+          <input type="color" class="system" :value="hex ?? '#000000'" :aria-label="t('{label}, system picker', { label })" @change="pick(($event.target as HTMLInputElement).value)" >
         </div>
         <div class="grid">
           <button v-for="s in SWATCHES" :key="s.value" type="button" class="chip" :class="{ on: hex?.toLowerCase() === s.value.toLowerCase() }" :title="s.name" :aria-label="s.name" :style="{ background: s.value }" @click="pick(s.value)" />
@@ -92,11 +95,11 @@ function adopt() {
       </template>
 
       <p v-if="strayed" class="strayed" data-testid="off-palette-warning">
-        This colour is not in the palette, so a palette change will leave it behind.
-        <button v-if="nearest" type="button" @click="adopt">Use {{ nearest.name }} instead</button>
+        {{ t('This colour is not in the palette, so a palette change will leave it behind.') }}
+        <button v-if="nearest" type="button" @click="adopt">{{ t('Use {name} instead', { name: nearest.name }) }}</button>
       </p>
 
-      <button v-if="own" class="reset" type="button" @click="emit('reset')">Follow the parent style again</button>
+      <button v-if="own" class="reset" type="button" @click="emit('reset')">{{ t('Follow the parent style again') }}</button>
     </div>
   </div>
 </template>

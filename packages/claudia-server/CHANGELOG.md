@@ -5,6 +5,36 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-13
+
+Help and function documentation in German (E13.8, D323).
+
+### Added
+- `set_locale(locale)`: the person chose another interface language in this window; what the server says to it from
+  then on (errors, help, function descriptions) is in it. Any role may call it; answers `{locale}` as understood. The
+  web app sends it when the language changes and after a reconnect. `Context.set_locale` is the callback behind it.
+- Help topics can be translated: `<topic>.<language>.md` next to the English file, with the same `id`, its own
+  `language` and a `source-hash` (the `fingerprint` of the English file it was made from). `HelpLibrary.get(id,
+  language)` and `search(query, language=)` give the translation where there is one and English where not
+  (`help_search` and `help_topic` use the connection's locale; `help_topic` says which `language` it answered in);
+  `HelpLibrary.stale()` lists translations older than their source and `check()` refuses one without its source. A
+  test fails on a stale translation. `Topic` gained `source_hash` and `fingerprint`.
+- `functions` and `function_help` say the descriptions and the words of the worked examples in the connection's
+  language (German first), the formulas, results and signatures unchanged.
+
+## [0.27.0] - 2026-11-13
+
+The server's own messages are said in the language of the connection (E5.7, D31, D322).
+
+### Changed
+- A `RequestError`'s message may be a `claudia_server.i18n.Message` (`msg("{what}: at most {limit} cells at a time",
+  limit=500)`): it reads as its English text and `RequestError.to_dict(locale)` says it in the language of the
+  connection it is sent to (the `locale` of `hello`, `Context.locale`). The server's own request errors, the refusals of
+  `hello` and `HubError` are written that way, with German as the first catalog
+  (`claudia_server/locale/<language>/LC_MESSAGES/claudia.mo`, built from `po/<language>.po`). What the document packages
+  raise (`str(exc)`) and the assistant's own chat texts stay English until they carry templates too (E5.17). The wire
+  protocol is unchanged: `message` is still one string, and a client that sends no `locale` gets English.
+
 ### Security
 - Every HTTP answer carries a `Content-Security-Policy` (scripts from this server and the start page's inline scripts
   by hash, connections to this server and its WebSocket, `object-src 'none'`, `base-uri 'none'`, framing only by the

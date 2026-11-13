@@ -15,6 +15,9 @@ import { facetCss, scaleCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 // `showGrid` is the View menu's own preference (`lib/grid.ts`'s `useGrid`, held by SlideWorkspace.vue so the
 // menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
@@ -116,8 +119,11 @@ function pictureSrc(o: SlideObject): string {
   const asset = pictureOf(o)
   return asset ? imageDataUrl(asset) : ''
 }
-const label = (o: SlideObject) =>
-  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (wordsOf(o) ? `: ${wordsOf(o)}` : '')
+const label = (o: SlideObject) => {
+  if (o.kind === 'image') return t('Picture: {alt}', { alt: o.imported?.alt ?? '' })
+  const kind = o.kind === 'text' ? t('Text box') : (outline(o)?.name ?? t('Shape'))
+  return wordsOf(o) ? t('{kind}: {words}', { kind, words: wordsOf(o) }) : kind
+}
 
 // ------------------------------------------------------------------------------ selection, dragging, resizing
 type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
@@ -297,7 +303,7 @@ const setEditor = (el: unknown) => {
 async function beginEdit(id: string | null = state.selected) {
   const o = id ? state.objects[id] : null
   if (!o || editing.value || o.kind === 'image') return // a picture has no text to write
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
   editing.value = { id: o.id, text: wordsOf(o) }
@@ -372,7 +378,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     ref="area"
     class="area"
     tabindex="0"
-    aria-label="slide"
+    :aria-label="t('slide')"
     @keydown="onKey"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
@@ -406,7 +412,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="paintCss(o)" />
           </svg>
           <div class="words" :style="textStyle(o)">
-            <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
+            <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
             <span v-else-if="editing?.id !== o.id" class="text">{{ wordsOf(o) }}</span>
           </div>
           <textarea
@@ -414,7 +420,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             :ref="setEditor"
             v-model="editText"
             class="editor"
-            aria-label="text of the object"
+            :aria-label="t('text of the object')"
             :style="editorStyle(o)"
             @keydown="onEditorKey"
             @blur="commitEdit"
@@ -429,7 +435,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
           v-if="state.objects[other.id]"
           class="other"
           :style="{ ...boxStyle(state.objects[other.id]!), borderColor: colorOf(state, other.user) }"
-          :title="other.locked ? `${other.user} is working on this` : `${other.user} selected this`"
+          :title="other.locked ? t('{user} is working on this', { user: other.user }) : t('{user} selected this', { user: other.user })"
         >
           <span class="tag" :style="{ background: colorOf(state, other.user), color: inkOn(colorOf(state, other.user)) }">{{ other.user }}</span>
         </div>
@@ -448,7 +454,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
       </div>
     </div>
 
-    <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" label="Object menu" @close="closeContextMenu" />
+    <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" :label="t('Object menu')" @close="closeContextMenu" />
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>

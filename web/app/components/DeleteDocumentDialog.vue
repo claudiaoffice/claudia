@@ -3,6 +3,9 @@
 // is no way back from this: no recycle bin, no undo.
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: BaseSession }>()
 const emit = defineEmits<{ close: []; deleted: [] }>()
@@ -18,16 +21,15 @@ async function remove() {
 </script>
 
 <template>
-  <Modal title="Delete this document" @close="emit('close')">
-    <p class="lead warning">
-      This removes <b>{{ session.state.doc }}</b> from the server for good — its content, its history and its chat, and everybody's access to it. There is
-      no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download).
-    </p>
+  <Modal :title="t('Delete this document')" @close="emit('close')">
+    <TransText tag="p" class="lead warning" :text="t('This removes {doc} from the server for good — its content, its history and its chat, and everybody\'s access to it. There is no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download).')">
+      <template #doc><b>{{ session.state.doc }}</b></template>
+    </TransText>
     <form class="form" @submit.prevent="remove">
-      <label class="field">Your password, to confirm<input v-model="password" type="password" autocomplete="current-password" ></label>
+      <label class="field">{{ t('Your password, to confirm') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
       <div class="buttons">
-        <button class="btn danger" type="submit" :disabled="busy || !password">Delete for good</button>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
+        <button class="btn danger" type="submit" :disabled="busy || !password">{{ t('Delete for good') }}</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
       </div>
     </form>
   </Modal>

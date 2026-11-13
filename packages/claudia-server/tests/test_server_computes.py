@@ -10,6 +10,7 @@ from claudia_computes.model import MAX_ROWS
 from claudia_core import Document, MemoryStore
 from claudia_server.auth import Account
 from claudia_server.computes import computes_methods
+from claudia_server.i18n import translate
 from claudia_server.protocol import Context, Limits, RequestError, core_methods
 
 ANN = Account("ann", "owner")
@@ -22,8 +23,8 @@ def book():
     return Document(WorkbookModel(), store=MemoryStore())
 
 
-def call(doc, name, params=None, account=ANN):
-    ctx = Context(doc, account, Limits(), users=lambda: ["ann", "ben"], lock_seconds=30.0)
+def call(doc, name, params=None, account=ANN, locale="en"):
+    ctx = Context(doc, account, Limits(), users=lambda: ["ann", "ben"], lock_seconds=30.0, locale=locale)
     return computes_methods.dispatch(ctx, name, params)
 
 
@@ -497,6 +498,36 @@ def test_function_help_gives_the_full_text_by_name_case_insensitively(book):
     assert found["name"] == "ROUND"
     assert found["signature"] == "ROUND(number, digits?)"
     assert "2.68" in found["help"]  # the worked example survives into the full help text
+
+
+def test_function_help_is_in_the_language_of_the_connection(book):
+    """E13.8, D323: descriptions and the words of the worked examples are German for a German window; the formula,
+    its result and the signature are not words and stay as they are."""
+    german = call(book, "function_help", {"name": "round"}, locale="de")
+    english = call(book, "function_help", {"name": "round"})
+    assert german["signature"] == english["signature"] and "2.68" in german["help"]
+    assert german["tooltip"].startswith("ROUND(number, digits?): Rundet")
+    assert "ergibt" in german["help"] and "gives" not in german["help"]
+    assert "Rundet" not in english["help"] and "gives" in english["help"]
+
+
+def test_functions_are_listed_and_searched_in_the_language_of_the_connection(book):
+    summed = {f["name"]: f["tooltip"] for f in call(book, "functions", {"query": "Summe"}, locale="de")}
+    assert (
+        summed["SUM"]
+        == "SUM(*values): Die Summe der Zahlen in den Bereichen. Text und leere Zellen werden übersprungen."
+    )
+    assert call(book, "functions", {"query": "Summe"}) == []  # English has no word "Summe"
+    assert [f["name"] for f in call(book, "functions", {"query": "sum"}, locale="de")][:1] == ["SUM"]
+
+
+def test_every_function_has_a_german_description():
+    """Nothing in the catalog is left out of ``po/de.po``: a new function comes with its translation."""
+    from claudia_computes import function_catalog
+
+    for entry in function_catalog():
+        if entry.description:
+            assert entry.translated(lambda text: translate(text, "de")).description != entry.description, entry.name
 
 
 def test_function_help_refuses_an_unknown_name(book):

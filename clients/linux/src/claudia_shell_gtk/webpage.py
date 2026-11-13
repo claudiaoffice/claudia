@@ -33,6 +33,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from ._gi import Gio, GLib, Gtk
+from .i18n import translate as _
 from .trust import may_override
 from .urls import external_target, is_internal, origin_of, safe_download_name, unique_path
 
@@ -213,12 +214,13 @@ class WebPage:
         return True
 
     def _load_failed(self, _view: WebKit.WebView, _event: WebKit.LoadEvent, uri: str, error: GLib.Error) -> bool:
-        self._on_problem("The page could not be loaded", f"{uri}\n{error.message}")
+        self._on_problem(_("The page could not be loaded"), f"{uri}\n{error.message}")
         return True
 
     def _process_terminated(self, _view: WebKit.WebView, reason: WebKit.WebProcessTerminationReason) -> None:
         self._on_problem(
-            "The page stopped working", f"The web process ended ({reason.value_nick}). Start Claudia again."
+            _("The page stopped working"),
+            _("The web process ended ({reason}). Start Claudia again.").format(reason=reason.value_nick),
         )
 
     def _download_started(self, _session: WebKit.NetworkSession, download: WebKit.Download) -> None:
@@ -235,7 +237,7 @@ class WebPage:
 
         download.connect("decide-destination", decide)
         download.connect("finished", lambda _d: chosen and self._on_download(chosen[0]))
-        download.connect("failed", lambda _d, error: self._on_problem("The download failed", error.message))
+        download.connect("failed", lambda _d, error: self._on_problem(_("The download failed"), error.message))
 
     @staticmethod
     def _launch_default_application(uri: str) -> None:

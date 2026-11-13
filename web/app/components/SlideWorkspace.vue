@@ -46,8 +46,8 @@ const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
 const dialog = ref<null | 'styles' | 'colours'>(null)
 const EXPORT_FORMATS = [
-  { value: 'pptx', label: 'PowerPoint presentation (.pptx)' },
-  { value: 'odp', label: 'OpenDocument presentation (.odp)' },
+  { value: 'pptx', get label() { return t('PowerPoint presentation (.pptx)') } },
+  { value: 'odp', get label() { return t('OpenDocument presentation (.odp)') } },
 ]
 
 const readonly = computed(() => state.me.role === 'viewer')
@@ -180,10 +180,10 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
-        { id: 'edit.new-slide', label: t('New slide'), action: () => session.addSlide(), disabled: readonly.value },
+        { id: 'edit.new-slide', label: t('New Slide'), action: () => session.addSlide(), disabled: readonly.value },
         { label: '', separator: true },
-        { id: 'edit.edit-text', label: t('Edit text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
-        { id: 'edit.text-box', label: t('Text box'), action: () => addText(), disabled: readonly.value },
+        { id: 'edit.edit-text', label: t('Edit Text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
+        { id: 'edit.text-box', label: t('Text Box'), action: () => addText(), disabled: readonly.value },
         { id: 'edit.image', label: t('Image…'), action: () => (showImageDialog.value = true), disabled: readonly.value },
         { label: '', separator: true },
         ...state.library.map((s) => ({ label: s.name, action: () => addShape(s.id), disabled: readonly.value })),
@@ -198,7 +198,7 @@ const menus = computed<Menu[]>(() => {
         authorsItemUnavailable(c), // creates tracks no per-object authorship yet
         {
           id: 'view.grid',
-          label: 'Show grid',
+          label: t('Show grid'),
           checked: gridShown.value,
           action: (x) => {
             if (x === undefined || (x === 'on') !== gridShown.value) toggleGrid()
@@ -215,13 +215,13 @@ const menus = computed<Menu[]>(() => {
 })
 
 /** Config ▸ Shortcuts: the slide's own mouse and keyboard conventions, which are not a single key chord. */
-const SHORTCUT_NOTES: [string, string][] = [
-  ['Click', 'select an object (colleagues cannot change it while you hold it)'],
-  ['Drag', 'move it; the handles resize it'],
-  ['Double-click, Enter', 'write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it'],
-  ['Arrows', 'move it by 10 units; with Shift by 1'],
-  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
-]
+const SHORTCUT_NOTES = computed<[string, string][]>(() => [
+  [t('Click'), t('select an object (colleagues cannot change it while you hold it)')],
+  [t('Drag'), t('move it; the handles resize it')],
+  [t('Double-click, Enter'), t('write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it')],
+  [t('Arrows'), t('move it by 10 units; with Shift by 1')],
+  [t('Ctrl + C / X / V'), t('copy, cut and paste, also from and to other programs')],
+])
 </script>
 
 <template>
@@ -257,12 +257,12 @@ const SHORTCUT_NOTES: [string, string][] = [
         <!-- Applying a style where composes and computes have it (owner's report, 2026-11-12): the popover only shows a
              style's look (UX-14), so without this a named style could be applied only from Format ▸ Apply style. -->
         <StylePicker :host="styleHost" :hint="'Shift+F10'" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
-        <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" caption="Label" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
+        <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" :caption="t('Label')" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
       </InsertBar>
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
     <SlideCanvas v-else-if="state.activeSlide" ref="canvas" data-region="document" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
-    <div v-else class="noslide">This presentation has no slide.</div>
+    <div v-else class="noslide">{{ t('This presentation has no slide.') }}</div>
     <template #overlay>
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
@@ -270,7 +270,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     </template>
     <template #footer>
       <footer v-if="!printing" class="foot">
-        <div class="tabs" role="tablist" aria-label="slides">
+        <div class="tabs" role="tablist" :aria-label="t('slides')">
           <button
             v-for="(s, i) in state.slides"
             :key="s.id"
@@ -280,13 +280,13 @@ const SHORTCUT_NOTES: [string, string][] = [
             :class="{ on: s.id === state.activeSlide }"
             @click="session.showSlide(s.id)"
           >
-            Slide {{ i + 1 }}
+            {{ t('Slide {n}', { n: i + 1 }) }}
           </button>
-          <button v-if="!readonly" type="button" class="add" title="New slide" aria-label="new slide" @click="session.addSlide()">+</button>
+          <button v-if="!readonly" type="button" class="add" :title="t('New Slide')" :aria-label="t('new slide')" @click="session.addSlide()">+</button>
         </div>
         <div class="stats mono">
           <span v-if="here >= 0">{{ here + 1 }} / {{ state.slides.length }}</span>
-          <span class="rev" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
+          <span class="rev" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
         </div>
       </footer>
     </template>

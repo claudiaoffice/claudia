@@ -864,7 +864,7 @@ defineExpose({
     :class="{ 'resize-col': hoverAxis === 'col' || resizeDrag?.axis === 'col', 'resize-row': hoverAxis === 'row' || resizeDrag?.axis === 'row' }"
     tabindex="0"
     role="grid"
-    aria-label="table"
+    :aria-label="t('table')"
     @scroll.passive="onScroll"
     @mousedown="onDown"
     @mousemove.passive="onHeaderHover"
@@ -884,7 +884,7 @@ defineExpose({
           :style="tableStyle(tb)"
           :data-table="tb.table.name"
         >
-          <span v-if="tb.kind === 'ghost'" class="ghost-label">type here to add a row</span>
+          <span v-if="tb.kind === 'ghost'" class="ghost-label">{{ t('type here to add a row') }}</span>
         </div>
         <div v-for="rl in rowLines" :key="`r${rl.key}`" class="gridline horiz" :style="{ top: `${rl.top}px` }" />
         <div v-for="cl in colLines" :key="`c${cl.key}`" class="gridline vert" :style="{ left: `${cl.left}px` }" />
@@ -928,8 +928,8 @@ defineExpose({
             type="button"
             class="chip"
             :style="{ left: `${x(tb.c0) + colWidthAt(tb.c0) - 20}px`, top: `${y(tb.r0) + 5}px` }"
-            :title="`${tb.table.name} · ${tb.purpose} — change what this column is for`"
-            :aria-label="`purpose of ${tb.table.name} column ${tb.offset + 1}`"
+            :title="t('{name} · {purpose} — change what this column is for', { name: tb.table.name, purpose: tb.purpose })"
+            :aria-label="t('purpose of {name} column {n}', { name: tb.table.name, n: tb.offset + 1 })"
             @mousedown.stop.prevent
             @click="onChip($event, tb)"
           >▾</button>
@@ -962,7 +962,7 @@ defineExpose({
         </div>
 
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
-          <span class="tag">{{ o.name }}<template v-if="o.locked"> · editing</template></span>
+          <span class="tag">{{ o.name }}<template v-if="o.locked"> {{ t('· editing') }}</template></span>
         </div>
 
         <div v-if="activeBorder" class="active-border" :class="activeBorder.axis" :style="activeBorder.axis === 'col' ? { left: `${activeBorder.pos}px` } : { top: `${activeBorder.pos}px` }" />
@@ -977,7 +977,7 @@ defineExpose({
           :value="edit!.text"
           spellcheck="false"
           autocomplete="off"
-          aria-label="editing cell"
+          :aria-label="t('editing cell')"
           @input="onEditorInput"
           @keyup="reportCaret"
           @click="reportCaret"

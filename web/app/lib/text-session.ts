@@ -28,6 +28,7 @@ import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
+import { translate as t } from './i18n'
 export interface SuggestionInfo {
   id: string
   author: string | null
@@ -378,7 +379,7 @@ export class TextSession extends BaseSession<TextState> {
 
   private denied(): boolean {
     if (!this.readOnly) return false
-    this.notice('You can only look at this document.', 'warning')
+    this.notice(t('You can only look at this document.'), 'warning')
     return true
   }
 

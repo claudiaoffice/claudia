@@ -7,6 +7,8 @@
 // one style API every app has (`apply_style`, `deviate`) with the target `{sheet, range}`, plus `clear_cell_style`.
 import { ref } from 'vue'
 import { rangeLabel } from './cells'
+import { translate as t } from './i18n'
+import { currentLocale } from './locale'
 import { alignOf, styleAt, whereFrom, type Area, type CellRange } from './cell-styles'
 import type { HostSlot, StyleHost } from './style-host'
 import type { ColourRole, Reading, StyleModel, StyleTarget } from './objects'
@@ -45,7 +47,7 @@ export function cellSlot(model: StyleModel | null): HostSlot | undefined {
   const reads = [...new Set(slots.flatMap((s) => s.reads))]
   const takes = slots[0]!.takes.filter((kind) => slots.every((s) => s.takes.includes(kind)))
   const words = slots.find((s) => s.name === 'words') ?? slots[0]!
-  return { name: 'cell', label: 'Cell', reads, kind: words.kind, takes }
+  return { name: 'cell', label: t('Cell'), reads, kind: words.kind, takes }
 }
 
 export function cellStyleHost(session: CellStyling): StyleHost {
@@ -73,16 +75,17 @@ export function cellStyleHost(session: CellStyling): StyleHost {
     noun: 'cell',
     get title() {
       const a = session.area
-      if (!a) return 'Cells'
-      return `${count() === 1 ? 'Cell' : 'Cells'} ${rangeLabel(a[0], a[1], a[2], a[3])}`
+      if (!a) return t('Cells')
+      const range = rangeLabel(a[0], a[1], a[2], a[3])
+      return count() === 1 ? t('Cell {range}', { range }) : t('Cells {range}', { range })
     },
     get these() {
       const n = count()
-      return n === 1 ? 'This cell only' : `These ${n.toLocaleString('en-US')} cells only`
+      return n === 1 ? t('This cell only') : t('These {count} cells only', { count: n.toLocaleString(currentLocale()) })
     },
     narrow: {
       get label() {
-        return count() === 1 ? 'only its box' : 'only their box'
+        return count() === 1 ? t('only its box') : t('only their box')
       },
       get on() {
         return boxOnly.value

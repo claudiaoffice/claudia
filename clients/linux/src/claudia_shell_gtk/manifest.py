@@ -74,7 +74,7 @@ ISSUES = "https://github.com/claudiaoffice/claudia/issues"
 LEGAL = "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"
 
 
-def about_links() -> tuple[tuple[str, str], ...]:
+def about_links(translate: Translate = lambda text: text) -> tuple[tuple[str, str], ...]:
     """The three outbound links every About dialog shows, in this order (D28, the owner's 2026-11-06 report that the
     web and Linux About dialogs had drifted apart): data, so both can be tested without GTK (``window.py``'s
     ``_show_about`` is what actually builds the dialog). The licence is linked rather than shown in full here, for
@@ -84,7 +84,7 @@ def about_links() -> tuple[tuple[str, str], ...]:
     Web's own copy of this list is ``AboutDialog.vue``'s ``LINKS`` — there is no shared manifest for the two shells
     to read this from, so a change here needs the same change made there by hand.
     """
-    return (("Website", WEBSITE), ("Report an Issue", ISSUES), ("Legal", LEGAL))
+    return ((translate("Website"), WEBSITE), (translate("Report an Issue"), ISSUES), (translate("Legal"), LEGAL))
 
 
 class Kind(enum.Enum):

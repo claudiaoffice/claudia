@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
+
 // The dark sidebar shared by the three server settings pages (E3.11; canvas note s3): "these pages now live on
 // the server, not in your Preferences — reached the same way whether it's your own box or someone else's." Same
 // components as the client; the dark sidebar and the server's name are the only things that say so.
@@ -6,20 +10,20 @@ defineProps<{ label: string; host: string; signedInAs: string; active: 'ai' | 't
 const emit = defineEmits<{ navigate: [page: 'ai' | 'typeset' | 'access']; signOut: []; close: [] }>()
 
 const pages: { id: 'ai' | 'typeset' | 'access'; name: string }[] = [
-  { id: 'ai', name: 'AI model' },
-  { id: 'typeset', name: 'Typesetting' },
-  { id: 'access', name: 'Access & documents' },
+  { id: 'ai', get name() { return t('AI model') } },
+  { id: 'typeset', get name() { return t('Typesetting') } },
+  { id: 'access', get name() { return t('Access & documents') } },
 ]
 </script>
 
 <template>
   <div class="shell">
     <header class="bar">
-      <span>Server settings</span>
-      <button class="close" type="button" aria-label="Close" @click="emit('close')">×</button>
+      <span>{{ t('Server settings') }}</span>
+      <button class="close" type="button" :aria-label="t('Close')" @click="emit('close')">×</button>
     </header>
     <div class="body">
-      <nav class="side" aria-label="Server settings pages">
+      <nav class="side" :aria-label="t('Server settings pages')">
         <div class="server">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="server-icon">
             <rect x="4" y="4" width="16" height="6" rx="1.5" /><rect x="4" y="14" width="16" height="6" rx="1.5" />
@@ -28,7 +32,7 @@ const pages: { id: 'ai' | 'typeset' | 'access'; name: string }[] = [
           <div class="server-text">
             <div class="server-label">{{ label }}</div>
             <div class="server-host">{{ host }}</div>
-            <div class="server-you">Signed in as {{ signedInAs }}</div>
+            <div class="server-you">{{ t('Signed in as {signedInAs}', { signedInAs }) }}</div>
           </div>
         </div>
         <hr >
@@ -43,7 +47,7 @@ const pages: { id: 'ai' | 'typeset' | 'access'; name: string }[] = [
           </li>
         </ul>
         <div class="spacer" />
-        <button type="button" class="signout" @click="emit('signOut')">Sign out</button>
+        <button type="button" class="signout" @click="emit('signOut')">{{ t('Sign out') }}</button>
       </nav>
       <div class="content"><slot /></div>
     </div>

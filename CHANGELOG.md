@@ -4,7 +4,7 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
-## [Unreleased]
+## [0.18.0] - 2026-11-13
 
 Lists (E9.21); search, the engine (E1.12, D281–D284).
 

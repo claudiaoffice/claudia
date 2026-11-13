@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Edit ▸ Search & replace… (E5.15, D281–D286): one floating, non-modal panel for all three apps. The sheet stays
+// Edit ▸ Search & Replace… (E5.15, D281–D286): one floating, non-modal panel for all three apps. The sheet stays
 // editable and the matches show in it; the app's `SearchHost` says what can be searched, where, how to name a match and
 // how to get to it (`lib/sheet-search-host.ts`). Three ways to say what to find, all compiled by the same server
 // engine: the plain quick field; a builder of parts and conditions that says back in a sentence what it does; and,

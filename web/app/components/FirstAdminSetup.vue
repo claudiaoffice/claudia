@@ -4,6 +4,9 @@
 // person can still choose to set one up early, e.g. before exposing the server later.
 import { ref } from 'vue'
 import type { useAdminSession } from '~/lib/admin-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ host: string; exposed: boolean; session: ReturnType<typeof useAdminSession> }>()
 
@@ -15,11 +18,11 @@ const formError = ref('')
 async function create() {
   formError.value = ''
   if (!name.value.trim() || !password.value) {
-    formError.value = 'Fill in your name and a password.'
+    formError.value = t('Fill in your name and a password.')
     return
   }
   if (password.value !== confirmPassword.value) {
-    formError.value = 'The passwords do not match.'
+    formError.value = t('The passwords do not match.')
     return
   }
   const error = await props.session.setup(name.value.trim(), password.value)
@@ -33,32 +36,32 @@ function keepLocal() {
 
 <template>
   <div class="setup">
-    <header class="bar">Server settings</header>
+    <header class="bar">{{ t('Server settings') }}</header>
     <form class="body" @submit.prevent="create">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--iris)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shield">
         <path d="M12 2l8 3.5v5.3c0 5-3.4 8.9-8 10.2-4.6-1.3-8-5.2-8-10.2V5.5L12 2z" /><path d="M9.5 12l1.8 1.8 3.2-3.6" />
       </svg>
-      <h1>Name yourself as this server's administrator</h1>
-      <p v-if="exposed" class="lead">{{ host }} can now be reached from outside this computer. Before anyone else can reach it, set a name and password for yourself — you'll use them to sign in here from now on.</p>
-      <p v-else class="lead">{{ host }} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later.</p>
+      <h1>{{ t('Name yourself as this server\'s administrator') }}</h1>
+      <p v-if="exposed" class="lead">{{ t('{host} can now be reached from outside this computer. Before anyone else can reach it, set a name and password for yourself — you\'ll use them to sign in here from now on.', { host }) }}</p>
+      <p v-else class="lead">{{ t('{host} isn\'t reachable beyond this computer yet, so this isn\'t required — but set a name and password now if you\'d like to manage its settings, or before you open it up to others later.', { host }) }}</p>
 
-      <label class="field">Your name<input v-model="name" type="text" autocomplete="username" placeholder="tobi" ></label>
-      <label class="field">Password<input v-model="password" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
-      <label class="field">Confirm password<input v-model="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
+      <label class="field">{{ t('Your name') }}<input v-model="name" type="text" autocomplete="username" :placeholder="t('tobi')" ></label>
+      <label class="field">{{ t('Password') }}<input v-model="password" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
+      <label class="field">{{ t('Confirm password') }}<input v-model="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
 
       <div class="note">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="11" width="18" height="10" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
         </svg>
-        <span>The access secret you set earlier stays as a recovery key — only needed if every administrator is ever locked out.</span>
+        <span>{{ t('The access secret you set earlier stays as a recovery key — only needed if every administrator is ever locked out.') }}</span>
       </div>
 
       <p v-if="formError" class="error" role="alert">{{ formError }}</p>
 
       <div class="spacer" />
       <div class="buttons">
-        <button class="btn" type="button" :disabled="session.busy.value" @click="keepLocal">{{ exposed ? 'Keep this server local for now' : 'Skip for now' }}</button>
-        <button class="btn primary" type="submit" :disabled="session.busy.value">Create administrator</button>
+        <button class="btn" type="button" :disabled="session.busy.value" @click="keepLocal">{{ exposed ? t('Keep this server local for now') : t('Skip for now') }}</button>
+        <button class="btn primary" type="submit" :disabled="session.busy.value">{{ t('Create administrator') }}</button>
       </div>
     </form>
   </div>

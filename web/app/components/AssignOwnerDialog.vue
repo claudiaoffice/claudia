@@ -5,6 +5,9 @@
 // no separate "accept" screen yet; see the decision log).
 import { onMounted, ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: BaseSession }>()
 const emit = defineEmits<{ close: [] }>()
@@ -30,34 +33,33 @@ async function propose() {
 </script>
 
 <template>
-  <Modal title="Assign a new owner" @close="emit('close')">
-    <p v-if="proposed" class="lead">
-      <b>{{ proposed }}</b> has been asked to take over <b>{{ session.state.doc }}</b>. Until they accept, you are still the owner. You will become an
-      editor the moment they do.
-    </p>
+  <Modal :title="t('Assign a new owner')" @close="emit('close')">
+    <TransText v-if="proposed" tag="p" class="lead" :text="t('{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do.')">
+      <template #who><b>{{ proposed }}</b></template>
+      <template #doc><b>{{ session.state.doc }}</b></template>
+    </TransText>
     <template v-else>
-      <p class="lead">
-        Hand <b>{{ session.state.doc }}</b> over to somebody who already edits it. You will become an editor; they become the owner once they accept —
-        confirm it is you with your own password.
-      </p>
+      <TransText tag="p" class="lead" :text="t('Hand {doc} over to somebody who already edits it. You will become an editor; they become the owner once they accept — confirm it is you with your own password.')">
+        <template #doc><b>{{ session.state.doc }}</b></template>
+      </TransText>
       <form v-if="loaded" class="form" @submit.prevent="propose">
         <label v-if="editors.length" class="field"
-          >New owner
+          >{{ t('New owner') }}
           <select v-model="chosen">
-            <option value="" disabled>Choose somebody…</option>
+            <option value="" disabled>{{ t('Choose somebody…') }}</option>
             <option v-for="name in editors" :key="name" :value="name">{{ name }}</option>
           </select>
         </label>
-        <p v-else class="lead">Nobody edits this document yet. Make somebody an editor first (File ▸ Manage ▸ Share…).</p>
-        <label v-if="editors.length" class="field">Your password<input v-model="password" type="password" autocomplete="current-password" ></label>
+        <p v-else class="lead">{{ t('Nobody edits this document yet. Make somebody an editor first (File ▸ Manage ▸ Share…).') }}</p>
+        <label v-if="editors.length" class="field">{{ t('Your password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
         <div class="buttons">
-          <button v-if="editors.length" class="btn primary" type="submit" :disabled="busy || !chosen || !password">Ask them to take over</button>
-          <button class="btn" type="button" @click="emit('close')">{{ editors.length ? 'Cancel' : 'Close' }}</button>
+          <button v-if="editors.length" class="btn primary" type="submit" :disabled="busy || !chosen || !password">{{ t('Ask them to take over') }}</button>
+          <button class="btn" type="button" @click="emit('close')">{{ editors.length ? t('Cancel') : t('Close') }}</button>
         </div>
       </form>
     </template>
     <div v-if="proposed" class="buttons">
-      <button class="btn primary" type="button" @click="emit('close')">Done</button>
+      <button class="btn primary" type="button" @click="emit('close')">{{ t('Done') }}</button>
     </div>
   </Modal>
 </template>

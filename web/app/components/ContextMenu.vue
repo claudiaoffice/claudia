@@ -4,6 +4,9 @@
 // through `Popover` instead of a fixed dropdown. App-agnostic — knows nothing about slides, cells or paragraphs —
 // so composes and computes can reuse it for their own objects the same way `SlideCanvas.vue` does for creates'.
 import type { MenuItem } from './MenuBar.vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 defineProps<{ x: number; y: number; items: MenuItem[]; label?: string; width?: number }>()
 const emit = defineEmits<{ close: [] }>()
@@ -16,8 +19,8 @@ function choose(item: MenuItem) {
 </script>
 
 <template>
-  <Popover :x="x" :y="y" :width="width ?? 200" :label="label ?? 'Object menu'" @close="emit('close')">
-    <ul class="menu" role="menu" :aria-label="label ?? 'Object menu'">
+  <Popover :x="x" :y="y" :width="width ?? 200" :label="label ?? t('Object menu')" @close="emit('close')">
+    <ul class="menu" role="menu" :aria-label="label ?? t('Object menu')">
       <template v-for="(item, i) in items" :key="i">
         <li v-if="item.separator" class="sep" role="separator" />
         <li v-else role="none">

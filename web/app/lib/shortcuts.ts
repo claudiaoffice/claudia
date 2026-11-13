@@ -8,6 +8,8 @@
 
 import { onBeforeUnmount, onMounted } from 'vue'
 
+import { translate as t } from './i18n'
+
 export interface KeyChord {
   /** What the chord is called, and — without `code` — the character the key types. */
   key: string
@@ -44,9 +46,9 @@ export interface KeyLike {
 /** The GNOMEish defaults every workspace starts from: Undo, Redo, Save. Each app appends its own (Shift+F10, …). */
 export function sharedShortcuts(actions: { undo: () => void; redo: () => void; save: () => void }): ShortcutDef[] {
   return [
-    { id: 'edit.undo', label: 'Undo', chord: { key: 'z', ctrl: true }, run: actions.undo },
-    { id: 'edit.redo', label: 'Redo', chord: { key: 'z', ctrl: true, shift: true }, run: actions.redo },
-    { id: 'file.save', label: 'Save', chord: { key: 's', ctrl: true }, run: actions.save },
+    { id: 'edit.undo', get label() { return t('Undo') }, chord: { key: 'z', ctrl: true }, run: actions.undo },
+    { id: 'edit.redo', get label() { return t('Redo') }, chord: { key: 'z', ctrl: true, shift: true }, run: actions.redo },
+    { id: 'file.save', get label() { return t('Save') }, chord: { key: 's', ctrl: true }, run: actions.save },
   ]
 }
 
@@ -54,8 +56,8 @@ export function sharedShortcuts(actions: { undo: () => void; redo: () => void; s
  * where Tab is taken for stepping between cells. */
 export function regionShortcuts(actions: { next: () => void; previous: () => void }): ShortcutDef[] {
   return [
-    { id: 'view.nextRegion', label: 'Next part of the window', chord: { key: 'F6' }, run: actions.next, whileTyping: true },
-    { id: 'view.previousRegion', label: 'Previous part of the window', chord: { key: 'F6', shift: true }, run: actions.previous, whileTyping: true },
+    { id: 'view.nextRegion', get label() { return t('Next Part of the Window') }, chord: { key: 'F6' }, run: actions.next, whileTyping: true },
+    { id: 'view.previousRegion', get label() { return t('Previous Part of the Window') }, chord: { key: 'F6', shift: true }, run: actions.previous, whileTyping: true },
   ]
 }
 
@@ -64,17 +66,17 @@ export function regionShortcuts(actions: { next: () => void; previous: () => voi
  * two in every app, so the table lives here. */
 export function searchShortcuts(actions: { find: () => void; replace: () => void; canReplace: () => boolean }): ShortcutDef[] {
   return [
-    { id: 'edit.search-replace', label: 'Search & replace', chord: { key: 'f', ctrl: true }, run: actions.find },
-    { id: 'edit.replace', label: 'Replace', chord: { key: 'h', ctrl: true }, run: actions.replace, enabled: actions.canReplace },
+    { id: 'edit.search-replace', get label() { return t('Search & Replace') }, chord: { key: 'f', ctrl: true }, run: actions.find },
+    { id: 'edit.replace', get label() { return t('Replace') }, chord: { key: 'h', ctrl: true }, run: actions.replace, enabled: actions.canReplace },
   ]
 }
 
 /** `Ctrl+Shift+Z` for the Config ▸ Shortcuts list and the menu's `hint`. */
 export function chordLabel(chord: KeyChord): string {
   const parts: string[] = []
-  if (chord.ctrl) parts.push('Ctrl')
-  if (chord.shift) parts.push('Shift')
-  if (chord.alt) parts.push('Alt')
+  if (chord.ctrl) parts.push(t('Ctrl'))
+  if (chord.shift) parts.push(t('Shift'))
+  if (chord.alt) parts.push(t('Alt'))
   parts.push(chord.key.length === 1 ? chord.key.toUpperCase() : chord.key)
   return parts.join('+')
 }

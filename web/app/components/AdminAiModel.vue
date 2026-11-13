@@ -6,6 +6,9 @@
 // rather than drawing controls that would silently do nothing.
 import { onMounted, ref } from 'vue'
 import { adminApi, AdminApiError, type ServerSettingsView } from '~/lib/admin-api'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ token: string }>()
 
@@ -32,7 +35,7 @@ onMounted(async () => {
   try {
     sync(await adminApi.getSettings(props.token))
   } catch (e) {
-    error.value = e instanceof AdminApiError ? e.message : 'Could not reach the server.'
+    error.value = e instanceof AdminApiError ? e.message : t('Could not reach the server.')
   } finally {
     loading.value = false
   }
@@ -56,7 +59,7 @@ async function apply() {
       }),
     )
   } catch (e) {
-    error.value = e instanceof AdminApiError ? e.message : 'Could not reach the server.'
+    error.value = e instanceof AdminApiError ? e.message : t('Could not reach the server.')
   } finally {
     busy.value = false
   }
@@ -65,28 +68,28 @@ async function apply() {
 
 <template>
   <div v-if="!loading">
-    <h1>AI model</h1>
-    <p class="lead">The model that answers @ai in every document on this server.</p>
+    <h1>{{ t('AI model') }}</h1>
+    <p class="lead">{{ t('The model that answers @ai in every document on this server.') }}</p>
 
     <label class="field">
-      Model folder
+      {{ t('Model folder') }}
       <div class="row">
-        <input v-model="modelDir" class="mono" placeholder="(none — @ai gets the scripted stand-in)" >
+        <input v-model="modelDir" class="mono" :placeholder="t('(none — @ai gets the scripted stand-in)')" >
       </div>
     </label>
 
-    <h2>Device</h2>
-    <div role="group" aria-label="Device" class="segmented">
-      <button v-for="d in DEVICES" :key="d" type="button" :aria-pressed="device === d" @click="device = d">{{ d === 'AUTO' ? 'Auto' : d }}</button>
+    <h2>{{ t('Device') }}</h2>
+    <div role="group" :aria-label="t('Device')" class="segmented">
+      <button v-for="d in DEVICES" :key="d" type="button" :aria-pressed="device === d" @click="device = d">{{ d === 'AUTO' ? t('Auto') : d }}</button>
     </div>
 
     <div class="pair">
       <label class="field">
-        Max answer length (tokens)
+        {{ t('Max answer length (tokens)') }}
         <input v-model.number="maxTokens" type="number" min="1" class="mono narrow" >
       </label>
       <label class="field">
-        Timeout (seconds)
+        {{ t('Timeout (seconds)') }}
         <input v-model.number="timeout" type="number" min="1" class="mono narrow" >
       </label>
     </div>

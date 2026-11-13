@@ -7,6 +7,9 @@ import { computed, onMounted, ref } from 'vue'
 import { columnName } from '~/lib/cells'
 import { DEFAULT_SIZE, formatPercent, lineRange, percentChange, proportionalResize, SIZE_LIMITS, type Axis } from '~/lib/line-sizes'
 import type { Session } from '~/lib/session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: Session; sheet: string; axis: Axis; first: number; last: number }>()
 const emit = defineEmits<{ close: [] }>()
@@ -35,10 +38,29 @@ const parsed = computed(() => {
 const pct = computed(() => (parsed.value === null ? 0 : percentChange(currentFirst.value, parsed.value)))
 const valid = computed(() => parsed.value !== null && parsed.value > 0)
 
-const lineLabel = computed(() => (props.axis === 'row' ? `Row ${props.first + 1}` : `Column ${columnName(props.first)}`))
-const fieldLabel = computed(() => `${lineLabel.value}'s ${props.axis === 'row' ? 'height' : 'width'}, in pixels${multiple.value ? ' (top of the selection)' : ''}`)
-const noun = computed(() => (props.axis === 'row' ? 'rows' : 'columns'))
-const unit = computed(() => (props.axis === 'row' ? 'tall' : 'wide'))
+const lineLabel = computed(() => (props.axis === 'row' ? t('Row {n}', { n: props.first + 1 }) : t('Column {n}', { n: columnName(props.first) })))
+const fieldLabel = computed(() => {
+  const line = lineLabel.value
+  const base = props.axis === 'row' ? t("{line}'s height, in pixels", { line }) : t("{line}'s width, in pixels", { line })
+  return multiple.value ? t('{label} (top of the selection)', { label: base }) : base
+})
+/** "5 rows selected — Row 2 to row 6 — with different sizes." as one sentence per axis, so a translator moves the
+ * whole thing around rather than assembling it from a noun and a label. */
+const selectedNote = computed(() => {
+  const count = lines.value.length
+  return props.axis === 'row'
+    ? t('{count} rows selected — {line} to row {last} — with different sizes.', { count, line: lineLabel.value, last: props.last + 1 })
+    : t('{count} columns selected — {line} to column {last} — with different sizes.', { count, line: lineLabel.value, last: columnName(props.last) })
+})
+const wasNote = computed(() => {
+  const size = Math.round(currentFirst.value)
+  return props.axis === 'row' ? t('was {size} px tall', { size }) : t('was {size} px wide', { size })
+})
+const sameNote = computed(() =>
+  props.axis === 'row'
+    ? t("Same {pct} applied to each row's own size:", { pct: formatPercent(pct.value) })
+    : t("Same {pct} applied to each column's own size:", { pct: formatPercent(pct.value) }),
+)
 
 /** The example footer (mockup 2): up to two other selected lines, with their own size before and after. */
 const examples = computed(() => {
@@ -48,7 +70,7 @@ const examples = computed(() => {
     .filter((i) => i !== props.first)
     .slice(0, 2)
     .map((i) => ({
-      label: props.axis === 'row' ? `row ${i + 1}` : `column ${columnName(i)}`,
+      label: props.axis === 'row' ? t('row {n}', { n: i + 1 }) : t('column {n}', { n: columnName(i) }),
       from: Math.round(sizeOf(i)),
       to: Math.round(pairs.get(i)!),
     }))
@@ -69,9 +91,9 @@ async function submit() {
 </script>
 
 <template>
-  <Modal :title="axis === 'row' ? 'Row height' : 'Column width'" :width="420" @close="emit('close')">
+  <Modal :title="axis === 'row' ? t('Row height') : t('Column width')" :width="420" @close="emit('close')">
     <form class="form" @submit.prevent="submit">
-      <p v-if="multiple" class="lead">{{ lines.length }} {{ noun }} selected — {{ lineLabel }} to {{ axis === 'row' ? `row ${last + 1}` : `column ${columnName(last)}` }} — with different sizes.</p>
+      <p v-if="multiple" class="lead">{{ selectedNote }}</p>
       <div class="row">
         <label class="field">
           {{ fieldLabel }}
@@ -79,23 +101,23 @@ async function submit() {
         </label>
         <span v-if="parsed !== null" class="tag" :class="{ zero: pct === 0 }">{{ formatPercent(pct) }}</span>
       </div>
-      <p class="was">was {{ Math.round(currentFirst) }} px {{ unit }}</p>
-      <button type="button" class="reset" @click="resetToDefault">Reset to default ({{ defaultSize }} px)</button>
+      <p class="was">{{ wasNote }}</p>
+      <button type="button" class="reset" @click="resetToDefault">{{ t('Reset to default ({defaultSize} px)', { defaultSize }) }}</button>
 
       <template v-if="multiple && examples.length">
         <div class="sep" />
         <p class="example">
-          Same {{ formatPercent(pct) }} applied to each {{ axis === 'row' ? 'row' : 'column' }}'s own size:
+          {{ sameNote }}
           <template v-for="(e, i) in examples" :key="e.label">
-            {{ e.label }}: {{ e.from }} → {{ e.to }} px<template v-if="i < examples.length - 1 || moreCount">&nbsp;·&nbsp;</template>
+            {{ t('{label}: {from} → {to} px', { label: e.label, from: e.from, to: e.to }) }}<template v-if="i < examples.length - 1 || moreCount">&nbsp;·&nbsp;</template>
           </template>
-          <template v-if="moreCount">and {{ moreCount }} more</template>
+          <template v-if="moreCount">{{ t('and {moreCount} more', { moreCount }) }}</template>
         </p>
       </template>
 
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="!valid">Set {{ axis === 'row' ? 'height' : 'width' }}</button>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
+        <button class="btn primary" type="submit" :disabled="!valid">{{ axis === 'row' ? t('Set height') : t('Set width') }}</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
       </div>
     </form>
   </Modal>

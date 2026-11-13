@@ -3,10 +3,11 @@
 import type { HostSlot, StyleHost } from './style-host'
 import type { TextSession } from './text-session'
 
+import { translate as t } from './i18n'
 export function textStyleHost(session: TextSession): StyleHost {
   const slot = (): HostSlot | undefined => {
     const found = session.state.styleModel?.slots.paragraph?.[0]
-    return found ? { ...found, label: 'Paragraph' } : undefined
+    return found ? { ...found, label: t('Paragraph') } : undefined
   }
   return {
     get styles() {

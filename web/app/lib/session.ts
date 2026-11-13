@@ -1,6 +1,7 @@
 // One person's view of one workbook: the replica the screen draws, kept up to date from the server's events.
 // The connection, history, chat and the rest that every app has live in BaseSession.
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
+import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
@@ -560,7 +561,7 @@ export class Session extends BaseSession<State> {
     try {
       return await this.need().request<RandomPreview>('random_preview', { ...request })
     } catch (error) {
-      return { error: error instanceof ProtocolError ? error.message : 'Something went wrong.' }
+      return { error: error instanceof ProtocolError ? error.message : t('Something went wrong.') }
     }
   }
 

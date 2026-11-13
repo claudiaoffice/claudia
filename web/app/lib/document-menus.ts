@@ -42,7 +42,7 @@ export interface DocumentMenuContext {
   print?: () => void
 }
 
-/** The shortcut of Edit ▸ Search & replace… (E5.15); `searchShortcuts` in `shortcuts.ts` is what listens for it. */
+/** The shortcut of Edit ▸ Search & Replace… (E5.15); `searchShortcuts` in `shortcuts.ts` is what listens for it. */
 export const SEARCH_CHORD = { key: 'f', ctrl: true } as const
 
 /** The shortcut of File ▸ Print… (D906). */
@@ -73,7 +73,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
       { id: 'file.open', label: t('Open…'), action: () => c.leave() },
       separator,
       { id: 'file.save', label: t('Save'), hint: SHARED_HINTS['file.save'], action: () => c.save(), disabled: viewer },
-      { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => c.open('checkpoint'), disabled: viewer },
+      { id: 'file.save-as', label: t('Save New Checkpoint…'), action: () => c.open('checkpoint'), disabled: viewer },
       { id: 'file.download', label: t('Download'), action: () => c.open('export') },
       ...(c.print ? [{ id: 'file.print', label: t('Print…'), hint: chordLabel(PRINT_CHORD), action: c.print }] : []),
       separator,
@@ -82,15 +82,15 @@ export function fileMenu(c: DocumentMenuContext): Menu {
         label: t('Manage'),
         items: [
           { id: 'file.manage.share', label: t('Share…'), action: () => c.open('share'), disabled: !owner },
-          { id: 'file.manage.assign-owner', label: t('Assign new owner…'), action: () => c.open('assign-owner'), disabled: !owner },
-          { id: 'file.manage.accept-owner', label: t('Accept ownership…'), action: () => c.open('accept-owner'), disabled: viewer },
-          { id: 'file.manage.leave', label: t('Leave document…'), action: () => c.open('leave') },
+          { id: 'file.manage.assign-owner', label: t('Assign New Owner…'), action: () => c.open('assign-owner'), disabled: !owner },
+          { id: 'file.manage.accept-owner', label: t('Accept Ownership…'), action: () => c.open('accept-owner'), disabled: viewer },
+          { id: 'file.manage.leave', label: t('Leave Document…'), action: () => c.open('leave') },
           { id: 'file.manage.export', label: t('Export…'), action: () => c.open('export-format') },
-          { id: 'file.manage.delete', label: t('Delete from server…'), action: () => c.open('delete'), disabled: !owner },
+          { id: 'file.manage.delete', label: t('Delete From Server…'), action: () => c.open('delete'), disabled: !owner },
         ],
       },
       separator,
-      { id: 'file.close', label: t('Close document'), action: () => c.leave() },
+      { id: 'file.close', label: t('Close Document'), action: () => c.leave() },
     ],
   }
 }
@@ -129,45 +129,45 @@ export function clipboardItems(c: DocumentMenuContext, paste: () => void): MenuI
     { id: 'edit.paste', label: t('Paste'), hint: 'Ctrl+V', action: () => paste(), disabled: viewer },
     {
       id: 'edit.paste-as',
-      label: t('Paste as'),
+      label: t('Paste As'),
       disabled: viewer,
       // The child's own `disabled` is what a shell actually reports per action (`collectStates` walks each item on
       // its own terms, not by inheriting a parent's); the parent's only keeps the web menu from opening the flyout.
       // Both have to agree, or a shell could show the leaf as enabled.
-      items: [{ id: 'edit.paste-as-plain', label: t('Plain text'), action: () => paste(), disabled: viewer }],
+      items: [{ id: 'edit.paste-as-plain', label: t('Plain Text'), action: () => paste(), disabled: viewer }],
     },
   ]
 }
 
-/** Edit ▸ Search & replace…, the same entry in every app (D281): opens the floating panel. Finding changes nothing, so
+/** Edit ▸ Search & Replace…, the same entry in every app (D281): opens the floating panel. Finding changes nothing, so
  * it is there for somebody who can only look; the panel itself keeps Replace off for them. */
 export function searchItem(c: DocumentMenuContext, search: { open: () => void }): MenuItem {
   const { t } = c
-  return { id: 'edit.search-replace', label: t('Search & replace…'), hint: chordLabel(SEARCH_CHORD), action: () => search.open() }
+  return { id: 'edit.search-replace', label: t('Search & Replace…'), hint: chordLabel(SEARCH_CHORD), action: () => search.open() }
 }
 
 /** View ▸ History and chat. */
 export function panelItem(c: DocumentMenuContext, panel: { open: () => boolean; toggle: () => void }): MenuItem {
   const { t } = c
-  return { id: 'view.panel', label: t('History and chat'), checked: panel.open(), action: toggling(panel.open, panel.toggle) }
+  return { id: 'view.panel', label: t('History and Chat'), checked: panel.open(), action: toggling(panel.open, panel.toggle) }
 }
 
 /** View ▸ Dark mode. */
 export function darkItem(c: DocumentMenuContext, theme: { on: () => boolean; toggle: () => void }): MenuItem {
   const { t } = c
-  return { id: 'view.dark', label: t('Dark mode'), checked: theme.on(), action: toggling(theme.on, theme.toggle) }
+  return { id: 'view.dark', label: t('Dark Mode'), checked: theme.on(), action: toggling(theme.on, theme.toggle) }
 }
 
 /** View ▸ Show who wrote what, for an app that does not track authorship of its content yet: shown, and off. */
 export function authorsItemUnavailable(c: DocumentMenuContext): MenuItem {
   const { t } = c
-  return { id: 'view.authors', label: t('Show who wrote what'), checked: false, disabled: true }
+  return { id: 'view.authors', label: t('Show Who Wrote What'), checked: false, disabled: true }
 }
 
 /** Tools ▸ Ask the assistant…, the one Tools item every app has. */
 export function askItem(c: DocumentMenuContext, ask: (text: string) => void): MenuItem {
   const { t } = c
-  return { id: 'tools.ask', label: t('Ask the assistant…'), action: () => ask('@ai ') }
+  return { id: 'tools.ask', label: t('Ask the Assistant…'), action: () => ask('@ai ') }
 }
 
 /** Config: Shortcuts, and App Language from `LANGUAGES` (each language under its own name, never translated). */
@@ -200,7 +200,7 @@ export function helpMenu(
     label: t('Help'),
     items: [
       { id: 'help.ask', label: t('Ask ai'), action: () => panel.ask('@ai ') },
-      { id: 'help.how-to', label: t('How do I…?'), action: () => panel.openHelp('how-to') },
+      { id: 'help.how-to', label: t('How Do I…?'), action: () => panel.openHelp('how-to') },
       { id: 'help.docs', label: t('Documentation'), action: () => panel.openHelp('docs') },
       { id: 'help.about', label: t('About claudia'), action: () => c.open('about') },
     ],

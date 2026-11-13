@@ -2,6 +2,8 @@
 //   -> {id, method, params}     <- {id, ok, result | error}     <- {event, data} (pushed)
 // The first frame is `hello` with the name and password; the answer carries the welcome data.
 
+import { translate as t } from './i18n'
+
 export class ProtocolError extends Error {
   constructor(
     public code: string,
@@ -29,7 +31,7 @@ export interface Welcome {
   id: number
   color: string
   /** The locale the server negotiated for this connection (E5.7, D31): what was sent, or 'en' if nothing was, or
-   *  what was sent could not be read as a locale tag. Nothing is rendered in it yet. */
+   *  what was sent could not be read as a locale tag. The server says its own messages and help in it (D322, D323). */
   locale: string
   people: { id: number; user: string; color: string }[]
   presence: { user: string; regions: Region[]; locked: boolean }[]
@@ -169,7 +171,7 @@ export class Link implements LinkLike {
       socket.onmessage = (event) => this.receive(String(event.data))
       socket.onclose = (event) => {
         this.closed = true
-        const error = new ProtocolError('closed', `the connection closed (${event.code})`)
+        const error = new ProtocolError('closed', t('the connection closed ({code})', { code: event.code }))
         reject(error) // no effect once the welcome has come; before it, nobody is left waiting for ever
         for (const waiting of this.pending.values()) waiting.reject(error)
         this.pending.clear()
@@ -179,7 +181,7 @@ export class Link implements LinkLike {
   }
 
   request<T = WireData>(method: string, params: Record<string, unknown> = {}): Promise<T> {
-    if (!this.socket || this.closed) return Promise.reject(new ProtocolError('closed', 'not connected'))
+    if (!this.socket || this.closed) return Promise.reject(new ProtocolError('closed', t('not connected')))
     const id = this.nextId++
     const sent = new Promise<T>((resolve, reject) => this.pending.set(id, { resolve, reject }))
     this.socket.send(JSON.stringify({ id, method, params }))
@@ -206,7 +208,7 @@ export class Link implements LinkLike {
     if (!waiting) return
     this.pending.delete(frame.id)
     if (frame.ok) waiting.resolve(frame.result)
-    else waiting.reject(new ProtocolError(frame.error?.code ?? 'internal', frame.error?.message ?? 'request failed'))
+    else waiting.reject(new ProtocolError(frame.error?.code ?? 'internal', frame.error?.message ?? t('request failed')))
   }
 }
 
@@ -220,20 +222,20 @@ export function socketUrl(doc: string, page: { protocol: string; host: string })
 export function closeMessage(code: number): string {
   switch (code) {
     case 4400:
-      return 'The server did not understand the request.'
+      return t('The server did not understand the request.')
     case 4401:
-      return 'The name or password is not right.'
+      return t('The name or password is not right.')
     case 4403:
-      return 'This page is not allowed to use that server.'
+      return t('This page is not allowed to use that server.')
     case 4404:
-      return 'There is no such document.'
+      return t('There is no such document.')
     case 4408:
-      return 'The server did not hear from the page in time.'
+      return t('The server did not hear from the page in time.')
     case 4423:
-      return 'The document is waiting for an owner or editor to open it.'
+      return t('The document is waiting for an owner or editor to open it.')
     case 1013:
-      return 'The document is full, or the connection was too slow.'
+      return t('The document is full, or the connection was too slow.')
     default:
-      return 'The connection to the server was lost.'
+      return t('The connection to the server was lost.')
   }
 }

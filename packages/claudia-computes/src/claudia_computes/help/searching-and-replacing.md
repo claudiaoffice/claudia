@@ -4,9 +4,9 @@ title: How do I find and replace things in my workbook?
 apps: computes
 language: en
 tags: search, find, replace, pattern, builder, match
-explains: Search & replace, Replace with, Build a pattern, Left out
+explains: Search & Replace, Replace with, Build a pattern, Left out
 ---
-**Edit ▸ Search & replace…** (Ctrl+F) opens a panel beside the sheet. Type what you are looking for and the cells
+**Edit ▸ Search & Replace…** (Ctrl+F) opens a panel beside the sheet. Type what you are looking for and the cells
 that contain it are marked as you type; Enter goes to the next match, Shift+Enter to the previous one. Ctrl+H opens the
 same panel with **Replace with** already showing.
 

@@ -8,6 +8,7 @@
 // Everything here is a pure function of those ranges and the document's styles: the grid paints with `cellLook`
 // for the cells on screen only, and the popover says where a look comes from with `whereFrom`.
 import { columnName, MAX_COLS, MAX_ROWS } from './cells'
+import { translate as t } from './i18n'
 import { withDisplayInk, type Css } from './style-css'
 
 export type CellSlot = 'box' | 'words'
@@ -71,22 +72,22 @@ export function within(ranges: readonly CellRange[], r0: number, c0: number, r1:
 function place(origin: Origin, row: number, col: number): string {
   switch (origin.layer) {
     case 'range':
-      return 'these cells’ own style'
+      return t('these cells’ own style')
     case 'row':
-      return `row ${row + 1}’s style`
+      return t('row {n}’s style', { n: row + 1 })
     case 'column':
-      return `column ${columnName(col)}’s style`
+      return t('column {name}’s style', { name: columnName(col) })
     case 'sheet':
-      return 'the sheet’s style'
+      return t('the sheet’s style')
     default:
-      return 'no style of their own'
+      return t('no style of their own')
   }
 }
 
 function beneath(origin: Origin, row: number, col: number, name: string): string {
-  if (origin.layer === 'row') return `row ${row + 1} is ${name}`
-  if (origin.layer === 'column') return `column ${columnName(col)} is ${name}`
-  return `the sheet is ${name}` // the sheet's own range, or the default every sheet has
+  if (origin.layer === 'row') return t('row {n} is {style}', { n: row + 1, style: name })
+  if (origin.layer === 'column') return t('column {name} is {style}', { name: columnName(col), style: name })
+  return t('the sheet is {style}', { style: name }) // the sheet's own range, or the default every sheet has
 }
 
 /** The line at the top of the popover on cells (`computes-cell-style-popover.svg`): which style the cell has and
@@ -95,13 +96,15 @@ function beneath(origin: Origin, row: number, col: number, name: string): string
 export function whereFrom(ranges: readonly CellRange[], row: number, col: number, nameOf: (id: string) => string): string[] {
   const box = styleAt(ranges, row, col, 'box')
   const words = styleAt(ranges, row, col, 'words')
-  if (box.style !== words.style) return [`Box ${nameOf(box.style)} · Words ${nameOf(words.style)} — the two slots now differ`]
-  const lines = [`${nameOf(words.style)} — ${place(words, row, col)}${words.layer === 'default' ? '' : ', box and words'}`]
+  if (box.style !== words.style) return [t('Box {box} · Words {words} — the two slots now differ', { box: nameOf(box.style), words: nameOf(words.style) })]
+  const style = nameOf(words.style)
+  const where = place(words, row, col)
+  const lines = [words.layer === 'default' ? t('{style} — {place}', { style, place: where }) : t('{style} — {place}, box and words', { style, place: where })]
   // A sheet's own style covers every cell, so the default beneath it never shows and is not named.
   const under = layersAt(ranges, row, col, 'words')
     .slice(1)
     .filter((o, _, all) => o.layer !== 'default' || !all.some((x) => x.layer === 'sheet'))
-  if (words.layer !== 'default' && under.length) lines.push(`Under it: ${under.map((o) => beneath(o, row, col, nameOf(o.style))).join('; ')}`)
+  if (words.layer !== 'default' && under.length) lines.push(t('Under it: {list}', { list: under.map((o) => beneath(o, row, col, nameOf(o.style))).join('; ') }))
   return lines
 }
 
