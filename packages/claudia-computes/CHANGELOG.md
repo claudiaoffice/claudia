@@ -3,6 +3,31 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-13
+
+Random numbers, alternatives and following a computation (E6.21–E6.23, D291–D299).
+
+### Added
+- **`RANDOM(...)`** (E6.22, D291–D293): the same numbers for every user, because a number is a function of the
+  workbook's seed, its draw number, the cell and the position in the cell's call (`claudia_computes.draws`, BLAKE2b),
+  never of a clock or a generator's state. `RANDOM()` is Excel's `RAND()`; `RANDOM("dist", params…)` draws from
+  uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson or a discrete
+  list of values with weights (`claudia_computes.distributions`, quantile functions in `claudia_computes.special`),
+  optionally cut to `low`/`high`. `Resample` (relative, so undo works after colleagues' changes) and
+  `SetRandomSeed` are logged commands, `RandomChanged` an event; workbook state schema 8 keeps seed and draw number.
+- **Alternatives** (E6.21, D294–D296): an input cell may hold `{a, b, c}` (stored as `=ALTERNATIVES(a,b,c)`, or
+  `=SCENARIOS("name", a, b, …)` with a name), each alternative a value or a formula. `Sheet.alternatives` and
+  `Sheet.outcomes` are derived: for every cell that depends on alternatives, the value for each combination, its
+  median and spread, computed by running the calculation over the cells that take part (`claudia_computes.outcomes`;
+  above 10 000 combinations a seeded sample, with common random numbers). `WorkbookModel.outcome_table(sheet, row,
+  col, combine)` lists every outcome with the alternatives behind it and a sensitivity per input (`combine="pair"`
+  takes the first alternatives together, the second ones, …).
+- **Follow a computation** (E6.23, D297): `WorkbookModel.trace(sheet, row, col, reach, window)` gives the cells connected
+  to a cell, each as `input`, `calc` or `output`, cut to the visible window, with counts for other sheets
+  (`claudia_computes.trace`). A view, not an edit.
+- New public names: `Resample`, `SetRandomSeed`, `RandomChanged`, `AltInput`, `OutcomeRow`, `OutcomeTable`, `Swing`,
+  `Trace`.
+
 ## [0.3.0] - 2026-11-12
 
 The styling-suite plan, steps 1.1 to 2.6 (D300–D318).

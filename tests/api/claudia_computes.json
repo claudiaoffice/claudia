@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.4.0",
  "AddChart": {
   "class": [
    "Command"
@@ -54,6 +54,16 @@
    "label",
    "summary"
   ]
+ },
+ "AltInput": {
+  "class": [
+   "object"
+  ],
+  "init": "(key: 'Key', count: 'int', labels: 'tuple[str | None, ...]', label: 'str | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "BUILTIN_STYLES": {
   "value": "(StyleDef(id='body-text', name='Body text', purpose='words in a floating text box or shape on a sheet', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '13px', 'line-height': '1.4', 'text-align': 'left'}, to_name=False, kind='paragraph'), StyleDef(id='shape-label', name='Shape label', purpose='the words inside a shape on a sheet', based_on='body-text', css={'text-align': 'center'}, to_name=False, kind='paragraph'), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that marks or annotates a part of the sheet, without drawing attention to itself', based_on=None, css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '2px'}, to_name=False, kind='outline'), StyleDef(id='plain-box', name='Plain box', purpose='the box of a text box on a sheet: no background and no border, so only its words show', based_on=None, css={}, to_name=False, kind='box'), StyleDef(id='header', name='Header', purpose='the labels at the top of a table or the start of a row', based_on='body-text', css={'font-weight': '600', 'background-color': '@accent/14', 'border-bottom': '1px solid @accent'}, to_name=False, kind='paragraph'), StyleDef(id='input', name='Input', purpose='a number someone is meant to change: an assumption of the model', based_on='body-text', css={'color': '@accent', 'background-color': '@highlight/14'}, to_name=False, kind='paragraph'), StyleDef(id='result', name='Result', purpose='a number the model works out and someone reads', based_on='body-text', css={'font-weight': '600', 'border-top': '1px solid @structure'}, to_name=False, kind='paragraph'), StyleDef(id='note', name='Note', purpose='a remark beside the numbers', based_on='body-text', css={'font-style': 'italic', 'color': '@muted'}, to_name=False, kind='paragraph'), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the sheet; it carries its own colours, so no style properties apply to it', based_on=None, css={}, to_name=False, kind='box'))"
@@ -492,6 +502,26 @@
   },
   "properties": []
  },
+ "OutcomeRow": {
+  "class": [
+   "object"
+  ],
+  "init": "(choice: 'tuple[int, ...]', value: 'Value') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "OutcomeTable": {
+  "class": [
+   "object"
+  ],
+  "init": "(inputs: 'tuple[AltInput, ...]', rows: 'tuple[OutcomeRow, ...]', sampled: 'bool', sensitivity: 'tuple[Swing, ...]' = ()) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "PURPOSES": {
   "value": "('input', 'data', 'calc', 'result')"
  },
@@ -508,6 +538,16 @@
    "with_style": "(self, style: 'str') -> 'Paragraph'",
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
+  },
+  "properties": []
+ },
+ "RandomChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(seed: 'int', draw: 'int') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -614,6 +654,21 @@
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'RenameName'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "Resample": {
+  "class": [
+   "Command"
+  ],
+  "init": "(steps: 'int' = 1) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'Resample'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -755,6 +810,21 @@
    "summary"
   ]
  },
+ "SetRandomSeed": {
+  "class": [
+   "Command"
+  ],
+  "init": "(seed: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetRandomSeed'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetSnap": {
   "class": [
    "Command"
@@ -848,6 +918,28 @@
    "summary"
   ]
  },
+ "Swing": {
+  "class": [
+   "object"
+  ],
+  "init": "(input: 'int', low: 'float', high: 'float', low_choice: 'int', high_choice: 'int') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Trace": {
+  "class": [
+   "object"
+  ],
+  "init": "(focus: 'Key', reach: 'str', cells: 'dict[Position, str]', other_sheets: 'dict[SheetId, int]', total: 'int', truncated: 'bool') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "connected"
+  ]
+ },
  "UpdateDiagram": {
   "class": [
    "Command"
@@ -906,6 +998,7 @@
    "grow_names": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'NameRestores'",
    "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
+   "outcome_table": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, combine: 'str' = 'all') -> 'OutcomeTable | None'",
    "put_names": "(self, entries: 'Sequence[tuple[NameKey, NamedRange | None]]') -> 'NameRestores'",
    "query": "(self, text: 'str', home: 'SheetId', parameters: 'Sequence[object]' = ()) -> 'Table'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
@@ -921,6 +1014,7 @@
    "sheet_name_of": "(self, sheet_id: 'SheetId') -> 'str | None'",
    "store": "(self, sheet: 'Sheet', row: 'int', col: 'int', content: 'Content') -> 'Content'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "trace": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, reach: 'str' = 'group', window: 'Window | None' = None) -> 'Trace'",
    "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "value": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Value'"
   },

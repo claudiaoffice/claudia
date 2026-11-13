@@ -34,9 +34,15 @@ from xml.sax.saxutils import escape as _xml_escape
 
 import openpyxl
 from lxml import etree
+from openpyxl.comments import Comment
 
 from claudia_computes import Content, Sheet, SheetId, WorkbookModel, content_of
+from claudia_computes.values import ErrorValue, Value
+from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
+
+from .extensions import from_excel, restore_alternatives, to_excel, with_note
+from .openformula import Untranslatable
 
 NS = {
     "ct": "http://schemas.openxmlformats.org/package/2006/content-types",
@@ -63,17 +69,65 @@ def _attr(value) -> str:
     return _xml_escape(str(value), {'"': "&quot;"})
 
 
+_NOTE_AUTHOR = "claudia"
+
+
+def _shown(value: Value) -> object:
+    """What a formula that cannot be written shows, as a cell value: errors by their code."""
+    return value.code if isinstance(value, ErrorValue) else value
+
+
+def _written(content: Content, value: Value) -> tuple[object, str | None, Loss | None]:
+    """What to put in a cell for ``content`` (a formula shows ``value``): its cell value, the note that says what its
+    alternatives are (when it has any) and, when its formula cannot be said in Excel, why it is written as its value.
+
+    ``RANDOM(...)`` becomes the Excel formula that draws the same distribution and a cell with alternatives its first
+    alternative with a note (see :mod:`claudia_computes_io.extensions`)."""
+    written = with_note(content)
+    shown = written.content
+    if shown is None:
+        return None, written.note, None
+    if shown["t"] != "formula":
+        return shown["v"], written.note, None
+    try:
+        return to_excel(shown["v"]), written.note, None
+    except Untranslatable as why:
+        return _shown(value), written.note, Loss("formula", why.reason)
+
+
+def _put(cell, content: Content, value: Value) -> Loss | None:  # noqa: ANN001 (openpyxl's own cell class)
+    """Write ``content`` into an openpyxl cell, with its note."""
+    cell.value, note, lost = _written(content, value)
+    cell.comment = Comment(note, _NOTE_AUTHOR) if note is not None else None
+    return lost
+
+
+def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
+    """What :func:`workbook_to_xlsx` cannot say in Excel for ``model``, each as a code with how many:
+    ``"formula"`` (with the reason, ``random`` for a draw Excel has no single formula for: written as its value) and
+    ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest)."""
+    losses = LossLog()
+    for sheet in model.sheets.values():
+        for position, content in sheet.cells.items():
+            _, note, lost = _written(content, sheet.grid.get(position))
+            if lost is not None:
+                losses.add(lost.kind, lost.detail)
+            if note is not None:
+                losses.add("alternatives")
+    return losses.result()
+
+
 def workbook_to_xlsx(model: WorkbookModel) -> bytes:
     """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
-    with the leading ``=``). No styles, number formats or charts yet (E6.4, E6.9 are the full story)."""
+    with the leading ``=``; see ``_written`` for what is written differently). No styles, number formats or
+    charts yet (E6.4, E6.9 are the full story)."""
     wb = openpyxl.Workbook()
     assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
     for sheet in model.sheets.values():
         ws = wb.create_sheet(title=sheet.name)
         for (row, col), content in sheet.cells.items():
-            cell = ws.cell(row=row + 1, column=col + 1)
-            cell.value = content["v"] if content["t"] == "formula" else content.get("v")
+            _put(ws.cell(row=row + 1, column=col + 1), content, sheet.grid.get((row, col)))
     if not wb.sheetnames:
         wb.create_sheet(title="Sheet1")
     out = BytesIO()
@@ -83,12 +137,15 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
 
 def _cell_content(cell) -> Content:  # noqa: ANN001 (openpyxl's own cell classes are not exported as one type)
     """``cell``'s content as claudia's own ``Content`` shape: ``None`` for an empty cell, a formula content
-    (keeping the leading ``=``) for a formula cell, :func:`~claudia_computes.content_of` for anything else."""
+    (keeping the leading ``=``; the inverse functions of ``RAND()`` read as ``RANDOM``) for a formula cell,
+    :func:`~claudia_computes.content_of` for anything else; a note claudia wrote gives the alternatives back."""
     if cell.value is None:
         return None
     if cell.data_type == "f":
-        return {"t": "formula", "v": cell.value}
-    return content_of(cell.value)
+        content: Content = {"t": "formula", "v": from_excel(cell.value) if isinstance(cell.value, str) else cell.value}
+    else:
+        content = content_of(cell.value)
+    return restore_alternatives(content, cell.comment.text if cell.comment is not None else None)
 
 
 def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
@@ -152,12 +209,7 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
             if before == after:
                 continue
             row, col = position
-            cell = ws.cell(row=row + 1, column=col + 1)
-            cell.value = (
-                after["v"]
-                if after is not None and after["t"] == "formula"
-                else (after.get("v") if after is not None else None)
-            )  # noqa: E501
+            _put(ws.cell(row=row + 1, column=col + 1), after, current.sheets[sheet_id].grid.get(position))
         touched_parts.add(_sheet_part(members, sheet_name))
 
     patched = BytesIO()

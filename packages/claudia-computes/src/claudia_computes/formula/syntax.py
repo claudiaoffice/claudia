@@ -49,6 +49,7 @@ from .tablespec import SpecError, parse_spec
 MAX_LENGTH = 8192  # characters, like Excel
 MAX_DEPTH = 64  # nested brackets and signs, like Excel's nesting of functions
 DYNAMIC_FUNCTIONS = frozenset({"OFFSET", "INDIRECT"})  # read cells that the text alone does not name
+RANDOM_FUNCTIONS = frozenset({"RAND", "RANDBETWEEN", "RANDOM"})  # draw from the document's stream (D291)
 
 SheetIds = Callable[[str], SheetId | None]
 
@@ -108,13 +109,15 @@ class Formula:
 
     ``refs`` is every cell or range the formula names (a cell as a range of one), in the order of the text and
     without repeats; ``sheet`` is ``None`` for the sheet the formula is on. ``dynamic`` is true when it also reads
-    cells that its text does not name (``OFFSET``, ``INDIRECT``)."""
+    cells that its text does not name (``OFFSET``, ``INDIRECT``). ``random`` is true when it draws random numbers
+    (``RAND``, ``RANDBETWEEN``, ``RANDOM``): it is calculated again when the document is resampled."""
 
     source: str
     ast: Node | None
     error: ErrorValue | None = None
     refs: tuple[RangeRef, ...] = ()
     dynamic: bool = False
+    random: bool = False
 
 
 def parse_formula(text: str, sheet_ids: SheetIds | None = None) -> Formula:
@@ -130,7 +133,7 @@ def parse_formula(text: str, sheet_ids: SheetIds | None = None) -> Formula:
         return Formula(source, None, ErrorValue(SYNTAX, str(problem)))
     except RecursionError:
         return Formula(source, None, ErrorValue(SYNTAX, "the formula is nested too deeply"))
-    return Formula(source, node, None, tuple(dict.fromkeys(parser.refs)), parser.dynamic)
+    return Formula(source, node, None, tuple(dict.fromkeys(parser.refs)), parser.dynamic, parser.random)
 
 
 # ------------------------------------------------------------------------------------ tokens
@@ -185,6 +188,7 @@ class _Parser:
         self.depth = 0
         self.refs: list[RangeRef] = []
         self.dynamic = False
+        self.random = False
 
     def parse(self) -> Node:
         if not self.tokens:
@@ -294,6 +298,8 @@ class _Parser:
         upper = name.upper()
         if upper in DYNAMIC_FUNCTIONS:
             self.dynamic = True
+        if upper in RANDOM_FUNCTIONS:
+            self.random = True
         return Call(upper, tuple(args))
 
     # -- references

@@ -43,7 +43,7 @@ import secrets
 import time
 from collections import Counter
 
-from claudia_computes_io import ods_export_losses, workbook_to_ods, workbook_to_xlsx
+from claudia_computes_io import ods_export_losses, workbook_to_ods, workbook_to_xlsx, xlsx_export_losses
 
 from claudia_computes import (
     CELL_SLOTS,
@@ -59,9 +59,11 @@ from claudia_computes import (
     RemoveChart,
     RemoveName,
     RenameName,
+    Resample,
     ResizeLines,
     SetCells,
     SetCellStyle,
+    SetRandomSeed,
     SheetId,
     Structure,
     WorkbookModel,
@@ -80,6 +82,7 @@ from claudia_computes.model import (
 )
 from claudia_computes.names import PURPOSES  # noqa: F401
 from claudia_computes.refs import CellRef, RangeRef
+from claudia_computes.trace import REACHES
 from claudia_computes.values import FormulaError
 from claudia_core import (
     AddObject,
@@ -214,8 +217,9 @@ def _sheets(ctx):
 @computes_methods.method("export_office", "format:str")
 def _export_office(ctx, *, format):
     """The document's current content as bytes of an Excel file (`format` `"xlsx"`) or an OpenDocument
-    spreadsheet (`"ods"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); an ods's answer
-    also has `losses`, what the file could not hold, as `{kind, detail, count}` codes. No tracked changes, no
+    spreadsheet (`"ods"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); the answer
+    also has `losses`, what the file could not hold, as `{kind, detail, count}` codes: for both formats since
+    E6.22 (a draw Excel has no formula for, `formula`/`random`; alternatives, `alternatives`). No tracked changes, no
     history, no chat — just the workbook as it stands now (D212); an ods says in its metadata when the workbook was
     made and last changed, and by whom, read from the log (D411), and holds every formula with the value it shows
     (D413)."""
@@ -223,9 +227,92 @@ def _export_office(ctx, *, format):
         raise RequestError("bad_request", 'export_office: format must be "xlsx" or "ods"')
     book = _workbook(ctx)
     if format == "xlsx":
-        return office_export(format, workbook_to_xlsx(book))
+        return office_export(format, workbook_to_xlsx(book), xlsx_export_losses(book))
     info = document_info(ctx.document.log, ctx.document.branch)
     return office_export(format, workbook_to_ods(book, info=info), ods_export_losses(book))
+
+
+MAX_RESAMPLE = 1_000  # draws one ``resample`` may skip
+MAX_SEED = 2**53  # a seed a JSON number holds exactly
+
+
+def _whole(value, low: int, high: int, what: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
+        raise RequestError("bad_request", f"{what} must be a whole number from {low} to {high}")
+    return value
+
+
+@computes_methods.method("random_state")
+def _random_state(ctx):
+    """What every random number in the workbook is a function of (E6.22, D291): `{revision, seed, draw}`. All
+    users see the same numbers because they share both."""
+    book = _workbook(ctx)
+    return {"revision": _rev(ctx), "seed": book.random_seed, "draw": book.random_draw}
+
+
+@computes_methods.method("resample", "steps:int=1 base:revision?", write=True)
+def _resample(ctx, *, steps, base):
+    """Draw fresh random numbers for everyone (Tools > Resample, F9): the draw number goes up by `steps` (1 to
+    1000). Relative, so resampling by two people at once counts both, and one undo step. Returns the revision and
+    the new `draw`."""
+    steps = _whole(steps, 1, MAX_RESAMPLE, "resample: steps")
+    applied = ctx.document.execute(Resample(steps), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data(), "draw": _workbook(ctx).random_draw}
+
+
+@computes_methods.method("set_random_seed", "seed:int base:revision?", write=True)
+def _set_random_seed(ctx, *, seed, base):
+    """Give the workbook's random numbers a seed (0 to 2^53): the same seed and draw number give the same numbers
+    on every computer, so a model can be reproduced. One undo step."""
+    seed = _whole(seed, 0, MAX_SEED, "set_random_seed: seed")
+    applied = ctx.document.execute(SetRandomSeed(seed), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("outcome_table", 'sheet:str row:int col:int combine:str="all"')
+def _outcome_table(ctx, *, sheet, row, col, combine):
+    """Every outcome of a cell that depends on alternatives (`{a, b, c}` in input cells), as `{revision, table}`:
+    the alternatives that make each outcome (`inputs`, `rows` with their `choice`), the `sensitivity` of the
+    outcome to each input, and whether the outcomes were `sampled` (very many combinations). `combine` is `"all"`
+    (every combination) or `"pair"` (the first alternatives together, the second ones, ...; command_error when the
+    inputs have different numbers of alternatives). `table` is null for a cell that depends on none."""
+    row, col = _index(row, MAX_ROWS, "row"), _index(col, MAX_COLS, "col")
+    if combine not in ("all", "pair"):
+        raise RequestError("bad_request", 'outcome_table: combine must be "all" or "pair"')
+    try:
+        table = _workbook(ctx).outcome_table(SheetId(sheet), row, col, combine=combine)
+    except (KeyError, ValueError) as exc:
+        raise RequestError("command_error", str(exc)) from None
+    return {"revision": _rev(ctx), "table": None if table is None else table.to_data()}
+
+
+@computes_methods.method("trace", 'sheet:str row:int col:int reach:str="group" window:list?')
+def _trace(ctx, *, sheet, row, col, reach, window):
+    """Follow a computation (E6.23): the cells that take part in one with this cell, as `{revision, trace}` where
+    `trace.cells` is `[[row, col, role]]` with `role` `input`, `calc` or `output`, `other` counts the connected
+    cells on other sheets per sheet, and `connected` says whether the cell is part of a computation at all.
+    `reach` is `"group"` (everything connected) or `"chain"` (only what the cell feeds and is fed by); `window`
+    is `[row0, col0, row1, col1]`, the cells a client shows, to which the listed cells are cut (at most 50000
+    positions). Nothing is changed: lighting up cells is a view, not an edit."""
+    row, col = _index(row, MAX_ROWS, "row"), _index(col, MAX_COLS, "col")
+    if reach not in REACHES:
+        raise RequestError("bad_request", f"trace: reach must be one of {', '.join(REACHES)}")
+    area = None
+    if window is not None:
+        if not isinstance(window, list) or len(window) != 4:
+            raise RequestError("bad_request", "trace: window is [row0, col0, row1, col1]")
+        r0, c0 = _index(window[0], MAX_ROWS, "window row0"), _index(window[1], MAX_COLS, "window col0")
+        r1, c1 = _index(window[2], MAX_ROWS, "window row1"), _index(window[3], MAX_COLS, "window col1")
+        if r1 < r0 or c1 < c0:
+            raise RequestError("bad_request", "trace: the window must not end before it starts")
+        if (r1 - r0 + 1) * (c1 - c0 + 1) > MAX_WINDOW_CELLS:
+            raise RequestError("bad_request", f"trace: window too large (at most {MAX_WINDOW_CELLS} positions)")
+        area = (r0, c0, r1, c1)
+    try:
+        found = _workbook(ctx).trace(SheetId(sheet), row, col, reach=reach, window=area)
+    except KeyError as exc:
+        raise RequestError("command_error", str(exc)) from None
+    return {"revision": _rev(ctx), "trace": found.to_data()}
 
 
 @computes_methods.method("cells", "sheet:str row0:int row1:int col0:int col1:int")

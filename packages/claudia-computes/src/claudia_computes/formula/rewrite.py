@@ -9,6 +9,7 @@ Nodes are rebuilt only along the path to a changed reference.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 
 from ..limits import MAX_COLS, MAX_ROWS
 from ..refs import CellRef, RangeRef, SheetId, SheetNames, StructuralEdit
@@ -81,8 +82,8 @@ def _rebuilt(formula: Formula, ast: Node, names: SheetNames | None) -> Formula:
             refs.append(RangeRef(node.ref, node.ref))
         elif isinstance(node, Area):
             refs.append(node.ref)
-    draft = Formula(formula.source, ast, formula.error, tuple(dict.fromkeys(refs)), formula.dynamic)
-    return Formula(print_formula(draft, names), ast, formula.error, draft.refs, formula.dynamic)
+    draft = replace(formula, ast=ast, refs=tuple(dict.fromkeys(refs)))
+    return replace(draft, source=print_formula(draft, names))
 
 
 def _full_height(area: RangeRef) -> bool:

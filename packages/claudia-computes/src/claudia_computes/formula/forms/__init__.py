@@ -57,6 +57,14 @@ def truth(value: Value | object) -> bool:
     raise FormulaError(VALUE, "a condition must be TRUE or FALSE, or a number (0 is FALSE)")
 
 
-from . import conditional, information, lookup, reference, sql  # noqa: E402, F401  (they register their forms)
+from . import (  # noqa: E402, F401  (they register their forms)
+    alternatives,
+    conditional,
+    information,
+    lookup,
+    random,
+    reference,
+    sql,
+)
 
 CORE_NAMES = frozenset(FORMS)

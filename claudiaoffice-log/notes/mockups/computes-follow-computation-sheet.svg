@@ -1,0 +1,245 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+<defs><clipPath id="gridclip"><rect x="0" y="112" width="1280" height="624"/></clipPath><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker></defs>
+<rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#F7F3EC"/>
+<rect x="0.0" y="0.0" width="1280.0" height="48.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="48.0" x2="1280.0" y2="48.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<text x="14.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">File</text>
+<path d="M54.5,22.5 L58,26 L61.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="86.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Edit</text>
+<path d="M126.5,22.5 L130,26 L133.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="158.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Tools</text>
+<path d="M208.5,22.5 L212,26 L215.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="240.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Help</text>
+<path d="M282.5,22.5 L286,26 L289.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="560.0" cy="24.0" r="5" fill="#1F8A85"/>
+<text x="574.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="14.5" font-weight="600" fill="#1F1A33" text-anchor="start">Pricing model</text>
+<text x="684.8" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">claudia computes</text>
+<rect x="1170.0" y="12.0" width="26.0" height="24.0" rx="5" fill="none" stroke="#1F1A33" stroke-width="1.4"/>
+<line x1="1185.0" y1="12.0" x2="1185.0" y2="36.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<line x1="1212.0" y1="24.0" x2="1222.0" y2="24.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<rect x="1236.0" y="19.0" width="10.0" height="10.0" rx="1.5" fill="none" stroke="#1F1A33" stroke-width="1.4"/>
+<line x1="1258.0" y1="19.0" x2="1268.0" y2="29.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<line x1="1268.0" y1="19.0" x2="1258.0" y2="29.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<rect x="0.0" y="49.0" width="1280.0" height="39.0" rx="0" fill="#FBF9F5"/>
+<rect x="12.0" y="55.0" width="84.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="26.0" y="74.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">B8</text>
+<path d="M78.5,67.5 L82,71 L85.5,67.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="112.0" y="75.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="14" font-weight="500" fill="#6E6885" text-anchor="start" font-style="italic">fx</text>
+<rect x="140.0" y="55.0" width="1128.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="152.0" y="74.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">=</text>
+<text x="159.8" y="74.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="500" fill="#D9822B" text-anchor="start">B5</text>
+<text x="175.4" y="74.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">+</text>
+<text x="183.2" y="74.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="500" fill="#D9822B" text-anchor="start">B3</text>
+<text x="198.8" y="74.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">*</text>
+<text x="206.6" y="74.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="500" fill="#D9822B" text-anchor="start">B4</text>
+<rect x="0.0" y="88.0" width="1280.0" height="24.0" rx="0" fill="#EFEBF5"/>
+<line x1="0.0" y1="112.0" x2="1280.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="144.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">A</text>
+<line x1="44.0" y1="88.0" x2="44.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="244.0" y="88.0" width="150.0" height="24.0" rx="0" fill="#E6E1F8"/>
+<text x="319.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5B4BC4" text-anchor="middle">B</text>
+<line x1="244.0" y1="88.0" x2="244.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="489.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">C</text>
+<line x1="394.0" y1="88.0" x2="394.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="649.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">D</text>
+<line x1="584.0" y1="88.0" x2="584.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="779.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">E</text>
+<line x1="714.0" y1="88.0" x2="714.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="909.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">F</text>
+<line x1="844.0" y1="88.0" x2="844.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="1039.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">G</text>
+<line x1="974.0" y1="88.0" x2="974.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="1169.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">H</text>
+<line x1="1104.0" y1="88.0" x2="1104.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="1299.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">I</text>
+<line x1="1234.0" y1="88.0" x2="1234.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="0.0" y="112.0" width="1280.0" height="624.0" rx="0" fill="#FFFFFF"/>
+<g clip-path="url(#gridclip)">
+<line x1="44.0" y1="112.0" x2="44.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="244.0" y1="112.0" x2="244.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="394.0" y1="112.0" x2="394.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="584.0" y1="112.0" x2="584.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="714.0" y1="112.0" x2="714.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="844.0" y1="112.0" x2="844.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="974.0" y1="112.0" x2="974.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="1104.0" y1="112.0" x2="1104.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="1234.0" y1="112.0" x2="1234.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="142.0" x2="1280.0" y2="142.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="172.0" x2="1280.0" y2="172.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="202.0" x2="1280.0" y2="202.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="232.0" x2="1280.0" y2="232.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="262.0" x2="1280.0" y2="262.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="292.0" x2="1280.0" y2="292.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="322.0" x2="1280.0" y2="322.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="352.0" x2="1280.0" y2="352.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="382.0" x2="1280.0" y2="382.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="412.0" x2="1280.0" y2="412.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="442.0" x2="1280.0" y2="442.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="472.0" x2="1280.0" y2="472.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="502.0" x2="1280.0" y2="502.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="532.0" x2="1280.0" y2="532.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="562.0" x2="1280.0" y2="562.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="592.0" x2="1280.0" y2="592.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="622.0" x2="1280.0" y2="622.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="652.0" x2="1280.0" y2="652.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="682.0" x2="1280.0" y2="682.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="712.0" x2="1280.0" y2="712.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="742.0" x2="1280.0" y2="742.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+</g>
+<rect x="0.0" y="112.0" width="44.0" height="624.0" rx="0" fill="#EFEBF5"/>
+<text x="22.0" y="132.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">1</text>
+<line x1="0.0" y1="142.0" x2="44.0" y2="142.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="162.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">2</text>
+<line x1="0.0" y1="172.0" x2="44.0" y2="172.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="192.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">3</text>
+<line x1="0.0" y1="202.0" x2="44.0" y2="202.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="222.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">4</text>
+<line x1="0.0" y1="232.0" x2="44.0" y2="232.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="252.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">5</text>
+<line x1="0.0" y1="262.0" x2="44.0" y2="262.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="282.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">6</text>
+<line x1="0.0" y1="292.0" x2="44.0" y2="292.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">7</text>
+<line x1="0.0" y1="322.0" x2="44.0" y2="322.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="0.0" y="322.0" width="44.0" height="30.0" rx="0" fill="#E6E1F8"/>
+<text x="22.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5B4BC4" text-anchor="middle">8</text>
+<line x1="0.0" y1="352.0" x2="44.0" y2="352.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">9</text>
+<line x1="0.0" y1="382.0" x2="44.0" y2="382.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">10</text>
+<line x1="0.0" y1="412.0" x2="44.0" y2="412.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="432.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">11</text>
+<line x1="0.0" y1="442.0" x2="44.0" y2="442.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="462.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">12</text>
+<line x1="0.0" y1="472.0" x2="44.0" y2="472.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="492.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">13</text>
+<line x1="0.0" y1="502.0" x2="44.0" y2="502.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="522.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">14</text>
+<line x1="0.0" y1="532.0" x2="44.0" y2="532.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="552.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">15</text>
+<line x1="0.0" y1="562.0" x2="44.0" y2="562.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="582.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">16</text>
+<line x1="0.0" y1="592.0" x2="44.0" y2="592.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="612.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">17</text>
+<line x1="0.0" y1="622.0" x2="44.0" y2="622.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="642.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">18</text>
+<line x1="0.0" y1="652.0" x2="44.0" y2="652.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="672.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">19</text>
+<line x1="0.0" y1="682.0" x2="44.0" y2="682.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="702.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">20</text>
+<line x1="0.0" y1="712.0" x2="44.0" y2="712.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="88.0" x2="44.0" y2="736.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="0.0" y="736.0" width="1280.0" height="32.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="736.0" x2="1280.0" y2="736.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<rect x="14.0" y="740.0" width="67.2" height="26.0" rx="6" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<line x1="22.0" y1="765.0" x2="73.2" y2="765.0" stroke="#1F8A85" stroke-width="2.5" stroke-linecap="round"/>
+<text x="24.0" y="758.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start">Pricing</text>
+<text x="99.2" y="758.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#6E6885" text-anchor="start">Summary</text>
+<rect x="162.4" y="749.0" width="9.0" height="9.0" rx="0" fill="#1F8A85"/>
+<text x="194.4" y="759.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="16" font-weight="400" fill="#6E6885" text-anchor="start">+</text>
+<rect x="0.0" y="768.0" width="1280.0" height="32.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="768.0" x2="1280.0" y2="768.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<circle cx="1002.0" cy="784.0" r="4.5" fill="#2E9E5B"/>
+<text x="1012.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">demo.claudia-office.de</text>
+<text x="1160.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">TLS · 2 online</text>
+<g clip-path="url(#gridclip)">
+<text x="56.0" y="134.0" font-family="Fraunces, 'DejaVu Serif', serif" font-size="19" font-weight="600" fill="#6E6885" text-anchor="start">Pricing model — launch scenario</text>
+<text x="56.0" y="162.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">Price per unit</text>
+<rect x="245.0" y="143.0" width="148.0" height="28.0" rx="0" fill="#FBE3CC"/>
+<rect x="245.0" y="143.0" width="4.0" height="28.0" rx="0" fill="#D9822B"/>
+<circle cx="262.0" cy="157.0" r="5" fill="#D9822B"/>
+<text x="382.0" y="162.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="end">24.00</text>
+<text x="56.0" y="192.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">Units sold</text>
+<rect x="245.0" y="173.0" width="148.0" height="28.0" rx="0" fill="#FBE3CC"/>
+<rect x="245.0" y="173.0" width="4.0" height="28.0" rx="0" fill="#D9822B"/>
+<circle cx="262.0" cy="187.0" r="5" fill="#D9822B"/>
+<text x="382.0" y="192.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="end">1,000</text>
+<text x="56.0" y="222.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">Variable cost per unit</text>
+<rect x="245.0" y="203.0" width="148.0" height="28.0" rx="0" fill="#FBE3CC"/>
+<rect x="245.0" y="203.0" width="4.0" height="28.0" rx="0" fill="#D9822B"/>
+<circle cx="262.0" cy="217.0" r="5" fill="#D9822B"/>
+<text x="382.0" y="222.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="end">11.00</text>
+<text x="56.0" y="252.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">Fixed costs</text>
+<rect x="245.0" y="233.0" width="148.0" height="28.0" rx="0" fill="#FBE3CC"/>
+<rect x="245.0" y="233.0" width="4.0" height="28.0" rx="0" fill="#D9822B"/>
+<circle cx="262.0" cy="247.0" r="5" fill="#D9822B"/>
+<text x="382.0" y="252.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="end">8,500</text>
+<text x="56.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#6E6885" text-anchor="start">Revenue</text>
+<rect x="245.0" y="293.0" width="148.0" height="28.0" rx="0" fill="#E6E1F8"/>
+<rect x="245.0" y="293.0" width="4.0" height="28.0" rx="0" fill="#5B4BC4"/>
+<path d="M262,301 L268,307 L262,313 L256,307 Z" fill="#5B4BC4" />
+<text x="382.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="end">24,000</text>
+<text x="404.0" y="312.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">=B2*B3</text>
+<text x="56.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#6E6885" text-anchor="start">Costs</text>
+<rect x="245.0" y="323.0" width="148.0" height="28.0" rx="0" fill="#E6E1F8"/>
+<rect x="245.0" y="323.0" width="4.0" height="28.0" rx="0" fill="#5B4BC4"/>
+<path d="M262,331 L268,337 L262,343 L256,337 Z" fill="#5B4BC4" />
+<text x="382.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="end">19,500</text>
+<text x="404.0" y="342.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">=B5+B3*B4</text>
+<text x="56.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#6E6885" text-anchor="start">Profit</text>
+<rect x="245.0" y="353.0" width="148.0" height="28.0" rx="0" fill="#E6E1F8"/>
+<rect x="245.0" y="353.0" width="4.0" height="28.0" rx="0" fill="#5B4BC4"/>
+<path d="M262,361 L268,367 L262,373 L256,367 Z" fill="#5B4BC4" />
+<text x="382.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="end">4,500</text>
+<text x="404.0" y="372.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">=B7-B8</text>
+<text x="56.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#6E6885" text-anchor="start">Margin</text>
+<rect x="245.0" y="383.0" width="148.0" height="28.0" rx="0" fill="#D6EEEB"/>
+<rect x="245.0" y="383.0" width="4.0" height="28.0" rx="0" fill="#1F8A85"/>
+<rect x="257.0" y="392.0" width="10.0" height="10.0" rx="1" fill="#1F8A85"/>
+<text x="382.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="end">18.8 %</text>
+<text x="404.0" y="402.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">=B9/B7</text>
+<text x="56.0" y="432.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#6E6885" text-anchor="start">Break-even units</text>
+<rect x="245.0" y="413.0" width="148.0" height="28.0" rx="0" fill="#D6EEEB"/>
+<rect x="245.0" y="413.0" width="4.0" height="28.0" rx="0" fill="#1F8A85"/>
+<rect x="257.0" y="422.0" width="10.0" height="10.0" rx="1" fill="#1F8A85"/>
+<text x="382.0" y="432.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="end">654</text>
+<text x="404.0" y="432.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">=B5/(B2-B4)</text>
+<text x="718.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#6E6885" text-anchor="start">Staffing plan</text>
+<rect x="715.0" y="323.0" width="128.0" height="28.0" rx="0" fill="#F3F0F8"/>
+<rect x="845.0" y="323.0" width="128.0" height="28.0" rx="0" fill="#F3F0F8"/>
+<text x="724.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">Headcount</text>
+<text x="962.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="end">12</text>
+<rect x="715.0" y="353.0" width="128.0" height="28.0" rx="0" fill="#F3F0F8"/>
+<rect x="845.0" y="353.0" width="128.0" height="28.0" rx="0" fill="#F3F0F8"/>
+<text x="724.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">Salary</text>
+<text x="962.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="end">4,200</text>
+<rect x="715.0" y="383.0" width="128.0" height="28.0" rx="0" fill="#F3F0F8"/>
+<rect x="845.0" y="383.0" width="128.0" height="28.0" rx="0" fill="#F3F0F8"/>
+<text x="724.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">Payroll</text>
+<text x="962.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="end">50,400</text>
+<rect x="244.0" y="322.0" width="150.0" height="30.0" rx="0" fill="none" stroke="#1F1A33" stroke-width="2.4"/>
+</g>
+<rect x="560.0" y="130.0" width="680.0" height="38.0" rx="21" fill="#1F1A33" opacity="0.05"/>
+<rect x="557.0" y="127.0" width="686.0" height="44.0" rx="24" fill="#1F1A33" opacity="0.05"/>
+<rect x="554.0" y="124.0" width="692.0" height="50.0" rx="27" fill="#1F1A33" opacity="0.05"/>
+<rect x="551.0" y="121.0" width="698.0" height="56.0" rx="30" fill="#1F1A33" opacity="0.06"/>
+<rect x="560.0" y="124.0" width="680.0" height="38.0" rx="19" fill="#1F1A33"/>
+<text x="580.0" y="148.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#CFC8DD" text-anchor="start">Following</text>
+<text x="644.0" y="148.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="start">B8</text>
+<circle cx="687.0" cy="143.0" r="4.5" fill="#F2B27A"/>
+<text x="698.0" y="148.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#FFFFFF" text-anchor="start">4 inputs</text>
+<path d="M777,137.5 L782.5,143 L777,148.5 L771.5,143 Z" fill="#A99CF0" />
+<text x="788.0" y="148.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#FFFFFF" text-anchor="start">3 calculations</text>
+<rect x="904.5" y="138.5" width="9.0" height="9.0" rx="1" fill="#6FD1C8"/>
+<text x="920.0" y="148.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#FFFFFF" text-anchor="start">2 outputs</text>
+<rect x="1112.0" y="131.0" width="70.0" height="24.0" rx="12" fill="#FFFFFF" opacity="0.14"/>
+<text x="1126.0" y="148.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#FFFFFF" text-anchor="start">Group</text>
+<path d="M1162.5,139.5 L1166,143 L1169.5,139.5" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<line x1="1206.0" y1="138.0" x2="1216.0" y2="148.0" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="1216.0" y1="138.0" x2="1206.0" y2="148.0" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+<rect x="96.0" y="706.0" width="188.0" height="30.0" rx="10" fill="#1F1A33" opacity="0.05"/>
+<rect x="93.0" y="703.0" width="194.0" height="36.0" rx="13" fill="#1F1A33" opacity="0.05"/>
+<rect x="90.0" y="700.0" width="200.0" height="42.0" rx="16" fill="#1F1A33" opacity="0.05"/>
+<rect x="87.0" y="697.0" width="206.0" height="48.0" rx="19" fill="#1F1A33" opacity="0.06"/>
+<rect x="96.0" y="700.0" width="188.0" height="30.0" rx="8" fill="#1F1A33"/>
+<rect x="104.0" y="710.0" width="9.0" height="9.0" rx="0" fill="#6FD1C8"/>
+<text x="120.0" y="719.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#FFFFFF" text-anchor="start">Summary!B2 · Profit (output)</text>
+<circle cx="19.0" cy="784.0" r="4.5" fill="#D9822B"/>
+<text x="30.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Input</text>
+<path d="M88,778.5 L93.5,784 L88,789.5 L82.5,784 Z" fill="#5B4BC4" />
+<text x="99.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Calculation</text>
+<rect x="194.5" y="779.5" width="9.0" height="9.0" rx="1" fill="#1F8A85"/>
+<text x="210.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Output</text>
+<rect x="270.0" y="779.0" width="14.0" height="10.0" rx="2" fill="#F3F0F8" stroke="#DCD6E8" stroke-width="1"/>
+<text x="290.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">not connected (dimmed)</text>
+</svg>
