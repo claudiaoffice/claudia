@@ -58,6 +58,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the
   WebKit view of the Linux client) could show the previous web app for a long time after the server was updated.
 
+## [0.26.0] - 2026-11-13
+
+Printing slides (D917).
+
+### Added
+- creates: `print_setup` and `set_print_setup(setup)` (a viewer cannot change it), and `language` and
+  `set_language`, as composes has them.
+- `claudia_server.printing`: what the apps that print share — `add_language_methods(table)` and `people_only(ctx)`.
+  composes' `language` and `set_language` are made by it now; their answers are unchanged.
+
 ## [0.25.0] - 2026-11-12
 
 Hyphenation and SVG in the client's pages (D912–D915): the server hands out the patterns.

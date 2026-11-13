@@ -1,0 +1,43 @@
+[
+ {
+  "id": "body-text",
+  "based_on": null,
+  "resolved": {
+   "color": "#1F1A33",
+   "font-family": "Inter, system-ui, 'Segoe UI', sans-serif",
+   "font-size": "40px",
+   "line-height": "1.3",
+   "text-align": "left"
+  }
+ },
+ {
+  "id": "shape-label",
+  "based_on": "body-text",
+  "resolved": {
+   "color": "#1F1A33",
+   "font-family": "Inter, system-ui, 'Segoe UI', sans-serif",
+   "font-size": "36px",
+   "line-height": "1.25",
+   "text-align": "center"
+  }
+ },
+ {
+  "id": "plain-shape",
+  "based_on": null,
+  "resolved": {
+   "fill": "rgba(91, 75, 196, 0.14)",
+   "stroke": "#5B4BC4",
+   "stroke-width": "4px"
+  }
+ },
+ {
+  "id": "plain-box",
+  "based_on": null,
+  "resolved": {}
+ },
+ {
+  "id": "plain-image",
+  "based_on": null,
+  "resolved": {}
+ }
+]

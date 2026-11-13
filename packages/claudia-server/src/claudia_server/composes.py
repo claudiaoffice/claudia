@@ -31,12 +31,10 @@ from claudia_composes import (
     DeleteText,
     InsertText,
     JoinBlocks,
-    LanguageError,
     PageSetup,
     PageSetupError,
     ProposeSuggestion,
     ResolveSuggestion,
-    SetLanguage,
     SetPageSetup,
     SetStyle,
     SplitBlock,
@@ -54,6 +52,7 @@ from claudia_core import (
 )
 
 from .office_export import office_export
+from .printing import add_language_methods
 from .protocol import Context, RequestError, core_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
@@ -255,24 +254,8 @@ def _set_page(ctx, *, setup, base):
     return {"revision": applied.revision.to_data()}
 
 
-# ------------------------------------------------------------------------------ the language (D915)
-@composes_methods.method("language")
-def _language(ctx):
-    """The language the text is written in, as `{language}`: a BCP 47 tag such as `de` or `en-GB`, or `null`."""
-    return {"language": _text(ctx).language}
-
-
-@composes_methods.method("set_language", "language:str? base:revision?", write=True)
-def _set_language(ctx, *, language, base):
-    """Say which language the text is written in (`null` or `""`: not known). One step for everybody, in the
-    history; the pages are hyphenated by it. `command_error` for a value that is not a language tag."""
-    _people_only(ctx)
-    try:
-        command = SetLanguage(language or None)
-    except LanguageError as exc:
-        raise RequestError("command_error", str(exc)) from None
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+# ------------------------------------------------------------------------------ the language (D915, D917)
+add_language_methods(composes_methods)
 
 
 # ------------------------------------------------------------------------------ floating objects, for printing (D907)

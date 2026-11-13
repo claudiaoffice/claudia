@@ -1,5 +1,5 @@
 {
- "version": "0.16.0",
+ "version": "0.17.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -686,6 +686,24 @@
   "methods": {},
   "properties": []
  },
+ "LanguageChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(language: 'str | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "LanguageError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
  "Line": {
   "class": [
    "object"
@@ -853,8 +871,32 @@
  "PAIRINGS": {
   "value": "(('text', 'page', 4.5), ('text', 'surface', 4.5), ('muted', 'page', 4.5), ('muted', 'surface', 4.5), ('accent-text', 'accent', 4.5), ('structure', 'page', 3.0), ('structure', 'surface', 3.0), ('accent', 'page', 3.0), ('accent', 'surface', 3.0))"
  },
+ "PAPERS": {
+  "value": "{'a3': (841890, 1190551), 'a4': (595276, 841890), 'a5': (419528, 595276), 'a6': (297638, 419528), 'b5': (498898, 708661), 'letter': (612000, 792000), 'legal': (612000, 1008000), 'tabloid': (792000, 1224000), 'executive': (522000, 756000), 'slide': (540000, 960000)}"
+ },
  "PARAGRAPH_FACET": {
   "value": "<Facet>"
+ },
+ "PageSetup": {
+  "class": [
+   "object"
+  ],
+  "init": "(paper: 'str' = 'a4', width: 'int' = 595276, height: 'int' = 841890, orientation: 'str' = 'portrait', margin_top: 'int' = 70866, margin_right: 'int' = 70866, margin_bottom: 'int' = 70866, margin_left: 'int' = 70866, page_numbers: 'bool' = False) -> None",
+  "methods": {
+   "describe": "(self) -> 'str'",
+   "from_data": "(data: 'object') -> 'Self'",
+   "preset": "(paper: 'str', **changes: 'object') -> 'Self'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PageSetupError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
  },
  "Palette": {
   "class": [
@@ -1209,6 +1251,21 @@
   "init": "(kind: 'str', found: 'int', known: 'int')",
   "methods": {},
   "properties": []
+ },
+ "SetLanguage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(language: 'str | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "SetObjectStyle": {
   "class": [
@@ -1566,6 +1623,9 @@
  },
  "new_registry": {
   "function": "() -> 'CommandRegistry'"
+ },
+ "normalize_language": {
+  "function": "(tag: 'str') -> 'str'"
  },
  "normalized": {
   "function": "(runs: 'Iterable[Run]') -> 'list[Run]'"

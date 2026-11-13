@@ -81,8 +81,11 @@ used._suggestions  # composes_methods.method("suggestions")
 used._replace_text  # composes_methods.method("replace_text")
 used._set_style  # composes_methods.method("set_style")
 used._set_page  # composes_methods.method("set_page")
-used._language  # composes_methods.method("language")
-used._set_language  # composes_methods.method("set_language")
+used._language  # table.method("language") in printing.add_language_methods
+used._set_language  # table.method("set_language") in printing.add_language_methods
+used._print_setup  # table.method("print_setup") in creates_methods_with
+used._set_print_setup  # table.method("set_print_setup") in creates_methods_with
+used._SetLanguageAsFirstWritten  # registered by its decorator: replays logs that wrote "composes.SetLanguage" (D917)
 used._change_style  # composes_methods.method("change_style")
 used._deviate_style  # composes_methods.method("deviate_style")
 used._rename_style  # composes_methods.method("rename_style")

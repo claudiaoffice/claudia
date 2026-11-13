@@ -69,6 +69,21 @@ Commands
 .. autoclass:: claudia_creates.AddSlide
 .. autoclass:: claudia_creates.RemoveSlide
 
+Printing
+--------
+
+.. automodule:: claudia_creates.printing
+   :no-members:
+
+How a presentation prints (D917): slides one to a page or handouts, on a page set up as in composes; its language is
+:class:`claudia_core.SetLanguage`'s.
+
+.. autoclass:: claudia_creates.PrintSetup
+.. autoexception:: claudia_creates.PrintSetupError
+.. autodata:: claudia_creates.LAYOUTS
+.. autoclass:: claudia_creates.SetPrintSetup
+.. autoclass:: claudia_creates.PrintSetupChanged
+
 Regions
 -------
 

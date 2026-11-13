@@ -43,6 +43,25 @@ text box, the label inside a shape on a sheet (E10.17, D181).
 .. autoclass:: claudia_core.Paragraph
 .. autoclass:: claudia_core.Run
 
+Page setup and language
+-----------------------
+
+.. automodule:: claudia_core.page
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+The page a document prints on and the language it is written in, shared by the apps that print (D904, D915, D917).
+
+.. autoclass:: claudia_core.PageSetup
+.. autoexception:: claudia_core.PageSetupError
+.. autodata:: claudia_core.page.PAPERS
+   :no-value:
+.. autofunction:: claudia_core.normalize_language
+.. autoexception:: claudia_core.LanguageError
+.. autoclass:: claudia_core.SetLanguage
+.. autoclass:: claudia_core.LanguageChanged
+
 Objects: shapes, images and text boxes
 --------------------------------------
 

@@ -5,8 +5,11 @@ shapes    ShapeLibrary: outlines read from JSON files on disk that users can add
           ``claudia_core.shapes``)
 styles    BUILTIN_STYLES: the styles a presentation starts with, as core StyleDef entries in the document's own book
 model     SlideModel, SlideAnchor, SlideObject: slides, the slide space, and what is this app's own about an object
-commands  AddSlide, RemoveSlide — everything about objects is shared and comes from ``claudia_core``
-events    SlidesChanged (``ObjectsChanged``, ``ShapesChanged``, ``ImagesChanged`` are core's, re-exported)
+commands  AddSlide, RemoveSlide, SetPrintSetup — everything about objects is shared and comes from ``claudia_core``,
+          and so is SetLanguage (D917)
+printing  PrintSetup: how the slides are printed, the layout and the kernel's PageSetup (D917)
+events    SlidesChanged, PrintSetupChanged (``ObjectsChanged``, ``ShapesChanged``, ``ImagesChanged`` are core's,
+          re-exported)
 
 An object is a shared ``ObjectBody`` plus a ``SlideAnchor``: only the anchor is this app's. Placing, stacking,
 moving, resizing, rotating, styling and the image and shape assets are ``claudia_core.objects``, shared with
@@ -34,6 +37,7 @@ from claudia_core import (  # noqa: F401
     ResizeObject,
     RotateObject,
     Run,
+    SetLanguage,
     SetParagraphStyle,
     SetSnap,
     SetText,
@@ -46,8 +50,8 @@ from claudia_core import (  # noqa: F401
 
 from . import commands  # noqa: F401  (registers the commands)
 from ._version import __version__
-from .commands import AddSlide, RemoveSlide
-from .events import ImagesChanged, ObjectsChanged, ShapesChanged, SlidesChanged
+from .commands import AddSlide, RemoveSlide, SetPrintSetup
+from .events import ImagesChanged, ObjectsChanged, PrintSetupChanged, ShapesChanged, SlidesChanged
 from .model import (
     FIRST_SLIDE,
     SLIDE_HEIGHT,
@@ -56,6 +60,7 @@ from .model import (
     SlideModel,
     SlideObject,
 )
+from .printing import LAYOUTS, PrintSetup, PrintSetupError
 from .shapes import BUILTIN_DIRECTORY, ShapeLibrary
 from .styles import ALLOWED_CSS, BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 
@@ -76,8 +81,12 @@ __all__ = [
     "ForgetShape",
     "FORMAT",
     "ImagesChanged",
+    "LAYOUTS",
     "MoveObject",
     "ObjectBody",
+    "PrintSetup",
+    "PrintSetupChanged",
+    "PrintSetupError",
     "ObjectsChanged",
     "ObjectSet",
     "Paragraph",
@@ -85,10 +94,12 @@ __all__ = [
     "parse_shape",
     "RemoveObject",
     "RemoveSlide",
+    "SetLanguage",
     "ResizeObject",
     "RotateObject",
     "Run",
     "SetParagraphStyle",
+    "SetPrintSetup",
     "SetSnap",
     "SetText",
     "ShapeDefinition",

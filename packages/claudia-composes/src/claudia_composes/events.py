@@ -84,17 +84,6 @@ class SuggestionsChanged:
 
 
 @dataclass(frozen=True)
-class LanguageChanged:
-    """The language of the text changed (D915); ``None`` when it is no longer set."""
-
-    language: str | None
-
-    def to_data(self) -> dict:
-        """The plain-data form of the event, as sent to clients."""
-        return {"type": "language", "language": self.language}
-
-
-@dataclass(frozen=True)
 class PageSetupChanged:
     """The page the text is printed on changed (D904)."""
 
@@ -103,3 +92,7 @@ class PageSetupChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "page", "setup": dict(self.setup)}
+
+
+# The language is the kernel's now (D917); its event is re-exported here, where it was first imported from.
+from claudia_core import LanguageChanged  # noqa: E402,F401

@@ -16,3 +16,5 @@ superseded-by: []
 **Notes.** The screens were agreed as an SVG mock-up first (`notes/mockups/print-preview.svg`). This **refines D61**, which said composes has "no separate print dialog or overlay": the preview is a mode of the main window, not a dialog, and the print dialog is the browser's own. D61's flow/page switch stays as it is; the page view (E9.6) is still the approximate one, and moving it onto the layout library is its own story (E9.24). The letters inside a word are shaped by the browser when they are drawn on screen (D910). The desktop shells' native menus do not have the item yet (E9.23); Ctrl+P works in their page.
 
 *2026-11-12:* the bar gained a Language choice and wraps when the window is narrow (**D916**).
+
+*2026-11-13:* the preview is one component for composes and creates (**D918**).

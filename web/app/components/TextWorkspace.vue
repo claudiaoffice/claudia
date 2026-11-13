@@ -17,7 +17,6 @@ import {
   helpMenu,
   panelItem,
   undoRedoItems,
-  PRINT_CHORD,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
 import { chordLabel, type ShortcutDef } from '~/lib/shortcuts'
@@ -25,6 +24,8 @@ import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import PrintPreview from './PrintPreview.vue'
+import { textSource } from '~/lib/print/source'
+import { useCreatorLanguage, usePrint } from '~/lib/print/use-print'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
@@ -66,31 +67,11 @@ const authors = ref(remembered('claudia.composes.authors', ['on', 'off'], 'off')
 watch(view, (v) => remember('claudia.composes.view', v))
 watch(authors, (on) => remember('claudia.composes.authors', on ? 'on' : 'off'))
 
-// A text says which language it is written in (D915), which is what its pages are hyphenated by (D912). The person
-// who just made it is the one who knows: it starts in the language of their own interface, as one step of theirs.
-let languageGiven = false
-watch(
-  () => state.language,
-  (language) => {
-    if (language === null && session.justCreated && !session.readOnly && !languageGiven) {
-      languageGiven = true
-      void session.setLanguage(locale.value)
-    }
-  },
-  { immediate: true },
-)
-
-/** File ▸ Print… shows the pages in place of the text (D906); Esc or the arrow goes back. */
-const printing = ref(false)
-const preview = ref<InstanceType<typeof PrintPreview> | null>(null)
-function openPrint() {
-  if (printing.value) void preview.value?.print()
-  else printing.value = true
-}
-function closePrint() {
-  printing.value = false
-  setTimeout(() => editor.value?.focus())
-}
+// A new text starts in the language of its maker's interface (D915); File ▸ Print… shows the pages in place of the
+// text (D906, D918). Both as in every app that prints (`lib/print/use-print.ts`).
+useCreatorLanguage(session, () => locale.value)
+const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => editor.value?.focus())
+const printSource = textSource(session)
 
 const readonly = computed(() => session.readOnly)
 const words = computed(() => countWords(state.blocks))
@@ -169,8 +150,6 @@ async function pasteFromClipboard() {
 // ------------------------------------------------------------------------------ menus and shortcuts
 // D122: composes' one shortcut of its own, on top of the window's Undo, Redo and Save.
 const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => openStyleMenu() }
-// D906: Ctrl+P opens the preview; in the preview it prints.
-const PRINT: ShortcutDef = { id: 'file.print', label: 'Print…', chord: PRINT_CHORD, run: openPrint }
 // D912: a soft hyphen says where a word may be broken, a non-breaking hyphen where it may not (as in Word and
 // LibreOffice). Both are invisible in the text unless the pages break there.
 const typing = () => !printing.value && !session.readOnly
@@ -310,7 +289,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     <template #toolbar>
       <StyleBar v-if="!printing" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
-    <PrintPreview v-if="printing" ref="preview" :session="session" @close="closePrint" />
+    <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
     <TextEditor v-else ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
     <template #footer>
       <footer v-if="!printing" class="foot">

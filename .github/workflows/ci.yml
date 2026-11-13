@@ -168,6 +168,7 @@ jobs:
           URL=http://127.0.0.1:8766/ npm run e2e:print
           URL=http://127.0.0.1:8767/ npm run e2e:slides
           URL=http://127.0.0.1:8767/ npm run e2e:creates-styles
+          URL=http://127.0.0.1:8767/ npm run e2e:print-creates
           pkill -f claudia_server || true
       # These two start (and restart) a server of their own, on ports the step above has freed.
       - name: Losing the server, and the recovery key

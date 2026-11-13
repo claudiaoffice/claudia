@@ -1,9 +1,8 @@
-// From a text session to pages: the composes adapter of the layout library (`layoutText`), fed with what the session
-// holds (paragraphs, styles, page) and what the preview fetched (objects, shapes, images), and the PDF made from it.
-import { fontsNeeded, layoutText, utf8Decode, writePdf, type TextDocument, type TextPages } from '@claudia/layout'
+// A text session as the composes adapter of the layout library (`layoutText`) reads it: what the session holds
+// (paragraphs, styles, page) and what the preview fetched (objects, shapes, images). `source.ts` lays it out.
+import { utf8Decode, type TextDocument } from '@claudia/layout'
 import type { Block } from '../blocks'
 import type { StyleView } from '../style-css'
-import type { PrintAssets } from './assets'
 import type { PrintExtras } from '../text-session'
 
 /** The base64 of a server answer as bytes. */
@@ -26,15 +25,4 @@ export function textDocument(blocks: readonly Block[], styles: readonly StyleVie
     images: extras?.images.map((i) => ({ id: i.id, format: i.format, ...(i.format === 'svg' ? { svg: utf8Decode(fromBase64(i.data)) } : {}) })) ?? [],
     language: language ?? null,
   }
-}
-
-/** Fetch the fonts and the hyphenation patterns the text needs, then lay it out. */
-export async function layOut(assets: PrintAssets, doc: TextDocument): Promise<TextPages> {
-  const [hyphenator] = await Promise.all([assets.hyphenator(doc.language), assets.ensure(fontsNeeded(doc, assets.resolver))])
-  return layoutText(doc, assets.fonts, assets.resolver, { hyphenator })
-}
-
-/** The PDF of laid-out pages. No date is written into it, so the same text gives the same file everywhere. */
-export function pdfOf(assets: PrintAssets, pages: TextPages, images: Map<string, Uint8Array>, title: string, lang?: string | null): Uint8Array {
-  return writePdf(pages.list.pages, assets.fonts, (id) => images.get(id) ?? pages.embedded.get(id), { title, ...(lang ? { lang } : {}), producer: 'claudia composes' })
 }

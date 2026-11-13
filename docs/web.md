@@ -169,3 +169,15 @@ slide view for `creates`, the table for `computes`. Start a presentation server 
 Not in this first draft: text formatting beyond the two built-in styles, images, groups, copy and paste of objects,
 reordering objects, slide order and slide thumbnails, and the assistant (the AI user does not answer in presentations
 yet; the panel with history and chat is there).
+
+## Printing (composes and creates)
+
+**File ▸ Print…** (Ctrl+P) shows the pages in place of the document, laid out in the browser by `@claudia/layout`
+(D901); Print… hands the very PDF the pages are drawn from to the browser's print dialog, Download PDF saves it, Esc
+goes back. It is one component in both apps (`components/PrintPreview.vue`, D918): what it prints comes from a print
+source (`lib/print/source.ts`, `textSource` and `slideSource`), and `lib/print/use-print.ts` gives each window its
+Ctrl+P, its printing mode and the language a new document starts in. The bar is the same in both — paper,
+orientation, margins, language, page numbers — and a presentation adds **Layout**: slides one to a page (on a
+slide-sized page by default) or handouts of 2, 3 (with lines for notes), 4, 6 or 9 to a page (D917). How a document
+prints is part of it, one step in its history for everybody; a viewer sees the pages but cannot change them.
+`e2e/print.cjs` and `e2e/print-creates.cjs` (`npm run e2e:print`, `npm run e2e:print-creates`) drive both.

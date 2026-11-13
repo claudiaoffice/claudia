@@ -91,7 +91,7 @@ its GitHub release assets were not reachable from the build sandbox. Only TrueTy
 
 - The desktop shells' native menus and their local servers' fonts: **E9.23**.
 - The page view on the real layout, editable: **E9.24**.
-- Print for computes (**E6.19**, needs a grid paginator) and creates (**E10.18**, boxes only).
+- Print for computes (**E6.19**, needs a grid paginator) and creates (**E10.18**, boxes only; done 2026-11-13, `e10-print-slides.md`).
 - Named page styles, sections, headers/footers: the rest of **E9.14**.
 - SVG pictures and charts in print: a dashed placeholder and a note (D907).
 - Hyphenation, text wrapping around objects, bidi and vertical text: nothing yet.

@@ -23,7 +23,8 @@
     "e2e:recovery": "node e2e/recovery.cjs",
     "e2e:macos-shell": "node e2e/macos-shell.cjs",
     "e2e:windows-shell": "node e2e/windows-shell.cjs",
-    "e2e:print": "node e2e/print.cjs"
+    "e2e:print": "node e2e/print.cjs",
+    "e2e:print-creates": "node e2e/print-creates.cjs"
   },
   "dependencies": {
     "@claudia/layout": "file:../layout",
