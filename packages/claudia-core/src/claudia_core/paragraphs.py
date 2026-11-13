@@ -10,6 +10,8 @@ in a creates text box, the label inside a shape on a sheet. It carries:
   ``stroke``), its paragraph's style says what its words look like.
 * ``runs`` — who wrote which stretch, by character count, independent of how it is styled. ``runs`` always add up
   to exactly the length of ``text``.
+* ``item`` — set when the paragraph is an item of a list (E9.21): which list, and at which level. It is *structure*;
+  the bullet or number is never part of the text but derived from it (:mod:`claudia_core.lists`).
 
 A paragraph is **immutable**. Editing one makes a new one (``with_text``, ``with_style``, or
 ``dataclasses.replace``). That is not ceremony: a paragraph is stored inside a frozen
@@ -93,9 +95,36 @@ def runs_from_data(data: Iterable[list]) -> list[Run]:
     return [Run(item[0], item[1], item[2] if len(item) > 2 else None) for item in data]
 
 
+#: The deepest level of a list: levels run from 0 to this.
+MAX_LIST_LEVEL = 8
+
+
+@dataclass(frozen=True)
+class ListItem:
+    """A paragraph's membership of a list: the list's id (an entry of the document's
+    :class:`~claudia_core.ListBook`) and the item's ``level``, 0 being the outermost."""
+
+    list: str
+    level: int = 0
+
+    def check(self) -> None:
+        """``ValueError`` with a sentence if the item makes no sense."""
+        if not isinstance(self.level, int) or not 0 <= self.level <= MAX_LIST_LEVEL:
+            raise ValueError(f"A list item's level is from 0 to {MAX_LIST_LEVEL}, got {self.level!r}")
+
+    def to_data(self) -> dict:
+        """The plain-data form: ``{list, level}``."""
+        return {"list": self.list, "level": self.level}
+
+    @classmethod
+    def from_data(cls, data: dict) -> ListItem:
+        """Inverse of :meth:`to_data`."""
+        return cls(data["list"], data["level"])
+
+
 @dataclass(frozen=True)
 class Paragraph:
-    """One paragraph: its id, its style, its characters, and who wrote which of them.
+    """One paragraph: its id, its style, its characters, who wrote which of them, and the list it is an item of.
 
     ``runs`` always add up to the length of ``text``; :meth:`check` says so out loud. Immutable — see the module
     description for why that matters to undo."""
@@ -104,6 +133,7 @@ class Paragraph:
     style: str
     text: str = ""
     runs: tuple[Run, ...] = field(default_factory=tuple)
+    item: ListItem | None = None
 
     def __len__(self) -> int:
         """The number of characters in the paragraph."""
@@ -117,6 +147,10 @@ class Paragraph:
         """The same paragraph under another style."""
         return replace(self, style=style)
 
+    def with_item(self, item: ListItem | None) -> Paragraph:
+        """The same paragraph as an item of a list (or, with ``None``, no longer one)."""
+        return replace(self, item=item)
+
     def written_by(self, author: str | None, via: str | None = None) -> Paragraph:
         """The same paragraph with all of its text attributed to one person: what setting the whole text at once
         means, as opposed to typing into it character by character."""
@@ -128,12 +162,25 @@ class Paragraph:
             raise ValueError(f"a paragraph holds text of at most {MAX_PARAGRAPH_TEXT} characters")
         if total(self.runs) != len(self.text):
             raise ValueError("the runs must cover exactly the paragraph's text")
+        if self.item is not None:
+            self.item.check()
 
     def to_data(self) -> dict:
-        """The plain-data form: ``{id, style, text, runs}``."""
-        return {"id": self.id, "style": self.style, "text": self.text, "runs": runs_to_data(self.runs)}
+        """The plain-data form: ``{id, style, text, runs}``, and ``item`` when the paragraph is a list item. A
+        paragraph that is not one is written exactly as before lists existed."""
+        data: dict = {"id": self.id, "style": self.style, "text": self.text, "runs": runs_to_data(self.runs)}
+        if self.item is not None:
+            data["item"] = self.item.to_data()
+        return data
 
     @classmethod
     def from_data(cls, data: dict) -> Paragraph:
         """Inverse of :meth:`to_data`."""
-        return cls(data["id"], data["style"], data.get("text", ""), tuple(runs_from_data(data.get("runs", []))))
+        item = data.get("item")
+        return cls(
+            data["id"],
+            data["style"],
+            data.get("text", ""),
+            tuple(runs_from_data(data.get("runs", []))),
+            None if item is None else ListItem.from_data(item),
+        )

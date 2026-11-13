@@ -11,11 +11,12 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context, Region
+from claudia_core import Batch, Command, Context, ListItem, Region
 
 from .events import (
     BlocksJoined,
     BlockSplit,
+    ItemChanged,
     LanguageChanged,
     PageSetupChanged,
     StyleChanged,
@@ -261,10 +262,13 @@ class JoinBlocks(TextCommand):
         return "joined paragraphs"
 
     def apply(self, ctx: Context[TextModel]) -> Command:
-        style = ctx.model.join(self.block, self.into, self.at)
+        gone = ctx.model.join(self.block, self.into, self.at)
         ctx.emit(BlocksJoined(self.block, self.into, self.at))
         _moved(ctx, self)
-        return SplitBlock(self.into, self.at, self.block, style)
+        split = SplitBlock(self.into, self.at, self.block, gone.style)
+        if gone.item == ctx.model.block(self.into).item:
+            return split  # a split gives the new paragraph that item anyway
+        return Batch((split, SetListItem(self.block, gone.item)))  # the paragraph that went away was another kind
 
     def to_data(self) -> dict:
         return {"block": self.block, "into": self.into, "at": self.at}
@@ -401,6 +405,48 @@ class SetLanguage(Command):
     @classmethod
     def from_data(cls, data, registry) -> SetLanguage:
         return cls(data["language"])
+
+
+@register
+@dataclass(frozen=True)
+class SetListItem(TextCommand):
+    """Make a paragraph an item of a list, at a level, or (``None``) a plain paragraph again (E9.21)."""
+
+    kind: ClassVar[str] = "composes.SetListItem"
+    block: str
+    item: ListItem | None
+
+    @property
+    def label(self) -> str:
+        return "List"
+
+    @property
+    def summary(self) -> str:
+        return "no longer a list item" if self.item is None else f"list item, level {self.item.level + 1}"
+
+    def apply(self, ctx: Context[TextModel]) -> Command:
+        old = ctx.model.block(self.block).item
+        ctx.model.set_item(self.block, self.item)
+        ctx.emit(ItemChanged(self.block, self.item))
+        return SetListItem(self.block, old)
+
+    def to_data(self) -> dict:
+        return {"block": self.block, "item": None if self.item is None else self.item.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetListItem:
+        item = data["item"]
+        return cls(data["block"], None if item is None else ListItem.from_data(item))
+
+    def regions(self, model) -> tuple[Region, ...]:
+        # The paragraph may not exist yet: the inverse of a join sets the item of the paragraph it splits off.
+        block = next((b for b in model.blocks if b.id == self.block), None) if isinstance(model, TextModel) else None
+        return (TextRange(self.block, 0, max(1, 0 if block is None else len(block.text))),)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        if isinstance(other, JoinBlocks) and other.block == self.block:
+            return None  # the paragraph is part of another one now; its place in a list is that one's
+        return self
 
 
 # ------------------------------------------------------------------------------ suggestions (D63)

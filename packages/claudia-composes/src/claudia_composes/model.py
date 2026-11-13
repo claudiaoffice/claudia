@@ -15,7 +15,11 @@ from typing import ClassVar, Self
 from claudia_core import (
     SLOTS,
     CommandRegistry,
+    Context,
     DocumentModel,
+    Label,
+    ListBook,
+    ListItem,
     ObjectBody,
     ObjectModel,
     ObjectSet,
@@ -31,12 +35,13 @@ from claudia_core import (
     fits,
     insert_runs,
     new_registry,
-    runs_from_data,
+    numbering_labels,
     slice_runs,
     total,
 )
 
 from .anchors import BlockAnchor
+from .events import LabelsChanged
 from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
@@ -256,7 +261,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 5: the text carries its own colour palette (D200)
     # 6: the text says which page it is printed on (D904)
     # 7: the text says which language it is written in (D915)
-    state_schema: ClassVar[int] = 7
+    # 8: paragraphs may be items of lists, which the text holds in a book of its own (E9.21)
+    state_schema: ClassVar[int] = 8
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -266,6 +272,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         palette: Palette | None = None,
         page: PageSetup | None = None,
         language: str | None = None,
+        lists: ListBook | None = None,
     ):
         super().__init__()
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
@@ -277,10 +284,19 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self.page: PageSetup = page if page is not None else PageSetup()
         #: The language of the text, a BCP 47 tag, or ``None`` when it is not known (D915): what it is hyphenated by.
         self.language: str | None = language
+        #: The lists the items of the text belong to (E9.21); what a list is, not which paragraphs are in it.
+        self.lists: ListBook = lists if lists is not None else ListBook()
         self.suggestions: dict[str, Suggestion] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
         for block in self.blocks:
             self.open_container(block.id)
+        #: Changes of the structure that numbering depends on (an item set, a paragraph split or joined). Typing
+        #: does not count, so it never makes the labels be worked out again.
+        self._structure = 0
+        self._labelled: tuple[int, int] | None = None
+        self._labels: dict[str, Label] = {}
+        #: The labels the clients have been told about; what :meth:`settle` compares the labels to.
+        self._told: dict[str, Label] = self.labels()
 
     # -- lifecycle ---------------------------------------------------------------
     @classmethod
@@ -296,6 +312,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "palette": self.palette.to_data(),
             "page": self.page.to_data(),
             "language": self.language,
+            "lists": self.lists.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
@@ -311,11 +328,12 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             blocks = [Block(f"b{i}", DEFAULT_STYLE, t, (Run(len(t), None),) if t else ()) for i, t in enumerate(raw, 1)]
             return cls(blocks)
         styles = StyleBook.from_data(state["styles"]) if "styles" in state else None  # schema 2 had the built-in ones
-        blocks = [Block(b["id"], b["style"], b["text"], tuple(runs_from_data(b["runs"]))) for b in raw]
+        blocks = [Block.from_data(b) for b in raw]
         palette = Palette.from_data(state["palette"]) if "palette" in state else None  # schema 4 and earlier
         page = PageSetup.from_data(state["page"]) if "page" in state else None  # schema 5 and earlier: A4
+        lists = ListBook.from_data(state["lists"]) if "lists" in state else None  # schema 7 and earlier
         # schema 6 and earlier: no language
-        model = cls(blocks, styles, palette, page, state.get("language"))
+        model = cls(blocks, styles, palette, page, state.get("language"), lists)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects
@@ -396,6 +414,36 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         style commands before they take a style back.)"""
         return any(b.style == style_id for b in self.blocks) or ObjectModel.style_in_use(self, style_id)
 
+    def list_in_use(self, list_id: str) -> bool:
+        """Is any paragraph an item of this list? (Asked by the list commands before they take a list back.)"""
+        return any(b.item is not None and b.item.list == list_id for b in self.blocks)
+
+    def labels(self) -> dict[str, Label]:
+        """The marker of every list item, by paragraph id (:func:`claudia_core.numbering_labels`).
+
+        Worked out again only when the structure or the lists changed since last time; the answer is the model's
+        own, so callers must not change it."""
+        key = (self._structure, self.lists.version)
+        if self._labelled != key:
+            self._labels = numbering_labels(((b.id, b.item) for b in self.blocks), self.lists)
+            self._labelled = key
+        return self._labels
+
+    def settle(self, ctx: Context) -> None:
+        """Tell the clients which labels changed: the numbering of a list is derived, so a command that only set
+        one item may have renumbered a hundred others."""
+        now = self.labels()
+        if now is self._told or now == self._told:
+            return
+        present = {b.id for b in self.blocks}
+        changed: list[tuple[str, Label | None]] = [
+            (block, label) for block, label in now.items() if self._told.get(block) != label
+        ]
+        changed += [(block, None) for block in self._told if block not in now and block in present]
+        self._told = now
+        if changed:
+            ctx.emit(LabelsChanged(tuple(changed)))
+
     def style_uses(self) -> dict[str, int]:
         """How many paragraphs have each style that is in use."""
         return dict(Counter(b.style for b in self.blocks))
@@ -447,6 +495,15 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """Put a paragraph under another style (a paragraph is immutable, so this replaces it)."""
         self._put(self.block(block_id).with_style(style))
 
+    def set_item(self, block_id: str, item: ListItem | None) -> None:
+        """Make a paragraph an item of a list, or (``None``) take it out of its list. The list must exist."""
+        if item is not None:
+            item.check()
+            if item.list not in self.lists:
+                raise ValueError(f"no list {item.list!r}")
+        self._put(self.block(block_id).with_item(item))
+        self._structure += 1
+
     def _put(self, block: Block) -> None:
         """Swap a changed paragraph into place. A paragraph is immutable (D181), so every edit below builds a new
         one and puts it where the old one was."""
@@ -473,23 +530,28 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return removed
 
     def split(self, block_id: str, offset: int, new_id: str, style: str) -> None:
-        """Cut a paragraph at ``offset``; the rest becomes the paragraph ``new_id`` right behind it."""
+        """Cut a paragraph at ``offset``; the rest becomes the paragraph ``new_id`` right behind it, in ``style``
+        and, if the paragraph is a list item, an item of the same list at the same level."""
         block = self.block(block_id)
         if not 0 <= offset <= len(block.text):
             raise IndexError("split outside the text")
         if any(b.id == new_id for b in self.blocks):
             raise ValueError(f"the paragraph {new_id!r} exists already")
         self.check_style(style)
-        rest = Block(new_id, style, block.text[offset:], tuple(slice_runs(block.runs, offset, len(block.text))))
+        rest = Block(
+            new_id, style, block.text[offset:], tuple(slice_runs(block.runs, offset, len(block.text))), block.item
+        )
         self._put(block.with_text(block.text[:offset], slice_runs(block.runs, 0, offset)))
         self.blocks.insert(self.index_of(block_id) + 1, rest)
         self.open_container(new_id)
         self._note_id(new_id)
+        self._structure += 1
 
-    def join(self, block_id: str, into: str, at: int) -> str:
+    def join(self, block_id: str, into: str, at: int) -> Block:
         """Put paragraph ``block_id`` at the end of ``into`` (the one right before it, ``at`` characters long).
+        The joined paragraph is the first one's: its style and its place in a list win.
 
-        Returns the style of the paragraph that went away."""
+        Returns the paragraph that went away, as it was."""
         first, second = self.block(into), self.block(block_id)
         if self.index_of(block_id) != self.index_of(into) + 1:
             raise ValueError("a paragraph can only be joined to the one right before it")
@@ -499,7 +561,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self.carry_objects(block_id, into, shift=at)
         self.blocks.remove(second)
         self.close_container(block_id)
-        return second.style
+        self._structure += 1
+        return second
 
     def carry_objects(self, source: str, target: str, *, shift: int) -> None:
         """Move every object of the paragraph ``source`` to ``target``, ``shift`` characters further along.

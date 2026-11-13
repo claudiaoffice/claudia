@@ -10,6 +10,8 @@
   pages themselves are laid out in the client (D901);
 * ``objects``, ``images`` and ``shapes``: the floating objects of the text and what they are drawn with, for the
   print preview, which draws them where they hang (D907);
+* ``make_list``, ``indent_item``, ``continue_list`` and ``list_start``: bullets, numbers and their levels
+  (:mod:`claudia_server.composes_lists`, E9.21);
 * ``styles``, ``change_style``, ``deviate_style``, ``rename_style`` and ``check_css``: the styles are CSS in the
   document (E1.10, D73). Changing a style changes every paragraph that has it; deviating makes a new style, with a
   provisional name, from an old one and applies it, in one step (D75); naming ends the invitation to name it;
@@ -46,6 +48,7 @@ from claudia_composes import (
     word_window,
 )
 from claudia_core import (
+    SCHEMES,
     Batch,
     Command,
     CreateStyle,
@@ -53,6 +56,7 @@ from claudia_core import (
     validate_css,
 )
 
+from .composes_lists import add_list_methods
 from .office_export import office_export
 from .protocol import Context, RequestError, core_methods
 from .style_targets import OBJECTS
@@ -104,6 +108,7 @@ class _BlockTargets:
 
 
 add_style_methods(composes_methods, guard=_people_only, targets=(_BlockTargets(), OBJECTS))
+add_list_methods(composes_methods, guard=_people_only)
 
 
 def _rev(ctx: Context) -> str | None:
@@ -121,12 +126,20 @@ def _inside(model: TextModel, block: str, offset: int, what: str = "offset") -> 
 @composes_methods.method("blocks")
 def _blocks(ctx):
     """The paragraphs in order, each as `{id, style, text, runs}` (`runs` are `[length, author, via]`: who wrote
-    which stretch), the styles (see `styles`), and the revision they are at."""
+    which stretch), the styles (see `styles`), the lists and the schemes they can have, and the revision they are
+    at. A paragraph that is a list item also has `item` (`{list, level}`) and `label` (`{marker, path}`: what is
+    drawn in front of it, derived from the structure, and for numbers the trail of counters). `lists` are
+    `{id, scheme, start, name}`; `schemes` are `{id, name, kind, indent, gap}` (`indent` and `gap` in em)."""
     model = _text(ctx)
+    labels = model.labels()
     return {
         "revision": _rev(ctx),
         "styles": model.styles.views(model.palette.colours()),
-        "blocks": [b.to_data() for b in model.blocks],
+        "lists": model.lists.to_data(),
+        "schemes": [scheme.to_data() for scheme in SCHEMES.values()],
+        "blocks": [
+            {**b.to_data(), "label": labels[b.id].to_data()} if b.id in labels else b.to_data() for b in model.blocks
+        ],
     }
 
 

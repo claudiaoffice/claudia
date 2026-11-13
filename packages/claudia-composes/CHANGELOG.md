@@ -3,6 +3,24 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+Lists (E9.21). State schema 7 → 8.
+
+### Added
+- `SetListItem(block, item)`: make a paragraph an item of a list at a level, or a plain paragraph again.
+- `TextModel.lists` (a `ListBook`), `TextModel.labels()` (the marker of every item, derived and cached until the
+  structure or the lists change), `TextModel.list_in_use` and `TextModel.set_item`.
+- The events `ItemChanged` (`item`) and `LabelsChanged` (`labels`: only the paragraphs whose marker differs from what
+  clients were last told; typing sends none).
+
+### Changed
+- `SplitBlock` gives the new paragraph the item of the one it cuts (Enter in an item makes an item); `JoinBlocks`
+  keeps the first paragraph's item, and when the paragraph that went away was a different kind of item its inverse is
+  a `Batch` of the split and a `SetListItem`, so undo is exact. `TextModel.join` returns the paragraph that went away
+  (it returned its style).
+- The state has a `lists` entry; a state without one (schema 7 and earlier) opens as a text without lists.
+
 ## [0.5.0] - 2026-11-12
 
 The language of a text, and hyphenation (D912, D915).

@@ -19,7 +19,7 @@ import {
 import { useI18n } from '~/lib/i18n'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { galleryFor } from '~/lib/style-host'
-import { formatItems } from '~/lib/format-menu'
+import { formatItems, noLists } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
@@ -103,6 +103,7 @@ function styleItems() {
     look: { disabled: !body, open: () => canvas.value?.openStyleMenu() },
     allStyles: () => (dialog.value = 'styles'),
     colours: () => (dialog.value = 'colours'),
+    list: noLists(t('Text boxes hold no lists yet')),
   })
 }
 

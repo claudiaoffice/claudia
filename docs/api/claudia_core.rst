@@ -42,6 +42,35 @@ text box, the label inside a shape on a sheet (E10.17, D181).
 
 .. autoclass:: claudia_core.Paragraph
 .. autoclass:: claudia_core.Run
+.. autoclass:: claudia_core.ListItem
+   :exclude-members: list
+
+Lists
+-----
+
+.. automodule:: claudia_core.lists
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A paragraph is an item of a list by structure only (``Paragraph.item``); how it looks, and which number it carries,
+is derived (E9.21). (The field ``list`` of ``ListItem`` and of the commands is left out of the member lists below,
+because a documented attribute called ``list`` makes every ``list[...]`` in a signature ambiguous for Sphinx; each
+class docstring says what it holds.) ``claudia_core.SCHEMES`` maps the id of each scheme (``bullets``,
+``numbers``) to its :class:`~claudia_core.Scheme`.
+
+.. autoclass:: claudia_core.ListDef
+.. autoclass:: claudia_core.ListBook
+.. autoclass:: claudia_core.Scheme
+.. autoclass:: claudia_core.Label
+.. autofunction:: claudia_core.numbering_labels
+.. autoclass:: claudia_core.ListsChanged
+.. autoclass:: claudia_core.CreateList
+   :exclude-members: list
+.. autoclass:: claudia_core.ChangeList
+   :exclude-members: list
+.. autoclass:: claudia_core.RemoveList
+   :exclude-members: list
 
 Objects: shapes, images and text boxes
 --------------------------------------

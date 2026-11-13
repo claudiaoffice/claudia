@@ -9,7 +9,11 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 
 export interface KeyChord {
+  /** What the chord is called, and — without `code` — the character the key types. */
   key: string
+  /** The physical key (`KeyboardEvent.code`, "Digit8"): for a chord that is defined by where the key is, because the
+   * character it types depends on the keyboard layout (Shift+8 is `*` on a US and `(` on a German keyboard). */
+  code?: string
   ctrl?: boolean
   shift?: boolean
   alt?: boolean
@@ -27,6 +31,7 @@ export interface ShortcutDef {
 
 export interface KeyLike {
   key: string
+  code?: string
   ctrlKey: boolean
   metaKey: boolean
   shiftKey: boolean
@@ -54,7 +59,8 @@ export function chordLabel(chord: KeyChord): string {
 
 export function matches(chord: KeyChord, event: KeyLike): boolean {
   const ctrl = event.ctrlKey || event.metaKey // metaKey: a Mac keyboard reaching a GNOMEish shell through the browser
-  return event.key.toLowerCase() === chord.key.toLowerCase() && ctrl === !!chord.ctrl && event.shiftKey === !!chord.shift && event.altKey === !!chord.alt
+  const same = chord.code ? event.code === chord.code : event.key.toLowerCase() === chord.key.toLowerCase()
+  return same && ctrl === !!chord.ctrl && event.shiftKey === !!chord.shift && event.altKey === !!chord.alt
 }
 
 /** The field the event started in: shortcuts do not fire while someone is typing in it. */

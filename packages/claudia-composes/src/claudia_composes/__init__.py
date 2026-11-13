@@ -2,7 +2,7 @@
 
 model      TextModel, TextObject: paragraphs, authorship, open suggestions, styles, and floating objects (E10.16)
 anchors    BlockAnchor: where an object hangs in a text, and why it follows the text where a sheet's is frozen
-commands   InsertText, DeleteText, SplitBlock, JoinBlocks, SetStyle, SetPageSetup, SetLanguage, suggestions (D63)
+commands   the text and structure commands (SetStyle, SetListItem, SetPageSetup, SetLanguage, …), suggestions (D63)
 page       PageSetup: the paper, orientation, margins and page numbers a text is printed with (D904)
 language   normalize_language: the BCP 47 tag of the language a text is written in (D915)
 region     TextRange, and ``word_window``: the ± n words zone around a cursor (D11)
@@ -44,10 +44,12 @@ from .commands import (
     ProposeSuggestion,
     ResolveSuggestion,
     SetLanguage,
+    SetListItem,
     SetPageSetup,
     SetStyle,
     SplitBlock,
 )
+from .events import ItemChanged, LabelsChanged
 from .language import LanguageError, normalize_language
 from .model import (
     BUILTIN_STYLES,
@@ -78,8 +80,10 @@ __all__ = [
     "ForgetImage",
     "ForgetShape",
     "InsertText",
+    "ItemChanged",
     "JoinBlocks",
     "LanguageError",
+    "LabelsChanged",
     "MoveObject",
     "next_style",
     "normalize_language",
@@ -97,6 +101,7 @@ __all__ = [
     "RotateObject",
     "Run",
     "SetLanguage",
+    "SetListItem",
     "SetPageSetup",
     "SetParagraphStyle",
     "SetSnap",

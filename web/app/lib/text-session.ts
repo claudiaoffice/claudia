@@ -19,6 +19,7 @@ import {
   wordStart,
   textBetween,
   type Block,
+  type ListItem,
   type Pos,
   type TextEvent,
 } from './blocks'
@@ -40,6 +41,22 @@ export interface SuggestionInfo {
   state: string
   outdated: boolean
 }
+/** A list of the document (the server's `lists`): its scheme, the number it starts at and, when it has one, its name. */
+export interface ListInfo {
+  id: string
+  scheme: string
+  start: number
+  name: string | null
+}
+/** How a list looks (the server's `schemes`): whether it counts, how far a level moves the text in and the gap between
+ * two items, both in em. */
+export interface SchemeInfo {
+  id: string
+  name: string
+  kind: 'bullet' | 'number'
+  indent: number
+  gap: number
+}
 export interface Selection {
   anchor: Pos
   focus: Pos
@@ -57,6 +74,8 @@ export interface TextState extends BaseState {
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
   styleModel: StyleModel | null
   blocks: Block[]
+  lists: ListInfo[]
+  schemes: SchemeInfo[]
   suggestions: SuggestionInfo[]
   selection: Selection | null
   /** Typed and kept back until the word ends. */
@@ -102,7 +121,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined })
   }
 
   get readOnly(): boolean {
@@ -113,7 +132,7 @@ export class TextSession extends BaseSession<TextState> {
   protected async loadApp() {
     const link = this.need()
     const [answer, suggestions, palette, styleModel, page] = await Promise.all([
-      link.request<{ styles: StyleView[]; blocks: Block[] }>('blocks'),
+      link.request<{ styles: StyleView[]; blocks: Block[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
       link.request<StyleModel>('style_model'),
@@ -129,6 +148,8 @@ export class TextSession extends BaseSession<TextState> {
     s.page = page
     s.language = language
     s.styles = answer.styles
+    s.lists = answer.lists
+    s.schemes = answer.schemes
     s.palette = palette
     s.styleModel = styleModel
     s.blocks = answer.blocks.map((b) => ({ ...b, runs: runsToUnits(b.text, b.runs) }))
@@ -183,7 +204,9 @@ export class TextSession extends BaseSession<TextState> {
       case 'text':
       case 'split':
       case 'join':
-      case 'style': {
+      case 'style':
+      case 'item':
+      case 'labels': {
         const event = eventInUnits(s.blocks, data as TextEvent)
         if (!applyEvent(s.blocks, event)) this.track(this.reload())
         else this.follow(event)
@@ -197,6 +220,9 @@ export class TextSession extends BaseSession<TextState> {
         return true
       case 'language':
         s.language = (data.language as string | null) ?? null
+        return true
+      case 'lists':
+        s.lists = data.lists as ListInfo[]
         return true
       case 'palette':
         // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls
@@ -416,9 +442,19 @@ export class TextSession extends BaseSession<TextState> {
     this.place()
   }
 
-  /** Enter: ends the paragraph at the caret (a selection is replaced). */
+  /**
+   * Enter: ends the paragraph at the caret (a selection is replaced). In an item the server gives the new paragraph the
+   * same item; an *empty* item is the way out instead: one level out, and at the first level out of the list (E9.21).
+   */
   newline(): Promise<boolean> | undefined {
-    return this.replaceSelection('\n')
+    if (this.denied()) return undefined
+    return this.act(async () => {
+      const r = this.range()
+      if (!r) return false
+      const block = this.state.blocks.find((b) => b.id === r[0].block)
+      if (block?.item && !block.text && same(r[0], r[1])) return this.leaveList(block)
+      return this.write(r[0], r[1], '\n')
+    })
   }
 
   /** Put text in place of the selection (paste; Enter). */
@@ -471,6 +507,7 @@ export class TextSession extends BaseSession<TextState> {
         const start = word ? wordStart(text, r[0].offset) : r[0].offset - (text.codePointAt(r[0].offset - 2)! > 0xffff ? 2 : 1)
         return this.write({ block: r[0].block, offset: Math.max(0, start) }, r[0], '')
       }
+      if (blocks[i]!.item) return this.leaveList(blocks[i]!) // out of the list first, as every editor does
       const before = blocks[i - 1]
       return before ? this.write({ block: before.id, offset: before.text.length }, r[0], '') : false
     }
@@ -518,6 +555,91 @@ export class TextSession extends BaseSession<TextState> {
       link.request<TextImage[]>('images').catch(() => []),
     ])
     return { objects, shapes, images }
+  }
+
+  // -- lists (E9.21). The numbering is the server's: what is asked for is structure, and the markers arrive as events.
+  /** The list item the caret is in, or `null`. */
+  currentItem(): ListItem | null {
+    const focus = this.state.selection?.focus
+    return this.state.blocks.find((b) => b.id === focus?.block)?.item ?? null
+  }
+
+  /** The scheme (`bullets`, `numbers`) of the list the caret's item belongs to, or `null`. */
+  currentScheme(): string | null {
+    const item = this.currentItem()
+    return (item && this.state.lists.find((l) => l.id === item.list)?.scheme) ?? null
+  }
+
+  /** May the list of the caret's item go on from an earlier one? Only from its first item, and only when an item of
+   * another list of the same scheme lies before it (the same rule as the server's `continue_list`). */
+  canContinue(): boolean {
+    const item = this.currentItem()
+    const scheme = this.currentScheme()
+    if (!item || !scheme) return false
+    const { blocks, lists } = this.state
+    const first = blocks.findIndex((b) => b.item?.list === item.list)
+    if (blocks[first]?.id !== this.state.selection?.focus.block) return false
+    return blocks.slice(0, first).some((b) => b.item && b.item.list !== item.list && lists.find((l) => l.id === b.item!.list)?.scheme === scheme)
+  }
+
+  /** The paragraphs of the selection. */
+  private selectedBlocks(): Block[] {
+    const r = this.range()
+    if (!r) return []
+    const { blocks } = this.state
+    return blocks.slice(indexOf(blocks, r[0].block), indexOf(blocks, r[1].block) + 1)
+  }
+
+  /** Bullets or numbers for the selected paragraphs, or (`null`) plain paragraphs. Asking for what they are takes them
+   * out of their list; the server decides (`make_list`). */
+  makeList(scheme: string | null): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => {
+      const blocks = this.selectedBlocks().map((b) => b.id)
+      if (!blocks.length) return false
+      return (await this.attempt('make_list', { blocks, scheme, base: this.state.revision })) !== false
+    })
+  }
+
+  /** Move the selected items one level in (`1`) or out (`-1`). */
+  indent(by: 1 | -1): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => {
+      const blocks = this.selectedBlocks().filter((b) => b.item).map((b) => b.id)
+      if (!blocks.length) return false
+      return (await this.attempt('indent_item', { blocks, by, base: this.state.revision })) !== false
+    })
+  }
+
+  /** Tab and Shift+Tab: in a list item they move it in or out. `false` where the key is not ours (a plain paragraph). */
+  tab(back: boolean): boolean {
+    if (this.readOnly || !this.currentItem()) return false
+    void this.indent(back ? -1 : 1)
+    return true
+  }
+
+  /** Let the list of the caret's item go on where the nearest earlier list of its kind ends. */
+  continueList(): Promise<boolean> {
+    const block = this.state.selection?.focus.block
+    if (this.denied() || !block || !this.currentItem()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('continue_list', { block, base: this.state.revision })) !== false)
+  }
+
+  /** Number the first level of the caret's list from `start` on. */
+  startAt(start: number): Promise<boolean> {
+    const item = this.currentItem()
+    if (this.denied() || !item) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('list_start', { list: item.list, start, base: this.state.revision })) !== false)
+  }
+
+  /** The way out of a list from an item with nothing in it: one level out, at the first level out of the list. */
+  private leaveList(block: Block): Promise<boolean> {
+    const item = block.item!
+    return item.level > 0 ? this.attemptOk('indent_item', { blocks: [block.id], by: -1 }) : this.attemptOk('make_list', { blocks: [block.id], scheme: null })
+  }
+
+  private async attemptOk(method: string, params: Record<string, unknown>): Promise<boolean> {
+    return (await this.attempt(method, { ...params, base: this.state.revision })) !== false
   }
 
   /** The style of the paragraph the caret is in. */

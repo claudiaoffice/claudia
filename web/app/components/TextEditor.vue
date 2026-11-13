@@ -5,6 +5,7 @@
 import { nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
 import { colorOf } from '~/lib/people'
 import type { Block, Pos } from '~/lib/blocks'
+import { itemLayout } from '~/lib/list-layout'
 import { paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
 
@@ -20,6 +21,9 @@ let composing = false
 const tagOf = (style: string) => semanticTag(state.styles, style)
 // `resolved`, not `computed`: a palette role is a colour by the time it reaches the page (D200).
 const cssOf = (style: string) => paragraphCss(state.styles.find((s) => s.id === style)?.resolved ?? {})
+
+/** A list item's indent and gap, from the scheme of its list (E9.21); the marker itself is drawn by CSS. */
+const layoutOf = (at: number) => itemLayout(state.blocks, at, state.lists, state.schemes) ?? {}
 
 // ------------------------------------------------------------------------------ what is drawn
 interface TextSeg {
@@ -288,6 +292,13 @@ function onBeforeInput(event: InputEvent) {
   }
 }
 
+/** Tab and Shift+Tab move a list item one level in or out; anywhere else they are the browser's (focus moves on). */
+function onKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey || composing) return
+  adoptSelection()
+  if (props.session.tab(event.shiftKey)) event.preventDefault()
+}
+
 function onCompositionStart() {
   void props.session.flush()
   composing = true
@@ -376,6 +387,7 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
         spellcheck="true"
         data-testid="text"
         @beforeinput="onBeforeInput"
+        @keydown="onKeydown"
         @compositionstart="onCompositionStart"
         @compositionend="onCompositionEnd"
         @paste="onPaste"
@@ -386,7 +398,16 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
         @dragstart.prevent
         @blur="session.flush()"
       >
-        <component :is="tagOf(block.style)" v-for="block in state.blocks" :key="`${block.id}:${tagOf(block.style)}`" class="para" :class="`st-${block.style}`" :style="cssOf(block.style)" :data-block="block.id">
+        <component
+          :is="tagOf(block.style)"
+          v-for="(block, at) in state.blocks"
+          :key="`${block.id}:${tagOf(block.style)}`"
+          class="para"
+          :class="[`st-${block.style}`, { item: block.item, tight: layoutOf(at)['--item-gap'] }]"
+          :style="{ ...cssOf(block.style), ...layoutOf(at) }"
+          :data-block="block.id"
+          :data-marker="block.label?.marker"
+        >
           <template v-for="seg in segmentsOf(block)" :key="seg.key">
             <span
               v-if="seg.kind === 'text'"
@@ -444,6 +465,30 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
 }
 .doc :deep(.para) {
   margin: 0 0 0.9em;
+}
+
+/* a list item: the marker is drawn, not typed, in the gutter before the text (E9.21). It is not part of the text, so
+   selection, copy, find and the caret never see it. */
+.doc :deep(.para.item) {
+  position: relative;
+  padding-left: var(--item-pad);
+}
+.doc :deep(.para.item.tight) {
+  margin-bottom: var(--item-gap); /* the scheme's gap between neighbours; the last item keeps the paragraph's margin */
+}
+.doc :deep(.para.item[data-marker]::before) {
+  content: attr(data-marker);
+  position: absolute;
+  left: var(--item-left);
+  width: var(--item-step);
+  box-sizing: border-box;
+  padding-right: 0.45em;
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 400;
+  font-style: normal;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* who wrote what */

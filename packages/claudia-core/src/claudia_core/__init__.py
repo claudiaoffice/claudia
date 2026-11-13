@@ -19,6 +19,7 @@
                  that can be styled (D303-D305, D312, D315)
     css          the CSS a style may hold: a versioned allow-list, a validator, the text form of a style
     styles       StyleBook and the commands that change it (E1.10)
+    lists        ListDef, ListBook, the schemes and the counting of list items (E9.21)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
@@ -104,6 +105,18 @@ from .facets import (
     fits,
 )
 from .history import History, Step
+from .lists import (
+    SCHEMES,
+    ChangeList,
+    CreateList,
+    Label,
+    ListBook,
+    ListDef,
+    ListsChanged,
+    RemoveList,
+    Scheme,
+    numbering_labels,
+)
 from .log import CommandLog, Entry
 from .manifest import (
     Environment,
@@ -169,7 +182,9 @@ from .palette import (
     luminance,
 )
 from .paragraphs import (
+    MAX_LIST_LEVEL,
     MAX_PARAGRAPH_TEXT,
+    ListItem,
     Paragraph,
     Run,
     delete_runs,
@@ -189,6 +204,18 @@ from .store import DocumentStore, MemoryStore
 from .styles import ChangeStyle, CreateStyle, RemoveStyle, RenameStyle, StyleBook, StyleDef, StylesChanged
 
 __all__ = [
+    "MAX_LIST_LEVEL",
+    "numbering_labels",
+    "Scheme",
+    "RemoveList",
+    "ListsChanged",
+    "ListItem",
+    "ListDef",
+    "ListBook",
+    "Label",
+    "CreateList",
+    "ChangeList",
+    "SCHEMES",
     "__version__",
     "AddObject",
     "ALLOWED_CSS",

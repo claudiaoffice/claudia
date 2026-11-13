@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { chordLabel, dispatch, isTypingTarget, matches, sharedShortcuts } from '~/lib/shortcuts'
 
-function key(partial: Partial<{ key: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }>) {
-  return { key: '', ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...partial }
+function key(partial: Partial<{ key: string; code: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }>) {
+  return { key: '', code: '', ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...partial }
 }
 
 describe('matches', () => {
@@ -16,6 +16,24 @@ describe('matches', () => {
   it('requires shift and alt to match exactly, not just be present', () => {
     expect(matches({ key: 'z', ctrl: true }, key({ key: 'z', ctrlKey: true, shiftKey: true }))).toBe(false)
     expect(matches({ key: 'z', ctrl: true, shift: true }, key({ key: 'z', ctrlKey: true }))).toBe(false)
+  })
+})
+
+describe('a chord on a physical key (`code`)', () => {
+  // Shift+8 types `*` on a US keyboard and `(` on a German one: the key is the same, what it types is not (E9.21).
+  const bullets = { key: '8', code: 'Digit8', ctrl: true, shift: true }
+  it('matches whatever the layout types for that key', () => {
+    expect(matches(bullets, key({ key: '*', code: 'Digit8', ctrlKey: true, shiftKey: true }))).toBe(true)
+    expect(matches(bullets, key({ key: '(', code: 'Digit8', ctrlKey: true, shiftKey: true }))).toBe(true)
+  })
+  it('does not match another key that happens to type the same character', () => {
+    expect(matches(bullets, key({ key: '8', code: 'Numpad9', ctrlKey: true, shiftKey: true }))).toBe(false)
+  })
+  it('still wants the modifiers exactly', () => {
+    expect(matches(bullets, key({ key: '*', code: 'Digit8', ctrlKey: true }))).toBe(false)
+  })
+  it('is labelled by its key', () => {
+    expect(chordLabel(bullets)).toBe('Ctrl+Shift+8')
   })
 })
 
