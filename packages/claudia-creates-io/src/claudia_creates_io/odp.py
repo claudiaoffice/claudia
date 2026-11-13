@@ -11,6 +11,10 @@ preservation from day one**.
   has no model for -- is still there, and every byte of ``content.xml`` outside what was edited is the original's. A
   moved object changes its start tag and nothing else.
 
+A slide's speaker notes are the words of its notes page (D298): the Markdown of the model is written as paragraphs with
+bold and italic spans (``_notes.py``), read back the same way, and an edit patches only the text box of the notes
+frame. A planned time (D294) is not written -- an odp has no such thing -- and ``odp_export_losses`` says so.
+
 What the model sees of an odp: every ``draw:page`` is a slide (``s1``, ``s2``... by its place) and every text box
 (a ``draw:frame`` holding a ``draw:text-box``), ellipse, rectangle and triangle directly on it is an object (``o1``,
 ``o2``... by its place over the whole deck), in the order the file draws them. An object is *modeled* only if the app
@@ -34,7 +38,7 @@ from zipfile import BadZipFile
 from lxml import etree
 
 from claudia_core import ObjectBody, VisualObject, paragraph_for
-from claudia_creates import SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
+from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
     NS,
@@ -54,6 +58,7 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 from .pptx import UnsupportedEdit
 
@@ -172,6 +177,13 @@ class _Slide:
     objects: list[_Object] = field(default_factory=list)
     #: What is on the slide and not in the model, as ``(kind, detail)``: "picture", "table", "rotated-object"...
     left_out: list[tuple[str, str]] = field(default_factory=list)
+    #: The notes page, and in it the frame and the text box of the notes (the frame of class "notes"), as far as
+    #: the file has them; the notes as Markdown, and whether the file has notes the model could not read.
+    notes_page: etree._Element | None = None
+    notes_frame: etree._Element | None = None
+    notes_box: etree._Element | None = None
+    notes: str = ""
+    notes_unread: bool = False
 
 
 class _Probe:
@@ -337,9 +349,121 @@ def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, 
     return box
 
 
+class _TextLooks:
+    """How words look in a file, as far as notes need it: bold and italic, from the text and paragraph styles of
+    both parts, with what a style is based on, and whether a list is numbered or bulleted."""
+
+    def __init__(self, *roots: etree._Element | None) -> None:
+        self._styles: dict[tuple[str, str], etree._Element] = {}
+        self._numbered: dict[str, bool] = {}
+        for root in roots:
+            if root is None:
+                continue
+            for style in root.iter(_q("style", "style")):
+                key = (style.get(_q("style", "family")) or "", style.get(_q("style", "name")) or "")
+                self._styles.setdefault(key, style)
+            for listing in root.iter(_q("text", "list-style")):
+                level = next((c for c in listing if isinstance(c.tag, str) and "level-style" in c.tag), None)
+                number = level is not None and local_name(level.tag) == "list-level-style-number"
+                self._numbered.setdefault(listing.get(_q("style", "name")) or "", number)
+
+    def of(self, family: str, name: str | None) -> tuple[bool | None, bool | None]:
+        """``(bold, italic)`` of a style, each ``None`` if neither it nor what it is based on says."""
+        bold = italic = None
+        seen: set[str] = set()
+        while name and name not in seen and (family, name) in self._styles:
+            seen.add(name)
+            style = self._styles[family, name]
+            for props in style.findall("style:text-properties", NS):
+                weight, slant = props.get(_q("fo", "font-weight")), props.get(_q("fo", "font-style"))
+                if bold is None and weight:
+                    bold = weight in ("bold", "600", "700", "800", "900")
+                if italic is None and slant:
+                    italic = slant in ("italic", "oblique")
+            name = style.get(_q("style", "parent-style-name"))
+        return bold, italic
+
+    def numbered(self, name: str | None) -> bool:
+        return self._numbered.get(name or "", False)
+
+
+def _read_notes(slide: _Slide, looks: _TextLooks) -> None:
+    """Find the notes frame of the slide's notes page and read its words as Markdown into ``slide``."""
+    if slide.notes_page is None:
+        return
+    slide.notes_frame = next(
+        (f for f in slide.notes_page.findall("draw:frame", NS) if f.get(_q("presentation", "class")) == "notes"), None
+    )
+    slide.notes_box = slide.notes_frame.find("draw:text-box", NS) if slide.notes_frame is not None else None
+    if slide.notes_box is None:
+        return
+    lines: list[Line] = []
+    _read_blocks(slide.notes_box, looks, lines, 0, None)
+    markdown = lines_to_markdown(lines)
+    if len(markdown) > MAX_NOTES_LENGTH:
+        slide.notes_unread = True
+        slide.left_out.append(("notes", "too-long"))
+    else:
+        slide.notes = markdown
+
+
+def _read_blocks(
+    holder: etree._Element, looks: _TextLooks, lines: list[Line], depth: int, list_style: str | None
+) -> None:
+    """The paragraphs under ``holder`` (a text box or a list item) as lines, a list's items with a marker."""
+    for child in holder:
+        if not isinstance(child.tag, str):
+            continue
+        name = local_name(child.tag)
+        if name in ("p", "h"):
+            made = _read_paragraph(child, looks, bold=name == "h")
+            if depth:
+                mark = "1. " if looks.numbered(list_style) else f"{BULLET} "
+                made[0].insert(0, Run("  " * (depth - 1) + mark))
+            lines.extend(made)
+        elif name == "list":
+            _read_blocks(child, looks, lines, depth, child.get(_q("text", "style-name")) or list_style)
+        elif name == "list-item":
+            _read_blocks(child, looks, lines, depth + 1, list_style)
+
+
+def _read_paragraph(paragraph: etree._Element, looks: _TextLooks, *, bold: bool) -> list[Line]:
+    """One paragraph as lines (a line break starts one), its spans as runs that are bold or italic."""
+    base_bold, base_italic = looks.of("paragraph", paragraph.get(_q("text", "style-name")))
+    lines: list[Line] = [[]]
+
+    def add(text: str, is_bold: bool, is_italic: bool) -> None:
+        if text:
+            lines[-1].append(Run(text, is_bold, is_italic))
+
+    def walk(element: etree._Element, is_bold: bool, is_italic: bool) -> None:
+        add(re.sub(r"\s+", " ", element.text or ""), is_bold, is_italic)
+        for child in element:
+            if isinstance(child.tag, str):
+                name = local_name(child.tag)
+                if name == "s":
+                    add(" " * int(child.get(_q("text", "c")) or 1), is_bold, is_italic)
+                elif name == "tab":
+                    add("\t", is_bold, is_italic)
+                elif name == "line-break":
+                    lines.append([])
+                else:
+                    span_bold, span_italic = looks.of("text", child.get(_q("text", "style-name")))
+                    walk(
+                        child,
+                        is_bold if span_bold is None else span_bold,
+                        is_italic if span_italic is None else span_italic,
+                    )
+            add(re.sub(r"\s+", " ", child.tail or ""), is_bold, is_italic)
+
+    walk(paragraph, bold or bool(base_bold), bool(base_italic))
+    return lines
+
+
 def _scan(content: etree._Element, styles: etree._Element | None) -> list[_Slide]:
-    """Every slide of the deck, with the objects on it that the model holds and what else there is."""
+    """Every slide of the deck, with the objects on it that the model holds, its notes and what else there is."""
     layouts = _layouts(styles, content)
+    looks = _TextLooks(content, styles)
     masters = _masters(styles)
     page_styles = _drawing_page_styles(content, styles)
     graphics = _graphic_styles(content, styles)
@@ -352,6 +476,7 @@ def _scan(content: etree._Element, styles: etree._Element | None) -> list[_Slide
         slide = _Slide(f"s{index}", page, master, size)
         for child in page:
             _scan_child(slide, child, probe, numbers, graphics)
+        _read_notes(slide, looks)
         if page.get(_q("draw", "style-name")) and _has_transition(
             page_styles.get(page.get(_q("draw", "style-name")) or "")
         ):
@@ -372,8 +497,8 @@ def _scan_child(
             slide.left_out.append(("animation", ""))
         return
     if tag == _q("presentation", "notes"):
-        if _has_words(child):  # LibreOffice writes an empty notes page for every slide: nothing is hidden there
-            slide.left_out.append(("notes", ""))
+        if slide.notes_page is None:
+            slide.notes_page = child
         return
     if namespace != NS["draw"] or local_name(tag) not in _DRAWN:
         return
@@ -423,7 +548,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
         return SlideModel.empty()
     model, library, defined = SlideModel(), ShapeLibrary.load(), set()
     for slide in slides:
-        model.insert_slide(slide.id)
+        model.insert_slide(slide.id, notes=slide.notes)
         for found in slide.objects:
             style, words = _default_styles(found.kind)
             if found.kind == "text":
@@ -540,6 +665,15 @@ class _Looks:
         key = ("graphic", *sorted(props.items()))
         return self._style(key, "clg", "graphic", [_el("style", "graphic-properties", props)])
 
+    def text(self, *, bold: bool, italic: bool) -> str:
+        """A text style that makes words bold, italic or both."""
+        props: dict[str, str] = {}
+        if bold:
+            props["fo:font-weight"] = "bold"
+        if italic:
+            props["fo:font-style"] = "italic"
+        return self._style(("text", bold, italic), "clt", "text", [_el("style", "text-properties", props)])
+
     def paragraph(self, css: dict[str, str], over: str | None, pt_per_unit: float) -> str | None:
         """A paragraph style for the size, colour and alignment of words, or ``None`` if ``css`` says none of them."""
         size, colour = points_of(css, "font-size", pt_per_unit), colour_of(css, "color", over)
@@ -560,6 +694,25 @@ class _Looks:
             properties.append(_el("style", "text-properties", text))
         key = ("paragraph", align, *sorted(text.items()))
         return self._style(key, "clp", "paragraph", properties)
+
+
+def _put_text(parent: etree._Element, text: str) -> None:
+    """Add ``text`` at the end of ``parent`` the way an odf file holds it. White space is collapsed when a file is
+    read, so a space is only written as itself between two words; any other (at the edge of a run, next to
+    another) is a ``text:s``, and a tab a ``text:tab``."""
+    pieces = re.split(r"( +|\t)", xml_safe(text))
+    for index, piece in enumerate(pieces):
+        if not piece:
+            continue
+        last = parent[-1] if len(parent) else None
+        if piece == "\t":
+            etree.SubElement(parent, _q("text", "tab"))
+        elif piece[0] == " " and not (len(piece) == 1 and pieces[index - 1] and pieces[index + 1]):
+            etree.SubElement(parent, _q("text", "s")).set(_q("text", "c"), str(len(piece)))
+        elif last is None:
+            parent.text = (parent.text or "") + piece
+        else:
+            last.tail = (last.tail or "") + piece
 
 
 def _paragraphs(text: str, style_name: str | None) -> list[etree._Element]:
@@ -624,6 +777,41 @@ class _Writer:
             element.extend(_paragraphs(text, words) if text else [])
         return element
 
+    def notes(self, markdown: str) -> etree._Element:
+        """The notes page of a slide: its thumbnail and the notes frame, laid out as LibreOffice lays them out."""
+        thumbnail = {
+            "draw:layer": "layout",
+            "svg:width": "12.699cm",
+            "svg:height": "9.524cm",
+            "svg:x": "3.175cm",
+            "svg:y": "1.905cm",
+            "presentation:class": "page",
+        }
+        page = _el("presentation", "notes")
+        page.extend([_el("draw", "page-thumbnail", thumbnail), self.notes_frame(markdown)])
+        return page
+
+    def notes_frame(self, markdown: str) -> etree._Element:
+        """The frame of the notes on a notes page, with the notes as the paragraphs of its text box."""
+        frame = _el("draw", "frame", _NOTES_FRAME)
+        etree.SubElement(frame, _q("draw", "text-box")).extend(self.note_paragraphs(markdown))
+        return frame
+
+    def note_paragraphs(self, markdown: str) -> list[etree._Element]:
+        """The paragraphs of the notes: a line each, its bold and italic runs as spans with a style of their own."""
+        paragraphs = []
+        for line in markdown_to_lines(markdown)[0]:
+            paragraph = _el("text", "p")
+            for run in line:
+                if run.bold or run.italic:
+                    span = etree.SubElement(paragraph, _q("text", "span"))
+                    span.set(_q("text", "style-name"), self.looks.text(bold=run.bold, italic=run.italic))
+                    _put_text(span, run.text)
+                else:
+                    _put_text(paragraph, run.text)
+            paragraphs.append(paragraph)
+        return paragraphs
+
     def _picture(self, body: ObjectBody, placing: dict[str, str]) -> etree._Element | None:
         asset = self.model.images.get(body.image) if body.image else None
         if asset is None:  # pragma: no cover - the model refuses an image object whose asset it does not hold
@@ -643,6 +831,15 @@ class _Writer:
 
 
 _EXTENSION = {"jpeg": "jpg"}
+#: Where the notes of a slide are on its notes page, as LibreOffice puts them.
+_NOTES_FRAME = {
+    "presentation:class": "notes",
+    "draw:layer": "layout",
+    "svg:width": "15.239cm",
+    "svg:height": "11.429cm",
+    "svg:x": "1.905cm",
+    "svg:y": "12.065cm",
+}
 
 
 def _styles_part() -> bytes:
@@ -681,6 +878,8 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None) -> byt
             element = writer.object(obj)
             if element is not None:
                 page.append(element)
+        if model.notes_of(slide_id):
+            page.append(writer.notes(model.notes_of(slide_id)))
     automatic.extend(writer.looks.elements)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
     extra = {
@@ -695,7 +894,9 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None) -> byt
 def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
     """What :func:`slides_to_odp` cannot put into the file for ``model``, each as a code with how many: ``"authorship"``
     (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle) and an
-    ``"image-missing"`` (an image the document has no picture for)."""
+    ``"image-missing"`` (an image the document has no picture for); for notes ``"notes-link"``, ``"notes-image"``,
+    ``"notes-code"`` and ``"notes-quote"`` (how many slides use what the file shows only as plain words), and
+    ``"planned-time"`` (how many slides have a planned time, which an odp has no place for, D294)."""
     losses = LossLog()
     authored = sum(
         1
@@ -704,6 +905,14 @@ def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
     )
     if authored:
         losses.add("authorship", count=authored)
+    used: dict[str, int] = {}
+    for slide_id in model.slides:
+        for feature in markdown_to_lines(model.notes_of(slide_id))[1] - {"heading"}:  # a heading is a bold line
+            used[feature] = used.get(feature, 0) + 1
+    for feature in sorted(used):
+        losses.add(f"notes-{feature}", count=used[feature])
+    if timed := sum(1 for slide_id in model.slides if slide_id in model.times):
+        losses.add("planned-time", count=timed)
     for obj in model.objects.values():  # pragma: no cover - neither can be in a presentation yet (see above)
         if obj.body.kind == "diagram":
             losses.add("diagram")
@@ -744,6 +953,7 @@ class _Patch:
         self._after: dict[int, tuple[etree._Element, list[etree._Element]]] = {}
         self._into: dict[int, tuple[etree._Element, list[etree._Element]]] = {}
         self._before: dict[int, tuple[etree._Element, list[etree._Element]]] = {}
+        self._tail: list[tuple[etree._Element, etree._Element]] = []  # notes pages, after all else on a page
         self._check_baseline()
 
     def _style_names(self) -> set[str]:
@@ -812,7 +1022,7 @@ class _Patch:
                 previous = slide.element
                 continue
             objects = self.current.objects_on(slide_id)
-            if not objects and not self.slides:
+            if not objects and not self.slides and not self.current.notes_of(slide_id):
                 continue  # the one empty slide of a deck with no pages is not a page
             self._new_slide(slide_id, objects, previous)
 
@@ -842,7 +1052,37 @@ class _Patch:
                 continue
             self._put(slide.element, element, after, first)
             self.changed = True
+        self._patch_notes(slide, writer)
         self._lose(writer)
+
+    def _patch_notes(self, slide: _Slide, writer: _Writer) -> None:
+        """Write the notes of a slide if they changed: the words of the notes frame are replaced and nothing else of
+        the notes page is touched; a slide with no notes page, or none with a frame for them, gets what is missing."""
+        then, now = self.baseline.notes_of(slide.id), self.current.notes_of(slide.id)
+        if then == now:
+            return
+        if slide.notes_unread:
+            raise UnsupportedEdit("the notes of this slide are too long to be held, so they cannot be replaced")
+        if slide.notes_box is not None:
+            words = copy.deepcopy(slide.notes_box)  # the box as it was, with its attributes, but for what is in it
+            words.text = None
+            for child in list(words):
+                words.remove(child)
+            words.extend(writer.note_paragraphs(now))
+            self.part.replace(slide.notes_box, words)
+        elif slide.notes_frame is not None:
+            box = _el("draw", "text-box")
+            box.extend(writer.note_paragraphs(now))
+            self.part.insert_into(slide.notes_frame, box)
+        elif slide.notes_page is not None:
+            self.part.insert_into(slide.notes_page, writer.notes_frame(now))
+        else:
+            drawn = [child for child in slide.element if isinstance(child.tag, str)]
+            if drawn:
+                self._tail.append((drawn[-1], writer.notes(now)))
+            else:
+                self._into.setdefault(id(slide.element), (slide.element, []))[1].append(writer.notes(now))
+        self.changed = True
 
     def _lose(self, writer: _Writer) -> None:
         if self.losses is not None:
@@ -884,6 +1124,8 @@ class _Patch:
             element = writer.object(obj)
             if element is not None:
                 page.append(element)
+        if self.current.notes_of(slide_id):
+            page.append(writer.notes(self.current.notes_of(slide_id)))
         self._lose(writer)
         if previous is not None:
             self._after.setdefault(id(previous), (previous, []))[1].append(page)
@@ -914,6 +1156,8 @@ class _Patch:
                 self.part.insert_after(anchor, element)
         for parent, elements in self._into.values():
             self.part.insert_into(parent, *elements, at_start=True)
+        for anchor, notes in self._tail:  # after the objects that went in at the same place
+            self.part.insert_after(anchor, notes)
 
     def _add_styles(self) -> None:
         if not self.looks.elements:

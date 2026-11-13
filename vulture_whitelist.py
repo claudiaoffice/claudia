@@ -89,6 +89,8 @@ used._language  # table.method("language") in printing.add_language_methods
 used._set_language  # table.method("set_language") in printing.add_language_methods
 used._print_setup  # table.method("print_setup") in creates_methods_with
 used._set_print_setup  # table.method("set_print_setup") in creates_methods_with
+used._set_slide_notes  # table.method("set_slide_notes") in creates._add_plan_methods (D293)
+used._set_slide_time  # table.method("set_slide_time") in creates._add_plan_methods (D294)
 used._SetLanguageAsFirstWritten  # registered by its decorator: replays logs that wrote "composes.SetLanguage" (D917)
 used._change_style  # composes_methods.method("change_style")
 used._deviate_style  # composes_methods.method("deviate_style")

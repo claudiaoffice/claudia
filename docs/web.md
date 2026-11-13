@@ -181,3 +181,24 @@ orientation, margins, language, page numbers — and a presentation adds **Layou
 slide-sized page by default) or handouts of 2, 3 (with lines for notes), 4, 6 or 9 to a page (D917). How a document
 prints is part of it, one step in its history for everybody; a viewer sees the pages but cannot change them.
 `e2e/print.cjs` and `e2e/print-creates.cjs` (`npm run e2e:print`, `npm run e2e:print-creates`) drive both.
+
+## Presenter mode (creates)
+
+Every slide has **speaker notes** (Markdown, a field under the slide) and a **planned time** (the ⏱ chip beside it:
+`2` is two minutes, `2:30`, `90s`, `1h`; the buttons 1, 2, 3, 5 and 10 min). Both are document content, one step in the
+history, readable by a viewer and written by whoever may edit (D293, D294). The tab of each slide shows its time and
+the bar below adds them up, with how many slides have none yet. View ▸ Speaker notes hides the field (a personal
+setting, `lib/show-prefs.ts`).
+
+**Present** (the apricot button, View ▸ Present from the first slide / from this slide) opens the show over the
+workspace: **F5** from the first slide, **Shift+F5** from this one, and **Ctrl+Alt+P** / **Ctrl+Alt+Shift+P** where F5 is a
+system key (a Mac, D295). It is read-only and local (D291) and runs on a frozen copy of the presentation (D292,
+`lib/frozen.ts`): a colleague's edit changes nothing on the screen, and the presenter view says "Changes since you
+started: N" with an **Update now** button. In the show: ← → Space PageUp PageDown Backspace go through the slides,
+Home and End jump, a typed number and Enter go to that slide, **G** the overview, **B** a blank screen, **P** swaps
+between the audience view and the presenter view (current and next slide, the notes formatted, elapsed time against the
+planned total, the pace, this slide against its time, the clock), **F** toggles fullscreen, **Esc** steps back out one
+layer and then ends. The window announces each slide to a screen reader and respects reduced motion. The rules are in
+`lib/show.ts` (tested without a browser); `components/PresentShow.vue` draws them; `e2e/present.cjs`
+(`npm run e2e:present`, `BROWSER=firefox` for Firefox) drives all of it. A second audience window on another screen is
+not built yet (D296).

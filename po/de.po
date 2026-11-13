@@ -664,3 +664,283 @@ msgstr "{app} kann noch nicht starten"
 #: clients/linux/src/claudia_shell_gtk
 msgid "{app} could not start its server"
 msgstr "{app} konnte seinen Server nicht starten"
+
+#: web/app/components/PresentShow.vue:225 web/app/components/PresentShow.vue:227
+msgid "All slides"
+msgstr "Alle Folien"
+
+#: web/app/components/PresentShow.vue:190
+msgid "Changes since you started: {n}"
+msgstr "Änderungen seit dem Start: {n}"
+
+#: web/app/components/SlideNotes.vue:141
+msgid "Clear"
+msgstr "Entfernen"
+
+#: web/app/components/SlideNotes.vue:114
+msgid "Common times"
+msgstr "Übliche Zeiten"
+
+#: web/app/components/PresentShow.vue:194
+msgid "Current slide"
+msgstr "Aktuelle Folie"
+
+#: web/app/components/PresentShow.vue:167
+msgid "Elapsed"
+msgstr "Vergangen"
+
+#: web/app/components/PresentShow.vue:149 web/app/components/PresentShow.vue:200 web/app/components/PresentShow.vue:39
+msgid "End of presentation"
+msgstr "Ende der Präsentation"
+
+#: web/app/components/PresentShow.vue:159
+msgid "End the show"
+msgstr "Präsentation beenden"
+
+#: web/app/components/PresentShow.vue:159
+msgid "End the show (Esc)"
+msgstr "Präsentation beenden (Esc)"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "How long you want to spend on this slide; the bar below the slides adds the times up"
+msgstr "Wie lange Sie bei dieser Folie bleiben möchten; die Leiste unter den Folien zählt die Zeiten zusammen"
+
+#: web/app/components/PresentShow.vue:205
+msgid "Larger notes"
+msgstr "Größere Notizen"
+
+#: web/app/components/SlideNotes.vue:128
+msgid "Less time"
+msgstr "Weniger Zeit"
+
+#: web/app/components/SlideNotes.vue:84
+msgid "Markdown: **bold**, *italic*, - lists. Shown in the presenter view, never on the slide."
+msgstr "Markdown: **fett**, *kursiv*, - Listen. Nur in der Referentenansicht zu sehen, nie auf der Folie."
+
+#: web/app/components/SlideNotes.vue:140
+msgid "More time"
+msgstr "Mehr Zeit"
+
+#: web/app/components/PresentShow.vue:150 web/app/components/PresentShow.vue:156 web/app/components/PresentShow.vue:198
+msgid "Next slide"
+msgstr "Nächste Folie"
+
+#: web/app/components/PresentShow.vue:209
+msgid "No notes for this slide."
+msgstr "Keine Notizen zu dieser Folie."
+
+#: web/app/components/PresentShow.vue:181
+msgid "No time planned"
+msgstr "Keine Zeit geplant"
+
+#: web/app/components/PresentShow.vue:203
+msgid "Notes"
+msgstr "Notizen"
+
+#: web/app/components/PresentShow.vue:158
+msgid "Overview"
+msgstr "Übersicht"
+
+#: web/app/components/PresentShow.vue:158
+msgid "Overview (G)"
+msgstr "Übersicht (G)"
+
+#: web/app/components/PresentShow.vue:172
+msgid "Pace"
+msgstr "Tempo"
+
+#: web/app/components/SlideNotes.vue:90
+msgid "Plan a time for this slide"
+msgstr "Zeit für diese Folie planen"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Plan the Time of This Slide…"
+msgstr "Zeit dieser Folie planen…"
+
+#: web/app/lib/present-keys.ts:52
+msgid "Plan the time of this slide"
+msgstr "Zeit dieser Folie planen"
+
+#: web/app/components/SlideWorkspace.vue:221
+msgid "Plan the time of this slide…"
+msgstr "Zeit dieser Folie planen…"
+
+#: web/app/components/SlideNotes.vue:96
+msgid "Plan time"
+msgstr "Zeit planen"
+
+#: web/app/components/SlideNotes.vue:112
+msgid "Planned time"
+msgstr "Geplante Zeit"
+
+#: web/app/components/SlideNotes.vue:90
+msgid "Planned time for this slide: {time}"
+msgstr "Geplante Zeit für diese Folie: {time}"
+
+#: web/app/components/SlideNotes.vue:135
+msgid "Planned time, for example 2, 2:30 or 90s"
+msgstr "Geplante Zeit, zum Beispiel 2, 2:30 oder 90s"
+
+#: web/app/components/SlideWorkspace.vue:350
+msgid "Planned {time}"
+msgstr "Geplant {time}"
+
+#: web/app/components/PresentShow.vue:228
+msgid "Planned: {time}"
+msgstr "Geplant: {time}"
+
+#: web/app/components/SlideWorkspace.vue:304
+msgid "Present"
+msgstr "Präsentieren"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Present from This Slide"
+msgstr "Ab dieser Folie präsentieren"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Present from the First Slide"
+msgstr "Ab der ersten Folie präsentieren"
+
+#: web/app/components/SlideWorkspace.vue:252 web/app/lib/present-keys.ts:49
+msgid "Present from the first slide"
+msgstr "Ab der ersten Folie präsentieren"
+
+#: web/app/components/SlideWorkspace.vue:253 web/app/lib/present-keys.ts:50
+msgid "Present from this slide"
+msgstr "Ab dieser Folie präsentieren"
+
+#: web/app/components/PresentShow.vue:137
+msgid "Presentation"
+msgstr "Präsentation"
+
+#: web/app/components/PresentShow.vue:153
+msgid "Presentation controls"
+msgstr "Steuerung der Präsentation"
+
+#: web/app/components/PresentShow.vue:157
+msgid "Presenter view"
+msgstr "Referentenansicht"
+
+#: web/app/components/PresentShow.vue:157
+msgid "Presenter view (P)"
+msgstr "Referentenansicht (P)"
+
+#: web/app/components/PresentShow.vue:154
+msgid "Previous slide"
+msgstr "Vorherige Folie"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Show or hide the notes under the slide"
+msgstr "Die Notizen unter der Folie ein- oder ausblenden"
+
+#: web/app/lib/present-keys.ts:51
+msgid "Show or hide the speaker notes"
+msgstr "Die Referentennotizen ein- oder ausblenden"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Show the presentation full screen, beginning with the first slide"
+msgstr "Die Präsentation im Vollbild zeigen, beginnend mit der ersten Folie"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Show the presentation full screen, beginning with the slide you are on"
+msgstr "Die Präsentation im Vollbild zeigen, beginnend mit der Folie, auf der Sie sind"
+
+#: web/app/components/PresentShow.vue:236
+msgid "Slide {n}"
+msgstr "Folie {n}"
+
+#: web/app/components/PresentShow.vue:43
+msgid "Slide {n} of {total}"
+msgstr "Folie {n} von {total}"
+
+#: web/app/components/PresentShow.vue:42
+msgid "Slide {n} of {total}: {title}"
+msgstr "Folie {n} von {total}: {title}"
+
+#: web/app/components/PresentShow.vue:204
+msgid "Smaller notes"
+msgstr "Kleinere Notizen"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Speaker Notes"
+msgstr "Referentennotizen"
+
+#: web/app/components/PresentShow.vue:207 web/app/components/SlideNotes.vue:81 web/app/components/SlideNotes.vue:83 web/app/components/SlideWorkspace.vue:256
+msgid "Speaker notes"
+msgstr "Referentennotizen"
+
+#: web/app/components/SlideWorkspace.vue:349
+msgid "The planned times of the slides, added up"
+msgstr "Die geplanten Zeiten der Folien, zusammengezählt"
+
+#: web/app/components/PresentShow.vue:176
+msgid "This slide"
+msgstr "Diese Folie"
+
+#: web/app/components/PresentShow.vue:185
+msgid "Time"
+msgstr "Uhrzeit"
+
+#: web/app/components/SlideNotes.vue:143
+msgid "Try 2 for two minutes, 2:30 or 90s."
+msgstr "Probieren Sie 2 für zwei Minuten, 2:30 oder 90s."
+
+#: web/app/components/PresentShow.vue:191
+msgid "Update now"
+msgstr "Jetzt aktualisieren"
+
+#: web/app/components/SlideNotes.vue:107
+msgid "What to say on this slide"
+msgstr "Was Sie zu dieser Folie sagen möchten"
+
+#: web/app/components/PresentShow.vue:218
+msgid "audience view"
+msgstr "Publikumsansicht"
+
+#: web/app/components/PresentShow.vue:217
+msgid "blank"
+msgstr "abdunkeln"
+
+#: web/app/components/PresentShow.vue:220
+msgid "end"
+msgstr "beenden"
+
+#: web/app/components/PresentShow.vue:219
+msgid "full screen"
+msgstr "Vollbild"
+
+#: web/app/components/PresentShow.vue:52
+msgid "on time"
+msgstr "im Plan"
+
+#: web/app/components/PresentShow.vue:216
+msgid "overview"
+msgstr "Übersicht"
+
+#: web/app/components/PresentShow.vue:215
+msgid "slides"
+msgstr "Folien"
+
+#: web/app/components/PresentShow.vue:34
+msgid "{n} / {total}"
+msgstr "{n} / {total}"
+
+#: web/app/components/SlideNotes.vue:124
+msgid "{n} min"
+msgstr "{n} Min."
+
+#: web/app/components/PresentShow.vue:182
+msgid "{n} of {total} slides"
+msgstr "{n} von {total} Folien"
+
+#: web/app/components/SlideWorkspace.vue:350
+msgid "{n} without a time"
+msgstr "{n} ohne Zeit"
+
+#: web/app/components/PresentShow.vue:53
+msgid "{time} ahead"
+msgstr "{time} Vorsprung"
+
+#: web/app/components/PresentShow.vue:53
+msgid "{time} behind"
+msgstr "{time} Rückstand"

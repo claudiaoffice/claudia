@@ -30,3 +30,27 @@ class PrintSetupChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "print_setup", "setup": self.setup}
+
+
+@dataclass(frozen=True)
+class SlideNotesChanged:
+    """The speaker notes of a slide changed (D293): the slide and its whole new notes, ``""`` when cleared."""
+
+    slide: str
+    notes: str
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "slide_notes", "slide": self.slide, "notes": self.notes}
+
+
+@dataclass(frozen=True)
+class SlideTimeChanged:
+    """The planned time of a slide changed (D294): the slide and its new time in seconds, ``None`` when cleared."""
+
+    slide: str
+    seconds: int | None
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "slide_time", "slide": self.slide, "seconds": self.seconds}

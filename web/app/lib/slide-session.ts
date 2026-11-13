@@ -39,6 +39,10 @@ export interface SlideState extends BaseState {
   shapes: Record<string, ShapeDef> // what this document has taken in, by id
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id (E10.8)
   styles: Record<string, StyleDef>
+  /** The speaker notes of the slides, Markdown, by slide; a slide without any is not here (D293). */
+  notes: Record<string, string>
+  /** The planned time of the slides in whole seconds, by slide; a slide without one is not here (D294). */
+  times: Record<string, number>
   /** The document's colour roles and how they read against each other (D200); the styles are what is drawn from. */
   palette: PaletteEvent | null
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
@@ -65,6 +69,8 @@ export class SlideSession extends BaseSession<SlideState> {
       shapes: {},
       images: {},
       styles: {},
+      notes: {},
+      times: {},
       palette: null,
       styleModel: null,
       selected: null,
@@ -85,7 +91,9 @@ export class SlideSession extends BaseSession<SlideState> {
       link.request<PaletteEvent>('palette'),
       link.request<StyleModel>('style_model'),
     ])
-    const loaded = await Promise.all(slides.map((slide) => link.request<{ objects: SlideObject[] }>('slide', { slide: slide.id })))
+    const loaded = await Promise.all(
+      slides.map((slide) => link.request<{ objects: SlideObject[]; notes?: string; seconds?: number | null }>('slide', { slide: slide.id })),
+    )
     // an older server knows neither: the preview then starts from slide-sized pages and offers no language
     const [printSetup, language] = await Promise.all([
       link.request<PrintSetupData>('print_setup').catch(() => null),
@@ -98,7 +106,12 @@ export class SlideSession extends BaseSession<SlideState> {
     s.language = language
     s.objects = {}
     s.order = {}
+    s.notes = {}
+    s.times = {}
     slides.forEach((slide, i) => {
+      // an older server sends neither: no notes and no times, as for a slide that has none
+      if (loaded[i]!.notes) s.notes[slide.id] = loaded[i]!.notes!
+      if (typeof loaded[i]!.seconds === 'number') s.times[slide.id] = loaded[i]!.seconds!
       s.order[slide.id] = loaded[i]!.objects.map((o) => o.id)
       for (const o of loaded[i]!.objects) s.objects[o.id] = o
     })
@@ -175,6 +188,14 @@ export class SlideSession extends BaseSession<SlideState> {
       case 'language':
         s.language = (data.language as string | null) ?? null
         return true
+      case 'slide_notes':
+        if (data.notes) s.notes[data.slide as string] = data.notes as string
+        else delete s.notes[data.slide as string]
+        return true
+      case 'slide_time':
+        if (typeof data.seconds === 'number') s.times[data.slide as string] = data.seconds
+        else delete s.times[data.slide as string]
+        return true
     }
     return false
   }
@@ -231,6 +252,37 @@ export class SlideSession extends BaseSession<SlideState> {
   async setLanguage(language: string | null): Promise<boolean> {
     if (this.readOnly) return false
     return (await this.attempt('set_language', { language, base: this.state.revision })) !== false
+  }
+
+  // -- what a talk is prepared with: speaker notes and planned times (D293, D294)
+  /** The speaker notes of a slide, Markdown; `""` if it has none. */
+  notesOf(slide: string): string {
+    return this.state.notes[slide] ?? ''
+  }
+
+  /** The planned time of a slide in whole seconds; `null` if it has none. */
+  secondsOf(slide: string): number | null {
+    return this.state.times[slide] ?? null
+  }
+
+  /** How long the talk is planned to take: the planned times added up, how many slides have one and how many do not
+   * (D294: a slide without a time counts nothing, and the person is told so rather than given a guess). */
+  plan(): { seconds: number; planned: number; unplanned: number } {
+    const ids = this.state.slides.map((slide) => slide.id)
+    const times = ids.map((id) => this.state.times[id]).filter((seconds): seconds is number => seconds !== undefined)
+    return { seconds: times.reduce((a, b) => a + b, 0), planned: times.length, unplanned: ids.length - times.length }
+  }
+
+  /** Write the notes of a slide (D293): one step in the history, for everybody. `""` clears them. */
+  async setNotes(slide: string, notes: string): Promise<boolean> {
+    if (this.readOnly) return false
+    return (await this.attempt('set_slide_notes', { slide, notes, base: this.state.revision })) !== false
+  }
+
+  /** Plan a time for a slide (D294), whole seconds; `null` takes the plan away. */
+  async setTime(slide: string, seconds: number | null): Promise<boolean> {
+    if (this.readOnly) return false
+    return (await this.attempt('set_slide_time', { slide, seconds, base: this.state.revision })) !== false
   }
 
   async addSlide(): Promise<string | null> {

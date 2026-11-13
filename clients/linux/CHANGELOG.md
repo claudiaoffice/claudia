@@ -6,6 +6,12 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 First slice of the native Linux client (epic 5).
 
+### Added (presenter mode, E10.2)
+- Creates' menu manifest: View ▸ Present from the First Slide (`F5`, `Ctrl+Alt+P`), Present from This Slide
+  (`Shift+F5`, `Ctrl+Alt+Shift+P`), Speaker Notes (`Ctrl+Alt+N`, checkable); Edit ▸ Plan the Time of This Slide…
+  (`Ctrl+Alt+D`). Page actions, no contract change; the German texts are in the catalog. The two-window show and
+  fullscreen from the shell (a `create` handler for new windows) wait for the spike's runs (D296).
+
 ### Added (all three apps, other servers, HTTPS)
 - `claudia-computes` and `claudia-creates` beside `claudia-composes`: one shell for every app (`identity.names()`),
   one `.deb` with three start buttons (desktop entries, AppStream metadata and icons per app; the icons are those of

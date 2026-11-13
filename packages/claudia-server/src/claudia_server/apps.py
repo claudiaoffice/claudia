@@ -55,10 +55,11 @@ _ENGINES: dict[str, Callable[[], Engine]] = {
 MODEL_METHODS = {
     "computes": ("set_cells", "add_sheet", "structure", "resize_lines"),
     "composes": ("suggest",),
-    # D265: slides and the objects that need no binary data, their words and their words' style. Not images,
-    # export, snapping or rotation to begin with.
+    # D265: slides and the objects that need no binary data, their words and their words' style; D293: the speaker
+    # notes. Not images, export, snapping or rotation to begin with, and not the planned times (people plan).
     "creates": (
         "add_slide",
+        "set_slide_notes",
         "add_object",
         "set_text",
         "set_paragraph_style",

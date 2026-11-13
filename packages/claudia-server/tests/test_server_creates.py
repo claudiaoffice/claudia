@@ -64,8 +64,14 @@ def objects(doc, slide="s1"):
 
 
 def test_a_new_presentation_has_one_empty_slide(deck):
-    assert call(deck, "slides") == [{"id": "s1", "objects": 0}]
-    assert call(deck, "slide", {"slide": "s1"}) == {"revision": None, "slide": "s1", "objects": []}
+    assert call(deck, "slides") == [{"id": "s1", "objects": 0, "seconds": None, "has_notes": False}]
+    assert call(deck, "slide", {"slide": "s1"}) == {
+        "revision": None,
+        "slide": "s1",
+        "objects": [],
+        "notes": "",
+        "seconds": None,
+    }
 
 
 def test_a_text_box_is_added_with_a_plain_box_and_body_text_words(deck):
@@ -76,7 +82,7 @@ def test_a_text_box_is_added_with_a_plain_box_and_body_text_words(deck):
     assert (box["kind"], box["anchor"]["x"], box["anchor"]["y"], box["w"], box["h"]) == ("text", 100, 80, 400, 120)
     assert box["style"] == "plain-box" and box["paragraph"]["style"] == "body-text"  # two slots (D304, D310)
     assert box["paragraph"]["text"] == "" and box["shape"] is None
-    assert call(deck, "slides") == [{"id": "s1", "objects": 1}]
+    assert call(deck, "slides") == [{"id": "s1", "objects": 1, "seconds": None, "has_notes": False}]
 
 
 def test_text_can_be_given_when_the_box_is_added(deck):
@@ -257,10 +263,43 @@ def test_viewers_may_look_but_not_change(deck):
         ("set_snap", {"id": box, "snap": False}),
         ("remove_object", {"id": box}),
         ("add_slide", {}),
+        ("set_slide_notes", {"slide": "s1", "notes": "x"}),
+        ("set_slide_time", {"slide": "s1", "seconds": 60}),
     ):
         with pytest.raises(RequestError) as caught:
             call(deck, name, params, account=VERA)
         assert caught.value.code == "forbidden"
+
+
+# -- speaker notes and planned times (E10.2, D293, D294) -----------------------------------------------------------
+def test_notes_and_planned_times_are_set_and_read_back(deck):
+    call(deck, "set_slide_notes", {"slide": "s1", "notes": "Start with **2019**."})
+    call(deck, "set_slide_time", {"slide": "s1", "seconds": 120})
+    assert call(deck, "slides") == [{"id": "s1", "objects": 0, "seconds": 120, "has_notes": True}]
+    one = call(deck, "slide", {"slide": "s1"})
+    assert (one["notes"], one["seconds"]) == ("Start with **2019**.", 120)
+    call(deck, "set_slide_time", {"slide": "s1", "seconds": None})
+    call(deck, "set_slide_notes", {"slide": "s1", "notes": ""})
+    assert call(deck, "slides")[0]["seconds"] is None and not call(deck, "slides")[0]["has_notes"]
+
+
+def test_a_note_or_time_that_cannot_be_kept_is_a_command_error(deck):
+    for name, params in (
+        ("set_slide_notes", {"slide": "nope", "notes": "x"}),
+        ("set_slide_notes", {"slide": "s1", "notes": "a\x00b"}),
+        ("set_slide_time", {"slide": "s1", "seconds": 0}),
+        ("set_slide_time", {"slide": "s1", "seconds": 90000}),
+        ("set_slide_time", {"slide": "nope", "seconds": 60}),
+    ):
+        with pytest.raises(RequestError) as caught:
+            call(deck, name, params)
+        assert caught.value.code == "command_error", (name, params)
+
+
+def test_notes_and_times_are_steps_of_the_history(deck):
+    call(deck, "set_slide_time", {"slide": "s1", "seconds": 60})
+    call(deck, "undo")
+    assert call(deck, "slides")[0]["seconds"] is None
 
 
 def test_a_selection_can_be_held_and_then_only_the_holder_changes_the_object(deck):
@@ -294,6 +333,8 @@ def test_the_methods_are_described_for_client_developers(deck):
         "resize_object",
         "set_text",
         "set_snap",
+        "set_slide_notes",
+        "set_slide_time",
     ):
         assert described[name]["doc"], name
     assert described["add_object"]["write"] and not described["slide"]["write"]

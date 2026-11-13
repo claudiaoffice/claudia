@@ -80,10 +80,13 @@ TABLE = (
 GROUP = '<draw:g><draw:rect svg:x="1cm" svg:y="1cm" svg:width="1cm" svg:height="1cm"/></draw:g>'
 LINE = '<draw:line svg:x1="1cm" svg:y1="1cm" svg:x2="3cm" svg:y2="3cm"/>'
 NOTES = (
-    "<presentation:notes><draw:page-thumbnail/><draw:frame><draw:text-box><text:p>Say this slowly.</text:p>"
-    "</draw:text-box></draw:frame></presentation:notes>"
+    '<presentation:notes><draw:page-thumbnail/><draw:frame presentation:class="notes"><draw:text-box>'
+    "<text:p>Say this slowly.</text:p></draw:text-box></draw:frame></presentation:notes>"
 )
-EMPTY_NOTES = "<presentation:notes><draw:page-thumbnail/><draw:frame><draw:text-box/></draw:frame></presentation:notes>"
+EMPTY_NOTES = (
+    '<presentation:notes><draw:page-thumbnail/><draw:frame presentation:class="notes"><draw:text-box/></draw:frame>'
+    "</presentation:notes>"
+)
 BARE = (
     '<style:style style:name="bare" style:family="graphic" style:parent-style-name="base"/>'
     '<style:style style:name="base" style:family="graphic"><style:graphic-properties draw:fill="none" '
@@ -294,7 +297,14 @@ def test_the_preset_shapes_libreoffice_names_ooxml_are_the_shapes_they_are(kind,
 def test_an_empty_notes_page_is_not_something_the_model_leaves_out():
     plain = ellipse().replace(' draw:style-name="gr2"', "")  # no style: nothing else to report
     assert odp_import_losses(an_odp(page(plain + EMPTY_NOTES))) == ()
-    assert [loss.kind for loss in odp_import_losses(an_odp(page(plain + NOTES)))] == ["notes"]
+    assert odp_to_slides(an_odp(page(plain + EMPTY_NOTES))).notes == {}
+
+
+def test_notes_are_in_the_model_so_they_are_not_left_out():
+    plain = ellipse().replace(' draw:style-name="gr2"', "")
+    data = an_odp(page(plain + NOTES))
+    assert odp_import_losses(data) == ()
+    assert odp_to_slides(data).notes_of("s1") == "Say this slowly."
 
 
 def libreoffice_text_box(style: str, words: str = "<text:p>Hi</text:p>") -> str:
@@ -395,7 +405,7 @@ def test_an_object_that_cannot_be_placed_is_not_in_the_model_and_is_reported(mar
 
 def test_what_the_model_does_not_show_is_reported():
     kinds = {loss.kind: loss.count for loss in odp_import_losses(RICH)}
-    assert kinds == {"picture": 1, "table": 1, "notes": 1, "look": 3}
+    assert kinds == {"picture": 1, "table": 1, "look": 3}
 
 
 def test_other_things_on_a_slide_are_reported_by_what_they_are():
@@ -593,7 +603,9 @@ def test_a_removed_slide_and_what_was_on_it_are_reported():
     drop(current)
     edited = apply_edits_to_odp(RICH, baseline, current, losses=log)
     assert len(pages_of(edited)) == 1
-    assert {loss.kind for loss in log.result()} >= {"removed-picture", "removed-table", "removed-notes"}
+    kinds = {loss.kind for loss in log.result()}
+    assert kinds >= {"removed-picture", "removed-table"}
+    assert "removed-notes" not in kinds  # the notes were in the model: a person saw them go with the slide
 
 
 def test_a_new_slide_goes_where_it_is_with_the_master_of_its_neighbour():
@@ -719,3 +731,224 @@ def test_random_moves_and_retexts_always_give_the_edited_deck_and_leave_the_rest
         for kept in (PICTURE, TABLE, NOTES):
             assert kept in new
         assert new.startswith(old[: old.index("<draw:page")])
+
+
+# -- speaker notes (D293, D298) and planned times (D294) -----------------------------------------------------------
+TEXT_STYLES = (
+    '<style:style style:name="Tb" style:family="text"><style:text-properties fo:font-weight="bold"/></style:style>'
+    '<style:style style:name="Ti" style:family="text"><style:text-properties fo:font-style="italic"/></style:style>'
+    '<style:style style:name="Tbi" style:family="text" style:parent-style-name="Tb">'
+    '<style:text-properties fo:font-style="italic"/></style:style>'
+    '<text:list-style style:name="Lb"><text:list-level-style-bullet text:level="1"/></text:list-style>'
+    '<text:list-style style:name="Ln"><text:list-level-style-number text:level="1"/></text:list-style>'
+)
+
+
+def notes_with(words: str, kind: str = "notes") -> str:
+    return (
+        f'<presentation:notes><draw:page-thumbnail/><draw:frame presentation:class="{kind}"><draw:text-box>{words}'
+        "</draw:text-box></draw:frame></presentation:notes>"
+    )
+
+
+def notes_of_file(words: str, kind: str = "notes") -> str:
+    return odp_to_slides(an_odp(page(notes_with(words, kind)), automatic=TEXT_STYLES)).notes_of("s1")
+
+
+def test_the_paragraphs_of_the_notes_frame_are_the_lines_of_the_notes():
+    assert notes_of_file("<text:p>one</text:p><text:p/><text:p>two</text:p>") == "one\n\ntwo"
+
+
+def test_bold_and_italic_spans_come_in_as_markdown():
+    words = (
+        '<text:p>Say <text:span text:style-name="Tb">this</text:span> '
+        '<text:span text:style-name="Ti">slowly</text:span> and <text:span text:style-name="Tbi">twice</text:span>'
+        "</text:p>"
+    )
+    assert notes_of_file(words) == "Say **this** *slowly* and ***twice***"
+
+
+def test_spaces_and_line_breaks_of_the_file_are_kept():
+    assert notes_of_file("<text:p>a<text:s text:c='3'/>b<text:line-break/>c</text:p>") == "a   b\nc"
+
+
+def test_a_list_of_the_file_comes_in_as_a_markdown_list():
+    bullets = (
+        '<text:list text:style-name="Lb"><text:list-item><text:p>one</text:p></text:list-item><text:list-item>'
+        "<text:list><text:list-item><text:p>two</text:p></text:list-item></text:list></text:list-item></text:list>"
+    )
+    numbers = '<text:list text:style-name="Ln"><text:list-item><text:p>first</text:p></text:list-item></text:list>'
+    assert notes_of_file(bullets) == "- one\n  - two"
+    assert notes_of_file(numbers) == "1. first"
+
+
+def test_words_with_markdown_marks_in_them_come_in_as_the_words_they_are():
+    assert notes_of_file("<text:p>2 * 3 and _x_</text:p>") == "2 \\* 3 and \\_x\\_"
+
+
+def test_only_the_notes_frame_is_the_notes():
+    assert notes_of_file("<text:p>&lt;number&gt;</text:p>", "page-number") == ""
+    assert notes_of_file("<text:p>the slide</text:p>", "page") == ""
+
+
+def test_notes_too_long_for_the_model_stay_in_the_file_and_are_reported():
+    data = an_odp(page(notes_with("<text:p>" + "x" * 20001 + "</text:p>")))
+    assert odp_to_slides(data).notes == {}
+    assert [(loss.kind, loss.detail) for loss in odp_import_losses(data)] == [("notes", "too-long")]
+
+
+def test_a_slide_with_notes_has_them_after_its_objects_in_a_notes_frame():
+    model = a_deck()
+    model.set_notes("s1", "Open with **the story**")
+    first, second = pages_of(slides_to_odp(model))
+    assert [etree.QName(child).localname for child in first] == ["frame", "ellipse", "notes"]
+    assert [etree.QName(child).localname for child in second] == ["rect", "custom-shape"]
+    frame = first[-1].find("draw:frame", NS)
+    assert frame.get(f"{{{NS['presentation']}}}class") == "notes"
+    assert frame.find("draw:text-box/text:p/text:span", NS).text == "the story"
+    assert odp_to_slides(slides_to_odp(model)).notes_of("s1") == "Open with **the story**"
+
+
+def test_exported_notes_make_a_valid_file_that_reads_back():
+    model = a_deck()
+    model.set_notes("s1", "Open with **the story**\n\n- one\n  - two\n1. three\n*soft* end")
+    model.set_notes("s2", "plain")
+    data = slides_to_odp(model)
+    assert problems(data) == []
+    again = odp_to_slides(data)
+    assert again.notes == model.notes
+    assert not {loss.kind for loss in odp_import_losses(data)} & {"notes", "formatting", "link"}
+
+
+def test_bold_and_italic_are_automatic_text_styles_that_say_so():
+    model = a_deck()
+    model.set_notes("s1", "**b** and *i*")
+    root = tree(slides_to_odp(model))
+    spans = root.findall(".//presentation:notes//text:span", NS)
+    styles = {
+        span.get(f"{{{NS['text']}}}style-name"): "".join(span.itertext())
+        for span in spans
+        if span.get(f"{{{NS['text']}}}style-name")
+    }
+    assert sorted(styles.values()) == ["b", "i"]
+    properties = {
+        style.get(f"{{{NS['style']}}}name"): style.find("style:text-properties", NS).attrib
+        for style in root.findall("office:automatic-styles/style:style[@style:family='text']", NS)
+    }
+    assert {value for name in styles for value in properties[name].values()} == {"bold", "italic"}
+
+
+def test_notes_that_the_file_shows_only_as_words_are_reported_by_what_they_used():
+    model = a_deck()
+    model.set_notes("s1", "see [the plan](https://example.org) and `code`")
+    model.set_notes("s2", "[more](https://example.org/2)")
+    losses = {(loss.kind, loss.count) for loss in odp_export_losses(model) if loss.kind.startswith("notes")}
+    assert losses == {("notes-link", 2), ("notes-code", 1)}
+
+
+def test_planned_times_are_reported_as_not_in_the_file():
+    model = a_deck()
+    model.set_time("s1", 120)
+    model.set_time("s2", 60)
+    assert {(loss.kind, loss.count) for loss in odp_export_losses(model) if loss.kind == "planned-time"} == {
+        ("planned-time", 2)
+    }
+    assert b"120" not in read_parts(slides_to_odp(model))["content.xml"]
+
+
+def test_a_deck_without_notes_or_times_loses_no_notes_or_times_on_export():
+    assert {loss.kind for loss in odp_export_losses(a_deck())} == {"authorship"}  # the fixture's words are authored
+
+
+def test_changed_notes_replace_only_the_words_of_the_notes_frame():
+    edited, _, _ = edit(RICH, lambda model: model.set_notes("s1", "Say this faster"))
+    old, new = content(RICH), content(edited)
+    assert odp_to_slides(edited).notes_of("s1") == "Say this faster"
+    assert problems(edited) == []
+    before = old.index("<presentation:notes>")
+    assert old[:before] == new[:before]  # every byte up to the notes is the original's
+    assert "<draw:page-thumbnail/>" in new and PICTURE in new and TABLE in new
+
+
+def test_first_notes_go_into_the_empty_notes_page_the_file_has():
+    data = an_odp(page(ellipse() + EMPTY_NOTES))
+    edited, _, _ = edit(data, lambda model: model.set_notes("s1", "now there are"))
+    assert odp_to_slides(edited).notes_of("s1") == "now there are"
+    assert content(edited).count("<presentation:notes>") == 1
+
+
+def test_first_notes_make_a_notes_page_at_the_end_of_a_slide_that_has_none():
+    edited, _, _ = edit(RICH, lambda model: model.set_notes("s2", "second slide"))
+    names = [etree.QName(child).localname for child in pages_of(edited)[1]]
+    assert names[-1] == "notes"
+    assert odp_to_slides(edited).notes_of("s2") == "second slide"
+    assert problems(edited) == []
+
+
+def test_first_notes_and_a_new_object_on_the_same_slide_keep_their_order():
+    def change(model: SlideModel) -> None:
+        model.set_notes("s2", "second slide")
+        model.insert_object(an_object("o9", "s2", "text", 100, 100, 200, 100, "body-text", "new"))
+
+    edited, _, _ = edit(RICH, change)
+    names = [etree.QName(child).localname for child in pages_of(edited)[1]]
+    assert names[-2:] == ["frame", "notes"] or names[-2:] == ["custom-shape", "notes"]
+    assert odp_to_slides(edited).notes_of("s2") == "second slide"
+    assert problems(edited) == []
+
+
+def test_first_notes_on_an_empty_page_open_it_for_the_notes():
+    data = an_odp('<draw:page draw:name="p" draw:master-page-name="Default"/>')
+    edited, _, _ = edit(data, lambda model: model.set_notes("s1", "alone"))
+    assert odp_to_slides(edited).notes_of("s1") == "alone"
+    assert problems(edited) == []
+
+
+def test_a_notes_page_without_a_notes_frame_gets_one():
+    data = an_odp(page(ellipse() + "<presentation:notes><draw:page-thumbnail/></presentation:notes>"))
+    edited, _, _ = edit(data, lambda model: model.set_notes("s1", "framed"))
+    assert odp_to_slides(edited).notes_of("s1") == "framed"
+    assert content(edited).count("<presentation:notes>") == 1
+
+
+def test_cleared_notes_leave_an_empty_notes_page():
+    edited, _, _ = edit(RICH, lambda model: model.set_notes("s1", ""))
+    assert odp_to_slides(edited).notes == {}
+    assert "Say this slowly." not in content(edited) and "<draw:page-thumbnail/>" in content(edited)
+
+
+def test_a_new_slide_comes_with_its_notes():
+    def add(model: SlideModel) -> None:
+        model.insert_slide("s3", notes="third **one**")
+
+    edited, _, _ = edit(RICH, add)
+    assert odp_to_slides(edited).notes_of("s3") == "third **one**"
+    assert problems(edited) == []
+
+
+def test_a_new_slide_in_a_deck_without_slides_comes_with_its_notes():
+    empty = an_odp("")
+    baseline, current = odp_to_slides(empty), odp_to_slides(empty)
+    current.set_notes("s1", "first slide, first words")
+    current.insert_object(an_object("o1", "s1", "text", 100, 100, 200, 100, "body-text", "x"))
+    edited = apply_edits_to_odp(empty, baseline, current)
+    assert odp_to_slides(edited).notes_of("s1") == "first slide, first words"
+
+
+def test_notes_the_model_could_not_read_are_not_replaced():
+    data = an_odp(page(ellipse() + notes_with("<text:p>" + "x" * 20001 + "</text:p>")))
+    baseline, current = odp_to_slides(data), odp_to_slides(data)
+    current.set_notes("s1", "short")
+    with pytest.raises(UnsupportedEdit, match="notes"):
+        apply_edits_to_odp(data, baseline, current)
+
+
+def test_a_changed_planned_time_changes_nothing_in_the_file():
+    edited, _, _ = edit(RICH, lambda model: model.set_time("s1", 90))
+    assert edited == RICH
+
+
+def test_bold_notes_add_one_text_style_and_the_notes_frame_keeps_its_place():
+    edited, _, _ = edit(RICH, lambda model: model.set_notes("s1", "Say this **fast**"))
+    assert odp_to_slides(edited).notes_of("s1") == "Say this **fast**"
+    assert content(edited).count('style:family="text"') == 1 and problems(edited) == []

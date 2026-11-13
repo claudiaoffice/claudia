@@ -404,3 +404,77 @@ describe('selecting', () => {
     expect(link.last('presence').regions).toEqual([])
   })
 })
+
+
+describe('speaker notes and planned times (D293, D294)', () => {
+  async function planned() {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.slides = () => [
+      { id: 's1', objects: 0, seconds: 120, has_notes: true },
+      { id: 's2', objects: 0, seconds: null, has_notes: false },
+      { id: 's3', objects: 0, seconds: 30, has_notes: false },
+    ]
+    link.handlers.slide = ({ slide }) => ({
+      revision: 'main:0',
+      slide,
+      objects: [],
+      notes: slide === 's1' ? 'Open with **the story**' : '',
+      seconds: { s1: 120, s2: null, s3: 30 }[slide as string],
+    })
+    link.handlers.set_slide_notes = () => ({ revision: 'main:3' })
+    link.handlers.set_slide_time = () => ({ revision: 'main:4' })
+    const session = new SlideSession(() => link, { retryDelays: [1] })
+    await session.open()
+    return { link, session, state: session.state }
+  }
+
+  it('loads the notes and the planned time of every slide', async () => {
+    const { session } = await planned()
+    expect(session.notesOf('s1')).toBe('Open with **the story**')
+    expect(session.notesOf('s2')).toBe('')
+    expect(session.secondsOf('s1')).toBe(120)
+    expect(session.secondsOf('s2')).toBeNull()
+  })
+  it('adds up the planned times, and says how many slides have none', async () => {
+    const { session } = await planned()
+    expect(session.plan()).toEqual({ seconds: 150, planned: 2, unplanned: 1 })
+  })
+  it('follows a colleague who changes notes or a time', async () => {
+    const { link, session } = await planned()
+    link.push('slide_notes', { type: 'slide_notes', slide: 's2', notes: 'now there are some' })
+    link.push('slide_time', { type: 'slide_time', slide: 's2', seconds: 45 })
+    expect(session.notesOf('s2')).toBe('now there are some')
+    expect(session.secondsOf('s2')).toBe(45)
+    link.push('slide_notes', { type: 'slide_notes', slide: 's1', notes: '' })
+    link.push('slide_time', { type: 'slide_time', slide: 's1', seconds: null })
+    expect(session.notesOf('s1')).toBe('')
+    expect(session.secondsOf('s1')).toBeNull()
+    expect(session.plan()).toEqual({ seconds: 75, planned: 2, unplanned: 1 })
+  })
+  it('sends changed notes against the revision it knows', async () => {
+    const { link, session } = await planned()
+    expect(await session.setNotes('s2', 'Remember the demo')).toBe(true)
+    expect(link.last('set_slide_notes')).toEqual({ slide: 's2', notes: 'Remember the demo', base: 'main:0' })
+  })
+  it('sends a planned time, and null to clear it', async () => {
+    const { link, session } = await planned()
+    expect(await session.setTime('s2', 90)).toBe(true)
+    expect(link.last('set_slide_time')).toEqual({ slide: 's2', seconds: 90, base: 'main:0' })
+    expect(await session.setTime('s1', null)).toBe(true)
+    expect(link.last('set_slide_time')).toEqual({ slide: 's1', seconds: null, base: 'main:0' })
+  })
+  it('does not ask a viewer\'s server to change anything', async () => {
+    const { link, session, state } = await planned()
+    state.me.role = 'viewer'
+    expect(await session.setNotes('s1', 'x')).toBe(false)
+    expect(await session.setTime('s1', 5)).toBe(false)
+    expect(link.count('set_slide_notes') + link.count('set_slide_time')).toBe(0)
+  })
+  it('copes with a server that does not know notes or times', async () => {
+    const { session } = await opened()
+    expect(session.notesOf('s1')).toBe('')
+    expect(session.secondsOf('s1')).toBeNull()
+    expect(session.plan()).toEqual({ seconds: 0, planned: 0, unplanned: 1 })
+  })
+})

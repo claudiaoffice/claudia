@@ -60,6 +60,7 @@ def test_creates_has_a_model_driven_ai_with_the_writes_of_d265():
     assert model_assistant_for(SlideModel, ModelRunner(FakeModel(), timeout=1)) is not None
     assert set(MODEL_METHODS["creates"]) == {
         "add_slide",
+        "set_slide_notes",
         "add_object",
         "set_text",
         "set_paragraph_style",
@@ -68,6 +69,7 @@ def test_creates_has_a_model_driven_ai_with_the_writes_of_d265():
         "remove_object",
     }
     assert not {"add_image", "export_office", "set_snap", "rotate_object"} & set(MODEL_METHODS["creates"])
+    assert "set_slide_time" not in MODEL_METHODS["creates"], "people plan the time (D294)"
 
 
 def test_the_model_is_shown_the_slides_and_puts_a_text_box_on_one():

@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Creates methods `set_slide_notes(slide, notes, base?)` and `set_slide_time(slide, seconds, base?)` (D293, D294).
+  `slides` answers each slide as `{id, objects, seconds, has_notes}` and `slide` adds `notes` and `seconds`. The AI
+  may write notes (`set_slide_notes`) but not planned times.
+
 ### Security
 - Every HTTP answer carries a `Content-Security-Policy` (scripts from this server and the start page's inline scripts
   by hash, connections to this server and its WebSocket, `object-src 'none'`, `base-uri 'none'`, framing only by the

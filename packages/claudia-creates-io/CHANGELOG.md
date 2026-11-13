@@ -5,6 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Speaker notes (D293, D298) in both formats, in one shared converter (`claudia_creates_io._notes`): Markdown with
+  bold, italic and lists (bullets as "• " lines, two spaces a level) to and from the runs of a notes page. PPTX: the
+  notes slide, also where another program put the notes in a plain text box; ODP: `presentation:notes` with its notes
+  frame. `apply_edits_to_pptx` and `apply_edits_to_odp` patch notes in an existing file in place and leave what they
+  do not own untouched; notes that cannot be read back (too long, or a shape the converter does not know) make the
+  edit `UnsupportedEdit` rather than lose them.
+- Losses: `notes-<feature>` for what the Markdown subset flattens (links, images, code, quotes), `("notes",
+  "too-long")` for notes over `MAX_NOTES_LENGTH` on import, and `planned-time` on ODP export (the number of slides that
+  had a planned time, which neither format has a place for, D294).
+
 ### Changed
 - `pptx_to_slides` gives an imported text box's box the `plain-box` style; its words stay `body-text` (D310).
 - `pptx_to_slides` gives an imported autoshape's words the `shape-label` style; the shape itself keeps

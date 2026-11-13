@@ -38,6 +38,10 @@ from .styles import builtin_styles
 SLIDE_WIDTH = 1600
 SLIDE_HEIGHT = 900
 FIRST_SLIDE = "s1"  # the slide of a new presentation
+#: The longest speaker notes of a slide, in characters (D293): a page of text, not a manuscript.
+MAX_NOTES_LENGTH = 20000
+#: The longest planned time of a slide, in seconds: one day (D294).
+MAX_SLIDE_SECONDS = 86400
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
 
@@ -45,6 +49,24 @@ _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
 def _is_whole(value: object) -> TypeIs[int]:
     """``True`` for a plain ``int`` (not a ``bool``), narrowing the type for the caller."""
     return type(value) is int
+
+
+def _checked_notes(text: object) -> str:
+    """The notes as they are kept: line ends as ``\\n``; ``ValueError`` if they are not text we keep."""
+    if not isinstance(text, str):
+        raise ValueError("notes are text")
+    if "\x00" in text:
+        raise ValueError("notes must not contain a null character")
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    if len(text) > MAX_NOTES_LENGTH:
+        raise ValueError(f"notes are at most {MAX_NOTES_LENGTH} characters")
+    return text
+
+
+def _check_seconds(seconds: object) -> None:
+    """``ValueError`` unless ``seconds`` is a whole number from 1 to a day."""
+    if not _is_whole(seconds) or not 1 <= seconds <= MAX_SLIDE_SECONDS:
+        raise ValueError(f"a planned time is a whole number of seconds from 1 to {MAX_SLIDE_SECONDS}")
 
 
 @dataclass(frozen=True)
@@ -93,7 +115,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     app: ClassVar[str] = "creates"
     # 6: the presentation carries its own colour palette (D200)
     # 7: how it is printed, and its language (D917)
-    state_schema: ClassVar[int] = 7
+    # 8: speaker notes (Markdown, D293) and planned times (D294) of the slides
+    state_schema: ClassVar[int] = 8
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -105,6 +128,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     ) -> None:
         super().__init__()
         self.slides: list[str] = []
+        #: The speaker notes of the slides that have any, as written in Markdown (D293).
+        self.notes: dict[str, str] = {}
+        #: The planned time of the slides that have one, in whole seconds (D294).
+        self.times: dict[str, int] = {}
         #: How the slides are printed, as a layout and a page (D917).
         self.print_setup: PrintSetup = print_setup if print_setup is not None else PrintSetup()
         #: The language of the presentation, a BCP 47 tag, or ``None`` when it is not known (D915, D917).
@@ -124,6 +151,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     def serialize(self) -> dict:
         return {
             "slides": list(self.slides),
+            "notes": dict(self.notes),
+            "times": dict(self.times),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
             "shapes": self.shapes_to_data(),
@@ -143,6 +172,9 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.slides = list(state["slides"])
         for slide in model.slides:
             model.open_container(slide)
+        # schema 7 and earlier: no notes and no planned times
+        model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.slides and v}
+        model.times = {k: v for k, v in state.get("times", {}).items() if k in model.slides}
         model.restore_objects(state["objects"], state["images"], state["shapes"])
         return model
 
@@ -171,16 +203,24 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return self.get_object(object_id)
 
     # -- slides ----------------------------------------------------------------
-    def insert_slide(self, slide: str, at: int | None = None) -> None:
-        """Add a slide at position ``at`` (the end by default)."""
+    def insert_slide(self, slide: str, at: int | None = None, notes: str = "", seconds: int | None = None) -> None:
+        """Add a slide at position ``at`` (the end by default), optionally with its notes and planned time (which is
+        how undoing the removal of a slide gives them back)."""
         if not _ID.fullmatch(slide):
             raise ValueError(f"slide id {slide!r}: lower-case letters, digits, '-' and '_', starting with a letter")
         if slide in self.slides:
             raise ValueError(f"slide {slide!r} exists already")
         if at is not None and not 0 <= at <= len(self.slides):
             raise ValueError(f"there is no place {at} among {len(self.slides)} slides")
+        notes = _checked_notes(notes)
+        if seconds is not None:
+            _check_seconds(seconds)
         self.slides.insert(len(self.slides) if at is None else at, slide)
         self.open_container(slide)
+        if notes:
+            self.notes[slide] = notes
+        if seconds is not None:
+            self.times[slide] = seconds
 
     def delete_slide(self, slide: str) -> int:
         """Remove an empty slide; returns the place it had."""
@@ -191,4 +231,47 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         place = self.slides.index(slide)
         del self.slides[place]
         self.close_container(slide)
+        self.notes.pop(slide, None)
+        self.times.pop(slide, None)
         return place
+
+    # -- notes and planned times (E10.2) -----------------------------------------
+    def notes_of(self, slide: str) -> str:
+        """The speaker notes of a slide, ``""`` if it has none; ``ValueError`` for an unknown slide."""
+        self._require_slide(slide)
+        return self.notes.get(slide, "")
+
+    def set_notes(self, slide: str, text: str) -> str:
+        """Set the notes of a slide (``""`` clears them); returns the notes it had."""
+        self._require_slide(slide)
+        old = self.notes.get(slide, "")
+        text = _checked_notes(text)
+        if text:
+            self.notes[slide] = text
+        else:
+            self.notes.pop(slide, None)
+        return old
+
+    def time_of(self, slide: str) -> int | None:
+        """The planned time of a slide in seconds, ``None`` if it has none; ``ValueError`` for an unknown slide."""
+        self._require_slide(slide)
+        return self.times.get(slide)
+
+    def set_time(self, slide: str, seconds: int | None) -> int | None:
+        """Set the planned time of a slide (``None`` clears it); returns the time it had."""
+        self._require_slide(slide)
+        old = self.times.get(slide)
+        if seconds is None:
+            self.times.pop(slide, None)
+        else:
+            _check_seconds(seconds)
+            self.times[slide] = seconds
+        return old
+
+    def total_time(self) -> int:
+        """The planned times of all slides added up, in seconds; a slide without one counts as nothing."""
+        return sum(self.times.values())
+
+    def _require_slide(self, slide: str) -> None:
+        if slide not in self.slides:
+            raise ValueError(f"unknown slide {slide!r}")

@@ -4,6 +4,12 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.1] - unreleased
 
+### Changed
+- `src/generated/menu.creates.json` regenerated (E10.2, D295): View has **Present from the First Slide** (`F5`,
+  `Ctrl+Alt+P`), **Present from This Slide** (`Shift+F5`, `Ctrl+Alt+Shift+P`) and **Speaker Notes** (checkable,
+  `Ctrl+Alt+N`); Edit has **Plan the Time of This Slide…** (`Ctrl+Alt+D`). All are page actions: the page does the work,
+  the shell needs nothing new. F5 alone is not enough on a Mac (a system key there), hence the second chord.
+
 ### Fixed
 - **The window stayed on "Starting…" for ever** (first run on a real Mac, 2026-11-10/11). Two causes, found one after the
   other with the core's own log. (1) The core only knew its app from the environment variable `CLAUDIA_SHELL_APP`, which

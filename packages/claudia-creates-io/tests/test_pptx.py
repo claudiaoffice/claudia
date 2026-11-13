@@ -353,3 +353,173 @@ def test_changing_a_role_changes_what_the_exported_file_holds():
     model.palette.set_colour("accent", "#008080")
     reopened = pptx.Presentation(BytesIO(slides_to_pptx(model)))
     assert reopened.slides[1].shapes[0].line.color.rgb == RGBColor.from_string("008080")
+
+
+# -- speaker notes (D293, D298) and planned times (D294) -----------------------------------------------------------
+def _notes_of(prs, index):
+    """The notes of a slide as ``(text, bold flags per run)`` per paragraph, or ``None`` if it has no notes page."""
+    slide = prs.slides[index]
+    if not slide.has_notes_slide:
+        return None
+    frame = slide.notes_slide.notes_text_frame
+    return [(p.text, [bool(r.font.bold) for r in p.runs]) for p in frame.paragraphs]
+
+
+def test_notes_come_out_as_the_notes_of_their_slide():
+    model = two_slide_deck()
+    model.set_notes("s1", "Open with the story\nThen **the numbers**")
+    prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
+    assert _notes_of(prs, 0) == [("Open with the story", [False]), ("Then the numbers", [False, True])]
+    assert _notes_of(prs, 1) is None  # no notes, no empty notes page
+
+
+def test_notes_lists_come_out_as_lines_with_a_bullet():
+    model = two_slide_deck()
+    model.set_notes("s1", "- one\n  - two\n1. three")
+    prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
+    assert [text for text, _ in _notes_of(prs, 0)] == ["• one", "  • two", "1. three"]
+
+
+def test_notes_come_in_as_markdown():
+    model = two_slide_deck()
+    model.set_notes("s1", "Say **hello**\n\n- one\n- two")
+    model.set_notes("s2", "*soft* words")
+    imported = pptx_to_slides(slides_to_pptx(model))
+    assert imported.notes_of("s1") == "Say **hello**\n\n- one\n- two"
+    assert imported.notes_of("s2") == "*soft* words"
+
+
+def test_a_deck_without_notes_comes_in_without_any():
+    imported = pptx_to_slides(slides_to_pptx(two_slide_deck()))
+    assert imported.notes == {}
+
+
+def test_real_bullets_of_a_notes_page_come_in_as_a_list():
+    prs = pptx.Presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    frame = slide.notes_slide.notes_text_frame
+    frame.text = "Points"
+    for text, level in (("first", 0), ("nested", 1)):
+        paragraph = frame.add_paragraph()
+        paragraph.text = text
+        paragraph.level = level
+        properties = paragraph._p.get_or_add_pPr()
+        etree.SubElement(properties, "{http://schemas.openxmlformats.org/drawingml/2006/main}buChar").set("char", "-")
+    out = BytesIO()
+    prs.save(out)
+    assert pptx_to_slides(out.getvalue()).notes_of("s1") == "Points\n- first\n  - nested"
+
+
+def test_notes_that_are_too_long_to_hold_are_left_in_the_file_and_out_of_the_model():
+    prs = pptx.Presentation()
+    prs.slides.add_slide(prs.slide_layouts[6]).notes_slide.notes_text_frame.text = "x" * 20001
+    out = BytesIO()
+    prs.save(out)
+    assert pptx_to_slides(out.getvalue()).notes == {}
+
+
+def test_planned_times_are_not_in_the_file():
+    """A planned time is not a slide timing (that advances the slide on its own): it travels in claudia's format."""
+    model = two_slide_deck()
+    model.set_time("s1", 120)
+    with zipfile.ZipFile(BytesIO(slides_to_pptx(model))) as z:
+        slide_xml = z.read("ppt/slides/slide1.xml")
+    assert b"<p:timing" not in slide_xml and b"advTm" not in slide_xml
+
+
+def _deck_with_notes_and_a_table() -> bytes:
+    prs = pptx.Presentation()
+    prs.slide_width, prs.slide_height = _DECK_WIDTH, _DECK_HEIGHT
+    first = prs.slides.add_slide(prs.slide_layouts[6])
+    first.shapes.add_textbox(Emu(762_000), Emu(762_000), Emu(3_048_000), Emu(762_000)).text_frame.text = "First"
+    first.shapes.add_table(1, 1, Emu(762_000), Emu(2_286_000), Emu(3_048_000), Emu(762_000)).table.cell(0, 0).text = "A"
+    first.notes_slide.notes_text_frame.text = "old notes"
+    second = prs.slides.add_slide(prs.slide_layouts[6])
+    second.shapes.add_picture(BytesIO(_RED_PNG), Emu(762_000), Emu(762_000), Emu(1_524_000), Emu(1_524_000))
+    out = BytesIO()
+    prs.save(out)
+    return out.getvalue()
+
+
+def test_apply_edits_changes_the_notes_and_keeps_everything_else():
+    original = _deck_with_notes_and_a_table()
+    baseline, current = pptx_to_slides(original), pptx_to_slides(original)
+    assert baseline.notes_of("s1") == "old notes"
+    current.set_notes("s1", "new **notes**")
+
+    edited = apply_edits_to_pptx(original, baseline, current)
+    assert pptx_to_slides(edited).notes_of("s1") == "new **notes**"
+    reopened = pptx.Presentation(BytesIO(edited))
+    assert reopened.slides[0].shapes[1].table.cell(0, 0).text == "A"
+    with zipfile.ZipFile(BytesIO(original)) as before, zipfile.ZipFile(BytesIO(edited)) as after:
+        assert before.read("ppt/slides/slide2.xml") == after.read("ppt/slides/slide2.xml")
+        assert before.read("ppt/slides/slide1.xml") == after.read("ppt/slides/slide1.xml")
+        assert before.read("ppt/media/image1.png") == after.read("ppt/media/image1.png")
+
+
+def test_apply_edits_gives_a_slide_its_first_notes():
+    original = _deck_with_notes_and_a_table()
+    baseline, current = pptx_to_slides(original), pptx_to_slides(original)
+    current.set_notes("s2", "first words")
+
+    edited = apply_edits_to_pptx(original, baseline, current)
+    reopened = pptx.Presentation(BytesIO(edited))
+    assert _notes_of(reopened, 1) == [("first words", [False])]
+    assert _notes_of(reopened, 0)[0][0] == "old notes"
+    assert pptx_to_slides(edited).notes == {"s1": "old notes", "s2": "first words"}
+
+
+def test_apply_edits_clears_notes():
+    original = _deck_with_notes_and_a_table()
+    baseline, current = pptx_to_slides(original), pptx_to_slides(original)
+    current.set_notes("s1", "")
+    edited = apply_edits_to_pptx(original, baseline, current)
+    assert pptx_to_slides(edited).notes == {}
+
+
+def test_apply_edits_with_the_notes_untouched_changes_nothing_of_them():
+    original = _deck_with_notes_and_a_table()
+    baseline, current = pptx_to_slides(original), pptx_to_slides(original)
+    current.set_time("s1", 90)  # a planned time is not in the file: nothing to patch
+    edited = apply_edits_to_pptx(original, baseline, current)
+    with zipfile.ZipFile(BytesIO(original)) as before, zipfile.ZipFile(BytesIO(edited)) as after:
+        assert before.read("ppt/notesSlides/notesSlide1.xml") == after.read("ppt/notesSlides/notesSlide1.xml")
+
+
+def test_apply_edits_will_not_replace_notes_it_could_not_read():
+    prs = pptx.Presentation()
+    prs.slides.add_slide(prs.slide_layouts[6]).notes_slide.notes_text_frame.text = "x" * 20001
+    out = BytesIO()
+    prs.save(out)
+    original = out.getvalue()
+    baseline, current = pptx_to_slides(original), pptx_to_slides(original)
+    current.set_notes("s1", "short")
+    with pytest.raises(UnsupportedEdit, match="notes"):
+        apply_edits_to_pptx(original, baseline, current)
+
+
+def _deck_with_libreoffice_style_notes(text: str = "from libreoffice") -> bytes:
+    """LibreOffice writes the words of the notes in a plain text box on the notes page, not in the notes placeholder."""
+    prs = pptx.Presentation()
+    frame = prs.slides.add_slide(prs.slide_layouts[6]).notes_slide.notes_text_frame
+    frame.text = text
+    placeholder = frame._txBody.getparent()
+    placeholder.find(f"{{{PNS}}}nvSpPr/{{{PNS}}}nvPr").remove(placeholder.find(f".//{{{PNS}}}ph"))
+    out = BytesIO()
+    prs.save(out)
+    return out.getvalue()
+
+
+def test_notes_in_a_plain_text_box_of_the_notes_page_come_in_too():
+    assert pptx_to_slides(_deck_with_libreoffice_style_notes()).notes_of("s1") == "from libreoffice"
+
+
+def test_notes_in_a_plain_text_box_are_replaced_where_they_are():
+    original = _deck_with_libreoffice_style_notes()
+    baseline, current = pptx_to_slides(original), pptx_to_slides(original)
+    current.set_notes("s1", "changed **here**")
+    edited = apply_edits_to_pptx(original, baseline, current)
+    assert pptx_to_slides(edited).notes_of("s1") == "changed **here**"
+    assert len(pptx.Presentation(BytesIO(edited)).slides[0].notes_slide.shapes) == len(
+        pptx.Presentation(BytesIO(original)).slides[0].notes_slide.shapes
+    )

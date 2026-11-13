@@ -5,11 +5,11 @@ shapes    ShapeLibrary: outlines read from JSON files on disk that users can add
           ``claudia_core.shapes``)
 styles    BUILTIN_STYLES: the styles a presentation starts with, as core StyleDef entries in the document's own book
 model     SlideModel, SlideAnchor, SlideObject: slides, the slide space, and what is this app's own about an object
-commands  AddSlide, RemoveSlide, SetPrintSetup — everything about objects is shared and comes from ``claudia_core``,
-          and so is SetLanguage (D917)
+commands  AddSlide, RemoveSlide, SetSlideNotes, SetSlideTime, SetPrintSetup — everything about objects is shared
+          and comes from ``claudia_core``, and so is SetLanguage (D917)
 printing  PrintSetup: how the slides are printed, the layout and the kernel's PageSetup (D917)
-events    SlidesChanged, PrintSetupChanged (``ObjectsChanged``, ``ShapesChanged``, ``ImagesChanged`` are core's,
-          re-exported)
+events    SlidesChanged, SlideNotesChanged, SlideTimeChanged, PrintSetupChanged (``ObjectsChanged``,
+          ``ShapesChanged``, ``ImagesChanged`` are core's, re-exported)
 
 An object is a shared ``ObjectBody`` plus a ``SlideAnchor``: only the anchor is this app's. Placing, stacking,
 moving, resizing, rotating, styling and the image and shape assets are ``claudia_core.objects``, shared with
@@ -50,10 +50,20 @@ from claudia_core import (  # noqa: F401
 
 from . import commands  # noqa: F401  (registers the commands)
 from ._version import __version__
-from .commands import AddSlide, RemoveSlide, SetPrintSetup
-from .events import ImagesChanged, ObjectsChanged, PrintSetupChanged, ShapesChanged, SlidesChanged
+from .commands import AddSlide, RemoveSlide, SetPrintSetup, SetSlideNotes, SetSlideTime
+from .events import (
+    ImagesChanged,
+    ObjectsChanged,
+    PrintSetupChanged,
+    ShapesChanged,
+    SlideNotesChanged,
+    SlidesChanged,
+    SlideTimeChanged,
+)
 from .model import (
     FIRST_SLIDE,
+    MAX_NOTES_LENGTH,
+    MAX_SLIDE_SECONDS,
     SLIDE_HEIGHT,
     SLIDE_WIDTH,
     SlideAnchor,
@@ -82,6 +92,8 @@ __all__ = [
     "FORMAT",
     "ImagesChanged",
     "LAYOUTS",
+    "MAX_NOTES_LENGTH",
+    "MAX_SLIDE_SECONDS",
     "MoveObject",
     "ObjectBody",
     "PrintSetup",
@@ -100,6 +112,8 @@ __all__ = [
     "Run",
     "SetParagraphStyle",
     "SetPrintSetup",
+    "SetSlideNotes",
+    "SetSlideTime",
     "SetSnap",
     "SetText",
     "ShapeDefinition",
@@ -111,6 +125,8 @@ __all__ = [
     "SlideAnchor",
     "SlideModel",
     "SlideObject",
+    "SlideNotesChanged",
     "SlidesChanged",
+    "SlideTimeChanged",
     "VisualObject",
 ]

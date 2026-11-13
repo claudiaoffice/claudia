@@ -10,8 +10,11 @@ defineProps<{
   undoLabel: string
   redoLabel: string
   readonly: boolean
+  /** The shortcut the Present button names in its tool tip (`lib/present-keys.ts`), and its words. */
+  presentHint?: string
+  presentLabel?: string
 }>()
-defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; redo: [] }>()
+defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; redo: []; present: [] }>()
 </script>
 
 <template>
@@ -45,6 +48,11 @@ defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; re
         <svg viewBox="0 0 20 20" width="18" height="18"><path d="m13 5 4 4-4 4m4-4H9a5 5 0 0 0 0 10h2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
       </button>
     </div>
+    <!-- Starting the show is not an edit, so it stays open to a viewer too. -->
+    <button type="button" class="present" :title="`${presentLabel ?? 'Present'} (${presentHint ?? 'F5'})`" :aria-label="presentLabel ?? 'Present'" data-tool="present" @click="$emit('present')">
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M6 4.5v11l9-5.5z" fill="currentColor" /></svg>
+      <span>{{ presentLabel ?? 'Present' }}</span>
+    </button>
   </div>
 </template>
 
@@ -99,8 +107,26 @@ defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; re
   opacity: 0.5;
   cursor: default;
 }
+.present {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--app);
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.present:hover,
+.present:focus-visible {
+  background: color-mix(in srgb, var(--app) 82%, white);
+}
 @media (max-width: 736px) {
-  .tool span {
+  .tool span,
+  .present span {
     display: none;
   }
 }

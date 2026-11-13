@@ -3,6 +3,24 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.9.0] - 2026-11-13
+
+Speaker notes and planned times (E10.2, D293, D294).
+
+### Added
+- `SetSlideNotes(slide, notes)` (summary "edited the speaker notes of …"): the Markdown notes of a slide, at most
+  `MAX_NOTES_LENGTH` characters, `""` clears them; one step with its exact inverse; event
+  `{type: "slide_notes", slide, notes}` (`SlideNotesChanged`).
+- `SetSlideTime(slide, seconds)` (summary "planned 2:00 for a slide"): the planned time in whole seconds, 1 to
+  `MAX_SLIDE_SECONDS` (86 400), `None` clears it; one step with its exact inverse; event
+  `{type: "slide_time", slide, seconds}` (`SlideTimeChanged`).
+- `SlideModel.notes_of(slide)` and `time_of(slide)`; both are in the state and in the history, so they undo, redo and
+  come back from a checkpoint like anything else.
+
+### Changed
+- State schema 8 (was 7): `notes` and `times` per slide. An older document opens with none.
+- Removing a slide removes its notes and time, and undoing the removal brings them back.
+
 ## [0.8.0] - 2026-11-13
 
 How a presentation prints, and its language (D917).

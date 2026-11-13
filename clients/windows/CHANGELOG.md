@@ -9,6 +9,12 @@ parity with the Linux and macOS clients: all three apps, the same command line, 
 D241-D248. Branch `win-client-complete`. Everything here ran on Linux only; see the README's "Not verified".
 
 ### Changed
+- `src/generated/menu.creates.json` regenerated (E10.2, D295): View has **Present from the First Slide** (`F5`,
+  `Ctrl+Alt+P`), **Present from This Slide** (`Shift+F5`, `Ctrl+Alt+Shift+P`) and **Speaker Notes** (checkable,
+  `Ctrl+Alt+N`); Edit has **Plan the Time of This Slide…** (`Ctrl+Alt+D`). All are page actions: the page does the work,
+  the shell needs nothing new. F5 alone is not enough on a Mac (a system key there), hence the second chord.
+
+### Changed
 - **Architecture (D251, replaces D159).** Neutralino now shows its own static shell page
   (`apps/<app>/index.html`), the Claudia web app is framed in it, and the native parts (server checks, server
   list, settings, the local server) run in a Node extension (`ext/core.mjs`, `commandWindows` in the Neutralino

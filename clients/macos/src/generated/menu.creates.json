@@ -198,6 +198,16 @@
             "kind": "page",
             "label": "New Slide",
             "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "id": "edit.slide-time",
+            "kind": "page",
+            "label": "Plan the Time of This Slide\u2026",
+            "role": null
           }
         ],
         [
@@ -299,6 +309,40 @@
             "id": "view.dark",
             "kind": "page",
             "label": "Dark Mode",
+            "role": null
+          }
+        ],
+        [
+          {
+            "accelerators": [
+              "F5",
+              "<Primary><Alt>p"
+            ],
+            "checkable": false,
+            "id": "view.present-start",
+            "kind": "page",
+            "label": "Present from the First Slide",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Shift>F5",
+              "<Primary><Alt><Shift>p"
+            ],
+            "checkable": false,
+            "id": "view.present-here",
+            "kind": "page",
+            "label": "Present from This Slide",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>n"
+            ],
+            "checkable": true,
+            "id": "view.speaker-notes",
+            "kind": "page",
+            "label": "Speaker Notes",
             "role": null
           }
         ]

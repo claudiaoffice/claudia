@@ -19,6 +19,11 @@ picture already in a pptx read this way is not imported as claudia's own "image"
 an arbitrary embedded picture back into an :class:`~claudia_core.ImageAsset` is separate, not-yet-built work
 (unlike export, D213, this has no existing asset to fall back on) -- so it stays beyond-claudia content, same as
 a table or a chart.
+
+A slide's speaker notes are the notes page of its slide (D298): the Markdown of the model written as paragraphs of
+bold and italic runs (``_notes.py``) and read back the same way, and an edit to them is patched onto the original's
+notes page. A planned time (D294) is *not* written: the only time a pptx holds is the one that advances a slide by
+itself, which is not the time a person means to spend on it, so planned times travel in claudia's own format.
 """
 
 from __future__ import annotations
@@ -35,6 +40,7 @@ from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.util import Emu, Pt
 
 from claudia_creates import (
+    MAX_NOTES_LENGTH,
     SLIDE_HEIGHT,
     SLIDE_WIDTH,
     ObjectBody,
@@ -46,10 +52,12 @@ from claudia_creates import (
 )
 from claudia_opc_io import owns, reconcile
 
+from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 RNS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+ANS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 
 #: A 16:9 widescreen deck, the aspect ratio ``SLIDE_WIDTH``/``SLIDE_HEIGHT`` already is.
 _DECK_WIDTH, _DECK_HEIGHT = Emu(12_192_000), Emu(6_858_000)
@@ -133,6 +141,8 @@ def slides_to_pptx(model: SlideModel) -> bytes:
     page = page_colour(model)
     for slide_id in model.slides:
         slide = prs.slides.add_slide(layout)
+        if model.notes_of(slide_id):
+            _write_notes(slide, model.notes_of(slide_id))
         for obj in model.objects_on(slide_id):
             body, anchor = obj.body, obj.anchor
             box = (
@@ -163,6 +173,79 @@ def slides_to_pptx(model: SlideModel) -> bytes:
     out = BytesIO()
     prs.save(out)
     return out.getvalue()
+
+
+def _notes_frame(slide):  # noqa: ANN001, ANN202
+    """The text frame the notes of ``slide`` are in: the notes placeholder, or -- LibreOffice does not make one -- the
+    one plain text box of the notes page (the only shape on it that is not a placeholder and has words); ``None`` if
+    there is no such place."""
+    notes_slide = slide.notes_slide
+    if notes_slide.notes_text_frame is not None:
+        return notes_slide.notes_text_frame
+    boxes = [shape for shape in notes_slide.shapes if not shape.is_placeholder and shape.has_text_frame]
+    return boxes[0].text_frame if len(boxes) == 1 else None
+
+
+def _write_notes(slide, markdown: str) -> None:  # noqa: ANN001
+    """Put ``markdown`` (the notes of the model) on the notes page of ``slide``, replacing the words that were there;
+    a notes page is made if the slide has none. Raises :class:`UnsupportedEdit` for a notes page with no place for
+    words."""
+    frame = _notes_frame(slide)
+    if frame is None:
+        raise UnsupportedEdit("the notes page of this slide has no place for notes")
+    frame.clear()
+    lines, _ = markdown_to_lines(markdown)
+    for number, line in enumerate(lines):
+        paragraph = frame.paragraphs[0] if number == 0 else frame.add_paragraph()
+        for words in line:
+            run = paragraph.add_run()
+            run.text = words.text
+            if words.bold:
+                run.font.bold = True
+            if words.italic:
+                run.font.italic = True
+
+
+def _is_on(value: str | None) -> bool:
+    return value in ("1", "true")
+
+
+def _paragraph_lines(paragraph) -> list[Line]:  # noqa: ANN001
+    """The lines of one paragraph of a notes page: a line break starts a new line, a bullet or a number of the
+    paragraph is the text ``"\u2022 "`` or ``"1. "`` in front of its first line, two spaces for each level."""
+    lines: list[Line] = [[]]
+    for child in paragraph._p:  # noqa: SLF001 -- python-pptx has no public way to see a line break
+        tag = etree.QName(child.tag).localname if isinstance(child.tag, str) else ""
+        if tag in ("r", "fld"):
+            text = child.find(f"{{{ANS}}}t")
+            properties = child.find(f"{{{ANS}}}rPr")
+            bold = properties is not None and _is_on(properties.get("b"))
+            italic = properties is not None and _is_on(properties.get("i"))
+            lines[-1].append(Run(text.text or "" if text is not None else "", bold, italic))
+        elif tag == "br":
+            lines.append([])
+    properties = paragraph._p.pPr  # noqa: SLF001
+    if properties is not None:
+        mark = (
+            f"{BULLET} "
+            if properties.find(f"{{{ANS}}}buChar") is not None
+            else "1. "
+            if properties.find(f"{{{ANS}}}buAutoNum") is not None
+            else ""
+        )
+        if mark:
+            lines[0].insert(0, Run("  " * paragraph.level + mark))
+    return lines
+
+
+def _notes_markdown(slide) -> str:  # noqa: ANN001
+    """The notes page of ``slide`` as Markdown, ``""`` if there are none."""
+    if not slide.has_notes_slide:
+        return ""
+    frame = _notes_frame(slide)
+    if frame is None:
+        return ""
+    return lines_to_markdown(line for paragraph in frame.paragraphs for line in _paragraph_lines(paragraph))
 
 
 def _classify(shape) -> str | None:  # noqa: ANN001 (python-pptx's own shape classes are not exported as one type)
@@ -216,6 +299,9 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
     for slide_number, pptx_slide in enumerate(prs.slides, start=1):
         slide_id = f"s{slide_number}"
         model.insert_slide(slide_id)
+        notes = _notes_markdown(pptx_slide)
+        if 0 < len(notes) <= MAX_NOTES_LENGTH:  # longer is left in the file and out of the model (see the patch)
+            model.set_notes(slide_id, notes)
         for index in _modeled_shape_indices(pptx_slide):
             shape = pptx_slide.shapes[index]
             kind = _classify(shape)
@@ -269,6 +355,39 @@ def _slide_part(members: dict[str, bytes], slide_index: int) -> str:
     return _resolve_target("ppt", target)
 
 
+def _patch_notes(
+    prs,  # noqa: ANN001
+    members: dict[str, bytes],
+    slide_number: int,
+    baseline: SlideModel,
+    current: SlideModel,
+    slide_id: str,
+) -> set[str]:
+    """Write the notes of ``slide_id`` if they changed since ``baseline``; the names of the parts that holds
+    claudia's to rewrite, ``set()`` if the notes did not change. A first notes page for a slide is a new part, and
+    the slide's relationships and the content types have to say so, so those are claudia's too."""
+    then, now = baseline.notes_of(slide_id), current.notes_of(slide_id)
+    if then == now:
+        return set()
+    slide = prs.slides[slide_number]
+    if _notes_markdown(slide) != then:
+        raise UnsupportedEdit(
+            f"the notes of slide {slide_number + 1} are too long to be held, so they cannot be replaced in the file"
+        )
+    had_page = slide.has_notes_slide
+    _write_notes(slide, now)
+    if had_page:
+        return {str(slide.notes_slide.part.partname).lstrip("/")}
+    part = _slide_part(members, slide_number)
+    directory, _, name = part.rpartition("/")
+    return {
+        "[Content_Types].xml",
+        "ppt/presentation.xml",
+        "ppt/_rels/presentation.xml.rels",
+        f"{directory}/_rels/{name}.rels",
+    }
+
+
 def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: SlideModel) -> bytes:
     """Re-export ``current`` to pptx by patching only the slides whose objects actually changed since
     ``baseline`` (the model as it stood right after :func:`pptx_to_slides` imported ``original_bytes``) onto
@@ -282,7 +401,9 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
     Raises :class:`UnsupportedEdit` if a slide or an object was added, removed or reordered since ``baseline``,
     if the objects on a slide were reordered (stacking order is not one object's own field, so a per-object diff
     cannot see it), or if an object's kind or shape outline changed. Moving, resizing, retexting or restyling an
-    existing object is supported."""
+    existing object is supported, and so are the notes of a slide: they are written to its notes page (a slide's first
+    notes make one), and the notes page is the only part that changes -- unless the file's notes were too long for
+    the model to read, which are not replaced (:class:`UnsupportedEdit`)."""
     if baseline.slides != current.slides:
         raise UnsupportedEdit("adding, removing or reordering a slide cannot be patched onto the original file yet")
     baseline_by_id, current_by_id = dict(baseline.objects), dict(current.objects)
@@ -306,6 +427,7 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
 
     touched_parts: set[str] = set()
     for slide_number, slide_id in enumerate(baseline.slides):
+        touched_parts |= _patch_notes(prs, members, slide_number, baseline, current, slide_id)
         shape_indices = _modeled_shape_indices(prs.slides[slide_number])
         for position, object_id in enumerate(obj.id for obj in baseline.objects_on(slide_id)):
             before, after = baseline_by_id[object_id], current_by_id[object_id]

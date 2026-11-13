@@ -93,3 +93,43 @@ is for the owner's machines (README of the spike).
 are not printed yet); `SlideWorkspace.vue` for the View entries and the notes field; `SlideModel` for notes and times
 (state schema 8) and the wire methods; the ODP and PPTX writers and readers for notes; the three desktop shells for
 fullscreen and the second window (a contract message each); gettext entries for every label; an e2e test in Firefox.
+
+## What was built (2026-11-13, branch `presenter`)
+
+The decisions D291–D295 are implemented, in this order and with this result:
+
+- **Model and wire.** `SlideModel` state schema 8: `notes` (Markdown, at most `MAX_NOTES_LENGTH`) and `times` (whole
+  seconds 1 to `MAX_SLIDE_SECONDS`, 86 400), commands `SetSlideNotes` and `SetSlideTime` (one step each, with an exact
+  inverse), events `slide_notes` and `slide_time`, server methods `set_slide_notes` and `set_slide_time`; `slides`
+  answers `seconds` and `has_notes`, `slide` answers `notes` and `seconds`. The AI may write notes, not times.
+- **Files.** PPTX: the notes slide of every slide, bold, italic, bullets and numbers as the Markdown subset of D298, also
+  from files made by LibreOffice (which puts the notes in a plain text box). ODP: `presentation:notes` with its notes
+  frame. Both patch an existing file in place. Features the subset has no counterpart for are flattened and reported
+  as losses; planned times are not exported (`planned-time` loss for ODP, which says how many slides had one).
+- **Web.** `lib/show.ts` (the show's rules: slide, overview, blank, end, typed number, clock, pace; no DOM, tested in
+  Node), `lib/frozen.ts` (the deep copy a show runs on, D292), `lib/show-time.ts` (`2`, `2:30`, `90s`, `1h`),
+  `lib/notes-markdown.ts` (notes as lines of spans, never HTML), `lib/present-keys.ts`; components `PresentShow.vue`
+  (audience view, presenter view, overview), `SlideView.vue` (one frozen slide), `NotesText.vue`, `SlideNotes.vue`
+  (the field under the slide and the ⏱ chip with its popover). The View menu has Present from the first slide, Present
+  from this slide and Speaker notes; Edit has Plan the time of this slide…; the tool bar has the apricot Present button
+  (also for a viewer: showing writes nothing, D291); every slide tab carries its time and the bar below adds them up
+  ("Planned 3:30 · 1 without a time").
+- **Desktop shells.** The menu manifest has the same entries and accelerators, so the macOS and Windows menus
+  (`src/generated/menu.creates.json`) and the GTK menu show them; the page does the work (kind `page`).
+- **Text.** 70 new strings in `po/claudia.pot` with German in `po/de.po`.
+- **Tests.** Python: model, server, AI list, PPTX and ODP round trips, real LibreOffice conversions both ways. Web:
+  `show`, `frozen`, `show-time`, `notes-markdown`, `present-keys`, session. Browser: `e2e/present.cjs`
+  (`npm run e2e:present`; `BROWSER=firefox` for Firefox), which writes notes and times, runs the show with every
+  key, and checks that `F5` does not reload.
+
+### Safari on macOS (the owner's run of the spike)
+
+Fullscreen, a second window, three message channels at 1 ms, wake lock: all fine. **Window Management API absent. F5
+combinations are system keys on a Mac**, which led to the second chord of D295. Details in D296.
+
+### Not in this round
+
+The second audience window and shell fullscreen (D296, waiting for Firefox, GTK, Neutralino); the presence line while
+presenting (it needs the server to take a "presenting" flag with the presence); the Edit-menu time entry in the slide's
+context menu; a message in the export dialog that times travel only in Claudia's own format; per-slide timing
+against actual (D299, still undecided: the pace shown is the plain schedule difference).

@@ -538,7 +538,15 @@ def creates() -> Manifest:
         (
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
-            (_page("edit.new-slide", "New Slide", "Add a new slide to the presentation"),),
+            (
+                _page("edit.new-slide", "New Slide", "Add a new slide to the presentation"),
+                _page(
+                    "edit.slide-time",
+                    "Plan the Time of This Slide…",
+                    "How long you want to spend on this slide; the bar below the slides adds the times up",
+                    accelerators=("<Primary><Alt>d",),
+                ),
+            ),
             (
                 _page("edit.edit-text", "Edit Text", "Write in the selected text box"),
                 _page("edit.text-box", "Text Box", "Add a text box to the slide"),
@@ -566,7 +574,35 @@ def creates() -> Manifest:
             (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
         ),
     )
-    view_menu = Menu("View", (_shared_view_block(authors=False),))
+    view_menu = Menu(
+        "View",
+        (
+            _shared_view_block(authors=False),
+            # The show (E10.2, D295). F5 is a system key on a Mac and cannot be the only way in, so each entry also has
+            # a chord on a letter that every system leaves alone; the page handles both (``lib/present-keys.ts``).
+            (
+                _page(
+                    "view.present-start",
+                    "Present from the First Slide",
+                    "Show the presentation full screen, beginning with the first slide",
+                    accelerators=("F5", "<Primary><Alt>p"),
+                ),
+                _page(
+                    "view.present-here",
+                    "Present from This Slide",
+                    "Show the presentation full screen, beginning with the slide you are on",
+                    accelerators=("<Shift>F5", "<Primary><Alt><Shift>p"),
+                ),
+                _page(
+                    "view.speaker-notes",
+                    "Speaker Notes",
+                    "Show or hide the notes under the slide",
+                    accelerators=("<Primary><Alt>n",),
+                    checkable=True,
+                ),
+            ),
+        ),
+    )
     tools_menu = Menu("Tools", ((_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),))
     return Manifest(
         "creates",

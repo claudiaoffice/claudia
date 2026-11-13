@@ -1,5 +1,5 @@
 {
- "version": "0.8.0",
+ "version": "0.9.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -27,7 +27,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', at: 'int | None' = None) -> None",
+  "init": "(id: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'AddSlide'",
@@ -138,6 +138,12 @@
  },
  "LAYOUTS": {
   "value": "('slides', 'handouts-2', 'handouts-3', 'handouts-4', 'handouts-6', 'handouts-9')"
+ },
+ "MAX_NOTES_LENGTH": {
+  "value": "20000"
+ },
+ "MAX_SLIDE_SECONDS": {
+  "value": "86400"
  },
  "MoveObject": {
   "class": [
@@ -373,6 +379,41 @@
    "summary"
   ]
  },
+ "SetSlideNotes": {
+  "class": [
+   "Command"
+  ],
+  "init": "(slide: 'str', notes: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetSlideNotes'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetSlideTime": {
+  "class": [
+   "Command"
+  ],
+  "init": "(slide: 'str', seconds: 'int | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetSlideTime'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetSnap": {
   "class": [
    "Command"
@@ -476,15 +517,40 @@
    "delete_slide": "(self, slide: 'str') -> 'int'",
    "empty": "() -> 'Self'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
-   "insert_slide": "(self, slide: 'str', at: 'int | None' = None) -> 'None'",
+   "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None) -> 'None'",
+   "notes_of": "(self, slide: 'str') -> 'str'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "restore": "(state: 'dict') -> 'Self'",
-   "serialize": "(self) -> 'dict'"
+   "serialize": "(self) -> 'dict'",
+   "set_notes": "(self, slide: 'str', text: 'str') -> 'str'",
+   "set_time": "(self, slide: 'str', seconds: 'int | None') -> 'int | None'",
+   "time_of": "(self, slide: 'str') -> 'int | None'",
+   "total_time": "(self) -> 'int'"
+  },
+  "properties": []
+ },
+ "SlideNotesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(slide: 'str', notes: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
  "SlideObject": {
   "value": "<TypeAliasType>"
+ },
+ "SlideTimeChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(slide: 'str', seconds: 'int | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "SlidesChanged": {
   "class": [

@@ -250,7 +250,20 @@ def test_creates_edit_has_new_slide_edit_text_text_box_then_delete(creates: mani
     deliberately not a static manifest entry — see this module's own docstring and ``manifest.py``'s."""
     edit = creates.menu("Edit")
     tail = [e.label for e in entries(edit)[6:]]
-    assert tail == ["New Slide", "Edit Text", "Text Box", "Delete"]
+    assert tail == ["New Slide", "Plan the Time of This Slide…", "Edit Text", "Text Box", "Delete"]
+
+
+def test_creates_view_has_the_show_and_the_notes_each_with_a_chord_a_mac_leaves_alone(
+    creates: manifest.Manifest,
+) -> None:
+    """E10.2, D295: F5 is a system key on a Mac (the spike's Safari result), so every entry that starts the show
+    has a second chord on a letter, and the planned time has one too (every menu entry has a key)."""
+    view = {a.id: a for a in creates.menu("View").all_actions()}
+    assert view["view.present-start"].accelerators == ("F5", "<Primary><Alt>p")
+    assert view["view.present-here"].accelerators == ("<Shift>F5", "<Primary><Alt><Shift>p")
+    assert view["view.speaker-notes"].checkable is True
+    edit = {a.id: a for a in creates.menu("Edit").all_actions()}
+    assert edit["edit.slide-time"].accelerators == ("<Primary><Alt>d",)
 
 
 # ------------------------------------------------------------------------------------------------- ids and actions
@@ -310,6 +323,8 @@ def test_checkable_actions_are_the_view_toggles_and_the_language_picker(app: man
     language_ids = {f"config.language.{tag}" for tag, _label in manifest.LANGUAGES}
     if app.app == "composes":
         assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"} | language_ids
+    elif app.app == "creates":
+        assert checkable == {"view.authors", "view.panel", "view.dark", "view.speaker-notes"} | language_ids
     else:
         assert checkable == {"view.authors", "view.panel", "view.dark"} | language_ids
 

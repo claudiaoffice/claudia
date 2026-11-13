@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // A presentation: the slide, the tool bar to put things on it, the slides along the bottom and the panel.
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { insertFrame, type Frame } from '~/lib/geometry'
 import type { SlideSession } from '~/lib/slide-session'
 import { pasteAsPlainText } from '~/lib/clipboard'
@@ -22,10 +22,15 @@ import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
+import { onMac, presentHint, presentShortcuts } from '~/lib/present-keys'
+import { useNotesShown } from '~/lib/show-prefs'
+import { formatTime } from '~/lib/show-time'
 import DocumentFrame from './DocumentFrame.vue'
 import SlideCanvas from './SlideCanvas.vue'
 import ImageImportDialog from './ImageImportDialog.vue'
 import PrintPreview from './PrintPreview.vue'
+import PresentShow from './PresentShow.vue'
+import SlideNotes from './SlideNotes.vue'
 import { slideSource } from '~/lib/print/source'
 import { useCreatorLanguage, usePrint } from '~/lib/print/use-print'
 import type { Menu } from './MenuBar.vue'
@@ -52,12 +57,42 @@ const EXPORT_FORMATS = [
 
 const readonly = computed(() => state.me.role === 'viewer')
 
+// ------------------------------------------------------------------------------ the show and the notes (E10.2)
+// Presenting is read-only and local (D291): a viewer may do it too, and it writes nothing to the document.
+const { shown: notesShown, toggle: toggleNotes } = useNotesShown()
+const notes = ref<InstanceType<typeof SlideNotes> | null>(null)
+const presenting = ref<{ from: number } | null>(null)
+const mac = onMac()
+const plan = computed(() => session.plan())
+function present(from: 'start' | 'here') {
+  if (!state.slides.length || printing.value) return
+  presenting.value = { from: from === 'start' ? 0 : Math.max(here.value, 0) }
+}
+function endShow() {
+  presenting.value = null
+  canvas.value?.focus()
+}
+/** The time chip wants the notes field in view: shown if it was hidden. */
+async function planTime() {
+  if (readonly.value) return
+  notesShown.value = true
+  await nextTick()
+  void notes.value?.openTime()
+}
+
 // A new presentation starts in the language of its maker's interface (D915, D917); File ▸ Print… shows the pages in
 // place of the slide (D906, D918). Both as in every app that prints (`lib/print/use-print.ts`).
 useCreatorLanguage(session, () => locale.value)
 const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => canvas.value?.focus())
 const printSource = slideSource(session)
-const extraShortcuts = [PRINT]
+const extraShortcuts = [
+  PRINT,
+  ...presentShortcuts(
+    t,
+    { start: () => present('start'), here: () => present('here'), notes: toggleNotes, time: () => void planTime() },
+    { time: () => !readonly.value },
+  ),
+]
 const styling: ObjectStyling = {
   get readOnly() {
     return session.readOnly
@@ -181,6 +216,13 @@ const menus = computed<Menu[]>(() => {
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
         { id: 'edit.new-slide', label: t('New slide'), action: () => session.addSlide(), disabled: readonly.value },
+        {
+          id: 'edit.slide-time',
+          label: t('Plan the time of this slide…'),
+          hint: presentHint('time', mac),
+          action: () => planTime(),
+          disabled: readonly.value || !state.activeSlide,
+        },
         { label: '', separator: true },
         { id: 'edit.edit-text', label: t('Edit text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
         { id: 'edit.text-box', label: t('Text box'), action: () => addText(), disabled: readonly.value },
@@ -206,6 +248,18 @@ const menus = computed<Menu[]>(() => {
         },
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
         darkItem(c, { on: dark, toggle: toggleDark }),
+        { label: '', separator: true },
+        { id: 'view.present-start', label: t('Present from the first slide'), hint: presentHint('start', mac), action: () => present('start'), disabled: !state.slides.length },
+        { id: 'view.present-here', label: t('Present from this slide'), hint: presentHint('here', mac), action: () => present('here'), disabled: !state.slides.length },
+        {
+          id: 'view.speaker-notes',
+          label: t('Speaker notes'),
+          hint: presentHint('notes', mac),
+          checked: notesShown.value,
+          action: (x) => {
+            if (x === undefined || (x === 'on') !== notesShown.value) toggleNotes()
+          },
+        },
       ],
     },
     { label: t('Tools'), items: [askItem(c, (text) => frame.value?.ask(text))] },
@@ -246,6 +300,9 @@ const SHORTCUT_NOTES: [string, string][] = [
         :undo-label="state.undoLabel"
         :redo-label="state.redoLabel"
         :readonly="readonly"
+        :present-hint="presentHint('start', mac)"
+        :present-label="t('Present')"
+        @present="present('start')"
         @text="addText"
         @shape="addShape"
         @image="showImageDialog = true"
@@ -260,9 +317,13 @@ const SHORTCUT_NOTES: [string, string][] = [
       </InsertBar>
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <SlideCanvas v-else-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
+    <div v-else-if="state.activeSlide" class="stage">
+      <SlideCanvas ref="canvas" class="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
+      <SlideNotes v-if="notesShown" ref="notes" :session="session" :hint="presentHint('time', mac)" :t="t" @present="present" />
+    </div>
     <div v-else class="noslide">This presentation has no slide.</div>
     <template #overlay>
+      <PresentShow v-if="presenting" :session="session" :from="presenting.from" view="audience" :t="t" @close="endShow" />
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
@@ -279,12 +340,15 @@ const SHORTCUT_NOTES: [string, string][] = [
             :class="{ on: s.id === state.activeSlide }"
             @click="session.showSlide(s.id)"
           >
-            Slide {{ i + 1 }}
+            Slide {{ i + 1 }}<span v-if="session.secondsOf(s.id) !== null" class="time mono">{{ formatTime(session.secondsOf(s.id)!) }}</span>
           </button>
           <button v-if="!readonly" type="button" class="add" title="New slide" aria-label="new slide" @click="session.addSlide()">+</button>
         </div>
         <div class="stats mono">
           <span v-if="here >= 0">{{ here + 1 }} / {{ state.slides.length }}</span>
+          <span v-if="plan.planned" class="plan" data-testid="plan-total" :title="t('The planned times of the slides, added up')">
+            {{ t('Planned {time}', { time: formatTime(plan.seconds) }) }}<template v-if="plan.unplanned"> · {{ t('{n} without a time', { n: plan.unplanned }) }}</template>
+          </span>
           <span class="rev" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
         </div>
       </footer>
@@ -293,6 +357,23 @@ const SHORTCUT_NOTES: [string, string][] = [
 </template>
 
 <style scoped>
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.canvas {
+  flex: 1;
+}
+.time {
+  margin-inline-start: 8px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.plan {
+  color: var(--ink);
+}
 .noslide {
   display: grid;
   place-items: center;

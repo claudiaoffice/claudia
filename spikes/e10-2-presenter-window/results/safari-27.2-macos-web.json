@@ -1,0 +1,49 @@
+{
+  "spike": "e10-2-presenter-window",
+  "when": "2026-11-13T12:44:40.793Z",
+  "env": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+    "framed": false,
+    "framedAllow": null,
+    "platform": "MacIntel",
+    "lang": "en-GB",
+    "screen": "1440x900 avail 1440x781",
+    "dpr": 2,
+    "window": "1228x703",
+    "isExtended": "n/a",
+    "fullscreenEnabled": true,
+    "broadcastChannel": true,
+    "localStorage": true,
+    "windowManagementApi": false,
+    "wakeLock": true,
+    "reducedMotion": false,
+    "neutralino": false,
+    "gtkHandler": false,
+    "pageLoads": 1,
+    "pageLoadsAtReport": "1"
+  },
+  "tests": {
+    "t-fs: requestFullscreen on an element": {"verdict": "ok", "note": "103 ms; element is fullscreen"},
+    "t-fs: fullscreenchange fired": {"verdict": "ok", "note": "left; window now 1228x703, screen 1440x900"},
+    "t-fs: requestFullscreen on the whole document": {"verdict": "ok", "note": ""},
+    "t-win: window.open returned a window object": {"verdict": "ok", "note": ""},
+    "t-win: audience window announced itself": {"verdict": "ok", "note": "via storage; its window 960x508, screen 1440x900 at 724,159; framed false; opener true"},
+    "t-win: audience window closed": {"verdict": "na", "note": ""},
+    "t-win: key pressed in the audience window arrived here": {"verdict": "ok", "note": "ArrowLeft"},
+    "t-win: round trip via broadcast": {"verdict": "ok", "note": "84 answers, median 1.0 ms, max 8.0 ms"},
+    "t-win: round trip via postMessage": {"verdict": "ok", "note": "84 answers, median 1.0 ms, max 8.0 ms"},
+    "t-win: round trip via storage": {"verdict": "ok", "note": "84 answers, median 1.0 ms, max 9.0 ms"},
+    "t-scr: getScreenDetails": {"verdict": "na", "note": "not in this web view (the manual route: drag the window, press F11)"}
+  },
+  "keys": {"b": true, "g": true, "p": true, "Escape": true, "ArrowRight": true, "ArrowLeft": true, "Space": true, "Ctrl+Shift+P": true, "Ctrl+Alt+N": true},
+  "manual": {
+    "The audience window shows the slide number I chose with the buttons": "ok",
+    "The audience window fills the other screen when I drag it there and press F (or F11)": "n/a",
+    "Esc leaves fullscreen, in the main window and in the audience window": "ok",
+    "The pointer disappears in the audience window after 2 s without moving": "ok",
+    "Going forward with → or Space in the audience window moves this page too": "n/a",
+    "Fullscreen shows no browser or shell chrome (title bar, menu, address bar)": "ok",
+    "Nothing flashes or resizes badly when entering and leaving fullscreen": "ok"
+  },
+  "seenVia": {"broadcast": 200, "postMessage": 200, "storage": 200}
+}

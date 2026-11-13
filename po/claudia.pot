@@ -53,6 +53,10 @@ msgstr ""
 msgid "All Styles…"
 msgstr ""
 
+#: web/app/components/PresentShow.vue:225 web/app/components/PresentShow.vue:227
+msgid "All slides"
+msgstr ""
+
 #: web/app/lib/format-menu.ts:106
 msgid "All styles…"
 msgstr ""
@@ -113,6 +117,10 @@ msgstr ""
 msgid "Change how this kind of paragraph looks"
 msgstr ""
 
+#: web/app/components/PresentShow.vue:190
+msgid "Changes since you started: {n}"
+msgstr ""
+
 #: web/app/components/Workspace.vue:720
 msgid "Chart…"
 msgstr ""
@@ -123,6 +131,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Choose a style for the selection, each drawn in its own look"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:149
+msgid "Clear"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -173,6 +185,10 @@ msgstr ""
 msgid "Column"
 msgstr ""
 
+#: web/app/components/SlideNotes.vue:122
+msgid "Common times"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:167
 msgid "Config"
 msgstr ""
@@ -205,6 +221,10 @@ msgstr ""
 msgid "Create a document or open one from the server"
 msgstr ""
 
+#: web/app/components/PresentShow.vue:194
+msgid "Current slide"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:125
 msgid "Cut"
 msgstr ""
@@ -217,7 +237,7 @@ msgstr ""
 msgid "Dark mode"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:191 web/app/components/Workspace.vue:731 web/app/components/Workspace.vue:741
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:233 web/app/components/Workspace.vue:731 web/app/components/Workspace.vue:741
 msgid "Delete"
 msgstr ""
 
@@ -253,7 +273,7 @@ msgstr ""
 msgid "Download the document to this computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:170 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:705
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:205 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:705
 msgid "Edit"
 msgstr ""
 
@@ -265,12 +285,28 @@ msgstr ""
 msgid "Edit This Style…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:185
+#: web/app/components/SlideWorkspace.vue:227
 msgid "Edit text"
 msgstr ""
 
 #: web/app/lib/format-menu.ts:105
 msgid "Edit this style…"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:167
+msgid "Elapsed"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:149 web/app/components/PresentShow.vue:200 web/app/components/PresentShow.vue:39
+msgid "End of presentation"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:159
+msgid "End the show"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:159
+msgid "End the show (Esc)"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:85
@@ -301,7 +337,7 @@ msgstr ""
 msgid "For the {thing}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:194 web/app/components/TextWorkspace.vue:215 web/app/components/Workspace.vue:748
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:236 web/app/components/TextWorkspace.vue:215 web/app/components/Workspace.vue:748
 msgid "Format"
 msgstr ""
 
@@ -337,7 +373,11 @@ msgstr ""
 msgid "How do I…?"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:187 web/app/components/Workspace.vue:719
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "How long you want to spend on this slide; the bar below the slides adds the times up"
+msgstr ""
+
+#: web/app/components/SlideWorkspace.vue:229 web/app/components/Workspace.vue:719
 msgid "Image…"
 msgstr ""
 
@@ -401,12 +441,20 @@ msgstr ""
 msgid "Insert the clipboard without formatting"
 msgstr ""
 
+#: web/app/components/PresentShow.vue:205
+msgid "Larger notes"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Leave Document…"
 msgstr ""
 
 #: web/app/lib/document-menus.ts:84
 msgid "Leave document…"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:136
+msgid "Less time"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -433,6 +481,14 @@ msgstr ""
 msgid "Manage"
 msgstr ""
 
+#: web/app/components/SlideNotes.vue:91
+msgid "Markdown: **bold**, *italic*, - lists. Shown in the presenter view, never on the slide."
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:148
+msgid "More time"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Move the selection to the clipboard"
 msgstr ""
@@ -457,16 +513,28 @@ msgstr ""
 msgid "New sheet…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:183
+#: web/app/components/SlideWorkspace.vue:218
 msgid "New slide"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:150 web/app/components/PresentShow.vue:156 web/app/components/PresentShow.vue:198
+msgid "Next slide"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:209
+msgid "No notes for this slide."
 msgstr ""
 
 #: web/app/lib/format-menu.ts:101
 msgid "No styles fit what is selected"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:103 web/app/components/TextWorkspace.vue:218 web/app/components/Workspace.vue:581
+#: web/app/components/SlideWorkspace.vue:138 web/app/components/TextWorkspace.vue:218 web/app/components/Workspace.vue:581
 msgid "No styles yet"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:181
+msgid "No time planned"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -479,6 +547,10 @@ msgstr ""
 
 #: web/app/components/HelpPanel.vue:118
 msgid "Not finding it? Say"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:203
+msgid "Notes"
 msgstr ""
 
 #: web/app/lib/format-menu.ts:73
@@ -495,6 +567,18 @@ msgstr ""
 
 #: web/app/lib/format-menu.ts:79
 msgid "Outdent"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:158
+msgid "Overview"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:158
+msgid "Overview (G)"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:172
+msgid "Pace"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:257
@@ -519,6 +603,86 @@ msgstr ""
 
 #: web/app/lib/document-menus.ts:134
 msgid "Plain text"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:97
+msgid "Plan a time for this slide"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Plan the Time of This Slide…"
+msgstr ""
+
+#: web/app/lib/present-keys.ts:53
+msgid "Plan the time of this slide"
+msgstr ""
+
+#: web/app/components/SlideWorkspace.vue:221
+msgid "Plan the time of this slide…"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:103
+msgid "Plan time"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:120
+msgid "Planned time"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:97
+msgid "Planned time for this slide: {time}"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:143
+msgid "Planned time, for example 2, 2:30 or 90s"
+msgstr ""
+
+#: web/app/components/SlideWorkspace.vue:350
+msgid "Planned {time}"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:228
+msgid "Planned: {time}"
+msgstr ""
+
+#: web/app/components/SlideWorkspace.vue:304
+msgid "Present"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Present from This Slide"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Present from the First Slide"
+msgstr ""
+
+#: web/app/components/SlideWorkspace.vue:252 web/app/lib/present-keys.ts:50
+msgid "Present from the first slide"
+msgstr ""
+
+#: web/app/components/SlideWorkspace.vue:253 web/app/lib/present-keys.ts:51
+msgid "Present from this slide"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:137
+msgid "Presentation"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:153
+msgid "Presentation controls"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:157
+msgid "Presenter view"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:157
+msgid "Presenter view (P)"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:154
+msgid "Previous slide"
 msgstr ""
 
 #: web/app/lib/document-menus.ts:75
@@ -573,7 +737,7 @@ msgstr ""
 msgid "Search help…"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:108
+#: web/app/components/SlideWorkspace.vue:143
 msgid "Select an object to style it"
 msgstr ""
 
@@ -598,11 +762,51 @@ msgid "Show or hide the history and the chat"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Show or hide the notes under the slide"
+msgstr ""
+
+#: web/app/lib/present-keys.ts:52
+msgid "Show or hide the speaker notes"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Show the presentation full screen, beginning with the first slide"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Show the presentation full screen, beginning with the slide you are on"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Show the text as pages instead of a flowing text"
 msgstr ""
 
 #: web/app/components/TextWorkspace.vue:251 web/app/lib/document-menus.ts:154
 msgid "Show who wrote what"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:236
+msgid "Slide {n}"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:43
+msgid "Slide {n} of {total}"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:42
+msgid "Slide {n} of {total}: {title}"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:204
+msgid "Smaller notes"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Speaker Notes"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:207 web/app/components/SlideNotes.vue:88 web/app/components/SlideNotes.vue:90 web/app/components/SlideWorkspace.vue:256
+msgid "Speaker notes"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -633,11 +837,11 @@ msgstr ""
 msgid "Text Box"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:186
+#: web/app/components/SlideWorkspace.vue:228
 msgid "Text box"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:116
+#: web/app/components/SlideWorkspace.vue:151
 msgid "Text boxes hold no lists yet"
 msgstr ""
 
@@ -673,12 +877,28 @@ msgstr ""
 msgid "The keyboard shortcuts this app uses"
 msgstr ""
 
+#: web/app/components/SlideWorkspace.vue:349
+msgid "The planned times of the slides, added up"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/window.py:131
 msgid "This computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:211 web/app/components/TextWorkspace.vue:261 web/app/components/Workspace.vue:758
+#: web/app/components/PresentShow.vue:176
+msgid "This slide"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:185
+msgid "Time"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:265 web/app/components/TextWorkspace.vue:261 web/app/components/Workspace.vue:758
 msgid "Tools"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:151
+msgid "Try 2 for two minutes, 2:30 or 90s."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/servers.py:98
@@ -693,6 +913,10 @@ msgstr ""
 msgid "Undo {label}"
 msgstr ""
 
+#: web/app/components/PresentShow.vue:191
+msgid "Update now"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/servers.py:149
 msgid "Use https:// — plain http is only allowed for this computer."
 msgstr ""
@@ -701,8 +925,12 @@ msgstr ""
 msgid "Version, authors and licence"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:196 web/app/components/TextWorkspace.vue:249 web/app/components/Workspace.vue:750
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:238 web/app/components/TextWorkspace.vue:249 web/app/components/Workspace.vue:750
 msgid "View"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:114
+msgid "What to say on this slide"
 msgstr ""
 
 #: web/app/components/SidePanel.vue:145
@@ -717,8 +945,36 @@ msgstr ""
 msgid "Write to the assistant in the chat"
 msgstr ""
 
+#: web/app/components/PresentShow.vue:218
+msgid "audience view"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:217
+msgid "blank"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:220
+msgid "end"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:219
+msgid "full screen"
+msgstr ""
+
 #: web/app/components/HelpPanel.vue:118
 msgid "in the chat."
+msgstr ""
+
+#: web/app/components/PresentShow.vue:52
+msgid "on time"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:216
+msgid "overview"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:215
+msgid "slides"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/app.py:127
@@ -727,4 +983,28 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/app.py:130 clients/linux/src/claudia_shell_gtk/app.py:161
 msgid "{app} could not start its server"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:34
+msgid "{n} / {total}"
+msgstr ""
+
+#: web/app/components/SlideNotes.vue:132
+msgid "{n} min"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:182
+msgid "{n} of {total} slides"
+msgstr ""
+
+#: web/app/components/SlideWorkspace.vue:350
+msgid "{n} without a time"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:53
+msgid "{time} ahead"
+msgstr ""
+
+#: web/app/components/PresentShow.vue:53
+msgid "{time} behind"
 msgstr ""

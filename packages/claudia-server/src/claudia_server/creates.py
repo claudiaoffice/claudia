@@ -1,6 +1,7 @@
 """The methods of the presentation app: what a slide view needs to show a slide and to take what people do on it.
 
 ``creates_methods`` is ``core_methods`` plus ``slides``, ``slide``, ``shapes``, ``styles``, ``add_slide``,
+``set_slide_notes``, ``set_slide_time`` (speaker notes and planned times, D293, D294),
 ``add_object``, ``add_image``, ``move_object``, ``resize_object``, ``set_text``, ``set_snap`` and
 ``remove_object``. Positions and sizes are whole units of the slide space (1600 by 900). A shape is chosen by its
 id from the server's shape library;
@@ -39,7 +40,17 @@ from claudia_core import (
     paragraph_for,
 )
 from claudia_core.clock import utc_now
-from claudia_creates import AddSlide, PrintSetup, PrintSetupError, SetPrintSetup, ShapeLibrary, SlideAnchor, SlideModel
+from claudia_creates import (
+    AddSlide,
+    PrintSetup,
+    PrintSetupError,
+    SetPrintSetup,
+    SetSlideNotes,
+    SetSlideTime,
+    ShapeLibrary,
+    SlideAnchor,
+    SlideModel,
+)
 
 from .images import image_bytes
 from .office_export import document_info, office_export
@@ -185,13 +196,30 @@ def _add_print_methods(table: MethodTable) -> None:
         return _done(ctx, command, base)
 
 
+def _add_plan_methods(table: MethodTable) -> None:
+    """The speaker notes (D293) and planned times (D294) of the slides: what a talk is prepared with."""
+
+    @table.method("set_slide_notes", "slide:str notes:text base:revision?", write=True)
+    def _set_slide_notes(ctx, *, slide, notes, base):
+        """Set the speaker notes of a slide (D293), Markdown, shown formatted in the presenter view only; `""` clears
+        them. `command_error` for an unknown slide or notes that cannot be kept."""
+        return _done(ctx, SetSlideNotes(slide, notes), base)
+
+    @table.method("set_slide_time", "slide:str seconds:int? base:revision?", write=True)
+    def _set_slide_time(ctx, *, slide, seconds, base):
+        """Set the planned time of a slide (D294) in whole seconds, 1 to 86400; `null` clears it. `command_error`
+        for an unknown slide or a time that makes no sense."""
+        return _done(ctx, SetSlideTime(slide, seconds), base)
+
+
 def _add_shared_methods(table: MethodTable) -> None:
     """What presentations answer the way the other apps do: ``styles``, ``palette``, ``change_style``,
-    ``rename_style``, ``check_css`` and ``set_object_style`` (E1.10, D200), the objects (E10.16), and printing and
-    the language (D917)."""
+    ``rename_style``, ``check_css`` and ``set_object_style`` (E1.10, D200), the objects (E10.16), the notes and
+    planned times (D293, D294), and printing and the language (D917)."""
     add_style_methods(table)
     _add_object_methods(table)
     _add_print_methods(table)
+    _add_plan_methods(table)
 
 
 def creates_methods_with(library: ShapeLibrary) -> MethodTable:
@@ -201,13 +229,24 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
 
     @table.method("slides")
     def _slides(ctx):
-        """The slides in order, each as `{id, objects}` where objects is how many things are on it."""
+        """The slides in order, each as `{id, objects, seconds, has_notes}`: how many things are on it, its planned
+        time in seconds (`null` when it has none, D294) and whether it has speaker notes (D293, read them with
+        `slide`)."""
         deck = _deck(ctx)
-        return [{"id": slide, "objects": len(deck.objects_on(slide))} for slide in deck.slides]
+        return [
+            {
+                "id": slide,
+                "objects": len(deck.objects_on(slide)),
+                "seconds": deck.times.get(slide),
+                "has_notes": slide in deck.notes,
+            }
+            for slide in deck.slides
+        ]
 
     @table.method("slide", "slide:str")
     def _slide(ctx, slide):
-        """One slide as `{revision, slide, objects}`: its objects, the one in front last. An object is
+        """One slide as `{revision, slide, objects, notes, seconds}`: its objects, the one in front last, its speaker
+        notes in Markdown (`""` if none, D293) and its planned time in seconds (`null` if none, D294). An object is
         `{id, kind, w, h, style, text, shape, image, imported, rotation, snap, anchor}` — the same shape in all
         three apps except for `anchor`, which here is `{kind: "slide", container: <slide>, x, y}` (E10.16).
         `imported`'s `source_path` is only sent to the person who imported that image (everyone else sees `null`
@@ -218,7 +257,13 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         if slide not in deck.slides:
             raise RequestError("command_error", f"unknown slide {slide!r}")
         objects = [obj.to_data_for(ctx.user) for obj in deck.objects_on(slide)]
-        return {"revision": _rev(ctx), "slide": slide, "objects": objects}
+        return {
+            "revision": _rev(ctx),
+            "slide": slide,
+            "objects": objects,
+            "notes": deck.notes_of(slide),
+            "seconds": deck.time_of(slide),
+        }
 
     @table.method("shapes")
     def _shapes(ctx):
