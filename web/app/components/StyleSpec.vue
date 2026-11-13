@@ -162,6 +162,10 @@ const ALIGN = [
             </button>
           </div>
         </div>
+        <label class="row check" title="Break long words at the end of a line where the text's language allows (in the pages and the PDF)">
+          <input type="checkbox" :checked="editor.hyphenates" :disabled="off" data-testid="hyphenate" @change="run(editor.setHyphens(($event.target as HTMLInputElement).checked))" >
+          <span>Hyphenate</span>
+        </label>
       </section>
 
       <section v-if="shown.has('box')" class="facet" data-facet="box" aria-label="Box" data-testid="box-controls">

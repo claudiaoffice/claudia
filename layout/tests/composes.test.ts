@@ -70,11 +70,16 @@ describe('a composes text on pages', () => {
         { id: 'o4', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'svg1', rotation: 0, anchor: { kind: 'block', container: 'b4', offset: 0 } },
       ],
       shapes: [{ id: 'circle', path: 'M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z', text_area: { x: 14.6, y: 14.6, w: 70.8, h: 70.8 } }],
-      images: [{ id: 'img1', format: 'png' }, { id: 'svg1', format: 'svg' }],
+      images: [
+        { id: 'img1', format: 'png' },
+        { id: 'svg1', format: 'svg', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 50"><rect width="70" height="50" fill="#D6477A"/><filter id="f"/></svg>' },
+      ],
     })
     const out = layoutText(d, fonts, resolver)
     expect(out.images).toEqual(['img1'])
-    expect(out.notes).toEqual([{ kind: 'object', object: 'o4', reason: 'SVG pictures cannot be printed yet' }])
+    expect(out.notes).toEqual([])
+    const svgGroup = out.list.pages.flatMap((p) => p.items).find((i) => i.kind === 'group' && i.items[0]?.kind === 'group' && i.items[0].items[0]?.kind === 'path')
+    expect(svgGroup).toBeDefined()
     const groups = out.list.pages.flatMap((p) => p.items.filter((i) => i.kind === 'group'))
     expect(groups).toHaveLength(4)
     const text = groups[0]!

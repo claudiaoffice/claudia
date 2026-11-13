@@ -77,6 +77,7 @@ from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserD
 from .fonts import FontService, font_router
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
+from .hyphenation import HyphenationService, hyphenation_router
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, web_script_hashes
 
@@ -445,6 +446,7 @@ def create_app(
     list_documents: bool = True,
     admin: AdminContext | None = None,
     fonts: FontService | None = None,
+    hyphenation: HyphenationService | None = None,
 ) -> FastAPI:
     """The server for ``hub``, with the users of each document in ``directory``.
 
@@ -518,6 +520,8 @@ def create_app(
         app.include_router(admin_router(hub, gateway.set_secret, admin))
     if fonts is not None:
         app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS))
+    if hyphenation is not None:
+        app.include_router(hyphenation_router(hyphenation))
 
     # The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed origin
     # is needed. Mounted last so /api/... wins.

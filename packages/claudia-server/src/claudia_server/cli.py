@@ -75,6 +75,7 @@ from .filestore import FileDirectory, FileProvider
 from .fonts import FontService
 from .hosts import AllowedHosts, is_loopback, machine_names
 from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
+from .hyphenation import HyphenationService
 from .protocol import Limits
 from .sealed import SealedDocuments
 from .server_settings import ServerSettings, load_admins, load_settings
@@ -137,6 +138,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="font collections to hand to clients for layout and PDF export (/api/fonts): a collection folder or a "
         "folder of them; repeatable. Default: STATE_DIR/fonts if it exists. "
         "Fill one with python -m claudia_fonts fetch",
+    )
+    parser.add_argument(
+        "--hyphenation",
+        metavar="DIR",
+        default=None,
+        help="the folder of hyphenation patterns to hand to clients (/api/hyphenation). Default: "
+        "STATE_DIR/hyphenation. Fill it with python -m claudia_server.hyphenation fetch DIR",
     )
     parser.add_argument(
         "--no-assistant", action="store_true", help="do not give workbooks the scripted stand-in for the AI"
@@ -326,6 +334,14 @@ def _fonts(args: argparse.Namespace, state_dir: Path) -> FontService:
     return FontService.from_folders(folders, state_dir / "webfonts")
 
 
+def _hyphenation(args: argparse.Namespace, state_dir: Path) -> HyphenationService:
+    """The hyphenation patterns this server hands to its clients: from ``--hyphenation``, else
+    ``STATE_DIR/hyphenation``. ``UsageError`` for a folder given on the command line that does not exist."""
+    if args.hyphenation and not Path(args.hyphenation).is_dir():
+        raise UsageError(f"--hyphenation: {args.hyphenation} is not a folder")
+    return HyphenationService.from_folder(Path(args.hyphenation) if args.hyphenation else state_dir / "hyphenation")
+
+
 def _what_is_loaded(library: ShapeLibrary | None, runner: ModelRunner | None) -> list[str]:
     """The lines of the start-up report about the shapes (and the files skipped) and the AI model."""
     lines: list[str] = []
@@ -450,6 +466,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     assistant, ai = _build_assistant(args, model, settings)
     library = _shapes(args, model)
     fonts = _fonts(args, state_dir)
+    hyphenation = _hyphenation(args, state_dir)
     hub = Hub(
         provider,
         methods=methods_for(model, shapes=library),
@@ -475,6 +492,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         list_documents=not args.no_list,
         admin=admin,
         fonts=fonts,
+        hyphenation=hyphenation,
     )
     scheme = "http" if certificate is None else "https"
     ws_scheme = "ws" if certificate is None else "wss"
@@ -500,6 +518,8 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         banner.append("documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)")
     banner.append(fonts.summary())
     banner += [f"  not used, {problem.path}: {problem.reason}" for problem in fonts.catalogue.problems]
+    banner.append(hyphenation.summary())
+    banner += [f"  not used, {problem}" for problem in hyphenation.problems if hyphenation.languages]
     banner += _what_is_loaded(library, ai.runner)
     options = {
         "host": args.host,

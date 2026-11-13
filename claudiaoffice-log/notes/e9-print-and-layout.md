@@ -44,9 +44,15 @@ second tsconfig with both. Nothing in it reads a clock or a random number.
 
 - **Raw WebAssembly, own bindings.** harfbuzzjs 0.4.x's glue had to be replaced: 1.6.x loads its wasm itself and
   cannot be given checked bytes. The library instantiates `harfbuzz.wasm` (shaping; emscripten imports satisfied by
-  stubs) and `harfbuzz-subset.wasm` (no imports) itself; `scripts/copy-wasm.mjs` copies both into `web/public/wasm`
+  stubs) and `harfbuzz-subset.wasm` (no imports) itself; `layout/scripts/copy-wasm.mjs` copies both into `web/public/wasm`
   before `npm run dev`/`build` and refuses a file whose hash is not the pinned one. Vite could not resolve
   `?url` imports of the package's wasm, which is why it is a copy step.
+- **`npm ci` in `web/` installs the library's dependencies too** (fixed the day after: the first patch built only
+  where `npm ci` had also been run in `layout/`). A `file:` link gives the app a symlink and nothing else, and the
+  library's imports resolve from `layout/node_modules`. `layout/scripts/ensure-deps.mjs` runs as web's
+  `postinstall`, `predev` and `prebuild`; it does nothing when the locked versions are there, and otherwise runs
+  `npm ci` in `layout/` (without the development tools unless they were installed). The Docker image copies the
+  library's sources only, never a `node_modules` of the build machine.
 - **Subset with glyph ids kept** (`RETAIN_GIDS`, `NO_HINTING`, `NOTDEF_OUTLINE`, layout tables dropped): CID = GID in
   the PDF, no remapping; the `W` array comes from the instanced subset's own `hmtx`, so widths match the outlines.
 - **The preview SVG is written in points, not mpt.** Browsers cap font sizes (Chrome at about 10 000 px), so text

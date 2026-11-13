@@ -218,6 +218,33 @@ def test_every_server_gets_the_checkouts_fonts_folder():
     assert Path(command[command.index("--fonts") + 1]) == Path("mine", "fonts")
 
 
+def test_every_server_gets_the_checkouts_hyphenation_folder():
+    command = start.server_command(start.parse_args(["--app", "composes", "--dir", "mine"]))
+    assert Path(command[command.index("--hyphenation") + 1]) == Path("mine", "hyphenation")
+
+
+def test_the_hyphenation_patterns_are_fetched_once_and_a_failure_does_not_stop_the_start(tmp_path, capsys, monkeypatch):
+    from claudia_server import hyphenation
+
+    calls = []
+    monkeypatch.setattr(
+        hyphenation.HyphenationService, "from_folder", classmethod(lambda cls, folder: cls(tuple(calls), {}))
+    )
+
+    def fetched(folder):
+        calls.append(folder)
+
+    assert start.ensure_hyphenation(tmp_path, fetch=fetched) is True
+    assert start.ensure_hyphenation(tmp_path, fetch=fetched) is True
+    assert calls == [tmp_path / "hyphenation"], "fetched the first time only"
+
+    def offline(folder):
+        raise hyphenation.FetchError("no network")
+
+    assert start.ensure_hyphenation(tmp_path / "other", fetch=offline) is False
+    assert "Could not fetch the hyphenation patterns" in capsys.readouterr().out
+
+
 def test_the_starter_fonts_are_fetched_once_and_a_failure_does_not_stop_the_start(tmp_path, capsys):
     from claudia_fonts import FetchError
 

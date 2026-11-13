@@ -50,9 +50,11 @@ TEXT_FACET = Facet(
         "word-spacing",
     ),
 )
-#: How a stretch of text is laid out — alignment, line height and the space around it.
+#: How a stretch of text is laid out — alignment, line height, the space around it, and whether its words may be
+#: hyphenated at the end of a line (``hyphens``, CSS_VERSION 4, D912).
 PARAGRAPH_FACET = Facet(
-    "paragraph", ("text-align", "line-height", "margin-top", "margin-right", "margin-bottom", "margin-left")
+    "paragraph",
+    ("text-align", "line-height", "margin-top", "margin-right", "margin-bottom", "margin-left", "hyphens"),
 )
 #: A rectangle around content — its background, padding, a border per side, and where its content sits in it.
 BOX_FACET = Facet(

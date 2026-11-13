@@ -77,6 +77,7 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "text-align": "left",
             "margin-top": "0",
             "margin-bottom": "0.9em",
+            "hyphens": "auto",
         },
     ),
     _style(
@@ -90,6 +91,7 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "line-height": "1.15",
             "letter-spacing": "-0.01em",
             "margin-bottom": "0.5em",
+            "hyphens": "manual",
         },
     ),
     _style(
@@ -103,6 +105,7 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "line-height": "1.25",
             "margin-top": "1.6em",
             "margin-bottom": "0.5em",
+            "hyphens": "manual",
         },
     ),
     _style(
@@ -116,6 +119,7 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "line-height": "1.3",
             "margin-top": "1.3em",
             "margin-bottom": "0.4em",
+            "hyphens": "manual",
         },
     ),
     _style(
@@ -251,7 +255,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 4: a text also carries objects, images and shapes (E10.16)
     # 5: the text carries its own colour palette (D200)
     # 6: the text says which page it is printed on (D904)
-    state_schema: ClassVar[int] = 6
+    # 7: the text says which language it is written in (D915)
+    state_schema: ClassVar[int] = 7
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -260,6 +265,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         styles: StyleBook | None = None,
         palette: Palette | None = None,
         page: PageSetup | None = None,
+        language: str | None = None,
     ):
         super().__init__()
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
@@ -269,6 +275,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self.palette: Palette = palette if palette is not None else builtin_palette()
         #: The page the text is laid out on for the print preview and PDF (D904); laid out in the client (D901).
         self.page: PageSetup = page if page is not None else PageSetup()
+        #: The language of the text, a BCP 47 tag, or ``None`` when it is not known (D915): what it is hyphenated by.
+        self.language: str | None = language
         self.suggestions: dict[str, Suggestion] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
         for block in self.blocks:
@@ -287,6 +295,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
             "page": self.page.to_data(),
+            "language": self.language,
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
@@ -305,7 +314,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         blocks = [Block(b["id"], b["style"], b["text"], tuple(runs_from_data(b["runs"]))) for b in raw]
         palette = Palette.from_data(state["palette"]) if "palette" in state else None  # schema 4 and earlier
         page = PageSetup.from_data(state["page"]) if "page" in state else None  # schema 5 and earlier: A4
-        model = cls(blocks, styles, palette, page)
+        # schema 6 and earlier: no language
+        model = cls(blocks, styles, palette, page, state.get("language"))
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects

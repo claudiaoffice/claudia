@@ -27,7 +27,8 @@ function check(bs: FlowBlock[], pages: FlowPage[], geometry: ReturnType<typeof p
       const line = bs[l.block]!.layout.lines[l.line]!
       expect(l.top).toBeGreaterThanOrEqual(box.y)
       expect(l.top + line.height).toBeLessThanOrEqual(box.y + box.h)
-      expect(l.x + line.x + line.natural).toBeLessThanOrEqual(box.x + box.w)
+      const right = line.words.length ? line.words.at(-1)!.x + line.words.at(-1)!.w : line.x
+      expect(l.x + right).toBeLessThanOrEqual(box.x + box.w)
     }
   }
 }

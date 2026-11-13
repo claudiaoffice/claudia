@@ -1,6 +1,6 @@
 // File ▸ Print… in composes (D906): the pages are laid out in the browser by @claudia/layout, the page setup is the
-// document's (D904), and the PDF the preview prints is the one it shows (server: --model claudia_composes:TextModel
-// with --fonts). Run: URL=http://127.0.0.1:8766/ npm run e2e:print
+// document's (D904), and the PDF the preview prints is the one it shows; the text is hyphenated by its language
+// (D912, D915) (server: --model claudia_composes:TextModel with --fonts and --hyphenation). Run: URL=http://127.0.0.1:8766/ npm run e2e:print
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 const crypto = require('node:crypto')
@@ -107,6 +107,24 @@ async function download(page) {
     await ann.waitForFunction(() => /100 × 150 mm landscape/.test(document.querySelector('[data-testid=print-status]')?.textContent ?? ''))
     log('custom paper 100 × 150 mm')
 
+    // ---- the language of the text (D915): ann made it, so it started in her interface's language; in German the
+    // narrow pages are hyphenated by the German patterns (D912), with no language not at all
+    const lang = await ann.locator('[data-testid=print-language]').inputValue()
+    assert.ok(/^en/.test(lang), `a new text starts in the creator's language, got ${lang}`)
+    await ann.selectOption('[data-testid=print-language]', 'de')
+    await ann.waitForFunction(() => [...document.querySelectorAll('aside')].some((a) => a.textContent.includes('set the language to de')))
+    const hyphenated = () => [...document.querySelectorAll('[data-testid=print-pages] .page text')].filter((t) => /\p{L}-$/u.test(t.textContent)).length
+    await ann.waitForFunction(hyphenated)
+    log('German:', await ann.evaluate(hyphenated), 'lines end in a hyphen')
+    await ann.waitForTimeout(400)
+    await ann.screenshot({ path: `${SHOTS}/print-3-hyphenated.png` })
+    await ann.selectOption('[data-testid=print-language]', '')
+    await ann.waitForFunction(() => [...document.querySelectorAll('[data-testid=print-note]')].some((n) => n.textContent.includes('no language set')))
+    assert.equal(await ann.evaluate(hyphenated), 0, 'no language, no hyphens')
+    await ann.selectOption('[data-testid=print-language]', 'de')
+    await ann.waitForFunction(hyphenated)
+    log('no language: not hyphenated, and the preview says so')
+
     // ---- Ctrl+P prints the PDF Download gives (a headless browser cannot show a print dialog: the page hands the
     // PDF to a test hook instead of its print frame)
     await ann.evaluate(() => (window.__claudiaPrintDialog = (pdf) => (window.__printed = Array.from(pdf))))
@@ -124,6 +142,15 @@ async function download(page) {
     await ann.waitForSelector('[data-testid=text]')
     assert.equal(await ann.locator('[data-testid=print-preview]').count(), 0)
 
+    // ---- Ctrl+- types a soft hyphen: where a word may be broken (D912)
+    await ann.click('[data-testid=text] [data-block]:last-child')
+    await ann.keyboard.press('End')
+    await ann.keyboard.type(' Donau')
+    await ann.keyboard.press('Control+Minus')
+    await ann.keyboard.type('dampf')
+    await ann.waitForFunction(() => document.querySelector('[data-testid=text] [data-block]:last-child')?.textContent.includes('Donau\u00addampf'))
+    log('Ctrl+- typed a soft hyphen')
+
     // ---- a viewer sees the pages but cannot change the paper
     await menu(ann, 'File', 'Manage', 'Share')
     await ann.fill('.modal input >> nth=0', VERA[0])
@@ -136,6 +163,8 @@ async function download(page) {
     await vera.keyboard.press('Control+p')
     await vera.waitForSelector('[data-testid=print-pages] .page svg text')
     assert.ok(await vera.locator('[data-testid=print-paper]').isDisabled(), 'a viewer cannot change the paper')
+    assert.ok(await vera.locator('[data-testid=print-language]').isDisabled(), 'nor the language')
+    assert.equal(await vera.locator('[data-testid=print-language]').inputValue(), 'de')
     assert.match(await vera.locator('[data-testid=print-status]').textContent(), /100 × 150 mm landscape/, 'she sees the document’s page')
     log('vera sees the same pages and cannot change them')
 

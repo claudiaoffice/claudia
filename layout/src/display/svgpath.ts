@@ -27,8 +27,8 @@ function tokens(d: string): (string | number)[] {
   return out
 }
 
-/** An SVG elliptical arc as cubic curves, in the path's own (unrounded) units. */
-function arcToCubics(x1: number, y1: number, rx: number, ry: number, phiDeg: number, large: boolean, sweep: boolean, x2: number, y2: number): number[][] {
+/** An SVG elliptical arc as cubic curves `[c1x, c1y, c2x, c2y, x, y]`, in the path's own (unrounded) units. */
+export function arcToCubics(x1: number, y1: number, rx: number, ry: number, phiDeg: number, large: boolean, sweep: boolean, x2: number, y2: number): number[][] {
   if ((x1 === x2 && y1 === y2) || rx === 0 || ry === 0) return [[x1, y1, x2, y2, x2, y2]]
   rx = Math.abs(rx)
   ry = Math.abs(ry)

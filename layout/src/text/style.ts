@@ -45,6 +45,11 @@ export interface ParagraphStyle {
   widows: number
   /** BCP 47 language of the text, given to the shaper */
   language?: string
+  /**
+   * CSS `hyphens`: `none` never breaks a word with a hyphen; `manual` (the default) breaks it only at a soft hyphen
+   * (U+00AD) typed into it; `auto` also where the language's patterns allow (D912)
+   */
+  hyphens?: 'none' | 'manual' | 'auto'
 }
 
 export const BLACK: Rgba = { r: 0, g: 0, b: 0, a: 255 }

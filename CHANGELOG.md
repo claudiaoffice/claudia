@@ -4,6 +4,15 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.16.0] - 2026-11-12
+
+Hyphenation (D912).
+
+### Added
+- `CSS_VERSION` 4: `hyphens` (`none`, `manual`, `auto`), a property of the paragraph facet: whether the words of a
+  paragraph may be broken with a hyphen at the end of a line, only at a soft hyphen typed into them, or also where
+  the language's patterns allow. Nothing to upcast: a style without it keeps the CSS default, `manual`.
+
 ## [0.15.0] - 2026-11-11
 
 A throwaway copy of a document, for previewing what the AI proposes (E7.8, D263).

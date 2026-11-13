@@ -66,6 +66,20 @@ const authors = ref(remembered('claudia.composes.authors', ['on', 'off'], 'off')
 watch(view, (v) => remember('claudia.composes.view', v))
 watch(authors, (on) => remember('claudia.composes.authors', on ? 'on' : 'off'))
 
+// A text says which language it is written in (D915), which is what its pages are hyphenated by (D912). The person
+// who just made it is the one who knows: it starts in the language of their own interface, as one step of theirs.
+let languageGiven = false
+watch(
+  () => state.language,
+  (language) => {
+    if (language === null && session.justCreated && !session.readOnly && !languageGiven) {
+      languageGiven = true
+      void session.setLanguage(locale.value)
+    }
+  },
+  { immediate: true },
+)
+
 /** File ▸ Print… shows the pages in place of the text (D906); Esc or the arrow goes back. */
 const printing = ref(false)
 const preview = ref<InstanceType<typeof PrintPreview> | null>(null)
@@ -157,7 +171,12 @@ async function pasteFromClipboard() {
 const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => openStyleMenu() }
 // D906: Ctrl+P opens the preview; in the preview it prints.
 const PRINT: ShortcutDef = { id: 'file.print', label: 'Print…', chord: PRINT_CHORD, run: openPrint }
-const extraShortcuts = [LOOK, PRINT]
+// D912: a soft hyphen says where a word may be broken, a non-breaking hyphen where it may not (as in Word and
+// LibreOffice). Both are invisible in the text unless the pages break there.
+const typing = () => !printing.value && !session.readOnly
+const SOFT_HYPHEN: ShortcutDef = { id: 'edit.soft-hyphen', label: 'Soft hyphen', chord: { key: '-', ctrl: true }, run: () => session.type('\u00ad'), enabled: typing }
+const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', label: 'Non-breaking hyphen', chord: { key: '_', ctrl: true, shift: true }, run: () => session.type('\u2011'), enabled: typing }
+const extraShortcuts = [LOOK, PRINT, SOFT_HYPHEN, HARD_HYPHEN]
 
 /** What the shared menu items need from this window (`lib/document-menus.ts`). */
 const shared = computed<DocumentMenuContext>(() => ({
@@ -270,6 +289,8 @@ const SHORTCUT_NOTES: [string, string][] = [
   ['Backspace / Delete', 'delete; at the edge of a paragraph it joins the one next to it'],
   ['Ctrl + Backspace / Delete', 'delete a word'],
   ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
+  ['Ctrl + -', 'a soft hyphen: where a word may be broken at the end of a line in the pages'],
+  ['Ctrl + Shift + -', 'a non-breaking hyphen: a hyphen the line is never broken after'],
   ['@ai review this text', 'the assistant suggests changes; you accept or reject each'],
 ]
 </script>

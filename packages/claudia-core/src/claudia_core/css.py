@@ -33,7 +33,8 @@ from .facets import FACET_PROPERTIES
 #: Bumped whenever the list or the meaning of a value changes; an old document is upcast, never broken (E1.3).
 #: 2: a colour may be a role of the palette (``@accent``, ``@accent/55``).
 #: 3: ``vertical-align`` and ``white-space``, for the box of a cell (E6.13, D307).
-CSS_VERSION = 3
+#: 4: ``hyphens`` (``none``, ``manual``, ``auto``), whether the words of a paragraph may be hyphenated (D912).
+CSS_VERSION = 4
 
 _MAX_LENGTH = 1000.0
 _MAX_FAMILIES = 20
@@ -383,6 +384,7 @@ _CHECKS: dict[str, Callable[[str], str]] = {
     "line-height": _line_height,
     "letter-spacing": _spacing,
     "word-spacing": _spacing,
+    "hyphens": _keywords("none", "manual", "auto"),
     "margin-top": _margin,
     "margin-right": _margin,
     "margin-bottom": _margin,

@@ -177,7 +177,7 @@ export function locate(pages: readonly FlowPage[], blocks: readonly FlowBlock[],
     for (const w of line.words) {
       if (offset < w.offset) break
       x = w.x + w.w
-      if (offset < w.offset + w.text.length) {
+      if (offset < w.offset + w.length) {
         let pos = w.offset
         x = w.x
         for (let g = 0; g < w.chars.length; g++) {

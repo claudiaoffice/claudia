@@ -4,9 +4,10 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
-    "predev": "node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
+    "postinstall": "node node_modules/@claudia/layout/scripts/ensure-deps.mjs",
+    "predev": "node node_modules/@claudia/layout/scripts/ensure-deps.mjs && node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
     "dev": "nuxt dev",
-    "prebuild": "node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
+    "prebuild": "node node_modules/@claudia/layout/scripts/ensure-deps.mjs && node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
     "build": "nuxt generate",
     "test": "vitest run",
     "coverage": "vitest run --coverage",

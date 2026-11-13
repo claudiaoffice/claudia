@@ -7,6 +7,7 @@ import { contentBox, pageGeometry, paperById } from '../src/flow/paper'
 import { writePdf } from '../src/pdf/writer'
 import { blocks, sampleParagraphs } from './sample'
 import { world } from './world'
+import { hyphenatorFor } from './fonts'
 
 let fonts: FontSet
 let resolver: FontResolver
@@ -18,13 +19,16 @@ describe('performance', () => {
     const g = pageGeometry(a4.width, a4.height, 'portrait', { top: 70866, right: 70866, bottom: 70866, left: 70866 })
     const paras = sampleParagraphs(700)
     const t0 = performance.now()
-    const bs = blocks(fonts, resolver, paras, contentBox(g).w)
+    // justified body text, hyphenated by the German patterns: the whole of what a page costs
+    const bs = blocks(fonts, resolver, paras, contentBox(g).w, { hyphenator: hyphenatorFor('de') })
     const pages = paginate(bs, g)
     const display = flowItems(fonts, pages, bs, g)
     const t1 = performance.now()
     const pdf = writePdf(display, fonts, () => undefined, { title: 'perf' })
     const t2 = performance.now()
-    console.log(`${pages.length} pages: layout ${Math.round(t1 - t0)} ms, PDF ${Math.round(t2 - t1)} ms, ${Math.round(pdf.length / 1024)} KB`)
+    const hyphenated = bs.reduce((n, b) => n + b.layout.lines.filter((l) => l.hyphenated).length, 0)
+    expect(hyphenated).toBeGreaterThan(50)
+    console.log(`${pages.length} pages (${hyphenated} hyphenated lines): layout ${Math.round(t1 - t0)} ms, PDF ${Math.round(t2 - t1)} ms, ${Math.round(pdf.length / 1024)} KB`)
     expect(pages.length).toBeGreaterThan(80)
     expect(t1 - t0).toBeLessThan(4000)
     expect(t2 - t1).toBeLessThan(6000)

@@ -201,6 +201,21 @@ def test_a_page_that_cannot_be_used_is_refused_and_so_is_the_assistant(paper):
     assert caught.value.code == "forbidden"
 
 
+def test_the_language_is_read_and_set_in_one_step_for_everybody(paper):
+    assert call(paper, "language") == {"language": None}
+    call(paper, "set_language", {"language": "de-at"}, BEN)
+    assert call(paper, "language", account=VERA) == {"language": "de-AT"}
+    assert list(paper.log)[-1].command.summary == "set the language to de-AT"
+    call(paper, "set_language", {"language": None}, BEN)
+    assert call(paper, "language") == {"language": None}
+    with pytest.raises(RequestError) as caught:
+        call(paper, "set_language", {"language": "deutsch!"}, BEN)
+    assert caught.value.code == "command_error"
+    with pytest.raises(RequestError) as caught:
+        call(paper, "set_language", {"language": "de"}, VERA)
+    assert caught.value.code == "forbidden"
+
+
 def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing(paper):
     from pathlib import Path
 

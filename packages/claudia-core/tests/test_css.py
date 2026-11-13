@@ -7,7 +7,8 @@ from claudia_core import ALLOWED_CSS, CSS_VERSION, CssError, format_css, parse_c
 
 # ----------------------------------------------------------------------------- the list
 def test_the_list_is_versioned_and_has_what_the_style_menu_needs():
-    assert CSS_VERSION == 3  # 2: a colour may be a role of the palette (D200); 3: a cell's box (D307)
+    # 2: a colour may be a role of the palette (D200); 3: a cell's box (D307); 4: hyphens (D912)
+    assert CSS_VERSION == 4
     assert {
         "color",
         "background-color",
@@ -212,3 +213,14 @@ def test_a_cells_box_may_say_where_its_content_sits_and_whether_it_wraps(prop, v
 def test_only_the_keywords_a_cell_uses_are_allowed(prop, value):
     with pytest.raises(CssError, match=prop):
         validate_css({prop: value})
+
+
+@pytest.mark.parametrize("value", ["none", "manual", "auto", "AUTO"])
+def test_a_paragraph_may_say_whether_its_words_are_hyphenated(value):
+    """CSS_VERSION 4 (D912): the CSS keywords, nothing else."""
+    assert validate_css({"hyphens": value}) == {"hyphens": value.lower()}
+
+
+def test_hyphens_takes_only_its_keywords():
+    with pytest.raises(CssError, match="hyphens"):
+        validate_css({"hyphens": "always"})

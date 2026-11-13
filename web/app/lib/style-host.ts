@@ -330,6 +330,16 @@ export class StyleEditor {
     return match ? Math.round(Number(match[1])) : 0
   }
 
+  // -- hyphenation (CSS_VERSION 4, D912): `auto` breaks words where the language's patterns allow; `manual` only at
+  // soft hyphens typed into them
+  setHyphens(on: boolean) {
+    return this.set('hyphens', on ? 'auto' : 'manual')
+  }
+
+  get hyphenates(): boolean {
+    return (this.look.hyphens ?? 'manual') === 'auto'
+  }
+
   // -- what only a cell's box has (CSS_VERSION 3, D307)
   setVertical(value: 'top' | 'middle' | 'bottom') {
     return this.set('vertical-align', value)

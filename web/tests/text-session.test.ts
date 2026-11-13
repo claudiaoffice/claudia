@@ -446,3 +446,23 @@ describe('styles', () => {
     expect(link.sent('change_style')).toEqual([])
   })
 })
+
+describe('the language of the text (D915)', () => {
+  it('is loaded, followed and set in one step; a server without languages leaves it unknown', async () => {
+    const { link, session } = await opened()
+    expect(session.state.language).toBeUndefined() // this fake server has no `language` method
+    link.handlers.language = () => ({ language: 'de' })
+    link.handlers.set_language = () => ({ revision: 'main:9' })
+    const again = new TextSession(() => link, { retryDelays: [0] })
+    await again.open()
+    expect(again.state.language).toBe('de')
+    link.push('language', { type: 'language', language: 'en-GB' })
+    expect(again.state.language).toBe('en-GB')
+    link.push('language', { type: 'language', language: null })
+    expect(again.state.language).toBeNull()
+    expect(await again.setLanguage('de-AT')).toBe(true)
+    expect(link.sent('set_language').at(-1)).toMatchObject({ language: 'de-AT' })
+    session.close()
+    again.close()
+  })
+})

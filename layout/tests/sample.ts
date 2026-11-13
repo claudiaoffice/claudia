@@ -4,7 +4,7 @@ import type { FontResolver } from '../src/fonts/resolve'
 import { type FlowBlock } from '../src/flow/paginate'
 import { insets } from '../src/display/text'
 import { type Css, paragraphStyleFromCss } from '../src/text/css'
-import { layoutParagraph } from '../src/text/paragraph'
+import { layoutParagraph, type ParagraphOptions } from '../src/text/paragraph'
 
 const SANS = "Inter, system-ui, 'Segoe UI', sans-serif"
 const SERIF = 'Fraunces, Georgia, serif'
@@ -29,11 +29,11 @@ export function sampleParagraphs(n: number): { style: string; text: string }[] {
 }
 
 /** The paragraphs as flow blocks for a content width. */
-export function blocks(fonts: FontSet, resolver: FontResolver, paras: { style: string; text: string }[], width: number): FlowBlock[] {
+export function blocks(fonts: FontSet, resolver: FontResolver, paras: { style: string; text: string }[], width: number, options: ParagraphOptions = {}): FlowBlock[] {
   return paras.map((p, i) => {
     const r = paragraphStyleFromCss(STYLES[p.style]!, resolver, fonts)!
     if (p.style === 'h1' || p.style === 'title') r.style.keepWithNext = true
     const inset = insets(r.decoration)
-    return { id: `b${i}`, layout: layoutParagraph(fonts, r.style, p.text, width - inset.left - inset.right), decoration: r.decoration }
+    return { id: `b${i}`, layout: layoutParagraph(fonts, p.style === 'body' && options.hyphenator ? { ...r.style, hyphens: 'auto' } : r.style, p.text, width - inset.left - inset.right, options), decoration: r.decoration }
   })
 }

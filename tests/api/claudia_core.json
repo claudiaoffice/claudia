@@ -1,5 +1,5 @@
 {
- "version": "0.15.0",
+ "version": "0.16.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -97,7 +97,7 @@
   "properties": []
  },
  "CSS_VERSION": {
-  "value": "3"
+  "value": "4"
  },
  "ChangeStyle": {
   "class": [
@@ -499,7 +499,7 @@
   "properties": []
  },
  "FACETS": {
-  "value": "(Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')), Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')))"
+  "value": "(Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'hyphens')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')), Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')))"
  },
  "FACET_PROPERTIES": {
   "value": "<frozenset>"
@@ -676,7 +676,7 @@
   "properties": []
  },
  "KINDS": {
-  "value": "{'paragraph': (Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space'))), 'box': (Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')),), 'outline': (Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')),)}"
+  "value": "{'paragraph': (Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'hyphens')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space'))), 'box': (Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')),), 'outline': (Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')),)}"
  },
  "KernelError": {
   "class": [

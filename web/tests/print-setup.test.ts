@@ -56,8 +56,54 @@ describe('painting a page', () => {
     expect(svg).toContain('&lt;a &amp; &quot;b&quot;&gt;')
     expect(svg).toContain("font-variation-settings:'wght' 600")
     expect(svg).toContain('stroke-dasharray="0.001 0.002"')
-    expect(svg).toContain('<clipPath id="p0-clip1">')
+    expect(svg).toContain('<clipPath id="p0-1">')
     expect(svg).toContain('transform="rotate(15 0.005 0.006)"')
     expect(svg).toContain('href="blob:x"')
+  })
+
+  it('draws gradients, transforms, clip paths, fill rules, stroke details and transparent layers', () => {
+    const svg = pageSvg(
+      {
+        width: 1000,
+        height: 1000,
+        items: [
+          {
+            kind: 'group',
+            clip: null,
+            rotation: 0,
+            origin: { x: 0, y: 0 },
+            matrix: [500000, 0, 0, 2000000, 1000, 2000],
+            clipPath: { ops: [['M', 0, 0], ['L', 10, 0], ['L', 0, 10], ['Z']], evenOdd: true },
+            opacity: 128,
+            items: [
+              {
+                kind: 'path',
+                ops: [['M', 0, 0], ['L', 5, 5]],
+                fill: { kind: 'linear', coords: [0, 0, 1000, 0], stops: [{ offset: 0, color: { r: 255, g: 0, b: 0, a: 255 } }, { offset: 1000000, color: { r: 0, g: 0, b: 255, a: 0 } }], matrix: [1000000, 0, 0, 1000000, 0, 0] },
+                stroke: { kind: 'radial', coords: [1, 2, 3, 1, 2, 0], stops: [], matrix: [1000000, 0, 0, 1000000, 0, 0] },
+                lineWidth: 1000,
+                fillRule: 'evenodd',
+                lineCap: 'round',
+                lineJoin: 'bevel',
+                miterLimit: 4000,
+                dash: [1000, 1000],
+                dashOffset: 500,
+              },
+            ],
+          },
+        ],
+      },
+      () => undefined,
+      'q',
+    )
+    expect(svg).toContain('<linearGradient id="q-2" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="0" y1="0" x2="1" y2="0">')
+    expect(svg).toContain('stop-opacity="0"')
+    expect(svg).toContain('<radialGradient id="q-3"')
+    expect(svg).toContain('transform="matrix(0.5 0 0 2 1 2)"')
+    expect(svg).toContain('clip-rule="evenodd"')
+    expect(svg).toContain('opacity="0.502"')
+    expect(svg).toContain('fill-rule="evenodd"')
+    expect(svg).toContain('stroke-linecap="round" stroke-linejoin="bevel" stroke-miterlimit="4"')
+    expect(svg).toContain('stroke-dashoffset="0.5"')
   })
 })

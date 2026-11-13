@@ -92,7 +92,7 @@ One server serves one app. Name the app to choose it (`computes` is the default)
 By hand (needs Node.js 22 or newer for the build):
 
 ```bash
-cd web && npm ci && npx nuxt generate          # writes web/.output/public
+cd web && npm ci && npm run build             # writes web/.output/public (npm ci also installs ../layout's dependencies)
 cd .. && uv run python -m claudia_server --no-tls --dir .claudia/computes/documents \
     --state-dir .claudia/computes/state --web web/.output/public
 ```

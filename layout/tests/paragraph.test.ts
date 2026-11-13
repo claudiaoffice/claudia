@@ -3,7 +3,8 @@ import { canonicalJson } from '../src/canonical'
 import { FontSet } from '../src/fonts/fontset'
 import { layoutParagraph, MAX_STRETCH } from '../src/text/paragraph'
 import { paragraphStyle } from '../src/text/style'
-import { fixture } from './fonts'
+import { fixture, hyphenatorFor } from './fonts'
+import { HYPHENATION } from '../src/text/hyphenate'
 import { harfbuzz, sha256 } from './helpers'
 
 let fonts: FontSet
@@ -112,5 +113,83 @@ describe('layoutParagraph', () => {
     const a = canonicalJson(layoutParagraph(fonts, paragraphStyle(inter, 10500, { align: 'justify' }), TEXT, 150000))
     const b = canonicalJson(layoutParagraph(fonts, paragraphStyle(inter, 10500, { align: 'justify' }), TEXT, 150000))
     expect(a).toBe(b)
+  })
+})
+
+describe('hyphenation', () => {
+  const LONG =
+    'Die Silbentrennung entscheidet, wie gleichmäßig ein Blocksatz aussieht: Ohne sie müssen die Wortzwischenräume ' +
+    'ganzer Zeilen aufklaffen, sobald ein Kompositum wie Donaudampfschifffahrtsgesellschaft oder Rechtsschutzversicherung ' +
+    'nicht mehr auf die Zeile passt. Mit ihr bleibt der Grauwert der Seite ruhig, und das Auge findet leichter zur nächsten Zeile.'
+  const join = (lines: { text: string; hyphenated: boolean }[]) =>
+    lines.map((l, i) => (l.hyphenated ? l.text.slice(0, -1) : l.text + (i < lines.length - 1 ? ' ' : ''))).join('')
+
+  it('breaks words where the patterns allow, keeping every character and the offsets continuous', () => {
+    const de = hyphenatorFor('de')
+    const style = paragraphStyle(inter, 10000, { align: 'justify', hyphens: 'auto', language: 'de' })
+    const p = layoutParagraph(fonts, style, LONG, 120000, { hyphenator: de })
+    const hyphenated = p.lines.filter((l) => l.hyphenated)
+    expect(hyphenated.length).toBeGreaterThan(0)
+    expect(join(p.lines)).toBe(LONG)
+    expect(p.lines[0]!.start).toBe(0)
+    expect(p.lines.at(-1)!.end).toBe(LONG.length)
+    for (let i = 1; i < p.lines.length; i++) expect(p.lines[i]!.start).toBe(p.lines[i - 1]!.end)
+    for (const l of hyphenated) {
+      expect(l.text.endsWith('-')).toBe(true)
+      // the break is one the patterns give, with enough letters on both sides
+      const word = /(\p{L}+)-$/u.exec(l.text)![1]!
+      const rest = /^\p{L}+/u.exec(LONG.slice(l.end))![0]
+      expect(word.length).toBeGreaterThanOrEqual(HYPHENATION.left)
+      expect(rest.length).toBeGreaterThanOrEqual(HYPHENATION.right)
+      expect(de.points(word + rest)).toContain(word.length)
+    }
+    expect(p.overflows).toBe(false)
+  })
+
+  it('never ends more than two lines in a row with a hyphen, nor the last but one line of a paragraph', () => {
+    const de = hyphenatorFor('de')
+    for (const width of [60000, 80000, 100000, 140000]) {
+      const p = layoutParagraph(fonts, paragraphStyle(inter, 10000, { align: 'justify', hyphens: 'auto' }), LONG, width, { hyphenator: de })
+      let run = 0
+      for (const l of p.lines) {
+        run = l.hyphenated ? run + 1 : 0
+        expect(run).toBeLessThanOrEqual(HYPHENATION.maxConsecutive)
+      }
+      expect(p.lines.at(-2)?.hyphenated ?? false).toBe(false)
+    }
+  })
+
+  it('hyphenates only with hyphens: auto and patterns', () => {
+    const de = hyphenatorFor('de')
+    const manual = layoutParagraph(fonts, paragraphStyle(inter, 10000, { align: 'justify' }), LONG, 120000, { hyphenator: de })
+    expect(manual.lines.some((l) => l.hyphenated)).toBe(false)
+    const none = layoutParagraph(fonts, paragraphStyle(inter, 10000, { align: 'justify', hyphens: 'auto' }), LONG, 120000)
+    expect(none.lines.some((l) => l.hyphenated)).toBe(false)
+  })
+
+  it('breaks at a soft hyphen, which is drawn only there', () => {
+    const text = 'Zucker Zu\u00adcker\u00adbä\u00adcke\u00adrei'
+    const narrow = layoutParagraph(fonts, paragraphStyle(carlito, 12000), text, 60000)
+    expect(narrow.lines.some((l) => l.hyphenated)).toBe(true)
+    expect(narrow.lines.every((l) => !l.text.includes('\u00ad'))).toBe(true)
+    expect(narrow.lines.map((l) => l.text).join('|').replace(/-\|/g, '').replace(/\|/g, ' ')).toBe('Zucker Zuckerbäckerei')
+    const wide = layoutParagraph(fonts, paragraphStyle(carlito, 12000), text, 300000)
+    expect(wide.lines).toHaveLength(1)
+    expect(wide.lines[0]!.text).toBe('Zucker Zuckerbäckerei')
+    expect(wide.lines[0]!.words[1]!.length).toBe(text.length - 7)
+    const none = layoutParagraph(fonts, paragraphStyle(carlito, 12000, { hyphens: 'none' }), text, 60000)
+    expect(none.lines.some((l) => l.hyphenated)).toBe(false)
+  })
+
+  it('weighs the whole paragraph: with hyphenation no space of a justified paragraph is more than doubled', () => {
+    const de = hyphenatorFor('de')
+    const m = fonts.metrics(inter)
+    const spaceW = Math.round((fonts.shape(inter, ' ').advances[0]! * 10000) / m.unitsPerEm)
+    const text = Array.from({ length: 4 }, () => TEXT).join(' ')
+    const p = layoutParagraph(fonts, paragraphStyle(inter, 10000, { align: 'justify', hyphens: 'auto' }), text, 250000, { hyphenator: de })
+    for (const l of p.lines.slice(0, -1)) {
+      const gaps = l.text.split(' ').length - 1
+      expect(250000 - l.natural).toBeLessThanOrEqual(spaceW * gaps)
+    }
   })
 })

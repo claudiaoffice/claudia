@@ -241,7 +241,7 @@ msgstr ""
 msgid "Download the document to this computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:158 web/app/components/TextWorkspace.vue:181 web/app/components/Workspace.vue:704
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:158 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:704
 msgid "Edit"
 msgstr ""
 
@@ -269,7 +269,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:223
+#: web/app/components/TextWorkspace.vue:242
 msgid "Flow"
 msgstr ""
 
@@ -289,7 +289,7 @@ msgstr ""
 msgid "For the {thing}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:182 web/app/components/TextWorkspace.vue:196 web/app/components/Workspace.vue:747
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:182 web/app/components/TextWorkspace.vue:215 web/app/components/Workspace.vue:747
 msgid "Format"
 msgstr ""
 
@@ -445,7 +445,7 @@ msgstr ""
 msgid "No styles fit what is selected"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:93 web/app/components/TextWorkspace.vue:199 web/app/components/Workspace.vue:581
+#: web/app/components/SlideWorkspace.vue:93 web/app/components/TextWorkspace.vue:218 web/app/components/Workspace.vue:581
 msgid "No styles yet"
 msgstr ""
 
@@ -469,7 +469,7 @@ msgstr ""
 msgid "Open…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:225
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:244
 msgid "Page"
 msgstr ""
 
@@ -573,7 +573,7 @@ msgstr ""
 msgid "Show the text as pages instead of a flowing text"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:219 web/app/lib/document-menus.ts:154
+#: web/app/components/TextWorkspace.vue:238 web/app/lib/document-menus.ts:154
 msgid "Show who wrote what"
 msgstr ""
 
@@ -641,7 +641,7 @@ msgstr ""
 msgid "This computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:199 web/app/components/TextWorkspace.vue:229 web/app/components/Workspace.vue:757
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:199 web/app/components/TextWorkspace.vue:248 web/app/components/Workspace.vue:757
 msgid "Tools"
 msgstr ""
 
@@ -665,7 +665,7 @@ msgstr ""
 msgid "Version, authors and licence"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:184 web/app/components/TextWorkspace.vue:217 web/app/components/Workspace.vue:749
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:184 web/app/components/TextWorkspace.vue:236 web/app/components/Workspace.vue:749
 msgid "View"
 msgstr ""
 

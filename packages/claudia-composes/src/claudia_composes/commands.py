@@ -13,7 +13,16 @@ from typing import ClassVar
 
 from claudia_core import Batch, Command, Context, Region
 
-from .events import BlocksJoined, BlockSplit, PageSetupChanged, StyleChanged, SuggestionsChanged, TextChanged
+from .events import (
+    BlocksJoined,
+    BlockSplit,
+    LanguageChanged,
+    PageSetupChanged,
+    StyleChanged,
+    SuggestionsChanged,
+    TextChanged,
+)
+from .language import normalize_language
 from .model import Suggestion, TextModel
 from .page import PageSetup
 from .region import TextRange
@@ -356,6 +365,42 @@ class SetPageSetup(Command):
     @classmethod
     def from_data(cls, data, registry) -> SetPageSetup:
         return cls(PageSetup.from_data(data["setup"]))
+
+
+# ------------------------------------------------------------------------------ the language (D915)
+@register
+@dataclass(frozen=True)
+class SetLanguage(Command):
+    """Say which language the text is written in (a BCP 47 tag), or that it is not known (``None``). The layout
+    hyphenates by it (D912). One step in the history, shared by everybody."""
+
+    kind: ClassVar[str] = "composes.SetLanguage"
+    language: str | None
+
+    def __post_init__(self) -> None:
+        if self.language is not None:
+            object.__setattr__(self, "language", normalize_language(self.language))
+
+    @property
+    def label(self) -> str:
+        return "Language"
+
+    @property
+    def summary(self) -> str:
+        return f"set the language to {self.language}" if self.language else "removed the language"
+
+    def apply(self, ctx: Context[TextModel]) -> Command:
+        old = ctx.model.language
+        ctx.model.language = self.language
+        ctx.emit(LanguageChanged(self.language))
+        return SetLanguage(old)
+
+    def to_data(self) -> dict:
+        return {"language": self.language}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetLanguage:
+        return cls(data["language"])
 
 
 # ------------------------------------------------------------------------------ suggestions (D63)

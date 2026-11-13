@@ -13,7 +13,7 @@
  */
 import { zlibSync } from 'fflate'
 import { cosMillionths, sinMillionths } from '../display/angles'
-import type { DisplayItem, DisplayPage, GlyphRun, GroupItem, ImageItem, PathItem } from '../display/list'
+import { type DisplayItem, type DisplayPage, type GlyphRun, type Gradient, type GradientStop, type GroupItem, type ImageItem, isGradient, type Paint, type PathItem, type PathOp } from '../display/list'
 import { faceId, type FaceRef, type FontSet } from '../fonts/fontset'
 import { readSfnt } from '../fonts/sfnt'
 import { isJpeg, readJpeg } from '../image/jpeg'
@@ -129,7 +129,6 @@ export function writePdf(pages: readonly DisplayPage[], fonts: FontSet, images: 
   // ---- what every face needs: its glyphs, and the text each glyph stands for (first seen wins)
   const faces = new Map<string, { ref: FaceRef; gids: Set<number>; chars: Map<number, string> }>()
   const imageIds: string[] = []
-  const alphas = new Set<number>()
   for (const page of pages) {
     for (const it of allItems(page.items)) {
       if (it.kind === 'glyphs') {
@@ -140,12 +139,8 @@ export function writePdf(pages: readonly DisplayPage[], fonts: FontSet, images: 
           f.gids.add(g.gid)
           if (g.chars && !f.chars.has(g.gid)) f.chars.set(g.gid, g.chars)
         }
-        if (it.color.a < 255) alphas.add(it.color.a)
       } else if (it.kind === 'image') {
         if (!imageIds.includes(it.image)) imageIds.push(it.image)
-      } else if (it.kind === 'path') {
-        if (it.fill && it.fill.a < 255) alphas.add(it.fill.a)
-        if (it.stroke && it.stroke.a < 255) alphas.add(it.stroke.a)
       }
     }
   }
@@ -233,29 +228,92 @@ export function writePdf(pages: readonly DisplayPage[], fonts: FontSet, images: 
     imageRefs.set(id, { name: `Im${index}`, ref: n })
   })
 
-  // ---- transparency: one graphics state per alpha value
-  const gstates = new Map<number, { name: string; ref: number }>()
-  ;[...alphas].sort((a, b) => a - b).forEach((a, i) => {
+  // ---- what pages draw with, made as they need it: graphics states, gradient patterns, transparency groups. One
+  // resource dictionary serves every page and every group.
+  const resources = reserve()
+  const gstates = new Map<string, string>()
+  const gstateRefs: string[] = []
+  const patternRefs: string[] = []
+  const formRefs: string[] = []
+  /** the operator that sets fill and stroke opacity (0–255), or `''` for opaque */
+  const opacity = (fill: number, stroke: number): string => {
+    if (fill >= 255 && stroke >= 255) return ''
+    const key = `${fill}:${stroke}`
+    let name = gstates.get(key)
+    if (!name) {
+      name = `GS${gstates.size}`
+      const n = reserve()
+      setObj(n, `<< /Type /ExtGState /ca ${unit(fill)} /CA ${unit(stroke)} >>`)
+      gstates.set(key, name)
+      gstateRefs.push(`/${name} ${n} 0 R`)
+    }
+    return `/${name} gs`
+  }
+  /** a soft mask from a gradient's opacities, as a graphics state; `G` maps the gradient's space to user space */
+  const alphaMask = (g: Gradient, G: Affine): string => {
+    const form = reserve()
+    const data = enc('/Sh0 sh')
+    setStream(
+      form,
+      `/Type /XObject /Subtype /Form /BBox [-1000000 -1000000 1000000 1000000] /Matrix ${affine(G)} ` +
+        `/Group << /S /Transparency /CS /DeviceGray >> /Resources << /Shading << /Sh0 ${shading(g, true)} >> >>`,
+      data,
+    )
     const n = reserve()
-    const v = unit(a)
-    setObj(n, `<< /Type /ExtGState /ca ${v} /CA ${v} >>`)
-    gstates.set(a, { name: `GS${i}`, ref: n })
-  })
+    const name = `GS${gstates.size}`
+    gstates.set(`mask${n}`, name)
+    setObj(n, `<< /Type /ExtGState /SMask << /Type /Mask /S /Luminosity /G ${form} 0 R >> >>`)
+    gstateRefs.push(`/${name} ${n} 0 R`)
+    return `/${name} gs`
+  }
+  /** a pattern for a gradient, placed by `P` (from the gradient's space to the content stream's own space) */
+  const pattern = (g: Gradient, P: Affine): string => {
+    const n = reserve()
+    const name = `P${patternRefs.length}`
+    setObj(n, `<< /Type /Pattern /PatternType 2 /Shading ${shading(g, false)} /Matrix ${affine(P)} >>`)
+    patternRefs.push(`/${name} ${n} 0 R`)
+    return name
+  }
 
-  // ---- pages
-  const pageRefs: number[] = []
-  for (const page of pages) {
-    const H = page.height
+  /**
+   * The content of `items` drawn on a page `H` high, where `ctm` is the transform from the coordinates being drawn
+   * in to those of the content stream (a page, or a transparency group).
+   */
+  const content = (items: readonly DisplayItem[], H: number): string => {
     const ops: string[] = []
-    const alphaOp = (a: number) => (a < 255 ? `/${gstates.get(a)!.name} gs` : '')
+    let ctm: Affine = [1, 0, 0, 1, 0, 0]
     const draw = (it: DisplayItem) => {
-      if (it.kind === 'glyphs') ops.push(glyphOps(it, embedded.get(faceId(it.face))!, H, alphaOp(it.color.a)))
-      else if (it.kind === 'path') ops.push(pathOps(it, H, alphaOp))
+      if (it.kind === 'glyphs') ops.push(glyphOps(it, embedded.get(faceId(it.face))!, H, opacity(it.color.a, 255)))
+      else if (it.kind === 'path') ops.push(pathPaint(it))
       else if (it.kind === 'image') ops.push(imageOps(it, imageRefs.get(it.image)!.name, H))
       else drawGroup(it)
     }
+    const pathPaint = (p: PathItem): string => {
+      const out: string[] = []
+      const geometry = pathGeometry(p, H)
+      const paint = (paint: Paint, stroke: boolean) => {
+        const parts: string[] = ['q']
+        if (isGradient(paint)) {
+          const G = gradientSpace(paint, H)
+          const alphas = new Set(paint.stops.map((s) => s.color.a))
+          if (alphas.size > 1) parts.push(alphaMask(paint, G))
+          else parts.push(stroke ? opacity(255, [...alphas][0] ?? 255) : opacity([...alphas][0] ?? 255, 255))
+          parts.push(`/Pattern ${stroke ? 'CS' : 'cs'} /${pattern(paint, compose(ctm, G))} ${stroke ? 'SCN' : 'scn'}`)
+        } else {
+          parts.push(stroke ? opacity(255, paint.a) : opacity(paint.a, 255))
+          parts.push(`${rgb(paint)} ${stroke ? 'RG' : 'rg'}`)
+        }
+        if (stroke) parts.push(strokeStyle(p))
+        parts.push(geometry, stroke ? 'S' : p.fillRule === 'evenodd' ? 'f*' : 'f', 'Q')
+        out.push(parts.filter(Boolean).join(' '))
+      }
+      if (p.fill) paint(p.fill, false)
+      if (p.stroke && p.lineWidth > 0) paint(p.stroke, true)
+      return out.join('\n')
+    }
     const drawGroup = (g: GroupItem) => {
       ops.push('q')
+      const saved = ctm
       if (g.rotation % 360 !== 0) {
         const c = cosMillionths(g.rotation)
         const s = sinMillionths(g.rotation)
@@ -265,25 +323,53 @@ export function writePdf(pages: readonly DisplayPage[], fonts: FontSet, images: 
         const e = ox - mulDivRound(ox, c, 1_000_000) - mulDivRound(oy, s, 1_000_000)
         const f = oy + mulDivRound(ox, s, 1_000_000) - mulDivRound(oy, c, 1_000_000)
         ops.push(`${fmt6(c)} ${fmt6(-s)} ${fmt6(s)} ${fmt6(c)} ${fmt3(e)} ${fmt3(f)} cm`)
+        ctm = compose(ctm, [c / 1e6, -s / 1e6, s / 1e6, c / 1e6, e / 1000, f / 1000])
+      }
+      if (g.matrix) {
+        const [a, b, c, d, e, f] = g.matrix
+        // the matrix is in page coordinates (y down); in PDF's (y up) it is F·M·F⁻¹ with F(x, y) = (x, H − y)
+        const E = mulDivRound(c, H, 1_000_000) + e
+        const Fy = H - mulDivRound(d, H, 1_000_000) - f
+        ops.push(`${fmt6(a)} ${fmt6(-b)} ${fmt6(-c)} ${fmt6(d)} ${fmt3(E)} ${fmt3(Fy)} cm`)
+        ctm = compose(ctm, [a / 1e6, -b / 1e6, -c / 1e6, d / 1e6, E / 1000, Fy / 1000])
       }
       if (g.clip) ops.push(`${fmt3(g.clip.x)} ${fmt3(H - g.clip.y - g.clip.h)} ${fmt3(g.clip.w)} ${fmt3(g.clip.h)} re W n`)
-      for (const child of g.items) draw(child)
+      if (g.clipPath) ops.push(`${pathGeometry({ ops: g.clipPath.ops }, H)} ${g.clipPath.evenOdd ? 'W*' : 'W'} n`)
+      if (g.opacity !== undefined && g.opacity < 255) {
+        // one layer, drawn as a whole and then made transparent (SVG's group opacity)
+        const form = reserve()
+        const name = `Fm${formRefs.length}`
+        formRefs.push(`/${name} ${form} 0 R`)
+        const body = content(g.items, H)
+        setStream(form, `/Type /XObject /Subtype /Form /BBox [-100000 -100000 100000 100000] /Group << /S /Transparency >> /Resources ${resources} 0 R`, enc(body))
+        ops.push(`${opacity(g.opacity, g.opacity)} /${name} Do`)
+      } else for (const child of g.items) draw(child)
+      ctm = saved
       ops.push('Q')
     }
-    for (const it of page.items) draw(it)
+    for (const it of items) draw(it)
+    return ops.filter(Boolean).join('\n')
+  }
+
+  // ---- pages
+  const pageRefs: number[] = []
+  for (const page of pages) {
     const contentN = reserve()
-    setStream(contentN, '', enc(ops.filter(Boolean).join('\n')))
-    const res: string[] = []
-    if (embedded.size) res.push(`/Font << ${[...embedded.values()].map((f) => `/${f.name} ${f.ref} 0 R`).join(' ')} >>`)
-    if (imageRefs.size) res.push(`/XObject << ${[...imageRefs.values()].map((i) => `/${i.name} ${i.ref} 0 R`).join(' ')} >>`)
-    if (gstates.size) res.push(`/ExtGState << ${[...gstates.values()].map((g) => `/${g.name} ${g.ref} 0 R`).join(' ')} >>`)
+    setStream(contentN, '', enc(content(page.items, page.height)))
     const pageN = reserve()
     setObj(
       pageN,
-      `<< /Type /Page /Parent ${pagesRoot} 0 R /MediaBox [0 0 ${fmt3(page.width)} ${fmt3(page.height)}] /Resources << ${res.join(' ')} >> /Contents ${contentN} 0 R >>`,
+      `<< /Type /Page /Parent ${pagesRoot} 0 R /MediaBox [0 0 ${fmt3(page.width)} ${fmt3(page.height)}] /Resources ${resources} 0 R /Contents ${contentN} 0 R >>`,
     )
     pageRefs.push(pageN)
   }
+  const res: string[] = []
+  if (embedded.size) res.push(`/Font << ${[...embedded.values()].map((f) => `/${f.name} ${f.ref} 0 R`).join(' ')} >>`)
+  const xobjects = [...[...imageRefs.values()].map((i) => `/${i.name} ${i.ref} 0 R`), ...formRefs]
+  if (xobjects.length) res.push(`/XObject << ${xobjects.join(' ')} >>`)
+  if (gstateRefs.length) res.push(`/ExtGState << ${gstateRefs.join(' ')} >>`)
+  if (patternRefs.length) res.push(`/Pattern << ${patternRefs.join(' ')} >>`)
+  setObj(resources, `<< ${res.join(' ')} >>`)
 
   setObj(pagesRoot, `<< /Type /Pages /Count ${pageRefs.length} /Kids [${pageRefs.map((r) => r + ' 0 R').join(' ')}] >>`)
   setObj(catalog, `<< /Type /Catalog /Pages ${pagesRoot} 0 R${info.lang ? ` /Lang ${lit(info.lang)}` : ''} /ViewerPreferences << /DisplayDocTitle true >> >>`)
@@ -323,22 +409,71 @@ function glyphOps(run: GlyphRun, font: EmbeddedFont, H: number, gs: string): str
   return `${gs ? 'q ' + gs + ' ' : ''}BT /${font.name} ${fmt3(run.size)} Tf ${rgb(run.color)} rg 1 0 0 1 ${fmt3(run.x)} ${fmt3(H - run.y)} Tm [${parts.join(' ')}] TJ ET${gs ? ' Q' : ''}`
 }
 
-function pathOps(p: PathItem, H: number, alphaOp: (a: number) => string): string {
-  const out: string[] = ['q']
-  const a = p.fill?.a ?? p.stroke?.a ?? 255
-  const gs = alphaOp(a)
-  if (gs) out.push(gs)
-  if (p.fill) out.push(`${rgb(p.fill)} rg`)
-  if (p.stroke) out.push(`${rgb(p.stroke)} RG ${fmt3(p.lineWidth)} w`)
-  if (p.dash?.length) out.push(`[${p.dash.map(fmt3).join(' ')}] 0 d`)
+/** An affine transform in PDF space (y up), in points: `[a, b, c, d, e, f]`. */
+type Affine = [number, number, number, number, number, number]
+
+/** `m` after `n`: first `n`, then `m`. */
+function compose(m: Affine, n: Affine): Affine {
+  return [
+    m[0] * n[0] + m[2] * n[1],
+    m[1] * n[0] + m[3] * n[1],
+    m[0] * n[2] + m[2] * n[3],
+    m[1] * n[2] + m[3] * n[3],
+    m[0] * n[4] + m[2] * n[5] + m[4],
+    m[1] * n[4] + m[3] * n[5] + m[5],
+  ]
+}
+
+/** A transform as PDF writes it: six numbers, rounded (to millionths, and to thousandths of a point). */
+const affine = (m: Affine): string =>
+  `[${m.slice(0, 4).map((v) => fmt6(Math.round(v * 1_000_000))).join(' ')} ${fmt3(Math.round(m[4] * 1000))} ${fmt3(Math.round(m[5] * 1000))}]`
+
+/** From a gradient's own space (in points) to PDF page space, on a page `H` mpt high. */
+function gradientSpace(g: Gradient, H: number): Affine {
+  const [a, b, c, d, e, f] = g.matrix
+  return [a / 1e6, -b / 1e6, c / 1e6, -d / 1e6, e / 1000, (H - f) / 1000]
+}
+
+/** A gradient's shading: its colours (or, `gray`, its opacities as grey levels) along its axis. */
+function shading(g: Gradient, gray: boolean): string {
+  const stops = [...g.stops]
+  if (!stops.length) stops.push({ offset: 0, color: { r: 0, g: 0, b: 0, a: 0 } })
+  if (stops[0]!.offset > 0) stops.unshift({ ...stops[0]!, offset: 0 })
+  if (stops.at(-1)!.offset < 1_000_000) stops.push({ ...stops.at(-1)!, offset: 1_000_000 })
+  const colour = (c: Rgba) => `[${gray ? unit(c.a) : `${unit(c.r)} ${unit(c.g)} ${unit(c.b)}`}]`
+  const piece = (p: GradientStop, q: GradientStop) => `<< /FunctionType 2 /Domain [0 1] /C0 ${colour(p.color)} /C1 ${colour(q.color)} /N 1 >>`
+  let fn: string
+  if (stops.length === 2) fn = piece(stops[0]!, stops[1]!)
+  else {
+    const pieces: string[] = []
+    for (let i = 0; i + 1 < stops.length; i++) pieces.push(piece(stops[i]!, stops[i + 1]!))
+    const bounds = stops.slice(1, -1).map((s) => fmt6(s.offset))
+    fn = `<< /FunctionType 3 /Domain [0 1] /Functions [${pieces.join(' ')}] /Bounds [${bounds.join(' ')}] /Encode [${pieces.map(() => '0 1').join(' ')}] >>`
+  }
+  const c = g.coords.map(fmt3)
+  const coords = g.kind === 'linear' ? c.slice(0, 4) : [c[3], c[4], c[5], c[0], c[1], c[2]]
+  return `<< /ShadingType ${g.kind === 'linear' ? 2 : 3} /ColorSpace /${gray ? 'DeviceGray' : 'DeviceRGB'} /Coords [${coords.join(' ')}] /Function ${fn} /Extend [true true] >>`
+}
+
+/** A path's outline as PDF operators, on a page `H` high. */
+function pathGeometry(p: { ops: readonly PathOp[] }, H: number): string {
+  const out: string[] = []
   for (const op of p.ops) {
     if (op[0] === 'M') out.push(`${fmt3(op[1])} ${fmt3(H - op[2])} m`)
     else if (op[0] === 'L') out.push(`${fmt3(op[1])} ${fmt3(H - op[2])} l`)
     else if (op[0] === 'C') out.push(`${fmt3(op[1])} ${fmt3(H - op[2])} ${fmt3(op[3])} ${fmt3(H - op[4])} ${fmt3(op[5])} ${fmt3(H - op[6])} c`)
     else out.push('h')
   }
-  out.push(p.fill && p.stroke ? 'B' : p.fill ? 'f' : p.stroke ? 'S' : 'n')
-  out.push('Q')
+  return out.join(' ')
+}
+
+/** How a path's outline is stroked: width, ends, corners and dashes. */
+function strokeStyle(p: PathItem): string {
+  const out = [`${fmt3(p.lineWidth)} w`]
+  if (p.lineCap) out.push(`${p.lineCap === 'round' ? 1 : 2} J`)
+  if (p.lineJoin) out.push(`${p.lineJoin === 'round' ? 1 : 2} j`)
+  if (p.miterLimit !== undefined && p.miterLimit !== 10000) out.push(`${fmt3(Math.max(1000, p.miterLimit))} M`)
+  if (p.dash?.length) out.push(`[${p.dash.map(fmt3).join(' ')}] ${fmt3(p.dashOffset ?? 0)} d`)
   return out.join(' ')
 }
 

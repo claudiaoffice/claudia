@@ -10,10 +10,12 @@
  */
 import { boxItems, layoutBox } from '../text/box'
 import { type BoxDecoration, boxDecorationFromCss, type Css, paragraphStyleFromCss, parseColor, type StyleFromCss } from '../text/css'
-import { layoutParagraph } from '../text/paragraph'
+import { layoutParagraph, type ParagraphOptions } from '../text/paragraph'
+import type { Hyphenator } from '../text/hyphenate'
+import { drawSvg, parseSvg, type SvgDocument, SvgError, svgFonts } from '../svg/render'
 import { paragraphStyle, type ParagraphStyle, type Rgba } from '../text/style'
 import { insets, lineItems } from '../display/text'
-import { type DisplayItem, type DisplayList, type DisplayPage, type GroupItem, type Rect, rectPath } from '../display/list'
+import { type DisplayItem, type DisplayList, type DisplayPage, type GroupItem, type Rect, rectPath, walk } from '../display/list'
 import { outlinePath, PathError } from '../display/svgpath'
 import { type FlowBlock, flowItems, locate, paginate } from '../flow/paginate'
 import { contentBox, type PageGeometry, pageGeometry } from '../flow/paper'
@@ -64,6 +66,8 @@ export interface ShapeOutline {
 export interface ImageInfo {
   id: string
   format: string
+  /** the text of an SVG picture (D914), so it can be drawn */
+  svg?: string
 }
 
 export interface TextDocument {
@@ -73,19 +77,29 @@ export interface TextDocument {
   objects?: readonly TextObject[]
   shapes?: readonly ShapeOutline[]
   images?: readonly ImageInfo[]
-  /** BCP 47 language of the text, for shaping */
-  language?: string
+  /** BCP 47 language of the text (D915), for shaping and hyphenation */
+  language?: string | null
 }
 
-/** Something the person should know about the pages: a font that was replaced, an object that cannot be printed. */
+/** What laying out a text needs besides its fonts: the hyphenation patterns of its language, if the caller has them. */
+export interface TextLayoutOptions {
+  hyphenator?: Hyphenator | null
+}
+
+/**
+ * Something the person should know about the pages: a font that was replaced, an object that cannot be printed (or
+ * not all of it), text that is not hyphenated because its language is not known or has no patterns.
+ */
 export interface Note {
-  kind: 'font' | 'object'
+  kind: 'font' | 'object' | 'hyphenation'
   /** for `font`: the family the style asked for and the one used */
   requested?: string
   used?: string
-  /** for `object`: its id and why */
+  /** for `object`: its id and why; for `hyphenation`: why */
   object?: string
   reason?: string
+  /** for `object`: the object is printed, only this part of it is not (an SVG picture's filters, say) */
+  partial?: boolean
 }
 
 export interface TextPages {
@@ -94,6 +108,8 @@ export interface TextPages {
   notes: Note[]
   /** image ids the display list draws */
   images: string[]
+  /** the bytes of pictures that SVG pictures carry inside them, by the image id the display list uses */
+  embedded: Map<string, Uint8Array>
 }
 
 /** CSS pixels to mpt (96 px = 72 pt). */
@@ -126,6 +142,16 @@ export function fontsNeeded(doc: TextDocument, resolver: FontResolver): string[]
     const r = resolver.resolve(css['font-family'] ?? 'sans-serif', weight(css), /^(italic|oblique)$/i.test(css['font-style'] ?? ''), 12000)
     if (r) out.add(r.face.sha256)
   }
+  // the text of SVG pictures
+  const used = new Set((doc.objects ?? []).filter((o) => o.kind === 'image' && o.image).map((o) => o.image))
+  for (const image of doc.images ?? []) {
+    if (!image.svg || !used.has(image.id)) continue
+    try {
+      for (const h of svgFonts(parsedSvg(image), resolver)) out.add(h)
+    } catch (e) {
+      if (!(e instanceof SvgError)) throw e
+    }
+  }
   return [...out].sort()
 }
 
@@ -134,8 +160,11 @@ const weight = (css: Css) => {
   return v === 'bold' ? 700 : v === '' || v === 'normal' ? 400 : Number(v) || 400
 }
 
-/** Lay out `doc` on its pages. Every font {@link fontsNeeded} names must be in `fonts`. */
-export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontResolver): TextPages {
+/**
+ * Lay out `doc` on its pages. Every font {@link fontsNeeded} names must be in `fonts`. `options.hyphenator` holds
+ * the patterns of the text's language, for the styles with `hyphens: auto` (D912).
+ */
+export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontResolver, options: TextLayoutOptions = {}): TextPages {
   const p = doc.page
   const geometry = pageGeometry(p.width, p.height, p.orientation, { top: p.margins[0], right: p.margins[1], bottom: p.margins[2], left: p.margins[3] })
   const box = contentBox(geometry)
@@ -165,12 +194,22 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   }
 
   // ---- the flow
+  const hyphenator = options.hyphenator ?? null
+  const paragraphOptions = { hyphenator }
+  let wantsHyphens = false
   const blocks: FlowBlock[] = doc.blocks.map((b) => {
     const r = styleFor(b.style)
     const style: ParagraphStyle = { ...r.style, keepWithNext: headingLike(b.style, styles) }
+    if (style.hyphens === 'auto' && b.text) wantsHyphens = true
     const inset = insets(r.decoration)
-    return { id: b.id, layout: layoutParagraph(fonts, style, b.text, box.w - inset.left - inset.right), decoration: r.decoration }
+    return { id: b.id, layout: layoutParagraph(fonts, style, b.text, box.w - inset.left - inset.right, paragraphOptions), decoration: r.decoration }
   })
+  if (wantsHyphens && !hyphenator) {
+    notes.push({
+      kind: 'hyphenation',
+      reason: doc.language ? `there are no hyphenation patterns for ${doc.language}, so words are not hyphenated` : 'the text has no language set, so words are not hyphenated',
+    })
+  }
   const flow = paginate(blocks, geometry)
   const pages: DisplayPage[] = flowItems(fonts, flow, blocks, geometry)
 
@@ -179,6 +218,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const shapes = new Map((doc.shapes ?? []).map((s) => [s.id, s]))
   const images = new Map((doc.images ?? []).map((i) => [i.id, i]))
   const usedImages: string[] = []
+  const embedded = new Map<string, Uint8Array>()
   for (const o of doc.objects ?? []) {
     const index = blockIndex.get(o.anchor.container)
     const spot = index === undefined ? null : locate(flow, blocks, index, o.anchor.offset)
@@ -188,9 +228,9 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
     // keep the object on its page: inside the margins across, and above the bottom margin
     const x = Math.max(box.x, Math.min(spot.x, box.x + box.w - w))
     const y = Math.max(box.y, Math.min(spot.top, geometry.height - geometry.margin.bottom - h))
-    const group = objectItems(o, { x, y, w, h }, fonts, styles, styleFor, shapes, images, notes)
+    const group = objectItems(o, { x, y, w, h }, { fonts, resolver, styles, styleFor, shapes, images, notes, embedded, paragraphOptions })
     if (!group) continue
-    for (const it of group.items) if (it.kind === 'image' && !usedImages.includes(it.image)) usedImages.push(it.image)
+    for (const it of walk(group.items)) if (it.kind === 'image' && !usedImages.includes(it.image)) usedImages.push(it.image)
     pages[spot.page]!.items.push(group)
   }
 
@@ -207,25 +247,41 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   }
 
   return {
-    list: { layoutVersion: LAYOUT_VERSION, shaper: fonts.shaperId, pages },
+    list: { layoutVersion: LAYOUT_VERSION, shaper: fonts.shaperId, ...(hyphenator ? { hyphenation: hyphenator.id } : {}), pages },
     geometry,
     notes,
     images: usedImages,
+    embedded,
   }
 }
 
 const muted = (c: Rgba): Rgba => ({ ...c, a: Math.round((c.a * 65) / 100) })
 
-function objectItems(
-  o: TextObject,
-  r: Rect,
-  fonts: FontSet,
-  styles: ReadonlyMap<string, TextStyle>,
-  styleFor: (id: string) => StyleFromCss,
-  shapes: ReadonlyMap<string, ShapeOutline>,
-  images: ReadonlyMap<string, ImageInfo>,
-  notes: Note[],
-): GroupItem | null {
+interface ObjectContext {
+  fonts: FontSet
+  resolver: FontResolver
+  styles: ReadonlyMap<string, TextStyle>
+  styleFor: (id: string) => StyleFromCss
+  shapes: ReadonlyMap<string, ShapeOutline>
+  images: ReadonlyMap<string, ImageInfo>
+  notes: Note[]
+  embedded: Map<string, Uint8Array>
+  paragraphOptions: ParagraphOptions
+}
+
+const parsed = new WeakMap<ImageInfo, SvgDocument>()
+/** An SVG picture read once (fontsNeeded and layoutText both need it). */
+function parsedSvg(image: ImageInfo): SvgDocument {
+  let doc = parsed.get(image)
+  if (!doc) {
+    doc = parseSvg(image.svg ?? '')
+    parsed.set(image, doc)
+  }
+  return doc
+}
+
+function objectItems(o: TextObject, r: Rect, ctx: ObjectContext): GroupItem | null {
+  const { fonts, styles, styleFor, shapes, images, notes } = ctx
   const boxCss = cssOf(styles, o.style)
   const decoration: BoxDecoration = boxDecorationFromCss(boxCss, 12000)
   const group = (items: DisplayItem[], clip = true): GroupItem => ({
@@ -237,7 +293,7 @@ function objectItems(
   })
   if (o.kind === 'text') {
     const words = o.paragraph ? styleFor(o.paragraph.style) : null
-    const laid = layoutBox(fonts, o.paragraph?.text ?? null, words?.style ?? null, r.w, r.h, decoration, words?.verticalAlign ?? 'top')
+    const laid = layoutBox(fonts, o.paragraph?.text ?? null, words?.style ?? null, r.w, r.h, decoration, words?.verticalAlign ?? 'top', ctx.paragraphOptions)
     const g = boxItems(fonts, laid, r.x, r.y, o.rotation)
     return g
   }
@@ -262,16 +318,30 @@ function objectItems(
       const area = outline.text_area
       const inner: Rect = { x: r.x + Math.round((area.x * r.w) / 100), y: r.y + Math.round((area.y * r.h) / 100), w: Math.round((area.w * r.w) / 100), h: Math.round((area.h * r.h) / 100) }
       const words = styleFor(o.paragraph.style)
-      const laid = layoutBox(fonts, o.paragraph.text, words.style, inner.w, inner.h, undefined, words.verticalAlign)
+      const laid = layoutBox(fonts, o.paragraph.text, words.style, inner.w, inner.h, undefined, words.verticalAlign, ctx.paragraphOptions)
       items.push(boxItems(fonts, laid, inner.x, inner.y))
     }
     return group(items, false)
   }
   if (o.kind === 'image') {
     const info = o.image ? images.get(o.image) : undefined
+    const placeholder = () => group([{ kind: 'path', ops: rectPath(r), fill: null, stroke: { r: 150, g: 150, b: 150, a: 255 }, lineWidth: 500, dash: [3000, 2000] }])
+    if (info?.format === 'svg' && info.svg !== undefined) {
+      // an SVG picture is drawn as what it is made of (D914), into the object's box
+      try {
+        const drawing = drawSvg(parsedSvg(info), r, { fonts, resolver: ctx.resolver })
+        for (const reason of drawing.notes) notes.push({ kind: 'object', object: o.id, reason, partial: true })
+        for (const [id, bytes] of drawing.images) ctx.embedded.set(id, bytes)
+        return group([drawing.item])
+      } catch (e) {
+        if (!(e instanceof SvgError)) throw e
+        notes.push({ kind: 'object', object: o.id, reason: 'its SVG picture cannot be read' })
+        return placeholder()
+      }
+    }
     if (!info || !['png', 'jpeg', 'gif', 'bmp'].includes(info.format)) {
-      notes.push({ kind: 'object', object: o.id, reason: info?.format === 'svg' ? 'SVG pictures cannot be printed yet' : 'its picture is missing' })
-      return group([{ kind: 'path', ops: rectPath(r), fill: null, stroke: { r: 150, g: 150, b: 150, a: 255 }, lineWidth: 500, dash: [3000, 2000] }])
+      notes.push({ kind: 'object', object: o.id, reason: 'its picture is missing' })
+      return placeholder()
     }
     return group([{ kind: 'image', image: info.id, ...r }])
   }

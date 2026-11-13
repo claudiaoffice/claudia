@@ -20,7 +20,7 @@ const find = (base) => {
   }
 }
 const from = find(join(process.cwd(), 'package.json')) ?? find(import.meta.url)
-if (!from) throw new Error('harfbuzzjs is not installed')
+if (!from) throw new Error('harfbuzzjs is not installed: run `npm ci` (in web/ this also installs the layout library\'s dependencies)')
 const to = resolve(process.argv[2] ?? join(here, '..', 'wasm'))
 mkdirSync(to, { recursive: true })
 for (const { file, sha256 } of pins) {

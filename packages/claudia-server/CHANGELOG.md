@@ -58,6 +58,21 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the
   WebKit view of the Linux client) could show the previous web app for a long time after the server was updated.
 
+## [0.25.0] - 2026-11-12
+
+Hyphenation and SVG in the client's pages (D912–D915): the server hands out the patterns.
+
+### Added
+- `GET /api/hyphenation` and `GET /api/hyphenation/{sha256}` (`claudia_server.hyphenation`, D913): the languages the
+  server can hyphenate (BCP 47 tag, other tags they stand for, name, licence, the hash and size of the pattern file
+  and of the exceptions), and the files themselves under their hash, cached for good.
+- `--hyphenation DIR` (default `STATE_DIR/hyphenation`) and `create_app(hyphenation=...)`; the start-up banner names
+  the languages, or says that pages are not hyphenated.
+- `python -m claudia_server.hyphenation fetch DIR`: the TeX hyphenation patterns of hyph-utf8 for German (1996
+  spelling) and British and American English, pinned at one commit with every file's SHA-256
+  (`hyphenation.lock.json`).
+- composes: `language` and `set_language` (D915), the language of a text.
+
 ## [0.24.0] - 2026-11-12
 
 Print preview and PDF in the client (D901–D907): the server hands out what the client lays out with.

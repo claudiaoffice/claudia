@@ -52,6 +52,7 @@ export const CSS_ORDER = [
   'line-height',
   'letter-spacing',
   'word-spacing',
+  'hyphens',
   'margin-top',
   'margin-right',
   'margin-bottom',

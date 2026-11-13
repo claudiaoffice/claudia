@@ -25,7 +25,7 @@ Unused numbers in a closed block stay unused.
 | D281–D290 | *free — next branch or agent to ask* | | open |
 
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D315 used) | 2026-11-10 | open |
-| D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D911 used) | 2026-11-12 | open |
+| D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D916 used) | 2026-11-12 | open |
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D318 used) | 2026-11-10 | open |
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |

@@ -20,6 +20,7 @@ app's sealed documents and its server's own state (certificate, administrators, 
     .claudia/composes/documents   .claudia/composes/state
     .claudia/creates/documents    .claudia/creates/state
     .claudia/fonts                the fonts every app hands to its clients for print and PDF (fetched once)
+    .claudia/hyphenation          the hyphenation patterns they hand out, the same way (fetched once)
 
 ``--dir DIR`` means the same for one app and for ``all``: ``DIR/<app>/documents``. The installed desktop apps keep
 theirs elsewhere, in the system's place for user data, so a development checkout never touches them. Folders that
@@ -214,6 +215,7 @@ def server_command(args: argparse.Namespace, python: str = sys.executable, built
     command += ["--web", Path(built).as_posix()]
     command += ["--host", args.host, "--port", str(args.port)]
     command += ["--fonts", fonts_folder(args.root).as_posix()]
+    command += ["--hyphenation", hyphenation_folder(args.root).as_posix()]
     if MODELS[args.app]:
         command += ["--model", MODELS[args.app]]
     for folder in args.shapes:
@@ -249,6 +251,35 @@ def ensure_fonts(root: str | Path, fetch=None) -> bool:
         print(
             f"Could not fetch the fonts ({problem}); print preview needs them. Try again later, or run "
             f"`uv run python -m claudia_fonts fetch {folder}`.",
+            flush=True,
+        )
+        return False
+    return True
+
+
+def hyphenation_folder(root: str | Path) -> Path:
+    """The hyphenation patterns all the servers of a checkout share: ``ROOT/hyphenation`` (D913)."""
+    return Path(root) / "hyphenation"
+
+
+def ensure_hyphenation(root: str | Path, fetch=None) -> bool:
+    """Fetch the pinned hyphenation patterns into :func:`hyphenation_folder` once (D913). As with the fonts, a failed
+    fetch is reported and the servers start anyway; their pages are then not hyphenated. ``True`` when the patterns
+    are there afterwards."""
+    from claudia_server.hyphenation import FetchError, HyphenationService
+    from claudia_server.hyphenation import fetch as fetch_patterns
+
+    folder = hyphenation_folder(root)
+    if folder.is_dir() and HyphenationService.from_folder(folder).languages:
+        return True
+    folder.mkdir(parents=True, exist_ok=True)  # the server is given the folder either way
+    print(f"Fetching the hyphenation patterns into {folder} (once; about 400 kB) …", flush=True)
+    try:
+        (fetch or fetch_patterns)(folder)
+    except (FetchError, OSError) as problem:
+        print(
+            f"Could not fetch the hyphenation patterns ({problem}); pages are not hyphenated until they are there. "
+            f"Run `uv run python -m claudia_server.hyphenation fetch {folder}`.",
             flush=True,
         )
         return False
@@ -342,6 +373,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.ai and not has_openvino():
         install_openvino()
     ensure_fonts(args.root)
+    ensure_hyphenation(args.root)
     servers = app_servers(args)
     processes: list[subprocess.Popen] = []
     try:

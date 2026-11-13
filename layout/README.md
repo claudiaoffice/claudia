@@ -12,11 +12,12 @@ computes and creates will reuse its parts with adapters of their own (D902).
 |---|---|---|
 | Units | `units.ts` | Whole thousandths of a point (*mpt*), exact `mulDivRound`, CSS lengths and paper sizes to mpt |
 | Fonts | `fonts/` | Reads sfnt tables; shapes and subsets with pinned HarfBuzz WebAssembly (D903); a `FontSet` of faces by SHA-256 and variation; CSS font matching over a catalogue (`FontResolver`, D905, D911) |
-| Text | `text/` | A paragraph to lines (UAX #14 breaks, alignment, justification); CSS to a paragraph style; boxes clipped at their border |
+| Text | `text/` | A paragraph to lines (UAX #14 breaks, hyphenation by TeX's patterns, lines chosen for the whole paragraph by Knuth and Plass, alignment, justification); CSS to a paragraph style; boxes clipped at their border |
 | Flow | `flow/` | Paper sizes, page geometry, pagination with orphans, widows, keep-with-next and collapsing margins (D909) |
-| Display list | `display/` | Glyph runs, paths, images and groups (clip, rotation); deterministic trigonometry; SVG path data to outlines |
+| Display list | `display/` | Glyph runs, paths (colours, gradients), images and groups (clip rectangle or path, rotation, transform, opacity); deterministic trigonometry; shape outlines |
+| SVG | `svg/` | Any SVG picture as display items: an XML reader of its own, styles, transforms, paths, gradients, clip paths, text in the server's fonts (D914) |
 | Images | `image/` | PNG, JPEG, GIF and BMP decoders of its own |
-| PDF | `pdf/writer.ts` | A PDF from a display list: embedded subset fonts (CID = GID, ToUnicode), images, clipping, transparency |
+| PDF | `pdf/writer.ts` | A PDF from a display list: embedded subset fonts (CID = GID, ToUnicode), images, gradients, clipping, transparency groups |
 | Apps | `apps/composes.ts` | A composes text as the server sends it, to pages |
 
 ## Rules
@@ -31,12 +32,13 @@ computes and creates will reuse its parts with adapters of their own (D902).
 ## Use
 
 ```ts
-import { HarfBuzz, FontSet, FontResolver, layoutText, writePdf } from '@claudia/layout'
+import { HarfBuzz, FontSet, FontResolver, Hyphenator, layoutText, writePdf } from '@claudia/layout'
 
 const hb = await HarfBuzz.load({ shaping, subset }, sha256)  // the two wasm files; sha256: your hash function, checked against HARFBUZZ_PIN
 const fonts = new FontSet(hb)
 fonts.add(fontHash, fontBytes)                                // every face the document needs
-const pages = layoutText(textDocument, fonts, new FontResolver(catalogue))
+const hyphenator = new Hyphenator(patternsHash, patternsText, exceptionsText)   // from GET /api/hyphenation
+const pages = layoutText(textDocument, fonts, new FontResolver(catalogue), { hyphenator })
 const pdf = writePdf(pages.list, fonts, id => imageBytes[id], { title, lang })
 ```
 
@@ -53,6 +55,12 @@ npm run docs         # TypeDoc into docs-build/
 npm run coverage
 ```
 
-The tests read every PDF back with pdf.js and compare image decoding against Pillow (`tests/images/expected.json`).
+The tests read every PDF back with pdf.js, compare image decoding against Pillow (`tests/images/expected.json`), and
+compare the SVG drawings with librsvg's where `rsvg-convert` and `pdftoppm` are installed.
 `scripts/copy-wasm.mjs DIR` copies the two pinned HarfBuzz files into an app (the web app runs it before `dev` and
 `build`).
+
+An app that links the library with `file:../layout` gets only a symlink from npm, not the library's dependencies.
+`scripts/ensure-deps.mjs` installs them in `layout/node_modules` when they are missing or out of date (without the
+development tools, unless they were there already). The web app runs it after `npm ci`/`npm install` and before
+`dev` and `build`, so an existing checkout needs no reinstall.

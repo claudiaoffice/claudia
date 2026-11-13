@@ -65,6 +65,9 @@ export interface TextState extends BaseState {
   sending: Unwritten | null
   /** The page the text is printed on (D904); `null` until loaded or for a server that does not know pages. */
   page: PageSetupData | null
+  /** The language the text is written in (D915), a BCP 47 tag; `null` when it is not set. `undefined` for a server
+   *  that does not know languages. */
+  language: string | null | undefined
 }
 
 /** An image of the text as the server sends it (`images`): base64 data. */
@@ -99,7 +102,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null, page: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined })
   }
 
   get readOnly(): boolean {
@@ -117,8 +120,14 @@ export class TextSession extends BaseSession<TextState> {
       // an older server has no pages: the preview then starts from A4 and cannot store a change
       link.request<PageSetupData>('page').catch(() => null),
     ])
+    // an older server has no language either; the preview then hyphenates nothing and offers no choice
+    const language = await link
+      .request<{ language: string | null }>('language')
+      .then((a) => a.language)
+      .catch(() => undefined)
     const s = this.state
     s.page = page
+    s.language = language
     s.styles = answer.styles
     s.palette = palette
     s.styleModel = styleModel
@@ -185,6 +194,9 @@ export class TextSession extends BaseSession<TextState> {
         return true
       case 'page':
         s.page = data.setup as PageSetupData
+        return true
+      case 'language':
+        s.language = (data.language as string | null) ?? null
         return true
       case 'palette':
         // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls
@@ -489,6 +501,12 @@ export class TextSession extends BaseSession<TextState> {
   setPage(setup: PageSetupData): Promise<boolean> | undefined {
     if (this.denied()) return undefined
     return this.act(async () => (await this.attempt('set_page', { setup, base: this.state.revision })) !== false)
+  }
+
+  /** Say which language the text is written in (D915), or `null` for not known: one step, for everybody. */
+  setLanguage(language: string | null): Promise<boolean> | undefined {
+    if (this.denied()) return undefined
+    return this.act(async () => (await this.attempt('set_language', { language, base: this.state.revision })) !== false)
   }
 
   /** The floating objects, their outlines and their images, for printing (D907). Read when the preview opens. */

@@ -9,11 +9,14 @@
 #   docker build --build-arg WITH_OPENVINO=true -t claudia-server:ai .                        # with --ai support
 
 # ---- web: the Nuxt single-page app, built to static files --------------------------------------
-# It links the layout library (../layout, D902), so both folders are copied; `npm run build` also copies the
-# pinned HarfBuzz WebAssembly into the app (D903).
+# It links the layout library (../layout, D902), so the library's sources are copied too (not a node_modules of the
+# build machine's); `npm ci` installs the library's own dependencies (web's postinstall), and `npm run build` copies
+# the pinned HarfBuzz WebAssembly into the app (D903).
 FROM node:22-bookworm-slim AS web
 WORKDIR /build/web
-COPY layout/ /build/layout/
+COPY layout/package.json layout/package-lock.json layout/tsconfig.json /build/layout/
+COPY layout/src/ /build/layout/src/
+COPY layout/scripts/ /build/layout/scripts/
 COPY web/package.json web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 COPY web/ ./
@@ -36,6 +39,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync "$@"
 # The starter set of open fonts, pinned by SHA-256 (D905): what the clients lay out and print with.
 RUN /app/.venv/bin/python -m claudia_fonts fetch /app/fonts
+# The hyphenation patterns, pinned the same way (D913): what the clients hyphenate with.
+RUN /app/.venv/bin/python -m claudia_server.hyphenation fetch /app/hyphenation
 
 # ---- runtime ----------------------------------------------------------------------------------
 FROM python:3.14-slim-bookworm
@@ -47,6 +52,7 @@ RUN groupadd --system --gid 10001 claudia \
 COPY --from=python /app/.venv /app/.venv
 COPY --from=web /build/web/.output/public /app/web
 COPY --from=python /app/fonts /app/fonts
+COPY --from=python /app/hyphenation /app/hyphenation
 COPY --chmod=755 docker/entrypoint.sh /app/entrypoint.sh
 COPY docker/healthcheck.py /app/healthcheck.py
 

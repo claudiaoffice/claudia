@@ -99,6 +99,21 @@ What ``create_app`` is given to serve fonts to clients (not in ``__all__``; docu
 .. autofunction:: claudia_server.fonts.font_router
 .. autodata:: claudia_server.fonts.FONTS_FORMAT
 
+Hyphenation patterns for the clients' layout, the same way (D913): ``GET /api/hyphenation`` and
+``/api/hyphenation/{sha256}``, and ``python -m claudia_server.hyphenation fetch DIR``.
+
+.. autoclass:: claudia_server.hyphenation.HyphenationService
+   :members:
+.. autoclass:: claudia_server.hyphenation.Language
+   :members:
+.. autoclass:: claudia_server.hyphenation.PatternFile
+   :members:
+.. autofunction:: claudia_server.hyphenation.hyphenation_router
+.. autofunction:: claudia_server.hyphenation.read_lock
+.. autofunction:: claudia_server.hyphenation.fetch
+.. autoexception:: claudia_server.hyphenation.FetchError
+.. autodata:: claudia_server.hyphenation.HYPHENATION_FORMAT
+
 Users
 -----
 

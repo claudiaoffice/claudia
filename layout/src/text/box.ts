@@ -11,7 +11,7 @@ import { decorationItems, insets, lineItems } from '../display/text'
 import type { DisplayItem, GroupItem, Rect } from '../display/list'
 import type { FontSet } from '../fonts/fontset'
 import { type BoxDecoration, NO_DECORATION } from './css'
-import { layoutParagraph, type ParagraphLayout } from './paragraph'
+import { layoutParagraph, type ParagraphLayout, type ParagraphOptions } from './paragraph'
 import type { ParagraphStyle } from './style'
 
 export interface BoxLayout {
@@ -42,11 +42,12 @@ export function layoutBox(
   height: number,
   decoration: BoxDecoration = NO_DECORATION,
   verticalAlign: 'top' | 'middle' | 'bottom' = 'top',
+  options: ParagraphOptions = {},
 ): BoxLayout {
   const inset = insets(decoration)
   const content: Rect = { x: inset.left, y: inset.top, w: Math.max(0, width - inset.left - inset.right), h: Math.max(0, height - inset.top - inset.bottom) }
   if (text === null || !style) return { width, height, decoration, content, paragraph: null, textTop: content.y, visibleLines: 0, clipped: false }
-  const paragraph = layoutParagraph(fonts, style, text, content.w)
+  const paragraph = layoutParagraph(fonts, style, text, content.w, options)
   const free = content.h - paragraph.height
   const shift = verticalAlign === 'middle' ? Math.floor(free / 2) : verticalAlign === 'bottom' ? free : 0
   // a paragraph taller than its box starts at the top, whatever the alignment, so its first words can be read

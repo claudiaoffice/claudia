@@ -42,14 +42,54 @@ export interface GlyphRun {
 /** Path commands: move, line, cubic curve, close. */
 export type PathOp = ['M', number, number] | ['L', number, number] | ['C', number, number, number, number, number, number] | ['Z']
 
-/** A path, filled and/or stroked. `dash`: lengths of dashes and gaps, mpt. */
+/**
+ * An affine transform `[a, b, c, d, e, f]`: a point (x, y) goes to (a·x + c·y + e, b·x + d·y + f). `a`–`d` are in
+ * millionths (1 000 000 is 1), `e` and `f` in mpt, all whole numbers, in page coordinates (y down).
+ */
+export type Matrix = [number, number, number, number, number, number]
+export const IDENTITY: Matrix = [1_000_000, 0, 0, 1_000_000, 0, 0]
+
+/** A colour at a place of a gradient: `offset` from 0 to 1 000 000. */
+export interface GradientStop {
+  offset: number
+  color: Rgba
+}
+
+/**
+ * A gradient, as SVG and PDF know it. `coords` are in mpt in the gradient's own space, which `matrix` places on
+ * the page: `[x1, y1, x2, y2]` for a linear one, `[cx, cy, r, fx, fy, fr]` for a radial one (from the focal circle
+ * to the outer one). Beyond its ends the end colours carry on (SVG's `spreadMethod="pad"`).
+ */
+export interface Gradient {
+  kind: 'linear' | 'radial'
+  coords: number[]
+  stops: GradientStop[]
+  matrix: Matrix
+}
+
+/** What a path is filled or stroked with: a colour or a gradient. */
+export type Paint = Rgba | Gradient
+
+/** True for a gradient paint. */
+export const isGradient = (p: Paint): p is Gradient => 'kind' in p
+
+/**
+ * A path, filled and/or stroked. `dash`: lengths of dashes and gaps, mpt, starting `dashOffset` into the pattern.
+ * `miterLimit` in thousandths (4000 is SVG's default of 4).
+ */
 export interface PathItem {
   kind: 'path'
   ops: PathOp[]
-  fill: Rgba | null
-  stroke: Rgba | null
+  fill: Paint | null
+  stroke: Paint | null
   lineWidth: number
   dash?: number[]
+  dashOffset?: number
+  /** `evenodd`: a part is inside when an odd number of edges lie around it (SVG `fill-rule`); default nonzero */
+  fillRule?: 'evenodd'
+  lineCap?: 'round' | 'square'
+  lineJoin?: 'round' | 'bevel'
+  miterLimit?: number
 }
 
 /** A raster image (an asset, by id) drawn into a rectangle. */
@@ -62,13 +102,20 @@ export interface ImageItem {
   h: number
 }
 
-/** Items drawn together: clipped to `clip` (if any) and rotated by `rotation` whole degrees about `origin`. */
+/**
+ * Items drawn together: rotated by `rotation` whole degrees about `origin`, then (if given) transformed by
+ * `matrix`, clipped to `clip` and to `clipPath` (in the group's own coordinates), and, with `opacity` (0–255),
+ * drawn as one layer that much transparent.
+ */
 export interface GroupItem {
   kind: 'group'
   clip: Rect | null
   rotation: number
   origin: { x: number; y: number }
   items: DisplayItem[]
+  matrix?: Matrix
+  clipPath?: { ops: PathOp[]; evenOdd?: boolean }
+  opacity?: number
 }
 
 export type DisplayItem = GlyphRun | PathItem | ImageItem | GroupItem
@@ -85,6 +132,8 @@ export interface DisplayList {
   /** the layout rules' version, the shaping engine and the fonts used (by face id → file hash) */
   layoutVersion: string
   shaper: string
+  /** the hyphenation patterns used (their id: the SHA-256 the server lists them by), if any */
+  hyphenation?: string
   pages: DisplayPage[]
 }
 

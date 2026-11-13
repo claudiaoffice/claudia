@@ -18,6 +18,8 @@ used.protocol  # FastAPI route /api/protocol in create_app
 used.live  # FastAPI WebSocket route in create_app
 used.landing  # FastAPI route / in create_app
 used.font_file  # FastAPI route /api/fonts/{name} in font_router (fonts.py)
+used.hyphenation_listing  # FastAPI route /api/hyphenation (hyphenation.py)
+used.hyphenation_file  # FastAPI route /api/hyphenation/{sha256} (hyphenation.py)
 # admin_api.py: the /api/admin/* routes, registered the same way
 used.setup  # POST /api/admin/setup
 used.logout  # POST /api/admin/logout
@@ -79,6 +81,8 @@ used._suggestions  # composes_methods.method("suggestions")
 used._replace_text  # composes_methods.method("replace_text")
 used._set_style  # composes_methods.method("set_style")
 used._set_page  # composes_methods.method("set_page")
+used._language  # composes_methods.method("language")
+used._set_language  # composes_methods.method("set_language")
 used._change_style  # composes_methods.method("change_style")
 used._deviate_style  # composes_methods.method("deviate_style")
 used._rename_style  # composes_methods.method("rename_style")

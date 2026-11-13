@@ -3,6 +3,21 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.5.0] - 2026-11-12
+
+The language of a text, and hyphenation (D912, D915).
+
+### Added
+- `TextModel.language`: the language the text is written in, a BCP 47 tag, or `None` (a new text, and every older
+  one); state schema 7.
+- `SetLanguage(language)`: one step with its exact inverse (summary "set the language to de-AT"), event
+  `{type: "language", language}`; `normalize_language` and `LanguageError` check and write a tag as BCP 47 does
+  (`en-gb` becomes `en-GB`).
+
+### Changed
+- The built-in styles say how they hyphenate (`hyphens`, CSS_VERSION 4): Body text and the styles based on it
+  `auto`, Title and the headings `manual`. A text keeps the styles it was made with, so only new texts have this.
+
 ## [0.4.0] - 2026-11-12
 
 The page a text is printed on (E9.14 first step; print preview, D904).

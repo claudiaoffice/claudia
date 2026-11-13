@@ -157,3 +157,16 @@ describe('alignment by content (D318)', () => {
     expect(host.alignOf!('result')).toBe('right')
   })
 })
+
+describe('hyphenation (D912)', () => {
+  it('sets whether the words of a style are hyphenated at line ends', async () => {
+    const { host, calls } = styling()
+    const editor = new StyleEditor(host, true)
+    editor.pick('input')
+    expect(editor.hyphenates).toBe(false)
+    await editor.setHyphens(true)
+    expect(calls.changeStyle).toEqual(['input', { set: { hyphens: 'auto' } }])
+    await editor.setHyphens(false)
+    expect(calls.changeStyle).toEqual(['input', { set: { hyphens: 'manual' } }])
+  })
+})

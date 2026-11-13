@@ -140,6 +140,7 @@ export function paragraphStyleFromCss(css: Css, resolver: FontResolver, fonts: F
   const deco = (css['text-decoration'] ?? '').toLowerCase()
   const spacing = (p: string) => ((css[p] ?? 'normal').trim().toLowerCase() === 'normal' ? 0 : len(p))
   const ws = (css['white-space'] ?? 'normal').toLowerCase()
+  const hy = (css.hyphens ?? 'manual').trim().toLowerCase()
   const decoration = boxDecorationFromCss(css, size)
   const va = (css['vertical-align'] ?? 'top').toLowerCase()
   return {
@@ -162,6 +163,7 @@ export function paragraphStyleFromCss(css: Css, resolver: FontResolver, fonts: F
       keepWithNext: false,
       orphans: 2,
       widows: 2,
+      hyphens: hy === 'auto' ? 'auto' : hy === 'none' ? 'none' : 'manual',
       ...(options.language ? { language: options.language } : {}),
     },
     decoration,
