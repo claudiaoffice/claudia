@@ -1,7 +1,42 @@
 {
- "version": "0.9.0",
+ "version": "0.17.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
+ },
+ "ASPECT_TOLERANCE": {
+  "value": "1"
+ },
+ "AddObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'AddObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "object_id",
+   "summary"
+  ]
+ },
+ "Anchor": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "container"
+  ]
  },
  "Applied": {
   "class": [
@@ -10,6 +45,15 @@
   "init": "(revision: 'Revision', command: 'Command', inverse: 'Command', entry: 'Entry') -> None",
   "methods": {},
   "properties": []
+ },
+ "BOX": {
+  "value": "100"
+ },
+ "BOX_FACET": {
+  "value": "<Facet>"
+ },
+ "BUILTIN_ROLES": {
+  "value": "(ColourRole(id='text', name='Text', purpose='the words you read', colour='#1F1A33'), ColourRole(id='muted', name='Muted', purpose='captions and secondary words', colour='#6B6578'), ColourRole(id='page', name='Page', purpose='the page, slide or sheet itself', colour='#F7F3EC'), ColourRole(id='surface', name='Surface', purpose='the fill of a box or a shape', colour='#FFFFFF'), ColourRole(id='structure', name='Structure', purpose='borders, rules and dividers', colour='#8A82A0'), ColourRole(id='accent', name='Accent', purpose='the one thing to notice', colour='#5B4BC4'), ColourRole(id='accent-text', name='Accent text', purpose='words on top of the accent', colour='#FFFFFF'), ColourRole(id='attention', name='Attention', purpose='something addressed to the reader', colour='#D6477A'), ColourRole(id='highlight', name='Highlight', purpose='a passage set apart from the rest', colour='#F2A057'))"
  },
  "Batch": {
   "class": [
@@ -53,7 +97,23 @@
   "properties": []
  },
  "CSS_VERSION": {
-  "value": "1"
+  "value": "4"
+ },
+ "ChangeList": {
+  "class": [
+   "Command"
+  ],
+  "init": "(list: 'ListDef') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ChangeList'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "ChangeStyle": {
   "class": [
@@ -121,6 +181,17 @@
   ],
   "init": "(number: 'int', label: 'str', author: 'str | None', marks: 'Revision') -> None",
   "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ColourRole": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', purpose: 'str', colour: 'str') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ColourRole'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
@@ -207,6 +278,21 @@
   },
   "properties": []
  },
+ "CreateList": {
+  "class": [
+   "Command"
+  ],
+  "init": "(list: 'ListDef') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CreateList'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "CreateStyle": {
   "class": [
    "Command"
@@ -235,6 +321,79 @@
    "object"
   ],
   "init": "(line: 'int | None', property: 'str | None', message: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "DefineDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(image: 'ImageAsset') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(shape: 'ShapeDefinition') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DiagramDefinition": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "id"
+  ]
+ },
+ "DiagramsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(diagram_id: 'str', definition: 'DiagramDefinition | None') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -269,6 +428,7 @@
    "redo": "(self, author: 'str | None') -> 'Applied | None'",
    "restore_checkpoint": "(self, number: 'int', author: 'str | None' = None) -> 'Applied | None'",
    "save_checkpoint": "(self, author: 'str | None' = None, label: 'str | None' = None) -> 'CheckpointInfo | None'",
+   "scratch": "(self, at: 'Revision | None' = None) -> 'Document'",
    "show_presence": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Ephemeral'",
    "side_revisions": "(self) -> 'list[Revision]'",
    "snapshot": "(self) -> 'Snapshot | None'",
@@ -369,6 +529,23 @@
   },
   "properties": []
  },
+ "FACETS": {
+  "value": "(Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'hyphens')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')), Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')))"
+ },
+ "FACET_PROPERTIES": {
+  "value": "<frozenset>"
+ },
+ "FORMAT": {
+  "value": "1"
+ },
+ "Facet": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', properties: 'tuple[str, ...]') -> None",
+  "methods": {},
+  "properties": []
+ },
  "FontRequirement": {
   "class": [
    "object"
@@ -378,6 +555,57 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "ForgetDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ForgetImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ForgetShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "FunctionInfo": {
   "class": [
@@ -468,9 +696,50 @@
   },
   "properties": []
  },
+ "ImagesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(image_id: 'str', asset: 'ImageAsset | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "KINDS": {
+  "value": "{'paragraph': (Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'hyphens')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space'))), 'box': (Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')),), 'outline': (Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')),)}"
+ },
  "KernelError": {
   "class": [
    "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Label": {
+  "class": [
+   "object"
+  ],
+  "init": "(marker: 'str', path: 'tuple[int, ...] | None' = None) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "LanguageChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(language: 'str | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "LanguageError": {
+  "class": [
+   "ValueError"
   ],
   "init": "(...)",
   "methods": {},
@@ -484,11 +753,80 @@
   "methods": {},
   "properties": []
  },
+ "ListBook": {
+  "class": [
+   "object"
+  ],
+  "init": "(lists: 'Iterable[ListDef]' = ())",
+  "methods": {
+   "add": "(self, each: 'ListDef') -> 'None'",
+   "from_data": "(items: 'Iterable[dict]') -> 'ListBook'",
+   "get": "(self, list_id: 'str') -> 'ListDef'",
+   "ids": "(self) -> 'list[str]'",
+   "remove": "(self, list_id: 'str') -> 'ListDef'",
+   "replace": "(self, each: 'ListDef') -> 'ListDef'",
+   "to_data": "(self) -> 'list[dict]'",
+   "unique_id": "(self) -> 'str'"
+  },
+  "properties": []
+ },
+ "ListDef": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', scheme: 'str', start: 'int' = 1, name: 'str | None' = None) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'ListDef'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ListItem": {
+  "class": [
+   "object"
+  ],
+  "init": "(list: 'str', level: 'int' = 0) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'ListItem'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ListsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(lists: 'tuple[dict, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "MAIN": {
   "value": "'main'"
  },
  "MAX_IMAGE_BYTES": {
   "value": "8388608"
+ },
+ "MAX_LIST_LEVEL": {
+  "value": "8"
+ },
+ "MAX_OBJECTS_PER_CONTAINER": {
+  "value": "500"
+ },
+ "MAX_PARAGRAPH_TEXT": {
+  "value": "20000"
+ },
+ "MAX_ROLES": {
+  "value": "64"
+ },
+ "MAX_SELECTION": {
+  "value": "64"
+ },
+ "MIN_OBJECT_SIZE": {
+  "value": "20"
  },
  "Manifest": {
   "class": [
@@ -525,6 +863,183 @@
   "methods": {},
   "properties": []
  },
+ "MoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'MoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "OBJECT_KINDS": {
+  "value": "('text', 'shape', 'image', 'diagram')"
+ },
+ "OUTLINE_FACET": {
+  "value": "<Facet>"
+ },
+ "ObjectBody": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectBody'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
+  "properties": []
+ },
+ "ObjectModel": {
+  "class": [
+   "Generic"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "anchor_from_data": "(self, data: 'dict') -> 'A'",
+   "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
+   "check_object": "(self, obj: 'VisualObject[A]') -> 'None'",
+   "close_container": "(self, container: 'str') -> 'None'",
+   "containers": "(self) -> 'Iterable[str]'",
+   "define_diagram": "(self, definition: 'DiagramDefinition') -> 'None'",
+   "define_image": "(self, image: 'ImageAsset') -> 'None'",
+   "define_shape": "(self, shape: 'ShapeDefinition') -> 'None'",
+   "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
+   "diagram_from_data": "(self, data: 'dict') -> 'DiagramDefinition'",
+   "diagrams_to_data": "(self) -> 'list[dict]'",
+   "forget_diagram": "(self, diagram_id: 'str') -> 'DiagramDefinition'",
+   "forget_image": "(self, image_id: 'str') -> 'ImageAsset'",
+   "forget_shape": "(self, shape_id: 'str') -> 'ShapeDefinition'",
+   "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
+   "images_to_data": "(self) -> 'list[dict]'",
+   "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None) -> 'None'",
+   "objects_changed": "(self, container: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
+   "objects_on": "(self, container: 'str') -> 'list[VisualObject[A]]'",
+   "objects_to_data": "(self) -> 'list[dict]'",
+   "open_container": "(self, container: 'str') -> 'None'",
+   "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
+   "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
+   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = ()) -> 'None'",
+   "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
+   "shapes_to_data": "(self) -> 'list[dict]'",
+   "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
+   "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
+   "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
+   "users_of_shape": "(self, shape_id: 'str') -> 'list[str]'"
+  },
+  "properties": []
+ },
+ "ObjectSet": {
+  "class": [
+   "object"
+  ],
+  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectSet'",
+   "overlaps": "(self, other: 'object') -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'ObjectSet | None'"
+  },
+  "properties": []
+ },
+ "ObjectsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(container: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
+  "properties": []
+ },
+ "PAIRINGS": {
+  "value": "(('text', 'page', 4.5), ('text', 'surface', 4.5), ('muted', 'page', 4.5), ('muted', 'surface', 4.5), ('accent-text', 'accent', 4.5), ('structure', 'page', 3.0), ('structure', 'surface', 3.0), ('accent', 'page', 3.0), ('accent', 'surface', 3.0))"
+ },
+ "PAPERS": {
+  "value": "{'a3': (841890, 1190551), 'a4': (595276, 841890), 'a5': (419528, 595276), 'a6': (297638, 419528), 'b5': (498898, 708661), 'letter': (612000, 792000), 'legal': (612000, 1008000), 'tabloid': (792000, 1224000), 'executive': (522000, 756000), 'slide': (540000, 960000)}"
+ },
+ "PARAGRAPH_FACET": {
+  "value": "<Facet>"
+ },
+ "PageSetup": {
+  "class": [
+   "object"
+  ],
+  "init": "(paper: 'str' = 'a4', width: 'int' = 595276, height: 'int' = 841890, orientation: 'str' = 'portrait', margin_top: 'int' = 70866, margin_right: 'int' = 70866, margin_bottom: 'int' = 70866, margin_left: 'int' = 70866, page_numbers: 'bool' = False) -> None",
+  "methods": {
+   "describe": "(self) -> 'str'",
+   "from_data": "(data: 'object') -> 'Self'",
+   "preset": "(paper: 'str', **changes: 'object') -> 'Self'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PageSetupError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Palette": {
+  "class": [
+   "object"
+  ],
+  "init": "(roles: 'Iterable[ColourRole]' = ())",
+  "methods": {
+   "add": "(self, role: 'ColourRole') -> 'None'",
+   "colours": "(self) -> 'dict[str, str]'",
+   "from_data": "(items: 'Iterable[dict]') -> 'Palette'",
+   "get": "(self, role_id: 'str') -> 'ColourRole'",
+   "ids": "(self) -> 'list[str]'",
+   "missing_from": "(self, css: 'Mapping[str, str]') -> 'set[str]'",
+   "readings": "(self) -> 'list[Reading]'",
+   "remove": "(self, role_id: 'str') -> 'ColourRole'",
+   "replace_all": "(self, roles: 'Iterable[ColourRole]') -> 'None'",
+   "set_colour": "(self, role_id: 'str', colour: 'str') -> 'None'",
+   "to_data": "(self) -> 'list[dict]'",
+   "views": "(self) -> 'list[dict]'"
+  },
+  "properties": []
+ },
+ "PaletteChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(roles: 'tuple[dict, ...]', readings: 'tuple[dict, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Paragraph": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Paragraph'",
+   "to_data": "(self) -> 'dict'",
+   "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
+   "with_style": "(self, style: 'str') -> 'Paragraph'",
+   "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
+   "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
+  },
+  "properties": []
+ },
  "Presence": {
   "class": [
    "object"
@@ -541,6 +1056,19 @@
    "show": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Hold'"
   },
   "properties": []
+ },
+ "Reading": {
+  "class": [
+   "object"
+  ],
+  "init": "(foreground: 'str', background: 'str', ratio: 'float', floor: 'float') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "ok",
+   "words"
+  ]
  },
  "Rebuilt": {
   "class": [
@@ -620,6 +1148,41 @@
   "methods": {},
   "properties": []
  },
+ "RemoveList": {
+  "class": [
+   "Command"
+  ],
+  "init": "(list: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveList'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RemoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "RemoveStyle": {
   "class": [
    "Command"
@@ -644,6 +1207,22 @@
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RenameStyle'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ReplacePalette": {
+  "class": [
+   "Command"
+  ],
+  "init": "(roles: 'tuple[ColourRole, ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ReplacePalette'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -681,6 +1260,24 @@
   "init": "(functions: 'tuple[FunctionRequirement, ...]' = (), fonts: 'tuple[FontRequirement, ...]' = ()) -> None",
   "methods": {},
   "properties": []
+ },
+ "ResizeObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict', w: 'int', h: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ResizeObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "Restore": {
   "class": [
@@ -727,8 +1324,40 @@
   "methods": {},
   "properties": []
  },
+ "RotateObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', rotation: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RotateObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "Run": {
+  "class": [
+   "object"
+  ],
+  "init": "(length: 'int', author: 'str | None', via: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "SCHEMES": {
+  "value": "{'bullets': Scheme(id='bullets', name='Bullets', kind='bullet', indent=1.6, gap=0.25), 'numbers': Scheme(id='numbers', name='Numbers', kind='number', indent=1.6, gap=0.25)}"
+ },
+ "SLOTS": {
+  "value": "<SlotTable>"
+ },
  "SUPPORTED_IMAGE_FORMATS": {
-  "value": "('jpeg', 'gif', 'bmp', 'svg')"
+  "value": "('jpeg', 'png', 'gif', 'bmp', 'svg')"
  },
  "SchemaTooNew": {
   "class": [
@@ -736,6 +1365,195 @@
   ],
   "init": "(kind: 'str', found: 'int', known: 'int')",
   "methods": {},
+  "properties": []
+ },
+ "Scheme": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', kind: 'str', indent: 'float' = 1.6, gap: 'float' = 0.25) -> None",
+  "methods": {
+   "marker": "(self, level: 'int', number: 'int') -> 'str'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "counts"
+  ]
+ },
+ "SetLanguage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(language: 'str | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetObjectStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetObjectStyle'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetParagraph": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', paragraph: 'Paragraph') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetParagraph'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetParagraphStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetParagraphStyle'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetRole": {
+  "class": [
+   "Command"
+  ],
+  "init": "(role: 'str', colour: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetRole'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetSnap": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', snap: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetSnap'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetText": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', text: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ShapeDefinition": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', path: 'str', aspect: 'float | None' = None, text_area: 'tuple[float, float, float, float]' = (0, 0, 100, 100)) -> None",
+  "methods": {
+   "from_data": "(data: 'object') -> 'ShapeDefinition'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ShapeError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "ShapesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(shape_id: 'str', definition: 'ShapeDefinition | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Slot": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', reads: 'tuple[Facet, ...]', kind: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "SlotTable": {
+  "class": [
+   "object"
+  ],
+  "init": "(rows: 'Mapping[str, Iterable[Slot]]')",
+  "methods": {
+   "slot": "(self, thing: 'str', name: 'str') -> 'Slot'",
+   "slots_of": "(self, thing: 'str') -> 'tuple[Slot, ...]'",
+   "things": "(self) -> 'list[str]'",
+   "to_data": "(self) -> 'dict'",
+   "with_row": "(self, thing: 'str', slots: 'Iterable[Slot]') -> 'SlotTable'"
+  },
   "properties": []
  },
  "Snapshot": {
@@ -782,10 +1600,11 @@
    "provisional_name": "(self, parent_id: 'str') -> 'str'",
    "remove": "(self, style_id: 'str') -> 'StyleDef'",
    "rename": "(self, style_id: 'str', name: 'str', *, to_name: 'bool' = False) -> 'None'",
+   "resolved": "(self, style_id: 'str', colours: 'Mapping[str, str] | None' = None) -> 'dict[str, str]'",
    "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
    "to_data": "(self) -> 'list[dict]'",
    "unique_id": "(self, base: 'str') -> 'str'",
-   "views": "(self) -> 'list[dict]'"
+   "views": "(self, colours: 'Mapping[str, str] | None' = None) -> 'list[dict]'"
   },
   "properties": []
  },
@@ -793,7 +1612,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False) -> None",
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'StyleDef'",
    "to_data": "(self) -> 'dict'"
@@ -825,6 +1644,15 @@
    "label"
   ]
  },
+ "TEXT_FACET": {
+  "value": "<Facet>"
+ },
+ "TEXT_FLOOR": {
+  "value": "4.5"
+ },
+ "UI_FLOOR": {
+  "value": "3.0"
+ },
  "UndoConflict": {
   "class": [
    "KernelError"
@@ -849,11 +1677,56 @@
   "methods": {},
   "properties": []
  },
+ "UpdateDiagram": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateDiagram'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "VisualObject": {
+  "class": [
+   "Generic"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'A') -> None",
+  "methods": {
+   "from_data": "(data: 'dict', read_anchor: 'ReadAnchor[A]') -> 'VisualObject[A]'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'",
+   "with_body": "(self, **changes: 'Any') -> 'Self'"
+  },
+  "properties": [
+   "container",
+   "id"
+  ]
+ },
+ "builtin_palette": {
+  "function": "() -> 'Palette'"
+ },
  "check": {
   "function": "(manifest: 'Manifest', env: 'Environment') -> 'RequirementReport'"
  },
+ "check_kind": {
+  "function": "(kind: 'str', properties: 'Iterable[str]') -> 'None'"
+ },
+ "contrast": {
+  "function": "(one: 'str', other: 'str') -> 'float'"
+ },
  "decode_image": {
   "function": "(data: 'bytes') -> 'ImageAsset'"
+ },
+ "delete_runs": {
+  "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"
  },
  "encode": {
   "function": "(command: 'Command') -> 'dict'"
@@ -861,11 +1734,35 @@
  "environment_of": {
   "function": "(model_cls: 'type[DocumentModel]', *, functions=None, fonts=(), providable_fonts=()) -> 'Environment'"
  },
+ "facet_of": {
+  "function": "(prop: 'str') -> 'Facet'"
+ },
+ "fits": {
+  "function": "(kind: 'str', slot: 'Slot') -> 'bool'"
+ },
  "format_css": {
   "function": "(css: 'Mapping[str, str]') -> 'str'"
  },
+ "insert_runs": {
+  "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
+ },
+ "luminance": {
+  "function": "(colour: 'str') -> 'float'"
+ },
  "new_registry": {
   "function": "() -> 'CommandRegistry'"
+ },
+ "normalize_language": {
+  "function": "(tag: 'str') -> 'str'"
+ },
+ "normalized": {
+  "function": "(runs: 'Iterable[Run]') -> 'list[Run]'"
+ },
+ "numbering_labels": {
+  "function": "(entries: 'Iterable[tuple[str, ListItem | None]]', lists: 'ListBook') -> 'dict[str, Label]'"
+ },
+ "paragraph_for": {
+  "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"
  },
  "parse_chat": {
   "function": "(raw: 'str', users: 'Iterable[str]' = ()) -> 'tuple[str, str]'"
@@ -873,11 +1770,35 @@
  "parse_css": {
   "function": "(text: 'str') -> 'tuple[dict[str, str], list[CssProblem]]'"
  },
+ "parse_shape": {
+  "function": "(text: 'str') -> 'ShapeDefinition'"
+ },
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
  },
  "replay_collecting": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]') -> 'list[tuple[Entry, Command]]'"
+ },
+ "resolve_css": {
+  "function": "(css: 'Mapping[str, str]', colours: 'Mapping[str, str]') -> 'dict[str, str]'"
+ },
+ "rgb_of": {
+  "function": "(colour: 'str') -> 'tuple[int, int, int]'"
+ },
+ "roles_used": {
+  "function": "(css: 'Mapping[str, str]') -> 'set[str]'"
+ },
+ "runs_from_data": {
+  "function": "(data: 'Iterable[list]') -> 'list[Run]'"
+ },
+ "runs_to_data": {
+  "function": "(runs: 'Iterable[Run]') -> 'list[list]'"
+ },
+ "slice_runs": {
+  "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"
+ },
+ "total": {
+  "function": "(runs: 'Iterable[Run]') -> 'int'"
  },
  "transform": {
   "function": "(region: 'Region', command: 'Command') -> 'Region | None'"

@@ -1,0 +1,8 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs-build",
+  "name": "@claudia/layout",
+  "readme": "README.md",
+  "excludePrivate": true,
+  "treatWarningsAsErrors": false
+}

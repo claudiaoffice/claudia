@@ -35,7 +35,7 @@ errors           ``raise FunctionError("#NUM!", "why")`` for an Excel-style code
 ``description``  one line: what it does. Required, as the tooltip is made from it (``get_tooltip``).
 ``examples``     at least one ``Example``: formulas with the result they give. They are the help topic's worked example
                  (``get_help``) and they are run as tests when the function is loaded, so help cannot go stale.
-``heavy``        ``True`` if ``call`` can be slow enough to matter (E3.5, D37, D177): everything on this server runs
+``heavy``        ``True`` if ``call`` can be slow enough to matter (E3.5, D37, D291): everything on this server runs
                  on the one thread every document shares, so a slow call must not run there. Default ``False``.
 ``heavy_above``  with ``heavy = True``: defer only once a ``Range`` argument holds more than this many present cells
                  (not the nominal rectangle: ``A1:A1000000`` with two cells filled counts as two). ``None`` (the
@@ -44,7 +44,7 @@ errors           ``raise FunctionError("#NUM!", "why")`` for an Excel-style code
                  same way they already judge each argument's type.
 
 A heavy call is never run here: :meth:`Bound.__call__` raises :class:`Deferred` with the call to make instead of
-making it, so a whole formula can be hinted off the event loop to run elsewhere (D177) and the result reconciled
+making it, so a whole formula can be hinted off the event loop to run elsewhere (D291) and the result reconciled
 when it comes back, the way D37 specified without building: on a copy of the inputs, discarded if they changed
 before an answer came back.
 

@@ -4,18 +4,33 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
+    "postinstall": "node node_modules/@claudia/layout/scripts/ensure-deps.mjs",
+    "predev": "node node_modules/@claudia/layout/scripts/ensure-deps.mjs && node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
     "dev": "nuxt dev",
+    "prebuild": "node node_modules/@claudia/layout/scripts/ensure-deps.mjs && node node_modules/@claudia/layout/scripts/copy-wasm.mjs public/wasm",
     "build": "nuxt generate",
     "test": "vitest run",
+    "coverage": "vitest run --coverage",
     "typecheck": "nuxt typecheck",
+    "lint": "eslint . --max-warnings 0",
     "e2e": "node e2e/demo.cjs",
     "e2e:composes": "node e2e/composes.cjs",
+    "e2e:lists": "node e2e/lists.cjs",
     "e2e:slides": "node e2e/slides.cjs",
+    "e2e:creates-styles": "node e2e/creates-styles.cjs",
     "e2e:pointing": "node e2e/pointing.cjs",
-    "e2e:resilience": "node e2e/resilience.cjs"
+    "e2e:resilience": "node e2e/resilience.cjs",
+    "e2e:styling": "node e2e/styling.cjs",
+    "e2e:recovery": "node e2e/recovery.cjs",
+    "e2e:macos-shell": "node e2e/macos-shell.cjs",
+    "e2e:windows-shell": "node e2e/windows-shell.cjs",
+    "e2e:print": "node e2e/print.cjs",
+    "e2e:print-creates": "node e2e/print-creates.cjs"
   },
   "dependencies": {
-    "nuxt": "^4.6.3",
+    "@claudia/layout": "file:../layout",
+    "nuxt": "^4.6.4",
+    "plotly.js-dist-min": "^4.2.0",
     "vue": "^3.5.0"
   },
   "devDependencies": {
@@ -23,8 +38,17 @@
     "@fontsource/inter": "^5.0.0",
     "@fontsource/jetbrains-mono": "^5.0.0",
     "@fontsource/sacramento": "^5.0.0",
+    "@nuxt/eslint-config": "^1.17.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "eslint": "^10.14.0",
+    "playwright": "^1.65.0",
     "typescript": "^5.6.0",
-    "vitest": "^3.0.0",
+    "vitest": "^5.1.0",
     "vue-tsc": "^3.0.0"
+  },
+  "overrides": {
+    "glob": "^14.0.4",
+    "minimatch": "^11.0.8",
+    "node-forge": "^1.4.3"
   }
 }

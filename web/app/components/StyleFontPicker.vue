@@ -33,7 +33,7 @@ function pick(family: string) {
         </li>
       </ul>
       <form class="other" @submit.prevent="typed.trim() && pick(typed)">
-        <input v-model="typed" placeholder="Another font…" aria-label="Another font" spellcheck="false" />
+        <input v-model="typed" placeholder="Another font…" aria-label="Another font" spellcheck="false" >
       </form>
       <button v-if="own" class="reset" type="button" @click="emit('reset'); open = false">Follow the parent style again</button>
     </div>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>de.claudiaoffice.creates</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Claudia Creates</name>
+  <summary>Create presentations with an assistant that runs on your own computer</summary>
+  <description>
+    <p>Claudia Creates is the presentation part of the Claudia office suite. Slides and the assistant stay on your computer or on a server you choose.</p>
+  </description>
+  <launchable type="desktop-id">de.claudiaoffice.creates.desktop</launchable>
+  <url type="homepage">https://claudia-office.de</url>
+  <url type="bugtracker">https://github.com/claudiaoffice/claudia/issues</url>
+  <content_rating type="oars-1.1"/>
+</component>

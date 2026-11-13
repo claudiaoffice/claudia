@@ -30,7 +30,7 @@ async function open(browser, [user, password], create) {
     await page.click('.modal button:text-is("Continue")')
   }
   await page.waitForSelector('[data-testid=text]')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
   return page
 }
 
@@ -61,9 +61,10 @@ async function waitParagraphs(page, expected, what) {
   }
   throw new Error(`${what}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(got)}`)
 }
-async function menu(page, title, item) {
+// A menu item by its path: `menu(page, 'File', 'Manage', 'Share')` opens File, then Manage ▸, then clicks Share….
+async function menu(page, title, ...path) {
   await page.click(`.menus .title:text-is("${title}")`)
-  await page.click(`.menus [role=menuitem]:has-text("${item}")`)
+  for (const item of path) await page.click(`.menus .drop [role=menuitem]:has-text("${item}")`)
 }
 
 ;(async () => {
@@ -92,7 +93,7 @@ async function menu(page, title, item) {
     log('style set: title')
 
     // ---- ann lets ben in
-    await menu(ann, 'File', 'Share')
+    await menu(ann, 'File', 'Manage', 'Share')
     await ann.fill('.modal input >> nth=0', BEN[0])
     await ann.fill('.modal input >> nth=1', BEN[1])
     await ann.click('.modal button:has-text("Add person")')
@@ -135,24 +136,33 @@ async function menu(page, title, item) {
     const input = ann.locator('aside input').first()
     await input.fill('@ai review this text')
     await input.press('Enter')
-    await waitFor(ann, () => document.querySelectorAll('[data-suggestion]').length >= 3, null, 'the suggestions').catch(async (e) => {
+    // The suggestions are marked in the text and counted in the bottom bar; a mark opens its card (no list in the panel).
+    const marks = () => new Set([...document.querySelectorAll('[data-testid=text] [data-sug]')].map((m) => m.dataset.sug)).size >= 3
+    await waitFor(ann, marks, null, 'the suggestions').catch(async (e) => {
       console.log('chat:', JSON.stringify(await ann.$$eval('.msg', (els) => els.map((x) => x.textContent.replace(/\s+/g, ' ').trim()))))
       throw e
     })
     const before = await paragraphs(ann)
     assert.ok(before[1].includes('recieve') && before[1].includes('utilize'), 'the text is untouched: ' + before[1])
-    await waitFor(ben, () => document.querySelectorAll('[data-suggestion]').length >= 3, null, 'the suggestions on ben\'s screen')
+    await waitFor(ben, () => new Set([...document.querySelectorAll('[data-testid=text] [data-sug]')].map((m) => m.dataset.sug)).size >= 3, null, 'the suggestions on ben\'s screen')
+    assert.match(await ann.locator('[data-testid=open-suggestions]').innerText(), /^3 suggestions/)
+    assert.equal(await ann.locator('[data-testid=suggestions]').count(), 0, 'no suggestion list above the panel tabs any more')
     log('assistant made suggestions; the text is untouched')
     await ann.screenshot({ path: `${SHOTS}/c2-suggestions.png` })
 
     // ben accepts the spelling fix, ann rejects "utilize"
-    const spelling = ben.locator('[data-suggestion]:has-text("receive")').first()
+    await ben.locator('[data-testid=text] [data-sug]:has-text("recieve")').first().click()
+    const spelling = ben.locator('[data-testid=suggestion]:has-text("receive")')
+    await spelling.waitFor()
+    await ben.screenshot({ path: `${SHOTS}/c2b-suggestion-card.png` })
     await spelling.locator('button.accept').click()
     await waitFor(ben, () => window.__text().some((t) => t.includes('receive feedback')), null, 'the accepted word')
     await waitFor(ann, () => window.__text().some((t) => t.includes('receive feedback')), null, 'accepted word on ann\'s screen')
-    const reject = ann.locator('[data-suggestion]:has-text("utilize")').first()
+    await ann.locator('[data-testid=text] [data-sug]:has-text("utilize")').first().click()
+    const reject = ann.locator('[data-testid=suggestion]:has-text("utilize")')
+    await reject.waitFor()
     await reject.locator('button.reject').click()
-    await waitFor(ann, () => !document.querySelector('[data-testid=suggestions]').innerText.includes('utilize'), null, 'rejected suggestion gone')
+    await waitFor(ann, () => ![...document.querySelectorAll('[data-testid=text] [data-sug]')].some((m) => m.textContent.includes('utilize')), null, 'rejected suggestion gone')
     assert.ok((await paragraphs(ann))[1].includes('utilize'), 'utilize stays')
     log('accepted one, rejected one')
 

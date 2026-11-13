@@ -70,11 +70,16 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
+from claudia_fonts import DEFAULT_SUBSTITUTIONS
+
 from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
+from .fonts import FontService, font_router
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
+from .hyphenation import HyphenationService, hyphenation_router
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
+from .security_headers import SecurityHeaders, web_script_hashes
 
 HELLO_TIMEOUT = 10.0
 OUTGOING_QUEUE = 1000  # frames waiting for a slow client before it is dropped
@@ -84,13 +89,32 @@ MIN_ACCESS_SECRET = 16
 _CLOSE = {"not_found": 4404, "bad_request": 4400, "unavailable": 1013, "internal": 1011, "sealed": 4423}
 
 
+_REVALIDATE = "no-cache"
+"""Keep a copy, but ask the server before every use (a cheap ``304`` when nothing changed)."""
+_FOR_GOOD = "public, max-age=31536000, immutable"
+"""For files whose name changes with their content: the copy can never be out of date."""
+_HASHED_ASSETS = "_nuxt/"
+"""Where the web build puts the files it names by content hash."""
+
+
 class SinglePageApp(StaticFiles):
     """The built web app. A path that is neither a file nor under /api gets the start page (so a bookmark like
     /budget, or a reload on any address, still ends up on the welcome form); a missing file with an extension stays a
-    404."""
+    404.
+
+    Every answer says how long it may be kept (D248). Without that a client (a browser, the WebKit view of a desktop
+    shell) decides for itself and may show the previous version of the app for a long time after the server was
+    updated.
+    Pages and any file not named by its content are revalidated on each load; the content-hashed files under
+    ``_nuxt/`` are kept for good."""
 
     async def get_response(self, path, scope):
         """The file, or the start page for an address of the app."""
+        response = await self._found_or_start_page(path, scope)
+        response.headers["Cache-Control"] = _FOR_GOOD if path.startswith(_HASHED_ASSETS) else _REVALIDATE
+        return response
+
+    async def _found_or_start_page(self, path, scope):
         try:
             response = await super().get_response(path, scope)
         except StarletteHTTPException as exc:
@@ -245,9 +269,10 @@ class Gateway:
             if not (isinstance(credentials.user, str) and isinstance(credentials.password, str)):
                 return None, False
             await hub.ensure_room()  # before any hashing or disk: a refused document costs nothing
-            if (
-                reserved := await self._verify(doc_id, credentials)
-            ) is not None:  # (cannot happen; keeps verify's checks)
+            # The same work as for a document that exists (SEC-04). It usually finds nobody, but not always: the user
+            # directory is kept apart from the documents, so a creation that died between the two can leave this
+            # person's account behind without a document. They then get that account back, not a second owner.
+            if (reserved := await self._verify(doc_id, credentials)) is not None:
                 return reserved, False
             async with self._hashing:
                 account = await asyncio.to_thread(
@@ -420,6 +445,8 @@ def create_app(
     web_dir: str | Path | None = None,
     list_documents: bool = True,
     admin: AdminContext | None = None,
+    fonts: FontService | None = None,
+    hyphenation: HyphenationService | None = None,
 ) -> FastAPI:
     """The server for ``hub``, with the users of each document in ``directory``.
 
@@ -462,6 +489,8 @@ def create_app(
             allow_methods=["GET"],
             allow_headers=["Content-Type", "Authorization"],
         )
+    # SEC-13: CSP, nosniff, referrer and permissions on every answer; the start page's inline scripts by hash.
+    app.add_middleware(SecurityHeaders, script_hashes=web_script_hashes(web_dir))
     app.add_middleware(HostGuard, hosts=hosts)  # added last, so it is the first to see a request (even a preflight)
     if hub.directory is None:
         hub.directory = directory  # owners add people to their documents through it
@@ -489,6 +518,10 @@ def create_app(
 
     if admin is not None:
         app.include_router(admin_router(hub, gateway.set_secret, admin))
+    if fonts is not None:
+        app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS))
+    if hyphenation is not None:
+        app.include_router(hyphenation_router(hyphenation))
 
     # The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed origin
     # is needed. Mounted last so /api/... wins.

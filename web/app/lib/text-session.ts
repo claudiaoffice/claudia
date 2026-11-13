@@ -19,10 +19,13 @@ import {
   wordStart,
   textBetween,
   type Block,
+  type ListItem,
   type Pos,
   type TextEvent,
 } from './blocks'
-import { type LinkLike, type Region } from './protocol'
+import type { PaletteEvent, StyleModel } from './objects'
+import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
+import type { LinkLike, Region, WireData } from './protocol'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
 export interface SuggestionInfo {
@@ -38,6 +41,22 @@ export interface SuggestionInfo {
   state: string
   outdated: boolean
 }
+/** A list of the document (the server's `lists`): its scheme, the number it starts at and, when it has one, its name. */
+export interface ListInfo {
+  id: string
+  scheme: string
+  start: number
+  name: string | null
+}
+/** How a list looks (the server's `schemes`): whether it counts, how far a level moves the text in and the gap between
+ * two items, both in em. */
+export interface SchemeInfo {
+  id: string
+  name: string
+  kind: 'bullet' | 'number'
+  indent: number
+  gap: number
+}
 export interface Selection {
   anchor: Pos
   focus: Pos
@@ -49,13 +68,38 @@ export interface Unwritten {
 }
 export interface TextState extends BaseState {
   styles: StyleView[]
+  /** The document's colour roles and how they read against each other (D200); a paragraph style names them, and
+   * the resolved colours arrive with the styles themselves. */
+  palette: PaletteEvent | null
+  /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
+  styleModel: StyleModel | null
   blocks: Block[]
+  lists: ListInfo[]
+  schemes: SchemeInfo[]
   suggestions: SuggestionInfo[]
   selection: Selection | null
   /** Typed and kept back until the word ends. */
   pending: Unwritten | null
   /** On its way to the server. */
   sending: Unwritten | null
+  /** The page the text is printed on (D904); `null` until loaded or for a server that does not know pages. */
+  page: PageSetupData | null
+  /** The language the text is written in (D915), a BCP 47 tag; `null` when it is not set. `undefined` for a server
+   *  that does not know languages. */
+  language: string | null | undefined
+}
+
+/** An image of the text as the server sends it (`images`): base64 data. */
+export interface TextImage {
+  id: string
+  format: string
+  data: string
+}
+/** What the print preview needs beyond the paragraphs: the floating objects and what they are drawn with (D907). */
+export interface PrintExtras {
+  objects: TextObject[]
+  shapes: ShapeOutline[]
+  images: TextImage[]
 }
 
 export const IDLE_FLUSH_MS = 700
@@ -77,7 +121,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], blocks: [], suggestions: [], selection: null, pending: null, sending: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined })
   }
 
   get readOnly(): boolean {
@@ -87,12 +131,27 @@ export class TextSession extends BaseSession<TextState> {
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions] = await Promise.all([
-      link.request<{ styles: StyleView[]; blocks: Block[] }>('blocks'),
+    const [answer, suggestions, palette, styleModel, page] = await Promise.all([
+      link.request<{ styles: StyleView[]; blocks: Block[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
+      link.request<PaletteEvent>('palette'),
+      link.request<StyleModel>('style_model'),
+      // an older server has no pages: the preview then starts from A4 and cannot store a change
+      link.request<PageSetupData>('page').catch(() => null),
     ])
+    // an older server has no language either; the preview then hyphenates nothing and offers no choice
+    const language = await link
+      .request<{ language: string | null }>('language')
+      .then((a) => a.language)
+      .catch(() => undefined)
     const s = this.state
+    s.page = page
+    s.language = language
     s.styles = answer.styles
+    s.lists = answer.lists
+    s.schemes = answer.schemes
+    s.palette = palette
+    s.styleModel = styleModel
     s.blocks = answer.blocks.map((b) => ({ ...b, runs: runsToUnits(b.text, b.runs) }))
     s.suggestions = suggestions.map((x) => this.suggestionInUnits(x))
     s.pending = null
@@ -139,13 +198,15 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   // ------------------------------------------------------------------------------ events
-  protected onAppEvent(name: string, data: any): boolean {
+  protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
       case 'text':
       case 'split':
       case 'join':
-      case 'style': {
+      case 'style':
+      case 'item':
+      case 'labels': {
         const event = eventInUnits(s.blocks, data as TextEvent)
         if (!applyEvent(s.blocks, event)) this.track(this.reload())
         else this.follow(event)
@@ -153,6 +214,20 @@ export class TextSession extends BaseSession<TextState> {
       }
       case 'styles':
         s.styles = data.styles as StyleView[]
+        return true
+      case 'page':
+        s.page = data.setup as PageSetupData
+        return true
+      case 'language':
+        s.language = (data.language as string | null) ?? null
+        return true
+      case 'lists':
+        s.lists = data.lists as ListInfo[]
+        return true
+      case 'palette':
+        // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls
+        // that offer them by name (D200).
+        s.palette = data as PaletteEvent
         return true
       case 'suggestions': {
         for (const item of data.items as SuggestionInfo[]) {
@@ -286,7 +361,7 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   /** Send what was typed; resolves when everything before it is done. */
-  async flush(): Promise<void> {
+  override async flush(): Promise<void> {
     do {
       await this.flushNow()
       await this.chain
@@ -367,9 +442,19 @@ export class TextSession extends BaseSession<TextState> {
     this.place()
   }
 
-  /** Enter: ends the paragraph at the caret (a selection is replaced). */
+  /**
+   * Enter: ends the paragraph at the caret (a selection is replaced). In an item the server gives the new paragraph the
+   * same item; an *empty* item is the way out instead: one level out, and at the first level out of the list (E9.21).
+   */
   newline(): Promise<boolean> | undefined {
-    return this.replaceSelection('\n')
+    if (this.denied()) return undefined
+    return this.act(async () => {
+      const r = this.range()
+      if (!r) return false
+      const block = this.state.blocks.find((b) => b.id === r[0].block)
+      if (block?.item && !block.text && same(r[0], r[1])) return this.leaveList(block)
+      return this.write(r[0], r[1], '\n')
+    })
   }
 
   /** Put text in place of the selection (paste; Enter). */
@@ -422,6 +507,7 @@ export class TextSession extends BaseSession<TextState> {
         const start = word ? wordStart(text, r[0].offset) : r[0].offset - (text.codePointAt(r[0].offset - 2)! > 0xffff ? 2 : 1)
         return this.write({ block: r[0].block, offset: Math.max(0, start) }, r[0], '')
       }
+      if (blocks[i]!.item) return this.leaveList(blocks[i]!) // out of the list first, as every editor does
       const before = blocks[i - 1]
       return before ? this.write({ block: before.id, offset: before.text.length }, r[0], '') : false
     }
@@ -446,6 +532,114 @@ export class TextSession extends BaseSession<TextState> {
       }
       return true
     })
+  }
+
+  /** Lay the text out on another page (D904): one step in the history, for everybody. */
+  setPage(setup: PageSetupData): Promise<boolean> | undefined {
+    if (this.denied()) return undefined
+    return this.act(async () => (await this.attempt('set_page', { setup, base: this.state.revision })) !== false)
+  }
+
+  /** Say which language the text is written in (D915), or `null` for not known: one step, for everybody. */
+  setLanguage(language: string | null): Promise<boolean> | undefined {
+    if (this.denied()) return undefined
+    return this.act(async () => (await this.attempt('set_language', { language, base: this.state.revision })) !== false)
+  }
+
+  /** The floating objects, their outlines and their images, for printing (D907). Read when the preview opens. */
+  async printExtras(): Promise<PrintExtras> {
+    const link = this.need()
+    const [objects, shapes, images] = await Promise.all([
+      link.request<{ objects: TextObject[] }>('objects').then((a) => a.objects).catch(() => []),
+      link.request<ShapeOutline[]>('shapes').catch(() => []),
+      link.request<TextImage[]>('images').catch(() => []),
+    ])
+    return { objects, shapes, images }
+  }
+
+  // -- lists (E9.21). The numbering is the server's: what is asked for is structure, and the markers arrive as events.
+  /** The list item the caret is in, or `null`. */
+  currentItem(): ListItem | null {
+    const focus = this.state.selection?.focus
+    return this.state.blocks.find((b) => b.id === focus?.block)?.item ?? null
+  }
+
+  /** The scheme (`bullets`, `numbers`) of the list the caret's item belongs to, or `null`. */
+  currentScheme(): string | null {
+    const item = this.currentItem()
+    return (item && this.state.lists.find((l) => l.id === item.list)?.scheme) ?? null
+  }
+
+  /** May the list of the caret's item go on from an earlier one? Only from its first item, and only when an item of
+   * another list of the same scheme lies before it (the same rule as the server's `continue_list`). */
+  canContinue(): boolean {
+    const item = this.currentItem()
+    const scheme = this.currentScheme()
+    if (!item || !scheme) return false
+    const { blocks, lists } = this.state
+    const first = blocks.findIndex((b) => b.item?.list === item.list)
+    if (blocks[first]?.id !== this.state.selection?.focus.block) return false
+    return blocks.slice(0, first).some((b) => b.item && b.item.list !== item.list && lists.find((l) => l.id === b.item!.list)?.scheme === scheme)
+  }
+
+  /** The paragraphs of the selection. */
+  private selectedBlocks(): Block[] {
+    const r = this.range()
+    if (!r) return []
+    const { blocks } = this.state
+    return blocks.slice(indexOf(blocks, r[0].block), indexOf(blocks, r[1].block) + 1)
+  }
+
+  /** Bullets or numbers for the selected paragraphs, or (`null`) plain paragraphs. Asking for what they are takes them
+   * out of their list; the server decides (`make_list`). */
+  makeList(scheme: string | null): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => {
+      const blocks = this.selectedBlocks().map((b) => b.id)
+      if (!blocks.length) return false
+      return (await this.attempt('make_list', { blocks, scheme, base: this.state.revision })) !== false
+    })
+  }
+
+  /** Move the selected items one level in (`1`) or out (`-1`). */
+  indent(by: 1 | -1): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => {
+      const blocks = this.selectedBlocks().filter((b) => b.item).map((b) => b.id)
+      if (!blocks.length) return false
+      return (await this.attempt('indent_item', { blocks, by, base: this.state.revision })) !== false
+    })
+  }
+
+  /** Tab and Shift+Tab: in a list item they move it in or out. `false` where the key is not ours (a plain paragraph). */
+  tab(back: boolean): boolean {
+    if (this.readOnly || !this.currentItem()) return false
+    void this.indent(back ? -1 : 1)
+    return true
+  }
+
+  /** Let the list of the caret's item go on where the nearest earlier list of its kind ends. */
+  continueList(): Promise<boolean> {
+    const block = this.state.selection?.focus.block
+    if (this.denied() || !block || !this.currentItem()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('continue_list', { block, base: this.state.revision })) !== false)
+  }
+
+  /** Number the first level of the caret's list from `start` on. */
+  startAt(start: number): Promise<boolean> {
+    const item = this.currentItem()
+    if (this.denied() || !item) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('list_start', { list: item.list, start, base: this.state.revision })) !== false)
+  }
+
+  /** The way out of a list from an item with nothing in it: one level out, at the first level out of the list. */
+  private leaveList(block: Block): Promise<boolean> {
+    const item = block.item!
+    return item.level > 0 ? this.attemptOk('indent_item', { blocks: [block.id], by: -1 }) : this.attemptOk('make_list', { blocks: [block.id], scheme: null })
+  }
+
+  private async attemptOk(method: string, params: Record<string, unknown>): Promise<boolean> {
+    return (await this.attempt(method, { ...params, base: this.state.revision })) !== false
   }
 
   /** The style of the paragraph the caret is in. */
@@ -489,6 +683,18 @@ export class TextSession extends BaseSession<TextState> {
       }
       return true
     })
+  }
+
+  /** Give a colour role another colour: every paragraph style that meant it follows (D200). */
+  setRole(role: string, colour: string): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false)
+  }
+
+  /** Put a whole palette in place of this document's — what "the colours it started with" does. */
+  replacePalette(roles: unknown[]): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false)
   }
 
   renameStyle(style: string, name: string): Promise<boolean> {

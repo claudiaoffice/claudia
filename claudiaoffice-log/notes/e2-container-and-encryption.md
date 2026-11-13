@@ -6,7 +6,7 @@ mapping is in `decision-log.md`. The code still cites the old numbers (DOC-01 in
 
 ## 1. Decisions
 
-See `decision-log.md`, D100–D112. In short: the threat model (D100); one key slot per user wrapping the domain keys
+See `decision-log/`, D100–D112. In short: the threat model (D100); one key slot per user wrapping the domain keys
 of their role (D101); names found by a locator derived from name *and* password so they never appear in the file
 (D102); a small plain manifest anyone may read (D103); Argon2id, HKDF-SHA256 and AES-256-GCM from the `cryptography`
 package with the algorithm ids recorded (D104); an optional recovery key shown once (D105); a journal next to the zip,

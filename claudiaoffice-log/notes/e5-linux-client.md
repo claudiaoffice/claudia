@@ -3,7 +3,7 @@
 Written 2026-11-03; moved here 2026-11-05. What was built for the native Linux client of **composes**, how it was
 checked, what deviates from the plan, and the decisions that came from it. The decisions were originally proposed as
 D97–D103 and collided with the typesetting decisions of the same numbers; they are now **D113–D119** in
-`decision-log.md`.
+`decision-log/`.
 
 Code: `clients/linux/` (package `claudia-shell-gtk`) and `clients/contract/` (the shell contract). Human
 documentation: `clients/linux/README.md` and `clients/contract/README.md`, both also in the Sphinx docs.
@@ -120,3 +120,72 @@ but could not run here.
 - **Translations:** labels are marked translatable, but no catalogue exists (D31, E5.7).
 - **Housekeeping:** `uv.lock.rej` in the root and `web/dist` tracked although `.gitignore` names `web/.output`
   (CODE-07, CODE-02). A stray `claudia-composes.patch` has since been cleaned up.
+
+## One shell for three apps, other servers and HTTPS (E5.8, 2026-11-10, branch `linux-client-complete`)
+
+Decisions D241–D247 (D241–D244 confirmed by the owner, D245–D247 proposed). Mock-up: `mockups/connect-and-trust.svg`.
+
+**What changed.**
+- *Three apps.* `identity.names()` is the one table; `cli.py` (parse, `--server`, `--debug`, `--version`), `__main__.py`
+  (`composes()`, `computes()`, `creates()`, `main()` for `-m claudia_shell_gtk APP`), `ClaudiaApp`/`ClaudiaWindow`
+  (formerly `Composes…`), `launch.py` and `server.server_command` take an identity. `window.ui` has one menu button
+  per menu id; `_attach_menus` gives each the menu of the app's manifest at runtime, so one GType serves all apps and the
+  menus are built in the language installed when the window is made. `apps/computes` and `apps/creates` have desktop
+  entries, AppStream files and the icons of `AppIcon.vue` (a test compares the shapes). One `.deb` (`claudia-office`).
+- *Other servers.* New GTK-free modules: `servers.py` (addresses, the per-app list), `settings.py` (one `shell.json`
+  with `locale`, `servers`, `trusted`, each saved without touching the others), `x509.py` (a small DER reader: subject,
+  issuer, validity, names, self-signed, fingerprint), `trust.py` (pins), `connection.py` (`check`: scheme → reach and
+  certificate → app, with a real or fake transport), `connector.py` (worker thread, newest request wins, the trust
+  question, the server book). `bridge.py` and the contract learn `connect`, `connect_failed`, `servers`. The web start
+  page (`OpenDialog.vue`) says hello to the shell, shows the shell's list and sends `connect`; in a browser nothing
+  changes.
+- *HTTPS.* The check runs `ssl` against the system's authorities first. If that fails with *unknown issuer* or *name
+  mismatch* it connects again without verification, reads the certificate **of that connection**, and only then asks
+  (or accepts a matching pin). `WebPage` accepts an untrusted certificate only if it is the pinned one and the failure
+  is `UNKNOWN_CA`/`BAD_IDENTITY` (`NetworkSession.allow_tls_certificate_for_host`, WebKitGTK 6.0 — signature taken from
+  the WebKit documentation; **not run here**).
+
+**Verified here.** Unit tests for all GTK-free modules (certificates made with `openssl`), contract and schema,
+packaging drift guards, `tests/test_connect_flow.py` — the real web app in headless Chromium, three real servers (two
+plain http, one TLS with a self-signed certificate) and the real `Bridge`/`Connector`/`check`/`TrustStore`: this
+computer is listed first, plain http to another computer is refused, a server of another app is refused naming both
+apps, an unknown certificate connects only after it is trusted and is pinned, declining connects nowhere, the way back
+to this computer works. Web: vitest (537), vue-tsc, eslint. `scripts/check_debt.py`: everything clean.
+
+**Not verified (needs GTK, a display and WebKitGTK 6.0).** `window.py`, `app.py`, `webpage.py` and their tests
+(`test_window.py`, `test_app.py`, `test_e2e.py`, `test_webpage.py` are written but could not run: this sandbox has no
+GTK stack). Run `xvfb-run -a pytest -m gtk` and `xvfb-run -a pytest -m e2e` on a real machine. Also unchecked: that the
+three `.desktop` and AppStream files validate (`desktop-file-validate`, `appstreamcli`; CI does it), the `.deb` build,
+and a real self-signed server in WebKit.
+
+**Open points for the owner.**
+- The "Trust this server?" dialog (A) and "certificate changed" dialog (B) are not built; waiting for the mock-up to be
+  agreed. Until then an unknown certificate is refused with an explanation (`certificate_invalid`).
+- The check decides *Claudia server of the right app* **before** the certificate question (mock-up panel D has them the
+  other way round).
+- `certificate_invalid` has a message of its own that the mock-up does not show ("The certificate of {host} is not
+  valid." / "…not issued by an authority this computer trusts.").
+- Bare `localhost:8420` means https. A plain local development server needs `http://localhost:8420`; a local server with
+  TLS (the server's default) needs nothing. Alternative: try https, fall back to http for loopback.
+- Forgetting a trusted certificate (proposed: "Remove" on a server in the list; the list has no remove action).
+- `AdminApp.vue` still bookmarks into the page's `localStorage`; in a shell that list is not shown.
+- The "Manage…" button of a server is hidden for servers other than the current one in a shell (the admin pages are on
+  the other origin and cannot be opened from here).
+- `hello.app` optional (D246) and the package name (D247).
+
+## A stale page in the shell's cache (D248, 2026-11-10, branch `linux-client-complete`)
+
+**Seen.** After the demo server (Scaleway) was updated, the desktop client showed the old web app: four menus instead of
+seven, the old connection indicator, and — because that page never sent `hello` — the native menus stayed disabled.
+A browser showed the new app from the same address. Emptying WebKit's cache (`~/.cache/.../WebKitCache`) fixed it.
+
+**Cause.** WebKitGTK keeps its HTTP cache on disk between runs; the server sent no `Cache-Control` for the web app, so
+WebKit applied its own freshness guess.
+
+**Fix, two parts.** `SinglePageApp` (server) sends `no-cache` for pages and unhashed files and `immutable` for
+`_nuxt/`; `WebPage._load_current` (shell) empties the disk and memory page cache before `load` and `navigate`.
+
+**Verified here.** `packages/claudia-server/tests/test_server_web.py` (headers, 304, 404). **Not verified:** the shell
+part — `test_webpage.py` has two gtk tests for it (a server that changes its page while allowing an hour of caching),
+not run in the sandbox. Run `xvfb-run -a pytest -m gtk tests/test_webpage.py`. Also unverified: the PyGObject call
+signature of `WebsiteDataManager.clear` with a plain callback.

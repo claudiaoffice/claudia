@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "source": "https://github.com/hyphenation/tex-hyphen",
+  "commit": "5684c0f51c0b81133db2efbe60a408b4155a3ff5",
+  "languages": [
+    {
+      "tag": "de",
+      "aliases": [],
+      "name": "German (1996 spelling)",
+      "licence": "MIT",
+      "patterns": {
+        "name": "hyph-de-1996.pat.txt",
+        "url": "https://raw.githubusercontent.com/hyphenation/tex-hyphen/5684c0f51c0b81133db2efbe60a408b4155a3ff5/hyph-utf8/tex/generic/hyph-utf8/patterns/txt/hyph-de-1996.pat.txt",
+        "sha256": "0570839683e4843a6210b188e2a586fe06f2b6b73952ec8106a634209d735adb",
+        "size": 271680
+      },
+      "exceptions": null
+    },
+    {
+      "tag": "en-GB",
+      "aliases": [],
+      "name": "English (British spelling)",
+      "licence": "MIT",
+      "patterns": {
+        "name": "hyph-en-gb.pat.txt",
+        "url": "https://raw.githubusercontent.com/hyphenation/tex-hyphen/5684c0f51c0b81133db2efbe60a408b4155a3ff5/hyph-utf8/tex/generic/hyph-utf8/patterns/txt/hyph-en-gb.pat.txt",
+        "sha256": "651b89b4a0d4051995db8586e81ab109a4c7395d7706c06483893ebab5af013b",
+        "size": 54769
+      },
+      "exceptions": {
+        "name": "hyph-en-gb.hyp.txt",
+        "url": "https://raw.githubusercontent.com/hyphenation/tex-hyphen/5684c0f51c0b81133db2efbe60a408b4155a3ff5/hyph-utf8/tex/generic/hyph-utf8/patterns/txt/hyph-en-gb.hyp.txt",
+        "sha256": "947b7b8e76f6a0d8ebe296178ff92ad624e4912ffbaaf59b26f81a395124e366",
+        "size": 103
+      }
+    },
+    {
+      "tag": "en-US",
+      "aliases": [
+        "en"
+      ],
+      "name": "English (American spelling)",
+      "licence": "permissive: copying and distribution permitted with the notice kept (Gerard D.C. Kuiken)",
+      "patterns": {
+        "name": "hyph-en-us.pat.txt",
+        "url": "https://raw.githubusercontent.com/hyphenation/tex-hyphen/5684c0f51c0b81133db2efbe60a408b4155a3ff5/hyph-utf8/tex/generic/hyph-utf8/patterns/txt/hyph-en-us.pat.txt",
+        "sha256": "0f57318b878b132547ae92db39a6e1d1cf2a05d9008874955d6ecb910007a463",
+        "size": 31489
+      },
+      "exceptions": {
+        "name": "hyph-en-us.hyp.txt",
+        "url": "https://raw.githubusercontent.com/hyphenation/tex-hyphen/5684c0f51c0b81133db2efbe60a408b4155a3ff5/hyph-utf8/tex/generic/hyph-utf8/patterns/txt/hyph-en-us.hyp.txt",
+        "sha256": "5e785c27e151f878c312991d937b5582615b77737ab30bac413d5967d6aa21da",
+        "size": 169
+      }
+    }
+  ]
+}

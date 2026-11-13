@@ -1,0 +1,6 @@
+{
+  // The tests run in Node and may use its API (files, hashes) to feed the library.
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["node"], "lib": ["ES2022", "DOM"] },
+  "include": ["src", "tests", "scripts"]
+}

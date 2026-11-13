@@ -1,0 +1,253 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="sh2" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dy="3" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#F7F3EC"/>
+<rect x="0.0" y="0.0" width="1280.0" height="46.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="46.0" x2="1280.0" y2="46.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="14.0" y="11.0" width="24.0" height="24.0" rx="6" fill="#13917F"/>
+<path d="M19 20 H33" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19 28 C22.5 24.5 25 31 28.5 28 C30 26.5 31.5 27 33 27.8" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="50.0" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="500">Budget 2027</text>
+<text x="190.0" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400">File</text>
+<path d="M228.0 22.2 L231.6 25.8 L235.2 22.2" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="257.6" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400">Edit</text>
+<path d="M295.6 22.2 L299.20000000000005 25.8 L302.80000000000007 22.2" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="325.2" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400">Tools</text>
+<path d="M370.6 22.2 L374.20000000000005 25.8 L377.80000000000007 22.2" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="400.2" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400">Help</text>
+<path d="M438.20000000000005 22.2 L441.80000000000007 25.8 L445.4000000000001 22.2" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1044.0" cy="23.0" r="11" fill="#D6477A"/>
+<text x="1044.0" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">A</text>
+<circle cx="1071.0" cy="23.0" r="11" fill="#13917F"/>
+<text x="1071.0" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">T</text>
+<circle cx="1098.0" cy="23.0" r="11" fill="#5B4BC4"/>
+<text x="1098.0" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">ai</text>
+<circle cx="1130.0" cy="23.0" r="3.5" fill="#13917F"/>
+<text x="1266.0" y="27.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end">demo.claudia-office.de</text>
+<rect x="0.0" y="47.0" width="1280.0" height="34.0" rx="0" fill="#FFFFFF"/>
+<line x1="0.0" y1="81.0" x2="1280.0" y2="81.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="10.0" y="52.0" width="120.0" height="24.0" rx="6" fill="#FBF9F5" stroke="#13917F" stroke-width="2"/>
+<text x="21.0" y="69.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Sales</text>
+<path d="M113.4 62.2 L117 65.8 L120.6 62.2" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="150.0" y="69.0" font-family="Fraunces, Georgia, serif" font-size="13" fill="#6B6580" font-weight="400" font-style="italic">fx</text>
+<line x1="140.0" y1="55.0" x2="140.0" y2="73.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="0.0" y="766.0" width="1280.0" height="34.0" rx="0" fill="#F2EEE6"/>
+<line x1="0.0" y1="766.0" x2="1280.0" y2="766.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="12.0" y="767.0" width="60.4" height="33.0" rx="0" fill="#FFFFFF"/>
+<rect x="12.0" y="797.0" width="60.4" height="3.0" rx="0" fill="#13917F"/>
+<text x="42.2" y="788.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="middle">Data</text>
+<text x="110.2" y="788.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="middle">Report</text>
+<text x="162.0" y="789.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="17" fill="#6B6580" font-weight="400">+</text>
+<circle cx="1268.0" cy="420.0" r="11" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<path d="M1270 415 L1265 420 L1270 425" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<clipPath id="clip1"><rect x="0" y="82" width="1274" height="674"/></clipPath><g clip-path="url(#clip1)">
+<rect x="0.0" y="82.0" width="1274.0" height="674.0" rx="0" fill="#FFFFFF"/>
+<rect x="0.0" y="82.0" width="1274.0" height="24.0" rx="0" fill="#EFEBE3"/>
+<rect x="0.0" y="82.0" width="44.0" height="674.0" rx="0" fill="#EFEBE3"/>
+<text x="99.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">A</text>
+<text x="204.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">B</text>
+<text x="294.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">C</text>
+<text x="374.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">D</text>
+<text x="464.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">E</text>
+<text x="564.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">F</text>
+<text x="669.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">G</text>
+<text x="779.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">H</text>
+<text x="889.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">I</text>
+<text x="999.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">J</text>
+<text x="1109.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">K</text>
+<text x="1219.0" y="98.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="middle">L</text>
+<text x="22.0" y="123.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">1</text>
+<text x="22.0" y="149.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">2</text>
+<text x="22.0" y="175.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">3</text>
+<text x="22.0" y="201.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">4</text>
+<text x="22.0" y="227.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">5</text>
+<text x="22.0" y="253.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">6</text>
+<text x="22.0" y="279.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">7</text>
+<text x="22.0" y="305.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">8</text>
+<text x="22.0" y="331.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">9</text>
+<text x="22.0" y="357.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">10</text>
+<text x="22.0" y="383.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">11</text>
+<text x="22.0" y="409.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">12</text>
+<text x="22.0" y="435.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">13</text>
+<text x="22.0" y="461.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">14</text>
+<text x="22.0" y="487.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">15</text>
+<text x="22.0" y="513.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">16</text>
+<text x="22.0" y="539.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">17</text>
+<text x="22.0" y="565.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">18</text>
+<text x="22.0" y="591.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">19</text>
+<text x="22.0" y="617.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">20</text>
+<text x="22.0" y="643.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">21</text>
+<text x="22.0" y="669.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">22</text>
+<text x="22.0" y="695.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">23</text>
+<text x="22.0" y="721.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">24</text>
+<text x="22.0" y="747.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">25</text>
+<line x1="44.0" y1="82.0" x2="44.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="154.0" y1="82.0" x2="154.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="254.0" y1="82.0" x2="254.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="334.0" y1="82.0" x2="334.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="414.0" y1="82.0" x2="414.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="514.0" y1="82.0" x2="514.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="614.0" y1="82.0" x2="614.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="724.0" y1="82.0" x2="724.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="834.0" y1="82.0" x2="834.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="944.0" y1="82.0" x2="944.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="1054.0" y1="82.0" x2="1054.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="1164.0" y1="82.0" x2="1164.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="1274.0" y1="82.0" x2="1274.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="106.0" x2="1274.0" y2="106.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="132.0" x2="1274.0" y2="132.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="158.0" x2="1274.0" y2="158.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="184.0" x2="1274.0" y2="184.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="210.0" x2="1274.0" y2="210.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="236.0" x2="1274.0" y2="236.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="262.0" x2="1274.0" y2="262.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="288.0" x2="1274.0" y2="288.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="314.0" x2="1274.0" y2="314.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="340.0" x2="1274.0" y2="340.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="366.0" x2="1274.0" y2="366.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="392.0" x2="1274.0" y2="392.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="418.0" x2="1274.0" y2="418.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="444.0" x2="1274.0" y2="444.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="470.0" x2="1274.0" y2="470.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="496.0" x2="1274.0" y2="496.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="522.0" x2="1274.0" y2="522.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="548.0" x2="1274.0" y2="548.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="574.0" x2="1274.0" y2="574.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="600.0" x2="1274.0" y2="600.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="626.0" x2="1274.0" y2="626.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="652.0" x2="1274.0" y2="652.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="678.0" x2="1274.0" y2="678.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="704.0" x2="1274.0" y2="704.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="730.0" x2="1274.0" y2="730.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="756.0" x2="1274.0" y2="756.0" stroke="#E3DED5" stroke-width="1"/>
+<line x1="0.0" y1="106.0" x2="1274.0" y2="106.0" stroke="#D3CCBF" stroke-width="1"/>
+<line x1="44.0" y1="82.0" x2="44.0" y2="756.0" stroke="#D3CCBF" stroke-width="1"/>
+<text x="52.0" y="383.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Region</text>
+<text x="162.0" y="383.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Product</text>
+<text x="262.0" y="383.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500">Quarter</text>
+<text x="406.0" y="383.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="end">Units</text>
+<text x="506.0" y="383.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="end">Unit price</text>
+<text x="606.0" y="383.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="end">Amount</text>
+<text x="52.0" y="409.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">North</text>
+<text x="162.0" y="409.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Chair</text>
+<text x="262.0" y="409.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q1</text>
+<text x="406.0" y="409.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">12</text>
+<text x="506.0" y="409.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">89</text>
+<text x="606.0" y="409.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">1,068</text>
+<text x="52.0" y="435.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">North</text>
+<text x="162.0" y="435.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Desk</text>
+<text x="262.0" y="435.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q1</text>
+<text x="406.0" y="435.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">4</text>
+<text x="506.0" y="435.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">240</text>
+<text x="606.0" y="435.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">960</text>
+<text x="52.0" y="461.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">South</text>
+<text x="162.0" y="461.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Chair</text>
+<text x="262.0" y="461.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q1</text>
+<text x="406.0" y="461.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">20</text>
+<text x="506.0" y="461.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">89</text>
+<text x="606.0" y="461.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">1,780</text>
+<text x="52.0" y="487.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">South</text>
+<text x="162.0" y="487.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Lamp</text>
+<text x="262.0" y="487.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q2</text>
+<text x="406.0" y="487.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">35</text>
+<text x="506.0" y="487.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">24</text>
+<text x="606.0" y="487.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">840</text>
+<text x="52.0" y="513.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">East</text>
+<text x="162.0" y="513.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Desk</text>
+<text x="262.0" y="513.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q2</text>
+<text x="406.0" y="513.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">6</text>
+<text x="506.0" y="513.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">240</text>
+<text x="606.0" y="513.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">1,440</text>
+<text x="52.0" y="539.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">East</text>
+<text x="162.0" y="539.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Chair</text>
+<text x="262.0" y="539.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q2</text>
+<text x="406.0" y="539.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">15</text>
+<text x="506.0" y="539.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">89</text>
+<text x="606.0" y="539.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">1,335</text>
+<text x="52.0" y="565.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">West</text>
+<text x="162.0" y="565.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Lamp</text>
+<text x="262.0" y="565.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q3</text>
+<text x="406.0" y="565.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">50</text>
+<text x="506.0" y="565.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">24</text>
+<text x="606.0" y="565.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">1,200</text>
+<text x="52.0" y="591.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">North</text>
+<text x="162.0" y="591.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Lamp</text>
+<text x="262.0" y="591.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q3</text>
+<text x="406.0" y="591.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">28</text>
+<text x="506.0" y="591.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">24</text>
+<text x="606.0" y="591.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">672</text>
+<text x="52.0" y="617.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">South</text>
+<text x="162.0" y="617.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Desk</text>
+<text x="262.0" y="617.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Q4</text>
+<text x="406.0" y="617.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">9</text>
+<text x="506.0" y="617.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">240</text>
+<text x="606.0" y="617.7" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="end">2,160</text>
+<text x="52.0" y="124.4" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" fill="#1F1A33" font-weight="500">Sales 2026</text>
+<text x="52.0" y="149.3" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Export from the ERP system, 9 November</text>
+</g>
+<rect x="44.0" y="366.0" width="570.0" height="260.0" rx="0" fill="#13917F" stroke="#13917F" stroke-width="0" opacity="0.08"/>
+<rect x="44.0" y="366.0" width="570.0" height="260.0" rx="0" fill="none" stroke="#13917F" stroke-width="2" stroke-dasharray="6 4"/>
+<line x1="61.0" y1="56.0" x2="61.0" y2="72.0" stroke="#13917F" stroke-width="1.5"/>
+<rect x="14.0" y="90.0" width="500.0" height="262.0" rx="12" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<path d="M54 90.5 L62 82 L70 90.5" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round"/>
+<line x1="55.0" y1="90.8" x2="69.0" y2="90.8" stroke="#FFFFFF" stroke-width="2"/>
+<text x="36.0" y="126.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Name</text>
+<rect x="114.0" y="106.0" width="250.0" height="30.0" rx="7" fill="#FFFFFF" stroke="#13917F" stroke-width="2"/>
+<text x="126.0" y="126.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500">Sales</text>
+<circle cx="386.0" cy="121.0" r="8" fill="#13917F"/>
+<path d="M382 121 L385 124 L390.5 118" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="400.0" y="125.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#0F7D6E" font-weight="400">valid</text>
+<text x="36.0" y="158.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Refers to</text>
+<text x="114.0" y="158.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="13" fill="#1F1A33" font-weight="400">=Data!A11:F20</text>
+<text x="264.0" y="158.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">from your selection</text>
+<text x="36.0" y="190.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Scope</text>
+<circle cx="121.0" cy="186.0" r="7" fill="#FFFFFF" stroke="#13917F" stroke-width="1.5"/>
+<circle cx="121.0" cy="186.0" r="3.4" fill="#13917F"/>
+<text x="136.0" y="190.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Whole workbook</text>
+<circle cx="281.0" cy="186.0" r="7" fill="#FFFFFF" stroke="#B9B2C9" stroke-width="1.5"/>
+<text x="296.0" y="190.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Only on sheet “Data”</text>
+<text x="36.0" y="224.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Table</text>
+<rect x="114.0" y="212.0" width="14.0" height="14.0" rx="3.5" fill="#13917F"/>
+<path d="M117.2 219.2 L120 222 L124.8 216.2" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="136.0" y="224.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">First row is header</text>
+<text x="114.0" y="244.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="10.5" fill="#6B6580" font-weight="400">Fields: Region, Product, Quarter, Units, "Unit price", Amount</text>
+<rect x="114.0" y="258.0" width="14.0" height="14.0" rx="3.5" fill="#13917F"/>
+<path d="M117.2 265.2 L120 268 L124.8 262.2" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="136.0" y="270.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400">Grows with its last row</text>
+<text x="304.0" y="270.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">typing under the table extends it</text>
+<text x="36.0" y="304.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400">Purpose</text>
+<rect x="114.0" y="288.0" width="364.0" height="28.0" rx="8" fill="#E7E1F4"/>
+<circle cx="130.0" cy="302.0" r="4.5" fill="#F2A057"/>
+<text x="140.0" y="306.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400">Input</text>
+<rect x="206.0" y="290.0" width="88.0" height="24.0" rx="6" fill="#FFFFFF" filter="url(#sh2)"/>
+<circle cx="220.0" cy="302.0" r="4.5" fill="#9A93B5"/>
+<text x="230.0" y="306.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="500">Data</text>
+<circle cx="310.0" cy="302.0" r="4.5" fill="#5B4BC4"/>
+<text x="320.0" y="306.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400">Calculation</text>
+<circle cx="400.0" cy="302.0" r="4.5" fill="#13917F"/>
+<text x="410.0" y="306.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400">Result</text>
+<text x="36.0" y="340.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400">Enter to define · Esc to cancel</text>
+<rect x="334.0" y="316.0" width="78.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DC" stroke-width="1"/>
+<text x="373.0" y="334.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="middle">Cancel</text>
+<rect x="420.0" y="316.0" width="78.0" height="28.0" rx="7" fill="#13917F"/>
+<text x="459.0" y="334.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="500" text-anchor="middle">Define</text>
+<rect x="830.0" y="130.0" width="410.0" height="244.0" rx="12" fill="#1F1A33"/>
+<text x="848.0" y="158.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#C9BFF0" font-weight="500">Mock 1 · Name Box: name a range or table</text>
+<circle cx="856.0" cy="180.0" r="8" fill="#5B4BC4"/>
+<text x="856.0" y="184.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">1</text>
+<text x="872.0" y="184.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">Select cells, click the Name Box, type a name, press</text>
+<text x="872.0" y="201.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">Enter. Common case = one gesture.</text>
+<circle cx="856.0" cy="223.0" r="8" fill="#5B4BC4"/>
+<text x="856.0" y="227.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">2</text>
+<text x="872.0" y="227.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">A text row above numbers is detected as a header, so</text>
+<text x="872.0" y="244.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">the name becomes a table. Same concept, one switch.</text>
+<circle cx="856.0" cy="266.0" r="8" fill="#5B4BC4"/>
+<text x="856.0" y="270.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">3</text>
+<text x="872.0" y="270.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">Scope: whole workbook by default; “only on sheet”</text>
+<text x="872.0" y="287.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">gives a sheet-scoped name.</text>
+<circle cx="856.0" cy="309.0" r="8" fill="#5B4BC4"/>
+<text x="856.0" y="313.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">4</text>
+<text x="872.0" y="313.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">Fields with spaces are quoted in SQL: "Unit price".</text>
+<text x="872.0" y="330.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">The popover shows what SQL will see.</text>
+<circle cx="856.0" cy="352.0" r="8" fill="#5B4BC4"/>
+<text x="856.0" y="356.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">5</text>
+<text x="872.0" y="356.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#F7F3EC" font-weight="400">Tables grow with their last row (on by default).</text>
+</svg>

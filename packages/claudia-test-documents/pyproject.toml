@@ -1,0 +1,34 @@
+[project]
+name = "claudia-test-documents"
+dynamic = ["version"]
+description = "claudia-test-documents"
+requires-python = ">=3.14"
+dependencies = [
+    "claudia-composes",
+    "claudia-composes-io",
+    "claudia-computes",
+    "claudia-computes-io",
+    "claudia-creates",
+    "claudia-creates-io",
+    "claudia-opc-io",
+    "Pillow>=10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_test_documents/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_test_documents"]
+
+[tool.uv.sources]
+claudia-composes = { workspace = true }
+claudia-composes-io = { workspace = true }
+claudia-computes = { workspace = true }
+claudia-computes-io = { workspace = true }
+claudia-creates = { workspace = true }
+claudia-creates-io = { workspace = true }
+claudia-opc-io = { workspace = true }

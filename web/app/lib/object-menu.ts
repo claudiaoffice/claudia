@@ -11,6 +11,8 @@ import type { SlideObject } from './slide-session'
 
 export interface ObjectMenuActions {
   edit: () => void
+  /** Open the style menu on this object: its fill, its border, and the style its words follow (E9.7, D203). */
+  style: () => void
   remove: () => void
   cut: () => void
   copy: () => void
@@ -20,6 +22,10 @@ export interface ObjectMenuActions {
 
 export function contextMenuItems(o: SlideObject, readonly: boolean, actions: ObjectMenuActions): MenuItem[] {
   const items: MenuItem[] = []
+  // "Style…" first and for every kind: a picture has no fill and no words, but it does have a border and a place
+  // in the stacking order, so the menu has something to offer for all four kinds (D178, D181).
+  items.push({ label: 'Style…', action: actions.style, disabled: readonly })
+  items.push({ label: '', separator: true })
   if (o.kind === 'image') {
     // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call — not a second,
     // image-specific clipboard. Copy never needs write access, same as `edit.copy` is never disabled either.

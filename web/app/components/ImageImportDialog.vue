@@ -81,16 +81,16 @@ async function submit() {
 <template>
   <Modal title="Insert image" :width="440" @close="emit('close')">
     <form class="form" @submit.prevent="submit">
-      <input ref="fileInput" type="file" :accept="IMAGE_FILE_ACCEPT" class="hidden-input" @change="onFileChange" />
+      <input ref="fileInput" type="file" :accept="IMAGE_FILE_ACCEPT" class="hidden-input" @change="onFileChange" >
       <div class="picker">
         <button type="button" class="btn" @click="choose">{{ file ? 'Choose a different file…' : 'Choose a file…' }}</button>
         <span v-if="file" class="filename">{{ file.name }}</span>
       </div>
       <p v-if="fileError" class="error" role="alert">{{ fileError }}</p>
       <div v-if="previewUrl" class="preview">
-        <img :src="previewUrl" alt="" @load="onPreviewLoad" @error="onPreviewError" />
+        <img :src="previewUrl" alt="" @load="onPreviewLoad" @error="onPreviewError" >
       </div>
-      <label class="field">Description (read aloud to someone who cannot see it)<input v-model="alt" autocomplete="off" maxlength="300" /></label>
+      <label class="field">Description (read aloud to someone who cannot see it)<input v-model="alt" autocomplete="off" maxlength="300" ></label>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? 'Inserting…' : 'Insert' }}</button>
         <button class="btn" type="button" @click="emit('close')">Cancel</button>

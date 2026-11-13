@@ -1,4 +1,4 @@
-"""E1.2: ``replay_collecting`` -- the decoupled-from-``Document`` shape of replay (D37, D178 groundwork)."""
+"""E1.2: ``replay_collecting`` -- the decoupled-from-``Document`` shape of replay (D37, D292 groundwork)."""
 
 import pytest
 

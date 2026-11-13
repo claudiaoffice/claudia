@@ -1,5 +1,5 @@
 """``HeavyDispatcher``: watches a document's deferred heavy formula calls and runs the ones it can safely
-resolve on a worker pool (PERF review 2026-11-08, D37, D177).
+resolve on a worker pool (PERF review 2026-11-08, D37, D291).
 
 Most tests use a ``FakePool`` -- ``WorkerPool``'s own pickling and process-isolation story is
 ``test_server_workers.py``'s concern; this file is about the dispatcher's own decisions: which calls it may

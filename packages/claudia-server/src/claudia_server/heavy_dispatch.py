@@ -1,6 +1,6 @@
 """Dispatches a document's deferred heavy formula calls (``Calculator.pending_heavy``, see ``claudia_computes
 .calc``) to a :class:`~claudia_server.workers.WorkerPool`, and applies or discards each result when it comes
-back (PERF review 2026-11-08, D37, D177).
+back (PERF review 2026-11-08, D37, D291).
 
 One :class:`HeavyDispatcher` per document, built the same way :class:`~claudia_server.assistant.Assistant` is:
 it subscribes to the document's events and, for every call newly waiting in ``pending_heavy`` that it has not
@@ -16,9 +16,9 @@ wraps it; running that one call on a worker and applying its result as the *whol
 wrong whenever something wraps it. :meth:`HeavyDispatcher._is_whole_formula` checks this before ever
 submitting, so a wrapped heavy call simply stays deferred -- correct, if not yet resolved -- rather than
 risking a silently wrong answer. Offloading part of an expression is a follow-up, not attempted here (open
-decision-log item, see D177).
+decision-log item, see D291).
 
-No "calculating" indicator is shown yet, per D177: a deferred cell keeps showing whatever it showed before
+No "calculating" indicator is shown yet, per D291: a deferred cell keeps showing whatever it showed before
 until the result lands. The UI for that needs its own screens-first round (the project's own rule for new
 frontend work), not this patch.
 """

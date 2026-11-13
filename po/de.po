@@ -33,6 +33,10 @@ msgstr "Ein Dokument annehmen, das Ihnen übergeben wurde"
 msgid "Accept ownership…"
 msgstr "Eigentümerschaft annehmen…"
 
+#: web/app/components/SidePanel.vue
+msgid "Act at once"
+msgstr "Sofort ausführen"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Add a new sheet to the document"
 msgstr "Dem Dokument ein neues Blatt hinzufügen"
@@ -533,6 +537,10 @@ msgstr "Anzeigen, wer was geschrieben hat"
 msgid "Start a new document"
 msgstr "Ein neues Dokument beginnen"
 
+#: web/app/components/SidePanel.vue
+msgid "Suggest first"
+msgstr "Erst vorschlagen"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Take back your last step"
 msgstr "Den letzten Schritt zurücknehmen"
@@ -548,6 +556,10 @@ msgstr "Textfeld"
 #: web/app/components/SlideWorkspace.vue:134
 msgid "Text box"
 msgstr "Textfeld"
+
+#: web/app/components/SidePanel.vue
+msgid "Text documents: the AI suggests either way."
+msgstr "Textdokumente: Die KI schlägt in beiden Fällen nur vor."
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "The keyboard shortcuts this app uses"
@@ -573,6 +585,10 @@ msgstr "Version, Autoren und Lizenz"
 msgid "View"
 msgstr "Ansicht"
 
+#: web/app/components/SidePanel.vue
+msgid "When I ask the AI, in this document:"
+msgstr "Wenn ich die KI bitte, in diesem Dokument:"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Write in the selected text box"
 msgstr "In das ausgewählte Textfeld schreiben"
@@ -588,3 +604,63 @@ msgstr "computes hat noch kein Formatsystem"
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "creates has no style system yet"
 msgstr "creates hat noch kein Formatsystem"
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "Connecting to {address}…"
+msgstr "Verbinde mit {address}…"
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "Could not connect"
+msgstr "Verbindung nicht möglich"
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "Could not reach {address}."
+msgstr "{address} ist nicht erreichbar."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "Not connected: you did not trust this server's certificate."
+msgstr "Nicht verbunden: Sie haben dem Zertifikat dieses Servers nicht vertraut."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "Starting {app}…"
+msgstr "{app} wird gestartet…"
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "That does not look like a Claudia server."
+msgstr "Das sieht nicht nach einem Claudia-Server aus."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "That server runs {other}. This window is {this} — open it there."
+msgstr "Dieser Server betreibt {other}. Dieses Fenster ist {this} – öffnen Sie ihn dort."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "The certificate of {host} has expired. Ask its administrator to renew it."
+msgstr "Das Zertifikat von {host} ist abgelaufen. Bitten Sie die Administration, es zu erneuern."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "The certificate of {host} is not issued by an authority this computer trusts."
+msgstr "Das Zertifikat von {host} stammt nicht von einer Stelle, der dieser Computer vertraut."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "The certificate of {host} is not valid."
+msgstr "Das Zertifikat von {host} ist nicht gültig."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "This computer"
+msgstr "Dieser Computer"
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "Type the address of a server, such as demo.example.org:8420."
+msgstr "Geben Sie die Adresse eines Servers ein, zum Beispiel demo.example.org:8420."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "Use https:// — plain http is only allowed for this computer."
+msgstr "Verwenden Sie https:// – unverschlüsseltes http ist nur für diesen Computer erlaubt."
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "{app} cannot start yet"
+msgstr "{app} kann noch nicht starten"
+
+#: clients/linux/src/claudia_shell_gtk
+msgid "{app} could not start its server"
+msgstr "{app} konnte seinen Server nicht starten"

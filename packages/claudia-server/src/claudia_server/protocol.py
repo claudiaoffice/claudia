@@ -49,6 +49,7 @@ from claudia_core import (
     UnknownCommand,
 )
 
+from .ai_mode import parse_mode
 from .auth import (
     Account,
     DeletableDirectory,
@@ -58,6 +59,7 @@ from .auth import (
     TransferableDirectory,
     UserDirectory,
 )
+from .help import default_library
 from .restore import POLICIES, RestoreCoordinator, RestoreError
 
 if TYPE_CHECKING:
@@ -284,6 +286,8 @@ class Context:
         default_factory=lambda: RestoreCoordinator(lambda record: None, clock=lambda: 0.0)
     )
     broadcast: Callable[[dict], None] = field(default=lambda message: None)  # tell every window of this document
+    # Tell the AI of this document how the next request of a person is to be treated (D262); nothing if there is none.
+    note_ai_mode: Callable[[str, str | None], None] = field(default=lambda user, mode: None)
 
     @property
     def user(self) -> str:
@@ -463,6 +467,28 @@ def _checkpoint(info) -> dict:
         "entry": info.entry.to_data(),
         "time": info.time,
     }
+
+
+# -- help (E13.1, E13.3): the same two read-only methods for every app. A topic names the apps it is for itself
+# (its ``apps`` front matter), so `_help_search` only has to pass the asking document's own app along; no table of
+# which id belongs to which app lives here. Not gated by ``allowed_methods`` (nothing here writes), so the ``ai``
+# user gets the same read access as everybody (E13.4).
+@core_methods.method("help_search", 'query:str=""')
+def _help_search(ctx, *, query):
+    """Help topics for `ctx`'s own app whose title, tags or ``explains`` mention ``query`` (case-insensitive);
+    every topic for this app, by title, if ``query`` is blank. A topic that names no app at all is for every app.
+    Each result is a summary (`id`, `title`, `apps`, `tags`); fetch the body with `help_topic`."""
+    return [topic.summary() for topic in default_library().search(query, app=ctx.document.model.app)]
+
+
+@core_methods.method("help_topic", "id:str")
+def _help_topic(ctx, *, id):
+    """One help topic in full, by the id a `help_search` result gave. Unlike `help_search`, not re-scoped to
+    `ctx`'s own app: an id already names one exact topic, the same way a direct link works wherever it came from."""
+    topic = default_library().get(id)
+    if topic is None:
+        raise RequestError("command_error", f"no help topic {id!r}")
+    return topic.to_data()
 
 
 # -- reading
@@ -876,9 +902,18 @@ def _export_content(ctx):
 
 
 # -- chat
-@core_methods.method("chat", "text:text", write=True)
-def _chat(ctx, text):
+@core_methods.method("chat", "text:text ai_mode:str?", write=True)
+def _chat(ctx, text, ai_mode):
     """`@username message` for one person who is connected (names may contain spaces; case does not matter), a message
     without a leading @ (or `@all message`) for everybody. Chat is kept apart from the document's changes. Returns the
-    record."""
-    return ctx.document.post_chat(ctx.user, text, users=ctx.users()).to_data()
+    record. `ai_mode` (`act` or `suggest`) is how the sender wants the AI to treat this request if it is for the AI: it
+    is not stored, and a client that sends none gets `act`."""
+    try:
+        mode = parse_mode(ai_mode)
+    except ValueError as exc:
+        raise RequestError("bad_request", f"chat: {exc}") from None
+    ctx.note_ai_mode(ctx.user, mode)  # before the message: the AI hears it as it is posted
+    try:
+        return ctx.document.post_chat(ctx.user, text, users=ctx.users()).to_data()
+    finally:
+        ctx.note_ai_mode(ctx.user, None)  # whether or not the AI took it

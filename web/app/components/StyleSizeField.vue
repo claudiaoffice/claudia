@@ -20,7 +20,7 @@ function commit() {
 <template>
   <div class="size" role="group" aria-label="Size" data-testid="size-field">
     <button type="button" :disabled="disabled" aria-label="Smaller" title="Smaller" @click="emit('step', -1)">−</button>
-    <input v-model="typed" inputmode="decimal" aria-label="Font size" :disabled="disabled" @keydown.enter.prevent="commit" @blur="commit" />
+    <input v-model="typed" inputmode="decimal" aria-label="Font size" :disabled="disabled" @keydown.enter.prevent="commit" @blur="commit" >
     <span class="unit mono">{{ size?.unit ?? 'pt' }}</span>
     <button type="button" :disabled="disabled" aria-label="Larger" title="Larger" @click="emit('step', 1)">+</button>
   </div>

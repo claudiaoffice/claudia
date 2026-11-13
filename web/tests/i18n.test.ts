@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { LANGUAGES, createTranslator, loadCatalog, useI18n } from '~/lib/i18n'
+import { LANGUAGES, appLanguage, createTranslator, loadCatalog, useI18n } from '~/lib/i18n'
 import { currentLocale } from '~/lib/locale'
 
 function fakeFetch(responses: Record<string, unknown>): typeof fetch {
@@ -11,12 +11,46 @@ function fakeFetch(responses: Record<string, unknown>): typeof fetch {
   }) as typeof fetch
 }
 
+describe('appLanguage', () => {
+  it('is the App Language entry for a locale tag, region and case aside', () => {
+    expect(appLanguage('de')).toBe('de')
+    expect(appLanguage('de-DE')).toBe('de')
+    expect(appLanguage('DE-at')).toBe('de')
+    expect(appLanguage('en-US')).toBe('en')
+  })
+
+  it('falls back to English, the source language, for a language Claudia has no catalog for', () => {
+    expect(appLanguage('fr-FR')).toBe('en')
+    expect(appLanguage('')).toBe('en')
+  })
+})
+
 describe('loadCatalog', () => {
+  it('never fetches for a regional English such as en-US (a browser default): there is no en-US.json', async () => {
+    // Counted, not thrown: `loadCatalog` swallows a failing fetch, so a throwing stub could not tell the difference.
+    const asked: string[] = []
+    const fetchImpl = (async (input: string | URL | Request) => {
+      asked.push(String(input))
+      return new Response(null, { status: 404 })
+    }) as typeof fetch
+    expect(await loadCatalog('en-US', '/i18n', fetchImpl)).toEqual({})
+    expect(asked).toEqual([])
+  })
+
+  it("reads a regional tag from its language's catalog: de-DE is de.json", async () => {
+    const catalog = await loadCatalog('de-DE', '/i18n', fakeFetch({ '/i18n/de.json': { Save: 'Speichern' } }))
+    expect(catalog).toEqual({ Save: 'Speichern' })
+  })
+
+
   it('never fetches for en, the source language', async () => {
-    const fetchImpl = (() => {
-      throw new Error('should not be called')
-    }) as unknown as typeof fetch
+    const asked: string[] = []
+    const fetchImpl = (async (input: string | URL | Request) => {
+      asked.push(String(input))
+      return new Response(null, { status: 404 })
+    }) as typeof fetch
     expect(await loadCatalog('en', '/i18n', fetchImpl)).toEqual({})
+    expect(asked).toEqual([])
   })
 
   it('returns the catalog it finds', async () => {
@@ -82,11 +116,13 @@ describe('useI18n', () => {
   // menu's own action handler does, needs no component mount.
   vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-  it('starts at the current locale and falls back to the msgid itself before any catalog has loaded', () => {
+  it('starts at the App Language of the current locale and falls back to the msgid before any catalog has loaded', () => {
     // Not asserting a specific tag: Node 21+ exposes a minimal global `navigator` of its own (`locale.test.ts`'s
-    // own caveat), so `currentLocale()` reads whatever that reports, not necessarily 'en'.
+    // own caveat), so `currentLocale()` reads whatever that reports, not necessarily 'en'. Whatever it is, the
+    // menu needs one of its own entries checked, so `locale` is always one of LANGUAGES' tags.
     const i18n = useI18n()
-    expect(i18n.locale.value).toBe(currentLocale())
+    expect(i18n.locale.value).toBe(appLanguage(currentLocale()))
+    expect(LANGUAGES.map(([tag]) => tag)).toContain(i18n.locale.value)
     expect(i18n.t('Save')).toBe('Save')
   })
 

@@ -75,7 +75,7 @@ async function submit() {
       <div class="row">
         <label class="field">
           {{ fieldLabel }}
-          <input ref="field" v-model="value" type="number" :min="limits.lo" :max="limits.hi" inputmode="numeric" autocomplete="off" />
+          <input ref="field" v-model="value" type="number" :min="limits.lo" :max="limits.hi" inputmode="numeric" autocomplete="off" >
         </label>
         <span v-if="parsed !== null" class="tag" :class="{ zero: pct === 0 }">{{ formatPercent(pct) }}</span>
       </div>

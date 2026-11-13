@@ -49,6 +49,24 @@ FILL_AND_CREATE = """
 })()
 """
 
+# Type a word into the text the way the browser does it for a keyboard (Tools ▸ Insert Sample Text did this until it
+# was taken out of the menu, 2026-11-12).
+TYPE_A_WORD = """
+(() => {
+  const text = document.querySelector('[data-testid=text] [data-block]')
+  if (!text) return 'waiting'
+  text.focus()
+  const range = document.createRange()
+  range.selectNodeContents(text)
+  range.collapse(false)
+  const selection = getSelection()
+  selection.removeAllRanges()
+  selection.addRange(range)
+  document.execCommand('insertText', false, 'Hello')
+  return 'typed'
+})()
+"""
+
 
 @pytest.fixture
 def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -62,10 +80,10 @@ def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
     monkeypatch.setenv("XDG_DOWNLOAD_DIR", str(tmp_path / "Downloads"))
     from claudia_shell_gtk._gi import Adw, Gio
-    from claudia_shell_gtk.app import ComposesApp
+    from claudia_shell_gtk.app import ClaudiaApp
 
     Adw.init()
-    application = ComposesApp(identity.get("composes"), flags=Gio.ApplicationFlags.NON_UNIQUE)
+    application = ClaudiaApp(identity.get("composes"), flags=Gio.ApplicationFlags.NON_UNIQUE)
     application.register(None)
     application.activate()
     yield application
@@ -80,6 +98,9 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     pump(lambda: window.visible_page == "web", timeout=60, what="the server to answer")
     bridge = window._bridge  # noqa: SLF001
     view = window._page.widget  # noqa: SLF001
+    # The page is loaded only once its cache has been emptied (``WebPage._load_current``, asynchronous): until then
+    # the view is shown but has no address yet (PROC-12).
+    pump(lambda: view.get_uri() is not None, timeout=15, what="the page to start loading")
     assert view.get_uri().startswith("http://127.0.0.1:")
 
     # Before a document is open the page has no menus, so the page actions are disabled. The page itself has
@@ -112,9 +133,9 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     page_action.activate(None)
     pump(lambda: page_action.get_state().get_boolean() is False, timeout=15, what="the Page View tick to go")
 
-    # Undo is not possible yet; after Insert Sample Text it is.
+    # Undo is not possible yet; after typing it is (in the page, the way the browser types: `insertText`).
     assert not window.lookup_action("edit.undo").get_enabled()
-    window.lookup_action("tools.insert-sample").activate(None)
+    pump(lambda: evaluate(view, TYPE_A_WORD) == "typed", timeout=15, what="the text to take a word")
     pump(lambda: window.lookup_action("edit.undo").get_enabled(), timeout=15, what="Undo to become possible")
 
     # A picture for people to look at.

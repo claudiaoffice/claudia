@@ -40,7 +40,7 @@ class FrozenGrid:
     """A ``Grid`` snapshot holding only the cells one ``Range``'s footprint reached, and nothing else -- no live
     ``Sheet``, no lock, no connection, nothing that cannot cross a process boundary. This is the copy a deferred
     heavy call (:class:`~claudia_computes.functions.base.Deferred`) runs on in a worker, instead of the live
-    sheet it was first read from (D37, D177): plain data, pickled once and read many times.
+    sheet it was first read from (D37, D291): plain data, pickled once and read many times.
 
     Not ``frozen=True``: a :class:`Grid` is a plain, writable-attribute :class:`~typing.Protocol`, and a truly
     immutable dataclass does not structurally match it (its fields are read-only descriptors, not plain
@@ -80,7 +80,7 @@ def freeze(value: object) -> object:
     snapshot of just the cells it reaches, instead of its live sheet; anything else passes through unchanged.
 
     This is what a deferred heavy call's arguments are run through before the call is handed to a worker (D37,
-    D177) -- not a general deep-copy, just enough to take the live, mutable sheet out of the picture."""
+    D291) -- not a general deep-copy, just enough to take the live, mutable sheet out of the picture."""
     if isinstance(value, Range):
         snapshot = FrozenGrid.of(value.sheet, value.row0, value.col0, value.row1, value.col1)
         return Range(snapshot, value.row0, value.col0, value.row1, value.col1, sheet_id=value.sheet_id)

@@ -33,7 +33,7 @@ from pathlib import Path
 
 from .paths import default_repo
 
-__all__ = ["LocalServer", "ServerStartError", "composes_command", "find_server_python", "free_port"]
+__all__ = ["LocalServer", "ServerStartError", "find_server_python", "free_port", "server_command"]
 
 LOOPBACK = "127.0.0.1"
 HEALTH_PATH = "/api/health"
@@ -73,8 +73,9 @@ def find_server_python(*, repo: Path | None = None) -> str | None:
     return str(candidate) if candidate.is_file() and os.access(candidate, os.X_OK) else None
 
 
-def composes_command(python: str, *, port: int, documents: Path, web: Path, state: Path) -> list[str]:
-    """The command line of a composes server for one person on this computer.
+def server_command(python: str, *, model: str, port: int, documents: Path, web: Path, state: Path) -> list[str]:
+    """The command line of a server for one person on this computer, hosting the document ``model`` (``module:Class``,
+    ``AppIdentity.model``).
 
     It listens on the loopback address only, so the connection is plain (as in ``start.sh``); it serves the bundled web
     frontend itself, so the page and its WebSocket have the same origin and no ``--allow-origin`` is needed.
@@ -84,7 +85,7 @@ def composes_command(python: str, *, port: int, documents: Path, web: Path, stat
         "-m",
         "claudia_server",
         "--model",
-        "claudia_composes:TextModel",
+        model,
         "--host",
         LOOPBACK,
         "--port",

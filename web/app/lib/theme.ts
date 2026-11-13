@@ -1,6 +1,7 @@
 // Dark/light mode (UX-05): a `data-theme` attribute on `<html>`, so `tokens.css` can override the light tokens under
 // `:root[data-theme='dark']` without waiting on `prefers-color-scheme` alone (a person can still ask for dark on a
 // light system, or the reverse — the View menu item D120 asks for needs a tri-state: Light, Dark, or Match system).
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue' // only the Vue wiring at the end uses these
 
 export type ThemeChoice = 'light' | 'dark' | 'system'
 const KEY = 'claudia.theme'
@@ -45,7 +46,6 @@ function safeStorage(): Pick<Storage, 'getItem' | 'setItem'> {
 }
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 /**
  * The View menu's "Dark mode" item is one checkbox (the schema gives it one line), not a three-way pick: before it

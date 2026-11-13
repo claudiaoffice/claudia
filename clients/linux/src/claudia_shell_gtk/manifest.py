@@ -15,8 +15,10 @@ never listed a style by name): nothing data-driven gets a static entry. Dynamic,
 and computes' style names, creates' shape library — has no id and no `Action` of its own on the web side either
 (``lib/menu-dispatch.ts``'s `collectStates`/`findMenuItem` walk explicitly skip id-less items); a shell reaches that
 content through its one real submenu-shaped escape hatch (composes: "All Styles…") rather than the static menu
-growing one entry per document. The same reasoning drops the "visible but inert" stub items (D125) from the
-*accelerator* story but not from the menu itself: ``format.none``, ``help.how-to`` and ``help.docs`` below are
+growing one entry per document. Format ▸ Apply Style… is the same escape hatch for applying a style: one page action
+that opens the page's own popover with the styles drawn in their looks (D300, D301), never a native list of them.
+The same reasoning drops the "visible but inert" stub items (D125) from the
+*accelerator* story but not from the menu itself: ``help.how-to`` and ``help.docs`` below are
 ordinary ``Kind.PAGE`` actions the shell greys out the moment the page connects (``set_action_states``, driven by the
 page's own ``collectStates`` — nothing shell-side needs to know they are permanent stubs rather than temporarily
 disabled ones).
@@ -37,6 +39,8 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
+from .identity import UnknownApp
+
 __all__ = [
     "Action",
     "Kind",
@@ -47,6 +51,8 @@ __all__ = [
     "composes",
     "computes",
     "creates",
+    "for_app",
+    "menu_button_id",
     "menu_elements",
     "menu_xml",
     "about_links",
@@ -107,6 +113,13 @@ class Action:
     checkable: bool = False
     editing: str | None = None
     """For :attr:`Kind.EDITING`: the name of the WebKit editing command (``Cut``, ``Copy``, ``Paste``, ...)."""
+    role: str | None = None
+    """The Cocoa selector (``copy:``, ``cut:``, ``paste:``, ``undo:``, ``redo:``) a macOS shell puts on this item
+    next to its accelerator (D158). GTK ignores it; it is carried here, rather than kept only in the macOS client, so
+    one manifest stays the single source for every shell (the module docstring's reason for existing at all) and
+    ``describe()`` can hand it to a shell that never imports this package (``clients/macos``). Unset for everything
+    that is not a standard editing command — macOS has no selector for "paste as plain text" or an app's own
+    commands, and giving those a Cocoa role would route the key to a native editing action with no page effect."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,6 +199,7 @@ class Manifest:
                 "kind": action.kind.value,
                 "checkable": action.checkable,
                 "accelerators": list(action.accelerators),
+                "role": action.role,
             }
 
         def entry(e: MenuEntry) -> dict[str, Any]:
@@ -203,8 +217,16 @@ class Manifest:
         }
 
 
-def _page(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str, ...] = (), checkable: bool = False):
-    return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable)
+def _page(
+    action_id: str,
+    label: str,
+    tooltip: str,
+    *,
+    accelerators: tuple[str, ...] = (),
+    checkable: bool = False,
+    role: str | None = None,
+):
+    return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable, role=role)
 
 
 # --------------------------------------------------------------------------------------------- shared across apps
@@ -272,10 +294,12 @@ def _file_menu(*, title: str) -> Menu:
 
 def _shared_edit_block() -> tuple[Action, ...]:
     """Undo, Redo — identical in every app (D120); their accelerators are page-handled (``lib/shortcuts.ts``), not
-    shell-handled, so none are bound here, the same as before this round."""
+    shell-handled, so none are bound here, the same as before this round. Each still carries its macOS role
+    (D158): on that shell the key equivalent needs one to reach the item at all, whether or not the shell itself
+    binds an accelerator for it."""
     return (
-        _page("edit.undo", "Undo", "Take back your last step"),
-        _page("edit.redo", "Redo", "Do your last undone step again"),
+        _page("edit.undo", "Undo", "Take back your last step", role="undo:"),
+        _page("edit.redo", "Redo", "Do your last undone step again", role="redo:"),
     )
 
 
@@ -290,9 +314,11 @@ def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
     """
     if native:
         return (
-            Action("edit.copy", "Copy", Kind.EDITING, "Copy the selection to the clipboard", editing="Copy"),
-            Action("edit.cut", "Cut", Kind.EDITING, "Move the selection to the clipboard", editing="Cut"),
-            Action("edit.paste", "Paste", Kind.EDITING, "Insert the clipboard", editing="Paste"),
+            Action(
+                "edit.copy", "Copy", Kind.EDITING, "Copy the selection to the clipboard", editing="Copy", role="copy:"
+            ),
+            Action("edit.cut", "Cut", Kind.EDITING, "Move the selection to the clipboard", editing="Cut", role="cut:"),
+            Action("edit.paste", "Paste", Kind.EDITING, "Insert the clipboard", editing="Paste", role="paste:"),
             Submenu(
                 "Paste As",
                 (
@@ -307,9 +333,9 @@ def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
             ),
         )
     return (
-        _page("edit.copy", "Copy", "Copy the selection to the clipboard"),
-        _page("edit.cut", "Cut", "Move the selection to the clipboard"),
-        _page("edit.paste", "Paste", "Insert the clipboard"),
+        _page("edit.copy", "Copy", "Copy the selection to the clipboard", role="copy:"),
+        _page("edit.cut", "Cut", "Move the selection to the clipboard", role="cut:"),
+        _page("edit.paste", "Paste", "Insert the clipboard", role="paste:"),
         Submenu("Paste As", (_page("edit.paste-as-plain", "Plain Text", "Insert the clipboard without formatting"),)),
     )
 
@@ -381,6 +407,11 @@ def composes() -> Manifest:
         (
             (
                 _page(
+                    "format.apply-style",
+                    "Apply Style…",
+                    "Choose a style for the selection, each drawn in its own look",
+                ),
+                _page(
                     "format.look",
                     "Edit This Style…",
                     "Change how this kind of paragraph looks",
@@ -388,6 +419,7 @@ def composes() -> Manifest:
                 ),
                 _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
             ),
+            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
         ),
     )
     view_menu = Menu(
@@ -400,20 +432,8 @@ def composes() -> Manifest:
     tools_menu = Menu(
         "Tools",
         (
-            (
-                _page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),
-                _page("tools.review-text", "Review This Text", "Ask the assistant to suggest improvements"),
-                _page(
-                    "tools.review-paragraph", "Review This Paragraph", "Ask the assistant about the current paragraph"
-                ),
-            ),
-            (
-                _page(
-                    "tools.insert-sample",
-                    "Insert Sample Text",
-                    "Put a sample text into the document to try the assistant",
-                ),
-            ),
+            # Only the generic entry (D126): the canned demo requests and Insert Sample Text went (2026-11-12).
+            (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
         ),
     )
     return Manifest(
@@ -439,7 +459,7 @@ def computes() -> Manifest:
             _shared_clipboard_block(native=False),
             (_page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document"),),
             (
-                # D130 (Claude's recommendation, not yet confirmed — decision-log.md): grouped into Row ▸ /
+                # D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ /
                 # Column ▸ rather than six flat items, reusing the same submenu mechanism Paste as ▸ already needed.
                 Submenu(
                     "Row",
@@ -465,19 +485,32 @@ def computes() -> Manifest:
             (_page("edit.clear", "Clear Cells", "Clear the selected cells"),),
         ),
     )
-    format_menu = Menu("Format", ((_page("format.none", "No Styles Yet", "computes has no style system yet"),),))
+    format_menu = Menu(
+        "Format",
+        (
+            (
+                _page(
+                    "format.apply-style",
+                    "Apply Style…",
+                    "Choose a style for the selection, each drawn in its own look",
+                ),
+                _page(
+                    "format.look",
+                    "Edit This Style…",
+                    "Change how the object you have selected looks",
+                    accelerators=("<Shift>F10",),
+                ),
+                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
+            ),
+            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+        ),
+    )
     view_menu = Menu("View", (_shared_view_block(authors=False),))
     tools_menu = Menu(
         "Tools",
         (
-            (
-                _page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),
-                _page(
-                    "tools.example-budget",
-                    "Ask for an Example Budget",
-                    "Ask the assistant to build an example budget",
-                ),
-            ),
+            # Only the generic entry (D126): "Ask for an Example Budget" was taken out (2026-11-12).
+            (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
         ),
     )
     return Manifest(
@@ -513,7 +546,26 @@ def creates() -> Manifest:
             (_page("edit.delete", "Delete", "Take the selected object off the slide"),),
         ),
     )
-    format_menu = Menu("Format", ((_page("format.none", "No Styles Yet", "creates has no style system yet"),),))
+    format_menu = Menu(
+        "Format",
+        (
+            (
+                _page(
+                    "format.apply-style",
+                    "Apply Style…",
+                    "Choose a style for the selection, each drawn in its own look",
+                ),
+                _page(
+                    "format.look",
+                    "Edit This Style…",
+                    "Change how the object you have selected looks",
+                    accelerators=("<Shift>F10",),
+                ),
+                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
+            ),
+            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+        ),
+    )
     view_menu = Menu("View", (_shared_view_block(authors=False),))
     tools_menu = Menu("Tools", ((_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),))
     return Manifest(
@@ -528,6 +580,20 @@ def creates() -> Manifest:
             _help_menu("Claudia Creates"),
         ),
     )
+
+
+def for_app(name: str) -> Manifest:
+    """The manifest of the app called ``name`` — what a shell started for that app builds its menus from.
+
+    :class:`~claudia_shell_gtk.identity.UnknownApp` (naming the available apps) if there is none.
+    """
+    builders: dict[str, Callable[[], Manifest]] = {"composes": composes, "computes": computes, "creates": creates}
+    try:
+        return builders[name]()
+    except KeyError:
+        raise UnknownApp(
+            f"there is no Linux client for '{name}' yet; available: {', '.join(sorted(builders))}"
+        ) from None
 
 
 # ----------------------------------------------------------------------------------------------------- GtkBuilder XML
@@ -570,6 +636,11 @@ def _menu_tree(manifest: Manifest, translate: Translate) -> ET.Element:
                     _item_element(section_element, entry, translate)
     ET.indent(interface)
     return interface
+
+
+def menu_button_id(menu_id: str) -> str:
+    """The id that ``data/window.ui`` gives the menu button of the menu ``menu_id`` (``menu-file`` → ``menu_file``)."""
+    return menu_id.replace("-", "_")
 
 
 def menu_elements(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:

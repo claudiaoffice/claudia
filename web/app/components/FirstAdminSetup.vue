@@ -42,9 +42,9 @@ function keepLocal() {
       <p v-if="exposed" class="lead">{{ host }} can now be reached from outside this computer. Before anyone else can reach it, set a name and password for yourself — you'll use them to sign in here from now on.</p>
       <p v-else class="lead">{{ host }} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later.</p>
 
-      <label class="field">Your name<input v-model="name" type="text" autocomplete="username" placeholder="tobi" /></label>
-      <label class="field">Password<input v-model="password" type="password" autocomplete="new-password" placeholder="••••••••••" /></label>
-      <label class="field">Confirm password<input v-model="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••••" /></label>
+      <label class="field">Your name<input v-model="name" type="text" autocomplete="username" placeholder="tobi" ></label>
+      <label class="field">Password<input v-model="password" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
+      <label class="field">Confirm password<input v-model="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
 
       <div class="note">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -4,7 +4,7 @@ from claudia_composes import TextModel
 from claudia_computes import WorkbookModel
 from claudia_core.testing import ListModel
 from claudia_creates import ShapeLibrary, SlideModel
-from claudia_server.apps import methods_for, model_assistant_for, stand_in_assistant_for
+from claudia_server.apps import NoModelEngine, methods_for, model_assistant_for, stand_in_assistant_for
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
 from claudia_server.creates import creates_methods
@@ -35,6 +35,8 @@ def test_presentations_get_their_methods_and_a_server_can_bring_its_own_shapes(t
     assert methods_for(WorkbookModel, shapes=ShapeLibrary.load()) is computes_methods, "shapes matter to creates only"
 
 
-def test_nobody_answers_for_the_ai_in_a_presentation_yet():
-    assert stand_in_assistant_for(SlideModel) is None
-    assert model_assistant_for(SlideModel, runner=None) is None
+def test_a_presentation_has_the_model_driven_ai_and_without_a_model_one_that_says_so():
+    """D265 (supersedes D85): creates' AI is model-driven; with no model, `@ai` is answered that there is none."""
+    assert model_assistant_for(SlideModel, runner=None) is not None
+    assistant = stand_in_assistant_for(SlideModel)()
+    assert isinstance(assistant.engine, NoModelEngine)

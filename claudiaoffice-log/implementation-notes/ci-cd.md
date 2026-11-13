@@ -1,6 +1,6 @@
 # CI/CD (GitHub Actions)
 
-GitLab is abandoned; `.gitlab-ci.yml` is only a leftover and can be deleted.
+GitLab is abandoned; its leftover `.gitlab-ci.yml` was deleted on 2026-11-10.
 
 - `docker.yml`: one image, linux/amd64 only (Scaleway takes nothing else). Smoke test = each app with `CLAUDIA_DEMO=1` answers `/api/health`.
 - `deploy-demo.yml`: GHCR -> `rg.<region>.scw.cloud/<namespace>/claudia-demo:sha-<short>` -> `PATCH registry_image` + `POST .../deploy` on the Scaleway Containers API (`v1beta1`), then waits for `status=ready` and asks the demo URL. GitHub environment `demo` (optional approval). Variables/secrets are listed at the top of the file.

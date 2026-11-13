@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 120">
+  <style>
+    .dot { fill: #3d5a80 }
+    #big { fill: #d6477a }
+    rect.soft { opacity: 0.5 }
+  </style>
+  <defs>
+    <symbol id="star" viewBox="0 0 10 10"><path d="M5 0 6.2 3.8 10 3.8 6.9 6.1 8.1 10 5 7.6 1.9 10 3.1 6.1 0 3.8 3.8 3.8z"/></symbol>
+    <clipPath id="clip"><circle cx="160" cy="35" r="25"/></clipPath>
+    <g id="pair"><circle class="dot" cx="0" cy="0" r="4"/><circle class="dot" cx="12" cy="0" r="4"/></g>
+  </defs>
+  <g transform="translate(20 20) rotate(15) scale(1.2)">
+    <rect width="40" height="25" fill="#98c1d9"/>
+    <use xlink:href="#pair" x="8" y="12"/>
+  </g>
+  <use href="#star" x="80" y="10" width="40" height="40" fill="#f4d35e"/>
+  <g clip-path="url(#clip)">
+    <rect x="130" y="5" width="60" height="60" fill="#ee6c4d"/>
+    <rect x="130" y="5" width="30" height="30" fill="#293241"/>
+  </g>
+  <g opacity="0.5">
+    <rect x="10" y="70" width="60" height="40" fill="#d6477a"/>
+    <rect x="40" y="80" width="60" height="35" fill="#3d5a80"/>
+  </g>
+  <rect class="soft" x="110" y="75" width="30" height="30" fill="#293241"/>
+  <circle id="big" cx="170" cy="92" r="18"/>
+  <g transform="skewX(20)"><rect x="100" y="108" width="20" height="8" fill="#000"/></g>
+  <svg x="150" y="100" width="40" height="18" viewBox="0 0 10 10" preserveAspectRatio="none">
+    <rect width="10" height="10" fill="#98c1d9"/><circle cx="10" cy="10" r="6" fill="#293241"/>
+  </svg>
+</svg>

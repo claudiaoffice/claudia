@@ -3,13 +3,31 @@
 import { computed, ref } from 'vue'
 import { insertFrame, type Frame } from '~/lib/geometry'
 import type { SlideSession } from '~/lib/slide-session'
-import { copySelection, cutSelection, pasteAsPlainText } from '~/lib/clipboard'
+import { pasteAsPlainText } from '~/lib/clipboard'
+import {
+  askItem,
+  authorsItemUnavailable,
+  clipboardItems,
+  configMenu,
+  darkItem,
+  fileMenu,
+  helpMenu,
+  panelItem,
+  undoRedoItems,
+  type DocumentMenuContext,
+} from '~/lib/document-menus'
 import { useI18n } from '~/lib/i18n'
+import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
+import { galleryFor } from '~/lib/style-host'
+import { formatItems, noLists } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import SlideCanvas from './SlideCanvas.vue'
 import ImageImportDialog from './ImageImportDialog.vue'
+import PrintPreview from './PrintPreview.vue'
+import { slideSource } from '~/lib/print/source'
+import { useCreatorLanguage, usePrint } from '~/lib/print/use-print'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: SlideSession }>()
@@ -25,8 +43,85 @@ const { shown: gridShown, toggle: toggleGrid } = useGrid()
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
+/** The modal layer: creates had only the image dialog before the styles arrived. */
+const dialog = ref<null | 'styles' | 'colours'>(null)
+const EXPORT_FORMATS = [
+  { value: 'pptx', label: 'PowerPoint presentation (.pptx)' },
+  { value: 'odp', label: 'OpenDocument presentation (.odp)' },
+]
 
 const readonly = computed(() => state.me.role === 'viewer')
+
+// A new presentation starts in the language of its maker's interface (D915, D917); File ▸ Print… shows the pages in
+// place of the slide (D906, D918). Both as in every app that prints (`lib/print/use-print.ts`).
+useCreatorLanguage(session, () => locale.value)
+const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => canvas.value?.focus())
+const printSource = slideSource(session)
+const extraShortcuts = [PRINT]
+const styling: ObjectStyling = {
+  get readOnly() {
+    return session.readOnly
+  },
+  get styles() {
+    return session.styleViews()
+  },
+  get roles() {
+    return state.palette?.roles ?? []
+  },
+  get readings() {
+    return state.palette?.readings ?? []
+  },
+  get selected() {
+    return state.selected ? state.objects[state.selected] ?? null : null
+  },
+  get model() {
+    return state.styleModel
+  },
+  get bodies() {
+    return session.bodies()
+  },
+  applyStyle: (targets, style, slot) => session.applyStyle(targets, style, slot),
+  changeStyle: (style, edit) => session.changeStyle(style, edit),
+  deviateStyle: (parent, targets, slot, edit) => session.deviateStyle(parent, targets, slot, edit),
+  renameStyle: (style, name) => session.renameStyle(style, name),
+  checkCss: (text) => session.checkCss(text),
+  setRole: (role, colour) => session.setRole(role, colour),
+}
+/** The Format menu's and the bar's host: the slot an object is mostly styled by (a text box's words, a shape's
+ * outline, a picture's box). */
+const styleHost = objectStyleHost(styling)
+/** The bar's second picker, for a shape's words (D310: the outline and the label are two slots). */
+const labelHost = objectStyleHost(styling, 'label')
+const selectedKind = computed(() => (state.selected ? state.objects[state.selected]?.kind : undefined))
+
+/**
+ * The Format menu (D300): Apply style ▸ with the styles that fit the selected object's slot — the one the style
+ * menu works on, a shape's outline or a text box's words (D304, D316) — then this object's own look, all the
+ * styles, and the document's colours. Styling needs something selected; colours never do.
+ */
+function styleItems() {
+  if (session.styleViews().length === 0) return [{ label: t('No styles yet'), disabled: true }]
+  const body = state.selected ? state.objects[state.selected] : undefined
+  const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)
+  return formatItems(t, {
+    groups: body ? [offered.own, offered.bundles] : [],
+    heading: body ? undefined : t('Select an object to style it'),
+    current: styleHost.current?.id,
+    canApply: !readonly.value && !!body,
+    apply: (id) => void styleHost.apply(id),
+    openApply: () => canvas.value?.openStyleMenu(undefined, 'apply'),
+    look: { disabled: !body, open: () => canvas.value?.openStyleMenu() },
+    allStyles: () => (dialog.value = 'styles'),
+    colours: () => (dialog.value = 'colours'),
+    list: noLists(t('Text boxes hold no lists yet')),
+  })
+}
+
+/** Put the colours the document started with back, as the server itself states them (no second copy to drift). */
+async function resetPalette() {
+  const started = state.palette?.builtin ?? []
+  if (started.length && (await session.replacePalette(started))) dialog.value = null
+}
 const here = computed(() => state.slides.findIndex((s) => s.id === state.activeSlide))
 const count = computed(() => session.objectsOn(state.activeSlide).length)
 
@@ -57,152 +152,93 @@ async function pasteFromClipboard() {
   await pasteAsPlainText(document.activeElement)
 }
 
-const menus = computed<Menu[]>(() => [
-  {
-    label: t('File'),
-    items: [
-      { id: 'file.new', label: t('New'), action: () => emit('leave', { startFresh: true }) },
-      { id: 'file.open', label: t('Open…'), action: () => emit('leave') },
-      { label: '', separator: true },
-      { id: 'file.save', label: t('Save'), hint: 'Ctrl+S', action: () => frame.value?.checkpoint(null), disabled: readonly.value },
-      { id: 'file.save-as', label: t('Save new checkpoint…'), action: () => frame.value?.openDialog('checkpoint'), disabled: readonly.value },
-      { id: 'file.download', label: t('Download'), disabled: true }, // D123: a stub here until creates has an export format
-      { label: '', separator: true },
-      {
-        id: 'file.manage',
-        label: t('Manage'),
-        items: [
-          { id: 'file.manage.share', label: t('Share…'), action: () => frame.value?.openDialog('share'), disabled: state.me.role !== 'owner' },
-          {
-            id: 'file.manage.assign-owner',
-            label: t('Assign new owner…'),
-            action: () => frame.value?.openDialog('assign-owner'),
-            disabled: state.me.role !== 'owner',
+/** What the shared menu items need from this window (`lib/document-menus.ts`). */
+const shared = computed<DocumentMenuContext>(() => ({
+  t,
+  role: state.me.role,
+  open: (dialog) => frame.value?.openDialog(dialog),
+  leave: (opts) => emit('leave', opts),
+  save: () => frame.value?.checkpoint(null),
+  print: openPrint,
+}))
+
+const menus = computed<Menu[]>(() => {
+  const c = shared.value
+  return [
+    fileMenu(c),
+    {
+      label: t('Edit'),
+      items: [
+        ...undoRedoItems(c, {
+          canUndo: state.canUndo,
+          undoLabel: state.undoLabel,
+          canRedo: state.canRedo,
+          redoLabel: state.redoLabel,
+          undo: () => session.undo(),
+          redo: () => session.redo(),
+        }),
+        { label: '', separator: true },
+        ...clipboardItems(c, () => pasteFromClipboard()),
+        { label: '', separator: true },
+        { id: 'edit.new-slide', label: t('New slide'), action: () => session.addSlide(), disabled: readonly.value },
+        { label: '', separator: true },
+        { id: 'edit.edit-text', label: t('Edit text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
+        { id: 'edit.text-box', label: t('Text box'), action: () => addText(), disabled: readonly.value },
+        { id: 'edit.image', label: t('Image…'), action: () => (showImageDialog.value = true), disabled: readonly.value },
+        { label: '', separator: true },
+        ...state.library.map((s) => ({ label: s.name, action: () => addShape(s.id), disabled: readonly.value })),
+        { label: '', separator: true },
+        { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
+      ],
+    },
+    { label: t('Format'), items: styleItems() },
+    {
+      label: t('View'),
+      items: [
+        authorsItemUnavailable(c), // creates tracks no per-object authorship yet
+        {
+          id: 'view.grid',
+          label: 'Show grid',
+          checked: gridShown.value,
+          action: (x) => {
+            if (x === undefined || (x === 'on') !== gridShown.value) toggleGrid()
           },
-          {
-            id: 'file.manage.accept-owner',
-            label: t('Accept ownership…'),
-            action: () => frame.value?.openDialog('accept-owner'),
-            disabled: state.me.role === 'viewer',
-          },
-          { id: 'file.manage.leave', label: t('Leave document…'), action: () => frame.value?.openDialog('leave') },
-          { id: 'file.manage.export', label: t('Export…'), action: () => frame.value?.openDialog('export') },
-          {
-            id: 'file.manage.delete',
-            label: t('Delete from server…'),
-            action: () => frame.value?.openDialog('delete'),
-            disabled: state.me.role !== 'owner',
-          },
-        ],
-      },
-      { label: '', separator: true },
-      { id: 'file.close', label: t('Close document'), action: () => emit('leave') },
-    ],
-  },
-  {
-    label: t('Edit'),
-    items: [
-      {
-        id: 'edit.undo',
-        label: state.canUndo ? t('Undo {label}', { label: state.undoLabel }) : t('Undo'),
-        hint: 'Ctrl+Z',
-        action: () => session.undo(),
-        disabled: !state.canUndo,
-      },
-      {
-        id: 'edit.redo',
-        label: state.canRedo ? t('Redo {label}', { label: state.redoLabel }) : t('Redo'),
-        hint: 'Ctrl+Shift+Z',
-        action: () => session.redo(),
-        disabled: !state.canRedo,
-      },
-      { label: '', separator: true },
-      { id: 'edit.copy', label: t('Copy'), hint: 'Ctrl+C', action: () => copySelection() },
-      { id: 'edit.cut', label: t('Cut'), hint: 'Ctrl+X', action: () => cutSelection(), disabled: readonly.value },
-      { id: 'edit.paste', label: t('Paste'), hint: 'Ctrl+V', action: () => pasteFromClipboard(), disabled: readonly.value },
-      {
-        id: 'edit.paste-as',
-        label: t('Paste as'),
-        disabled: readonly.value,
-        // The child's own `disabled` is what a shell actually reports per-action (`collectStates` walks each item on
-        // its own terms, not by inheriting a parent's); the parent's `disabled` above only keeps the web menu from
-        // opening the flyout at all — both need to agree, or a shell could show the leaf as enabled regardless.
-        items: [{ id: 'edit.paste-as-plain', label: t('Plain text'), action: () => pasteFromClipboard(), disabled: readonly.value }],
-      },
-      { label: '', separator: true },
-      { id: 'edit.new-slide', label: t('New slide'), action: () => session.addSlide(), disabled: readonly.value },
-      { label: '', separator: true },
-      { id: 'edit.edit-text', label: t('Edit text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
-      { id: 'edit.text-box', label: t('Text box'), action: () => addText(), disabled: readonly.value },
-      { id: 'edit.image', label: t('Image…'), action: () => (showImageDialog.value = true), disabled: readonly.value },
-      { label: '', separator: true },
-      ...state.library.map((s) => ({ label: s.name, action: () => addShape(s.id), disabled: readonly.value })),
-      { label: '', separator: true },
-      { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
-    ],
-  },
-  { label: t('Format'), items: [{ id: 'format.none', label: t('No styles yet'), disabled: true }] }, // D125: visible, inert — creates has no style system yet
-  {
-    label: t('View'),
-    items: [
-      { id: 'view.authors', label: t('Show who wrote what'), checked: false, disabled: true }, // creates tracks no per-object authorship yet
-      {
-        id: 'view.grid',
-        label: 'Show grid',
-        checked: gridShown.value,
-        action: (t) => {
-          if (t === undefined || (t === 'on') !== gridShown.value) toggleGrid()
         },
-      },
-      {
-        id: 'view.panel',
-        label: t('History and chat'),
-        checked: frame.value?.isPanelOpen() ?? true,
-        action: (x) => {
-          const open = frame.value?.isPanelOpen() ?? true
-          if (x === undefined || (x === 'on') !== open) frame.value?.togglePanel()
-        },
-      },
-      {
-        id: 'view.dark',
-        label: t('Dark mode'),
-        checked: dark(),
-        action: (x) => {
-          if (x === undefined || (x === 'on') !== dark()) toggleDark()
-        },
-      },
-    ],
-  },
-  { label: t('Tools'), items: [{ id: 'tools.ask', label: t('Ask the assistant…'), action: () => frame.value?.ask('@ai ') }] },
-  {
-    label: t('Config'),
-    items: [
-      { id: 'config.shortcuts', label: t('Shortcuts'), action: () => frame.value?.openDialog('shortcuts') },
-      {
-        label: t('App Language'),
-        items: [
-          { id: 'config.language.en', label: 'English', checked: locale.value === 'en', action: () => choose('en') },
-          { id: 'config.language.de', label: 'Deutsch', checked: locale.value === 'de', action: () => choose('de') },
-        ],
-      },
-    ],
-  },
-  {
-    label: t('Help'),
-    items: [
-      { id: 'help.ask', label: t('Ask ai'), action: () => frame.value?.ask('@ai ') },
-      { id: 'help.how-to', label: t('How do I…?'), disabled: true },
-      { id: 'help.docs', label: t('Documentation'), disabled: true },
-      { id: 'help.about', label: t('About claudia'), action: () => frame.value?.openDialog('about') },
-    ],
-  },
-])
+        panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
+        darkItem(c, { on: dark, toggle: toggleDark }),
+      ],
+    },
+    { label: t('Tools'), items: [askItem(c, (text) => frame.value?.ask(text))] },
+    configMenu(c, { current: locale.value, choose }),
+    helpMenu(c, { ask: (text) => frame.value?.ask(text), openHelp: (mode) => frame.value?.openHelp(mode) }),
+  ]
+})
+
+/** Config ▸ Shortcuts: the slide's own mouse and keyboard conventions, which are not a single key chord. */
+const SHORTCUT_NOTES: [string, string][] = [
+  ['Click', 'select an object (colleagues cannot change it while you hold it)'],
+  ['Drag', 'move it; the handles resize it'],
+  ['Double-click, Enter', 'write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it'],
+  ['Arrows', 'move it by 10 units; with Shift by 1'],
+  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
+]
 </script>
 
 <template>
-  <DocumentFrame ref="frame" :session="session" :menus="menus" @leave="(opts) => emit('leave', opts)" @saved="canvas?.focus()">
+  <DocumentFrame
+    ref="frame"
+    app="creates"
+    :session="session"
+    :menus="menus"
+    :export-formats="EXPORT_FORMATS"
+    :extra-shortcuts="extraShortcuts"
+    :shortcut-notes="SHORTCUT_NOTES"
+    @leave="(opts) => emit('leave', opts)"
+    @saved="canvas?.focus()"
+  >
     <template #toolbar>
       <InsertBar
+        v-if="!printing"
         :shapes="state.library"
         :can-delete="state.selected !== null"
         :can-undo="state.canUndo"
@@ -216,15 +252,23 @@ const menus = computed<Menu[]>(() => [
         @remove="remove"
         @undo="session.undo()"
         @redo="session.redo()"
-      />
+      >
+        <!-- Applying a style where composes and computes have it (owner's report, 2026-11-12): the popover only shows a
+             style's look (UX-14), so without this a named style could be applied only from Format ▸ Apply style. -->
+        <StylePicker :host="styleHost" :hint="'Shift+F10'" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
+        <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" caption="Label" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
+      </InsertBar>
     </template>
-    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" />
+    <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
+    <SlideCanvas v-else-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
     <div v-else class="noslide">This presentation has no slide.</div>
     <template #overlay>
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
+      <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
     <template #footer>
-      <footer class="foot">
+      <footer v-if="!printing" class="foot">
         <div class="tabs" role="tablist" aria-label="slides">
           <button
             v-for="(s, i) in state.slides"

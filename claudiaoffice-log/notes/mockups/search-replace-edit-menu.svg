@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="sh2" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dy="3" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0.0" y="0.0" width="1120.0" height="660.0" rx="0" fill="#F7F3EC"/>
+<text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="18" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Edit ▸ Search &amp; replace…  —  one entry, one place, in all three apps</text>
+<text x="40.0" y="68.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">The shared block of Edit (D120) gets one more group between the clipboard and the app's own items. Ctrl+F opens it for finding, Ctrl+H with Replace unfolded.</text>
+<rect x="40.0" y="96.0" width="320.0" height="40.0" rx="0" fill="#FBF9F5" stroke="#E3DED5" stroke-width="1"/>
+<rect x="50.0" y="104.0" width="24.0" height="24.0" rx="6" fill="#13917F"/>
+<path d="M55 113 H69" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M55 121 C58.5 117.5 61 124 64.5 121 C66 119.5 67.5 120 69 120.8" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="84.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Budget 2027</text>
+<rect x="190.0" y="104.0" width="52.0" height="26.0" rx="7" fill="#E7E1F4"/>
+<text x="199.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Edit</text>
+<text x="255.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Format</text>
+<text x="308.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">View</text>
+<rect x="180.0" y="140.0" width="190.0" height="451.0" rx="10" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="198.0" y="169.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Undo</text>
+<text x="356.0" y="169.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+Z</text>
+<text x="198.0" y="199.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Redo</text>
+<text x="356.0" y="199.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+Shift+Z</text>
+<line x1="190.0" y1="214.0" x2="360.0" y2="214.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="198.0" y="238.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Copy</text>
+<text x="356.0" y="238.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+C</text>
+<text x="198.0" y="268.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Cut</text>
+<text x="356.0" y="268.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+X</text>
+<text x="198.0" y="298.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Paste</text>
+<text x="356.0" y="298.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+V</text>
+<text x="198.0" y="328.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Paste as</text>
+<text x="356.0" y="328.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">▸</text>
+<line x1="190.0" y1="343.0" x2="360.0" y2="343.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="186.0" y="348.0" width="178.0" height="28.0" rx="7" fill="#13917F"/>
+<text x="198.0" y="367.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="500" text-anchor="start" xml:space="preserve">Search &amp; replace…</text>
+<text x="356.0" y="367.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+F</text>
+<line x1="190.0" y1="382.0" x2="360.0" y2="382.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="198.0" y="406.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">New sheet…</text>
+<text x="198.0" y="436.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Image…</text>
+<text x="198.0" y="466.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Chart…</text>
+<line x1="190.0" y1="481.0" x2="360.0" y2="481.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="198.0" y="505.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Row</text>
+<text x="356.0" y="505.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">▸</text>
+<text x="198.0" y="535.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Column</text>
+<text x="356.0" y="535.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">▸</text>
+<line x1="190.0" y1="550.0" x2="360.0" y2="550.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="198.0" y="574.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Clear cells</text>
+<text x="356.0" y="574.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Del</text>
+<text x="40.0" y="633.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="1" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"></text>
+<rect x="400.0" y="96.0" width="320.0" height="40.0" rx="0" fill="#FBF9F5" stroke="#E3DED5" stroke-width="1"/>
+<rect x="410.0" y="104.0" width="24.0" height="24.0" rx="6" fill="#D6477A"/>
+<path d="M422 108.5 L426 116.5 L422 122 L418 116.5 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M416 124.5 H428" fill="none" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="444.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Project report</text>
+<rect x="550.0" y="104.0" width="52.0" height="26.0" rx="7" fill="#E7E1F4"/>
+<text x="559.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Edit</text>
+<text x="615.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Format</text>
+<text x="668.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">View</text>
+<rect x="540.0" y="140.0" width="190.0" height="244.0" rx="10" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="558.0" y="169.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Undo</text>
+<text x="716.0" y="169.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+Z</text>
+<text x="558.0" y="199.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Redo</text>
+<text x="716.0" y="199.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+Shift+Z</text>
+<line x1="550.0" y1="214.0" x2="720.0" y2="214.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="558.0" y="238.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Copy</text>
+<text x="716.0" y="238.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+C</text>
+<text x="558.0" y="268.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Cut</text>
+<text x="716.0" y="268.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+X</text>
+<text x="558.0" y="298.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Paste</text>
+<text x="716.0" y="298.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+V</text>
+<text x="558.0" y="328.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Paste as</text>
+<text x="716.0" y="328.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">▸</text>
+<line x1="550.0" y1="343.0" x2="720.0" y2="343.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="546.0" y="348.0" width="178.0" height="28.0" rx="7" fill="#D6477A"/>
+<text x="558.0" y="367.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="500" text-anchor="start" xml:space="preserve">Search &amp; replace…</text>
+<text x="716.0" y="367.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#FFFFFF" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+F</text>
+<text x="400.0" y="426.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="1" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"></text>
+<rect x="760.0" y="96.0" width="320.0" height="40.0" rx="0" fill="#FBF9F5" stroke="#E3DED5" stroke-width="1"/>
+<rect x="770.0" y="104.0" width="24.0" height="24.0" rx="6" fill="#F2A057"/>
+<rect x="775.0" y="111.0" width="14.0" height="10.0" rx="2" fill="#FFFFFF"/>
+<circle cx="779.5" cy="116.0" r="2" fill="#F2A057"/>
+<text x="804.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Kick-off</text>
+<rect x="910.0" y="104.0" width="52.0" height="26.0" rx="7" fill="#E7E1F4"/>
+<text x="919.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Edit</text>
+<text x="975.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Format</text>
+<text x="1028.0" y="121.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">View</text>
+<rect x="900.0" y="140.0" width="190.0" height="421.0" rx="10" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="918.0" y="169.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Undo</text>
+<text x="1076.0" y="169.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+Z</text>
+<text x="918.0" y="199.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Redo</text>
+<text x="1076.0" y="199.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+Shift+Z</text>
+<line x1="910.0" y1="214.0" x2="1080.0" y2="214.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="918.0" y="238.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Copy</text>
+<text x="1076.0" y="238.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+C</text>
+<text x="918.0" y="268.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Cut</text>
+<text x="1076.0" y="268.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+X</text>
+<text x="918.0" y="298.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Paste</text>
+<text x="1076.0" y="298.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+V</text>
+<text x="918.0" y="328.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Paste as</text>
+<text x="1076.0" y="328.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">▸</text>
+<line x1="910.0" y1="343.0" x2="1080.0" y2="343.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="906.0" y="348.0" width="178.0" height="28.0" rx="7" fill="#F2A057"/>
+<text x="918.0" y="367.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Search &amp; replace…</text>
+<text x="1076.0" y="367.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="end" xml:space="preserve">Ctrl+F</text>
+<line x1="910.0" y1="382.0" x2="1080.0" y2="382.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="918.0" y="406.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">New slide</text>
+<line x1="910.0" y1="421.0" x2="1080.0" y2="421.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="918.0" y="445.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Edit text</text>
+<text x="1076.0" y="445.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Enter</text>
+<text x="918.0" y="475.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Text box</text>
+<text x="918.0" y="505.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Image…</text>
+<line x1="910.0" y1="520.0" x2="1080.0" y2="520.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="918.0" y="544.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Delete</text>
+<text x="1076.0" y="544.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">Del</text>
+<text x="760.0" y="603.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="1" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"></text>
+<text x="40.0" y="575.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="1" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"></text>
+</svg>

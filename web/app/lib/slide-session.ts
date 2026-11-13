@@ -1,31 +1,21 @@
 // One person's view of one presentation (creates): the slides, their objects and the shapes, kept up to date from the
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
-import { type LinkLike, type Region } from './protocol'
+import type { LinkLike, Region, WireData } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import type { Frame } from './geometry'
-import type { ImageAsset, ImageImport } from './images'
+import type { ImageAsset } from './images'
+import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { CssCheck, CssEdit } from './style-css'
+import type { PrintSetupData } from '@claudia/layout'
 
-// `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E10.11); re-exported here
+// `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
 export type { ImageAsset, ImageImport } from './images'
+export type { ColourRole, ObjectBody, PaletteEvent, Reading, SlideAnchor, StyleDef, VisualObject } from './objects'
 
-export interface SlideObject {
-  id: string
-  slide: string
-  kind: 'text' | 'shape' | 'image'
-  x: number
-  y: number
-  w: number
-  h: number
-  style: string
-  text: string
-  shape: string | null
-  image: string | null
-  imported: ImageImport | null
-  /** Whether this object holds to the grid (E10.15): the document's own state, set with `setSnap`. The grid
-   * itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is shown. */
-  snap: boolean
-}
+/** One thing on a slide: the shared `ObjectBody` plus a `SlideAnchor` — the only part of it that is this app's
+ * own (E10.16, D177). Read its place with `slideFrame(obj)`, not `obj.x`. */
+export type SlideObject = VisualObject<SlideAnchor>
 /** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
 export interface ShapeDef {
   format: number
@@ -35,12 +25,7 @@ export interface ShapeDef {
   aspect: number | null
   text_area: { x: number; y: number; w: number; h: number }
 }
-export interface StyleDef {
-  id: string
-  name: string
-  purpose: string
-  css: Record<string, string>
-}
+
 export interface SlideInfo {
   id: string
   objects: number
@@ -54,7 +39,16 @@ export interface SlideState extends BaseState {
   shapes: Record<string, ShapeDef> // what this document has taken in, by id
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id (E10.8)
   styles: Record<string, StyleDef>
+  /** The document's colour roles and how they read against each other (D200); the styles are what is drawn from. */
+  palette: PaletteEvent | null
+  /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
+  styleModel: StyleModel | null
   selected: string | null
+  /** How the presentation is printed (D917): layout and page; `null` for a server that does not know printing. */
+  printSetup: PrintSetupData | null
+  /** The language of the presentation (D915, D917), a BCP 47 tag; `null` when not set, `undefined` for a server
+   *  that does not know languages. */
+  language: string | null | undefined
 }
 
 export class SlideSession extends BaseSession<SlideState> {
@@ -71,7 +65,11 @@ export class SlideSession extends BaseSession<SlideState> {
       shapes: {},
       images: {},
       styles: {},
+      palette: null,
+      styleModel: null,
       selected: null,
+      printSetup: null,
+      language: undefined,
     })
   }
 
@@ -79,13 +77,25 @@ export class SlideSession extends BaseSession<SlideState> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [slides, shapes, images, styles] = await Promise.all([
+    const [slides, shapes, images, styles, palette, styleModel] = await Promise.all([
       link.request<SlideInfo[]>('slides'),
       link.request<{ library: ShapeDef[]; document: ShapeDef[] }>('shapes'),
       link.request<ImageAsset[]>('images'),
       link.request<StyleDef[]>('styles'),
+      link.request<PaletteEvent>('palette'),
+      link.request<StyleModel>('style_model'),
     ])
     const loaded = await Promise.all(slides.map((slide) => link.request<{ objects: SlideObject[] }>('slide', { slide: slide.id })))
+    // an older server knows neither: the preview then starts from slide-sized pages and offers no language
+    const [printSetup, language] = await Promise.all([
+      link.request<PrintSetupData>('print_setup').catch(() => null),
+      link
+        .request<{ language: string | null }>('language')
+        .then((a) => a.language)
+        .catch(() => undefined),
+    ])
+    s.printSetup = printSetup
+    s.language = language
     s.objects = {}
     s.order = {}
     slides.forEach((slide, i) => {
@@ -97,6 +107,8 @@ export class SlideSession extends BaseSession<SlideState> {
     s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
+    s.palette = palette
+    s.styleModel = styleModel
     if (!slides.some((x) => x.id === s.activeSlide)) s.activeSlide = slides[0]?.id ?? ''
     if (s.selected && !s.objects[s.selected]) s.selected = null
   }
@@ -112,28 +124,40 @@ export class SlideSession extends BaseSession<SlideState> {
     for (const [user, here] of Object.entries(this.state.presence)) {
       if (user === this.state.me.user) continue
       for (const region of here.regions) {
-        if (region.kind === 'objects' && region.slide === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
+        if (region.kind === 'objects' && region.container === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
       }
     }
     return found
   }
 
   // ------------------------------------------------------------------------------ events
-  protected onAppEvent(name: string, data: any): boolean {
+  protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
       case 'objects': {
-        for (const o of data.changed as SlideObject[]) s.objects[o.id] = o
-        for (const id of data.removed as string[]) delete s.objects[id]
-        s.order[data.slide] = data.order
-        const info = s.slides.find((x) => x.id === data.slide)
-        if (info) info.objects = data.order.length
-        if (s.selected && (data.removed as string[]).includes(s.selected)) {
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed as SlideObject[]) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.container] = e.order
+        const info = s.slides.find((x) => x.id === e.container)
+        if (info) info.objects = e.order.length
+        if (e.removed.includes(s.selected ?? '')) {
           s.selected = null
           this.track(this.letGo())
         }
         return true
       }
+      case 'styles':
+        // Found by driving a real browser: the styles were requested once at open and never again, so a style a
+        // colleague changed — or a palette role anybody changed (D200) — did not reach this slide until the
+        // document was reopened. The whole book travels, as it does in composes.
+        s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
+        return true
+      case 'palette':
+        // Only the styles are drawn from, and they arrive with the event above. Kept so that a palette change is
+        // not reported as an unknown event, and so the roles are here for the menu that will offer them.
+        s.palette = data as PaletteEvent
+        return true
       case 'shape':
         if (data.definition) s.shapes[data.id] = data.definition
         else delete s.shapes[data.id]
@@ -144,6 +168,12 @@ export class SlideSession extends BaseSession<SlideState> {
         return true
       case 'slides':
         this.track(this.reload())
+        return true
+      case 'print_setup':
+        s.printSetup = data.setup as PrintSetupData
+        return true
+      case 'language':
+        s.language = (data.language as string | null) ?? null
         return true
     }
     return false
@@ -191,6 +221,18 @@ export class SlideSession extends BaseSession<SlideState> {
     return done.object
   }
 
+  /** Print the presentation another way (D917): layout and page, one step for everybody. */
+  async setPrintSetup(setup: PrintSetupData): Promise<boolean> {
+    if (this.readOnly) return false
+    return (await this.attempt('set_print_setup', { setup, base: this.state.revision })) !== false
+  }
+
+  /** Say which language the presentation is written in (D917), or `null` for not known: one step, for everybody. */
+  async setLanguage(language: string | null): Promise<boolean> {
+    if (this.readOnly) return false
+    return (await this.attempt('set_language', { language, base: this.state.revision })) !== false
+  }
+
   async addSlide(): Promise<string | null> {
     const done = await this.attempt('add_slide', { base: this.state.revision })
     if (done === false) return null
@@ -219,6 +261,64 @@ export class SlideSession extends BaseSession<SlideState> {
     return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
   }
 
+  // -- styles and the palette (E9.7, D200, D203). The same eight methods computes' session has, because the style
+  // menu is one component talking to one `StyleHost` and neither knows which app it is in.
+  get readOnly(): boolean {
+    return this.state.me.role === 'viewer'
+  }
+
+  /** The styles as the menu wants them, in the order the server lists them. */
+  styleViews(): StyleDef[] {
+    return Object.values(this.state.styles)
+  }
+
+  /** Every object of the document, for the use counts beside the style names. */
+  bodies(): ObjectBody[] {
+    // The client's `VisualObject` is flat — `ObjectBody & { anchor }` — so an object is already a body.
+    return Object.values(this.state.objects)
+  }
+
+
+  /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). */
+  async applyStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
+    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+  }
+
+  /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
+  async deviateStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
+    const params = { parent, targets, slot, ...edit, base: this.state.revision }
+    return (await this.attempt('deviate', params)) !== false
+  }
+
+  /** Change a style for everything that has it — and for the styles based on it, where they say nothing (D73). */
+  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
+    return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
+  }
+
+
+  async renameStyle(style: string, name: string): Promise<boolean> {
+    return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false
+  }
+
+  /** Give a colour role another colour: every style that meant it follows, and so does every object (D200). */
+  async setRole(role: string, colour: string): Promise<boolean> {
+    return (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false
+  }
+
+  /** Put a whole palette in place of this document's — what "the colours it started with" does (D200). */
+  async replacePalette(roles: ColourRole[]): Promise<boolean> {
+    return (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false
+  }
+
+  /** What the server makes of this CSS text, line by line. A read: viewers may ask it too. */
+  async checkCss(text: string): Promise<CssCheck | null> {
+    try {
+      return await this.need().request<CssCheck>('check_css', { text })
+    } catch {
+      return null
+    }
+  }
+
   async showSlide(slide: string): Promise<void> {
     if (slide === this.state.activeSlide) return
     await this.select(null)
@@ -227,7 +327,7 @@ export class SlideSession extends BaseSession<SlideState> {
 
   // -- the selection: shown to the others, and held so that nobody changes the object under my hands
   private regionOf(id: string): Region[] {
-    return [{ kind: 'objects', slide: this.state.objects[id]?.slide ?? this.state.activeSlide, ids: [id] }]
+    return [{ kind: 'objects', container: this.state.objects[id]?.anchor.container ?? this.state.activeSlide, ids: [id] }]
   }
 
   /** Select an object (null: nothing). Selecting holds it; a colleague who holds it first keeps it. */

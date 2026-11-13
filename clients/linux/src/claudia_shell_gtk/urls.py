@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from urllib.parse import urlsplit
 
-__all__ = ["external_target", "is_internal", "safe_download_name", "unique_path"]
+__all__ = ["external_target", "is_internal", "origin_of", "safe_download_name", "unique_path"]
 
 _OPENABLE_SCHEMES = frozenset({"http", "https", "mailto"})
 _MAX_NAME = 200
@@ -25,6 +25,17 @@ def _origin(uri: str) -> tuple[str, str, int | None] | None:
         return parts.scheme, parts.hostname, parts.port
     except ValueError:  # e.g. "127.0.0.1:41233.evil.example": the port is not a number
         return None
+
+
+def origin_of(uri: str) -> str | None:
+    """The canonical origin (``https://host[:port]``, the key of ``servers``, ``trust``) of an https address, or
+    ``None`` for anything else: only an https address has a certificate that could have been trusted."""
+    found = _origin(uri)
+    if found is None or found[0] != "https":
+        return None
+    _scheme, host, port = found
+    shown = f"[{host}]" if ":" in host else host
+    return f"https://{shown}" + (f":{port}" if port not in (None, 443) else "")
 
 
 def is_internal(uri: str, origin: str) -> bool:

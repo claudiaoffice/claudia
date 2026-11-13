@@ -1,0 +1,16 @@
+[project]
+name = "claudia-opc-io"
+dynamic = ["version"]
+description = "claudia-opc-io"
+requires-python = ">=3.14"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_opc_io/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_opc_io"]

@@ -40,6 +40,15 @@ export function indicatorLabel(label: string, status: ConnectionStatus): string 
   return `Connection to ${label}: ${word}. Show details.`
 }
 
+/** Whether "Manage this server…" should be a live link right now, rather than an inert, dimmed one — true only
+ * once the connection is actually open. A different question from D171's gate (viewer permission, deliberately
+ * left unchecked since this component can't verify it without a cross-origin fetch): this one the component
+ * already has the answer to, for free, in `state.status` — so there is no reason to show an action that implies
+ * the server is reachable right next to a status line saying it currently is not. */
+export function canManageNow(status: ConnectionStatus): boolean {
+  return status === 'open'
+}
+
 /** Where that server's settings pages are, from the current page — a plain navigation, never an in-page fetch
  * (D115: page and socket share one origin; switching servers is always a full page load). */
 export function manageUrl(origin: string): string {

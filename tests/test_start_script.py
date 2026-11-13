@@ -24,10 +24,10 @@ def test_defaults_run_a_plain_local_server_with_the_web_app():
 
 
 def test_tls_is_the_servers_own_default_when_asked_for():
-    args = start.parse_args(["--tls", "--port", "9000", "--dir", "docs"])
+    args = start.parse_args(["--tls", "--port", "9000", "--dir", "data"])
     command = start.server_command(args)
     assert "--no-tls" not in command
-    assert command[command.index("--dir") + 1] == "docs"
+    assert Path(command[command.index("--dir") + 1]) == Path("data", "computes", "documents")
     assert start.page_url(args) == "https://127.0.0.1:9000/"
 
 
@@ -35,9 +35,11 @@ def test_a_text_server_serves_the_text_model_with_documents_of_its_own():
     args = start.parse_args(["--app", "composes"])
     command = start.server_command(args)
     assert command[command.index("--model") + 1] == "claudia_composes:TextModel"
-    assert command[command.index("--dir") + 1].endswith("demo-docs-composes"), "one directory holds one app's documents"
+    assert Path(command[command.index("--dir") + 1]) == start.DATA / "composes" / "documents", "one app's documents"
     assert "--model" not in start.server_command(start.parse_args([])), "workbooks are the server's default"
-    assert start.parse_args(["--app", "composes", "--dir", "mine"]).dir == "mine"
+    assert start.parse_args(["--app", "composes", "--dir", "mine"]).documents == str(
+        Path("mine", "composes", "documents")
+    )
 
 
 def test_the_web_app_is_built_when_missing_or_asked_for(tmp_path):
@@ -56,9 +58,9 @@ def test_waiting_gives_up_when_the_server_stops():
 def test_presentations_run_on_their_own_model_in_their_own_folder():
     command = start.server_command(start.parse_args(["--app", "creates"]))
     assert command[command.index("--model") + 1] == "claudia_creates:SlideModel"
-    assert Path(command[command.index("--dir") + 1]).name == "demo-docs-creates", "documents of two apps never mix"
+    assert Path(command[command.index("--dir") + 1]).parent.name == "creates", "documents of two apps never mix"
     own = start.server_command(start.parse_args(["--app", "creates", "--dir", "mine"]))
-    assert own[own.index("--dir") + 1] == "mine"
+    assert Path(own[own.index("--dir") + 1]) == Path("mine", "creates", "documents")
 
 
 def test_shape_folders_are_handed_to_the_server():
@@ -93,8 +95,34 @@ def test_one_app_is_one_server_on_the_given_port():
 
 def test_a_custom_directory_gets_a_folder_for_each_app():
     servers = start.app_servers(start.parse_args(["all", "--dir", "mine"]))
-    assert [Path(s.dir).name for s in servers] == ["computes", "composes", "creates"]
-    assert all(Path(s.dir).parent == Path("mine") for s in servers)
+    assert [Path(s.dir) for s in servers] == [Path("mine", app, "documents") for app in start.APPS]
+    assert [Path(s.state) for s in servers] == [Path("mine", app, "state") for app in start.APPS]
+
+
+def test_dir_means_the_same_for_one_app_and_for_all():
+    """It used to be the documents folder itself for one app and the parent of three for ``all`` (QA 2026-11-12)."""
+    (alone,) = start.app_servers(start.parse_args(["composes", "--dir", "mine"]))
+    together = {s.app: s for s in start.app_servers(start.parse_args(["all", "--dir", "mine"]))}
+    assert (alone.dir, alone.state) == (together["composes"].dir, together["composes"].state)
+
+
+def test_every_server_has_a_state_of_its_own_beside_its_documents():
+    """Without ``--state-dir`` all three servers shared one per-user folder (certificate, administrators, settings),
+    the same tree the Linux desktop app keeps its documents in."""
+    servers = start.app_servers(start.parse_args(["all"]))
+    commands = [start.server_command(s.args) for s in servers]
+    states = [Path(c[c.index("--state-dir") + 1]) for c in commands]
+    assert states == [start.DATA / app / "state" for app in start.APPS]
+    assert all(start.DATA in s.parents for s in states), "inside the checkout"
+
+
+def test_folders_of_an_earlier_version_are_reported_not_moved(tmp_path):
+    (tmp_path / "demo-docs").mkdir()
+    (tmp_path / "demo-docs" / "budget.claudia").write_bytes(b"x")
+    (tmp_path / "docs-computes").mkdir()  # empty: nothing to say
+    assert start.legacy_folders("computes", root=tmp_path) == [tmp_path / "demo-docs"]
+    assert start.legacy_folders("composes", root=tmp_path) == []
+    assert (tmp_path / "demo-docs" / "budget.claudia").exists()
 
 
 def test_the_guide_names_every_address_and_what_to_do_there():
@@ -124,3 +152,115 @@ def test_plain_text_stays_fine_on_this_computer(extra):
 
 def test_an_encrypted_server_may_listen_on_any_address():
     assert start.parse_args(["--host", "0.0.0.0", "--tls"]).host == "0.0.0.0"
+
+
+def _model(folder: Path, name: str) -> Path:
+    (folder / name).mkdir(parents=True)
+    (folder / name / "openvino_model.xml").write_text("<net/>")
+    return folder / name
+
+
+def test_the_ai_model_goes_to_the_app_that_can_use_it(tmp_path):
+    """``all --ai``: computes and creates load the model (E7.9); composes has no lens yet and keeps the stand-in, and a
+    server that is handed one refuses to start (``--ai: the AI assistant does not know documents of this kind``)."""
+    model = _model(tmp_path, "qwen-ov")
+    servers = start.app_servers(start.parse_args(["all", "--ai", str(model), "--ai-device", "CPU"]))
+    commands = {s.app: start.server_command(s.args) for s in servers}
+    assert commands["computes"][commands["computes"].index("--ai") + 1] == str(model)
+    assert commands["computes"][commands["computes"].index("--ai-device") + 1] == "CPU"
+    assert "--ai" not in commands["composes"]
+    assert commands["creates"][commands["creates"].index("--ai") + 1] == str(model)
+    assert "qwen-ov" in start.guide(servers)
+    assert "--ai" not in start.server_command(start.parse_args([])), "no model unless asked for"
+
+
+def test_ai_without_a_folder_takes_the_one_model_in_ai_models(tmp_path, monkeypatch):
+    monkeypatch.setattr(start, "MODELS_DIR", tmp_path)
+    (tmp_path / "notes").mkdir()  # a folder without a model is not one
+    model = _model(tmp_path, "qwen-ov")
+    assert start.parse_args(["--ai"]).ai == str(model)
+    assert start.parse_args(["all", "--ai"]).ai == str(model)
+
+
+@pytest.mark.parametrize("models", [[], ["a-ov", "b-ov"]])
+def test_ai_without_a_folder_says_what_to_do_when_it_cannot_choose(tmp_path, monkeypatch, capsys, models):
+    monkeypatch.setattr(start, "MODELS_DIR", tmp_path)
+    for name in models:
+        _model(tmp_path, name)
+    with pytest.raises(SystemExit):
+        start.parse_args(["--ai"])
+    err = capsys.readouterr().err
+    assert "--ai MODEL_DIR" in err
+    assert ("optimum-cli" in err) if not models else ("a-ov, b-ov" in err)
+
+
+def test_ai_is_refused_where_no_app_can_use_it(capsys):
+    for argv in (["composes", "--ai", "m"], ["--ai-device", "CPU"]):
+        with pytest.raises(SystemExit):
+            start.parse_args(argv)
+        assert "--ai" in capsys.readouterr().err, argv
+
+
+def test_openvino_is_installed_into_the_environment_without_removing_anything(monkeypatch):
+    ran = []
+    monkeypatch.setattr(start.shutil, "which", lambda name: f"/bin/{name}")
+    monkeypatch.setattr(start.subprocess, "run", lambda command, **kw: ran.append((command, kw)))
+    start.install_openvino()
+    ((command, kw),) = ran
+    assert command[:2] == ["/bin/uv", "sync"]
+    assert "--inexact" in command and "--locked" in command
+    assert command[command.index("--extra") + 1] == "openvino"
+    assert kw["cwd"] == start.ROOT
+
+
+def test_every_server_gets_the_checkouts_fonts_folder():
+    command = start.server_command(start.parse_args(["--app", "composes", "--dir", "mine"]))
+    assert Path(command[command.index("--fonts") + 1]) == Path("mine", "fonts")
+
+
+def test_every_server_gets_the_checkouts_hyphenation_folder():
+    command = start.server_command(start.parse_args(["--app", "composes", "--dir", "mine"]))
+    assert Path(command[command.index("--hyphenation") + 1]) == Path("mine", "hyphenation")
+
+
+def test_the_hyphenation_patterns_are_fetched_once_and_a_failure_does_not_stop_the_start(tmp_path, capsys, monkeypatch):
+    from claudia_server import hyphenation
+
+    calls = []
+    monkeypatch.setattr(
+        hyphenation.HyphenationService, "from_folder", classmethod(lambda cls, folder: cls(tuple(calls), {}))
+    )
+
+    def fetched(folder):
+        calls.append(folder)
+
+    assert start.ensure_hyphenation(tmp_path, fetch=fetched) is True
+    assert start.ensure_hyphenation(tmp_path, fetch=fetched) is True
+    assert calls == [tmp_path / "hyphenation"], "fetched the first time only"
+
+    def offline(folder):
+        raise hyphenation.FetchError("no network")
+
+    assert start.ensure_hyphenation(tmp_path / "other", fetch=offline) is False
+    assert "Could not fetch the hyphenation patterns" in capsys.readouterr().out
+
+
+def test_the_starter_fonts_are_fetched_once_and_a_failure_does_not_stop_the_start(tmp_path, capsys):
+    from claudia_fonts import FetchError
+
+    calls = []
+
+    def fetched(folder):
+        calls.append(folder)
+        (folder / "inter").mkdir(parents=True)
+        (folder / "inter" / "collection.json").write_text("{}")
+
+    assert start.ensure_fonts(tmp_path, fetch=fetched) is True
+    assert start.ensure_fonts(tmp_path, fetch=fetched) is True
+    assert calls == [tmp_path / "fonts"], "fetched the first time only"
+
+    def offline(folder):
+        raise FetchError("no network")
+
+    assert start.ensure_fonts(tmp_path / "other", fetch=offline) is False
+    assert "Could not fetch the fonts" in capsys.readouterr().out

@@ -68,19 +68,20 @@ def test_a_new_presentation_has_one_empty_slide(deck):
     assert call(deck, "slide", {"slide": "s1"}) == {"revision": None, "slide": "s1", "objects": []}
 
 
-def test_a_text_box_is_added_with_the_body_text_style(deck):
+def test_a_text_box_is_added_with_a_plain_box_and_body_text_words(deck):
     added = call(deck, "add_object", {"slide": "s1", "kind": "text", "x": 100, "y": 80, "w": 400, "h": 120})
     assert added["revision"] == "main:1"
     (box,) = objects(deck)
     assert box["id"] == added["object"]
-    assert (box["kind"], box["x"], box["y"], box["w"], box["h"]) == ("text", 100, 80, 400, 120)
-    assert box["style"] == "body-text" and box["text"] == "" and box["shape"] is None
+    assert (box["kind"], box["anchor"]["x"], box["anchor"]["y"], box["w"], box["h"]) == ("text", 100, 80, 400, 120)
+    assert box["style"] == "plain-box" and box["paragraph"]["style"] == "body-text"  # two slots (D304, D310)
+    assert box["paragraph"]["text"] == "" and box["shape"] is None
     assert call(deck, "slides") == [{"id": "s1", "objects": 1}]
 
 
 def test_text_can_be_given_when_the_box_is_added(deck):
     add_text(deck, text="Quarterly goals")
-    assert objects(deck)[0]["text"] == "Quarterly goals"
+    assert objects(deck)[0]["paragraph"]["text"] == "Quarterly goals"
 
 
 def test_a_shape_brings_its_outline_into_the_document_once(deck):
@@ -104,7 +105,13 @@ def test_the_library_lists_the_shapes_to_insert_and_the_styles(deck):
     shapes = call(deck, "shapes")
     assert [s["id"] for s in shapes["library"]] == ["circle", "rectangle", "triangle"]
     assert shapes["library"][0]["aspect"] == 1
-    assert [s["id"] for s in call(deck, "styles")] == ["body-text", "plain-shape", "plain-image"]
+    assert [s["id"] for s in call(deck, "styles")] == [
+        "body-text",
+        "shape-label",
+        "plain-shape",
+        "plain-box",
+        "plain-image",
+    ]
     assert call(deck, "styles")[0]["css"]["font-size"]
 
 
@@ -180,7 +187,13 @@ def test_an_object_moves_resizes_and_is_edited(deck):
     call(deck, "resize_object", {"id": box, "x": 300, "y": 50, "w": 500, "h": 200})
     call(deck, "set_text", {"id": box, "text": "Hello"})
     (found,) = objects(deck)
-    assert (found["x"], found["y"], found["w"], found["h"], found["text"]) == (300, 50, 500, 200, "Hello")
+    assert (found["anchor"]["x"], found["anchor"]["y"], found["w"], found["h"], found["paragraph"]["text"]) == (
+        300,
+        50,
+        500,
+        200,
+        "Hello",
+    )
     assert deck.history_for("ann").undo_label == "Edit text"
 
 
@@ -252,7 +265,7 @@ def test_viewers_may_look_but_not_change(deck):
 
 def test_a_selection_can_be_held_and_then_only_the_holder_changes_the_object(deck):
     box = add_text(deck)
-    selection = {"kind": "objects", "slide": "s1", "ids": [box]}
+    selection = {"kind": "objects", "container": "s1", "ids": [box]}
     call(deck, "lock", {"regions": [selection]})
     with pytest.raises(RequestError) as caught:
         call(deck, "move_object", {"id": box, "x": 5, "y": 5}, account=BEN)
@@ -260,12 +273,12 @@ def test_a_selection_can_be_held_and_then_only_the_holder_changes_the_object(dec
     call(deck, "move_object", {"id": box, "x": 5, "y": 5})
     call(deck, "unlock")
     call(deck, "move_object", {"id": box, "x": 9, "y": 9}, account=BEN)
-    assert objects(deck)[0]["x"] == 9
+    assert objects(deck)[0]["anchor"]["x"] == 9
 
 
 def test_a_selection_must_look_like_one(deck):
     with pytest.raises(RequestError) as caught:
-        call(deck, "presence", {"regions": [{"kind": "objects", "slide": "s1", "ids": "all"}]})
+        call(deck, "presence", {"regions": [{"kind": "objects", "container": "s1", "ids": "all"}]})
     assert caught.value.code == "bad_request"
 
 
@@ -309,7 +322,7 @@ def test_a_presentation_comes_back_after_a_restart_with_its_shapes_and_order(tmp
     back = FileProvider(tmp_path, SlideModel).open("talk")
     assert objects(back) == before["objects"] and [o["id"] for o in objects(back)] == [text, circle]
     assert call(back, "shapes")["document"] == before["shapes"] and call(back, "slides") == before["slides"]
-    assert objects(back)[0]["x"] == 30 and objects(back)[0]["text"] == "Agenda"
+    assert objects(back)[0]["anchor"]["x"] == 30 and objects(back)[0]["paragraph"]["text"] == "Agenda"
 
 
 # -- images (E10.8): add_image, the plain-image style, and masking source_path per viewer ---------------------
@@ -400,3 +413,145 @@ def test_a_presentation_with_an_image_comes_back_after_a_restart(tmp_path):
     back = FileProvider(tmp_path, SlideModel).open("talk")
     assert objects(back) == before["objects"]
     assert call(back, "images") == before["images"]
+
+
+# ----------------------------------------------------------------------------- export to PowerPoint (D212)
+def test_export_office_returns_pptx_bytes_that_round_trip(deck):
+    from claudia_creates_io import pptx_to_slides
+
+    add_text(deck, text="Hello there")
+    answer = call(deck, "export_office", {"format": "pptx"})
+    assert answer["format"] == "pptx"
+    assert answer["content_type"] == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    raw = base64.b64decode(answer["data"])
+    assert raw[:2] == b"PK"  # a pptx is a zip
+    reloaded = pptx_to_slides(raw)
+    assert len(reloaded.slides) == 1
+
+
+def test_export_office_returns_an_odp_that_round_trips_and_says_who_made_it_when(deck):
+    from claudia_creates_io import odp_to_slides
+
+    from claudia_odf_io import problems, read_info
+    from claudia_opc_io import read_parts
+
+    add_text(deck, text="Hello there")
+    answer = call(deck, "export_office", {"format": "odp"})
+    assert answer["format"] == "odp"
+    assert answer["content_type"] == "application/vnd.oasis.opendocument.presentation"
+    raw = base64.b64decode(answer["data"])
+    assert problems(raw) == []
+    assert [o.body.paragraph.text for o in odp_to_slides(raw).objects.values()] == ["Hello there"]
+    info = read_info(read_parts(raw)["meta.xml"])
+    assert info.creator == "ann" and info.modifier == "ann"
+    assert info.created and info.modified
+    # who typed which words is not something an odp keeps
+    assert {"kind": "authorship", "detail": "", "count": 1} in answer["losses"]
+
+
+def test_export_office_to_pptx_has_no_loss_list(deck):
+    add_text(deck, text="Hello there")
+    assert "losses" not in call(deck, "export_office", {"format": "pptx"})
+
+
+def test_export_office_rejects_an_unknown_format(deck):
+    with pytest.raises(RequestError):
+        call(deck, "export_office", {"format": "key"})
+
+
+def test_a_new_shapes_words_start_under_shape_label_and_a_text_boxs_under_body_text(deck):
+    """D310: a shape has an outline style and its words a paragraph style of their own (``shape-label``)."""
+    shape, text = add_shape(deck, text="a label"), add_text(deck, text="words")
+    assert (deck.model.get(shape).body.style, deck.model.get(shape).body.paragraph.style) == (
+        "plain-shape",
+        "shape-label",
+    )
+    assert deck.model.get(text).body.paragraph.style == "body-text"
+
+
+def test_deviating_a_shapes_style_keeps_its_kind(deck):
+    """A deviation is a style of the same kind as its parent (D305): changing a shape's outline makes an outline."""
+    shape = add_shape(deck)
+    made = call(
+        deck, "deviate_object_style", {"parent": "plain-shape", "objects": [shape], "set": {"stroke-width": "9px"}}
+    )
+    assert deck.model.styles.get(made["style"]).kind == "outline"
+    with pytest.raises(RequestError, match="font-size"):
+        call(deck, "deviate_object_style", {"parent": "plain-shape", "objects": [shape], "set": {"font-size": "9px"}})
+
+
+def test_the_words_of_an_object_are_restyled_through_the_shared_method(deck):
+    """`set_paragraph_style` is one of the shared style methods now, so all three apps have it (plan, step 1.4)."""
+    shape = add_shape(deck, text="a label")
+    call(deck, "set_paragraph_style", {"id": shape, "style": "body-text"})
+    assert deck.model.get(shape).body.paragraph.style == "body-text"
+    with pytest.raises(RequestError, match="cannot be put into the label"):
+        call(deck, "set_paragraph_style", {"id": shape, "style": "plain-shape"})
+    with pytest.raises(RequestError, match="nope"):
+        call(deck, "set_paragraph_style", {"id": "nope", "style": "body-text"})
+
+
+def test_every_app_offers_the_same_object_style_methods():
+    from claudia_server.composes import composes_methods
+    from claudia_server.computes import computes_methods
+
+    for methods in (creates_methods, computes_methods, composes_methods):
+        assert {"set_object_style", "set_paragraph_style", "deviate_object_style"} <= set(methods.names())
+
+
+# ------------------------------------------------------------------------------ printing (D917)
+def test_a_presentation_prints_slide_sized_until_someone_sets_it_up_otherwise(deck):
+    setup = call(deck, "print_setup")
+    assert setup["layout"] == "slides"
+    assert setup["page"]["paper"] == "slide" and setup["page"]["orientation"] == "landscape"
+    assert setup["page"]["margins"] == [0, 0, 0, 0]
+    handouts = {
+        "layout": "handouts-6",
+        "page": {
+            **setup["page"],
+            "paper": "a4",
+            "width": 595276,
+            "height": 841890,
+            "orientation": "portrait",
+            "margins": [36000] * 4,
+        },
+    }
+    call(deck, "set_print_setup", {"setup": handouts}, BEN)
+    assert call(deck, "print_setup", account=VERA) == handouts
+    assert list(deck.log)[-1].command.summary == "set printing to 6 slides a page on A4, portrait"
+    call(deck, "undo", {})  # nothing of ann's to undo; ben's step stays
+    assert call(deck, "print_setup")["layout"] == "handouts-6"
+
+
+@pytest.mark.parametrize(
+    "setup",
+    [
+        {"layout": "handouts-5", "page": {"paper": "a4", "width": 595276, "height": 841890}},
+        {"layout": "slides", "page": {"paper": "a4", "width": 1, "height": 841890}},
+        {"layout": "slides"},
+        "slides",
+    ],
+)
+def test_a_print_setup_that_cannot_be_used_is_refused(deck, setup):
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_print_setup", {"setup": setup})
+    assert caught.value.code in ("command_error", "bad_request")
+
+
+def test_viewers_and_the_assistant_do_not_change_how_a_deck_prints_or_its_language(deck):
+    setup = call(deck, "print_setup")
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_print_setup", {"setup": setup}, VERA)
+    assert caught.value.code == "forbidden"
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_language", {"language": "de"}, Account("assistant", "editor", system=True))
+    assert caught.value.code == "forbidden"
+
+
+def test_a_presentation_has_a_language_like_a_text(deck):
+    assert call(deck, "language") == {"language": None}
+    call(deck, "set_language", {"language": "EN-gb"}, BEN)
+    assert call(deck, "language") == {"language": "en-GB"}
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_language", {"language": "english!"})
+    assert caught.value.code == "command_error"

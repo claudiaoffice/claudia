@@ -1,5 +1,5 @@
 // Reading a picture file for an `add_image`-like method, and showing a decoded `ImageAsset` back: shared by every
-// app that can put a picture on a document (creates and computes today, E10.8/E10.11; composes the same way).
+// app that can put a picture on a document (creates and computes today, E10.8/E6.17; composes the same way).
 // No format sniffing or dimension reading here — the server decodes and validates the bytes
 // (`claudia_core.decode_image`); a browser reads a chosen file's own width/height for free once it is shown as a
 // preview `<img>`, so there is nothing for this module to duplicate beyond getting the bytes across the wire and
@@ -34,9 +34,16 @@ export interface ImageAsset {
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 /** What `claudia_core.decode_image` reads (`claudia_core.SUPPORTED_IMAGE_FORMATS`), as a file input's `accept`. */
-export const IMAGE_FILE_ACCEPT = 'image/jpeg,image/gif,image/bmp,image/svg+xml,.jpg,.jpeg,.gif,.bmp,.svg'
+export const IMAGE_FILE_ACCEPT =
+  'image/jpeg,image/png,image/gif,image/bmp,image/svg+xml,.jpg,.jpeg,.png,.gif,.bmp,.svg'
 
-const IMAGE_MIME: Record<string, string> = { jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', svg: 'image/svg+xml' }
+const IMAGE_MIME: Record<string, string> = {
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  bmp: 'image/bmp',
+  svg: 'image/svg+xml',
+}
 
 /** Base64 of a file's bytes, the shape `add_image`'s `data` parameter (and every app's own version of it) wants. */
 export async function fileToBase64(file: File): Promise<string> {

@@ -15,8 +15,11 @@ env:
   PYTHONUTF8: "1" # Windows consoles default to a legacy encoding; the tests use non-ASCII text
 
 jobs:
-  # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, i18n extraction, pytest,
-  # Sphinx with warnings as errors, performance guards.
+  # scripts/check_debt.py is the one-command gate: ruff, mypy, vulture, i18n extraction, pytest with coverage floors,
+  # Sphinx with warnings as errors, performance guards, and `npm audit` of every package-lock.json (SEC-08). The audit
+  # runs here on every push and in the weekly run, so a new advisory turns this job red even when nobody pushed. It
+  # asks the npm registry; an unreachable registry is a skip, which --ci fails (PROC-02): re-run the job. An advisory
+  # that cannot be fixed is recorded with its reason in pyproject.toml (`[[tool.claudia.npm-audit-allow]]`).
   python:
     name: Python (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -68,12 +71,17 @@ jobs:
         shell: pwsh
         run: Set-MpPreference -EnableControlledFolderAccess Disabled
       - run: uv sync --locked
-      # web tests/types and the Linux client's tests are skipped here on purpose: the separate `web` and
-      # `linux-client` jobs below run them for real, with Node and GTK installed. --ci fails on any OTHER skip
-      # (PROC-02), so a check that starts skipping for some new reason is caught instead of waved through.
+      # web tests/types, the layout library, the browser test and the Linux client's tests are skipped here on
+      # purpose: the separate `web`, `layout`, `e2e` and `linux-client` jobs below run them for real, with Node, a
+      # built web app, Chromium and GTK installed. --ci fails on any OTHER skip (PROC-02), so a check that starts skipping for some new reason is
+      # caught instead of waved through. (Before "e2e greeting" was listed here, it failed this job on every OS.)
+      # The coverage floors (CODE-01) are measured on Linux with TeX, where every test runs; on Windows and macOS
+      # whole groups of tests skip by design, so the check skips there too -- and only there may it.
       - run: >
           uv run python scripts/check_debt.py --ci
-          --allow-skip "web tests" --allow-skip "web types" --allow-skip "linux client tests"
+          --allow-skip "web lint" --allow-skip "web tests" --allow-skip "web types" --allow-skip "e2e greeting"
+          --allow-skip "layout types" --allow-skip "layout tests" --allow-skip "linux client tests"
+          ${{ runner.os != 'Linux' && '--allow-skip coverage' || '' }}
 
   web:
     name: Web
@@ -91,8 +99,151 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npx nuxt prepare # vitest needs the generated .nuxt files
-      - run: npx vitest run
-      - run: npx vue-tsc --noEmit
+      - run: npm run lint
+      # the unit tests, with app/lib's coverage held to the thresholds in vitest.config.ts (CODE-01)
+      - run: npm run coverage
+      # `nuxt typecheck`, not a bare `vue-tsc --noEmit`: web/tsconfig.json has `files: []` and only references the
+      # generated projects, so the bare call checked nothing and passed with a type error in any file.
+      - run: npm run typecheck
+
+  # The layout library (D902): its types (ES2022 only, no DOM, no Node) and its tests, which fetch the starter fonts
+  # (pinned by SHA-256) and read every PDF back with pdf.js.
+  layout:
+    name: Layout library
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: layout
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: layout/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run docs # TypeDoc: the API documentation is generated from the source
+
+  # Real browsers against real servers: the one Python test that starts all three apps (tests/e2e), and the scripts
+  # in web/e2e that walk two people through each app. They are the only tests that see the rendered page.
+  e2e:
+    name: End to end (Chromium)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SHOTS: ${{ github.workspace }}/shots
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: web
+      - name: Chromium for Python's and Node's Playwright
+        run: |
+          uv run playwright install --with-deps chromium
+          (cd web && npx playwright install chromium)
+      - name: Three servers, each greeting with its own app
+        run: uv run pytest tests/e2e
+      - name: Two people in each app, against running servers
+        run: |
+          mkdir -p "$SHOTS"
+          uv run python scripts/start.py all --dir "$RUNNER_TEMP/documents" --no-browser > "$RUNNER_TEMP/servers.log" 2>&1 &
+          for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8767/api/health > /dev/null && break; sleep 1; done
+          cd web
+          URL=http://127.0.0.1:8765/ npm run e2e
+          URL=http://127.0.0.1:8765/ npm run e2e:pointing
+          URL=http://127.0.0.1:8766/ npm run e2e:composes
+          URL=http://127.0.0.1:8766/ npm run e2e:styling
+          URL=http://127.0.0.1:8766/ npm run e2e:print
+          URL=http://127.0.0.1:8767/ npm run e2e:slides
+          URL=http://127.0.0.1:8767/ npm run e2e:creates-styles
+          URL=http://127.0.0.1:8767/ npm run e2e:print-creates
+          pkill -f claudia_server || true
+      # These two start (and restart) a server of their own, on ports the step above has freed.
+      - name: Losing the server, and the recovery key
+        working-directory: web
+        run: |
+          npm run e2e:resilience
+          npm run e2e:recovery
+      # The Windows client's window, minus Neutralino itself: its built shell page and core, the real web app in the
+      # frame. Starts servers of its own (8791 for --server), on ports the steps above have freed.
+      - name: The Windows client's window (shell page, core, server and web app, Neutralino faked)
+        run: |
+          (cd clients/windows && npm ci && npm run build)
+          cd web && npm run e2e:windows-shell
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: shots/
+          if-no-files-found: ignore
+
+  # What the OpenDocument code writes is also opened in LibreOffice, the reference implementation (D409): the library's
+  # odt, odp and ods cases and a file made from a model each are converted with `soffice` and what comes out is
+  # compared (the words of an odt or odp, the value of every cell of an ods). It
+  # may fail without failing the build until it has a track record, so that a LibreOffice release that reads a little
+  # differently does not stop anyone's work (`continue-on-error`); read its result like any other job's.
+  odf-libreoffice:
+    name: OpenDocument in LibreOffice
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - name: LibreOffice Writer, Impress and Calc, from the distribution
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-writer libreoffice-impress libreoffice-calc
+      - run: uv sync --locked
+      - run: uv run python scripts/odf_libreoffice_check.py
+
+  # The Windows client is TypeScript around Neutralino; its unit tests, its build (the shell page and the core of each
+  # app) and its generated menu (made from the Linux client's manifest) are checked on Windows itself. Its window is
+  # run in Chromium by the `e2e` job above.
+  windows-client:
+    name: Windows client
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: clients/windows
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: clients/windows/package-lock.json
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - name: The generated menu matches the shared manifest
+        run: uv run --no-project python tools/generate_menu.py --all --check
+      - run: uv run --no-project --with pytest python -m pytest tools/tests
+      # The macOS client's menu is generated the same way, and went stale unnoticed (CODE-16): the check is Python
+      # and needs no Mac, so it runs here.
+      - name: The macOS client's generated menu matches the shared manifest
+        working-directory: clients/macos
+        run: uv run --no-project python tools/generate_menu.py --all --check
 
   # The Linux client runs on the distribution's Python (3.12 on Ubuntu 24.04) with GTK from the distribution, while the
   # server it starts runs on 3.14 (clients/linux/README.md, "Two interpreters"). Its end-to-end test starts the real

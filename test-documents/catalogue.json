@@ -1,0 +1,665 @@
+{
+  "schema_version": 1,
+  "documents": [
+    {
+      "id": "docx-heading-styles",
+      "format": "docx",
+      "feature": "heading-styles",
+      "source": "docx/heading-styles/source.docx",
+      "spec": "docx/heading-styles/spec.py",
+      "summary": "Word's built-in Title/Heading 1/Heading 2 styles map to claudia's style ids on import and survive an edit to one paragraph untouched on the others.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.046,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-tracked-change-suggestion",
+      "format": "docx",
+      "feature": "tracked-change-suggestion",
+      "source": "docx/tracked-change-suggestion/source.docx",
+      "spec": "docx/tracked-change-suggestion/spec.py",
+      "summary": "An open suggestion added in claudia re-exports as a real Word tracked change (w:ins/w:del); docx_to_text cannot reimport one, so the check reads the exported XML directly.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1",
+        "export-only-check"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.048,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-beyond-claudia-table",
+      "format": "docx",
+      "feature": "beyond-claudia/table",
+      "source": "docx/beyond-claudia/table/source.docx",
+      "spec": "docx/beyond-claudia/table/spec.py",
+      "summary": "A table (no claudia model at all) sits inside the same part an edit rewrites; its own lxml element must stay byte-identical while the surrounding paragraph changes.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "element-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.074,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-beyond-claudia-image",
+      "format": "docx",
+      "feature": "beyond-claudia/image",
+      "source": "docx/beyond-claudia/image/source.docx",
+      "spec": "docx/beyond-claudia/image/spec.py",
+      "summary": "An embedded image is its own package part (word/media/image1.png); it must come back byte-for-byte identical through an edit to a different paragraph.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.038,
+        "detail": null
+      }
+    },
+    {
+      "id": "pptx-shapes-and-text",
+      "format": "pptx",
+      "feature": "shapes-and-text",
+      "source": "pptx/shapes-and-text/source.pptx",
+      "spec": "pptx/shapes-and-text/spec.py",
+      "summary": "A text box and the two built-in autoshapes (circle, rectangle) import as objects with their position and size read back exactly; editing one object's text and moving/resizing another leaves every other object alone.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.055,
+        "detail": null
+      }
+    },
+    {
+      "id": "pptx-beyond-claudia-table",
+      "format": "pptx",
+      "feature": "beyond-claudia/table",
+      "source": "pptx/beyond-claudia/table/source.pptx",
+      "spec": "pptx/beyond-claudia/table/spec.py",
+      "summary": "A table (no claudia model at all) sits on the same slide an edit rewrites; its own graphic-frame element must stay byte-identical while the text box on the same slide changes.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "element-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.027,
+        "detail": null
+      }
+    },
+    {
+      "id": "pptx-beyond-claudia-image",
+      "format": "pptx",
+      "feature": "beyond-claudia/image",
+      "source": "pptx/beyond-claudia/image/source.pptx",
+      "spec": "pptx/beyond-claudia/image/spec.py",
+      "summary": "A picture is its own package part (ppt/media/image1.png) on a slide the edit never touches; it must come back byte-for-byte identical through an edit to a different slide's text box.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.024,
+        "detail": null
+      }
+    },
+    {
+      "id": "xlsx-cells-and-formulas",
+      "format": "xlsx",
+      "feature": "cells-and-formulas",
+      "source": "xlsx/cells-and-formulas/source.xlsx",
+      "spec": "xlsx/cells-and-formulas/spec.py",
+      "summary": "A worksheet's cells and a formula import as typed cell contents, with the formula's value computed correctly; editing one cell leaves the recalculating formula and every other cell alone.",
+      "backlog": "E6.9",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.02,
+        "detail": null
+      }
+    },
+    {
+      "id": "xlsx-beyond-claudia-chart",
+      "format": "xlsx",
+      "feature": "beyond-claudia/chart",
+      "source": "xlsx/beyond-claudia/chart/source.xlsx",
+      "spec": "xlsx/beyond-claudia/chart/spec.py",
+      "summary": "A chart (no claudia model at all) lives in its own package parts, referenced from a sheet an edit never touches; those parts must come back byte-for-byte identical through an edit to the chart's own source data on another sheet.",
+      "backlog": "E6.9",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.019,
+        "detail": null
+      }
+    },
+    {
+      "id": "xlsx-beyond-claudia-image",
+      "format": "xlsx",
+      "feature": "beyond-claudia/image",
+      "source": "xlsx/beyond-claudia/image/source.xlsx",
+      "spec": "xlsx/beyond-claudia/image/spec.py",
+      "summary": "An embedded picture is its own package part (xl/media/image1.png) on a sheet an edit never touches; it must come back byte-for-byte identical even though openpyxl mutates its drawing XML on any load+resave.",
+      "backlog": "E6.9",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.023,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-heading-styles",
+      "format": "odt",
+      "feature": "heading-styles",
+      "source": "odt/heading-styles/source.odt",
+      "spec": "odt/heading-styles/spec.py",
+      "summary": "A file written by LibreOffice itself: Title/Heading 1/Heading 2 map to claudia's style ids on import; an edit to one paragraph leaves every other byte of content.xml and every other part as it was.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.014,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-beyond-claudia-table",
+      "format": "odt",
+      "feature": "beyond-claudia/table",
+      "source": "odt/beyond-claudia/table/source.odt",
+      "spec": "odt/beyond-claudia/table/spec.py",
+      "summary": "A table (LibreOffice-written) shares content.xml with the paragraph an edit rewrites; the table's own markup survives byte for byte because an edit replaces only the bytes of the changed paragraph.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.015,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-beyond-claudia-image",
+      "format": "odt",
+      "feature": "beyond-claudia/image",
+      "source": "odt/beyond-claudia/image/source.odt",
+      "spec": "odt/beyond-claudia/image/spec.py",
+      "summary": "A picture (LibreOffice-written) in its own Pictures/ part plus the draw:frame that anchors it in a paragraph: the part and the frame paragraph both survive an edit of the paragraph next to it.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.015,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-rich-paragraph",
+      "format": "odt",
+      "feature": "rich-paragraph",
+      "source": "odt/rich-paragraph/source.odt",
+      "spec": "odt/rich-paragraph/spec.py",
+      "summary": "A paragraph with a link, a formatted word, a bookmark and a footnote: changing a word of its text is done in place, so none of them is lost, and the neighbouring paragraph is not touched.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "preservation"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.003,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-tracked-change-suggestion",
+      "format": "odt",
+      "feature": "tracked-change-suggestion",
+      "source": "odt/tracked-change-suggestion/source.odt",
+      "spec": "odt/tracked-change-suggestion/spec.py",
+      "summary": "An open suggestion added in claudia is exported as a real OpenDocument tracked change (text:deletion/text:insertion, with the marks in the text and the date LibreOffice needs); the paragraph then reads as the replacement.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier1",
+        "export-check"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.003,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-lists-and-sections",
+      "format": "odt",
+      "feature": "lists-and-sections",
+      "source": "odt/lists-and-sections/source.odt",
+      "spec": "odt/lists-and-sections/spec.py",
+      "summary": "Paragraphs in a list and in a section are blocks of the model; a block added after the list and a paragraph emptied inside the section leave the list, its list style and the section exactly as they were.",
+      "backlog": "E9.5",
+      "tags": [
+        "tier2",
+        "preservation"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.003,
+        "detail": null
+      }
+    },
+    {
+      "id": "odp-shapes-and-text",
+      "format": "odp",
+      "feature": "shapes-and-text",
+      "source": "odp/shapes-and-text/source.odp",
+      "spec": "odp/shapes-and-text/spec.py",
+      "summary": "A file written by LibreOffice itself: its unfilled rectangle is read as a text box, its ooxml-ellipse and ooxml-rect as the circle and rectangle; editing one object's words and moving another leaves the rest of content.xml and every other part as it was.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier1",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.034,
+        "detail": null
+      }
+    },
+    {
+      "id": "odp-beyond-claudia-table",
+      "format": "odp",
+      "feature": "beyond-claudia/table",
+      "source": "odp/beyond-claudia/table/source.odp",
+      "spec": "odp/beyond-claudia/table/spec.py",
+      "summary": "A table (LibreOffice-written) shares the slide with the text box an edit rewrites; the table's frame and its preview picture survive byte for byte.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.03,
+        "detail": null
+      }
+    },
+    {
+      "id": "odp-beyond-claudia-image",
+      "format": "odp",
+      "feature": "beyond-claudia/image",
+      "source": "odp/beyond-claudia/image/source.odp",
+      "spec": "odp/beyond-claudia/image/spec.py",
+      "summary": "A picture (LibreOffice-written) in a part of its own and the frame that places it come back byte for byte from an edit of the text box next to it.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.03,
+        "detail": null
+      }
+    },
+    {
+      "id": "odp-groups-notes-transitions",
+      "format": "odp",
+      "feature": "groups-notes-transitions",
+      "source": "odp/groups-notes-transitions/source.odp",
+      "spec": "odp/groups-notes-transitions/spec.py",
+      "summary": "A group, a line, speaker notes, a transition and an animation sit on the edited slide; the model leaves them out, the file keeps all of it -- content.xml differs by the one edited paragraph.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier2",
+        "preservation"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.005,
+        "detail": null
+      }
+    },
+    {
+      "id": "ods-cells-and-formulas",
+      "format": "ods",
+      "feature": "cells-and-formulas",
+      "source": "ods/cells-and-formulas/source.ods",
+      "spec": "ods/cells-and-formulas/spec.py",
+      "summary": "A file written by LibreOffice itself: cells and a SUM formula (OpenFormula) import as typed cells with the formula as Excel text; editing one amount keeps table:formula and refreshes the cached value.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier1",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.012,
+        "detail": null
+      }
+    },
+    {
+      "id": "ods-beyond-claudia-chart",
+      "format": "ods",
+      "feature": "beyond-claudia/chart",
+      "source": "ods/beyond-claudia/chart/source.ods",
+      "spec": "ods/beyond-claudia/chart/spec.py",
+      "summary": "A chart (LibreOffice-written, an embedded Object 1 sub-document and its preview) sits on the second sheet; editing the source data leaves its parts and frame byte for byte.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.007,
+        "detail": null
+      }
+    },
+    {
+      "id": "ods-beyond-claudia-image",
+      "format": "ods",
+      "feature": "beyond-claudia/image",
+      "source": "ods/beyond-claudia/image/source.ods",
+      "spec": "ods/beyond-claudia/image/spec.py",
+      "summary": "A picture (LibreOffice-written) in a part of its own on a sheet the edit never touches survives byte for byte.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "part-level",
+        "written-by-libreoffice"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.005,
+        "detail": null
+      }
+    },
+    {
+      "id": "ods-repeated-and-styled",
+      "format": "ods",
+      "feature": "repeated-and-styled",
+      "source": "ods/repeated-and-styled/source.ods",
+      "spec": "ods/repeated-and-styled/spec.py",
+      "summary": "Repeated rows split by an edit, merged title, comment, date, union formula, error cell, trailing empty rows, named range and validations: only the edited cells and refreshed formula values change.",
+      "backlog": "E12.6",
+      "tags": [
+        "tier2",
+        "preservation"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-11T19:49:56Z",
+        "commit": "37ccc29",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.012,
+        "detail": null
+      }
+    }
+  ]
+}

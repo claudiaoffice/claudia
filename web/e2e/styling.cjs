@@ -29,7 +29,7 @@ async function main() {
   await page.check('.modal input[type=checkbox]')
   await page.click('.modal button:text-is("Continue")')
   await page.waitForSelector('[data-testid=text]')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
 
   // three paragraphs: a title, two of body text
   await page.click('[data-testid=text]')
@@ -94,6 +94,22 @@ async function main() {
   await page.screenshot({ path: `${SHOTS}/styling-1-menu.png` })
   log('context menu open on Body text')
 
+  // UX-14: clicking a different style in the gallery only shows its look — it must not touch the document
+  await page.click('[data-testid=style-menu] [data-style=heading-1]')
+  await page.waitForFunction(() => document.querySelector('[data-testid=style-menu] [data-style=heading-1]').classList.contains('on'))
+  assert.equal((await look(page, 1)).tag, 'p', 'picking Heading 1 in the gallery must not restyle the paragraph')
+  assert.equal((await look(page, 1)).weight, '400', 'body text is untouched by just looking at another style')
+  assert.equal(await page.locator('[data-testid=style-menu] [data-style=body] .here').count(), 1, 'the gallery marks which style the cursor is really in')
+  assert.equal(await page.locator('[data-testid=style-spec] input[value=new]').isDisabled(), true, '"this paragraph only" is unavailable while browsing another style’s look')
+  await page.click('[data-testid=bold]') // edits a picked style for "every use" — there is no selection to deviate
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid=style-menu] [data-style=heading-1] .name .look')).fontWeight === '700')
+  assert.equal((await look(page, 1)).weight, '400', 'the body paragraph is still untouched: the edit changed Heading 1 itself, everywhere')
+  await page.keyboard.press('Control+z') // undo the Heading 1 experiment before the rest of the scenario continues
+  await page.click('[data-testid=style-menu] [data-style=body]') // pick the caret's own style back
+  await page.waitForFunction(() => document.querySelector('[data-testid=style-menu] [data-style=body]').classList.contains('on'))
+  assert.equal(await page.locator('[data-testid=style-spec] input[value=new]').isDisabled(), false, '"this paragraph only" is available again for the caret’s own style')
+  log('picking a style in the gallery shows its look without applying it (UX-14)')
+
   // bold, this paragraph only: a new style appears and waits for its name, the others are untouched
   await page.click('[data-testid=bold]')
   await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-block]')[1].className.includes('body-text-changed'))
@@ -104,7 +120,7 @@ async function main() {
 
   // the next change goes into the deviation (it is the person’s own), colour and size
   await page.click('[data-testid=colour-text]')
-  await page.click('[data-testid=colour-text] .chip[title=Iris]')
+  await page.click('[data-testid=colour-text] [data-role=accent]') // a colour by what it means (D210): the accent, iris
   await page.click('[data-testid=size-field] button[aria-label=Larger]')
   await page.waitForFunction(() => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-block]')[1]).color === 'rgb(91, 75, 196)')
   const dev = await look(page, 1)
@@ -118,7 +134,7 @@ async function main() {
   const textarea = page.locator('[data-testid=css-view] textarea')
   const css = await textarea.inputValue()
   assert.match(css, /font-weight: bold;/)
-  assert.match(css, /color: #5B4BC4;/i)
+  assert.match(css, /color: @accent;/) // the style names the role, not the colour (D200)
   await page.screenshot({ path: `${SHOTS}/styling-3-css.png` })
   log('css view shows:', JSON.stringify(css))
 

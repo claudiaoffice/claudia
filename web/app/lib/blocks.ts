@@ -4,11 +4,26 @@
 
 /** `[length, author, via]`: who wrote this stretch, and whose suggestion it came through. */
 export type Run = [number, string | null, string | null]
+/** A paragraph's place in a list: which list (an id of the document's lists) and the level, 0 being the outermost. */
+export interface ListItem {
+  list: string
+  level: number
+}
+/** What is drawn in front of an item (derived by the server, never typed): a bullet or a number; `path` is the trail of
+ * counters ("2.a" is `[2, 1]`), `null` for bullets. */
+export interface Label {
+  marker: string
+  path: number[] | null
+}
 export interface Block {
   id: string
   style: string
   text: string
   runs: Run[]
+  /** Set when the paragraph is a list item. */
+  item?: ListItem | null
+  /** Set when it is one and the server has counted it. */
+  label?: Label
 }
 export interface Pos {
   block: string
@@ -26,6 +41,8 @@ export type TextEvent =
   | { type: 'split'; block: string; offset: number; new_id: string; style: string }
   | { type: 'join'; block: string; into: string; at: number }
   | { type: 'style'; block: string; style: string }
+  | { type: 'item'; block: string; item: ListItem | null }
+  | { type: 'labels'; labels: Record<string, Label | null> }
 
 // ------------------------------------------------------------------------------ runs
 export function normalizeRuns(runs: Run[]): Run[] {
@@ -66,6 +83,15 @@ export const indexOf = (blocks: Block[], id: string) => blocks.findIndex((b) => 
 
 /** Apply one event of the server to the paragraphs. `false` if the event does not fit (the replica is out of step). */
 export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
+  if (ev.type === 'labels') {
+    for (const [id, label] of Object.entries(ev.labels)) {
+      const found = blocks[indexOf(blocks, id)]
+      if (!found) continue // a paragraph that went away in the same step
+      if (label) found.label = label
+      else delete found.label
+    }
+    return true
+  }
   const i = indexOf(blocks, ev.type === 'join' ? ev.into : ev.block)
   const block = blocks[i]
   if (!block) return false
@@ -84,6 +110,7 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
         style: ev.style,
         text: block.text.slice(ev.offset),
         runs: sliceRuns(block.runs, ev.offset, block.text.length),
+        ...(block.item ? { item: { ...block.item } } : {}), // an item makes an item; its label comes with the server's count
       }
       block.text = block.text.slice(0, ev.offset)
       block.runs = sliceRuns(block.runs, 0, ev.offset)
@@ -100,6 +127,10 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
     }
     case 'style':
       block.style = ev.style
+      return true
+    case 'item':
+      block.item = ev.item
+      if (!ev.item) delete block.label
       return true
   }
 }
@@ -127,6 +158,8 @@ export function followSpan(span: Span, ev: TextEvent): Span {
     case 'join':
       return block === ev.block ? { block: ev.into, start: start + ev.at, end: end + ev.at } : span
     case 'style':
+    case 'item':
+    case 'labels':
       return span
   }
 }
@@ -219,6 +252,7 @@ export function runsToPoints(text: string, runs: Run[]): Run[] {
 
 /** An event as the server sent it (code points) in UTF-16 units, judged against the paragraphs it will be applied to. */
 export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
+  if (ev.type === 'labels') return ev
   const text = blocks.find((b) => b.id === (ev.type === 'join' ? ev.into : ev.block))?.text ?? ''
   switch (ev.type) {
     case 'text': {
@@ -231,6 +265,7 @@ export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
     case 'join':
       return { ...ev, at: unitOf(text, ev.at) }
     case 'style':
+    case 'item':
       return ev
   }
 }

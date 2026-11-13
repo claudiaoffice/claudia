@@ -3,26 +3,259 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [0.18.0] - 2026-11-08
+## [Unreleased]
 
-CPU-bound work off the event loop, continued (E3.5; D37 specified this and it was not built until now; D134,
-D177): a bound on the worker pool's own queue, and a document's heavy formula calls actually reaching it.
+### Security
+- Every HTTP answer carries a `Content-Security-Policy` (scripts from this server and the start page's inline scripts
+  by hash, connections to this server and its WebSocket, `object-src 'none'`, `base-uri 'none'`, framing only by the
+  server itself or a page on this computer for the desktop shells, D251), `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: no-referrer` and a `Permissions-Policy` (`claudia_server.security_headers`, SEC-13).
+
+### Fixed
+- `chat` without `ai_mode` gets *act* (`ai_mode.UNSAID_MODE`), as the method's own description and E7.7 say; it had got
+  *suggest*, so with no client sending a mode yet the AI in computes changed nothing and pointed at a switch that no
+  client had (QA 2026-11-12, UX-20). A client still starts with *suggest* (`DEFAULT_MODE`, D262) once it has the switch.
 
 ### Added
-- **`workers.WorkerPool.max_waiting`**: bounds how many submissions may be in flight at once across every
-  document this server holds, the same way `Assistant.max_waiting` bounds one document's own question queue.
-  Past the bound, `submit` raises the new `PoolBusy` at once, before it ever reaches the executor — never
-  queued, never run inline instead. `Hub` takes `max_waiting` too (default `DEFAULT_MAX_WAITING`) and passes it
-  through to the pool it owns.
-- **`heavy_dispatch.HeavyDispatcher`**: one per workbook document (`Hub.open` attaches it automatically,
-  `HostedDocument.heavy_dispatch`), watching `claudia_computes.calc.Calculator.pending_heavy` and running what
-  it can safely resolve on the hub's `WorkerPool` — applying the answer through the new `computes
-  .ApplyCalculated` command, or discarding it if the document moved on while the worker ran (D37's "a worker
-  computes on a copy at revision r and its result is discarded if the inputs changed", now built). Resolves a
-  deferred call only when the heavy function *is* the whole formula this round (`=HEAVY(...)`, not
-  `=HEAVY(...)+1`) — a documented, deliberate limit of this patch, not a bug (D177).
-- **`heavy_dispatch.Submittable`**: the `submit(fn, *args, **kwargs)` shape `HeavyDispatcher` needs from a pool,
-  so a test can stand in a fake one without a real process pool.
+- Lists in the text app (E9.21, `claudia_server.composes_lists`): `make_list(blocks, scheme)` (bullets, numbers or, with
+  a null scheme, none; asking for what the paragraphs are takes them out, the other kind of a whole list changes its
+  scheme, anything else starts a new list), `indent_item(blocks, by)` (answers how many items moved), `continue_list(block)`
+  and `list_start(list, start)`; each is one history step and the assistant has no access (D63). `blocks` also
+  answers `lists` and `schemes`, and gives every list item an `item` and a derived `label` (`{marker, path}`). The
+  events `item`, `labels` and `lists` follow the document.
+- One style API for all three apps (`claudia_server.style_targets`, the styling-suite plan step 1.5):
+  `style_model` (facets, kinds, slots with the kinds each takes, and the target keys this app accepts),
+  `apply_style(targets, style, slot?)`, `deviate(parent, targets, slot?, set|text)` and `style_uses`. A target is
+  `{"object": id}` in every app, `{"block": id}` in composes (and `{"sheet": id, "range": [...]}` in computes);
+  without a `slot`, a style fills every slot it fits (D309, D311, D316) and a deviation every slot that held the
+  parent. `add_style_methods` takes the app's `targets`; a later kind of thing is a row of the slot table and an
+  adapter (D315). The narrower methods stay until every client uses these.
+- computes: cells are a style target, `{"sheet": id, "range": [r0, c0, r1, c1]}` (D307, D311); a whole column,
+  row or sheet goes into the layer of its shape. `cell_styles(sheet, row0, row1, col0, col1)` returns the style
+  ranges of a window, cut to it, for a client to paint; `cell_style_at(sheet, row, col)` says where a cell's look
+  comes from, slot by slot.
+- computes: styling cells lets the last action win (D317); `clear_cell_style(sheet, range, slot?)` takes the
+  cells' own style away so that the row's, column's or sheet's style shows through.
+- `export_office` also writes `"odt"` for the text app (D401), and its answer then has `losses`: what the file could
+  not hold, as a list of `{kind, detail, count}` codes (nothing yet puts them into words; the screen is designed
+  first). A format that cannot say has no `losses` in the answer. The error for an unknown format names both.
+- `export_office` of the presentation app also writes `"odp"` (D412), with `losses`, and the file says in its metadata
+  when the deck was made and last changed and by whom, read from the log (D411).
+- `export_office` of the spreadsheet app also writes `"ods"` (D413), with `losses` and the metadata from the log (D411).
+- The text app's `export_office` takes `tracked_changes` (default `false`, a clean copy, D212): the open suggestions
+  that propose a replacement are written as tracked changes, dated with when they were proposed and signed by their
+  author (docx and odt); an odt's metadata is filled from the log (D411).
+- computes: `names`, `define_name`, `rename_name`, `remove_name`, `sql_preview`, `define_sql` (D600–D609), and a pushed
+  `names` event; `diagrams`/`define_diagram` accept a chart that reads a named `source`. They are not yet in the AI's allow-list.
+- CPU-bound work off the event loop (E3.5, D37, D134, D291, D293). **`workers.WorkerPool.max_waiting`** bounds how many
+  submissions may be in flight at once across every document the server holds, as `Assistant.max_waiting` bounds one
+  document's question queue. Past the bound `submit` raises the new **`PoolBusy`** at once, before anything reaches the
+  executor: never queued, never run inline instead. `Hub` takes `max_waiting` too (`DEFAULT_MAX_WAITING`).
+- **`heavy_dispatch.HeavyDispatcher`**: one per workbook document (`Hub.open` attaches it, `HostedDocument
+  .heavy_dispatch`). It watches `claudia_computes.calc.Calculator.pending_heavy`, runs what it can safely resolve on the
+  hub's `WorkerPool`, and applies the answer through the `computes.ApplyCalculated` command, or discards it when the
+  document moved on while the worker ran (D37: "a worker computes on a copy at revision r and its result is discarded
+  if the inputs changed"). Only a deferred call that *is* the whole formula (`=HEAVY(...)`, not `=HEAVY(...)+1`) is
+  resolved, a deliberate limit of this first slice (D291).
+- **`heavy_dispatch.Submittable`**: the `submit(fn, *args, **kwargs)` shape `HeavyDispatcher` needs from a pool, so a
+  test can stand in a fake one.
+
+### Changed
+- `set_paragraph_style` is one of the shared style methods (`add_style_methods`), so computes and composes have it
+  as creates did: the objects of a sheet or a text can have their words restyled too.
+- A new text box's own style is `plain-box`, the box slot (D310); its words stay `body-text`.
+- `set_object_style` and `set_paragraph_style` refuse, as `command_error`, a style that does not fit the slot
+  (D316): a paragraph style on a shape's outline, an outline style on its words.
+- A new shape's words start under `shape-label`, not under the shape's own style: a shape's outline and its words
+  are two styles of two kinds (D310). A text box's words stay under `body-text`.
+- `deviate_style` and `deviate_object_style` make a style of the parent's kind (D305), and refuse, as
+  `command_error`, a property the kind cannot hold (changing the font of an outline, say).
+- `styles` answers each style's `kind` (D305).
+- The built web app is served with `Cache-Control` (D248): pages and every file not named by its content are
+  revalidated on each load (`no-cache`, a cheap `304` when nothing changed), the content-hashed files under `_nuxt/`
+  are kept for good (`public, max-age=31536000, immutable`). Before, a client that kept its cache between runs (the
+  WebKit view of the Linux client) could show the previous web app for a long time after the server was updated.
+
+## [0.26.0] - 2026-11-13
+
+Printing slides (D917).
+
+### Added
+- creates: `print_setup` and `set_print_setup(setup)` (a viewer cannot change it), and `language` and
+  `set_language`, as composes has them.
+- `claudia_server.printing`: what the apps that print share — `add_language_methods(table)` and `people_only(ctx)`.
+  composes' `language` and `set_language` are made by it now; their answers are unchanged.
+
+## [0.25.0] - 2026-11-12
+
+Hyphenation and SVG in the client's pages (D912–D915): the server hands out the patterns.
+
+### Added
+- `GET /api/hyphenation` and `GET /api/hyphenation/{sha256}` (`claudia_server.hyphenation`, D913): the languages the
+  server can hyphenate (BCP 47 tag, other tags they stand for, name, licence, the hash and size of the pattern file
+  and of the exceptions), and the files themselves under their hash, cached for good.
+- `--hyphenation DIR` (default `STATE_DIR/hyphenation`) and `create_app(hyphenation=...)`; the start-up banner names
+  the languages, or says that pages are not hyphenated.
+- `python -m claudia_server.hyphenation fetch DIR`: the TeX hyphenation patterns of hyph-utf8 for German (1996
+  spelling) and British and American English, pinned at one commit with every file's SHA-256
+  (`hyphenation.lock.json`).
+- composes: `language` and `set_language` (D915), the language of a text.
+
+## [0.24.0] - 2026-11-12
+
+Print preview and PDF in the client (D901–D907): the server hands out what the client lays out with.
+
+### Added
+- `GET /api/fonts`, `GET /api/fonts/{sha256}` and `GET /api/fonts/{sha256}.woff2` (`claudia_server.fonts`, D905): the
+  font catalogue as data (family, style, weight, slant, variation axes, outline kind, hash, licence, substitutions)
+  and the font files themselves under their hash, cached for good; only fonts whose collection may be redistributed.
+- `--fonts DIR` (repeatable; default `STATE_DIR/fonts`) and `create_app(fonts=...)`: where those fonts come from.
+- composes: `page` and `set_page` (D904), the page a text is printed on; `objects`, `images` and `shapes` (D907),
+  the floating objects of a text and what they are drawn with, for the print preview.
+
+### Security
+- The Content-Security-Policy allows `'wasm-unsafe-eval'` (WebAssembly compiled from bytes the page fetched from this
+  server: HarfBuzz, D903; no JavaScript `eval`) and `frame-src 'self' blob:` (the PDF a page made, handed to the
+  browser's print dialog, D906).
+
+## [0.23.0] - 2026-11-11
+
+The AI looks, acts, checks and corrects (E7.5), and a request that names no mode is a *suggest* request (D262).
+
+### Added
+- The model's loop (`ModelEngine`): a question takes rounds on the shared runner. The model asks to look at the document
+  or change it; the server makes the requests as the asker's AI under the question's account and sends back what came of
+  them: what it saw, and after a change the effect report (every cell that changed, recalculated dependents included,
+  and which of them show an error); the model carries on until it answers without requests. `Budget` (rounds, requests,
+  characters shown) ends a model that never answers, and the asker is told what was done before it stopped.
+- The lens, an app's side of the loop (`lens.Lens`, `lens.fence`, `lens.cut`): the orientation the model starts with, the
+  read requests written for a model (`B2: 24 (=B1*2)`, errors marked) and the effect report. `WorkbookLens` is the one
+  for computes. Everything that comes out of a document is handed to the model fenced as data.
+- `Task.call`: an engine can make requests as the AI under the question's account while it plans.
+
+### Changed
+- **Breaking:** a `chat` that sends no `ai_mode` is a *suggest* request (0.22.0 treated it as *act*): `ai_mode.LEGACY_MODE`
+  is gone, `DEFAULT_MODE` is what it means. A client that wants the AI to change the document must say `"act"`.
+- **Breaking:** `ModelEngine(runner, tools, lens, ...)` takes a lens, not a function describing the workbook;
+  `steps_of` is gone (the model's answers are no longer turned into steps once, the loop makes the requests itself);
+  `tools_of(..., kind=)` and `model_assistant_for(..., budget=)` are new. `model_assistant_for` knows the apps that
+  have a lens (computes); for composes it returns `None`, so `--ai` on a composes server now says so at start-up
+  instead of starting an AI that failed on its first question.
+
+## [0.22.0] - 2026-11-11
+
+The AI works under the account of the person who asked, in the mode she chose (D261, D262; E7.4, E7.7).
+
+### Added
+- `chat` takes an optional `ai_mode` (`"act"` or `"suggest"`): how the sender wants the AI to treat this request. It is
+  not stored; a client that sends none gets `"act"` (it is an older one and could not choose). Anything else is a
+  `bad_request` and nothing is posted. The mode a client starts with is *suggest* (`ai_mode.DEFAULT_MODE`).
+- `Account.acting_for(asker_role, writes)`: the account the AI answers one question under: the weaker of its role and
+  the asker's, with the allow-list narrowed to `writes`. `Assistant.account_for(asker, mode)` builds it per question;
+  `Assistant(suggest_methods=...)` is what it may write for *suggest*; `apps.SUGGEST_METHODS` lists that per app (only
+  composes' `suggest` today, since computes and creates cannot propose before E7.8).
+- `Task.mode` and `Task.writes`: what an engine is told about the question. `ModelEngine` offers the model only the
+  tools in `writes`, and leaves the example request out of the prompt when there is none.
+- `HostedDocument.role_of`, `note_ai_mode`, `ai_mode_of`.
+
+### Changed
+- In *suggest* mode in computes the AI writes nothing and says so (a chosen mode, not an error). Clients that do not send
+  `ai_mode` are unaffected.
+
+## [0.21.0] - 2026-11-10
+
+Word, Excel and PowerPoint export, one method per app (D212).
+
+### Added
+- `export_office(format)` in composes (`"docx"`), computes (`"xlsx"`) and creates (`"pptx"`): the document as it
+  stands now — no history, no chat, no open suggestions — as `{format, content_type, data}`, `data` base64. Any
+  other format is `bad_request`.
+- `office_export.office_export(fmt, data)`: the one place that wraps those bytes for the wire.
+
+### Changed
+- `claudia-server` now depends on `claudia-composes-io`, `claudia-computes-io` and `claudia-creates-io`.
+
+## [0.20.0] - 2026-11-09
+
+What the style menus in all three apps needed from the protocol (D203).
+
+### Added
+- `deviate_object_style`: "change this shape only". Makes a new style from the one an object has, differing in the
+  CSS given, and points the objects at it in one step — with a provisional name, marked `to_name` until somebody
+  names it (D75). The mirror of composes' `deviate_style`, which names paragraphs; this one names objects, and all
+  three apps have it.
+- `palette` now also answers `builtin`: the palette a document starts with, so a client can offer "the colours it
+  started with" without keeping a copy of the nine roles that could drift from the server's.
+
+## [0.19.0] - 2026-11-09
+
+Fixes `help_search` leaking one app's topics into another's (UX-13): a topic meant for `claudia_computes` was
+showing up in `claudia_composes`' Help tab and the reverse, because nothing read the `apps` front matter the topic
+files already carried.
+
+### Changed
+- **`HelpLibrary.search(query, *, app=None)`**: new optional keyword. When given, keeps only topics that name `app`
+  in their own `apps` front matter, or that name no app at all (shared topics still show everywhere). `query=""`
+  with an `app` given now means "every topic for this app", not "every topic".
+- **`core_methods.help_search`** now passes the asking document's own app (`ctx.document.model.app`) to `search`,
+  so each app only ever sees its own topics plus any shared ones. `help_topic` is unchanged: an id already names
+  one exact topic, the same way a direct link would from anywhere.
+
+claudia-composes gained its own first two help topics (`composes.editing-a-style`, `composes.asking-ai-to-review`),
+so its Help tab is no longer empty now that it is correctly scoped.
+
+## [0.18.0] - 2026-11-08
+
+A first, cross-app help system (E13): searchable help topics and, for `claudia_computes`, a searchable catalog of
+every cell function, both read-only and open to every role including the `ai` user.
+
+### Added
+- **`help.py`**: `Topic` — a help topic's id, title, apps, language, tags, `explains` and body. `parse_topic(text,
+  source=...)` reads the Markdown-with-frontmatter shape already drafted for `claudia_typeset` (D99/E13.1), raising
+  `HelpContentError` with the source for anything malformed. `HelpLibrary` holds topics loaded from a folder
+  (`load_folder`) or added directly (`add`), and answers `get(id)` and `search(query)`. `default_library()` is the
+  lazy, server-wide library, loaded once from every installed package's own `help/` folder (`claudia_typeset`,
+  `claudia_computes`, `claudia_composes`, `claudia_creates` — a package with no such folder, or that isn't
+  installed, is skipped).
+- **`core_methods.help_search`** (read, `query:str=""`): topic summaries (id/title/apps/tags) whose title, tags or
+  `explains` mention `query`, or every topic if `query` is blank. Inherited by `composes_methods`, `computes_methods`
+  and `creates_methods`, so any app gets it for free the moment it has a `help/` folder of its own.
+- **`core_methods.help_topic`** (read, `id:str`): one topic in full. `command_error` if `id` is unknown.
+- **`computes_methods.functions`** (read, `query:str=""`): the function catalog (library and core forms together,
+  via `claudia_computes.search_functions`), as name/signature/tooltip/source summaries.
+- **`computes_methods.function_help`** (read, `name:str`): one function's signature, tooltip and full help text, by
+  name, case-insensitively. `command_error` if `name` is unknown.
+
+claudia-computes (unversioned) gained the generating side of the function catalog: `FunctionHelp`, `function_catalog
+()`, `search_functions(query)` and `get_function(name)`, unifying the library functions' existing `Bound.get_tooltip`
+/`get_help` with the core forms' own docstrings — no new content was written for this; both halves already carried
+everything needed.
+
+
+Colour roles over the protocol, and the style methods shared by every app (D200–D203).
+
+### Added
+- `claudia_server.styles.add_style_methods(table, guard=None)`: registers `styles`, `palette`, `set_role`,
+  `replace_palette`, `set_object_style`, `change_style`, `rename_style` and `check_css` into an app's table. All
+  three apps call it, so a presentation and a workbook can now change their styles and not only read them.
+- `palette` returns `{roles, readings}`: a role is `{id, name, purpose, colour}`, a reading is
+  `{foreground, background, ratio, floor, ok, words}`. A reading carries **no verdict text** — each client says
+  what a failure means in its own words, and never shows the ratio to a reader.
+- `set_role` gives one role another colour; everything in the document that meant that role follows. Nothing is
+  refused for contrast: `palette` reports what a colour costs, it does not prevent it.
+- `replace_palette` puts a whole palette in place of the one the document has, which is what "replace palette" and,
+  later, a template will use. Refused while a style names a role the new palette has not.
+- `set_object_style` puts an object under another style of its own (`fill`, `stroke`, `stroke-width`), beside the
+  `set_paragraph_style` that already pointed its words elsewhere.
+
+### Changed
+- **Breaking:** every style in `styles` (and in composes' `blocks`) now carries a third form of its CSS,
+  `resolved`, with the palette's roles replaced by literal colours. **A client must draw from `resolved`**;
+  `computed` still names the roles, which is what a style menu shows. The role grammar deliberately stays on the
+  server, so what reaches a browser is always a literal colour.
+- `composes_methods` keeps only `set_style` and `deviate_style` of its style methods — the two that name
+  paragraphs. The rest are the shared ones, and composes passes `_people_only` as their guard, so in a text the
+  assistant still suggests and does not write (D63, SEC-10).
 
 ## [0.17.0] - 2026-11-07
 
@@ -310,7 +543,7 @@ Security release: three findings of the first QA review (SEC-01, SEC-02, SEC-07)
   start-up report names the shapes and every file that was skipped, with the reason.
 - `GET /api/docs` also tells which `app` the server hosts, so that a client knows what kind of document to create.
 - `Hub.app`; `DocumentProvider.app` (a provider tells which kind of documents it holds; `MemoryProvider`, `FileProvider` and `SealedDocuments` do).
-- `scripts/start.py --app creates` starts the presentation server (documents in `demo-docs-creates`).
+- `scripts/start.py --app creates` starts the presentation server (documents in `docs-creates`).
 
 ### Changed
 - `methods_for(model_cls, *, shapes=None)` picks the presentation table for `creates` documents.

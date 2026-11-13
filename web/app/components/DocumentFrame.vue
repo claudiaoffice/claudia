@@ -1,28 +1,52 @@
 <script setup lang="ts">
-// What a document window has, whatever the app (used by creates; the workspaces of computes and composes have their own
-// copy of the same chrome and could move onto this): the top bar, menus, the panel with history and chat, the notices,
-// the keys for undo, redo and save, and the dialogs to save and to share. The app fills in the rest through the slots:
-// `toolbar` (under the menus), the main area (default), `footer` and `overlay` (its own dialogs).
+// What a document window has, whatever the app: the top bar, the menus, the panel with history and chat, the notices,
+// the keys for undo, redo and save, the dialogs to save, share, hand over, export and delete, and the "not connected
+// any more" screen. computes, composes and creates all mount it; each fills in the rest through the slots: `toolbar`
+// (under the menus), the main area (default), `side-top` (above the panel's tabs), `footer`, and `overlay` (its own
+// dialogs and popovers). The menus themselves are the app's, built mostly from `lib/document-menus.ts`.
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import type { FrameDialog } from '~/lib/document-menus'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { chordLabel, installWindowShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
+import type { ExportFormatOption } from './ExportFormatDialog.vue'
 import type { Menu } from './MenuBar.vue'
 
-const props = defineProps<{ session: BaseSession; menus: Menu[] }>()
+const props = withDefaults(
+  defineProps<{
+    session: BaseSession
+    app: 'computes' | 'composes' | 'creates'
+    menus: Menu[]
+    exportFormats: ExportFormatOption[]
+    /** This app's own shortcuts, on top of Undo, Redo and Save (D122). */
+    extraShortcuts?: ShortcutDef[]
+    /** Config ▸ Shortcuts: what is not a single key chord (the mouse, typing), as [keys, what it does]. */
+    shortcutNotes?: [string, string][]
+  }>(),
+  { extraShortcuts: () => [], shortcutNotes: () => [] },
+)
 const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }>()
 
 const state = props.session.state
 const panelOpen = ref(true)
-const dialog = ref<null | 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete'>(null)
-const panel = ref<{ ask: (text?: string) => void } | null>(null)
+const dialog = ref<FrameDialog | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 const readonly = computed(() => state.me.role === 'viewer')
 
+/** Save a checkpoint. What is still being typed is sent first, so the checkpoint holds it (composes, `flush`). */
 async function checkpoint(label: string | null) {
   dialog.value = null
+  await props.session.flush()
   if (await props.session.saveCheckpoint(label || null)) props.session.notice('Checkpoint saved.')
   emit('saved')
+}
+
+/** Open one of the window's own dialogs. An export reads the document as it stands this instant, so whatever is
+ * still being typed is sent first. */
+async function openDialog(name: FrameDialog) {
+  if (name === 'export' || name === 'export-format') await props.session.flush()
+  dialog.value = name
 }
 
 /** Open the panel with the cursor in the chat box, ready to write to the assistant. */
@@ -31,10 +55,14 @@ function ask(text = '@ai ') {
   setTimeout(() => panel.value?.ask(text), 0)
 }
 
-// D122: the shared shortcut map, same as the other two workspaces. `SlideWorkspace.vue` has nothing of its own to
-// add to Undo/Redo/Save, so this is the complete list — kept here (not duplicated in the parent) since this is also
-// where Ctrl+S's own dialog state (`dialog`) and `readonly` already live. Exposed so the parent's Config ▸ Shortcuts
-// dialog can show the same list it is actually wired to.
+/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
+function openHelp(mode?: 'how-to' | 'docs') {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.openHelp(mode), 0)
+}
+
+// D122: the shared shortcut map and the app's own, in one list that both the window's key handler and
+// Config ▸ Shortcuts read, so the dialog shows exactly what is wired.
 const shortcuts = computed<ShortcutDef[]>(() => [
   ...sharedShortcuts({
     undo: () => props.session.undo(),
@@ -43,29 +71,29 @@ const shortcuts = computed<ShortcutDef[]>(() => [
       if (!readonly.value) void checkpoint(null)
     },
   }),
+  ...props.extraShortcuts,
 ])
 installWindowShortcuts(() => shortcuts.value)
 
 defineExpose({
   checkpoint,
   ask,
-  shortcuts,
-  openDialog: (name: 'checkpoint' | 'share' | 'shortcuts' | 'about' | 'assign-owner' | 'accept-owner' | 'leave' | 'export' | 'delete') =>
-    (dialog.value = name),
+  openHelp,
+  openDialog,
   /** View ▸ History and chat (D120's shared block) toggles the one `panelOpen` this frame owns — exposed as a
    * getter/setter pair, not the ref itself, so the parent's own `computed` menus still track it correctly. */
   isPanelOpen: () => panelOpen.value,
   togglePanel: () => (panelOpen.value = !panelOpen.value),
 })
 
-// The shell bridge is wired here, not per-app, since the menus (built by the parent) are what state is reported
-// for, and the frame is what every creates document already mounts.
+// The shell bridge is wired here, not per app: the menus (built by the parent) are what state is reported for, and
+// the frame is what every document mounts.
 // `reactive` as `createShellBridge`'s `wrap` (not wrapping its return value) so the template's `shell.nativeMenu`
 // re-renders once the shell's `welcome` message actually arrives: `window.__claudiaShell.receive` must call back
 // into the reactive bridge itself, or `welcome`'s capabilities land outside Vue's dependency tracking. The cast is
 // `reactive()`'s own return type (`Reactive<ShellBridge>`) structurally losing `ShellBridge`'s private fields --
 // still there at runtime, just invisible to this particular structural check.
-const shell = createShellBridge('creates', undefined, (bridge) => reactive(bridge) as typeof bridge)
+const shell = createShellBridge(props.app, undefined, (bridge) => reactive(bridge) as typeof bridge)
 shell.onAction((id, target) => applyAction(props.menus, id, target))
 onBeforeUnmount(() => shell.detach())
 watch(() => props.menus, (m) => shell.reportStates(collectStates(m)), { immediate: true })
@@ -90,7 +118,9 @@ onBeforeUnmount(() => clearTimeout(timer))
     <slot name="toolbar" />
     <div class="main" :class="{ wide: !panelOpen }">
       <slot />
-      <SidePanel v-show="panelOpen" ref="panel" :session="session" />
+      <SidePanel v-show="panelOpen" ref="panel" :session="session">
+        <template #top><slot name="side-top" /></template>
+      </SidePanel>
     </div>
     <slot name="footer" />
 
@@ -108,20 +138,15 @@ onBeforeUnmount(() => clearTimeout(timer))
     <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
     <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
     <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
+    <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="exportFormats" @close="dialog = null" />
     <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog
       v-if="dialog === 'shortcuts'"
       :shortcuts="shortcuts.map((s) => ({ label: s.label, hint: chordLabel(s.chord) }))"
-      :extra="[
-        ['Click', 'select an object (colleagues cannot change it while you hold it)'],
-        ['Drag', 'move it; the handles resize it'],
-        ['Double-click, Enter', 'write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it'],
-        ['Arrows', 'move it by 10 units; with Shift by 1'],
-        ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
-      ]"
+      :extra="shortcutNotes"
       @close="dialog = null"
     />
-    <AboutDialog v-if="dialog === 'about'" app="creates" @close="dialog = null" />
+    <AboutDialog v-if="dialog === 'about'" :app="app" @close="dialog = null" />
     <slot name="overlay" />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>

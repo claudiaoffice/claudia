@@ -1,5 +1,5 @@
 """UserFunction's ``heavy``/``heavy_above`` contract: which calls must not run on the event loop (PERF review
-2026-11-08, D37, D177). The decision is made where the call is about to happen -- ``Bound`` -- so ``calc.py`` can
+2026-11-08, D37, D291). The decision is made where the call is about to happen -- ``Bound`` -- so ``calc.py`` can
 catch :class:`Deferred` and hand the call to a worker instead, without ``functions`` knowing anything about pools.
 """
 

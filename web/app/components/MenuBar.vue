@@ -21,9 +21,12 @@ export interface MenuItem {
   separator?: boolean
   /** A choice that is on or off: shown with a tick. */
   checked?: boolean
-  /** One level of flyout (Paste as ▸ Plain text; computes' Row ▸ and Column ▸, D130). Items of a submenu may carry
-   * `id` too, and are included in `lib/menu-dispatch.ts`'s walk, but may not nest a submenu of their own. */
+  /** One level of flyout (Paste as ▸ Plain text; computes' Row ▸ and Column ▸, D130; Format ▸ Apply style, D300).
+   * Items of a submenu may carry `id` too, and are included in `lib/menu-dispatch.ts`'s walk, but may not nest a
+   * submenu of their own. A flyout parent may also have an `action`: what a native shell's own entry does (D301). */
   items?: MenuItem[]
+  /** How the label is drawn: a style's own look in Format ▸ Apply style (`menuCss`, D300). */
+  css?: Record<string, string>
 }
 export interface Menu {
   label: string
@@ -46,7 +49,7 @@ let typeaheadTimer: ReturnType<typeof setTimeout> | undefined
 const openMenu = computed(() => (openIndex.value === null ? null : props.menus[openIndex.value] ?? null))
 const clickable = computed(() => (openMenu.value?.items ?? []).filter((it) => !it.separator))
 const activeTop = computed<MenuItem | null>(() => (activeItem.value === null ? null : (clickable.value[activeItem.value] ?? null)))
-const subItems = computed(() => activeTop.value?.items ?? [])
+const subItems = computed(() => (activeTop.value?.items ?? []).filter((it) => !it.separator))
 const activeSubItem = computed<MenuItem | null>(() => (activeSub.value === null ? null : (subItems.value[activeSub.value] ?? null)))
 
 function idOf(menuIndex: number, item: MenuItem | null | undefined): string | undefined {
@@ -66,11 +69,12 @@ function titleId(i: number) {
 function choose(item: MenuItem) {
   if (item.disabled || item.separator) return
   if (item.items) {
-    // A click on a flyout parent (Paste as, Row, Column) opens or closes its own submenu — same thing hovering it
-    // does below — rather than doing nothing, which the owner's 2026-11-06 report read as the submenu being gone
-    // (mouse hover alone could set `activeTop` but never `activeSub`, so the flyout never appeared for a mouse user).
+    // A click on a flyout parent (Manage, Paste as, Row, Column) opens its own submenu — the same thing hovering it
+    // does below — rather than doing nothing, which the owner's 2026-11-06 report read as the submenu being gone.
+    // It only ever opens: a mouse reaches the item by hovering, which has already opened the flyout, so a click that
+    // toggled would close it again under the pointer (found by e2e/demo.cjs, File ▸ Manage ▸ Share…).
     activeItem.value = clickable.value.indexOf(item)
-    activeSub.value = activeSub.value === null ? 0 : null
+    activeSub.value = 0
     return
   }
   close()
@@ -303,26 +307,30 @@ onBeforeUnmount(() => {
                 @click="choose(item)"
                 @mouseenter="enterItem(item)"
               >
-                <span><i v-if="item.checked !== undefined" class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</i>{{ item.label }}</span>
+                <span><i v-if="item.checked !== undefined" class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</i><span class="label" :style="item.css">{{ item.label }}</span></span>
                 <kbd v-if="item.hint">{{ item.hint }}</kbd>
                 <span v-if="item.items" class="arrow" aria-hidden="true">▸</span>
               </button>
               <ul v-if="item.items && activeTop === item && activeSub !== null" class="drop sub" role="menu" :aria-label="item.label">
-                <li v-for="(sub, k) in item.items" :key="k">
-                  <button
-                    :id="idOf(i, sub)"
-                    type="button"
-                    role="menuitem"
-                    :disabled="sub.disabled"
-                    :class="{ active: activeSubItem === sub }"
-                    tabindex="-1"
-                    @click="choose(sub)"
-                    @mouseenter="!sub.disabled && (activeSub = subItems.indexOf(sub))"
-                  >
-                    <span>{{ sub.label }}</span>
-                    <kbd v-if="sub.hint">{{ sub.hint }}</kbd>
-                  </button>
-                </li>
+                <template v-for="(sub, k) in item.items" :key="k">
+                  <li v-if="sub.separator" class="sep" role="separator" />
+                  <li v-else>
+                    <button
+                      :id="idOf(i, sub)"
+                      type="button"
+                      :role="sub.checked !== undefined ? 'menuitemcheckbox' : 'menuitem'"
+                      :aria-checked="sub.checked"
+                      :disabled="sub.disabled"
+                      :class="{ active: activeSubItem === sub }"
+                      tabindex="-1"
+                      @click="choose(sub)"
+                      @mouseenter="!sub.disabled && (activeSub = subItems.indexOf(sub))"
+                    >
+                      <span><i v-if="sub.checked !== undefined" class="tick" aria-hidden="true">{{ sub.checked ? '✓' : '' }}</i><span class="label" :style="sub.css">{{ sub.label }}</span></span>
+                      <kbd v-if="sub.hint">{{ sub.hint }}</kbd>
+                    </button>
+                  </li>
+                </template>
               </ul>
             </li>
           </template>

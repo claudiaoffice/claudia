@@ -1,35 +1,99 @@
 """claudia-computes: the spreadsheet app, here only the mini-port that proves claudia-core.
 
 refs      CellRef / RangeRef / structural edits (from the demo)
-model     WorkbookModel: sheets, typed cells, and the images/objects a document knows (E10.11)
-commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, DefineImage, ForgetImage, AddObject, MoveObject,
-RemoveObject, ApplyCalculated (a worker's result for a deferred heavy call, D37, D177)
-region    CellRegion: moves with structural edits; ObjectSet: a selection of floating objects (does not)
+model     WorkbookModel, CellAnchor, SheetObject, Chart: sheets, typed cells, and this app's own part of an object
+commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, SetCellStyle, AddChart, RemoveChart (rest: core)
+heavy     ApplyCalculated, in commands: a worker's result for a deferred heavy call (E4.4, D37, D291)
+cellstyles CellStyles: a sheet's style ranges, in layers, for the box and the words of its cells (E6.13, D307)
+name_commands  DefineName, RemoveName, RenameName, RestoreNames: named ranges and tables (E6.5)
+names     NamedRange, Names: what a name is, where it is looked up, and which cells ``Sales[Amount]`` means
+charts    ChartSpec: what a diagram draws, computes' own ``DiagramDefinition`` (E6.6)
+region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
+styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
 entry     parse_input: what typing into a cell means
 
-An image is anchored to a cell (``row``, ``col``) with a fixed pixel size (``w``, ``h``): neither ever changes
-because of a row/column insert, delete, or resize — only ``MoveObject`` (the person dragging it) moves it, and
-there is no resize of an object yet. Decoding and the import record are ``claudia_core``'s (``ImageAsset``,
-``ImageImport``, re-exported there), shared with creates and composes.
+
+A floating object is a shared ``ObjectBody`` plus a ``CellAnchor``: only the anchor is this app's. The anchor and
+the object's pixel size never change because of a row/column insert, delete or resize — only ``MoveObject`` (the
+person dragging it) moves it. Placing, stacking, moving, resizing, rotating, styling and the image, shape and
+diagram assets are ``claudia_core.objects``, shared with creates and composes.
+
+A chart (E6.6) may be shown as its own tab (``Chart``, ``AddChart``/``RemoveChart``, this app's own) or as a
+floating diagram object on a sheet (``ObjectBody.diagram``, shared) — the two may show the very same
+``ChartSpec``, exactly as two image objects may share one image asset.
+
+functions.help  function_catalog/search_functions/get_function: every cell function, library and core alike, as one
+searchable list (E13.5's "Documentation" for computes).
+
 """
 
-from . import commands  # noqa: F401  (registers the commands)
-from .commands import (
+# The object commands, the object types and the object region are shared by all three apps and live in
+# ``claudia_core`` (E10.16). They are re-exported here so that an app package names everything it can do.
+from claudia_core import (  # noqa: F401
     AddObject,
+    DefineDiagram,
+    DefineImage,
+    DefineShape,
+    DiagramDefinition,
+    ForgetDiagram,
+    ForgetImage,
+    ForgetShape,
+    MoveObject,
+    ObjectBody,
+    ObjectSet,
+    Paragraph,
+    RemoveObject,
+    ResizeObject,
+    RotateObject,
+    Run,
+    SetParagraphStyle,
+    SetSnap,
+    SetText,
+    UpdateDiagram,
+    VisualObject,
+    paragraph_for,
+)
+
+from . import commands, name_commands  # noqa: F401  (registers the commands)
+from ._version import __version__
+from .cellstyles import CELL_SLOTS, DEFAULT_CELL_STYLE, LAYERS, MAX_STYLE_RANGES, CellStyles, layer_of
+from .charts import CHART_KINDS, ChartError, ChartSpec
+from .commands import (
+    AddChart,
     AddSheet,
     ApplyCalculated,
-    DefineImage,
-    ForgetImage,
-    MoveObject,
-    RemoveObject,
+    RemoveChart,
     RemoveSheet,
     ResizeLines,
     SetCells,
+    SetCellStyle,
     Structure,
 )
 from .entry import parse_input
-from .events import ImagesChanged, ObjectsChanged
-from .model import OBJECT_KINDS, Content, Sheet, SheetObject, WorkbookModel, content_of
+from .events import (
+    CellStylesChanged,
+    ChartsChanged,
+    DiagramsChanged,
+    ImagesChanged,
+    NamesChanged,
+    ObjectsChanged,
+    ShapesChanged,
+)
+from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
+from .model import (
+    MAX_OBJECTS_PER_SHEET,
+    MIN_OBJECT_SIZE,
+    OBJECT_KINDS,
+    CellAnchor,
+    Chart,
+    Content,
+    Sheet,
+    SheetObject,
+    WorkbookModel,
+    content_of,
+)
+from .name_commands import DefineName, RemoveName, RenameName, RestoreNames
+from .names import PURPOSES, NamedRange, Names
 from .refs import (
     CellRef,
     DeleteCols,
@@ -42,39 +106,92 @@ from .refs import (
     column_name,
     parse_range_ref,
 )
-from .region import CellRegion, ObjectSet
+from .region import CellRegion
+from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 
 __all__ = [
-    "OBJECT_KINDS",
+    "__version__",
+    "AddChart",
     "AddObject",
     "AddSheet",
     "ApplyCalculated",
+    "builtin_styles",
+    "BUILTIN_STYLES",
+    "CELL_SLOTS",
+    "CellAnchor",
     "CellRef",
     "CellRegion",
+    "CellStyles",
+    "CellStylesChanged",
+    "Chart",
+    "CHART_KINDS",
+    "ChartError",
+    "ChartsChanged",
+    "ChartSpec",
+    "column_name",
     "Content",
+    "content_of",
+    "DEFAULT_CELL_STYLE",
+    "DEFAULT_STYLE",
+    "DefineDiagram",
+    "DefineName",
     "DefineImage",
+    "DefineShape",
     "DeleteCols",
     "DeleteRows",
+    "DiagramDefinition",
+    "DiagramsChanged",
+    "ForgetDiagram",
     "ForgetImage",
+    "FunctionHelp",
+    "ForgetShape",
     "ImagesChanged",
     "InsertCols",
     "InsertRows",
+    "layer_of",
+    "LAYERS",
+    "MAX_OBJECTS_PER_SHEET",
+    "MAX_STYLE_RANGES",
+    "MIN_OBJECT_SIZE",
     "MoveObject",
-    "ObjectSet",
+    "NamedRange",
+    "Names",
+    "NamesChanged",
+    "OBJECT_KINDS",
+    "PURPOSES",
+    "ObjectBody",
     "ObjectsChanged",
+    "ObjectSet",
+    "Paragraph",
+    "paragraph_for",
+    "parse_input",
+    "parse_range_ref",
     "RangeRef",
     "RefParseError",
+    "RemoveChart",
+    "RemoveName",
+    "RenameName",
+    "RestoreNames",
     "RemoveObject",
     "RemoveSheet",
     "ResizeLines",
+    "ResizeObject",
+    "RotateObject",
+    "Run",
     "SetCells",
+    "SetCellStyle",
+    "SetParagraphStyle",
+    "SetSnap",
+    "SetText",
+    "ShapesChanged",
     "Sheet",
     "SheetId",
     "SheetObject",
     "Structure",
+    "UpdateDiagram",
+    "VisualObject",
     "WorkbookModel",
-    "column_name",
-    "content_of",
-    "parse_input",
-    "parse_range_ref",
+    "function_catalog",
+    "get_function",
+    "search_functions",
 ]

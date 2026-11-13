@@ -61,7 +61,7 @@ defineExpose({ fit })
     role="dialog"
     :aria-label="label"
     :style="{ left: `${at.left}px`, top: `${at.top}px`, width: `${width ?? 320}px` }"
-    @mousedown="(e) => (e.target as HTMLElement).closest('input,textarea,select') || e.preventDefault()"
+    @mousedown="(e) => (e.target as HTMLElement).closest('input,textarea,select,label') || e.preventDefault()"
   >
     <slot />
   </div>

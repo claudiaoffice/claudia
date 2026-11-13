@@ -24,7 +24,7 @@ changes calculates once). A rolled back command leaves the same cells marked and
 A heavy call (a ``UserFunction`` with ``heavy``/``heavy_above``, see ``functions.base``) is not calculated here at
 all: ``Bound.__call__`` raises :class:`~.functions.base.Deferred` instead of running it, and this module lets it
 through rather than treating it as an error. The cell keeps showing whatever it showed before -- there is no
-"calculating" state yet (PERF review 2026-11-08, D37, D177) -- and the deferral is kept in
+"calculating" state yet (PERF review 2026-11-08, D37, D291) -- and the deferral is kept in
 ``Calculator.pending_heavy`` for the caller (``claudia-server``) to run on a worker and apply later with
 ``resolve_heavy``, or drop with ``discard_heavy`` if the inputs moved on before the worker finished.
 """
@@ -40,14 +40,17 @@ from typing import TYPE_CHECKING
 
 from .events import CellsChanged
 from .formula import Formula, parse_formula, print_formula
-from .formula.compiler import Compiler, Evaluator
+from .formula.compiler import Binding, Compiler, Evaluator
+from .formula.nodes import Call, walk
 from .formula.operators import single
 from .formula.scope import Scope
 from .functions.base import Deferred
 from .functions.range import Range, freeze
 from .functions.registry import FunctionRegistry
-from .refs import Position, SheetId
-from .values import CIRC, SYNTAX, ErrorValue, FormulaError, Value
+from .limits import MAX_COLS, MAX_ROWS
+from .refs import Position, SheetId, column_name
+from .spill import Table
+from .values import CIRC, SPILL, SYNTAX, ErrorValue, FormulaError, Value
 
 if TYPE_CHECKING:
     from claudia_core import Context
@@ -62,27 +65,48 @@ WIDE = 64  # a range of more columns than this is searched as a list, not entere
 BLOCK_BITS = 8  # ranges are filed by blocks of 256 rows, so that a change only looks at the ranges near it
 LONG_BLOCKS = 16  # a range longer than this many blocks is kept in a list of its own
 MAX_BLOCKS = 8  # how often a formula that reads where it likes may be put off, waiting for what it found
+MAX_SPILL_ROUNDS = 20  # how often what read a result is calculated again after the result changed, before giving up
 
 
 class Compiled:
-    """A formula cell as the calculator holds it: the formula, how to evaluate it and what it reads."""
+    """A formula cell as the calculator holds it: the formula, how to evaluate it and what it reads.
 
-    __slots__ = ("cells", "dynamic", "evaluate", "formula", "ranges", "reads")
+    Besides the cells its text names it reads the ones its *names* stood for when it was compiled (``bound``: see
+    ``Binding``), and the cells of the ``SQL()`` formulas whose results it uses (``anchors``). ``mentions`` are
+    the texts of the names it uses, found or not; it is compiled again when what one of them means changes."""
 
-    def __init__(self, formula: Formula, evaluate: Evaluator | None, home: SheetId):
+    __slots__ = ("cells", "dynamic", "evaluate", "formula", "mentions", "ranges", "reads", "records")
+
+    def __init__(
+        self,
+        formula: Formula,
+        evaluate: Evaluator | None,
+        home: SheetId,
+        binding: Binding | None = None,
+    ):
         self.formula = formula
         self.evaluate = evaluate
         self.dynamic = formula.dynamic
+        # A formula with a query reads the tables it names, which its text does not: where it looked is recorded
+        # (like a dynamic formula's), but it is calculated again only when what it read changes.
+        self.records = formula.ast is not None and any(
+            isinstance(n, Call) and n.name == "SQL" for n in walk(formula.ast)
+        )
         cells: list[Key] = []
         ranges: list[Rect] = []
-        for area in formula.refs:
-            sheet = area.sheet or home
-            first, last = area.first, area.last
-            if first.row == last.row and first.col == last.col:
-                cells.append((sheet, first.row, first.col))
+        rects = [
+            (area.sheet or home, area.first.row, area.first.col, area.last.row, area.last.col) for area in formula.refs
+        ]
+        if binding is not None:
+            rects.extend(binding.rects)
+            cells.extend(binding.anchors)
+        for sheet, row0, col0, row1, col1 in rects:
+            if (row0, col0) == (row1, col1):
+                cells.append((sheet, row0, col0))
             else:
-                ranges.append((sheet, first.row, first.col, last.row, last.col))
-        self.cells: tuple[Key, ...] = tuple(cells)
+                ranges.append((sheet, row0, col0, row1, col1))
+        self.mentions: frozenset[str] = frozenset(binding.mentions) if binding is not None else frozenset()
+        self.cells: tuple[Key, ...] = tuple(dict.fromkeys(cells))
         self.ranges: tuple[Rect, ...] = tuple(ranges)
         self.reads: tuple[Rect, ...] = ()  # (dynamic formulas) where it looked the last time
 
@@ -218,6 +242,7 @@ class Round:
         self.state: dict[Key, int] = {}
         self.circular: set[Key] = set()
         self.changed: dict[SheetId, set[Position]] = defaultdict(set)
+        self.spilled: set[Key] = set()  # results that changed: their formulas, and the cells they fill that did
 
     def run(self) -> dict[SheetId, set[Position]]:
         for seed in sorted(self.todo):
@@ -275,21 +300,31 @@ class Round:
         caller to dispatch. ``key`` still counts as done for this round -- it is not waited for again until the
         deferral resolves and touches it.
 
-        The deferral's arguments are frozen here, before anything returns to the caller: the next command may
+        A deferred formula goes through the rest of this method like any other: what it read is recorded, and when
+        that turns out to be cells that still wait it waits for them first, so the arguments it defers with are
+        the final ones.
+
+        The deferral's arguments are frozen at the end, before anything returns to the caller: the next command may
         change the very cells a deferred ``Range`` argument points at, and the worker must run on a copy from
         this instant (D37), not whatever the live sheet happens to hold when it gets around to it."""
         calc, scope = self.calc, self.scope
         compiled = calc.formulas[key]
         scope.enter(*key)
-        scope.reads = [] if compiled.dynamic else None
+        scope.reads = [] if compiled.dynamic or compiled.records else None
+        scope.mentioned.clear()
+        deferred: Deferred | None = None
         try:
             value = calc._evaluate(compiled, scope)
-        except Deferred as deferred:
-            deferred.call_args = [freeze(arg) for arg in deferred.call_args]
-            calc.pending_heavy[key] = deferred
-            return None
-        calc.pending_heavy.pop(key, None)
-        if compiled.dynamic:
+        except Deferred as call:
+            value, deferred = None, call
+        if scope.mentioned:
+            calc._mention(key, compiled, scope.mentioned)
+        if deferred is None:
+            if value.__class__ is Table:
+                value = self._spill(key, value, scope)
+            elif key in calc.spills:
+                self._unspill(key)
+        if compiled.dynamic or compiled.records:
             reads = tuple(dict.fromkeys(scope.reads or ()))
             scope.reads = None
             if reads != compiled.reads:
@@ -304,12 +339,70 @@ class Round:
             ]
             if blockers:
                 if frame.attempts >= MAX_BLOCKS or key in blockers or any(self.state.get(o) == 1 for o in blockers):
-                    value = ErrorValue(CIRC, "this formula reads cells that depend on it")
+                    value, deferred = ErrorValue(CIRC, "this formula reads cells that depend on it"), None
                     self.circular.add(key)
                 else:
                     return blockers
+        if deferred is not None:
+            deferred.call_args = [freeze(arg) for arg in deferred.call_args]
+            calc.pending_heavy[key] = deferred
+            return None
+        calc.pending_heavy.pop(key, None)
         self._store(key, value)
         return None
+
+    def _spill(self, key: Key, table: Table, scope: Scope) -> Value:
+        """Put ``table`` into the cells below and beside ``key``, which owns them from now on. Returns what the formula
+        cell itself shows: the first cell of the table, or ``#SPILL!`` when the table does not fit there."""
+        calc = self.calc
+        sheet_id, row, col = key
+        sheet = calc.model.sheets[sheet_id]
+        last_row, last_col = row + table.height - 1, col + table.width - 1
+        name = calc.result_name(key)
+        where = (
+            f"{column_name(col)}{row + 1}:{column_name(min(last_col, MAX_COLS - 1))}{min(last_row, MAX_ROWS - 1) + 1}"
+        )
+        if last_row >= MAX_ROWS or last_col >= MAX_COLS:
+            self._unspill(key)
+            return ErrorValue(SPILL, f"{name} needs {where}, which does not fit on the sheet")
+        blocker = sheet.blocker((row, col), (last_row, last_col), key)
+        if blocker is not None:
+            self._unspill(key)
+            # (calculated again when anything in the way changes: every cell of the rectangle but its own)
+            scope.reads = [
+                *(scope.reads or ()),
+                (sheet_id, row, col + 1, row, last_col),
+                (sheet_id, row + 1, col, last_row, last_col),
+            ]
+            return ErrorValue(
+                SPILL, f"{name} needs {where}, but {column_name(blocker[1])}{blocker[0] + 1} holds a value"
+            )
+        old = calc.spills.get(key)
+        changed: set[Position] = set()
+        if old is not None:
+            for r in range(old[1], old[3] + 1):
+                for c in range(old[2], old[4] + 1):
+                    if not (row <= r <= last_row and col <= c <= last_col) and sheet.spill_clear((r, c)):
+                        changed.add((r, c))
+        for i in range(table.height):
+            for j in range(table.width):
+                if (i or j) and sheet.spill_value((row + i, col + j), table.value_at(i, j), key):
+                    changed.add((row + i, col + j))
+        rect = (sheet_id, row, col, last_row, last_col)
+        if changed or old != rect:
+            self.changed[sheet_id] |= changed
+            self.spilled.add(key)
+            self.spilled.update((sheet_id, r, c) for r, c in changed)
+        calc.spills[key] = rect
+        return table.value_at(0, 0)
+
+    def _unspill(self, key: Key) -> None:
+        """``key`` fills no cells any more (its formula gave something else): they are empty again."""
+        positions = self.calc.clear_spill(key)
+        if positions:
+            self.changed[key[0]] |= positions
+            self.spilled.add(key)
+            self.spilled.update((key[0], r, c) for r, c in positions)
 
     def _store(self, key: Key, value: Value) -> None:
         sheet = self.calc.model.sheets[key[0]]
@@ -329,28 +422,96 @@ class Calculator:
         self.by_sheet: dict[SheetId, set[Key]] = defaultdict(set)  # the formulas on a sheet
         self.dynamic: set[Key] = set()  # the formulas that read where they like
         self.referring: dict[SheetId, set[Key]] = defaultdict(set)  # the formulas that name cells of a sheet
+        self._name_users: dict[str, set[Key]] = defaultdict(set)  # name text (casefolded) -> the formulas using it
         self._cell_readers: dict[Key, set[Key]] = defaultdict(set)
         self._column_readers: dict[tuple[SheetId, int], ColumnReaders] = {}
         self._wide_readers: dict[Key, list[Rect]] = {}
         self._lookup_indexes: dict[tuple, tuple[int, object]] = {}
+        self.spills: dict[Key, Rect] = {}  # the cells a SQL() formula fills (its own cell is the first one)
+        self.orphaned: dict[SheetId, set[Position]] = defaultdict(set)  # cells emptied outside a calculation
         self.touched: set[Key] = set()  # cells whose value changed since the last settle
         self.forced: set[Key] = set()  # formulas that must be calculated: new, rewritten or moved
         self.everything = False  # calculate every formula (after structure changed)
         self.pending_heavy: dict[Key, Deferred] = {}  # heavy calls waiting on a worker, by the cell that called them
 
     # ------------------------------------------------------------------ making formulas
-    def compile(self, home: SheetId, text: str) -> Compiled:
-        """Read ``text`` (a formula with its ``=``) typed on ``home``. The formula is kept in its canonical text, so
-        that a document means the same however it is rebuilt."""
+    def compile(self, home: SheetId, text: str, at: Position | None = None) -> Compiled:
+        """Read ``text`` (a formula with its ``=``) typed on ``home`` (in the cell ``at``, when that is known: the
+        row of the cell is what ``Sales[@Units]`` means). The formula is kept in its canonical text, so that a
+        document means the same however it is rebuilt."""
         formula = parse_formula(text, self.model.sheet_id_of)
         canonical = print_formula(formula, self.model.sheet_name_of)
         if canonical != formula.source:
             formula = replace(formula, source=canonical)
-        return self.compile_formula(home, formula)
+        return self.compile_formula(home, formula, at)
 
-    def compile_formula(self, home: SheetId, formula: Formula) -> Compiled:
-        evaluate = None if formula.ast is None else self.compiler.compile(formula.ast)
-        return Compiled(formula, evaluate, home)
+    def compile_formula(self, home: SheetId, formula: Formula, at: Position | None = None) -> Compiled:
+        if formula.ast is None:
+            return Compiled(formula, None, home)
+        binding = Binding(home, None if at is None else at[0], self.model.names, self.model.header_texts)
+        self.compiler.binding = binding
+        self.compiler.top_args = formula.ast.args if isinstance(formula.ast, Call) else None
+        try:
+            evaluate = self.compiler.compile(formula.ast)
+        finally:
+            self.compiler.binding = None
+            self.compiler.top_args = None
+        return Compiled(formula, evaluate, home, binding)
+
+    def _mention(self, key: Key, compiled: Compiled, texts: set[str]) -> None:
+        """The formula looked up names that its text does not have (a query reads tables by name): it is compiled
+        again when what one of them means changes."""
+        new = texts - compiled.mentions
+        if new:
+            compiled.mentions = compiled.mentions | frozenset(new)
+            for text in new:
+                self._name_users[text].add(key)
+
+    def result_name(self, key: Key) -> str:
+        """What a query result is called, for a message: its name, or ``this result`` when it has none."""
+        for named in self.model.names:
+            if named.anchor == key:
+                return named.name
+        return "this result"
+
+    def clear_spill(self, key: Key, *, report: bool = False) -> set[Position]:
+        """``key``'s result is no longer shown: its cells are empty. Returns them (``report``: also tell the readers
+        and the people watching, at the next settle)."""
+        rect = self.spills.pop(key, None)
+        if rect is None:
+            return set()
+        sheet_id, row0, col0, row1, col1 = rect
+        sheet = self.model.sheets.get(sheet_id)
+        cleared: set[Position] = set()
+        if sheet is not None:
+            for position in [p for p, owner in sheet.spilled.items() if owner == key]:
+                if sheet.spill_clear(position):
+                    cleared.add(position)
+        if report and cleared:
+            self.touched.update((sheet_id, r, c) for r, c in cleared)
+            self.touched.add(key)
+            self.orphaned[sheet_id] |= cleared
+        return cleared
+
+    def clear_spills(self, sheet_id: SheetId) -> None:
+        """Every result on a sheet is cleared (rows or columns are about to move: they are put back after)."""
+        for key in [k for k in self.spills if k[0] == sheet_id]:
+            self.clear_spill(key)
+
+    def users_of(self, text: str) -> list[Key]:
+        """The formulas that use the name ``text`` (found or not), in order."""
+        return sorted(self._name_users.get(text.casefold(), ()))
+
+    def rebind(self, texts: Iterable[str]) -> None:
+        """What the names ``texts`` mean changed: the formulas that use them are compiled again, to read the cells
+        they mean now (and to be calculated again)."""
+        users: set[Key] = set()
+        for text in texts:
+            users |= self._name_users.get(text.casefold(), set())
+        for key in sorted(users):
+            old = self.formulas.get(key)
+            if old is not None:
+                self.define(key, self.compile_formula(key[0], old.formula, (key[1], key[2])))
 
     # ------------------------------------------------------------------ the index
     def define(self, key: Key, compiled: Compiled, *, forced: bool = True) -> None:
@@ -365,6 +526,8 @@ class Calculator:
             self.referring[target].add(key)
         for cell in compiled.cells:
             self._cell_readers[cell].add(key)
+        for text in compiled.mentions:
+            self._name_users[text].add(key)
         self._enter_rects(key, compiled.ranges)
         if forced:
             self.forced.add(key)
@@ -374,6 +537,7 @@ class Calculator:
         compiled = self.formulas.pop(key, None)
         if compiled is None:
             return None
+        self.clear_spill(key, report=True)
         sheet = key[0]
         self.by_sheet[sheet].discard(key)
         self.dynamic.discard(key)
@@ -385,6 +549,12 @@ class Calculator:
                 readers.discard(key)
                 if not readers:
                     del self._cell_readers[cell]
+        for text in compiled.mentions:
+            users = self._name_users.get(text)
+            if users is not None:
+                users.discard(key)
+                if not users:
+                    del self._name_users[text]
         self._leave_rects(key, compiled.ranges + compiled.reads)
         self.forced.discard(key)
         self.pending_heavy.pop(key, None)
@@ -463,10 +633,13 @@ class Calculator:
         self.by_sheet.clear()
         self.dynamic.clear()
         self.referring.clear()
+        self._name_users.clear()
         self._cell_readers.clear()
         self._column_readers.clear()
         self._wide_readers.clear()
         self._lookup_indexes.clear()
+        self.spills.clear()
+        self.orphaned.clear()
         self.touched.clear()
         self.forced.clear()
         self.pending_heavy.clear()
@@ -493,6 +666,7 @@ class Calculator:
             self.touched.clear()
             self.forced.clear()
             self.everything = False
+            self._tell_orphans(ctx)
             return
         if not (self.touched or self.forced or self.everything):
             return
@@ -504,8 +678,16 @@ class Calculator:
         shown = self._calculate(todo)
         for sheet, row, col in forced:  # (new or rewritten formulas are shown even when the value came out the same)
             shown[sheet].add((row, col))
+        for sheet, positions in self.orphaned.items():  # (cells whose result went away)
+            shown[sheet] |= positions
+        self.orphaned.clear()
         if not ctx.failed:
             self._tell(ctx, shown)
+
+    def _tell_orphans(self, ctx: Context) -> None:
+        if self.orphaned and not ctx.failed:
+            self._tell(ctx, dict(self.orphaned))
+        self.orphaned.clear()
 
     def recalculate_all(self) -> None:
         """Calculate every formula (a document was opened from a snapshot)."""
@@ -546,12 +728,44 @@ class Calculator:
     def _scope(self) -> Scope:
         scope = Scope(self.model.sheets, self.model.sheet_id_of)
         scope.indexes = self._lookup_indexes
+        scope.names = self.model.names
+        scope.spills = self.spills
+        return scope
+
+    def scope_for(self, home: SheetId) -> Scope:
+        """A scope that reads the workbook as a formula on ``home`` sees it (for what evaluates outside a cell)."""
+        scope = self._scope()
+        scope.enter(home, 0, 0)
         return scope
 
     def _calculate(self, todo: set[Key]) -> dict[SheetId, set[Position]]:
         """Calculate the formulas in ``todo``, each after the waiting formulas it reads. Returns where something
-        changed that people see."""
-        return Round(self, todo).run()
+        changed that people see.
+
+        A formula that fills cells (``SQL()``) changes what the formulas that read those cells see, and they may
+        have been calculated before it: they are calculated again, round after round, until no result changes."""
+        changed: dict[SheetId, set[Position]] = defaultdict(set)
+        for _ in range(MAX_SPILL_ROUNDS):
+            current = Round(self, todo)
+            for sheet, positions in current.run().items():
+                changed[sheet] |= positions
+            if not current.spilled:
+                return changed
+            todo = self._readers_closure(current.spilled)
+            if not todo:
+                return changed
+        log.warning("results kept changing: gave up after %d rounds", MAX_SPILL_ROUNDS)
+        return changed
+
+    def _readers_closure(self, keys: set[Key]) -> set[Key]:
+        """The formulas that read any of ``keys``, however indirectly."""
+        reached: set[Key] = set()
+        frontier = set(keys)
+        while frontier:
+            new = self.readers_of(frontier) - reached
+            reached |= new
+            frontier = new
+        return reached
 
     def _evaluate(self, compiled: Compiled, scope: Scope) -> Value:
         if compiled.evaluate is None:

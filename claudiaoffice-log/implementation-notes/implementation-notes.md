@@ -1,6 +1,6 @@
 # Implementation notes
 
-Short, per-feature notes written as the work happens. Status itself lives in `backlog.md`, derived from the code; a
+Short, per-feature notes written as the work happens. Status itself lives in the backlog (`Projects/claudia-office/_tasks/`), derived from the code; a
 note here never outruns the commit that proves its claim (PROC-03).
 
 ## Row height and column width (E6.16, D135) — Patch 1 of 2
@@ -33,7 +33,7 @@ PR"): `uv.lock.rej` is tracked in git at the original `main` HEAD (`558f429`), w
 
 Patch 2 (the web grid, drag-resize and the right-click dialog) follows below.
 
-## Row height and column width (E6.16, D135/D160) — Patch 2 of 2
+## Row height and column width (E6.16, D135/D215) — Patch 2 of 2
 
 Patch 2 is the web half: variable-size rendering, the right-click header menu, the size dialog and drag-resize —
 client-only, since Patch 1's `resize_lines`/`sizes` already take arbitrary per-line `[index, size]` pairs in one
@@ -44,7 +44,7 @@ readout, not only in the dialog), corrected in the second, which also added the 
 
 Built and tested: `web/app/lib/line-sizes.ts` (new — the pure math: `buildSizeTable`/`offsetOf`/`lineStart`/
 `indexAt` for converting between a line's index and its pixel position when most lines share a default and a few
-don't; `percentChange`/`formatPercent`; `proportionalResize`, the D160 rule itself, including the clamp).
+don't; `percentChange`/`formatPercent`; `proportionalResize`, the D215 rule itself, including the clamp).
 `web/app/lib/session.ts` (`State.rowHeights`/`colWidths`, `ensureSizes()`, `resizeLines()`, the
 `rowHeight()`/`colWidth()` accessors, and handling the `sizes` event — plus forgetting a sheet's sizes, not only its
 cells, on a `structure` event, since a structural edit remaps both the same way and the server does not echo the
@@ -69,7 +69,7 @@ logic and leaves `.vue` files as thin wiring over it (no existing component has 
 genuinely non-trivial logic — the size table, the index lookups, the proportional math — all lives in
 `line-sizes.ts` and is covered there instead. `npm test` (300 tests) and `npm run typecheck` both green.
 
-Design: the rule itself is D160 (`decision-log.md`) — scale by percentage anchored on the selection's top-most/
+Design: the rule itself is D215 (`decision-log/`) — scale by percentage anchored on the selection's top-most/
 left-most line, never push every line to one pixel value; clamp a line the percentage would push out of range
 rather than reject the whole change; only the border right after the anchor line resizes the whole selection when
 dragged, any other border resizes just the one line it belongs to. The grid reflows live during a drag (not only
@@ -82,3 +82,30 @@ the dragged (anchor) line's own border — the mockups also show dashed/solid gu
 line's border moving as you drag. The resize itself is fully proportional regardless; only that secondary live
 preview for the *other* lines' borders during the drag was cut for scope. A reasonable follow-up, not a correctness
 gap.
+
+## Names, tables and SQL() (E6.5, E4.9, D600–D609)
+
+Delivered as a patch against `named-ranges-sql`. A name and a table are one thing: a region (`CellRegion`, so it moves
+with structure edits) or a `SQL()` anchor, with an optional header. Excel notation (`Sales[Amount]`) is compiled to
+the name, bound when the formula is compiled (D602). Built, in `packages/claudia-computes/src/claudia_computes/`:
+`names.py` (the registry, keyed by sheet or workbook and case-folded name), `name_commands.py` (`DefineName`,
+`RenameName`, `RemoveName` and their shared inverse `RestoreNames`), `sql.py` (SQLite in memory with an authorizer, 1 s
+and 100,000 rows), `spill.py`, `formula/tablespec.py` (the bracket part of a reference) and `charts.py` (a chart's
+`source`). The server methods are in `packages/claudia-server/src/claudia_server/computes.py`; the web half is
+`web/app/lib/names.ts`, `web/app/lib/sql.ts`, `web/app/components/SqlEditor.vue`, `NamesDialog.vue`,
+`NameDefinePopover.vue`, `TableMenu.vue` and `ResultNote.vue`. Mocks: `claudiaoffice-log/notes/mockups/`.
+
+Tests: `packages/claudia-computes/tests/test_names.py`, `test_sql.py`, `test_formula_tablerefs.py`,
+`test_chart_sources.py`, `packages/claudia-server/tests/test_server_names.py`, `web/tests/names.test.ts`,
+`web/tests/sql.test.ts`. The web client was also driven in real Chrome against a real server: define a name, sum a
+column, grow a table, change a purpose, run and apply a query, the `#SQL!` fix, the `#SPILL!` note and a chart from a
+name.
+
+Found on the way: a Popover that prevents the default of mouse-down also stopped labels activating their input in
+Chrome (D608); `\w` in a JavaScript regular expression is not Unicode-aware, so name checks use `\p{L}`.
+
+Not done, and said so rather than hidden: typing over a table header does not rewrite formulas that name the column
+(D602); renaming a name does not rewrite chart sources (D609); "Copy as values" copies text and does not convert the
+cells to constants; "Move result…" from the `#SPILL!` mock; Tools ▸ Names… and SQL query… are not in the GTK, macOS
+and Windows menu manifests (nothing yet forces parity, as for `edit.chart`); the AI cannot call the new methods; SQL
+does not yet run in a worker; user functions are not SQL aggregates.

@@ -4,23 +4,188 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
-## [0.9.0] - 2026-11-08
+## [Unreleased]
 
-Groundwork for running the expensive part of opening a document somewhere other than the caller's own thread
-(PERF review 2026-11-08, D37, D178). No dispatch is wired up yet -- `DocumentProvider.open` stays synchronous --
-this only makes the replay step itself able to run with nothing but a model and a log, ready for a future round
-to hand to a worker.
+Lists (E9.21).
 
 ### Added
-- `replay_collecting(model, entries)`: like `replay`, but returns the `(entry, inverse)` pairs instead of taking
-  an `on_applied` callback. Unlike handing `replay` a bound method such as `document._record_history`, this is a
-  pure function of plain data, with no dependency on any live `Document`.
+- `ListItem(list, level)` and `Paragraph.item`: a paragraph may be an item of a list, at a level 0 to 8
+  (`MAX_LIST_LEVEL`). It is written to plain data only when set, so a paragraph that is no item serialises exactly as
+  before (creates and its text boxes notice nothing); `Paragraph.with_item`.
+- `claudia_core.lists`: `ListDef(id, scheme, start, name)`, `ListBook` (with a `version` that counts its changes),
+  `SCHEMES` (`bullets`, `numbers`; `Scheme` says how markers are drawn and how far levels are indented) and
+  `numbering_labels(entries, lists)`, the one pure function that derives every item's `Label(marker, path)`.
+- The commands `CreateList`, `ChangeList` and `RemoveList` (the undo of a create, refused while `list_in_use` says an
+  item uses the list) and the event `ListsChanged`. A model that holds lists has a `lists` attribute (a `ListBook`).
+- `replay_collecting(model, entries)` (D292): like `replay`, but returns the `(entry, inverse)` pairs instead of taking
+  an `on_applied` callback. Unlike handing `replay` a bound method such as `document._record_history`, it is a pure
+  function of plain data with no dependency on a live `Document`: groundwork for running the expensive part of opening
+  a document somewhere other than the caller's own thread (PERF review 2026-11-08, D37). Nothing dispatches it yet.
 
 ### Changed
-- `Document.open` and `Document._rebuild` now call `replay_collecting` and do their own (cheap) undo-stack
-  bookkeeping afterward, instead of passing `replay` a bound method. Behaviour is unchanged (`test_document.py`,
-  `test_history.py`, `test_redaction.py` all still pass unmodified) -- this is a refactor of the call sites, not
-  a new capability.
+- `Document.open` and `Document._rebuild` call `replay_collecting` and do their own (cheap) undo-stack bookkeeping
+  afterwards, instead of passing `replay` a bound method. Behaviour is unchanged; it is a refactor of the call sites.
+
+## [0.17.0] - 2026-11-13
+
+Page setup and language for every app (D917).
+
+### Added
+- `claudia_core.page`: `PageSetup`, `PageSetupError` and `PAPERS`, moved here from `claudia_composes` unchanged, plus
+  the paper `slide` (7.5 × 13.333 in, a 16:9 slide; `describe()` says "Slide size"). The margins error now speaks of
+  the content rather than the text.
+- `claudia_core.language`: `normalize_language` and `LanguageError`, moved here from `claudia_composes`, and the
+  command `SetLanguage` (kind `core.SetLanguage`) with the event `LanguageChanged` (`{type: "language", language}`),
+  for every model with a `language` attribute; on another model it raises `TypeError`. Every app's registry has it.
+
+## [0.16.0] - 2026-11-12
+
+Hyphenation (D912).
+
+### Added
+- `CSS_VERSION` 4: `hyphens` (`none`, `manual`, `auto`), a property of the paragraph facet: whether the words of a
+  paragraph may be broken with a hyphen at the end of a line, only at a soft hyphen typed into them, or also where
+  the language's patterns allow. Nothing to upcast: a style without it keeps the CSS default, `manual`.
+
+## [0.15.0] - 2026-11-11
+
+A throwaway copy of a document, for previewing what the AI proposes (E7.8, D263).
+
+### Added
+- `Document.scratch(at=None)`: a new `Document` that starts from the state now (or at the revision `at`, on any line),
+  with a log of its own and no store. Commands run on it like on any document, with its own events, locks and undo; the
+  live document, its log, the disk and everybody's undo steps never notice it, and it never sees what happens live
+  afterwards. The current state is copied (cost: the size of the state, not the length of the history); an older
+  revision costs a replay from the nearest cached snapshot, as `materialize` does. `KernelError` for a revision that
+  does not exist.
+
+## [0.14.0] - 2026-11-10
+
+The styling-suite plan, steps 1.2 to 1.6: every styled thing reads its slots.
+
+### Changed
+- **Breaking:** `fits(kind, slot)` is true when the kind can hold every facet the slot reads (D316): a box slot
+  takes a box style and a paragraph style (a bundle, D309, D311); a slot that reads nothing takes only its own kind.
+- **Breaking:** an object's own style must fit its container's slot and its words' style the words' slot
+  (`ObjectModel.check_object`, so `AddObject`, `SetObjectStyle` and `SetParagraphStyle`): a shape's style is an
+  outline, its words a paragraph style.
+- `ObjectModel.style_in_use` counts the style of an object's words too, so a style only a shape's label uses
+  cannot be taken back.
+
+### Added
+- `object_styles(body)`: the styles an object uses, one per slot.
+- `CSS_VERSION` 3: `vertical-align` (`top`, `middle`, `bottom`) and `white-space` (`normal`, `nowrap`,
+  `pre-wrap`) in the Box facet, for the box of a cell (D307).
+- `Slot.to_data()` carries `takes`: the kinds of style that fit the slot.
+
+## [0.13.0] - 2026-11-10
+
+Facets, kinds and slots: what a style property means and where a style can be put (D303-D305, D312, D315; the
+styling-suite plan, step 1.1).
+
+### Added
+- `claudia_core.facets`: the four facets (`TEXT_FACET`, `PARAGRAPH_FACET`, `BOX_FACET`, `OUTLINE_FACET`, all in
+  `FACETS`), each a `Facet(name, properties)`; `facet_of(prop)`; `FACET_PROPERTIES`. Every property of
+  `ALLOWED_CSS` belongs to exactly one facet, and `ALLOWED_CSS` is now *derived* from them — the list of
+  properties is unchanged, and `CSS_VERSION` stays 2.
+- `KINDS`: the kinds of style and the facets each may hold — `paragraph` (text, paragraph and box), `box`,
+  `outline` (D312). `check_kind(kind, properties)` refuses, in one sentence, every property outside the kind.
+- `Slot(name, reads, kind)`, `SlotTable` and `SLOTS`: the slots of everything that can be styled today — a composes
+  paragraph, a text box, a shape, an image, a diagram, a cell (D304, D311). `fits(kind, slot)`.
+  `SlotTable.with_row(thing, slots)` adds a later kind of thing without touching anything else (D315);
+  `SlotTable.to_data()` is the plain-data form a server will send.
+- `StyleDef.kind` (default `"paragraph"`), in `to_data`, in `StyleBook.views` and so in `StylesChanged`.
+
+### Changed
+- **Breaking:** `StyleBook.add` and `StyleBook.set_css` (so `CreateStyle` and `ChangeStyle`) refuse a property that
+  is not of the style's kind, and a style based on a style of another kind.
+- **Breaking:** `StyleDef.from_data` requires `kind`. There is no upcast of documents or logs from before kinds
+  existed (D308, until the first release).
+
+## [0.12.0] - 2026-11-09
+
+The style surface the menus in all three apps are built on (D203).
+
+### Added
+- `StyleBook.resolved(style_id, colours)`: one style's CSS with its parents taken in *and* its palette roles turned
+  into literal colours. What `views` already returned per style, now askable for one — anything that paints or
+  exports needs it, and reading `computed` instead silently dropped every colour that was a role, which is exactly
+  what the pptx exporter was doing.
+
+## [0.11.0] - 2026-11-08
+
+A diagram joins the shared object layer as its own kind, so a chart can be a floating object on a slide, sheet
+or paragraph the same way an image or a shape is (E6.6). What a diagram draws is deliberately opaque to the
+kernel — the same split the object layer already draws between a body and an anchor, applied to a kind's own
+content instead of its placement, since only computes (today) knows what a chart's range and titles mean.
+
+### Added
+- `claudia_core.objects`: `"diagram"` joins `OBJECT_KINDS`; `ObjectBody` gained a `diagram` field (the id of a
+  definition, alongside its existing `shape`/`image`).
+- `DiagramDefinition`: a `Protocol` for what a diagram draws, mirroring `Anchor` — an app reads its own back
+  through the new `ObjectModel.diagram_from_data(data)` hook, the one door this data enters through.
+- `ObjectModel.diagrams`, `define_diagram`, `forget_diagram`, `replace_diagram`, `users_of_diagram`, and
+  `diagrams_to_data()`/the `diagrams` parameter of `restore_objects()` — the same shape as the existing
+  shape/image methods, except a diagram can also be redefined in place (`replace_diagram`), since unlike a
+  shape or an image, a diagram is meant to be edited after the fact.
+- `DefineDiagram`, `UpdateDiagram` and `ForgetDiagram`: the commands behind the above, each with its exact
+  inverse (mirroring `DefineShape`/`ForgetShape`).
+- `DiagramsChanged`: the event a view hears when a diagram definition is added, edited or forgotten.
+
+### Changed
+- `AddObject.label`/`summary` and `shifted_by` now cover `"diagram"` alongside `"text"`/`"shape"`/`"image"`.
+
+## [0.10.0] - 2026-11-08
+
+The document's palette: colours named by what they mean (D200–D203). **Breaking:** `StyleBook.views` gained a
+parameter and every style now travels with a third form of its CSS; a model that holds a style book is expected to
+hold a palette beside it.
+
+### Added
+- `claudia_core.palette`: `ColourRole` (id, name, purpose, colour), `Palette` (an ordered, extensible mapping of
+  them), `Reading` (how one role reads against another), `PaletteChanged`, and the commands `SetRole` and
+  `ReplacePalette`, each with its exact inverse. Plus `builtin_palette()`, `BUILTIN_ROLES` (nine roles), `PAIRINGS`,
+  `TEXT_FLOOR`, `UI_FLOOR`, `MAX_ROLES`, `contrast()` and `luminance()` (WCAG 2.2).
+- `resolve_css(css, colours)`, `roles_used(css)` and `rgb_of(colour)` in `claudia_core.css`.
+- `core.SetObjectStyle`: puts an object under another style of its own. An object's style was settled by
+  `AddObject` and could never be changed again, which left a style menu with nothing to do.
+- `claudia_core.styles.palette_colours(model)`: the role colours of a model that has a palette, asked of the model
+  rather than imported, so that the two modules can still be used apart.
+
+### Changed
+- **Breaking:** `CSS_VERSION` is 2. A colour may now be a role of the palette — `@accent`, or `@accent/55` for that
+  role at 55% opacity — wherever a colour is accepted, including inside a `border-*` shorthand. `@` is no longer
+  refused outright in a value; every value check other than the colour one refuses it anyway, so a role can only
+  land where a colour belongs. Nothing else about the allow-list changed: `url()`, `var()`, `calc()` and
+  `!important` are still refused, which is what `resolve_css` exists to protect.
+- **Breaking:** `StyleBook.views(colours=None)` now returns a `resolved` form of each style beside `computed`.
+  `computed` still names the roles, which is what a style menu shows; `resolved` has the literal colours, which is
+  what a client draws with. Without `colours`, a declaration naming a role is left out of `resolved`.
+- Changing the palette emits `StylesChanged` as well as `PaletteChanged`: a client is deliberately unable to
+  resolve a role itself, so the styles have to travel again.
+
+## [0.9.0] - 2026-11-08
+
+One shared object layer for shapes, images and text boxes, and an object's words as a paragraph (D177–D182). This
+release was built but never written down; it is recorded here after the fact, with the versioning policy's own
+rule in mind — the API changed, so it gets a version and an entry.
+
+### Added
+- `claudia_core.objects`: `ObjectBody`, `VisualObject[A]`, the `Anchor` protocol, `ObjectModel[A]`, `ObjectSet`,
+  `ObjectsChanged`, `ImagesChanged`, `ShapesChanged`, `paragraph_for()`, and the whole `core.*` object command
+  family — `DefineShape`, `ForgetShape`, `DefineImage`, `ForgetImage`, `AddObject`, `RemoveObject`, `MoveObject`,
+  `ResizeObject`, `RotateObject`, `SetText`, `SetParagraph`, `SetParagraphStyle`, `SetSnap`.
+- `claudia_core.paragraphs`: `Paragraph`, `Run` and the run arithmetic that used to be `claudia_composes.runs`, so
+  that one paragraph entity serves a document, a text box and a shape's label alike.
+- `claudia_core.shapes`: `ShapeDefinition`, `parse_shape`, `ShapeError`, `FORMAT`, `BOX` — the shape format only;
+  reading a library off a disk stays in `claudia_creates`, because the kernel does no I/O.
+- PNG among `SUPPORTED_IMAGE_FORMATS`, APNG included, with a still first frame taken without re-encoding.
+
+### Changed
+- **Breaking:** an object is a shared body plus a per-app anchor. `ObjectBody.text` became
+  `ObjectBody.paragraph: Paragraph | None`, so an object carries two styles: its own (`fill`, `stroke`,
+  `stroke-width`) and its paragraph's.
+- **Breaking:** `ObjectSet` names a `container`, not a slide or a sheet.
 
 ## [0.8.0] - 2026-11-07
 

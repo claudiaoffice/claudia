@@ -1,15 +1,21 @@
-"""The web page of a Claudia shell: a WebKit web view that shows the local server's frontend and nothing else.
+"""The web page of a Claudia shell: a WebKit web view that shows the frontend of one Claudia server and nothing else.
 
-Four jobs, each one a rule of the shell:
+Six jobs, each one a rule of the shell:
 
 * the page speaks the shell contract itself (D121, ``web/app/lib/shell-bridge.ts``) through one named script message
   handler, registered in the view's main world — the page's own compiled JavaScript posts to it directly, so there is
   no separate adapter script or isolated world to inject any more (that was ``data/shim.js``, retired with D121: it
   scraped the DOM of a web app that did not yet know about the shell; the web app now does);
 * the view never leaves its origin: links to other sites open in the person's browser (web and mail only), everything
-  else is dropped (``urls``);
+  else is dropped (``urls``). The window moves it to another server only by an explicit :meth:`WebPage.navigate`
+  (the person asked to connect, ``connector``), never by a link or a redirect;
+* a server whose certificate no authority vouches for loads only when it is the very certificate that the person
+  trusted for that address (``trust.may_override``); any other certificate problem is a failed load;
 * files the page downloads go to the Downloads folder, under a name the page cannot use to escape it, and never
   overwrite another file;
+* a page is never taken from the HTTP cache of an earlier visit (D248): WebKit keeps that cache on disk between runs and
+  decides for itself how long a page without ``Cache-Control`` stays fresh, so after a server was updated a window could
+  keep showing the previous web app (old menus, no shell contract) — a shell shows what the server serves *now*;
 * the page is not asked for permissions (camera, location, notifications): all requests are denied, and the browser
   features that contact other hosts by themselves (DNS prefetching, WebRTC, media streams) are off.
 
@@ -24,9 +30,11 @@ import os
 import warnings
 from collections.abc import Callable
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from ._gi import Gio, GLib, Gtk
-from .urls import external_target, is_internal, safe_download_name, unique_path
+from .trust import may_override
+from .urls import external_target, is_internal, origin_of, safe_download_name, unique_path
 
 import gi  # isort: skip
 
@@ -53,6 +61,7 @@ class WebPage:
         on_problem: Callable[[str, str], None],
         on_download: Callable[[Path], None],
         open_external: Callable[[str], None] | None = None,
+        pinned: Callable[[str], str | None] = lambda _origin: None,
     ) -> None:
         self._origin = origin.rstrip("/")
         self._downloads_dir = downloads_dir
@@ -61,6 +70,9 @@ class WebPage:
         self._on_problem = on_problem
         self._on_download = on_download
         self._open_external = open_external or self._launch_default_application
+        self._pinned = pinned
+        self._loads = 0  # which load is the newest: a load waits for the cache to be emptied and may be overtaken
+        self._closed = False
 
         # D121: the web app speaks the shell contract itself now (`shell-bridge.ts`) — it calls
         # `window.webkit.messageHandlers.claudia.postMessage(...)` and reads `window.__claudiaShell` from its own,
@@ -92,6 +104,7 @@ class WebPage:
         self._view.connect("decide-policy", self._decide_policy)
         self._view.connect("permission-request", self._deny_permission)
         self._view.connect("load-changed", self._load_changed)
+        self._view.connect("load-failed-with-tls-errors", self._load_failed_with_tls_errors)
         self._view.connect("load-failed", self._load_failed)
         self._view.connect("web-process-terminated", self._process_terminated)
         # The network session is shared by all web views of the process: handle only this page's downloads, and let go
@@ -106,7 +119,30 @@ class WebPage:
         return self._view
 
     def load(self, url: str) -> None:
-        self._view.load_uri(url)
+        self._load_current(url)
+
+    def navigate(self, origin: str) -> None:
+        """Show the frontend of the server at ``origin`` instead of the current one. From this moment only that
+        origin is internal: messages of the page that was shown before are no longer accepted."""
+        self._origin = origin.rstrip("/")
+        self._load_current(self._origin + "/")
+
+    def _load_current(self, url: str) -> None:
+        """Load ``url`` after the cached copies of earlier pages are gone. If emptying the cache fails the page is
+        loaded anyway (an old page is worse than none only when we knew about it); a newer call overtakes this one."""
+        self._loads += 1
+        this_load = self._loads
+        types = WebKit.WebsiteDataTypes.DISK_CACHE | WebKit.WebsiteDataTypes.MEMORY_CACHE
+
+        def emptied(manager: WebKit.WebsiteDataManager, result: Gio.AsyncResult) -> None:
+            try:
+                manager.clear_finish(result)
+            except GLib.Error as problem:
+                log.warning("could not empty the page cache: %s", problem.message)
+            if not self._closed and this_load == self._loads:
+                self._view.load_uri(url)
+
+        self._session.get_website_data_manager().clear(types, 0, None, emptied)
 
     def send(self, raw: str) -> None:
         """Hand a shell-contract message to the page, which sets ``window.__claudiaShell`` itself (D121)."""
@@ -118,6 +154,7 @@ class WebPage:
 
     def close(self) -> None:
         """Let go of the shared network session. Call when the window that shows the page is destroyed."""
+        self._closed = True
         if self._download_handler:
             self._session.disconnect(self._download_handler)
             self._download_handler = 0
@@ -158,6 +195,22 @@ class WebPage:
     def _load_changed(self, _view: WebKit.WebView, event: WebKit.LoadEvent) -> None:
         if event == WebKit.LoadEvent.STARTED:
             self._on_reset()
+
+    def _load_failed_with_tls_errors(
+        self, view: WebKit.WebView, uri: str, certificate: Gio.TlsCertificate, errors: Gio.TlsCertificateFlags
+    ) -> bool:
+        """The system does not vouch for the certificate: go on only for the one that the person trusted (the
+        connection check of ``connection.check`` looked at the same server a moment ago). ``False`` hands the load
+        on to :meth:`_load_failed`, which reports it."""
+        origin = origin_of(uri)
+        if origin is None or not is_internal(uri, self._origin):
+            return False
+        der = bytes(certificate.get_property("certificate") or b"")
+        if not may_override(der, self._pinned(origin), int(errors)):
+            return False
+        self._session.allow_tls_certificate_for_host(certificate, urlsplit(uri).hostname or "")
+        view.load_uri(uri)
+        return True
 
     def _load_failed(self, _view: WebKit.WebView, _event: WebKit.LoadEvent, uri: str, error: GLib.Error) -> bool:
         self._on_problem("The page could not be loaded", f"{uri}\n{error.message}")

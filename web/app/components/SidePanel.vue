@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { clock, colorOf, inkOn } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 import type { BaseSession } from '~/lib/base-session'
+import type { AiMode } from '~/lib/ai-mode'
 
 const props = defineProps<{ session: BaseSession }>()
 const state = props.session.state
@@ -15,6 +16,36 @@ const history = ref<HTMLElement | null>(null)
 const chatLog = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
 const draft = ref('')
+
+/** The two ways the AI can treat a request (D262); text documents have no direct way yet, the AI suggests there. */
+const modes: { mode: AiMode; label: string }[] = [
+  { mode: 'act', label: t('Act at once') },
+  { mode: 'suggest', label: t('Suggest first') },
+]
+const suggestsOnly = computed(() => state.app === 'composes')
+/** A radio group moves with the arrow keys and is one tab stop (WAI-ARIA radio group): the checked one. */
+function onModeKey(event: KeyboardEvent) {
+  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key]
+  if (!step) return
+  event.preventDefault()
+  const at = modes.findIndex((m) => m.mode === state.aiMode)
+  const next = modes[(at + step + modes.length) % modes.length]!
+  props.session.setAiMode(next.mode)
+  void nextTick(() => (event.currentTarget as HTMLElement | null)?.querySelector<HTMLElement>(`[data-mode="${next.mode}"]`)?.focus())
+}
+
+// ------------------------------------------------------------------------------ the two tabs (E13.5; the chat/history
+// redesign discussed alongside the help system is deferred — this tab strip is the one piece of that discussion
+// that ships now, so the new "Help" tab has somewhere to live without touching History & Chat itself).
+const tab = ref<'history' | 'help'>('history')
+const helpPanel = ref<{ focus: (mode?: 'how-to' | 'docs') => void } | null>(null)
+
+/** Help ▸ "How do I…?" and Help ▸ "Documentation" (D125's stubs, now real): switch to the Help tab and its
+ * matching section. */
+function openHelp(mode?: 'how-to' | 'docs') {
+  tab.value = 'help'
+  nextTick(() => helpPanel.value?.focus(mode))
+}
 
 /** The history with the checkpoints in their places. */
 const rows = computed(() => {
@@ -92,21 +123,47 @@ async function send() {
 
 /** Tools ▸ Ask AI: put the cursor in the chat box, ready to write to the assistant. */
 function ask(prefill = '@ai ') {
+  tab.value = 'history'
   draft.value = prefill
   nextTick(() => {
     input.value?.focus()
     input.value?.setSelectionRange(draft.value.length, draft.value.length)
   })
 }
-defineExpose({ ask })
+defineExpose({ ask, openHelp })
 
 const isAi = (user: string) => user.toLowerCase() === 'ai'
 </script>
 
 <template>
-  <aside class="panel" aria-label="history and chat">
+  <aside class="panel" aria-label="document panel">
     <slot name="top" />
 
+    <!-- How the AI treats my requests here (D262): directly above the tabs, so it reads as a setting of the whole
+         panel rather than of one chat message (owner's request, 2026-11-12). -->
+    <div class="aiMode" data-testid="ai-mode">
+      <span id="ai-mode-label">{{ t('When I ask the AI, in this document:') }}</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="ai-mode-label" @keydown="onModeKey">
+        <button
+          v-for="m in modes"
+          :key="m.mode"
+          type="button"
+          role="radio"
+          :data-mode="m.mode"
+          :aria-checked="state.aiMode === m.mode"
+          :tabindex="state.aiMode === m.mode ? 0 : -1"
+          @click="session.setAiMode(m.mode)"
+        >{{ m.label }}</button>
+      </div>
+      <small v-if="suggestsOnly">{{ t('Text documents: the AI suggests either way.') }}</small>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">{{ t('History & Chat') }}</button>
+      <button type="button" role="tab" :aria-selected="tab === 'help'" :class="{ active: tab === 'help' }" @click="tab = 'help'">{{ t('Help') }}</button>
+    </div>
+
+    <div v-show="tab === 'history'" class="historyChat" aria-label="history and chat">
     <div v-if="myProposal" class="proposal" role="alert">
       <p class="ask">
         <b>{{ myProposal.by }}</b> suggests going to {{ myProposal.label }}.
@@ -140,7 +197,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
       </ol>
     </section>
 
-    <section class="lines" v-if="state.lines.length > 1 || hiddenLines.length">
+    <section v-if="state.lines.length > 1 || hiddenLines.length" class="lines">
       <h2>
         Lines <span class="count">{{ state.lines.length }}</span>
         <select v-if="isOwner" class="policy" :value="state.restorePolicy" title="What silence at a suggestion's deadline means" @change="setPolicy(($event.target as HTMLSelectElement).value as 'consensus' | 'veto')">
@@ -191,12 +248,15 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           placeholder="Message everyone, or @ai …"
           autocomplete="off"
           maxlength="2000"
-        />
+        >
         <button class="send" type="submit" aria-label="send" :disabled="!draft.trim()">
           <svg viewBox="0 0 20 20" width="16" height="16"><path d="M4 10h11m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
       </form>
     </section>
+    </div>
+
+    <HelpPanel v-show="tab === 'help'" ref="helpPanel" class="helpTab" :session="session" />
   </aside>
 </template>
 
@@ -207,6 +267,40 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
   min-height: 0;
   background: var(--ink);
   color: #e6e0f5;
+}
+.tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 8px 10px 0;
+}
+.tabs button {
+  flex: 1;
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  padding: 7px 4px;
+  background: transparent;
+  color: rgb(230 224 245 / 60%);
+  font: 500 11.5px var(--font-ui);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.tabs button:hover {
+  color: rgb(230 224 245 / 85%);
+}
+.tabs button.active {
+  background: rgb(255 255 255 / 7%);
+  color: #fff;
+}
+.historyChat {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.helpTab {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 section {
   display: flex;
@@ -504,6 +598,52 @@ time {
   40% {
     opacity: 1;
   }
+}
+/* The panel is dark in both themes (`.panel`: --ink), so these use the panel's own light inks, not the page's
+ * --text/--muted: with those the unchosen half was ink on ink, invisible in the light theme (owner's report). */
+.aiMode {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 14px 4px;
+  font-size: 11.5px;
+  color: rgb(230 224 245 / 62%);
+}
+.aiMode small {
+  font-size: 11px;
+  color: rgb(230 224 245 / 55%);
+}
+.segmented {
+  display: flex;
+  border: 1px solid rgb(231 225 244 / 28%);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.segmented button {
+  flex: 1;
+  padding: 6px 4px;
+  border: none;
+  border-left: 1px solid rgb(231 225 244 / 28%);
+  background: transparent;
+  color: rgb(230 224 245 / 85%);
+  font: 500 12px var(--font-ui);
+  cursor: pointer;
+}
+.segmented button:first-child {
+  border-left: none;
+}
+.segmented button:hover {
+  background: rgb(255 255 255 / 7%);
+  color: #fff;
+}
+.segmented button[aria-checked='true'] {
+  background: var(--iris);
+  color: #fff;
+}
+.segmented button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
 }
 .write {
   display: flex;

@@ -14,6 +14,9 @@ page, `tokens.css`).
 * The grid, a formula bar, undo/redo (per author, refused when a colleague wrote the same cell after you).
 * A panel docked on the right with the **history** (every command: who, what, when) and the **chat**; `@name`
   mentions people, `@ai` asks the assistant.
+  Above the chat box a switch, **Act at once | Suggest first**, says how the AI treats *your* requests in *this*
+  document (D262). It is kept in the browser (`lib/ai-mode.ts`, one key per server and document), is *suggest* until
+  you choose, and goes with every chat message as `ai_mode`; a colleague can choose differently.
 * Presence: other people's cursors and locks are outlined with their colour and name.
 * File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`) and make a new recovery key (`new_recovery_key`). A new document shows its recovery key once, before it opens (`created` in the answer to `hello`); "I forgot my password" on the start page comes in with it (`hello` with `recovery_key`).
 * A banner while the connection is lost; the app reconnects by itself and reloads what it shows.
@@ -27,8 +30,8 @@ sliders, encryption of the file store, column resizing.
 
 ## Writing in composes
 
-`./start.sh composes` serves texts (documents in `./demo-docs-composes`, because a directory holds one app's
-documents). The text view lives in `TextWorkspace.vue` and `TextEditor.vue`; its state is `lib/text-session.ts`
+`./start.sh composes` serves texts (documents in `./.claudia/composes/documents`, because a directory holds one
+app's documents). The text view lives in `TextWorkspace.vue` and `TextEditor.vue`; its state is `lib/text-session.ts`
 (`TextSession`, next to the workbook's `Session`, both built on `lib/base-session.ts`) and `lib/blocks.ts` (pure:
 the paragraphs, the events that change them, where a caret or zone goes when somebody else writes).
 
@@ -55,10 +58,11 @@ the paragraphs, the events that change them, where a caret or zone goes when som
   while they write there. Your own zone is held the same way.
 * **Who wrote what** (View ▸ Show who wrote what): runs coloured by author; text that came from a suggestion is
   dotted and says whose it was.
-* **The assistant only suggests** (D63). `@ai review this text` (or `check this paragraph`) makes suggestions; they are
-  listed above the history, marked in the text, and accepted or rejected by a person. Accepting is an ordinary edit by
-  the accepter. A suggestion whose text changed cannot be accepted any more.
-* Flow and Page views, Save as Markdown (current text only), Insert sample text (Tools) to try the assistant.
+* **The assistant suggests** in texts (D262: both modes suggest here for now). `@ai review this text` (or `check this
+  paragraph`) makes suggestions; they are marked in the text, and clicking a mark opens it: what would change and why,
+  with Accept and Reject (or Dismiss for a remark). The count in the bottom bar opens the first one. Accepting is an
+  ordinary edit by the accepter. A suggestion whose text changed cannot be accepted any more.
+* Flow and Page views, Save as Markdown (current text only).
 
 Known gaps: bold/italic and lists, windowing of very long texts (the whole text is loaded), an exact page layout
 (Page is a sheet with margins), input methods are minimal (the composed text is sent when composition ends), and each
@@ -67,16 +71,20 @@ word is one undo step (the kernel has no grouping yet).
 ## Build and run
 
 The quick way (Linux, macOS: `./start.sh`, Windows: `start.cmd`) builds the web app when it is missing, starts the
-server and opens the browser. Documents are kept in `./demo-docs`, each one sealed (encrypted); a folder from an earlier version needs `--plain-dir`.
+server and opens the browser. Each app's documents are kept in `./.claudia/<app>/documents`, each one sealed
+(encrypted), and its server's certificate and settings in `./.claudia/<app>/state`; `--dir DIR` uses `DIR/<app>/`
+instead, for one app as for all three. Folders of earlier versions of the script (`docs-<app>`, `demo-docs*`) are
+named at start, never moved; a folder of plain files from the early demos needs `--plain-dir`.
 
 One server serves one app. Name the app to choose it (`computes` is the default), or start all three at once:
 
 ```bash
 ./start.sh                       # computes (tables) at http://127.0.0.1:8765/; or: uv run python scripts/start.py
-./start.sh composes              # texts, port 8765 (documents in ./demo-docs-composes)
-./start.sh creates               # presentations, port 8765 (documents in ./demo-docs-creates)
-./start.sh all                   # computes 8765, composes 8766, creates 8767; --dir DIR keeps DIR/<app>
-./start.sh --dir ~/claudia-docs --port 9000 --no-browser
+./start.sh composes              # texts, port 8765 (documents in .claudia/composes/documents)
+./start.sh creates               # presentations, port 8765 (documents in .claudia/creates/documents)
+./start.sh all                   # computes 8765, composes 8766, creates 8767
+./start.sh all --ai              # computes' AI user answers with the model in ai-models/ (OpenVINO)
+./start.sh --dir ~/claudia-data --port 9000 --no-browser
 ./start.sh --rebuild             # build the web app again first
 ./start.sh --tls                 # encrypted; the browser warns once about the server's own certificate
 ```
@@ -84,8 +92,9 @@ One server serves one app. Name the app to choose it (`computes` is the default)
 By hand (needs Node.js 22 or newer for the build):
 
 ```bash
-cd web && npm ci && npx nuxt generate          # writes web/.output/public
-cd .. && uv run python -m claudia_server --no-tls --dir ./demo-docs --web web/.output/public
+cd web && npm ci && npm run build             # writes web/.output/public (npm ci also installs ../layout's dependencies)
+cd .. && uv run python -m claudia_server --no-tls --dir .claudia/computes/documents \
+    --state-dir .claudia/computes/state --web web/.output/public
 ```
 
 Open <http://localhost:8765>, create a document (the creator is its owner), then share it and join from a second
@@ -95,17 +104,47 @@ browser to see presence, locks and the assistant working.
 
 ```bash
 cd web && npm test           # vitest: protocol client, workbook and text sessions, text replica, selection, people
-npm run typecheck            # vue-tsc
-npm run e2e                  # two real browsers against a running server (needs Playwright)
-npm run e2e:composes         # the same for a text: URL=http://127.0.0.1:8766/ against a server started with
-                             #   --model claudia_composes:TextModel --no-tls --web web/.output/public
-npm run e2e:pointing         # picking cells with the mouse while typing a formula (one browser, a running server)
-npm run e2e:resilience       # starts its own server, restarts it, checks that both browsers come back
+npm run coverage             # the same, with app/lib's coverage against its thresholds
+npm run typecheck            # nuxt typecheck (vue-tsc over the generated projects)
+npm run lint                 # ESLint
 ```
+
+The browser scripts in `web/e2e/` drive real Chromium windows through Playwright (a dev dependency; fetch the
+browser once with `npx playwright install chromium`). Build the app (`npm run build`), start the three servers with
+`./start.sh all --no-browser` (computes 8765, composes 8766, creates 8767), then:
+
+```bash
+URL=http://127.0.0.1:8765/ npm run e2e            # two people and the assistant in one table
+URL=http://127.0.0.1:8765/ npm run e2e:pointing   # picking cells with the mouse while typing a formula
+URL=http://127.0.0.1:8766/ npm run e2e:composes   # two people and the assistant in one text
+URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour roles and the CSS view
+URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
+npm run e2e:resilience       # starts its own server on 8766, restarts it, checks that both browsers come back
+npm run e2e:recovery         # starts its own server on 8767: the recovery key, shown once, and a new one
+npm run e2e:macos-shell      # the macOS client's window: its shell page and core in Chromium, the web app in the frame
+npm run e2e:windows-shell    # the same for the Windows client
+```
+
+The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. `e2e:macos-shell` needs the macOS client built
+(`cd clients/macos && npm ci && npm run build`) as well as the web app (`e2e:windows-shell` the same in `clients/windows`), starts a server of its own for each app and one on 8791
+for `--server`, and fakes only Neutralino's client library; `CHROMIUM=/path/to/chrome` picks a browser binary other than Playwright's. CI runs all of them in its `e2e` job,
+together with `tests/e2e` (the Python test that checks each server greets with its own app).
+
+`npm run lint` runs ESLint (`eslint.config.mjs`: Nuxt's recommended rules without the stylistic ones; every rule
+switched off or narrowed there says why), and `npm run coverage` runs the unit tests with `app/lib`'s coverage held to
+the thresholds in `vitest.config.ts`.
 
 `uv run python scripts/check_debt.py` runs the web checks too (skipped when npm or `web/node_modules` is missing, and
 named in the summary line either way: a skip is never reported as clean). `--ci` turns an unlisted skip into a
 failure; CI's Python job allows this one because the separate `web` job covers it with Node installed.
+
+The gate also audits the lockfiles of `web/` and of every client with `npm audit` (`scripts/check_npm_audit.py`, SEC-08).
+It needs no `node_modules`, only npm and the registry; an advisory of moderate severity or worse fails it (`--level high`
+for a narrower look), development tools included. Fix one by updating the direct dependency that brings the package in,
+or with an `overrides` entry in `package.json` where the dependent has no newer release. What cannot be fixed is
+recorded in `pyproject.toml` under `[[tool.claudia.npm-audit-allow]]`, one entry per advisory with its reason; an entry
+that nothing needs any more fails the audit. Where npm or the registry cannot be reached the check is skipped and says
+so, and `--ci` fails on that skip.
 
 
 ## Presentations (creates)
@@ -130,3 +169,15 @@ slide view for `creates`, the table for `computes`. Start a presentation server 
 Not in this first draft: text formatting beyond the two built-in styles, images, groups, copy and paste of objects,
 reordering objects, slide order and slide thumbnails, and the assistant (the AI user does not answer in presentations
 yet; the panel with history and chat is there).
+
+## Printing (composes and creates)
+
+**File ▸ Print…** (Ctrl+P) shows the pages in place of the document, laid out in the browser by `@claudia/layout`
+(D901); Print… hands the very PDF the pages are drawn from to the browser's print dialog, Download PDF saves it, Esc
+goes back. It is one component in both apps (`components/PrintPreview.vue`, D918): what it prints comes from a print
+source (`lib/print/source.ts`, `textSource` and `slideSource`), and `lib/print/use-print.ts` gives each window its
+Ctrl+P, its printing mode and the language a new document starts in. The bar is the same in both — paper,
+orientation, margins, language, page numbers — and a presentation adds **Layout**: slides one to a page (on a
+slide-sized page by default) or handouts of 2, 3 (with lines for notes), 4, 6 or 9 to a page (D917). How a document
+prints is part of it, one step in its history for everybody; a viewer sees the pages but cannot change them.
+`e2e/print.cjs` and `e2e/print-creates.cjs` (`npm run e2e:print`, `npm run e2e:print-creates`) drive both.

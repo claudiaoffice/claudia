@@ -1,4 +1,4 @@
-# Puts the image that CI built on main into the demo on Scaleway Serverless Containers (demo.claudiaoffice.de).
+# Puts the image that CI built on main into the demo on Scaleway Serverless Containers (demo.claudia-office.de).
 #
 # Starts by itself when "Docker image" has succeeded on main. By hand (Actions > Deploy demo > Run workflow) it can
 # deploy any tag the image has, which is also the way back to an earlier version: give e.g. sha-1a2b3c4.
@@ -95,15 +95,24 @@ jobs:
           TARGET: ${{ steps.image.outputs.target }}
         run: |
           api="https://api.scaleway.com/containers/v1beta1/regions/${REGION}/containers"
-          scw() { curl -fsS -H "X-Auth-Token: $SCW_SECRET_KEY" -H "Content-Type: application/json" "$@"; }
+          scw() {
+            local out code
+            out="$(mktemp)"
+            code="$(curl -sS -o "$out" -w '%{http_code}' \
+                -H "X-Auth-Token: $SCW_SECRET_KEY" -H "Content-Type: application/json" "$@")"
+            if [ "$code" -ge 400 ]; then
+              echo "::error::HTTP $code from: $*"; cat "$out" >&2; rm -f "$out"; return 1
+            fi
+              cat "$out"; rm -f "$out"
+          }
 
           for id in $CONTAINER_IDS; do
             [[ "$id" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::'$id' is not a container id"; exit 1; }
             echo "::group::container $id"
-            # Point the container at the new image, then roll it out.
-            scw -X PATCH -d "{\"registry_image\": \"$TARGET\"}" "$api/$id" > /dev/null
-            scw -X POST -d '{}' "$api/$id/deploy" > /dev/null
-
+            echo "status before: $(scw "$api/$id" | jq -r .status)"
+            body="$(scw -X PATCH -d "{\"registry_image\": \"$TARGET\"}" "$api/$id")"
+            echo "status after update: $(jq -r .status <<<"$body")"
+            
             status=
             for _ in $(seq 1 60); do
               body="$(scw "$api/$id")"

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ Export… (D141, E2.9). Claudia's own file format only: a JSON snapshot of the document's current
-// content, sealed with nothing (it is already decrypted content you are allowed to see) and saved straight to this
-// computer. Word, Excel and PowerPoint import and export is separate, not-yet-built work (the owner asked for this
-// clarification); neither is the command history or the chat — both stay in the document, only not in this file.
+// File ▸ Download (D141, E2.9; moved here from File ▸ Manage ▸ Export… by D212, which put the new format picker
+// in its place). Claudia's own file format only: a JSON snapshot of the document's current content, sealed with
+// nothing (it is already decrypted content you are allowed to see) and saved straight to this computer. Word,
+// Excel and PowerPoint export is `ExportFormatDialog.vue`, under File ▸ Export…; neither dialog includes the
+// command history or the chat — both stay in the document, only not in either file.
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { downloadJSON } from '~/lib/download'
@@ -28,7 +29,7 @@ async function exportNow() {
   <Modal title="Export this document" @close="emit('close')">
     <p class="lead">
       This saves <b>{{ session.state.doc }}</b>'s current content to this computer as Claudia's own file format (a JSON snapshot) — not a Word, Excel or
-      PowerPoint file; importing and exporting those is separate work, not built yet. It does not include the document's history or chat.
+      PowerPoint file; for one of those, use File ▸ Export… instead. It does not include the document's history or chat.
     </p>
     <p v-if="done" class="lead">Exported.</p>
     <div class="buttons">

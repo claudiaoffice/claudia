@@ -25,16 +25,33 @@ PACKAGES = (
     "claudia_creates",
     "claudia_fonts",
     "claudia_typeset",
+    # under the policy since 2026-11-10: the apps' models and their file formats, the AI and the test library
+    "claudia_computes",
+    "claudia_composes",
+    "claudia_ai",
+    "claudia_opc_io",
+    "claudia_odf_io",
+    "claudia_composes_io",
+    "claudia_computes_io",
+    "claudia_creates_io",
+    "claudia_test_documents",
 )
+
+
+def portable(text: str) -> str:
+    """``text`` without the memory addresses a repr carries ("<function name at ADDRESS>" -> "<function name>").
+
+    The address differs on every run, and its format is not portable either: glibc/macOS's `%p` gives lowercase hex
+    with a "0x" prefix, MSVC's gives uppercase hex with none (e.g. "0x7f3a2bc12340" vs "000001ED86581A60") -- both
+    must be stripped the same way everywhere, or the snapshot made on one platform never matches a check made on
+    the other."""
+    return re.sub(r" at (?:0x)?[0-9A-Fa-f]+", "", text)
 
 
 def signature(obj) -> str:
     try:
-        # A default that is a function reprs as "<function name at ADDRESS>". The address format itself is not
-        # portable: glibc/macOS's `%p` gives lowercase hex with a "0x" prefix, MSVC's gives uppercase hex with
-        # none (e.g. "0x7f3a2bc12340" vs "000001ED86581A60") -- both must be stripped the same way everywhere, or
-        # the snapshot made on one platform never matches a check made on the other.
-        return re.sub(r" at (?:0x)?[0-9A-Fa-f]+", "", str(inspect.signature(obj)))
+        # A default that is a function reprs with its address (`portable`).
+        return portable(str(inspect.signature(obj)))
     except (TypeError, ValueError):
         return "(...)"
 
@@ -64,7 +81,9 @@ def surface(module) -> dict:
             out[name] = {"function": signature(obj)}
         else:
             out[name] = {
-                "value": repr(obj) if isinstance(obj, int | float | str | tuple | dict) else f"<{type(obj).__name__}>"
+                "value": portable(repr(obj))
+                if isinstance(obj, int | float | str | tuple | dict)
+                else f"<{type(obj).__name__}>"
             }
     return out
 

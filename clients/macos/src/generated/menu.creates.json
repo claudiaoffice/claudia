@@ -1,0 +1,402 @@
+{
+  "app": "creates",
+  "header_toggles": [],
+  "menus": [
+    {
+      "label": "File",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "<Primary>n"
+            ],
+            "checkable": false,
+            "id": "file.new",
+            "kind": "page",
+            "label": "New",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary>o"
+            ],
+            "checkable": false,
+            "id": "file.open",
+            "kind": "page",
+            "label": "Open\u2026",
+            "role": null
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "file.save",
+            "kind": "page",
+            "label": "Save",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "file.save-as",
+            "kind": "page",
+            "label": "Save New Checkpoint\u2026",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "file.download",
+            "kind": "page",
+            "label": "Download",
+            "role": null
+          }
+        ],
+        [
+          {
+            "items": [
+              {
+                "accelerators": [],
+                "checkable": false,
+                "id": "file.manage.share",
+                "kind": "page",
+                "label": "Share\u2026",
+                "role": null
+              },
+              {
+                "accelerators": [],
+                "checkable": false,
+                "id": "file.manage.assign-owner",
+                "kind": "page",
+                "label": "Assign New Owner\u2026",
+                "role": null
+              },
+              {
+                "accelerators": [],
+                "checkable": false,
+                "id": "file.manage.accept-owner",
+                "kind": "page",
+                "label": "Accept Ownership\u2026",
+                "role": null
+              },
+              {
+                "accelerators": [],
+                "checkable": false,
+                "id": "file.manage.leave",
+                "kind": "page",
+                "label": "Leave Document\u2026",
+                "role": null
+              },
+              {
+                "accelerators": [],
+                "checkable": false,
+                "id": "file.manage.export",
+                "kind": "page",
+                "label": "Export\u2026",
+                "role": null
+              },
+              {
+                "accelerators": [],
+                "checkable": false,
+                "id": "file.manage.delete",
+                "kind": "page",
+                "label": "Delete From Server\u2026",
+                "role": null
+              }
+            ],
+            "label": "Manage"
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "file.close",
+            "kind": "page",
+            "label": "Close Document",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary>q"
+            ],
+            "checkable": false,
+            "id": "file.quit",
+            "kind": "shell",
+            "label": "Quit",
+            "role": null
+          }
+        ]
+      ]
+    },
+    {
+      "label": "Edit",
+      "sections": [
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.undo",
+            "kind": "page",
+            "label": "Undo",
+            "role": "undo:"
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.redo",
+            "kind": "page",
+            "label": "Redo",
+            "role": "redo:"
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.copy",
+            "kind": "page",
+            "label": "Copy",
+            "role": "copy:"
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.cut",
+            "kind": "page",
+            "label": "Cut",
+            "role": "cut:"
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.paste",
+            "kind": "page",
+            "label": "Paste",
+            "role": "paste:"
+          },
+          {
+            "items": [
+              {
+                "accelerators": [],
+                "checkable": false,
+                "id": "edit.paste-as-plain",
+                "kind": "page",
+                "label": "Plain Text",
+                "role": null
+              }
+            ],
+            "label": "Paste As"
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.new-slide",
+            "kind": "page",
+            "label": "New Slide",
+            "role": null
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.edit-text",
+            "kind": "page",
+            "label": "Edit Text",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.text-box",
+            "kind": "page",
+            "label": "Text Box",
+            "role": null
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "edit.delete",
+            "kind": "page",
+            "label": "Delete",
+            "role": null
+          }
+        ]
+      ]
+    },
+    {
+      "label": "Format",
+      "sections": [
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "format.apply-style",
+            "kind": "page",
+            "label": "Apply Style\u2026",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Shift>F10"
+            ],
+            "checkable": false,
+            "id": "format.look",
+            "kind": "page",
+            "label": "Edit This Style\u2026",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "format.all-styles",
+            "kind": "page",
+            "label": "All Styles\u2026",
+            "role": null
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "format.colours",
+            "kind": "page",
+            "label": "Colours\u2026",
+            "role": null
+          }
+        ]
+      ]
+    },
+    {
+      "label": "View",
+      "sections": [
+        [
+          {
+            "accelerators": [],
+            "checkable": true,
+            "id": "view.authors",
+            "kind": "page",
+            "label": "Show Who Wrote What",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": true,
+            "id": "view.panel",
+            "kind": "page",
+            "label": "History and Chat",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": true,
+            "id": "view.dark",
+            "kind": "page",
+            "label": "Dark Mode",
+            "role": null
+          }
+        ]
+      ]
+    },
+    {
+      "label": "Tools",
+      "sections": [
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "tools.ask",
+            "kind": "page",
+            "label": "Ask the Assistant\u2026",
+            "role": null
+          }
+        ]
+      ]
+    },
+    {
+      "label": "Config",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "F1"
+            ],
+            "checkable": false,
+            "id": "config.shortcuts",
+            "kind": "page",
+            "label": "Shortcuts",
+            "role": null
+          }
+        ],
+        [
+          {
+            "items": [
+              {
+                "accelerators": [],
+                "checkable": true,
+                "id": "config.language.en",
+                "kind": "page",
+                "label": "English",
+                "role": null
+              },
+              {
+                "accelerators": [],
+                "checkable": true,
+                "id": "config.language.de",
+                "kind": "page",
+                "label": "Deutsch",
+                "role": null
+              }
+            ],
+            "label": "App Language"
+          }
+        ]
+      ]
+    },
+    {
+      "label": "Help",
+      "sections": [
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "help.ask",
+            "kind": "page",
+            "label": "Ask ai",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "help.how-to",
+            "kind": "page",
+            "label": "How Do I\u2026?",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "help.docs",
+            "kind": "page",
+            "label": "Documentation",
+            "role": null
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "id": "help.about",
+            "kind": "shell",
+            "label": "About Claudia Creates",
+            "role": null
+          }
+        ]
+      ]
+    }
+  ]
+}

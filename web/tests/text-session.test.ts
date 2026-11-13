@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { IDLE_FLUSH_MS, PLACE_MS, TextSession } from '~/lib/text-session'
 
@@ -56,6 +57,13 @@ function server(link: FakeLink, text = 'hello world') {
   link.handlers = {
     blocks: () => ({ revision: 'main:2', styles: STYLES, blocks: [{ id: 'b1', style: 'body', text: doc.text, runs: doc.text ? [[[...doc.text].length, 'ann', null]] : [] }] }),
     suggestions: () => [],
+    // The palette reaches composes' paragraph styles from day one (D200): a style names `@text`, not a hex.
+    style_model: () => STYLE_MODEL,
+    palette: () => ({
+      type: 'palette',
+      roles: [{ id: 'text', name: 'Text', purpose: 'the words you read', colour: '#1F1A33' }],
+      readings: [],
+    }),
     log: () => [],
     chat_log: () => [],
     checkpoints: () => [],
@@ -436,5 +444,25 @@ describe('styles', () => {
     session.state.me.role = 'viewer'
     expect(await session.changeStyle('body', { set: { color: 'red' } })).toBe(false)
     expect(link.sent('change_style')).toEqual([])
+  })
+})
+
+describe('the language of the text (D915)', () => {
+  it('is loaded, followed and set in one step; a server without languages leaves it unknown', async () => {
+    const { link, session } = await opened()
+    expect(session.state.language).toBeUndefined() // this fake server has no `language` method
+    link.handlers.language = () => ({ language: 'de' })
+    link.handlers.set_language = () => ({ revision: 'main:9' })
+    const again = new TextSession(() => link, { retryDelays: [0] })
+    await again.open()
+    expect(again.state.language).toBe('de')
+    link.push('language', { type: 'language', language: 'en-GB' })
+    expect(again.state.language).toBe('en-GB')
+    link.push('language', { type: 'language', language: null })
+    expect(again.state.language).toBeNull()
+    expect(await again.setLanguage('de-AT')).toBe(true)
+    expect(link.sent('set_language').at(-1)).toMatchObject({ language: 'de-AT' })
+    session.close()
+    again.close()
   })
 })

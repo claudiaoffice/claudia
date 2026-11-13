@@ -5,7 +5,7 @@
 // so composes and computes can reuse it for their own objects the same way `SlideCanvas.vue` does for creates'.
 import type { MenuItem } from './MenuBar.vue'
 
-const props = defineProps<{ x: number; y: number; items: MenuItem[]; label?: string }>()
+defineProps<{ x: number; y: number; items: MenuItem[]; label?: string }>()
 const emit = defineEmits<{ close: [] }>()
 
 function choose(item: MenuItem) {

@@ -1,5 +1,15 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
+ "Axis": {
+  "class": [
+   "object"
+  ],
+  "init": "(tag: 'str', minimum: 'float', default: 'float', maximum: 'float') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "COLLECTION_FILE": {
   "value": "'collection.json'"
  },
@@ -42,11 +52,19 @@
  "DEFAULT_SUBSTITUTIONS": {
   "value": "<mappingproxy>"
  },
+ "FetchError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
  "FontFile": {
   "class": [
    "object"
   ],
-  "init": "(path: 'Path', family: 'str', style: 'str', weight: 'int', italic: 'bool', sha256: 'str', collection: 'str', licence: 'str', redistributable: 'bool', math: 'bool') -> None",
+  "init": "(path: 'Path', family: 'str', style: 'str', weight: 'int', italic: 'bool', sha256: 'str', collection: 'str', licence: 'str', redistributable: 'bool', math: 'bool', axes: 'tuple[Axis, ...]' = (), outlines: 'str' = 'truetype') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -65,6 +83,22 @@
    "object"
   ],
   "init": "(config: 'Path', environment: 'dict[str, str]') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "LockedCollection": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', folder: 'str', licence: 'str', redistributable: 'bool', source: 'str', version: 'str', files: 'tuple[LockedFile, ...]') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "LockedFile": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', url: 'str', sha256: 'str', size: 'int') -> None",
   "methods": {},
   "properties": []
  },
@@ -110,11 +144,20 @@
   },
   "properties": []
  },
+ "collection_folders": {
+  "function": "(path: 'str | Path') -> 'list[Path]'"
+ },
+ "fetch": {
+  "function": "(target: 'str | Path', collections: 'Iterable[LockedCollection] | None' = None, *, download: 'Callable[[str], bytes] | None' = None, report: 'Callable[[str], None]' = <function <lambda>>) -> 'list[Path]'"
+ },
  "font_face_css": {
   "function": "(catalogue: 'Catalogue', family: 'str', url_for: 'Callable[[FontFile], str]') -> 'str'"
  },
  "read_font": {
   "function": "(path: 'str | Path', collection: 'Collection') -> 'FontFile'"
+ },
+ "read_lock": {
+  "function": "(text: 'str | None' = None) -> 'tuple[LockedCollection, ...]'"
  },
  "write_fontconfig": {
   "function": "(catalogue: 'Catalogue', directory: 'str | Path', cache_directory: 'str | Path') -> 'JobFonts'"

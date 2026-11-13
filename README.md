@@ -34,10 +34,19 @@ starts one server per app and prints how to find each in the browser:
 | composes (text) | http://127.0.0.1:8766/ | `./start.sh composes` |
 | creates (presentations) | http://127.0.0.1:8767/ | `./start.sh creates` |
 
-Alone, every app uses port 8765 (`--port` changes it). Documents are kept sealed in `demo-docs*`; `./start.sh --help`
-lists all options. The first start builds the web app (needs Node.js 22 or newer).
+Alone, every app uses port 8765 (`--port` changes it). Each app keeps its sealed documents in
+`.claudia/<app>/documents` and its server's certificate and settings in `.claudia/<app>/state` (`--dir DIR` puts both
+under `DIR/<app>/` instead); `./start.sh --help` lists all options. The first start builds the web app (needs Node.js
+22 or newer).
 
-Requires Python 3.14 (`uv` fetches it). Design notes: `docs/core-kernel.md`.
+**With the AI model.** `./start.sh all --ai` lets the AI user of computes and creates answer with the language model
+in `ai-models/` (one folder, converted for OpenVINO; `--ai MODEL_DIR` names another, `--ai-device CPU` runs it without
+a GPU). The first time, OpenVINO GenAI is added to the environment. Each of the two servers loads its own copy of the
+model, so this needs its memory twice (`./start.sh creates --ai` alone needs it once). composes keeps the scripted
+stand-in until it has a lens for the model (E7.5). Without a model, `@ai` in creates says that there is none.
+
+Requires Python 3.14 exactly: `.python-version` makes `uv` use it even where a newer Python is installed (OpenVINO
+GenAI publishes no wheels for 3.15 yet). Design notes: `docs/core-kernel.md`.
 
 ## Run with Docker
 
@@ -68,7 +77,7 @@ The server makes its own certificate on first start, so the browser warns once.
   --behind-proxy` (a TLS proxy in front), `--tls-cert` and `--tls-key` (your own certificate, mounted into the
   container), `--no-create`, `--no-list`, `--max-documents N`, `--shapes DIR` (creates).
 * **Health.** The image checks `/api/health` itself; `docker ps` shows `healthy` once the server is up.
-* **AI model.** The image has no language model runtime by default. For `--ai` (only computes uses it so far) build
+* **AI model.** The image has no language model runtime by default. For `--ai` (computes and creates use it) build
   with `--build-arg WITH_OPENVINO=true`, which makes the image about 270 MB larger, and mount a model folder. A
   container has no GPU unless you pass one in, so name the device:
 
@@ -141,7 +150,7 @@ GitHub Actions does the work (`.github/workflows/`):
 | `ci.yml` | every push to `main`, every pull request, weekly | tests of the Python packages, the web app and the Linux client |
 | `docker.yml` | `main`, tags `v*`, pull requests (build only) | builds the server image, starts each app once as a test, pushes `ghcr.io/claudiaoffice/claudia-server` (`:latest`, `:sha-<commit>`, `:1.2.3` for tags) |
 | `deploy-demo.yml` | after `docker.yml` succeeded on `main`; by hand | copies the image to the Scaleway registry and redeploys the demo containers; by hand it deploys any image tag, which is also the way back to an earlier version |
-| `deb.yml` | `main`, tags `v*`, pull requests | builds `claudia-composes_<version>_amd64.deb` (desktop window, server, Python 3.14 and web app in one package), installs it on a clean runner and starts it; on a tag the file is attached to the GitHub release |
+| `deb.yml` | `main`, tags `v*`, pull requests | builds `claudia-office_<version>_amd64.deb` (the three desktop apps, server, Python 3.14 and web app in one package), installs it on a clean runner and starts every app; on a tag the file is attached to the GitHub release |
 
 To release: set the version in `clients/linux/src/claudia_shell_gtk/_version.py`, then tag `vX.Y.Z` and push the tag.
 The set-up of the demo deployment (secrets and variables) is described at the top of `deploy-demo.yml`. Build the

@@ -73,6 +73,12 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   that waits for its name), `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
   and `accept_suggestion` / `reject_suggestion`. The assistant has no direct write path into a text: it suggests,
   people accept (D63).
+* **Help (E13).** `help_search` (an optional `query`, blank for everything) and `help_topic` (an id from a search result)
+  read the help topics, which every app inherits for free the moment it has its own `help/` folder; nothing here needs a
+  role, so the `ai` user can read it too. `help_search` only returns topics meant for the document's own app — a topic
+  says which apps it is for in its own front matter, and a topic naming none is shown everywhere. `help_topic` is not
+  re-scoped: an id already names one exact topic. Workbooks add `functions` (the same kind of search, over every cell
+  function, library and core alike) and `function_help` (one function's signature, tooltip and full help text, by name).
 * The AI is a participant called `ai`, one per document: it shows up in `users` and `people` (in the colour Iris), hears
   messages that start with `@ai`, and answers the asker only. It edits through the same methods as everybody, so locks
   and roles apply and its work is in the history under its name. The model behind it is a plug-in (`Engine`, or
@@ -87,9 +93,12 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   message that says what to do. Nothing leaves the machine. The questions of all documents wait in one queue and are
   answered one at a time, in order (`ModelRunner`); a document refuses more than four waiting questions. While the model
   works the event loop serves everybody else and the others see "ai is typing". A failure is answered in the chat
-  ("I could not answer: ..."), never silently. The model may ask for `set_cells`, `add_sheet` and `structure`
-  (it is told how in its prompt, built from the method table) and nothing else; each request that fails is reported
-  to the asker with the reason. It remembers the last six exchanges with each person while the document is loaded.
+  ("I could not answer: ..."), never silently. In a workbook the model may ask for `set_cells`, `add_sheet`,
+  `structure` and `resize_lines`; in a presentation (E7.9, D265) for `add_slide`, `add_object` (text boxes and
+  shapes), `set_text`, `set_paragraph_style`, `move_object`, `resize_object` and `remove_object`, and it reads
+  `slides`, `slide`, `shapes` and `styles` (`claudia_server.slide_lens`); it is told how in its prompt, built from
+  the method table, and may ask for nothing else (`apps.MODEL_METHODS`). Each request that fails is reported to the
+  asker with the reason. A presentation server without a model answers `@ai` that it has none. It remembers the last six exchanges with each person while the document is loaded.
   What is provisional: the prompt names the sheets but does not show cell contents yet (E7.5), and the answer is
   read as text with an optional fenced `commands` block (`claudia_ai.Agent`).
 * Restoring a checkpoint and switching lines are **not on the wire yet**: the rules for who may do that in a live
@@ -100,6 +109,13 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
 * TLS by default. The server's own certificate is self-signed; its fingerprint is printed at start-up. The desktop
   client trusts it like an SSH host (`claudia_client.TlsPolicy`): shown once, remembered, a changed certificate refused
   loudly. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
+* Every HTTP answer says what a browser may do with the page (`claudia_server.security_headers`, SEC-13): a
+  `Content-Security-Policy` with scripts from this server only (the start page's two inline scripts by their hash,
+  read from the build at start), connections only to this server and its WebSocket, no plugins, and framing only by
+  the server itself or a page on this computer (`http://127.0.0.1:*`, `http://localhost:*`: the Windows and macOS
+  clients frame the web app in their local shell page, D251); plus `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: no-referrer` and a `Permissions-Policy` without camera, microphone and location. `/api/swagger`
+  keeps only the framing rule while it loads from a CDN (SEC-14).
 * A browser page cannot use a user's local server (see *Who can reach the server*).
 * With `--dir DIR` every document is a sealed file (`docs/<id>.claudia` and a journal next to it): the content, the
   history, the chat and the names of the people are encrypted (AES-256-GCM), and the keys are opened by each person's

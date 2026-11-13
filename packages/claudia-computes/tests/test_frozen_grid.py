@@ -1,5 +1,5 @@
 """``freeze``/``FrozenGrid``: the minimal, picklable copy of a ``Range``'s footprint that crosses a process
-boundary for a deferred heavy call to run on -- never the live ``Sheet`` itself (D37, D177).
+boundary for a deferred heavy call to run on -- never the live ``Sheet`` itself (D37, D291).
 """
 
 from __future__ import annotations

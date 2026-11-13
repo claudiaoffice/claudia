@@ -1,0 +1,18 @@
+{
+ "version": "0.2.0",
+ "OwnedTest": {
+  "function": "(*args, **kwargs)"
+ },
+ "owns": {
+  "function": "(part_names: 'Iterable[str]') -> 'OwnedTest'"
+ },
+ "read_parts": {
+  "function": "(zip_bytes: 'bytes') -> 'dict[str, bytes]'"
+ },
+ "reconcile": {
+  "function": "(original_bytes: 'bytes', regenerated_bytes: 'bytes', owned: 'OwnedTest') -> 'bytes'"
+ },
+ "write_parts": {
+  "function": "(parts: 'dict[str, bytes]') -> 'bytes'"
+ }
+}

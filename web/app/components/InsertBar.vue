@@ -32,6 +32,8 @@ defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; re
         <span>{{ s.name }}</span>
       </button>
     </div>
+    <!-- The selected object's style (creates' picker, as composes and computes have one in their bars). -->
+    <div class="group styles"><slot /></div>
     <div class="group">
       <button type="button" class="icon" :disabled="readonly || !canDelete" title="Delete the selected object (Del)" aria-label="delete" data-tool="delete" @click="$emit('remove')">
         <svg viewBox="0 0 20 20" width="18" height="18"><path d="M4 6h12M8 6V4h4v2m-6 0 .7 10h6.6L14 6M8.5 9v5m3-5v5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -61,6 +63,13 @@ defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; re
   display: flex;
   align-items: center;
   gap: 2px;
+}
+.group.styles {
+  flex: 1;
+  gap: 14px;
+  justify-content: flex-start;
+  padding-left: 6px;
+  border-left: 1px solid var(--line);
 }
 .tool,
 .icon {

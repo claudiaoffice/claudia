@@ -8,12 +8,14 @@ runner           ModelRunner: one model, one question at a time, on a worker thr
 The package knows nothing of documents, protocols or servers: ``claudia_server`` connects it to the user ``ai``.
 """
 
+from ._version import __version__
 from .agent import CALL_LIMIT, Agent, Request, ToolCall, ToolSpec, Turn
 from .model import LanguageModel, Message, ModelError
 from .openvino_model import DEFAULT_DEVICE, OpenVinoModel
 from .runner import ModelRunner
 
 __all__ = [
+    "__version__",
     "CALL_LIMIT",
     "DEFAULT_DEVICE",
     "Agent",

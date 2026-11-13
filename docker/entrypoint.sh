@@ -47,4 +47,4 @@ if [ -n "${CLAUDIA_ALLOW_HOST:-}" ]; then
 fi
 
 # One web app is the client of all three servers.
-exec python -m claudia_server --model "$model" --host 0.0.0.0 --port "${PORT:-8765}" --web /app/web "$@"
+exec python -m claudia_server --model "$model" --host 0.0.0.0 --port "${PORT:-8765}" --web /app/web --fonts /app/fonts --hyphenation /app/hyphenation "$@"

@@ -1,0 +1,97 @@
+{
+ "version": "0.2.0",
+ "Agent": {
+  "class": [
+   "object"
+  ],
+  "init": "()",
+  "methods": {
+   "messages": "(self, request: 'Request') -> 'list[Message]'",
+   "parse": "(self, raw: 'str', tools: 'Sequence[ToolSpec]') -> 'Turn'",
+   "respond": "(self, model: 'LanguageModel', request: 'Request', *, max_new_tokens: 'int', stop: 'Callable[[], bool]') -> 'Turn'"
+  },
+  "properties": []
+ },
+ "CALL_LIMIT": {
+  "value": "50"
+ },
+ "DEFAULT_DEVICE": {
+  "value": "'GPU'"
+ },
+ "LanguageModel": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "generate": "(self, messages: 'list[Message]', *, max_new_tokens: 'int', stop: 'Callable[[], bool]') -> 'str'"
+  },
+  "properties": []
+ },
+ "Message": {
+  "function": "(*args, **kwargs)"
+ },
+ "ModelError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "ModelRunner": {
+  "class": [
+   "object"
+  ],
+  "init": "(model: 'LanguageModel', agent: 'Agent | None' = None, *, max_new_tokens: 'int' = 512, timeout: 'float' = 180.0)",
+  "methods": {
+   "answer": "(self, request: 'Request') -> 'Turn'",
+   "close": "(self) -> 'None'"
+  },
+  "properties": [
+   "name"
+  ]
+ },
+ "OpenVinoModel": {
+  "class": [
+   "object"
+  ],
+  "init": "(model_dir: 'str | Path', device: 'str' = 'GPU', *, temperature: 'float' = 0.3, genai: 'Any' = None)",
+  "methods": {
+   "generate": "(self, messages: 'list[Message]', *, max_new_tokens: 'int', stop: 'Callable[[], bool]') -> 'str'"
+  },
+  "properties": []
+ },
+ "Request": {
+  "class": [
+   "object"
+  ],
+  "init": "(asker: 'str', text: 'str', context: 'str' = '', tools: 'tuple[ToolSpec, ...]' = (), history: 'Sequence[Message]' = (), exchange: 'Sequence[Message]' = ()) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ToolCall": {
+  "class": [
+   "object"
+  ],
+  "init": "(method: 'str', params: 'dict') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ToolSpec": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', signature: 'str', summary: 'str', kind: 'str' = 'change') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Turn": {
+  "class": [
+   "object"
+  ],
+  "init": "(say: 'str' = '', calls: 'list[ToolCall]' = <factory>, problems: 'list[str]' = <factory>, raw: 'str' = '') -> None",
+  "methods": {},
+  "properties": []
+ }
+}

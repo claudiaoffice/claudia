@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="760" viewBox="0 0 1100 760"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="sh2" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dy="3" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0.0" y="0.0" width="1100.0" height="760.0" rx="0" fill="#F7F3EC"/>
+<text x="36.0" y="40.0" font-family="Fraunces, Georgia, serif" font-size="18" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">The same panel in composes and creates</text>
+<text x="36.0" y="62.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Same layout, same words, same keys. Only “Look in”, the places the results sit in and the app colour differ.</text>
+<rect x="36.0" y="84.0" width="388.0" height="520.0" rx="12" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<text x="56.0" y="114.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Search &amp; replace</text>
+<circle cx="368.0" cy="103.0" r="1.5" fill="#6B6580"/>
+<circle cx="368.0" cy="108.0" r="1.5" fill="#6B6580"/>
+<circle cx="368.0" cy="113.0" r="1.5" fill="#6B6580"/>
+<path d="M396 104 L404 112 M404 104 L396 112" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="36.0" y1="130.0" x2="424.0" y2="130.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="50.0" y="144.0" width="360.0" height="36.0" rx="8" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.8"/>
+<circle cx="68" cy="160" r="5.2" fill="none" stroke="#6B6580" stroke-width="1.5"/>
+<path d="M72 164 L76.5 168.5" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="86.0" y="167.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">draft</text>
+<text x="348.0" y="167.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">1 of 3</text>
+<line x1="354.0" y1="152.0" x2="354.0" y2="172.0" stroke="#E3DED5" stroke-width="1"/>
+<path d="M364 162.6 L367.6 159 L371.2 162.6" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M386 159 L389.6 162.6 L393.2 159" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="52.0" y="202.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">LOOK IN</text>
+<rect x="50.0" y="210.0" width="71.8" height="26.0" rx="13" fill="#F9E1EA" stroke="#D6477A" stroke-width="1"/>
+<path d="M57 223.5 L60 226.5 L65 220.0" fill="none" stroke="#D6477A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="72.0" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Text</text>
+<text x="105.9" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">3</text>
+<rect x="127.8" y="210.0" width="100.0" height="26.0" rx="13" fill="#F9E1EA" stroke="#D6477A" stroke-width="1"/>
+<path d="M134.79500000000002 223.5 L137.79500000000002 226.5 L142.79500000000002 220.0" fill="none" stroke="#D6477A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="149.8" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Headings</text>
+<text x="211.9" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">0</text>
+<rect x="233.8" y="210.0" width="79.1" height="26.0" rx="13" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="255.8" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Notes</text>
+<text x="297.0" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">0</text>
+<rect x="50.0" y="248.0" width="150.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="60.0" y="266.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Whole document</text>
+<path d="M182 260.5 L185.6 264.1 L189.2 260.5" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="208.0" y="248.0" width="112.0" height="28.0" rx="7" fill="#F9E1EA" stroke="#D6477A" stroke-width="1"/>
+<text x="218.0" y="267.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Whole word</text>
+<rect x="328.0" y="248.0" width="82.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="338.0" y="267.0" font-family="Fraunces, Georgia, serif" font-size="12.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">Aa</text>
+<text x="358.0" y="267.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Case</text>
+<text x="52.0" y="308.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#5B4BC4" font-weight="500" text-anchor="start" xml:space="preserve">Replace with…</text>
+<path d="M148 297 l4 4 l-4 4" fill="none" stroke="#5B4BC4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="408.0" y="308.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#5B4BC4" font-weight="500" text-anchor="end" xml:space="preserve">Build a pattern…</text>
+<line x1="36.0" y1="324.0" x2="424.0" y2="324.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="52.0" y="352.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">3 matches</text>
+<rect x="44.0" y="368.0" width="372.0" height="56.0" rx="6" fill="#E7E1F4"/>
+<rect x="44.0" y="374.0" width="3.0" height="44.0" rx="1.5" fill="#D6477A"/>
+<text x="58.0" y="387.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">2.1  Method</text>
+<text x="58.0" y="408.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">the first </text>
+<rect x="110.4" y="397.0" width="31.6" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="111.4" y="408.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">draft</text>
+<text x="141.1" y="408.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"> of the budget was</text>
+<text x="58.0" y="447.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">2.3  Findings</text>
+<text x="58.0" y="468.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">a second </text>
+<rect x="115.7" y="457.0" width="31.6" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="116.7" y="468.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">draft</text>
+<text x="146.3" y="468.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"> shows that costs</text>
+<text x="58.0" y="507.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">4  Next steps</text>
+<text x="58.0" y="528.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">until the </text>
+<rect x="111.8" y="517.0" width="31.6" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="112.8" y="528.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">draft</text>
+<text x="142.4" y="528.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"> is approved</text>
+<line x1="36.0" y1="554.0" x2="424.0" y2="554.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="52.0" y="578.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Replacements take on the style of the text they replace.</text>
+<text x="36.0" y="624.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#D6477A" font-weight="500" text-anchor="start" xml:space="preserve">composes: results are paragraphs with their heading</text>
+<rect x="484.0" y="84.0" width="388.0" height="520.0" rx="12" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<text x="504.0" y="114.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Search &amp; replace</text>
+<circle cx="816.0" cy="103.0" r="1.5" fill="#6B6580"/>
+<circle cx="816.0" cy="108.0" r="1.5" fill="#6B6580"/>
+<circle cx="816.0" cy="113.0" r="1.5" fill="#6B6580"/>
+<path d="M844 104 L852 112 M852 104 L844 112" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="484.0" y1="130.0" x2="872.0" y2="130.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="498.0" y="144.0" width="360.0" height="36.0" rx="8" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.8"/>
+<circle cx="516" cy="160" r="5.2" fill="none" stroke="#6B6580" stroke-width="1.5"/>
+<path d="M520 164 L524.5 168.5" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="534.0" y="167.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Q3</text>
+<text x="796.0" y="167.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">1 of 3</text>
+<line x1="802.0" y1="152.0" x2="802.0" y2="172.0" stroke="#E3DED5" stroke-width="1"/>
+<path d="M812 162.6 L815.6 159 L819.2 162.6" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M834 159 L837.6 162.6 L841.2 159" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="500.0" y="202.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">LOOK IN</text>
+<rect x="498.0" y="210.0" width="112.1" height="26.0" rx="13" fill="#FCE8CF" stroke="#F2A057" stroke-width="1"/>
+<path d="M505 223.5 L508 226.5 L513 220.0" fill="none" stroke="#F2A057" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="520.0" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Text boxes</text>
+<text x="594.2" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">2</text>
+<rect x="616.1" y="210.0" width="118.3" height="26.0" rx="13" fill="#FCE8CF" stroke="#F2A057" stroke-width="1"/>
+<path d="M623.1075 223.5 L626.1075 226.5 L631.1075 220.0" fill="none" stroke="#F2A057" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="638.1" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Shape labels</text>
+<text x="722.6" y="227.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">1</text>
+<rect x="498.0" y="248.0" width="150.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="508.0" y="266.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">All slides</text>
+<path d="M630 260.5 L633.6 264.1 L637.2 260.5" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="656.0" y="248.0" width="112.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="666.0" y="267.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Whole word</text>
+<rect x="776.0" y="248.0" width="82.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="786.0" y="267.0" font-family="Fraunces, Georgia, serif" font-size="12.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">Aa</text>
+<text x="806.0" y="267.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Case</text>
+<text x="500.0" y="308.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#5B4BC4" font-weight="500" text-anchor="start" xml:space="preserve">Replace with…</text>
+<path d="M596 297 l4 4 l-4 4" fill="none" stroke="#5B4BC4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="856.0" y="308.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#5B4BC4" font-weight="500" text-anchor="end" xml:space="preserve">Build a pattern…</text>
+<line x1="484.0" y1="324.0" x2="872.0" y2="324.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="500.0" y="352.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">3 matches</text>
+<rect x="492.0" y="368.0" width="372.0" height="56.0" rx="6" fill="#E7E1F4"/>
+<rect x="492.0" y="374.0" width="3.0" height="44.0" rx="1.5" fill="#C9741A"/>
+<rect x="506.0" y="378.0" width="44.0" height="28.0" rx="3" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<rect x="512.0" y="384.0" width="22.0" height="4.0" rx="1" fill="#E7E1F4"/>
+<rect x="512.0" y="392.0" width="30.0" height="3.0" rx="1" fill="#F2EEE6"/>
+<text x="558.0" y="388.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">Slide 2 · Title</text>
+<text x="558.0" y="410.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Results </text>
+<rect x="607.2" y="399.0" width="18.5" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="608.2" y="410.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Q3</text>
+<text x="624.8" y="410.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"> 2027</text>
+<rect x="506.0" y="438.0" width="44.0" height="28.0" rx="3" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<rect x="512.0" y="444.0" width="22.0" height="4.0" rx="1" fill="#E7E1F4"/>
+<rect x="512.0" y="452.0" width="30.0" height="3.0" rx="1" fill="#F2EEE6"/>
+<text x="558.0" y="448.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">Slide 5 · Text box</text>
+<text x="558.0" y="470.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Plan for </text>
+<rect x="608.7" y="459.0" width="18.5" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="609.7" y="470.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Q3</text>
+<text x="626.2" y="470.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"> and Q4</text>
+<rect x="506.0" y="498.0" width="44.0" height="28.0" rx="3" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<rect x="512.0" y="504.0" width="22.0" height="4.0" rx="1" fill="#E7E1F4"/>
+<rect x="512.0" y="512.0" width="30.0" height="3.0" rx="1" fill="#F2EEE6"/>
+<text x="558.0" y="508.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">Slide 7 · Shape label</text>
+<rect x="558.0" y="522.5" width="10.0" height="7.0" rx="1.5" fill="#D6477A"/>
+<path d="M560.2 522.5 V521 a2.8 2.8 0 0 1 5.6 0 V522.5" fill="none" stroke="#D6477A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="574.0" y="528.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#D6477A" font-weight="500" text-anchor="start" xml:space="preserve">locked by Tobi</text>
+<text x="668.0" y="528.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">skipped</text>
+<line x1="484.0" y1="554.0" x2="872.0" y2="554.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="500.0" y="578.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Slide titles and text boxes keep their styles.</text>
+<text x="484.0" y="624.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#B46A12" font-weight="500" text-anchor="start" xml:space="preserve">creates: results are slides, locked shapes are skipped</text>
+</svg>

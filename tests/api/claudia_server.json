@@ -1,5 +1,5 @@
 {
- "version": "0.18.0",
+ "version": "0.26.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -9,6 +9,7 @@
   ],
   "init": "(user: 'str', role: 'str' = 'editor', system: 'bool' = False, allowed_methods: 'frozenset[str] | None' = None) -> None",
   "methods": {
+   "acting_for": "(self, asker_role: 'str', writes: 'Iterable[str] | None') -> 'Account'",
    "assistant": "(allowed_methods: 'Iterable[str] | None' = None) -> 'Account'"
   },
   "properties": [
@@ -90,8 +91,9 @@
   "class": [
    "object"
   ],
-  "init": "(engine: 'Engine | AsyncEngine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>, max_waiting: 'int | None' = None, allowed_methods: 'Iterable[str]' = ())",
+  "init": "(engine: 'Engine | AsyncEngine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>, max_waiting: 'int | None' = None, allowed_methods: 'Iterable[str]' = (), suggest_methods: 'Iterable[str]' = ())",
   "methods": {
+   "account_for": "(self, asker: 'str', mode: 'AiMode') -> 'Account'",
    "attach": "(self, hosted: 'HostedDocument') -> 'Connection'",
    "idle": "(self) -> 'None'"
   },
@@ -260,18 +262,42 @@
   },
   "properties": []
  },
+ "HelpContentError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "HelpLibrary": {
+  "class": [
+   "object"
+  ],
+  "init": "(topics: 'Iterable[Topic]' = ())",
+  "methods": {
+   "add": "(self, topic: 'Topic') -> 'None'",
+   "get": "(self, topic_id: 'str') -> 'Topic | None'",
+   "load_folder": "(self, folder: 'Path') -> 'None'",
+   "search": "(self, query: 'str', *, app: 'str | None' = None) -> 'list[Topic]'"
+  },
+  "properties": []
+ },
  "HostedDocument": {
   "class": [
    "object"
   ],
   "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, workers: 'WorkerPool | None' = None)",
   "methods": {
+   "ai_mode_of": "(self, user: 'str') -> 'str | None'",
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
    "connect": "(self, account: 'Account', send: 'Callable[[str], None]', *, locale: 'str' = 'en') -> 'Connection'",
    "editors": "(self) -> 'list[str]'",
    "humans": "(self) -> 'list[Connection]'",
    "new_connection_id": "(self) -> 'int'",
+   "note_ai_mode": "(self, user: 'str', mode: 'str | None') -> 'None'",
    "pick_color": "(self) -> 'str'",
+   "role_of": "(self, user: 'str') -> 'str | None'",
    "sweep": "(self) -> 'None'",
    "touch": "(self) -> 'None'",
    "users": "(self) -> 'list[str]'"
@@ -361,7 +387,7 @@
   "class": [
    "object"
   ],
-  "init": "(runner: 'ModelRunner', tools: 'tuple[ToolSpec, ...]', describe: 'Callable[[Document], str]', *, memory_turns: 'int' = 6)",
+  "init": "(runner: 'ModelRunner', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory_turns: 'int' = 6, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000))",
   "methods": {
    "plan_async": "(self, task: 'Task') -> 'list[Step]'"
   },
@@ -531,7 +557,7 @@
   "class": [
    "object"
   ],
-  "init": "(sender: 'str', text: 'str', document: 'Document') -> None",
+  "init": "(sender: 'str', text: 'str', document: 'Document', mode: 'AiMode' = 'suggest', writes: 'frozenset[str] | None' = None, call: 'Callable[[str, dict], Any] | None' = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -542,6 +568,17 @@
   "init": "()",
   "methods": {
    "plan": "(self, task: 'Task') -> 'list[Step]'"
+  },
+  "properties": []
+ },
+ "Topic": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', title: 'str', apps: 'tuple[str, ...]', language: 'str', tags: 'tuple[str, ...]', explains: 'tuple[str, ...]', body: 'str') -> None",
+  "methods": {
+   "summary": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -589,13 +626,16 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None) -> 'FastAPI'"
+  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"
  },
  "creates_methods_with": {
   "function": "(library: 'ShapeLibrary') -> 'MethodTable'"
+ },
+ "default_library": {
+  "function": "() -> 'HelpLibrary'"
  },
  "ensure_certificate": {
   "function": "(state_dir: 'str | Path | None' = None, extra_names: 'tuple[str, ...]' = (), cert_file: 'str | Path | None' = None, key_file: 'str | Path | None' = None) -> 'Certificate'"
@@ -610,13 +650,16 @@
   "function": "(model_cls: 'type[DocumentModel]', *, shapes: 'ShapeLibrary | None' = None) -> 'MethodTable'"
  },
  "model_assistant_for": {
-  "function": "(model_cls: 'type[DocumentModel]', runner: 'ModelRunner', *, max_waiting: 'int' = 4) -> 'Callable[[], Assistant] | None'"
+  "function": "(model_cls: 'type[DocumentModel]', runner: 'ModelRunner', *, max_waiting: 'int' = 4, budget: 'Budget | None' = None) -> 'Callable[[], Assistant] | None'"
  },
  "needs_administrator": {
   "function": "(exposed: 'bool', admin_count: 'int') -> 'bool'"
  },
  "parse_request": {
   "function": "(raw: 'str | bytes', limits: 'Limits') -> 'tuple[Any, Any, Any]'"
+ },
+ "parse_topic": {
+  "function": "(text: 'str', *, source: 'str' = '<topic>') -> 'Topic'"
  },
  "save_admins": {
   "function": "(state_dir: 'Path', directory) -> 'None'"

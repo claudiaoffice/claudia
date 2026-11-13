@@ -1,10 +1,8 @@
 """Which Claudia app a shell shows: its application id, name and the server model behind it. No GTK in here.
 
-Only composes has a window, an application class and a ``claudia-composes`` entry point so far. Computes and creates
-have an identity each (below) — the menus they need already exist too, in ``manifest.py`` — but no window/application
-class or ``__main__`` entry point yet (E5.1's scope cut, see
-``claudiaoffice-log/notes/e5-1-e5-10-menus-and-accessibility.md``): that is real GTK/WebKit wiring this sandbox
-cannot run or check (no PyGObject here), so it is left for a pass that can.
+This table is the one place that tells the three apps apart (D97): the window, the application, the local server and
+the command line all take an :class:`AppIdentity` and never name an app themselves. A fourth app would be one more
+entry here, one more manifest (``manifest.py``), and its own folder under ``apps/``.
 """
 
 from __future__ import annotations
@@ -12,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-__all__ = ["APPS_DIR", "AppIdentity", "UnknownApp", "get"]
+__all__ = ["APPS_DIR", "AppIdentity", "UnknownApp", "get", "names"]
 
 APPS_DIR = Path(__file__).resolve().parents[2] / "apps"
 """Desktop entry, icon and AppStream data of each app (``apps/<app>/``)."""
@@ -37,6 +35,11 @@ class AppIdentity:
     """The D-Bus/GApplication id, also the name of the desktop entry and the icon (lower case, no underscore)."""
     model: str
     """The server model that the local server loads for this app (``module:Class``)."""
+
+    @property
+    def command(self) -> str:
+        """The command that starts this app from a terminal or a launcher (``claudia-composes``)."""
+        return f"claudia-{self.name}"
 
     @property
     def icon_search_path(self) -> Path:
@@ -64,6 +67,11 @@ _APPS = {
         model="claudia_creates:SlideModel",
     ),
 }
+
+
+def names() -> tuple[str, ...]:
+    """The apps there is a Linux client for, in the order of the suite."""
+    return tuple(_APPS)
 
 
 def get(name: str) -> AppIdentity:

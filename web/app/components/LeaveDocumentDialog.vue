@@ -24,7 +24,7 @@ async function leave() {
       password.
     </p>
     <form class="form" @submit.prevent="leave">
-      <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" /></label>
+      <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" ></label>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="busy || !password">Leave document</button>
         <button class="btn" type="button" @click="emit('close')">Cancel</button>

@@ -5,6 +5,7 @@ the cost grows with the length of the history where it should not. That is robus
 is O(history) by design is named in the docs (opening a document replays it; E4 adds snapshots to bound that).
 """
 
+import gc
 import time
 
 from claudia_core import CommandLog, Document, Entry, MemoryStore
@@ -25,12 +26,26 @@ def build_log(n: int) -> CommandLog:
 
 
 def best_of(repeat: int, fn) -> float:
-    best = float("inf")
-    for _ in range(repeat):
-        started = time.perf_counter()
-        fn()
-        best = min(best, time.perf_counter() - started)
-    return best
+    """The fastest of ``repeat`` runs of ``fn``, with the cyclic garbage collector held off while they run.
+
+    A collection is triggered by how much has been allocated, not by the work being measured, so it lands in the
+    large case far more often than in the small one and reads as super-linear cost: reopening 8,000 formulas
+    measured 20-25x the time of 800 with it on, and 11x with it off (the guard's bound is 25x). ``timeit`` turns
+    it off for the same reason.
+    """
+    gc.collect()
+    was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        best = float("inf")
+        for _ in range(repeat):
+            started = time.perf_counter()
+            fn()
+            best = min(best, time.perf_counter() - started)
+        return best
+    finally:
+        if was_enabled:
+            gc.enable()
 
 
 def grows_with_history(operation, *, rounds: int = 200) -> float:
@@ -68,11 +83,15 @@ def test_executing_does_not_slow_down_with_the_length_of_the_history():
 
 def test_undoing_the_latest_step_does_not_depend_on_the_history_before_it():
     def per_undo(n: int) -> float:
-        log = build_log(n)
-        doc = Document.open(ListModel, log, store=MemoryStore())
-        for i in range(50):
-            doc.execute(Insert(n + i, 1), author="ben")
-        return best_of(1, lambda: [doc.undo("ben") for _ in range(50)])
+        # Undo uses its steps up, so each sample needs a fresh document; one sample alone failed now and then at
+        # 4.04x on a loaded machine (QA 2026-11-12, the PROC-07 kind of flake): the best of three is measured.
+        samples = []
+        for _ in range(3):
+            doc = Document.open(ListModel, build_log(n), store=MemoryStore())
+            for i in range(50):
+                doc.execute(Insert(n + i, 1), author="ben")
+            samples.append(best_of(1, lambda doc=doc: [doc.undo("ben") for _ in range(50)]))
+        return min(samples)
 
     ratio = per_undo(LARGE) / per_undo(SMALL)
     assert ratio < TOLERATED_GROWTH, f"undo() grew {ratio:.1f}x for 10x more history"

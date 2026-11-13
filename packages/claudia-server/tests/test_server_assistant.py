@@ -21,15 +21,21 @@ BEN = Account("ben", "editor")
 
 
 class Person:
-    """A connected person; everything the server sent is in ``frames``."""
+    """A connected person; everything the server sent is in ``frames``.
 
-    def __init__(self, hosted, account):
+    ``ai_mode`` is what her client sends with a chat message that names none (D262): the tests of the machinery behind
+    the AI let it act; ``None`` sends nothing, as a client without the switch would."""
+
+    def __init__(self, hosted, account, ai_mode="act"):
+        self.ai_mode = ai_mode
         self.frames: list[dict] = []
         self.connection = hosted.connect(account, lambda text: self.frames.append(json.loads(text)))
         self._next = 0
 
     def request(self, method, params=None):
         self._next += 1
+        if method == "chat" and self.ai_mode is not None and "ai_mode" not in params:
+            params = {**params, "ai_mode": self.ai_mode}
         self.connection.handle(json.dumps({"id": self._next, "method": method, "params": params}))
         return self.frames[-1]
 

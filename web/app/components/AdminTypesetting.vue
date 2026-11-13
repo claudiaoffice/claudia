@@ -67,11 +67,11 @@ async function apply() {
     <h2>Installation</h2>
     <label class="field">
       xelatex
-      <input v-model="xelatex" class="mono" placeholder="(auto-detect on PATH)" />
+      <input v-model="xelatex" class="mono" placeholder="(auto-detect on PATH)" >
     </label>
     <label class="field">
       pdftocairo
-      <input v-model="pdftocairo" class="mono" placeholder="(auto-detect on PATH)" />
+      <input v-model="pdftocairo" class="mono" placeholder="(auto-detect on PATH)" >
     </label>
     <p class="hint">A full path, the folder it lives in, or a bare program name to look up on the PATH. Blank looks for the usual name.</p>
 

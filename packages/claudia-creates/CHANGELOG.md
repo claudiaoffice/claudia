@@ -3,6 +3,63 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.8.0] - 2026-11-13
+
+How a presentation prints, and its language (D917).
+
+### Added
+- `PrintSetup(layout, page)` (`claudia_creates.printing`): `layout` is one of `LAYOUTS` — `slides`, `handouts-2`,
+  `handouts-3` (with lines for notes), `handouts-4`, `handouts-6`, `handouts-9` — and `page` a `claudia_core.PageSetup`;
+  the default is one slide to a page of the slide's size, landscape, without margins. `PrintSetupError` for a layout
+  that does not exist; `describe()` reads "6 slides a page on A4, portrait".
+- `SetPrintSetup(setup)` (summary "set printing to …"), one step with its exact inverse, event
+  `{type: "print_setup", setup}` (`PrintSetupChanged`).
+- `SlideModel.print_setup` and `SlideModel.language` (`claudia_core.SetLanguage`, re-exported here); state schema 7.
+  Older presentations get the default print setup and no language.
+
+## [0.7.0] - 2026-11-10
+
+The styling-suite plan, steps 1.2 to 1.6.
+
+### Added
+- The built-in **`plain-box`**, a `box` style without properties: the box of a text box on a slide (D310).
+
+## [0.6.0] - 2026-11-10
+
+Every built-in style has a kind (D305, D312), and a shape's outline and its words are two styles (D310).
+
+### Changed
+- **Breaking:** `plain-shape` is an `outline` style that holds only `fill`, `stroke` and `stroke-width`, and is no
+  longer based on Body text (a style and its parent are of the same kind). Its words' look (`36px`, `1.25`,
+  centred) moved to the new built-in **`shape-label`**, a paragraph style based on Body text; together the two look
+  exactly as the one did. `plain-image` is a `box` style, also a root.
+
+## [0.5.0] - 2026-11-08
+
+The presentation carries its own colour palette (D200, D201).
+
+### Added
+- `SlideModel.palette` (a `claudia_core.Palette`), serialized with the document and restored with it, so a
+  presentation looks the same on whichever server it is opened. `SlideModel(styles, palette)` takes it.
+
+### Changed
+- **Breaking:** `state_schema` is 6. An older snapshot is not read.
+- Every built-in style now names colour roles instead of literal colours: `Body text` is `color: @text`, and
+  `Plain shape` is `fill: @accent/14`, `stroke: @accent`. The colours are the suite's own, so what the styles look
+  like did not change — only what they mean, and the fact that replacing the palette recolours them.
+
+## [0.4.0] - 2026-11-08
+
+The shared object layer (D177–D181), recorded after the fact for the same reason as `claudia-core` 0.9.0.
+
+### Changed
+- **Breaking:** `SlideObject` is `VisualObject[SlideAnchor]` — a shared body and a slide anchor — and the object
+  commands moved to `claudia_core` as `core.*`. `SlideModel` inherits `ObjectModel[SlideAnchor]`, holds a real
+  `StyleBook` (creates' own `Style` dataclass is gone, and its built-in styles are validated like any other), and
+  `state_schema` is 5.
+- **Breaking:** `claudia_creates.shapes` keeps the disk half only (`ShapeLibrary`, `BUILTIN_DIRECTORY`); the shape
+  format itself moved to `claudia_core.shapes`.
+
 ## [0.3.0] - 2026-11-07
 
 The grid, and snapping to it (E10.15): a view-only helper, never part of the slide, that each object may follow.

@@ -11,9 +11,17 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context, Region
+from claudia_core import Batch, Command, Context, ListItem, PageSetup, Region, SetLanguage
 
-from .events import BlocksJoined, BlockSplit, StyleChanged, SuggestionsChanged, TextChanged
+from .events import (
+    BlocksJoined,
+    BlockSplit,
+    ItemChanged,
+    PageSetupChanged,
+    StyleChanged,
+    SuggestionsChanged,
+    TextChanged,
+)
 from .model import Suggestion, TextModel
 from .region import TextRange
 from .runs import Run, runs_from_data, runs_to_data
@@ -28,10 +36,14 @@ def _quote(text: str) -> str:
 
 
 def _moved(ctx: Context[TextModel], command: TextCommand) -> None:
-    """Let the open suggestions follow a text command, and tell the clients about those that moved."""
+    """Let the open suggestions and the floating objects follow a text command, and tell the clients about those
+    that moved (see :mod:`claudia_composes.anchors` for why an object's anchor follows the text here, where a
+    sheet's is deliberately frozen)."""
     moved = ctx.model.move_suggestions(command)
     if moved:
         ctx.emit(SuggestionsChanged(tuple(moved)))
+    for container in dict.fromkeys(obj["anchor"]["container"] for obj in ctx.model.move_objects(command)):
+        ctx.emit(ctx.model.objects_changed(container, changed=tuple(ctx.model.objects_on(container))))
 
 
 # ------------------------------------------------------------------------------ typing
@@ -247,10 +259,13 @@ class JoinBlocks(TextCommand):
         return "joined paragraphs"
 
     def apply(self, ctx: Context[TextModel]) -> Command:
-        style = ctx.model.join(self.block, self.into, self.at)
+        gone = ctx.model.join(self.block, self.into, self.at)
         ctx.emit(BlocksJoined(self.block, self.into, self.at))
         _moved(ctx, self)
-        return SplitBlock(self.into, self.at, self.block, style)
+        split = SplitBlock(self.into, self.at, self.block, gone.style)
+        if gone.item == ctx.model.block(self.into).item:
+            return split  # a split gives the new paragraph that item anyway
+        return Batch((split, SetListItem(self.block, gone.item)))  # the paragraph that went away was another kind
 
     def to_data(self) -> dict:
         return {"block": self.block, "into": self.into, "at": self.at}
@@ -299,7 +314,8 @@ class SetStyle(TextCommand):
         model = ctx.model
         model.check_style(self.style)
         block = model.block(self.block)
-        old, block.style = block.style, self.style
+        old = block.style
+        ctx.model.restyle(block.id, self.style)
         ctx.emit(StyleChanged(self.block, self.style))
         return SetStyle(self.block, old)
 
@@ -317,6 +333,90 @@ class SetStyle(TextCommand):
     def shifted_by(self, other: Command) -> Command | None:
         if isinstance(other, JoinBlocks) and other.block == self.block:
             return None  # the paragraph is part of another one now; its style is that one's
+        return self
+
+
+# ------------------------------------------------------------------------------ the page (D904)
+@register
+@dataclass(frozen=True)
+class SetPageSetup(Command):
+    """Lay the text out on another page: paper, orientation, margins, page numbers. One step in the history, shared
+    by everybody, so every preview and every PDF of the document uses the same page."""
+
+    kind: ClassVar[str] = "composes.SetPageSetup"
+    setup: PageSetup
+
+    @property
+    def label(self) -> str:
+        return "Page setup"
+
+    @property
+    def summary(self) -> str:
+        return f"set the page to {self.setup.describe()}"
+
+    def apply(self, ctx: Context[TextModel]) -> Command:
+        old = ctx.model.page
+        ctx.model.page = self.setup
+        ctx.emit(PageSetupChanged(self.setup.to_data()))
+        return SetPageSetup(old)
+
+    def to_data(self) -> dict:
+        return {"setup": self.setup.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetPageSetup:
+        return cls(PageSetup.from_data(data["setup"]))
+
+
+# ------------------------------------------------------------------------------ the language (D915, D917)
+@register
+@dataclass(frozen=True)
+class _SetLanguageAsFirstWritten(SetLanguage):
+    """The kind ``SetLanguage`` had before it moved to the kernel (D917), so that a log written with it still opens.
+    Its inverse is the kernel's own command."""
+
+    kind: ClassVar[str] = "composes.SetLanguage"
+
+
+@register
+@dataclass(frozen=True)
+class SetListItem(TextCommand):
+    """Make a paragraph an item of a list, at a level, or (``None``) a plain paragraph again (E9.21)."""
+
+    kind: ClassVar[str] = "composes.SetListItem"
+    block: str
+    item: ListItem | None
+
+    @property
+    def label(self) -> str:
+        return "List"
+
+    @property
+    def summary(self) -> str:
+        return "no longer a list item" if self.item is None else f"list item, level {self.item.level + 1}"
+
+    def apply(self, ctx: Context[TextModel]) -> Command:
+        old = ctx.model.block(self.block).item
+        ctx.model.set_item(self.block, self.item)
+        ctx.emit(ItemChanged(self.block, self.item))
+        return SetListItem(self.block, old)
+
+    def to_data(self) -> dict:
+        return {"block": self.block, "item": None if self.item is None else self.item.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetListItem:
+        item = data["item"]
+        return cls(data["block"], None if item is None else ListItem.from_data(item))
+
+    def regions(self, model) -> tuple[Region, ...]:
+        # The paragraph may not exist yet: the inverse of a join sets the item of the paragraph it splits off.
+        block = next((b for b in model.blocks if b.id == self.block), None) if isinstance(model, TextModel) else None
+        return (TextRange(self.block, 0, max(1, 0 if block is None else len(block.text))),)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        if isinstance(other, JoinBlocks) and other.block == self.block:
+            return None  # the paragraph is part of another one now; its place in a list is that one's
         return self
 
 

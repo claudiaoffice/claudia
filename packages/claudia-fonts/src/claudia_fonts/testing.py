@@ -37,13 +37,15 @@ def make_font(
     math: bool = False,
     typographic: bool = False,
     version: str = "1.0",
+    axes: tuple[tuple[str, float, float, float], ...] = (),
 ) -> Path:
     """Write a small valid TrueType font with one letter (``A``) and return its path.
 
     ``fs_type`` is the embedding permission of the OS/2 table; ``math`` adds a (meaningless) ``MATH`` table, which is
     all the catalogue looks at; with ``typographic`` the family and style are stored as the typographic names (IDs 16
     and 17) and the legacy family (ID 1) is ``"<family> <style>"``, as fonts with many weights do. Different
-    ``version`` strings make different bytes."""
+    ``version`` strings make different bytes. ``axes`` (tag, minimum, default, maximum) adds an ``fvar`` table, which
+    makes the font look variable to a reader (it has no variation data)."""
     target = Path(path)
     builder = FontBuilder(UNITS, isTTF=True)
     builder.setupGlyphOrder([".notdef", "A"])
@@ -67,6 +69,8 @@ def make_font(
     )
     builder.setupPost()
     builder.font["head"].macStyle = MAC_STYLE_ITALIC if italic else 0
+    if axes:
+        builder.setupFvar([(tag, low, default, high, tag) for tag, low, default, high in axes], [])
     if math:
         table = DefaultTable("MATH")
         table.data = b"\x00\x01\x00\x00"

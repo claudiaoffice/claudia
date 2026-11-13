@@ -1,6 +1,6 @@
 [project]
 name = "claudia-ai"
-version = "0.0.1"
+dynamic = ["version"]
 description = "claudia-ai: the language model behind the AI user (OpenVINO), the prompt and the reading of its answers (E7.1)"
 requires-python = ">=3.14"
 dependencies = []
@@ -11,6 +11,9 @@ openvino = ["openvino-genai>=2025.2"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_ai/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claudia_ai"]

@@ -383,7 +383,7 @@ def test_the_hub_bounds_its_worker_pool_queue(make_hub):
 
 
 def test_a_workbook_document_gets_a_heavy_dispatcher_sharing_the_hubs_pool():
-    """Only a workbook has heavy formula calls to dispatch (D37, D177); ``ListModel`` (every other test in this
+    """Only a workbook has heavy formula calls to dispatch (D37, D291); ``ListModel`` (every other test in this
     file) has no ``calc`` at all, so this one builds its own hub on ``WorkbookModel`` instead."""
     from claudia_computes import WorkbookModel
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
+import { facetCss, scaleCss } from '~/lib/slide-style'
 
 const css = {
   fill: '#e7e1f4',
@@ -35,13 +35,30 @@ describe('scaleCss', () => {
   })
 })
 
-describe('pathCss and textCss', () => {
-  it('give the outline the paint and the text the type', () => {
-    expect(Object.keys(pathCss(css)).sort()).toEqual(['fill', 'stroke', 'stroke-width'])
-    expect(Object.keys(textCss(css)).sort()).toEqual(['color', 'font-family', 'font-size', 'letter-spacing', 'line-height', 'text-align'])
+// The facets as the server's `style_model` sends them (D303).
+const FACETS = {
+  text: ['font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing'],
+  paragraph: ['text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left'],
+  box: ['background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left'],
+  outline: ['fill', 'stroke', 'stroke-width'],
+}
+
+describe('facetCss', () => {
+  it('gives the outline the paint and the words the type, by facet', () => {
+    expect(Object.keys(facetCss(css, FACETS, ['outline'])).sort()).toEqual(['fill', 'stroke', 'stroke-width'])
+    expect(Object.keys(facetCss(css, FACETS, ['text', 'paragraph'])).sort()).toEqual(['color', 'font-family', 'font-size', 'letter-spacing', 'line-height', 'text-align'])
   })
-  it('leave out what a style does not say', () => {
-    expect(pathCss({ color: 'red' })).toEqual({})
-    expect(textCss({ fill: 'red' })).toEqual({})
+  it('gives a box only what a box reads, so a bundle can stand in a box slot (D316)', () => {
+    expect(facetCss({ 'background-color': 'red', color: 'blue', 'padding-top': '4px' }, FACETS, ['box'])).toEqual({ 'background-color': 'red', 'padding-top': '4px' })
+  })
+  it('leaves out what a style does not say, and everything while the facets have not arrived', () => {
+    expect(facetCss({ color: 'red' }, FACETS, ['outline'])).toEqual({})
+    expect(facetCss(css, undefined, ['outline'])).toEqual({})
+  })
+})
+
+describe('scaleCss and a box', () => {
+  it('scales the padding of a box with the slide', () => {
+    expect(scaleCss({ 'padding-top': '20px' }, 0.5)['padding-top']).toBe('10px')
   })
 })

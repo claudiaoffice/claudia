@@ -1,0 +1,663 @@
+{
+ "version": "0.6.0",
+ "AcceptSuggestion": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(id: 'str', block: 'str', start: 'int', end: 'int', replacement: 'str', suggested_by: 'str | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "follow": "(self, span: 'Span') -> 'Span'",
+   "from_data": "(data, registry) -> 'AcceptSuggestion'",
+   "leaves": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "AddObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'AddObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "object_id",
+   "summary"
+  ]
+ },
+ "BUILTIN_STYLES": {
+  "value": "(StyleDef(id='body', name='Body text', purpose='running text', based_on=None, css={'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '12pt', 'line-height': '1.75', 'color': '@text', 'text-align': 'left', 'margin-top': '0', 'margin-bottom': '0.9em', 'hyphens': 'auto'}, to_name=False, kind='paragraph'), StyleDef(id='title', name='Title', purpose='names the document', based_on='body', css={'font-family': 'Fraunces, Georgia, serif', 'font-size': '30pt', 'font-weight': '500', 'line-height': '1.15', 'letter-spacing': '-0.01em', 'margin-bottom': '0.5em', 'hyphens': 'manual'}, to_name=False, kind='paragraph'), StyleDef(id='heading-1', name='Heading 1', purpose='a section', based_on='body', css={'font-family': 'Fraunces, Georgia, serif', 'font-size': '19pt', 'font-weight': '500', 'line-height': '1.25', 'margin-top': '1.6em', 'margin-bottom': '0.5em', 'hyphens': 'manual'}, to_name=False, kind='paragraph'), StyleDef(id='heading-2', name='Heading 2', purpose='a subsection', based_on='body', css={'font-family': 'Fraunces, Georgia, serif', 'font-size': '14.5pt', 'font-weight': '500', 'line-height': '1.3', 'margin-top': '1.3em', 'margin-bottom': '0.4em', 'hyphens': 'manual'}, to_name=False, kind='paragraph'), StyleDef(id='quote', name='Quote', purpose='words of someone else', based_on='body', css={'font-family': 'Fraunces, Georgia, serif', 'font-style': 'italic', 'font-size': '14pt', 'line-height': '1.7', 'color': '@text/82', 'border-left': '3px solid @highlight', 'padding-left': '1.1em'}, to_name=False, kind='paragraph'), StyleDef(id='remark', name='Remark', purpose='a note to the reader or co-author', based_on='body', css={'font-size': '11pt', 'line-height': '1.6', 'color': '@text/78', 'background-color': '@attention/7', 'border-left': '3px solid @attention', 'padding-top': '0.55em', 'padding-bottom': '0.55em', 'padding-left': '0.9em', 'padding-right': '0.9em'}, to_name=False, kind='paragraph'), StyleDef(id='shape-label', name='Shape label', purpose='the words inside a shape floating over the text', based_on='body', css={'text-align': 'center'}, to_name=False, kind='paragraph'), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape floating over the text, carrying a thought or marking a passage', based_on=None, css={'fill': '@accent/8', 'stroke': '@accent', 'stroke-width': '2px'}, to_name=False, kind='outline'), StyleDef(id='plain-box', name='Plain box', purpose='the box of a text box floating over the text: no background and no border, so only its words show', based_on=None, css={}, to_name=False, kind='box'), StyleDef(id='plain-image', name='Plain image', purpose='a picture floating over the text; it carries its own colours, so no style properties apply to it', based_on=None, css={}, to_name=False, kind='box'), StyleDef(id='definition', name='Definition', purpose='says what a term means', based_on='body', css={'background-color': '@accent/8', 'border-left': '3px solid @accent', 'padding-top': '0.5em', 'padding-bottom': '0.5em', 'padding-left': '0.9em', 'padding-right': '0.9em'}, to_name=False, kind='paragraph'))"
+ },
+ "Block": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Paragraph'",
+   "to_data": "(self) -> 'dict'",
+   "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
+   "with_style": "(self, style: 'str') -> 'Paragraph'",
+   "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
+   "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
+  },
+  "properties": []
+ },
+ "BlockAnchor": {
+  "class": [
+   "object"
+  ],
+  "init": "(block: 'str', offset: 'int' = 0) -> None",
+  "methods": {
+   "followed": "(self, span: 'Span') -> 'BlockAnchor'",
+   "from_data": "(data: 'dict') -> 'BlockAnchor'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "container",
+   "span"
+  ]
+ },
+ "DEFAULT_STYLE": {
+  "value": "'body'"
+ },
+ "DefineImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(image: 'ImageAsset') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(shape: 'ShapeDefinition') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DeleteText": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(block: 'str', offset: 'int', length: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "breaks": "(self, span: 'Span') -> 'bool'",
+   "follow": "(self, span: 'Span') -> 'Span'",
+   "from_data": "(data, registry) -> 'DeleteText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ForgetImage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ForgetShape": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "InsertText": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(block: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = ()) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "breaks": "(self, span: 'Span') -> 'bool'",
+   "follow": "(self, span: 'Span') -> 'Span'",
+   "from_data": "(data, registry) -> 'InsertText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ItemChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(block: 'str', item: 'ListItem | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "JoinBlocks": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(block: 'str', into: 'str', at: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "follow": "(self, span: 'Span') -> 'Span'",
+   "from_data": "(data, registry) -> 'JoinBlocks'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "LabelsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(labels: 'tuple[tuple[str, Label | None], ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "LanguageError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "MoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'MoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ObjectBody": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectBody'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+  },
+  "properties": []
+ },
+ "ObjectSet": {
+  "class": [
+   "object"
+  ],
+  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ObjectSet'",
+   "overlaps": "(self, other: 'object') -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'ObjectSet | None'"
+  },
+  "properties": []
+ },
+ "PAPERS": {
+  "value": "{'a3': (841890, 1190551), 'a4': (595276, 841890), 'a5': (419528, 595276), 'a6': (297638, 419528), 'b5': (498898, 708661), 'letter': (612000, 792000), 'legal': (612000, 1008000), 'tabloid': (792000, 1224000), 'executive': (522000, 756000), 'slide': (540000, 960000)}"
+ },
+ "PageSetup": {
+  "class": [
+   "object"
+  ],
+  "init": "(paper: 'str' = 'a4', width: 'int' = 595276, height: 'int' = 841890, orientation: 'str' = 'portrait', margin_top: 'int' = 70866, margin_right: 'int' = 70866, margin_bottom: 'int' = 70866, margin_left: 'int' = 70866, page_numbers: 'bool' = False) -> None",
+  "methods": {
+   "describe": "(self) -> 'str'",
+   "from_data": "(data: 'object') -> 'Self'",
+   "preset": "(paper: 'str', **changes: 'object') -> 'Self'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PageSetupError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Paragraph": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Paragraph'",
+   "to_data": "(self) -> 'dict'",
+   "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
+   "with_style": "(self, style: 'str') -> 'Paragraph'",
+   "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
+   "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
+  },
+  "properties": []
+ },
+ "ProposeSuggestion": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', block: 'str', start: 'int', end: 'int', original: 'str', replacement: 'str | None', reason: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'ProposeSuggestion'",
+   "redacted": "(self) -> 'Command'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RemoveObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ResizeObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', anchor: 'dict', w: 'int', h: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ResizeObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "ResolveSuggestion": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', state: 'str', anchor: 'tuple[str, int, int] | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'ResolveSuggestion'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RotateObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', rotation: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RotateObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "Run": {
+  "class": [
+   "object"
+  ],
+  "init": "(length: 'int', author: 'str | None', via: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "SetLanguage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(language: 'str | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetListItem": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(block: 'str', item: 'ListItem | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetListItem'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetPageSetup": {
+  "class": [
+   "Command"
+  ],
+  "init": "(setup: 'PageSetup') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetPageSetup'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetParagraphStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetParagraphStyle'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetSnap": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', snap: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetSnap'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetStyle": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(block: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetStyle'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetText": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', text: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SplitBlock": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(block: 'str', offset: 'int', new_id: 'str', style: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "breaks": "(self, span: 'Span') -> 'bool'",
+   "follow": "(self, span: 'Span') -> 'Span'",
+   "from_data": "(data, registry) -> 'SplitBlock'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "Suggestion": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', author: 'str | None', anchor: 'TextRange', original: 'str', replacement: 'str | None', reason: 'str', state: 'str' = 'open') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "TextCommand": {
+  "class": [
+   "Command",
+   "ABC"
+  ],
+  "init": "()",
+  "methods": {
+   "breaks": "(self, span: 'Span') -> 'bool'",
+   "follow": "(self, span: 'Span') -> 'Span'"
+  },
+  "properties": []
+ },
+ "TextModel": {
+  "class": [
+   "DocumentModel",
+   "ObjectModel"
+  ],
+  "init": "(blocks: 'list[Block] | None' = None, styles: 'StyleBook | None' = None, palette: 'Palette | None' = None, page: 'PageSetup | None' = None, language: 'str | None' = None, lists: 'ListBook | None' = None)",
+  "methods": {
+   "add_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
+   "anchor_from_data": "(self, data: 'dict') -> 'BlockAnchor'",
+   "block": "(self, block_id: 'str') -> 'Block'",
+   "carry_objects": "(self, source: 'str', target: 'str', *, shift: 'int') -> 'None'",
+   "check_anchor": "(self, anchor: 'BlockAnchor', body: 'ObjectBody') -> 'None'",
+   "check_style": "(self, style: 'str') -> 'None'",
+   "containers": "(self) -> 'list[str]'",
+   "empty": "() -> 'Self'",
+   "fresh_id": "(self) -> 'str'",
+   "fresh_ids": "(self, count: 'int') -> 'list[str]'",
+   "fresh_suggestion_id": "(self) -> 'str'",
+   "index_of": "(self, block_id: 'str') -> 'int'",
+   "insert": "(self, block_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'None'",
+   "is_outdated": "(self, suggestion: 'Suggestion') -> 'bool'",
+   "join": "(self, block_id: 'str', into: 'str', at: 'int') -> 'Block'",
+   "labels": "(self) -> 'dict[str, Label]'",
+   "list_in_use": "(self, list_id: 'str') -> 'bool'",
+   "move_objects": "(self, command: 'TextCommand') -> 'list[dict]'",
+   "move_suggestions": "(self, command: 'TextCommand') -> 'list[dict]'",
+   "put_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
+   "region_from_data": "(self, data: 'dict') -> 'Region'",
+   "remove": "(self, block_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run]]'",
+   "restore": "(state: 'dict') -> 'Self'",
+   "restyle": "(self, block_id: 'str', style: 'str') -> 'None'",
+   "serialize": "(self) -> 'dict'",
+   "set_item": "(self, block_id: 'str', item: 'ListItem | None') -> 'None'",
+   "settle": "(self, ctx: 'Context') -> 'None'",
+   "split": "(self, block_id: 'str', offset: 'int', new_id: 'str', style: 'str') -> 'None'",
+   "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "style_uses": "(self) -> 'dict[str, int]'",
+   "suggestion": "(self, suggestion_id: 'str') -> 'Suggestion'",
+   "suggestion_data": "(self, suggestion: 'Suggestion', *, with_state: 'bool' = False) -> 'dict'",
+   "visible_suggestions": "(self) -> 'list[dict]'"
+  },
+  "properties": []
+ },
+ "TextObject": {
+  "value": "<TypeAliasType>"
+ },
+ "TextRange": {
+  "class": [
+   "object"
+  ],
+  "init": "(block: 'str', start: 'int', end: 'int') -> None",
+  "methods": {
+   "overlaps": "(self, other: 'Region') -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'TextRange | None'"
+  },
+  "properties": [
+   "span"
+  ]
+ },
+ "VisualObject": {
+  "class": [
+   "Generic"
+  ],
+  "init": "(body: 'ObjectBody', anchor: 'A') -> None",
+  "methods": {
+   "from_data": "(data: 'dict', read_anchor: 'ReadAnchor[A]') -> 'VisualObject[A]'",
+   "to_data": "(self) -> 'dict'",
+   "to_data_for": "(self, viewer: 'str') -> 'dict'",
+   "with_body": "(self, **changes: 'Any') -> 'Self'"
+  },
+  "properties": [
+   "container",
+   "id"
+  ]
+ },
+ "builtin_styles": {
+  "function": "() -> 'StyleBook'"
+ },
+ "next_style": {
+  "function": "(styles: 'StyleBook', style_id: 'str') -> 'str'"
+ },
+ "normalize_language": {
+  "function": "(tag: 'str') -> 'str'"
+ },
+ "paragraph_for": {
+  "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"
+ },
+ "word_window": {
+  "function": "(text: 'str', cursor: 'int', n: 'int', block: 'str' = 'b1') -> 'TextRange'"
+ }
+}

@@ -1,6 +1,6 @@
 """``ApplyCalculated``: a worker's result landing on the cell that deferred it -- recalculated readers, an event,
 a log entry, round-tripping through the log -- except undo, since nobody undoes the server's own continuation of
-a formula (PERF review 2026-11-08, D37, D177).
+a formula (PERF review 2026-11-08, D37, D291).
 """
 
 from __future__ import annotations

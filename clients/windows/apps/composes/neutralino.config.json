@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
+  "applicationId": "de.claudiaoffice.composes",
+  "version": "0.2.0",
+  "defaultMode": "window",
+  "port": 0,
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "enableExtensions": true,
+  "extensions": [
+    {
+      "id": "de.claudiaoffice.core",
+      "commandWindows": "node ${NL_PATH}/ext/core.mjs"
+    }
+  ],
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": true
+  },
+  "nativeAllowList": [
+    "app.exit",
+    "window.setMainMenu",
+    "events.on",
+    "extensions.dispatch",
+    "extensions.getStats",
+    "app.broadcast"
+  ],
+  "modes": {
+    "window": {
+      "title": "claudia composes",
+      "width": 1280,
+      "height": 860,
+      "minWidth": 700,
+      "minHeight": 500,
+      "center": true,
+      "icon": "/icon.png",
+      "enableInspector": true,
+      "borderless": false,
+      "resizable": true,
+      "exitProcessOnClose": true
+    }
+  },
+  "cli": {
+    "binaryName": "claudia-composes",
+    "resourcesPath": "/",
+    "clientLibrary": "/js/neutralino.js",
+    "binaryVersion": "6.8.0",
+    "clientVersion": "6.8.0"
+  }
+}

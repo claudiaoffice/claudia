@@ -4,7 +4,21 @@ import pytest
 
 from claudia_core import Batch, CommandLog, Document, ImageAsset, ImageImport, MemoryStore, decode_image
 from claudia_core.testing import FakeClock
-from claudia_creates import AddObject, DefineImage, DefineShape, ShapeLibrary, SlideModel, SlideObject
+from claudia_creates import (
+    AddObject,
+    DefineImage,
+    DefineShape,
+    MoveObject,
+    ObjectBody,
+    ResizeObject,
+    ShapeLibrary,
+    SlideAnchor,
+    SlideModel,
+    SlideObject,
+    VisualObject,
+    paragraph_for,
+)
+from claudia_creates.styles import DEFAULT_STYLE
 
 SLIDE = "s1"
 
@@ -19,14 +33,52 @@ def doc(clock):
     return Document(SlideModel.empty(), store=MemoryStore(), clock=clock.time, lock_clock=clock.lock_time)
 
 
+def build(**fields) -> SlideObject:
+    """A :class:`SlideObject` from flat fields: the body's go to the body, ``slide``/``x``/``y`` to the anchor.
+
+    The helpers below keep the flat signatures the tests have always used, so a test says what it means
+    (``text_box(x=300)``, ``shape_object(text="hi")``) while the model holds the parts apart: the anchor
+    (E10.16) and, since E10.17, the words as a paragraph of their own (D181)."""
+    anchor = SlideAnchor(fields.pop("slide", SLIDE), fields.pop("x", 0), fields.pop("y", 0))
+    text, author = fields.pop("text", ""), fields.pop("author", "ana")
+    if fields.get("kind") != "image" and "paragraph" not in fields:
+        # A text box's words follow its own style here, as they always did in these tests; a shape's words have a
+        # style of their own kind, since a shape's own style is an outline (D310).
+        words = fields.get("style", DEFAULT_STYLE) if fields.get("kind") == "text" else "shape-label"
+        fields["paragraph"] = paragraph_for(fields["id"], words, text, author)
+    return VisualObject(ObjectBody(**fields), anchor)
+
+
 def text_box(object_id: str = "t1", **changes) -> SlideObject:
     fields = {"id": object_id, "slide": SLIDE, "kind": "text", "x": 100, "y": 100, "w": 400, "h": 120}
-    return SlideObject(**{"style": "body-text", **fields, **changes})
+    return build(**{"style": "body-text", **fields, **changes})
 
 
 def shape_object(object_id: str = "r1", shape: str = "rectangle", **changes) -> SlideObject:
     fields = {"id": object_id, "slide": SLIDE, "kind": "shape", "shape": shape, "x": 200, "y": 200, "w": 300, "h": 200}
-    return SlideObject(**{"style": "plain-shape", **fields, **changes})
+    return build(**{"style": "plain-shape", **fields, **changes})
+
+
+# -- the shared commands, built the way a client does: a body, and the anchor as plain data -------------------
+def add(obj: SlideObject, at: int | None = None) -> AddObject:
+    """``AddObject`` for a built object."""
+    return AddObject(obj.body, obj.anchor.to_data(), at)
+
+
+def move(object_id: str, x: int, y: int, slide: str = SLIDE) -> MoveObject:
+    """``MoveObject`` to a point on a slide."""
+    return MoveObject(object_id, SlideAnchor(slide, x, y).to_data())
+
+
+def resize(object_id: str, x: int, y: int, w: int, h: int, slide: str = SLIDE) -> ResizeObject:
+    """``ResizeObject`` to a frame on a slide."""
+    return ResizeObject(object_id, SlideAnchor(slide, x, y).to_data(), w, h)
+
+
+def frame(doc, object_id: str) -> tuple[int, int, int, int]:
+    """``(x, y, w, h)`` of an object: the anchor's point and the body's size."""
+    obj = doc.model.get(object_id)
+    return (obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h)
 
 
 def define(shape_id: str = "rectangle") -> DefineShape:
@@ -37,9 +89,9 @@ def define(shape_id: str = "rectangle") -> DefineShape:
 
 def put(doc, obj: SlideObject, author: str = "ana"):
     """Add an object; a shape object brings its definition along, as the server does."""
-    if obj.shape is not None and obj.shape not in doc.model.shapes:
-        return doc.execute(Batch((define(obj.shape), AddObject(obj))), author=author)
-    return doc.execute(AddObject(obj), author=author)
+    if obj.body.shape is not None and obj.body.shape not in doc.model.shapes:
+        return doc.execute(Batch((define(obj.body.shape), add(obj))), author=author)
+    return doc.execute(add(obj), author=author)
 
 
 def image_asset(width: int = 40, height: int = 20) -> ImageAsset:
@@ -78,7 +130,7 @@ def image_object(object_id: str = "i1", asset: ImageAsset | None = None, **chang
         "image": asset.id,
         "imported": image_import(asset.id),
     }
-    return SlideObject(**{"style": "plain-image", **fields, **changes})
+    return build(**{"style": "plain-image", **fields, **changes})
 
 
 def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset | None = None, **changes):
@@ -88,7 +140,7 @@ def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset
     ``doc.model.get(object_id)``."""
     asset = asset or image_asset()
     obj = image_object(object_id, asset=asset, **changes)
-    steps = [AddObject(obj)] if asset.id in doc.model.images else [DefineImage(asset), AddObject(obj)]
+    steps = [add(obj)] if asset.id in doc.model.images else [DefineImage(asset), add(obj)]
     return doc.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=author)
 
 

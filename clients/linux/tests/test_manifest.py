@@ -16,6 +16,7 @@ import json
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -28,6 +29,13 @@ WEB_SOURCES = {
     "computes": REPO / "web" / "app" / "components" / "Workspace.vue",
     "creates": REPO / "web" / "app" / "components" / "SlideWorkspace.vue",
 }
+# The items every app's window shares (File, the Edit and View blocks, Config, Help) are built once, here; each
+# workspace above assembles them with its own.
+WEB_SHARED_MENUS = REPO / "web" / "app" / "lib" / "document-menus.ts"
+# The Format menu's four entries are built in one place for all three apps (D300).
+WEB_FORMAT_MENU = REPO / "web" / "app" / "lib" / "format-menu.ts"
+# Config ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
+WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
 APPS = tuple(BUILDERS)
 
@@ -122,6 +130,34 @@ def test_edits_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
     ]
 
 
+def test_macos_roles_are_set_on_the_shared_undo_redo_and_clipboard_actions(app: manifest.Manifest) -> None:
+    """D158: a macOS shell needs a Cocoa role (``undo:``, ``redo:``, ``cut:``, ``copy:``, ``paste:``) next to each
+    shared Edit item's accelerator, or the key equivalent is swallowed by the menu and the web view never sees it
+    (confirmed on the owner's Mac, ``notes/e0-3-neutralino-windows-macos.md``). This holds whether the action's
+    ``kind`` is ``EDITING`` (composes, native WebKit commands) or ``PAGE`` (computes/creates, D121): either way the
+    key has to reach the item before anything downstream can run. ``edit.paste-as-plain`` has no standard Cocoa
+    editing selector, so it is not given one."""
+    pairs = {
+        "edit.undo": "undo:",
+        "edit.redo": "redo:",
+        "edit.copy": "copy:",
+        "edit.cut": "cut:",
+        "edit.paste": "paste:",
+    }
+    for action_id, role in pairs.items():
+        assert app.action(action_id).role == role
+    assert app.action("edit.paste-as-plain").role is None
+
+
+def test_only_the_shared_edit_block_carries_a_macos_role(app: manifest.Manifest) -> None:
+    """Everything else (``file.*``, ``view.*``, ``tools.*``, app-specific Edit items such as creates'
+    ``edit.new-slide``) has no Cocoa editing counterpart, so :attr:`manifest.Action.role` stays unset there."""
+    roled = {"edit.undo", "edit.redo", "edit.copy", "edit.cut", "edit.paste"}
+    for action in app.actions:
+        if action.id not in roled:
+            assert action.role is None, f"{action.id} should not carry a macOS role"
+
+
 def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
     """Show who wrote what, History and chat, Dark mode — D120's shared block, verbatim in every app (even where,
     per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship yet)."""
@@ -162,8 +198,8 @@ def test_helps_shared_shape_is_identical_in_every_app(app: manifest.Manifest) ->
     assert about.label.startswith("About Claudia ")
 
 
-def test_composes_format_offers_the_two_style_actions(composes: manifest.Manifest) -> None:
-    assert labels(composes.menu("Format")) == ["Edit This Style…", "All Styles…"]
+def test_composes_format_offers_the_style_actions_and_the_document_colours(composes: manifest.Manifest) -> None:
+    assert labels(composes.menu("Format")) == ["Apply Style…", "Edit This Style…", "All Styles…", "Colours…"]
 
 
 def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manifest) -> None:
@@ -173,17 +209,28 @@ def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manife
 
 
 @pytest.mark.parametrize("app_name", ["computes", "creates"])
-def test_computes_and_creates_format_is_a_single_visible_but_inert_stub(
+def test_every_app_offers_the_same_three_format_actions(app_name: str, request: pytest.FixtureRequest) -> None:
+    """Was a single inert stub while only composes had styles (D125). All three have them now (D203), and the
+    colours a document is painted from are the same dialog everywhere (D200), so the menu is the same everywhere
+    too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two."""
+    m = request.getfixturevalue(app_name)
+    assert action_ids(m.menu("Format")) == ["format.apply-style", "format.look", "format.all-styles", "format.colours"]
+
+
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_apply_style_is_one_page_action_that_opens_the_pages_popover(
     app_name: str, request: pytest.FixtureRequest
 ) -> None:
-    """D125: the action exists (so the page can report it `enabled: false` the moment it connects) rather than the
-    menu being empty or missing."""
+    """D301: no native list of styles and no new contract message — one page action, as All Styles… is."""
     m = request.getfixturevalue(app_name)
-    assert action_ids(m.menu("Format")) == ["format.none"]
+    (apply,) = [a for a in m.menu("Format").all_actions() if a.id == "format.apply-style"]
+    assert apply.kind is Kind.PAGE and apply.label == "Apply Style…"
+    first = m.menu("Format").sections[0]
+    assert [a.id for a in first] == ["format.apply-style", "format.look", "format.all-styles"]
 
 
 def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(computes: manifest.Manifest) -> None:
-    """D123 (where new items land) and D130 (Claude's recommendation — not yet confirmed, decision-log.md — grouped
+    """D123 (where new items land) and D130 (confirmed by the owner 2026-11-10 — grouped
     into two submenus of three items each, not six flat items)."""
     edit = computes.menu("Edit")
     tail = entries(edit)[6:]  # past the shared Undo…Paste-as block
@@ -299,11 +346,22 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
     """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
     still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
     design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
-    source_path = WEB_SOURCES[app_name]
-    if not source_path.exists():
+    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES)
+    if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    source = source_path.read_text(encoding="utf-8")
-    missing = [a.id for a in BUILDERS[app_name]().actions if a.kind is not Kind.SHELL and f"id: '{a.id}'" not in source]
+    app_source, shared_menus, format_menu, languages_source = (path.read_text(encoding="utf-8") for path in sources)
+    assert "formatItems(" in app_source, "every app builds its Format menu with lib/format-menu.ts"
+    shared_source = shared_menus + format_menu
+
+    def in_web(action_id: str) -> bool:
+        if f"id: '{action_id}'" in app_source or f"id: '{action_id}'" in shared_source:
+            return True
+        tag = action_id.removeprefix("config.language.")
+        return (
+            tag != action_id and "id: `config.language.${tag}`" in shared_source and f"['{tag}', " in languages_source
+        )
+
+    missing = [a.id for a in BUILDERS[app_name]().actions if a.kind is not Kind.SHELL and not in_web(a.id)]
     assert not missing, f"{app_name}: the web app no longer has " + ", ".join(missing)
 
 
@@ -399,6 +457,26 @@ def test_the_manifest_can_be_listed_for_the_page_and_the_docs(app: manifest.Mani
     assert paste_as["items"][0]["id"] == "edit.paste-as-plain"
 
 
+def test_role_is_in_the_listing_so_the_macos_client_can_read_it_without_importing_this_module(
+    app: manifest.Manifest,
+) -> None:
+    """The macOS client (``clients/macos``) has no PyGObject and no reason to import this GTK-adjacent package at
+    run time; it reads ``describe()``'s JSON instead (``clients/macos/tools/generate_menu.py``). ``role`` has to
+    survive that trip or D158's Cocoa mapping cannot be built on the other side."""
+    listing = app.describe()
+    by_id = {a["id"]: a for menu in listing["menus"] for a in _flatten(menu)}
+    assert by_id["edit.copy"]["role"] == "copy:"
+    assert by_id["file.new"]["role"] is None
+
+
+def _flatten(menu: dict[str, Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for section in menu["sections"]:
+        for entry in section:
+            out.extend(entry.get("items", [entry]))
+    return out
+
+
 def test_about_links_are_website_then_report_an_issue_then_legal() -> None:
     """D28's shared About dialog (``window.py``'s ``_show_about``, ``AboutDialog.vue``'s own ``LINKS``): this is the
     one side of that agreement GTK can test without a display — the three links, their order and their targets."""
@@ -410,3 +488,26 @@ def test_about_links_are_website_then_report_an_issue_then_legal() -> None:
     # linked, not reproduced in full — claudiaoffice-log/notes/README.md's reason for not duplicating generated
     # content applies here too: a second copy of the licence text cannot be kept true.
     assert urls["Legal"] == "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"
+
+
+# ----------------------------------------------------------------------------------- the registry (one shell, any app)
+
+
+@pytest.mark.parametrize("app", APPS)
+def test_for_app_gives_the_manifest_of_that_app(app: str) -> None:
+    assert manifest.for_app(app).app == app
+    assert manifest.for_app(app).describe() == BUILDERS[app]().describe()
+
+
+def test_the_registry_knows_exactly_the_apps_that_have_an_identity() -> None:
+    from claudia_shell_gtk import identity
+
+    assert set(identity.names()) == set(APPS)
+
+
+def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() -> None:
+    from claudia_shell_gtk import identity
+
+    with pytest.raises(identity.UnknownApp) as problem:
+        manifest.for_app("drawbook")
+    assert "composes" in str(problem.value)

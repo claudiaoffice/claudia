@@ -1,13 +1,16 @@
 [project]
 name = "claudia-computes-io"
-version = "0.0.1"
+dynamic = ["version"]
 description = "claudia-computes-io"
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "openpyxl>=3.1"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-opc-io", "claudia-odf-io", "openpyxl>=3.1"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_computes_io/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claudia_computes_io"]
@@ -15,3 +18,5 @@ packages = ["src/claudia_computes_io"]
 [tool.uv.sources]
 claudia-core = { workspace = true }
 claudia-computes = { workspace = true }
+claudia-opc-io = { workspace = true }
+claudia-odf-io = { workspace = true }

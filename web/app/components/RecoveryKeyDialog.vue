@@ -47,7 +47,7 @@ async function copy() {
       <span v-if="copied === 'yes'" class="ok" role="status">Copied.</span>
       <span v-else-if="copied === 'no'" class="hint" role="status">Your browser would not copy it: select the key and copy it yourself.</span>
     </div>
-    <label class="confirm"><input v-model="stored" type="checkbox" /> I have stored the recovery key somewhere safe.</label>
+    <label class="confirm"><input v-model="stored" type="checkbox" > I have stored the recovery key somewhere safe.</label>
     <div class="buttons">
       <button class="btn primary" type="button" :disabled="!stored" @click="emit('done')">Continue</button>
     </div>

@@ -6,33 +6,42 @@ refused and why, and which family stands in for a missing one (:mod:`claudia_fon
 with the same files: clients get WOFF2 web fonts and the CSS for them (:mod:`claudia_fonts.webfonts`), and a
 typesetting engine gets a fontconfig setup that shows it exactly these fonts (:mod:`claudia_fonts.fontconfig`).
 
-The package does no networking and reads no document: it is a library the servers use. It is not part of the kernel
+It reads no document, and the only network access is :func:`claudia_fonts.starter.fetch`, which an operator runs to
+get the pinned starter set of open fonts. It is a library the servers use. It is not part of the kernel
 (``claudia-core``), which stays standard-library only.
 """
 
 from ._version import __version__
 from .catalogue import DEFAULT_SUBSTITUTIONS, Catalogue, Problem, Resolution
 from .collection import COLLECTION_FILE, Collection, CollectionRecord, RecordError
-from .font import FontFile, FontProblem, read_font
+from .font import Axis, FontFile, FontProblem, read_font
 from .fontconfig import JobFonts, write_fontconfig
+from .starter import FetchError, LockedCollection, LockedFile, collection_folders, fetch, read_lock
 from .webfonts import NotServable, WebFontCache, font_face_css
 
 __all__ = [
     "COLLECTION_FILE",
+    "Axis",
     "DEFAULT_SUBSTITUTIONS",
     "Catalogue",
     "Collection",
     "CollectionRecord",
+    "FetchError",
     "FontFile",
     "FontProblem",
     "JobFonts",
+    "LockedCollection",
+    "LockedFile",
     "NotServable",
     "Problem",
     "RecordError",
     "Resolution",
     "WebFontCache",
     "__version__",
+    "collection_folders",
+    "fetch",
     "font_face_css",
     "read_font",
+    "read_lock",
     "write_fontconfig",
 ]

@@ -5,11 +5,13 @@
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
-import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, besideRect, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
+import { cssOf as computedCss, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
+import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
-import { pathCss, scaleCss, textCss } from '~/lib/slide-style'
+import { facetCss, scaleCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
@@ -18,6 +20,8 @@ import type { MenuItem } from './MenuBar.vue'
 // menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
 // object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
 const props = defineProps<{ session: SlideSession; showGrid: boolean }>()
+/** `styles` asks the workspace to open the all-styles dialog, which owns the modal layer. */
+const emit = defineEmits<{ styles: [] }>()
 const session = props.session
 const state = session.state
 
@@ -54,7 +58,7 @@ const gridStyle = computed(() => (props.showGrid ? { backgroundSize: `${px(GRID_
 
 /** Where an object is on the screen; a frame being dragged replaces the one the server knows. */
 function frameOf(o: SlideObject): Frame {
-  return drag.value?.id === o.id ? drag.value.frame : o
+  return drag.value?.id === o.id ? drag.value.frame : slideFrame(o)
 }
 function boxStyle(o: SlideObject) {
   const f = frameOf(o)
@@ -63,7 +67,11 @@ function boxStyle(o: SlideObject) {
 function cssOf(o: SlideObject) {
   // withDisplayInk: a text object's default ink, genuinely black in the document (D28/2026-11-06), still needs to
   // read against a dark slide canvas in dark mode — display-only, same fix as composes' paragraphCss.
-  return withDisplayInk(scaleCss(state.styles[o.style]?.css ?? {}, scale.value))
+  return withDisplayInk(scaleCss(computedCss(state.styles, o), scale.value))
+}
+/** The look of an object's words: its paragraph's style, not the object's own (D304, D310). */
+function wordsCss(o: SlideObject) {
+  return withDisplayInk(scaleCss(wordsCssOf(state.styles, o), scale.value))
 }
 function outline(o: SlideObject) {
   return o.shape ? (state.shapes[o.shape] ?? null) : null
@@ -79,12 +87,25 @@ function textBox(o: SlideObject) {
     height: `calc(${(area.h / 100) * f.h * scale.value}px - ${2 * pad * scale.value}px)`,
   }
 }
+/** Each slot draws only the facets it reads (D304), by the server's own table (`style_model`): the words their
+ * text and paragraph, a text box's box its box, a shape's outline its paint. */
+const facets = computed(() => state.styleModel?.facets)
+function words(o: SlideObject): Record<string, string> {
+  return facetCss(wordsCss(o), facets.value, ['text', 'paragraph'])
+}
+/** A text box's box — background, padding, a border per side (D310); a shape's box is its outline instead. */
+function frameCss(o: SlideObject): Record<string, string> {
+  return o.kind === 'text' ? { ...facetCss(cssOf(o), facets.value, ['box']), 'box-sizing': 'border-box' } : {}
+}
+function paintCss(o: SlideObject): Record<string, string> {
+  return facetCss(cssOf(o), facets.value, ['outline'])
+}
 function textStyle(o: SlideObject): Record<string, string> {
   const centered = o.kind === 'shape'
-  return { ...textCss(cssOf(o)), display: 'flex', 'flex-direction': 'column', 'justify-content': centered ? 'center' : 'flex-start', ...textBox(o) }
+  return { ...words(o), ...frameCss(o), display: 'flex', 'flex-direction': 'column', 'justify-content': centered ? 'center' : 'flex-start', ...textBox(o) }
 }
 function editorStyle(o: SlideObject): Record<string, string> {
-  return { ...textCss(cssOf(o)), ...textBox(o) }
+  return { ...words(o), ...frameCss(o), ...textBox(o) }
 }
 function pictureOf(o: SlideObject) {
   return o.image ? (state.images[o.image] ?? null) : null
@@ -96,7 +117,7 @@ function pictureSrc(o: SlideObject): string {
   return asset ? imageDataUrl(asset) : ''
 }
 const label = (o: SlideObject) =>
-  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (o.text ? `: ${o.text}` : '')
+  o.kind === 'image' ? `Picture: ${o.imported?.alt ?? ''}` : (o.kind === 'text' ? 'Text box' : (outline(o)?.name ?? 'Shape')) + (wordsOf(o) ? `: ${wordsOf(o)}` : '')
 
 // ------------------------------------------------------------------------------ selection, dragging, resizing
 type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
@@ -133,7 +154,7 @@ async function onObjectDown(event: PointerEvent, o: SlideObject) {
   target.setPointerCapture(event.pointerId)
   await commitEdit()
   area.value?.focus({ preventScroll: true })
-  drag.value = { id: o.id, handle: 'move', from: where, start: { x: o.x, y: o.y, w: o.w, h: o.h }, frame: { x: o.x, y: o.y, w: o.w, h: o.h }, moved: false }
+  drag.value = { id: o.id, handle: 'move', from: where, start: slideFrame(o), frame: slideFrame(o), moved: false }
   session.select(o.id)
 }
 
@@ -142,7 +163,7 @@ function onHandleDown(event: PointerEvent, handle: Handle) {
   if (!o || event.button !== 0) return
   event.stopPropagation()
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
-  drag.value = { id: o.id, handle, from: point(event), start: { x: o.x, y: o.y, w: o.w, h: o.h }, frame: { x: o.x, y: o.y, w: o.w, h: o.h }, moved: false }
+  drag.value = { id: o.id, handle, from: point(event), start: slideFrame(o), frame: slideFrame(o), moved: false }
 }
 
 function onPointerMove(event: PointerEvent) {
@@ -194,9 +215,56 @@ const contextItems = computed<MenuItem[]>(() => {
           propertiesFor.value = o.id
         },
         setSnap: (snap) => session.setSnap(o.id, snap),
+        style: () => {
+          const at = contextMenu.value
+          contextMenu.value = null
+          styleMenu.value = at ? { x: at.x, y: at.y } : { x: 120, y: 160 }
+        },
       })
     : []
 })
+
+// ------------------------------------------------------------------------------ the style menu (E9.7, D203)
+/** Where the style menu is open, if it is. The menu itself is the one every app uses; what it styles is whatever
+ * `objectStyleHost` says is selected, so this component only has to say where to put it. */
+const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
+const styleHost = objectStyleHost({
+  get readOnly() {
+    return session.readOnly
+  },
+  get styles() {
+    return session.styleViews()
+  },
+  get roles() {
+    return state.palette?.roles ?? []
+  },
+  get readings() {
+    return state.palette?.readings ?? []
+  },
+  get selected() {
+    return state.selected ? state.objects[state.selected] ?? null : null
+  },
+  get model() {
+    return state.styleModel
+  },
+  get bodies() {
+    return session.bodies()
+  },
+  applyStyle: (targets, style, slot) => session.applyStyle(targets, style, slot),
+  changeStyle: (style, edit) => session.changeStyle(style, edit),
+  deviateStyle: (parent, targets, slot, edit) => session.deviateStyle(parent, targets, slot, edit),
+  renameStyle: (style, name) => session.renameStyle(style, name),
+  checkCss: (text) => session.checkCss(text),
+  setRole: (role, colour) => session.setRole(role, colour),
+})
+
+/** Format ▸ Edit this style…, Apply style… and Shift+F10: beside the selected object, so it stays in view. */
+function openStyleMenu(at?: { x: number; y: number }, mode: 'edit' | 'apply' = 'edit') {
+  if (!state.selected) return
+  const el = area.value?.querySelector(`[data-id="${CSS.escape(state.selected)}"]`)
+  const where = at ?? (el ? besideRect(el.getBoundingClientRect(), mode === 'apply' ? 280 : 360, window.innerWidth) : { x: 120, y: 160 })
+  styleMenu.value = { ...where, mode }
+}
 function closeContextMenu() {
   contextMenu.value = null
 }
@@ -232,10 +300,11 @@ async function beginEdit(id: string | null = state.selected) {
   if (readonly.value) return session.notice('You can only look at this document.', 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
-  editing.value = { id: o.id, text: o.text }
+  editing.value = { id: o.id, text: wordsOf(o) }
   await nextTick()
   editor.value?.focus()
-  editor.value?.setSelectionRange(o.text.length, o.text.length)
+  const length = wordsOf(o).length
+  editor.value?.setSelectionRange(length, length)
 }
 
 async function commitEdit() {
@@ -243,7 +312,8 @@ async function commitEdit() {
   if (!e) return
   editing.value = null
   area.value?.focus({ preventScroll: true })
-  if (state.objects[e.id] && e.text !== state.objects[e.id]!.text) await session.setText(e.id, e.text)
+  const current = state.objects[e.id]
+  if (current && e.text !== wordsOf(current)) await session.setText(e.id, e.text)
 }
 
 function cancelEdit() {
@@ -285,12 +355,12 @@ async function onKey(event: KeyboardEvent) {
   if (arrow) {
     event.preventDefault()
     const step = event.shiftKey ? 1 : STEP
-    const f = moveFrame(o, arrow[0] * step, arrow[1] * step)
-    if (f.x !== o.x || f.y !== o.y) await session.move(o.id, f.x, f.y)
+    const f = moveFrame(slideFrame(o), arrow[0] * step, arrow[1] * step)
+    if (f.x !== o.anchor.x || f.y !== o.anchor.y) await session.move(o.id, f.x, f.y)
   }
 }
 
-defineExpose({ focus: () => area.value?.focus(), beginEdit })
+defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu })
 
 const HANDLE_CURSOR: Record<Handle, string> = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize', n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' }
 const HANDLE_AT: Record<Handle, [number, number]> = { nw: [0, 0], n: [0.5, 0], ne: [1, 0], e: [1, 0.5], se: [1, 1], s: [0.5, 1], sw: [0, 1], w: [0, 0.5] }
@@ -321,7 +391,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         v-for="o in objects"
         :key="o.id"
         class="obj"
-        :class="[o.kind, { selected: o.id === state.selected, empty: o.text === '' }]"
+        :class="[o.kind, { selected: o.id === state.selected, empty: wordsOf(o) === '' }]"
         :style="boxStyle(o)"
         :data-id="o.id"
         :aria-label="label(o)"
@@ -330,14 +400,14 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         @dblclick.stop="beginEdit(o.id)"
         @contextmenu="onObjectContext($event, o)"
       >
-        <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" />
+        <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
         <template v-else>
           <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="pathCss(cssOf(o))" />
+            <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="paintCss(o)" />
           </svg>
           <div class="words" :style="textStyle(o)">
-            <span v-if="o.text === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
-            <span v-else-if="editing?.id !== o.id" class="text">{{ o.text }}</span>
+            <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">Double-click to type</span>
+            <span v-else-if="editing?.id !== o.id" class="text">{{ wordsOf(o) }}</span>
           </div>
           <textarea
             v-if="editing?.id === o.id"
@@ -379,6 +449,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     </div>
 
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" label="Object menu" @close="closeContextMenu" />
+    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>
 </template>

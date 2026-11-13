@@ -1,15 +1,63 @@
-demo-docs
-demo-docs-*
+# Python
 .venv
 *__pycache__*
+
+# Documents and server state a local server writes: ./start.sh keeps them in .claudia/<app>/ (docs-<app>/ and
+# demo-docs*/ are where earlier versions of it did; still ignored, so nobody commits a leftover by accident)
+.claudia/
+docs-*
+demo-docs
+demo-docs-*
+
+# Generated documentation; docs/ itself is source and tracked
+docs/_build
+
+# Web app: build output and dependencies (web/dist was an early build target, CODE-02)
 web/.nuxt
 web/.output
+web/dist
 web/node_modules
-clients/windows/node_modules
-clients/windows/dist
-clients/windows/apps/*/inject
-clients/windows/apps/*/bin
-docs/_build
-claudiaoffice-log/.obsidian/*
-claudiaoffice-log/.obsidian/workspace.json
+web/coverage
+# the HarfBuzz WebAssembly the build copies from harfbuzzjs (npm run build/dev, D903)
+web/public/wasm
 
+# Windows client: dependencies, build output, what `npm run build` generates per app, Neutralino's downloads and logs.
+# (`clients/windows/bin/` -- the `claudia-<app>` command shims -- is source and is tracked.)
+clients/windows/node_modules/
+clients/windows/dist/
+clients/windows/apps/*/bin/
+clients/windows/apps/*/js/
+clients/windows/apps/*/index.html
+clients/windows/apps/*/shell/
+clients/windows/apps/*/ext/
+clients/windows/apps/*/.tmp/
+clients/windows/apps/*/neutralinojs.log
+
+# macOS client: dependencies, build output, what `npm run build` generates per app, Neutralino's downloads and logs
+clients/macos/node_modules/
+clients/macos/dist/
+clients/macos/apps/*/bin/
+clients/macos/apps/*/js/
+clients/macos/apps/*/index.html
+clients/macos/apps/*/shell/
+clients/macos/apps/*/ext/
+clients/macos/apps/*/neutralinojs.log
+
+clients/macos/apps/creates/neutralino-mac_arm64
+clients/macos/bin/
+
+# The test-document library's run output
+test-documents/_artifacts
+
+# Obsidian: the vault's settings and plugins are shared; each person's window layout is not
+claudiaoffice-log/.obsidian/workspace*.json
+
+# Patches handed around in chat, and macOS litter
+*.patch
+*DS_Store*
+
+# Coverage data the gate's `tests` step writes (CODE-01)
+.coverage
+.coverage.*
+
+ai-models/*

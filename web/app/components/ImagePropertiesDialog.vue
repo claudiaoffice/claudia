@@ -25,6 +25,7 @@ const formatLabel = computed(() => {
   if (!a) return ''
   if (a.format === 'svg') return 'SVG (vector)'
   if (a.format === 'gif') return a.animated ? 'GIF (animated)' : 'GIF'
+  if (a.format === 'png') return a.animated ? 'PNG (animated)' : 'PNG'
   return a.format.toUpperCase()
 })
 const byteSize = computed(() => (asset.value ? formatByteSize(imageByteSize(asset.value.data)) : ''))
@@ -35,7 +36,7 @@ const importedByColor = computed(() => (imported.value ? colorOf(state, imported
   <Modal title="Image properties" :width="480" @close="emit('close')">
     <div v-if="asset && imported" class="props">
       <div class="head">
-        <img class="thumb" :src="thumbSrc" alt="" />
+        <img class="thumb" :src="thumbSrc" alt="" >
         <div class="names">
           <div class="filename">{{ imported.source_name }}</div>
           <div class="alt">“{{ imported.alt }}”</div>

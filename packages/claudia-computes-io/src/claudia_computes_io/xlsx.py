@@ -1,4 +1,4 @@
-"""Exporting a :class:`~claudia_computes.WorkbookModel` to xlsx, and adding a pivot table additively.
+"""Converting between a :class:`~claudia_computes.WorkbookModel` and xlsx, and adding a pivot table additively.
 
 ``workbook_to_xlsx`` is a minimal base export (values, formulas, one worksheet per sheet) built with openpyxl's own
 object model: it is not the ODF-first, loss-reporting import/export story of E6.9 (D5, D70, D67, D69), only enough of
@@ -10,6 +10,19 @@ overrides that reference them, by editing the already-written zip directly with 
 layer openpyxl itself writes to, not a fork of it. The result is read as a normal pivot table by Excel and
 LibreOffice, and survives an openpyxl load-edit-save round trip (the library renumbers the relationship id but keeps
 it internally consistent).
+
+``xlsx_to_workbook`` and ``apply_edits_to_xlsx`` close the loop D217 opened for docx and D219 closed for pptx, now
+for xlsx (D220): a worksheet becomes a :class:`~claudia_computes.Sheet` of cell contents, and re-exporting an
+*edited* import patches only the sheets whose cells actually changed onto the original bytes (through
+``claudia_opc_io.reconcile``), so a chart, an embedded image, a sheet claudia never touched survives untouched. The
+reconcile strategy owns only the touched sheets' own worksheet XML parts, never ``xl/styles.xml`` or
+``xl/sharedStrings.xml``: openpyxl drops the shared-string table on every save of its own accord (every string
+becomes an inline string, regardless of how the source file encoded it), so a touched sheet never needs the shared
+table and an untouched one keeps referencing the pristine, reconciled-back original; and openpyxl preserves a
+workbook's exact style-index numbering through a round trip as long as no style, font or fill is touched, which
+this module never does (cells carry no per-cell style in claudia's model -- styles apply only to floating objects,
+out of scope here). Both findings were confirmed empirically against openpyxl itself before writing this, the same
+way D147's pivot-table spike was; see the implementation note.
 """
 
 from __future__ import annotations
@@ -22,7 +35,8 @@ from xml.sax.saxutils import escape as _xml_escape
 import openpyxl
 from lxml import etree
 
-from claudia_computes import WorkbookModel
+from claudia_computes import Content, Sheet, SheetId, WorkbookModel, content_of
+from claudia_opc_io import owns, reconcile
 
 NS = {
     "ct": "http://schemas.openxmlformats.org/package/2006/content-types",
@@ -65,6 +79,90 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
     out = BytesIO()
     wb.save(out)
     return out.getvalue()
+
+
+def _cell_content(cell) -> Content:  # noqa: ANN001 (openpyxl's own cell classes are not exported as one type)
+    """``cell``'s content as claudia's own ``Content`` shape: ``None`` for an empty cell, a formula content
+    (keeping the leading ``=``) for a formula cell, :func:`~claudia_computes.content_of` for anything else."""
+    if cell.value is None:
+        return None
+    if cell.data_type == "f":
+        return {"t": "formula", "v": cell.value}
+    return content_of(cell.value)
+
+
+def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
+    """``xlsx_bytes`` as a :class:`~claudia_computes.WorkbookModel`: one sheet per worksheet, in order, each
+    non-empty cell becoming a constant or formula content. Styles, number formats, charts, pivot tables, images
+    and anything else a worksheet can carry are simply not modeled -- claudia has no model for them, same as a
+    table is invisible to ``docx_to_text`` (D217) or a picture to ``pptx_to_slides`` (D219)."""
+    wb = openpyxl.load_workbook(BytesIO(xlsx_bytes))
+    model = WorkbookModel()
+    for index, name in enumerate(wb.sheetnames, start=1):
+        sheet = Sheet(SheetId(f"s{index}"), name)
+        for row_index, row in enumerate(wb[name].iter_rows()):
+            for col_index, cell in enumerate(row):
+                content = _cell_content(cell)
+                if content is not None:
+                    sheet.cells[(row_index, col_index)] = content
+        model.sheets[sheet.id] = sheet
+        model.open_container(str(sheet.id))
+    model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
+    return model
+
+
+class UnsupportedEdit(Exception):
+    """Raised by :func:`apply_edits_to_xlsx` for an edit it cannot patch onto the original file yet: adding,
+    removing, renaming or reordering a sheet. Changing a cell's content (a constant or a formula) on a sheet
+    that already existed in ``baseline`` is supported."""
+
+
+def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current: WorkbookModel) -> bytes:
+    """Re-export ``current`` to xlsx by patching only the sheets whose cells actually changed since ``baseline``
+    (the model as it stood right after :func:`xlsx_to_workbook` imported ``original_bytes``) onto those same
+    bytes, instead of rebuilding the file from the model alone -- so a chart, an embedded image, a sheet claudia
+    never touched survives untouched (D220, following D217's docx and D219's pptx design). The parts
+    :func:`claudia_opc_io.reconcile` is told claudia owns are exactly the touched sheets' own worksheet XML
+    parts, resolved fresh each call through ``xl/workbook.xml`` and its rels -- never ``xl/styles.xml`` or
+    ``xl/sharedStrings.xml`` (see this module's own docstring for why that is safe without the per-entry merge
+    those two parts would otherwise need).
+
+    Raises :class:`UnsupportedEdit` if a sheet was added, removed, renamed or reordered since ``baseline``.
+    Changing an existing cell's content is supported; adding or removing cells on an existing sheet is too, since
+    that is just another cell content changing to or from ``None``."""
+    baseline_sheets = [(sheet.id, sheet.name) for sheet in baseline.sheets.values()]
+    current_sheets = [(sheet.id, sheet.name) for sheet in current.sheets.values()]
+    if baseline_sheets != current_sheets:
+        raise UnsupportedEdit(
+            "adding, removing, renaming or reordering a sheet cannot be patched onto the original file yet"
+        )  # noqa: E501
+
+    wb = openpyxl.load_workbook(BytesIO(original_bytes))
+    with zipfile.ZipFile(BytesIO(original_bytes)) as z:
+        members = {name: z.read(name) for name in z.namelist()}
+
+    touched_parts: set[str] = set()
+    for sheet_id, sheet_name in baseline_sheets:
+        before_cells, after_cells = baseline.sheets[sheet_id].cells, current.sheets[sheet_id].cells
+        if before_cells == after_cells:
+            continue  # nothing about this sheet changed: leave its worksheet part exactly as is
+        ws = wb[sheet_name]
+        for position in before_cells.keys() | after_cells.keys():
+            before, after = before_cells.get(position), after_cells.get(position)
+            if before == after:
+                continue
+            row, col = position
+            cell = ws.cell(row=row + 1, column=col + 1)
+            cell.value = (
+                after["v"]
+                if after is not None and after["t"] == "formula"
+                else (after.get("v") if after is not None else None)
+            )  # noqa: E501
+        touched_parts.add(_sheet_part(members, sheet_name))
+
+    patched = BytesIO()
+    wb.save(patched)
+    return reconcile(original_bytes, patched.getvalue(), owns(touched_parts))
 
 
 def _resolve_target(source_dir: str, target: str) -> str:

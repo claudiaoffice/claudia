@@ -29,7 +29,7 @@ async function open(browser, [user, password], create) {
     await page.click('.modal button:text-is("Continue")')
   }
   await page.waitForSelector('.viewport')
-  await page.waitForFunction(() => document.querySelector('.status.open'))
+  await page.waitForFunction(() => document.querySelector('.health.open'))
   return page
 }
 
@@ -51,9 +51,10 @@ async function waitFor(page, fn, arg, what) {
     throw new Error('timed out waiting for ' + what)
   }
 }
-async function menu(page, title, item) {
+// A menu item by its path: `menu(page, 'File', 'Manage', 'Share')` opens File, then Manage ▸, then clicks Share….
+async function menu(page, title, ...path) {
   await page.click(`.menus .title:text-is("${title}")`)
-  await page.click(`.menus [role=menuitem]:has-text("${item}")`)
+  for (const item of path) await page.click(`.menus .drop [role=menuitem]:has-text("${item}")`)
 }
 
 ;(async () => {
@@ -95,7 +96,7 @@ async function menu(page, title, item) {
     log('status bar:', (await ann.locator('.stats').textContent()).replace(/\s+/g, ' '))
 
     // ---- ann shares the document with ben
-    await menu(ann, 'File', 'Share')
+    await menu(ann, 'File', 'Manage', 'Share')
     await ann.fill('.modal input >> nth=0', BEN[0])
     await ann.fill('.modal input >> nth=1', BEN[1])
     await ann.click('.modal button:has-text("Add person")')
@@ -131,6 +132,25 @@ async function menu(page, title, item) {
     log('ben changed B2 to 1300; ann sees it live')
 
     // ---- ann asks the assistant
+    // The switch sits directly above the panel's tabs, and the half that is not chosen can be read on the dark panel
+    // (it was ink on ink in the light theme, 2026-11-12): WCAG contrast of its text against the panel, at least 4.5.
+    const switchCheck = await ann.evaluate(() => {
+      const lum = (rgb) => {
+        const [r, g, b] = rgb.match(/[\d.]+/g).slice(0, 3).map((v) => { const c = Number(v) / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 })
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+      }
+      const mode = document.querySelector('[data-testid=ai-mode]')
+      const off = mode.querySelector('[aria-checked=false]')
+      const panel = getComputedStyle(document.querySelector('aside.panel')).backgroundColor
+      const [a, b] = [lum(getComputedStyle(off).color), lum(panel)].sort((x, y) => y - x)
+      return { aboveTabs: mode.nextElementSibling?.classList.contains('tabs'), contrast: (a + 0.05) / (b + 0.05) }
+    })
+    assert.ok(switchCheck.aboveTabs, 'the AI switch is directly above the tabs')
+    assert.ok(switchCheck.contrast >= 4.5, `the unchosen half is readable: ${switchCheck.contrast.toFixed(2)}`)
+    // A person starts with "Suggest first" (D262), and computes cannot propose yet (E7.8): ann lets it act.
+    assert.equal(await ann.locator('[data-testid=ai-mode] [aria-checked=true]').getAttribute('data-mode'), 'suggest')
+    await ann.click('[data-testid=ai-mode] [data-mode=act]')
+    await waitFor(ann, () => document.querySelector('[data-testid=ai-mode] [aria-checked=true]')?.dataset.mode === 'act', null, 'act at once')
     await ann.fill('.write input', '@ai build an example budget')
     await ann.press('.write input', 'Enter')
     await waitFor(ann, () => document.querySelector('.typing'), null, 'ai is working')

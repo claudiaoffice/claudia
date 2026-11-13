@@ -15,6 +15,7 @@ from .nodes import (
     Percent,
     Ref,
     Str,
+    TableRef,
     Unary,
 )
 from .printer import print_formula, print_node
@@ -36,6 +37,7 @@ __all__ = [
     "Area",
     "Ref",
     "Str",
+    "TableRef",
     "Unary",
     "parse_formula",
     "print_formula",

@@ -27,7 +27,10 @@ const view = (id: string, based_on: string | null, css: Record<string, string>, 
   based_on,
   css,
   computed: css,
+  // The server derives `resolved` from `computed`; these fixtures hold literal colours, so the two match.
+  resolved: extra.computed ?? css,
   to_name: false,
+  kind: 'paragraph',
   ...extra,
 })
 

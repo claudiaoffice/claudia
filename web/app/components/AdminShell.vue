@@ -31,7 +31,7 @@ const pages: { id: 'ai' | 'typeset' | 'access'; name: string }[] = [
             <div class="server-you">Signed in as {{ signedInAs }}</div>
           </div>
         </div>
-        <hr />
+        <hr >
         <ul>
           <li v-for="p in pages" :key="p.id">
             <button type="button" :aria-current="p.id === active ? 'page' : undefined" @click="emit('navigate', p.id)">

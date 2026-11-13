@@ -1,6 +1,6 @@
 """Deferring a heavy ``UserFunction`` call through ``calc.py``: the cell keeps showing whatever it showed before,
 the deferral is kept in ``Calculator.pending_heavy`` for the caller to dispatch, and resolving it lands the result
-and wakes its readers on the next settle, the same as any other change (PERF review 2026-11-08, D37, D177).
+and wakes its readers on the next settle, the same as any other change (PERF review 2026-11-08, D37, D291).
 
 These tests go through a real ``Document``/``WorkbookModel`` (not ``Calculator`` in isolation) because the point is
 that a heavy call behaves like any other formula everywhere except the one place it must not: it never reaches
@@ -176,3 +176,19 @@ def test_discarding_a_stale_deferred_call_stores_nothing_but_forces_another_try(
 
     fill(doc, {"D1": 1})  # the forced retry happens on the next settle
     assert key in calc(doc).pending_heavy  # still too big: deferred again, not an infinite loop of errors
+
+
+def test_a_deferred_formula_that_reads_where_it_likes_is_deferred_again_when_what_it_read_changes(doc):
+    """``INDIRECT`` looks where its text says, which only the evaluation knows: what it read must be recorded even
+    when the call defers, or a later edit of those cells would never make the formula run again (D291)."""
+    fill(doc, {f"A{r + 1}": r for r in range(5)})
+    fill(doc, {"B1": '=COUNT_HEAVY(INDIRECT("A1:A5"))'})
+    key = key_of(doc, "B1")
+    (first,) = calc(doc).pending_heavy[key].call_args
+    assert sorted(first.present()) == [0, 1, 2, 3, 4]
+
+    fill(doc, {"A3": 999})
+
+    (again,) = calc(doc).pending_heavy[key].call_args
+    assert again is not first, "the formula was not calculated again after a cell it read changed"
+    assert 999 in set(again.present())

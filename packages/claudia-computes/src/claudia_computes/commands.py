@@ -1,4 +1,11 @@
-"""Commands of the mini computes model: sheets, cell contents, structural edits.
+"""Commands of the computes model: sheets, cell contents, structural edits, row and column sizes, chart tabs.
+
+Everything about floating objects — images, shapes, text boxes, diagrams: define, forget, add, remove, move,
+resize, rotate, retext, snap — is shared with composes and creates and lives in :mod:`claudia_core.objects`
+(E10.16). ``AddChart``/``RemoveChart`` below are computes' own: a chart *tab* is a concept this app alone has
+(creates has slides, composes has none of this), so it stays here even though the diagram *definition* it shows
+(a :class:`~claudia_computes.ChartSpec`) is managed by the shared ``DefineDiagram``/``UpdateDiagram``/
+``ForgetDiagram`` (E6.6).
 
 Every command carries final values and returns its exact inverse, so undo, replay and checkpoints work on the
 kernel without any computes-specific code in it. ``shifted_by`` is what lets one author undo an old step after
@@ -11,9 +18,18 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context, ImageAsset
+from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagram, fits
 
-from .events import CellsChanged, ImagesChanged, LinesResized, SheetsChanged, StructureChanged
+from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
+from .events import (
+    CellsChanged,
+    CellStylesChanged,
+    ChartsChanged,
+    LinesResized,
+    NamesChanged,
+    SheetsChanged,
+    StructureChanged,
+)
 from .formula import parse_formula
 from .formula.rewrite import adjusted
 from .model import (
@@ -23,9 +39,9 @@ from .model import (
     MAX_ROWS,
     MIN_COL_WIDTH,
     MIN_ROW_HEIGHT,
+    Chart,
     Content,
     Sheet,
-    SheetObject,
     WorkbookModel,
     content_of,
     value_of,
@@ -39,7 +55,7 @@ from .refs import (
     StructuralEdit,
     column_name,
 )
-from .region import CellRegion, ObjectSet
+from .region import CellRegion
 from .values import ErrorValue, Value
 
 register = WorkbookModel.registry.register
@@ -149,6 +165,13 @@ class RemoveSheet(Command):
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         model = ctx.model
         sheet = model.sheet(self.id)
+        blocking = model.charts_reading(self.id)
+        if blocking:
+            # A diagram's range is frozen at the cells it names (E6.6, same policy as an object's anchor) — it
+            # does not follow the sheet elsewhere the way a formula reference would, so removing the sheet
+            # would leave it pointing nowhere. Refusing is the same answer ``forget_shape``/``forget_image``
+            # give while something still uses them.
+            raise ValueError(f"sheet {sheet.name!r} still has chart {blocking[0]!r}'s data on it")
         index = list(model.sheets).index(self.id)
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
         row_heights = tuple(sorted(sheet.row_heights.items()))
@@ -156,9 +179,13 @@ class RemoveSheet(Command):
         objects = tuple(model.objects_on(self.id))  # bottom first; a removed sheet takes its objects with it
         for obj in objects:
             model.delete_object(obj.id)
-        del model._stack[self.id]  # noqa: SLF001 (the stack is WorkbookModel's own; this command is its one clearer)
-        restores = model.drop_sheet(self.id)  # formulas elsewhere that pointed here, as they were
+        model.close_container(str(self.id))
+        restores, name_restores = model.drop_sheet(
+            self.id
+        )  # formulas elsewhere that pointed here, and names, as they were
         ctx.emit(SheetsChanged())
+        if name_restores:
+            ctx.emit(NamesChanged())
         undo: list[Command] = [AddSheet(sheet.id, sheet.name, index)]
         if cells:
             undo.append(SetCells(sheet.id, cells))
@@ -166,8 +193,16 @@ class RemoveSheet(Command):
             undo.append(ResizeLines(sheet.id, "row", row_heights))
         if col_widths:
             undo.append(ResizeLines(sheet.id, "col", col_widths))
-        undo.extend(AddObject(obj, place) for place, obj in enumerate(objects))
+        undo.extend(
+            SetCellStyle(sheet.id, slot, layer, (r0, c0, r1, c1), (((r0, c0, r1, c1), style),))
+            for slot, layer, r0, c0, r1, c1, style in sheet.cell_styles.to_data()
+        )
+        undo.extend(AddObject(obj.body, obj.anchor.to_data(), place) for place, obj in enumerate(objects))
         undo.extend(SetCells(other, tuple(sorted(items))) for other, items in restores.items())
+        if name_restores:  # (after the sheet is back: a name needs its sheet)
+            from .name_commands import RestoreNames
+
+            undo.append(RestoreNames(tuple(reversed(name_restores))))
         return undo[0] if len(undo) == 1 else Batch(tuple(undo))
 
     def to_data(self) -> dict:
@@ -218,11 +253,20 @@ class SetCells(Command):
             _check_position(row, col)
         previous = tuple((r, c, sheet.cells.get((r, c))) for r, c, _ in self.cells)
         model = ctx.model
+        model.check_writable(sheet, [(r, c) for r, c, _ in self.cells])
         final = {(r, c): model.store(sheet, r, c, content) for r, c, content in self.cells}  # later duplicates win
+        model.header_edited(self.sheet, list(final))  # (formulas that name a table's columns read the new headers)
+        grown = model.grow_names(self.sheet, [position for position, v in final.items() if v is not None])
         # Formulas are told by ``settle``, with the value they give; the event here carries what needs no calculating.
         shown = tuple((r, c, v) for (r, c), v in final.items() if v is None or v["t"] != "formula")
         ctx.emit(CellsChanged(self.sheet, frozenset(final), shown))
-        return SetCells(self.sheet, tuple(reversed(previous)))  # reversed: later duplicates restore first
+        undo = SetCells(self.sheet, tuple(reversed(previous)))  # reversed: later duplicates restore first
+        if not grown:
+            return undo
+        from .name_commands import RestoreNames  # (a table that took in the new rows lets them go again)
+
+        ctx.emit(NamesChanged())
+        return Batch((undo, RestoreNames(tuple(grown))))
 
     def to_data(self) -> dict:
         return {"sheet": self.sheet, "cells": [[r, c, content] for r, c, content in self.cells]}
@@ -269,7 +313,7 @@ class ApplyCalculated(Command):
     """A worker's result for one heavy formula call (``UserFunction.heavy``), landing on the cell that deferred
     it exactly like any other change -- recalculated readers, an event, a log entry -- except undo: this is the
     server's own continuation of a formula the person already typed, not a new edit of theirs, so nobody undoes
-    it (PERF review 2026-11-08, D37, D177).
+    it (PERF review 2026-11-08, D37, D291).
 
     Applying is a no-op if the cell is not (or is no longer) waiting for this call -- edited away, its sheet
     removed, or already answered -- so a result computed from a stale snapshot can never land (``Calculator
@@ -346,7 +390,7 @@ class Structure(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         edit = self.edit
-        destroyed, restores, destroyed_sizes = ctx.model.restructure(edit)
+        destroyed, restores, destroyed_sizes, cut_styles, name_restores = ctx.model.restructure(edit)
         ctx.emit(StructureChanged(edit))
         undo = Structure(_OPPOSITE[type(edit)](edit.sheet, edit.at, edit.count))
         # Deleted cells come back, and so do the formulas that pointed at them, as they were typed.
@@ -356,6 +400,17 @@ class Structure(Command):
         ]
         if destroyed_sizes:  # the deleted lines' own sizes, which a reference can't bring back
             sets.append(ResizeLines(edit.sheet, edit.axis, destroyed_sizes))
+        # The style ranges that lay on the deleted lines, put back where the lines come back (E6.13, D307).
+        sets.extend(
+            SetCellStyle(edit.sheet, slot, layer, area, ((area, style),)) for slot, layer, (area, style) in cut_styles
+        )
+        if cut_styles:
+            ctx.emit(CellStylesChanged(edit.sheet, (0, 0, MAX_ROWS - 1, MAX_COLS - 1)))
+        if name_restores:  # names that moved or went, as they were (last: they are about the cells put back above)
+            from .name_commands import RestoreNames
+
+            ctx.emit(NamesChanged())
+            sets.append(RestoreNames(tuple(reversed(name_restores))))
         return Batch((undo, *sets)) if sets else undo
 
     def to_data(self) -> dict:
@@ -399,6 +454,118 @@ class Structure(Command):
 
     def redacted(self) -> Command:
         return self
+
+
+# ------------------------------------------------------------------------------ cell styles
+def _area_name(area: Area) -> str:
+    r0, c0, r1, c1 = area
+    layer = layer_of(area)
+    if layer == "sheet":
+        return "the whole sheet"
+    if layer == "column":
+        first, last = column_name(c0), column_name(c1)
+        return f"column {first}" if c0 == c1 else f"columns {first}:{last}"
+    if layer == "row":
+        return f"row {r0 + 1}" if r0 == r1 else f"rows {r0 + 1}:{r1 + 1}"
+    start = f"{column_name(c0)}{r0 + 1}"
+    return start if (r0, c0) == (r1, c1) else f"{start}:{column_name(c1)}{r1 + 1}"
+
+
+@register
+@dataclass(frozen=True)
+class SetCellStyle(Command):
+    """Make ``area`` of one slot and layer of a sheet's style ranges hold exactly ``pieces`` (E6.13, D307, D311).
+
+    The ordinary case is one piece, the area itself, and a style: "these cells are Header" in the ``box`` or the
+    ``words`` slot (:meth:`put`). No piece clears the area, so the layers below show through. The inverse is the
+    same command with the pieces the area held before, which is also how a row delete's undo puts styles back.
+    Every style must exist and fit the slot of a cell (D304, D316)."""
+
+    kind: ClassVar[str] = "computes.SetCellStyle"
+    sheet: SheetId
+    slot: str
+    layer: str
+    area: Area
+    pieces: tuple[Piece, ...]
+
+    @classmethod
+    def put(cls, sheet: SheetId, slot: str, area: Area, style: str | None) -> SetCellStyle:
+        """Put ``style`` into the layer of ``area``'s shape only (``None``: no style of this layer there). What a
+        person does is :meth:`applying`, where the last action wins."""
+        return cls(sheet, slot, layer_of(area), area, () if style is None else ((area, style),))
+
+    @classmethod
+    def applying(cls, model: WorkbookModel, sheet: SheetId, slot: str, area: Area, style: str | None) -> Command:
+        """What styling ``area`` in ``slot`` means to a person: every cell of it takes ``style``, whatever was there
+        before — the last action wins (D317). One step, undone as one. ``None`` clears ``area`` so that what lies
+        beneath shows through (“Clear cell style”)."""
+        plan = model.sheet(sheet).cell_styles.plan(slot, check_area(area), style)
+        steps = [cls(sheet, slot, layer, where, pieces) for layer, where, pieces in plan]
+        return steps[0] if len(steps) == 1 else Batch(tuple(steps), "Cell style")
+
+    @property
+    def label(self) -> str:
+        return "Cell style"
+
+    @property
+    def summary(self) -> str:
+        styles = sorted({style for _, style in self.pieces})
+        what = ", ".join(styles) if styles else "no style"
+        return f"{_area_name(self.area)} {self.slot}: {what}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        sheet = model.sheet(self.sheet)
+        area = check_area(self.area)
+        if self.slot not in CELL_SLOTS:
+            raise ValueError(f"a cell has no slot “{self.slot}”; it has {', '.join(CELL_SLOTS)}")
+        if self.layer not in LAYERS:
+            raise ValueError(f"there is no layer {self.layer!r}; there are {', '.join(LAYERS)}")
+        slot = SLOTS.slot("cell", self.slot)
+        for _, style_id in self.pieces:
+            if style_id not in model.styles:
+                raise ValueError(f"no style {style_id!r}")
+            style = model.styles.get(style_id)
+            if not fits(style.kind, slot):
+                raise ValueError(
+                    f"“{style.name}” is a {style.kind} style and cannot be put into the {self.slot} of a cell"
+                )
+        before = sheet.cell_styles.pieces(self.slot, self.layer, area)
+        sheet.cell_styles.replace(self.slot, self.layer, area, self.pieces)
+        ctx.emit(CellStylesChanged(self.sheet, area))
+        return SetCellStyle(self.sheet, self.slot, self.layer, area, before)
+
+    def to_data(self) -> dict:
+        return {
+            "sheet": self.sheet,
+            "slot": self.slot,
+            "layer": self.layer,
+            "area": list(self.area),
+            "pieces": [[*area, style] for area, style in self.pieces],
+        }
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetCellStyle:
+        pieces = tuple(((r0, c0, r1, c1), style) for r0, c0, r1, c1, style in data["pieces"])
+        return cls(SheetId(data["sheet"]), data["slot"], data["layer"], tuple(data["area"]), pieces)
+
+    def regions(self, model) -> tuple[CellRegion, ...]:
+        r0, c0, r1, c1 = self.area
+        return (CellRegion.of(self.sheet, r0, c0, r1, c1),)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        if isinstance(other, Structure) and other.edit.sheet == self.sheet:
+            return None  # the cells moved under the style: undoing by position would style the wrong cells
+        if isinstance(other, SetCellStyle) and (other.sheet, other.slot) == (self.sheet, self.slot):
+            a, b = self.area, other.area
+            if other.layer == self.layer and a[0] <= b[2] and b[0] <= a[2] and a[1] <= b[3] and b[1] <= a[3]:
+                return None  # a colleague styled some of the same cells after us
+        if isinstance(other, RemoveSheet) and other.id == self.sheet:
+            return None
+        return self
+
+    def redacted(self) -> Command:
+        return self  # a style name is a name the document's own style book carries anyway
 
 
 # ------------------------------------------------------------------------------ layout
@@ -491,231 +658,94 @@ class ResizeLines(Command):
         return self  # a size is layout, not content with anything to hide (same reasoning as Structure)
 
 
-# ------------------------------------------------------------------------------ images
+# ------------------------------------------------------------------------------ chart tabs
 @register
 @dataclass(frozen=True)
-class DefineImage(Command):
-    """Take a decoded image into the document, so that it opens the same anywhere (mirrors creates' own)."""
+class AddChart(Command):
+    """Add a chart tab (E6.6): a name in the tab strip, showing the diagram definition ``spec_id`` names.
 
-    kind: ClassVar[str] = "computes.DefineImage"
-    image: ImageAsset
+    That definition must already be in the document — put there by :class:`~claudia_core.DefineDiagram` — and
+    stays shared: a floating diagram object elsewhere may show the very same ``spec_id`` (``Chart``'s own
+    docstring says why that mirrors an image asset). A tab is computes' own concept, so this command lives
+    here rather than in :mod:`claudia_core.objects`, even though the definition it shows does not."""
+
+    kind: ClassVar[str] = "computes.AddChart"
+    id: str
+    name: str
+    spec_id: str
+    index: int | None = None  # where in the tab order; None: at the end
 
     @property
     def label(self) -> str:
-        return "Define image"
+        return "Add chart"
 
     @property
     def summary(self) -> str:
-        return f"the document takes an image ({self.image.width} × {self.image.height})"
+        return f"add chart {self.name}"
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        ctx.model.define_image(self.image)
-        ctx.emit(ImagesChanged(self.image.id, self.image))
-        return ForgetImage(self.image.id)
+        model = ctx.model
+        if self.id in model.charts:
+            raise ValueError(f"chart id {self.id!r} exists")
+        if any(c.name.casefold() == self.name.casefold() for c in model.charts.values()):
+            raise ValueError(f"a chart called {self.name!r} exists")
+        if self.spec_id not in model.diagrams:
+            raise ValueError(f"this document does not know the diagram {self.spec_id!r}")
+        model.add_chart(Chart(self.id, self.name, self.spec_id), self.index)
+        ctx.emit(ChartsChanged())
+        return RemoveChart(self.id)
 
     def to_data(self) -> dict:
-        return {"image": self.image.to_data()}
+        return {"id": self.id, "name": self.name, "spec_id": self.spec_id, "index": self.index}
 
     @classmethod
-    def from_data(cls, data, registry) -> DefineImage:
-        return cls(ImageAsset.from_data(data["image"]))
+    def from_data(cls, data, registry) -> AddChart:
+        return cls(data["id"], data["name"], data["spec_id"], data.get("index"))
 
     def shifted_by(self, other: Command) -> Command | None:
-        return None if isinstance(other, DefineImage) and other.image.id == self.image.id else self
+        """Refused once the diagram it would show is gone (the same guard ``AddObject`` keeps for its shape,
+        image or diagram, applied here to a tab instead of a floating object)."""
+        return None if isinstance(other, ForgetDiagram) and other.id == self.spec_id else self
+
+    def stub(self) -> dict:
+        return {"chart": self.id}
 
     def redacted(self) -> Command:
-        return self
+        return AddChart(self.id, self.id, self.spec_id, self.index)  # still there for later commands, neutral name
 
 
 @register
 @dataclass(frozen=True)
-class ForgetImage(Command):
-    """Let go of an image that no object uses (the undo of :class:`DefineImage`)."""
+class RemoveChart(Command):
+    """Remove a chart tab. The diagram definition it showed is untouched — it may still be shown elsewhere, the
+    same way removing an object never forgets the image or shape it used (:class:`~claudia_core.ForgetDiagram`
+    is the separate, explicit step for letting the definition itself go)."""
 
-    kind: ClassVar[str] = "computes.ForgetImage"
+    kind: ClassVar[str] = "computes.RemoveChart"
     id: str
 
     @property
     def label(self) -> str:
-        return "Forget image"
+        return "Remove chart"
 
     @property
     def summary(self) -> str:
-        return f"the document lets go of the image {self.id}"
+        return "remove a chart"
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        image = ctx.model.forget_image(self.id)
-        ctx.emit(ImagesChanged(self.id, None))
-        return DefineImage(image)
+        model = ctx.model
+        chart = model.chart(self.id)
+        index = list(model.charts).index(self.id)
+        model.remove_chart(self.id)
+        ctx.emit(ChartsChanged())
+        return AddChart(chart.id, chart.name, chart.spec_id, index)
 
     def to_data(self) -> dict:
         return {"id": self.id}
 
     @classmethod
-    def from_data(cls, data, registry) -> ForgetImage:
+    def from_data(cls, data, registry) -> RemoveChart:
         return cls(data["id"])
 
-    def shifted_by(self, other: Command) -> Command | None:
-        """Refuse when a colleague now uses the image, or defined it anew."""
-        if isinstance(other, AddObject) and other.obj.image == self.id:
-            return None
-        return None if isinstance(other, DefineImage) and other.image.id == self.id else self
-
     def redacted(self) -> Command:
         return self
-
-
-# ------------------------------------------------------------------------------ objects
-@register
-@dataclass(frozen=True)
-class AddObject(Command):
-    """Put an image on a sheet, anchored to a cell: on top of the others, or at stacking place ``at``.
-
-    The object's anchor (``row``/``col``) and its pixel size (``w``/``h``) never change because of a structural
-    edit (a row/column insert, delete, or resize) — see the module docstring. Only :class:`MoveObject` (the
-    person dragging it to another cell) changes where it sits, and nothing changes its size."""
-
-    kind: ClassVar[str] = "computes.AddObject"
-    obj: SheetObject
-    at: int | None = None
-
-    @property
-    def label(self) -> str:
-        return "Add image"
-
-    @property
-    def summary(self) -> str:
-        alt = self.obj.imported.alt if self.obj.imported else ""
-        return f"added an image: {_quote(alt)}" if alt.strip() else "added an image"
-
-    def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        ctx.model.insert_object(self.obj, self.at)
-        ctx.emit(ctx.model.changed(self.obj.sheet, changed=(self.obj,)))
-        return RemoveObject(self.obj.id)
-
-    def to_data(self) -> dict:
-        return {"object": self.obj.to_data(), "at": self.at}
-
-    @classmethod
-    def from_data(cls, data, registry) -> AddObject:
-        return cls(SheetObject.from_data(data["object"]), data.get("at"))
-
-    def regions(self, model: WorkbookModel) -> tuple[ObjectSet, ...]:  # type: ignore[override]
-        return (ObjectSet(self.obj.sheet, frozenset({self.obj.id})),)
-
-    def shifted_by(self, other: Command) -> Command | None:
-        """Bringing an object back is refused when somebody made another one with its id, took its image away, or
-        removed the sheet it anchors to."""
-        if isinstance(other, AddObject) and other.obj.id == self.obj.id:
-            return None
-        if isinstance(other, RemoveSheet) and other.id == self.obj.sheet:
-            return None
-        return None if isinstance(other, ForgetImage) and other.id == self.obj.image else self
-
-    def redacted(self) -> Command:
-        return self  # an image object carries no text of its own to redact (unlike creates' text boxes)
-
-
-@register
-@dataclass(frozen=True)
-class RemoveObject(Command):
-    """Take an object off its sheet."""
-
-    kind: ClassVar[str] = "computes.RemoveObject"
-    id: str
-
-    @property
-    def label(self) -> str:
-        return "Remove object"
-
-    @property
-    def summary(self) -> str:
-        return "removed an image"
-
-    def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        obj, place = ctx.model.delete_object(self.id)
-        ctx.emit(ctx.model.changed(obj.sheet, removed=(obj.id,)))
-        return AddObject(obj, place)
-
-    def to_data(self) -> dict:
-        return {"id": self.id}
-
-    @classmethod
-    def from_data(cls, data, registry) -> RemoveObject:
-        return cls(data["id"])
-
-    def regions(self, model: WorkbookModel) -> tuple[ObjectSet, ...]:  # type: ignore[override]
-        return _object_selection(model, self.id)
-
-    def shifted_by(self, other: Command) -> Command | None:
-        """Never destroy what a colleague has done to the object since (this is the undo of adding it)."""
-        return None if _touches_object(other, self.id) else self
-
-    def redacted(self) -> Command:
-        return self
-
-
-@register
-@dataclass(frozen=True)
-class MoveObject(Command):
-    """Put an object at a new anchor cell; its pixel size stays. The only way an object's position ever changes —
-    see the module docstring for why a structural edit never does."""
-
-    kind: ClassVar[str] = "computes.MoveObject"
-    id: str
-    row: int
-    col: int
-
-    @property
-    def label(self) -> str:
-        return "Move object"
-
-    @property
-    def summary(self) -> str:
-        return f"moved an image to {column_name(self.col)}{self.row + 1}"
-
-    def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        old = ctx.model.get_object(self.id)
-        new = replace(old, row=self.row, col=self.col)
-        ctx.model.replace_object(new)
-        ctx.emit(ctx.model.changed(new.sheet, changed=(new,)))
-        return MoveObject(self.id, old.row, old.col)
-
-    def to_data(self) -> dict:
-        return {"id": self.id, "row": self.row, "col": self.col}
-
-    @classmethod
-    def from_data(cls, data, registry) -> MoveObject:
-        return cls(data["id"], data["row"], data["col"])
-
-    def regions(self, model: WorkbookModel) -> tuple[ObjectSet, ...]:  # type: ignore[override]
-        return _object_selection(model, self.id)
-
-    def shifted_by(self, other: Command) -> Command | None:
-        return None if _changes_object_frame(other, self.id) else self
-
-    def redacted(self) -> Command:
-        return self
-
-
-def _object_selection(model: WorkbookModel, object_id: str) -> tuple[ObjectSet, ...]:
-    obj = model.objects.get(object_id)
-    return () if obj is None else (ObjectSet(obj.sheet, frozenset({object_id})),)
-
-
-def _object_target(command: Command) -> str | None:
-    """The id of the object a command is about, if it is about one."""
-    if isinstance(command, AddObject):
-        return command.obj.id
-    if isinstance(command, MoveObject | RemoveObject):
-        return command.id
-    return None
-
-
-def _touches_object(other: Command, object_id: str) -> bool:
-    return _object_target(other) == object_id
-
-
-def _changes_object_frame(other: Command, object_id: str) -> bool:
-    """Did ``other`` place, remove or re-create the object? (There is no resize of an object yet.)"""
-    return isinstance(other, MoveObject | RemoveObject | AddObject) and _object_target(other) == object_id

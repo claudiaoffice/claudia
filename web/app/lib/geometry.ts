@@ -116,3 +116,10 @@ export function insertFrame(kind: 'text' | 'shape' | 'image', aspect: number | n
     h,
   }
 }
+
+/** Where a popover `width` pixels wide goes beside a selected object's on-screen `rect`: to its right, top-aligned,
+ *  or to its left when the right would leave the window — so that the object it styles stays in view. */
+export function besideRect(rect: { left: number; top: number; right: number }, width: number, viewport: number, gap = 12): Point {
+  const right = rect.right + gap
+  return { x: right + width <= viewport ? right : Math.max(gap, rect.left - gap - width), y: rect.top }
+}

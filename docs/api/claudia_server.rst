@@ -38,7 +38,7 @@ Heavy-call dispatch
 --------------------
 
 Resolves a document's deferred heavy formula calls (``Calculator.pending_heavy``) on the worker pool above
-(decisions D37, D177).
+(decisions D37, D291).
 
 .. autoclass:: claudia_server.HeavyDispatcher
 .. autoclass:: claudia_server.Submittable
@@ -70,6 +70,15 @@ Restore
 .. autoclass:: claudia_server.Resolution
 .. autoclass:: claudia_server.RestoreError
 
+Help
+----
+
+.. autoclass:: claudia_server.HelpLibrary
+.. autoclass:: claudia_server.Topic
+.. autofunction:: claudia_server.parse_topic
+.. autofunction:: claudia_server.default_library
+.. autoclass:: claudia_server.HelpContentError
+
 Assistant
 ---------
 
@@ -83,6 +92,48 @@ Assistant
 .. autofunction:: claudia_server.stand_in_assistant_for
 .. autoclass:: claudia_server.ModelEngine
 .. autofunction:: claudia_server.model_assistant_for
+
+What ``ModelEngine`` is given (not in ``__all__``; documented so its signature resolves): one question's limits, and the
+app's view of its documents for the model.
+
+.. autoclass:: claudia_server.model_engine.Budget
+.. autoclass:: claudia_server.lens.Lens
+.. autoclass:: claudia_server.lens.Recorder
+
+Printing
+--------
+
+What the apps that print share (D917): the ``language`` and ``set_language`` methods, and the rule that only people
+(not the AI) change how a document prints.
+
+.. autofunction:: claudia_server.printing.add_language_methods
+.. autofunction:: claudia_server.printing.people_only
+
+Fonts
+-----
+
+What ``create_app`` is given to serve fonts to clients (not in ``__all__``; documented so its signature resolves):
+``GET /api/fonts``, ``/api/fonts/{sha256}`` and ``/api/fonts/{sha256}.woff2`` (D905).
+
+.. autoclass:: claudia_server.fonts.FontService
+   :members:
+.. autofunction:: claudia_server.fonts.font_router
+.. autodata:: claudia_server.fonts.FONTS_FORMAT
+
+Hyphenation patterns for the clients' layout, the same way (D913): ``GET /api/hyphenation`` and
+``/api/hyphenation/{sha256}``, and ``python -m claudia_server.hyphenation fetch DIR``.
+
+.. autoclass:: claudia_server.hyphenation.HyphenationService
+   :members:
+.. autoclass:: claudia_server.hyphenation.Language
+   :members:
+.. autoclass:: claudia_server.hyphenation.PatternFile
+   :members:
+.. autofunction:: claudia_server.hyphenation.hyphenation_router
+.. autofunction:: claudia_server.hyphenation.read_lock
+.. autofunction:: claudia_server.hyphenation.fetch
+.. autoexception:: claudia_server.hyphenation.FetchError
+.. autodata:: claudia_server.hyphenation.HYPHENATION_FORMAT
 
 Users
 -----

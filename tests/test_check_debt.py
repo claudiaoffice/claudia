@@ -107,16 +107,73 @@ def test_mo_compilation_is_its_own_check():
     assert mo_check.command == ("uv", "run", "--quiet", "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")
 
 
-def test_ci_catches_the_real_bug_with_no_node_modules():
+def test_ci_catches_the_real_bug_with_no_node_modules(tmp_path):
     """The acceptance test asked for in the finding: with no ``node_modules``, ``--ci`` exits non-zero.
 
-    This checks it the cheap way, without running the whole gate: the real ``web_checks()`` against this checkout
-    (where ``web/node_modules`` is not installed) really does skip, and feeding that real skip through ``verdict``
-    under ``--ci`` with no allow-list really does fail.
+    This checks it the cheap way, without running the whole gate: the real ``web_checks()`` pointed at a web folder
+    without ``node_modules`` really does skip, and feeding that real skip through ``verdict`` under ``--ci`` with no
+    allow-list really does fail. (It used to look at this checkout's own ``web/``, and so failed on every machine
+    where somebody had run ``npm install``.)
     """
-    checks = check_debt.web_checks()
+    checks = check_debt.web_checks(tmp_path)
     assert checks, "web_checks() must return the two web checks even when they will skip"
     outcomes = [check_debt.Outcome(c.name, "skipped", c.skip_reason) for c in checks if c.skip_reason]
-    assert outcomes, "this test asserts the bug's own precondition: web/node_modules is not installed here"
+    assert outcomes, "a web folder without node_modules (or a machine without npm) must make the web checks skip"
     failed, _ = check_debt.verdict(outcomes, ci=True, allow_skip=set())
     assert failed, "check_debt.py --ci must exit non-zero when node_modules is missing and no skip is allowed"
+
+
+def test_the_browser_test_is_its_own_step_and_never_fails_the_gate_for_being_unrunnable():
+    """UX-10's test needs a built web app and a Chromium, so it is a step of its own that skips with a reason.
+
+    A skip is still named in the final line (PROC-02) and still fails ``--ci`` unless allowed, which is how CI says
+    out loud that the dedicated ``e2e`` job is the one running it for real.
+    """
+    (check,) = check_debt.e2e_checks()
+    assert check.name == "e2e greeting"
+    assert check.slow, "it starts three servers and a browser; --fast should leave it out"
+    if check.skip_reason:
+        failed, message = check_debt.verdict(
+            [check_debt.Outcome(check.name, "skipped", check.skip_reason)], ci=False, allow_skip=set()
+        )
+        assert not failed and check.name in message, "an unrunnable browser test is a named skip, not a failure"
+
+
+def test_the_browser_test_does_not_also_run_inside_the_main_suite():
+    """It starts three servers; the suite that runs on every save must not."""
+    (tests,) = [c for c in check_debt.checks() if c.name == "tests"]
+    assert "--ignore" in tests.command and check_debt.E2E in tests.command
+
+
+def test_the_suite_measures_coverage_and_the_floors_are_their_own_check():
+    """CODE-01: one run of the suite measures, and a check of its own holds each package to its floor."""
+    names = [c.name for c in check_debt.checks()]
+    (tests,) = [c for c in check_debt.checks() if c.name == "tests"]
+    assert "--cov" in tests.command
+    assert names.index("coverage") == names.index("tests") + 1, "the floors read what the suite just measured"
+
+
+def test_the_coverage_floors_skip_where_tests_cannot_all_run():
+    """Off Linux, or without TeX, whole groups of tests skip, so the floors would fail for nothing broken."""
+    everything = lambda program: f"/usr/bin/{program}"  # noqa: E731
+    assert check_debt.coverage_check("linux", everything).skip_reason == ""
+    assert "Linux" in check_debt.coverage_check("win32", everything).skip_reason
+    no_tex = check_debt.coverage_check("linux", lambda program: None)
+    assert "xelatex" in no_tex.skip_reason
+
+
+def test_the_web_app_is_linted_and_its_tests_held_to_their_coverage(tmp_path):
+    """CODE-01: ESLint is a check of its own, and the web unit tests run with their coverage thresholds."""
+    by_name = {c.name: c for c in check_debt.web_checks(tmp_path)}
+    assert by_name["web lint"].command == ("npm", "run", "lint", "--silent")
+    assert by_name["web tests"].command == ("npm", "run", "coverage", "--silent")
+
+
+def test_the_layout_library_has_its_types_and_tests_checked(tmp_path):
+    """D902: the TypeScript layout library is held to its own types (no DOM, no Node) and tests."""
+    by_name = {c.name: c for c in check_debt.layout_checks(tmp_path)}
+    assert by_name["layout types"].command == ("npm", "run", "typecheck", "--silent")
+    assert by_name["layout tests"].command == ("npm", "test", "--silent")
+    assert all(c.skip_reason for c in by_name.values()), "a layout folder without node_modules skips, saying why"
+    names = [c.name for c in check_debt.checks()]
+    assert names.index("layout types") < names.index("web lint")

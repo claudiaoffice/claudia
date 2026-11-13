@@ -5,7 +5,7 @@
 // connection is encrypted, a fresh latency reading, and the way into that server's own settings pages.
 import { computed, ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
-import { friendlyLabel, indicatorLabel, manageUrl, resolveOrigin, statusWord } from '~/lib/connection'
+import { canManageNow, friendlyLabel, indicatorLabel, manageUrl, resolveOrigin, statusWord } from '~/lib/connection'
 
 const props = defineProps<{ session: BaseSession }>()
 
@@ -71,8 +71,13 @@ function close() {
           </svg>
           <span>{{ secure ? 'TLS verified' : 'Not encrypted' }}</span>
         </p>
-        <hr />
-        <a class="manage" :href="manageUrl(origin)">
+        <hr >
+        <!-- A link to this server's own settings only makes sense while its connection is actually open (D171
+             covered a different gate — viewer permission — and deliberately left this one always visible; whether
+             the link currently leads anywhere is a question this component already answers for itself, unlike
+             permission, which it can't check without a cross-origin fetch). Reconnecting/closed renders a plain,
+             inert span instead of a dead-looking live link. -->
+        <a v-if="canManageNow(state.status)" class="manage" :href="manageUrl(origin)">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />
             <path
@@ -81,6 +86,15 @@ function close() {
           </svg>
           Manage this server…
         </a>
+        <span v-else class="manage disabled" aria-disabled="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
+            />
+          </svg>
+          Manage this server…
+        </span>
       </div>
     </Popover>
   </div>
@@ -188,5 +202,10 @@ hr {
 }
 .manage:hover {
   color: var(--paper);
+}
+.manage.disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
 }
 </style>

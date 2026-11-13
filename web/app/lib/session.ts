@@ -1,10 +1,16 @@
 // One person's view of one workbook: the replica the screen draws, kept up to date from the server's events.
 // The connection, history, chat and the rest that every app has live in BaseSession.
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
-import { type LinkLike, type Region } from './protocol'
-import { type Content } from './cells'
-import type { ImageAsset, ImageImport } from './images'
+import type { LinkLike, Region, WireData } from './protocol'
+import { MAX_COLS, MAX_ROWS, type Content } from './cells'
+import type { CellRange } from './cell-styles'
+import type { ImageAsset } from './images'
+import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { CssCheck, CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
+import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
+import { rangeTouchedBy } from './charts'
+import type { NameDraft, NameInfo } from './names'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
 
@@ -19,6 +25,8 @@ export type {
 } from './base-session'
 export { BaseSession } from './base-session'
 export type { ImageAsset, ImageImport } from './images'
+export type { Chart, ChartDraft, ChartFigure, ChartRange, ChartSpec } from './charts'
+export { chartRange } from './charts'
 
 export const CHUNK_ROWS = 64
 export const CHUNK_COLS = 16
@@ -30,21 +38,26 @@ export interface SheetInfo {
   rows: number
   cols: number
 }
-/** A floating object anchored to a cell of a sheet (E10.11): today only an image. `row`/`col` anchor its top
- * left corner; `w`/`h` are its pixel size, fixed at insertion — neither the anchor nor the size ever change
- * because of a structural edit (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject`
- * (dragging it) moves it, and there is no resize of an object yet. Mirrors `claudia_computes.SheetObject`. */
-export interface SheetObject {
-  id: string
-  sheet: string
-  kind: 'image'
-  row: number
-  col: number
-  w: number
-  h: number
-  image: string | null
-  imported: ImageImport | null
+/** A `functions` search result: name, signature and a one-line tooltip (E13.5/E13.6). Fetch the full help text,
+ * with its worked example, through `functionHelp`. */
+export interface FunctionSummary {
+  name: string
+  signature: string
+  tooltip: string
 }
+export interface FunctionHelp extends FunctionSummary {
+  help: string
+}
+/** A floating object anchored to a cell of a sheet (E6.17, E10.16): the shared `ObjectBody` plus a
+ * `CellAnchor` — the only part of it that is this app's own (D177). `anchor.row`/`anchor.col` pin its top left
+ * corner; `w`/`h` are its pixel size. Neither the anchor nor the size ever changes because of a structural edit
+ * (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject` (dragging it) moves it and
+ * `resizeObject` resizes it. Mirrors `claudia_computes.SheetObject`. */
+export type SheetObject = VisualObject<CellAnchor>
+/** What `sql_preview` answers: the table a query gives (at most the asked rows of it), or the `#SQL!` it would show. */
+export type SqlPreview =
+  | { ok: true; columns: string[]; rows: (string | number | boolean | null)[][]; row_count: number; ms: number }
+  | { ok: false; error: { code: string; detail: string } }
 export interface State extends BaseState {
   sheets: SheetInfo[]
   activeSheet: string
@@ -58,6 +71,26 @@ export interface State extends BaseState {
   objects: Record<string, SheetObject>
   order: Record<string, string[]> // sheet -> object ids, the one in front last
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id
+  diagrams: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
+  charts: Chart[] // chart tabs, in tab order
+  /** The workbook's names: named ranges, tables and the results of `SQL()` cells (E6.5), as `names` sends them. */
+  names: NameInfo[]
+  /** A diagram's Plotly figure, read live off its sheet, cached by diagram id until something that could
+   * change it happens — its own definition changing, or a `cells` event touching its range (`ensureFigure`,
+   * `onAppEvent`'s `'cells'`/`'diagram'` cases). Never persisted across a reload: `loadApp` starts it empty. */
+  figures: Record<string, ChartFigure>
+  /** The document's styles: what a floating object looks like. Cell styling is a separate story (E6.13). */
+  styles: Record<string, StyleDef>
+  /** The document's colour roles and how they read against each other (D200); the styles are drawn from. */
+  palette: PaletteEvent | null
+  /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
+  styleModel: StyleModel | null
+  /** The style ranges of each sheet that has been looked at (E6.13, D307), least specific layer first, as the
+   * server's `cell_styles` sends them. A sheet's ranges are few — a whole column is one — so a sheet is loaded whole,
+   * as its sizes are. */
+  cellStyles: Record<string, CellRange[]>
+  /** How many things use each style — cells counted by range, objects by slot (`style_uses`). */
+  styleUses: Record<string, number>
 }
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
@@ -67,6 +100,8 @@ export class Session extends BaseSession<State> {
   private inflight = new Map<string, Promise<void>>()
   private sizesLoaded = new Set<string>()
   private sizesInflight = new Map<string, Promise<void>>()
+  private figuresInflight = new Map<string, Promise<void>>()
+  private stylesInflight = new Map<string, Promise<void>>()
   private editing = false
   private shown = ''
 
@@ -81,6 +116,15 @@ export class Session extends BaseSession<State> {
       objects: {},
       order: {},
       images: {},
+      diagrams: {},
+      charts: [],
+      names: [],
+      figures: {},
+      styles: {},
+      palette: null,
+      styleModel: null,
+      cellStyles: {},
+      styleUses: {},
     })
   }
 
@@ -90,7 +134,16 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images] = await Promise.all([link.request<SheetInfo[]>('sheets'), link.request<ImageAsset[]>('images')])
+    const [sheets, images, diagrams, charts, names, styles, palette, styleModel] = await Promise.all([
+      link.request<SheetInfo[]>('sheets'),
+      link.request<ImageAsset[]>('images'),
+      link.request<ChartSpec[]>('diagrams'),
+      link.request<Chart[]>('charts'),
+      link.request<{ names: NameInfo[] }>('names'),
+      link.request<StyleDef[]>('styles'),
+      link.request<PaletteEvent>('palette'),
+      link.request<StyleModel>('style_model'),
+    ])
     this.forgetCells()
     const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
     s.objects = {}
@@ -101,12 +154,155 @@ export class Session extends BaseSession<State> {
     })
     s.sheets = sheets
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
+    s.diagrams = Object.fromEntries(diagrams.map((x) => [x.id, x]))
+    s.charts = charts
+    s.names = names.names
+    s.figures = {}
+    this.figuresInflight.clear()
+    s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
+    s.palette = palette
+    s.styleModel = styleModel
+    this.track(this.refreshUses())
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
+  }
+
+  // -- styles and the palette (E9.7, D200, D203): the same methods creates' session has, so that one style menu
+  // can talk to either app through a `StyleHost`.
+  get readOnly(): boolean {
+    return this.state.me.role === 'viewer'
+  }
+
+  styleViews(): StyleDef[] {
+    return Object.values(this.state.styles)
+  }
+
+  /** Every object of the document, for the use counts beside the style names. */
+  bodies(): ObjectBody[] {
+    return Object.values(this.state.objects)
+  }
+
+
+  /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). Without a
+   * slot, into every slot of them the style fits: both slots of a cell (D311). */
+  async applyStyle(targets: StyleTarget[], style: string, slot?: string): Promise<boolean> {
+    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+  }
+
+  /** Change these targets only, in one slot or (without) in every slot that held `parent`: a new style from
+   * `parent`, named later (`deviate`, D75, D309). */
+  async deviateStyle(parent: string, targets: StyleTarget[], slot: string | undefined, edit: CssEdit): Promise<boolean> {
+    const params = { parent, targets, slot, ...edit, base: this.state.revision }
+    return (await this.attempt('deviate', params)) !== false
+  }
+
+  /** "Clear cell style" (D317): take the cells' own style away, in one slot or both, so what lies beneath shows. */
+  async clearCellStyle(sheet: string, range: [number, number, number, number], slot?: string): Promise<boolean> {
+    return (await this.attempt('clear_cell_style', { sheet, range, slot, base: this.state.revision })) !== false
+  }
+
+  /** The style ranges of a sheet that are loaded; none until `ensureCellStyles` has run for it. */
+  cellStyles(sheet: string): CellRange[] {
+    return this.state.cellStyles[sheet] ?? []
+  }
+
+  /** Load a sheet's style ranges, all of them, unless they are here already. */
+  async ensureCellStyles(sheet: string): Promise<void> {
+    if (sheet in this.state.cellStyles) return
+    return this.loadCellStyles(sheet)
+  }
+
+  private loadCellStyles(sheet: string): Promise<void> {
+    const running = this.stylesInflight.get(sheet)
+    if (running) return running
+    const generation = this.state.generation
+    const job = this.need()
+      .request<{ revision: string; ranges: CellRange[] }>('cell_styles', { sheet, row0: 0, row1: MAX_ROWS - 1, col0: 0, col1: MAX_COLS - 1 })
+      .then((answer) => {
+        if (generation === this.state.generation) this.state.cellStyles[sheet] = answer.ranges
+      })
+      .finally(() => this.stylesInflight.delete(sheet))
+    this.stylesInflight.set(sheet, job)
+    return job
+  }
+
+  /** Ask the server again how often each style is used. Quietly keeps the old counts if it cannot say. */
+  async refreshUses(): Promise<void> {
+    try {
+      this.state.styleUses = (await this.need().request<{ uses: Record<string, number> }>('style_uses')).uses
+    } catch {
+      /* a server without the counts: the gallery shows none */
+    }
+  }
+
+  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
+    return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
+  }
+
+
+  async renameStyle(style: string, name: string): Promise<boolean> {
+    return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false
+  }
+
+  async setRole(role: string, colour: string): Promise<boolean> {
+    return (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false
+  }
+
+  async replacePalette(roles: ColourRole[]): Promise<boolean> {
+    return (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false
+  }
+
+  async checkCss(text: string): Promise<CssCheck | null> {
+    try {
+      return await this.need().request<CssCheck>('check_css', { text })
+    } catch {
+      return null
+    }
   }
 
   /** The objects of a sheet, the one in front last. */
   objectsOn(sheet: string): SheetObject[] {
     return (this.state.order[sheet] ?? []).map((id) => this.state.objects[id]).filter((o): o is SheetObject => o !== undefined)
+  }
+
+  // -- charts (E6.6): a diagram definition, shown as a floating object, a tab, or both at once
+  /** The already-cached figure for a diagram, or `null` while it has not been asked for yet (call
+   * `ensureFigure` to start that, typically from the component that is about to draw it). */
+  figureOf(diagramId: string): ChartFigure | null {
+    return this.state.figures[diagramId] ?? null
+  }
+
+  /** Load (or reload, with `force`) a diagram's figure. Safe to call on every render of a chart view: a figure
+   * already cached and not invalidated resolves at once and does nothing. */
+  async ensureFigure(diagramId: string, force = false): Promise<void> {
+    if (!force && this.state.figures[diagramId]) return
+    const running = this.figuresInflight.get(diagramId)
+    if (!force && running) return running
+    const job = this.need()
+      .request<{ figure: ChartFigure }>('chart_figure', { diagram: diagramId })
+      .then((answer) => {
+        this.state.figures[diagramId] = answer.figure
+      })
+      .catch(() => {
+        /* the diagram may have just been forgotten under us; the next relevant event resolves it one way or
+         * the other, so a chart view that asked simply keeps showing its last good figure (if any) */
+      })
+      .finally(() => this.figuresInflight.delete(diagramId))
+    this.figuresInflight.set(diagramId, job)
+    return job
+  }
+
+  /** Re-fetch `charts` (the tab strip) without reloading the whole document — the `charts` push event carries
+   * no payload of its own (`claudia_computes.events.ChartsChanged`), unlike `objects`/`cells`. */
+  private async reloadCharts() {
+    this.state.charts = await this.need().request<Chart[]>('charts')
+  }
+
+  /** Re-fetch the names; the `names` push event carries no payload of its own (`claudia_computes.events.NamesChanged`).
+   * What a chart that reads a name shows may have changed with them, so those figures are asked for again. */
+  private async reloadNames() {
+    const answer = await this.need().request<{ names: NameInfo[] }>('names')
+    this.state.names = answer.names
+    for (const spec of Object.values(this.state.diagrams)) if (spec.source !== undefined) delete this.state.figures[spec.id]
   }
 
   /** Forgets a sheet's cells, and with them its row/column sizes — a structural edit (rows or columns inserted or
@@ -117,6 +313,8 @@ export class Session extends BaseSession<State> {
       s.cells = {}
       s.rowHeights = {}
       s.colWidths = {}
+      s.cellStyles = {}
+      this.stylesInflight.clear()
       this.loaded.clear()
       this.inflight.clear() // what was asked of a connection that is gone will never be answered
       this.sizesLoaded.clear()
@@ -125,6 +323,8 @@ export class Session extends BaseSession<State> {
       delete s.cells[sheet]
       delete s.rowHeights[sheet]
       delete s.colWidths[sheet]
+      delete s.cellStyles[sheet]
+      this.stylesInflight.delete(sheet)
       for (const k of [...this.loaded]) if (k.startsWith(`${sheet}:`)) this.loaded.delete(k)
       this.sizesLoaded.delete(sheet)
       this.sizesInflight.delete(sheet)
@@ -211,7 +411,7 @@ export class Session extends BaseSession<State> {
   }
 
   // ------------------------------------------------------------------------------ events
-  protected onAppEvent(name: string, data: any): boolean {
+  protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
       case 'cells': {
@@ -219,6 +419,14 @@ export class Session extends BaseSession<State> {
         for (const [r, c, content] of data.cells as [number, number, Content][]) {
           if (content === null) map.delete(key(r, c))
           else map.set(key(r, c), content)
+        }
+        // A changed cell may feed a diagram's figure even on another sheet's screen (a chart tab, say), so
+        // every cached figure is checked, not only those for the active sheet.
+        const positions = data.positions as [number, number][]
+        for (const spec of Object.values(s.diagrams)) {
+          // A chart that reads a name follows whatever the name is on, which may be a query result that moves: any
+          // change of cells may touch it, so it is asked for again.
+          if (spec.id in s.figures && (spec.range ? rangeTouchedBy(spec.range, data.sheet, positions) : true)) delete s.figures[spec.id]
         }
         return true
       }
@@ -237,14 +445,41 @@ export class Session extends BaseSession<State> {
         this.track(this.reload())
         return true
       case 'objects': {
-        for (const o of data.changed as SheetObject[]) s.objects[o.id] = o
-        for (const id of data.removed as string[]) delete s.objects[id]
-        s.order[data.sheet] = data.order
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed as SheetObject[]) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.container] = e.order
+        this.track(this.refreshUses())
         return true
       }
       case 'image':
         if (data.asset) s.images[data.id] = data.asset
         else delete s.images[data.id]
+        return true
+      case 'diagram':
+        if (data.definition) s.diagrams[data.id] = data.definition as ChartSpec
+        else delete s.diagrams[data.id]
+        delete s.figures[data.id] // its range or titles may have changed (DefineDiagram/UpdateDiagram alike)
+        return true
+      case 'charts':
+        this.track(this.reloadCharts())
+        return true
+      case 'names':
+        this.track(this.reloadNames())
+        return true
+      case 'styles':
+        // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
+        // resolved colours a sheet is drawn with, and a client cannot work them out for itself (D200).
+        s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
+        this.track(this.refreshUses())
+        return true
+      case 'cell_styles':
+        // Only a sheet somebody looks at is loaded again; another is loaded when it comes into view.
+        if (data.sheet in s.cellStyles) this.track(this.loadCellStyles(data.sheet).catch(() => undefined))
+        this.track(this.refreshUses())
+        return true
+      case 'palette':
+        s.palette = data as PaletteEvent
         return true
     }
     return false
@@ -269,7 +504,7 @@ export class Session extends BaseSession<State> {
 
   // -- floating objects (images, today): anchored to a cell, a fixed pixel size, never touched by `structure`
   // or `resizeLines`
-  /** Import a picture from disk and anchor it to a cell of the sheet that is shown (E10.11); its id, or null
+  /** Import a picture from disk and anchor it to a cell of the sheet that is shown (E6.17); its id, or null
    * after telling the person why not. `data` is the file's bytes, base64 (`lib/images.ts`'s `fileToBase64`);
    * `sourcePath` is the file's full path if the caller could get one — a plain web browser cannot, and passes
    * `null`. `anchor` fixes the object's cell and its pixel size for good: there is no resize yet, and no
@@ -290,9 +525,77 @@ export class Session extends BaseSession<State> {
     return done === false ? null : done.object
   }
 
+  /** Take a new chart definition into the document (E6.6); its id, or `null` after telling the person why not.
+   * Show it with `addDiagramObject`, `addChart`, or both — neither is bundled into this call, since (unlike
+   * `addImage`) a definition may be placed more than once from the very start. */
+  async defineDiagram(draft: ChartDraft): Promise<string | null> {
+    const done = await this.attempt('define_diagram', { definition: { kind: 'bar', ...draft }, base: this.state.revision })
+    return done === false ? null : done.diagram
+  }
+
+  /** Redefine a chart in place: what a tab or floating object already showing `id` updates to. */
+  async updateDiagram(id: string, draft: ChartDraft): Promise<boolean> {
+    return (await this.attempt('update_diagram', { id, definition: { kind: 'bar', ...draft }, base: this.state.revision })) !== false
+  }
+
+  /** Let a chart definition go. Refused (returns `false`) while a tab or a floating object still shows it. */
+  async forgetDiagram(id: string): Promise<boolean> {
+    return (await this.attempt('forget_diagram', { id, base: this.state.revision })) !== false
+  }
+
+  /** Put a chart on the sheet that is shown, as a floating object showing `diagramId`; its id, or `null` after
+   * telling the person why not. `moveObject`/`resizeObject`/`removeObject` then work on it like any object. */
+  async addDiagramObject(diagramId: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
+    const done = await this.attempt('add_diagram_object', { sheet: this.state.activeSheet, diagram: diagramId, ...anchor, base: this.state.revision })
+    return done === false ? null : done.object
+  }
+
+  /** Add a chart tab showing `specId`; its id, or `null` after telling the person why not. */
+  async addChart(name: string, specId: string, index: number | null = null): Promise<string | null> {
+    const done = await this.attempt('add_chart', { name, spec_id: specId, index, base: this.state.revision })
+    return done === false ? null : done.chart
+  }
+
+  /** Remove a chart tab. The definition it showed is untouched (`forgetDiagram` is the separate step). */
+  async removeChart(id: string): Promise<boolean> {
+    return (await this.attempt('remove_chart', { id, base: this.state.revision })) !== false
+  }
+
+  // -- names, tables and queries (E6.5)
+  /** Give cells a name (or point an existing one, same scope, somewhere else); `false` after telling the person why not. */
+  async defineName(draft: NameDraft): Promise<boolean> {
+    return (await this.attempt('define_name', { definition: draft, base: this.state.revision })) !== false
+  }
+
+  /** Call a name something else; the formulas that use it are rewritten. */
+  async renameName(old: string, next: string, scope: string | null): Promise<boolean> {
+    return (await this.attempt('rename_name', { old, new: next, scope, base: this.state.revision })) !== false
+  }
+
+  /** Take a name away; the cells stay. */
+  async removeName(name: string, scope: string | null): Promise<boolean> {
+    return (await this.attempt('remove_name', { name, scope, base: this.state.revision })) !== false
+  }
+
+  /** Run a query as a `SQL()` cell on `sheet` would, without changing the document (what the SQL editor previews). */
+  async sqlPreview(query: string, sheet: string, limit = 20): Promise<SqlPreview> {
+    return this.need().request<SqlPreview>('sql_preview', { query, sheet, limit })
+  }
+
+  /** Put a query into a cell as `=SQL("…")`, and with `name` make its result a table of that name. */
+  async defineSql(sheet: string, row: number, col: number, query: string, name: string | null): Promise<boolean> {
+    return (await this.attempt('define_sql', { sheet, row, col, query, name, base: this.state.revision })) !== false
+  }
+
   /** Drag an object to a new anchor cell; its size never changes. */
   async moveObject(id: string, row: number, col: number): Promise<boolean> {
     return (await this.attempt('move_object', { id, row, col, base: this.state.revision })) !== false
+  }
+
+  /** Give an object a new frame: its anchor cell and pixel size together, since dragging a corner moves the
+   * corner too. An image must keep its own proportions (the server refuses otherwise); a diagram keeps none. */
+  async resizeObject(id: string, frame: { row: number; col: number; w: number; h: number }): Promise<boolean> {
+    return (await this.attempt('resize_object', { id, ...frame, base: this.state.revision })) !== false
   }
 
   async removeObject(id: string): Promise<boolean> {
@@ -303,6 +606,19 @@ export class Session extends BaseSession<State> {
    * `sizes` is `[index, size | null]` pairs. */
   async resizeLines(sheet: string, axis: Axis, sizes: [number, number | null][]): Promise<boolean> {
     return (await this.attempt('resize_lines', { sheet, axis, sizes, base: this.state.revision })) !== false
+  }
+
+  // -- the function catalog (E13.5, E13.6: computes' "Documentation", and the formula bar's in-context help)
+  /** Every cell function whose name or description mentions `query`, closest name match first; the whole
+   * catalog, alphabetically, if `query` is blank. */
+  async listFunctions(query = ''): Promise<FunctionSummary[] | false> {
+    return await this.attempt('functions', { query })
+  }
+
+  /** One function's full help text, by the name a `listFunctions` result (or the formula bar's own parsing of
+   * what is being typed) gave. */
+  async functionHelp(name: string): Promise<FunctionHelp | false> {
+    return await this.attempt('function_help', { name })
   }
 
   // -- where I am, and holding a cell while I type into it

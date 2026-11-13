@@ -1,0 +1,38 @@
+{
+ "version": "0.2.0",
+ "UnsupportedEdit": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "apply_edits_to_docx": {
+  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+ },
+ "apply_edits_to_odt": {
+  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, losses: 'LossLog | None' = None, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+ },
+ "docx_to_text": {
+  "function": "(docx_bytes: 'bytes') -> 'TextModel'"
+ },
+ "export_info": {
+  "function": "(log: 'CommandLog', branch: 'str | None' = None) -> 'tuple[DocumentInfo, dict[str, str]]'"
+ },
+ "odt_export_losses": {
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True) -> 'tuple[Loss, ...]'"
+ },
+ "odt_import_losses": {
+  "function": "(odt_bytes: 'bytes') -> 'tuple[Loss, ...]'"
+ },
+ "odt_to_text": {
+  "function": "(odt_bytes: 'bytes') -> 'TextModel'"
+ },
+ "text_to_docx": {
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+ },
+ "text_to_odt": {
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+ }
+}

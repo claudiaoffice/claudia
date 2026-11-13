@@ -102,8 +102,8 @@
       "activeSavedViewId": null,
       "sort": [
         {
-          "key": "progress",
-          "dir": "asc"
+          "key": "title",
+          "dir": "desc"
         }
       ],
       "group": {
@@ -131,9 +131,18 @@
   "scopeViews": {},
   "collapsedTasks": {
     "Projects/claudia-office/claudia-office.md": [
-      "w0ipiw84mw2jd96q",
       "6pox7j2emw2jdqxt",
-      "77fftat6mw2jdxvb"
+      "yz6wagfzmw2jbyb5",
+      "kbenavvsmw2jbooq",
+      "29b4sfkhmw2jaxzw",
+      "f59xjlwlmw2jai9h",
+      "vddlkb3qmw2j92ym",
+      "zbd2x6brrjehpdmw",
+      "8zy9t4h3mw2j2ob6",
+      "h9vwutc9mw2j8jhe",
+      "zsc7t7qrcm4vw7zc",
+      "soc833mmmw2ja5dj",
+      "sl3nsm7kmw2jcdp5"
     ]
   },
   "collapsedProjects": [],

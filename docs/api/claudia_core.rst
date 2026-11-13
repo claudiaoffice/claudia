@@ -29,6 +29,121 @@ Commands
 .. autoclass:: claudia_core.Redacted
 .. autoclass:: claudia_core.Context
 
+Paragraphs
+----------
+
+.. automodule:: claudia_core.paragraphs
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A paragraph is the same entity wherever text appears: a paragraph of a composes document, the words in a creates
+text box, the label inside a shape on a sheet (E10.17, D181).
+
+.. autoclass:: claudia_core.Paragraph
+.. autoclass:: claudia_core.Run
+.. autoclass:: claudia_core.ListItem
+   :exclude-members: list
+
+Lists
+-----
+
+.. automodule:: claudia_core.lists
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A paragraph is an item of a list by structure only (``Paragraph.item``); how it looks, and which number it carries,
+is derived (E9.21). (The field ``list`` of ``ListItem`` and of the commands is left out of the member lists below,
+because a documented attribute called ``list`` makes every ``list[...]`` in a signature ambiguous for Sphinx; each
+class docstring says what it holds.) ``claudia_core.SCHEMES`` maps the id of each scheme (``bullets``,
+``numbers``) to its :class:`~claudia_core.Scheme`.
+
+.. autoclass:: claudia_core.ListDef
+.. autoclass:: claudia_core.ListBook
+.. autoclass:: claudia_core.Scheme
+.. autoclass:: claudia_core.Label
+.. autofunction:: claudia_core.numbering_labels
+.. autoclass:: claudia_core.ListsChanged
+.. autoclass:: claudia_core.CreateList
+   :exclude-members: list
+.. autoclass:: claudia_core.ChangeList
+   :exclude-members: list
+.. autoclass:: claudia_core.RemoveList
+   :exclude-members: list
+
+Page setup and language
+-----------------------
+
+.. automodule:: claudia_core.page
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+The page a document prints on and the language it is written in, shared by the apps that print (D904, D915, D917).
+
+.. autoclass:: claudia_core.PageSetup
+.. autoexception:: claudia_core.PageSetupError
+.. autodata:: claudia_core.page.PAPERS
+   :no-value:
+.. autofunction:: claudia_core.normalize_language
+.. autoexception:: claudia_core.LanguageError
+.. autoclass:: claudia_core.SetLanguage
+.. autoclass:: claudia_core.LanguageChanged
+
+Objects: shapes, images and text boxes
+--------------------------------------
+
+.. automodule:: claudia_core.objects
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+An object is a shared body and a per-app anchor; everything but the anchor is written once here (E10.16, D177).
+
+.. autoclass:: claudia_core.ObjectBody
+.. autoclass:: claudia_core.VisualObject
+.. autoclass:: claudia_core.Anchor
+.. autoclass:: claudia_core.ObjectModel
+.. autoclass:: claudia_core.ObjectSet
+.. autoclass:: claudia_core.ObjectsChanged
+.. autoclass:: claudia_core.ImagesChanged
+.. autoclass:: claudia_core.ShapesChanged
+.. autoclass:: claudia_core.DiagramDefinition
+.. autoclass:: claudia_core.DiagramsChanged
+
+The object commands, the same in all three apps:
+
+.. autoclass:: claudia_core.AddObject
+.. autoclass:: claudia_core.RemoveObject
+.. autoclass:: claudia_core.MoveObject
+.. autoclass:: claudia_core.ResizeObject
+.. autoclass:: claudia_core.RotateObject
+.. autoclass:: claudia_core.SetText
+.. autoclass:: claudia_core.SetParagraph
+.. autoclass:: claudia_core.SetObjectStyle
+.. autoclass:: claudia_core.SetParagraphStyle
+.. autoclass:: claudia_core.SetSnap
+.. autoclass:: claudia_core.DefineShape
+.. autoclass:: claudia_core.ForgetShape
+.. autoclass:: claudia_core.DefineImage
+.. autoclass:: claudia_core.ForgetImage
+.. autoclass:: claudia_core.DefineDiagram
+.. autoclass:: claudia_core.UpdateDiagram
+.. autoclass:: claudia_core.ForgetDiagram
+
+Shape outlines
+--------------
+
+.. automodule:: claudia_core.shapes
+   :members: ShapeError
+
+.. currentmodule:: claudia_core
+
+.. autoclass:: claudia_core.ShapeDefinition
+.. autofunction:: claudia_core.parse_shape
+.. autoclass:: claudia_core.objects.ReadAnchor
+
 The model an app implements
 ---------------------------
 
@@ -99,11 +214,18 @@ A style is CSS from one short, versioned allow-list (``CSS_VERSION``): no ``url(
 ``@``-rules or ``!important``. An app's model that wants styles holds a ``StyleBook``; the commands are the only ways to
 change it.
 
+A colour may be a role of the document's palette (``@accent``, or ``@accent/55`` for that role at 55% opacity) rather
+than a literal. ``resolve_css`` replaces the roles with colours, and that is the form a client draws with, so what
+reaches a browser is always literal.
+
 .. autodata:: claudia_core.CSS_VERSION
 .. autodata:: claudia_core.ALLOWED_CSS
 .. autofunction:: claudia_core.validate_css
 .. autofunction:: claudia_core.parse_css
 .. autofunction:: claudia_core.format_css
+.. autofunction:: claudia_core.resolve_css
+.. autofunction:: claudia_core.roles_used
+.. autofunction:: claudia_core.rgb_of
 .. autoexception:: claudia_core.CssError
 .. autoclass:: claudia_core.CssProblem
 .. autoclass:: claudia_core.StyleDef
@@ -113,6 +235,67 @@ change it.
 .. autoclass:: claudia_core.ChangeStyle
 .. autoclass:: claudia_core.RenameStyle
 .. autoclass:: claudia_core.RemoveStyle
+
+Facets, kinds and slots
+-----------------------
+
+.. automodule:: claudia_core.facets
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+Every property a style may set belongs to one of four facets (text, paragraph, box, outline); a style's kind says which
+facets it may hold; a slot is a place in a thing that reads a style, and the slot table says which slots everything that
+can be styled has (D303-D305, D312, D315).
+
+.. autoclass:: claudia_core.Facet
+.. autodata:: claudia_core.facets.TEXT_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.PARAGRAPH_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.BOX_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.OUTLINE_FACET
+   :no-value:
+.. autodata:: claudia_core.facets.FACETS
+   :no-value:
+.. autodata:: claudia_core.facets.FACET_PROPERTIES
+   :no-value:
+.. autofunction:: claudia_core.facet_of
+.. autodata:: claudia_core.facets.KINDS
+   :no-value:
+.. autofunction:: claudia_core.check_kind
+.. autoclass:: claudia_core.Slot
+.. autoclass:: claudia_core.SlotTable
+.. autodata:: claudia_core.facets.SLOTS
+   :no-value:
+.. autofunction:: claudia_core.fits
+
+The palette: colours by what they mean
+--------------------------------------
+
+.. automodule:: claudia_core.palette
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A palette is part of the document, so a document looks the same wherever it is opened (D200). A role says what a
+colour *means*; change the role and everything that meant it follows, across all three apps.
+
+.. autoclass:: claudia_core.ColourRole
+.. autoclass:: claudia_core.Palette
+.. autoclass:: claudia_core.Reading
+.. autoclass:: claudia_core.PaletteChanged
+.. autoclass:: claudia_core.SetRole
+.. autoclass:: claudia_core.ReplacePalette
+.. autofunction:: claudia_core.builtin_palette
+.. autofunction:: claudia_core.contrast
+.. autofunction:: claudia_core.luminance
+.. autodata:: claudia_core.BUILTIN_ROLES
+.. autodata:: claudia_core.PAIRINGS
+.. autodata:: claudia_core.TEXT_FLOOR
+.. autodata:: claudia_core.UI_FLOOR
+.. autodata:: claudia_core.MAX_ROLES
 
 Images
 ------

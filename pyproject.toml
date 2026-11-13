@@ -3,7 +3,7 @@ name = "claudia-monorepo"
 version = "0.0.0"
 description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents"]
 
 [tool.uv]
 package = false
@@ -25,6 +25,9 @@ claudia-typeset = { workspace = true }
 claudia-computes-io = { workspace = true }
 claudia-composes-io = { workspace = true }
 claudia-creates-io = { workspace = true }
+claudia-opc-io = { workspace = true }
+claudia-odf-io = { workspace = true }
+claudia-test-documents = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -37,6 +40,10 @@ dev = [
     "httpx>=0.27",
     "types-openpyxl>=3.1",
     "lxml-stubs>=0.5",
+    # The one browser-driven test (tests/e2e): the browser itself is a separate
+    # `playwright install chromium`, and the test skips, saying so, where it is missing.
+    "playwright>=1.47",
+    "pytest-cov>=6",
 ]
 
 [tool.pytest.ini_options]
@@ -64,14 +71,14 @@ ignore = [
 "vulture_whitelist.py" = ["B018"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset"]
+known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents"]
 
 [tool.mypy]
 python_version = "3.14"
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src"]
+mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src", "packages/claudia-test-documents/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
@@ -91,3 +98,46 @@ paths = ["packages", "scripts", "clients/linux/src", "clients/linux/tests", "vul
 min_confidence = 60
 ignore_decorators = ["@form", "@builtin"]  # (they register the function in a table; nothing calls it by name)
 exclude = [".venv/", "docs/"]
+
+[tool.coverage.run]
+# CODE-01: what the test suite reaches of the packages' own code (not of the tests themselves). Measured by the gate's
+# `tests` step and held to the floors below by `scripts/check_coverage.py`.
+source = ["packages"]
+omit = ["packages/*/tests/*", "*/conftest.py"]
+branch = true
+data_file = ".coverage"
+
+# SEC-08: advisories the npm audit (`scripts/check_npm_audit.py`, a step of the gate) may let through, one entry per
+# advisory with the reason. The audit fails on every other advisory of moderate severity or worse. An entry
+# that nothing needs any more fails the audit, so this table only ever holds what it must.
+#
+# [[tool.claudia.npm-audit-allow]]
+# advisory = "GHSA-xxxx-xxxx-xxxx"
+# reason = "why this is acceptable, and what to wait for before removing the entry"
+
+[[tool.claudia.npm-audit-allow]]
+advisory = "GHSA-g3hv-75wg-m249"
+reason = """minimatch <11.0.1 (denial of service by glob-part amplification) reaches layout/ only through TypeDoc, a
+development tool that matches the globs of our own typedoc.json and never untrusted input. TypeDoc 0.28.20, the
+latest, calls Minimatch.matchOne, which minimatch 11 no longer has, so it cannot be overridden. Remove when a TypeDoc
+release accepts minimatch 11."""
+
+[tool.claudia.coverage-floors]
+# CODE-01: the least each package's tests must reach, statements and branches together, as a whole percentage. A floor
+# only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.
+"claudia-ai" = 99
+"claudia-client" = 88
+"claudia-composes" = 90
+"claudia-composes-io" = 95
+"claudia-computes" = 91
+"claudia-computes-io" = 95
+"claudia-container" = 91
+"claudia-core" = 94
+"claudia-creates" = 93
+"claudia-creates-io" = 91
+"claudia-fonts" = 97
+"claudia-odf-io" = 96
+"claudia-opc-io" = 100
+"claudia-server" = 94
+"claudia-test-documents" = 89
+"claudia-typeset" = 87

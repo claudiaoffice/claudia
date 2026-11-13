@@ -4,6 +4,7 @@ Scaling tests, not stopwatches: they compare the same operation on a small and a
 cost grows faster than it should, which is robust against slow machines (see the guards of claudia-core).
 """
 
+import gc
 import time
 
 from claudia_computes import AddSheet, InsertRows, SetCells, Structure, WorkbookModel, parse_input
@@ -14,12 +15,26 @@ S1 = "s1"
 
 
 def best_of(repeat, fn):
-    best = float("inf")
-    for _ in range(repeat):
-        started = time.perf_counter()
-        fn()
-        best = min(best, time.perf_counter() - started)
-    return best
+    """The fastest of ``repeat`` runs of ``fn``, with the cyclic garbage collector held off while they run.
+
+    A collection is triggered by how much has been allocated, not by the work being measured, so it lands in the
+    large case far more often than in the small one and reads as super-linear cost: reopening 8,000 formulas
+    measured 20-25x the time of 800 with it on, and 11x with it off (the guard's bound is 25x). ``timeit`` turns
+    it off for the same reason.
+    """
+    gc.collect()
+    was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        best = float("inf")
+        for _ in range(repeat):
+            started = time.perf_counter()
+            fn()
+            best = min(best, time.perf_counter() - started)
+        return best
+    finally:
+        if was_enabled:
+            gc.enable()
 
 
 def workbook():
@@ -102,3 +117,17 @@ def test_a_structural_edit_is_linear_in_the_formulas():
 
     ratio = insert(5_000) / insert(500)
     assert ratio < 25, f"10x more formulas took {ratio:.0f}x as long to insert a row (linear is about 10)"
+
+
+def test_a_scratch_copy_costs_the_size_of_the_workbook_not_the_length_of_its_history():
+    """E7.8: previewing an AI proposal copies the current state; 40x more edits on the same cells must not show."""
+
+    def scratch_time(edits):
+        doc = workbook()
+        fill_column(doc, [f"=A{i % 90 + 1}*2" for i in range(3000)])
+        for k in range(edits):
+            doc.execute(SetCells(S1, ((k % 90, 0, parse_input(str(k))),)), author="ana")
+        return best_of(3, doc.scratch)
+
+    ratio = scratch_time(2000) / scratch_time(50)
+    assert ratio < 3, f"a copy after 2,000 edits took {ratio:.1f}x as long as after 50 (it should not depend on them)"

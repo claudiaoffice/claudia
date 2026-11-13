@@ -15,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
-from support import pump, pump_for
+from support import evaluate, pump, pump_for
 
 from claudia_shell_gtk import manifest
 from claudia_shell_gtk.bridge import Bridge
@@ -322,5 +322,70 @@ def test_a_page_of_another_origin_is_not_heard(site: str, tmp_path: Path) -> Non
     try:
         pump_for(1.5)
         assert rig.messages == []
+    finally:
+        rig.close()
+
+
+class Versioned:
+    """A server whose page changes between two loads while it tells the client to keep the old one for an hour: what
+    a server without revalidation looks like after it was updated (the demo server showed its old web app that way)."""
+
+    def __init__(self) -> None:
+        self.version = "one"
+        owner = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self) -> None:  # noqa: N802 (name fixed by http.server)
+                body = f"<!doctype html><title>{owner.version}</title>".encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "max-age=3600")
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args: object) -> None:
+                pass
+
+        self._server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self._server.serve_forever, daemon=True).start()
+        self.origin = f"http://127.0.0.1:{self._server.server_port}"
+
+    def stop(self) -> None:
+        self._server.shutdown()
+
+
+@pytest.fixture
+def versioned() -> Iterator[Versioned]:
+    server = Versioned()
+    yield server
+    server.stop()
+
+
+def _title_is(rig: Rig, expected: str) -> bool:
+    return evaluate(rig.page.widget, "document.title") == expected
+
+
+def test_a_page_that_a_server_changed_is_not_taken_from_the_cache_of_an_earlier_window(
+    versioned: Versioned, tmp_path: Path
+) -> None:
+    first = Rig(versioned.origin, tmp_path)
+    pump(lambda: _title_is(first, "one"), what="the first version")
+    first.close()
+    versioned.version = "two"
+    second = Rig(versioned.origin, tmp_path)
+    try:
+        pump(lambda: _title_is(second, "two"), what="the new version, not the cached one")
+    finally:
+        second.close()
+
+
+def test_navigating_to_a_server_again_shows_its_current_page(versioned: Versioned, tmp_path: Path) -> None:
+    rig = Rig(versioned.origin, tmp_path)
+    try:
+        pump(lambda: _title_is(rig, "one"), what="the first version")
+        versioned.version = "two"
+        rig.page.navigate(versioned.origin)
+        pump(lambda: _title_is(rig, "two"), what="the new version, not the cached one")
     finally:
         rig.close()

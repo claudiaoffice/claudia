@@ -10,7 +10,7 @@ stood at `886f484` (not rebased onto `main`'s later work — `main` has diverged
 > not part of the slide itself. Whether it's shown should be controlled by a View menu entry, default on, objects
 > snap by default. In the context menu for an object I can "release" the object from the snapping.
 
-Not previously in `backlog.md`; added there as E10.15 only once built (D151).
+Not previously in `backlog.md`; added there as E10.15 only once built (D214).
 
 ## The two independent things
 

@@ -2,10 +2,26 @@
 // checkpoints, undo/redo. The replica of the document itself belongs to the app (Session: cells, TextSession: text).
 // All changes go to the server as requests; nothing is believed until the server's events say it happened.
 import { reactive } from 'vue'
-import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome } from './protocol'
+import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
+import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
+
+/** One thing an export could not put into the file, as a code for the interface to put into words (E12.6). */
+export interface ExportLoss {
+  kind: string
+  detail: string
+  count: number
+}
+
+/** What `export_office` answers: the file as base64, and for formats that can tell, what it could not hold. */
+export interface ExportedFile {
+  format: string
+  content_type: string
+  data: string
+  losses?: ExportLoss[]
+}
 
 export interface Person {
   id: number
@@ -41,6 +57,20 @@ export interface Notice {
   kind: 'info' | 'warning' | 'error'
   text: string
 }
+/** A `help_search` result: everything but the body (E13.1, E13.3). */
+export interface HelpTopicSummary {
+  id: string
+  title: string
+  apps: string[]
+  tags: string[]
+}
+/** A `help_topic` result: the whole topic, its `body` Markdown shown as plain text for now (D30 is not wired up
+ * for help yet — this iteration's own scope decision, not a property of the topic format). */
+export interface HelpTopic extends HelpTopicSummary {
+  language: string
+  explains: string[]
+  body: string
+}
 export interface BaseState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
@@ -49,6 +79,8 @@ export interface BaseState {
    *  the Open dialog can connect to a bookmarked server other than the one the page was loaded from). Blank only
    *  before the first connection has told us. */
   host: string
+  /** How the AI treats this person's requests in this document (D262): the person's own choice, kept in this browser. */
+  aiMode: AiMode
   status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed'
   error: string
   me: { user: string; role: string; color: string }
@@ -79,6 +111,8 @@ export interface SessionOptions {
   /** The server this session is to connect to (same shape as `BaseState.host`) — carried into `state.host` so the
    *  connection indicator can show it without reaching back into whatever built the link. */
   host?: string
+  /** Where the person's choices about this document are kept (the browser's local storage; tests hand in a map). */
+  storage?: ModeStorage
 }
 
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -87,6 +121,7 @@ function initialState(): BaseState {
   return {
     app: '',
     host: '',
+    aiMode: DEFAULT_AI_MODE,
     status: 'idle',
     error: '',
     me: { user: '', role: '', color: '' },
@@ -120,6 +155,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   private noticeCount = 0
   private closing = false
   private retryDelays: number[]
+  private storage: ModeStorage
 
   /** `app` is the app's own part of the state (it becomes reactive together with the common part). */
   constructor(
@@ -128,13 +164,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     app: Omit<S, keyof BaseState>,
   ) {
     this.retryDelays = options.retryDelays ?? [1000, 2000, 4000, 8000]
+    this.storage = options.storage ?? safeStorage()
     this.state = reactive({ ...initialState(), ...app, host: options.host ?? '' }) as unknown as S
   }
 
   /** Load what the app shows of the document (called with every (re)load, next to the common parts). */
   protected abstract loadApp(): Promise<void>
   /** Handle an event that only the app knows; `true` if it was one. */
-  protected abstract onAppEvent(name: string, data: any): boolean
+  protected abstract onAppEvent(name: string, data: WireData): boolean
 
   // ------------------------------------------------------------------------------ connecting
   async open(): Promise<void> {
@@ -175,6 +212,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     s.me = { user: w.user, role: w.role, color: w.color }
     s.doc = w.doc
+    s.aiMode = readAiMode(s.host, w.doc, this.storage)
     s.app = w.app
     s.line = w.line
     s.revision = w.revision
@@ -275,7 +313,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   // ------------------------------------------------------------------------------ events
-  private onEvent(name: string, data: any) {
+  private onEvent(name: string, data: WireData) {
     if (this.onAppEvent(name, data)) return
     const s = this.state
     switch (name) {
@@ -325,7 +363,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
-  private onEphemeral(message: { kind: string; sender: string | null; data: any }) {
+  private onEphemeral(message: { kind: string; sender: string | null; data: WireData }) {
     const s = this.state
     const who = message.sender ?? ''
     if (message.kind === 'presence') {
@@ -356,7 +394,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   /** Run a request; `false` after telling the person why it did not work. */
-  protected async attempt(method: string, params: Record<string, unknown> = {}): Promise<any | false> {
+  protected async attempt(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
     try {
       return await this.need().request(method, params)
     } catch (error) {
@@ -393,14 +431,27 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return done !== false && done.applied
   }
 
+  /** Send whatever is still waiting to be sent, before something that must see all of it (a checkpoint, an
+   *  export). Nothing waits in an app that sends every change as it is made; composes overrides this for the
+   *  words it collects while someone types (`TextSession.flush`). */
+  async flush(): Promise<void> {}
+
   async saveCheckpoint(label: string | null): Promise<boolean> {
     const done = await this.attempt('save_checkpoint', { label })
     if (done !== false && !done.saved) this.notice('Nothing has changed since the last checkpoint.')
     return done !== false && done.saved
   }
 
+  /** Says `text` in the chat, with how the person wants the AI to treat it if it is for the AI (D262). Always sent:
+   *  a message without a mode means a client without the switch, which the server answers as *act* (UNSAID_MODE). */
   async say(text: string): Promise<boolean> {
-    return (await this.attempt('chat', { text })) !== false
+    return (await this.attempt('chat', { text, ai_mode: this.state.aiMode })) !== false
+  }
+
+  /** The person's choice of how the AI treats their requests in this document; kept for next time. */
+  setAiMode(mode: AiMode): void {
+    this.state.aiMode = mode
+    storeAiMode(this.state.host, this.state.doc, mode, this.storage)
   }
 
   async addUser(name: string, password: string, role: 'editor' | 'viewer'): Promise<boolean> {
@@ -451,6 +502,28 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
   async exportContent(): Promise<Record<string, unknown> | false> {
     return await this.attempt('export_content')
+  }
+
+  /** The document's current content as bytes of a Word, Excel, PowerPoint or OpenDocument file (`format` is one of
+   * what the app supports: "docx", "odt", "xlsx", "ods", "pptx" or "odp"), as `{format, content_type, data}` with
+   * `data` base64 — no history, no chat; just the document as it stands now. With `trackedChanges` the text app also writes its
+   * open suggestions as tracked changes, dated and signed (D411); the parameter is only sent when asked for, because
+   * the other apps do not know it. An OpenDocument answer also has `losses`: what the file could not hold, as
+   * `{kind, detail, count}` codes (nothing shows them yet: the screen for that is designed first). */
+  async exportOffice(format: string, options: { trackedChanges?: boolean } = {}): Promise<ExportedFile | false> {
+    return await this.attempt('export_office', options.trackedChanges ? { format, tracked_changes: true } : { format })
+  }
+
+  // ------------------------------------------------------------------------------ help (E13.1, E13.3, E13.5)
+  /** Help topics whose title, tags or what-they-explain mention `query`; every topic, by title, if `query` is
+   * blank. The same for every app — a topic names the apps it is for itself. */
+  async helpSearch(query = ''): Promise<HelpTopicSummary[] | false> {
+    return await this.attempt('help_search', { query })
+  }
+
+  /** One help topic in full, by the id a `helpSearch` result gave. */
+  async helpTopic(id: string): Promise<HelpTopic | false> {
+    return await this.attempt('help_topic', { id })
   }
 
   // ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)

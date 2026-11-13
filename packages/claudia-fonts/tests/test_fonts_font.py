@@ -90,4 +90,18 @@ def test_a_font_can_be_listed_as_plain_data(tmp_path):
         "licence": "OFL-1.1",
         "redistributable": True,
         "math": False,
+        "axes": [],
+        "outlines": "truetype",
     }
+
+
+def test_a_static_font_has_no_axes_and_truetype_outlines(tmp_path):
+    font = read(make_font(tmp_path / "s.ttf"))
+    assert (font.axes, font.outlines) == ((), "truetype")
+    assert font.to_data()["axes"] == [] and font.to_data()["outlines"] == "truetype"
+
+
+def test_a_variable_font_lists_its_axes_for_clients(tmp_path):
+    font = read(make_font(tmp_path / "v.ttf", axes=(("wght", 100, 400, 900), ("opsz", 14, 14, 32))))
+    assert [a.tag for a in font.axes] == ["wght", "opsz"]
+    assert font.to_data()["axes"][0] == {"tag": "wght", "min": 100.0, "default": 400.0, "max": 900.0}

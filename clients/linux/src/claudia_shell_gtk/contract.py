@@ -18,17 +18,21 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, TypeGuard
 
 __all__ = [
+    "CONNECT_FAILED_CODES",
     "CONTRACT_VERSION",
     "MAX_MESSAGE_BYTES",
+    "MAX_SERVER_LIST",
     "SUPPORTED_VERSIONS",
     "ContractError",
     "Message",
     "UnknownMessageType",
     "action",
+    "connect_failed",
     "error",
     "error_for",
     "negotiate",
     "parse",
+    "servers",
     "welcome",
 ]
 
@@ -45,9 +49,24 @@ _ACTION_ID = re.compile(r"^[a-z]+(\.[a-z][a-z0-9-]*)+$")
 _TOKEN = re.compile(r"^[a-z][a-z0-9-]*$")
 _LOCALE = re.compile(r"^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$")  # a BCP-47-ish tag (E5.7); loose on purpose
 _ERROR_CODES = ("bad_json", "bad_message", "unsupported_contract", "unknown_action", "internal")
+CONNECT_FAILED_CODES = (
+    "bad_address",
+    "insecure",
+    "unreachable",
+    "not_claudia",
+    "wrong_app",
+    "certificate_expired",
+    "certificate_invalid",
+    "not_trusted",
+)
+"""Why a ``connect`` can fail (E5.8): what the page may rely on to decide what to show next."""
+MAX_SERVER_LIST = 64
+"""The most servers a ``servers`` message may carry."""
 _MAX_ACTION_ID = 64
 _MAX_TOKEN = 32
 _MAX_TEXT = 512
+_MAX_ADDRESS = 255
+_MAX_LABEL = 128
 
 
 class ContractError(Exception):
@@ -130,9 +149,8 @@ def _version(message: Mapping[str, Any]) -> None:
 
 def _check_hello(message: Message) -> None:
     _version(message)
-    if "app" not in message:
-        raise _bad("'hello' needs 'app'")
-    _token(message["app"], "'app'")
+    if "app" in message:  # a page that does not know yet which app its server runs (it wants a login first) omits it
+        _token(message["app"], "'app'")
     _text(message, "frontend", limit=64)
 
 
@@ -183,12 +201,50 @@ def _check_error(message: Message) -> None:
         raise _bad("'supported' is a list of contract versions")
 
 
+def _check_connect(message: Message) -> None:
+    _text(message, "address", limit=_MAX_ADDRESS, required=True)
+    if not message["address"]:
+        raise _bad("'connect' needs an address")
+
+
+def _check_connect_failed(message: Message) -> None:
+    if message.get("code") not in CONNECT_FAILED_CODES:
+        raise _bad(f"'code' is one of {', '.join(CONNECT_FAILED_CODES)}")
+    _text(message, "message", limit=_MAX_TEXT, required=True)
+
+
+def _check_server_entry(entry: object) -> None:
+    if not isinstance(entry, dict):
+        raise _bad("a server is an object")
+    origin = entry.get("origin")
+    if not (isinstance(origin, str) and 0 < len(origin) <= _MAX_ADDRESS):
+        raise _bad(f"a server's 'origin' is text of 1 to {_MAX_ADDRESS} characters")
+    label = entry.get("label")
+    if not (isinstance(label, str) and len(label) <= _MAX_LABEL):
+        raise _bad(f"a server's 'label' is text of at most {_MAX_LABEL} characters")
+    if not isinstance(entry.get("custom"), bool):
+        raise _bad("a server's 'custom' is true or false")
+    if "local" in entry and not isinstance(entry["local"], bool):
+        raise _bad("a server's 'local' is true or false")
+
+
+def _check_servers(message: Message) -> None:
+    entries = message.get("servers")
+    if not isinstance(entries, list) or len(entries) > MAX_SERVER_LIST:
+        raise _bad(f"'servers' is a list of at most {MAX_SERVER_LIST} servers")
+    for entry in entries:
+        _check_server_entry(entry)
+
+
 _CHECKS: dict[str, Callable[[Message], None]] = {
     "hello": _check_hello,
     "welcome": _check_welcome,
     "action": _check_action,
     "action_state": _check_action_state,
     "error": _check_error,
+    "connect": _check_connect,
+    "connect_failed": _check_connect_failed,
+    "servers": _check_servers,
 }
 
 # -------------------------------------------------------------------------------------------------- negotiation
@@ -253,3 +309,18 @@ def error(code: str, message: str, *, supported: Sequence[int] | None = None) ->
 def error_for(problem: ContractError) -> Message:
     """The ``error`` message that answers a :class:`ContractError` (not meant for ``unknown_type``: ignore those)."""
     return error(problem.code, str(problem), supported=problem.supported)
+
+
+def connect_failed(code: str, message: str) -> Message:
+    """The message that tells the page why a ``connect`` was not made (``code`` is one of
+    :data:`CONNECT_FAILED_CODES`; a message that is too long is cut)."""
+    built: Message = {"type": "connect_failed", "code": code, "message": message[:_MAX_TEXT]}
+    _check_connect_failed(built)
+    return built
+
+
+def servers(entries: Iterable[Mapping[str, Any]]) -> Message:
+    """The list of servers the shell remembers for its app (``servers.for_page`` makes it)."""
+    built: Message = {"type": "servers", "servers": [dict(entry) for entry in entries]}
+    _check_servers(built)
+    return built

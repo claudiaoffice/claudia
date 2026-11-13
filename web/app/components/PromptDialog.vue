@@ -21,7 +21,7 @@ function submit() {
 <template>
   <Modal :title="title" @close="emit('close')">
     <form class="form" @submit.prevent="submit">
-      <label class="field">{{ label }}<input ref="field" v-model="value" :placeholder="placeholder" autocomplete="off" /></label>
+      <label class="field">{{ label }}<input ref="field" v-model="value" :placeholder="placeholder" autocomplete="off" ></label>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="required && !value.trim()">{{ ok }}</button>
         <button class="btn" type="button" @click="emit('close')">Cancel</button>

@@ -18,29 +18,41 @@ from __future__ import annotations
 
 import secrets
 
-from claudia_core import Batch, ImageImport, decode_image
-from claudia_core.clock import utc_now
-from claudia_creates import (
-    BUILTIN_STYLES,
+from claudia_creates_io import odp_export_losses, slides_to_odp, slides_to_pptx
+
+from claudia_core import (
     OBJECT_KINDS,
     AddObject,
-    AddSlide,
+    Batch,
     DefineImage,
     DefineShape,
+    ImageImport,
     MoveObject,
+    ObjectBody,
+    PageSetupError,
     RemoveObject,
     ResizeObject,
+    RotateObject,
     SetSnap,
     SetText,
-    ShapeLibrary,
-    SlideModel,
-    SlideObject,
+    decode_image,
+    paragraph_for,
 )
+from claudia_core.clock import utc_now
+from claudia_creates import AddSlide, PrintSetup, PrintSetupError, SetPrintSetup, ShapeLibrary, SlideAnchor, SlideModel
 
 from .images import image_bytes
+from .office_export import document_info, office_export
+from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
+from .styles import add_style_methods
 
-STYLE_OF_KIND = {"text": "body-text", "shape": "plain-shape", "image": "plain-image"}
+#: The style a new object of each kind starts with: its container's slot (D304). A text box's box is a box style
+#: of its own (D310), so a change to it never has to deviate from Body text.
+STYLE_OF_KIND = {"text": "plain-box", "shape": "plain-shape", "image": "plain-image"}
+#: The style a new object's words start with: its words' slot. A shape's outline and its words are two styles of
+#: two kinds (D310).
+PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}
 
 
 def _deck(ctx: Context) -> SlideModel:
@@ -93,21 +105,27 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, b
         }
     )
     object_id = _fresh("o", deck.objects)
-    style = STYLE_OF_KIND["image"]
-    obj = SlideObject(object_id, slide, "image", x, y, w, h, style, image=asset.id, imported=imported)
-    steps.append(AddObject(obj))
+    body = ObjectBody(object_id, "image", w, h, STYLE_OF_KIND["image"], image=asset.id, imported=imported)
+    steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
     return _done(ctx, command, base, object=object_id)
 
 
 def _move_object(ctx, *, id, x, y, base):
     """Move an object so that its top left corner is at (x, y)."""
-    return _done(ctx, MoveObject(id, x, y), base)
+    slide = _deck(ctx).get_object(id).anchor.slide
+    return _done(ctx, MoveObject(id, SlideAnchor(slide, x, y).to_data()), base)
 
 
 def _resize_object(ctx, *, id, x, y, w, h, base):
     """Give an object a new frame: top left corner and size (resizing from the left or top moves the corner)."""
-    return _done(ctx, ResizeObject(id, x, y, w, h), base)
+    slide = _deck(ctx).get_object(id).anchor.slide
+    return _done(ctx, ResizeObject(id, SlideAnchor(slide, x, y).to_data(), w, h), base)
+
+
+def _rotate_object(ctx, *, id, rotation, base):
+    """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
+    return _done(ctx, RotateObject(id, rotation), base)
 
 
 def _set_text(ctx, *, id, text, base):
@@ -126,9 +144,10 @@ def _remove_object(ctx, *, id, base):
     return _done(ctx, RemoveObject(id), base)
 
 
-def creates_methods_with(library: ShapeLibrary) -> MethodTable:
-    """The method table of presentations on a server whose shape library is ``library``."""
-    table = core_methods.extended()
+def _add_object_methods(table: MethodTable) -> None:
+    """The methods that change one object: import a picture, place it, size it, turn it, word it, style its
+    words, hold it to the grid, take it away. Split out of the table builder below only because it had grown
+    past the statement limit — they belong together."""
     table.kind("image")(image_bytes)
     table.method(
         "add_image",
@@ -137,9 +156,48 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     )(_add_image)
     table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
     table.method("resize_object", "id:str x:int y:int w:int h:int base:revision?", write=True)(_resize_object)
+    table.method("rotate_object", "id:str rotation:int base:revision?", write=True)(_rotate_object)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
+
+
+def _add_print_methods(table: MethodTable) -> None:
+    """How the presentation is printed (D917), and its language (the kernel's, the same methods as composes')."""
+    add_language_methods(table)
+
+    @table.method("print_setup")
+    def _print_setup(ctx):
+        """How the presentation is printed (D917): `{layout, page}`, `layout` one of `slides`, `handouts-2`,
+        `handouts-3`, `handouts-4`, `handouts-6`, `handouts-9`, and `page` as composes' `page` (paper, width,
+        height, orientation, margins, page_numbers; lengths in mpt)."""
+        return _deck(ctx).print_setup.to_data()
+
+    @table.method("set_print_setup", "setup:dict base:revision?", write=True)
+    def _set_print_setup(ctx, *, setup, base):
+        """Print the presentation another way (`setup` as `print_setup` returns it). One step for everybody, in
+        the history. `command_error` names what is wrong with a setup that cannot be used."""
+        people_only(ctx)
+        try:
+            command = SetPrintSetup(PrintSetup.from_data(setup))
+        except (PrintSetupError, PageSetupError) as exc:
+            raise RequestError("command_error", str(exc)) from None
+        return _done(ctx, command, base)
+
+
+def _add_shared_methods(table: MethodTable) -> None:
+    """What presentations answer the way the other apps do: ``styles``, ``palette``, ``change_style``,
+    ``rename_style``, ``check_css`` and ``set_object_style`` (E1.10, D200), the objects (E10.16), and printing and
+    the language (D917)."""
+    add_style_methods(table)
+    _add_object_methods(table)
+    _add_print_methods(table)
+
+
+def creates_methods_with(library: ShapeLibrary) -> MethodTable:
+    """The method table of presentations on a server whose shape library is ``library``."""
+    table = core_methods.extended()
+    _add_shared_methods(table)
 
     @table.method("slides")
     def _slides(ctx):
@@ -150,10 +208,12 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("slide", "slide:str")
     def _slide(ctx, slide):
         """One slide as `{revision, slide, objects}`: its objects, the one in front last. An object is
-        `{id, slide, kind, x, y, w, h, style, text, shape, image, imported, snap}`; `imported`'s `source_path` is
-        only sent to the person who imported that image (everyone else sees `null` there, not the path). `snap`
-        is whether the object holds to the grid, a helper the view draws and is free to show or hide on its
-        own — `snap` is unaffected by that and is the document's own state, set with `set_snap`."""
+        `{id, kind, w, h, style, text, shape, image, imported, rotation, snap, anchor}` — the same shape in all
+        three apps except for `anchor`, which here is `{kind: "slide", container: <slide>, x, y}` (E10.16).
+        `imported`'s `source_path` is only sent to the person who imported that image (everyone else sees `null`
+        there, not the path). `snap` is whether the object holds to the grid, a helper the view draws and is free
+        to show or hide on its own — `snap` is unaffected by that and is the document's own state, set with
+        `set_snap`."""
         deck = _deck(ctx)
         if slide not in deck.slides:
             raise RequestError("command_error", f"unknown slide {slide!r}")
@@ -179,10 +239,20 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         deck = _deck(ctx)
         return [image.to_data() for _, image in sorted(deck.images.items())]
 
-    @table.method("styles")
-    def _styles(ctx):
-        """The named looks objects refer to, each as `{id, name, purpose, css}`."""
-        return [style.to_data() for style in BUILTIN_STYLES.values()]
+    @table.method("export_office", "format:str")
+    def _export_office(ctx, *, format):
+        """The document's current content as bytes of a PowerPoint file (`format` `"pptx"`) or an OpenDocument
+        presentation (`"odp"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); an odp's
+        answer also has `losses`, what the file could not hold, as `{kind, detail, count}` codes. No tracked
+        changes, no history, no chat -- just the deck as it stands now (D212); an odp says in its metadata when the
+        deck was made and last changed, and by whom, read from the log (D411)."""
+        if format not in ("pptx", "odp"):
+            raise RequestError("bad_request", 'export_office: format must be "pptx" or "odp"')
+        deck = _deck(ctx)
+        if format == "pptx":
+            return office_export(format, slides_to_pptx(deck))
+        info = document_info(ctx.document.log, ctx.document.branch)
+        return office_export(format, slides_to_odp(deck, info=info), odp_export_losses(deck))
 
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):
@@ -194,7 +264,9 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         "add_object", 'slide:str kind:str x:int y:int w:int h:int shape:str? text:text="" base:revision?', write=True
     )
     def _add_object(ctx, *, slide, kind, x, y, w, h, shape, text, base):
-        """Put a text box (`kind` "text") or a shape (`kind` "shape" with the `shape` id) on a slide. It gets the
+        """Put a text box (`kind` "text") or a shape (`kind` "shape" with the `shape` id) on a slide. Its words
+        are a paragraph (E10.17): it starts under the object's own style, and `set_paragraph_style` points it at
+        another. It gets the
         style of its kind. Returns the new object's id and the revision. A circle must keep its proportions."""
         deck = _deck(ctx)
         if kind not in OBJECT_KINDS:
@@ -210,7 +282,10 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 raise RequestError("bad_request", f"add_object: this server has no shape {shape!r}")
             steps.append(DefineShape(outline))
         object_id = _fresh("o", deck.objects)
-        steps.append(AddObject(SlideObject(object_id, slide, kind, x, y, w, h, STYLE_OF_KIND[kind], text, shape)))
+        style = STYLE_OF_KIND[kind]
+        words = paragraph_for(object_id, PARAGRAPH_STYLE_OF_KIND[kind], text, ctx.user)
+        body = ObjectBody(object_id, kind, w, h, style, words, shape=shape)
+        steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return _done(ctx, command, base, object=object_id)
 
