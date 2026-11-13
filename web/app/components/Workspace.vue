@@ -44,6 +44,8 @@ import { forThe } from '~/lib/noun-phrases'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
+import { describeShortcut, objectName, pictureAlt } from '~/lib/descriptions'
+import { selectionAnnouncement } from '~/lib/grid-a11y'
 import { chordLabel, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import { marksFor, NO_MARKS, type PreviewAnswer, type SearchMatch } from '~/lib/search'
 import { sheetSearchHost } from '~/lib/sheet-search-host'
@@ -83,6 +85,7 @@ const EXPORT_FORMATS = [
 /** The chart tab shown instead of a sheet, or `null` for a sheet (`FooterBar.vue`'s own docstring on why this
  * is not part of `state`). Reset to `null` if its tab disappears (removed here, or by someone else). */
 const activeChart = ref<string | null>(null)
+const activeChartName = computed(() => state.charts.find((c) => c.id === activeChart.value)?.name ?? '')
 const activeChartSpec = computed(() => state.charts.find((c) => c.id === activeChart.value)?.spec_id ?? null)
 watch(
   () => state.charts,
@@ -95,6 +98,7 @@ const grid = ref<{
   selectObject: (id: string) => void
   openStyleMenu: (at?: { x: number; y: number }, mode?: 'edit' | 'apply') => void
   selectedObject: () => string | null
+  stepObject: (step: 1 | -1) => void
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
 } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
@@ -617,8 +621,54 @@ const RESAMPLE: ShortcutDef = { id: 'tools.resample', get label() { return t('Re
 const RANDOM_GENERATOR: ShortcutDef = { id: 'tools.random', get label() { return t('Random Generator…') }, chord: { key: 'r', code: 'KeyR', ctrl: true, alt: true }, run: () => openRandom() }
 const OUTCOMES: ShortcutDef = { id: 'tools.outcomes', get label() { return t('Outcomes of This Cell…') }, chord: { key: 'o', code: 'KeyO', ctrl: true, alt: true }, run: () => openOutcomes() }
 const FOLLOW: ShortcutDef = { id: 'tools.follow', get label() { return t('Follow Computation') }, chord: { key: 'f', code: 'KeyF', ctrl: true, alt: true }, run: () => toggleFollow() }
+
+// ------------------------------------------------------------------------------ what a screen reader is told of the selection (UX-02)
+// The active cell speaks for itself (`aria-activedescendant` on the grid); a block of cells, a whole row or column and
+// a floating object do not, so they are said here, in a polite live region — a moment after the selection settles, so
+// that dragging a range across a screen says its final size once and not every step on the way.
+const announcement = ref('')
+let announceTimer: ReturnType<typeof setTimeout> | undefined
+function say() {
+  const id = objectSelected.value ? grid.value?.selectedObject() : null
+  const object = id ? state.objects[id] : undefined
+  announcement.value = object ? t('Selected: {name}', { name: objectName(object) }) : (selectionAnnouncement(sel.value, VIEW_ROWS, VIEW_COLS) ?? '')
+}
+watch([sel, objectSelected], () => {
+  clearTimeout(announceTimer)
+  announceTimer = setTimeout(say, 300)
+})
+onBeforeUnmount(() => clearTimeout(announceTimer))
+
+// ------------------------------------------------------------------------------ describing a floating object (BITV 1.1.1)
+/** The object whose description is being written; the dialog is the one slides use. */
+const describing = ref<string | null>(null)
+const describingObject = computed(() => (describing.value ? state.objects[describing.value] ?? null : null))
+function openDescribe() {
+  const id = grid.value?.selectedObject()
+  if (!id || !state.objects[id]) return
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  describing.value = id
+}
+async function saveDescription(params: { description: string; decorative: boolean }) {
+  const id = describing.value
+  describing.value = null
+  if (id) await session.describeObject(id, params.description, params.decorative)
+  grid.value?.focus()
+}
+function closeDescribe() {
+  describing.value = null
+  grid.value?.focus()
+}
+const DESCRIBE = describeShortcut(openDescribe, () => !!grid.value?.selectedObject() && !readonly.value)
+/** Ctrl+Alt+PageDown / PageUp: the keyboard's way to a floating object, which only the mouse reached before. */
+const NEXT_OBJECT: ShortcutDef = { id: 'view.nextObject', get label() { return t('Next Object') }, chord: { key: 'PageDown', ctrl: true, alt: true }, run: () => grid.value?.stepObject(1) }
+const PREVIOUS_OBJECT: ShortcutDef = { id: 'view.previousObject', get label() { return t('Previous Object') }, chord: { key: 'PageUp', ctrl: true, alt: true }, run: () => grid.value?.stepObject(-1) }
+
 const extraShortcuts = [
   LOOK,
+  DESCRIBE,
+  NEXT_OBJECT,
+  PREVIOUS_OBJECT,
   ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value }),
   RESAMPLE,
   RANDOM_GENERATOR,
@@ -879,7 +929,14 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.clear', label: t('Clear Cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
       ],
     },
-    { label: t('Format'), items: styleItems() },
+    {
+      label: t('Format'),
+      items: [
+        ...styleItems(),
+        { label: '', separator: true },
+        { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value || !grid.value?.selectedObject() },
+      ],
+    },
     {
       label: t('View'),
       items: [
@@ -963,7 +1020,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
             class="draw"
             :disabled="readonly"
             :title="t('Draw new random numbers ({key})', { key: chordLabel(RESAMPLE.chord) })"
-            :aria-label="t('Draw new random numbers')"
+            :aria-label="t('Draw {n}: draw new random numbers', { n: state.random?.draw ?? 1 })"
             @click="resample()"
           >
             {{ t('Draw {n}', { n: state.random?.draw ?? 1 }) }}
@@ -989,7 +1046,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       </div>
     </template>
     <div v-if="activeChart" class="chart-tab">
-      <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" />
+      <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" :label="t('Chart: {name}', { name: activeChartName })" />
       <div v-else class="nosheet">{{ t('This chart\'s definition is gone.') }}</div>
     </div>
     <SheetGrid
@@ -1023,6 +1080,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       @view="seen"
     />
     <div v-else class="nosheet">{{ t('This document has no sheet yet.') }}</div>
+    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
     <template #footer>
       <FooterBar data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" />
     </template>
@@ -1047,6 +1105,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <OutcomePopover v-if="outcomes" :session="session" :sheet="state.activeSheet" :row="outcomes.row" :col="outcomes.col" :x="outcomes.x" :y="outcomes.y" @close="outcomes = null" />
       <ContextMenu v-if="cellMenu" :x="cellMenu.x" :y="cellMenu.y" :items="cellMenuItems" :width="290" :label="t('Cell menu')" @close="cellMenu = null" />
       <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
+      <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
       <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog
         v-if="dialog === 'chart'"

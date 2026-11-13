@@ -4,6 +4,25 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [Unreleased]
+
+What an object says to someone who cannot see it (BITV 1.1.1).
+
+### Added
+- `ObjectBody.description` (at most `MAX_ALT_CHARS` characters) and `ObjectBody.decorative`, the same in every app. A
+  decorative object has no description. A picture that has no description of its own is described by the words it was
+  imported with, so documents written before the fields existed keep what they said (`ObjectBody.from_data` still reads
+  a body without the two fields).
+- The command `DescribeObject(id, description, decorative=False)` (`core.DescribeObject`): one history step with its
+  exact inverse; its redacted form keeps the flag and drops the words.
+
+### Changed
+- `AddObject` is schema 2 (the body has the two new fields); schema 1 data is brought up to date by a registered
+  upcaster. A model's `state_schema` is raised by one in each app that holds objects, which retires cached snapshots only.
+- **Breaking** (small): `ImageImport.from_data` accepts an empty `alt`. Whether a picture needs words is the object's
+  business now; a picture that is neither described nor decorative is refused by the server's `add_image` and
+  `describe_object`, not by the kernel, so that a redacted or imported history always replays.
+
 ## [0.18.0] - 2026-11-13
 
 Lists (E9.21); search, the engine (E1.12, D281–D284).

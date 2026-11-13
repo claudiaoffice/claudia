@@ -5,6 +5,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- `slides_to_pptx` writes an object's description as the shape's alt text (`descr`) and marks a decorative object the way
+  PowerPoint 2019 and later do (`adec:decorative` in the shape's extension list, with an empty `descr`: python-pptx would
+  otherwise name a picture's alt text after its file).
+- `slides_to_odp` writes a description as `svg:desc`; a decorative picture has no text alternative. `odp_export_losses`
+  reports `"decorative"` (with how many): ODF 1.3 has no attribute for it.
+
 ### Changed
 - `pptx_to_slides` gives an imported text box's box the `plain-box` style; its words stay `body-text` (D310).
 - `pptx_to_slides` gives an imported autoshape's words the `shape-label` style; the shape itself keeps

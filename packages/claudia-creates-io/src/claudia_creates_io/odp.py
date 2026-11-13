@@ -637,8 +637,8 @@ class _Writer:
         image = etree.SubElement(frame, _q("draw", "image"))
         for name, value in (("href", href), ("type", "simple"), ("show", "embed"), ("actuate", "onLoad")):
             image.set(_q("xlink", name), value)
-        if body.imported is not None and body.imported.alt:
-            etree.SubElement(frame, _q("svg", "desc")).text = xml_safe(body.imported.alt)
+        if body.description:  # a decorative picture has none: ODF 1.3 has no way to say more (see odp_export_losses)
+            etree.SubElement(frame, _q("svg", "desc")).text = xml_safe(body.description)
         return frame
 
 
@@ -694,8 +694,9 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None) -> byt
 
 def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
     """What :func:`slides_to_odp` cannot put into the file for ``model``, each as a code with how many: ``"authorship"``
-    (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle) and an
-    ``"image-missing"`` (an image the document has no picture for)."""
+    (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle), an
+    ``"image-missing"`` (an image the document has no picture for) and ``"decorative"`` (an object marked as
+    decoration: ODF 1.3 has no attribute for it, so a reader of the file sees an object nobody described)."""
     losses = LossLog()
     authored = sum(
         1
@@ -704,6 +705,9 @@ def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
     )
     if authored:
         losses.add("authorship", count=authored)
+    decorative = sum(1 for obj in model.objects.values() if obj.body.decorative)
+    if decorative:
+        losses.add("decorative", count=decorative)
     for obj in model.objects.values():  # pragma: no cover - neither can be in a presentation yet (see above)
         if obj.body.kind == "diagram":
             losses.add("diagram")

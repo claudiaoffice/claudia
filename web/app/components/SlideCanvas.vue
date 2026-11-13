@@ -6,6 +6,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
 import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, besideRect, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { objectName, pictureAlt } from '~/lib/descriptions'
 import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
@@ -119,11 +120,8 @@ function pictureSrc(o: SlideObject): string {
   const asset = pictureOf(o)
   return asset ? imageDataUrl(asset) : ''
 }
-const label = (o: SlideObject) => {
-  if (o.kind === 'image') return t('Picture: {alt}', { alt: o.imported?.alt ?? '' })
-  const kind = o.kind === 'text' ? t('Text box') : (outline(o)?.name ?? t('Shape'))
-  return wordsOf(o) ? t('{kind}: {words}', { kind, words: wordsOf(o) }) : kind
-}
+/** What a screen reader says for an object: its kind and its description (or its words), or that it is decoration. */
+const label = (o: SlideObject) => objectName(o, { shape: outline(o)?.name, words: wordsOf(o) })
 
 // ------------------------------------------------------------------------------ selection, dragging, resizing
 type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
@@ -220,6 +218,10 @@ const contextItems = computed<MenuItem[]>(() => {
           contextMenu.value = null
           propertiesFor.value = o.id
         },
+        describe: () => {
+          contextMenu.value = null
+          openDescribe(o.id)
+        },
         setSnap: (snap) => session.setSnap(o.id, snap),
         style: () => {
           const at = contextMenu.value
@@ -280,6 +282,27 @@ function closeContextMenu() {
  * `contextMenu`/`selected` since the menu itself has already closed by the time the dialog is showing. */
 const propertiesFor = ref<string | null>(null)
 const propertiesObject = computed(() => (propertiesFor.value ? state.objects[propertiesFor.value] ?? null : null))
+// ------------------------------------------------------------------------------ describing an object (BITV 1.1.1)
+/** The object whose description is being written: Format ▸ Describe Object…, Ctrl+Alt+D, or the context menu's
+ * "Describe…". Tracked on its own, like `propertiesFor`, since the context menu has closed by the time it shows. */
+const describing = ref<string | null>(null)
+const describingObject = computed(() => (describing.value ? state.objects[describing.value] ?? null : null))
+function openDescribe(id: string | null = state.selected) {
+  if (!id || !state.objects[id]) return
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  describing.value = id
+}
+async function saveDescription(params: { description: string; decorative: boolean }) {
+  const id = describing.value
+  describing.value = null
+  if (id) await session.describe(id, params.description, params.decorative)
+  area.value?.focus({ preventScroll: true })
+}
+function closeDescribe() {
+  describing.value = null
+  area.value?.focus({ preventScroll: true })
+}
+
 /** Was showing the browser's own menu here (Back, Inspect, …) over a shape, a text box or a picture — the bug
  * this fixes. Shift + right button still gets the browser's own menu, the same escape hatch `TextEditor.vue`'s
  * `onContextMenu` already gives composes, and editing text keeps its own menu too (spelling, …), same as before. */
@@ -366,7 +389,7 @@ async function onKey(event: KeyboardEvent) {
   }
 }
 
-defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu })
+defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe })
 
 const HANDLE_CURSOR: Record<Handle, string> = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize', n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' }
 const HANDLE_AT: Record<Handle, [number, number]> = { nw: [0, 0], n: [0.5, 0], ne: [1, 0], e: [1, 0.5], se: [1, 1], s: [0.5, 1], sw: [0, 1], w: [0, 0.5] }
@@ -456,6 +479,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
 
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" :label="t('Object menu')" @close="closeContextMenu" />
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
+    <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>
 </template>

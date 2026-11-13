@@ -27,3 +27,16 @@ def image_bytes(value: Any, limits: Limits) -> bytes:
     if len(raw) > MAX_IMAGE_BYTES:
         raise ValueError(f"an image is at most {MAX_IMAGE_BYTES // (1024 * 1024)} MB")
     return raw
+
+
+def picture_words(alt: str, decorative: bool) -> str:
+    """The description a picture is added or described with (BITV 1.1.1): none for a decorative one, words for any
+    other. The model lets an object go undescribed (an AI or an old document may leave one so); a person's way in
+    does not, so what the method refuses here names the way out."""
+    if decorative:
+        if alt.strip():
+            raise ValueError("a decorative picture has no description: leave it empty, or do not mark it as decorative")
+        return ""
+    if not alt.strip():
+        raise ValueError("every picture needs a short description of what it shows, or must be marked as decorative")
+    return alt

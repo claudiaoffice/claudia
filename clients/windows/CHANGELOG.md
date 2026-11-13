@@ -4,6 +4,10 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.0] - unreleased
 
+### Added
+- Format ▸ Describe Object… (Ctrl+Alt+D) in claudia computes and claudia creates, by regenerating the menus from the
+  Linux manifest. The page owns the dialog.
+
 The Windows client is rebuilt on D251 (the design the macOS client proved on a real Mac, 2026-11-10) and brought to
 parity with the Linux and macOS clients: all three apps, the same command line, the remote-server flow of
 D241-D248. Branch `win-client-complete`. Everything here ran on Linux only; see the README's "Not verified".

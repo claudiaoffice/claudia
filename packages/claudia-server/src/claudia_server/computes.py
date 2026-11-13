@@ -112,6 +112,7 @@ from claudia_core import (
     CompiledSearch,
     DefineDiagram,
     DefineImage,
+    DescribeObject,
     ForgetDiagram,
     ImageImport,
     MoveObject,
@@ -127,7 +128,7 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 
 from .i18n import msg, translate
-from .images import image_bytes
+from .images import image_bytes, picture_words
 from .office_export import document_info, office_export
 from .protocol import Context, RequestError, core_methods
 from .style_targets import OBJECTS
@@ -701,24 +702,27 @@ def _remove_chart(ctx, *, id, base):
 
 @computes_methods.method(
     "add_image",
-    "sheet:str row:int col:int w:int h:int data:image alt:str source_name:str source_path:str? base:revision?",
+    "sheet:str row:int col:int w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? "
+    "base:revision?",
     write=True,
 )
-def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_path, base):
+def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_path, decorative, base):
     """Import a picture from disk and anchor it to a cell of a sheet: `data` is the file's bytes, base64. `alt`
-    is a short, required description of what it shows. `source_name` is the file name as the client has it;
+    is a short, required description of what it shows — unless the picture is only `decorative` (a flourish, a
+    divider), when it has none and `alt` is empty. `source_name` is the file name as the client has it;
     `source_path` is its full path if the client could supply one (a plain web browser cannot, for its own
     security — send `null`). Returns the new object's id and the revision. The image keeps its own proportions,
     and its pixel size (and anchor) never change on their own afterwards — only `move_object` moves it."""
     workbook = _workbook(ctx)
     if sheet not in workbook.sheets:
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
+    words = picture_words(alt, bool(decorative))
     asset = decode_image(data)
     steps: list = [] if asset.id in workbook.images else [DefineImage(asset)]
     imported = ImageImport.from_data(
         {
             "asset": asset.id,
-            "alt": alt,
+            "alt": words,
             "imported_by": ctx.user,
             "imported_at": utc_now(),
             "source": "disk",
@@ -727,11 +731,23 @@ def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_pat
         }
     )
     object_id = _fresh_object_id(workbook.objects)
-    body = ObjectBody(object_id, "image", w, h, "plain-image", image=asset.id, imported=imported)
+    body = ObjectBody(
+        object_id, "image", w, h, "plain-image", image=asset.id, imported=imported, decorative=bool(decorative)
+    )
     steps.append(AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
     applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"object": object_id, "revision": applied.revision.to_data()}
+
+
+@computes_methods.method("describe_object", "id:str description:text decorative:bool? base:revision?", write=True)
+def _describe_object(ctx, *, id, description, decorative, base):
+    """Say what an object is to someone who cannot see it (`description`, a short sentence), or that it is only
+    decoration (`decorative` true, and then no description). A picture needs one or the other."""
+    if _workbook(ctx).get_object(id).body.kind == "image":
+        picture_words(description, bool(decorative))
+    applied = ctx.document.execute(DescribeObject(id, description, bool(decorative)), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
 
 
 @computes_methods.method("move_object", "id:str row:int col:int base:revision?", write=True)

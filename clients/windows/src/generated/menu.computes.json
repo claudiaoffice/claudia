@@ -324,6 +324,18 @@
             "label": "Colours\u2026",
             "role": null
           }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "id": "format.describe",
+            "kind": "page",
+            "label": "Describe Object\u2026",
+            "role": null
+          }
         ]
       ]
     },

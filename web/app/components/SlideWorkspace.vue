@@ -19,6 +19,8 @@ import {
 import { useI18n } from '~/lib/i18n'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { galleryFor } from '~/lib/style-host'
+import { describeShortcut } from '~/lib/descriptions'
+import { chordLabel } from '~/lib/shortcuts'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
@@ -57,7 +59,11 @@ const readonly = computed(() => state.me.role === 'viewer')
 useCreatorLanguage(session, () => locale.value)
 const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => canvas.value?.focus())
 const printSource = slideSource(session)
-const extraShortcuts = [PRINT]
+const describeSelected = describeShortcut(
+  () => canvas.value?.openDescribe(),
+  () => state.selected !== null && !readonly.value,
+)
+const extraShortcuts = [PRINT, describeSelected]
 const styling: ObjectStyling = {
   get readOnly() {
     return session.readOnly
@@ -191,7 +197,14 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
       ],
     },
-    { label: t('Format'), items: styleItems() },
+    {
+      label: t('Format'),
+      items: [
+        ...styleItems(),
+        { label: '', separator: true },
+        { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(describeSelected.chord), action: () => canvas.value?.openDescribe(), disabled: readonly.value || !state.selected },
+      ],
+    },
     {
       label: t('View'),
       items: [
@@ -347,8 +360,5 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
-}
-.rev {
-  opacity: 0.8;
 }
 </style>

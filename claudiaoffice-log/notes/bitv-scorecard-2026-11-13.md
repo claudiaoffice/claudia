@@ -4,6 +4,9 @@ Asked for by the owner: a scale rather than pass or fail, split by aspect, weigh
 **estimate from reading the code and the QA log**. No screen reader was run; nothing here replaces a BIK BITV-Test. D233
 (the accessibility standard) is still undecided: this note proposes, it does not decide.
 
+**Update, same day:** the grid structure (UX-02) and alt text with decorative objects (UX-31) are now built on `bitv`; see
+`bitv-grid-and-alt-text-2026-11-13.md`. The scores below are not re-estimated.
+
 ## How the number is made
 
 BITV 2.0 points to EN 301 549, which takes in WCAG 2.1 A and AA. The BIK BITV-Test rates each test step *fulfilled*,

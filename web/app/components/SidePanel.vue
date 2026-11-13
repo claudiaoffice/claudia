@@ -372,7 +372,7 @@ ol {
   color: var(--apricot);
 }
 time {
-  color: rgb(230 224 245 / 45%);
+  color: rgb(230 224 245 / 62%); /* 45% was 3.7:1 on the panel; 62% is 6:1 (BITV 1.4.3) */
   font-size: 11px;
 }
 .mark {

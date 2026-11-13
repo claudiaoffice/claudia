@@ -3,6 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+Describing objects (BITV 1.1.1). State schema 7 → 8.
+
+### Added
+- `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`).
+
+### Changed
+- Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
+  rebuilt from the log.
+
 ## [0.8.0] - 2026-11-13
 
 How a presentation prints, and its language (D917).

@@ -2,6 +2,7 @@
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
+import { describeParams } from './descriptions'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
@@ -204,7 +205,7 @@ export class SlideSession extends BaseSession<SlideState> {
    * `null`. Clipboard and drag-and-drop import are not built yet; this is the "browse a file" path only.
    */
   async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null },
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
     frame: Frame,
   ): Promise<string | null> {
     const done = await this.attempt('add_image', {
@@ -213,6 +214,7 @@ export class SlideSession extends BaseSession<SlideState> {
       alt: picture.alt,
       source_name: picture.sourceName,
       source_path: picture.sourcePath,
+      ...(picture.decorative ? { decorative: true } : {}),
       ...frame,
       base: this.state.revision,
     })
@@ -255,6 +257,12 @@ export class SlideSession extends BaseSession<SlideState> {
   /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
   async setSnap(id: string, snap: boolean): Promise<boolean> {
     return (await this.attempt('set_snap', { id, snap, base: this.state.revision })) !== false
+  }
+
+  /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
+   * history. A picture needs one or the other, which the server insists on. */
+  async describe(id: string, description: string, decorative: boolean): Promise<boolean> {
+    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
   }
 
   async remove(id: string): Promise<boolean> {

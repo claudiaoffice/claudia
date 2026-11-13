@@ -372,6 +372,22 @@ describe('floating objects (images, E6.17)', () => {
     })
   })
 
+  it('imports a decorative picture with the mark and no words (BITV 1.1.1)', async () => {
+    const { link, session } = await opened()
+    link.handlers.add_image = () => ({ object: 'i1', revision: 'main:4' })
+    await session.addImage({ data: 'AA==', alt: '', sourceName: 'rule.gif', sourcePath: null, decorative: true }, { row: 2, col: 1, w: 400, h: 200 })
+    expect(link.last('add_image')).toMatchObject({ alt: '', decorative: true })
+  })
+
+  it('describes an object, trimmed, and marks one as decoration without words', async () => {
+    const { link, session } = await opened()
+    link.handlers.describe_object = () => ({ revision: 'main:4' })
+    expect(await session.describeObject('i1', '  sales by quarter ', false)).toBe(true)
+    expect(link.last('describe_object')).toEqual({ id: 'i1', description: 'sales by quarter', decorative: false, base: 'main:3' })
+    await session.describeObject('i1', 'left over', true)
+    expect(link.last('describe_object')).toEqual({ id: 'i1', description: '', decorative: true, base: 'main:3' })
+  })
+
   it('says why importing a picture failed, without touching the objects', async () => {
     const { link, session } = await opened()
     link.handlers.add_image = () => {

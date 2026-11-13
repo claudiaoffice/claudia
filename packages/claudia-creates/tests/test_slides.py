@@ -581,6 +581,8 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "diagram",  # E6.6: opaque to the shared body, like shape/image — a text box never sets it
         "rotation",
         "snap",
+        "description",  # BITV 1.1.1: what the object says to someone who cannot see it
+        "decorative",
         "anchor",
     }
     assert box.to_data()["anchor"] == {"kind": "slide", "container": SLIDE, "x": 100, "y": 100}

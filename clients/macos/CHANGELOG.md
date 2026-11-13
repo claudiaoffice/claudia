@@ -4,6 +4,10 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.1] - unreleased
 
+### Added
+- Format ▸ Describe Object… (Cmd+Option+D) in claudia computes and claudia creates, by regenerating the menus from the
+  Linux manifest. The page owns the dialog.
+
 ### Fixed
 - **The window stayed on "Starting…" for ever** (first run on a real Mac, 2026-11-10/11). Two causes, found one after the
   other with the core's own log. (1) The core only knew its app from the environment variable `CLAUDIA_SHELL_APP`, which

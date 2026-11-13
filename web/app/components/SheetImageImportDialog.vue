@@ -25,10 +25,12 @@ const file = ref<File | null>(null)
 const previewUrl = ref('')
 const naturalSize = ref<{ width: number; height: number } | null>(null)
 const alt = ref('')
+/** A picture that only decorates needs no words; a screen reader skips it (BITV 1.1.1). */
+const decorative = ref(false)
 const fileError = ref('')
 const busy = ref(false)
 
-const canSubmit = computed(() => file.value !== null && naturalSize.value !== null && alt.value.trim() !== '' && !busy.value)
+const canSubmit = computed(() => file.value !== null && naturalSize.value !== null && (decorative.value || alt.value.trim() !== '') && !busy.value)
 
 function reset() {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
@@ -72,7 +74,7 @@ async function submit() {
   busy.value = true
   const data = await fileToBase64(file.value)
   const aspect = naturalSize.value.width / naturalSize.value.height
-  const id = await props.session.addImage({ data, alt: alt.value.trim(), sourceName: file.value.name, sourcePath: null }, props.anchorFor(aspect))
+  const id = await props.session.addImage({ data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: null }, props.anchorFor(aspect))
   busy.value = false
   if (id) emit('inserted', id) // a failure already told the person why, via the session's own notice
 }
@@ -90,7 +92,8 @@ async function submit() {
       <div v-if="previewUrl" class="preview">
         <img :src="previewUrl" alt="" @load="onPreviewLoad" @error="onPreviewError" >
       </div>
-      <label class="field">{{ t('Description (read aloud to someone who cannot see it)') }}<input v-model="alt" autocomplete="off" maxlength="300" ></label>
+      <label class="field">{{ t('Description (read aloud to someone who cannot see it)') }}<input v-model="alt" autocomplete="off" maxlength="300" :disabled="decorative" ></label>
+      <label class="check"><input v-model="decorative" type="checkbox" > {{ t('Decorative: only for looks, a screen reader skips it') }}</label>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? t('Inserting…') : t('Insert') }}</button>
         <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
@@ -100,6 +103,11 @@ async function submit() {
 </template>
 
 <style scoped>
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 .form {
   display: grid;
   gap: 14px;

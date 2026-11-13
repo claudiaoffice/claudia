@@ -93,7 +93,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     app: ClassVar[str] = "creates"
     # 6: the presentation carries its own colour palette (D200)
     # 7: how it is printed, and its language (D917)
-    state_schema: ClassVar[int] = 7
+    state_schema: ClassVar[int] = 8  # 7: object bodies without a description
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(

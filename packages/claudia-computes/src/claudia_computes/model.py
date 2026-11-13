@@ -423,7 +423,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
     # 7: the workbook carries names: named ranges, tables and query results (E6.5, D600)
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
-    state_schema: ClassVar[int] = 8
+    state_schema: ClassVar[int] = 9  # 8: object bodies without a description
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS

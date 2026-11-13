@@ -27,7 +27,10 @@
     "e2e:macos-shell": "node e2e/macos-shell.cjs",
     "e2e:windows-shell": "node e2e/windows-shell.cjs",
     "e2e:print": "node e2e/print.cjs",
-    "e2e:print-creates": "node e2e/print-creates.cjs"
+    "e2e:print-creates": "node e2e/print-creates.cjs",
+    "e2e:grid-a11y": "node e2e/grid-a11y.cjs",
+    "e2e:describe": "node e2e/describe.cjs",
+    "e2e:describe-creates": "node e2e/describe-creates.cjs"
   },
   "dependencies": {
     "@claudia/layout": "file:../layout",
@@ -42,6 +45,7 @@
     "@fontsource/sacramento": "^5.0.0",
     "@nuxt/eslint-config": "^1.17.0",
     "@vitest/coverage-v8": "^5.1.0",
+    "axe-core": "^4.14.0",
     "eslint": "^10.14.0",
     "playwright": "^1.65.0",
     "typescript": "^5.6.0",

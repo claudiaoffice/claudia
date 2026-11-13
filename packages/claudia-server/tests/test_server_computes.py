@@ -345,6 +345,50 @@ def test_inserting_rows_moves_formulas_and_what_they_read(book):
     assert window(book)[(2, 0)] == {"t": "int", "v": 10, "f": "=A2*2"}
 
 
+# -- what an object says to someone who cannot see it (BITV 1.1.1) -----------------------------------------------
+def test_a_decorative_picture_is_imported_with_no_description(book):
+    call(book, "add_sheet", {"name": "S"})
+    add_image(book, alt="", decorative=True)
+    (obj,) = objects(book)
+    assert obj["decorative"] is True and obj["description"] == "" and obj["imported"]["alt"] == ""
+
+
+def test_a_picture_needs_a_description_or_the_decorative_mark(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="decorative") as caught:
+        add_image(book, alt="")
+    assert caught.value.code == "command_error"
+    with pytest.raises(RequestError, match="decorative") as caught:
+        add_image(book, alt="a flourish", decorative=True)
+    assert caught.value.code == "command_error"
+
+
+def test_a_picture_is_described_better_later_and_marked_decorative_later_still(book):
+    call(book, "add_sheet", {"name": "S"})
+    picture = add_image(book)
+    call(book, "describe_object", {"id": picture, "description": "the quarterly sales chart as a picture"})
+    assert objects(book)[0]["description"] == "the quarterly sales chart as a picture"
+    assert book.history_for("ann").undo_label == "Describe object"
+    call(book, "describe_object", {"id": picture, "description": "", "decorative": True})
+    assert (objects(book)[0]["description"], objects(book)[0]["decorative"]) == ("", True)
+
+
+def test_a_picture_cannot_be_left_with_neither_a_description_nor_the_decorative_mark(book):
+    call(book, "add_sheet", {"name": "S"})
+    picture = add_image(book)
+    with pytest.raises(RequestError, match="decorative") as caught:
+        call(book, "describe_object", {"id": picture, "description": ""})
+    assert caught.value.code == "command_error"
+
+
+def test_a_viewer_may_not_describe(book):
+    call(book, "add_sheet", {"name": "S"})
+    picture = add_image(book)
+    with pytest.raises(RequestError) as caught:
+        call(book, "describe_object", {"id": picture, "description": "x"}, account=VERA)
+    assert caught.value.code == "forbidden"
+
+
 # -- images and floating objects (E6.17): add_image, move_object, remove_object, and the never-resize guarantee
 def test_an_image_is_imported_and_anchored_to_a_cell(book):
     call(book, "add_sheet", {"name": "S"})

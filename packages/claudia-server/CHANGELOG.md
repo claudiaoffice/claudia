@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+Describing objects (BITV 1.1.1), in creates and computes (composes has no object methods yet).
+
+### Added
+- `describe_object(id, description, decorative?, base?)`: say what an object is to someone who cannot see it, or that it is
+  only decoration (then no description). A picture needs one or the other. One history step, "Describe object" or "Mark
+  as decorative".
+- `add_image` takes `decorative` (optional). A decorative picture has an empty `alt`; any other still needs words, and a
+  picture given both is refused.
+- The objects of a slide or a sheet are listed with `description` and `decorative`.
+
 ## [0.28.0] - 2026-11-13
 
 Help and function documentation in German (E13.8, D323).

@@ -9,6 +9,7 @@
 // menu's own next steps) — this shows what the picture already carries, and closes.
 import { computed } from 'vue'
 import { formatByteSize, imageByteSize, imageDataUrl } from '~/lib/images'
+import { pictureAlt } from '~/lib/descriptions'
 import { ago, colorOf, inkOn, initial } from '~/lib/people'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import { useI18n } from '~/lib/i18n'
@@ -21,6 +22,8 @@ const emit = defineEmits<{ close: [] }>()
 const state = props.session.state
 const asset = computed(() => (props.object.image ? state.images[props.object.image] : undefined))
 const imported = computed(() => props.object.imported)
+/** What the picture says now (Format ▸ Describe Object… may have changed it since the import), not the import's own words. */
+const description = computed(() => pictureAlt(props.object))
 
 const thumbSrc = computed(() => (asset.value ? imageDataUrl(asset.value) : ''))
 const formatLabel = computed(() => {
@@ -42,7 +45,8 @@ const importedByColor = computed(() => (imported.value ? colorOf(state, imported
         <img class="thumb" :src="thumbSrc" alt="" >
         <div class="names">
           <div class="filename">{{ imported.source_name }}</div>
-          <div class="alt">“{{ imported.alt }}”</div>
+          <div v-if="object.decorative" class="alt">{{ t('Decorative: a screen reader skips it') }}</div>
+          <div v-else class="alt">“{{ description }}”</div>
         </div>
       </div>
 

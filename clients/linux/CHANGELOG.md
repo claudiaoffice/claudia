@@ -6,6 +6,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 First slice of the native Linux client (epic 5).
 
+### Added (alt text and decorative objects, BITV 1.1.1)
+- Format ▸ Describe Object… (Ctrl+Alt+D, action `format.describe`) in claudia computes and claudia creates: the page
+  opens its own dialog to describe the selected object or mark it as decoration. A new page action, so the contract
+  version is unchanged; the macOS and Windows menus follow by regeneration.
+
 ### Added (computes: random numbers, alternatives, following)
 - Tools ▸ Random Generator… (Ctrl+Alt+R), Resample Random Numbers (F9), Outcomes of This Cell… (Ctrl+Alt+O) and Follow
   Computation (Ctrl+Alt+F, checkable) in claudia computes (E6.21–E6.23); the macOS and Windows menus follow by

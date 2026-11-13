@@ -54,7 +54,7 @@ statement in the docs or on the website).
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |
 | PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |
 | UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |
-| UX-02 | P2 | UX | The grid has no accessible structure | verified open (2026-11-12) |
+| UX-02 | P2 | UX | The grid has no accessible structure | fixed on `bitv`, awaiting commit (axe clean; no screen reader run yet) |
 | UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |
 | UX-04 | P2 | UX | Text and border colours fail WCAG contrast | fixed on `bitv`, awaiting commit (residue closed and guarded by a test, 2026-11-13) |
 | UX-05 | P3 | UX | No dark mode | fixed (2026-11-12) |
@@ -81,6 +81,8 @@ statement in the docs or on the website).
 | UX-28 | P2 | UX / BITV | The page declares no language (WCAG 3.1.1) | fixed on `bitv`, awaiting commit |
 | UX-29 | P2 | UX / BITV | A keyboard user cannot leave the grid, nor skip the menus and toolbar (WCAG 2.1.2, 2.4.1) | fixed on `bitv`, awaiting commit |
 | UX-30 | P3 | UX / BITV | The tab title does not name the document (WCAG 2.4.2) | fixed on `bitv`, awaiting commit |
+| UX-31 | P2 | UX / BITV | Pictures, charts and shapes had no description of their own, and nothing could be marked as decoration (WCAG 1.1.1) | fixed on `bitv`, awaiting commit; design to confirm |
+| UX-32 | P3 | UX / BITV | The workspace pages have no landmarks (axe `landmark-one-main`, `region`; WCAG 1.3.1, 2.4.1) | **new, open** |
 | UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |
 | UX-27 | P3 | UX / creates | A new object lands exactly on the previous one, so the second hides the first | **new, open** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
@@ -393,7 +395,7 @@ bar.
 **Re-checked 2026-11-12: fixed (read).** `MenuBar.vue` now has `aria-haspopup`/`aria-expanded` and arrow-key
 handling (commit 47519fa). Not yet tried with Orca or NVDA.
 
-### UX-02 · The grid has no accessible structure · P2 · verified open (the structure is not part of the `bitv` quick fixes)
+### UX-02 · The grid has no accessible structure · P2 · fixed on `bitv`, awaiting commit
 **Evidence (read, `54d1245`).** `SheetGrid.vue` has exactly two ARIA attributes: `role="grid"` and
 `aria-label="table"` (plus `aria-label="editing cell"` on the editor). No `role="row"`, no `role="gridcell"`, no
 `aria-rowcount`/`aria-colcount`, no `aria-rowindex`/`aria-colindex`, no `aria-activedescendant`, no `aria-selected`. A
@@ -410,6 +412,25 @@ cell, and a live region for values changed by other people.
 **Re-checked 2026-11-12: still open.** `SheetGrid.vue` has `role="grid"` and still no `row`/`gridcell`,
 `aria-rowindex`/`aria-colindex` or `aria-activedescendant`. The grid is the one part of computes a screen-reader user
 cannot work with; E5.10 (accessibility baseline) is `todo`.
+
+**Fixed on `bitv` (2026-11-13).** `SheetGrid.vue` now says what it is: `aria-rowcount` 10001 and `aria-colcount` 703 (the
+sheet and its header row and column), `aria-multiselectable`, a name that includes the sheet; the column letters are a
+`row` of `columnheader`s (row 1); every drawn row is a `row` with `aria-rowindex`, a `rowheader` and its `gridcell`s with
+`aria-colindex` and `aria-selected`. Focus stays on the grid and `aria-activedescendant` names the active cell, which is
+always drawn, empty or not; its name is "B2, 9600, formula", "B3, error #DIV/0!: …", "B5, empty", with alternatives,
+outcomes and the part in a followed computation said in words (`lib/grid-a11y.ts`, tested first). A range, a whole
+row or column and a selected object are said once the selection settles, in a polite live region next to the grid
+(`Workspace.vue`). The header and row-number layers keep their look by z-order instead of by clipping containers.
+**Test:** `web/tests/grid-a11y.test.ts` (words), `web/e2e/grid-a11y.cjs` (structure, the active cell's name through
+Home/arrows, the range announcement, and axe-core 4.14 over the whole computes page against WCAG 2.0/2.1/2.2 A and AA:
+no violations). Found and fixed on the way, outside the grid: the sheet tab list contained the "new sheet" button
+(`aria-required-children`), the Draw button's name did not contain its visible text (2.5.3), and two texts fell below 4.5:1
+(the history panel's times on the dark panel, 45% to 62%; the revision label's 80% opacity).
+**Not done / not known.** No screen reader (NVDA, JAWS, Orca, VoiceOver) was run, so how they read the row wrappers and
+`aria-activedescendant` is unverified, and axe lists items for a person to judge (four contrast checks on overlays, three
+names). Whole rows and columns are announced, not marked cell by cell (only the drawn cells carry `aria-selected`). The
+other apps are not grids. Another person's or the `ai`'s changes to cells are not announced (the original fix asked for
+that): a separate story.
 
 ### UX-03 · Dialogs do not manage focus · P2 · verified open
 **Evidence (read, `54d1245`).** `Modal.vue` is a plain element with a global `keydown` listener for Escape. No
@@ -1098,6 +1119,32 @@ in a browser tab F6 may also be claimed by the browser (Firefox not tried); no m
 ### UX-30 · The tab title does not name the document · P3 · fixed on `bitv`, awaiting commit
 Every tab of one app read "Claudia Computes" (WCAG 2.4.2). `tabTitle(app, documentName)` now gives
 "budget 2027 – Claudia Computes". **Test:** `web/tests/shell-bridge.test.ts`, `regions.cjs`.
+
+### UX-31 · Pictures, charts and shapes had no description of their own · P2 · fixed on `bitv`, awaiting commit
+**Evidence.** An image had its alt text only from the import (and the import dialog of the sheet insisted on one); a shape,
+a text box and a chart had none; nothing said that an object is only decoration, so a screen reader read "image" for
+every flourish (WCAG 1.1.1, BITV 1.1.1 Nicht-Text-Inhalte).
+**Fix.** Every object has `description` and `decorative` (`claudia_core.ObjectBody`, command schema 2 with an upcaster, so
+old documents replay), a new undoable command `DescribeObject`, and the server method `describe_object` in computes and
+creates (composes has no objects yet). A picture still needs words or the decorative mark; for anything else a description
+is optional. Format ▸ Describe Object… (Ctrl+Alt+D, `format.describe`, also on the Windows/macOS menus) and the object's
+context menu on a slide ("Describe…") open one dialog with a 300-character counter and a "Decorative" box; the import
+dialogs have the box too. The accessible name of an object is its kind plus its description ("Picture: …", "Picture
+(decorative)", "Picture (no description)"); a decoration is `role="presentation"` and hidden. Ctrl+Alt+PageDown/PageUp step
+through the objects of a sheet, which only the mouse reached. A chart tab is named by its chart.
+**Export.** PPTX: `descr` on `p:cNvPr` and the decorative extension (`adec:decorative`, from memory of the 2017 extension:
+**verify in PowerPoint**). ODP: `svg:desc`; ODF 1.3 has no attribute for decorative, so the export reports a loss
+(`odp_export_losses`). ODS and XLSX write no floating objects yet. Import of descriptions from those files is not built.
+**Test:** `packages/claudia-core/tests/test_object_description.py`, `claudia-creates/tests/test_descriptions.py`, the server
+tests of both apps, `claudia-creates-io` pptx/odp tests, `web/tests/descriptions.test.ts`, `object-menu.test.ts`,
+`object-cycle.test.ts`, `clients/linux/tests/test_manifest.py`, `web/e2e/describe.cjs`, `describe-creates.cjs`.
+**Design to confirm:** `notes/mockups/describe-object-and-grid-structure.svg` (built before it was agreed).
+
+### UX-32 · The workspace pages have no landmarks · P3 · new, open
+axe (best-practice rules, not WCAG ones) finds no `main` landmark and content outside any landmark on the computes page.
+F6 and the skip link (UX-29) are the bypass the page has; landmarks would give screen readers the same jump list: `header`
+for the menu and toolbar, `main` for the document, `complementary` for the panel, `contentinfo` for the footer. Needs a look at
+how `DocumentFrame.vue` is laid out in all three apps before touching it.
 
 ### PROC-17 · `demo.cjs` fails once the client sends *suggest* · P2 · fixed 2026-11-12
 The switch (E7.7) made every client send *suggest* by default; computes cannot propose yet, so `@ai build an example

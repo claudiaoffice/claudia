@@ -18,6 +18,8 @@ export interface ObjectMenuActions {
   cut: () => void
   copy: () => void
   properties: () => void
+  /** Say what the object shows to someone who cannot see it, or mark it as decoration (BITV 1.1.1). */
+  describe: () => void
   setSnap: (snap: boolean) => void
 }
 
@@ -26,6 +28,7 @@ export function contextMenuItems(o: SlideObject, readonly: boolean, actions: Obj
   // "Style…" first and for every kind: a picture has no fill and no words, but it does have a border and a place
   // in the stacking order, so the menu has something to offer for all four kinds (D178, D181).
   items.push({ label: t('Style…'), action: actions.style, disabled: readonly })
+  items.push({ label: t('Describe…'), hint: t('Ctrl+Alt+D'), action: actions.describe, disabled: readonly })
   items.push({ label: '', separator: true })
   if (o.kind === 'image') {
     // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call — not a second,

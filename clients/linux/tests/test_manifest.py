@@ -212,9 +212,26 @@ def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manife
 def test_every_app_offers_the_same_three_format_actions(app_name: str, request: pytest.FixtureRequest) -> None:
     """Was a single inert stub while only composes had styles (D125). All three have them now (D203), and the
     colours a document is painted from are the same dialog everywhere (D200), so the menu is the same everywhere
-    too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two."""
+    too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two.
+    The two that have floating objects also say what an object shows to someone who cannot see it (BITV 1.1.1)."""
     m = request.getfixturevalue(app_name)
-    assert action_ids(m.menu("Format")) == ["format.apply-style", "format.look", "format.all-styles", "format.colours"]
+    assert action_ids(m.menu("Format")) == [
+        "format.apply-style",
+        "format.look",
+        "format.all-styles",
+        "format.colours",
+        "format.describe",
+    ]
+
+
+@pytest.mark.parametrize("app_name", ["computes", "creates"])
+def test_describe_object_is_a_page_action_with_its_own_key(app_name: str, request: pytest.FixtureRequest) -> None:
+    """Every menu entry has a key (project rule): Ctrl+Alt+D, the chord the page binds to the same action."""
+    m = request.getfixturevalue(app_name)
+    describe = m.action("format.describe")
+    assert describe.kind is Kind.PAGE and describe.label == "Describe Object…"
+    assert describe.accelerators == ("<Primary><Alt>d",)
+    assert "format.describe" not in action_ids(request.getfixturevalue("composes").menu("Format"))
 
 
 @pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])

@@ -26,6 +26,7 @@ from claudia_core import (
     Batch,
     DefineImage,
     DefineShape,
+    DescribeObject,
     ImageImport,
     MoveObject,
     ObjectBody,
@@ -42,7 +43,7 @@ from claudia_core.clock import utc_now
 from claudia_creates import AddSlide, PrintSetup, PrintSetupError, SetPrintSetup, ShapeLibrary, SlideAnchor, SlideModel
 
 from .i18n import msg
-from .images import image_bytes
+from .images import image_bytes, picture_words
 from .office_export import document_info, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
@@ -82,9 +83,10 @@ def _done(ctx: Context, command, base, **extra) -> dict:
     return {**extra, "revision": applied.revision.to_data()}
 
 
-def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, base):
+def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, decorative, base):
     """Import a picture from disk and put it on a slide: `data` is the file's bytes, base64. `alt` is a short,
-    required description of what it shows. `source_name` is the file name as the client has it; `source_path`
+    required description of what it shows — unless the picture is only `decorative` (a flourish, a divider),
+    when it has none and `alt` is empty. `source_name` is the file name as the client has it; `source_path`
     is its full path if the client could supply one (a plain web browser cannot, for its own security — send
     `null`). Clipboard and drag-and-drop imports are not implemented yet; this is the "browse a file" path.
     Returns the new object's id and the revision. The image keeps its own proportions.
@@ -92,12 +94,13 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, b
     Module-level, not nested in `creates_methods_with`, because it needs no shape library: only `add_object`
     and `shapes` read from one."""
     deck = _deck(ctx)
+    words = picture_words(alt, bool(decorative))
     asset = decode_image(data)
     steps: list = [] if asset.id in deck.images else [DefineImage(asset)]
     imported = ImageImport.from_data(
         {
             "asset": asset.id,
-            "alt": alt,
+            "alt": words,
             "imported_by": ctx.user,
             "imported_at": utc_now(),
             "source": "disk",
@@ -106,7 +109,9 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, b
         }
     )
     object_id = _fresh("o", deck.objects)
-    body = ObjectBody(object_id, "image", w, h, STYLE_OF_KIND["image"], image=asset.id, imported=imported)
+    body = ObjectBody(
+        object_id, "image", w, h, STYLE_OF_KIND["image"], image=asset.id, imported=imported, decorative=bool(decorative)
+    )
     steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
     return _done(ctx, command, base, object=object_id)
@@ -140,6 +145,14 @@ def _set_snap(ctx, *, id, snap, base):
     return _done(ctx, SetSnap(id, snap), base)
 
 
+def _describe_object(ctx, *, id, description, decorative, base):
+    """Say what an object is to someone who cannot see it (`description`, a short sentence), or that it is only
+    decoration (`decorative` true, and then no description). A picture needs one or the other."""
+    if _deck(ctx).get_object(id).body.kind == "image":
+        picture_words(description, bool(decorative))
+    return _done(ctx, DescribeObject(id, description, bool(decorative)), base)
+
+
 def _remove_object(ctx, *, id, base):
     """Take an object off its slide. Undo brings it back in the same place of the stacking order."""
     return _done(ctx, RemoveObject(id), base)
@@ -152,7 +165,8 @@ def _add_object_methods(table: MethodTable) -> None:
     table.kind("image")(image_bytes)
     table.method(
         "add_image",
-        "slide:str x:int y:int w:int h:int data:image alt:str source_name:str source_path:str? base:revision?",
+        "slide:str x:int y:int w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? "
+        "base:revision?",
         write=True,
     )(_add_image)
     table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
@@ -160,6 +174,9 @@ def _add_object_methods(table: MethodTable) -> None:
     table.method("rotate_object", "id:str rotation:int base:revision?", write=True)(_rotate_object)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
+    table.method("describe_object", "id:str description:text decorative:bool? base:revision?", write=True)(
+        _describe_object
+    )
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
 
 

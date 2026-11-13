@@ -5,6 +5,7 @@ import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
+import { describeParams } from './descriptions'
 import type { ImageAsset } from './images'
 import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
@@ -657,7 +658,7 @@ export class Session extends BaseSession<State> {
    * `null`. `anchor` fixes the object's cell and its pixel size for good: there is no resize yet, and no
    * structural edit (row/column insert, delete or resize) ever changes either. */
   async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null },
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
     anchor: { row: number; col: number; w: number; h: number },
   ): Promise<string | null> {
     const done = await this.attempt('add_image', {
@@ -666,6 +667,7 @@ export class Session extends BaseSession<State> {
       alt: picture.alt,
       source_name: picture.sourceName,
       source_path: picture.sourcePath,
+      ...(picture.decorative ? { decorative: true } : {}),
       ...anchor,
       base: this.state.revision,
     })
@@ -743,6 +745,12 @@ export class Session extends BaseSession<State> {
    * corner too. An image must keep its own proportions (the server refuses otherwise); a diagram keeps none. */
   async resizeObject(id: string, frame: { row: number; col: number; w: number; h: number }): Promise<boolean> {
     return (await this.attempt('resize_object', { id, ...frame, base: this.state.revision })) !== false
+  }
+
+  /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
+   * history. A picture needs one or the other, which the server insists on. */
+  async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
+    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
   }
 
   async removeObject(id: string): Promise<boolean> {

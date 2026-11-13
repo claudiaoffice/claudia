@@ -54,6 +54,11 @@ export interface ObjectBody {
    * grid itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is
    * shown. */
   snap: boolean
+  /** What the object says to someone who cannot see it (BITV 1.1.1; `lib/descriptions.ts`). A picture that has none of
+   * its own is described by the words it was imported with; a decorative object has none. */
+  description: string
+  /** Only decoration: a screen reader skips it, and it has no description. */
+  decorative: boolean
 }
 
 /** One object: the shared body plus the anchor of its own app. */

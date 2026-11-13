@@ -513,6 +513,15 @@ def computes() -> Manifest:
                 _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
             ),
             (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+            # BITV 1.1.1: say what the selected object shows to someone who cannot see it, or mark it as decoration.
+            (
+                _page(
+                    "format.describe",
+                    "Describe Object…",
+                    "Say what the object you have selected shows to someone who cannot see it",
+                    accelerators=("<Primary><Alt>d",),
+                ),
+            ),
         ),
     )
     view_menu = Menu("View", (_shared_view_block(authors=False),))
@@ -602,6 +611,15 @@ def creates() -> Manifest:
                 _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
             ),
             (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+            # BITV 1.1.1: say what the selected object shows to someone who cannot see it, or mark it as decoration.
+            (
+                _page(
+                    "format.describe",
+                    "Describe Object…",
+                    "Say what the object you have selected shows to someone who cannot see it",
+                    accelerators=("<Primary><Alt>d",),
+                ),
+            ),
         ),
     )
     view_menu = Menu("View", (_shared_view_block(authors=False),))

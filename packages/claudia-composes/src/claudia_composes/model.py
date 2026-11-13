@@ -262,7 +262,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 6: the text says which page it is printed on (D904)
     # 7: the text says which language it is written in (D915)
     # 8: paragraphs may be items of lists, which the text holds in a book of its own (E9.21)
-    state_schema: ClassVar[int] = 8
+    state_schema: ClassVar[int] = 9  # 8: object bodies without a description
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
