@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, shallowRef, watchEffect } from 'vue'
 import { isSlides, isText, type AnySession } from '~/lib/open'
+import { setPageLanguage } from '~/lib/i18n'
 import { tabTitle } from '~/lib/shell-bridge'
 import type { SlideSession } from '~/lib/slide-session'
 import type { TextSession } from '~/lib/text-session'
@@ -22,11 +23,13 @@ function leave(opts?: { startFresh?: boolean }) {
 }
 
 // Each app has its colour (tokens.css); the open dialog sets it for the app of the documents it lists. The tab
-// title follows the same switch, so a person with several documents open in different tabs can tell them apart
-// (previously every tab read "claudia computes", nuxt.config.ts's default, whichever app was actually open).
+// title follows the same switch and names the document too, so a person with several documents open in different
+// tabs can tell them apart (previously every tab read "claudia computes", nuxt.config.ts's default).
 watchEffect(() => {
   if (session.value) document.documentElement.dataset.app = session.value.state.app
-  document.title = tabTitle(session.value?.state.app)
+  document.title = tabTitle(session.value?.state.app, session.value?.state.doc)
+  // The open dialog and the admin pages are English only; a workspace declares its own language once its catalog loads.
+  if (!session.value) setPageLanguage('en')
 })
 </script>
 

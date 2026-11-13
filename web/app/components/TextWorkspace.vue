@@ -322,10 +322,10 @@ const SHORTCUT_NOTES: [string, string][] = [
     @leave="(opts) => emit('leave', opts)"
   >
     <template #toolbar>
-      <StyleBar v-if="!printing" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
+      <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">

@@ -26,6 +26,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `e9-composes-lists.md` | Agreed and built (kernel, server, web; creates bullets open): ordered and unordered lists as a (list, level) mark on a paragraph with named schemes, numbers derived in the kernel, and the seam for numbered headings and referencable anchors (E9.21, E9.22); mock-up `composes-lists.svg` | 2026-11-13 |
 | `e10-15-grid-and-snap.md` | E10.15: the view-only grid vs. the object's own persisted snap state, the mock-up's four open points, and what snapping does to an aspect-locked resize | 2026-11-07 |
 | `e5-1-e5-10-menus-and-accessibility.md` | The menu-schema redesign (UX-06/UX-09), the UX-01/03/04/05 accessibility baseline, and the dark-mode contrast/About-dialog/button-shape bugs found running the patch, with `mockups/`; a patch exists, not yet committed (PROC-03: not built) | 2026-11-05/06 |
+| `bitv-scorecard-2026-11-13.md` | An estimate of where the web app stands against BITV 2.0 / WCAG 2.1 AA, by principle (about 59 of 100 today, about 70 with an accessible grid), the user groups to weigh it by, the order of work, and what the quick fixes on branch `bitv` did and left | 2026-11-13 |
 | `code-map.md` | The narrative map of the repository, **stale**: written at `842d739`, six packages | 2026-11-02 |
 
 ## Three documents were deliberately not copied

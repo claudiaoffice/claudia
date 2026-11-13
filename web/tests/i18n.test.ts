@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { LANGUAGES, appLanguage, createTranslator, loadCatalog, useI18n } from '~/lib/i18n'
+import { LANGUAGES, appLanguage, createTranslator, languageOf, loadCatalog, setPageLanguage, useI18n } from '~/lib/i18n'
 import { currentLocale } from '~/lib/locale'
 
 function fakeFetch(responses: Record<string, unknown>): typeof fetch {
@@ -22,6 +22,38 @@ describe('appLanguage', () => {
   it('falls back to English, the source language, for a language Claudia has no catalog for', () => {
     expect(appLanguage('fr-FR')).toBe('en')
     expect(appLanguage('')).toBe('en')
+  })
+})
+
+describe('languageOf', () => {
+  // WCAG 3.1.1 (BITV 2.0): the page's `lang` is what a screen reader picks its voice by, so it must name the
+  // language the words on the screen are really in, not the one that was asked for.
+  it('is English for English, which needs no catalog', () => {
+    expect(languageOf('en-US', {})).toBe('en')
+  })
+
+  it('is the App Language once its catalog has loaded', () => {
+    expect(languageOf('de-DE', { Save: 'Speichern' })).toBe('de')
+  })
+
+  it('stays English while the German catalog is missing, because that is what is on the screen', () => {
+    expect(languageOf('de', {})).toBe('en')
+  })
+
+  it('is English for a language the app does not have', () => {
+    expect(languageOf('fr', { Save: 'Enregistrer' })).toBe('en')
+  })
+})
+
+describe('setPageLanguage', () => {
+  it('declares the language on the root element it is given', () => {
+    const root = { lang: 'en' }
+    setPageLanguage('de', root)
+    expect(root.lang).toBe('de')
+  })
+
+  it('has nothing to declare it on outside a browser, and says nothing about that', () => {
+    expect(() => setPageLanguage('de')).not.toThrow()
   })
 })
 
@@ -130,6 +162,33 @@ describe('useI18n', () => {
     const i18n = useI18n()
     await i18n.choose('de')
     expect(i18n.locale.value).toBe('de')
+  })
+
+  it('declares the page language once the catalog for the chosen language has loaded', async () => {
+    const root = { lang: 'en' }
+    vi.stubGlobal('document', { documentElement: root })
+    vi.stubGlobal('fetch', fakeFetch({ '/i18n/de.json': { Save: 'Speichern' } }))
+    try {
+      const i18n = useI18n()
+      await i18n.choose('de')
+      expect(root.lang).toBe('de')
+      await i18n.choose('en')
+      expect(root.lang).toBe('en')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('keeps the page English when the German catalog cannot be loaded', async () => {
+    const root = { lang: 'en' }
+    vi.stubGlobal('document', { documentElement: root })
+    vi.stubGlobal('fetch', fakeFetch({}))
+    try {
+      await useI18n().choose('de')
+      expect(root.lang).toBe('en')
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('choosing the already-active language is harmless', async () => {

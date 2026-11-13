@@ -239,6 +239,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     <template #toolbar>
       <InsertBar
         v-if="!printing"
+        data-region="toolbar"
         :shapes="state.library"
         :can-delete="state.selected !== null"
         :can-undo="state.canUndo"
@@ -260,7 +261,7 @@ const SHORTCUT_NOTES: [string, string][] = [
       </InsertBar>
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <SlideCanvas v-else-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
+    <SlideCanvas v-else-if="state.activeSlide" ref="canvas" data-region="document" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
     <div v-else class="noslide">This presentation has no slide.</div>
     <template #overlay>
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />

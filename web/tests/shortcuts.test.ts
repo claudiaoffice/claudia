@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { chordLabel, dispatch, isTypingTarget, matches, sharedShortcuts } from '~/lib/shortcuts'
+import { chordLabel, dispatch, isTypingTarget, matches, regionShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 
 function key(partial: Partial<{ key: string; code: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }>) {
   return { key: '', code: '', ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...partial }
@@ -72,6 +72,54 @@ describe('dispatch', () => {
     const run = vi.fn()
     const defs = [{ id: 'file.save', label: 'Save', chord: { key: 's', ctrl: true }, run }]
     expect(dispatch(defs, key({ key: 's', ctrlKey: true }))?.id).toBe('file.save')
+  })
+})
+
+describe('dispatch while someone is typing in a field', () => {
+  const run = vi.fn()
+  const save = { id: 'file.save', label: 'Save', chord: { key: 's', ctrl: true }, run }
+
+  it('leaves an ordinary shortcut to the field', () => {
+    run.mockClear()
+    expect(dispatch([save], key({ key: 's', ctrlKey: true }), true)).toBeNull()
+    expect(run).not.toHaveBeenCalled()
+  })
+
+  it('still runs one that says it works in a field', () => {
+    run.mockClear()
+    expect(dispatch([{ ...save, whileTyping: true }], key({ key: 's', ctrlKey: true }), true)?.id).toBe('file.save')
+    expect(run).toHaveBeenCalledOnce()
+  })
+
+  it('runs everything when nobody is typing', () => {
+    run.mockClear()
+    expect(dispatch([save], key({ key: 's', ctrlKey: true }), false)?.id).toBe('file.save')
+  })
+})
+
+describe('regionShortcuts', () => {
+  // WCAG 2.1.2 / 2.4.1: F6 and Shift+F6 are how a keyboard user gets out of the grid and between the parts of the window.
+  it('binds F6 to the next part and Shift+F6 to the previous one', () => {
+    const next = vi.fn()
+    const previous = vi.fn()
+    const defs = regionShortcuts({ next, previous })
+    expect(dispatch(defs, key({ key: 'F6' }))?.id).toBe('view.nextRegion')
+    expect(dispatch(defs, key({ key: 'F6', shiftKey: true }))?.id).toBe('view.previousRegion')
+    expect(next).toHaveBeenCalledOnce()
+    expect(previous).toHaveBeenCalledOnce()
+  })
+
+  it('works from inside a text field too, which is where the formula bar keeps focus', () => {
+    const defs = regionShortcuts({ next: vi.fn(), previous: vi.fn() })
+    expect(dispatch(defs, key({ key: 'F6' }), true)?.id).toBe('view.nextRegion')
+  })
+
+  it('shows as F6 and Shift+F6 in Config ▸ Shortcuts', () => {
+    const labels = regionShortcuts({ next: vi.fn(), previous: vi.fn() }).map((d) => [d.label, chordLabel(d.chord)])
+    expect(labels).toEqual([
+      ['Next part of the window', 'F6'],
+      ['Previous part of the window', 'Shift+F6'],
+    ])
   })
 })
 

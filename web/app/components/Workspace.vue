@@ -773,6 +773,7 @@ const menus = computed<Menu[]>(() => {
 // were never candidates for the shared map.
 const SHORTCUT_NOTES: [string, string][] = [
   ['Arrows, Tab, Enter', 'move through the table'],
+  ['F6 / Shift + F6', 'leave the table: on to the next / back to the previous part of the window'],
   ['Shift + arrows or drag', 'select a block'],
   ['Ctrl + arrows', 'jump to the edge of a block of data'],
   ['Type, F2 or double click', 'edit a cell (others are kept out of it while you do)'],
@@ -794,7 +795,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     @saved="grid?.focus()"
   >
     <template #toolbar>
-      <div class="formulaRow">
+      <div class="formulaRow" data-region="toolbar">
         <FormulaBar
           :label="label"
           :text="formulaText"
@@ -843,6 +844,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     <SheetGrid
       v-else-if="state.activeSheet"
       ref="grid"
+      data-region="document"
       :session="session"
       :sheet="state.activeSheet"
       :sel="sel"
@@ -868,7 +870,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     />
     <div v-else class="nosheet">This document has no sheet yet.</div>
     <template #footer>
-      <FooterBar :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" @pick="pickTab" @add="dialog = 'sheet'" />
+      <FooterBar data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" @pick="pickTab" @add="dialog = 'sheet'" />
     </template>
     <template #overlay>
       <PromptDialog v-if="dialog === 'sheet'" title="New sheet" label="Name" ok="Add sheet" required placeholder="Forecast" @ok="addSheet" @close="dialog = null" />

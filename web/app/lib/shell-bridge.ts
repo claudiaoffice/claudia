@@ -26,11 +26,14 @@ export const APP_NAME: Record<App, string> = {
   creates: 'Claudia Creates',
 }
 
-/** The browser tab's title for the session's own app, or the generic fallback before one has opened (or for
+/** The browser tab's title (WCAG 2.4.2): the open document first, then its app, so two tabs of the same app can be
+ * told apart; just the app for a document without a name; the generic fallback before one has opened, or for
  * anything not one of the three known apps -- `app` is a plain string at this boundary, not the narrower `App`
- * union, the same way `TopBar.vue`'s own `state.app || 'claudia'` treats it). */
-export function tabTitle(app: string | undefined): string {
-  return (app && APP_NAME[app as App]) || 'Claudia'
+ * union, the same way `TopBar.vue`'s own `state.app || 'claudia'` treats it. */
+export function tabTitle(app: string | undefined, documentName?: string): string {
+  const name = app && APP_NAME[app as App]
+  if (!name) return 'Claudia'
+  return documentName ? `${documentName} – ${name}` : name
 }
 export interface ActionState {
   enabled?: boolean

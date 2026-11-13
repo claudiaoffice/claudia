@@ -27,6 +27,9 @@ export interface ShortcutDef {
   run: () => void
   /** Skipped (and left to whatever the focused field does) while this is true. Defaults to always enabled. */
   enabled?: () => boolean
+  /** Runs even while someone is typing in an `<input>` or `<textarea>`, where shortcuts are otherwise left to the
+   * field: for a key the field has no use for, such as F6 leaving the formula bar. */
+  whileTyping?: boolean
 }
 
 export interface KeyLike {
@@ -44,6 +47,15 @@ export function sharedShortcuts(actions: { undo: () => void; redo: () => void; s
     { id: 'edit.undo', label: 'Undo', chord: { key: 'z', ctrl: true }, run: actions.undo },
     { id: 'edit.redo', label: 'Redo', chord: { key: 'z', ctrl: true, shift: true }, run: actions.redo },
     { id: 'file.save', label: 'Save', chord: { key: 's', ctrl: true }, run: actions.save },
+  ]
+}
+
+/** F6 and Shift+F6, which move between the parts of the window (`regions.ts`): how a keyboard user gets out of the grid,
+ * where Tab is taken for stepping between cells. */
+export function regionShortcuts(actions: { next: () => void; previous: () => void }): ShortcutDef[] {
+  return [
+    { id: 'view.nextRegion', label: 'Next part of the window', chord: { key: 'F6' }, run: actions.next, whileTyping: true },
+    { id: 'view.previousRegion', label: 'Previous part of the window', chord: { key: 'F6', shift: true }, run: actions.previous, whileTyping: true },
   ]
 }
 
@@ -69,9 +81,10 @@ export function isTypingTarget(target: { tagName?: string } | null): boolean {
   return tag === 'INPUT' || tag === 'TEXTAREA'
 }
 
-/** Runs the first matching, enabled shortcut. Returns it (so the caller knows to `preventDefault()`), or `null`. */
-export function dispatch(defs: ShortcutDef[], event: KeyLike): ShortcutDef | null {
-  const found = defs.find((d) => matches(d.chord, event) && (d.enabled ? d.enabled() : true))
+/** Runs the first matching, enabled shortcut. Returns it (so the caller knows to `preventDefault()`), or `null`.
+ * With `typing` (the event started in a text field) only a shortcut that says `whileTyping` is considered. */
+export function dispatch(defs: ShortcutDef[], event: KeyLike, typing = false): ShortcutDef | null {
+  const found = defs.find((d) => matches(d.chord, event) && (!typing || d.whileTyping) && (d.enabled ? d.enabled() : true))
   if (found) found.run()
   return found ?? null
 }
@@ -83,8 +96,7 @@ export function dispatch(defs: ShortcutDef[], event: KeyLike): ShortcutDef | nul
  */
 export function installWindowShortcuts(defs: () => ShortcutDef[]): void {
   function onKeydown(event: KeyboardEvent) {
-    if (isTypingTarget(event.target as HTMLElement | null)) return
-    if (dispatch(defs(), event)) event.preventDefault()
+    if (dispatch(defs(), event, isTypingTarget(event.target as HTMLElement | null))) event.preventDefault()
   }
   onMounted(() => window.addEventListener('keydown', onKeydown))
   onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))

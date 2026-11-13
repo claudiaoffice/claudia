@@ -27,6 +27,21 @@ export function appLanguage(locale: string): string {
   return tags.find((tag) => tag === lower) ?? tags.find((tag) => tag === lower.split('-')[0]) ?? 'en'
 }
 
+/** The language the words on the screen are really in (WCAG 3.1.1): the App Language of `locale` once its catalog has
+ *  loaded, else English, which is what every string renders as while a catalog is missing. This, not the browser's
+ *  own tag, is what the page's `lang` must say, because a screen reader chooses its voice by it. */
+export function languageOf(locale: string, catalog: Catalog): string {
+  const language = appLanguage(locale)
+  return language === 'en' || Object.keys(catalog).length > 0 ? language : 'en'
+}
+
+/** Declares the page's language (`<html lang>`). `root` is the page's root element; without one, and outside a
+ *  browser, there is nothing to declare it on. */
+export function setPageLanguage(language: string, root?: { lang: string }): void {
+  const element = root ?? (typeof document !== 'undefined' ? document.documentElement : undefined)
+  if (element) element.lang = language
+}
+
 /** Fetch the catalog for `locale`'s App Language (as `po_to_json.py` writes it, under `/i18n/<language>.json`).
  *  An empty catalog — not an error — for English (the source language needs no catalog, so nothing is fetched and
  *  a browser in `en-US` asks for no `en-US.json` that does not exist), or when the fetch fails for any reason
@@ -85,6 +100,7 @@ export function useI18n() {
 
   async function loadFor(tag: string): Promise<void> {
     catalog.value = await loadCatalog(tag)
+    setPageLanguage(languageOf(tag, catalog.value))
   }
 
   onMounted(() => void loadFor(locale.value))

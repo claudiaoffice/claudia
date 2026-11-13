@@ -56,10 +56,10 @@ statement in the docs or on the website).
 | UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |
 | UX-02 | P2 | UX | The grid has no accessible structure | verified open (2026-11-12) |
 | UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |
-| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | mostly fixed; one residue (re-measured 2026-11-12) |
+| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | fixed on `bitv`, awaiting commit (residue closed and guarded by a test, 2026-11-13) |
 | UX-05 | P3 | UX | No dark mode | fixed (2026-11-12) |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |
-| UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open (not re-checked) |
+| UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open; the website is not in this repository (searched 2026-11-13) |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
 | UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
@@ -78,6 +78,9 @@ statement in the docs or on the website).
 | UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |
 | UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |
 | UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |
+| UX-28 | P2 | UX / BITV | The page declares no language (WCAG 3.1.1) | fixed on `bitv`, awaiting commit |
+| UX-29 | P2 | UX / BITV | A keyboard user cannot leave the grid, nor skip the menus and toolbar (WCAG 2.1.2, 2.4.1) | fixed on `bitv`, awaiting commit |
+| UX-30 | P3 | UX / BITV | The tab title does not name the document (WCAG 2.4.2) | fixed on `bitv`, awaiting commit |
 | UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |
 | UX-27 | P3 | UX / creates | A new object lands exactly on the previous one, so the second hides the first | **new, open** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
@@ -390,7 +393,7 @@ bar.
 **Re-checked 2026-11-12: fixed (read).** `MenuBar.vue` now has `aria-haspopup`/`aria-expanded` and arrow-key
 handling (commit 47519fa). Not yet tried with Orca or NVDA.
 
-### UX-02 · The grid has no accessible structure · P2 · verified open
+### UX-02 · The grid has no accessible structure · P2 · verified open (the structure is not part of the `bitv` quick fixes)
 **Evidence (read, `54d1245`).** `SheetGrid.vue` has exactly two ARIA attributes: `role="grid"` and
 `aria-label="table"` (plus `aria-label="editing cell"` on the editor). No `role="row"`, no `role="gridcell"`, no
 `aria-rowcount`/`aria-colcount`, no `aria-rowindex`/`aria-colindex`, no `aria-activedescendant`, no `aria-selected`. A
@@ -451,6 +454,12 @@ palette cannot regress silently.
 text (`FooterBar.vue` `.tabs button.on`, `StyleSpec.vue`, `SlideWorkspace.vue`): needs ≥ 4.5:1 (e.g. `#a75a17`). And
 `--iris` as text on the dark surface is 2.44:1 — nothing uses it that way today, but nothing stops it. **Acceptance.**
 A vitest that reads `tokens.css` and checks every text token against both surfaces, so the next colour cannot regress.
+
+**Fixed on `bitv` (2026-11-13), awaiting commit.** `web/tests/tokens.test.ts` is that vitest (arithmetic in
+`web/tests/contrast.ts`). It showed the residue was wider than measured: `--app-dark` is also text on the app's own soft
+tint, where computes' teal measured 4.36:1 as well, and the suggested `#a75a17` for creates would have reached only
+4.49:1 there. Now teal `#0d7768` (4.73:1 on its soft tint, 4.92:1 on paper) and apricot `#9c5314` (5.05:1, 5.19:1);
+composes' `#b8386a` already passed. `--iris` as text on the dark surface stays unfixed and unguarded: nothing uses it.
 
 ### UX-05 · No dark mode · P3 · verified open
 **Evidence (measured).** `web/app/assets/tokens.css` contains **zero** `prefers-color-scheme` rules, and `--surface` is
@@ -1067,6 +1076,28 @@ by `demo.cjs`), a real radio group (arrow keys, one tab stop).
 **Evidence (measured).** Text ▸ Text puts the second text box on the first; the browser scripts move them apart by
 dragging. **Fix.** Offset each new object by one grid step (or place it in the first free spot) when another object
 sits exactly there.
+
+### UX-28 · The page declares no language · P2 · fixed on `bitv`, awaiting commit
+**Evidence (read, 2026-11-13).** No `lang` on `<html>`: `nuxt.config.ts` set none and nothing in `web/app` did, so a screen
+reader chose its voice by guesswork, for a UI that is German or English (WCAG 3.1.1, level A). **Fix.** `lang="en"` in the
+build, and `useI18n` declares the language once its catalog has loaded (`languageOf`, `setPageLanguage` in
+`web/app/lib/i18n.ts`): a German browser whose catalog did not load stays `en`, because that is what is on the screen.
+The open dialog and the admin pages are English only; `app.vue` puts `en` back when a document is left. **Test:**
+`web/tests/i18n.test.ts`; `web/e2e/regions.cjs` checks `en`, and a `de-DE` browser was checked by hand to give `de`.
+
+### UX-29 · A keyboard user cannot leave the grid · P2 · fixed on `bitv`, awaiting commit
+**Evidence (read, 2026-11-13).** `SheetGrid.vue`'s `onKey` takes Tab and Shift+Tab for stepping between cells and
+`preventDefault`s them, and nothing else moved focus out (WCAG 2.1.2 no keyboard trap, 2.4.1 bypass blocks). **Fix.** F6 and
+Shift+F6 go to the next and previous part of the window (menus, toolbar, document, panel, footer; hidden or empty parts
+are skipped; wrapping round), in all three apps, and from the formula bar. `web/app/lib/regions.ts` (`cycleRegions`),
+`regionShortcuts` in `shortcuts.ts`, wired once in `DocumentFrame.vue`; parts are marked `data-region`. Listed in
+Config ▸ Shortcuts. **Test:** `web/tests/regions.test.ts`, `shortcuts.test.ts`, `web/e2e/regions.cjs` (Chrome only).
+**Left.** F6 does not work while a cell is being edited in the grid (the editor keeps its keys: finish with Enter or Esc);
+in a browser tab F6 may also be claimed by the browser (Firefox not tried); no menu item carries it.
+
+### UX-30 · The tab title does not name the document · P3 · fixed on `bitv`, awaiting commit
+Every tab of one app read "Claudia Computes" (WCAG 2.4.2). `tabTitle(app, documentName)` now gives
+"budget 2027 – Claudia Computes". **Test:** `web/tests/shell-bridge.test.ts`, `regions.cjs`.
 
 ### PROC-17 · `demo.cjs` fails once the client sends *suggest* · P2 · fixed 2026-11-12
 The switch (E7.7) made every client send *suggest* by default; computes cannot propose yet, so `@ai build an example
