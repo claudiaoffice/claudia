@@ -4,6 +4,20 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.17.0] - 2026-11-13
+
+Search, the engine (E1.12, D281-D284).
+
+### Added
+- `claudia_core.search`: what a person wants to find, compiled to a pattern and run on plain texts, for all three apps.
+  `Query.from_data(data)` reads a search in one of three modes (`text`: what is typed is what is found; `builder`:
+  parts to find, each *what x how many*, optionally kept under a name, plus conditions on the whole text; `pattern`:
+  her own pattern, a filter and a replacement) and checks everything a client could get wrong; `Query.compile(extra_parts)`
+  makes a `CompiledSearch` (`matches`, `admits`, `left_out`, `replaced`, `pattern_text`) that returns `Match` spans.
+  An app adds parts of its own through `extra_parts`. `SearchError` carries the message, the field and the
+  character position of a mistake. The engine is Python's `re`; since that cannot be interrupted, a pattern that could
+  backtrack without end (`(a+)+$`, `(a|aa)+$`) is refused before it runs, and patterns, parts and texts have size caps.
+
 ## [0.16.0] - 2026-11-12
 
 Hyphenation (D912).
