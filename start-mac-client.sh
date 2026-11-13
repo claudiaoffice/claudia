@@ -2,14 +2,14 @@
 #   ./start-mac-client.sh [composes|computes|creates] [--server URL] [--debug]      (the app defaults to composes)
 #
 # Starts the macOS desktop client (clients/macos, the Neutralino shell) directly -- the macOS counterpart of
-# ./start-client.sh (Linux/GTK), with the same arguments. Unlike that script, there is no second system interpreter to
+# ./start-linux-client.sh (Linux/GTK), with the same arguments. Unlike that script, there is no second system interpreter to
 # hand off to: the macOS client itself is Node/TypeScript, not Python at all. What is left is setup that
 # clients/macos/README.md's "Running it from a checkout" otherwise has a person do by hand:
 #
 #   * `.venv` (via `uv sync --no-dev`) is what the *server* runs on -- same Python 3.14 requirement as Linux, same reason
 #     (D116). `--no-dev`: the client needs none of the documentation tools of the dev group, one of which can force a
 #     source build that needs a C toolchain on a very recent Python (found for the Windows client, see its CHANGELOG).
-#   * The web frontend is rebuilt every run, not just built once and left stale -- see start-client.sh's own
+#   * The web frontend is rebuilt every run, not just built once and left stale -- see start-linux-client.sh's own
 #     comment on the 2026-11-06 report that caught exactly that bug for the Linux client. Skip with
 #     CLAUDIA_SKIP_WEB_BUILD=1 once you know your build is current.
 #   * The macOS client's own TypeScript and the three app pages are rebuilt every run for the same reason. Skip with

@@ -15,6 +15,11 @@ Describing objects (BITV 1.1.1), in creates and computes (composes has no object
   picture given both is refused.
 - The objects of a slide or a sheet are listed with `description` and `decorative`.
 
+### Fixed
+- `GET /api/fonts/{sha256}` and `/api/fonts/{sha256}.woff2` no longer run on the event loop (PERF-09). Making a WOFF2
+  file takes seconds (2.4 s for an ordinary 740 KB font), and every other request of every document waited for it the
+  first time a page asked for a font.
+
 ## [0.28.0] - 2026-11-13
 
 Help and function documentation in German (E13.8, D323).

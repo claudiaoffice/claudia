@@ -109,3 +109,34 @@ def test_the_state_folder_s_fonts_are_used_when_none_are_given(tmp_path):
 def test_a_fonts_folder_that_does_not_exist_stops_the_server(tmp_path):
     with pytest.raises(UsageError, match="--fonts"):
         make_plan(["--no-tls", "--state-dir", str(tmp_path / "s"), "--fonts", str(tmp_path / "missing")])
+
+
+def test_making_a_webfont_does_not_hold_up_the_rest_of_the_server(tmp_path, monkeypatch):
+    """PERF-09: WOFF2 compression takes seconds for an ordinary font (2.4 s for DejaVu Sans, 37 s for a 10 MB one);
+    it was done on the event loop, so every other request of every document waited for it."""
+    import threading
+
+    started, release = threading.Event(), threading.Event()
+
+    def slow_woff2(data):
+        started.set()
+        release.wait(10)
+        return b"wOF2" + data[:16]
+
+    monkeypatch.setattr("claudia_fonts.webfonts._woff2", slow_woff2)
+    root = collection(tmp_path / "fonts" / "test")
+    c, service = client(tmp_path, root)
+    font = service.servable()[0]
+    with c:
+        fetching = threading.Thread(target=lambda: c.get(f"/api/fonts/{font.sha256}.woff2"))
+        fetching.start()
+        try:
+            assert started.wait(5)
+            answered: list[int] = []
+            asking = threading.Thread(target=lambda: answered.append(c.get("/api/health").status_code))
+            asking.start()
+            asking.join(3)
+            assert answered == [200], "the health check waited for a webfont to be made"
+        finally:
+            release.set()
+            fetching.join(10)

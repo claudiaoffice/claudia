@@ -16,6 +16,7 @@ on:
       - packaging/**
       - clients/linux/**
       - web/**
+      - layout/**
       - packages/**
       - pyproject.toml
       - uv.lock

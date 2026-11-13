@@ -17,6 +17,7 @@ on:
       - docker/**
       - packages/**
       - web/**
+      - layout/**
       - pyproject.toml
       - uv.lock
       - .github/workflows/docker.yml

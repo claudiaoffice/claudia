@@ -352,6 +352,23 @@ def test_a_pattern_that_backtracks_without_end_is_refused(pattern):
         pattern_query(pattern).compile()
 
 
+# SEC-18: the static guard is a heuristic, and these shapes pass it. Measured at cfa2d91 on 24 characters:
+# `(a|a?)+!` 12.5 s, `(x\w*)*!` 1.2 s, both doubling with every further character, on the event loop. The fix is a
+# search that can be stopped (D284's worker budget, or the `regex` package's timeout, D287), not a longer guard.
+@pytest.mark.xfail(strict=True, reason="SEC-18: exponential patterns pass the guard")
+@pytest.mark.parametrize(("pattern", "text"), [("(a|a?)+!", "a" * 19), (r"(x\w*)*!", "x" * 21)])
+def test_a_pattern_the_guard_lets_through_still_cannot_hold_the_server(pattern, text):
+    import time
+
+    try:
+        compiled = pattern_query(pattern).compile()
+    except SearchError:
+        return
+    started = time.perf_counter()
+    compiled.matches(text)
+    assert time.perf_counter() - started < 0.02  # an ordinary pattern takes microseconds here; these take 0.15-0.35 s
+
+
 @pytest.mark.parametrize("pattern", ["a+b*", r"(\d+)(?:,\d+)?", "(ab)?c", "(?:a{2})+", r"\d+(?:[.,]\d+)*", ".*x.*"])
 def test_ordinary_repeats_are_allowed(pattern):
     pattern_query(pattern).compile()

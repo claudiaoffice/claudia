@@ -12,7 +12,7 @@
 #   variable SCW_REGISTRY_NAMESPACE    the Container Registry namespace, as in rg.fr-par.scw.cloud/NAMESPACE
 #   variable SCW_DEMO_CONTAINER_IDS    the ids (UUIDs) of the demo containers, separated by spaces (one per app)
 #   variable SCW_REGION                optional, default fr-par
-#   variable DEMO_URL                  optional, default https://demo.claudiaoffice.de; checked after the deployment
+#   variable DEMO_URL                  optional, default https://demo.claudia-office.de; checked after the deployment
 name: Deploy demo
 
 on:
@@ -46,7 +46,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: demo
-      url: ${{ vars.DEMO_URL || 'https://demo.claudiaoffice.de' }}
+      url: ${{ vars.DEMO_URL || 'https://demo.claudia-office.de' }}
     permissions:
       contents: read
       packages: read
@@ -55,7 +55,7 @@ jobs:
       REGION: ${{ vars.SCW_REGION || 'fr-par' }}
       NAMESPACE: ${{ vars.SCW_REGISTRY_NAMESPACE }}
       CONTAINER_IDS: ${{ vars.SCW_DEMO_CONTAINER_IDS }}
-      DEMO_URL: ${{ vars.DEMO_URL || 'https://demo.claudiaoffice.de' }}
+      DEMO_URL: ${{ vars.DEMO_URL || 'https://demo.claudia-office.de' }}
       SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
       INPUT_TAG: ${{ inputs.tag }}
       HEAD_SHA: ${{ github.event.workflow_run.head_sha }}

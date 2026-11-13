@@ -2,7 +2,7 @@
 rem   start-win-client.cmd [composes|computes|creates] [--server URL] [--debug]      (the app defaults to composes)
 rem
 rem Starts the Windows desktop client (clients\windows, the Neutralino shell) directly -- the Windows counterpart
-rem of start-mac-client.sh (macOS) and start-client.sh (Linux/GTK), with the same arguments. Like macOS and unlike
+rem of start-mac-client.sh (macOS) and start-linux-client.sh (Linux/GTK), with the same arguments. Like macOS and unlike
 rem Linux, there is no second system interpreter to hand off to here: the Windows client itself is plain
 rem Node/TypeScript, not Python at all (clients\windows\README.md's "Running it from a checkout" is the step-by-step
 rem this script automates).
@@ -14,7 +14,7 @@ rem     own code and docs, not for running a client to test it, and myst-parser'
 rem     prebuilt wheel yet for every Python/OS combination (hit on a real Windows run, 2026-11-09: PyYAML 6.0.3
 rem     tried to compile its optional C extension and failed with "Microsoft Visual C++ 14.0 or greater is
 rem     required" -- no C toolchain on that machine, and none should be needed just to start this client).
-rem   * The web frontend is rebuilt every run, not just built once and left stale -- see start-client.sh's own
+rem   * The web frontend is rebuilt every run, not just built once and left stale -- see start-linux-client.sh's own
 rem     comment on the 2026-11-06 report that caught exactly that bug for the Linux client. Skip with
 rem     CLAUDIA_SKIP_WEB_BUILD=1 once you know your build is current.
 rem   * The Windows client's own TypeScript and the three app pages (tsc, then the shell page and the core of each

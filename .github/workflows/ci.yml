@@ -163,12 +163,17 @@ jobs:
           cd web
           URL=http://127.0.0.1:8765/ npm run e2e
           URL=http://127.0.0.1:8765/ npm run e2e:pointing
+          URL=http://127.0.0.1:8765/ npm run e2e:regions
+          URL=http://127.0.0.1:8765/ npm run e2e:grid-a11y
+          URL=http://127.0.0.1:8765/ npm run e2e:describe
           URL=http://127.0.0.1:8766/ npm run e2e:composes
           URL=http://127.0.0.1:8766/ npm run e2e:styling
           URL=http://127.0.0.1:8766/ npm run e2e:print
+          URL=http://127.0.0.1:8766/ npm run e2e:lists
           URL=http://127.0.0.1:8767/ npm run e2e:slides
           URL=http://127.0.0.1:8767/ npm run e2e:creates-styles
           URL=http://127.0.0.1:8767/ npm run e2e:print-creates
+          URL=http://127.0.0.1:8767/ npm run e2e:describe-creates
           pkill -f claudia_server || true
       # These two start (and restart) a server of their own, on ports the step above has freed.
       - name: Losing the server, and the recovery key
@@ -183,6 +188,10 @@ jobs:
         run: |
           (cd clients/windows && npm ci && npm run build)
           cd web && npm run e2e:windows-shell
+      - name: The macOS client's window (the same, for the macOS shell)
+        run: |
+          (cd clients/macos && npm ci && npm run build)
+          cd web && npm run e2e:macos-shell
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -245,6 +254,28 @@ jobs:
       - name: The macOS client's generated menu matches the shared manifest
         working-directory: clients/macos
         run: uv run --no-project python tools/generate_menu.py --all --check
+
+  # The macOS client is TypeScript around Neutralino like the Windows one; its unit tests, types and build need no Mac
+  # (its window runs in Chromium in the `e2e` job, its generated menu is checked in `windows-client`). Until this job
+  # it was tested nowhere (PROC-19). Signing, notarising and a real WKWebView still need a Mac and are not covered.
+  macos-client:
+    name: macOS client (tests and build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: clients/macos
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: clients/macos/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
 
   # The Linux client runs on the distribution's Python (3.12 on Ubuntu 24.04) with GTK from the distribution, while the
   # server it starts runs on 3.14 (clients/linux/README.md, "Two interpreters"). Its end-to-end test starts the real
