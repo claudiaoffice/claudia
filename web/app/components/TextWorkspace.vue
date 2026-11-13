@@ -40,7 +40,7 @@ const { t, locale, choose } = useI18n()
 
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 /** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'styles' | 'colours'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'list-start'>(null)
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
@@ -155,7 +155,28 @@ const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chor
 const typing = () => !printing.value && !session.readOnly
 const SOFT_HYPHEN: ShortcutDef = { id: 'edit.soft-hyphen', label: 'Soft hyphen', chord: { key: '-', ctrl: true }, run: () => session.type('\u00ad'), enabled: typing }
 const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', label: 'Non-breaking hyphen', chord: { key: '_', ctrl: true, shift: true }, run: () => session.type('\u2011'), enabled: typing }
-const extraShortcuts = [LOOK, PRINT, SOFT_HYPHEN, HARD_HYPHEN]
+// E9.21: bullets and numbers, on the keys of the digits (Google Docs' Ctrl+Shift+8 and 7), whatever they type.
+const BULLETS: ShortcutDef = { id: 'format.bulleted-list', label: 'Bulleted list', chord: { key: '8', code: 'Digit8', ctrl: true, shift: true }, run: () => makeList('bullets'), enabled: () => !readonly.value }
+const NUMBERS: ShortcutDef = { id: 'format.numbered-list', label: 'Numbered list', chord: { key: '7', code: 'Digit7', ctrl: true, shift: true }, run: () => makeList('numbers'), enabled: () => !readonly.value }
+const extraShortcuts = [LOOK, PRINT, SOFT_HYPHEN, HARD_HYPHEN, BULLETS, NUMBERS]
+
+function makeList(scheme: 'bullets' | 'numbers') {
+  void session.makeList(scheme)
+  editor.value?.focus()
+}
+
+/** The kind of list the caret is in, if it is one of the two the menu names. */
+const currentKind = () => (['bullets', 'numbers'] as const).find((kind) => kind === session.currentScheme()) ?? null
+
+function startListAt(value: string) {
+  const start = Number.parseInt(value, 10)
+  if (Number.isInteger(start) && start >= 1 && start <= 999999) {
+    void session.startAt(start)
+    dialog.value = null
+    editor.value?.focus()
+  }
+}
+const listStart = () => String(state.lists.find((l) => l.id === session.currentItem()?.list)?.start ?? 1)
 
 /** What the shared menu items need from this window (`lib/document-menus.ts`). */
 const shared = computed<DocumentMenuContext>(() => ({
@@ -209,6 +230,19 @@ const menus = computed<Menu[]>(() => {
               allStyles: () => (dialog.value = 'styles'),
               // The palette reaches composes' paragraph styles from day one (D200): a heading's colour is a role.
               colours: () => (dialog.value = 'colours'),
+              list: {
+                readonly: readonly.value,
+                current: currentKind(),
+                canNest: !!session.currentItem(),
+                canContinue: session.canContinue(),
+                hints: { bulleted: chordLabel(BULLETS.chord), numbered: chordLabel(NUMBERS.chord), indent: 'Tab', outdent: 'Shift+Tab' },
+                bulleted: () => makeList('bullets'),
+                numbered: () => makeList('numbers'),
+                continueList: () => void session.continueList(),
+                startAt: () => (dialog.value = 'list-start'),
+                indent: () => void session.indent(1),
+                outdent: () => void session.indent(-1),
+              },
             }),
     },
     {
@@ -264,7 +298,8 @@ function customStyles(): StyleView[] {
 // Ctrl+C/X/V, which the browser already handles for whatever has focus.
 const SHORTCUT_NOTES: [string, string][] = [
   ['Type', 'write; a word is sent when it ends, and the others see where you are'],
-  ['Enter', 'end the paragraph (after a heading the next one is body text)'],
+  ['Enter', 'end the paragraph (after a heading the next one is body text); in a list, the next item; on an empty item, out of the list'],
+  ['Tab / Shift + Tab', 'in a list, one level in or out'],
   ['Backspace / Delete', 'delete; at the edge of a paragraph it joins the one next to it'],
   ['Ctrl + Backspace / Delete', 'delete a word'],
   ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
@@ -305,6 +340,7 @@ const SHORTCUT_NOTES: [string, string][] = [
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <PromptDialog v-if="dialog === 'list-start'" title="Start numbering at" label="First number" ok="Start" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
   </DocumentFrame>

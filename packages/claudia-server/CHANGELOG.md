@@ -17,6 +17,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   client had (QA 2026-11-12, UX-20). A client still starts with *suggest* (`DEFAULT_MODE`, D262) once it has the switch.
 
 ### Added
+- Lists in the text app (E9.21, `claudia_server.composes_lists`): `make_list(blocks, scheme)` (bullets, numbers or, with
+  a null scheme, none; asking for what the paragraphs are takes them out, the other kind of a whole list changes its
+  scheme, anything else starts a new list), `indent_item(blocks, by)` (answers how many items moved), `continue_list(block)`
+  and `list_start(list, start)`; each is one history step and the assistant has no access (D63). `blocks` also
+  answers `lists` and `schemes`, and gives every list item an `item` and a derived `label` (`{marker, path}`). The
+  events `item`, `labels` and `lists` follow the document.
 - One style API for all three apps (`claudia_server.style_targets`, the styling-suite plan step 1.5):
   `style_model` (facets, kinds, slots with the kinds each takes, and the target keys this app accepts),
   `apply_style(targets, style, slot?)`, `deviate(parent, targets, slot?, set|text)` and `style_uses`. A target is

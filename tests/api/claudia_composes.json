@@ -47,11 +47,12 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
   "methods": {
    "check": "(self) -> 'None'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
@@ -184,6 +185,16 @@
    "summary"
   ]
  },
+ "ItemChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(block: 'str', item: 'ListItem | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "JoinBlocks": {
   "class": [
    "TextCommand"
@@ -201,6 +212,16 @@
    "label",
    "summary"
   ]
+ },
+ "LabelsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(labels: 'tuple[tuple[str, Label | None], ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "LanguageError": {
   "class": [
@@ -281,11 +302,12 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
   "methods": {
    "check": "(self) -> 'None'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
@@ -397,6 +419,23 @@
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetListItem": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(block: 'str', item: 'ListItem | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetListItem'",
+   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -535,7 +574,7 @@
    "DocumentModel",
    "ObjectModel"
   ],
-  "init": "(blocks: 'list[Block] | None' = None, styles: 'StyleBook | None' = None, palette: 'Palette | None' = None, page: 'PageSetup | None' = None, language: 'str | None' = None)",
+  "init": "(blocks: 'list[Block] | None' = None, styles: 'StyleBook | None' = None, palette: 'Palette | None' = None, page: 'PageSetup | None' = None, language: 'str | None' = None, lists: 'ListBook | None' = None)",
   "methods": {
    "add_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
    "anchor_from_data": "(self, data: 'dict') -> 'BlockAnchor'",
@@ -551,7 +590,9 @@
    "index_of": "(self, block_id: 'str') -> 'int'",
    "insert": "(self, block_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'None'",
    "is_outdated": "(self, suggestion: 'Suggestion') -> 'bool'",
-   "join": "(self, block_id: 'str', into: 'str', at: 'int') -> 'str'",
+   "join": "(self, block_id: 'str', into: 'str', at: 'int') -> 'Block'",
+   "labels": "(self) -> 'dict[str, Label]'",
+   "list_in_use": "(self, list_id: 'str') -> 'bool'",
    "move_objects": "(self, command: 'TextCommand') -> 'list[dict]'",
    "move_suggestions": "(self, command: 'TextCommand') -> 'list[dict]'",
    "put_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
@@ -560,6 +601,8 @@
    "restore": "(state: 'dict') -> 'Self'",
    "restyle": "(self, block_id: 'str', style: 'str') -> 'None'",
    "serialize": "(self) -> 'dict'",
+   "set_item": "(self, block_id: 'str', item: 'ListItem | None') -> 'None'",
+   "settle": "(self, ctx: 'Context') -> 'None'",
    "split": "(self, block_id: 'str', offset: 'int', new_id: 'str', style: 'str') -> 'None'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "style_uses": "(self) -> 'dict[str, int]'",

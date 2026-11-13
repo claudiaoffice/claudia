@@ -35,6 +35,17 @@ function choose(id: string) {
   emit('styled')
 }
 
+// -- lists (E9.21): the same things as Format ▸ List, within reach of the hand that is typing
+const kind = () => props.session.currentScheme()
+function list(scheme: 'bullets' | 'numbers') {
+  void props.session.makeList(scheme)
+  emit('styled')
+}
+function nest(by: 1 | -1) {
+  void props.session.indent(by)
+  emit('styled')
+}
+
 const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter((u, i, all) => all.indexOf(u) === i)
 </script>
 
@@ -68,6 +79,25 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
       </Popover>
     </div>
     <button ref="look" class="tool" type="button" :disabled="session.readOnly" title="How this style looks: font, size, colour, CSS (right-click in the text does the same)" data-testid="look-button" @mousedown.prevent @click="emit('look', below(look))">Look…</button>
+
+    <div class="segmented" role="group" aria-label="List">
+      <button type="button" :aria-pressed="kind() === 'bullets'" :disabled="session.readOnly" title="Bulleted list (Ctrl+Shift+8)" data-testid="list-bullets" @mousedown.prevent @click="list('bullets')">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="2.5" cy="4" r="1.3" /><circle cx="2.5" cy="8" r="1.3" /><circle cx="2.5" cy="12" r="1.3" /></g><path d="M6 4h8M6 8h8M6 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none" /></svg>
+        <span class="sr">Bulleted list</span>
+      </button>
+      <button type="button" :aria-pressed="kind() === 'numbers'" :disabled="session.readOnly" title="Numbered list (Ctrl+Shift+7)" data-testid="list-numbers" @mousedown.prevent @click="list('numbers')">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor" font-size="5" font-family="sans-serif" font-weight="700"><text x="0.5" y="5.2">1</text><text x="0.5" y="9.2">2</text><text x="0.5" y="13.2">3</text></g><path d="M6 4h8M6 8h8M6 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none" /></svg>
+        <span class="sr">Numbered list</span>
+      </button>
+    </div>
+    <button class="tool icon" type="button" :disabled="session.readOnly || !session.currentItem()" title="Outdent (Shift+Tab)" data-testid="list-outdent" @mousedown.prevent @click="nest(-1)">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 3h12M7 7h7M7 11h7M2 15h12M5 7.5 2.5 9 5 10.5Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(0 -1.5)" /></svg>
+      <span class="sr">Outdent</span>
+    </button>
+    <button class="tool icon" type="button" :disabled="session.readOnly || !session.currentItem()" title="Indent (Tab)" data-testid="list-indent" @mousedown.prevent @click="nest(1)">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 3h12M7 7h7M7 11h7M2 15h12M2.5 7.5 5 9 2.5 10.5Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(0 -1.5)" /></svg>
+      <span class="sr">Indent</span>
+    </button>
 
     <span class="grow" />
 
@@ -107,6 +137,27 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
   border-radius: 8px;
   background: transparent;
   font-weight: 500;
+}
+.tool.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  padding: 0;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.segmented button svg {
+  display: block;
+}
+.segmented button:disabled {
+  opacity: 0.5;
 }
 .tool:disabled {
   opacity: 0.5;

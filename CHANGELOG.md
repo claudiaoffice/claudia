@@ -4,6 +4,20 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [Unreleased]
+
+Lists (E9.21).
+
+### Added
+- `ListItem(list, level)` and `Paragraph.item`: a paragraph may be an item of a list, at a level 0 to 8
+  (`MAX_LIST_LEVEL`). It is written to plain data only when set, so a paragraph that is no item serialises exactly as
+  before (creates and its text boxes notice nothing); `Paragraph.with_item`.
+- `claudia_core.lists`: `ListDef(id, scheme, start, name)`, `ListBook` (with a `version` that counts its changes),
+  `SCHEMES` (`bullets`, `numbers`; `Scheme` says how markers are drawn and how far levels are indented) and
+  `numbering_labels(entries, lists)`, the one pure function that derives every item's `Label(marker, path)`.
+- The commands `CreateList`, `ChangeList` and `RemoveList` (the undo of a create, refused while `list_in_use` says an
+  item uses the list) and the event `ListsChanged`. A model that holds lists has a `lists` attribute (a `ListBook`).
+
 ## [0.17.0] - 2026-11-13
 
 Page setup and language for every app (D917).

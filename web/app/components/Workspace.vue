@@ -44,7 +44,7 @@ import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
 import { chordLabel, type ShortcutDef } from '~/lib/shortcuts'
 import { galleryFor } from '~/lib/style-host'
-import { formatItems } from '~/lib/format-menu'
+import { formatItems, noLists } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
 import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
@@ -586,6 +586,7 @@ function styleItems() {
     openApply: () => grid.value?.openStyleMenu(undefined, 'apply'),
     allStyles: () => (dialog.value = 'styles'),
     colours: () => (dialog.value = 'colours'),
+    list: noLists(t('Cells hold no lists')),
   }
   if (body) {
     const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)

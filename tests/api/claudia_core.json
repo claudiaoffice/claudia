@@ -99,6 +99,22 @@
  "CSS_VERSION": {
   "value": "4"
  },
+ "ChangeList": {
+  "class": [
+   "Command"
+  ],
+  "init": "(list: 'ListDef') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ChangeList'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "ChangeStyle": {
   "class": [
    "Command"
@@ -261,6 +277,21 @@
    "emit": "(self, event: 'Event') -> 'None'"
   },
   "properties": []
+ },
+ "CreateList": {
+  "class": [
+   "Command"
+  ],
+  "init": "(list: 'ListDef') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CreateList'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "CreateStyle": {
   "class": [
@@ -686,6 +717,16 @@
   "methods": {},
   "properties": []
  },
+ "Label": {
+  "class": [
+   "object"
+  ],
+  "init": "(marker: 'str', path: 'tuple[int, ...] | None' = None) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "LanguageChanged": {
   "class": [
    "object"
@@ -712,11 +753,65 @@
   "methods": {},
   "properties": []
  },
+ "ListBook": {
+  "class": [
+   "object"
+  ],
+  "init": "(lists: 'Iterable[ListDef]' = ())",
+  "methods": {
+   "add": "(self, each: 'ListDef') -> 'None'",
+   "from_data": "(items: 'Iterable[dict]') -> 'ListBook'",
+   "get": "(self, list_id: 'str') -> 'ListDef'",
+   "ids": "(self) -> 'list[str]'",
+   "remove": "(self, list_id: 'str') -> 'ListDef'",
+   "replace": "(self, each: 'ListDef') -> 'ListDef'",
+   "to_data": "(self) -> 'list[dict]'",
+   "unique_id": "(self) -> 'str'"
+  },
+  "properties": []
+ },
+ "ListDef": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', scheme: 'str', start: 'int' = 1, name: 'str | None' = None) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'ListDef'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ListItem": {
+  "class": [
+   "object"
+  ],
+  "init": "(list: 'str', level: 'int' = 0) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'ListItem'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ListsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(lists: 'tuple[dict, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "MAIN": {
   "value": "'main'"
  },
  "MAX_IMAGE_BYTES": {
   "value": "8388608"
+ },
+ "MAX_LIST_LEVEL": {
+  "value": "8"
  },
  "MAX_OBJECTS_PER_CONTAINER": {
   "value": "500"
@@ -933,11 +1028,12 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
   "methods": {
    "check": "(self) -> 'None'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
@@ -1051,6 +1147,22 @@
   "init": "(holders: 'Sequence[tuple[str, object]]')",
   "methods": {},
   "properties": []
+ },
+ "RemoveList": {
+  "class": [
+   "Command"
+  ],
+  "init": "(list: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveList'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "RemoveObject": {
   "class": [
@@ -1238,6 +1350,9 @@
   "methods": {},
   "properties": []
  },
+ "SCHEMES": {
+  "value": "{'bullets': Scheme(id='bullets', name='Bullets', kind='bullet', indent=1.6, gap=0.25), 'numbers': Scheme(id='numbers', name='Numbers', kind='number', indent=1.6, gap=0.25)}"
+ },
  "SLOTS": {
   "value": "<SlotTable>"
  },
@@ -1251,6 +1366,19 @@
   "init": "(kind: 'str', found: 'int', known: 'int')",
   "methods": {},
   "properties": []
+ },
+ "Scheme": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', kind: 'str', indent: 'float' = 1.6, gap: 'float' = 0.25) -> None",
+  "methods": {
+   "marker": "(self, level: 'int', number: 'int') -> 'str'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "counts"
+  ]
  },
  "SetLanguage": {
   "class": [
@@ -1629,6 +1757,9 @@
  },
  "normalized": {
   "function": "(runs: 'Iterable[Run]') -> 'list[Run]'"
+ },
+ "numbering_labels": {
+  "function": "(entries: 'Iterable[tuple[str, ListItem | None]]', lists: 'ListBook') -> 'dict[str, Label]'"
  },
  "paragraph_for": {
   "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"

@@ -21,3 +21,12 @@ def test_a_snapshot_of_state_schema_1_is_understood():
     assert [(b.id, b.style, b.text) for b in model.blocks] == [("b1", "body", "first"), ("b2", "body", "second")]
     assert sum(r.length for r in model.blocks[1].runs) == len("second")
     assert model.fresh_id() == "b3"
+
+
+def test_a_snapshot_of_state_schema_5_has_no_lists_and_opens_as_a_text_without_any():
+    """Lists came with state schema 6 (E9.21); a text written before has neither a book of lists nor items."""
+    state = TextModel().serialize()
+    del state["lists"]
+    model = TextModel.restore(state)
+    assert len(model.lists) == 0 and model.labels() == {}
+    assert all(b.item is None and "item" not in b.to_data() for b in model.blocks)

@@ -197,11 +197,12 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
   "methods": {
    "check": "(self) -> 'None'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"

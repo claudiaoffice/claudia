@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from claudia_core import Label, ListItem
+
 from .runs import Run, runs_to_data
 
 
@@ -70,6 +72,33 @@ class StyleChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "style", "block": self.block, "style": self.style}
+
+
+@dataclass(frozen=True)
+class ItemChanged:
+    """The paragraph ``block`` is now this list item, or (``None``) no list item."""
+
+    block: str
+    item: ListItem | None
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "item", "block": self.block, "item": None if self.item is None else self.item.to_data()}
+
+
+@dataclass(frozen=True)
+class LabelsChanged:
+    """These paragraphs have another marker (or, with ``None``, none any more). Only what differs from what the
+    clients were last told is in it, so typing, which changes no label, sends nothing."""
+
+    labels: tuple[tuple[str, Label | None], ...]
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {
+            "type": "labels",
+            "labels": {block: None if label is None else label.to_data() for block, label in self.labels},
+        }
 
 
 @dataclass(frozen=True)

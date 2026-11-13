@@ -159,3 +159,60 @@ describe('characters outside the basic plane', () => {
     expect(eventInUnits(blocks, typed)).toMatchObject({ offset: 1, runs: [[4, 'ann', null]] })
   })
 })
+
+describe('list items', () => {
+  const item = (list: string, level = 0) => ({ list, level })
+
+  it('an item event makes a paragraph an item and takes it out again', () => {
+    const blocks = [block('b1', 'one')]
+    expect(applyEvent(blocks, { type: 'item', block: 'b1', item: item('l1', 1) })).toBe(true)
+    expect(blocks[0]!.item).toEqual(item('l1', 1))
+    applyEvent(blocks, { type: 'item', block: 'b1', item: null })
+    expect(blocks[0]!.item).toBeNull()
+    expect(applyEvent(blocks, { type: 'item', block: 'b9', item: null })).toBe(false)
+  })
+
+  it('a labels event sets the markers it names and removes the ones it sends as null', () => {
+    const blocks = [block('b1', 'one'), block('b2', 'two'), block('b3', 'three')]
+    blocks[0]!.label = { marker: '1.', path: [1] }
+    expect(
+      applyEvent(blocks, {
+        type: 'labels',
+        labels: { b1: null, b2: { marker: '•', path: null }, b3: { marker: 'a.', path: [1, 1] } },
+      }),
+    ).toBe(true)
+    expect(blocks.map((b) => b.label ?? null)).toEqual([null, { marker: '•', path: null }, { marker: 'a.', path: [1, 1] }])
+  })
+
+  it('a split gives the new paragraph the item of the one it cuts, as the model does, but no label of its own yet', () => {
+    const blocks = [block('b1', 'one two')]
+    blocks[0]!.item = item('l1', 2)
+    blocks[0]!.label = { marker: 'i.', path: [1, 1, 1] }
+    applyEvent(blocks, { type: 'split', block: 'b1', offset: 3, new_id: 'b2', style: 'body' })
+    expect(blocks[1]!.item).toEqual(item('l1', 2))
+    expect(blocks[1]!.item).not.toBe(blocks[0]!.item) // the replica never shares what it may change
+    expect(blocks[1]!.label).toBeUndefined()
+    expect(blocks[0]!.label).toEqual({ marker: 'i.', path: [1, 1, 1] })
+  })
+
+  it('a join keeps the first paragraphs item and label', () => {
+    const blocks = [block('b1', 'one'), block('b2', ' two')]
+    blocks[1]!.item = item('l1')
+    blocks[1]!.label = { marker: '1.', path: [1] }
+    applyEvent(blocks, { type: 'join', block: 'b2', into: 'b1', at: 3 })
+    expect(blocks).toHaveLength(1)
+    expect(blocks[0]!.item ?? null).toBeNull()
+    expect(blocks[0]!.label).toBeUndefined()
+  })
+
+  it('moves nothing and passes through the conversion of positions', () => {
+    const events: TextEvent[] = [
+      { type: 'item', block: 'b1', item: item('l1') },
+      { type: 'labels', labels: { b1: null } },
+    ]
+    for (const ev of events) {
+      expect(eventInUnits([block('b1', 'x')], ev)).toEqual(ev)
+      expect(followSpan({ block: 'b1', start: 1, end: 2 }, ev)).toEqual({ block: 'b1', start: 1, end: 2 })
+    }
+  })
+})

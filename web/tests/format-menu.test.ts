@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { formatItems, type FormatMenu } from '~/lib/format-menu'
+import { formatItems, noLists, type FormatMenu, type ListMenu } from '~/lib/format-menu'
 import { menuCss, type StyleView } from '~/lib/style-css'
 
 const view = (id: string, resolved: Record<string, string> = {}): StyleView => ({
@@ -14,6 +14,22 @@ const view = (id: string, resolved: Record<string, string> = {}): StyleView => (
   kind: 'paragraph',
 })
 
+function listMenu(calls: string[], over: Partial<ListMenu> = {}): ListMenu {
+  return {
+    current: null,
+    canNest: true,
+    canContinue: true,
+    hints: { bulleted: 'Ctrl+Shift+8', numbered: 'Ctrl+Shift+7', indent: 'Tab', outdent: 'Shift+Tab' },
+    bulleted: () => calls.push('bulleted'),
+    numbered: () => calls.push('numbered'),
+    continueList: () => calls.push('continue'),
+    startAt: () => calls.push('start'),
+    indent: () => calls.push('indent'),
+    outdent: () => calls.push('outdent'),
+    ...over,
+  }
+}
+
 function menu(over: Partial<FormatMenu> = {}) {
   const calls: string[] = []
   const made: FormatMenu = {
@@ -25,15 +41,17 @@ function menu(over: Partial<FormatMenu> = {}) {
     look: { disabled: false, hint: 'Shift+F10', open: () => calls.push('look') },
     allStyles: () => calls.push('all'),
     colours: () => calls.push('colours'),
+    list: listMenu(calls),
     ...over,
   }
   return { items: formatItems((s) => s, made), calls }
 }
 
 describe('the Format menu (D300)', () => {
-  it('has four entries in this order, with Colours set apart', () => {
+  it('has four entries and the list in this order, with Colours set apart', () => {
     const { items } = menu()
-    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Apply style', 'Edit this style…', 'All styles…', '—', 'Colours…'])
+    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Apply style', 'Edit this style…', 'All styles…', 'List', '—', 'Colours…'])
+    // The list has no action id: the native shells' manifests have the four of D300 and nothing else yet (E9.21).
     expect(items.map((i) => i.id).filter(Boolean)).toEqual(['format.apply-style', 'format.look', 'format.all-styles', 'format.colours'])
   })
 
@@ -69,6 +87,62 @@ describe('the Format menu (D300)', () => {
     expect(items[0]!.items!.filter((i) => !i.separator).every((i) => i.disabled)).toBe(true)
     expect(items[1]!.disabled).toBe(true)
     expect(items[2]!.disabled).toBeFalsy()
+  })
+})
+
+describe('the List entry of the Format menu (E9.21)', () => {
+  const flyout = (over: Partial<ListMenu> = {}) => {
+    const calls: string[] = []
+    const items = menu({ list: listMenu(calls, over) }).items.find((i) => i.label === 'List')!.items!
+    return { items, calls }
+  }
+
+  it('offers bullets and numbers, continuing and starting, and the levels, with the keys beside them', () => {
+    const { items } = flyout()
+    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Bulleted list', 'Numbered list', '—', 'Continue previous list', 'Start at…', '—', 'Indent', 'Outdent'])
+    expect(items.filter((i) => i.hint).map((i) => [i.label, i.hint])).toEqual([
+      ['Bulleted list', 'Ctrl+Shift+8'],
+      ['Numbered list', 'Ctrl+Shift+7'],
+      ['Indent', 'Tab'],
+      ['Outdent', 'Shift+Tab'],
+    ])
+  })
+
+  it('does what the entries say', () => {
+    const { items, calls } = flyout()
+    for (const item of items.filter((i) => !i.separator)) item.action!()
+    expect(calls).toEqual(['bulleted', 'numbered', 'continue', 'start', 'indent', 'outdent'])
+  })
+
+  it('ticks the kind of list the caret is in', () => {
+    expect(flyout({ current: 'numbers' }).items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Numbered list'])
+    expect(flyout({ current: null }).items.filter((i) => i.checked)).toEqual([])
+  })
+
+  it('leaves what needs an item disabled outside one, and continuing where there is nothing to continue', () => {
+    const outside = flyout({ canNest: false, canContinue: false }).items
+    expect(outside.filter((i) => i.disabled).map((i) => i.label)).toEqual(['Continue previous list', 'Start at…', 'Indent', 'Outdent'])
+    expect(flyout({ canContinue: false }).items.filter((i) => i.disabled).map((i) => i.label)).toEqual(['Continue previous list'])
+  })
+
+  it('is there but disabled, and says why, in an app that has no lists yet', () => {
+    const calls: string[] = []
+    const entry = menu({ list: listMenu(calls, { unavailable: 'Cells hold no lists' }) }).items.find((i) => i.label === 'List')!
+    expect(entry.items![0]).toMatchObject({ label: 'Cells hold no lists', disabled: true })
+    expect(entry.items!.filter((i) => !i.separator).every((i) => i.disabled)).toBe(true)
+    expect(entry.disabled).toBe(true)
+  })
+
+  it('an app without lists says so with noLists, and nothing in it does anything', () => {
+    const entry = menu({ list: noLists('Cells hold no lists') }).items.find((i) => i.label === 'List')!
+    expect(entry.disabled).toBe(true)
+    expect(entry.items!.map((i) => (i.separator ? '—' : i.label))[0]).toBe('Cells hold no lists')
+    for (const item of entry.items!.filter((i) => i.action)) expect(() => item.action!()).not.toThrow()
+  })
+
+  it('is disabled for a viewer', () => {
+    const entry = menu({ list: listMenu([], { readonly: true }) }).items.find((i) => i.label === 'List')!
+    expect(entry.items!.filter((i) => !i.separator).every((i) => i.disabled)).toBe(true)
   })
 })
 
