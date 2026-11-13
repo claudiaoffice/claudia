@@ -14,6 +14,12 @@ Describing objects (BITV 1.1.1). State schema 8 → 9.
 - Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
   rebuilt from the log.
 
+## [0.6.0] - 2026-11-13
+
+### Added
+- Rendered text containers on sheets (D340): `rendered` among the object kinds (`OBJECT_KINDS`), definitions and
+  their commands in the model, `state_schema` 10.
+
 ## [0.5.0] - 2026-11-13
 
 The function catalog can be said in another language (E13.8, D323); the package still carries no catalog. An outcome

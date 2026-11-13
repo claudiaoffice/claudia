@@ -72,7 +72,7 @@ def test_the_fields_are_part_of_the_data_the_log_stores():
 # -- documents are forever -------------------------------------------------------------------------------------
 def test_a_body_written_before_the_fields_existed_still_reads():
     old = picture().to_data()
-    del old["description"], old["decorative"]
+    del old["description"], old["decorative"], old["rendered"]  # a body of that time had none of the three
     assert ObjectBody.from_data(old).description == "a red bicycle"
     assert ObjectBody.from_data(old).decorative is False
 
@@ -89,8 +89,8 @@ def test_a_body_with_a_field_nobody_knows_is_refused():
         ObjectBody.from_data({**text_box().to_data(), "colour": "red"})
 
 
-def test_adding_an_object_is_schema_2_and_schema_1_data_is_brought_up_to_date():
-    assert AddObject.schema == 2
+def test_adding_an_object_is_schema_3_and_schema_1_data_is_brought_up_to_date():
+    assert AddObject.schema == 3
     old_body = picture().to_data()
     del old_body["description"], old_body["decorative"]
     envelope = {"k": "core.AddObject", "s": 1, "d": {"body": old_body, "anchor": {"container": "s1"}, "at": None}}

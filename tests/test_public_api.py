@@ -27,6 +27,7 @@ CHANGELOGS = {
     "claudia_creates": ROOT / "packages" / "claudia-creates" / "CHANGELOG.md",
     "claudia_fonts": ROOT / "packages" / "claudia-fonts" / "CHANGELOG.md",
     "claudia_typeset": ROOT / "packages" / "claudia-typeset" / "CHANGELOG.md",
+    "claudia_render": ROOT / "packages" / "claudia-render" / "CHANGELOG.md",
     "claudia_computes": ROOT / "packages" / "claudia-computes" / "CHANGELOG.md",
     "claudia_composes": ROOT / "packages" / "claudia-composes" / "CHANGELOG.md",
     "claudia_ai": ROOT / "packages" / "claudia-ai" / "CHANGELOG.md",

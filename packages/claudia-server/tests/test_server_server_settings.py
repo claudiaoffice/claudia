@@ -88,3 +88,28 @@ def test_a_damaged_admins_file_leaves_the_directory_empty_rather_than_stopping_t
     directory = AdminDirectory()
     load_admins(tmp_path, directory)
     assert len(directory) == 0
+
+
+# -- the tools behind rendered containers (D342) -------------------------------------------------------------------
+def test_the_tools_of_rendered_containers_are_empty_until_an_administrator_sets_them(tmp_path):
+    from claudia_server.server_settings import RenderSettings
+
+    assert load_settings(tmp_path, default_max_documents=1).render == RenderSettings()
+
+
+def test_the_tools_survive_the_disk_and_a_file_from_before_them_still_loads(tmp_path):
+    from claudia_server.server_settings import RenderSettings
+
+    settings = ServerSettings(
+        max_documents=5,
+        render=RenderSettings(
+            tools={"typst": "/opt/typst/typst", "mmdc": {"path": "/opt/mmdc", "chrome": "/usr/bin/chrome"}},
+            plugins_dir="/srv/plugins",
+        ),
+    )
+    save_settings(tmp_path, settings)
+    assert load_settings(tmp_path, default_max_documents=1).render == settings.render
+    old = settings.dump()
+    del old["render"]
+    assert ServerSettings.load(old).render == RenderSettings()
+    assert settings.to_public_dict()["render"]["plugins_dir"] == "/srv/plugins"

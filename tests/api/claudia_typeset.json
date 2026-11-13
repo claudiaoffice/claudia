@@ -1,5 +1,5 @@
 {
- "version": "0.2.0",
+ "version": "0.3.0",
  "BadJob": {
   "class": [
    "ValueError"
@@ -65,7 +65,7 @@
   "class": [
    "object"
   ],
-  "init": "(seconds: float = 20.0, memory_mb: int = 2048, output_mb: int = 16, pages: int = 200) -> None",
+  "init": "(seconds: float = 20.0, memory_mb: int = 2048, output_mb: int = 16, pages: int = 200, address_space: bool = True) -> None",
   "methods": {},
   "properties": []
  },
@@ -76,6 +76,9 @@
   "init": "(*values)",
   "methods": {},
   "properties": []
+ },
+ "NEVER_ALLOWED": {
+  "value": "<frozenset>"
  },
  "OutputTooLarge": {
   "class": [
@@ -174,7 +177,7 @@
   "function": "(job: claudia_typeset.job.Job, *, engine: str, fonts: str) -> str"
  },
  "check_svg": {
-  "function": "(svg: str) -> str"
+  "function": "(svg: str, *, extra_elements: frozenset[str] = frozenset()) -> str"
  },
  "hint_for": {
   "function": "(message: str) -> str"
@@ -183,7 +186,7 @@
   "function": "(output: str, *, first_line: int, line_count: int, job_folder: str | None = None) -> claudia_typeset.source.TexError | None"
  },
  "resolve_program": {
-  "function": "(setting: str, configured: str | os.PathLike[str] | None, default: str) -> pathlib.Path"
+  "function": "(setting: str, configured: str | os.PathLike[str] | None, default: str, *, hint: str | None = None) -> pathlib.Path"
  },
  "run_sandboxed": {
   "function": "(argv: collections.abc.Sequence[str], *, cwd: pathlib.Path, env: collections.abc.Mapping[str, str], limits: claudia_typeset.job.Limits, search_path: collections.abc.Sequence[str | pathlib.Path] = ()) -> claudia_typeset.sandbox.Completed"

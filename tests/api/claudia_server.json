@@ -1,5 +1,5 @@
 {
- "version": "0.28.0",
+ "version": "0.29.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -274,7 +274,7 @@
   "class": [
    "object"
   ],
-  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None)",
+  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None)",
   "methods": {
    "ai_mode_of": "(self, user: 'str') -> 'str | None'",
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
@@ -285,6 +285,7 @@
    "note_ai_mode": "(self, user: 'str', mode: 'str | None') -> 'None'",
    "pick_color": "(self) -> 'str'",
    "role_of": "(self, user: 'str') -> 'str | None'",
+   "stop_rendering": "(self) -> 'None'",
    "sweep": "(self) -> 'None'",
    "touch": "(self) -> 'None'",
    "users": "(self) -> 'list[str]'"
@@ -295,7 +296,7 @@
   "class": [
    "object"
   ],
-  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4)",
+  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4, renderings: 'RenderDesk | None' = None)",
   "methods": {
    "check_id": "(doc_id: 'object') -> 'str'",
    "ensure_room": "(self) -> 'None'",
@@ -502,7 +503,7 @@
   "class": [
    "object"
   ],
-  "init": "(max_documents: 'int', access_secret: 'str | None' = None, ai: 'AiSettings' = <factory>, typeset: 'TypesetSettings' = <factory>, changed: 'dict[str, Changed]' = <factory>) -> None",
+  "init": "(max_documents: 'int', access_secret: 'str | None' = None, ai: 'AiSettings' = <factory>, typeset: 'TypesetSettings' = <factory>, render: 'RenderSettings' = <factory>, changed: 'dict[str, Changed]' = <factory>) -> None",
   "methods": {
    "dump": "(self) -> 'dict'",
    "load": "(data: 'dict') -> 'ServerSettings'",

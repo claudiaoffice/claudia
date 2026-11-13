@@ -59,6 +59,7 @@ from .i18n import msg
 from .office_export import office_export
 from .printing import add_language_methods
 from .protocol import Context, RequestError, core_methods
+from .rendered import add_rendering_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
 
@@ -408,3 +409,8 @@ def _reject(ctx, *, id, base):
     state = "dismissed" if suggestion.replacement is None else "rejected"
     applied = ctx.document.execute(ResolveSuggestion(id, state), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
+
+
+# Rendered text containers: the text app reads them (its objects are drawn from them) but places none yet: like
+# `images`, there is no way in on the wire for it until the text app places objects (D345).
+add_rendering_methods(composes_methods, model_of=_text, anchor=None)

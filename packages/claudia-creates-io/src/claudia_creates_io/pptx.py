@@ -32,6 +32,7 @@ from lxml import etree
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
+from pptx.opc.package import Part
 from pptx.util import Emu, Pt
 
 from claudia_creates import (
@@ -44,8 +45,10 @@ from claudia_creates import (
     VisualObject,
     paragraph_for,
 )
+from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
+from ._raster import Rasterise, blank_png
 from ._styling import colour_of, look, page_colour, points_of
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -140,7 +143,52 @@ def _describe(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's o
         properties.set("descr", body.description)
 
 
-def slides_to_pptx(model: SlideModel) -> bytes:
+#: How a picture is drawn in PowerPoint 2016 and later: the SVG itself, next to an ordinary picture as its fallback.
+_SVG_BLIP_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}"
+_SVG_BLIP_NS = "http://schemas.microsoft.com/office/drawing/2016/SVG/main"
+_IMAGE_RELATIONSHIP = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+_BLIP_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
+_RELATIONSHIPS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+
+
+def _add_picture(slide, asset, box, body: ObjectBody, rasterise: Rasterise | None):  # noqa: ANN001, ANN202
+    """A picture of ``asset`` on ``slide``. An SVG is drawn by ``rasterise`` into an ordinary picture if there is one:
+    every program then shows the same thing, which LibreOffice does not for the SVG itself (it prefers the SVG to its
+    fallback and leaves out what a diagram's style sheet gives). With none, it is written the way PowerPoint writes
+    one: an empty picture and the drawing beside it, which PowerPoint 2016 and later show instead."""
+    if asset.format != "svg":
+        return slide.shapes.add_picture(BytesIO(asset.data), *box)
+    if rasterise is not None:
+        return slide.shapes.add_picture(BytesIO(rasterise(asset.data, round(body.w), round(body.h))), *box)
+    picture = slide.shapes.add_picture(BytesIO(blank_png(round(body.w), round(body.h))), *box)
+    package = slide.part.package
+    name = package.next_partname("/ppt/media/svg%d.svg")
+    svg_part = Part(name, "image/svg+xml", package, asset.data)
+    relation = slide.part.relate_to(svg_part, _IMAGE_RELATIONSHIP)
+    blip = picture._element.xpath(".//a:blip")[0]
+    extensions = etree.SubElement(blip, f"{{{_BLIP_NS}}}extLst")
+    extension = etree.SubElement(extensions, f"{{{_BLIP_NS}}}ext", uri=_SVG_BLIP_URI)
+    svg = etree.SubElement(extension, f"{{{_SVG_BLIP_NS}}}svgBlip", nsmap={"asvg": _SVG_BLIP_NS})
+    svg.set(f"{{{_RELATIONSHIPS}}}embed", relation)
+    return picture
+
+
+def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
+    """What :func:`slides_to_pptx` cannot keep for ``model``: ``"svg-fallback"`` (a picture drawn as SVG, which only
+    PowerPoint 2016 and later show; other programs show an empty picture unless a rasteriser was given, ``rasterised``)
+    and ``"rendering-pending"`` (a rendered text container nothing has been drawn for yet: left out)."""
+    losses = LossLog()
+    for obj in model.objects.values():
+        picture = model.picture_of(obj.body)
+        asset = model.images.get(picture) if picture else None
+        if obj.body.kind == "rendered" and asset is None:
+            losses.add("rendering-pending")
+        elif asset is not None and asset.format == "svg" and not rasterised:
+            losses.add("svg-fallback")
+    return losses.result()
+
+
+def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> bytes:
     """``model`` as pptx bytes: one slide per slide id, its objects added bottom to top so the stacking order
     (the last one is in front) comes out the same as it is drawn in claudia-creates. An image object is written
     as a real picture, its asset's own bytes embedded as-is (D213) — python-pptx reads the format back out of
@@ -170,10 +218,11 @@ def slides_to_pptx(model: SlideModel) -> bytes:
                 shape.text_frame.text = words
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
                 _describe(shape, body)
-            elif body.kind == "image":
-                asset = model.images.get(body.image) if body.image else None
+            elif body.kind in ("image", "rendered"):
+                picture = model.picture_of(body)
+                asset = model.images.get(picture) if picture else None
                 if asset is not None:
-                    _describe(slide.shapes.add_picture(BytesIO(asset.data), *box), body)
+                    _describe(_add_picture(slide, asset, box, body, rasterise), body)
             else:
                 definition = model.shapes.get(body.shape) if body.shape else None
                 auto_shape = _AUTOSHAPE.get(definition.id if definition else "", MSO_SHAPE.RECTANGLE)

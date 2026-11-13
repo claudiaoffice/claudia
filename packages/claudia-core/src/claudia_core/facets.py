@@ -226,7 +226,8 @@ _WORDS = (TEXT_FACET, PARAGRAPH_FACET)
 
 #: Everything that can be styled today, and its slots (D304, D310, D311). A composes paragraph is one slot that reads
 #: all three of a paragraph style's facets; a text box, a shape and a cell each have a container and words; a
-#: picture's box reads nothing yet (it carries its own colours); a diagram draws itself and has a box around it.
+#: picture's box reads nothing yet (it carries its own colours); a diagram draws itself and has a box around it, and
+#: so does a rendered container, whose picture is made from its text (D340).
 SLOTS = SlotTable(
     {
         "paragraph": (Slot("paragraph", (TEXT_FACET, PARAGRAPH_FACET, BOX_FACET), "paragraph"),),
@@ -234,6 +235,7 @@ SLOTS = SlotTable(
         "shape": (Slot("outline", (OUTLINE_FACET,), "outline"), Slot("label", _WORDS, "paragraph")),
         "image": (Slot("box", (), "box"),),
         "diagram": (Slot("box", (BOX_FACET,), "box"),),
+        "rendered": (Slot("box", (BOX_FACET,), "box"),),
         "cell": (Slot("box", (BOX_FACET,), "box"), Slot("words", _WORDS, "paragraph")),
     }
 )

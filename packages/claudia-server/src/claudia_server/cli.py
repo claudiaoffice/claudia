@@ -61,6 +61,7 @@ from typing import Any
 from claudia_ai import DEFAULT_DEVICE, ModelError, ModelRunner, OpenVinoModel
 from claudia_core import DocumentModel
 from claudia_creates import ShapeLibrary
+from claudia_render import RenderService, ToolRegistry, builtin_registry
 
 from . import __version__, redirect
 from .admin import AdminDirectory, needs_administrator
@@ -77,6 +78,8 @@ from .hosts import AllowedHosts, is_loopback, machine_names
 from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
 from .hyphenation import HyphenationService
 from .protocol import Limits
+from .rasterise import svg_rasteriser
+from .rendered import RenderDesk
 from .sealed import SealedDocuments
 from .server_settings import ServerSettings, load_admins, load_settings
 from .state import default_state_dir
@@ -334,6 +337,33 @@ def _fonts(args: argparse.Namespace, state_dir: Path) -> FontService:
     return FontService.from_folders(folders, state_dir / "webfonts")
 
 
+def _program_of(entry: object) -> str | None:
+    """The path of a tool entry, which is a path or a mapping with one."""
+    return entry.get("path") if isinstance(entry, dict) else entry  # type: ignore[return-value]
+
+
+def _renderings(settings: ServerSettings, state_dir: Path, fonts: FontService) -> tuple[RenderDesk, list[str]]:
+    """What makes rendered containers (D345): the built-in types, the manifests of the plugins folder and the tools the
+    administrator registered (the LaTeX programs are those of the typeset settings). The lines are for the start-up
+    report: what is offered, and each manifest that could not be taken, with the reason."""
+    work = state_dir / "render"
+    registry = builtin_registry(fonts.catalogue, work / "plugins")
+    folder = Path(settings.render.plugins_dir) if settings.render.plugins_dir else state_dir / "plugins"
+    reports = registry.load_directory(folder, work / "plugins")
+    tools: dict[str, object] = {"xelatex": settings.typeset.xelatex, "pdftocairo": settings.typeset.pdftocairo}
+    tools.update(settings.render.tools)
+    service = RenderService(registry, ToolRegistry({k: v for k, v in tools.items() if v is not None}), work)
+    lines = ["rendered containers: " + ", ".join(plugin.manifest.type for plugin in registry.plugins())]
+    lines += [f"  not used, {folder.name}/{r.file}: {r.error}" for r in reports if r.error]
+    draw = svg_rasteriser(_program_of(tools.get("rsvg_convert")))
+    lines.append(
+        "office files draw rendered containers as pictures"
+        if draw
+        else "office files get rendered containers as SVG only (no rsvg-convert; help topic render.configure-tools)"
+    )
+    return RenderDesk(service, draw), lines
+
+
 def _hyphenation(args: argparse.Namespace, state_dir: Path) -> HyphenationService:
     """The hyphenation patterns this server hands to its clients: from ``--hyphenation``, else
     ``STATE_DIR/hyphenation``. ``UsageError`` for a folder given on the command line that does not exist."""
@@ -445,6 +475,14 @@ def _tls_banner_lines(certificate: Certificate | None, *, behind_proxy: bool) ->
     return [f"connections are encrypted (TLS), certificate {origin}", f"  fingerprint {certificate.fingerprint}"]
 
 
+def _check_places(args: argparse.Namespace) -> None:
+    """The folders and files the options name must fit together and exist."""
+    if args.web and not (Path(args.web) / "index.html").is_file():
+        raise UsageError(f"{args.web} does not contain a built web app (index.html); run `npm run build` in web/")
+    if args.dir and args.plain_dir:
+        raise UsageError("--dir (sealed documents) and --plain-dir (plain files) cannot be used together")
+
+
 def make_plan(argv: list[str] | None = None) -> Plan:
     """Read the command line and prepare the server; ``UsageError`` if it cannot be started as asked."""
     args = build_parser().parse_args(argv)
@@ -457,16 +495,14 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     state_dir, settings, admins = _server_state(args)
     secret = _access_secret(args, settings)
     max_documents = args.max_documents if args.max_documents is not None else settings.max_documents
-    if args.web and not (Path(args.web) / "index.html").is_file():
-        raise UsageError(f"{args.web} does not contain a built web app (index.html); run `npm run build` in web/")
-    if args.dir and args.plain_dir:
-        raise UsageError("--dir (sealed documents) and --plain-dir (plain files) cannot be used together")
+    _check_places(args)
     limits = Limits()
     provider, directory = _storage(args, model)
     assistant, ai = _build_assistant(args, model, settings)
     library = _shapes(args, model)
     fonts = _fonts(args, state_dir)
     hyphenation = _hyphenation(args, state_dir)
+    renderings, rendering_lines = _renderings(settings, state_dir, fonts)
     hub = Hub(
         provider,
         methods=methods_for(model, shapes=library),
@@ -475,6 +511,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         allow_create=not args.no_create,
         max_documents=max_documents,
         max_connections=args.max_connections,
+        renderings=renderings,
     )
     exposed = not is_loopback(args.host)
     admin = AdminContext(
@@ -518,6 +555,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         banner.append("documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)")
     banner.append(fonts.summary())
     banner += [f"  not used, {problem.path}: {problem.reason}" for problem in fonts.catalogue.problems]
+    banner += rendering_lines
     banner.append(hyphenation.summary())
     banner += [f"  not used, {problem}" for problem in hyphenation.problems if hyphenation.languages]
     banner += _what_is_loaded(library, ai.runner)

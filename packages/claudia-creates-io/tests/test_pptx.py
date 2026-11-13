@@ -416,3 +416,86 @@ def test_a_decorative_picture_is_marked_the_way_powerpoint_marks_one_and_has_no_
 def test_an_object_that_is_not_decorative_carries_no_decorative_mark():
     picture = _image_object("o1", "s1", 10, 10, 400, 200, _image_asset())
     assert _properties(_exported_shape(picture)).xpath("./a:extLst") == []
+
+
+# -- a rendered text container is a picture to a file (D344) ---------------------------------------------------------
+_GLYPHS = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="10">'
+    b'<defs><symbol id="g"><path d="M0 0L5 5"/></symbol></defs><use xlink:href="#g"/></svg>'
+)
+_PNG = b"\x89PNG\r\n\x1a\n"
+
+
+def _deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
+    from claudia_core import RenderedDefinition
+
+    model = SlideModel.empty()
+    asset = decode_image(_GLYPHS, checked_drawing=True)
+    model.define_image(asset)
+    model.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
+    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", rendered="r1", **changes)
+    model.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
+    return model
+
+
+def _package(data: bytes) -> zipfile.ZipFile:
+    return zipfile.ZipFile(BytesIO(data))
+
+
+def test_a_rendered_container_is_a_real_picture_with_its_alt_text_and_the_drawing_itself_for_powerpoint():
+    data = slides_to_pptx(_deck_with_container(description="a heading that says Hi"))
+    (picture,) = [
+        s for s in pptx.Presentation(BytesIO(data)).slides[0].shapes if s.shape_type == MSO_SHAPE_TYPE.PICTURE
+    ]
+    assert picture._element.xpath("./*[1]/p:cNvPr")[0].get("descr") == "a heading that says Hi"
+    package = _package(data)
+    (svg_name,) = [n for n in package.namelist() if n.endswith(".svg")]
+    assert b"<use" in package.read(svg_name)
+    assert picture.image.blob.startswith(_PNG), "a program that cannot draw SVG shows a picture, not a hole"
+    blips = etree.fromstring(package.read("ppt/slides/slide1.xml")).xpath("//*[local-name()='svgBlip']")
+    assert len(blips) == 1
+
+
+def test_a_picture_that_a_rasteriser_made_is_what_a_program_without_svg_shows():
+    from PIL import Image
+
+    made = BytesIO()
+    Image.new("RGBA", (30, 10), (200, 30, 30, 255)).save(made, "PNG")
+    seen = []
+
+    def rasterise(svg: bytes, width: int, height: int) -> bytes:
+        seen.append((svg, width, height))
+        return made.getvalue()
+
+    data = slides_to_pptx(_deck_with_container(), rasterise=rasterise)
+    (picture,) = [
+        s for s in pptx.Presentation(BytesIO(data)).slides[0].shapes if s.shape_type == MSO_SHAPE_TYPE.PICTURE
+    ]
+    assert seen == [(decode_image(_GLYPHS, checked_drawing=True).data, 300, 100)]
+    assert picture.image.blob == made.getvalue()
+    assert not [n for n in _package(data).namelist() if n.endswith(".svg")], "one picture, the same in every program"
+
+
+def test_a_container_nothing_was_made_for_yet_is_left_out():
+    shapes = pptx.Presentation(BytesIO(slides_to_pptx(_deck_with_container(pictured=False)))).slides[0].shapes
+    assert len(shapes) == 0
+
+
+def test_an_imported_svg_picture_no_longer_stops_the_export():
+    asset = decode_image(
+        b'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20"/></svg>'
+    )
+    model = SlideModel.empty()
+    model.define_image(asset)
+    model.insert_object(_image_object("i1", "s1", 150, 300, 400, 200, asset))
+    assert any(n.endswith(".svg") for n in _package(slides_to_pptx(model)).namelist())
+
+
+def test_the_export_report_names_what_powerpoint_cannot_keep():
+    from claudia_creates_io import pptx_export_losses
+
+    assert [(loss.kind, loss.count) for loss in pptx_export_losses(_deck_with_container())] == [("svg-fallback", 1)]
+    assert pptx_export_losses(_deck_with_container(), rasterised=True) == ()
+    assert [(loss.kind, loss.count) for loss in pptx_export_losses(_deck_with_container(pictured=False))] == [
+        ("rendering-pending", 1)
+    ]

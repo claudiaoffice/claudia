@@ -25,6 +25,7 @@ PACKAGES = (
     "claudia_creates",
     "claudia_fonts",
     "claudia_typeset",
+    "claudia_render",
     # under the policy since 2026-11-10: the apps' models and their file formats, the AI and the test library
     "claudia_computes",
     "claudia_composes",

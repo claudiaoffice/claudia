@@ -37,8 +37,11 @@ from claudia_core import (
     EphemeralPublished,
     HistoryChanged,
     MemoryStore,
+    ObjectModel,
+    RenderingsChanged,
 )
 from claudia_core.clock import utc_now
+from claudia_render import RenderFailed, ToolUnavailable
 
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .i18n import localized, msg
@@ -58,6 +61,7 @@ from .workers import DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
     from .assistant import Assistant
+    from .rendered import RenderDesk
 
 log = logging.getLogger("claudia_server")
 
@@ -66,6 +70,10 @@ log = logging.getLogger("claudia_server")
 PALETTE = ("#d6477a", "#f2a057", "#3d7dd8", "#8d6e63", "#7cb342", "#b0408f", "#607d8b", "#c9a400")
 
 _DOC_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
+#: How long a rendered container's text must stay as it is before its picture is made, so that typing makes one.
+RENDER_DELAY = 0.4
+#: Who a picture's edit is by when nobody can be said to have asked for it.
+RENDER_AUTHOR = "claudia-render"
 DEFAULT_MAX_DOCUMENTS = 1000  # room for a team for years, but not for anybody who can reach the server (SEC-02)
 
 
@@ -242,7 +250,9 @@ class Connection:
                 hosted.broadcast,
                 hosted.note_ai_mode,
                 self.set_locale,
+                hosted.renderings,
             )
+            hosted.acting_user = self.account.user
             result = hosted.methods.dispatch(context, name, params)
             frame = {"id": request_id, "ok": True, "result": result}
             json.dumps(frame, allow_nan=False)  # make sure it can be sent before claiming success
@@ -252,6 +262,8 @@ class Connection:
             log.exception("request failed in %s", hosted.id)
             internal = localized(msg("internal server error"), self.locale)
             frame = {"id": request_id, "ok": False, "error": {"code": "internal", "message": internal}}
+        finally:
+            hosted.acting_user = None
         hosted.touch()
         self.deliver(frame)
 
@@ -291,9 +303,14 @@ class HostedDocument:
         edit_timeout: float,
         clock: Callable[[], float],
         directory: UserDirectory | None = None,
+        renderings: RenderDesk | None = None,
     ):
         self.id = doc_id
         self.document = document
+        self.renderings = renderings
+        self.acting_user: str | None = None  # whose request is being handled right now (see `_schedule_render`)
+        self._render_jobs: dict[str, asyncio.Task] = {}
+        self._rendered: dict[str, tuple[str, tuple]] = {}  # what a finished job made a picture of, by container
         self.limits = limits
         self.methods = methods
         self.max_connections = max_connections
@@ -393,6 +410,8 @@ class HostedDocument:
         return everyone
 
     def _on_event(self, event: object) -> None:
+        if isinstance(event, RenderingsChanged):
+            self._schedule_render(event)
         data = event.to_data()  # type: ignore[attr-defined]
         if isinstance(event, EphemeralPublished) and event.message.kind == "presence":
             (self._locked.add if event.message.data.get("locked") else self._locked.discard)(event.message.sender or "")
@@ -404,6 +423,69 @@ class HostedDocument:
         for connection in self._audience(event):
             payload = data if to_data_for is None else to_data_for(connection.account.user)
             connection.deliver({"event": event_type, "data": payload})
+
+    # -- pictures follow the text (D345) -------------------------------------------------------
+    def _schedule_render(self, event: RenderingsChanged) -> None:
+        """A container's definition changed: make its picture soon, unless it was made from exactly this text already.
+
+        Typing makes a burst of changes, so a job waits ``RENDER_DELAY`` and a newer change replaces it. The job is
+        by the person whose request caused the change, so that undo follows what that person did (D345)."""
+        rendering_id, definition = event.rendering_id, event.definition
+        previous = self._render_jobs.pop(rendering_id, None)
+        if previous is not None and previous is not asyncio.current_task():
+            previous.cancel()
+        if self.renderings is None or definition is None or not definition.source.strip():
+            return
+        if self._made_from(rendering_id, definition):
+            return  # a picture was made of this very text: this event is that picture, or an undo or redo of it
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return  # not served by an event loop (a test of the model): there is nobody to make a picture for
+        author = self.acting_user or RENDER_AUTHOR
+        self._render_jobs[rendering_id] = loop.create_task(self._render_job(rendering_id, author))
+
+    def _made_from(self, rendering_id: str, definition) -> bool:  # noqa: ANN001 - RenderedDefinition
+        """Was the last picture of this container made of exactly this text and these settings?
+
+        An undo or a redo of the picture is not a reason to make it again: undoing means going back to what was, and a
+        picture that came back would put a new edit on the undo stack in front of the person's own."""
+        return self._rendered.get(rendering_id) == (definition.source, tuple(definition.params.items()))
+
+    async def _render_job(self, rendering_id: str, author: str) -> None:
+        assert self.renderings is not None
+        result: dict = {"id": rendering_id, "ok": False, "diagnostics": [], "message": "", "unavailable": None}
+        try:
+            await asyncio.sleep(RENDER_DELAY)
+            model = self.document.model
+            assert isinstance(model, ObjectModel)
+            definition = model.renderings[rendering_id]
+            if self._made_from(rendering_id, definition):
+                return
+            made = await self.renderings.render_into(self.document, author, rendering_id)
+            if made is None:
+                return  # the text changed while the tool ran: the job of the newer text speaks for it
+            self._rendered[rendering_id] = (definition.source, tuple(definition.params.items()))
+            result.update(ok=True, diagnostics=[d.to_data() for d in made.warnings])
+        except (KeyError, asyncio.CancelledError):
+            return  # the container is gone, or its text changed again
+        except RenderFailed as error:
+            result.update(message=str(error), diagnostics=[d.to_data() for d in error.diagnostics])
+        except ToolUnavailable as error:
+            result.update(message=str(error), unavailable=error.tool)
+        except Exception:
+            log.exception("rendering %s failed in %s", rendering_id, self.id)
+            result.update(message="the picture could not be made")
+        finally:
+            if self._render_jobs.get(rendering_id) is asyncio.current_task():
+                del self._render_jobs[rendering_id]
+        self.broadcast({"event": "render_result", "data": result})
+
+    def stop_rendering(self) -> None:
+        """Nothing more is made for this document (it is being unloaded, or the server stops)."""
+        for job in self._render_jobs.values():
+            job.cancel()
+        self._render_jobs.clear()
 
     def sweep(self) -> None:
         """Tell the others about locks that ran out (the kernel turns them into plain presence on its own), and
@@ -459,8 +541,10 @@ class Hub:
         directory: UserDirectory | None = None,
         clock: Callable[[], float] = time.monotonic,
         max_workers: int = DEFAULT_WORKERS,
+        renderings: RenderDesk | None = None,
     ):
         self.provider = provider
+        self.renderings = renderings  # what makes rendered containers (D345); ``None``: this server makes none
         self.methods = methods
         self.limits = limits or Limits()
         self.allow_create = allow_create
@@ -564,6 +648,7 @@ class Hub:
                 edit_timeout=self.edit_timeout,
                 clock=self._clock,
                 directory=self.directory,
+                renderings=self.renderings,
             )
             if self.assistant is not None:
                 self.assistant().attach(hosted)
@@ -580,6 +665,7 @@ class Hub:
         for doc_id, hosted in list(self._documents.items()):
             hosted.sweep()
             if now - hosted.last_active > self.idle_unload and not hosted.humans():
+                hosted.stop_rendering()
                 del self._documents[doc_id]  # nothing is lost: every change reached storage when it happened
                 gone.append(doc_id)
         return gone

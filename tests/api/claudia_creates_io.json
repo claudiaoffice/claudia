@@ -1,5 +1,8 @@
 {
- "version": "0.2.0",
+ "version": "0.3.0",
+ "Rasterise": {
+  "function": "(*args, **kwargs)"
+ },
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -18,7 +21,7 @@
   "function": "(original_bytes: 'bytes', baseline: 'SlideModel', current: 'SlideModel') -> 'bytes'"
  },
  "odp_export_losses": {
-  "function": "(model: 'SlideModel') -> 'tuple[Loss, ...]'"
+  "function": "(model: 'SlideModel', *, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"
  },
  "odp_import_losses": {
   "function": "(odp_bytes: 'bytes') -> 'tuple[Loss, ...]'"
@@ -26,13 +29,16 @@
  "odp_to_slides": {
   "function": "(odp_bytes: 'bytes') -> 'SlideModel'"
  },
+ "pptx_export_losses": {
+  "function": "(model: 'SlideModel', *, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"
+ },
  "pptx_to_slides": {
   "function": "(pptx_bytes: 'bytes') -> 'SlideModel'"
  },
  "slides_to_odp": {
-  "function": "(model: 'SlideModel', *, info: 'DocumentInfo | None' = None) -> 'bytes'"
+  "function": "(model: 'SlideModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  },
  "slides_to_pptx": {
-  "function": "(model: 'SlideModel') -> 'bytes'"
+  "function": "(model: 'SlideModel', *, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  }
 }

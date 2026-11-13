@@ -23,6 +23,12 @@ Lists (E9.21). State schema 7 â†’ 8. Describing objects (BITV 1.1.1): schema 8 â
   (it returned its style).
 - The state has a `lists` entry; a state without one (schema 7 and earlier) opens as a text without lists.
 
+## [0.7.0] - 2026-11-13
+
+### Added
+- Rendered text containers in text documents (D340): definitions and their commands in the model, `state_schema`
+  10. There is no way to place one on the wire yet.
+
 ## [0.6.0] - 2026-11-13
 
 The page setup and the language are the kernel's (D917).

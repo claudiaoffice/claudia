@@ -8,7 +8,7 @@ from .job import BadJob, Job, Limits, Mode
 from .programs import HELP_TOPIC, SETTINGS, EngineUnavailable, resolve_program
 from .sandbox import Completed, OutputTooLarge, SandboxError, Timeout, run_sandboxed
 from .source import Built, FontUnavailable, TexError, build_source, parse_log
-from .svg import UnsafeOutput, check_svg
+from .svg import NEVER_ALLOWED, UnsafeOutput, check_svg
 
 __all__ = [
     "BadJob",
@@ -22,6 +22,7 @@ __all__ = [
     "Mode",
     "OutputTooLarge",
     "HELP_TOPIC",
+    "NEVER_ALLOWED",
     "ResultCache",
     "SETTINGS",
     "SandboxError",

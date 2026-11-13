@@ -72,7 +72,7 @@ MAX_COL_WIDTH = 2_000
 # row/column resize) — only ``MoveObject`` (the person dragging it) changes where it sits. That is a deliberate
 # policy, not an oversight: a picture should not leap across the sheet because somebody inserted a row above it.
 # It is why ``CellAnchor`` is not a ``RangeRef`` and takes no part in ``refs.adjusted``.
-OBJECT_KINDS = ("text", "shape", "image", "diagram")
+OBJECT_KINDS = ("text", "shape", "image", "diagram", "rendered")
 MIN_OBJECT_SIZE = 20  # pixels; an object is at least this wide and this tall
 MAX_OBJECTS_PER_SHEET = 500
 
@@ -423,7 +423,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
     # 7: the workbook carries names: named ranges, tables and query results (E6.5, D600)
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
-    state_schema: ClassVar[int] = 9  # 8: object bodies without a description
+    state_schema: ClassVar[int] = 10  # 8: object bodies without a description; 9: no rendered containers
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
@@ -467,6 +467,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
             "diagrams": self.diagrams_to_data(),
+            "renderings": self.renderings_to_data(),
             "objects": self.objects_to_data(),
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),
@@ -484,7 +485,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.cell_styles = CellStyles.from_data(item["cell_styles"])  # no upcast before the first release (D308)
             model.sheets[sheet.id] = sheet
             model.open_container(str(sheet.id))
-        model.restore_objects(state["objects"], state["images"], state["shapes"], state["diagrams"])
+        model.restore_objects(
+            state["objects"], state["images"], state["shapes"], state["diagrams"], state.get("renderings", ())
+        )
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
         model.random_seed, model.random_draw = state["random"]["seed"], state["random"]["draw"]

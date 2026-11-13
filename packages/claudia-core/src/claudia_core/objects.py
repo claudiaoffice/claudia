@@ -35,6 +35,7 @@ from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Command, CommandRegistry, core_commands
 from .facets import SLOTS, fits
 from .paragraphs import Paragraph
+from .renderings import RenderedDefinition
 from .shapes import ShapeDefinition
 
 if TYPE_CHECKING:
@@ -42,8 +43,10 @@ if TYPE_CHECKING:
 
 #: Kinds of object every app understands. A text box carries only words; a shape carries an outline and may carry
 #: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
-#: opaque to the kernel, the same way an anchor's own geometry is (see :class:`DiagramDefinition`).
-OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram")
+#: opaque to the kernel, the same way an anchor's own geometry is (see :class:`DiagramDefinition`); a rendered
+#: container carries a :class:`~claudia_core.RenderedDefinition` — text that something outside the document turns
+#: into a picture (D340).
+OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram", "rendered")
 
 MIN_OBJECT_SIZE = 20  # an object is at least this wide and this tall, in its app's own units
 MAX_OBJECTS_PER_CONTAINER = 500
@@ -63,6 +66,7 @@ _BODY_FIELDS = (
     "image",
     "imported",
     "diagram",
+    "rendered",
     "rotation",
     "snap",
     "description",
@@ -70,6 +74,13 @@ _BODY_FIELDS = (
 )
 #: The fields documents written before descriptions existed lack (``ObjectBody.from_data`` fills them in).
 _LATER_FIELDS = ("description", "decorative")
+#: The field of rendered containers (D340), later than the two above: bodies of each earlier generation still read.
+_RENDERED_FIELD = "rendered"
+_FIELD_SETS = (
+    frozenset(_BODY_FIELDS),
+    frozenset(_BODY_FIELDS) - {_RENDERED_FIELD},
+    frozenset(_BODY_FIELDS) - {_RENDERED_FIELD, *_LATER_FIELDS},
+)
 
 
 def _is_whole(value: object) -> TypeIs[int]:
@@ -152,6 +163,8 @@ class ObjectBody:
     ``shape`` is the id of an outline the document knows, ``image`` the id of an
     :class:`~claudia_core.ImageAsset` and ``imported`` the record of how that image got there. ``diagram`` is the
     id of a :class:`DiagramDefinition` the document knows (E6.6) — opaque to the kernel, the way an anchor is.
+    ``rendered`` is the id of a :class:`~claudia_core.RenderedDefinition`: the text a rendered container is made
+    from and the picture last made of it (D340).
     ``rotation`` is whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15,
     D214): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
     document state.
@@ -171,6 +184,7 @@ class ObjectBody:
     image: str | None = None
     imported: ImageImport | None = None
     diagram: str | None = None
+    rendered: str | None = None
     rotation: int = 0
     snap: bool = True
     description: str = ""
@@ -200,8 +214,7 @@ class ObjectBody:
     def from_data(cls, data: dict) -> ObjectBody:
         """Inverse of :meth:`to_data`; whether the values make sense is the model's business
         (:meth:`~claudia_core.ObjectModel.check_object`)."""
-        earlier = tuple(name for name in _BODY_FIELDS if name not in _LATER_FIELDS)
-        if set(data) != set(_BODY_FIELDS) and set(data) != set(earlier):
+        if frozenset(data) not in _FIELD_SETS:
             raise ValueError("an object body has exactly these fields: " + ", ".join(_BODY_FIELDS))
         imported, paragraph = data["imported"], data["paragraph"]
         return cls(
@@ -377,6 +390,23 @@ class DiagramsChanged:
         }
 
 
+@dataclass(frozen=True)
+class RenderingsChanged:
+    """The document learned a rendered container's definition (``definition`` is it), forgot one (``definition`` is
+    ``None``), or changed one in place: its text, its settings or its picture (``definition`` is the new one)."""
+
+    rendering_id: str
+    definition: RenderedDefinition | None
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {
+            "type": "rendering",
+            "id": self.rendering_id,
+            "definition": None if self.definition is None else self.definition.to_data(),
+        }
+
+
 # --------------------------------------------------------------------------- the model mixin
 class ObjectModel[A: Anchor]:
     """Objects, their stacking order, their shapes and their image assets: the state and the operations all three
@@ -406,6 +436,7 @@ class ObjectModel[A: Anchor]:
         self.images: dict[str, ImageAsset] = {}
         self.shapes: dict[str, ShapeDefinition] = {}
         self.diagrams: dict[str, DiagramDefinition] = {}
+        self.renderings: dict[str, RenderedDefinition] = {}
         self._stack: dict[str, list[str]] = {}  # container id -> object ids, bottom first
 
     # -- what the app brings -----------------------------------------------------
@@ -464,6 +495,16 @@ class ObjectModel[A: Anchor]:
         """The ids of the objects that use this image asset."""
         return [obj.id for obj in self.objects.values() if obj.body.image == image_id]
 
+    def picture_of(self, body: ObjectBody) -> str | None:
+        """The id of the image asset that draws ``body``: its own picture, or for a rendered container the picture last
+        made from its text (``None`` for a container nothing has been made for yet, and for kinds drawn otherwise).
+        Everything that draws or exports a picture asks this, so a rendered container is a picture to it (D344)."""
+        if body.image is not None:
+            return body.image
+        if body.rendered is not None and body.rendered in self.renderings:
+            return self.renderings[body.rendered].image
+        return None
+
     def users_of_shape(self, shape_id: str) -> list[str]:
         """The ids of the objects that use this shape outline."""
         return [obj.id for obj in self.objects.values() if obj.body.shape == shape_id]
@@ -471,6 +512,10 @@ class ObjectModel[A: Anchor]:
     def users_of_diagram(self, diagram_id: str) -> list[str]:
         """The ids of the objects that use this diagram definition."""
         return [obj.id for obj in self.objects.values() if obj.body.diagram == diagram_id]
+
+    def users_of_rendering(self, rendering_id: str) -> list[str]:
+        """The ids of the objects that show this rendered container's definition."""
+        return [obj.id for obj in self.objects.values() if obj.body.rendered == rendering_id]
 
     def style_in_use(self, style_id: str) -> bool:
         """Does any object have this style, for itself or for its words? (Asked by the core style commands before
@@ -507,6 +552,9 @@ class ObjectModel[A: Anchor]:
         users = self.users_of_image(image_id)
         if users:
             raise ValueError(f"image {image_id!r} is in use by {users[0]!r}")
+        holder = next((r.id for r in self.renderings.values() if r.image == image_id), None)
+        if holder is not None:
+            raise ValueError(f"image {image_id!r} is in use by the rendering {holder!r}")
         return self.images.pop(image_id)
 
     # -- diagrams ------------------------------------------------------------------
@@ -536,6 +584,40 @@ class ObjectModel[A: Anchor]:
         return old
 
     # -- checking ----------------------------------------------------------------
+    # -- rendered containers ---------------------------------------------------------
+    def define_rendering(self, definition: RenderedDefinition) -> None:
+        """Take a rendered container's definition into the document. Its picture, if it names one, must be here."""
+        if definition.id in self.renderings:
+            raise ValueError(f"rendering {definition.id!r} is already defined in this document")
+        self._check_rendering_picture(definition)
+        self.renderings[definition.id] = definition
+
+    def forget_rendering(self, rendering_id: str) -> RenderedDefinition:
+        """Let go of a definition nobody uses; returns it."""
+        if rendering_id not in self.renderings:
+            raise ValueError(f"this document does not know the rendering {rendering_id!r}")
+        users = self.users_of_rendering(rendering_id)
+        if users:
+            raise ValueError(f"rendering {rendering_id!r} is in use by {users[0]!r}")
+        return self.renderings.pop(rendering_id)
+
+    def replace_rendering(self, definition: RenderedDefinition) -> RenderedDefinition:
+        """Swap in a changed definition that exists, in place (its id and its type stay); returns the one it replaces.
+
+        A container's text is meant to be edited, so unlike an image or a shape there is no forget-and-define dance."""
+        old = self.renderings.get(definition.id)
+        if old is None:
+            raise ValueError(f"this document does not know the rendering {definition.id!r}")
+        if definition.type != old.type:
+            raise ValueError("a rendering cannot change its type: make another container")
+        self._check_rendering_picture(definition)
+        self.renderings[definition.id] = definition
+        return old
+
+    def _check_rendering_picture(self, definition: RenderedDefinition) -> None:
+        if definition.image is not None and definition.image not in self.images:
+            raise ValueError(f"this document does not know the image {definition.image!r}")
+
     def check_object(self, obj: VisualObject[A]) -> None:
         """``ValueError`` with a sentence if this object cannot exist in this document as it is now.
 
@@ -554,7 +636,7 @@ class ObjectModel[A: Anchor]:
             self._check_slot(styles, body.kind, 0, body.style)
         aspect = self._check_visual(body)
         self._check_size(body, aspect)
-        if body.kind in ("image", "diagram"):
+        if body.kind in ("image", "diagram", "rendered"):
             if body.paragraph is not None:
                 raise ValueError(f"a {body.kind} carries no text")
         else:
@@ -602,16 +684,17 @@ class ObjectModel[A: Anchor]:
             "shape": self._check_shape_visual,
             "diagram": self._check_diagram_visual,
             "image": self._check_image_visual,
+            "rendered": self._check_rendered_visual,
         }
         return checks[body.kind](body)
 
     def _check_text_visual(self, body: ObjectBody) -> None:
-        if any((body.shape, body.image, body.imported, body.diagram)):
-            raise ValueError("a text box has no shape, image or diagram")
+        if any((body.shape, body.image, body.imported, body.diagram, body.rendered)):
+            raise ValueError("a text box has no shape, image, diagram or rendering")
 
     def _check_shape_visual(self, body: ObjectBody) -> float | None:
-        if any((body.image, body.imported, body.diagram)):
-            raise ValueError("a shape object has no image or diagram")
+        if any((body.image, body.imported, body.diagram, body.rendered)):
+            raise ValueError("a shape object has no image, diagram or rendering")
         if body.shape is None:
             raise ValueError("a shape object needs a shape")
         definition = self.shapes.get(body.shape)
@@ -620,17 +703,26 @@ class ObjectModel[A: Anchor]:
         return definition.aspect
 
     def _check_diagram_visual(self, body: ObjectBody) -> None:
-        if any((body.shape, body.image, body.imported)):
-            raise ValueError("a diagram object has no shape or image")
+        if any((body.shape, body.image, body.imported, body.rendered)):
+            raise ValueError("a diagram object has no shape, image or rendering")
         if body.diagram is None:
             raise ValueError("a diagram object needs a diagram")
         if body.diagram not in self.diagrams:
             raise ValueError(f"this document does not know the diagram {body.diagram!r}")
         # a diagram keeps no fixed aspect ratio (falls through to the implicit ``None``)
 
+    def _check_rendered_visual(self, body: ObjectBody) -> None:
+        if any((body.shape, body.image, body.imported, body.diagram)):
+            raise ValueError("a rendered object has no shape, image or diagram")
+        if body.rendered is None:
+            raise ValueError("a rendered object needs a rendering")
+        if body.rendered not in self.renderings:
+            raise ValueError(f"this document does not know the rendering {body.rendered!r}")
+        # the picture scales with the frame the person gives it, and keeps no fixed ratio of its own
+
     def _check_image_visual(self, body: ObjectBody) -> float | None:
-        if body.shape is not None or body.diagram is not None:
-            raise ValueError("an image object has no shape or diagram")
+        if body.shape is not None or body.diagram is not None or body.rendered is not None:
+            raise ValueError("an image object has no shape, diagram or rendering")
         if body.image is None or body.imported is None:
             raise ValueError("an image object needs an image and its import record")
         asset = self.images.get(body.image)
@@ -710,14 +802,19 @@ class ObjectModel[A: Anchor]:
         """Every diagram definition, by id: what ``serialize`` stores."""
         return [definition.to_data() for _, definition in sorted(self.diagrams.items())]
 
+    def renderings_to_data(self) -> list[dict]:
+        """Every rendered container's definition, by id: what ``serialize`` stores."""
+        return [definition.to_data() for _, definition in sorted(self.renderings.items())]
+
     def restore_objects(
         self,
         objects: Iterable[dict],
         images: Iterable[dict] = (),
         shapes: Iterable[dict] = (),
         diagrams: Iterable[dict] = (),
+        renderings: Iterable[dict] = (),
     ) -> None:
-        """Put back what the four ``*_to_data`` methods stored (the containers must already exist)."""
+        """Put back what the five ``*_to_data`` methods stored (the containers must already exist)."""
         for data in shapes:
             shape = ShapeDefinition.from_data(data)
             self.shapes[shape.id] = shape
@@ -727,6 +824,9 @@ class ObjectModel[A: Anchor]:
         for data in diagrams:
             definition = self.diagram_from_data(data)
             self.diagrams[definition.id] = definition
+        for data in renderings:
+            definition = RenderedDefinition.from_data(data)
+            self.renderings[definition.id] = definition
         for data in objects:
             obj = VisualObject.from_data(data, self.anchor_from_data)
             self.objects[obj.id] = obj
@@ -1053,6 +1153,130 @@ class ForgetDiagram(Command):
 
 @core_commands.register
 @dataclass(frozen=True)
+class DefineRendering(Command):
+    """Take a rendered container's definition into the document: its text, its settings and, if it has one, its
+    picture (which must already be in the document, see :class:`DefineImage`).
+
+    ``definition`` crosses the wire and the log as plain data, as :meth:`RenderedDefinition.to_data` writes it."""
+
+    kind: ClassVar[str] = "core.DefineRendering"
+    definition: dict
+
+    @property
+    def label(self) -> str:
+        return "Define rendered text"
+
+    @property
+    def summary(self) -> str:
+        return "The document takes a piece of rendered text"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        definition = RenderedDefinition.from_data(self.definition)
+        model.define_rendering(definition)
+        ctx.emit(RenderingsChanged(definition.id, definition))
+        return ForgetRendering(definition.id)
+
+    def to_data(self) -> dict:
+        return {"definition": dict(self.definition)}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> DefineRendering:
+        return cls(dict(data["definition"]))
+
+    def shifted_by(self, other: Command) -> Command | None:
+        mine = self.definition.get("id")
+        return None if isinstance(other, DefineRendering) and other.definition.get("id") == mine else self
+
+    def redacted(self) -> Command:
+        return DefineRendering(RenderedDefinition.from_data(self.definition).redacted().to_data())
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class UpdateRendering(Command):
+    """Change a rendered container's definition in place: the text a person writes, the settings, and the picture
+    made from it. Its id and its type stay. The undo puts the whole earlier definition back, picture included."""
+
+    kind: ClassVar[str] = "core.UpdateRendering"
+    id: str
+    definition: dict
+
+    @property
+    def label(self) -> str:
+        return "Edit rendered text"
+
+    @property
+    def summary(self) -> str:
+        return "Edited a piece of rendered text"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        new = RenderedDefinition.from_data(self.definition)
+        if new.id != self.id:
+            raise ValueError("a rendering cannot change its id")
+        old = model.replace_rendering(new)
+        ctx.emit(RenderingsChanged(self.id, new))
+        return UpdateRendering(self.id, old.to_data())
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "definition": dict(self.definition)}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> UpdateRendering:
+        return cls(data["id"], dict(data["definition"]))
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Never destroy what a colleague has done to the text since (edited it again, or forgotten it)."""
+        if isinstance(other, UpdateRendering | ForgetRendering) and other.id == self.id:
+            return None
+        return self
+
+    def redacted(self) -> Command:
+        return UpdateRendering(self.id, RenderedDefinition.from_data(self.definition).redacted().to_data())
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class ForgetRendering(Command):
+    """Let go of a rendered container's definition that no object shows (the undo of :class:`DefineRendering`)."""
+
+    kind: ClassVar[str] = "core.ForgetRendering"
+    id: str
+
+    @property
+    def label(self) -> str:
+        return "Forget rendered text"
+
+    @property
+    def summary(self) -> str:
+        return f"The document lets go of the rendered text {self.id}"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        definition = model.forget_rendering(self.id)
+        ctx.emit(RenderingsChanged(self.id, None))
+        return DefineRendering(definition.to_data())
+
+    def to_data(self) -> dict:
+        return {"id": self.id}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> ForgetRendering:
+        return cls(data["id"])
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Refuse when a colleague now shows the definition, or defined it anew."""
+        if isinstance(other, AddObject) and other.body.rendered == self.id:
+            return None
+        return None if isinstance(other, DefineRendering) and other.definition.get("id") == self.id else self
+
+    def redacted(self) -> Command:
+        return self
+
+
+@core_commands.register
+@dataclass(frozen=True)
 class AddObject(Command):
     """Put a text box, a shape or an image on a slide, a sheet or a paragraph: on top of the others, or at
     stacking place ``at``.
@@ -1060,7 +1284,7 @@ class AddObject(Command):
     The body is the shared part; ``anchor`` is plain data the app reads back (see the module description)."""
 
     kind: ClassVar[str] = "core.AddObject"
-    schema: ClassVar[int] = 2  # 1: a body without ``description`` and ``decorative``
+    schema: ClassVar[int] = 3  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``
     body: ObjectBody
     anchor: dict
     at: int | None = None
@@ -1072,7 +1296,13 @@ class AddObject(Command):
 
     @property
     def label(self) -> str:
-        labels = {"text": "Add text box", "shape": "Add shape", "image": "Add image", "diagram": "Add diagram"}
+        labels = {
+            "text": "Add text box",
+            "shape": "Add shape",
+            "image": "Add image",
+            "diagram": "Add diagram",
+            "rendered": "Add rendered text",
+        }
         return labels[self.body.kind]
 
     @property
@@ -1087,6 +1317,8 @@ class AddObject(Command):
             return f"Added an image: {_quote(alt)}" if alt.strip() else "Added an image"
         if self.body.kind == "diagram":
             return "Added a diagram"
+        if self.body.kind == "rendered":
+            return "Added a piece of rendered text"
         return f"Added a {self.body.shape}"
 
     def apply(self, ctx: Context) -> Command:
@@ -1115,6 +1347,8 @@ class AddObject(Command):
         if isinstance(other, ForgetShape) and other.id == self.body.shape:
             return None
         if isinstance(other, ForgetDiagram) and other.id == self.body.diagram:
+            return None
+        if isinstance(other, ForgetRendering) and other.id == self.body.rendered:
             return None
         return None if isinstance(other, ForgetImage) and other.id == self.body.image else self
 
@@ -1561,6 +1795,12 @@ def _objects_with_descriptions(data: dict) -> dict:
     body.setdefault("description", "" if imported is None else imported["alt"])
     body.setdefault("decorative", False)
     return {**data, "body": body}
+
+
+@core_commands.upcaster("core.AddObject", 2)
+def _objects_without_renderings(data: dict) -> dict:
+    """Schema 2 bodies had no ``rendered``: none of those objects shows a rendered container."""
+    return {**data, "body": {**data["body"], "rendered": None}}
 
 
 @core_commands.register

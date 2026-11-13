@@ -75,7 +75,7 @@ class _PosixGuard:
         resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))  # type: ignore[attr-defined]
         resource.setrlimit(resource.RLIMIT_FSIZE, (file_size, file_size))  # type: ignore[attr-defined]
         resource.setrlimit(resource.RLIMIT_NOFILE, (_OPEN_FILES, _OPEN_FILES))  # type: ignore[attr-defined]
-        if sys.platform.startswith("linux"):  # macOS does not enforce RLIMIT_AS
+        if sys.platform.startswith("linux") and limits.address_space:  # macOS does not enforce RLIMIT_AS
             memory = limits.memory_mb * _MB
             resource.setrlimit(resource.RLIMIT_AS, (memory, memory))  # type: ignore[attr-defined]
 

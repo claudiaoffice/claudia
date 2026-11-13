@@ -1,0 +1,36 @@
+{
+  "api": 1,
+  "type": "typst",
+  "version": "1.0.0",
+  "title": "Typst",
+  "tier": "static",
+  "requires": [{"tool": "typst", "version_at_least": "0.12"}],
+  "params": [
+    {"name": "font_size", "type": "number", "default": 11, "minimum": 6, "maximum": 72},
+    {"name": "margin", "type": "number", "default": 4, "minimum": 0, "maximum": 100}
+  ],
+  "cli": {
+    "argv": [
+      "${tool.typst}", "compile", "--root", ".", "--ignore-system-fonts", "--diagnostic-format", "short",
+      "--format", "svg", "--font-path=${tool.typst.font_path?}", "${input}", "${output}"
+    ],
+    "input": "input.typ",
+    "output": "output.svg",
+    "env": {"HTTPS_PROXY": "http://127.0.0.1:9", "HTTP_PROXY": "http://127.0.0.1:9", "ALL_PROXY": "http://127.0.0.1:9"},
+    "diagnostics": "typst-short",
+    "prefix": "#set page(width: auto, height: auto, margin: ${param.margin}pt, fill: none)\n#set text(size: ${param.font_size}pt)\n"
+  },
+  "forbid": [
+    {
+      "pattern": "\"@[A-Za-z0-9_-]+/",
+      "message": "Typst packages are not available here: they would be fetched from the internet. Write the content directly."
+    }
+  ],
+  "svg_elements": [],
+  "limits": {"seconds": 20, "memory_mb": 2048, "output_mb": 8},
+  "editor": {
+    "syntax": "typst",
+    "example": "= Quarterly summary\n\nRevenue grew by *12 %*, driven by $sum_(i=1)^n x_i$.\n",
+    "ai_hint": "Typst markup: = headings, *bold*, _italic_, $ math $, #table(...), #figure(...). No packages (@preview) and no files. The page is sized to the content."
+  }
+}

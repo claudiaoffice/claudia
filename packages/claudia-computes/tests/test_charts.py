@@ -119,7 +119,7 @@ def test_a_diagram_object_needs_a_known_definition(doc):
 
 def test_a_diagram_object_rejects_a_shape_or_image_alongside_the_diagram(doc):
     spec = put_chart_spec(doc)
-    with pytest.raises(ValueError, match="no shape or image"):
+    with pytest.raises(ValueError, match="no shape, image or rendering"):
         doc.execute(add(diagram_object(spec_id=spec.id, shape="circle")), author="ana")
 
 
@@ -128,7 +128,7 @@ def test_a_shape_or_image_object_rejects_a_diagram(doc):
     asset = image_asset()
     doc.execute(DefineImage(asset), author="ana")
     bad = image_object(asset=asset, diagram="c1")
-    with pytest.raises(ValueError, match="no shape or diagram"):
+    with pytest.raises(ValueError, match="no shape, diagram or rendering"):
         doc.execute(add(bad), author="ana")
 
 

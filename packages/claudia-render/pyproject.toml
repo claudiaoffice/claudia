@@ -1,0 +1,20 @@
+[project]
+name = "claudia-render"
+dynamic = ["version"]
+description = "claudia-render: rendered text containers of a Claudia server (D340-D349): plugins, tool registry, render service"
+requires-python = ">=3.14"
+dependencies = ["claudia-fonts", "claudia-typeset"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_render/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_render"]
+
+[tool.uv.sources]
+claudia-fonts = { workspace = true }
+claudia-typeset = { workspace = true }

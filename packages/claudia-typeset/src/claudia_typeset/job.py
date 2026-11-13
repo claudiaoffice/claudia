@@ -46,6 +46,11 @@ class Limits:
     memory_mb: int = 2048
     output_mb: int = 16
     pages: int = 200
+    #: Whether ``memory_mb`` also limits the *address space* of the process (Linux). Turn it off for a tool built on
+    #: V8 or Chromium, which reserve far more address space than they use and are stopped by any such limit; the
+    #: server's own memory limit (a container, a cgroup) is then what holds. Windows' Job Object limits committed
+    #: memory, which these tools respect, so nothing changes there.
+    address_space: bool = True
 
     def __post_init__(self) -> None:
         for name in ("seconds", "memory_mb", "output_mb", "pages"):

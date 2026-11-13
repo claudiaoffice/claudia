@@ -93,7 +93,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     app: ClassVar[str] = "creates"
     # 6: the presentation carries its own colour palette (D200)
     # 7: how it is printed, and its language (D917)
-    state_schema: ClassVar[int] = 8  # 7: object bodies without a description
+    state_schema: ClassVar[int] = 9  # 7: object bodies without a description; 8: no rendered containers
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -129,6 +129,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
+            "renderings": self.renderings_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,
         }
@@ -143,7 +144,9 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.slides = list(state["slides"])
         for slide in model.slides:
             model.open_container(slide)
-        model.restore_objects(state["objects"], state["images"], state["shapes"])
+        model.restore_objects(
+            state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
+        )
         return model
 
     def region_from_data(self, data: dict) -> Region:

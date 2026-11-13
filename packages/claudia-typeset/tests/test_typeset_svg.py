@@ -67,3 +67,52 @@ def test_something_that_is_not_xml_is_refused():
 def test_the_root_must_be_an_svg():
     with pytest.raises(UnsafeOutput, match="svg"):
         check_svg("<html xmlns='http://www.w3.org/1999/xhtml'/>")
+
+
+# -- what some diagram tools draw besides paths: a profile widens the allowlist, never the rules about references ----
+DIAGRAM = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'>"
+    "<style>.node{fill:#fff;stroke:#333}</style>"
+    "<marker id='m' markerWidth='4' markerHeight='4'><path d='M0 0L4 2L0 4z'/></marker>"
+    "<text x='1' y='2'><tspan>hello</tspan></text></svg>"
+)
+DIAGRAM_ELEMENTS = frozenset({"style", "marker", "text", "tspan"})
+
+
+def test_text_and_style_are_refused_unless_the_profile_names_them():
+    with pytest.raises(UnsafeOutput, match="not allowed"):
+        check_svg(DIAGRAM)
+    assert check_svg(DIAGRAM, extra_elements=DIAGRAM_ELEMENTS) == DIAGRAM
+
+
+def test_a_profile_cannot_allow_what_can_run_or_fetch():
+    for name in ("script", "foreignObject", "iframe", "a", "animate", "set"):
+        with pytest.raises(ValueError, match="never allowed"):
+            check_svg(GOOD, extra_elements=frozenset({name}))
+
+
+@pytest.mark.parametrize(
+    "css",
+    [
+        "@import url(http://evil.example/x.css);",
+        ".a{background:url(http://evil.example/x.png)}",
+        ".a{background:url('https://evil.example/x.png')}",
+        ".a{behavior:expression(alert(1))}",
+        ".a{background:url(javascript:alert(1))}",
+    ],
+)
+def test_style_text_that_reaches_outside_the_picture_is_refused(css):
+    svg = DIAGRAM.replace(".node{fill:#fff;stroke:#333}", css)
+    with pytest.raises(UnsafeOutput, match="style"):
+        check_svg(svg, extra_elements=DIAGRAM_ELEMENTS)
+
+
+def test_style_text_may_refer_to_something_in_the_picture():
+    svg = DIAGRAM.replace(".node{fill:#fff;stroke:#333}", ".a{fill:url(#grad)}")
+    assert check_svg(svg, extra_elements=DIAGRAM_ELEMENTS) == svg
+
+
+def test_a_style_element_may_not_hold_other_elements():
+    svg = DIAGRAM.replace("<style>.node{fill:#fff;stroke:#333}</style>", "<style><g/></style>")
+    with pytest.raises(UnsafeOutput, match="style"):
+        check_svg(svg, extra_elements=DIAGRAM_ELEMENTS)

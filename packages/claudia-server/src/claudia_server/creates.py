@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import secrets
 
-from claudia_creates_io import odp_export_losses, slides_to_odp, slides_to_pptx
+from claudia_creates_io import odp_export_losses, pptx_export_losses, slides_to_odp, slides_to_pptx
 
 from claudia_core import (
     OBJECT_KINDS,
@@ -47,6 +47,7 @@ from .images import image_bytes, picture_words
 from .office_export import document_info, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
+from .rendered import add_rendering_methods
 from .styles import add_style_methods
 
 #: The style a new object of each kind starts with: its container's slot (D304). A text box's box is a box style
@@ -178,6 +179,15 @@ def _add_object_methods(table: MethodTable) -> None:
         _describe_object
     )
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
+    add_rendering_methods(
+        table,
+        model_of=_deck,
+        anchor=(
+            "slide:str x:int y:int",
+            lambda slide, x, y: SlideAnchor(slide, x, y).to_data(),
+            lambda model, **where: None,
+        ),
+    )
 
 
 def _add_print_methods(table: MethodTable) -> None:
@@ -261,16 +271,21 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     def _export_office(ctx, *, format):
         """The document's current content as bytes of a PowerPoint file (`format` `"pptx"`) or an OpenDocument
         presentation (`"odp"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); an odp's
-        answer also has `losses`, what the file could not hold, as `{kind, detail, count}` codes. No tracked
-        changes, no history, no chat -- just the deck as it stands now (D212); an odp says in its metadata when the
-        deck was made and last changed, and by whom, read from the log (D411)."""
+        answer also has `losses` (a pptx's too), what the file could not hold, as `{kind, detail, count}` codes. No
+        tracked changes, no history, no chat -- just the deck as it stands now (D212); an odp says in its metadata
+        when the deck was made and last changed, and by whom, read from the log (D411)."""
         if format not in ("pptx", "odp"):
             raise RequestError("bad_request", msg('export_office: format must be "pptx" or "odp"'))
         deck = _deck(ctx)
+        draw = None if ctx.renderings is None else ctx.renderings.rasteriser
         if format == "pptx":
-            return office_export(format, slides_to_pptx(deck))
+            return office_export(
+                format, slides_to_pptx(deck, rasterise=draw), pptx_export_losses(deck, rasterised=draw is not None)
+            )
         info = document_info(ctx.document.log, ctx.document.branch)
-        return office_export(format, slides_to_odp(deck, info=info), odp_export_losses(deck))
+        return office_export(
+            format, slides_to_odp(deck, info=info, rasterise=draw), odp_export_losses(deck, rasterised=draw is not None)
+        )
 
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):

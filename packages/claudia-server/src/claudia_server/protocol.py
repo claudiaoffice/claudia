@@ -66,6 +66,8 @@ from .restore import POLICIES, RestoreCoordinator, RestoreError
 if TYPE_CHECKING:
     from claudia_core import Region
 
+    from .rendered import RenderDesk
+
 PROTOCOL_VERSION = 2
 INT_MAX = 2**31 - 1
 MAX_LOG = 5000
@@ -292,6 +294,7 @@ class Context:
     # Tell the AI of this document how the next request of a person is to be treated (D262); nothing if there is none.
     note_ai_mode: Callable[[str, str | None], None] = field(default=lambda user, mode: None)
     set_locale: Callable[[str], None] = field(default=lambda locale: None)  # change this window's language (D323)
+    renderings: RenderDesk | None = None  # what makes rendered containers (D345); ``None``: this server makes none
 
     @property
     def user(self) -> str:

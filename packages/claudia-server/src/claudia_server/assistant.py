@@ -239,10 +239,15 @@ class Assistant:
     def _call(self, method: str, params: dict, account: Account | None = None) -> Any:
         assert self.hosted is not None and self.connection is not None
         hosted = self.hosted
+        who = account or self.connection.account
         context = Context(
-            hosted.document, account or self.connection.account, hosted.limits, hosted.users, hosted.edit_timeout
+            hosted.document, who, hosted.limits, hosted.users, hosted.edit_timeout, renderings=hosted.renderings
         )
-        return hosted.methods.dispatch(context, method, params)
+        hosted.acting_user = who.user
+        try:
+            return hosted.methods.dispatch(context, method, params)
+        finally:
+            hosted.acting_user = None
 
     def _say(self, asker: str, text: str) -> None:
         assert self.hosted is not None

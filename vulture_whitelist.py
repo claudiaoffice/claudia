@@ -189,3 +189,5 @@ used.menu_help  # (same)
 # claudia-odf-io
 used.StartElementHandler  # expat calls the handlers assigned to these attributes (splice.py's `_spans`)
 used.EndElementHandler  # (same)
+used._objects_without_renderings  # registered as an upcaster by a decorator (claudia_core AddObject 2 -> 3, D340)
+used._quick  # autouse fixture of packages/claudia-server/tests/test_server_rendering_jobs.py

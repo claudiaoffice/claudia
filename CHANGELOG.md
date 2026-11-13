@@ -23,6 +23,23 @@ What an object says to someone who cannot see it (BITV 1.1.1).
   business now; a picture that is neither described nor decorative is refused by the server's `add_image` and
   `describe_object`, not by the kernel, so that a redacted or imported history always replays.
 
+## [0.19.0] - 2026-11-13
+
+Rendered text containers (D340-D345), the same in every app.
+
+### Added
+- The object kind `rendered` (in `OBJECT_KINDS`) and `ObjectBody.rendered`, the id of the definition it shows.
+- `RenderedDefinition` (text, type, settings, picture, renderer note) and `MAX_RENDERING_SOURCE`.
+- Commands `DefineRendering`, `UpdateRendering`, `ForgetRendering` and the event `RenderingsChanged`.
+- `ObjectModel` methods `define_rendering`, `replace_rendering`, `forget_rendering`, `users_of_rendering`,
+  `renderings_to_data` and `picture_of(body)`, which every drawing and export asks for the picture of an object.
+- `restore_objects(..., renderings=...)`.
+- `decode_image(data, *, checked_drawing=False)`: for a drawing a renderer made, `<use>` with local references is kept.
+
+### Changed
+- `AddObject` is schema 3; an upcaster gives older bodies `rendered: null`. The SVG sanitiser keeps the `xlink`
+  prefix, so that other programs follow the references of a typeset page.
+
 ## [0.18.0] - 2026-11-13
 
 Lists (E9.21); search, the engine (E1.12, D281–D284).
