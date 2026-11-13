@@ -101,9 +101,9 @@ export function formatItems(t: (text: string) => string, menu: FormatMenu): Menu
   if (!groups.length) flyout.push({ label: t('No styles fit what is selected'), disabled: true })
   if (menu.more?.length) flyout.push({ label: '', separator: true }, ...menu.more)
   return [
-    { id: 'format.apply-style', label: t('Apply style'), items: flyout, action: () => menu.openApply() },
-    { id: 'format.look', label: t('Edit this style…'), hint: menu.look.hint, disabled: menu.look.disabled, action: () => menu.look.open() },
-    { id: 'format.all-styles', label: t('All styles…'), action: () => menu.allStyles() },
+    { id: 'format.apply-style', label: t('Apply Style'), items: flyout, action: () => menu.openApply() },
+    { id: 'format.look', label: t('Edit This Style…'), hint: menu.look.hint, disabled: menu.look.disabled, action: () => menu.look.open() },
+    { id: 'format.all-styles', label: t('All Styles…'), action: () => menu.allStyles() },
     listItem(t, menu.list),
     { label: '', separator: true },
     { id: 'format.colours', label: t('Colours…'), action: () => menu.colours() },

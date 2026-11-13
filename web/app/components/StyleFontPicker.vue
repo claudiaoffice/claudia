@@ -4,12 +4,15 @@
 import { computed, ref, watch } from 'vue'
 import { FONTS, choiceOf } from '~/lib/fonts'
 import { familyName, type Css } from '~/lib/style-css'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ look: Css; own: boolean; disabled?: boolean }>()
 const emit = defineEmits<{ pick: [family: string]; reset: [] }>()
 
 const open = ref(false)
-const name = computed(() => familyName(props.look) || 'Font')
+const name = computed(() => familyName(props.look) || t('Font'))
 const typed = ref('')
 const current = computed(() => choiceOf(props.look))
 watch(open, (o) => o && (typed.value = ''))
@@ -22,20 +25,20 @@ function pick(family: string) {
 
 <template>
   <div class="font" data-testid="font-picker">
-    <button class="font-btn" type="button" :disabled="disabled" aria-haspopup="listbox" :aria-expanded="open" title="Font" @click="open = !open">
+    <button class="font-btn" type="button" :disabled="disabled" aria-haspopup="listbox" :aria-expanded="open" :title="t('Font')" @click="open = !open">
       <span :style="{ fontFamily: look['font-family'] }">{{ name }}</span
       ><span class="caret">▾</span>
     </button>
     <div v-if="open" class="drop">
-      <ul role="listbox" aria-label="Fonts">
+      <ul role="listbox" :aria-label="t('Fonts')">
         <li v-for="f in FONTS" :key="f.name" role="option" :aria-selected="current?.name === f.name">
           <button type="button" :class="{ on: current?.name === f.name }" :style="{ fontFamily: f.stack }" :data-font="f.name" @click="pick(f.name)">{{ f.name }}</button>
         </li>
       </ul>
       <form class="other" @submit.prevent="typed.trim() && pick(typed)">
-        <input v-model="typed" placeholder="Another font…" aria-label="Another font" spellcheck="false" >
+        <input v-model="typed" :placeholder="t('Another font…')" :aria-label="t('Another font')" spellcheck="false" >
       </form>
-      <button v-if="own" class="reset" type="button" @click="emit('reset'); open = false">Follow the parent style again</button>
+      <button v-if="own" class="reset" type="button" @click="emit('reset'); open = false">{{ t('Follow the parent style again') }}</button>
     </div>
   </div>
 </template>

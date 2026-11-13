@@ -155,6 +155,7 @@ def test_check_passes_when_the_pot_on_disk_already_matches(tmp_path, monkeypatch
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ())
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
     monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
+    monkeypatch.setattr(extract_i18n, "extract_function_texts", lambda: {})
     extract_i18n.POT_PATH.parent.mkdir(parents=True)
     extract_i18n.POT_PATH.write_text(extract_i18n.HEADER, encoding="utf-8")
     assert extract_i18n.main(["--check"]) == 0
@@ -166,6 +167,7 @@ def test_check_fails_when_the_pot_on_disk_is_stale(tmp_path, monkeypatch, capsys
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ())
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
     monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
+    monkeypatch.setattr(extract_i18n, "extract_function_texts", lambda: {})
     extract_i18n.POT_PATH.parent.mkdir(parents=True)
     extract_i18n.POT_PATH.write_text("stale\n", encoding="utf-8")
     assert extract_i18n.main(["--check"]) == 1
@@ -178,6 +180,7 @@ def test_check_fails_when_the_pot_does_not_exist_yet(tmp_path, monkeypatch):
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ())
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
     monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
+    monkeypatch.setattr(extract_i18n, "extract_function_texts", lambda: {})
     assert extract_i18n.main(["--check"]) == 1
 
 
@@ -189,6 +192,7 @@ def test_main_writes_the_pot_and_exits_nonzero_on_an_unreadable_call(tmp_path, m
     monkeypatch.setattr(extract_i18n, "PY_DIRS", ("pkg",))
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
     monkeypatch.setattr(extract_i18n, "extract_manifest", lambda: {})
+    monkeypatch.setattr(extract_i18n, "extract_function_texts", lambda: {})
     write(src, "a.py", '_("Save")\n_(f"bad {1}")\n')
     assert extract_i18n.main([]) == 1  # a problem was found: exits non-zero even though it wrote the file
     assert 'msgid "Save"' in extract_i18n.POT_PATH.read_text(encoding="utf-8")
@@ -201,3 +205,20 @@ def test_collect_includes_the_manifest_strings_too(monkeypatch):
     monkeypatch.setattr(extract_i18n, "WEB_DIRS", ())
     catalog, problems = extract_i18n.collect()
     assert "Edit" in catalog and problems == []
+
+
+# ------------------------------------------------------------------------------- function descriptions (E13.8)
+def test_extract_function_texts_finds_descriptions_and_example_wordings():
+    found = extract_i18n.extract_function_texts()
+    assert "The sum of the numbers in the ranges. Text and empty cells are skipped." in found
+    assert "{formula}  gives  {result}" in found
+
+
+def test_extract_python_finds_the_servers_msg_calls_with_their_parameters(tmp_path, monkeypatch):
+    monkeypatch.setattr(extract_i18n, "ROOT", tmp_path)
+    source = write(
+        tmp_path, "m.py", 'msg("{what}: at most {limit} cells", what=what, limit=3)\nmsg(text)\n_("plain")\n'
+    )
+    found, problems = extract_i18n.extract_python(source)
+    assert set(found) == {"{what}: at most {limit} cells", "plain"}
+    assert [(p.line, "msg(...)" in p.reason) for p in problems] == [(2, True)]

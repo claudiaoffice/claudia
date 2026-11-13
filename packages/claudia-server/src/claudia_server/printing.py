@@ -9,13 +9,14 @@ from __future__ import annotations
 
 from claudia_core import LanguageError, SetLanguage
 
+from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
 
 
 def people_only(ctx: Context) -> None:
     """The assistant suggests; it does not change how a document is set up (D63)."""
     if ctx.account.system:
-        raise RequestError("forbidden", "the assistant can only make suggestions; people set the document up")
+        raise RequestError("forbidden", msg("the assistant can only make suggestions; people set the document up"))
 
 
 def add_language_methods(table: MethodTable) -> None:

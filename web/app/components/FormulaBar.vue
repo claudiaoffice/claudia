@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { NameInfo } from '~/lib/names'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   label: string
@@ -72,34 +75,34 @@ function manage() {
     <input
       v-model="jump"
       class="name mono"
-      aria-label="cell"
+      :aria-label="t('cell')"
       spellcheck="false"
       @keydown.enter.prevent="submitJump"
       @focus="($event.target as HTMLInputElement).select()"
     >
-    <button ref="opener" type="button" class="drop" aria-label="names" title="Names" :aria-expanded="menu !== null" @click="toggleMenu">▾</button>
-    <Popover v-if="menu" :x="menu.x" :y="menu.y" :width="240" label="names" :anchor="opener" @close="menu = null">
+    <button ref="opener" type="button" class="drop" :aria-label="t('names')" :title="t('Names')" :aria-expanded="menu !== null" @click="toggleMenu">▾</button>
+    <Popover v-if="menu" :x="menu.x" :y="menu.y" :width="240" :label="t('names')" :anchor="opener" @close="menu = null">
       <div class="names" data-testid="name-menu">
-        <p v-if="!names.length" class="none">No names yet. Select cells and type a word in the box.</p>
+        <p v-if="!names.length" class="none">{{ t('No names yet. Select cells and type a word in the box.') }}</p>
         <button v-for="n in names" :key="`${n.scope}:${n.name}`" type="button" class="item" :disabled="n.region === null" @click="pickName(n)">
-          <span class="mono">{{ n.name }}</span><small>{{ n.a1 ?? 'no cells' }}</small>
+          <span class="mono">{{ n.name }}</span><small>{{ n.a1 ?? t('no cells') }}</small>
         </button>
         <div class="sep" />
-        <button type="button" class="item" @click="manage">Names…</button>
+        <button type="button" class="item" @click="manage">{{ t('Names…') }}</button>
       </div>
     </Popover>
     <div class="history">
-      <button type="button" class="icon" :disabled="!canUndo" :title="canUndo ? `Undo ${undoLabel}` : 'Nothing to undo'" aria-label="undo" @click="$emit('undo')">
+      <button type="button" class="icon" :disabled="!canUndo" :title="canUndo ? t('Undo {label}', { label: undoLabel }) : t('Nothing to undo')" :aria-label="t('undo')" @click="$emit('undo')">
         <svg viewBox="0 0 20 20" width="18" height="18"><path d="M7 5 3 9l4 4M3 9h8a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
       </button>
-      <button type="button" class="icon" :disabled="!canRedo" :title="canRedo ? `Redo ${redoLabel}` : 'Nothing to redo'" aria-label="redo" @click="$emit('redo')">
+      <button type="button" class="icon" :disabled="!canRedo" :title="canRedo ? t('Redo {label}', { label: redoLabel }) : t('Nothing to redo')" :aria-label="t('redo')" @click="$emit('redo')">
         <svg viewBox="0 0 20 20" width="18" height="18"><path d="m13 5 4 4-4 4m4-4H9a5 5 0 0 0 0 10h2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
       </button>
     </div>
     <span class="eq" aria-hidden="true">=</span>
     <input
       class="text mono"
-      aria-label="cell content"
+      :aria-label="t('cell content')"
       spellcheck="false"
       autocomplete="off"
       :readonly="readonly"

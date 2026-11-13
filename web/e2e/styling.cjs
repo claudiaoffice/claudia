@@ -178,7 +178,7 @@ async function main() {
 
   // the dialog lists the styles and counts
   await page.click('text=Format')
-  await page.click('text=All styles…')
+  await page.click('text=All Styles…')
   await page.waitForSelector('[data-testid=styles-list]')
   assert.match(await page.locator('[data-testid=styles-list] [data-style=body-text-changed]').innerText(), /1 paragraph/)
   await page.screenshot({ path: `${SHOTS}/styling-6-styles.png` })

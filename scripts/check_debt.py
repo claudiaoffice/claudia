@@ -16,9 +16,12 @@ checks are:
 * mypy       types of the sources
 * vulture    code nobody uses (``vulture_whitelist.py`` lists the reasoned exceptions)
 * i18n extraction   ``po/claudia.pot`` is current (E5.7, D31); run ``uv run python scripts/extract_i18n.py`` to fix it
+* i18n merge        every ``po/<language>.po`` holds exactly the strings of ``po/claudia.pot``; run
+             ``uv run python scripts/update_po.py`` to fix it (it keeps the translations, adds what is new untranslated)
 * mo compilation   the Gtk client's ``de`` catalog matches ``po/de.po`` (D160); run
              ``uv run python scripts/compile_mo.py po/de.po de`` to fix it -- there was nothing worth drifting from
              before this round's real German translations existed, which is why this check is new here
+* mo compilation server  the same for the server's own ``de`` catalog (D293)
 * tests      the whole suite, with a note of the slowest ones; it also measures coverage (``--cov``, CODE-01)
 * coverage   each package against its floor in ``pyproject.toml`` (``scripts/check_coverage.py``). The floors are
              measured on Linux with TeX installed, where every test runs; elsewhere this check skips, saying why
@@ -59,6 +62,7 @@ PERF = (
     "packages/claudia-computes/tests/test_cellstyle_performance.py",
 )  # (each runs on its own: the packages' conftest files would clash)
 #: The one browser-driven test: it starts three servers and wants the web app built, so it is its own step (UX-10).
+SERVER_LOCALE_DIR = "packages/claudia-server/src/claudia_server/locale"
 E2E = "tests/e2e"
 DOCS_OUT = "docs/_build/html"
 
@@ -125,7 +129,12 @@ def checks() -> list[Check]:
         Check("mypy", (*run, "mypy", *SOURCES)),
         Check("vulture", (*run, "vulture")),
         Check("i18n extraction", (*run, "python", "scripts/extract_i18n.py", "--check")),
+        Check("i18n merge", (*run, "python", "scripts/update_po.py", "--check")),
         Check("mo compilation", (*run, "python", "scripts/compile_mo.py", "po/de.po", "de", "--check")),
+        Check(
+            "mo compilation server",
+            (*run, "python", "scripts/compile_mo.py", "po/de.po", "de", "--locale-dir", SERVER_LOCALE_DIR, "--check"),
+        ),
         Check(
             "tests",
             (

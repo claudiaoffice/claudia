@@ -4,6 +4,8 @@
 // in-page fetch to another origin: the same "page and socket share one origin" choice the project already made for
 // the Linux shell (D115), and it means none of this ever has to think about CORS.
 
+import { translate as t } from './i18n'
+
 export interface Bookmark {
   /** `protocol//host`, e.g. `https://demo.claudiaoffice.de` — the canonical key, and what every link is built from. */
   origin: string
@@ -85,7 +87,7 @@ export function rename(origin: string, label: string, storage: Pick<Storage, 'ge
 
 /** The label a fresh bookmark gets: the administrator's name if the server has one, else its own host. */
 export function defaultLabel(origin: string, administrator: string | null): string {
-  if (administrator) return `${administrator}'s server`
+  if (administrator) return t('{administrator}\'s server', { administrator })
   try {
     return new URL(origin).host
   } catch {

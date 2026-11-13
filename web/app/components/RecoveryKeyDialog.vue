@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** The key as the server wrote it: 13 groups of 4 letters and digits. */
@@ -32,24 +35,23 @@ async function copy() {
 </script>
 
 <template>
-  <Modal ref="modal" title="Your recovery key" :width="520" locked @close="keepOpen">
+  <Modal ref="modal" :title="t('Your recovery key')" :width="520" locked @close="keepOpen">
     <p class="lead">
-      This is the only way back into <b>{{ doc }}</b> for somebody who has forgotten their password.
-      <template v-if="replacing">The key you had before no longer works.</template>
-      The server does not keep it and will <b>never show it again</b>: write it down or put it in your password manager, and keep it
-      away from the document.
+      <TransText :text="t('This is the only way back into {doc} for somebody who has forgotten their password.')"><template #doc><b>{{ doc }}</b></template></TransText>
+      <template v-if="replacing">{{ t('The key you had before no longer works.') }}</template>
+      <TransText :text="t('The server does not keep it and will {never}: write it down or put it in your password manager, and keep it away from the document.')"><template #never><b>{{ t('never show it again') }}</b></template></TransText>
     </p>
-    <div class="key" data-testid="recovery-key" aria-label="recovery key">
+    <div class="key" data-testid="recovery-key" :aria-label="t('recovery key')">
       <code v-for="(group, i) in recoveryKey.split('-')" :key="i">{{ group }}</code>
     </div>
     <div class="row">
-      <button class="btn" type="button" @click="copy">Copy</button>
-      <span v-if="copied === 'yes'" class="ok" role="status">Copied.</span>
-      <span v-else-if="copied === 'no'" class="hint" role="status">Your browser would not copy it: select the key and copy it yourself.</span>
+      <button class="btn" type="button" @click="copy">{{ t('Copy') }}</button>
+      <span v-if="copied === 'yes'" class="ok" role="status">{{ t('Copied.') }}</span>
+      <span v-else-if="copied === 'no'" class="hint" role="status">{{ t('Your browser would not copy it: select the key and copy it yourself.') }}</span>
     </div>
-    <label class="confirm"><input v-model="stored" type="checkbox" > I have stored the recovery key somewhere safe.</label>
+    <label class="confirm"><input v-model="stored" type="checkbox" > {{ t('I have stored the recovery key somewhere safe.') }}</label>
     <div class="buttons">
-      <button class="btn primary" type="button" :disabled="!stored" @click="emit('done')">Continue</button>
+      <button class="btn primary" type="button" :disabled="!stored" @click="emit('done')">{{ t('Continue') }}</button>
     </div>
   </Modal>
 </template>

@@ -43,8 +43,11 @@ name and a document that does not exist give the same answer. The name `ai` belo
 used.
 
 `"locale"` is optional and always the client's own setting (E5.7, D31/D148 groundwork): there is no account profile
-to keep it on. It is echoed back, normalized, in the welcome and on every connection the hub keeps — nothing reads it
-yet, since no interface string has moved into a catalog. `PROTOCOL_VERSION` is **2** as of this field (was 1).
+to keep it on. It is echoed back, normalized, in the welcome and on every connection the hub keeps, and the server
+says its own messages in it (D293): the `message` of an error, of a refused `hello` and of a `HubError` comes in the
+language of the connection when there is a catalog for it (German now), else in English. `code` and `detail` never
+change with the language, so a client branches on those. What the document packages raise is English for now (E5.17).
+`PROTOCOL_VERSION` is **2** as of this field (was 1).
 
 When the handshake fails the server answers and closes the socket with a code: 4400 bad request, 4401 unauthorized,
 4403 foreign origin or host, 4404 no such document, 4408 no hello in time, 1013 too many connections, too many people

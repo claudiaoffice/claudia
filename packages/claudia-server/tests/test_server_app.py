@@ -286,3 +286,40 @@ def test_a_configured_origin_may_connect_and_gets_cors(provider, directory):
 
 def test_the_landing_page_names_no_secrets(client):
     assert not re.search(r"token|secret|key", client.get("/").text, re.IGNORECASE)
+
+
+def test_a_refused_request_is_answered_in_the_language_of_the_connection(client):
+    """E5.7, D31, D293: the locale of ``hello`` is the language of every message the server writes for that window."""
+    german = Peer(client, create=True, locale="de")
+    english = Peer(client, locale="en")
+    asked = {"limit": 0}
+    assert german.request("log", asked)["error"]["message"] == "log: limit muss von 1 bis 5000 gehen"
+    assert english.request("log", asked)["error"]["message"] == "log: limit must be from 1 to 5000"
+    german.close()
+    english.close()
+
+
+def test_a_refused_hello_is_answered_in_the_language_of_the_connection(client):
+    Peer(client, create=True).close()
+    wrong = Peer(client, user="ann", password="not the password", locale="de")
+    assert wrong.hello["error"]["message"] == "Anmeldedaten fehlen oder sind falsch"
+    wrong.close()
+    reserved = Peer(client, user="AI", password=PASSWORD, create=True, locale="de")
+    assert "KI-Assistenten" in reserved.hello["error"]["message"]
+    reserved.close()
+
+
+def test_a_message_in_a_language_without_a_catalog_stays_english(client):
+    peer = Peer(client, create=True, locale="fr")
+    assert peer.request("log", {"limit": 0})["error"]["message"] == "log: limit must be from 1 to 5000"
+    peer.close()
+
+
+def test_a_language_chosen_while_connected_is_the_language_of_the_next_answer(client):
+    """D294: ``set_locale`` is for a person who switches the interface language without reconnecting."""
+    peer = Peer(client, create=True, locale="en")
+    asked = {"limit": 0}
+    assert peer.request("log", asked)["error"]["message"] == "log: limit must be from 1 to 5000"
+    assert peer.request("set_locale", {"locale": "de"})["result"] == {"locale": "de"}
+    assert peer.request("log", asked)["error"]["message"] == "log: limit muss von 1 bis 5000 gehen"
+    peer.close()

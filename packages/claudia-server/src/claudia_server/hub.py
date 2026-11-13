@@ -41,6 +41,7 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
+from .i18n import localized, msg
 from .protocol import (
     DEFAULT_LOCALE,
     PROTOCOL_VERSION,
@@ -69,7 +70,8 @@ DEFAULT_MAX_DOCUMENTS = 1000  # room for a team for years, but not for anybody w
 
 
 class HubError(Exception):
-    """Opening a document failed; ``code`` is one of ``protocol.ERROR_CODES``."""
+    """Opening a document failed; ``code`` is one of ``protocol.ERROR_CODES``; ``message`` is English or a
+    ``claudia_server.i18n.Message`` that the connection says in its own language."""
 
     def __init__(self, code: str, message: str):
         super().__init__(message)
@@ -239,17 +241,23 @@ class Connection:
                 hosted.restore,
                 hosted.broadcast,
                 hosted.note_ai_mode,
+                self.set_locale,
             )
             result = hosted.methods.dispatch(context, name, params)
             frame = {"id": request_id, "ok": True, "result": result}
             json.dumps(frame, allow_nan=False)  # make sure it can be sent before claiming success
         except RequestError as error:
-            frame = {"id": request_id, "ok": False, "error": error.to_dict()}
+            frame = {"id": request_id, "ok": False, "error": error.to_dict(self.locale)}
         except Exception:
             log.exception("request failed in %s", hosted.id)
-            frame = {"id": request_id, "ok": False, "error": {"code": "internal", "message": "internal server error"}}
+            internal = localized(msg("internal server error"), self.locale)
+            frame = {"id": request_id, "ok": False, "error": {"code": "internal", "message": internal}}
         hosted.touch()
         self.deliver(frame)
+
+    def set_locale(self, locale: str) -> None:
+        """The person chose another interface language in this window (D294): later answers are in it."""
+        self.locale = normalize_locale(locale)
 
     def close(self) -> None:
         """The window is gone. What its person shows or holds goes with their last window."""
@@ -350,7 +358,9 @@ class HostedDocument:
     def connect(self, account: Account, send: Callable[[str], None], *, locale: str = DEFAULT_LOCALE) -> Connection:
         """Add a window. ``HubError('unavailable')`` if the document is full."""
         if not account.system and len(self.humans()) >= self.max_connections:
-            raise HubError("unavailable", f"{self.id} already has {self.max_connections} connections")
+            raise HubError(
+                "unavailable", msg("{id} already has {limit} connections", id=self.id, limit=self.max_connections)
+            )
         connection = Connection(self, account, send, locale=locale)
         self.connections.add(connection)
         if not account.system:
@@ -476,7 +486,7 @@ class Hub:
     def check_id(doc_id: object) -> str:
         """The id if it is a valid document id, else ``HubError('bad_request')``."""
         if not isinstance(doc_id, str) or not _DOC_ID.fullmatch(doc_id):
-            raise HubError("bad_request", "document ids are 1-64 letters, digits, '-' or '_'")
+            raise HubError("bad_request", msg("document ids are 1-64 letters, digits, '-' or '_'"))
         return doc_id
 
     def exists(self, doc_id: str) -> bool:
@@ -515,7 +525,10 @@ class Hub:
             self._known.update(info.id for info in await asyncio.to_thread(self.provider.documents))
             self._counted = True
         if len(self._known) >= self.max_documents:
-            raise HubError("unavailable", f"this server holds {self.max_documents} documents, the most it may hold")
+            raise HubError(
+                "unavailable",
+                msg("this server holds {limit} documents, the most it may hold", limit=self.max_documents),
+            )
 
     async def open(self, doc_id: str, create: bool = False) -> HostedDocument:
         """The open document, loaded from storage (or created, if allowed) first."""
@@ -529,17 +542,19 @@ class Hub:
                 try:
                     document = await asyncio.to_thread(self.provider.open, doc_id)
                 except DocumentSealed as exc:
-                    raise HubError("sealed", f"{doc_id} cannot be opened yet: {exc}") from exc
+                    raise HubError("sealed", msg("{id} cannot be opened yet: {reason}", id=doc_id, reason=exc)) from exc
                 except ValueError as exc:
-                    raise HubError("bad_request", f"{doc_id} cannot be opened: {exc}") from exc
+                    raise HubError(
+                        "bad_request", msg("{id} cannot be opened: {reason}", id=doc_id, reason=exc)
+                    ) from exc
                 except OSError as exc:
                     log.exception("cannot read %s", doc_id)
-                    raise HubError("internal", f"{doc_id} cannot be read") from exc
+                    raise HubError("internal", msg("{id} cannot be read", id=doc_id)) from exc
             elif create and self.allow_create:
                 await self.ensure_room()
                 document = await asyncio.to_thread(self.provider.create, doc_id)
             else:
-                raise HubError("not_found", f"no document {doc_id!r}")
+                raise HubError("not_found", msg("no document {id!r}", id=doc_id))
             hosted = HostedDocument(
                 doc_id,
                 document,

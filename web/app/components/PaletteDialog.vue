@@ -11,6 +11,9 @@ import { computed, ref, watch } from 'vue'
 import { contrast, troubleWith, troubles, type ColourRole } from '~/lib/roles'
 import { roleIn } from '~/lib/roles'
 import type { StyleHost } from '~/lib/style-host'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ host: StyleHost; builtin?: ColourRole[] }>()
 const emit = defineEmits<{ close: []; reset: [] }>()
@@ -78,10 +81,10 @@ async function commit() {
 </script>
 
 <template>
-  <Modal title="Colours" :width="540" @close="emit('close')">
-    <p class="lead">A colour here means something. Change it and everything that means the same thing changes with it.</p>
+  <Modal :title="t('Colours')" :width="540" @close="emit('close')">
+    <p class="lead">{{ t('A colour here means something. Change it and everything that means the same thing changes with it.') }}</p>
 
-    <ul class="roles" role="listbox" aria-label="Colour roles" data-testid="role-list">
+    <ul class="roles" role="listbox" :aria-label="t('Colour roles')" data-testid="role-list">
       <li v-for="r in host.roles" :key="r.id" role="option" :aria-selected="r.id === picked" :data-role="r.id">
         <button type="button" :class="{ on: r.id === picked }" @click="picked = r.id">
           <i :style="{ background: r.colour }" />
@@ -96,34 +99,34 @@ async function commit() {
       <header>
         <i :style="{ background: current.colour }" />
         <span class="name">{{ current.name }}</span>
-        <span class="used">used by {{ uses[current.id] ?? 0 }} {{ (uses[current.id] ?? 0) === 1 ? 'style' : 'styles' }}</span>
+        <span class="used">{{ (uses[current.id] ?? 0) === 1 ? t('used by 1 style') : t('used by {count} styles', { count: uses[current.id] ?? 0 }) }}</span>
         <label class="hex">
-          <span>Hex</span>
-          <input v-model="typed" class="mono" spellcheck="false" :disabled="off" :aria-label="`${current.name} as hex`" @keydown.enter.prevent="commit" >
+          <span>{{ t('Hex') }}</span>
+          <input v-model="typed" class="mono" spellcheck="false" :disabled="off" :aria-label="t('{name} as hex', { name: current.name })" @keydown.enter.prevent="commit" >
         </label>
-        <button class="btn primary" type="button" :disabled="off || !changed" data-testid="apply-role" @click="commit">Change it</button>
+        <button class="btn primary" type="button" :disabled="off || !changed" data-testid="apply-role" @click="commit">{{ t('Change it') }}</button>
       </header>
 
       <!-- warned, never prevented: what it will cost, in plain words -->
       <div v-if="wouldBreak.length" class="warn" data-testid="would-break">
         <p v-for="said in wouldBreak" :key="said ?? ''">{{ said }}</p>
-        <p class="anyway">You can change it anyway — this is a warning, not a refusal.</p>
+        <p class="anyway">{{ t('You can change it anyway — this is a warning, not a refusal.') }}</p>
       </div>
 
       <div v-if="readings.length" class="readings">
         <!-- These verdicts are about the colour the role *has*. While a different one is typed above, the warning
              there is about what it *would* become, and saying so keeps the two from reading as contradictions. -->
-        <h4>Read against{{ changed ? ' — as it is now' : '' }}</h4>
+        <h4>{{ changed ? t('Read against — as it is now') : t('Read against') }}</h4>
         <ul>
           <li v-for="r in readings" :key="`${r.foreground}-${r.background}`">
-            <span class="pair">{{ host.roles.find((x) => x.id === r.foreground)?.name ?? r.foreground }} on {{ host.roles.find((x) => x.id === r.background)?.name ?? r.background }}</span>
-            <span class="verdict" :class="{ bad: !r.ok }">{{ r.ok ? (r.words ? 'Easy to read' : 'Easy to see') : r.words ? 'Hard to read' : 'Too faint' }}</span>
+            <span class="pair">{{ t('{foreground} on {background}', { foreground: host.roles.find((x) => x.id === r.foreground)?.name ?? r.foreground, background: host.roles.find((x) => x.id === r.background)?.name ?? r.background }) }}</span>
+            <span class="verdict" :class="{ bad: !r.ok }">{{ r.ok ? (r.words ? t('Easy to read') : t('Easy to see')) : r.words ? t('Hard to read') : t('Too faint') }}</span>
           </li>
         </ul>
       </div>
 
       <div v-if="reached.length" class="reached">
-        <h4>What changes with it</h4>
+        <h4>{{ t('What changes with it') }}</h4>
         <ul>
           <li v-for="s in reached" :key="s.id">{{ s.name }}</li>
         </ul>
@@ -131,13 +134,13 @@ async function commit() {
     </section>
 
     <p v-if="failing.length" class="standing" data-testid="standing-trouble">
-      <strong>In this document now:</strong>
+      <strong>{{ t('In this document now:') }}</strong>
       <span v-for="said in failing" :key="said ?? ''">{{ said }}</span>
     </p>
 
     <div class="buttons">
-      <button v-if="builtin?.length" class="btn" type="button" :disabled="off" data-testid="reset-palette" @click="emit('reset')">The colours it started with</button>
-      <button class="btn primary" type="button" @click="emit('close')">Done</button>
+      <button v-if="builtin?.length" class="btn" type="button" :disabled="off" data-testid="reset-palette" @click="emit('reset')">{{ t('The colours it started with') }}</button>
+      <button class="btn primary" type="button" @click="emit('close')">{{ t('Done') }}</button>
     </div>
   </Modal>
 </template>

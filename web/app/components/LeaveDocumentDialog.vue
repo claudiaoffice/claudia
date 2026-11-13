@@ -3,6 +3,9 @@
 // removing you — not the password that opened this connection a moment ago, in case somebody is still at your desk.
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: BaseSession }>()
 const emit = defineEmits<{ close: []; left: [] }>()
@@ -18,16 +21,15 @@ async function leave() {
 </script>
 
 <template>
-  <Modal title="Leave this document" @close="emit('close')">
-    <p class="lead">
-      You will no longer be able to open <b>{{ session.state.doc }}</b>, unless somebody adds you again. Confirm it is you with your own current
-      password.
-    </p>
+  <Modal :title="t('Leave this document')" @close="emit('close')">
+    <TransText tag="p" class="lead" :text="t('You will no longer be able to open {doc}, unless somebody adds you again. Confirm it is you with your own current password.')">
+      <template #doc><b>{{ session.state.doc }}</b></template>
+    </TransText>
     <form class="form" @submit.prevent="leave">
-      <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" ></label>
+      <label class="field">{{ t('Your password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="busy || !password">Leave document</button>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
+        <button class="btn primary" type="submit" :disabled="busy || !password">{{ t('Leave document') }}</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
       </div>
     </form>
   </Modal>

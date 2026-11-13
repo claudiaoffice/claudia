@@ -29,6 +29,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
+from .i18n import msg
+
 ROLES = ("owner", "editor", "viewer")
 WRITE_ROLES = ("owner", "editor")
 _RANK = {"viewer": 0, "editor": 1, "owner": 2}
@@ -248,7 +250,7 @@ class ScryptDirectory:
         """The account if name and password match a user of ``doc_id``, else ``None``."""
         name, password = credentials.user, credentials.password
         if isinstance(name, str) and is_reserved(name):
-            raise AuthRefused(f"The name “{AI_USER}” belongs to the AI assistant. Choose another name.")
+            raise AuthRefused(msg("The name “{name}” belongs to the AI assistant. Choose another name.", name=AI_USER))
         if not (isinstance(name, str) and isinstance(password, str)):
             return None
         record = self._users.get((doc_id, normalized(name)))

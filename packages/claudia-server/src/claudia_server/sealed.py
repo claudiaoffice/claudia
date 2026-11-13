@@ -76,6 +76,7 @@ from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Snapsh
 from .auth import AI_USER, Account, AuthRefused, Credentials, is_reserved
 from .filestore import JournalStore, replay
 from .hub import DocumentSealed, StoredInfo
+from .i18n import msg
 from .state import private_dir
 
 log = logging.getLogger(__name__)
@@ -252,7 +253,7 @@ class SealedDocuments:
         editor who gets in leaves the keys waiting for ``open``."""
         name, password = credentials.user, credentials.password
         if isinstance(name, str) and is_reserved(name):
-            raise AuthRefused(f"The name “{AI_USER}” belongs to the AI assistant. Choose another name.")
+            raise AuthRefused(msg("The name “{name}” belongs to the AI assistant. Choose another name.", name=AI_USER))
         if not (isinstance(name, str) and isinstance(password, str)):
             return None
         try:

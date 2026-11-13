@@ -3,6 +3,18 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-13
+
+The function catalog can be said in another language (E13.8, D294); the package still carries no catalog.
+
+### Added
+- `FunctionHelp.translated(translate)`: the entry with its description, tooltip and help text said by the function
+  `translate` (the identity gives the same entry); `FunctionHelp.examples` holds a library function's worked examples.
+- `translatable_texts()`: every text a translator is given for the catalog (the descriptions, the notes of examples and
+  the two wordings of an example, `functions.base.GIVES` and `GIVES_WITH`).
+- `Bound.get_tooltip(translate)` and `Bound.get_help(translate)` take the same function, and
+  `functions.base.example_lines(examples, translate)` puts a function's examples into lines of text.
+
 ## [0.3.0] - 2026-11-12
 
 The styling-suite plan, steps 1.1 to 2.6 (D300–D318).

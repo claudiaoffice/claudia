@@ -8,6 +8,8 @@
 
 import { onBeforeUnmount, onMounted } from 'vue'
 
+import { translate as t } from './i18n'
+
 export interface KeyChord {
   /** What the chord is called, and — without `code` — the character the key types. */
   key: string
@@ -41,18 +43,18 @@ export interface KeyLike {
 /** The GNOMEish defaults every workspace starts from: Undo, Redo, Save. Each app appends its own (Shift+F10, …). */
 export function sharedShortcuts(actions: { undo: () => void; redo: () => void; save: () => void }): ShortcutDef[] {
   return [
-    { id: 'edit.undo', label: 'Undo', chord: { key: 'z', ctrl: true }, run: actions.undo },
-    { id: 'edit.redo', label: 'Redo', chord: { key: 'z', ctrl: true, shift: true }, run: actions.redo },
-    { id: 'file.save', label: 'Save', chord: { key: 's', ctrl: true }, run: actions.save },
+    { id: 'edit.undo', get label() { return t('Undo') }, chord: { key: 'z', ctrl: true }, run: actions.undo },
+    { id: 'edit.redo', get label() { return t('Redo') }, chord: { key: 'z', ctrl: true, shift: true }, run: actions.redo },
+    { id: 'file.save', get label() { return t('Save') }, chord: { key: 's', ctrl: true }, run: actions.save },
   ]
 }
 
 /** `Ctrl+Shift+Z` for the Config ▸ Shortcuts list and the menu's `hint`. */
 export function chordLabel(chord: KeyChord): string {
   const parts: string[] = []
-  if (chord.ctrl) parts.push('Ctrl')
-  if (chord.shift) parts.push('Shift')
-  if (chord.alt) parts.push('Alt')
+  if (chord.ctrl) parts.push(t('Ctrl'))
+  if (chord.shift) parts.push(t('Shift'))
+  if (chord.alt) parts.push(t('Alt'))
   parts.push(chord.key.length === 1 ? chord.key.toUpperCase() : chord.key)
   return parts.join('+')
 }

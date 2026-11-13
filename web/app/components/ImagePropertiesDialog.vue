@@ -11,6 +11,9 @@ import { computed } from 'vue'
 import { formatByteSize, imageByteSize, imageDataUrl } from '~/lib/images'
 import { ago, colorOf, inkOn, initial } from '~/lib/people'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: SlideSession; object: SlideObject }>()
 const emit = defineEmits<{ close: [] }>()
@@ -23,9 +26,9 @@ const thumbSrc = computed(() => (asset.value ? imageDataUrl(asset.value) : ''))
 const formatLabel = computed(() => {
   const a = asset.value
   if (!a) return ''
-  if (a.format === 'svg') return 'SVG (vector)'
-  if (a.format === 'gif') return a.animated ? 'GIF (animated)' : 'GIF'
-  if (a.format === 'png') return a.animated ? 'PNG (animated)' : 'PNG'
+  if (a.format === 'svg') return t('SVG (vector)')
+  if (a.format === 'gif') return a.animated ? t('GIF (animated)') : 'GIF'
+  if (a.format === 'png') return a.animated ? t('PNG (animated)') : 'PNG'
   return a.format.toUpperCase()
 })
 const byteSize = computed(() => (asset.value ? formatByteSize(imageByteSize(asset.value.data)) : ''))
@@ -33,7 +36,7 @@ const importedByColor = computed(() => (imported.value ? colorOf(state, imported
 </script>
 
 <template>
-  <Modal title="Image properties" :width="480" @close="emit('close')">
+  <Modal :title="t('Image properties')" :width="480" @close="emit('close')">
     <div v-if="asset && imported" class="props">
       <div class="head">
         <img class="thumb" :src="thumbSrc" alt="" >
@@ -45,15 +48,15 @@ const importedByColor = computed(() => (imported.value ? colorOf(state, imported
 
       <dl class="facts">
         <div class="row">
-          <dt>Format</dt>
+          <dt>{{ t('Format') }}</dt>
           <dd>{{ formatLabel }}</dd>
         </div>
         <div class="row">
-          <dt>Dimensions</dt>
-          <dd>{{ asset.width }} × {{ asset.height }} px</dd>
+          <dt>{{ t('Dimensions') }}</dt>
+          <dd>{{ t('{width} × {height} px', { width: asset.width, height: asset.height }) }}</dd>
         </div>
         <div class="row">
-          <dt>File size</dt>
+          <dt>{{ t('File size') }}</dt>
           <dd>{{ byteSize }}</dd>
         </div>
       </dl>
@@ -62,20 +65,20 @@ const importedByColor = computed(() => (imported.value ? colorOf(state, imported
 
       <dl class="facts">
         <div class="row">
-          <dt>Imported by</dt>
+          <dt>{{ t('Imported by') }}</dt>
           <dd class="person">
             <span class="avatar" :style="{ background: importedByColor, color: inkOn(importedByColor) }">{{ initial(imported.imported_by) }}</span>
             {{ imported.imported_by }}
           </dd>
         </div>
         <div class="row">
-          <dt>Imported</dt>
+          <dt>{{ t('Imported') }}</dt>
           <dd>{{ ago(imported.imported_at) }}</dd>
         </div>
         <div class="row">
-          <dt>Source</dt>
+          <dt>{{ t('Source') }}</dt>
           <dd>
-            Imported from disk
+            {{ t('Imported from disk') }}
             <div v-if="imported.source_path" class="path">{{ imported.source_path }}</div>
           </dd>
         </div>
@@ -83,7 +86,7 @@ const importedByColor = computed(() => (imported.value ? colorOf(state, imported
     </div>
 
     <div class="buttons">
-      <button class="btn primary" type="button" @click="emit('close')">Close</button>
+      <button class="btn primary" type="button" @click="emit('close')">{{ t('Close') }}</button>
     </div>
   </Modal>
 </template>

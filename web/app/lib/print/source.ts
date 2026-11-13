@@ -23,6 +23,7 @@ import { DEFAULT_PAGE, DEFAULT_PRINT, describe, LAYOUTS, MARGINS, NO_MARGIN, SLI
 import type { PrintExtras, TextSession } from '../text-session'
 import type { SlideSession } from '../slide-session'
 
+import { translate as t } from '../i18n'
 /** A picture the document holds, as the server sends it: `data` is base64. */
 export interface PrintImage {
   id: string
@@ -90,7 +91,7 @@ export function textSource(session: TextSession): PrintSource {
   const state = session.state
   let extras: PrintExtras | null = null
   return {
-    back: 'the text',
+    back: t('the text'),
     title: () => state.doc || 'document',
     canChange: () => !session.readOnly && state.page !== null,
     page: () => state.page ?? DEFAULT_PAGE,
@@ -141,7 +142,7 @@ export function slideSource(session: SlideSession): PrintSource {
   const setup = () => state.printSetup ?? DEFAULT_PRINT
   const canChange = () => !session.readOnly && state.printSetup !== null
   return {
-    back: 'the slides',
+    back: t('the slides'),
     title: () => state.doc || 'presentation',
     canChange,
     page: () => setup().page,

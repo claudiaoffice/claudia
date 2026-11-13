@@ -31,6 +31,7 @@ import urllib.request
 from collections.abc import Sequence
 from pathlib import Path
 
+from .i18n import translate as _
 from .paths import default_repo
 
 __all__ = ["LocalServer", "ServerStartError", "find_server_python", "free_port", "server_command"]
@@ -168,14 +169,19 @@ class LocalServer:
         code = process.poll()
         if code is not None:
             self.stop()
-            raise ServerStartError(f"the server stopped at start-up (exit code {code}){self._what_it_said()}")
+            raise ServerStartError(
+                _("The server stopped at start-up (exit code {code}).").format(code=code) + self._what_it_said()
+            )
         if self._answers():
             self._ready = True
             return True
         if time.monotonic() - self._spawned_at > self._timeout:
             self.stop()
             raise ServerStartError(
-                f"the server did not answer at {self.url} within {self._timeout:g} seconds{self._what_it_said()}"
+                _("The server did not answer at {url} within {seconds} seconds.").format(
+                    url=self.url, seconds=f"{self._timeout:g}"
+                )
+                + self._what_it_said()
             )
         return False
 
@@ -220,4 +226,6 @@ class LocalServer:
         if self._log is None or not self._log.exists():
             return ""
         tail = self._log.read_text(encoding="utf-8", errors="replace")[-_LOG_TAIL:].strip()
-        return f"\n--- what the server printed ({self._log}) ---\n{tail}" if tail else ""
+        if not tail:
+            return ""
+        return "\n" + _("--- What the server printed ({log}) ---").format(log=self._log) + f"\n{tail}"

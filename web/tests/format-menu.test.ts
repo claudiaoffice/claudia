@@ -50,7 +50,7 @@ function menu(over: Partial<FormatMenu> = {}) {
 describe('the Format menu (D300)', () => {
   it('has four entries and the list in this order, with Colours set apart', () => {
     const { items } = menu()
-    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Apply style', 'Edit this style…', 'All styles…', 'List', '—', 'Colours…'])
+    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Apply Style', 'Edit This Style…', 'All Styles…', 'List', '—', 'Colours…'])
     // The list has no action id: the native shells' manifests have the four of D300 and nothing else yet (E9.21).
     expect(items.map((i) => i.id).filter(Boolean)).toEqual(['format.apply-style', 'format.look', 'format.all-styles', 'format.colours'])
   })

@@ -2,6 +2,9 @@
 // The "Last changed by … · Apply/Cancel" row every server settings page ends with — identical on all three, so it's
 // factored out once rather than copied three times.
 import { ago } from '~/lib/people'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 defineProps<{ changed: { by: string; at: string } | null; busy: boolean; error: string }>()
 const emit = defineEmits<{ cancel: []; apply: [] }>()
@@ -12,11 +15,11 @@ const emit = defineEmits<{ cancel: []; apply: [] }>()
     <p v-if="error" class="error" role="alert">{{ error }}</p>
     <div class="row">
       <div class="changed">
-        <template v-if="changed">Last changed by <strong>{{ changed.by }}</strong> · {{ ago(changed.at) }}</template>
+        <TransText v-if="changed" :text="t('Last changed by {by} · {when}', { when: ago(changed.at) })"><template #by><strong>{{ changed.by }}</strong></template></TransText>
       </div>
       <div class="buttons">
-        <button class="btn" type="button" :disabled="busy" @click="emit('cancel')">Cancel</button>
-        <button class="btn primary" type="button" :disabled="busy" @click="emit('apply')">Apply</button>
+        <button class="btn" type="button" :disabled="busy" @click="emit('cancel')">{{ t('Cancel') }}</button>
+        <button class="btn primary" type="button" :disabled="busy" @click="emit('apply')">{{ t('Apply') }}</button>
       </div>
     </div>
   </div>

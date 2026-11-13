@@ -18,6 +18,7 @@ import re
 from dataclasses import dataclass
 
 from ..formula.forms import FORMS
+from .base import GIVES, GIVES_WITH, Example, Translate, example_lines
 from .builtin import builtin_registry
 from .registry import FunctionRegistry
 
@@ -35,6 +36,31 @@ class FunctionHelp:
     tooltip: str
     help: str
     source: str
+    examples: tuple[Example, ...] = ()  # a library function's worked examples (a form has none)
+
+    def translated(self, translate: Translate) -> FunctionHelp:
+        """The same entry with its words said by ``translate``: the description, the tooltip and the help text, whose
+        examples are put together again in that language. This package carries no catalog; whoever has one (the
+        server, by the language of the connection) passes it in (E13.8, D294). A tooltip or help text that was
+        written by hand rather than derived (a function with its own ``get_tooltip``) is left as it is. The entry
+        itself, not a copy, comes back when nothing changed, so the identity gives the same object."""
+        if not self.description:
+            return self
+        description = translate(self.description)
+        derived_tooltip = f"{self.signature}: {self.description}"
+        tooltip = f"{self.signature}: {description}" if self.tooltip == derived_tooltip else self.tooltip
+        if self.source == "core":
+            help_text = tooltip if tooltip != self.tooltip else self.help
+        else:
+            derived_help = "\n".join([self.tooltip, "", *example_lines(self.examples)])
+            help_text = (
+                "\n".join([tooltip, "", *example_lines(self.examples, translate)])
+                if self.help == derived_help
+                else self.help
+            )
+        if (description, tooltip, help_text) == (self.description, self.tooltip, self.help):
+            return self
+        return FunctionHelp(self.name, self.signature, description, tooltip, help_text, self.source, self.examples)
 
 
 def _collapsed(text: str) -> str:
@@ -58,7 +84,15 @@ def function_catalog(registry: FunctionRegistry | None = None) -> list[FunctionH
     admin-installed functions (E4.6) would pass its own."""
     registry = builtin_registry() if registry is None else registry
     library = [
-        FunctionHelp(bound.name, bound.signature, bound.description, bound.get_tooltip(), bound.get_help(), "library")
+        FunctionHelp(
+            bound.name,
+            bound.signature,
+            bound.description,
+            bound.get_tooltip(),
+            bound.get_help(),
+            "library",
+            bound.examples,
+        )
         for bound in registry
     ]
     core = [_core_entry(name) for name in FORMS]
@@ -91,3 +125,16 @@ def get_function(name: str, catalog: list[FunctionHelp] | None = None) -> Functi
     catalog = function_catalog() if catalog is None else catalog
     wanted = name.strip().upper()
     return next((entry for entry in catalog if entry.name == wanted), None)
+
+
+def translatable_texts(catalog: list[FunctionHelp] | None = None) -> list[str]:
+    """Every text of the catalog that a translator is given, sorted: each function's description, the notes of the
+    examples and the wordings of an example (the formula and what it gives are not words). ``scripts/extract_i18n.py``
+    reads this, since the descriptions are data of the library and not ``_("...")`` calls (E13.8)."""
+    catalog = function_catalog() if catalog is None else catalog
+    texts = {GIVES, GIVES_WITH}
+    for entry in catalog:
+        if entry.description:
+            texts.add(entry.description)
+        texts.update(example.note for example in entry.examples if example.note)
+    return sorted(texts)

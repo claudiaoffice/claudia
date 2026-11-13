@@ -27,8 +27,8 @@ from claudia_server.protocol import (
 )
 
 
-def ctx_for(doc, account, *, users=("ann", "ben"), limits=None):
-    return Context(doc, account, limits or Limits(), users=lambda: list(users), lock_seconds=30.0)
+def ctx_for(doc, account, *, users=("ann", "ben"), limits=None, locale="en"):
+    return Context(doc, account, limits or Limits(), users=lambda: list(users), lock_seconds=30.0, locale=locale)
 
 
 def call(doc, account, name, params=None, *, table=core_methods, **options):
@@ -119,6 +119,20 @@ def test_context_locale_defaults_and_is_carried_through_to_a_method(doc, ann):
 
     ctx = Context(doc, ann, Limits(), users=lambda: ["ann"], lock_seconds=30.0, locale="de-DE")
     assert table.dispatch(ctx, "echo_locale", None) == {"locale": "de-DE"}
+
+
+def test_set_locale_changes_the_language_of_the_window_and_normalizes_it(doc, ann):
+    """D294: the person switches the interface language while connected; the next answer is in it."""
+    chosen = []
+    ctx = Context(doc, ann, Limits(), users=lambda: ["ann"], lock_seconds=30.0, set_locale=chosen.append)
+    assert core_methods.dispatch(ctx, "set_locale", {"locale": "de"}) == {"locale": "de"}
+    assert core_methods.dispatch(ctx, "set_locale", {"locale": "not a locale!"}) == {"locale": DEFAULT_LOCALE}
+    assert chosen == ["de", DEFAULT_LOCALE]
+
+
+def test_a_viewer_may_set_their_own_locale(doc):
+    viewer = Account("vera", "viewer")
+    assert core_methods.dispatch(ctx_for(doc, viewer), "set_locale", {"locale": "de"}) == {"locale": "de"}
 
 
 def test_request_error_detail_is_only_in_to_dict_when_given():
@@ -422,6 +436,25 @@ def test_help_topic_gives_the_full_text_by_id(doc, ann):
     topic = call(doc, ann, "help_topic", {"id": "computes.writing-a-formula"})
     assert topic["title"] == "How do I write a formula?"
     assert "=A1+A2" in topic["body"]
+
+
+def test_help_is_in_the_language_of_the_connection_where_it_has_been_translated(ann):
+    """E13.8, D294: the connection's own locale picks the translation; English is what is there without one."""
+    computes = _app_document(WorkbookModel)
+    german = call(computes, ann, "help_search", {"query": "Formel"}, table=computes_methods, locale="de")
+    assert "Wie schreibe ich eine Formel?" in [topic["title"] for topic in german]
+    english = call(computes, ann, "help_search", {"query": "formula"}, table=computes_methods, locale="en")
+    assert "How do I write a formula?" in [topic["title"] for topic in english]
+    topic = call(
+        computes, ann, "help_topic", {"id": "computes.writing-a-formula"}, table=computes_methods, locale="de-AT"
+    )
+    assert (topic["language"], topic["title"]) == ("de", "Wie schreibe ich eine Formel?")
+    assert "=A1+A2" in topic["body"]
+
+
+def test_help_in_a_language_without_translations_is_english(ann):
+    topic = call(_app_document(WorkbookModel), ann, "help_topic", {"id": "computes.writing-a-formula"}, locale="fr")
+    assert (topic["language"], topic["title"]) == ("en", "How do I write a formula?")
 
 
 def test_help_topic_is_not_scoped_by_app_unlike_search(ann):

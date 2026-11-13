@@ -7,6 +7,9 @@ import { adminApi, AdminApiError, hasNoAdministrator } from '~/lib/admin-api'
 import { useAdminSession } from '~/lib/admin-session'
 import { friendlyLabel } from '~/lib/connection'
 import { defaultLabel, upsert } from '~/lib/server-bookmarks'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const host = location.host
 const origin = location.origin
@@ -37,7 +40,7 @@ onMounted(async () => {
     label.value = friendlyLabel(origin, host)
     if (!noAdministrator.value) await session.refresh()
   } catch (e) {
-    loadError.value = e instanceof AdminApiError ? e.message : 'Could not reach this server.'
+    loadError.value = e instanceof AdminApiError ? e.message : t('Could not reach this server.')
   } finally {
     loading.value = false
   }
@@ -60,7 +63,7 @@ function close() {
         <AdminAccessDocuments v-else :token="session.token.value!" />
       </AdminShell>
     </template>
-    <p v-else class="loading">Loading…</p>
+    <p v-else class="loading">{{ t('Loading…') }}</p>
   </div>
 </template>
 

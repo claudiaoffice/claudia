@@ -34,6 +34,7 @@ from claudia_core import (
     validate_css,
 )
 
+from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
 from .style_targets import OBJECTS, StyleTarget, add_target_methods
 
@@ -51,14 +52,14 @@ def _rev(ctx: Context) -> str | None:
 def _book(ctx: Context) -> StyleBook:
     book = getattr(ctx.document.model, "styles", None)
     if not isinstance(book, StyleBook):
-        raise RequestError("bad_request", "this document has no styles")
+        raise RequestError("bad_request", msg("this document has no styles"))
     return book
 
 
 def _palette(ctx: Context) -> Palette:
     palette = getattr(ctx.document.model, "palette", None)
     if not isinstance(palette, Palette):
-        raise RequestError("bad_request", "this document has no palette")
+        raise RequestError("bad_request", msg("this document has no palette"))
     return palette
 
 
@@ -68,7 +69,7 @@ def own_css(properties: dict | None, text: str | None) -> dict[str, str] | None:
     Public because an app's own ``deviate_style`` takes its CSS exactly the same way.
     """
     if properties is not None and text is not None:
-        raise RequestError("bad_request", "give the CSS as set properties or as text, not both")
+        raise RequestError("bad_request", msg("give the CSS as set properties or as text, not both"))
     if text is None:
         return properties
     css, problems = parse_css(text)
@@ -82,15 +83,15 @@ def _roles_from(items: Iterable[object]) -> tuple[ColourRole, ...]:
     roles = []
     for item in items:
         if not isinstance(item, dict):
-            raise RequestError("bad_request", "every role is an object with id, name, purpose and colour")
+            raise RequestError("bad_request", msg("every role is an object with id, name, purpose and colour"))
         try:
             roles.append(ColourRole(item["id"], item["name"], item["purpose"], item["colour"]))
         except KeyError as exc:
-            raise RequestError("bad_request", f"a role is missing {exc.args[0]!r}") from None
+            raise RequestError("bad_request", msg("a role is missing {key!r}", key=exc.args[0])) from None
         if not all(isinstance(value, str) for value in (roles[-1].id, roles[-1].name, roles[-1].colour)):
-            raise RequestError("bad_request", "a role's id, name and colour are text")
+            raise RequestError("bad_request", msg("a role's id, name and colour are text"))
     if len(roles) > MAX_SENT_ROLES:
-        raise RequestError("bad_request", f"a palette holds at most {MAX_SENT_ROLES} colour roles")
+        raise RequestError("bad_request", msg("a palette holds at most {limit} colour roles", limit=MAX_SENT_ROLES))
     return tuple(roles)
 
 
@@ -205,7 +206,13 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
         allowed(ctx)
         model = ctx.document.model
         if len(objects) > MAX_STYLED_OBJECTS or not all(isinstance(one, str) for one in objects):
-            raise RequestError("bad_request", f"objects must be a list of at most {MAX_STYLED_OBJECTS} object ids")
+            raise RequestError(
+                "bad_request",
+                msg(
+                    "objects must be a list of at most {limit} object ids",
+                    limit=MAX_STYLED_OBJECTS,
+                ),
+            )
         book = _book(ctx)
         try:
             inherited = book.computed(parent)
@@ -215,7 +222,9 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
             raise RequestError("command_error", exc.args[0]) from None
         own = _only_what_differs(own_css(set, text) or {}, inherited)
         if not own:
-            raise RequestError("command_error", f"the new style would look just like “{book.get(parent).name}”")
+            raise RequestError(
+                "command_error", msg("the new style would look just like “{name}”", name=book.get(parent).name)
+            )
         name = book.provisional_name(parent)
         kind = book.get(parent).kind  # a deviation is of its parent's kind (D305)
         made = StyleDef(book.unique_id(name), name, "", parent, own, to_name=True, kind=kind)
@@ -276,7 +285,7 @@ def add_style_methods(
             removed = tuple(name for name in own if name not in wanted)
         else:
             if unset is not None and not all(isinstance(name, str) for name in unset):
-                raise RequestError("bad_request", "unset must be a list of property names")
+                raise RequestError("bad_request", msg("unset must be a list of property names"))
             removed = tuple(name for name in dict.fromkeys(unset or ()) if name in own)
             change = validate_css(wanted or {})
             change = {name: value for name, value in change.items() if own.get(name) != value}

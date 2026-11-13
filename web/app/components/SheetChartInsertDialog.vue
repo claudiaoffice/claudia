@@ -13,6 +13,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { show } from '~/lib/cells'
 import { nameAt, purposeLabel, referLabel, visibleNames, type NameInfo } from '~/lib/names'
 import { chartRange, type Session } from '~/lib/session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   session: Session
@@ -24,7 +27,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ close: []; inserted: [objectId: string | null, chartId: string | null] }>()
 
-const name = ref('Chart')
+const name = ref(t('Chart'))
 // Where the chart reads from (E6.5, mock 6): the cells that are selected, or the table or query result of a name — which
 // the chart follows as it grows or moves. A selection that is exactly a name starts as that name.
 const sources = computed(() => visibleNames(props.session.state.names, props.sheet).filter((n) => n.header && n.region !== null))
@@ -103,89 +106,89 @@ async function submit() {
   const diagramId = await props.session.defineDiagram(draft)
   if (!diagramId) {
     busy.value = false
-    error.value = 'That range will not make a chart.'
+    error.value = t('That range will not make a chart.')
     return
   }
   const chartId = placement.value === 'tab' ? await props.session.addChart(name.value.trim(), diagramId) : null
   const objectId = placement.value === 'object' ? await props.session.addDiagramObject(diagramId, props.anchorFor()) : null
   busy.value = false
   if (objectId || chartId) emit('inserted', objectId, chartId)
-  else error.value = 'Could not place the chart.'
+  else error.value = t('Could not place the chart.')
 }
 </script>
 
 <template>
-  <Modal title="Insert chart" :width="520" @close="emit('close')">
+  <Modal :title="t('Insert chart')" :width="520" @close="emit('close')">
     <form class="form" @submit.prevent="submit">
-      <fieldset class="field kinds" aria-label="chart type">
-        <legend>Chart</legend>
-        <span class="kind on">Bar</span>
-        <span class="kind soon" aria-disabled="true">Line · soon</span>
-        <span class="kind soon" aria-disabled="true">Scatter · soon</span>
+      <fieldset class="field kinds" :aria-label="t('chart type')">
+        <legend>{{ t('Chart') }}</legend>
+        <span class="kind on">{{ t('Bar') }}</span>
+        <span class="kind soon" aria-disabled="true">{{ t('Line · soon') }}</span>
+        <span class="kind soon" aria-disabled="true">{{ t('Scatter · soon') }}</span>
       </fieldset>
       <fieldset class="field sourcelist" data-testid="chart-source">
-        <legend>Data from</legend>
+        <legend>{{ t('Data from') }}</legend>
         <label v-for="n in sources" :key="`${n.scope}:${n.name}`" class="radio source" :class="{ on: picked === n.name }">
           <input v-model="picked" type="radio" :value="n.name" >
           <span class="mono strong">{{ n.name }}</span>
-          <span v-if="n.kind === 'result'" class="badge">SQL</span>
-          <span class="dim">{{ referLabel(n) }} · {{ n.rows }} rows · {{ purposeLabel(n.purpose) }}</span>
+          <span v-if="n.kind === 'result'" class="badge">{{ t('SQL') }}</span>
+          <span class="dim">{{ t('{range} · {rows} rows · {purpose}', { range: referLabel(n), rows: n.rows, purpose: purposeLabel(n.purpose) }) }}</span>
         </label>
         <label class="radio source" :class="{ on: picked === null }">
           <input v-model="picked" type="radio" :value="null" >
-          <span>Pick cells instead…</span>
-          <span class="dim">the selection, as it is now</span>
+          <span>{{ t('Pick cells instead…') }}</span>
+          <span class="dim">{{ t('the selection, as it is now') }}</span>
         </label>
       </fieldset>
       <p v-if="onNamed" class="hint">
-        Bar chart of <strong class="mono">{{ picked }}</strong>: it follows the table as rows are added, and as a query result changes size.
-        <template v-if="multiCol">The first column is read as category names.</template>
+        <TransText :text="t('Bar chart of {name}: it follows the table as rows are added, and as a query result changes size.')"><template #name><strong class="mono">{{ picked }}</strong></template></TransText>
+        <template v-if="multiCol">{{ t('The first column is read as category names.') }}</template>
       </p>
       <p v-else class="hint">
-        Bar chart over <strong>{{ range.r1 - range.r0 + 1 }}</strong> rows × <strong>{{ range.c1 - range.c0 + 1 }}</strong> columns.
-        <template v-if="multiCol">The first column is read as category or series names.</template>
-        <template v-else>Only one column — no room for a header there; a label is made up.</template>
+        <TransText :text="t('Bar chart over {rows} rows × {columns} columns.')"><template #rows><strong>{{ range.r1 - range.r0 + 1 }}</strong></template><template #columns><strong>{{ range.c1 - range.c0 + 1 }}</strong></template></TransText>
+        <template v-if="multiCol">{{ t('The first column is read as category or series names.') }}</template>
+        <template v-else>{{ t('Only one column — no room for a header there; a label is made up.') }}</template>
       </p>
       <fieldset class="field">
-        <legend>Show as</legend>
-        <label class="radio"><input v-model="placement" type="radio" value="tab" >A tab</label>
-        <label class="radio"><input v-model="placement" type="radio" value="object" >A floating object on the sheet</label>
+        <legend>{{ t('Show as') }}</legend>
+        <label class="radio"><input v-model="placement" type="radio" value="tab" >{{ t('A tab') }}</label>
+        <label class="radio"><input v-model="placement" type="radio" value="object" >{{ t('A floating object on the sheet') }}</label>
       </fieldset>
       <label class="field" :class="{ disabled: placement !== 'tab' }">
-        Name (the tab it opens as)
+        {{ t('Name (the tab it opens as)') }}
         <input v-model="name" autocomplete="off" maxlength="60" :disabled="placement !== 'tab'" >
       </label>
       <div class="two">
         <fieldset class="field" :disabled="!multiRow || !multiCol">
-          <legend>Series are in</legend>
-          <label class="radio"><input v-model="seriesIn" type="radio" value="columns" >Columns</label>
-          <label class="radio"><input v-model="seriesIn" type="radio" value="rows" >Rows</label>
+          <legend>{{ t('Series are in') }}</legend>
+          <label class="radio"><input v-model="seriesIn" type="radio" value="columns" >{{ t('Columns') }}</label>
+          <label class="radio"><input v-model="seriesIn" type="radio" value="rows" >{{ t('Rows') }}</label>
         </fieldset>
         <div class="field">
           <label class="check" :class="{ disabled: !multiRow }">
             <input v-model="headerRow" type="checkbox" :disabled="!multiRow || onNamed" >
-            First row is a header
+            {{ t('First row is a header') }}
           </label>
           <p class="subhint">
-            <template v-if="onNamed">A table always has its header row.</template>
-            <template v-else-if="multiRow">Off reads every row as data — no row is skipped. On fills the axis titles below, for a field still blank.</template>
-            <template v-else>Only one row — no room for a header there either.</template>
+            <template v-if="onNamed">{{ t('A table always has its header row.') }}</template>
+            <template v-else-if="multiRow">{{ t('Off reads every row as data — no row is skipped. On fills the axis titles below, for a field still blank.') }}</template>
+            <template v-else>{{ t('Only one row — no room for a header there either.') }}</template>
           </p>
         </div>
       </div>
-      <label class="field">Title (optional)<input v-model="title" autocomplete="off" maxlength="120" ></label>
+      <label class="field">{{ t('Title (optional)') }}<input v-model="title" autocomplete="off" maxlength="120" ></label>
       <div class="two">
-        <label class="field">X axis (optional)<input v-model="xTitle" autocomplete="off" maxlength="120" ></label>
-        <label class="field">Y axis (optional)<input v-model="yTitle" autocomplete="off" maxlength="120" ></label>
+        <label class="field">{{ t('X axis (optional)') }}<input v-model="xTitle" autocomplete="off" maxlength="120" ></label>
+        <label class="field">{{ t('Y axis (optional)') }}<input v-model="yTitle" autocomplete="off" maxlength="120" ></label>
       </div>
       <div class="two">
-        <label class="check"><input v-model="legend" type="checkbox" >Legend</label>
-        <label class="check"><input v-model="gridlines" type="checkbox" >Gridlines</label>
+        <label class="check"><input v-model="legend" type="checkbox" >{{ t('Legend') }}</label>
+        <label class="check"><input v-model="gridlines" type="checkbox" >{{ t('Gridlines') }}</label>
       </div>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? 'Inserting…' : 'Insert' }}</button>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
+        <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? t('Inserting…') : t('Insert') }}</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
       </div>
     </form>
   </Modal>

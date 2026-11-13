@@ -12,6 +12,9 @@ import { chordLabel, installWindowShortcuts, sharedShortcuts, type ShortcutDef }
 import { createShellBridge } from '~/lib/shell-bridge'
 import type { ExportFormatOption } from './ExportFormatDialog.vue'
 import type { Menu } from './MenuBar.vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -38,7 +41,7 @@ const readonly = computed(() => state.me.role === 'viewer')
 async function checkpoint(label: string | null) {
   dialog.value = null
   await props.session.flush()
-  if (await props.session.saveCheckpoint(label || null)) props.session.notice('Checkpoint saved.')
+  if (await props.session.saveCheckpoint(label || null)) props.session.notice(t('Checkpoint saved.'))
   emit('saved')
 }
 
@@ -113,7 +116,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <div class="frame">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
-    <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you do now is not saved.</div>
+    <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
     <MenuBar :class="{ hidden: shell.nativeMenu }" :menus="menus" />
     <slot name="toolbar" />
     <div class="main" :class="{ wide: !panelOpen }">
@@ -126,10 +129,10 @@ onBeforeUnmount(() => clearTimeout(timer))
 
     <PromptDialog
       v-if="dialog === 'checkpoint'"
-      title="Save new checkpoint"
-      label="Name of this state (you can leave it empty)"
-      ok="Save"
-      placeholder="before the review"
+      :title="t('Save new checkpoint')"
+      :label="t('Name of this state (you can leave it empty)')"
+      :ok="t('Save')"
+      :placeholder="t('before the review')"
       @ok="checkpoint"
       @close="dialog = null"
     />
@@ -153,9 +156,9 @@ onBeforeUnmount(() => clearTimeout(timer))
 
     <div v-if="state.status === 'closed'" class="gone" role="alertdialog">
       <div>
-        <h2>You are not connected any more</h2>
-        <p>{{ state.error || 'The connection was closed.' }}</p>
-        <button class="btn primary" type="button" @click="emit('leave')">Back to the documents</button>
+        <h2>{{ t('You are not connected any more') }}</h2>
+        <p>{{ state.error || t('The connection was closed.') }}</p>
+        <button class="btn primary" type="button" @click="emit('leave')">{{ t('Back to the documents') }}</button>
       </div>
     </div>
   </div>

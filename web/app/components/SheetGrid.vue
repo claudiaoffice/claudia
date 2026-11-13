@@ -25,6 +25,9 @@ import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
 import type { Session, SheetObject } from '~/lib/session'
 import type { StyleHost } from '~/lib/style-host'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 /** The cell being edited (on which sheet), what is typed so far and where the caret stands in it. */
 export interface EditState {
@@ -778,7 +781,7 @@ defineExpose({
     :class="{ 'resize-col': hoverAxis === 'col' || resizeDrag?.axis === 'col', 'resize-row': hoverAxis === 'row' || resizeDrag?.axis === 'row' }"
     tabindex="0"
     role="grid"
-    aria-label="table"
+    :aria-label="t('table')"
     @scroll.passive="onScroll"
     @mousedown="onDown"
     @mousemove.passive="onHeaderHover"
@@ -791,14 +794,14 @@ defineExpose({
     <div class="canvas" :style="{ width: `${totalW}px`, height: `${totalH}px` }">
       <div class="stage" :style="{ width: `${size.w}px`, height: `${size.h}px` }">
         <div
-          v-for="t in tables"
-          :key="t.key"
+          v-for="tb in tables"
+          :key="tb.key"
           class="table"
-          :class="[t.kind, t.kind === 'frame' || t.kind === 'ghost' ? `purpose-${t.purpose}` : '']"
-          :style="tableStyle(t)"
-          :data-table="t.table.name"
+          :class="[tb.kind, tb.kind === 'frame' || tb.kind === 'ghost' ? `purpose-${tb.purpose}` : '']"
+          :style="tableStyle(tb)"
+          :data-table="tb.table.name"
         >
-          <span v-if="t.kind === 'ghost'" class="ghost-label">type here to add a row</span>
+          <span v-if="tb.kind === 'ghost'" class="ghost-label">{{ t('type here to add a row') }}</span>
         </div>
         <div v-for="rl in rowLines" :key="`r${rl.key}`" class="gridline horiz" :style="{ top: `${rl.top}px` }" />
         <div v-for="cl in colLines" :key="`c${cl.key}`" class="gridline vert" :style="{ left: `${cl.left}px` }" />
@@ -818,16 +821,16 @@ defineExpose({
           <span class="words">{{ cell.text }}</span>
         </div>
 
-        <template v-for="t in tables" :key="`chip-${t.key}`">
+        <template v-for="tb in tables" :key="`chip-${tb.key}`">
           <button
-            v-if="t.kind === 'head' && t.table.kind === 'range'"
+            v-if="tb.kind === 'head' && tb.table.kind === 'range'"
             type="button"
             class="chip"
-            :style="{ left: `${x(t.c0) + colWidthAt(t.c0) - 20}px`, top: `${y(t.r0) + 5}px` }"
-            :title="`${t.table.name} · ${t.purpose} — change what this column is for`"
-            :aria-label="`purpose of ${t.table.name} column ${t.offset + 1}`"
+            :style="{ left: `${x(tb.c0) + colWidthAt(tb.c0) - 20}px`, top: `${y(tb.r0) + 5}px` }"
+            :title="t('{name} · {purpose} — change what this column is for', { name: tb.table.name, purpose: tb.purpose })"
+            :aria-label="t('purpose of {name} column {n}', { name: tb.table.name, n: tb.offset + 1 })"
             @mousedown.stop.prevent
-            @click="onChip($event, t)"
+            @click="onChip($event, tb)"
           >▾</button>
         </template>
 
@@ -850,7 +853,7 @@ defineExpose({
         </div>
 
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
-          <span class="tag">{{ o.name }}<template v-if="o.locked"> · editing</template></span>
+          <span class="tag">{{ o.name }}<template v-if="o.locked"> {{ t('· editing') }}</template></span>
         </div>
 
         <div v-if="activeBorder" class="active-border" :class="activeBorder.axis" :style="activeBorder.axis === 'col' ? { left: `${activeBorder.pos}px` } : { top: `${activeBorder.pos}px` }" />
@@ -865,7 +868,7 @@ defineExpose({
           :value="edit!.text"
           spellcheck="false"
           autocomplete="off"
-          aria-label="editing cell"
+          :aria-label="t('editing cell')"
           @input="onEditorInput"
           @keyup="reportCaret"
           @click="reportCaret"

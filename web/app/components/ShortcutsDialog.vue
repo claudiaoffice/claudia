@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
+
 // Config ▸ Shortcuts (D122, D126): replaces `HelpDialog.vue`. Shows the shared, structured shortcut map
 // (`lib/shortcuts.ts`) this app is actually wired to — not a hand-maintained table that can drift from what Ctrl+Z
 // really does — plus `extra`, the handful of things that are real and worth knowing but are not a `keydown` shortcut
@@ -17,7 +21,7 @@ const emit = defineEmits<{ close: [] }>()
 </script>
 
 <template>
-  <Modal title="Shortcuts" @close="emit('close')">
+  <Modal :title="t('Shortcuts')" @close="emit('close')">
     <dl>
       <template v-for="s in shortcuts" :key="s.label">
         <dt class="mono">{{ s.hint }}</dt>
@@ -28,7 +32,7 @@ const emit = defineEmits<{ close: [] }>()
         <dd>{{ v }}</dd>
       </template>
     </dl>
-    <button class="btn primary" type="button" @click="emit('close')">Close</button>
+    <button class="btn primary" type="button" @click="emit('close')">{{ t('Close') }}</button>
   </Modal>
 </template>
 

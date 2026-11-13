@@ -60,6 +60,7 @@ from .auth import (
     UserDirectory,
 )
 from .help import default_library
+from .i18n import localized, msg
 from .restore import POLICIES, RestoreCoordinator, RestoreError
 
 if TYPE_CHECKING:
@@ -127,10 +128,12 @@ EVENTS = {
 class RequestError(Exception):
     """A request failed in a way the client is told about: ``code`` is one of ``ERROR_CODES``.
 
+    ``message`` is English text, or a ``claudia_server.i18n.Message`` (``msg("...")``) that :meth:`to_dict` says
+    in the language of the connection it is sent to (E5.7, D293); what the core packages raise stays English.
+
     ``detail``, when given, is the finer-grained ``code`` of the ``claudia_core`` error this came from (E5.7
     groundwork): ``code`` stays the small, stable wire category a client already branches on (``"locked"``,
-    ``"stale"``...), while ``detail`` is what a future translator would use to pick the exact message to render,
-    alongside ``message`` which stays the English text for anyone not yet rendering it that way."""
+    ``"stale"``...), while ``detail`` is what a future translator would use to pick the exact message to render."""
 
     def __init__(self, code: str, message: str, detail: str | None = None):
         super().__init__(message)
@@ -138,9 +141,9 @@ class RequestError(Exception):
         self.message = message
         self.detail = detail
 
-    def to_dict(self) -> dict:
-        """The error as sent in a response."""
-        out = {"code": self.code, "message": self.message}
+    def to_dict(self, locale: str = DEFAULT_LOCALE) -> dict:
+        """The error as sent in a response, its message in ``locale`` (the connection's own, D31)."""
+        out = {"code": self.code, "message": localized(self.message, locale)}
         if self.detail is not None:
             out["detail"] = self.detail
         return out
@@ -278,7 +281,7 @@ class Context:
     lock_seconds: float = 300.0  # how long a lock lasts without being renewed
     directory: UserDirectory | None = None  # where this document's people are kept, if the server manages them
     doc_id: str = ""
-    locale: str = DEFAULT_LOCALE  # the connection's own locale (E5.7); nothing reads it yet
+    locale: str = DEFAULT_LOCALE  # the connection's own locale (E5.7, D31); what a method says is said in it
     editors: Callable[[], list[str]] = field(default=lambda: [])  # connected now, and may write (E3.7)
     # The open restore/switch suggestion, if any, and the consent around it (E3.7); a harmless, unattached one by
     # default, for contexts nothing here is asked of.
@@ -288,6 +291,7 @@ class Context:
     broadcast: Callable[[dict], None] = field(default=lambda message: None)  # tell every window of this document
     # Tell the AI of this document how the next request of a person is to be treated (D262); nothing if there is none.
     note_ai_mode: Callable[[str, str | None], None] = field(default=lambda user, mode: None)
+    set_locale: Callable[[str], None] = field(default=lambda locale: None)  # change this window's language (D294)
 
     @property
     def user(self) -> str:
@@ -352,36 +356,44 @@ class MethodTable:
         if raw is None:
             raw = {}
         if not isinstance(raw, dict):
-            raise RequestError("bad_request", "params must be an object")
+            raise RequestError("bad_request", msg("params must be an object"))
         extra = sorted(set(raw) - {p.name for p in entry.params})
         if extra:
-            raise RequestError("bad_request", f"unknown parameter {extra[0]!r} for {entry.name}")
+            raise RequestError(
+                "bad_request", msg("unknown parameter {parameter!r} for {name}", parameter=extra[0], name=entry.name)
+            )
         args = {}
         for p in entry.params:
             if p.name not in raw or (raw[p.name] is None and not p.required):
                 if p.required:
-                    raise RequestError("bad_request", f"{entry.name}: missing parameter {p.name!r}")
+                    raise RequestError(
+                        "bad_request",
+                        msg("{method}: missing parameter {parameter!r}", method=entry.name, parameter=p.name),
+                    )
                 args[p.name] = p.default
                 continue
             try:
                 args[p.name] = self._kinds[p.kind](raw[p.name], limits)
             except ValueError as exc:
-                raise RequestError("bad_request", f"{entry.name}: {p.name} {exc}") from None
+                raise RequestError(
+                    "bad_request",
+                    msg("{method}: {parameter} {reason}", method=entry.name, parameter=p.name, reason=exc),
+                ) from None
         return args
 
     def dispatch(self, ctx: Context, name: Any, params: Any) -> Any:
         """Run one request and return its JSON-able result. Raises ``RequestError``."""
         if not isinstance(name, str):
-            raise RequestError("bad_request", "method must be a string")
+            raise RequestError("bad_request", msg("method must be a string"))
         entry = self._methods.get(name)
         if entry is None:
-            raise RequestError("unknown_method", f"no method {name!r}")
+            raise RequestError("unknown_method", msg("no method {name!r}", name=name))
         if entry.write and not ctx.account.can_write:
-            raise RequestError("forbidden", f"{name} needs the editor role")
+            raise RequestError("forbidden", msg("{name} needs the editor role", name=name))
         allowed = ctx.account.allowed_methods
         if entry.write and allowed is not None and name not in allowed:
             # SEC-10: the one place every path goes through (the wire, the assistant, a future remote engine).
-            raise RequestError("forbidden", f"{name} is not one of the methods this account may call")
+            raise RequestError("forbidden", msg("{name} is not one of the methods this account may call", name=name))
         args = self.bind(entry, params, ctx.limits)
         try:
             return entry.fn(ctx, **args)
@@ -422,16 +434,16 @@ class MethodTable:
 def parse_request(raw: str | bytes, limits: Limits) -> tuple[Any, Any, Any]:
     """``(id, method, params)`` of a request frame; raises ``RequestError`` for a malformed one."""
     if len(raw) > limits.max_message_bytes:
-        raise RequestError("bad_request", "message too large")
+        raise RequestError("bad_request", msg("message too large"))
     try:
         message = json.loads(raw)
     except (ValueError, RecursionError):
-        raise RequestError("bad_request", "not valid JSON") from None
+        raise RequestError("bad_request", msg("not valid JSON")) from None
     if not isinstance(message, dict):
-        raise RequestError("bad_request", "a request must be a JSON object")
+        raise RequestError("bad_request", msg("a request must be a JSON object"))
     request_id = message.get("id")
     if not (isinstance(request_id, str) and len(request_id) <= 100) and not _is_int(request_id):
-        raise RequestError("bad_request", "id must be an integer or a short string")
+        raise RequestError("bad_request", msg("id must be an integer or a short string"))
     return request_id, message.get("method"), message.get("params")
 
 
@@ -455,7 +467,9 @@ def _regions_of(ctx: Context, items: list[dict]) -> list[Region]:
     try:
         return [ctx.document.model.region_from_data(item) for item in items]
     except (KeyError, TypeError, ValueError, NotImplementedError) as exc:
-        raise RequestError("bad_request", f"not a region this document understands: {exc!r}") from None
+        raise RequestError(
+            "bad_request", msg("not a region this document understands: {reason!r}", reason=exc)
+        ) from None
 
 
 def _checkpoint(info) -> dict:
@@ -477,18 +491,32 @@ def _checkpoint(info) -> dict:
 def _help_search(ctx, *, query):
     """Help topics for `ctx`'s own app whose title, tags or ``explains`` mention ``query`` (case-insensitive);
     every topic for this app, by title, if ``query`` is blank. A topic that names no app at all is for every app.
-    Each result is a summary (`id`, `title`, `apps`, `tags`); fetch the body with `help_topic`."""
-    return [topic.summary() for topic in default_library().search(query, app=ctx.document.model.app)]
+    Each result is a summary (`id`, `title`, `apps`, `tags`); fetch the body with `help_topic`. Topics come in the
+    language of the connection (the `locale` of `hello`) where they have been translated, else in English."""
+    found = default_library().search(query, app=ctx.document.model.app, language=ctx.locale)
+    return [topic.summary() for topic in found]
 
 
 @core_methods.method("help_topic", "id:str")
 def _help_topic(ctx, *, id):
     """One help topic in full, by the id a `help_search` result gave. Unlike `help_search`, not re-scoped to
-    `ctx`'s own app: an id already names one exact topic, the same way a direct link works wherever it came from."""
-    topic = default_library().get(id)
+    `ctx`'s own app: an id already names one exact topic, the same way a direct link works wherever it came from. In
+    the language of the connection where it has been translated, else in English (`language` says which)."""
+    topic = default_library().get(id, ctx.locale)
     if topic is None:
-        raise RequestError("command_error", f"no help topic {id!r}")
+        raise RequestError("command_error", msg("no help topic {id!r}", id=id))
     return topic.to_data()
+
+
+# -- language (E5.7, D294)
+@core_methods.method("set_locale", "locale:str")
+def _set_locale(ctx, *, locale):
+    """The interface language of this window changed (the person chose another one): what the server says to it from
+    now on, errors and help, is in it where there is a translation. Like the `locale` of `hello` it is only ever the
+    client's own setting, so anybody may set it, a viewer too; answers `{locale}`, as understood."""
+    chosen = normalize_locale(locale)
+    ctx.set_locale(chosen)
+    return {"locale": chosen}
 
 
 # -- reading
@@ -555,9 +583,11 @@ def _restore_policy(ctx):
 def _set_restore_policy(ctx, policy):
     """Owners only: choose `consensus` or `veto` for this document (see `restore_policy`)."""
     if ctx.account.role != "owner":
-        raise RequestError("forbidden", "only the owner of a document sets this")
+        raise RequestError("forbidden", msg("only the owner of a document sets this"))
     if policy not in POLICIES:
-        raise RequestError("bad_request", f"set_restore_policy: policy must be one of {POLICIES}")
+        raise RequestError(
+            "bad_request", msg("set_restore_policy: policy must be one of {policies}", policies=POLICIES)
+        )
     ctx.restore.policy = policy
     return {"policy": policy}
 
@@ -569,10 +599,10 @@ def _propose_restore(ctx, checkpoint):
     `command_error` for an unknown checkpoint number, or if a suggestion is already open (`restore_proposed`'s
     `proposal`, or `null`, says); withdraw or answer that one first."""
     if ctx.account.system:
-        raise RequestError("forbidden", "the assistant does not suggest restoring a checkpoint")
+        raise RequestError("forbidden", msg("the assistant does not suggest restoring a checkpoint"))
     info = next((c for c in ctx.document.checkpoints if c.number == checkpoint), None)
     if info is None:
-        raise RequestError("command_error", f"no checkpoint number {checkpoint}")
+        raise RequestError("command_error", msg("no checkpoint number {checkpoint}", checkpoint=checkpoint))
     try:
         proposal, applied = ctx.restore.propose(
             kind="restore",
@@ -595,9 +625,9 @@ def _propose_switch(ctx, line):
     `propose_restore`. `command_error` for a name that is not a line of this document, or if a suggestion is
     already open."""
     if ctx.account.system:
-        raise RequestError("forbidden", "the assistant does not suggest switching lines")
+        raise RequestError("forbidden", msg("the assistant does not suggest switching lines"))
     if line not in {x.name for x in ctx.document.lines()}:
-        raise RequestError("command_error", f"there is no line called {line!r}")
+        raise RequestError("command_error", msg("there is no line called {line!r}", line=line))
     try:
         proposal, applied = ctx.restore.propose(
             kind="switch", by=ctx.user, checkpoint=None, line=line, label=f"line “{line}”", group=ctx.editors()
@@ -614,7 +644,7 @@ def _answer_restore(ctx, agree):
     """Agree or decline the open suggestion (E3.7). Resolves it at once if that was the last answer needed, or the
     moment anybody declines. `command_error` if nothing is open."""
     if ctx.account.system:
-        raise RequestError("forbidden", "the assistant does not vote")
+        raise RequestError("forbidden", msg("the assistant does not vote"))
     try:
         outcome = ctx.restore.answer(user=ctx.user, agree=agree)
     except RestoreError as exc:
@@ -632,9 +662,9 @@ def _discard_side_history(ctx):
     not part of the visible history. Returns the revisions removed. `command_error` while a suggestion is open
     (answer or withdraw it first: it may be aimed at exactly what this would remove)."""
     if ctx.account.role != "owner":
-        raise RequestError("forbidden", "only the owner of a document discards its hidden lines")
+        raise RequestError("forbidden", msg("only the owner of a document discards its hidden lines"))
     if ctx.restore.open_proposal is not None:
-        raise RequestError("command_error", "there is an open suggestion; answer or withdraw it first")
+        raise RequestError("command_error", msg("there is an open suggestion; answer or withdraw it first"))
     return {"discarded": [rev.to_data() for rev in ctx.document.discard_side_history()]}
 
 
@@ -642,7 +672,7 @@ def _discard_side_history(ctx):
 def _withdraw_restore(ctx):
     """Take back the open suggestion: whoever made it, or an owner. `command_error` if nothing is open."""
     if ctx.account.system:
-        raise RequestError("forbidden", "the assistant does not withdraw suggestions")
+        raise RequestError("forbidden", msg("the assistant does not withdraw suggestions"))
     try:
         ctx.restore.withdraw(user=ctx.user, is_owner=ctx.account.role == "owner")
     except RestoreError as exc:
@@ -658,7 +688,9 @@ def _changes_since(ctx, revision):
     try:
         return [entry.to_data() for entry in ctx.document.entries_since(revision)]
     except KeyError:
-        raise RequestError("stale", f"{revision} is not part of the document's current line; reload it") from None
+        raise RequestError(
+            "stale", msg("{revision} is not part of the document's current line; reload it", revision=revision)
+        ) from None
 
 
 @core_methods.method("log", "limit:int=200")
@@ -667,7 +699,7 @@ def _log(ctx, limit):
     the active line as `{revision, author, origin, time, label, summary, of}`. `summary` may name values (a cell and
     what was typed into it) and is gone from a redacted entry."""
     if not 1 <= limit <= MAX_LOG:
-        raise RequestError("bad_request", f"log: limit must be from 1 to {MAX_LOG}")
+        raise RequestError("bad_request", msg("log: limit must be from 1 to {limit}", limit=MAX_LOG))
     entries = ctx.document.log.path(ctx.document.revision)[-limit:]
     return [
         {
@@ -688,7 +720,7 @@ def _chat_log(ctx, limit):
     """The chat this account may read, oldest first: messages for everybody and the private ones it sent or got.
     The newest `limit` (1 to 5000), each as in the `chat` event."""
     if not 1 <= limit <= MAX_LOG:
-        raise RequestError("bad_request", f"chat_log: limit must be from 1 to {MAX_LOG}")
+        raise RequestError("bad_request", msg("chat_log: limit must be from 1 to {limit}", limit=MAX_LOG))
     me = ctx.user.casefold()
     readable = [
         record.to_data()
@@ -726,13 +758,13 @@ def _apply(ctx, command, base):
     error. Refused with `forbidden` for the assistant (SEC-10): a raw command would walk around the checks an app's
     own methods make against it (`composes._people_only` and the like), whatever `apply` itself is allowed to call."""
     if ctx.account.system:
-        raise RequestError("forbidden", "the assistant cannot apply a raw command; use the app's own methods")
+        raise RequestError("forbidden", msg("the assistant cannot apply a raw command; use the app's own methods"))
     try:
         parsed = ctx.document.model.registry.decode(command)
     except (UnknownCommand, SchemaTooNew) as exc:
         raise RequestError("bad_request", str(exc)) from exc
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
-        raise RequestError("bad_request", f"invalid command: {exc!r}") from exc
+        raise RequestError("bad_request", msg("invalid command: {reason!r}", reason=exc)) from exc
     applied = ctx.document.execute(parsed, author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
@@ -794,11 +826,11 @@ def _add_user(ctx, name, password, role):
     it; there is no way yet to change it). `role` is `editor` or `viewer`. Returns `{user, role}`; `command_error`
     with a sentence for the person if the name is taken or reserved or the password is too short."""
     if ctx.account.role != "owner":
-        raise RequestError("forbidden", "only the owner of a document adds people to it")
+        raise RequestError("forbidden", msg("only the owner of a document adds people to it"))
     if ctx.directory is None:
-        raise RequestError("unavailable", "this server does not manage people")
+        raise RequestError("unavailable", msg("this server does not manage people"))
     if role not in ("editor", "viewer"):
-        raise RequestError("bad_request", "add_user: role must be editor or viewer")
+        raise RequestError("bad_request", msg("add_user: role must be editor or viewer"))
     account = ctx.directory.add_user(ctx.doc_id, name, password, role)
     return {"user": account.user, "role": account.role}
 
@@ -810,9 +842,9 @@ def _new_recovery_key(ctx):
     document had before stops working. Returns `{recovery_key}` as 13 groups of 4 letters and digits; `unavailable`
     on a server whose documents have none."""
     if ctx.account.role != "owner":
-        raise RequestError("forbidden", "only the owner of a document makes a recovery key")
+        raise RequestError("forbidden", msg("only the owner of a document makes a recovery key"))
     if not isinstance(ctx.directory, RecoverableDirectory):
-        raise RequestError("unavailable", "this server does not keep recovery keys")
+        raise RequestError("unavailable", msg("this server does not keep recovery keys"))
     return {"recovery_key": ctx.directory.new_recovery_key(ctx.doc_id)}
 
 
@@ -822,7 +854,7 @@ def _roster(ctx):
     `[{user, role}, ...]`. Needed to choose who to hand ownership to. `unavailable` on a server that does not list
     a document's people this way."""
     if not isinstance(ctx.directory, RosterDirectory):
-        raise RequestError("unavailable", "this server does not list a document's people this way")
+        raise RequestError("unavailable", msg("this server does not list a document's people this way"))
     return [{"user": account.user, "role": account.role} for account in ctx.directory.list_people(ctx.doc_id)]
 
 
@@ -832,9 +864,9 @@ def _leave(ctx, password):
     you are the document's only owner: make somebody else the owner first (`propose_owner`). Returns `{left:
     true}`; `unauthorized` if the password is wrong."""
     if not isinstance(ctx.directory, LeavableDirectory):
-        raise RequestError("unavailable", "this server does not support leaving a document")
+        raise RequestError("unavailable", msg("this server does not support leaving a document"))
     if not ctx.directory.leave(ctx.doc_id, ctx.user, password):
-        raise RequestError("unauthorized", "that is not your current password")
+        raise RequestError("unauthorized", msg("that is not your current password"))
     ctx.document.publish("person_left", ctx.user, {"user": ctx.user})
     return {"left": True}
 
@@ -846,11 +878,11 @@ def _propose_owner(ctx, name, password):
     asking again replaces a proposal they have not accepted yet. Returns `{proposed: name}`; `unauthorized` if the
     password is wrong; `command_error` with a sentence if `name` is not currently an editor."""
     if ctx.account.role != "owner":
-        raise RequestError("forbidden", "only the owner of a document can hand it over")
+        raise RequestError("forbidden", msg("only the owner of a document can hand it over"))
     if not isinstance(ctx.directory, TransferableDirectory):
-        raise RequestError("unavailable", "this server does not support handing over ownership")
+        raise RequestError("unavailable", msg("this server does not support handing over ownership"))
     if not ctx.directory.propose_owner_transfer(ctx.doc_id, ctx.user, password, name):
-        raise RequestError("unauthorized", "that is not your current password")
+        raise RequestError("unauthorized", msg("that is not your current password"))
     return {"proposed": name}
 
 
@@ -861,10 +893,10 @@ def _accept_owner(ctx, password):
     of this session. Returns `{accepted: true}`; `unauthorized` if nothing is waiting for you with that password
     (none was proposed to you, it already went through, or it expired)."""
     if not isinstance(ctx.directory, TransferableDirectory):
-        raise RequestError("unavailable", "this server does not support handing over ownership")
+        raise RequestError("unavailable", msg("this server does not support handing over ownership"))
     account = ctx.directory.accept_owner_transfer(ctx.doc_id, ctx.user, password)
     if account is None:
-        raise RequestError("unauthorized", "no ownership transfer is waiting for you with that password")
+        raise RequestError("unauthorized", msg("no ownership transfer is waiting for you with that password"))
     ctx.document.publish("owner_changed", ctx.user, {"owner": account.user})
     return {"accepted": True}
 
@@ -876,11 +908,11 @@ def _delete_document(ctx, password):
     sure everybody who needs something from the document has it first. Returns `{deleted: true}`; `unauthorized` if
     the password is wrong."""
     if ctx.account.role != "owner":
-        raise RequestError("forbidden", "only an owner of a document may delete it")
+        raise RequestError("forbidden", msg("only an owner of a document may delete it"))
     if not isinstance(ctx.directory, DeletableDirectory):
-        raise RequestError("unavailable", "this server does not support deleting a document")
+        raise RequestError("unavailable", msg("this server does not support deleting a document"))
     if not ctx.directory.delete_document(ctx.doc_id, ctx.user, password):
-        raise RequestError("unauthorized", "that is not your current password")
+        raise RequestError("unauthorized", msg("that is not your current password"))
     ctx.document.publish("document_deleted", ctx.user, {})
     return {"deleted": True}
 
@@ -911,7 +943,7 @@ def _chat(ctx, text, ai_mode):
     try:
         mode = parse_mode(ai_mode)
     except ValueError as exc:
-        raise RequestError("bad_request", f"chat: {exc}") from None
+        raise RequestError("bad_request", msg("chat: {reason}", reason=exc)) from None
     ctx.note_ai_mode(ctx.user, mode)  # before the message: the AI hears it as it is posted
     try:
         return ctx.document.post_chat(ctx.user, text, users=ctx.users()).to_data()

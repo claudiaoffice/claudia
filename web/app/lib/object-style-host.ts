@@ -6,6 +6,7 @@
 // box's words, a shape's outline (`slotOf`) — and the switcher of `style-editor-two-slots.svg` chooses the other.
 // Everything goes through the one style API every app has (`apply_style`, `deviate`), for the chosen slot only.
 import { ref } from 'vue'
+import { translate as t } from './i18n'
 import type { HostSlot, StyleHost } from './style-host'
 import type { ColourRole, ObjectBody, Reading, StyleModel, StyleTarget } from './objects'
 import type { CssCheck, CssEdit, StyleView } from './style-css'
@@ -33,7 +34,23 @@ export interface ObjectStyling {
 }
 
 /** The words a person reads for a slot. */
-export const SLOT_LABELS: Record<string, string> = { box: 'Box', words: 'Words', outline: 'Outline', label: 'Label', paragraph: 'Paragraph' }
+export const SLOT_LABELS: Record<string, string> = {
+  get box() {
+    return t('Box')
+  },
+  get words() {
+    return t('Words')
+  },
+  get outline() {
+    return t('Outline')
+  },
+  get label() {
+    return t('Label')
+  },
+  get paragraph() {
+    return t('Paragraph')
+  },
+}
 
 /** The slot the menu opens on for a kind of object: a text box's words, a shape's outline, the box of the rest. */
 export function slotOf(kind: string | undefined): string {

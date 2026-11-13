@@ -39,6 +39,7 @@ import {
 } from '~/lib/document-menus'
 import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
+import { forThe } from '~/lib/noun-phrases'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
@@ -71,8 +72,8 @@ const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'names' | 'row-size' | '
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 
 const EXPORT_FORMATS = [
-  { value: 'xlsx', label: 'Excel workbook (.xlsx)' },
-  { value: 'ods', label: 'OpenDocument spreadsheet (.ods)' },
+  { value: 'xlsx', get label() { return t('Excel workbook (.xlsx)') } },
+  { value: 'ods', get label() { return t('OpenDocument spreadsheet (.ods)') } },
 ]
 /** The chart tab shown instead of a sheet, or `null` for a sheet (`FooterBar.vue`'s own docstring on why this
  * is not part of `state`). Reset to `null` if its tab disappears (removed here, or by someone else). */
@@ -239,10 +240,10 @@ const sqlEditor = ref<{ row: number; col: number; x: number; y: number; query: s
 const note = ref<{ x: number; y: number; row: number; col: number; kind: 'spill' | 'blocked' | 'sql'; from: string; detail: string } | null>(null)
 
 const sheetName = (id: string) => state.sheets.find((s) => s.id === id)?.name ?? ''
-const scopeName = (scope: string | null) => (scope === null ? 'Workbook' : sheetName(scope) || 'Sheet')
+const scopeName = (scope: string | null) => (scope === null ? t('Workbook') : sheetName(scope) || t('Sheet'))
 
 function openDefine(action: Extract<NameBoxAction, { kind: 'define' | 'redefine' }>) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const box = document.querySelector<HTMLInputElement>('input[aria-label="cell"]')?.getBoundingClientRect()
   const region: NameRegion = { sheet: state.activeSheet, row0: b.value.r0, col0: b.value.c0, row1: b.value.r1, col1: b.value.c1 }
   const rows = Math.min(2, b.value.r1 - b.value.r0 + 1)
@@ -287,7 +288,7 @@ async function pickPurpose(offset: number | null, purpose: Purpose) {
 /** The cell the SQL editor writes to: the active cell, or the cell of the query that fills it when it is a part of a
  * result — with what is already in it. */
 function openSql(at?: { row: number; col: number }) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   let row = at?.row ?? sel.value.row
   let col = at?.col ?? sel.value.col
   const here = session.cell(state.activeSheet, row, col)
@@ -351,7 +352,7 @@ async function noteCopyValues() {
   const owner = n ? session.cell(state.activeSheet, n.row, n.col)?.from : undefined
   const name = owner ? state.names.find((x) => x.anchor?.row === owner[0] && x.anchor.col === owner[1] && x.anchor.sheet === state.activeSheet) : undefined
   const g = name?.region
-  if (!g) return session.notice('This result has no name to take its cells from: select them and copy (Ctrl+C).', 'info')
+  if (!g) return session.notice(t('This result has no name to take its cells from: select them and copy (Ctrl+C).'), 'info')
   const rows: string[] = []
   for (let r = g.row0; r <= Math.min(g.row1, g.row0 + 10_000); r++) {
     const line: string[] = []
@@ -360,16 +361,16 @@ async function noteCopyValues() {
   }
   try {
     await navigator.clipboard.writeText(rows.join('\n'))
-    session.notice('Copied the result as values.', 'info')
+    session.notice(t('Copied the result as values.'), 'info')
   } catch {
-    session.notice('The browser did not allow copying.', 'warning')
+    session.notice(t('The browser did not allow copying.'), 'warning')
   }
 }
 
 // ------------------------------------------------------------------------------ editing
 async function beginEdit(initial?: string) {
   if (edit.value) return
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const { row, col } = sel.value
   if (session.cell(state.activeSheet, row, col)?.spill) return noteFor(row, col) // (part of a query result: say so)
   original = inputOf(session.cell(state.activeSheet, row, col))
@@ -429,17 +430,17 @@ watch(currentFunctionName, async (name) => {
 const formulaExample = computed(() => formulaHelp.value?.help.split('\n\n')[1]?.split('\n')[0] ?? '')
 
 async function clearSelection() {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const cells = session.filledIn(state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
   if (cells.length) await session.setCells(state.activeSheet, cells.map(([row, col]) => ({ row, col, input: '' })))
 }
 
 async function paste(rows: string[][]) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const cells = rows.flatMap((line, i) => line.map((input, j) => ({ row: b.value.r0 + i, col: b.value.c0 + j, input })))
   if (!cells.length) return
-  if (cells.length > 10_000) return session.notice('That is too much to paste at once (at most 10,000 cells).', 'warning')
-  if (cells.some((c) => c.row >= VIEW_ROWS || c.col >= VIEW_COLS)) return session.notice('That does not fit on the sheet.', 'warning')
+  if (cells.length > 10_000) return session.notice(t('That is too much to paste at once (at most 10,000 cells).'), 'warning')
+  if (cells.some((c) => c.row >= VIEW_ROWS || c.col >= VIEW_COLS)) return session.notice(t('That does not fit on the sheet.'), 'warning')
   if (await session.setCells(state.activeSheet, cells)) {
     const last = cells[cells.length - 1]!
     sel.value = { row: b.value.r0, col: b.value.c0, row2: last.row, col2: last.col }
@@ -485,7 +486,7 @@ async function addSheet(name: string) {
 }
 
 async function structure(axis: 'row' | 'col', insert: boolean, after = false) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const first = axis === 'row' ? b.value.r0 : b.value.c0
   const last = axis === 'row' ? b.value.r1 : b.value.c1
   const count = last - first + 1
@@ -569,7 +570,7 @@ const objectSelected = ref(false)
 const activeHost = computed(() => (objectSelected.value ? styleHost : cellHost))
 
 /** Edit this style… at the active cell, or beside the selected object (D300, D302). */
-const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => grid.value?.openStyleMenu() }
+const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: { key: 'F10', shift: true }, run: () => grid.value?.openStyleMenu() }
 const extraShortcuts = [LOOK]
 
 /**
@@ -593,7 +594,7 @@ function styleItems() {
     return formatItems(t, {
       ...common,
       groups: [offered.own, offered.bundles],
-      heading: t('For the {thing}', { thing: styleHost.noun }),
+      heading: forThe(),
       current: styleHost.current?.id,
       canApply: !readonly.value,
       apply: (id) => void styleHost.apply(id),
@@ -640,7 +641,7 @@ async function headerDelete() {
 function headerResize() {
   if (readonly.value) {
     headerMenu.value = null
-    return session.notice('You can only look at this document.', 'warning')
+    return session.notice(t('You can only look at this document.'), 'warning')
   }
   dialog.value = headerMenu.value!.axis === 'row' ? 'row-size' : 'col-size'
   headerMenu.value = null
@@ -715,7 +716,7 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
-        { id: 'edit.new-sheet', label: t('New sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
+        { id: 'edit.new-sheet', label: t('New Sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
         { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
         { id: 'edit.chart', label: t('Chart…'), action: () => (dialog.value = 'chart'), disabled: readonly.value },
         { label: '', separator: true },
@@ -726,8 +727,8 @@ const menus = computed<Menu[]>(() => {
           label: t('Row'),
           disabled: readonly.value,
           items: [
-            { id: 'edit.row-insert-above', label: t('Insert above'), action: () => structure('row', true), disabled: readonly.value },
-            { id: 'edit.row-insert-below', label: t('Insert below'), action: () => structure('row', true, true), disabled: readonly.value },
+            { id: 'edit.row-insert-above', label: t('Insert Above'), action: () => structure('row', true), disabled: readonly.value },
+            { id: 'edit.row-insert-below', label: t('Insert Below'), action: () => structure('row', true, true), disabled: readonly.value },
             { id: 'edit.row-delete', label: t('Delete'), action: () => structure('row', false), disabled: readonly.value },
           ],
         },
@@ -736,13 +737,13 @@ const menus = computed<Menu[]>(() => {
           label: t('Column'),
           disabled: readonly.value,
           items: [
-            { id: 'edit.column-insert-left', label: t('Insert left'), action: () => structure('col', true), disabled: readonly.value },
-            { id: 'edit.column-insert-right', label: t('Insert right'), action: () => structure('col', true, true), disabled: readonly.value },
+            { id: 'edit.column-insert-left', label: t('Insert Left'), action: () => structure('col', true), disabled: readonly.value },
+            { id: 'edit.column-insert-right', label: t('Insert Right'), action: () => structure('col', true, true), disabled: readonly.value },
             { id: 'edit.column-delete', label: t('Delete'), action: () => structure('col', false), disabled: readonly.value },
           ],
         },
         { label: '', separator: true },
-        { id: 'edit.clear', label: t('Clear cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
+        { id: 'edit.clear', label: t('Clear Cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
       ],
     },
     { label: t('Format'), items: styleItems() },
@@ -771,14 +772,14 @@ const menus = computed<Menu[]>(() => {
 
 // Config ▸ Shortcuts: the grid's own mouse and keyboard conventions, which are not a single `keydown` chord and so
 // were never candidates for the shared map.
-const SHORTCUT_NOTES: [string, string][] = [
-  ['Arrows, Tab, Enter', 'move through the table'],
-  ['Shift + arrows or drag', 'select a block'],
-  ['Ctrl + arrows', 'jump to the edge of a block of data'],
-  ['Type, F2 or double click', 'edit a cell (others are kept out of it while you do)'],
-  ['Enter / Tab / Esc', 'keep and go down / keep and go right / cancel'],
-  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
-]
+const SHORTCUT_NOTES = computed<[string, string][]>(() => [
+  [t('Arrows, Tab, Enter'), t('move through the table')],
+  [t('Shift + arrows or drag'), t('select a block')],
+  [t('Ctrl + arrows'), t('jump to the edge of a block of data')],
+  [t('Type, F2 or double click'), t('edit a cell (others are kept out of it while you do)')],
+  [t('Enter / Tab / Esc'), t('keep and go down / keep and go right / cancel')],
+  [t('Ctrl + C / X / V'), t('copy, cut and paste, also from and to other programs')],
+])
 </script>
 
 <template>
@@ -818,7 +819,7 @@ const SHORTCUT_NOTES: [string, string][] = [
         >
           <StylePicker v-if="state.activeSheet && !activeChart" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
         </FormulaBar>
-        <ul v-if="completing" class="completion" :class="{ below: formulaHelp }" role="listbox" aria-label="completions" data-testid="completion">
+        <ul v-if="completing" class="completion" :class="{ below: formulaHelp }" role="listbox" :aria-label="t('completions')" data-testid="completion">
           <li
             v-for="(item, i) in completing.items"
             :key="item.label"
@@ -838,7 +839,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     </template>
     <div v-if="activeChart" class="chart-tab">
       <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" />
-      <div v-else class="nosheet">This chart's definition is gone.</div>
+      <div v-else class="nosheet">{{ t('This chart\'s definition is gone.') }}</div>
     </div>
     <SheetGrid
       v-else-if="state.activeSheet"
@@ -866,12 +867,12 @@ const SHORTCUT_NOTES: [string, string][] = [
       @header-menu="openHeaderMenu"
       @table-menu="openTableMenu"
     />
-    <div v-else class="nosheet">This document has no sheet yet.</div>
+    <div v-else class="nosheet">{{ t('This document has no sheet yet.') }}</div>
     <template #footer>
       <FooterBar :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" @pick="pickTab" @add="dialog = 'sheet'" />
     </template>
     <template #overlay>
-      <PromptDialog v-if="dialog === 'sheet'" title="New sheet" label="Name" ok="Add sheet" required placeholder="Forecast" @ok="addSheet" @close="dialog = null" />
+      <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
       <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog
         v-if="dialog === 'chart'"

@@ -11,6 +11,9 @@ import { facesOf, pageSvg, registerFaces } from '~/lib/print/paint'
 import { marginPreset, mm, withCustomSize, withPaper } from '~/lib/print/setup'
 import { fromBase64 } from '~/lib/print/document'
 import { pdfOfPages, type PrintPages, type PrintSource } from '~/lib/print/source'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ source: PrintSource }>()
 const emit = defineEmits<{ close: [] }>()
@@ -143,7 +146,7 @@ const languages = computed(() => {
     return { tag: l.tag, name: twice && region ? `${base(l.name)} (${region})` : base(l.name), title: l.name }
   })
   const own = source.language()
-  if (own && !listed.some((l) => l.tag.toLowerCase() === own.toLowerCase())) listed.push({ tag: own, name: own, title: `${own}: no hyphenation patterns on this server` })
+  if (own && !listed.some((l) => l.tag.toLowerCase() === own.toLowerCase())) listed.push({ tag: own, name: own, title: t('{language}: no hyphenation patterns on this server', { language: own }) })
   return listed.sort((a, b) => a.name.localeCompare(b.name))
 })
 const canSetLanguage = computed(() => source.canSetLanguage())
@@ -164,7 +167,7 @@ const scale = computed(() => {
   if (zoom.value === 'width') return Math.max(0.2, (width.value - 80) / (w * PX_PER_MPT))
   return zoom.value
 })
-const zoomLabel = computed(() => (zoom.value === 'two' ? 'Two pages' : zoom.value === 'width' ? 'Fit width' : `${Math.round(scale.value * 100)} %`))
+const zoomLabel = computed(() => (zoom.value === 'two' ? t('Two pages') : zoom.value === 'width' ? t('Fit width') : `${Math.round(scale.value * 100)} %`))
 const zoomBy = (f: number) => (zoom.value = Math.min(4, Math.max(0.25, Math.round(scale.value * f * 100) / 100)))
 const pageStyle = computed(() => {
   const g = result.value?.geometry
@@ -229,12 +232,12 @@ const noteText = computed(() => [
   ...new Set(
     (result.value?.notes ?? []).map((n) =>
       n.kind === 'font'
-        ? `“${n.requested}” is not on this server; the preview and the PDF use ${n.used} for it.`
+        ? t('“{requested}” is not on this server; the preview and the PDF use {used} for it.', { requested: n.requested ?? '', used: n.used ?? '' })
         : n.kind === 'hyphenation'
-          ? `Not hyphenated: ${n.reason?.replace(/, so words are not hyphenated$/, '')}.`
+          ? t('Not hyphenated: {reason}.', { reason: n.reason?.replace(/, so words are not hyphenated$/, '') ?? '' })
           : n.partial
-            ? `A picture is printed without some of it: ${n.reason}.`
-            : `An object cannot be printed: ${n.reason}.`,
+            ? t('A picture is printed without some of it: {reason}.', { reason: n.reason ?? '' })
+            : t('An object cannot be printed: {reason}.', { reason: n.reason ?? '' }),
     ),
   ),
 ])
@@ -245,66 +248,66 @@ defineExpose({ print, download, status })
 </script>
 
 <template>
-  <section class="preview" data-testid="print-preview" aria-label="Print preview">
-    <div class="bar" role="toolbar" aria-label="Print">
-      <button class="back" type="button" :title="`Back to ${source.back} (Esc)`" data-testid="print-close" @click="emit('close')"><span aria-hidden="true">←</span> Print preview</button>
+  <section class="preview" data-testid="print-preview" :aria-label="t('Print preview')">
+    <div class="bar" role="toolbar" :aria-label="t('Print')">
+      <button class="back" type="button" :title="t('Back to {place} (Esc)', { place: source.back })" data-testid="print-close" @click="emit('close')"><span aria-hidden="true">←</span> {{ t('Print preview') }}</button>
       <span class="sep" />
-      <label v-if="source.layouts.length" class="lbl" title="How many slides go on a page">Layout
+      <label v-if="source.layouts.length" class="lbl" :title="t('How many slides go on a page')">{{ t('Layout') }}
         <select data-testid="print-layout" :value="source.layout() ?? ''" :disabled="!canChange" @change="chooseLayout(($event.target as HTMLSelectElement).value)">
           <option v-for="l in source.layouts.filter((x) => x.value === 'slides')" :key="l.value" :value="l.value">{{ l.label }}</option>
-          <optgroup label="Handouts">
+          <optgroup :label="t('Handouts')">
             <option v-for="l in source.layouts.filter((x) => x.value !== 'slides')" :key="l.value" :value="l.value">{{ l.label }}</option>
           </optgroup>
         </select>
       </label>
-      <label class="lbl">Paper
+      <label class="lbl">{{ t('Paper') }}
         <select data-testid="print-paper" :value="paperListed ? page.paper : 'custom'" :disabled="!canChange" @change="choosePaper(($event.target as HTMLSelectElement).value)">
           <option v-for="p in source.papers" :key="p.id" :value="p.id">{{ p.name }} · {{ p.label }}</option>
-          <option value="custom">{{ page.paper === 'custom' ? `${mm(page.width)} × ${mm(page.height)} mm` : 'Custom…' }}</option>
+          <option value="custom">{{ page.paper === 'custom' ? `${mm(page.width)} × ${mm(page.height)} mm` : t('Custom…') }}</option>
         </select>
       </label>
       <span v-if="customOpen" class="custom" data-testid="print-custom">
-        <input v-model.number="custom.w" type="number" min="25" max="1200" aria-label="width in millimetres" > ×
-        <input v-model.number="custom.h" type="number" min="25" max="1200" aria-label="height in millimetres" > mm
-        <button class="btn small" type="button" @click="applyCustom">Use</button>
+        <input v-model.number="custom.w" type="number" min="25" max="1200" :aria-label="t('width in millimetres')" > ×
+        <input v-model.number="custom.h" type="number" min="25" max="1200" :aria-label="t('height in millimetres')" > {{ t('mm') }}
+        <button class="btn small" type="button" @click="applyCustom">{{ t('Use') }}</button>
       </span>
-      <div class="segmented" role="group" aria-label="Orientation">
-        <button type="button" :aria-pressed="page.orientation === 'portrait'" :disabled="!canChange" data-testid="print-portrait" @click="change({ ...page, orientation: 'portrait' })">Portrait</button>
-        <button type="button" :aria-pressed="page.orientation === 'landscape'" :disabled="!canChange" data-testid="print-landscape" @click="change({ ...page, orientation: 'landscape' })">Landscape</button>
+      <div class="segmented" role="group" :aria-label="t('Orientation')">
+        <button type="button" :aria-pressed="page.orientation === 'portrait'" :disabled="!canChange" data-testid="print-portrait" @click="change({ ...page, orientation: 'portrait' })">{{ t('Portrait') }}</button>
+        <button type="button" :aria-pressed="page.orientation === 'landscape'" :disabled="!canChange" data-testid="print-landscape" @click="change({ ...page, orientation: 'landscape' })">{{ t('Landscape') }}</button>
       </div>
-      <label class="lbl">Margins
+      <label class="lbl">{{ t('Margins') }}
         <select data-testid="print-margins" :value="margin ?? 'own'" :disabled="!canChange" @change="chooseMargins(($event.target as HTMLSelectElement).value)">
           <option v-for="m in source.margins" :key="m.id" :value="m.id">{{ m.label }}</option>
-          <option v-if="!margin" value="own" disabled>the document's own</option>
+          <option v-if="!margin" value="own" disabled>{{ t('the document\'s own') }}</option>
         </select>
       </label>
-      <label class="lbl" title="The language of the document: its words are hyphenated by it">Language
+      <label class="lbl" :title="t('The language of the document: its words are hyphenated by it')">{{ t('Language') }}
         <select class="narrow" data-testid="print-language" :value="source.language() ?? ''" :disabled="!canSetLanguage" @change="chooseLanguage(($event.target as HTMLSelectElement).value)">
-          <option value="">Not set</option>
+          <option value="">{{ t('Not set') }}</option>
           <option v-for="l in languages" :key="l.tag" :value="l.tag" :title="l.title">{{ l.name }}</option>
         </select>
       </label>
-      <label class="check"><input type="checkbox" data-testid="print-numbers" :checked="page.page_numbers" :disabled="!canChange" @change="change({ ...page, page_numbers: ($event.target as HTMLInputElement).checked })" > Page numbers</label>
+      <label class="check"><input type="checkbox" data-testid="print-numbers" :checked="page.page_numbers" :disabled="!canChange" @change="change({ ...page, page_numbers: ($event.target as HTMLInputElement).checked })" > {{ t('Page numbers') }}</label>
       <span class="grow" />
-      <button class="btn" type="button" :disabled="!result" data-testid="print-download" @click="void download()">Download PDF</button>
-      <button class="btn primary" type="button" :disabled="!result" data-testid="print-print" @click="void print()">Print…</button>
+      <button class="btn" type="button" :disabled="!result" data-testid="print-download" @click="void download()">{{ t('Download PDF') }}</button>
+      <button class="btn primary" type="button" :disabled="!result" data-testid="print-print" @click="void print()">{{ t('Print…') }}</button>
     </div>
     <div ref="canvas" class="canvas">
       <div class="over">
         <p v-for="(n, i) in noteText" :key="i" class="note" data-testid="print-note"><span aria-hidden="true">ⓘ</span> {{ n }}</p>
         <p v-if="problem" class="note bad" role="alert" data-testid="print-problem">{{ problem }}</p>
         <span class="grow" />
-        <div class="zoom" role="group" aria-label="Zoom">
-          <button type="button" title="Smaller" @click="zoomBy(0.8)">−</button>
-          <button type="button" class="mode" title="Two pages side by side" @click="zoom = 'two'">{{ zoomLabel }}</button>
-          <button type="button" title="Larger" @click="zoomBy(1.25)">+</button>
-          <button type="button" title="Fit the width" @click="zoom = 'width'">⤢</button>
+        <div class="zoom" role="group" :aria-label="t('Zoom')">
+          <button type="button" :title="t('Smaller')" @click="zoomBy(0.8)">−</button>
+          <button type="button" class="mode" :title="t('Two pages side by side')" @click="zoom = 'two'">{{ zoomLabel }}</button>
+          <button type="button" :title="t('Larger')" @click="zoomBy(1.25)">+</button>
+          <button type="button" :title="t('Fit the width')" @click="zoom = 'width'">⤢</button>
         </div>
       </div>
-      <p v-if="busy" class="busy">Laying out the pages…</p>
+      <p v-if="busy" class="busy">{{ t('Laying out the pages…') }}</p>
       <div class="pages" :class="{ two: zoom === 'two' }" data-testid="print-pages">
         <!-- eslint-disable-next-line vue/no-v-html -- markup made by lib/print/paint.ts from the display list, every text escaped -->
-        <div v-for="(svg, i) in svgs" :key="i" class="page" :style="pageStyle" :aria-label="`page ${i + 1}`" v-html="svg" />
+        <div v-for="(svg, i) in svgs" :key="i" class="page" :style="pageStyle" :aria-label="t('page {n}', { n: i + 1 })" v-html="svg" />
       </div>
     </div>
     <footer class="foot mono" data-testid="print-status">{{ status }}</footer>

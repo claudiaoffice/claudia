@@ -68,7 +68,7 @@ from .events import (
     ObjectsChanged,
     ShapesChanged,
 )
-from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
+from .functions.help import FunctionHelp, function_catalog, get_function, search_functions, translatable_texts
 from .model import (
     MAX_OBJECTS_PER_SHEET,
     MIN_OBJECT_SIZE,
@@ -182,4 +182,5 @@ __all__ = [
     "function_catalog",
     "get_function",
     "search_functions",
+    "translatable_texts",
 ]

@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
-import { LANGUAGES, appLanguage, createTranslator, loadCatalog, useI18n } from '~/lib/i18n'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { LANGUAGES, appLanguage, createTranslator, loadCatalog, translate, useI18n } from '~/lib/i18n'
 import { currentLocale } from '~/lib/locale'
 
 function fakeFetch(responses: Record<string, unknown>): typeof fetch {
@@ -137,5 +137,44 @@ describe('useI18n', () => {
     const already = i18n.locale.value
     await i18n.choose(already)
     expect(i18n.locale.value).toBe(already)
+  })
+})
+
+describe('one language for the whole page', () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+  // `choose` loads a catalog only when the language changes, so every test starts from English.
+  beforeEach(() => useI18n().choose('en'))
+
+  async function choosingGerman(catalog: Record<string, string>) {
+    const real = globalThis.fetch
+    globalThis.fetch = (async () => new Response(JSON.stringify(catalog), { status: 200 })) as typeof fetch
+    try {
+      await useI18n().choose('de')
+    } finally {
+      globalThis.fetch = real
+    }
+  }
+
+  it('lets a component that never chose anything read the language another one chose', async () => {
+    const dialog = useI18n()
+    const menu = useI18n()
+    await choosingGerman({ Save: 'Speichern' })
+    expect(menu.locale.value).toBe('de')
+    expect(dialog.locale.value).toBe('de')
+    expect(dialog.t('Save')).toBe('Speichern')
+    expect(menu.t('Save')).toBe('Speichern')
+  })
+
+  it('lets a plain module translate with the same catalog, through `translate`', async () => {
+    await choosingGerman({ Save: 'Speichern', 'Hello {name}': 'Hallo {name}' })
+    expect(translate('Save')).toBe('Speichern')
+    expect(translate('Hello {name}', { name: 'Ann' })).toBe('Hallo Ann')
+    expect(translate('Not in the catalog')).toBe('Not in the catalog')
+  })
+
+  it('goes back to the msgids when English is chosen again', async () => {
+    await choosingGerman({ Save: 'Speichern' })
+    await useI18n().choose('en')
+    expect(translate('Save')).toBe('Save')
   })
 })

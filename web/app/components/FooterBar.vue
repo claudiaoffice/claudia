@@ -3,6 +3,9 @@ import { computed } from 'vue'
 import { show } from '~/lib/cells'
 import type { Summary } from '~/lib/selection'
 import type { State } from '~/lib/session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   state: State
@@ -21,7 +24,7 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
 
 <template>
   <footer class="foot">
-    <div class="tabs" role="tablist" aria-label="sheets">
+    <div class="tabs" role="tablist" :aria-label="t('sheets')">
       <button
         v-for="s in state.sheets"
         :key="s.id"
@@ -45,15 +48,15 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
       >
         {{ c.name }}
       </button>
-      <button v-if="canAdd" type="button" class="add" title="New sheet" aria-label="new sheet" @click="$emit('add')">+</button>
+      <button v-if="canAdd" type="button" class="add" :title="t('New sheet')" :aria-label="t('new sheet')" @click="$emit('add')">+</button>
     </div>
     <div class="stats mono" aria-live="polite">
       <template v-if="summary.numbers > 1">
-        <span>Sum <b>{{ shownSum }}</b></span>
-        <span>Average <b>{{ shownAverage }}</b></span>
+        <TransText :text="t('Sum {value}')"><template #value><b>{{ shownSum }}</b></template></TransText>
+        <TransText :text="t('Average {value}')"><template #value><b>{{ shownAverage }}</b></template></TransText>
       </template>
-      <span v-if="summary.count > 1">Count <b>{{ summary.count }}</b></span>
-      <span class="rev" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
+      <TransText v-if="summary.count > 1" :text="t('Count {value}')"><template #value><b>{{ summary.count }}</b></template></TransText>
+      <span class="rev" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
     </div>
   </footer>
 </template>

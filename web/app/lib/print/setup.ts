@@ -3,6 +3,8 @@
 // the same for every app that prints: only what an app offers differs, never what a choice means.
 import { PAPER_SIZES, umToMpt, type PageSetupData, type PaperSize, type PrintSetupData, type SlideLayout } from '@claudia/layout'
 
+import { translate as t } from '../i18n'
+
 /** A new text's page (the server's default, for a server that does not know pages yet). */
 export const DEFAULT_PAGE: PageSetupData = {
   paper: 'a4',
@@ -25,7 +27,7 @@ export const MARGINS: readonly MarginChoice[] = [
   { id: 'wide', label: '3.5 cm', mpt: umToMpt(35_000) },
 ]
 /** No margin at all: a slide printed edge to edge (creates only; a text needs room around it). */
-export const NO_MARGIN: MarginChoice = { id: 'none', label: 'None', mpt: 0 }
+export const NO_MARGIN: MarginChoice = { id: 'none', get label() { return t('None') }, mpt: 0 }
 
 /** The papers a text is printed on: every preset but the slide-sized one. */
 export const TEXT_PAPERS: readonly PaperSize[] = PAPER_SIZES.filter((p) => p.id !== 'slide')
@@ -40,12 +42,12 @@ export const DEFAULT_PRINT: PrintSetupData = {
 
 /** The layouts the bar offers a presentation, in order; the handouts are listed under "Handouts". */
 export const LAYOUTS: readonly { value: SlideLayout; label: string }[] = [
-  { value: 'slides', label: 'Slides' },
-  { value: 'handouts-2', label: '2 per page' },
-  { value: 'handouts-3', label: '3 per page, with lines' },
-  { value: 'handouts-4', label: '4 per page' },
-  { value: 'handouts-6', label: '6 per page' },
-  { value: 'handouts-9', label: '9 per page' },
+  { value: 'slides', get label() { return t('Slides') } },
+  { value: 'handouts-2', get label() { return t('2 per page') } },
+  { value: 'handouts-3', get label() { return t('3 per page, with lines') } },
+  { value: 'handouts-4', get label() { return t('4 per page') } },
+  { value: 'handouts-6', get label() { return t('6 per page') } },
+  { value: 'handouts-9', get label() { return t('9 per page') } },
 ]
 
 /**
@@ -92,14 +94,15 @@ export function withCustomSize(page: PageSetupData, width: number, height: numbe
 
 /** The margin preset the setup uses among `choices`, or `null` when its four margins are not one of them. */
 export function marginPreset(page: PageSetupData, choices: readonly MarginChoice[] = MARGINS): string | null {
-  const [t, r, b, l] = page.margins
-  return choices.find((m) => [t, r, b, l].every((v) => v === m.mpt))?.id ?? null
+  const [top, r, b, l] = page.margins
+  return choices.find((m) => [top, r, b, l].every((v) => v === m.mpt))?.id ?? null
 }
 
 /** A one-line description for the status line: "3 pages · A4 portrait"; with `slides`, "7 slides on 2 pages · …". */
 export function describe(page: PageSetupData, pages: number, slides?: number): string {
   const preset = PAPER_SIZES.find((p) => p.id === page.paper)
-  const what = `${pages} ${pages === 1 ? 'page' : 'pages'}`
-  const counted = slides === undefined ? what : `${slides} ${slides === 1 ? 'slide' : 'slides'} on ${what}`
-  return `${counted} · ${preset?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`} ${page.orientation}`
+  const what = pages === 1 ? t('1 page') : t('{count} pages', { count: pages })
+  const counted = slides === undefined ? what : slides === 1 ? t('1 slide on {pages}', { pages: what }) : t('{count} slides on {pages}', { count: slides, pages: what })
+  const size = preset?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`
+  return `${counted} · ${size} ${page.orientation === 'landscape' ? t('landscape') : t('portrait')}`
 }

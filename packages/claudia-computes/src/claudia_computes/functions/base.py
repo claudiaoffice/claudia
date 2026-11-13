@@ -51,7 +51,7 @@ import math
 import numbers
 import types
 import typing
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 
 from ..values import NUM, SYNTAX, VALUE, ErrorValue, FormulaError, Value, fits_int, format_value
@@ -199,6 +199,30 @@ def _result(value: object) -> Value | Range:
     raise FunctionError(VALUE, f"returned {what}, which is not a number, text or range")
 
 
+Translate = Callable[[str], str]
+GIVES = "{formula}  gives  {result}"  # the two wordings of a worked example, for translators too
+GIVES_WITH = "{formula}  gives  {result}  (with {given})"
+
+
+def _same(text: str) -> str:
+    return text
+
+
+def example_lines(examples: Iterable[Example], translate: Translate = _same) -> list[str]:
+    """The worked examples of a function as lines of help text: the formula, what it gives and the cells it reads,
+    and the example's own note, with the words said by ``translate`` (the identity gives the English text)."""
+    lines = []
+    for example in examples:
+        given = ", ".join(f"{address} = {format_value(value)}" for address, value in example.cells.items())
+        template = GIVES_WITH if given else GIVES
+        lines.append(
+            translate(template).format(formula=example.formula, result=format_value(example.result), given=given)
+        )
+        if example.note:
+            lines.append(f"  {translate(example.note)}")
+    return lines
+
+
 class Bound:
     """A ``UserFunction`` as the evaluator calls it: ``bound(arguments)`` with the formula's evaluated arguments."""
 
@@ -217,25 +241,18 @@ class Bound:
         parts = [("*" if p.variadic else "") + p.name + ("?" if p.has_default else "") for p in self.params]
         return f"{self.name}({', '.join(parts)})"
 
-    def get_tooltip(self) -> str:
-        """One line for a tooltip: the signature and what the function does."""
+    def get_tooltip(self, translate: Translate = _same) -> str:
+        """One line for a tooltip: the signature and what the function does. ``translate`` says the description in
+        another language (the package carries no catalog: whoever has one passes it in)."""
         custom = getattr(self.instance, "get_tooltip", None)
-        return custom() if callable(custom) else f"{self.signature}: {self.description}"
+        return custom() if callable(custom) else f"{self.signature}: {translate(self.description)}"
 
-    def get_help(self) -> str:
-        """The help topic as plain text: what it does and the worked examples."""
+    def get_help(self, translate: Translate = _same) -> str:
+        """The help topic as plain text: what it does and the worked examples, in the language ``translate`` says."""
         custom = getattr(self.instance, "get_help", None)
         if callable(custom):
             return custom()
-        lines = [self.get_tooltip(), ""]
-        for example in self.examples:
-            given = ", ".join(f"{address} = {format_value(value)}" for address, value in example.cells.items())
-            lines.append(
-                f"{example.formula}  gives  {format_value(example.result)}" + (f"  (with {given})" if given else "")
-            )
-            if example.note:
-                lines.append(f"  {example.note}")
-        return "\n".join(lines)
+        return "\n".join([self.get_tooltip(translate), "", *example_lines(self.examples, translate)])
 
     def __call__(self, args: list):
         if len(args) < self.min_args or (self.max_args is not None and len(args) > self.max_args):

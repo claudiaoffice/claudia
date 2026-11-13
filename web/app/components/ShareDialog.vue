@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: BaseSession }>()
 const emit = defineEmits<{ close: [] }>()
@@ -33,32 +36,30 @@ async function add() {
 
 <template>
   <RecoveryKeyDialog v-if="newKey" :recovery-key="newKey" :doc="session.state.doc" replacing @done="newKey = null" />
-  <Modal v-else title="Share this document" @close="emit('close')">
-    <p class="lead">
-      Give a colleague a name and a password for <b>{{ session.state.doc }}</b>. They open the document with them, like you did. Tell them the
-      password yourself: the server never shows it again.
-    </p>
+  <Modal v-else :title="t('Share this document')" @close="emit('close')">
+    <TransText tag="p" class="lead" :text="t('Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again.')">
+      <template #doc><b>{{ session.state.doc }}</b></template>
+    </TransText>
     <form class="form" @submit.prevent="add">
-      <label class="field">Name<input v-model="name" autocomplete="off" ></label>
-      <label class="field">Password (at least 8 characters, with a capital letter, a small letter and a digit)<input v-model="password" type="text" autocomplete="off" ></label>
+      <label class="field">{{ t('Name') }}<input v-model="name" autocomplete="off" ></label>
+      <label class="field">{{ t('Password (at least 8 characters, with a capital letter, a small letter and a digit)') }}<input v-model="password" type="text" autocomplete="off" ></label>
       <label class="field">
-        May<select v-model="role"><option value="editor">edit</option><option value="viewer">only look</option></select>
+        {{ t('May') }}<select v-model="role"><option value="editor">{{ t('edit') }}</option><option value="viewer">{{ t('only look') }}</option></select>
       </label>
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="busy || !name.trim() || password.length < 8">Add person</button>
-        <button class="btn" type="button" @click="emit('close')">Done</button>
+        <button class="btn primary" type="submit" :disabled="busy || !name.trim() || password.length < 8">{{ t('Add person') }}</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Done') }}</button>
       </div>
     </form>
-    <ul v-if="added.length" class="added" aria-label="people added just now">
+    <ul v-if="added.length" class="added" :aria-label="t('people added just now')">
       <li v-for="a in added" :key="a">✓ {{ a }}</li>
     </ul>
     <section v-if="isOwner" class="recovery">
-      <h3>Recovery key</h3>
+      <h3>{{ t('Recovery key') }}</h3>
       <p class="lead">
-        If somebody forgets their password, the recovery key lets them choose a new one. Making a new key shows it to you once and
-        makes the old one stop working.
+        {{ t('If somebody forgets their password, the recovery key lets them choose a new one. Making a new key shows it to you once and makes the old one stop working.') }}
       </p>
-      <div class="buttons"><button class="btn" type="button" :disabled="busy" @click="makeKey">Make a new recovery key</button></div>
+      <div class="buttons"><button class="btn" type="button" :disabled="busy" @click="makeKey">{{ t('Make a new recovery key') }}</button></div>
     </section>
   </Modal>
 </template>

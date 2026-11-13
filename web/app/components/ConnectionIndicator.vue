@@ -6,6 +6,9 @@
 import { computed, ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { canManageNow, friendlyLabel, indicatorLabel, manageUrl, resolveOrigin, statusWord } from '~/lib/connection'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: BaseSession }>()
 
@@ -57,7 +60,7 @@ function close() {
         <rect x="15" y="3" width="3" height="15" rx="1" />
       </svg>
     </button>
-    <Popover v-if="at" bare :x="at.x" :y="at.y" :width="260" :anchor="button" label="Connection details" @close="close">
+    <Popover v-if="at" bare :x="at.x" :y="at.y" :width="260" :anchor="button" :label="t('Connection details')" @close="close">
       <div class="tooltip">
         <p class="line">
           <span class="dot" :class="state.status" aria-hidden="true" />
@@ -69,7 +72,7 @@ function close() {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 018 0v3" />
           </svg>
-          <span>{{ secure ? 'TLS verified' : 'Not encrypted' }}</span>
+          <span>{{ secure ? t('TLS verified') : t('Not encrypted') }}</span>
         </p>
         <hr >
         <!-- A link to this server's own settings only makes sense while its connection is actually open (D171
@@ -84,7 +87,7 @@ function close() {
               d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
             />
           </svg>
-          Manage this server…
+          {{ t('Manage this server…') }}
         </a>
         <span v-else class="manage disabled" aria-disabled="true">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -93,7 +96,7 @@ function close() {
               d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
             />
           </svg>
-          Manage this server…
+          {{ t('Manage this server…') }}
         </span>
       </div>
     </Popover>

@@ -28,9 +28,9 @@ describe('contextMenuItems', () => {
     const a = actions()
     const items = contextMenuItems(text(), false, a)
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Edit text', 'Release from grid', 'Delete'])
+    expect(labels).toEqual(['Style…', 'Edit Text', 'Release from grid', 'Delete'])
 
-    items.find((i) => i.label === 'Edit text')!.action!()
+    items.find((i) => i.label === 'Edit Text')!.action!()
     expect(a.edit).toHaveBeenCalledOnce()
     expect(a.remove).not.toHaveBeenCalled()
 
@@ -40,13 +40,13 @@ describe('contextMenuItems', () => {
 
   it('offers Edit text for a shape too, the same as the Edit menu does (Enter/F2 works on it there)', () => {
     const items = contextMenuItems(shape(), false, actions())
-    expect(items.map((i) => i.label)).toContain('Edit text')
+    expect(items.map((i) => i.label)).toContain('Edit Text')
   })
 
   it('leaves Cut/Copy/Properties off a text object or shape, unchanged from before the image-properties bug fix', () => {
     const items = contextMenuItems(shape(), false, actions())
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Edit text', 'Release from grid', 'Delete'])
+    expect(labels).toEqual(['Style…', 'Edit Text', 'Release from grid', 'Delete'])
   })
 
   it('offers Cut, Copy, Properties, the grid toggle and Delete for an image, in that order, no Edit text (it has no text to write)', () => {
@@ -81,7 +81,7 @@ describe('contextMenuItems', () => {
 
   it('gives Edit text, Cut and Delete their usual keyboard hints, so the menu teaches the shortcut too', () => {
     const textItems = contextMenuItems(text(), false, actions())
-    expect(textItems.find((i) => i.label === 'Edit text')!.hint).toBe('Enter')
+    expect(textItems.find((i) => i.label === 'Edit Text')!.hint).toBe('Enter')
     expect(textItems.find((i) => i.label === 'Delete')!.hint).toBe('Del')
 
     const imageItems = contextMenuItems(image(), false, actions())

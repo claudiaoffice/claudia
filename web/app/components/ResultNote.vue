@@ -3,6 +3,9 @@
 // and says where it comes from; a result that does not fit says what is in the way (#SPILL!); a query that failed says
 // why (#SQL!) and, when a column was misspelled, offers the one that was probably meant.
 import { computed } from 'vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   x: number
@@ -15,39 +18,39 @@ const emit = defineEmits<{ close: []; editQuery: []; copyValues: []; selectBlock
 const title = computed(() => {
   switch (props.note.kind) {
     case 'spill':
-      return `Part of the result of the query in ${props.note.from}`
+      return t('Part of the result of the query in {cell}', { cell: props.note.from })
     case 'blocked':
-      return '#SPILL! — the result does not fit'
+      return t('#SPILL! — the result does not fit')
     default:
-      return '#SQL! — the query did not run'
+      return t('#SQL! — the query did not run')
   }
 })
 </script>
 
 <template>
-  <Popover :x="x" :y="y" :width="300" label="about this cell" @close="emit('close')">
+  <Popover :x="x" :y="y" :width="300" :label="t('about this cell')" @close="emit('close')">
     <div class="note" data-testid="result-note">
       <p class="title">{{ title }}</p>
       <template v-if="note.kind === 'spill'">
-        <p class="text">These cells are filled by the query, so they are not typed into.</p>
+        <p class="text">{{ t('These cells are filled by the query, so they are not typed into.') }}</p>
         <div class="buttons">
-          <button type="button" class="btn primary small" :disabled="readonly" @click="emit('editQuery')">Edit query…</button>
-          <button type="button" class="btn small" @click="emit('copyValues')">Copy as values</button>
+          <button type="button" class="btn primary small" :disabled="readonly" @click="emit('editQuery')">{{ t('Edit query…') }}</button>
+          <button type="button" class="btn small" @click="emit('copyValues')">{{ t('Copy as values') }}</button>
         </div>
       </template>
       <template v-else-if="note.kind === 'blocked'">
         <p class="text">{{ note.detail }}.</p>
         <div class="buttons">
-          <button v-if="note.blocker" type="button" class="btn primary small" @click="emit('selectBlocker')">Select {{ note.blocker }}</button>
-          <button type="button" class="btn small" :disabled="readonly" @click="emit('editQuery')">Edit query…</button>
+          <button v-if="note.blocker" type="button" class="btn primary small" @click="emit('selectBlocker')">{{ t('Select {blocker}', { blocker: note.blocker }) }}</button>
+          <button type="button" class="btn small" :disabled="readonly" @click="emit('editQuery')">{{ t('Edit query…') }}</button>
         </div>
       </template>
       <template v-else>
         <p class="text mono">{{ note.detail }}</p>
-        <p v-if="note.mend" class="text">Did you mean <b class="mono">{{ note.mend.right }}</b>?</p>
+        <TransText v-if="note.mend" tag="p" class="text" :text="t('Did you mean {word}?')"><template #word><b class="mono">{{ note.mend.right }}</b></template></TransText>
         <div class="buttons">
-          <button v-if="note.mend" type="button" class="btn primary small" :disabled="readonly" @click="emit('useWord')">Use {{ note.mend.right }}</button>
-          <button type="button" class="btn small" :disabled="readonly" @click="emit('editQuery')">Edit query…</button>
+          <button v-if="note.mend" type="button" class="btn primary small" :disabled="readonly" @click="emit('useWord')">{{ t('Use {right}', { right: note.mend.right }) }}</button>
+          <button type="button" class="btn small" :disabled="readonly" @click="emit('editQuery')">{{ t('Edit query…') }}</button>
         </div>
       </template>
     </div>

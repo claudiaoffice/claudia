@@ -7,6 +7,7 @@
 import { ref } from 'vue' // only the Vue wiring at the end uses these
 import { AdminApiError, adminApi, type AdminApi } from './admin-api'
 
+import { translate as t } from './i18n'
 const KEY = 'claudia.admin.token'
 
 export function readToken(storage: Pick<Storage, 'getItem'> = safeStorage()): string | null {
@@ -79,7 +80,7 @@ export function useAdminSession(api: AdminApi = adminApi) {
       storeToken(t)
       return null
     } catch (error) {
-      return error instanceof AdminApiError ? error.message : 'Could not reach the server.'
+      return error instanceof AdminApiError ? error.message : t('Could not reach the server.')
     } finally {
       busy.value = false
     }
@@ -94,7 +95,7 @@ export function useAdminSession(api: AdminApi = adminApi) {
       storeToken(t)
       return null
     } catch (error) {
-      return error instanceof AdminApiError ? error.message : 'Could not reach the server.'
+      return error instanceof AdminApiError ? error.message : t('Could not reach the server.')
     } finally {
       busy.value = false
     }

@@ -4,6 +4,9 @@
 // log says so) — the two people tell each other, the same way they would hand over a key.
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: BaseSession }>()
 const emit = defineEmits<{ close: [] }>()
@@ -20,20 +23,20 @@ async function accept() {
 </script>
 
 <template>
-  <Modal title="Accept ownership" @close="emit('close')">
-    <p v-if="accepted" class="lead">You are now the owner of <b>{{ session.state.doc }}</b>.</p>
+  <Modal :title="t('Accept ownership')" @close="emit('close')">
+    <TransText v-if="accepted" tag="p" class="lead" :text="t('You are now the owner of {doc}.')"><template #doc><b>{{ session.state.doc }}</b></template></TransText>
     <template v-else>
-      <p class="lead">If somebody asked you to take over <b>{{ session.state.doc }}</b>, confirm it is you with your own current password.</p>
+      <TransText tag="p" class="lead" :text="t('If somebody asked you to take over {doc}, confirm it is you with your own current password.')"><template #doc><b>{{ session.state.doc }}</b></template></TransText>
       <form class="form" @submit.prevent="accept">
-        <label class="field">Your password<input v-model="password" type="password" autocomplete="current-password" ></label>
+        <label class="field">{{ t('Your password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
         <div class="buttons">
-          <button class="btn primary" type="submit" :disabled="busy || !password">Accept</button>
-          <button class="btn" type="button" @click="emit('close')">Cancel</button>
+          <button class="btn primary" type="submit" :disabled="busy || !password">{{ t('Accept') }}</button>
+          <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
         </div>
       </form>
     </template>
     <div v-if="accepted" class="buttons">
-      <button class="btn primary" type="button" @click="emit('close')">Done</button>
+      <button class="btn primary" type="button" @click="emit('close')">{{ t('Done') }}</button>
     </div>
   </Modal>
 </template>

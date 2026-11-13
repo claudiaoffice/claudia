@@ -13,6 +13,10 @@ import { computed, ref, watch } from 'vue'
 import { isBold as boldIn, isItalic as italicIn } from '~/lib/style-css'
 import { flatten, readable } from '~/lib/roles'
 import { SIDES, facetsOfSlot, type Side, type StyleEditor, type StyleHost } from '~/lib/style-host'
+import { useI18n } from '~/lib/i18n'
+import { goToThis, thisOnly } from '~/lib/noun-phrases'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   host: StyleHost
@@ -35,6 +39,20 @@ const isItalic = computed(() => italicIn(editor.look))
 const shown = computed(() => new Set(props.facets ?? facetsOfSlot(props.host.slot)))
 
 const SIDE_CHOICES = ['all', ...SIDES] as const
+function sideTitle(side: (typeof SIDE_CHOICES)[number]): string {
+  switch (side) {
+    case 'all':
+      return t('All four sides')
+    case 'top':
+      return t('The top side')
+    case 'right':
+      return t('The right side')
+    case 'bottom':
+      return t('The bottom side')
+    default:
+      return t('The left side')
+  }
+}
 const VERTICAL = ['top', 'middle', 'bottom'] as const
 /** Box properties only some things have: a cell's vertical alignment and wrapping. */
 const extras = computed(() => new Set(props.host.extras ?? []))
@@ -65,7 +83,7 @@ const unreadable = computed(() => {
   const own = editor.look['background-color'] ?? (shown.value.has('outline') ? editor.look.fill : undefined)
   const behind = flatten(own, page)
   if (!ink || !behind || readable(ink, behind)) return null
-  return own ? 'The words will be hard to read on this background.' : 'These words will be hard to read.'
+  return own ? t('The words will be hard to read on this background.') : t('These words will be hard to read.')
 })
 
 const KEY = 'claudia.style-view'
@@ -98,28 +116,31 @@ async function name() {
 /** The alignment shown pressed: the style's, or — where a thing can align by its content — none of the four. */
 const alignNow = computed(() => (props.host.alignOf ? (current.value ? props.host.alignOf(current.value.id) : undefined) : (editor.look['text-align'] ?? 'left')))
 
-const ALIGN = [
-  ['left', 'Left'],
-  ['center', 'Centre'],
-  ['right', 'Right'],
-  ['justify', 'Justify'],
-] as const
+const ALIGN = computed(
+  () =>
+    [
+      ['left', t('Left')],
+      ['center', t('Centre')],
+      ['right', t('Right')],
+      ['justify', t('Justify')],
+    ] as const,
+)
 </script>
 
 <template>
-  <section v-if="current" class="spec" data-testid="style-spec" aria-label="Look">
+  <section v-if="current" class="spec" data-testid="style-spec" :aria-label="t('Look')">
     <header class="head">
-      <h3>Look</h3>
-      <div class="switch" role="group" aria-label="View of the style">
-        <button type="button" :aria-pressed="view === 'controls'" data-testid="view-controls" @click="view = 'controls'">Controls</button>
-        <button type="button" :aria-pressed="view === 'css'" data-testid="view-css" @click="view = 'css'">CSS</button>
+      <h3>{{ t('Look') }}</h3>
+      <div class="switch" role="group" :aria-label="t('View of the style')">
+        <button type="button" :aria-pressed="view === 'controls'" data-testid="view-controls" @click="view = 'controls'">{{ t('Controls') }}</button>
+        <button type="button" :aria-pressed="view === 'css'" data-testid="view-css" @click="view = 'css'">{{ t('CSS') }}</button>
       </div>
     </header>
 
-    <div v-if="!fixed" class="scope" role="radiogroup" :aria-label="`Where a change goes`">
-      <label :class="{ on: editor.scope === 'new' }" :title="editor.canDeviate ? undefined : `Go to the ${host.noun} where your cursor is to change this ${host.noun} only`">
+    <div v-if="!fixed" class="scope" role="radiogroup" :aria-label="t('Where a change goes')">
+      <label :class="{ on: editor.scope === 'new' }" :title="editor.canDeviate ? undefined : goToThis(host.noun)">
         <input type="radio" name="scope" value="new" :checked="editor.scope === 'new'" :disabled="off || !editor.canDeviate" @change="editor.setScope('new')" >
-        <span>{{ host.these ?? `This ${host.noun} only` }}</span>
+        <span>{{ host.these ?? thisOnly(host.noun) }}</span>
       </label>
       <label v-if="host.narrow" class="narrow" :class="{ off: editor.scope !== 'new' }">
         <input type="checkbox" :checked="host.narrow.on" :disabled="off || editor.scope !== 'new'" data-testid="narrow" @change="host.narrow.set(($event.target as HTMLInputElement).checked)" >
@@ -127,34 +148,34 @@ const ALIGN = [
       </label>
       <label :class="{ on: editor.scope === 'every' }">
         <input type="radio" name="scope" value="every" :checked="editor.scope === 'every'" :disabled="off" @change="editor.setScope('every')" >
-        <span>Every use of “{{ current.name }}”<em v-if="uses"> ({{ uses }})</em></span>
+        <span>{{ t('Every use of “{name}”', { name: current.name }) }}<em v-if="uses"> ({{ uses }})</em></span>
       </label>
     </div>
-    <p v-else class="every" data-testid="every-use">A change here changes every use of “{{ current.name }}”<em v-if="uses"> ({{ uses }})</em>.</p>
+    <p v-else class="every" data-testid="every-use">{{ t('A change here changes every use of “{name}”', { name: current.name }) }}<em v-if="uses"> ({{ uses }})</em>.</p>
 
     <div v-if="view === 'controls'" class="controls" data-testid="controls">
-      <section v-if="shown.has('text')" class="facet" data-facet="text" aria-label="Text">
-        <h4>Text</h4>
+      <section v-if="shown.has('text')" class="facet" data-facet="text" :aria-label="t('Text')">
+        <h4>{{ t('Text') }}</h4>
         <div class="row">
           <StyleFontPicker :look="editor.look" :own="own('font-family')" :disabled="off" @pick="run(editor.setFamily($event))" @reset="run(editor.reset('font-family'))" />
           <StyleSizeField :look="editor.look" :disabled="off" @step="run(editor.stepSize($event))" @size="(v, u) => run(editor.setSize(v, u))" />
         </div>
         <div class="row">
-          <div class="marks" role="group" aria-label="Font properties">
-            <button type="button" class="b" :aria-pressed="isBold" :disabled="off" title="Bold" data-testid="bold" @click="run(editor.toggleBold())">B</button>
-            <button type="button" class="i" :aria-pressed="isItalic" :disabled="off" title="Italic" data-testid="italic" @click="run(editor.toggleItalic())">I</button>
-            <button type="button" class="u" :aria-pressed="editor.hasDecoration('underline')" :disabled="off" title="Underline" data-testid="underline" @click="run(editor.toggleDecoration('underline'))">U</button>
-            <button type="button" class="s" :aria-pressed="editor.hasDecoration('line-through')" :disabled="off" title="Strike through" data-testid="strike" @click="run(editor.toggleDecoration('line-through'))">S</button>
+          <div class="marks" role="group" :aria-label="t('Font properties')">
+            <button type="button" class="b" :aria-pressed="isBold" :disabled="off" :title="t('Bold')" data-testid="bold" @click="run(editor.toggleBold())">B</button>
+            <button type="button" class="i" :aria-pressed="isItalic" :disabled="off" :title="t('Italic')" data-testid="italic" @click="run(editor.toggleItalic())">I</button>
+            <button type="button" class="u" :aria-pressed="editor.hasDecoration('underline')" :disabled="off" :title="t('Underline')" data-testid="underline" @click="run(editor.toggleDecoration('underline'))">U</button>
+            <button type="button" class="s" :aria-pressed="editor.hasDecoration('line-through')" :disabled="off" :title="t('Strike through')" data-testid="strike" @click="run(editor.toggleDecoration('line-through'))">S</button>
           </div>
-          <StyleColorPicker label="Text" :value="editor.named('color')" :own="own('color')" :disabled="off" :roles="host.roles" @pick="run(editor.setColor('color', $event))" @reset="run(editor.reset('color'))" />
+          <StyleColorPicker :label="t('Text')" :value="editor.named('color')" :own="own('color')" :disabled="off" :roles="host.roles" @pick="run(editor.setColor('color', $event))" @reset="run(editor.reset('color'))" />
         </div>
       </section>
 
-      <section v-if="shown.has('paragraph')" class="facet" data-facet="paragraph" aria-label="Paragraph">
-        <h4>Paragraph</h4>
+      <section v-if="shown.has('paragraph')" class="facet" data-facet="paragraph" :aria-label="t('Paragraph')">
+        <h4>{{ t('Paragraph') }}</h4>
         <div class="row">
-          <div class="marks" role="group" aria-label="Alignment">
-            <button v-if="host.alignOf" type="button" class="auto" :aria-pressed="alignNow === undefined" :disabled="off" title="By content: numbers right, text left" data-align="auto" @click="run(editor.reset('text-align'))">Auto</button>
+          <div class="marks" role="group" :aria-label="t('Alignment')">
+            <button v-if="host.alignOf" type="button" class="auto" :aria-pressed="alignNow === undefined" :disabled="off" :title="t('By content: numbers right, text left')" data-align="auto" @click="run(editor.reset('text-align'))">{{ t('Auto') }}</button>
             <button v-for="[value, label] in ALIGN" :key="value" type="button" :aria-pressed="alignNow === value" :disabled="off" :title="label" :data-align="value" @click="run(editor.setAlign(value))">
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <path :d="value === 'left' ? 'M2 3h12M2 6.5h8M2 10h12M2 13.5h8' : value === 'center' ? 'M2 3h12M4 6.5h8M2 10h12M4 13.5h8' : value === 'right' ? 'M2 3h12M6 6.5h8M2 10h12M6 13.5h8' : 'M2 3h12M2 6.5h12M2 10h12M2 13.5h12'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -162,69 +183,69 @@ const ALIGN = [
             </button>
           </div>
         </div>
-        <label class="row check" title="Break long words at the end of a line where the text's language allows (in the pages and the PDF)">
+        <label class="row check" :title="t('Break long words at the end of a line where the text\'s language allows (in the pages and the PDF)')">
           <input type="checkbox" :checked="editor.hyphenates" :disabled="off" data-testid="hyphenate" @change="run(editor.setHyphens(($event.target as HTMLInputElement).checked))" >
-          <span>Hyphenate</span>
+          <span>{{ t('Hyphenate') }}</span>
         </label>
       </section>
 
-      <section v-if="shown.has('box')" class="facet" data-facet="box" aria-label="Box" data-testid="box-controls">
-        <h4>Box</h4>
+      <section v-if="shown.has('box')" class="facet" data-facet="box" :aria-label="t('Box')" data-testid="box-controls">
+        <h4>{{ t('Box') }}</h4>
         <div class="row">
-          <StyleColorPicker label="Background" :value="editor.named('background-color')" :own="own('background-color')" :disabled="off" :roles="host.roles" washes @pick="run(editor.setColor('background-color', $event))" @reset="run(editor.reset('background-color'))" />
+          <StyleColorPicker :label="t('Background')" :value="editor.named('background-color')" :own="own('background-color')" :disabled="off" :roles="host.roles" washes @pick="run(editor.setColor('background-color', $event))" @reset="run(editor.reset('background-color'))" />
         </div>
         <div class="row border">
-          <div class="marks sides" role="group" aria-label="Which side the border is on">
-            <button v-for="s in SIDE_CHOICES" :key="s" type="button" :aria-pressed="side === s" :disabled="off" :title="s === 'all' ? 'All four sides' : `The ${s} side`" :data-side="s" @click="side = s">
+          <div class="marks sides" role="group" :aria-label="t('Which side the border is on')">
+            <button v-for="s in SIDE_CHOICES" :key="s" type="button" :aria-pressed="side === s" :disabled="off" :title="sideTitle(s)" :data-side="s" @click="side = s">
               {{ s === 'all' ? '▢' : s === 'top' ? '▔' : s === 'right' ? '▕' : s === 'bottom' ? '▁' : '▏' }}
             </button>
           </div>
           <span class="stepper">
-            <button type="button" aria-label="Thinner border" :disabled="off" data-testid="border-thinner" @click="run(editor.setBorder(sidesNow, (borderNow?.width ?? 0) - 1, borderColour))">−</button>
+            <button type="button" :aria-label="t('Thinner border')" :disabled="off" data-testid="border-thinner" @click="run(editor.setBorder(sidesNow, (borderNow?.width ?? 0) - 1, borderColour))">−</button>
             <output class="mono" data-testid="border-width">{{ borderNow?.width ?? 0 }}</output>
-            <button type="button" aria-label="Thicker border" :disabled="off" data-testid="border-thicker" @click="run(editor.setBorder(sidesNow, (borderNow?.width ?? 0) + 1, borderColour))">+</button>
+            <button type="button" :aria-label="t('Thicker border')" :disabled="off" data-testid="border-thicker" @click="run(editor.setBorder(sidesNow, (borderNow?.width ?? 0) + 1, borderColour))">+</button>
           </span>
-          <StyleColorPicker label="Border" :value="borderNow?.colour" :own="!!borderNow" :disabled="off" :roles="host.roles" @pick="run(editor.setBorder(sidesNow, Math.max(1, borderNow?.width ?? 1), $event))" @reset="run(editor.setBorder(sidesNow, 0, borderColour))" />
+          <StyleColorPicker :label="t('Border')" :value="borderNow?.colour" :own="!!borderNow" :disabled="off" :roles="host.roles" @pick="run(editor.setBorder(sidesNow, Math.max(1, borderNow?.width ?? 1), $event))" @reset="run(editor.setBorder(sidesNow, 0, borderColour))" />
         </div>
         <div v-if="extras.has('vertical-align')" class="row">
-          <span class="label">Vertical</span>
-          <div class="marks words" role="group" aria-label="Vertical alignment" data-testid="vertical">
+          <span class="label">{{ t('Vertical') }}</span>
+          <div class="marks words" role="group" :aria-label="t('Vertical alignment')" data-testid="vertical">
             <button v-for="v in VERTICAL" :key="v" type="button" :aria-pressed="editor.vertical === v" :disabled="off" :data-vertical="v" @click="run(editor.setVertical(v))">{{ v }}</button>
           </div>
         </div>
         <label v-if="extras.has('white-space')" class="row check">
           <input type="checkbox" :checked="editor.wraps" :disabled="off" data-testid="wrap" @change="run(editor.setWrap(($event.target as HTMLInputElement).checked))" >
-          <span>Wrap long text</span>
+          <span>{{ t('Wrap long text') }}</span>
         </label>
         <div class="row">
           <label class="width">
-            <span>Padding</span>
+            <span>{{ t('Padding') }}</span>
             <span class="stepper">
-              <button type="button" aria-label="Less padding" :disabled="off" data-testid="padding-less" @click="run(editor.setPadding(editor.padding - 2))">−</button>
+              <button type="button" :aria-label="t('Less padding')" :disabled="off" data-testid="padding-less" @click="run(editor.setPadding(editor.padding - 2))">−</button>
               <output class="mono" data-testid="padding">{{ editor.padding }}</output>
-              <button type="button" aria-label="More padding" :disabled="off" data-testid="padding-more" @click="run(editor.setPadding(editor.padding + 2))">+</button>
+              <button type="button" :aria-label="t('More padding')" :disabled="off" data-testid="padding-more" @click="run(editor.setPadding(editor.padding + 2))">+</button>
             </span>
-            <span class="unit">px</span>
+            <span class="unit">{{ t('px') }}</span>
           </label>
         </div>
       </section>
 
       <!-- An outline is a shape's paint, in SVG's words because a shape is not a rectangle (D178). -->
-      <section v-if="shown.has('outline')" class="facet" data-facet="outline" aria-label="Outline" data-testid="outline-controls">
-        <h4>Outline</h4>
+      <section v-if="shown.has('outline')" class="facet" data-facet="outline" :aria-label="t('Outline')" data-testid="outline-controls">
+        <h4>{{ t('Outline') }}</h4>
         <div class="row">
-          <StyleColorPicker label="Fill" :value="editor.named('fill')" :own="own('fill')" :disabled="off" :roles="host.roles" washes @pick="run(editor.setFill($event))" @reset="run(editor.reset('fill'))" />
-          <StyleColorPicker label="Stroke" :value="editor.named('stroke')" :own="own('stroke')" :disabled="off" :roles="host.roles" @pick="run(editor.setStroke($event))" @reset="run(editor.reset('stroke'))" />
+          <StyleColorPicker :label="t('Fill')" :value="editor.named('fill')" :own="own('fill')" :disabled="off" :roles="host.roles" washes @pick="run(editor.setFill($event))" @reset="run(editor.reset('fill'))" />
+          <StyleColorPicker :label="t('Stroke')" :value="editor.named('stroke')" :own="own('stroke')" :disabled="off" :roles="host.roles" @pick="run(editor.setStroke($event))" @reset="run(editor.reset('stroke'))" />
         </div>
         <div class="row">
           <label class="width">
-            <span>Width</span>
+            <span>{{ t('Width') }}</span>
             <span class="stepper">
-              <button type="button" aria-label="Thinner" :disabled="off" data-testid="thinner" @click="run(editor.stepStrokeWidth(-1))">−</button>
+              <button type="button" :aria-label="t('Thinner')" :disabled="off" data-testid="thinner" @click="run(editor.stepStrokeWidth(-1))">−</button>
               <output class="mono" data-testid="stroke-width">{{ editor.strokeWidth }}</output>
-              <button type="button" aria-label="Thicker" :disabled="off" data-testid="thicker" @click="run(editor.stepStrokeWidth(1))">+</button>
+              <button type="button" :aria-label="t('Thicker')" :disabled="off" data-testid="thicker" @click="run(editor.stepStrokeWidth(1))">+</button>
             </span>
-            <span class="unit">px</span>
+            <span class="unit">{{ t('px') }}</span>
           </label>
         </div>
       </section>
@@ -235,12 +256,12 @@ const ALIGN = [
 
     <form v-if="editor.invitesName" class="name" data-testid="name-invitation" @submit.prevent="name">
       <label>
-        <span>This style is called “{{ current.name }}”. Give it a name that says what it is for?</span>
-        <input ref="nameField" v-model="naming" placeholder="Name" autocomplete="off" aria-label="Name of the style" >
+        <span>{{ t('This style is called “{name}”. Give it a name that says what it is for?', { name: current.name }) }}</span>
+        <input ref="nameField" v-model="naming" :placeholder="t('Name')" autocomplete="off" :aria-label="t('Name of the style')" >
       </label>
       <div class="actions">
-        <button class="btn primary" type="submit" :disabled="!naming.trim()">Name it</button>
-        <button class="btn" type="button" @click="editor.dismissNaming()">Not now</button>
+        <button class="btn primary" type="submit" :disabled="!naming.trim()">{{ t('Name it') }}</button>
+        <button class="btn" type="button" @click="editor.dismissNaming()">{{ t('Not now') }}</button>
       </div>
     </form>
   </section>

@@ -4,12 +4,15 @@ translations, before any string has actually moved into it.
 ``uv run python scripts/extract_i18n.py``          regenerate ``po/claudia.pot``
 ``uv run python scripts/extract_i18n.py --check``  fail if the checked-in file would change (the CI gate)
 
-Three shapes are collected, by three different techniques:
+Four shapes are collected, by four different techniques:
 
 * Python: ``_("...")`` (the GNU gettext convention; ``install_translation`` in ``clients/shell/i18n.py`` binds
-  ``_`` process-wide). Found with the ``ast`` module, so string concatenation, f-strings and anything else that is
-  not one plain string literal is reported, not silently skipped: a translator cannot work from a format that is
-  built at runtime, so that is a mistake to fix in the source, not a string to lose quietly.
+  ``_`` process-wide) and, in the server, ``msg("...", name=value)`` (D293). Found with the ``ast`` module, so string
+  concatenation, f-strings and anything else that is not one plain string literal is reported, not silently skipped:
+  a translator cannot work from a format that is built at runtime, so that is a mistake to fix in the source, not a
+  string to lose quietly.
+* The function library's descriptions and the wordings of its examples (E13.8), through
+  ``claudia_computes.translatable_texts``: data, not calls.
 * Web (TypeScript/Vue): ``t("...")`` (``createTranslator`` in ``web/app/lib/i18n.ts``). Found with a regular
   expression, not a real parser (there is no TypeScript/Vue parser in this project's own dependencies to reach for);
   it accepts the one plain string literal shape actual calls use today and otherwise reports the call so it is
@@ -21,7 +24,8 @@ Three shapes are collected, by three different techniques:
   ("Deutsch") are the one deliberate exclusion, by the same id rule ``manifest.py``'s own ``_item_element`` uses.
 
 The owner's second i18n round (E5.7, D31/D148's groundwork, D160) moved the manifest's own chrome into this catalog;
-nothing else has moved yet, so a mostly menu-shaped ``claudia.pot`` is the expected, correct output today.
+the round after it (D291) moved the whole web interface, and the Linux shell's remaining messages followed (the
+About links of ``manifest.about_links`` are walked with the manifest).
 """
 
 from __future__ import annotations
@@ -72,33 +76,38 @@ class Problem:
         return f"{self.path.relative_to(ROOT)}:{self.line}: {self.reason}"
 
 
+#: The names that mark a text for translation in Python: gettext's ``_`` and the server's ``msg`` (D293).
+MARKERS = ("_", "msg")
+
+
 def _existing_dirs(names: tuple[str, ...]) -> list[Path]:
     return [p for p in (ROOT / name for name in names) if p.is_dir()]
 
 
-def _call_arg_string(call: ast.Call) -> str | None:
+def _call_arg_string(call: ast.Call, *, keywords: bool = False) -> str | None:
     """The plain string literal of a call's one positional argument, or ``None`` if it is not that simple shape
-    (no args, more than one, a keyword, or anything other than a string constant — f-strings included: an
-    ``ast.JoinedStr`` is not an ``ast.Constant`` and so is correctly rejected here)."""
-    if len(call.args) != 1 or call.keywords:
+    (no args, more than one, a keyword unless ``keywords`` (the server's ``msg("{n} cells", n=n)`` fills its
+    placeholders that way), or anything other than a string constant — f-strings included: an ``ast.JoinedStr`` is
+    not an ``ast.Constant`` and so is correctly rejected here)."""
+    if len(call.args) != 1 or (call.keywords and not keywords):
         return None
     (arg,) = call.args
     return arg.value if isinstance(arg, ast.Constant) and isinstance(arg.value, str) else None
 
 
 def extract_python(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
-    """``_("...")`` calls in one file: ``{msgid: [occurrence, ...]}`` and anything that looked like a call but
-    was not one plain string literal."""
+    """``_("...")`` and the server's ``msg("...", name=value)`` calls in one file: ``{msgid: [occurrence, ...]}`` and
+    anything that looked like a call but was not one plain string literal."""
     found: dict[str, list[str]] = {}
     problems: list[Problem] = []
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     for node in ast.walk(tree):
-        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_"):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in MARKERS):
             continue
-        msgid = _call_arg_string(node)
+        msgid = _call_arg_string(node, keywords=node.func.id == "msg")
         occurrence = f"{path.relative_to(ROOT)}:{node.lineno}"
         if msgid is None:
-            problems.append(Problem(path, node.lineno, "_(...) is not a single plain string literal"))
+            problems.append(Problem(path, node.lineno, f"{node.func.id}(...) is not a single plain string literal"))
         else:
             found.setdefault(msgid, []).append(occurrence)
     return found, problems
@@ -176,7 +185,18 @@ def extract_manifest() -> dict[str, list[str]]:
                 texts.add(action.label)
                 if action.tooltip:
                     texts.add(action.tooltip)
+    texts.update(label for label, _url in manifest_module.about_links())  # the About dialog's links (D28)
     return {text: [occurrence] for text in texts}
+
+
+def extract_function_texts() -> dict[str, list[str]]:
+    """The description of every cell function and the wordings of its worked examples (E13.8, D294), as
+    ``claudia_computes.translatable_texts`` lists them: they are data of the function library, not ``_("...")`` calls.
+    Their one occurrence is the library's folder, since a description is a class attribute, not a line to point at."""
+    from claudia_computes import translatable_texts
+
+    occurrence = "packages/claudia-computes/src/claudia_computes/functions"
+    return {text: [occurrence] for text in translatable_texts()}
 
 
 def collect() -> tuple[dict[str, list[str]], list[Problem]]:
@@ -189,6 +209,7 @@ def collect() -> tuple[dict[str, list[str]], list[Problem]]:
             catalog.setdefault(msgid, []).extend(occurrences)
 
     merge(extract_manifest())
+    merge(extract_function_texts())
     for base in _existing_dirs(PY_DIRS):
         for path in sorted(base.rglob("*.py")):
             found, found_problems = extract_python(path)
