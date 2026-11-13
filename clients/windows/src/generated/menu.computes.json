@@ -192,6 +192,18 @@
         ],
         [
           {
+            "accelerators": [
+              "<Primary>f"
+            ],
+            "checkable": false,
+            "id": "edit.search-replace",
+            "kind": "page",
+            "label": "Search & Replace\u2026",
+            "role": null
+          }
+        ],
+        [
+          {
             "accelerators": [],
             "checkable": false,
             "id": "edit.new-sheet",

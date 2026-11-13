@@ -23,6 +23,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   and `list_start(list, start)`; each is one history step and the assistant has no access (D63). `blocks` also
   answers `lists` and `schemes`, and gives every list item an `item` and a derived `label` (`{marker, path}`). The
   events `item`, `labels` and `lists` follow the document.
+- Search and replace in workbooks (E6.20, D284-D286): `search_find`, `search_preview` and `search_replace` look in text,
+  formulas and values on every sheet, one sheet or a selection; show what a replacement would change; and replace in
+  one history step, skipping and naming the cells somebody else holds. A mistake in a person's pattern, or a pattern
+  that could run without end, is answered as `error: {message, field, position}`, not as a failed request. A search
+  stops after two seconds (`computes.SEARCH_SECONDS`; the answer says `timed_out`) and a replacement may change
+  10000 cells. The AI user may call `search_replace` (`apps.MODEL_METHODS`). New methods of an app do not change
+  `PROTOCOL_VERSION`.
 - One style API for all three apps (`claudia_server.style_targets`, the styling-suite plan step 1.5):
   `style_model` (facets, kinds, slots with the kinds each takes, and the target keys this app accepts),
   `apply_style(targets, style, slot?)`, `deviate(parent, targets, slot?, set|text)` and `style_uses`. A target is

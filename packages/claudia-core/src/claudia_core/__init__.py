@@ -22,6 +22,7 @@
     lists        ListDef, ListBook, the schemes and the counting of list items (E9.21)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
+    search       Query, CompiledSearch: what a person wants to find, compiled to a pattern and run on texts (E1.12)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
     page         PageSetup: the paper, orientation, margins and page numbers a document prints on (D904, D917)
@@ -203,6 +204,7 @@ from .presence import Hold, Presence
 from .region import Region, transform
 from .replay import replay
 from .revision import MAIN, Branch, Revision
+from .search import CompiledSearch, Match, Query, SearchError
 from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
 from .store import DocumentStore, MemoryStore
 from .styles import ChangeStyle, CreateStyle, RemoveStyle, RenameStyle, StyleBook, StyleDef, StylesChanged
@@ -222,6 +224,8 @@ __all__ = [
     "SCHEMES",
     "__version__",
     "AddObject",
+    "CompiledSearch",
+    "Match",
     "ALLOWED_CSS",
     "Anchor",
     "Applied",
@@ -335,6 +339,7 @@ __all__ = [
     "RedactedEvent",
     "Redaction",
     "RedactionError",
+    "Query",
     "Region",
     "RegionHeld",
     "RemoveObject",
@@ -365,6 +370,7 @@ __all__ = [
     "SetSnap",
     "SetLanguage",
     "SetText",
+    "SearchError",
     "ShapeDefinition",
     "ShapeError",
     "ShapesChanged",

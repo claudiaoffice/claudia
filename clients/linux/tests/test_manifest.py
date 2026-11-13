@@ -229,13 +229,15 @@ def test_apply_style_is_one_page_action_that_opens_the_pages_popover(
     assert [a.id for a in first] == ["format.apply-style", "format.look", "format.all-styles"]
 
 
-def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(computes: manifest.Manifest) -> None:
+def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_then_clear(
+    computes: manifest.Manifest,
+) -> None:
     """D123 (where new items land) and D130 (confirmed by the owner 2026-11-10 — grouped
-    into two submenus of three items each, not six flat items)."""
+    into two submenus of three items each, not six flat items); E5.15 put Search & Replace… ahead of them."""
     edit = computes.menu("Edit")
     tail = entries(edit)[6:]  # past the shared Undo…Paste-as block
-    assert [e.label for e in tail] == ["New Sheet…", "Row", "Column", "Clear Cells"]
-    row, column = tail[1], tail[2]
+    assert [e.label for e in tail] == ["Search & Replace…", "New Sheet…", "Row", "Column", "Clear Cells"]
+    row, column = tail[2], tail[3]
     assert isinstance(row, Submenu)
     assert [a.id for a in row.items] == ["edit.row-insert-above", "edit.row-insert-below", "edit.row-delete"]
     assert isinstance(column, Submenu) and [a.id for a in column.items] == [
@@ -243,6 +245,13 @@ def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(com
         "edit.column-insert-right",
         "edit.column-delete",
     ]
+
+
+def test_computes_search_and_replace_is_a_page_action_with_ctrl_f(computes: manifest.Manifest) -> None:
+    """E5.15, D281: the web page owns the panel, so the entry is a page action with the shortcut the menu shows."""
+    (search,) = [a for a in computes.menu("Edit").all_actions() if a.id == "edit.search-replace"]
+    assert search.kind is Kind.PAGE
+    assert search.accelerators == ("<Primary>f",)
 
 
 def test_creates_edit_has_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:

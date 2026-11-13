@@ -10,6 +10,7 @@ charts    ChartSpec: what a diagram draws, computes' own ``DiagramDefinition`` (
 region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
 styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
 entry     parse_input: what typing into a cell means
+search    scan and plan_replacement: search and replace in text, formulas and values (E6.20)
 
 
 A floating object is a shared ``ObjectBody`` plus a ``CellAnchor``: only the anchor is this app's. The anchor and

@@ -34,6 +34,7 @@ import {
   fileMenu,
   helpMenu,
   panelItem,
+  searchItem,
   undoRedoItems,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
@@ -42,12 +43,15 @@ import { useI18n } from '~/lib/i18n'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
-import { chordLabel, type ShortcutDef } from '~/lib/shortcuts'
+import { chordLabel, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { marksFor, NO_MARKS, type PreviewAnswer, type SearchMatch } from '~/lib/search'
+import { sheetSearchHost } from '~/lib/sheet-search-host'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
 import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
+import SearchPanel from './SearchPanel.vue'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
@@ -570,7 +574,44 @@ const activeHost = computed(() => (objectSelected.value ? styleHost : cellHost))
 
 /** Edit this style… at the active cell, or beside the selected object (D300, D302). */
 const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => grid.value?.openStyleMenu() }
-const extraShortcuts = [LOOK]
+
+// ------------------------------------------------------------------------------ Search & replace (E5.15)
+// The panel is one component for the three apps; this is the sheet's side of it: where it can look, how a match is
+// named and gone to, and the marks the grid draws for what it found.
+const searchOpen = ref(false)
+const searchReplace = ref(false)
+const searchPanel = ref<{ focus: () => void; openReplace: () => void } | null>(null)
+const searchView = ref<{ matches: SearchMatch[]; current: number | null; preview: PreviewAnswer | null }>({ matches: [], current: null, preview: null })
+const searchHost = sheetSearchHost({
+  session,
+  selection: () => sel.value,
+  goTo: (sheet, row, col) => void goToCell(sheet, row, col),
+})
+/** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */
+async function goToCell(sheet: string, row: number, col: number) {
+  if (sheet !== state.activeSheet || activeChart.value) await pickTab(sheet, 'sheet')
+  sel.value = single(row, col)
+}
+function openSearch(replace = false) {
+  searchOpen.value = true
+  searchReplace.value = replace && !readonly.value
+  void nextTick(() => (replace && !readonly.value ? searchPanel.value?.openReplace() : searchPanel.value?.focus()))
+}
+function closeSearch() {
+  searchOpen.value = false
+  searchReplace.value = false
+  searchView.value = { matches: [], current: null, preview: null }
+  grid.value?.focus()
+}
+const searchMarks = computed(() =>
+  searchOpen.value && state.activeSheet
+    ? marksFor(searchView.value.matches, state.activeSheet, searchView.value.current, searchView.value.preview)
+    : NO_MARKS,
+)
+const extraShortcuts = [
+  LOOK,
+  ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value }),
+]
 
 /**
  * The Format menu (D300): what it styles follows the selection — the selected cells (`computes-cell-styles.svg`,
@@ -715,6 +756,8 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
+        searchItem(c, { open: () => openSearch() }),
+        { label: '', separator: true },
         { id: 'edit.new-sheet', label: t('New sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
         { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
         { id: 'edit.chart', label: t('Chart…'), action: () => (dialog.value = 'chart'), disabled: readonly.value },
@@ -852,6 +895,7 @@ const SHORTCUT_NOTES: [string, string][] = [
       :pointing="pointing"
       :anchored="pointed"
       :cell-host="cellHost"
+      :marks="searchMarks"
       @object="objectSelected = $event"
       @styles="dialog = 'styles'"
       @select="select"
@@ -873,6 +917,15 @@ const SHORTCUT_NOTES: [string, string][] = [
       <FooterBar data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" @pick="pickTab" @add="dialog = 'sheet'" />
     </template>
     <template #overlay>
+      <SearchPanel
+        v-if="searchOpen"
+        ref="searchPanel"
+        :host="searchHost"
+        :replace="searchReplace"
+        @close="closeSearch"
+        @view="searchView = $event"
+        @help="frame?.openHelp('how-to')"
+      />
       <PromptDialog v-if="dialog === 'sheet'" title="New sheet" label="Name" ok="Add sheet" required placeholder="Forecast" @ok="addSheet" @close="dialog = null" />
       <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog

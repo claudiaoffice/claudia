@@ -176,6 +176,7 @@ jobs:
         run: |
           npm run e2e:resilience
           npm run e2e:recovery
+          npm run e2e:search
       # The Windows client's window, minus Neutralino itself: its built shell page and core, the real web app in the
       # frame. Starts servers of its own (8791 for --server), on ports the steps above have freed.
       - name: The Windows client's window (shell page, core, server and web app, Neutralino faked)

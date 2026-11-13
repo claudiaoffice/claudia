@@ -1069,3 +1069,48 @@ describe('names, tables and queries (E6.5)', () => {
     expect(session.figureOf('c1')).toBeNull()
   })
 })
+
+describe('searching', () => {
+  const QUERY = { mode: 'text', text: '€', match_case: false, whole: 'none' } as const
+  const ANSWER = { revision: 'main:3', matches: [], left_out: [], counts: { text: 0, formulas: 0, values: 0 }, total: 0, truncated: false, timed_out: false }
+
+  it('looks in all three kinds on the scope it is given, and answers what the server says', async () => {
+    const { session, link } = await opened()
+    link.handlers.search_find = () => ANSWER
+    expect(await session.searchFind(QUERY, ['text', 'formulas', 'values'], { sheet: 's1' })).toEqual(ANSWER)
+    expect(link.last('search_find')).toEqual({ query: QUERY, kinds: ['text', 'formulas', 'values'], scope: { sheet: 's1' } })
+  })
+
+  it('does not make a noise when a search cannot be answered while she types', async () => {
+    const { session, link } = await opened()
+    link.handlers.search_find = () => {
+      throw new ProtocolError('internal', 'down')
+    }
+    expect(await session.searchFind(QUERY, ['text'], {})).toBeNull()
+    expect(session.state.notice).toBeNull()
+  })
+
+  it('asks what a replacement would change, without a base: it changes nothing', async () => {
+    const { session, link } = await opened()
+    link.handlers.search_preview = () => ({ revision: 'main:3', changes: [], skipped: [], total: 0 })
+    await session.searchPreview({ ...QUERY, replace: [{ text: 'EUR ' }] }, ['text'], {}, [{ sheet: 's1', row: 0, col: 0, match: null }])
+    expect(link.last('search_preview')).toEqual({
+      query: { ...QUERY, replace: [{ text: 'EUR ' }] },
+      kinds: ['text'],
+      scope: {},
+      leave: [{ sheet: 's1', row: 0, col: 0, match: null }],
+    })
+  })
+
+  it('replaces against the revision it is looking at, and tells the person what the server refused', async () => {
+    const { session, link } = await opened()
+    link.handlers.search_replace = () => ({ revision: 'main:4', replaced: 2, skipped: [] })
+    expect(await session.searchReplace({ ...QUERY, replace: [{ text: 'EUR ' }] }, ['text'], { sheet: 's1' }, [])).toEqual({ revision: 'main:4', replaced: 2, skipped: [] })
+    expect(link.last('search_replace')).toMatchObject({ kinds: ['text'], scope: { sheet: 's1' }, leave: [], base: 'main:3' })
+    link.handlers.search_replace = () => {
+      throw new ProtocolError('bad_request', 'search_replace: that would change 20000 cells, at most 10000 at a time: narrow the search')
+    }
+    expect(await session.searchReplace(QUERY, ['text'], {}, [])).toBe(false)
+    expect(session.state.notice?.text).toMatch(/narrow the search/)
+  })
+})

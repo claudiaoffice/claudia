@@ -121,6 +121,7 @@ URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour r
 URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
 npm run e2e:resilience       # starts its own server on 8766, restarts it, checks that both browsers come back
 npm run e2e:recovery         # starts its own server on 8767: the recovery key, shown once, and a new one
+npm run e2e:search           # starts its own server on 8768: Edit ▸ Search & replace, the marks, the builder, one undoable replace
 npm run e2e:macos-shell      # the macOS client's window: its shell page and core in Chromium, the web app in the frame
 npm run e2e:windows-shell    # the same for the Windows client
 ```

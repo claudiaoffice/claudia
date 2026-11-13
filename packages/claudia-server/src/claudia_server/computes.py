@@ -4,8 +4,9 @@
 ``sizes``, ``resize_lines``, ``objects``, ``images``, ``styles``, ``add_image``, ``move_object``,
 ``resize_object``, ``rotate_object``, ``remove_object``, ``diagrams``, ``charts``, ``chart_figure``,
 ``define_diagram``, ``update_diagram``, ``forget_diagram``, ``add_diagram_object``, ``add_chart``,
-``remove_chart`` and, for named ranges, tables and queries (E6.5), ``names``, ``define_name``, ``rename_name``,
-``remove_name``, ``sql_preview`` and ``define_sql``. Cells
+``remove_chart``, for named ranges, tables and queries (E6.5), ``names``, ``define_name``, ``rename_name``,
+``remove_name``, ``sql_preview`` and ``define_sql``, and for search and replace (E6.20) ``search_find``,
+``search_preview`` and ``search_replace``. Cells
 travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
 "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
 with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
@@ -80,20 +81,32 @@ from claudia_computes.model import (
 )
 from claudia_computes.names import PURPOSES  # noqa: F401
 from claudia_computes.refs import CellRef, RangeRef
+from claudia_computes.region import CellRegion
+from claudia_computes.search import (
+    EXTRA_PARTS,
+    KINDS,
+    Plan,
+    plan_replacement,
+    replace_command,
+    scan,
+)
 from claudia_computes.values import FormulaError
 from claudia_core import (
     AddObject,
     Batch,
     Command,
+    CompiledSearch,
     DefineDiagram,
     DefineImage,
     ForgetDiagram,
     ImageImport,
     MoveObject,
     ObjectBody,
+    Query,
     RemoveObject,
     ResizeObject,
     RotateObject,
+    SearchError,
     UpdateDiagram,
     decode_image,
 )
@@ -109,6 +122,9 @@ MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
 MAX_TYPED_CELLS = 10_000  # cells in one ``set_cells``
 MAX_RESIZED_LINES = 1_000  # lines in one ``resize_lines``
 MAX_SHEET_NAME = 60
+SEARCH_SECONDS = 2.0  # how long one search may look (the worker pool's budget, D284); then it says it stopped
+MAX_REPLACED_CELLS = 10_000  # cells one replacement may change, as many as one ``set_cells``
+MAX_PREVIEWED = 2_000  # changes a preview lists (it says how many there are in all)
 AXES = {
     ("row", True): InsertRows,
     ("row", False): DeleteRows,
@@ -778,3 +794,214 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
             raise RequestError("bad_request", f"define_sql: {problem}") from None
     applied = ctx.document.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
+
+
+# -------------------------------------------------------------------- search and replace (E6.20, D284-D286)
+def _search_of(raw: dict) -> CompiledSearch:
+    """The compiled search of a query as a client sends it, with computes' own parts; ``SearchError`` if not."""
+    return Query.from_data(raw).compile(EXTRA_PARTS)
+
+
+def _kinds_of(kinds: list | None, method: str) -> tuple[str, ...]:
+    chosen = ["text"] if kinds is None else kinds
+    if not chosen or not all(isinstance(k, str) and k in KINDS for k in chosen):
+        raise RequestError("bad_request", f"{method}: kinds is a list of {', '.join(KINDS)}")
+    return tuple(k for k in KINDS if k in chosen)
+
+
+def _search_scope(ctx, scope: dict | None, method: str) -> tuple[list[str] | None, tuple[int, int, int, int] | None]:
+    """``(sheets, area)``: no scope is every sheet, ``{"sheet": id}`` one sheet, and with ``"range": [r0, c0, r1, c1]``
+    a selection on it."""
+    scope = scope or {}
+    if set(scope) - {"sheet", "range"}:
+        raise RequestError("bad_request", f"{method}: a scope has a sheet and, on it, a range")
+    sheet, area = scope.get("sheet"), scope.get("range")
+    if area is not None and sheet is None:
+        raise RequestError("bad_request", f"{method}: a range is on a sheet: say which")
+    if sheet is None:
+        return None, None
+    if not isinstance(sheet, str):
+        raise RequestError("bad_request", f"{method}: a sheet is named by its id")
+    _workbook(ctx).sheet(SheetId(sheet))  # (command_error for a sheet this document does not have)
+    if area is None:
+        return [sheet], None
+    ok = isinstance(area, list) and len(area) == 4 and all(isinstance(n, int) and not isinstance(n, bool) for n in area)
+    if not ok or not (0 <= area[0] <= area[2] < MAX_ROWS and 0 <= area[1] <= area[3] < MAX_COLS):
+        raise RequestError("bad_request", f"{method}: a range is [first row, first column, last row, last column]")
+    return [sheet], (area[0], area[1], area[2], area[3])
+
+
+def _no_search(error: SearchError, more: dict | None = None) -> dict:
+    """What a search that cannot run answers: the mistake, with where it is, and nothing found."""
+    return {
+        "error": {"message": error.message, "field": error.field, "position": error.position},
+        "matches": [],
+        "left_out": [],
+        "counts": dict.fromkeys(KINDS, 0),
+        "total": 0,
+        "truncated": False,
+        "timed_out": False,
+        **(more or {}),
+    }
+
+
+@computes_methods.method("search_find", "query:dict kinds:list? scope:dict?")
+def _search_find(ctx, *, query, kinds, scope):
+    """Search and replace, the looking (E6.20). `query` is what a person described: `{mode: "text", text}` (what
+    is typed is what is found), `{mode: "builder", parts, conditions, combine}` or `{mode: "pattern", find, filter}`
+    (her own pattern); each may carry `match_case`, and the first two `whole` (`none`, `entire` or `word`) and, to
+    show what a replacement would do, `replace`. A part is `{what, ...}`: `text`, `any_of`, `none_of`, `letter`,
+    `digit`, `space`, `any`, `number`, `start`, `end` or, in a workbook, `cellref`. `kinds` is any of `text`,
+    `formulas` and `values` (default `["text"]`): the text people typed, formulas as typed, and what cells show
+    that was not typed as text. `scope` is `{}` (every sheet), `{sheet}` or `{sheet, range: [r0, c0, r1, c1]}`.
+
+    Answers `{revision, matches, left_out, counts, total, truncated, timed_out, pattern}`. A match is `{sheet, row,
+    col, kind, number, start, end, parts, after, text, excerpt, clipped}`: `kind` is `text`, `formula` or `value`,
+    `number` the match's place among those of its cell, `start`/`end` where it is in the cell's text, `parts` what
+    the kept parts matched, `after` what a replacement would make of it (`null` for a value, or without one), `text`
+    the stretch of the cell around it, `excerpt` the match inside that and `clipped` whether the cell goes on before
+    and after it. `left_out` are cells that look like matches but fail a condition, `{sheet, row, col, kind, why}`.
+    `counts` are cells with a match, by kind; `total` all matches, of which at most 2000 are listed. `pattern` is
+    `{find, filter, replace}`, the three fields that say the same search as text. A search that cannot run — a
+    mistake in the person's pattern, or one that could run without end — is not an error: it answers `error:
+    {message, field, position}` and finds nothing, so that a client can say so while she types. `timed_out` says the
+    search stopped before it had seen everything."""
+    chosen, (sheets, area) = _kinds_of(kinds, "search_find"), _search_scope(ctx, scope, "search_find")
+    try:
+        compiled = _search_of(query)
+    except SearchError as error:
+        return _no_search(error, {"revision": _rev(ctx)})
+    deadline = time.monotonic() + SEARCH_SECONDS
+    found = scan(
+        _workbook(ctx), compiled, kinds=chosen, sheets=sheets, area=area, time_up=lambda: time.monotonic() >= deadline
+    )
+    return {
+        "revision": _rev(ctx),
+        "matches": [
+            {
+                "sheet": h.sheet,
+                "row": h.row,
+                "col": h.col,
+                "kind": h.kind,
+                "number": h.number,
+                "start": h.start,
+                "end": h.end,
+                "parts": list(h.kept),
+                "after": h.after,
+                "text": h.text,
+                "excerpt": [h.excerpt_start, h.excerpt_end],
+                "clipped": [h.clipped_before, h.clipped_after],
+            }
+            for h in found.matches
+        ],
+        "left_out": [
+            {"sheet": o.sheet, "row": o.row, "col": o.col, "kind": o.kind, "why": o.why} for o in found.left_out
+        ],
+        "counts": found.counts,
+        "total": found.total,
+        "truncated": found.truncated,
+        "timed_out": found.timed_out,
+        "pattern": compiled.pattern_text(),
+    }
+
+
+def _left(items: list | None) -> dict[tuple[str, int, int], set[int] | None]:
+    """The matches a person wants to keep, as ``{(sheet, row, col): {match numbers} | None}`` (``None``: the cell)."""
+    leave: dict[tuple[str, int, int], set[int] | None] = {}
+    for item in items or []:
+        ok = isinstance(item, dict) and set(item) == {"sheet", "row", "col", "match"}
+        if not ok or not isinstance(item["sheet"], str):
+            raise RequestError("bad_request", "leave: each is {sheet, row, col, match}, match being a number or null")
+        row, col, match = _index(item["row"], MAX_ROWS, "row"), _index(item["col"], MAX_COLS, "col"), item["match"]
+        if match is not None and (isinstance(match, bool) or not isinstance(match, int) or match < 0):
+            raise RequestError("bad_request", "leave: match is the number of a match in the cell, or null for all")
+        key = (item["sheet"], row, col)
+        if match is None:
+            leave[key] = None
+        elif leave.get(key, set()) is not None:
+            leave[key] = {*(leave.get(key) or set()), match}
+    return leave
+
+
+def _plan(ctx, query: dict, kinds: list | None, scope: dict | None, leave: list | None, method: str) -> Plan:
+    chosen, (sheets, area) = _kinds_of(kinds, method), _search_scope(ctx, scope, method)
+    compiled = _search_of(query)
+    return plan_replacement(
+        _workbook(ctx),
+        compiled,
+        kinds=chosen,
+        sheets=sheets,
+        area=area,
+        leave=_left(leave),
+        held=_holder(ctx),
+        max_length=ctx.limits.max_text,
+    )
+
+
+def _holder(ctx):
+    """Who holds a cell, when it is somebody else: asks the document's locks once per sheet."""
+    locks: dict[str, list] = {}
+
+    def held(sheet: str, row: int, col: int) -> str | None:
+        if sheet not in locks:
+            whole = CellRegion.of(SheetId(sheet), 0, 0, MAX_ROWS - 1, MAX_COLS - 1)
+            locks[sheet] = ctx.document.presence.conflicts(ctx.user, [whole])
+        here = CellRegion.of(SheetId(sheet), row, col, row, col)
+        return next((owner for owner, region in locks[sheet] if region.overlaps(here)), None)
+
+    return held
+
+
+def _skipped(plan: Plan) -> list[dict]:
+    return [
+        {"sheet": s.sheet, "row": s.row, "col": s.col, "kind": s.kind, "reason": s.reason, "by": s.by}
+        for s in plan.skipped
+    ]
+
+
+@computes_methods.method("search_preview", "query:dict kinds:list? scope:dict? leave:list?")
+def _search_preview(ctx, *, query, kinds, scope, leave):
+    """What `search_replace` with the same parameters would do, without doing it: `{revision, changes, skipped,
+    total}`. A change is `{sheet, row, col, kind, before, after}` (`kind` is `text` or `formula`; at most 2000 are
+    listed, `total` is how many there are); a skipped cell is `{sheet, row, col, kind, reason, by}`, the reason being
+    `locked` (`by` holds it), `formula` (the result would no longer be a formula that reads) or `too_long`. Only
+    text and formulas are ever replaced, whatever `kinds` says. A query that cannot run answers `error` as
+    `search_find` does."""
+    try:
+        plan = _plan(ctx, query, kinds, scope, leave, "search_preview")
+    except SearchError as error:
+        return {
+            "revision": _rev(ctx),
+            "error": {"message": error.message, "field": error.field, "position": error.position},
+        }
+    return {
+        "revision": _rev(ctx),
+        "changes": [
+            {"sheet": c.sheet, "row": c.row, "col": c.col, "kind": c.kind, "before": c.before, "after": c.after}
+            for c in plan.changes[:MAX_PREVIEWED]
+        ],
+        "skipped": _skipped(plan),
+        "total": len(plan.changes),
+    }
+
+
+@computes_methods.method("search_replace", "query:dict kinds:list? scope:dict? leave:list? base:revision?", write=True)
+def _search_replace(ctx, *, query, kinds, scope, leave, base):
+    """Replace what `search_find` finds, with `query.replace` (the same parameters as `search_preview`, which shows
+    the effect first). One change in the history, stored as the cells it changes: undoing it restores them all. Cells
+    held by somebody else are skipped and named in `skipped`, never refused as a whole. Answers `{revision,
+    replaced, skipped}`, `replaced` being the number of cells changed (nothing changing is not an error and leaves no
+    entry in the history). `command_error` for a query that cannot run or has nothing to replace with, `bad_request`
+    when more than 10000 cells would change."""
+    plan = _plan(ctx, query, kinds, scope, leave, "search_replace")
+    if len(plan.changes) > MAX_REPLACED_CELLS:
+        raise RequestError(
+            "bad_request",
+            f"search_replace: that would change {len(plan.changes)} cells, at most {MAX_REPLACED_CELLS} at a time: "
+            "narrow the search",
+        )
+    command = replace_command(plan)
+    if command is None:
+        return {"revision": _rev(ctx), "replaced": 0, "skipped": _skipped(plan)}
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data(), "replaced": len(plan.changes), "skipped": _skipped(plan)}

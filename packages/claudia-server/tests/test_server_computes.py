@@ -5,7 +5,7 @@ import struct
 
 import pytest
 
-from claudia_computes import AddSheet, WorkbookModel
+from claudia_computes import AddSheet, CellRegion, WorkbookModel
 from claudia_computes.model import MAX_ROWS
 from claudia_core import Document, MemoryStore
 from claudia_server.auth import Account
@@ -767,3 +767,257 @@ def test_moving_and_removing_a_diagram_object_undo_round_trips_like_any_object(b
     call(book, "remove_object", {"id": obj["id"]})
     book.undo("ann")
     assert [o["id"] for o in objects(book)] == [added["object"]]
+
+
+# ------------------------------------------------------------------------------------------ search and replace (E6.20)
+def budget_sheet(doc):
+    doc.execute(AddSheet("s1", "Sheet1"), author="ann")
+    typed(
+        doc,
+        "s1",
+        [
+            (0, 0, "Travel"),
+            (0, 1, "€12,50"),
+            (1, 1, "€80"),
+            (2, 1, "$9.90 EUR"),
+            (3, 1, '=VALUE(SUBSTITUTE(B1,"€",""))+1'),
+            (4, 1, "42"),
+        ],
+    )
+
+
+def search(doc, query, account=ANN, **more):
+    return call(doc, "search_find", {"query": query, **more}, account=account)
+
+
+def text(value, **more):
+    return {"mode": "text", "text": value, **more}
+
+
+def test_a_quick_search_lists_matches_with_where_and_what_kind(book):
+    budget_sheet(book)
+    found = search(book, text("€"), kinds=["text", "formulas"])
+    assert [(m["row"], m["col"], m["kind"], m["start"], m["end"]) for m in found["matches"]] == [
+        (0, 1, "text", 0, 1),
+        (1, 1, "text", 0, 1),
+        (3, 1, "formula", 22, 23),
+    ]
+    assert found["counts"] == {"text": 2, "formulas": 1, "values": 0}
+    assert found["total"] == 3 and not found["truncated"] and not found["timed_out"]
+    assert found["revision"] == book.revision.to_data()
+
+
+def test_a_match_says_what_it_is_in_and_how_it_reads_there(book):
+    budget_sheet(book)
+    match = search(book, text("12,5"))["matches"][0]
+    assert match["sheet"] == "s1" and match["text"] == "€12,50" and match["excerpt"] == [1, 5]
+    assert match["clipped"] == [False, False]
+    assert match["number"] == 0 and match["parts"] == [] and match["after"] is None
+
+
+def test_search_looks_in_text_unless_told_otherwise(book):
+    budget_sheet(book)
+    assert [(m["row"]) for m in search(book, text("42"))["matches"]] == []
+    assert [(m["row"]) for m in search(book, text("42"), kinds=["values"])["matches"]] == [4]
+
+
+def test_a_long_cell_is_cut_around_the_match_and_says_so(book):
+    budget_sheet(book)
+    typed(book, "s1", [(8, 0, "a" * 200 + "NEEDLE" + "b" * 200)])
+    match = search(book, text("needle"))["matches"][0]
+    assert match["start"] == 200 and match["clipped"] == [True, True]
+    assert match["text"][match["excerpt"][0] : match["excerpt"][1]] == "NEEDLE"
+
+
+def test_the_scope_is_a_sheet_or_a_selection(book):
+    budget_sheet(book)
+    call(book, "add_sheet", {"name": "Other"})
+    typed(book, "s2", [(0, 0, "€ elsewhere")])
+    assert len(search(book, text("€"))["matches"]) == 3  # all sheets
+    assert len(search(book, text("€"), scope={"sheet": "s2"})["matches"]) == 1
+    selected = search(book, text("€"), scope={"sheet": "s1", "range": [1, 0, 2, 1]})
+    assert [(m["row"], m["col"]) for m in selected["matches"]] == [(1, 1)]
+
+
+def test_a_selection_needs_its_sheet_and_four_numbers(book):
+    budget_sheet(book)
+    for scope in ({"range": [0, 0, 1, 1]}, {"sheet": "s1", "range": [0, 0, 1]}, {"sheet": "s1", "range": [1, 0, 0, 0]}):
+        with pytest.raises(RequestError) as caught:
+            search(book, text("x"), scope=scope)
+        assert caught.value.code == "bad_request"
+    with pytest.raises(RequestError) as caught:
+        search(book, text("x"), scope={"sheet": "nope"})
+    assert caught.value.code == "command_error"
+
+
+def test_a_search_in_the_builders_words(book):
+    budget_sheet(book)
+    query = {
+        "mode": "builder",
+        "parts": [{"what": "any_of", "chars": "€$£"}, {"what": "number", "keep": "amount"}],
+        "conditions": [{"kind": "not_contains", "text": "EUR"}],
+        "replace": [{"keep": "amount"}, {"text": " EUR"}],
+    }
+    found = search(book, query)
+    assert [(m["row"], m["parts"], m["after"]) for m in found["matches"]] == [
+        (0, ["12,50"], "12,50 EUR"),
+        (1, ["80"], "80 EUR"),
+    ]
+    assert [(o["row"], o["why"]) for o in found["left_out"]] == [(2, {"kind": "not_contains", "text": "EUR"})]
+    assert found["pattern"] == {"find": r"[€$£](\d+(?:[.,]\d+)*)", "filter": "^(?!.*EUR)", "replace": r"\g<1> EUR"}
+
+
+def test_a_typed_pattern_is_searched_as_it_is_and_a_cell_reference_is_a_part(book):
+    budget_sheet(book)
+    found = search(book, {"mode": "pattern", "find": r"\d+,\d+"})
+    assert [m["row"] for m in found["matches"]] == [0]
+    refs = search(book, {"mode": "builder", "parts": [{"what": "cellref"}]}, kinds=["formulas"])
+    assert [(m["row"], m["text"][m["excerpt"][0] : m["excerpt"][1]]) for m in refs["matches"]] == [(3, "B1")]
+
+
+def test_a_mistake_in_the_pattern_comes_back_as_a_result_not_an_error(book):
+    budget_sheet(book)
+    found = search(book, {"mode": "pattern", "find": "a(bc"})
+    assert found["error"] == {"message": "missing ), unterminated subpattern", "field": "find", "position": 1}
+    assert found["matches"] == [] and found["counts"] == {"text": 0, "formulas": 0, "values": 0}
+
+
+def test_a_pattern_that_could_run_forever_is_refused_in_the_same_way(book):
+    budget_sheet(book)
+    found = search(book, {"mode": "pattern", "find": "(a+)+$"})
+    assert found["error"]["field"] == "find" and "repeat" in found["error"]["message"]
+
+
+def test_a_query_that_is_not_a_query_is_a_bad_request(book):
+    budget_sheet(book)
+    for bad in ({}, {"mode": "regex"}, {"mode": "text"}, {"mode": "text", "text": 5}):
+        found = search(book, bad)
+        assert found["error"]["message"] and found["matches"] == []
+
+
+def test_unknown_kinds_are_a_bad_request(book):
+    budget_sheet(book)
+    with pytest.raises(RequestError) as caught:
+        search(book, text("x"), kinds=["words"])
+    assert caught.value.code == "bad_request"
+
+
+def test_a_search_that_runs_out_of_time_says_so(book, monkeypatch):
+    budget_sheet(book)
+    monkeypatch.setattr("claudia_server.computes.SEARCH_SECONDS", 0.0)
+    found = search(book, text("€"))
+    assert found["timed_out"] and found["matches"] == []
+
+
+def test_a_viewer_may_search(book):
+    budget_sheet(book)
+    assert len(search(book, text("€"), account=VERA)["matches"]) == 2
+
+
+def test_the_preview_says_what_would_change_and_changes_nothing(book):
+    budget_sheet(book)
+    before = book.revision
+    shown = call(book, "search_preview", {"query": text("€", replace=[{"text": "EUR "}])}, account=VERA)
+    assert [(c["row"], c["before"], c["after"]) for c in shown["changes"]] == [
+        (0, "€12,50", "EUR 12,50"),
+        (1, "€80", "EUR 80"),
+    ]
+    assert shown["skipped"] == [] and shown["total"] == 2
+    assert book.revision == before
+
+
+def test_replace_changes_the_cells_in_one_step_and_says_how_many(book):
+    budget_sheet(book)
+    done = call(book, "search_replace", {"query": text("€", replace=[{"text": "EUR "}])})
+    assert done["replaced"] == 2 and done["skipped"] == []
+    assert [book.model.get("s1", r, 1)["v"] for r in (0, 1)] == ["EUR 12,50", "EUR 80"]
+    assert book.log.get(book.revision).command.label == "Replace in 2 cells"
+    book.undo("ann")
+    assert [book.model.get("s1", r, 1)["v"] for r in (0, 1)] == ["€12,50", "€80"]
+
+
+def test_replace_leaves_formulas_alone_unless_they_are_asked_for(book):
+    budget_sheet(book)
+    call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
+    assert "€" in book.model.get("s1", 3, 1)["v"]
+    call(book, "search_replace", {"query": text("€", replace=[{"text": "$"}]), "kinds": ["formulas"]})
+    assert book.model.get("s1", 3, 1)["v"] == '=VALUE(SUBSTITUTE(B1,"$",""))+1'
+
+
+def test_replace_can_leave_a_match_or_a_cell_alone(book):
+    budget_sheet(book)
+    typed(book, "s1", [(6, 0, "a-b-c")])
+    call(
+        book,
+        "search_replace",
+        {
+            "query": text("-", replace=[{"text": "+"}]),
+            "leave": [{"sheet": "s1", "row": 6, "col": 0, "match": 0}],
+        },
+    )
+    assert book.model.get("s1", 6, 0)["v"] == "a-b+c"
+    call(
+        book,
+        "search_replace",
+        {"query": text("€", replace=[{"text": ""}]), "leave": [{"sheet": "s1", "row": 0, "col": 1, "match": None}]},
+    )
+    assert book.model.get("s1", 0, 1)["v"] == "€12,50" and book.model.get("s1", 1, 1)["v"] == "80"
+
+
+def test_a_cell_somebody_else_holds_is_skipped_and_named(book):
+    budget_sheet(book)
+    book.lock("ben", [CellRegion.of("s1", 1, 1, 1, 1)], 30)
+    shown = call(book, "search_preview", {"query": text("€", replace=[{"text": ""}])})
+    assert [(s["row"], s["reason"], s["by"]) for s in shown["skipped"]] == [(1, "locked", "ben")]
+    done = call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
+    assert done["replaced"] == 1 and done["skipped"] == shown["skipped"]
+    assert book.model.get("s1", 0, 1)["v"] == "12,50" and book.model.get("s1", 1, 1)["v"] == "€80"
+
+
+def test_my_own_hold_does_not_stop_me(book):
+    budget_sheet(book)
+    book.lock("ann", [CellRegion.of("s1", 0, 0, 5, 5)], 30)
+    assert call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})["replaced"] == 2
+
+
+def test_a_viewer_cannot_replace(book):
+    budget_sheet(book)
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])}, account=VERA)
+    assert caught.value.code == "forbidden"
+
+
+def test_replace_needs_something_to_replace_with(book):
+    budget_sheet(book)
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_replace", {"query": text("€")})
+    assert caught.value.code == "command_error" and "replace" in caught.value.message
+
+
+def test_replace_that_changes_nothing_makes_no_history(book):
+    budget_sheet(book)
+    before = book.revision
+    done = call(book, "search_replace", {"query": text("zzz", replace=[{"text": "y"}])})
+    assert done["replaced"] == 0 and done["revision"] == before.to_data()
+    assert book.revision == before
+
+
+def test_replace_refuses_more_cells_than_one_step_may_change(book, monkeypatch):
+    budget_sheet(book)
+    monkeypatch.setattr("claudia_server.computes.MAX_REPLACED_CELLS", 1)
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
+    assert caught.value.code == "bad_request" and "narrow" in caught.value.message
+    assert book.model.get("s1", 0, 1)["v"] == "€12,50"
+
+
+def test_replace_takes_the_base_revision_like_every_write(book):
+    budget_sheet(book)
+    done = call(book, "search_replace", {"query": text("€", replace=[{"text": ""}]), "base": book.revision.to_data()})
+    assert done["replaced"] == 2
+
+
+def test_the_assistant_may_replace_too():
+    from claudia_server.apps import MODEL_METHODS
+
+    assert "search_replace" in MODEL_METHODS["computes"]
