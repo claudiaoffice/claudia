@@ -14,6 +14,8 @@ Describing objects (BITV 1.1.1), in creates and computes (composes has no object
 - `add_image` takes `decorative` (optional). A decorative picture has an empty `alt`; any other still needs words, and a
   picture given both is refused.
 - The objects of a slide or a sheet are listed with `description` and `decorative`.
+- `number_formats` (computes): the workbook's named number formats, `{id, name, code, to_name}` each (D348). A style's
+  data has `number_format` when it names one.
 
 ## [0.28.0] - 2026-11-13
 

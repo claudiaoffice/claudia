@@ -41,6 +41,10 @@ msgstr "+ Mit einem Server verbinden…"
 msgid "--- What the server printed ({log}) ---"
 msgstr "--- Was der Server ausgegeben hat ({log}) ---"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 Jan 2025 to 13 Nov 2026"
+msgstr "1. Jan. 2025 bis 13. Nov. 2026"
+
 #: web/app/lib/noun-phrases.ts:111
 msgid "1 cell"
 msgstr "1 Zelle"
@@ -69,6 +73,22 @@ msgstr "1 Absatz"
 msgid "1 slide on {pages}"
 msgstr "1 Folie auf {pages}"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1,000 a year for 10 years"
+msgstr "1.000 im Jahr, 10 Jahre lang"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1,000 saved at the end of each of 10 years"
+msgstr "1.000 am Ende jedes von 10 Jahren gespart"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "10,000 over 10 years at 5% a year"
+msgstr "10.000 über 10 Jahre zu 5 % im Jahr"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "13 Nov 2026 is a Friday"
+msgstr "Der 13. Nov. 2026 ist ein Freitag"
+
 #: web/app/lib/print/setup.ts:46
 msgid "2 per page"
 msgstr "2 pro Seite"
@@ -76,6 +96,10 @@ msgstr "2 pro Seite"
 #: web/app/lib/print/setup.ts:47
 msgid "3 per page, with lines"
 msgstr "3 pro Seite, mit Linien"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "31 Oct 2026 + 1 month = 30 Nov 2026"
+msgstr "31. Okt. 2026 + 1 Monat = 30. Nov. 2026"
 
 #: web/app/lib/print/setup.ts:48
 msgid "4 per page"
@@ -128,6 +152,10 @@ msgstr "Ein Name wie dieser existiert bereits und verweist künftig hierher."
 #: web/app/components/OpenDialog.vue:403
 msgid "A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit)."
 msgstr "Ein neues Dokument gehört demjenigen, der es zuerst erstellt. Das Passwort schützt nur dieses Dokument (mindestens 8 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben und einer Ziffer)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number as text, shown through a number format code (\"#,##0.00\", \"dd.mm.yyyy\", \"0%\")."
+msgstr "Eine Zahl als Text, gezeigt durch einen Zahlenformat-Code (\"#,##0.00\", \"dd.mm.yyyy\", \"0%\")."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A number raised to a power (the same as the operator ^)."
@@ -517,7 +545,7 @@ msgstr "CSS des Formats"
 msgid "Calculation"
 msgstr "Berechnung"
 
-#: web/app/components/SheetGrid.vue:260
+#: web/app/components/SheetGrid.vue:272
 msgid "Calculation step"
 msgstr "Rechenschritt"
 
@@ -1557,7 +1585,7 @@ msgstr "Tinte"
 msgid "Input"
 msgstr "Eingabe"
 
-#: web/app/components/SheetGrid.vue:259
+#: web/app/components/SheetGrid.vue:271
 msgid "Input of the computation"
 msgstr "Eingabe der Berechnung"
 
@@ -2549,7 +2577,7 @@ msgstr "Ergebnis"
 msgid "Result name"
 msgstr "Ergebnisname"
 
-#: web/app/components/SheetGrid.vue:260
+#: web/app/components/SheetGrid.vue:272
 msgid "Result of the computation"
 msgstr "Ergebnis der Berechnung"
 
@@ -2789,7 +2817,7 @@ msgstr "Teilen…"
 msgid "Sheet"
 msgstr "Blatt"
 
-#: web/app/components/SheetGrid.vue:936
+#: web/app/components/SheetGrid.vue:952
 msgid "Sheet {name}"
 msgstr "Blatt {name}"
 
@@ -2885,7 +2913,7 @@ msgstr "Bedingter Trennstrich"
 msgid "Something is repeated that is not there."
 msgstr "Es wird etwas wiederholt, das nicht da ist."
 
-#: web/app/lib/base-session.ts:426 web/app/lib/session.ts:565
+#: web/app/lib/base-session.ts:426 web/app/lib/session.ts:573
 msgid "Something went wrong."
 msgstr "Etwas ist schiefgegangen."
 
@@ -3141,6 +3169,22 @@ msgstr "Die Verbindung wurde unterbrochen. Es wird versucht, sie wiederherzustel
 msgid "The cosine of an angle in radians."
 msgstr "Der Kosinus eines Winkels im Bogenmaß."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a number of months before or after a date, on the same day of the month where it has one."
+msgstr "Das Datum eine Anzahl Monate vor oder nach einem Datum, am selben Tag des Monats, wo es ihn gibt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date of a year, month and day. Months and days beyond their end carry over."
+msgstr "Das Datum zu Jahr, Monat und Tag. Monate und Tage über ihr Ende hinaus werden übertragen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The day of the month of a date, 1 to 31."
+msgstr "Der Tag des Monats eines Datums, 1 bis 31."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The day of the week of a date: 1 (Sunday) to 7, or as the second argument counts (2: Monday is 1)."
+msgstr "Der Wochentag eines Datums: 1 (Sonntag) bis 7, oder wie das zweite Argument zählt (2: Montag ist 1)."
+
 #: web/app/lib/base-session.ts:379
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr "Das Dokument hat sich unter Ihnen geändert (es ging zu einem Prüfpunkt zurück oder wurde neu aufgebaut). Es wurde neu geladen."
@@ -3213,6 +3257,10 @@ msgstr "Die größte Zahl des Bereichs überall dort, wo alle Kriterien erfüllt
 msgid "The last characters of the text (one unless a number is given)."
 msgstr "Die letzten Zeichen des Textes (eines, wenn keine Zahl angegeben ist)."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The last day of the month a number of months before or after a date."
+msgstr "Der letzte Tag des Monats eine Anzahl Monate vor oder nach einem Datum."
+
 #: web/app/components/StyleSpec.vue:53
 msgid "The left side"
 msgstr "Die linke Seite"
@@ -3253,6 +3301,10 @@ msgstr "Die mittlere Zahl der Zahlen in den Bereichen (der Mittelwert der beiden
 msgid "The model that answers @ai in every document on this server."
 msgstr "Das Modell, das in jedem Dokument auf diesem Server @ai antwortet."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The month of a date, 1 to 12."
+msgstr "Der Monat eines Datums, 1 bis 12."
+
 #: web/app/components/OpenDialog.vue:293
 msgid "The name or password is not right (or there is no such document)."
 msgstr "Name oder Passwort stimmen nicht (oder es gibt kein solches Dokument)."
@@ -3272,6 +3324,10 @@ msgstr "Der natürliche Logarithmus einer positiven Zahl."
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number of characters of the text."
 msgstr "Die Anzahl der Zeichen des Textes."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of days from the start date to the end date."
+msgstr "Die Anzahl der Tage vom Anfangs- bis zum Enddatum."
 
 #: web/app/components/RandomDialog.vue:69
 msgid "The number of trials must be a whole number, 1 or more."
@@ -3302,8 +3358,16 @@ msgid "The passwords do not match."
 msgstr "Die Passwörter stimmen nicht überein."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The payment per period that pays off a loan (or saves up a sum) at a fixed rate."
+msgstr "Die Zahlung je Periode, die einen Kredit bei festem Zins tilgt (oder eine Summe anspart)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The product of the numbers in the ranges."
 msgstr "Das Produkt der Zahlen in den Bereichen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
+msgstr "Der Zins, bei dem Zahlungsströme (der erste jetzt, danach einer je Periode) heute nichts wert sind."
 
 #: web/app/components/OpenDialog.vue:400
 msgid "The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do."
@@ -3429,9 +3493,17 @@ msgstr "Der Text, so oft wiederholt, wie angegeben."
 msgid "The text under it changed. It cannot be accepted any more."
 msgstr "Der Text darunter hat sich geändert. Der Vorschlag kann nicht mehr angenommen werden."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The time between two dates in whole years (\"Y\"), months (\"M\") or days (\"D\"), or what is left over (\"MD\", \"YM\", \"YD\")."
+msgstr "Die Zeit zwischen zwei Daten in ganzen Jahren (\"Y\"), Monaten (\"M\") oder Tagen (\"D\"), oder was übrig bleibt (\"MD\", \"YM\", \"YD\")."
+
 #: web/app/components/StyleSpec.vue:47
 msgid "The top side"
 msgstr "Die obere Seite"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value today of cash flows at the end of each coming period, discounted at a rate."
+msgstr "Der heutige Wert von Zahlungen am Ende jeder kommenden Periode, mit einem Zins abgezinst."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The variance of a sample (the numbers are a part of a larger whole)."
@@ -3452,6 +3524,10 @@ msgstr "Der Webprozess wurde beendet ({reason}). Starten Sie Claudia neu."
 #: web/app/components/StyleSpec.vue:86
 msgid "The words will be hard to read on this background."
 msgstr "Die Wörter sind auf diesem Hintergrund schwer lesbar."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The year of a date."
+msgstr "Das Jahr eines Datums."
 
 #: web/app/lib/search.ts:440
 msgid "The “(” at character {position} has no “)”. Nothing is replaced."
@@ -3769,6 +3845,10 @@ msgstr "Weibull"
 msgid "What a query gave"
 msgstr "Was eine Abfrage ergab"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "What a sum and regular payments are worth after a number of periods at a fixed rate."
+msgstr "Was eine Summe und regelmäßige Zahlungen nach einer Anzahl Perioden bei festem Zins wert sind."
+
 #: web/app/components/PaletteDialog.vue:129
 msgid "What changes with it"
 msgstr "Was sich damit ändert"
@@ -3776,6 +3856,10 @@ msgstr "Was sich damit ändert"
 #: web/app/components/OutcomePopover.vue:117 web/app/components/OutcomePopover.vue:118
 msgid "What moves the result most"
 msgstr "Was das Ergebnis am meisten bewegt"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
+msgstr "Was regelmäßige Zahlungen (und eine Summe am Ende) heute bei festem Zins wert sind."
 
 #: web/app/components/SidePanel.vue:203
 msgid "What silence at a suggestion's deadline means"
@@ -4293,11 +4377,11 @@ msgstr "kopieren, ausschneiden und einfügen, auch aus und in andere Programme"
 msgid "define_diagram: id and format are assigned by the server"
 msgstr "define_diagram: id und format vergibt der Server"
 
-#: packages/claudia-server/src/claudia_server/computes.py:992
+#: packages/claudia-server/src/claudia_server/computes.py:1000
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr "define_sql: query muss Text mit höchstens {limit} Zeichen sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1006
+#: packages/claudia-server/src/claudia_server/computes.py:1014
 msgid "define_sql: {problem}"
 msgstr "define_sql: {problem}"
 
@@ -4357,7 +4441,7 @@ msgstr "bearbeiten"
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr "eine Zelle bearbeiten (andere bleiben währenddessen ausgeschlossen)"
 
-#: web/app/components/SheetGrid.vue:1075
+#: web/app/components/SheetGrid.vue:1091
 msgid "editing cell"
 msgstr "Zelle wird bearbeitet"
 
@@ -4521,11 +4605,11 @@ msgstr "kleinster"
 msgid "leave the table: on to the next / back to the previous part of the window"
 msgstr "die Tabelle verlassen: weiter zum nächsten / zurück zum vorherigen Teil des Fensters"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1131
+#: packages/claudia-server/src/claudia_server/computes.py:1139
 msgid "leave: each is {sheet, row, col, match}, match being a number or null"
 msgstr "leave: Jeder Eintrag ist {sheet, row, col, match}, wobei match eine Zahl oder null ist"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1135
+#: packages/claudia-server/src/claudia_server/computes.py:1143
 msgid "leave: match is the number of a match in the cell, or null for all"
 msgstr "leave: match ist die Nummer eines Treffers in der Zelle, oder null für alle"
 
@@ -4801,7 +4885,7 @@ msgstr "Drucken erfordert eine sichere Verbindung (https oder dieser Computer)"
 msgid "purpose of {name}"
 msgstr "Zweck von {name}"
 
-#: web/app/components/SheetGrid.vue:1024
+#: web/app/components/SheetGrid.vue:1040
 msgid "purpose of {name} column {n}"
 msgstr "Zweck von {name} Spalte {n}"
 
@@ -4893,7 +4977,7 @@ msgstr "Skala"
 msgid "search help"
 msgstr "Hilfe durchsuchen"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1218
+#: packages/claudia-server/src/claudia_server/computes.py:1226
 msgid "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search"
 msgstr "search_replace: Das würde {count} Zellen ändern, höchstens {limit} auf einmal: Grenzen Sie die Suche ein"
 
@@ -4969,7 +5053,7 @@ msgstr "Streuung (Standardabweichung)"
 msgid "spread of the logarithm"
 msgstr "Streuung des Logarithmus"
 
-#: packages/claudia-server/src/claudia_server/computes.py:961
+#: packages/claudia-server/src/claudia_server/computes.py:969
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr "sql_preview: limit muss eine ganze Zahl von 0 bis {limit} sein"
 
@@ -5309,7 +5393,7 @@ msgstr "trace: Fenster zu groß (höchstens {limit} Positionen)"
 msgid "trials"
 msgstr "Versuche"
 
-#: web/app/components/SheetGrid.vue:961
+#: web/app/components/SheetGrid.vue:977
 msgid "type here to add a row"
 msgstr "hier tippen, um eine Zeile hinzuzufügen"
 
@@ -5321,7 +5405,7 @@ msgstr "rückgängig"
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "Unbekannter Parameter {parameter!r} für {name}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:583 packages/claudia-server/src/claudia_server/computes.py:669 packages/claudia-server/src/claudia_server/computes.py:718 packages/claudia-server/src/claudia_server/computes.py:957 packages/claudia-server/src/claudia_server/computes.py:987
+#: packages/claudia-server/src/claudia_server/computes.py:583 packages/claudia-server/src/claudia_server/computes.py:669 packages/claudia-server/src/claudia_server/computes.py:718 packages/claudia-server/src/claudia_server/computes.py:965 packages/claudia-server/src/claudia_server/computes.py:995
 msgid "unknown sheet {sheet!r}"
 msgstr "Unbekanntes Blatt {sheet!r}"
 
@@ -5629,23 +5713,23 @@ msgstr "Höhe von {line}, in Pixeln"
 msgid "{line}'s width, in pixels"
 msgstr "Breite von {line}, in Pixeln"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1045
+#: packages/claudia-server/src/claudia_server/computes.py:1053
 msgid "{method}: a range is [first row, first column, last row, last column]"
 msgstr "{method}: Ein Bereich ist [erste Zeile, erste Spalte, letzte Zeile, letzte Spalte]"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1034
+#: packages/claudia-server/src/claudia_server/computes.py:1042
 msgid "{method}: a range is on a sheet: say which"
 msgstr "{method}: Ein Bereich liegt auf einem Tabellenblatt: Geben Sie an, auf welchem"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1031
+#: packages/claudia-server/src/claudia_server/computes.py:1039
 msgid "{method}: a scope has a sheet and, on it, a range"
 msgstr "{method}: Ein Suchbereich hat ein Tabellenblatt und darauf einen Bereich"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1038
+#: packages/claudia-server/src/claudia_server/computes.py:1046
 msgid "{method}: a sheet is named by its id"
 msgstr "{method}: Ein Tabellenblatt wird mit seiner ID angegeben"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1021
+#: packages/claudia-server/src/claudia_server/computes.py:1029
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "{method}: kinds ist eine Liste aus {kinds}"
 
@@ -5673,7 +5757,7 @@ msgstr "{name} gehört nicht zu den Methoden, die dieses Konto aufrufen darf"
 msgid "{name} needs the editor role"
 msgstr "{name} braucht die Rolle „editor“"
 
-#: web/app/components/SheetGrid.vue:1023
+#: web/app/components/SheetGrid.vue:1039
 msgid "{name} · {purpose} — change what this column is for"
 msgstr "{name} · {purpose} – ändern, wofür diese Spalte gedacht ist"
 
@@ -5873,7 +5957,7 @@ msgstr "{who} schlägt vor, zu {line} zu gehen."
 msgid "{width} × {height} px"
 msgstr "{width} × {height} px"
 
-#: web/app/components/SheetGrid.vue:1060
+#: web/app/components/SheetGrid.vue:1076
 msgid "· editing"
 msgstr "· bearbeitet gerade"
 

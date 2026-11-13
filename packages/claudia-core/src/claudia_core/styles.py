@@ -37,7 +37,8 @@ class StyleDef:
     """One style: ``css`` holds only what differs from ``based_on``. ``to_name`` marks a style that was made by
     deviating and still has the provisional name it was given (E9.7). ``kind`` says which facets ``css`` may hold
     (:data:`claudia_core.facets.KINDS`); a style written without one is a ``paragraph`` style, which is what text
-    has."""
+    has. ``number_format`` names one of the app's number formats (computes, D348): not CSS, but inherited the same
+    way -- a style without one shows numbers as its parent does."""
 
     id: str
     name: str
@@ -46,10 +47,12 @@ class StyleDef:
     css: dict[str, str]
     to_name: bool = False
     kind: str = "paragraph"
+    number_format: str | None = None
 
     def to_data(self) -> dict:
-        """The plain-data form that goes into snapshots and commands."""
-        return {
+        """The plain-data form that goes into snapshots and commands; ``number_format`` only when it is set, so a
+        style of composes or creates writes exactly what it wrote before."""
+        data = {
             "id": self.id,
             "name": self.name,
             "purpose": self.purpose,
@@ -58,6 +61,9 @@ class StyleDef:
             "to_name": self.to_name,
             "kind": self.kind,
         }
+        if self.number_format is not None:
+            data["number_format"] = self.number_format
+        return data
 
     @classmethod
     def from_data(cls, data: dict) -> StyleDef:
@@ -71,6 +77,7 @@ class StyleDef:
             dict(data["css"]),
             data["to_name"],
             data["kind"],
+            data.get("number_format"),
         )
 
 
@@ -128,6 +135,13 @@ class StyleBook:
         for style in self.chain(style_id):
             result.update(style.css)
         return result
+
+    def number_format(self, style_id: str) -> str | None:
+        """The number format a style shows numbers with: its own, else the nearest parent's (D348)."""
+        for style in reversed(self.chain(style_id)):
+            if style.number_format is not None:
+                return style.number_format
+        return None
 
     def children(self, style_id: str) -> list[str]:
         """The ids of the styles that are based directly on this one."""
@@ -223,6 +237,11 @@ class StyleBook:
         style = self.get(style_id)
         check_kind(style.kind, css)
         self._styles[style_id] = replace(style, css=validate_css(css))
+
+    def set_number_format(self, style_id: str, format_id: str | None) -> None:
+        """Make a style show numbers through the number format ``format_id`` (``None``: as its parent does). The
+        book does not know the formats; the app that has them checks the id (D348)."""
+        self._styles[style_id] = replace(self.get(style_id), number_format=format_id)
 
     def rename(self, style_id: str, name: str, *, to_name: bool = False) -> None:
         """Give a style another name that no other style has; ``to_name`` says whether it is still provisional."""

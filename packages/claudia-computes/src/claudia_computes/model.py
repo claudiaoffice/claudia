@@ -41,6 +41,7 @@ from .formula.rewrite import adjusted, renamed_name, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
 from .names import NamedRange, NameKey, Names, Rect, key_of, name_problem
+from .numformats import NumberFormatBook
 from .outcomes import InputCell, OutcomeTable, Summary
 from .refs import CellRef, Position, RangeRef, SheetId, StructuralEdit, column_name
 from .spill import Table
@@ -423,7 +424,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
     # 7: the workbook carries names: named ranges, tables and query results (E6.5, D600)
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
-    state_schema: ClassVar[int] = 9  # 8: object bodies without a description
+    # 9: object bodies carry a description
+    state_schema: ClassVar[int] = 10  # 10: the workbook carries its named number formats (D348)
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
@@ -454,6 +456,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         #: everybody sees the same numbers; ``Resample`` raises the draw number, ``SetRandomSeed`` changes the seed.
         self.random_seed = 0
         self.random_draw = 0
+        #: The named number formats a cell style can point at, saying how numbers look and never what they are (D348).
+        self.number_formats = NumberFormatBook()
 
     @classmethod
     def empty(cls) -> Self:
@@ -471,6 +475,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),
             "random": {"seed": self.random_seed, "draw": self.random_draw},
+            "number_formats": self.number_formats.to_data(),
         }
 
     @classmethod
@@ -488,6 +493,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
         model.random_seed, model.random_draw = state["random"]["seed"], state["random"]["draw"]
+        model.number_formats = NumberFormatBook.from_data(state["number_formats"])
         model._calculate_loaded()
         return model
 

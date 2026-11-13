@@ -5,6 +5,7 @@ import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
+import type { NumberFormatDef } from './number-format'
 import { describeParams } from './descriptions'
 import type { ImageAsset } from './images'
 import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
@@ -98,6 +99,9 @@ export interface State extends BaseState {
   styleUses: Record<string, number>
   /** What every random number of the workbook is a function of (E6.22, D291): the seed and the draw number. */
   random: { seed: number; draw: number }
+  /** The workbook's named number formats by id (D348): a cell shows its number through the one its words' style
+   * names, as `number_formats` sends them. */
+  numberFormats: Record<string, NumberFormatDef>
   /** The cells that light up while a computation is followed (E6.23, D297), or `null`. A view of this person's own:
    * nobody else sees it. */
   trace: Trace | null
@@ -175,6 +179,7 @@ export class Session extends BaseSession<State> {
       cellStyles: {},
       styleUses: {},
       random: { seed: 0, draw: 0 },
+      numberFormats: {},
       trace: null,
     })
   }
@@ -185,7 +190,7 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random] = await Promise.all([
+    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random, formats] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
       link.request<ChartSpec[]>('diagrams'),
@@ -196,6 +201,8 @@ export class Session extends BaseSession<State> {
       link.request<StyleModel>('style_model'),
       // a server from before random numbers has none: the draw is 0 and nothing asks for it
       link.request<{ seed: number; draw: number }>('random_state').catch(() => ({ seed: 0, draw: 0 })),
+      // a server from before number formats has none: every number shows the General way
+      link.request<NumberFormatDef[]>('number_formats').catch(() => [] as NumberFormatDef[]),
     ])
     this.forgetCells()
     const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
@@ -216,6 +223,7 @@ export class Session extends BaseSession<State> {
     s.palette = palette
     s.styleModel = styleModel
     s.random = { seed: random.seed, draw: random.draw }
+    s.numberFormats = Object.fromEntries(formats.map((x) => [x.id, x]))
     this.track(this.refreshUses())
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
   }

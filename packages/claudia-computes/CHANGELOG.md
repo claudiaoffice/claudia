@@ -5,10 +5,23 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
-Describing objects (BITV 1.1.1). State schema 8 → 9.
+Describing objects (BITV 1.1.1); named number formats (D348). State schema 8 → 10 (9: an object's description, 10:
+the number formats).
 
 ### Added
 - `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`).
+- Date functions on Excel's day count, its 29 February 1900 included (D347): `DATE`, `YEAR`, `MONTH`, `DAY`, `EDATE`,
+  `EOMONTH`, `DAYS`, `WEEKDAY`, `DATEDIF`. Money functions with Excel's signs: `PMT`, `PV`, `FV`, `NPV`, `IRR` (Newton's
+  method, halving the interval when it does not settle). Each with a description and worked examples, in English and
+  German.
+- Named number formats (D348): `NumberFormat` and `NumberFormatBook`, on `WorkbookModel.number_formats`;
+  `claudia_computes.numformats` reads Excel's format codes (sections, conditions, colours, locales, digits, grouping
+  and scaling, percent, scientific, fractions, dates and elapsed times) and renders a number through one in English
+  or German (`render`, `ENGLISH`, `GERMAN`); `describe` names what a code shows. `TEXT(value, code)`.
+
+### Fixed
+- A reference passed straight to `ROW`, `COLUMN`, `ROWS` or `COLUMNS` is no longer a dependency of the formula:
+  `=COLUMNS($B$3:B3)` in B3 counted itself as a circle (`#CIRC!`), where Excel counts columns (D347).
 
 ### Changed
 - Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and

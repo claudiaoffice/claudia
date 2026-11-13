@@ -1658,11 +1658,13 @@
    "get": "(self, style_id: 'str') -> 'StyleDef'",
    "ids": "(self) -> 'list[str]'",
    "name_taken": "(self, name: 'str', *, besides: 'str | None' = None) -> 'bool'",
+   "number_format": "(self, style_id: 'str') -> 'str | None'",
    "provisional_name": "(self, parent_id: 'str') -> 'str'",
    "remove": "(self, style_id: 'str') -> 'StyleDef'",
    "rename": "(self, style_id: 'str', name: 'str', *, to_name: 'bool' = False) -> 'None'",
    "resolved": "(self, style_id: 'str', colours: 'Mapping[str, str] | None' = None) -> 'dict[str, str]'",
    "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
+   "set_number_format": "(self, style_id: 'str', format_id: 'str | None') -> 'None'",
    "to_data": "(self) -> 'list[dict]'",
    "unique_id": "(self, base: 'str') -> 'str'",
    "views": "(self, colours: 'Mapping[str, str] | None' = None) -> 'list[dict]'"
@@ -1673,7 +1675,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph') -> None",
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'StyleDef'",
    "to_data": "(self) -> 'dict'"

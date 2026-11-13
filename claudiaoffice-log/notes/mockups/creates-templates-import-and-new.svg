@@ -1,0 +1,208 @@
+<svg viewBox="0 0 1700 1120" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1700" height="1120" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia creates — templates from a PowerPoint file, slides that differ, a new presentation (E10.3–E10.5)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">For review before any code. Content and file names are invented. The import step is part of the import screen being designed with another agent; this is only its templates step.</text>
+<rect x="40" y="96" width="960" height="620" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">G · Opening a PowerPoint file: its masters become templates</text>
+<text x="62" y="144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">PowerPoint keeps a master per pasted slide when “Keep source formatting” was used. claudia compares them</text>
+<text x="62" y="161" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">and proposes as few templates as the design really has. Nothing is merged without the person's yes.</text>
+<rect x="65" y="169" width="916" height="532" rx="14" fill="#000000" opacity="0.05"/>
+<rect x="62" y="166" width="916" height="532" rx="14" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="86" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">Opening “Quarterly review.pptx”</text>
+<rect x="829.6" y="182" width="116.4" height="26" rx="13" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="887.8000000000001" y="199" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">3  What is kept</text>
+<rect x="726.8000000000001" y="182" width="94.8" height="26" rx="13" fill="#e7e1f4" stroke="#e7e1f4" stroke-width="1"/>
+<text x="774.2" y="199" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="middle">2  Templates</text>
+<rect x="631.2" y="182" width="87.6" height="26" rx="13" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="675.0" y="199" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">1  Contents</text>
+<line x1="62" y1="222" x2="978" y2="222" stroke="#e3dfee" stroke-width="1"/>
+<text x="86" y="250" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">This file has 14 slide masters with 31 layouts. 13 masters look the same — colours, fonts, background and slot positions —</text>
+<text x="86" y="269" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">and differ only in their names. Its 20 slides use 10 of the layouts.</text>
+<rect x="86" y="294" width="868" height="132" rx="10" fill="#faf9fd" stroke="#5b4bc4" stroke-width="1"/>
+<rect x="104" y="312" width="16" height="16" rx="4" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1.4"/>
+<path d="M108 320 L111 323 L116 317" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="132" y="325" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">13 masters “Custom Design”</text>
+<text x="352" y="325" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">→ one template “Custom Design” with 9 layouts, for 19 slides</text>
+<rect x="132" y="342" width="94" height="52.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="132" y="342" width="1.88" height="52.875" rx="0" fill="#4f8f7a"/>
+<rect x="141.4" y="358.45" width="75.19999999999999" height="11.75" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="179.0" y="365.735" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9" font-weight="400" fill="#9a92b8" text-anchor="middle">Title</text>
+<rect x="236" y="342" width="94" height="52.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="236" y="342" width="1.88" height="52.875" rx="0" fill="#4f8f7a"/>
+<rect x="241.64" y="346.23" width="82.72" height="7.989999999999999" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="243.51999999999998" y="351.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Title</text>
+<rect x="241.64" y="357.04" width="82.72" height="27.729999999999997" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="243.51999999999998" y="361.27" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Text</text>
+<rect x="340" y="342" width="94" height="52.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="340" y="342" width="1.88" height="52.875" rx="0" fill="#4f8f7a"/>
+<rect x="345.64" y="346.23" width="82.72" height="7.989999999999999" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="347.52" y="351.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Title</text>
+<rect x="345.64" y="357.04" width="39.48" height="27.729999999999997" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="347.52" y="361.27" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Text</text>
+<rect x="388.88" y="357.04" width="39.48" height="27.729999999999997" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="390.76" y="361.27" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Text 2</text>
+<rect x="444" y="342" width="94" height="52.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="444" y="342" width="1.88" height="52.875" rx="0" fill="#4f8f7a"/>
+<rect x="449.64" y="346.23" width="82.72" height="7.989999999999999" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="451.52" y="351.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Title</text>
+<rect x="449.64" y="357.04" width="52.17" height="27.729999999999997" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="451.52" y="361.27" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Text</text>
+<rect x="504.16" y="357.04" width="28.2" height="27.729999999999997" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="506.04" y="361.27" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Picture</text>
+<rect x="548" y="342" width="94" height="52.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="548" y="342" width="1.88" height="52.875" rx="0" fill="#4f8f7a"/>
+<rect x="557.4" y="370.2" width="75.19999999999999" height="9.399999999999999" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="559.28" y="376.075" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Section title</text>
+<rect x="557.4" y="368.32" width="14.1" height="0.705" rx="0" fill="#4f8f7a"/>
+<rect x="652" y="342" width="94" height="52.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="652" y="342" width="1.88" height="52.875" rx="0" fill="#4f8f7a"/>
+<rect x="657.64" y="346.23" width="82.72" height="7.989999999999999" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="659.52" y="351.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Title</text>
+<text x="762" y="374" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">+ 3 more</text>
+<text x="132" y="416" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Identical: colours, fonts, background, every slot's place and style.</text>
+<rect x="86" y="440" width="868" height="112" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="104" y="458" width="16" height="16" rx="4" fill="#ffffff" stroke="#d8d2e6" stroke-width="1.4"/>
+<text x="132" y="471" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">1 master “Office Theme”</text>
+<text x="330" y="471" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#6e6880" text-anchor="start">differs in: background picture, title font</text>
+<rect x="132" y="486" width="94" height="52.875" rx="3" fill="#eef2f7" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="132" y="486" width="1.88" height="52.875" rx="0" fill="#3a6ea5"/>
+<rect x="137.64" y="490.23" width="82.72" height="7.989999999999999" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="139.51999999999998" y="495.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Title</text>
+<rect x="137.64" y="501.04" width="82.72" height="27.729999999999997" rx="3" fill="none" stroke="#b7aed3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="139.51999999999998" y="505.27" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="400" fill="#9a92b8" text-anchor="start">Text</text>
+<text x="242" y="504" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Used by 1 slide (slide 17).</text>
+<rect x="242" y="514" width="230" height="28" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="254" y="532.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Keep as its own template</text>
+<path d="M453 526 L457 530 L461 526" fill="none" stroke="#6e6880" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="486" y="533" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">or: merge into “Custom Design” as a named variant</text>
+<rect x="104" y="568" width="16" height="16" rx="4" fill="#ffffff" stroke="#d8d2e6" stroke-width="1.4"/>
+<text x="132" y="581" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Bring over the 21 layouts no slide uses</text>
+<text x="132" y="599" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Off: they stay in the file (an edited file keeps them) but do not clutter the layout picker.</text>
+<line x1="86" y1="618" x2="954" y2="618" stroke="#e3dfee" stroke-width="1"/>
+<circle cx="112" cy="640" r="8" fill="#f2a057"/>
+<text x="112" y="644.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="700" fill="#1f1a33" text-anchor="middle">!</text>
+<text x="132" y="644" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The font “Aptos” is not on this server: the slides show it in Inter until it is installed (Tools ▸ Font manager…).</text>
+<rect x="854" y="650" width="100" height="32" rx="8" fill="#5b4bc4"/>
+<text x="904.0" y="671" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#ffffff" text-anchor="middle">Open</text>
+<rect x="764" y="650" width="80" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="804.0" y="671" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Back</text>
+<text x="86" y="670" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#5b4bc4" text-anchor="start">Proposal D345, for the owner to decide: one template per design, not per master.</text>
+<rect x="1020" y="96" width="640" height="620" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1042" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">H · Slides that differ from their layout</text>
+<text x="1042" y="144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">From the dot on a slide tab, or “3 slides differ” in the template band. Only places</text>
+<text x="1042" y="161" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">and sizes can differ: a look that differs is a named style (D75, D306).</text>
+<rect x="1042" y="166" width="596" height="340" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1062" y="198" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">3 slides differ from their layout</text>
+<line x1="1042" y1="216" x2="1638" y2="216" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1050" y="222" width="580" height="82" rx="8" fill="#f7f5fb"/>
+<rect x="1062" y="228" width="104" height="58.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="1062" y="228" width="2.08" height="58.5" rx="0" fill="#f2a057"/>
+<text x="1068.24" y="238.92" font-family="Fraunces, Georgia, serif" font-size="7" font-weight="600" fill="#1f1a33" text-anchor="start">Agenda</text>
+<circle cx="1069.28" cy="248.02" r="0.52" fill="#f2a057"/>
+<text x="1071.36" y="248.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Rounds</text>
+<circle cx="1069.28" cy="253.74" r="0.52" fill="#f2a057"/>
+<text x="1071.36" y="254.52" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Questions</text>
+<text x="1182" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Slide 6</text>
+<text x="1252" y="246" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">· Title and content</text>
+<text x="1182" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Title moved 100 units down</text>
+<rect x="1182" y="274" width="100" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1232.0" y="295" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Put it back</text>
+<rect x="1292" y="274" width="170" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1377.0" y="295" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Make the layout so…</text>
+<rect x="1472" y="274" width="86" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1515.0" y="295" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Variant…</text>
+<rect x="1062" y="318" width="104" height="58.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="1062" y="318" width="2.08" height="58.5" rx="0" fill="#f2a057"/>
+<text x="1068.24" y="328.92" font-family="Fraunces, Georgia, serif" font-size="7" font-weight="600" fill="#1f1a33" text-anchor="start">Agenda</text>
+<circle cx="1069.28" cy="338.02000000000004" r="0.52" fill="#f2a057"/>
+<text x="1071.36" y="338.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Rounds</text>
+<circle cx="1069.28" cy="343.74" r="0.52" fill="#f2a057"/>
+<text x="1071.36" y="344.52" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Questions</text>
+<circle cx="1117.12" cy="338.02000000000004" r="0.52" fill="#f2a057"/>
+<text x="1119.1999999999998" y="338.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Rounds</text>
+<circle cx="1117.12" cy="343.74" r="0.52" fill="#f2a057"/>
+<text x="1119.1999999999998" y="344.52" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Questions</text>
+<text x="1182" y="336" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Slide 9</text>
+<text x="1252" y="336" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">· Two columns</text>
+<text x="1182" y="356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Text 2 made 150 units narrower</text>
+<rect x="1182" y="364" width="100" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1232.0" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Put it back</text>
+<rect x="1292" y="364" width="170" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1377.0" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Make the layout so…</text>
+<rect x="1472" y="364" width="86" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1515.0" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Variant…</text>
+<rect x="1062" y="408" width="104" height="58.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="1062" y="408" width="2.08" height="58.5" rx="0" fill="#f2a057"/>
+<text x="1068.24" y="418.92" font-family="Fraunces, Georgia, serif" font-size="7" font-weight="600" fill="#1f1a33" text-anchor="start">Agenda</text>
+<circle cx="1069.28" cy="428.02000000000004" r="0.52" fill="#f2a057"/>
+<text x="1071.36" y="428.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Rounds</text>
+<circle cx="1069.28" cy="433.74" r="0.52" fill="#f2a057"/>
+<text x="1071.36" y="434.52" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#1f1a33" text-anchor="start">Questions</text>
+<rect x="1128.56" y="424.64" width="31.200000000000003" height="26.0" rx="3" fill="#e8e3d8"/>
+<path d="M1131.1599999999999 447.0 L1140.26 436.6 L1146.76 443.1 L1150.6599999999999 439.2 L1157.1599999999999 447.0" fill="none" stroke="#b9ae98" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1151.96" cy="430.88" r="2.08" fill="#d8cdb5"/>
+<text x="1182" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Slide 12</text>
+<text x="1252" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">· Content and picture</text>
+<text x="1182" y="446" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Picture moved out of its slot</text>
+<rect x="1182" y="454" width="100" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1232.0" y="475" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Put it back</text>
+<rect x="1292" y="454" width="170" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1377.0" y="475" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Make the layout so…</text>
+<rect x="1472" y="454" width="86" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1515.0" y="475" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Variant…</text>
+<text x="1042" y="534" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">“Put it back” returns the object to its slot (one command, undoable).</text>
+<text x="1042" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">“Make the layout so…” moves the slot in the template, for every slide</text>
+<text x="1042" y="570" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">with this layout; the dialog names how many slides change.</text>
+<text x="1042" y="588" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">“Variant…” is panel F of mock-up 2: a named layout with this difference.</text>
+<text x="1042" y="606" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start"></text>
+<text x="1042" y="624" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A slide that differs is not an error: the list only makes it visible, so a</text>
+<text x="1042" y="642" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">deck stays consistent on purpose. Screen readers hear “differs from its</text>
+<text x="1042" y="660" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">layout” after the slide's layout name.</text>
+<rect x="40" y="736" width="1620" height="364" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="766" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">I · File ▸ New: from a template, or from what the presentation should achieve</text>
+<text x="62" y="784" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Nothing is required (D71): “Start empty” is one click. The question is offered once; its answer is document metadata and may suggest a template and an outline.</text>
+<rect x="62" y="806" width="1576" height="274" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="84" y="838" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">New presentation</text>
+<text x="84" y="868" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">What would you like to achieve with it?</text>
+<rect x="84" y="878" width="640" height="34" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="96" y="900" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Win the council's support for the new cycle lanes</text>
+<text x="84" y="934" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Suggested from your answer: the template Lecture, and an outline —</text>
+<rect x="84" y="946" width="126" height="28" rx="7" fill="#e7e1f4" stroke="#e7e1f4" stroke-width="1"/>
+<text x="96" y="964.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Title</text>
+<rect x="216" y="946" width="126" height="28" rx="7" fill="#e7e1f4" stroke="#e7e1f4" stroke-width="1"/>
+<text x="228" y="964.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">The problem</text>
+<rect x="348" y="946" width="126" height="28" rx="7" fill="#e7e1f4" stroke="#e7e1f4" stroke-width="1"/>
+<text x="360" y="964.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Three options</text>
+<rect x="480" y="946" width="126" height="28" rx="7" fill="#e7e1f4" stroke="#e7e1f4" stroke-width="1"/>
+<text x="492" y="964.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">What we propose</text>
+<rect x="612" y="946" width="126" height="28" rx="7" fill="#e7e1f4" stroke="#e7e1f4" stroke-width="1"/>
+<text x="624" y="964.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">What we ask for</text>
+<text x="84" y="1002" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The outline becomes slides with titles in the matching layouts; nothing else is written.</text>
+<text x="84" y="1020" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The suggestion comes from the ai user if one is set up; without it, from the template's own outline.</text>
+<line x1="762" y1="826" x2="762" y2="1060" stroke="#e3dfee" stroke-width="1"/>
+<text x="786" y="838" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">TEMPLATES</text>
+<rect x="786" y="852" width="190" height="106.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="786" y="852" width="3.8" height="106.875" rx="0" fill="#f2a057"/>
+<text x="881.0" y="901.4" font-family="Fraunces, Georgia, serif" font-size="11.399999999999999" font-weight="600" fill="#1f1a33" text-anchor="middle">Workshop</text>
+<text x="881.0" y="914.7" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#6e6880" text-anchor="middle">Subtitle</text>
+<text x="786" y="978" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Workshop</text>
+<rect x="992" y="852" width="190" height="106.875" rx="3" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="992" y="852" width="3.8" height="106.875" rx="0" fill="#5b4bc4"/>
+<text x="1087.0" y="901.4" font-family="Fraunces, Georgia, serif" font-size="11.399999999999999" font-weight="600" fill="#1f1a33" text-anchor="middle">Lecture</text>
+<text x="1087.0" y="914.7" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#6e6880" text-anchor="middle">Subtitle</text>
+<text x="992" y="978" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Lecture</text>
+<text x="992" y="995" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">suggested</text>
+<rect x="1198" y="852" width="190" height="106.875" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="1198" y="852" width="3.8" height="106.875" rx="0" fill="#9a92b8"/>
+<text x="1293.0" y="901.4" font-family="Fraunces, Georgia, serif" font-size="11.399999999999999" font-weight="600" fill="#1f1a33" text-anchor="middle">Plain</text>
+<text x="1293.0" y="914.7" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="6" font-weight="400" fill="#6e6880" text-anchor="middle">Subtitle</text>
+<text x="1198" y="978" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Plain</text>
+<rect x="1404" y="852" width="190" height="107" rx="3" fill="#faf9fd" stroke="#d8d2e6" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="1499" y="902" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">pptx · potx · odp · otp</text>
+<text x="1499" y="920" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">its masters, step G</text>
+<text x="1404" y="978" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">From a file…</text>
+<rect x="1446" y="1032" width="170" height="32" rx="8" fill="#5b4bc4"/>
+<text x="1531.0" y="1053" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#ffffff" text-anchor="middle">Create presentation</text>
+<rect x="1318" y="1032" width="118" height="32" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1377.0" y="1053" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Start empty</text>
+</svg>

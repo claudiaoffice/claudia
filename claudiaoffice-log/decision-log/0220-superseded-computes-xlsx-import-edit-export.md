@@ -1,12 +1,12 @@
 ---
 id: D220
 title: "`claudia-computes-io` gets the same real import/edit/export path D217 gave docx and D219 gave pptx, now for xlsx: `xlsx_to_workbook` (a worksheet's cells…"
-status: current
+status: superseded
 applies-to: computes
 date: 2026-11-09
 round: "Real import, edit and re-export: docx, pptx, xlsx, and the test-document library"
 supersedes: []
-superseded-by: []
+superseded-by: [D340, D341]
 previous-id: D204
 ---
 
@@ -17,3 +17,5 @@ previous-id: D204
 **Notes.** Follows D217's and D219's design exactly, with xlsx's own structure landing between the two: like pptx (and unlike docx's single `word/document.xml`), xlsx keeps each sheet in its own part, so the owned-parts set can be the actual touched sheets rather than one fixed, coarse-grained part; like docx, cells on an untouched sheet needed no reasoning about relationship-id stability (xlsx's sheet-part-by-rels resolution, `_sheet_part`, already existed from the pivot-table spike and needed no change). The one genuinely new risk — the shared-string/styles whole-part reconcile gap `claudia-opc-io` had flagged in advance — was closed by seven probes against real openpyxl output *before* writing `xlsx_to_workbook`/`apply_edits_to_xlsx` at all, the same "validate against the real library first" discipline D147's three spikes and D217's own design discussion both used, rather than building the per-entry merge the docstring's own wording might have suggested was required.
 
 *Renumbered on 2026-11-10 from D204, a number that had been allocated twice by branches written in parallel (see `_rounds.md`, "One file per decision").*
+
+*Superseded on 2026-11-13: reading by D340 (the file is read from its XML), writing by D341 (an edit changes only the edited cells in the sheet's XML).*

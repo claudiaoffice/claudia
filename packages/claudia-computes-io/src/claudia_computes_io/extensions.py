@@ -118,6 +118,18 @@ def _rewrite(text: str, change: Callable[[Node], Node]) -> str:
     return text if changed is formula.ast else "=" + print_node(changed, _name_as_written)
 
 
+def rename_calls(text: str, rename: Callable[[str], str]) -> str:
+    """The formula ``text`` with every function it calls renamed by ``rename`` (``text`` itself when none is)."""
+
+    def change(node: Node) -> Node:
+        if not isinstance(node, Call):
+            return node
+        name = rename(node.name)
+        return node if name == node.name else Call(name, node.args)
+
+    return _rewrite(text, change)
+
+
 # ------------------------------------------------------------------------------------------------ RANDOM to Excel
 @dataclass(frozen=True, slots=True)
 class _Parameters:

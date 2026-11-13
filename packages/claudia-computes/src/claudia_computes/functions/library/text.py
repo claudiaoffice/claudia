@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 
+from ...numformats import check_code, render
 from ...values import VALUE, ErrorValue, format_value
 from ..base import Example, FunctionError, UserFunction
 from ..range import Range
@@ -224,3 +225,24 @@ class VALUE_OF(UserFunction):
         if not math.isfinite(number):
             raise FunctionError(VALUE, f"{text!r} is not a number")
         return number
+
+
+@builtin
+class TEXT(UserFunction):
+    description = 'A number as text, shown through a number format code ("#,##0.00", "dd.mm.yyyy", "0%").'
+    examples = (
+        Example('=TEXT(1234.5,"#,##0.00")', "1,234.50"),
+        Example('=TEXT(46339,"dd.mm.yyyy")', "13.11.2026"),
+        Example('=TEXT(0.256,"0.0%")', "25.6%"),
+    )
+
+    def call(self, value, code: str):  # noqa: ANN001 (any value: a number, a text, TRUE/FALSE)
+        if isinstance(value, Range):
+            value = value.at(0, 0)
+        if isinstance(value, ErrorValue):
+            raise value.raised()
+        try:
+            check_code(code)
+            return render(value, code)
+        except ValueError as why:
+            raise FunctionError(VALUE, str(why)) from None

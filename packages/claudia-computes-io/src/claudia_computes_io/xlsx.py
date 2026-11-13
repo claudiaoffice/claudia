@@ -11,24 +11,18 @@ layer openpyxl itself writes to, not a fork of it. The result is read as a norma
 LibreOffice, and survives an openpyxl load-edit-save round trip (the library renumbers the relationship id but keeps
 it internally consistent).
 
-``xlsx_to_workbook`` and ``apply_edits_to_xlsx`` close the loop D217 opened for docx and D219 closed for pptx, now
-for xlsx (D220): a worksheet becomes a :class:`~claudia_computes.Sheet` of cell contents, and re-exporting an
-*edited* import patches only the sheets whose cells actually changed onto the original bytes (through
-``claudia_opc_io.reconcile``), so a chart, an embedded image, a sheet claudia never touched survives untouched. The
-reconcile strategy owns only the touched sheets' own worksheet XML parts, never ``xl/styles.xml`` or
-``xl/sharedStrings.xml``: openpyxl drops the shared-string table on every save of its own accord (every string
-becomes an inline string, regardless of how the source file encoded it), so a touched sheet never needs the shared
-table and an untouched one keeps referencing the pristine, reconciled-back original; and openpyxl preserves a
-workbook's exact style-index numbering through a round trip as long as no style, font or fill is touched, which
-this module never does (cells carry no per-cell style in claudia's model -- styles apply only to floating objects,
-out of scope here). Both findings were confirmed empirically against openpyxl itself before writing this, the same
-way D147's pivot-table spike was; see the implementation note.
+``xlsx_to_workbook`` reads a file as a model and ``xlsx_import_losses`` says what the model does not show of it
+(:mod:`.xlsx_read`, D340); ``apply_edits_to_xlsx`` writes an edited import back by changing only the edited cells in
+the original file's XML (:mod:`.xlsx_patch`, D341, after D220), so a chart, a picture, the look of a cell, a list in a
+cell, an icon set or a spilled formula -- everything the model does not hold -- survives the edit. Formulas carry
+Excel's ``_xlfn.`` marks in the file and lose them in the model (:mod:`.excel_names`).
 """
 
 from __future__ import annotations
 
 import posixpath
 import zipfile
+from collections.abc import Hashable
 from io import BytesIO
 from xml.sax.saxutils import escape as _xml_escape
 
@@ -36,13 +30,39 @@ import openpyxl
 from lxml import etree
 from openpyxl.comments import Comment
 
-from claudia_computes import Content, Sheet, SheetId, WorkbookModel, content_of
+from claudia_computes import Content, Sheet, WorkbookModel
+from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.values import ErrorValue, Value
 from claudia_odf_io import Loss, LossLog
-from claudia_opc_io import owns, reconcile
+from claudia_opc_io import write_parts
 
-from .extensions import from_excel, restore_alternatives, to_excel, with_note
+from .cell_looks import (
+    Dressing,
+    Lines,
+    Look,
+    LookExport,
+    Restyling,
+    SheetLooks,
+    changed_styles,
+    restyling,
+    runs_of,
+    sheet_styling,
+)
+from .excel_names import with_marks
+from .extensions import to_excel, with_note
 from .openformula import Untranslatable
+from .xlsx_looks import XlsxLooks, read_looks
+from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
+from .xlsx_read import (
+    SheetRead,
+    losses_in_order,
+    names_and_tables,
+    open_package,
+    read_sheet,
+    workbook_losses,
+)
+from .xlsx_restyle import StylesPatch, restyle_sheet
+from .xlsx_write_looks import XlsxLookWriter
 
 NS = {
     "ct": "http://schemas.openxmlformats.org/package/2006/content-types",
@@ -83,16 +103,16 @@ def _written(content: Content, value: Value) -> tuple[object, str | None, Loss |
 
     ``RANDOM(...)`` becomes the Excel formula that draws the same distribution and a cell with alternatives its first
     alternative with a note (see :mod:`claudia_computes_io.extensions`)."""
-    written = with_note(content)
-    shown = written.content
+    noted = with_note(content)
+    shown = noted.content
     if shown is None:
-        return None, written.note, None
+        return None, noted.note, None
     if shown["t"] != "formula":
-        return shown["v"], written.note, None
+        return shown["v"], noted.note, None
     try:
-        return to_excel(shown["v"]), written.note, None
+        return with_marks(to_excel(shown["v"])), noted.note, None
     except Untranslatable as why:
-        return _shown(value), written.note, Loss("formula", why.reason)
+        return _shown(value), noted.note, Loss("formula", why.reason)
 
 
 def _put(cell, content: Content, value: Value) -> Loss | None:  # noqa: ANN001 (openpyxl's own cell class)
@@ -104,9 +124,13 @@ def _put(cell, content: Content, value: Value) -> Loss | None:  # noqa: ANN001 (
 
 def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     """What :func:`workbook_to_xlsx` cannot say in Excel for ``model``, each as a code with how many:
-    ``"formula"`` (with the reason, ``random`` for a draw Excel has no single formula for: written as its value) and
-    ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest)."""
+    ``"formula"`` (with the reason, ``random`` for a draw Excel has no single formula for: written as its value),
+    ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest) and ``"look"``
+    (``too-many-cells``: cells of style ranges too large to write one by one)."""
     losses = LossLog()
+    dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
+    if dropped:
+        losses.add("look", "too-many-cells", dropped)
     for sheet in model.sheets.values():
         for position, content in sheet.cells.items():
             _, note, lost = _written(content, sheet.grid.get(position))
@@ -119,15 +143,18 @@ def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
 
 def workbook_to_xlsx(model: WorkbookModel) -> bytes:
     """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
-    with the leading ``=``; see ``_written`` for what is written differently). No styles, number formats or
-    charts yet (E6.4, E6.9 are the full story)."""
+    with the leading ``=``; see ``_written`` for what is written differently), and the cells' looks: Body text as
+    the file's Normal, named styles as named cell styles, the rest as direct formats with their number formats
+    (``xlsx_write_looks``, D349). No charts yet (E6.4, E6.9 are the full story)."""
     wb = openpyxl.Workbook()
     assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
+    looks = XlsxLookWriter(model, wb)
     for sheet in model.sheets.values():
         ws = wb.create_sheet(title=sheet.name)
         for (row, col), content in sheet.cells.items():
             _put(ws.cell(row=row + 1, column=col + 1), content, sheet.grid.get((row, col)))
+        looks.sheet(sheet, ws)
     if not wb.sheetnames:
         wb.create_sheet(title="Sheet1")
     out = BytesIO()
@@ -135,86 +162,161 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
     return out.getvalue()
 
 
-def _cell_content(cell) -> Content:  # noqa: ANN001 (openpyxl's own cell classes are not exported as one type)
-    """``cell``'s content as claudia's own ``Content`` shape: ``None`` for an empty cell, a formula content
-    (keeping the leading ``=``; the inverse functions of ``RAND()`` read as ``RANDOM``) for a formula cell,
-    :func:`~claudia_computes.content_of` for anything else; a note claudia wrote gives the alternatives back."""
-    if cell.value is None:
-        return None
-    if cell.data_type == "f":
-        content: Content = {"t": "formula", "v": from_excel(cell.value) if isinstance(cell.value, str) else cell.value}
-    else:
-        content = content_of(cell.value)
-    return restore_alternatives(content, cell.comment.text if cell.comment is not None else None)
-
-
 def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
     """``xlsx_bytes`` as a :class:`~claudia_computes.WorkbookModel`: one sheet per worksheet, in order, each
-    non-empty cell becoming a constant or formula content. Styles, number formats, charts, pivot tables, images
-    and anything else a worksheet can carry are simply not modeled -- claudia has no model for them, same as a
-    table is invisible to ``docx_to_text`` (D217) or a picture to ``pptx_to_slides`` (D219)."""
-    wb = openpyxl.load_workbook(BytesIO(xlsx_bytes))
+    non-empty cell becoming a constant or formula content, and the workbook's ranges and tables as names (D340). A
+    formula the model cannot calculate as Excel does comes in as the value Excel last showed for it. The look of the
+    cells comes in as styles and named number formats -- the file's named styles as they are, its direct formats as
+    provisional styles that wait for a name (``cell_looks``, D349). What the model does not show at all (charts,
+    pictures, a rotated text...) stays in the file for :func:`apply_edits_to_xlsx` and is listed by
+    :func:`xlsx_import_losses`. Raises :class:`XlsxError` for bytes that are not an xlsx file."""
+    package = open_package(xlsx_bytes)
+    names, _ = names_and_tables(package)
+    known = frozenset(named.name.casefold() for named in names)
     model = WorkbookModel()
-    for index, name in enumerate(wb.sheetnames, start=1):
-        sheet = Sheet(SheetId(f"s{index}"), name)
-        for row_index, row in enumerate(wb[name].iter_rows()):
-            for col_index, cell in enumerate(row):
-                content = _cell_content(cell)
-                if content is not None:
-                    sheet.cells[(row_index, col_index)] = content
+    dressing = _dressing(model, read_looks(package.parts))
+    for part in package.sheets:
+        sheet = Sheet(part.sheet_id, part.name)
+        read = read_sheet(package, part, known)
+        sheet.cells.update(read.cells)
+        _dress(dressing, sheet, read)
         model.sheets[sheet.id] = sheet
         model.open_container(str(sheet.id))
+    for named in names:
+        model.names.put(named)
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
     return model
 
 
-class UnsupportedEdit(Exception):
-    """Raised by :func:`apply_edits_to_xlsx` for an edit it cannot patch onto the original file yet: adding,
-    removing, renaming or reordering a sheet. Changing a cell's content (a constant or a formula) on a sheet
-    that already existed in ``baseline`` is supported."""
+def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
+    """What :func:`xlsx_to_workbook` does not show of the file, each as a code with how many: ``"formula"`` (with the
+    reason it came in as its value: ``array``, ``function``, ``name``, ``syntax``), ``"date"``, ``"error-value"``,
+    ``"look"``, ``"merge"``, ``"comment"``, ``"chart"``, ``"picture"``, ``"validation"``, ``"conditional-format"``,
+    ``"named-range"``, ``"hidden-sheet"``... None of it is lost from the *file*: an edit written with
+    :func:`apply_edits_to_xlsx` keeps all of it (D403, D341)."""
+    package = open_package(xlsx_bytes)
+    names, losses = names_and_tables(package)
+    known = frozenset(named.name.casefold() for named in names)
+    dressing = _dressing(WorkbookModel(), read_looks(package.parts))
+    for part in package.sheets:
+        read = read_sheet(package, part, known)
+        for loss in read.lost.result():
+            losses.add(loss.kind, loss.detail, loss.count)
+        _dress(dressing, Sheet(part.sheet_id, part.name), read)
+    for what, count in dressing.lost.items():
+        losses.add("look", what, count)
+    workbook_losses(package, losses)
+    return losses_in_order(losses.result(), _ORDER)
+
+
+def _dressing(model: WorkbookModel, looks: XlsxLooks) -> Dressing:
+    def look(index: Hashable) -> tuple[Hashable | None, Look]:
+        assert isinstance(index, int)
+        return looks.cells[index] if 0 <= index < len(looks.cells) else (0, looks.normal)
+
+    return Dressing(model, looks.normal, looks.named.items(), look)
+
+
+def _dress(dressing: Dressing, sheet: Sheet, read: SheetRead) -> None:
+    """Give ``sheet`` the looks of its cells, rows and columns as ``read`` found them: a cell needs a range of its
+    own only where its look is not its row's (or, in a row without one, its column's)."""
+    columns = [(first, last, dressing.style(index)) for first, last, index in read.column_looks]
+    rows = {row: dressing.style(index) for row, index in read.row_looks.items()}
+    by_column = Lines(columns)
+    cells = {}
+    for (row, col), index in read.looks.items():
+        dressing.count(index)
+        style = dressing.style(index)
+        inherited = rows.get(row) or by_column.at(col) or DEFAULT_CELL_STYLE
+        if style != inherited:
+            cells[(row, col)] = style
+    dressing.dress(sheet, SheetLooks(cells, runs_of(rows), columns))
+
+
+_ORDER = (
+    "formula",
+    "alternatives",
+    "date",
+    "error-value",
+    "named-range",
+    "table",
+    "chart",
+    "picture",
+    "shape",
+    "comment",
+    "merge",
+    "look",
+    "conditional-format",
+    "validation",
+    "filter",
+    "pivot-table",
+    "protection",
+    "hidden-sheet",
+)
 
 
 def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current: WorkbookModel) -> bytes:
-    """Re-export ``current`` to xlsx by patching only the sheets whose cells actually changed since ``baseline``
-    (the model as it stood right after :func:`xlsx_to_workbook` imported ``original_bytes``) onto those same
-    bytes, instead of rebuilding the file from the model alone -- so a chart, an embedded image, a sheet claudia
-    never touched survives untouched (D220, following D217's docx and D219's pptx design). The parts
-    :func:`claudia_opc_io.reconcile` is told claudia owns are exactly the touched sheets' own worksheet XML
-    parts, resolved fresh each call through ``xl/workbook.xml`` and its rels -- never ``xl/styles.xml`` or
-    ``xl/sharedStrings.xml`` (see this module's own docstring for why that is safe without the per-entry merge
-    those two parts would otherwise need).
+    """Re-export ``current`` to xlsx by writing the cells that changed since ``baseline`` (the model as it stood
+    right after :func:`xlsx_to_workbook` imported ``original_bytes``) into those same bytes (D341, after D220).
 
-    Raises :class:`UnsupportedEdit` if a sheet was added, removed, renamed or reordered since ``baseline``.
-    Changing an existing cell's content is supported; adding or removing cells on an existing sheet is too, since
-    that is just another cell content changing to or from ``None``."""
+    Only the edited cells of each worksheet change in its XML; every other cell, and everything else on the sheet
+    and in the file -- the look of cells, lists, icon sets, spilled formulas, pictures, charts, comments -- stays as
+    the file had it. An edited cell keeps its look. A cell, row or column whose look changed (another style, or a
+    style that was changed) points at a new entry of ``styles.xml``, which is only ever added to
+    (``xlsx_restyle``, D349). A note that holds alternatives is written into the sheet's comments; somebody else's
+    comment on the same cell wins. When a formula changed, Excel's calculation chain is dropped (Excel builds it
+    again), and the workbook asks to be calculated when it is opened.
+
+    Raises :class:`UnsupportedEdit` if a sheet was added, removed, renamed or reordered since ``baseline``, or a
+    cell inside an array formula or a spilled range was changed. An unchanged model gives back ``original_bytes``."""
     baseline_sheets = [(sheet.id, sheet.name) for sheet in baseline.sheets.values()]
     current_sheets = [(sheet.id, sheet.name) for sheet in current.sheets.values()]
     if baseline_sheets != current_sheets:
         raise UnsupportedEdit(
             "adding, removing, renaming or reordering a sheet cannot be patched onto the original file yet"
-        )  # noqa: E501
+        )
+    current.calc.recalculate_all()  # (``store`` without the server's settle leaves dependents stale, as for ods)
+    package = open_package(original_bytes)
+    patch = PackagePatch(package.parts)
+    styles = StylesPatch(patch.parts, current)
+    old_looks = LookExport(baseline)
+    restyled = changed_styles(old_looks, styles.looks)
+    changed = formulas = False
+    for part in package.sheets:
+        before, after = baseline.sheets[part.sheet_id], current.sheets[part.sheet_id]
+        looks = restyling((old_looks, before), (styles.looks, after), restyled)
+        if before.cells == after.cells and not looks:
+            continue  # nothing about this sheet changed: its part stays exactly as it is
+        changed = True
+        formulas |= _write_sheet(patch, part.part, before, after, (styles, looks))
+    if not changed:
+        return original_bytes
+    styles.finish()
+    if formulas:
+        patch.drop_calculation_chain()
+    patch.ask_for_calculation()
+    return write_parts(patch.finish())
 
-    wb = openpyxl.load_workbook(BytesIO(original_bytes))
-    with zipfile.ZipFile(BytesIO(original_bytes)) as z:
-        members = {name: z.read(name) for name in z.namelist()}
 
-    touched_parts: set[str] = set()
-    for sheet_id, sheet_name in baseline_sheets:
-        before_cells, after_cells = baseline.sheets[sheet_id].cells, current.sheets[sheet_id].cells
-        if before_cells == after_cells:
-            continue  # nothing about this sheet changed: leave its worksheet part exactly as is
-        ws = wb[sheet_name]
-        for position in before_cells.keys() | after_cells.keys():
-            before, after = before_cells.get(position), after_cells.get(position)
-            if before == after:
-                continue
-            row, col = position
-            _put(ws.cell(row=row + 1, column=col + 1), after, current.sheets[sheet_id].grid.get(position))
-        touched_parts.add(_sheet_part(members, sheet_name))
-
-    patched = BytesIO()
-    wb.save(patched)
-    return reconcile(original_bytes, patched.getvalue(), owns(touched_parts))
+def _write_sheet(
+    patch: PackagePatch, part: str, before: Sheet, after: Sheet, looks: tuple[StylesPatch, Restyling]
+) -> bool:
+    """Write the cells of ``after`` that differ from ``before`` into the sheet ``part``, and the looks that changed;
+    whether a formula changed."""
+    sheet = SheetPatch(patch.parts[part])
+    notes = SheetNotes(patch, part, sheet)
+    formulas = False
+    for row, col in sorted(before.cells.keys() | after.cells.keys()):
+        content = after.cells.get((row, col))
+        if before.cells.get((row, col)) == content:
+            continue
+        cell = None if content is None else written(content, after.grid.get((row, col)))
+        formulas |= sheet.put(row, col, cell)
+        notes.set(row, col, None if cell is None else cell.note)
+    notes.finish()
+    restyle_sheet(sheet, *looks)
+    patch.parts[part] = sheet.to_bytes()
+    return formulas
 
 
 def _resolve_target(source_dir: str, target: str) -> str:

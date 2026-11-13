@@ -29,7 +29,7 @@ class Adapter:
 
 
 #: One entry per format the catalogue can test, each registered once it has its own real import and
-#: edit-and-reexport path: docx (D217), pptx (D219), xlsx (D220), odt (D401), odp (D412) and ods (D413).
+#: edit-and-reexport path: docx (D217), pptx (D219), xlsx (D341), odt (D401), odp (D412) and ods (D413).
 ADAPTERS: dict[str, Adapter] = {
     "docx": Adapter(import_fn=docx_to_text, apply_edits_fn=apply_edits_to_docx),
     "odt": Adapter(import_fn=odt_to_text, apply_edits_fn=apply_edits_to_odt),

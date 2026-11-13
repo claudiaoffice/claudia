@@ -3,6 +3,56 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.5.0] - 2026-11-13
+
+The look of cells to and from xlsx and ods (D348, D349).
+
+### Added
+- `xlsx_to_workbook` and `ods_to_workbook` bring the look of the cells as styles: the file's default look as Body text,
+  its named styles by name, its direct formats as provisional styles named by what differs, and its number formats as
+  the workbook's named formats; cells, rows and columns get style ranges (`cell_looks`, `xlsx_looks`, `ods_looks`,
+  `odf_numbers`).
+- `workbook_to_xlsx` and `workbook_to_ods` write the looks: Body text as Normal/Default, named styles as named cell
+  styles, the rest as direct formats, number formats as number formats and number styles (`xlsx_write_looks`,
+  `ods_write_looks`).
+- `apply_edits_to_xlsx` and `apply_edits_to_ods` write a changed look: a cell, row or column whose styles changed, or
+  whose style was changed, gets a new look of its own in the edited file (new `cellXfs` entries; `claudia-ce…`
+  automatic styles), based on the file's named style of the same name; nothing the file had changes (D350).
+
+### Changed
+- **Breaking** for whoever reads the loss codes: `look` now has a detail, per thing a look has that no style holds
+  (`rotation`, `pattern`, `center-across`, `shrink`, `number-format`, `too-many-ranges`...), counted per cell; a cell
+  with only a look a style holds is no loss any more. `date` is gone for xlsx and counted for ods only where no date
+  format shows the date. `xlsx_export_losses` and `ods_export_losses` count `look`: `too-many-cells`.
+
+## [0.4.0] - 2026-11-13
+
+xlsx files as Excel writes them today: read from their own XML, edited cell by cell (D340, D341).
+
+### Added
+- `xlsx_import_losses`: what `xlsx_to_workbook` does not show of a file, as codes with counts (`formula` with its
+  reason -- `array`, `function`, `name`, `syntax` --, `date`, `error-value`, `look`, `merge`, `comment`, `chart`,
+  `picture`, `conditional-format`, `validation`, `named-range`, `hidden-sheet`, `protection`...), like
+  `ods_import_losses`.
+- `XlsxError`: the bytes are not an xlsx file (not a zip, no workbook part).
+- Defined names that are one range, and tables with a header row, come in as the model's names (D600), so the
+  formulas that use them stay live.
+
+### Changed
+- `xlsx_to_workbook` reads the file with `lxml` instead of openpyxl. A formula the model cannot calculate as Excel
+  does (an array or spilled formula, a function the model lacks, a name that did not come in, text it cannot read)
+  comes in as the value Excel last showed, instead of failing the import (an array formula did) or calculating to
+  something else. A shared formula is each cell's own formula; `_xlfn.` marks are taken off function names; an error
+  Excel shows comes in as the formula that is that error (`=#N/A`), so formulas that use it get the error too; a
+  date is its serial number (before, openpyxl's `datetime` became text).
+- `apply_edits_to_xlsx` writes the edited cells into the original sheet's XML instead of letting openpyxl save the
+  sheet, so a list that reads another sheet, an icon set, a spilled formula and a picture in a cell survive an edit
+  on their sheet. An edited cell keeps its look; somebody else's comment is never removed; Excel's calculation chain
+  is dropped when a formula changed, and the workbook asks to be calculated when opened. Changing a cell inside an
+  array formula or a spilled range raises `UnsupportedEdit`. An unchanged model gives back the original bytes.
+- Formulas written to xlsx (`workbook_to_xlsx` and edits) carry Excel's `_xlfn.` marks for the functions Excel added
+  after 2007 (`IFS`, `XLOOKUP`, `NORM.INV`...): without them Excel showed `#NAME?`.
+
 ## [0.3.0] - 2026-11-13
 
 Random numbers and alternatives in Excel and OpenDocument files (E6.22, D298, D299).

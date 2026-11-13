@@ -31,6 +31,7 @@ Unused numbers in a closed block stay unused.
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D318 used) | 2026-11-10 | open |
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
+| D340–D359 | real-world documents: xlsx as Excel writes it today, slide templates, cell formats and number formats (branch `real-world-docs`; D340–D350 used) | 2026-11-13 | open |
 
 ## Never to be used
 

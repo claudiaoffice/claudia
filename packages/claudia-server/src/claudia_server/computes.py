@@ -908,6 +908,14 @@ def _name_data(workbook: WorkbookModel, named: NamedRange) -> dict:
     }
 
 
+@computes_methods.method("number_formats")
+def _number_formats(ctx):
+    """The workbook's named number formats (D348), as `[{id, name, code, to_name}]`: a cell shows its number through
+    the format its words' style names (a style's `number_format`, inherited from its parent where it sets none).
+    `code` is Excel's format code; the client renders it in the reader's locale."""
+    return _workbook(ctx).number_formats.to_data()
+
+
 @computes_methods.method("names")
 def _names(ctx):
     """Every name of the workbook (named ranges, tables and query results), workbook-wide ones first, as
