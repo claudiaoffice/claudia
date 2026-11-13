@@ -1,0 +1,321 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+<defs><clipPath id="gridclip"><rect x="0" y="112" width="1280" height="624"/></clipPath><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker></defs>
+<rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#F7F3EC"/>
+<rect x="0.0" y="0.0" width="1280.0" height="48.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="48.0" x2="1280.0" y2="48.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<text x="14.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">File</text>
+<path d="M54.5,22.5 L58,26 L61.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="86.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Edit</text>
+<path d="M126.5,22.5 L130,26 L133.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="158.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Tools</text>
+<path d="M208.5,22.5 L212,26 L215.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="240.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Help</text>
+<path d="M282.5,22.5 L286,26 L289.5,22.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="560.0" cy="24.0" r="5" fill="#1F8A85"/>
+<text x="574.0" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="14.5" font-weight="600" fill="#1F1A33" text-anchor="start">Pricing model</text>
+<text x="684.8" y="29.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">claudia computes</text>
+<rect x="1170.0" y="12.0" width="26.0" height="24.0" rx="5" fill="none" stroke="#1F1A33" stroke-width="1.4"/>
+<line x1="1185.0" y1="12.0" x2="1185.0" y2="36.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<line x1="1212.0" y1="24.0" x2="1222.0" y2="24.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<rect x="1236.0" y="19.0" width="10.0" height="10.0" rx="1.5" fill="none" stroke="#1F1A33" stroke-width="1.4"/>
+<line x1="1258.0" y1="19.0" x2="1268.0" y2="29.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<line x1="1268.0" y1="19.0" x2="1258.0" y2="29.0" stroke="#1F1A33" stroke-width="1.4" stroke-linecap="butt"/>
+<rect x="0.0" y="49.0" width="1280.0" height="39.0" rx="0" fill="#FBF9F5"/>
+<rect x="12.0" y="55.0" width="84.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="26.0" y="74.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">B3</text>
+<path d="M78.5,67.5 L82,71 L85.5,67.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="112.0" y="75.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="14" font-weight="500" fill="#6E6885" text-anchor="start" font-style="italic">fx</text>
+<rect x="140.0" y="55.0" width="1010.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="152.0" y="74.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">=ROUND(RANDOM("normal",1000,150),0)</text>
+<rect x="1160.0" y="55.0" width="108.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<path d="M1176,70 a6,6 0 1 1 2,4.6" fill="none" stroke="#5B4BC4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M1173,66 l3.5,4.5 l3,-4" fill="none" stroke="#5B4BC4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<text x="1198.0" y="74.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="500" fill="#1F1A33" text-anchor="start">Draw 7</text>
+<rect x="0.0" y="88.0" width="1280.0" height="24.0" rx="0" fill="#EFEBF5"/>
+<line x1="0.0" y1="112.0" x2="1280.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="144.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">A</text>
+<line x1="44.0" y1="88.0" x2="44.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="244.0" y="88.0" width="150.0" height="24.0" rx="0" fill="#E6E1F8"/>
+<text x="319.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5B4BC4" text-anchor="middle">B</text>
+<line x1="244.0" y1="88.0" x2="244.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="489.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">C</text>
+<line x1="394.0" y1="88.0" x2="394.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="649.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">D</text>
+<line x1="584.0" y1="88.0" x2="584.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="779.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">E</text>
+<line x1="714.0" y1="88.0" x2="714.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="909.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">F</text>
+<line x1="844.0" y1="88.0" x2="844.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="1039.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">G</text>
+<line x1="974.0" y1="88.0" x2="974.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="1169.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">H</text>
+<line x1="1104.0" y1="88.0" x2="1104.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="1299.0" y="105.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">I</text>
+<line x1="1234.0" y1="88.0" x2="1234.0" y2="112.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="0.0" y="112.0" width="1280.0" height="624.0" rx="0" fill="#FFFFFF"/>
+<g clip-path="url(#gridclip)">
+<line x1="44.0" y1="112.0" x2="44.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="244.0" y1="112.0" x2="244.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="394.0" y1="112.0" x2="394.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="584.0" y1="112.0" x2="584.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="714.0" y1="112.0" x2="714.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="844.0" y1="112.0" x2="844.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="974.0" y1="112.0" x2="974.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="1104.0" y1="112.0" x2="1104.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="1234.0" y1="112.0" x2="1234.0" y2="736.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="142.0" x2="1280.0" y2="142.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="172.0" x2="1280.0" y2="172.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="202.0" x2="1280.0" y2="202.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="232.0" x2="1280.0" y2="232.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="262.0" x2="1280.0" y2="262.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="292.0" x2="1280.0" y2="292.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="322.0" x2="1280.0" y2="322.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="352.0" x2="1280.0" y2="352.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="382.0" x2="1280.0" y2="382.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="412.0" x2="1280.0" y2="412.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="442.0" x2="1280.0" y2="442.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="472.0" x2="1280.0" y2="472.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="502.0" x2="1280.0" y2="502.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="532.0" x2="1280.0" y2="532.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="562.0" x2="1280.0" y2="562.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="592.0" x2="1280.0" y2="592.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="622.0" x2="1280.0" y2="622.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="652.0" x2="1280.0" y2="652.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="682.0" x2="1280.0" y2="682.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="712.0" x2="1280.0" y2="712.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="742.0" x2="1280.0" y2="742.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+</g>
+<rect x="0.0" y="112.0" width="44.0" height="624.0" rx="0" fill="#EFEBF5"/>
+<text x="22.0" y="132.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">1</text>
+<line x1="0.0" y1="142.0" x2="44.0" y2="142.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="162.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">2</text>
+<line x1="0.0" y1="172.0" x2="44.0" y2="172.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="0.0" y="172.0" width="44.0" height="30.0" rx="0" fill="#E6E1F8"/>
+<text x="22.0" y="192.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5B4BC4" text-anchor="middle">3</text>
+<line x1="0.0" y1="202.0" x2="44.0" y2="202.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="222.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">4</text>
+<line x1="0.0" y1="232.0" x2="44.0" y2="232.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="252.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">5</text>
+<line x1="0.0" y1="262.0" x2="44.0" y2="262.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="282.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">6</text>
+<line x1="0.0" y1="292.0" x2="44.0" y2="292.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">7</text>
+<line x1="0.0" y1="322.0" x2="44.0" y2="322.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">8</text>
+<line x1="0.0" y1="352.0" x2="44.0" y2="352.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">9</text>
+<line x1="0.0" y1="382.0" x2="44.0" y2="382.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">10</text>
+<line x1="0.0" y1="412.0" x2="44.0" y2="412.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="432.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">11</text>
+<line x1="0.0" y1="442.0" x2="44.0" y2="442.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="462.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">12</text>
+<line x1="0.0" y1="472.0" x2="44.0" y2="472.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="492.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">13</text>
+<line x1="0.0" y1="502.0" x2="44.0" y2="502.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="522.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">14</text>
+<line x1="0.0" y1="532.0" x2="44.0" y2="532.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="552.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">15</text>
+<line x1="0.0" y1="562.0" x2="44.0" y2="562.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="582.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">16</text>
+<line x1="0.0" y1="592.0" x2="44.0" y2="592.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="612.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">17</text>
+<line x1="0.0" y1="622.0" x2="44.0" y2="622.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="642.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">18</text>
+<line x1="0.0" y1="652.0" x2="44.0" y2="652.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="672.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">19</text>
+<line x1="0.0" y1="682.0" x2="44.0" y2="682.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<text x="22.0" y="702.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="500" fill="#6E6885" text-anchor="middle">20</text>
+<line x1="0.0" y1="712.0" x2="44.0" y2="712.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<line x1="44.0" y1="88.0" x2="44.0" y2="736.0" stroke="#D4CEE0" stroke-width="1" stroke-linecap="butt"/>
+<rect x="0.0" y="736.0" width="1280.0" height="32.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="736.0" x2="1280.0" y2="736.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<rect x="14.0" y="740.0" width="67.2" height="26.0" rx="6" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<line x1="22.0" y1="765.0" x2="73.2" y2="765.0" stroke="#1F8A85" stroke-width="2.5" stroke-linecap="round"/>
+<text x="24.0" y="758.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start">Pricing</text>
+<text x="93.2" y="759.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="16" font-weight="400" fill="#6E6885" text-anchor="start">+</text>
+<rect x="0.0" y="768.0" width="1280.0" height="32.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="768.0" x2="1280.0" y2="768.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<text x="14.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Draw 7 · seed: document</text>
+<circle cx="1002.0" cy="784.0" r="4.5" fill="#2E9E5B"/>
+<text x="1012.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">demo.claudia-office.de</text>
+<text x="1160.0" y="789.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">TLS · 2 online</text>
+<g clip-path="url(#gridclip)">
+<text x="56.0" y="134.0" font-family="Fraunces, 'DejaVu Serif', serif" font-size="19" font-weight="600" fill="#1F1A33" text-anchor="start">Pricing model — launch scenario</text>
+<text x="56.0" y="162.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Price per unit</text>
+<text x="382.0" y="162.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">24.00</text>
+<text x="406.0" y="161.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">€ per unit</text>
+<text x="56.0" y="192.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Units sold</text>
+<text x="382.0" y="192.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">1,043</text>
+<text x="406.0" y="191.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6E6885" text-anchor="start">=ROUND(RANDOM("normal",1000,150),0)</text>
+<text x="56.0" y="222.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Variable cost per unit</text>
+<text x="382.0" y="222.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">11.62</text>
+<text x="406.0" y="221.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6E6885" text-anchor="start">=ROUND(RANDOM("triangular",9,11,14),2)</text>
+<text x="56.0" y="252.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Fixed costs</text>
+<text x="382.0" y="252.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">8,500</text>
+<text x="406.0" y="251.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">€</text>
+<text x="56.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">Revenue</text>
+<text x="382.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">25,032</text>
+<text x="56.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">Costs</text>
+<text x="382.0" y="342.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">20,620</text>
+<text x="56.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">Profit</text>
+<text x="382.0" y="372.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">4,412</text>
+<text x="56.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">Margin</text>
+<text x="382.0" y="402.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">17.6 %</text>
+</g>
+<rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#1F1A33" opacity="0.38"/>
+<rect x="220.0" y="62.0" width="840.0" height="672.0" rx="18" fill="#1F1A33" opacity="0.05"/>
+<rect x="217.0" y="59.0" width="846.0" height="678.0" rx="21" fill="#1F1A33" opacity="0.05"/>
+<rect x="214.0" y="56.0" width="852.0" height="684.0" rx="24" fill="#1F1A33" opacity="0.05"/>
+<rect x="211.0" y="53.0" width="858.0" height="690.0" rx="27" fill="#1F1A33" opacity="0.06"/>
+<rect x="220.0" y="56.0" width="840.0" height="672.0" rx="16" fill="#FFFFFF"/>
+<rect x="220.0" y="56.0" width="840.0" height="52.0" rx="16" fill="#FBF9F5"/>
+<rect x="220.0" y="86.0" width="840.0" height="22.0" rx="0" fill="#FBF9F5"/>
+<line x1="220.0" y1="108.0" x2="1060.0" y2="108.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<text x="640.0" y="89.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="15" font-weight="600" fill="#1F1A33" text-anchor="middle">Random generator</text>
+<line x1="1024.0" y1="76.0" x2="1036.0" y2="88.0" stroke="#6E6885" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="1036.0" y1="76.0" x2="1024.0" y2="88.0" stroke="#6E6885" stroke-width="1.5" stroke-linecap="round"/>
+<text x="240.0" y="136.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="600" fill="#6E6885" text-anchor="start">Distribution</text>
+<g transform="translate(242,157)">
+<path d="M2,12 L2,4 L22,4 L22,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="169.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Uniform</text>
+<rect x="232.0" y="184.0" width="200.0" height="32.0" rx="8" fill="#E6E1F8"/>
+<g transform="translate(242,193)">
+<path d="M1,12 C7,12 8,2 12,2 C16,2 17,12 23,12" fill="none" stroke="#5B4BC4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="205.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">Normal</text>
+<g transform="translate(242,229)">
+<path d="M1,12 C3,12 5,2 8,2 C12,2 14,11 23,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="241.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Log-normal</text>
+<g transform="translate(242,265)">
+<path d="M1,12 L9,2 L23,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="277.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Triangular</text>
+<g transform="translate(242,301)">
+<path d="M1,12 C6,12 7,2 10,2 C14,2 17,12 23,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="313.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">PERT</text>
+<g transform="translate(242,337)">
+<path d="M2,2 C6,10 12,12 23,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="349.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Exponential</text>
+<g transform="translate(242,373)">
+<path d="M1,12 C4,12 6,3 10,3 C16,3 17,10 23,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="385.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Weibull</text>
+<g transform="translate(242,409)">
+<path d="M1,12 C4,4 8,2 12,3 C16,4 20,8 23,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="421.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Beta</text>
+<g transform="translate(242,445)">
+<path d="M1,12 C4,12 6,3 9,3 C13,3 15,11 23,12" fill="none" stroke="#6E6885" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<text x="276.0" y="457.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Gamma</text>
+<rect x="243.0" y="492.0" width="2.4" height="3.0" rx="0" fill="#6E6885"/>
+<rect x="246.3" y="489.0" width="2.4" height="6.0" rx="0" fill="#6E6885"/>
+<rect x="249.6" y="485.0" width="2.4" height="10.0" rx="0" fill="#6E6885"/>
+<rect x="252.9" y="483.0" width="2.4" height="12.0" rx="0" fill="#6E6885"/>
+<rect x="256.2" y="486.0" width="2.4" height="9.0" rx="0" fill="#6E6885"/>
+<rect x="259.5" y="490.0" width="2.4" height="5.0" rx="0" fill="#6E6885"/>
+<rect x="262.8" y="493.0" width="2.4" height="2.0" rx="0" fill="#6E6885"/>
+<text x="276.0" y="493.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Binomial</text>
+<rect x="243.0" y="525.0" width="2.4" height="6.0" rx="0" fill="#6E6885"/>
+<rect x="246.3" y="520.0" width="2.4" height="11.0" rx="0" fill="#6E6885"/>
+<rect x="249.6" y="519.0" width="2.4" height="12.0" rx="0" fill="#6E6885"/>
+<rect x="252.9" y="523.0" width="2.4" height="8.0" rx="0" fill="#6E6885"/>
+<rect x="256.2" y="527.0" width="2.4" height="4.0" rx="0" fill="#6E6885"/>
+<rect x="259.5" y="529.0" width="2.4" height="2.0" rx="0" fill="#6E6885"/>
+<rect x="262.8" y="530.0" width="2.4" height="1.0" rx="0" fill="#6E6885"/>
+<text x="276.0" y="529.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Poisson</text>
+<text x="424.0" y="529.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#D9822B" text-anchor="end">≠</text>
+<rect x="243.0" y="559.0" width="2.4" height="8.0" rx="0" fill="#6E6885"/>
+<rect x="246.3" y="564.0" width="2.4" height="3.0" rx="0" fill="#6E6885"/>
+<rect x="249.6" y="556.0" width="2.4" height="11.0" rx="0" fill="#6E6885"/>
+<rect x="252.9" y="562.0" width="2.4" height="5.0" rx="0" fill="#6E6885"/>
+<rect x="256.2" y="558.0" width="2.4" height="9.0" rx="0" fill="#6E6885"/>
+<rect x="259.5" y="565.0" width="2.4" height="2.0" rx="0" fill="#6E6885"/>
+<rect x="262.8" y="561.0" width="2.4" height="6.0" rx="0" fill="#6E6885"/>
+<text x="276.0" y="565.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Discrete (own values)</text>
+<text x="240.0" y="606.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="start">≠  no Excel equivalent:</text>
+<text x="258.0" y="621.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="start">exported as fixed values</text>
+<line x1="452.0" y1="120.0" x2="452.0" y2="658.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<text x="476.0" y="140.0" font-family="Fraunces, 'DejaVu Serif', serif" font-size="22" font-weight="600" fill="#1F1A33" text-anchor="start">Normal</text>
+<text x="476.0" y="164.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#6E6885" text-anchor="start">A symmetric bell curve. Typical for measurement noise and for</text>
+<text x="476.0" y="181.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#6E6885" text-anchor="start">quantities that add up from many small effects.</text>
+<text x="476.0" y="221.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Mean  μ</text>
+<line x1="572.0" y1="216.0" x2="822.0" y2="216.0" stroke="#D4CEE0" stroke-width="4" stroke-linecap="round"/>
+<line x1="572.0" y1="216.0" x2="697.0" y2="216.0" stroke="#5B4BC4" stroke-width="4" stroke-linecap="round"/>
+<circle cx="697.0" cy="216.0" r="8" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="2"/>
+<rect x="848.0" y="202.0" width="84.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="924.0" y="221.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">1000</text>
+<text x="476.0" y="259.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Spread  σ</text>
+<line x1="572.0" y1="254.0" x2="822.0" y2="254.0" stroke="#D4CEE0" stroke-width="4" stroke-linecap="round"/>
+<line x1="572.0" y1="254.0" x2="647.0" y2="254.0" stroke="#5B4BC4" stroke-width="4" stroke-linecap="round"/>
+<circle cx="647.0" cy="254.0" r="8" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="2"/>
+<rect x="848.0" y="240.0" width="84.0" height="28.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="924.0" y="259.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">150</text>
+<rect x="476.0" y="280.0" width="16.0" height="16.0" rx="4" fill="#5B4BC4"/>
+<path d="M479.5,288.5 l3.5,3.5 l6,-7" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="502.0" y="292.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">Keep values between</text>
+<rect x="644.0" y="276.0" width="70.0" height="26.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="708.0" y="294.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">0</text>
+<text x="726.0" y="293.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="start">and</text>
+<rect x="758.0" y="276.0" width="70.0" height="26.0" rx="7" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="822.0" y="294.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1F1A33" text-anchor="end">–</text>
+<rect x="476.0" y="326.0" width="548.0" height="204.0" rx="10" fill="#FBF9F5" stroke="#E1DCEA" stroke-width="1"/>
+<rect x="497.0" y="490.0" width="18.3" height="0.0" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="517.3" y="490.0" width="18.3" height="0.0" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="537.6" y="474.4" width="18.3" height="15.6" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="558.0" y="484.8" width="18.3" height="5.2" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="578.3" y="479.6" width="18.3" height="10.4" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="598.6" y="469.2" width="18.3" height="20.8" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="618.9" y="443.2" width="18.3" height="46.8" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="639.2" y="448.4" width="18.3" height="41.6" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="659.6" y="443.2" width="18.3" height="46.8" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="679.9" y="448.4" width="18.3" height="41.6" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="700.2" y="396.4" width="18.3" height="93.6" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="720.5" y="386.0" width="18.3" height="104.0" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="740.8" y="412.0" width="18.3" height="78.0" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="761.2" y="339.2" width="18.3" height="150.8" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="781.5" y="354.8" width="18.3" height="135.2" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="801.8" y="427.6" width="18.3" height="62.4" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="822.1" y="396.4" width="18.3" height="93.6" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="842.4" y="443.2" width="18.3" height="46.8" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="862.8" y="464.0" width="18.3" height="26.0" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="883.1" y="484.8" width="18.3" height="5.2" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="903.4" y="484.8" width="18.3" height="5.2" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="923.7" y="484.8" width="18.3" height="5.2" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="944.0" y="484.8" width="18.3" height="5.2" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="964.4" y="490.0" width="18.3" height="0.0" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<rect x="984.7" y="490.0" width="18.3" height="0.0" rx="0" fill="#5B4BC4" opacity="0.28"/>
+<path d="M496.0,489.6 L501.1,489.5 L506.2,489.3 L511.2,489.2 L516.3,489.0 L521.4,488.8 L526.5,488.5 L531.6,488.2 L536.6,487.8 L541.7,487.4 L546.8,486.8 L551.9,486.2 L557.0,485.5 L562.0,484.7 L567.1,483.8 L572.2,482.7 L577.3,481.5 L582.4,480.2 L587.4,478.6 L592.5,476.9 L597.6,475.0 L602.7,472.9 L607.8,470.6 L612.8,468.1 L617.9,465.4 L623.0,462.4 L628.1,459.2 L633.2,455.9 L638.2,452.3 L643.3,448.5 L648.4,444.5 L653.5,440.4 L658.6,436.1 L663.6,431.8 L668.7,427.4 L673.8,422.9 L678.9,418.4 L684.0,414.0 L689.0,409.7 L694.1,405.4 L699.2,401.4 L704.3,397.6 L709.4,394.0 L714.4,390.8 L719.5,387.9 L724.6,385.3 L729.7,383.2 L734.8,381.6 L739.8,380.3 L744.9,379.6 L750.0,379.4 L755.1,379.6 L760.2,380.3 L765.2,381.6 L770.3,383.2 L775.4,385.3 L780.5,387.9 L785.6,390.8 L790.6,394.0 L795.7,397.6 L800.8,401.4 L805.9,405.4 L811.0,409.7 L816.0,414.0 L821.1,418.4 L826.2,422.9 L831.3,427.4 L836.4,431.8 L841.4,436.1 L846.5,440.4 L851.6,444.5 L856.7,448.5 L861.8,452.3 L866.8,455.9 L871.9,459.2 L877.0,462.4 L882.1,465.4 L887.2,468.1 L892.2,470.6 L897.3,472.9 L902.4,475.0 L907.5,476.9 L912.6,478.6 L917.6,480.2 L922.7,481.5 L927.8,482.7 L932.9,483.8 L938.0,484.7 L943.0,485.5 L948.1,486.2 L953.2,486.8 L958.3,487.4 L963.4,487.8 L968.4,488.2 L973.5,488.5 L978.6,488.8 L983.7,489.0 L988.8,489.2 L993.8,489.3 L998.9,489.5 L1004.0,489.6" fill="none" stroke="#5B4BC4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+<line x1="496.0" y1="490.0" x2="1004.0" y2="490.0" stroke="#9C95B5" stroke-width="1" stroke-linecap="butt"/>
+<line x1="546.8" y1="490.0" x2="546.8" y2="494.0" stroke="#9C95B5" stroke-width="1" stroke-linecap="butt"/>
+<text x="546.8" y="508.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="middle">600</text>
+<line x1="648.4" y1="490.0" x2="648.4" y2="494.0" stroke="#9C95B5" stroke-width="1" stroke-linecap="butt"/>
+<text x="648.4" y="508.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="middle">800</text>
+<line x1="750.0" y1="490.0" x2="750.0" y2="494.0" stroke="#9C95B5" stroke-width="1" stroke-linecap="butt"/>
+<text x="750.0" y="508.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="middle">1,000</text>
+<line x1="851.6" y1="490.0" x2="851.6" y2="494.0" stroke="#9C95B5" stroke-width="1" stroke-linecap="butt"/>
+<text x="851.6" y="508.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="middle">1,200</text>
+<line x1="953.2" y1="490.0" x2="953.2" y2="494.0" stroke="#9C95B5" stroke-width="1" stroke-linecap="butt"/>
+<text x="953.2" y="508.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="middle">1,400</text>
+<line x1="673.8" y1="484.0" x2="673.8" y2="366.0" stroke="#5B4BC4" stroke-width="1" stroke-linecap="butt" stroke-dasharray="3 3"/>
+<line x1="826.2" y1="484.0" x2="826.2" y2="366.0" stroke="#5B4BC4" stroke-width="1" stroke-linecap="butt" stroke-dasharray="3 3"/>
+<text x="750.0" y="356.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="600" fill="#5B4BC4" text-anchor="middle">68 % of values fall between 850 and 1,150</text>
+<text x="490.0" y="346.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11" font-weight="400" fill="#6E6885" text-anchor="start">Preview · 200 draws (not saved)</text>
+<text x="476.0" y="552.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="600" fill="#6E6885" text-anchor="start">Formula in cell</text>
+<rect x="476.0" y="560.0" width="548.0" height="30.0" rx="7" fill="#1F1A33"/>
+<text x="488.0" y="580.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12.5" font-weight="400" fill="#FFFFFF" text-anchor="start">=ROUND(RANDOM("normal", 1000, 150), 0)</text>
+<text x="476.0" y="614.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="600" fill="#6E6885" text-anchor="start">In an Excel file</text>
+<rect x="476.0" y="622.0" width="548.0" height="30.0" rx="7" fill="#F5F2FA"/>
+<text x="488.0" y="642.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12.5" font-weight="400" fill="#6E6885" text-anchor="start">=ROUND(NORM.INV(RAND(), 1000, 150), 0)</text>
+<line x1="220.0" y1="664.0" x2="1060.0" y2="664.0" stroke="#D9D3E3" stroke-width="1" stroke-linecap="butt"/>
+<text x="244.0" y="692.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#6E6885" text-anchor="start">Target: B3</text>
+<rect x="790.0" y="672.0" width="100.0" height="34.0" rx="8" fill="#FFFFFF" stroke="#CFC8DD" stroke-width="1"/>
+<text x="840.0" y="694.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="middle">Cancel</text>
+<rect x="904.0" y="672.0" width="132.0" height="34.0" rx="8" fill="#5B4BC4"/>
+<text x="970.0" y="694.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Insert into B3</text>
+</svg>

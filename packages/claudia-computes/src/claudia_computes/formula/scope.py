@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Protocol
 
+from ..draws import uniform
 from ..functions.range import Grid, Range
 from ..names import Anchor, Names, Rect, select
 from ..refs import Position, SheetId, column_name
@@ -37,11 +38,21 @@ class Scope:
         self.spills: dict[Anchor, Rect] = {}  # where the SQL() cells put their results, as of the last calculation
         self.names: Names = Names()  # (set by the calculator)
         self.mentioned: set[str] = set()  # the names a query looked up while the cell was calculated
+        self.seed = 0  # the document's random seed and draw number (set by the calculator, D291)
+        self.draw = 0
+        self.choice: dict[tuple[SheetId, int, int], int] = {}  # which alternative a cell with alternatives gives (D294)
+        self._calls = 0  # how many random numbers the cell being evaluated has taken so far
 
     def enter(self, sheet: SheetId, row: int, col: int) -> None:
         """Evaluate next on ``sheet`` at (``row``, ``col``)."""
         self.home, self.row, self.col = sheet, row, col
         self.grid = self.sheets[sheet].grid
+        self._calls = 0
+
+    def next_uniform(self) -> float:
+        """The next number in [0, 1) of the stream for the cell being evaluated (``RAND`` and its relatives)."""
+        index, self._calls = self._calls, self._calls + 1
+        return uniform(self.seed, self.home, self.row, self.col, self.draw, index)
 
     def read(self, sheet: SheetId, position: Position) -> Value:
         """The value of one cell of another sheet."""

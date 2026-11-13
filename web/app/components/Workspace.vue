@@ -46,6 +46,7 @@ import { sheetArea } from '~/lib/cell-styles'
 import { chordLabel, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import { marksFor, NO_MARKS, type PreviewAnswer, type SearchMatch } from '~/lib/search'
 import { sheetSearchHost } from '~/lib/sheet-search-host'
+import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~/lib/follow'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
@@ -71,7 +72,7 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 /** computes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours'>(null)
+const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours' | 'random'>(null)
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 
 const EXPORT_FORMATS = [
@@ -608,10 +609,90 @@ const searchMarks = computed(() =>
     ? marksFor(searchView.value.matches, state.activeSheet, searchView.value.current, searchView.value.preview)
     : NO_MARKS,
 )
+
+// ------------------------------------------------------------------------------ random numbers, alternatives, following (E6.21–E6.23)
+// Chords are by physical key (`code`): with Alt held, the character a key types differs by layout and platform.
+const RESAMPLE: ShortcutDef = { id: 'tools.resample', label: 'Resample random numbers', chord: { key: 'F9' }, run: () => void resample() }
+const RANDOM_GENERATOR: ShortcutDef = { id: 'tools.random', label: 'Random generator…', chord: { key: 'r', code: 'KeyR', ctrl: true, alt: true }, run: () => openRandom() }
+const OUTCOMES: ShortcutDef = { id: 'tools.outcomes', label: 'Outcomes of this cell…', chord: { key: 'o', code: 'KeyO', ctrl: true, alt: true }, run: () => openOutcomes() }
+const FOLLOW: ShortcutDef = { id: 'tools.follow', label: 'Follow computation', chord: { key: 'f', code: 'KeyF', ctrl: true, alt: true }, run: () => toggleFollow() }
 const extraShortcuts = [
   LOOK,
   ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value }),
+  RESAMPLE,
+  RANDOM_GENERATOR,
+  OUTCOMES,
+  FOLLOW,
 ]
+
+/** Where the cell menu is open (right click on a cell), and the outcomes popover (which cell, at which point). */
+const cellMenu = ref<{ x: number; y: number } | null>(null)
+const outcomes = ref<{ row: number; col: number; x: number; y: number } | null>(null)
+/** Following a computation: the cell under the cursor is the one followed, so selecting another one moves the lights. */
+const following = ref(false)
+const reach = ref<Reach>('group')
+let asked: Window | null = null
+let view = { r0: 0, r1: 0, c0: 0, c1: 0 }
+
+const activeContent = computed(() => {
+  void state.generation
+  return session.cell(state.activeSheet, sel.value.row, sel.value.col)
+})
+/** "Outcomes" is for a cell that has alternatives or a result of them (or of random numbers). */
+const hasOutcomes = computed(() => !!(activeContent.value?.alts || activeContent.value?.out))
+
+async function resample() {
+  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  await session.resample()
+}
+function openRandom() {
+  if (state.activeSheet && !activeChart.value) dialog.value = 'random'
+}
+function openOutcomes(at?: { x: number; y: number }) {
+  if (!hasOutcomes.value) return session.notice('This cell has no alternatives and does not depend on any.', 'info')
+  const box = grid.value?.anchorPoint(sel.value.row, sel.value.col)
+  outcomes.value = { row: sel.value.row, col: sel.value.col, x: at?.x ?? box?.x ?? 120, y: at?.y ?? (box ? box.y + 24 : 160) }
+}
+function insertRandom(formula: string) {
+  dialog.value = null
+  void session.setCells(state.activeSheet, [{ row: sel.value.row, col: sel.value.col, input: formula }]) // (the server's formula already starts with "=")
+}
+
+function followNow(force = false) {
+  if (!following.value || !state.activeSheet || activeChart.value) return
+  if (!force && asked && coversWindow(asked, view) && state.trace?.row === sel.value.row && state.trace?.col === sel.value.col && state.trace?.reach === reach.value) return
+  asked = windowAround(view, VIEW_ROWS, VIEW_COLS)
+  void session.follow(state.activeSheet, sel.value.row, sel.value.col, reach.value, asked)
+}
+function toggleFollow() {
+  if (following.value) return stopFollowing()
+  if (!state.activeSheet || activeChart.value) return
+  following.value = true
+  followNow(true)
+}
+function stopFollowing() {
+  following.value = false
+  asked = null
+  session.unfollow()
+}
+function setReach(next: Reach) {
+  reach.value = next
+  followNow(true)
+}
+function seen(next: { r0: number; r1: number; c0: number; c1: number }) {
+  view = next
+  followNow()
+}
+watch([() => sel.value.row, () => sel.value.col, () => state.activeSheet], () => followNow(true))
+function onFollowKey(event: KeyboardEvent) {
+  if (event.key === 'Escape' && !edit.value && !dialog.value && !outcomes.value && !cellMenu.value && !searchOpen.value) stopFollowing()
+}
+watch(following, (now) => {
+  if (now) window.addEventListener('keydown', onFollowKey)
+  else window.removeEventListener('keydown', onFollowKey)
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onFollowKey))
+const marks = computed(() => tabMarks(state.trace))
 
 /**
  * The Format menu (D300): what it styles follows the selection — the selected cells (`computes-cell-styles.svg`,
@@ -738,6 +819,15 @@ function ask(text: string) {
   frame.value?.ask(text)
 }
 
+/** The cell's own menu (right click): the clipboard, then outcomes, follow and resample (mock computes-random-alternatives-follow-menus). */
+const cellMenuItems = computed(() => [
+  ...clipboardItems(shared.value, () => pasteFromClipboard()),
+  { label: '', separator: true },
+  { id: 'tools.outcomes', label: t('Outcomes of this cell…'), hint: chordLabel(OUTCOMES.chord), action: () => openOutcomes(cellMenu.value ?? undefined), disabled: !hasOutcomes.value },
+  { id: 'tools.follow', label: following.value ? t('Stop following') : t('Follow computation'), hint: chordLabel(FOLLOW.chord), action: () => toggleFollow() },
+  { id: 'tools.resample', label: t('Resample random numbers'), hint: chordLabel(RESAMPLE.chord), action: () => void resample(), disabled: readonly.value },
+])
+
 const menus = computed<Menu[]>(() => {
   const c = shared.value
   return [
@@ -803,6 +893,11 @@ const menus = computed<Menu[]>(() => {
         // "Ask for an example budget" was a demo prop, taken out at the owner's request (2026-11-12, D126 keeps "Ask ai").
         askItem(c, ask),
         { label: '', separator: true },
+        { id: 'tools.random', label: t('Random generator…'), hint: chordLabel(RANDOM_GENERATOR.chord), action: () => openRandom(), disabled: readonly.value },
+        { id: 'tools.resample', label: t('Resample random numbers'), hint: chordLabel(RESAMPLE.chord), action: () => void resample(), disabled: readonly.value },
+        { id: 'tools.outcomes', label: t('Outcomes of this cell…'), hint: chordLabel(OUTCOMES.chord), action: () => openOutcomes(), disabled: !hasOutcomes.value },
+        { id: 'tools.follow', label: t('Follow computation'), hint: chordLabel(FOLLOW.chord), checked: following.value, action: () => toggleFollow() },
+        { label: '', separator: true },
         { id: 'tools.names', label: t('Names…'), action: () => (dialog.value = 'names') },
         { id: 'tools.sql', label: t('SQL query…'), action: () => openSql(), disabled: readonly.value },
       ],
@@ -861,7 +956,19 @@ const SHORTCUT_NOTES: [string, string][] = [
           @redo="session.redo()"
         >
           <StylePicker v-if="state.activeSheet && !activeChart" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
+          <button
+            v-if="state.activeSheet && !activeChart"
+            type="button"
+            class="draw"
+            :disabled="readonly"
+            :title="t('Draw new random numbers ({key})', { key: chordLabel(RESAMPLE.chord) })"
+            :aria-label="t('Draw new random numbers')"
+            @click="resample()"
+          >
+            {{ t('Draw {n}', { n: state.random?.draw ?? 1 }) }}
+          </button>
         </FormulaBar>
+        <FollowPill v-if="following && state.trace" class="followPill" :trace="state.trace" @reach="setReach" @stop="stopFollowing" />
         <ul v-if="completing" class="completion" :class="{ below: formulaHelp }" role="listbox" aria-label="completions" data-testid="completion">
           <li
             v-for="(item, i) in completing.items"
@@ -911,10 +1018,12 @@ const SHORTCUT_NOTES: [string, string][] = [
       @select-all="sel = { row: 0, col: 0, row2: VIEW_ROWS - 1, col2: VIEW_COLS - 1 }"
       @header-menu="openHeaderMenu"
       @table-menu="openTableMenu"
+      @cell-menu="(x, y) => (cellMenu = { x, y })"
+      @view="seen"
     />
     <div v-else class="nosheet">This document has no sheet yet.</div>
     <template #footer>
-      <FooterBar data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" @pick="pickTab" @add="dialog = 'sheet'" />
+      <FooterBar data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" />
     </template>
     <template #overlay>
       <SearchPanel
@@ -926,6 +1035,16 @@ const SHORTCUT_NOTES: [string, string][] = [
         @view="searchView = $event"
         @help="frame?.openHelp('how-to')"
       />
+      <RandomDialog
+        v-if="dialog === 'random'"
+        :session="session"
+        :target="label"
+        :readonly="readonly"
+        @close="dialog = null"
+        @insert="insertRandom"
+      />
+      <OutcomePopover v-if="outcomes" :session="session" :sheet="state.activeSheet" :row="outcomes.row" :col="outcomes.col" :x="outcomes.x" :y="outcomes.y" @close="outcomes = null" />
+      <ContextMenu v-if="cellMenu" :x="cellMenu.x" :y="cellMenu.y" :items="cellMenuItems" :width="290" :label="t('Cell menu')" @close="cellMenu = null" />
       <PromptDialog v-if="dialog === 'sheet'" title="New sheet" label="Name" ok="Add sheet" required placeholder="Forecast" @ok="addSheet" @close="dialog = null" />
       <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog
@@ -1017,6 +1136,29 @@ const SHORTCUT_NOTES: [string, string][] = [
 <style scoped>
 .formulaRow {
   position: relative;
+}
+/* "Draw N" (E6.22): fresh random numbers for everybody, in the formula row where the person is working on cells. */
+.draw {
+  flex: none;
+  border: 1px solid var(--line-field);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 3px 12px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.draw:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* The strip of a followed computation floats at the top right of the grid, over the corner of the column letters. */
+.followPill {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  right: 16px;
 }
 .completion {
   position: absolute;

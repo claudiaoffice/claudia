@@ -1274,3 +1274,414 @@ msgstr "{first} oder {next}"
 msgid "{first}, then {next}"
 msgstr "{first}, dann {next}"
 
+#: web/app/components/RandomDialog.vue:202
+msgid "68 % of the values fall between {low} and {high}"
+msgstr "68 % der Werte liegen zwischen {low} und {high}"
+
+#: web/app/components/OutcomePopover.vue:88
+msgid "All combinations"
+msgstr "Alle Kombinationen"
+
+#: web/app/components/RandomDialog.vue:112
+msgid "Beta"
+msgstr "Beta"
+
+#: web/app/components/RandomDialog.vue:114
+msgid "Binomial"
+msgstr "Binomial"
+
+#: web/app/components/SheetGrid.vue:232
+msgid "Calculation step"
+msgstr "Rechenschritt"
+
+#: web/app/components/Workspace.vue:988
+msgid "Cell menu"
+msgstr "Zellmenü"
+
+#: web/app/components/FollowPill.vue:29
+msgid "Chain"
+msgstr "Kette"
+
+#: web/app/components/OutcomePopover.vue:155
+msgid "Copied"
+msgstr "Kopiert"
+
+#: web/app/components/OutcomePopover.vue:155
+msgid "Copy as table"
+msgstr "Als Tabelle kopieren"
+
+#: web/app/components/RandomDialog.vue:178
+msgid "Cut off at limits"
+msgstr "An Grenzen abschneiden"
+
+#: web/app/components/RandomDialog.vue:116
+msgid "Discrete (values and weights)"
+msgstr "Diskret (Werte und Gewichte)"
+
+#: web/app/components/RandomDialog.vue:151
+msgid "Distribution"
+msgstr "Verteilung"
+
+#: web/app/components/OutcomePopover.vue:95
+msgid "Dot plot of {n} outcomes, from {low} to {high}, median {median}"
+msgstr "Punktdiagramm von {n} Ergebnissen, von {low} bis {high}, Median {median}"
+
+#: web/app/components/Workspace.vue:917
+msgid "Draw new random numbers"
+msgstr "Neue Zufallszahlen ziehen"
+
+#: web/app/components/Workspace.vue:916
+msgid "Draw new random numbers ({key})"
+msgstr "Neue Zufallszahlen ziehen ({key})"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Draw new random numbers for everybody"
+msgstr "Neue Zufallszahlen für alle ziehen"
+
+#: web/app/components/Workspace.vue:920
+msgid "Draw {n}"
+msgstr "Ziehung {n}"
+
+#: web/app/components/RandomDialog.vue:73
+msgid "Each line is a value and, if you like, its weight: \"10 3\"."
+msgstr "Jede Zeile ist ein Wert und, wenn Sie möchten, sein Gewicht: „10 3“."
+
+#: web/app/components/RandomDialog.vue:61
+msgid "Every number must be filled in."
+msgstr "Jede Zahl muss ausgefüllt sein."
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Every outcome of the alternatives this cell depends on"
+msgstr "Jedes Ergebnis der Alternativen, von denen diese Zelle abhängt"
+
+#: web/app/components/RandomDialog.vue:210
+msgid "Excel has no formula for this: the file holds the current value."
+msgstr "Excel hat dafür keine Formel: Die Datei enthält den aktuellen Wert."
+
+#: web/app/components/RandomDialog.vue:110
+msgid "Exponential"
+msgstr "Exponential"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Follow Computation"
+msgstr "Berechnung verfolgen"
+
+#: web/app/components/Workspace.vue:782 web/app/components/Workspace.vue:852
+msgid "Follow computation"
+msgstr "Berechnung verfolgen"
+
+#: web/app/components/FollowPill.vue:18 web/app/components/FollowPill.vue:19
+msgid "Following {cell}"
+msgstr "Verfolge {cell}"
+
+#: web/app/components/RandomDialog.vue:206
+msgid "Formula"
+msgstr "Formel"
+
+#: web/app/components/RandomDialog.vue:113
+msgid "Gamma"
+msgstr "Gamma"
+
+#: web/app/components/FollowPill.vue:28
+msgid "Group"
+msgstr "Gruppe"
+
+#: web/app/components/FollowPill.vue:27
+msgid "How far the lights reach"
+msgstr "Wie weit das Leuchten reicht"
+
+#: web/app/components/OutcomePopover.vue:112
+msgid "How many fall below"
+msgstr "Wie viele liegen unter"
+
+#: web/app/components/OutcomePopover.vue:87
+msgid "How the inputs combine"
+msgstr "Wie die Eingaben kombiniert werden"
+
+#: web/app/components/RandomDialog.vue:208
+msgid "In an Excel file"
+msgstr "In einer Excel-Datei"
+
+#: web/app/components/SheetGrid.vue:231
+msgid "Input of the computation"
+msgstr "Eingabe der Berechnung"
+
+#: web/app/lib/outcomes.ts:105
+msgid "Input {n}"
+msgstr "Eingabe {n}"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Light up the cells that take part in this cell's computation"
+msgstr "Die Zellen hervorheben, die an der Berechnung dieser Zelle beteiligt sind"
+
+#: web/app/components/RandomDialog.vue:107
+msgid "Log-normal"
+msgstr "Lognormal"
+
+#: web/app/components/RandomDialog.vue:106
+msgid "Normal"
+msgstr "Normal"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Outcomes of This Cell…"
+msgstr "Ergebnisse dieser Zelle…"
+
+#: web/app/components/Workspace.vue:781 web/app/components/Workspace.vue:851
+msgid "Outcomes of this cell…"
+msgstr "Ergebnisse dieser Zelle…"
+
+#: web/app/components/OutcomePopover.vue:83 web/app/components/OutcomePopover.vue:86
+msgid "Outcomes of {cell}"
+msgstr "Ergebnisse von {cell}"
+
+#: web/app/components/RandomDialog.vue:109
+msgid "PERT"
+msgstr "PERT"
+
+#: web/app/components/OutcomePopover.vue:89
+msgid "Pair by position"
+msgstr "Paarweise nach Position"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Pick a distribution and put RANDOM into the cell"
+msgstr "Eine Verteilung wählen und RANDOM in die Zelle setzen"
+
+#: web/app/components/RandomDialog.vue:115
+msgid "Poisson"
+msgstr "Poisson"
+
+#: web/app/components/RandomDialog.vue:220
+msgid "Put in {cell}"
+msgstr "In {cell} einsetzen"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Random Generator…"
+msgstr "Zufallsgenerator…"
+
+#: web/app/components/RandomDialog.vue:148
+msgid "Random generator"
+msgstr "Zufallsgenerator"
+
+#: web/app/components/Workspace.vue:849
+msgid "Random generator…"
+msgstr "Zufallsgenerator…"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Resample Random Numbers"
+msgstr "Zufallszahlen neu ziehen"
+
+#: web/app/components/Workspace.vue:783 web/app/components/Workspace.vue:850
+msgid "Resample random numbers"
+msgstr "Zufallszahlen neu ziehen"
+
+#: web/app/components/SheetGrid.vue:232
+msgid "Result of the computation"
+msgstr "Ergebnis der Berechnung"
+
+#: web/app/components/RandomDialog.vue:214
+msgid "Seed of the random numbers"
+msgstr "Startwert der Zufallszahlen"
+
+#: web/app/components/RandomDialog.vue:216
+msgid "Set seed"
+msgstr "Startwert setzen"
+
+#: web/app/components/FollowPill.vue:31 web/app/components/Workspace.vue:782
+msgid "Stop following"
+msgstr "Verfolgen beenden"
+
+#: web/app/components/FollowPill.vue:31
+msgid "Stop following (Esc)"
+msgstr "Verfolgen beenden (Esc)"
+
+#: web/app/components/RandomDialog.vue:67
+msgid "The chance must be between 0 and 1."
+msgstr "Die Wahrscheinlichkeit muss zwischen 0 und 1 liegen."
+
+#: web/app/components/RandomDialog.vue:71
+msgid "The lower limit must be below the upper limit."
+msgstr "Die untere Grenze muss unter der oberen liegen."
+
+#: web/app/components/RandomDialog.vue:69
+msgid "The number of trials must be a whole number, 1 or more."
+msgstr "Die Zahl der Versuche muss eine ganze Zahl ab 1 sein."
+
+#: web/app/components/RandomDialog.vue:65
+msgid "The numbers must run from low to high."
+msgstr "Die Zahlen müssen von klein nach groß aufsteigen."
+
+#: web/app/components/OutcomePopover.vue:131 web/app/components/OutcomePopover.vue:132
+msgid "The outcomes"
+msgstr "Die Ergebnisse"
+
+#: web/app/components/FollowPill.vue:26
+msgid "This cell is not part of a computation."
+msgstr "Diese Zelle gehört zu keiner Berechnung."
+
+#: web/app/components/RandomDialog.vue:63
+msgid "This number must be greater than zero."
+msgstr "Diese Zahl muss größer als null sein."
+
+#: web/app/components/RandomDialog.vue:108
+msgid "Triangular"
+msgstr "Dreieck"
+
+#: web/app/components/RandomDialog.vue:105
+msgid "Uniform"
+msgstr "Gleichverteilung"
+
+#: web/app/components/RandomDialog.vue:173
+msgid "Values and weights, one pair a line"
+msgstr "Werte und Gewichte, ein Paar pro Zeile"
+
+#: web/app/components/RandomDialog.vue:111
+msgid "Weibull"
+msgstr "Weibull"
+
+#: web/app/components/OutcomePopover.vue:117 web/app/components/OutcomePopover.vue:118
+msgid "What moves the result most"
+msgstr "Was das Ergebnis am meisten bewegt"
+
+#: web/app/components/RandomDialog.vue:189
+msgid "What {n} draws look like"
+msgstr "So sehen {n} Ziehungen aus"
+
+#: web/app/components/OutcomePopover.vue:93
+msgid "Working it out…"
+msgstr "Wird berechnet…"
+
+#: web/app/components/RandomDialog.vue:131
+msgid "alpha"
+msgstr "Alpha"
+
+#: web/app/components/FollowPill.vue:24
+msgid "and more further out"
+msgstr "und weitere weiter außen"
+
+#: web/app/components/OutcomePopover.vue:151
+msgid "and {n} more"
+msgstr "und {n} weitere"
+
+#: web/app/components/RandomDialog.vue:132
+msgid "beta"
+msgstr "Beta"
+
+#: web/app/components/RandomDialog.vue:134
+msgid "chance"
+msgstr "Wahrscheinlichkeit"
+
+#: web/app/components/RandomDialog.vue:180
+msgid "from"
+msgstr "von"
+
+#: web/app/components/OutcomePopover.vue:107
+msgid "greatest"
+msgstr "größter"
+
+#: web/app/components/RandomDialog.vue:122
+msgid "high"
+msgstr "hoch"
+
+#: web/app/components/OutcomePopover.vue:104
+msgid "least"
+msgstr "kleinster"
+
+#: web/app/components/RandomDialog.vue:121
+msgid "low"
+msgstr "niedrig"
+
+#: web/app/components/OutcomePopover.vue:106 web/app/components/RandomDialog.vue:124
+msgid "mean"
+msgstr "Mittelwert"
+
+#: web/app/components/RandomDialog.vue:126
+msgid "mean of the logarithm"
+msgstr "Mittelwert des Logarithmus"
+
+#: web/app/components/OutcomePopover.vue:105
+msgid "median"
+msgstr "Median"
+
+#: web/app/components/RandomDialog.vue:123
+msgid "most likely"
+msgstr "wahrscheinlichster Wert"
+
+#: web/app/components/RandomDialog.vue:128
+msgid "rate"
+msgstr "Rate"
+
+#: web/app/components/RandomDialog.vue:130
+msgid "scale"
+msgstr "Skala"
+
+#: web/app/components/RandomDialog.vue:129
+msgid "shape"
+msgstr "Form"
+
+#: web/app/components/RandomDialog.vue:125
+msgid "spread (standard deviation)"
+msgstr "Streuung (Standardabweichung)"
+
+#: web/app/components/RandomDialog.vue:127
+msgid "spread of the logarithm"
+msgstr "Streuung des Logarithmus"
+
+#: web/app/components/RandomDialog.vue:181
+msgid "to"
+msgstr "bis"
+
+#: web/app/components/RandomDialog.vue:133
+msgid "trials"
+msgstr "Versuche"
+
+#: web/app/components/OutcomePopover.vue:115
+msgid "{below} of {total} outcomes, {percent} %"
+msgstr "{below} von {total} Ergebnissen, {percent} %"
+
+#: web/app/components/FollowPill.vue:22
+msgid "{n} calculations"
+msgstr "{n} Berechnungen"
+
+#: web/app/components/FollowPill.vue:21
+msgid "{n} inputs"
+msgstr "{n} Eingaben"
+
+#: web/app/lib/outcomes.ts:70
+msgid "{n} outcome"
+msgstr "{n} Ergebnis"
+
+#: web/app/lib/outcomes.ts:71
+msgid "{n} outcomes"
+msgstr "{n} Ergebnisse"
+
+#: web/app/components/FollowPill.vue:23
+msgid "{n} results"
+msgstr "{n} Ergebnisse"
+
+#: web/app/lib/outcomes.ts:68
+msgid "{n} samples"
+msgstr "{n} Stichproben"
+
+#: web/app/components/OutcomePopover.vue:109
+msgid "{n} samples were drawn, there are too many combinations to run all."
+msgstr "Es wurden {n} Stichproben gezogen, denn es gibt zu viele Kombinationen, um alle durchzurechnen."
+
+#: web/app/lib/outcomes.ts:73
+msgid "{what}, {n} error"
+msgstr "{what}, {n} Fehler"
+
+#: web/app/lib/outcomes.ts:73
+msgid "{what}, {n} errors"
+msgstr "{what}, {n} Fehler"
+
+#: web/app/components/FollowPill.vue
+msgid "{n} input"
+msgstr "{n} Eingabe"
+
+#: web/app/components/FollowPill.vue
+msgid "{n} calculation"
+msgstr "{n} Berechnung"
+
+#: web/app/components/FollowPill.vue
+msgid "{n} result"
+msgstr "{n} Ergebnis"

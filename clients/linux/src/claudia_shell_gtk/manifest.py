@@ -521,6 +521,34 @@ def computes() -> Manifest:
         (
             # Only the generic entry (D126): "Ask for an Example Budget" was taken out (2026-11-12).
             (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
+            # Random numbers, alternatives and following a computation (E6.21–E6.23, D292–D297): every entry a key.
+            (
+                _page(
+                    "tools.random",
+                    "Random Generator…",
+                    "Pick a distribution and put RANDOM into the cell",
+                    accelerators=("<Primary><Alt>r",),
+                ),
+                _page(
+                    "tools.resample",
+                    "Resample Random Numbers",
+                    "Draw new random numbers for everybody",
+                    accelerators=("F9",),
+                ),
+                _page(
+                    "tools.outcomes",
+                    "Outcomes of This Cell…",
+                    "Every outcome of the alternatives this cell depends on",
+                    accelerators=("<Primary><Alt>o",),
+                ),
+                _page(
+                    "tools.follow",
+                    "Follow Computation",
+                    "Light up the cells that take part in this cell's computation",
+                    accelerators=("<Primary><Alt>f",),
+                    checkable=True,
+                ),
+            ),
         ),
     )
     return Manifest(

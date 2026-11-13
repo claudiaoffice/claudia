@@ -30,6 +30,26 @@ computes
 .. autoclass:: claudia_computes.RestoreNames
 .. autoclass:: claudia_computes.spill.Table
 
+Random numbers, alternatives and following a computation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``RANDOM`` gives every user the same numbers, because a number is a function of the workbook's seed, its draw number and
+the cell (``claudia_computes.draws``, D291). An input cell may hold alternatives, ``{800, 1000, 1300}``, and every
+alternative runs through the cells that depend on it (D294, D295); clicking a cell lights up the cells connected to it
+(D297).
+
+.. autoclass:: claudia_computes.Resample
+.. autoclass:: claudia_computes.SetRandomSeed
+.. autoclass:: claudia_computes.RandomChanged
+.. autoclass:: claudia_computes.outcomes.Alt
+.. autoclass:: claudia_computes.outcomes.InputCell
+.. autoclass:: claudia_computes.outcomes.Summary
+.. autoclass:: claudia_computes.outcomes.OutcomeTable
+.. autoclass:: claudia_computes.outcomes.AltInput
+.. autoclass:: claudia_computes.outcomes.OutcomeRow
+.. autoclass:: claudia_computes.outcomes.Swing
+.. autoclass:: claudia_computes.trace.Trace
+
 Cell styles
 ~~~~~~~~~~~
 

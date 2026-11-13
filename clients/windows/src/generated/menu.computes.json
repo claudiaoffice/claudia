@@ -370,6 +370,48 @@
             "label": "Ask the Assistant\u2026",
             "role": null
           }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>r"
+            ],
+            "checkable": false,
+            "id": "tools.random",
+            "kind": "page",
+            "label": "Random Generator\u2026",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "F9"
+            ],
+            "checkable": false,
+            "id": "tools.resample",
+            "kind": "page",
+            "label": "Resample Random Numbers",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>o"
+            ],
+            "checkable": false,
+            "id": "tools.outcomes",
+            "kind": "page",
+            "label": "Outcomes of This Cell\u2026",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>f"
+            ],
+            "checkable": true,
+            "id": "tools.follow",
+            "kind": "page",
+            "label": "Follow Computation",
+            "role": null
+          }
         ]
       ]
     },

@@ -6,6 +6,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 First slice of the native Linux client (epic 5).
 
+### Added (computes: random numbers, alternatives, following)
+- Tools ▸ Random Generator… (Ctrl+Alt+R), Resample Random Numbers (F9), Outcomes of This Cell… (Ctrl+Alt+O) and Follow
+  Computation (Ctrl+Alt+F, checkable) in claudia computes (E6.21–E6.23); the macOS and Windows menus follow by
+  regeneration. The drawing is the web page's own.
+
 ### Added (all three apps, other servers, HTTPS)
 - `claudia-computes` and `claudia-creates` beside `claudia-composes`: one shell for every app (`identity.names()`),
   one `.deb` with three start buttons (desktop entries, AppStream metadata and icons per app; the icons are those of

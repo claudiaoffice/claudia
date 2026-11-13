@@ -58,7 +58,18 @@ from . import commands, name_commands  # noqa: F401  (registers the commands)
 from ._version import __version__
 from .cellstyles import CELL_SLOTS, DEFAULT_CELL_STYLE, LAYERS, MAX_STYLE_RANGES, CellStyles, layer_of
 from .charts import CHART_KINDS, ChartError, ChartSpec
-from .commands import AddChart, AddSheet, RemoveChart, RemoveSheet, ResizeLines, SetCells, SetCellStyle, Structure
+from .commands import (
+    AddChart,
+    AddSheet,
+    RemoveChart,
+    RemoveSheet,
+    Resample,
+    ResizeLines,
+    SetCells,
+    SetCellStyle,
+    SetRandomSeed,
+    Structure,
+)
 from .entry import parse_input
 from .events import (
     CellStylesChanged,
@@ -67,6 +78,7 @@ from .events import (
     ImagesChanged,
     NamesChanged,
     ObjectsChanged,
+    RandomChanged,
     ShapesChanged,
 )
 from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
@@ -84,6 +96,7 @@ from .model import (
 )
 from .name_commands import DefineName, RemoveName, RenameName, RestoreNames
 from .names import PURPOSES, NamedRange, Names
+from .outcomes import AltInput, OutcomeRow, OutcomeTable, Swing
 from .refs import (
     CellRef,
     DeleteCols,
@@ -98,8 +111,14 @@ from .refs import (
 )
 from .region import CellRegion
 from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
+from .trace import Trace
 
 __all__ = [
+    "Trace",
+    "Swing",
+    "OutcomeTable",
+    "OutcomeRow",
+    "AltInput",
     "__version__",
     "AddChart",
     "AddObject",
@@ -157,18 +176,21 @@ __all__ = [
     "parse_range_ref",
     "RangeRef",
     "RefParseError",
+    "RandomChanged",
     "RemoveChart",
     "RemoveName",
     "RenameName",
     "RestoreNames",
     "RemoveObject",
     "RemoveSheet",
+    "Resample",
     "ResizeLines",
     "ResizeObject",
     "RotateObject",
     "Run",
     "SetCells",
     "SetCellStyle",
+    "SetRandomSeed",
     "SetParagraphStyle",
     "SetSnap",
     "SetText",

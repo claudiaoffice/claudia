@@ -17,6 +17,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   client had (QA 2026-11-12, UX-20). A client still starts with *suggest* (`DEFAULT_MODE`, D262) once it has the switch.
 
 ### Added
+- Random numbers, alternatives and following a computation in the computes app (E6.21–E6.23): `random_state`,
+  `resample` (F9, steps 1–1000), `set_random_seed`, `outcome_table` (`sheet, row, col, combine`: all or paired
+  combinations) and `trace` (`sheet, row, col, reach, window`: the lit cells of a window). `cells` carries `alts`
+  (the alternatives of an input) and `out` (the median and spread of an outcome). `export_office` answers `losses`
+  for xlsx too. The protocol version stays 2: only methods and fields were added.
+- `random_preview` (`distribution, params, low, high, draws`): what the Random generator dialog shows — the formula to
+  type, the text an Excel file would hold, and up to 1000 draws of the distribution itself (E6.22).
 - Lists in the text app (E9.21, `claudia_server.composes_lists`): `make_list(blocks, scheme)` (bullets, numbers or, with
   a null scheme, none; asking for what the paragraphs are takes them out, the other kind of a whole list changes its
   scheme, anything else starts a new list), `indent_item(blocks, by)` (answers how many items moved), `continue_list(block)`

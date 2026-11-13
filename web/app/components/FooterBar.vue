@@ -12,6 +12,8 @@ const props = defineProps<{
    * which is active lives in `Workspace.vue` — there is nothing of this in the document itself, unlike
    * `state.activeSheet`, so two people looking at the same document may each have a different tab open. */
   activeChart: string | null
+  /** How many cells of the computation being followed each sheet has (E6.23): a marker on the tab of the others. */
+  marks?: Record<string, number>
 }>()
 defineEmits<{ pick: [id: string, kind: 'sheet' | 'chart']; add: [] }>()
 
@@ -32,6 +34,7 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
         @click="$emit('pick', s.id, 'sheet')"
       >
         {{ s.name }}
+        <span v-if="marks?.[s.id]" class="mark" :title="`${marks[s.id]}`" :aria-label="`${marks[s.id]} connected cells on this sheet`">◆ {{ marks[s.id] }}</span>
       </button>
       <span v-if="state.charts.length" class="sep" aria-hidden="true" />
       <button
@@ -59,6 +62,14 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
 </template>
 
 <style scoped>
+.tabs .mark {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--iris) 18%, var(--surface));
+  color: var(--text);
+  font-size: 11px;
+}
 .foot {
   display: flex;
   justify-content: space-between;

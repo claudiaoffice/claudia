@@ -223,9 +223,12 @@ def test_export_office_returns_an_ods_that_round_trips_with_its_values_and_says_
     assert answer["losses"] == []
 
 
-def test_export_office_to_xlsx_has_no_loss_list(book):
+def test_export_office_to_xlsx_lists_what_excel_cannot_hold(book):
     call(book, "add_sheet", {"name": "Costs"})
-    assert "losses" not in call(book, "export_office", {"format": "xlsx"})
+    assert call(book, "export_office", {"format": "xlsx"})["losses"] == []
+    typed(book, "s1", [(0, 0, '=RANDOM("triangular",1,2,3)'), (1, 0, "{1, 2}")])
+    losses = call(book, "export_office", {"format": "xlsx"})["losses"]
+    assert {(x["kind"], x["detail"]): x["count"] for x in losses} == {("formula", "random"): 1, ("alternatives", ""): 1}
 
 
 def test_export_office_rejects_an_unknown_format(book):
@@ -1021,3 +1024,159 @@ def test_the_assistant_may_replace_too():
     from claudia_server.apps import MODEL_METHODS
 
     assert "search_replace" in MODEL_METHODS["computes"]
+
+
+# ------------------------------------------------------------------ random numbers, alternatives, follow (E6.21-E6.23)
+@pytest.fixture
+def pricing(book):
+    call(book, "add_sheet", {"name": "Pricing"})
+    typed(
+        book,
+        "s1",
+        [
+            (1, 1, "24"),
+            (2, 1, "{800, 1000, 1300}"),
+            (3, 1, "{9.5, 11, 14}"),
+            (4, 1, "8500"),
+            (6, 1, "=B2*B3"),
+            (7, 1, "=B5+B3*B4"),
+            (8, 1, "=B7-B8"),
+            (0, 3, '=RANDOM("normal",1000,150)'),
+        ],
+    )
+    return book
+
+
+def test_cells_carry_alternatives_and_outcomes_for_a_client(pricing):
+    cells = {
+        (r, c): v
+        for r, c, v in call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 10, "col0": 0, "col1": 5})["cells"]
+    }
+    assert cells[(2, 1)]["f"] == "{800, 1000, 1300}"
+    assert [a["v"] for a in cells[(2, 1)]["alts"]] == [800, 1000, 1300]
+    assert cells[(8, 1)]["out"]["n"] == 9 and cells[(8, 1)]["out"]["median"] == 4500
+
+
+def test_the_random_state_is_asked_for_and_resampled(pricing):
+    assert call(pricing, "random_state") == {"revision": "main:2", "seed": 0, "draw": 0}
+    before = call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"]
+    answer = call(pricing, "resample")
+    assert answer["draw"] == 1 and answer["revision"] == "main:3"
+    after = call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"]
+    assert after != before
+    assert call(pricing, "resample", {"steps": 4})["draw"] == 5
+
+
+def test_a_seed_makes_the_numbers_reproducible(pricing):
+    call(pricing, "set_random_seed", {"seed": 42})
+    first = call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"]
+    call(pricing, "set_random_seed", {"seed": 7})
+    call(pricing, "set_random_seed", {"seed": 42})
+    assert (
+        call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"] == first
+    )
+    assert call(pricing, "random_state")["seed"] == 42
+
+
+def test_resampling_and_seeds_are_checked_and_are_for_editors(pricing):
+    for params in ({"steps": 0}, {"steps": 1001}, {"steps": "many"}):
+        with pytest.raises(RequestError):
+            call(pricing, "resample", params)
+    for params in ({"seed": -1}, {"seed": 2**60}, {"seed": 1.5}):
+        with pytest.raises(RequestError):
+            call(pricing, "set_random_seed", params)
+    with pytest.raises(RequestError):
+        call(pricing, "resample", account=VERA)
+    assert call(pricing, "random_state", account=VERA)["draw"] == 0
+
+
+def test_the_outcomes_of_a_cell_come_as_a_table(pricing):
+    answer = call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1})
+    table = answer["table"]
+    assert [i["row"] for i in table["inputs"]] == [2, 3] and table["inputs"][0]["count"] == 3
+    assert [r["value"]["v"] for r in table["rows"]] == [3100, 1900, -500, 6000, 4500, 1500, 10350, 8400, 4500]
+    assert table["rows"][1]["choice"] == [0, 1] and table["sampled"] is False
+    assert {s["input"] for s in table["sensitivity"]} == {0, 1}
+
+
+def test_outcome_tables_can_pair_inputs_and_say_when_they_cannot(pricing):
+    paired = call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1, "combine": "pair"})["table"]
+    assert [r["choice"] for r in paired["rows"]] == [[0, 0], [1, 1], [2, 2]]
+    typed(pricing, "s1", [(3, 1, "{9.5, 11}")])
+    with pytest.raises(RequestError) as why:
+        call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1, "combine": "pair"})
+    assert why.value.code == "command_error"
+    with pytest.raises(RequestError):
+        call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1, "combine": "sideways"})
+
+
+def test_a_cell_without_outcomes_has_no_table(pricing):
+    assert call(pricing, "outcome_table", {"sheet": "s1", "row": 4, "col": 1})["table"] is None
+
+
+def test_following_a_computation_lights_the_connected_cells_of_a_window(pricing):
+    answer = call(pricing, "trace", {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0, 20, 5]})
+    trace = answer["trace"]
+    roles = {(r, c): role for r, c, role in trace["cells"]}
+    assert roles[(1, 1)] == "input" and roles[(6, 1)] == "calc" and roles[(8, 1)] == "output"
+    assert (0, 3) not in roles and trace["connected"] is True and trace["reach"] == "group"
+
+
+def test_following_can_be_cut_to_a_chain_and_to_a_window(pricing):
+    chain = call(pricing, "trace", {"sheet": "s1", "row": 6, "col": 1, "reach": "chain"})["trace"]
+    assert {(r, c) for r, c, _ in chain["cells"]} == {(1, 1), (2, 1), (6, 1), (8, 1)}
+    cut = call(pricing, "trace", {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0, 3, 5]})["trace"]
+    assert {r for r, _, _ in cut["cells"]} <= {0, 1, 2, 3}
+
+
+def test_following_checks_what_it_is_given(pricing):
+    for params in (
+        {"sheet": "s1", "row": 8, "col": 1, "reach": "all"},
+        {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0]},
+        {"sheet": "s1", "row": 8, "col": 1, "window": [5, 0, 1, 5]},
+        {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0, 100000, 100]},
+        {"sheet": "nope", "row": 0, "col": 0},
+    ):
+        with pytest.raises(RequestError):
+            call(pricing, "trace", params)
+
+
+# ------------------------------------------------------------------ the Random generator's preview (E6.22)
+def test_a_distribution_can_be_previewed_before_it_is_typed(book):
+    answer = call(book, "random_preview", {"distribution": "normal", "params": [1000, 150]})
+    assert answer["formula"] == '=RANDOM("normal",1000,150)'
+    assert answer["excel"] == "=NORMINV(RAND(),1000,150)"
+    draws = answer["draws"]
+    assert len(draws) == 200 and draws == sorted(draws)
+    assert 990 < draws[100] < 1010 and answer["continuous"] is True
+
+
+def test_a_preview_with_limits_stays_between_them(book):
+    answer = call(book, "random_preview", {"distribution": "normal", "params": [1000, 150], "low": 900, "high": None})
+    assert answer["formula"] == '=RANDOM("normal",1000,150,900,)'
+    assert min(answer["draws"]) >= 900
+
+
+def test_a_preview_says_when_excel_has_no_formula_for_it(book):
+    answer = call(book, "random_preview", {"distribution": "triangular", "params": [9, 11, 14], "draws": 10})
+    assert answer["excel"] is None and len(answer["draws"]) == 10
+
+
+def test_a_discrete_preview_takes_values_and_weights(book):
+    answer = call(book, "random_preview", {"distribution": "discrete", "params": [1, 3, 2, 1]})
+    assert answer["formula"] == '=RANDOM("discrete",1,3,2,1)' and answer["continuous"] is False
+    assert set(answer["draws"]) == {1, 2}
+
+
+def test_a_preview_checks_what_it_is_given(book):
+    for params in (
+        {"distribution": "nope", "params": [1]},
+        {"distribution": "normal", "params": [1]},
+        {"distribution": "normal", "params": [1, -2]},
+        {"distribution": "normal", "params": ["x", 2]},
+        {"distribution": "poisson", "params": [3], "low": 1},
+        {"distribution": "normal", "params": [1, 2], "draws": 0},
+        {"distribution": "normal", "params": [1, 2], "draws": 5000},
+    ):
+        with pytest.raises(RequestError):
+            call(book, "random_preview", params)

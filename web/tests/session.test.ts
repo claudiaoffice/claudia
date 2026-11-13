@@ -136,6 +136,7 @@ function server(link: FakeLink) {
     diagrams: () => [],
     charts: () => [],
     names: () => ({ revision: 'main:3', names: [] }),
+    random_state: () => ({ revision: 'main:3', seed: 0, draw: 0 }),
   }
 }
 
@@ -1112,5 +1113,149 @@ describe('searching', () => {
     }
     expect(await session.searchReplace(QUERY, ['text'], {}, [])).toBe(false)
     expect(session.state.notice?.text).toMatch(/narrow the search/)
+  })
+})
+
+describe('random numbers, alternatives and following a computation (E6.21–E6.23)', () => {
+  const TRACE = {
+    revision: 'main:3',
+    trace: {
+      sheet: 's1',
+      row: 7,
+      col: 1,
+      reach: 'group',
+      cells: [[1, 1, 'input'], [7, 1, 'calc']],
+      other: {},
+      total: 2,
+      connected: true,
+      truncated: false,
+    },
+  }
+
+  it('starts with the random state the server has', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.random_state = () => ({ revision: 'main:3', seed: 7, draw: 3 })
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    expect(session.state.random).toEqual({ seed: 7, draw: 3 })
+  })
+
+  it('opens a server that does not know random numbers yet', async () => {
+    const link = new FakeLink()
+    server(link)
+    delete link.handlers.random_state
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    expect(session.state.random).toEqual({ seed: 0, draw: 0 })
+  })
+
+  it('follows a resample or a new seed that anybody made', async () => {
+    const { session, link } = await opened()
+    link.push('random', { type: 'random', seed: 5, draw: 2 })
+    expect(session.state.random).toEqual({ seed: 5, draw: 2 })
+  })
+
+  it('resamples by one draw, or by as many as asked', async () => {
+    const { session, link } = await opened()
+    link.handlers.resample = () => ({ revision: 'main:4', draw: 1 })
+    expect(await session.resample()).toBe(true)
+    expect(link.last('resample')).toEqual({ steps: 1, base: 'main:3' })
+    await session.resample(4)
+    expect(link.last('resample').steps).toBe(4)
+  })
+
+  it('tells why a resample did not work', async () => {
+    const { session, link } = await opened()
+    link.handlers.resample = () => {
+      throw new ProtocolError('forbidden', 'viewers cannot resample')
+    }
+    expect(await session.resample()).toBe(false)
+    expect(session.state.notice?.text).toContain('only look')
+  })
+
+  it('sets a seed', async () => {
+    const { session, link } = await opened()
+    link.handlers.set_random_seed = () => ({ revision: 'main:4' })
+    expect(await session.setRandomSeed(42)).toBe(true)
+    expect(link.last('set_random_seed')).toEqual({ seed: 42, base: 'main:3' })
+  })
+
+  it('previews a distribution, and gives the reason when it cannot', async () => {
+    const { session, link } = await opened()
+    link.handlers.random_preview = () => ({ formula: '=RANDOM("normal",1,2)', excel: '=NORMINV(RAND(),1,2)', continuous: true, draws: [1, 2, 3] })
+    const ok = await session.randomPreview({ distribution: 'normal', params: [1, 2] })
+    expect(ok).toEqual({ formula: '=RANDOM("normal",1,2)', excel: '=NORMINV(RAND(),1,2)', continuous: true, draws: [1, 2, 3] })
+    link.handlers.random_preview = () => {
+      throw new ProtocolError('command_error', 'normal needs a spread above 0')
+    }
+    expect(await session.randomPreview({ distribution: 'normal', params: [1, -2] })).toEqual({ error: 'normal needs a spread above 0' })
+    expect(session.state.notice).toBeNull() // a typo in the dialog is the dialog's to say, not a notice
+  })
+
+  it('asks for the table of outcomes of a cell', async () => {
+    const { session, link } = await opened()
+    link.handlers.outcome_table = () => ({ revision: 'main:3', table: { inputs: [], rows: [], sampled: false, sensitivity: [] } })
+    expect(await session.outcomeTable('s1', 8, 1)).toEqual({ inputs: [], rows: [], sampled: false, sensitivity: [] })
+    expect(link.last('outcome_table')).toEqual({ sheet: 's1', row: 8, col: 1, combine: 'all' })
+    await session.outcomeTable('s1', 8, 1, 'pair')
+    expect(link.last('outcome_table').combine).toBe('pair')
+  })
+
+  it('has no table for a cell that depends on no alternatives, and false when the server refuses', async () => {
+    const { session, link } = await opened()
+    link.handlers.outcome_table = () => ({ revision: 'main:3', table: null })
+    expect(await session.outcomeTable('s1', 4, 1)).toBeNull()
+    link.handlers.outcome_table = () => {
+      throw new ProtocolError('command_error', 'pairing needs as many alternatives each')
+    }
+    expect(await session.outcomeTable('s1', 8, 1, 'pair')).toBe(false)
+  })
+
+  it('follows a computation: asks for the window and keeps what lights up', async () => {
+    const { session, link } = await opened()
+    link.handlers.trace = () => TRACE
+    await session.follow('s1', 7, 1, 'group', [0, 0, 50, 15])
+    expect(link.last('trace')).toEqual({ sheet: 's1', row: 7, col: 1, reach: 'group', window: [0, 0, 50, 15] })
+    expect(session.state.trace?.cells).toEqual([[1, 1, 'input'], [7, 1, 'calc']])
+    expect(session.state.trace?.connected).toBe(true)
+  })
+
+  it('stops following', async () => {
+    const { session, link } = await opened()
+    link.handlers.trace = () => TRACE
+    await session.follow('s1', 7, 1, 'group', [0, 0, 50, 15])
+    session.unfollow()
+    expect(session.state.trace).toBeNull()
+  })
+
+  it('asks again when cells change while a computation is followed', async () => {
+    const { session, link } = await opened()
+    link.handlers.trace = () => TRACE
+    await session.follow('s1', 7, 1, 'chain', [0, 0, 50, 15])
+    link.push('cells', { sheet: 's1', positions: [[1, 1]], cells: [[1, 1, { t: 'int', v: 5 }]] })
+    link.push('cells', { sheet: 's1', positions: [[2, 1]], cells: [[2, 1, { t: 'int', v: 6 }]] })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(link.count('trace')).toBe(2) // once for the call, once for both changes
+    expect(link.last('trace').reach).toBe('chain')
+  })
+
+  it('does not ask again when nothing is followed', async () => {
+    const { link } = await opened()
+    link.push('cells', { sheet: 's1', positions: [[1, 1]], cells: [[1, 1, { t: 'int', v: 5 }]] })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(link.count('trace')).toBe(0)
+  })
+
+  it('stops following a computation whose cell cannot be found any more', async () => {
+    const { session, link } = await opened()
+    link.handlers.trace = () => TRACE
+    await session.follow('s1', 7, 1, 'group', [0, 0, 50, 15])
+    link.handlers.trace = () => {
+      throw new ProtocolError('command_error', 'there is no such sheet')
+    }
+    link.push('sheets', {})
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    expect(session.state.trace).toBeNull()
   })
 })

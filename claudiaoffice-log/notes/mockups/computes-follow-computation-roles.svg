@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+<defs><clipPath id="gridclip"><rect x="0" y="112" width="1280" height="624"/></clipPath><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker></defs>
+<rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#F7F3EC"/>
+<text x="40.0" y="62.0" font-family="Fraunces, 'DejaVu Serif', serif" font-size="28" font-weight="600" fill="#1F1A33" text-anchor="start">Following a computation</text>
+<text x="40.0" y="90.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="14" font-weight="400" fill="#6E6885" text-anchor="start">Click a cell in a computation: the cells connected to it light up by role, all other cells are dimmed. No arrows.</text>
+<rect x="40.0" y="118.0" width="390.0" height="458.0" rx="14" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<text x="60.0" y="150.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#1F1A33" text-anchor="start">Group (default): click Costs</text>
+<rect x="60.0" y="218.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="60.0" y="218.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="75.0" cy="233.0" r="3.6" fill="#D9822B"/>
+<text x="86.0" y="238.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Price</text>
+<rect x="60.0" y="268.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="60.0" y="268.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="75.0" cy="283.0" r="3.6" fill="#D9822B"/>
+<text x="86.0" y="288.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Units</text>
+<rect x="60.0" y="318.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="60.0" y="318.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="75.0" cy="333.0" r="3.6" fill="#D9822B"/>
+<text x="86.0" y="338.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Var. cost</text>
+<rect x="60.0" y="368.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="60.0" y="368.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="75.0" cy="383.0" r="3.6" fill="#D9822B"/>
+<text x="86.0" y="388.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Fixed</text>
+<rect x="168.0" y="230.0" width="76.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="168.0" y="230.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M183,240.4 L187.6,245 L183,249.6 L178.4,245 Z" fill="#5B4BC4" />
+<text x="194.0" y="250.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Revenue</text>
+<rect x="168.0" y="318.0" width="76.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="168.0" y="318.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M183,328.4 L187.6,333 L183,337.6 L178.4,333 Z" fill="#5B4BC4" />
+<text x="194.0" y="338.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="start">Costs</text>
+<rect x="166.0" y="316.0" width="80.0" height="34.0" rx="3" fill="none" stroke="#1F1A33" stroke-width="2.4"/>
+<rect x="260.0" y="274.0" width="70.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="260.0" y="274.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M275,284.4 L279.6,289 L275,293.6 L270.4,289 Z" fill="#5B4BC4" />
+<text x="286.0" y="294.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Profit</text>
+<rect x="340.0" y="230.0" width="74.0" height="30.0" rx="3" fill="#D6EEEB"/>
+<rect x="340.0" y="230.0" width="4.0" height="30.0" rx="0" fill="#1F8A85"/>
+<rect x="351.4" y="241.4" width="7.2" height="7.2" rx="1" fill="#1F8A85"/>
+<text x="366.0" y="250.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Margin</text>
+<rect x="326.0" y="368.0" width="76.0" height="30.0" rx="3" fill="#D6EEEB"/>
+<rect x="326.0" y="368.0" width="4.0" height="30.0" rx="0" fill="#1F8A85"/>
+<rect x="337.4" y="379.4" width="7.2" height="7.2" rx="1" fill="#1F8A85"/>
+<text x="352.0" y="388.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Break-even</text>
+<circle cx="68.0" cy="474.0" r="4.2" fill="#D9822B"/>
+<text x="82.0" y="479.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">inputs:</text>
+<text x="142.0" y="479.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Price, Units, Var. cost, Fixed</text>
+<path d="M68,490.8 L73.2,496 L68,501.2 L62.8,496 Z" fill="#5B4BC4" />
+<text x="82.0" y="501.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">calculations:</text>
+<text x="190.0" y="501.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Revenue, Costs, Profit</text>
+<rect x="63.8" y="513.8" width="8.4" height="8.4" rx="1" fill="#1F8A85"/>
+<text x="82.0" y="523.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">outputs:</text>
+<text x="150.0" y="523.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Margin, Break-even</text>
+<rect x="62.0" y="537.0" width="12.0" height="9.0" rx="2" fill="#F3F0F8" stroke="#DCD6E8" stroke-width="1"/>
+<text x="82.0" y="546.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">dimmed:</text>
+<text x="150.0" y="546.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">— (everything is connected)</text>
+<rect x="450.0" y="118.0" width="390.0" height="458.0" rx="14" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<text x="470.0" y="150.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#1F1A33" text-anchor="start">Chain: click Costs</text>
+<rect x="470.0" y="218.0" width="76.0" height="30.0" rx="3" fill="#F3F0F8"/>
+<text x="480.0" y="238.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">Price</text>
+<rect x="470.0" y="268.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="470.0" y="268.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="485.0" cy="283.0" r="3.6" fill="#D9822B"/>
+<text x="496.0" y="288.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Units</text>
+<rect x="470.0" y="318.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="470.0" y="318.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="485.0" cy="333.0" r="3.6" fill="#D9822B"/>
+<text x="496.0" y="338.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Var. cost</text>
+<rect x="470.0" y="368.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="470.0" y="368.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="485.0" cy="383.0" r="3.6" fill="#D9822B"/>
+<text x="496.0" y="388.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Fixed</text>
+<rect x="578.0" y="230.0" width="76.0" height="30.0" rx="3" fill="#F3F0F8"/>
+<text x="588.0" y="250.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">Revenue</text>
+<rect x="578.0" y="318.0" width="76.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="578.0" y="318.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M593,328.4 L597.6,333 L593,337.6 L588.4,333 Z" fill="#5B4BC4" />
+<text x="604.0" y="338.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="start">Costs</text>
+<rect x="576.0" y="316.0" width="80.0" height="34.0" rx="3" fill="none" stroke="#1F1A33" stroke-width="2.4"/>
+<rect x="670.0" y="274.0" width="70.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="670.0" y="274.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M685,284.4 L689.6,289 L685,293.6 L680.4,289 Z" fill="#5B4BC4" />
+<text x="696.0" y="294.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Profit</text>
+<rect x="750.0" y="230.0" width="74.0" height="30.0" rx="3" fill="#D6EEEB"/>
+<rect x="750.0" y="230.0" width="4.0" height="30.0" rx="0" fill="#1F8A85"/>
+<rect x="761.4" y="241.4" width="7.2" height="7.2" rx="1" fill="#1F8A85"/>
+<text x="776.0" y="250.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Margin</text>
+<rect x="736.0" y="368.0" width="76.0" height="30.0" rx="3" fill="#F3F0F8"/>
+<text x="746.0" y="388.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">Break-even</text>
+<circle cx="478.0" cy="474.0" r="4.2" fill="#D9822B"/>
+<text x="492.0" y="479.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">inputs:</text>
+<text x="552.0" y="479.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Units, Var. cost, Fixed</text>
+<path d="M478,490.8 L483.2,496 L478,501.2 L472.8,496 Z" fill="#5B4BC4" />
+<text x="492.0" y="501.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">calculations:</text>
+<text x="600.0" y="501.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Costs, Profit</text>
+<rect x="473.8" y="513.8" width="8.4" height="8.4" rx="1" fill="#1F8A85"/>
+<text x="492.0" y="523.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">outputs:</text>
+<text x="560.0" y="523.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Margin</text>
+<rect x="472.0" y="537.0" width="12.0" height="9.0" rx="2" fill="#F3F0F8" stroke="#DCD6E8" stroke-width="1"/>
+<text x="492.0" y="546.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">dimmed:</text>
+<text x="560.0" y="546.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Price, Revenue, Break-even</text>
+<rect x="860.0" y="118.0" width="390.0" height="458.0" rx="14" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<text x="880.0" y="150.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#1F1A33" text-anchor="start">Chain: click Margin</text>
+<rect x="880.0" y="218.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="880.0" y="218.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="895.0" cy="233.0" r="3.6" fill="#D9822B"/>
+<text x="906.0" y="238.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Price</text>
+<rect x="880.0" y="268.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="880.0" y="268.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="895.0" cy="283.0" r="3.6" fill="#D9822B"/>
+<text x="906.0" y="288.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Units</text>
+<rect x="880.0" y="318.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="880.0" y="318.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="895.0" cy="333.0" r="3.6" fill="#D9822B"/>
+<text x="906.0" y="338.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Var. cost</text>
+<rect x="880.0" y="368.0" width="76.0" height="30.0" rx="3" fill="#FBE3CC"/>
+<rect x="880.0" y="368.0" width="4.0" height="30.0" rx="0" fill="#D9822B"/>
+<circle cx="895.0" cy="383.0" r="3.6" fill="#D9822B"/>
+<text x="906.0" y="388.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Fixed</text>
+<rect x="988.0" y="230.0" width="76.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="988.0" y="230.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M1003,240.4 L1007.6,245 L1003,249.6 L998.4,245 Z" fill="#5B4BC4" />
+<text x="1014.0" y="250.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Revenue</text>
+<rect x="988.0" y="318.0" width="76.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="988.0" y="318.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M1003,328.4 L1007.6,333 L1003,337.6 L998.4,333 Z" fill="#5B4BC4" />
+<text x="1014.0" y="338.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Costs</text>
+<rect x="1080.0" y="274.0" width="70.0" height="30.0" rx="3" fill="#E6E1F8"/>
+<rect x="1080.0" y="274.0" width="4.0" height="30.0" rx="0" fill="#5B4BC4"/>
+<path d="M1095,284.4 L1099.6,289 L1095,293.6 L1090.4,289 Z" fill="#5B4BC4" />
+<text x="1106.0" y="294.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Profit</text>
+<rect x="1160.0" y="230.0" width="74.0" height="30.0" rx="3" fill="#D6EEEB"/>
+<rect x="1160.0" y="230.0" width="4.0" height="30.0" rx="0" fill="#1F8A85"/>
+<rect x="1171.4" y="241.4" width="7.2" height="7.2" rx="1" fill="#1F8A85"/>
+<text x="1186.0" y="250.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="start">Margin</text>
+<rect x="1158.0" y="228.0" width="78.0" height="34.0" rx="3" fill="none" stroke="#1F1A33" stroke-width="2.4"/>
+<rect x="1146.0" y="368.0" width="76.0" height="30.0" rx="3" fill="#F3F0F8"/>
+<text x="1156.0" y="388.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">Break-even</text>
+<circle cx="888.0" cy="474.0" r="4.2" fill="#D9822B"/>
+<text x="902.0" y="479.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">inputs:</text>
+<text x="962.0" y="479.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Price, Units, Var. cost, Fixed</text>
+<path d="M888,490.8 L893.2,496 L888,501.2 L882.8,496 Z" fill="#5B4BC4" />
+<text x="902.0" y="501.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">calculations:</text>
+<text x="1010.0" y="501.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Revenue, Costs, Profit</text>
+<rect x="883.8" y="513.8" width="8.4" height="8.4" rx="1" fill="#1F8A85"/>
+<text x="902.0" y="523.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">outputs:</text>
+<text x="970.0" y="523.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Margin</text>
+<rect x="882.0" y="537.0" width="12.0" height="9.0" rx="2" fill="#F3F0F8" stroke="#DCD6E8" stroke-width="1"/>
+<text x="902.0" y="546.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#1F1A33" text-anchor="start">dimmed:</text>
+<text x="970.0" y="546.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Break-even</text>
+<rect x="40.0" y="596.0" width="1200.0" height="186.0" rx="14" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<text x="64.0" y="630.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#1F1A33" text-anchor="start">Settings (in the pill, “Group ▾”)</text>
+<text x="64.0" y="662.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#6E6885" text-anchor="start">Reach</text>
+<circle cx="72.0" cy="682.0" r="6.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.6"/>
+<circle cx="72.0" cy="682.0" r="3.2" fill="#5B4BC4"/>
+<text x="86.0" y="686.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Group: every cell connected to this one, however</text>
+<circle cx="72.0" cy="706.0" r="6.5" fill="#FFFFFF" stroke="#B5AECB" stroke-width="1.6"/>
+<text x="86.0" y="710.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Chain: only what feeds this cell and what it feeds</text>
+<text x="500.0" y="662.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#6E6885" text-anchor="start">Show</text>
+<rect x="501.0" y="673.0" width="15.0" height="15.0" rx="4" fill="#5B4BC4" stroke="#5B4BC4" stroke-width="1.4"/>
+<path d="M504,681 l3,3.2 l5.5,-6.5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+<text x="522.0" y="686.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Marker on sheet tabs when the connection continues there</text>
+<text x="508.0" y="716.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#6E6885" text-anchor="start">Other cells are always dimmed while following.</text>
+<text x="508.0" y="738.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#6E6885" text-anchor="start">Dimmed text keeps a contrast of at least 4.5 : 1.</text>
+<text x="900.0" y="662.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#6E6885" text-anchor="start">Not by colour alone</text>
+<rect x="902.0" y="678.0" width="38.0" height="20.0" rx="3" fill="#FBE3CC"/>
+<rect x="902.0" y="678.0" width="4.0" height="20.0" rx="0" fill="#D9822B"/>
+<circle cx="924.0" cy="688.0" r="4" fill="#D9822B"/>
+<text x="952.0" y="693.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Input — dot + left bar + colour</text>
+<rect x="902.0" y="704.0" width="38.0" height="20.0" rx="3" fill="#E6E1F8"/>
+<rect x="902.0" y="704.0" width="4.0" height="20.0" rx="0" fill="#5B4BC4"/>
+<path d="M924,709 L929,714 L924,719 L919,714 Z" fill="#5B4BC4" />
+<text x="952.0" y="719.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Calculation — diamond + left bar + colour</text>
+<rect x="902.0" y="730.0" width="38.0" height="20.0" rx="3" fill="#D6EEEB"/>
+<rect x="902.0" y="730.0" width="4.0" height="20.0" rx="0" fill="#1F8A85"/>
+<rect x="920.0" y="736.0" width="8.0" height="8.0" rx="1" fill="#1F8A85"/>
+<text x="952.0" y="745.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Output — square + left bar + colour</text>
+<text x="902.0" y="774.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="11.5" font-weight="400" fill="#6E6885" text-anchor="start">Esc clears · Ctrl+Alt+F switches following on/off</text>
+</svg>

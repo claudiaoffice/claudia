@@ -27,6 +27,7 @@ from .events import (
     ChartsChanged,
     LinesResized,
     NamesChanged,
+    RandomChanged,
     SheetsChanged,
     StructureChanged,
 )
@@ -697,3 +698,72 @@ class RemoveChart(Command):
 
     def redacted(self) -> Command:
         return self
+
+
+# ------------------------------------------------------------------------------ random numbers
+@register
+@dataclass(frozen=True)
+class Resample(Command):
+    """Draw fresh random numbers (Tools > Resample, F9): the document's draw number goes up by ``steps``.
+
+    Relative on purpose: two people resampling at once count both, and the inverse is the same command with the
+    opposite sign, so one author can undo it after colleagues did other things (E1.4)."""
+
+    kind: ClassVar[str] = "computes.Resample"
+    steps: int = 1
+
+    @property
+    def label(self) -> str:
+        return "Resample random numbers"
+
+    @property
+    def summary(self) -> str:
+        return "resample the random numbers"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        if model.random_draw + self.steps < 0:
+            raise ValueError("the draw number cannot go below 0")
+        model.random_draw += self.steps
+        model.calc.redraw()
+        ctx.emit(RandomChanged(model.random_seed, model.random_draw))
+        return Resample(-self.steps)
+
+    def to_data(self) -> dict:
+        return {"steps": self.steps}
+
+    @classmethod
+    def from_data(cls, data, registry) -> Resample:
+        return cls(data["steps"])
+
+
+@register
+@dataclass(frozen=True)
+class SetRandomSeed(Command):
+    """Give the document's random numbers a new seed (a fixed seed makes a model reproducible)."""
+
+    kind: ClassVar[str] = "computes.SetRandomSeed"
+    seed: int
+
+    @property
+    def label(self) -> str:
+        return "Set the random seed"
+
+    @property
+    def summary(self) -> str:
+        return f"set the random seed to {self.seed}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        previous = model.random_seed
+        model.random_seed = self.seed
+        model.calc.redraw()
+        ctx.emit(RandomChanged(model.random_seed, model.random_draw))
+        return SetRandomSeed(previous)
+
+    def to_data(self) -> dict:
+        return {"seed": self.seed}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetRandomSeed:
+        return cls(data["seed"])

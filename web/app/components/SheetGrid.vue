@@ -21,7 +21,10 @@ import {
 import { NO_MARKS, type SearchMarks } from '~/lib/search'
 import { purposeVar, tableBoxes, type NameInfo, type TableBox } from '~/lib/names'
 import { objectStyleHost } from '~/lib/object-style-host'
+import { useI18n } from '~/lib/i18n'
+import { chipsOf, dotFractions, outcomeCaption, type Alt, type Summary } from '~/lib/outcomes'
 import { colorOf, inkOn } from '~/lib/people'
+import { ROLE_SHAPE, roleAt, type Role } from '~/lib/follow'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
 import type { Session, SheetObject } from '~/lib/session'
@@ -70,6 +73,10 @@ const emit = defineEmits<{
   object: [selected: boolean]
   /** The purpose chip on a table's header was pressed (mock 2): open the purpose menu for that column at this point. */
   tableMenu: [table: NameInfo, offset: number, x: number, y: number]
+  /** A cell was right-clicked (and selected, unless it is in the selection already): open its menu at this point. */
+  cellMenu: [x: number, y: number]
+  /** The cells in view changed (scrolling, resizing): what a followed computation has to cover (E6.23). */
+  view: [view: { r0: number; r1: number; c0: number; c1: number }]
 }>()
 
 const W = DEFAULT_COL_WIDTH // a column's width when it has no size of its own
@@ -85,6 +92,7 @@ const size = ref({ w: 800, h: 600 })
 let observer: ResizeObserver | null = null
 
 const state = props.session.state
+const { t } = useI18n()
 
 // ------------------------------------------------------------------------------ row heights and column widths
 // Sparse, like the server's own storage (D135): most lines are `H`/`W`, a few have their own size. While a border
@@ -173,8 +181,23 @@ const painted = computed(() => {
   }
   type Drawn = { key: number; left: number; top: number; width: number; height: number }
   const boxes: (Drawn & { css: Record<string, string> })[] = []
-  const texts: (Drawn & { text: string; kind: string; look: CellLook; spill: boolean; head: boolean })[] = []
+  const texts: (Drawn & {
+    text: string
+    kind: string
+    look: CellLook
+    spill: boolean
+    head: boolean
+    /** The alternatives of an input cell, as the chips drawn in it (E6.21). */
+    chips: string[]
+    /** What came out of a result of alternatives: its dots, and a caption for a screen reader (E6.21). */
+    out: { dots: number[]; caption: string } | null
+    /** The part the cell plays in the computation that is followed, and whether it is dimmed instead (E6.23). */
+    role: Role | null
+    dim: boolean
+  })[] = []
   const heads = headCells.value
+  const trace = state.trace // only the cells of this sheet are in it: another sheet's trace lights none of these
+  const followed = trace !== null && trace.sheet === props.sheet
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const content = props.session.cell(props.sheet, r, c)
@@ -184,7 +207,19 @@ const painted = computed(() => {
       const at = { key: r * 100_000 + c, left: x(c), top: y(r), width: colWidthAt(c), height: rowHeightAt(r) }
       if (!look.plain) boxes.push({ ...at, css: look.box })
       if (content === null || (editHere.value && props.edit!.row === r && props.edit!.col === c)) continue
-      texts.push({ ...at, text: props.marks?.after.get(at.key) ?? show(content), kind: content.t, look, spill: content.spill === true, head: heads.has(at.key) })
+      const role = followed ? roleAt(trace, r, c) : null
+      texts.push({
+        ...at,
+        text: props.marks?.after.get(at.key) ?? show(content),
+        kind: content.t,
+        look,
+        spill: content.spill === true,
+        head: heads.has(at.key),
+        chips: content.alts ? chipsOf(content.alts as Alt[]) : [],
+        out: content.out ? outcomeOf(content.out) : null,
+        role,
+        dim: followed && role === null,
+      })
     }
   }
   return { boxes, texts }
@@ -213,6 +248,15 @@ const found = computed(() => {
   }
   return out
 })
+/** The dots under the median of a result cell, and what a screen reader hears of them. */
+function outcomeOf(summary: Summary): { dots: number[]; caption: string } {
+  return { dots: dotFractions(summary.points), caption: outcomeCaption(summary, t) }
+}
+/** What a screen reader hears of a cell's part in the computation (the shape and bar say it to the eye, BITV). */
+function roleLabel(role: Role): string {
+  if (role === 'input') return t('Input of the computation')
+  return role === 'calc' ? t('Calculation step') : t('Result of the computation')
+}
 
 const PADDING = ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']
 
@@ -365,6 +409,7 @@ const editorStyle = computed(() => {
 
 // ------------------------------------------------------------------------------ loading what is in view
 let pending = 0
+
 function load() {
   cancelAnimationFrame(pending)
   pending = requestAnimationFrame(() => {
@@ -390,6 +435,7 @@ function measure() {
 
 onMounted(() => {
   measure()
+  emit('view', { ...range.value })
   observer = new ResizeObserver(measure)
   if (viewport.value) observer.observe(viewport.value)
   viewport.value?.focus()
@@ -551,6 +597,10 @@ interface ResizeDrag {
 }
 const resizeDrag = ref<ResizeDrag | null>(null)
 
+// The cells in view, for following a computation (E6.23). Here, after `resizeDrag`, which `range` reads when it is first
+// worked out (a watch does that at once); the first report is in `onMounted`.
+watch(range, (view) => emit('view', { ...view }))
+
 function dragTarget(axis: Axis, index: number): { first: number; lines: number[] } {
   const b = bounds(props.sel)
   const whole = axis === 'col' ? props.sel.row === 0 && props.sel.row2 === VIEW_ROWS - 1 : props.sel.col === 0 && props.sel.col2 === VIEW_COLS - 1
@@ -626,7 +676,16 @@ function onHeaderHover(event: MouseEvent) {
 function onHeaderContext(event: MouseEvent) {
   if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu, as in TextEditor.vue
   const hit = cellAt(event)
-  if (!hit || hit.rowHead === hit.colHead) return // a normal cell, or the corner: no menu for either
+  if (hit && !hit.rowHead && !hit.colHead) {
+    // A cell (E6.21–E6.23, mock computes-random-alternatives-follow-menus): outcomes, follow, resample, the clipboard.
+    event.preventDefault()
+    const at = bounds(props.sel)
+    const inside = hit.row >= at.r0 && hit.row <= at.r1 && hit.col >= at.c0 && hit.col <= at.c1
+    if (!inside) emit('select', { row: hit.row, col: hit.col, row2: hit.row, col2: hit.col }, false)
+    emit('cellMenu', event.clientX, event.clientY)
+    return
+  }
+  if (!hit || hit.rowHead === hit.colHead) return // the corner has no menu
   event.preventDefault()
   const axis: Axis = hit.colHead ? 'col' : 'row'
   const index = axis === 'col' ? hit.col : hit.row
@@ -818,14 +877,14 @@ defineExpose({
     <div class="canvas" :style="{ width: `${totalW}px`, height: `${totalH}px` }">
       <div class="stage" :style="{ width: `${size.w}px`, height: `${size.h}px` }">
         <div
-          v-for="t in tables"
-          :key="t.key"
+          v-for="tb in tables"
+          :key="tb.key"
           class="table"
-          :class="[t.kind, t.kind === 'frame' || t.kind === 'ghost' ? `purpose-${t.purpose}` : '']"
-          :style="tableStyle(t)"
-          :data-table="t.table.name"
+          :class="[tb.kind, tb.kind === 'frame' || tb.kind === 'ghost' ? `purpose-${tb.purpose}` : '']"
+          :style="tableStyle(tb)"
+          :data-table="tb.table.name"
         >
-          <span v-if="t.kind === 'ghost'" class="ghost-label">type here to add a row</span>
+          <span v-if="tb.kind === 'ghost'" class="ghost-label">type here to add a row</span>
         </div>
         <div v-for="rl in rowLines" :key="`r${rl.key}`" class="gridline horiz" :style="{ top: `${rl.top}px` }" />
         <div v-for="cl in colLines" :key="`c${cl.key}`" class="gridline vert" :style="{ left: `${cl.left}px` }" />
@@ -839,22 +898,40 @@ defineExpose({
           v-for="cell in painted.texts"
           :key="cell.key"
           class="cell"
-          :class="[cell.kind, cell.look.align, cell.look.valign, { wrap: cell.look.wrap, spill: cell.spill, head: cell.head }]"
+          :class="[
+            cell.kind,
+            cell.look.align,
+            cell.look.valign,
+            { wrap: cell.look.wrap, spill: cell.spill, head: cell.head, alts: cell.chips.length > 0, dim: cell.dim },
+            cell.role ? `lit lit-${cell.role}` : '',
+          ]"
           :style="textStyle(cell)"
+          :data-role="cell.role ?? undefined"
+          :title="cell.role ? roleLabel(cell.role) : undefined"
         >
-          <span class="words">{{ cell.text }}</span>
+          <span v-if="cell.role" class="mark" :class="ROLE_SHAPE[cell.role]" aria-hidden="true" />
+          <span v-if="cell.chips.length" class="chips" role="list">
+            <span v-for="(chip, i) in cell.chips" :key="i" class="alt" role="listitem">{{ chip }}</span>
+          </span>
+          <template v-else-if="cell.out">
+            <span class="words"><span class="approx" aria-hidden="true">≈ </span>{{ cell.text }}</span>
+            <span class="strip" role="img" :aria-label="cell.out.caption">
+              <span v-for="(f, i) in cell.out.dots" :key="i" class="dot" :style="{ left: `${f * 100}%` }" />
+            </span>
+          </template>
+          <span v-else class="words">{{ cell.text }}</span>
         </div>
 
-        <template v-for="t in tables" :key="`chip-${t.key}`">
+        <template v-for="tb in tables" :key="`chip-${tb.key}`">
           <button
-            v-if="t.kind === 'head' && t.table.kind === 'range'"
+            v-if="tb.kind === 'head' && tb.table.kind === 'range'"
             type="button"
             class="chip"
-            :style="{ left: `${x(t.c0) + colWidthAt(t.c0) - 20}px`, top: `${y(t.r0) + 5}px` }"
-            :title="`${t.table.name} · ${t.purpose} — change what this column is for`"
-            :aria-label="`purpose of ${t.table.name} column ${t.offset + 1}`"
+            :style="{ left: `${x(tb.c0) + colWidthAt(tb.c0) - 20}px`, top: `${y(tb.r0) + 5}px` }"
+            :title="`${tb.table.name} · ${tb.purpose} — change what this column is for`"
+            :aria-label="`purpose of ${tb.table.name} column ${tb.offset + 1}`"
             @mousedown.stop.prevent
-            @click="onChip($event, t)"
+            @click="onChip($event, tb)"
           >▾</button>
         </template>
 
@@ -1001,6 +1078,85 @@ defineExpose({
 .cell.bool,
 .cell.error {
   font-weight: 500;
+}
+/* Alternatives (E6.21, mocks computes-alternatives-*): an input cell with several values shows each as a chip. */
+.cell.alts {
+  gap: 3px;
+}
+.cell .chips {
+  display: flex;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+.cell .alt {
+  flex: none;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--apricot) 80%, var(--ink));
+  border-radius: 9px;
+  background: var(--purpose-input);
+  color: var(--ink);
+  font-size: 0.85em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+/* A result of alternatives: the median, and under it one dot for each outcome (thinned), from least to greatest. */
+.cell .approx {
+  color: var(--muted);
+}
+.cell .strip {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 2px;
+  height: 4px;
+  pointer-events: none;
+}
+.cell .strip .dot {
+  position: absolute;
+  top: 0;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--app-text);
+}
+/* Following a computation (E6.23, mocks computes-follow-computation-*): the connected cells light up with the part
+ * they play — a bar at the left, a shape and a tint — and every other cell dims. Shape and bar, not colour alone
+ * (BITV); the dimmed text keeps better than 4.5:1 on both surfaces. Nothing is drawn between cells. */
+.cell.lit {
+  --role: var(--iris);
+  background: color-mix(in srgb, var(--role) 18%, var(--surface));
+  box-shadow: inset 3px 0 0 var(--role);
+  padding-left: 12px;
+}
+.cell.lit-input {
+  --role: var(--apricot);
+}
+.cell.lit-calc {
+  --role: var(--iris);
+}
+.cell.lit-output {
+  --role: var(--teal);
+}
+.cell.dim {
+  opacity: 0.72;
+}
+.cell .mark {
+  position: absolute;
+  left: 4px;
+  top: 3px;
+  width: 6px;
+  height: 6px;
+  background: var(--role);
+  pointer-events: none;
+}
+.cell .mark.dot {
+  border-radius: 50%;
+}
+.cell .mark.diamond {
+  transform: rotate(45deg) scale(0.85);
 }
 /* A cell's box: its background and borders, under the words and the selection. */
 .cellbox {

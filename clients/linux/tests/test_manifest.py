@@ -319,6 +319,9 @@ def test_checkable_actions_are_the_view_toggles_and_the_language_picker(app: man
     language_ids = {f"config.language.{tag}" for tag, _label in manifest.LANGUAGES}
     if app.app == "composes":
         assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"} | language_ids
+    elif app.app == "computes":
+        # ... and Tools ▸ Follow Computation (E6.23), which is on while a computation is followed.
+        assert checkable == {"view.authors", "view.panel", "view.dark", "tools.follow"} | language_ids
     else:
         assert checkable == {"view.authors", "view.panel", "view.dark"} | language_ids
 
@@ -520,3 +523,18 @@ def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() 
     with pytest.raises(identity.UnknownApp) as problem:
         manifest.for_app("drawbook")
     assert "composes" in str(problem.value)
+
+
+def test_computes_tools_menu_has_random_outcomes_and_follow_entries_each_with_a_key(
+    computes: manifest.Manifest,
+) -> None:
+    """E6.21–E6.23: every menu entry has a shortcut (project rule); F9 keeps Excel's meaning of "draw again"."""
+    keys = {
+        "tools.random": ("<Primary><Alt>r",),
+        "tools.resample": ("F9",),
+        "tools.outcomes": ("<Primary><Alt>o",),
+        "tools.follow": ("<Primary><Alt>f",),
+    }
+    for action_id, accelerators in keys.items():
+        assert computes.action(action_id).accelerators == accelerators, action_id
+        assert computes.action(action_id).kind is Kind.PAGE, action_id

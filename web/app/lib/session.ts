@@ -1,7 +1,7 @@
 // One person's view of one workbook: the replica the screen draws, kept up to date from the server's events.
 // The connection, history, chat and the rest that every app has live in BaseSession.
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
-import type { LinkLike, Region, WireData } from './protocol'
+import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
 import type { ImageAsset } from './images'
@@ -12,6 +12,8 @@ import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
 import type { NameDraft, NameInfo } from './names'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchQuery } from './search'
+import type { OutcomeTable } from './outcomes'
+import type { Reach, Trace, Window } from './follow'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
 
@@ -92,6 +94,34 @@ export interface State extends BaseState {
   cellStyles: Record<string, CellRange[]>
   /** How many things use each style — cells counted by range, objects by slot (`style_uses`). */
   styleUses: Record<string, number>
+  /** What every random number of the workbook is a function of (E6.22, D291): the seed and the draw number. */
+  random: { seed: number; draw: number }
+  /** The cells that light up while a computation is followed (E6.23, D297), or `null`. A view of this person's own:
+   * nobody else sees it. */
+  trace: Trace | null
+}
+
+/** What `random_preview` answers: what to type, what an Excel file would hold, and the distribution's own values. */
+export interface RandomPreview {
+  formula: string
+  excel: string | null
+  continuous: boolean
+  draws: number[]
+}
+export interface RandomPreviewRequest {
+  distribution: string
+  params: number[]
+  low?: number | null
+  high?: number | null
+  draws?: number
+}
+
+interface Followed {
+  sheet: string
+  row: number
+  col: number
+  reach: Reach
+  window: Window
 }
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
@@ -119,6 +149,8 @@ export class Session extends BaseSession<State> {
   private stylesInflight = new Map<string, Promise<void>>()
   private editing = false
   private shown = ''
+  private followed: Followed | null = null
+  private refollowing = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
     super(makeLink, options, {
@@ -140,6 +172,8 @@ export class Session extends BaseSession<State> {
       styleModel: null,
       cellStyles: {},
       styleUses: {},
+      random: { seed: 0, draw: 0 },
+      trace: null,
     })
   }
 
@@ -149,7 +183,7 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, charts, names, styles, palette, styleModel] = await Promise.all([
+    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
       link.request<ChartSpec[]>('diagrams'),
@@ -158,6 +192,8 @@ export class Session extends BaseSession<State> {
       link.request<StyleDef[]>('styles'),
       link.request<PaletteEvent>('palette'),
       link.request<StyleModel>('style_model'),
+      // a server from before random numbers has none: the draw is 0 and nothing asks for it
+      link.request<{ seed: number; draw: number }>('random_state').catch(() => ({ seed: 0, draw: 0 })),
     ])
     this.forgetCells()
     const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
@@ -177,6 +213,7 @@ export class Session extends BaseSession<State> {
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
     s.palette = palette
     s.styleModel = styleModel
+    s.random = { seed: random.seed, draw: random.draw }
     this.track(this.refreshUses())
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
   }
@@ -435,6 +472,7 @@ export class Session extends BaseSession<State> {
           if (content === null) map.delete(key(r, c))
           else map.set(key(r, c), content)
         }
+        this.refollow()
         // A changed cell may feed a diagram's figure even on another sheet's screen (a chart tab, say), so
         // every cached figure is checked, not only those for the active sheet.
         const positions = data.positions as [number, number][]
@@ -447,6 +485,7 @@ export class Session extends BaseSession<State> {
       }
       case 'structure':
         this.forgetCells(data.sheet)
+        this.refollow()
         return true
       case 'sizes': {
         const target = (data.axis as Axis) === 'row' ? (s.rowHeights[data.sheet] ??= new Map()) : (s.colWidths[data.sheet] ??= new Map())
@@ -458,6 +497,7 @@ export class Session extends BaseSession<State> {
       }
       case 'sheets':
         this.track(this.reload())
+        this.refollow()
         return true
       case 'objects': {
         const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
@@ -496,8 +536,73 @@ export class Session extends BaseSession<State> {
       case 'palette':
         s.palette = data as PaletteEvent
         return true
+      case 'random':
+        s.random = { seed: data.seed, draw: data.draw }
+        return true
     }
     return false
+  }
+
+  // ------------------------------------------------------------------------------ random numbers, alternatives, following
+  /** Draw fresh random numbers for everybody (Tools ▸ Resample, F9, E6.22): one undoable step in the history. */
+  async resample(steps = 1): Promise<boolean> {
+    return (await this.attempt('resample', { steps, base: this.state.revision })) !== false
+  }
+
+  /** Give the workbook's random numbers a seed: the same seed and draw give the same numbers on every computer. */
+  async setRandomSeed(seed: number): Promise<boolean> {
+    return (await this.attempt('set_random_seed', { seed, base: this.state.revision })) !== false
+  }
+
+  /** What a distribution would give, for the Random generator. A problem with the numbers is the answer
+   * (`{ error }`), not a notice: the dialog says it beside the field. */
+  async randomPreview(request: RandomPreviewRequest): Promise<RandomPreview | { error: string }> {
+    try {
+      return await this.need().request<RandomPreview>('random_preview', { ...request })
+    } catch (error) {
+      return { error: error instanceof ProtocolError ? error.message : 'Something went wrong.' }
+    }
+  }
+
+  /** Every outcome of a cell that depends on alternatives (E6.21), as `all` combinations or `pair`ed by position;
+   * `null` for a cell that depends on none, `false` after telling the person why not. */
+  async outcomeTable(sheet: string, row: number, col: number, combine: 'all' | 'pair' = 'all'): Promise<OutcomeTable | null | false> {
+    const done = await this.attempt('outcome_table', { sheet, row, col, combine })
+    return done === false ? false : (done.table as OutcomeTable | null)
+  }
+
+  /** Start following the computation the cell at (`row`, `col`) is part of (E6.23): the cells of `window` that are
+   * connected to it light up (`state.trace`). Kept up to date as cells change, until `unfollow`. */
+  async follow(sheet: string, row: number, col: number, reach: Reach, window: Window): Promise<void> {
+    this.followed = { sheet, row, col, reach, window }
+    await this.fetchTrace()
+  }
+
+  unfollow(): void {
+    this.followed = null
+    this.state.trace = null
+  }
+
+  private async fetchTrace(): Promise<void> {
+    const asked = this.followed
+    if (!asked) return
+    try {
+      const answer = await this.need().request<{ trace: Trace }>('trace', { ...asked })
+      if (this.followed === asked) this.state.trace = answer.trace
+    } catch {
+      // The cell or its sheet is gone, or the connection: there is nothing to light up any more.
+      if (this.followed === asked) this.unfollow()
+    }
+  }
+
+  /** Ask again, once, for everything that changed in the same moment. */
+  private refollow(): void {
+    if (!this.followed || this.refollowing) return
+    this.refollowing = true
+    void Promise.resolve().then(() => {
+      this.refollowing = false
+      return this.fetchTrace()
+    })
   }
 
   // ------------------------------------------------------------------------------ doing things
