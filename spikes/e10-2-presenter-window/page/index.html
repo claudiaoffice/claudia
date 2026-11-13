@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Presenter window spike (E10.2)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font:14px/1.45 Inter,system-ui,sans-serif;margin:0;padding:20px 28px 60px;color:#1f1a33;background:#f7f3ec;max-width:980px}
+  h1{font:600 22px Georgia,serif;margin:0 0 4px} h2{font:600 16px Georgia,serif;margin:26px 0 6px}
+  .lead{color:#524b6b;margin:0 0 12px} table{border-collapse:collapse;width:100%;background:#fff}
+  td,th{border:1px solid #d8d2e6;padding:5px 8px;text-align:left;vertical-align:top} th{background:#efeaf8;font-weight:600}
+  code{font:12.5px 'JetBrains Mono',monospace} .ok{color:#0f7d6e;font-weight:600} .bad{color:#b3254f;font-weight:600} .na{color:#6e6880}
+  button{font:inherit;padding:6px 12px;border-radius:14px;border:1px solid #5b4bc4;background:#fff;color:#1f1a33;cursor:pointer;margin:2px 4px 2px 0}
+  button.primary{background:#5b4bc4;color:#fff} textarea{width:100%;height:160px;font:12px monospace}
+  .note{color:#6e6880;font-size:12.5px} #keyrow td.seen{background:#e6f4f1} #fsbox{background:#1f1a33;color:#f7f3ec;padding:8px 12px;border-radius:8px}
+</style></head><body>
+<h1>Presenter window spike <small style="font:12px sans-serif;color:#6e6880">E10.2, question 1 and 5</small></h1>
+<p class="lead">Throwaway test page, not product code. Work through the sections top to bottom; every button is one real user gesture. At the end copy the report.</p>
+
+<h2>1 · Environment</h2><table id="env"></table>
+
+<h2>2 · Fullscreen</h2>
+<p class="note">Presenting needs this window, or its slide, to fill the screen and Esc to leave it again.</p>
+<button id="b-fs" class="primary" type="button">Enter fullscreen</button><button id="b-fs-doc" type="button">Enter fullscreen (whole page)</button><button id="b-fs-exit" type="button">Exit fullscreen</button>
+<div id="fsbox" hidden>This box is the fullscreen element.</div><table id="t-fs"></table>
+
+<h2>3 · A second window (the audience window)</h2>
+<p class="note">Allow pop-ups for this page if the browser asks. Then drag the new window to the other screen, if you have one.</p>
+<button id="b-open" class="primary" type="button">Open audience window</button>
+<button id="b-prev" type="button">◀ slide</button><button id="b-next" type="button">slide ▶</button>
+<button id="b-ping" type="button">Measure round trip (30 pings)</button>
+<button id="b-close" type="button">Close it</button><table id="t-win"></table>
+
+<h2>4 · Several screens</h2>
+<button id="b-screens" type="button">List screens (Window Management API)</button>
+<button id="b-open2" type="button">Open audience window on the other screen</button><table id="t-scr"></table>
+
+<h2>5 · Keys</h2>
+<p class="note">Click into this page, then press each key once. The row turns green when the page received it; the page calls
+<code>preventDefault()</code>. "Page loads" counts how often this page was (re)loaded in this tab: if it grows after F5, the browser took the key.</p>
+<table id="keys"></table><p>Page loads in this tab: <b id="loads">?</b></p>
+
+<h2>6 · Other</h2>
+<button id="b-wake" type="button">Keep screen awake (Screen Wake Lock)</button><table id="t-misc"></table>
+
+<h2 id="h-neu" hidden>7 · Neutralino shell</h2>
+<div id="neu" hidden>
+  <button id="n-fs" type="button">Neutralino.window.setFullScreen()</button><button id="n-fs-off" type="button">exitFullScreen()</button>
+  <button id="n-create" type="button">Neutralino.window.create(audience.html)</button><table id="t-neu"></table>
+</div>
+
+<h2>8 · Manual verdicts</h2><table id="manual"></table>
+
+<h2>Report</h2>
+<button id="b-report" class="primary" type="button">Make report</button><button id="b-copy" type="button">Copy</button><button id="b-dl" type="button">Download .json</button>
+<textarea id="report" readonly aria-label="Report"></textarea>
+<script src="probe.js"></script>
+<script src="app.js"></script>
+</body></html>

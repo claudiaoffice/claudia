@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Audience window (E10.2 spike)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html,body{margin:0;height:100%;background:#1f1a33;color:#f7f3ec;font:16px Inter,system-ui,sans-serif}
+  #slide{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+  #n{font:600 18vmin Georgia,serif}
+  #info{position:fixed;left:12px;bottom:10px;font-size:13px;opacity:.75}
+  #bar{position:fixed;right:12px;bottom:10px;transition:opacity .3s}
+  #bar.idle{opacity:0}
+  body.idle{cursor:none}
+  button{font:inherit;padding:6px 12px;border-radius:14px;border:1px solid #fff6;background:#0000;color:inherit}
+</style></head><body>
+<div id="slide"><div><div id="n">1</div><div id="what">audience window</div></div></div>
+<div id="info">waiting for the presenter …</div>
+<div id="bar"><button id="fs" type="button">Fullscreen (F)</button></div>
+<script src="probe.js"></script>
+<script>
+'use strict';
+let slide = 1, seen = { broadcast: 0, postMessage: 0, storage: 0 };
+const info = document.getElementById('info'), n = document.getElementById('n');
+const t = openTransports((m, via) => {
+  if (!m || !m.spike) return;
+  seen[via]++;
+  if (m.type === 'goto') { slide = m.slide; n.textContent = slide; }
+  if (m.type === 'ping') reply({ spike: 1, type: 'pong', id: m.id, via });
+  if (m.type === 'hello') reply({ spike: 1, type: 'hello-back', via });
+  info.textContent = 'messages seen: ' + JSON.stringify(seen) + ' · ' + ua().slice(0, 90);
+});
+function reply(m) {
+  for (const k of ['broadcast', 'postMessage', 'storage']) if (t[k]) t[k].send(m);
+}
+reply({ spike: 1, type: 'audience-ready', framed: isFramed(), hasOpener: !!window.opener, w: innerWidth, h: innerHeight, sw: screen.width, sh: screen.height, sx: screenX, sy: screenY });
+// Keys go back to the presenter, so that "forward in either window moves both" can be judged.
+addEventListener('keydown', (e) => {
+  reply({ spike: 1, type: 'key', key: e.key });
+  if (e.key === 'f' || e.key === 'F') requestFs(document.documentElement).catch((x) => info.textContent = 'fullscreen failed: ' + x.message);
+  if (['ArrowRight', ' ', 'PageDown', 'F5'].includes(e.key)) e.preventDefault();
+});
+document.getElementById('fs').onclick = () => requestFs(document.documentElement).catch((x) => info.textContent = 'fullscreen failed: ' + x.message);
+onFsChange(() => reply({ spike: 1, type: 'audience-fullscreen', on: !!fsElement(), w: innerWidth, h: innerHeight, sw: screen.width, sh: screen.height }));
+// Pointer and controls hide after two seconds without movement (the design's audience screen).
+let idle; const bar = document.getElementById('bar');
+function wake() { document.body.classList.remove('idle'); bar.classList.remove('idle'); clearTimeout(idle);
+  idle = setTimeout(() => { document.body.classList.add('idle'); bar.classList.add('idle'); }, 2000); }
+addEventListener('mousemove', wake); wake();
+addEventListener('beforeunload', () => reply({ spike: 1, type: 'audience-closed' }));
+</script></body></html>

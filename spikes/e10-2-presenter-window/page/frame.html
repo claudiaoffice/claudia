@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Frame wrapper (E10.2 spike)</title>
+<style>
+  html,body{margin:0;height:100%;font:13px Inter,system-ui,sans-serif;background:#efeaf8;color:#1f1a33}
+  #top{padding:6px 10px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #d8d2e6}
+  iframe{border:0;width:100%;height:calc(100% - 38px)}
+</style>
+<script src="js/neutralino.js" onerror="void 0"></script></head><body>
+<div id="top"><b>Shell page (as in the macOS and Windows clients: the web app lives in a frame)</b>
+  <label><input type="radio" name="a" value="fullscreen"> allow="fullscreen"</label>
+  <label><input type="radio" name="a" value="none" checked> no allow (as the shells have it today)</label>
+  <button id="go" type="button">Reload frame</button></div>
+<iframe id="f" title="web app"></iframe>
+<script>
+'use strict';
+const q = new URLSearchParams(location.search), f = document.getElementById('f');
+const pick = q.get('allow') || 'none';
+document.querySelector('input[value=' + pick + ']').checked = true;
+function go() {
+  const a = document.querySelector('input[name=a]:checked').value;
+  f.removeAttribute('allow'); if (a === 'fullscreen') f.setAttribute('allow', 'fullscreen');
+  f.src = (q.get('app') || 'index.html') + '?framed=' + a;
+}
+document.getElementById('go').onclick = go; go();
+// The shell's side of the contract: the framed page asks, this page acts through Neutralino (if there is one).
+let neu = false;
+try { if (window.Neutralino) { Neutralino.init(); neu = true; } } catch (_) {}
+addEventListener('message', async (e) => {
+  if (e.source !== f.contentWindow || !e.data || e.data.spike !== 'ask-shell') return;
+  const reply = (r) => f.contentWindow.postMessage({ spike: 'shell-reply', op: e.data.op, ...r }, '*');
+  if (!neu) return reply({ ok: false, error: 'no Neutralino in this shell page' });
+  try {
+    if (e.data.op === 'setFullScreen') await Neutralino.window.setFullScreen();
+    else if (e.data.op === 'exitFullScreen') await Neutralino.window.exitFullScreen();
+    else if (e.data.op === 'create') await Neutralino.window.create('/audience.html', { title: 'Audience (spike)', width: 960, height: 540, useSavedState: false });
+    reply({ ok: true });
+  } catch (x) { reply({ ok: false, error: String(x && (x.code || x.message) || x) }); }
+});
+</script></body></html>
