@@ -8,10 +8,11 @@
         [
           {
             "accelerators": [
-              "<Primary>n"
+              "<Primary><Alt>n"
             ],
             "checkable": false,
             "id": "file.new",
+            "key_owner": "page",
             "kind": "page",
             "label": "New",
             "role": null
@@ -22,6 +23,7 @@
             ],
             "checkable": false,
             "id": "file.open",
+            "key_owner": "page",
             "kind": "page",
             "label": "Open\u2026",
             "role": null
@@ -29,27 +31,47 @@
         ],
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary>s"
+            ],
             "checkable": false,
             "id": "file.save",
+            "key_owner": "page",
             "kind": "page",
             "label": "Save",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Shift>s"
+            ],
             "checkable": false,
             "id": "file.save-as",
+            "key_owner": "page",
             "kind": "page",
             "label": "Save New Checkpoint\u2026",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>s"
+            ],
             "checkable": false,
             "id": "file.download",
+            "key_owner": "page",
             "kind": "page",
             "label": "Download",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary>p"
+            ],
+            "checkable": false,
+            "id": "file.print",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Print\u2026",
             "role": null
           }
         ],
@@ -57,49 +79,67 @@
           {
             "items": [
               {
-                "accelerators": [],
+                "accelerators": [
+                  "<Primary><Alt><Shift>s"
+                ],
                 "checkable": false,
                 "id": "file.manage.share",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "Share\u2026",
                 "role": null
               },
               {
-                "accelerators": [],
+                "accelerators": [
+                  "<Primary><Alt><Shift>o"
+                ],
                 "checkable": false,
                 "id": "file.manage.assign-owner",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "Assign New Owner\u2026",
                 "role": null
               },
               {
-                "accelerators": [],
+                "accelerators": [
+                  "<Primary><Alt><Shift>c"
+                ],
                 "checkable": false,
                 "id": "file.manage.accept-owner",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "Accept Ownership\u2026",
                 "role": null
               },
               {
-                "accelerators": [],
+                "accelerators": [
+                  "<Primary><Alt><Shift>l"
+                ],
                 "checkable": false,
                 "id": "file.manage.leave",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "Leave Document\u2026",
                 "role": null
               },
               {
-                "accelerators": [],
+                "accelerators": [
+                  "<Primary><Alt><Shift>x"
+                ],
                 "checkable": false,
                 "id": "file.manage.export",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "Export\u2026",
                 "role": null
               },
               {
-                "accelerators": [],
+                "accelerators": [
+                  "<Primary><Alt><Shift>r"
+                ],
                 "checkable": false,
                 "id": "file.manage.delete",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "Delete From Server\u2026",
                 "role": null
@@ -110,9 +150,12 @@
         ],
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>w"
+            ],
             "checkable": false,
             "id": "file.close",
+            "key_owner": "page",
             "kind": "page",
             "label": "Close Document",
             "role": null
@@ -123,6 +166,7 @@
             ],
             "checkable": false,
             "id": "file.quit",
+            "key_owner": "shell",
             "kind": "shell",
             "label": "Quit",
             "role": null
@@ -135,17 +179,23 @@
       "sections": [
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary>z"
+            ],
             "checkable": false,
             "id": "edit.undo",
+            "key_owner": "page",
             "kind": "page",
             "label": "Undo",
             "role": "undo:"
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Shift>z"
+            ],
             "checkable": false,
             "id": "edit.redo",
+            "key_owner": "page",
             "kind": "page",
             "label": "Redo",
             "role": "redo:"
@@ -153,25 +203,34 @@
         ],
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary>c"
+            ],
             "checkable": false,
             "id": "edit.copy",
+            "key_owner": "view",
             "kind": "page",
             "label": "Copy",
             "role": "copy:"
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary>x"
+            ],
             "checkable": false,
             "id": "edit.cut",
+            "key_owner": "view",
             "kind": "page",
             "label": "Cut",
             "role": "cut:"
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary>v"
+            ],
             "checkable": false,
             "id": "edit.paste",
+            "key_owner": "view",
             "kind": "page",
             "label": "Paste",
             "role": "paste:"
@@ -179,9 +238,12 @@
           {
             "items": [
               {
-                "accelerators": [],
+                "accelerators": [
+                  "<Primary><Shift>v"
+                ],
                 "checkable": false,
                 "id": "edit.paste-as-plain",
+                "key_owner": "view",
                 "kind": "page",
                 "label": "Plain Text",
                 "role": null
@@ -192,9 +254,12 @@
         ],
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary>m"
+            ],
             "checkable": false,
             "id": "edit.new-slide",
+            "key_owner": "page",
             "kind": "page",
             "label": "New Slide",
             "role": null
@@ -202,27 +267,47 @@
         ],
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "Return"
+            ],
             "checkable": false,
             "id": "edit.edit-text",
+            "key_owner": "view",
             "kind": "page",
             "label": "Edit Text",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>b"
+            ],
             "checkable": false,
             "id": "edit.text-box",
+            "key_owner": "page",
             "kind": "page",
             "label": "Text Box",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>i"
+            ],
+            "checkable": false,
+            "id": "edit.image",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Image\u2026",
             "role": null
           }
         ],
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "Delete"
+            ],
             "checkable": false,
             "id": "edit.delete",
+            "key_owner": "view",
             "kind": "page",
             "label": "Delete",
             "role": null
@@ -235,9 +320,12 @@
       "sections": [
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>a"
+            ],
             "checkable": false,
             "id": "format.apply-style",
+            "key_owner": "page",
             "kind": "page",
             "label": "Apply Style\u2026",
             "role": null
@@ -248,24 +336,102 @@
             ],
             "checkable": false,
             "id": "format.look",
+            "key_owner": "shell",
             "kind": "page",
             "label": "Edit This Style\u2026",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt><Shift>a"
+            ],
             "checkable": false,
             "id": "format.all-styles",
+            "key_owner": "page",
             "kind": "page",
             "label": "All Styles\u2026",
             "role": null
+          },
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Shift>8"
+                ],
+                "checkable": true,
+                "id": "format.bulleted-list",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Bulleted List",
+                "role": null
+              },
+              {
+                "accelerators": [
+                  "<Primary><Shift>7"
+                ],
+                "checkable": true,
+                "id": "format.numbered-list",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Numbered List",
+                "role": null
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>p"
+                ],
+                "checkable": false,
+                "id": "format.list-continue",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Continue Previous List",
+                "role": null
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>n"
+                ],
+                "checkable": false,
+                "id": "format.list-start",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Start At\u2026",
+                "role": null
+              },
+              {
+                "accelerators": [
+                  "Tab"
+                ],
+                "checkable": false,
+                "id": "format.list-indent",
+                "key_owner": "view",
+                "kind": "page",
+                "label": "Indent",
+                "role": null
+              },
+              {
+                "accelerators": [
+                  "<Shift>Tab"
+                ],
+                "checkable": false,
+                "id": "format.list-outdent",
+                "key_owner": "view",
+                "kind": "page",
+                "label": "Outdent",
+                "role": null
+              }
+            ],
+            "label": "List"
           }
         ],
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>k"
+            ],
             "checkable": false,
             "id": "format.colours",
+            "key_owner": "page",
             "kind": "page",
             "label": "Colours\u2026",
             "role": null
@@ -278,6 +444,7 @@
             ],
             "checkable": false,
             "id": "format.describe",
+            "key_owner": "page",
             "kind": "page",
             "label": "Describe Object\u2026",
             "role": null
@@ -290,27 +457,49 @@
       "sections": [
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>u"
+            ],
             "checkable": true,
             "id": "view.authors",
+            "key_owner": "page",
             "kind": "page",
             "label": "Show Who Wrote What",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>h"
+            ],
             "checkable": true,
             "id": "view.panel",
+            "key_owner": "page",
             "kind": "page",
             "label": "History and Chat",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt><Shift>d"
+            ],
             "checkable": true,
             "id": "view.dark",
+            "key_owner": "page",
             "kind": "page",
             "label": "Dark Mode",
+            "role": null
+          }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>g"
+            ],
+            "checkable": true,
+            "id": "view.grid",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Show Grid",
             "role": null
           }
         ]
@@ -321,9 +510,12 @@
       "sections": [
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Alt>j"
+            ],
             "checkable": false,
             "id": "tools.ask",
+            "key_owner": "page",
             "kind": "page",
             "label": "Ask the Assistant\u2026",
             "role": null
@@ -337,10 +529,11 @@
         [
           {
             "accelerators": [
-              "F1"
+              "<Primary>question"
             ],
             "checkable": false,
             "id": "config.shortcuts",
+            "key_owner": "page",
             "kind": "page",
             "label": "Shortcuts",
             "role": null
@@ -353,6 +546,7 @@
                 "accelerators": [],
                 "checkable": true,
                 "id": "config.language.en",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "English",
                 "role": null
@@ -361,6 +555,7 @@
                 "accelerators": [],
                 "checkable": true,
                 "id": "config.language.de",
+                "key_owner": "page",
                 "kind": "page",
                 "label": "Deutsch",
                 "role": null
@@ -376,33 +571,45 @@
       "sections": [
         [
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary>F1"
+            ],
             "checkable": false,
             "id": "help.ask",
+            "key_owner": "page",
             "kind": "page",
             "label": "Ask ai",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "F1"
+            ],
             "checkable": false,
             "id": "help.how-to",
+            "key_owner": "page",
             "kind": "page",
             "label": "How Do I\u2026?",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Shift>F1"
+            ],
             "checkable": false,
             "id": "help.docs",
+            "key_owner": "page",
             "kind": "page",
             "label": "Documentation",
             "role": null
           },
           {
-            "accelerators": [],
+            "accelerators": [
+              "<Primary><Shift>F1"
+            ],
             "checkable": false,
             "id": "help.about",
+            "key_owner": "shell",
             "kind": "shell",
             "label": "About Claudia Creates",
             "role": null

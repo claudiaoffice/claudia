@@ -27,6 +27,11 @@ Describing objects (BITV 1.1.1), in creates and computes (composes has no object
 - A pattern that "could backtrack without end" is no longer refused as an `error`: it runs until the deadline.
 - `leave` holds at most 10000 items.
 
+### Changed (UX-33)
+- When `hello` creates a document, the server runs the app's `setup_commands` once, as one `core.Setup` entry by the
+  maker: a new workbook has `Sheet1`, a new text or presentation the language of the `locale` the maker's client sent
+  (or the default). None of it is an undo step. A client no longer adds the first sheet or sets the language itself.
+
 ### Fixed
 - `GET /api/fonts/{sha256}` and `/api/fonts/{sha256}.woff2` no longer run on the event loop (PERF-09). Making a WOFF2
   file takes seconds (2.4 s for an ordinary 740 KB font), and every other request of every document waited for it the

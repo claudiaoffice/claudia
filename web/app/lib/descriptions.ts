@@ -4,7 +4,7 @@
 
 import { translate as t } from './i18n'
 import type { ImageImport } from './images'
-import type { ShortcutDef } from './shortcuts'
+import { chordOf, type ShortcutDef } from './shortcuts'
 
 /** `claudia_core.MAX_ALT_CHARS`: a description is at most this long. */
 export const MAX_DESCRIPTION = 300
@@ -57,7 +57,7 @@ export function describeParams(text: string, decorative: boolean): { description
 
 /** Format ▸ Describe Object…, Ctrl+Alt+D, the same key in every app (and the shells' `format.describe`). */
 export function describeShortcut(run: () => void, enabled: () => boolean): ShortcutDef {
-  return { id: 'format.describe', get label() { return t('Describe Object…') }, chord: { key: 'd', code: 'KeyD', ctrl: true, alt: true }, run, enabled }
+  return { id: 'format.describe', get label() { return t('Describe Object…') }, chord: chordOf('format.describe'), run, enabled }
 }
 
 /** The object a keyboard user reaches by stepping through the floating objects (Ctrl+Alt+PageDown / PageUp), in the

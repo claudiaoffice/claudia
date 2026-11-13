@@ -19,6 +19,7 @@ Commands
 
 .. autoclass:: claudia_core.Command
 .. autoclass:: claudia_core.Batch
+.. autoclass:: claudia_core.Setup
 .. autoclass:: claudia_core.CommandRegistry
 .. autofunction:: claudia_core.encode
 .. autofunction:: claudia_core.new_registry

@@ -99,10 +99,10 @@ describe('the List entry of the Format menu (E9.21)', () => {
 
   it('offers bullets and numbers, continuing and starting, and the levels, with the keys beside them', () => {
     const { items } = flyout()
-    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Bulleted list', 'Numbered list', '—', 'Continue previous list', 'Start at…', '—', 'Indent', 'Outdent'])
+    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Bulleted List', 'Numbered List', '—', 'Continue Previous List', 'Start At…', '—', 'Indent', 'Outdent'])
     expect(items.filter((i) => i.hint).map((i) => [i.label, i.hint])).toEqual([
-      ['Bulleted list', 'Ctrl+Shift+8'],
-      ['Numbered list', 'Ctrl+Shift+7'],
+      ['Bulleted List', 'Ctrl+Shift+8'],
+      ['Numbered List', 'Ctrl+Shift+7'],
       ['Indent', 'Tab'],
       ['Outdent', 'Shift+Tab'],
     ])
@@ -115,14 +115,14 @@ describe('the List entry of the Format menu (E9.21)', () => {
   })
 
   it('ticks the kind of list the caret is in', () => {
-    expect(flyout({ current: 'numbers' }).items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Numbered list'])
+    expect(flyout({ current: 'numbers' }).items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Numbered List'])
     expect(flyout({ current: null }).items.filter((i) => i.checked)).toEqual([])
   })
 
   it('leaves what needs an item disabled outside one, and continuing where there is nothing to continue', () => {
     const outside = flyout({ canNest: false, canContinue: false }).items
-    expect(outside.filter((i) => i.disabled).map((i) => i.label)).toEqual(['Continue previous list', 'Start at…', 'Indent', 'Outdent'])
-    expect(flyout({ canContinue: false }).items.filter((i) => i.disabled).map((i) => i.label)).toEqual(['Continue previous list'])
+    expect(outside.filter((i) => i.disabled).map((i) => i.label)).toEqual(['Continue Previous List', 'Start At…', 'Indent', 'Outdent'])
+    expect(flyout({ canContinue: false }).items.filter((i) => i.disabled).map((i) => i.label)).toEqual(['Continue Previous List'])
   })
 
   it('is there but disabled, and says why, in an app that has no lists yet', () => {

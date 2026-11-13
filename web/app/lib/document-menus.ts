@@ -9,7 +9,7 @@
 import type { Menu, MenuItem } from '../components/MenuBar.vue'
 import { copySelection, cutSelection } from './clipboard'
 import { LANGUAGES } from './i18n'
-import { chordLabel, sharedShortcuts } from './shortcuts'
+import { chordLabel, chordOf, sharedShortcuts } from './shortcuts'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 type Toggle = (target?: 'on' | 'off') => void
@@ -43,10 +43,10 @@ export interface DocumentMenuContext {
 }
 
 /** The shortcut of Edit ▸ Search & Replace… (E5.15); `searchShortcuts` in `shortcuts.ts` is what listens for it. */
-export const SEARCH_CHORD = { key: 'f', ctrl: true } as const
+export const SEARCH_CHORD = chordOf('edit.search-replace')
 
 /** The shortcut of File ▸ Print… (D906). */
-export const PRINT_CHORD = { key: 'p', ctrl: true } as const
+export const PRINT_CHORD = chordOf('file.print')
 
 /** The menu hints for the shortcuts every window listens for (`sharedShortcuts`), so the two cannot drift apart. */
 export const SHARED_HINTS: Readonly<Record<string, string>> = Object.fromEntries(

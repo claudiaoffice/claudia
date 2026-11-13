@@ -38,7 +38,9 @@ Credentials travel in the first frame, not in the URL (URLs end up in logs).
 ```
 
 The answer carries user, role, document, line, revision, people, limits and locale. With `"create": true` for a
-document that does not exist, the document is made and the person becomes its owner. A wrong password, an unknown
+document that does not exist, the document is made and the person becomes its owner. What a new document starts with (a
+workbook's first sheet, a text's or presentation's language, from `locale` below) the server makes then, as one
+`core.Setup` entry by its maker that is nobody's undo step (UX-33, D342). A wrong password, an unknown
 name and a document that does not exist give the same answer. The name `ai` belongs to the assistant and cannot be
 used.
 

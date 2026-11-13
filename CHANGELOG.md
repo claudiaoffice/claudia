@@ -4,6 +4,17 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.20.0] - 2026-11-13
+
+What a new document starts with is nobody's undo step (UX-33).
+
+### Added
+- `Setup` (`core.Setup`): a `Batch` of what a new document starts with, made once by the server when it creates the
+  document. It is in the history under its maker's name, but it is never an undo step (`undoable` is `False`), and its
+  redacted form is a `Setup` too.
+- `DocumentModel.setup_commands(language)`: the commands of that setup, for an app to override (none by default).
+  `language` is the language of the maker's interface, or `None`.
+
 ## [0.19.0] - 2026-11-13
 
 What an object says to someone who cannot see it (BITV 1.1.1); the search engine moves out of the kernel (SEC-18).

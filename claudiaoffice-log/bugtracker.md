@@ -124,10 +124,10 @@ statement in the docs or on the website).
 | PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |
 | PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |
-| UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **new, open** |
-| UX-34 | **P1** | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | **new, needs decision** |
-| UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **new, open** |
-| UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **new, open** |
+| UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **fixed** 2026-11-13 (D342) |
+| UX-34 | P3 | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | deferred (owner, 2026-11-13: the AI is not fully built yet) |
+| UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **fixed** 2026-11-13 (D340) |
+| UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **fixed** 2026-11-13 (D341) |
 | UX-37 | P3 | UX / composes | composes shows an act/suggest switch that changes nothing | **new, open** |
 | PROC-18 | **P1** | Process / CI | The gate fails on every fresh clone: a note names `web/public/wasm`, a build output | **fixed** 2026-11-13 |
 | PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |
@@ -1222,7 +1222,7 @@ SEC-18 fixed this is linear, but a large workbook still holds the loop. **Fix:**
 **Fixed.** The same deadline: `search_preview` answers `timed_out`, `search_replace` refuses (`command_error`) rather
 than replace part of it. **Test:** `test_a_preview_that_ran_out_of_time_says_so_and_a_replace_refuses`.
 
-### UX-33 · A new document starts with an undoable step · P2 · new, open
+### UX-33 · A new document starts with an undoable step · P2 · fixed 2026-11-13
 **Evidence (measured, screenshots).** In a new workbook Edit's first item is "Undo Add sheet"; Ctrl+Z leaves "This
 document has no sheet yet." In a new text or deck it is "Undo Language" (D915: the maker's client sets the language right
 after creating). A person's first Ctrl+Z undoes something she never did. It also broke the Linux client's end-to-end
@@ -1230,8 +1230,13 @@ test (PROC-20).
 **Fix.** Make the first sheet and the starting language part of creating the document (a `create` parameter, or a
 setup step the log marks as not undoable), not a command in the person's undo stack. **Test:** per app, a new document
 has nothing to undo; a browser script presses Ctrl+Z in a new workbook and still sees Sheet1.
+**Fixed (D342).** The server runs the app's `setup_commands` once when it creates a document, as one `core.Setup` entry
+by its maker that is never an undo step (claudia-core 0.20.0): computes adds Sheet1, composes and creates set the
+language from the `locale` of `hello`. The web client no longer does either. **Tests:**
+`claudia-server/tests/test_server_setup.py`, the Linux client's end-to-end test (Undo off in a new text again),
+`web/e2e/keys.cjs` (Ctrl+Z in a new workbook keeps Sheet1; Undo disabled in a new text).
 
-### UX-34 · In computes and creates the AI refuses every change by default · P1 · new, needs decision
+### UX-34 · In computes and creates the AI refuses every change by default · P3 · deferred
 **Evidence (read and measured).** D262 makes *suggest* the default in all three apps and says proposals (D263) must come
 before the AI writes anything in computes or creates. Proposals exist only in composes (`SUGGEST_METHODS`:
 `computes: ()`, `creates: ()`), so with the default switch every request that would change something is answered "I
@@ -1241,8 +1246,9 @@ symptom again, now by design.
 shows: the switch disabled with one line, here "This app's AI acts; it cannot suggest yet", and send *act*. (c) Per-app
 default. Recommendation: (b) now, (a) as planned. **Test:** `demo.cjs` asks `@ai` without touching the switch and sees
 a change.
+**Owner (2026-11-13):** not a P1: the AI is not fully built yet, and this is addressed with it. Deferred.
 
-### UX-35 · Menu entries without a shortcut · P2 · new, open
+### UX-35 · Menu entries without a shortcut · P2 · fixed 2026-11-13
 **Evidence (measured).** The project rule is that every menu entry has a key shortcut. In the shared manifest 30
 (composes), 37 (computes) and 33 (creates) entries have none. Part of that is display only: Save, Undo, Redo, Copy, Cut,
 Paste are handled by the page and therefore not bound natively (`test_keys_the_page_handles_itself_are_not_bound_a_second_time`),
@@ -1253,8 +1259,15 @@ computes' New Sheet, Row ▸, Column ▸, Clear Cells, Image, Chart, Names, SQL;
 with an explicit, short list of exemptions (the language picker). Shell: show the page's keys in the native menu with
 GMenu's `accel` attribute (display only, no binding). **Test:** a manifest test "every action has an accelerator or is
 on the exemption list", and the same over the web menus.
+**Fixed (D340).** One key table for every app and client in the manifest; `scripts/generate_keys.py` writes the web's
+copy and the table for people (`notes/keyboard-shortcuts.md`). The page listens for every key in every client (its menu
+entries run as if clicked); GTK binds only the shell's own (Quit, About, Shift+F10) and shows the rest with `accel`; the
+Windows menu shows every key. **Tests:** `test_every_menu_entry_has_a_key_but_the_language_names`,
+`test_one_action_has_one_key_in_every_app`, `test_only_the_shells_own_keys_are_bound_natively`,
+`test_no_key_is_one_a_browser_keeps_or_alt_gr_types`, `tests/test_keys_generated.py`, `web/tests/shortcuts.test.ts`,
+`web/e2e/keys.cjs`. **Left:** a Mac variant (Cmd+M is Minimize, Cmd+Option+H Hide Others), D122's per-OS sets.
 
-### UX-36 · Features of this round are missing from the native desktop menus · P2 · new, open
+### UX-36 · Features of this round are missing from the native desktop menus · P2 · fixed 2026-11-13
 **Evidence (measured: web menu ids against `manifest.for_app`).** The desktop shells hide the web menu bar and show the
 manifest's menu instead, so these are not in the desktop menus: File ▸ Print… (composes, creates), Format ▸ Bulleted /
 Numbered List, Edit ▸ Soft Hyphen, Non-breaking Hyphen (composes); Edit ▸ Image…, Chart…, Format ▸ Clear Cell Style,
@@ -1263,6 +1276,8 @@ Ctrl+P. The project rule "check whether the desktop clients need adapting" was n
 existing test checks only the other direction (native ids exist in the web source).
 **Fix.** Add the actions to `manifest.py`, regenerate the Windows and macOS menus, translate. **Test:** the reverse
 check: every web menu `id` of an app is in its manifest, or on a named list of web-only items with the reason.
+**Fixed (D341).** All added, regenerated and translated; also Format ▸ List ▸ (every app) and composes' Edit ▸ Insert ▸
+for the two hyphens, which had keys and no entry. **Test:** `test_every_web_menu_entry_is_in_the_desktop_menus_too`.
 
 ### UX-37 · composes shows an act/suggest switch that changes nothing · P3 · new, open
 The switch is live in composes and says beneath it "Text documents: the AI suggests either way." A control that does

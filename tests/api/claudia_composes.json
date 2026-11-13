@@ -622,6 +622,7 @@
    "serialize": "(self) -> 'dict'",
    "set_item": "(self, block_id: 'str', item: 'ListItem | None') -> 'None'",
    "settle": "(self, ctx: 'Context') -> 'None'",
+   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
    "split": "(self, block_id: 'str', offset: 'int', new_id: 'str', style: 'str') -> 'None'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "style_uses": "(self) -> 'dict[str, int]'",

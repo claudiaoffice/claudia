@@ -2,7 +2,7 @@
 
     assets       ImageAsset and ImageImport: the image model every app's objects can hold (E10.8)
     revision     Revision(branch, seq): ids that survive redaction and can branch
-    commands     Command, Batch, registry with schema versions and upcasters
+    commands     Command, Batch, Setup, registry with schema versions and upcasters
     model        DocumentModel: the interface each app implements; Snapshot
     context      what a command works with while it applies
     region       Region: presence, locks and AI edits written once
@@ -47,6 +47,7 @@ from .commands import (
     Redacted,
     Redaction,
     Restore,
+    Setup,
     Switch,
     encode,
     new_registry,
@@ -366,6 +367,7 @@ __all__ = [
     "SetRole",
     "SetSnap",
     "SetLanguage",
+    "Setup",
     "SetText",
     "ShapeDefinition",
     "ShapeError",

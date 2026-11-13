@@ -43,6 +43,14 @@ class DocumentModel(ABC):
     def empty(cls) -> Self:
         """A new, empty document: the state before the first command."""
 
+    @classmethod
+    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
+        """What a new document starts with beyond :meth:`empty`, as commands: a workbook its first sheet, a text its
+        language. ``language`` is the language of its maker's interface (D915), or ``None`` when that is not a language
+        tag. The server runs them once, when it creates the document, as one :class:`~claudia_core.Setup` entry: in
+        the history, but nobody's undo step (UX-33). None by default."""
+        return ()
+
     @abstractmethod
     def serialize(self) -> dict:
         """Plain JSON-able state. Equal states must serialize equally (tests compare them)."""

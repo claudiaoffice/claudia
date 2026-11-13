@@ -498,7 +498,8 @@
    "insert_slide": "(self, slide: 'str', at: 'int | None' = None) -> 'None'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "restore": "(state: 'dict') -> 'Self'",
-   "serialize": "(self) -> 'dict'"
+   "serialize": "(self) -> 'dict'",
+   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'"
   },
   "properties": []
  },

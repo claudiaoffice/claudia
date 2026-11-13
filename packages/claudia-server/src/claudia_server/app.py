@@ -70,6 +70,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
+from claudia_core import LanguageError, Setup, normalize_language
 from claudia_fonts import DEFAULT_SUBSTITUTIONS
 
 from .admin_api import AdminContext, admin_router
@@ -348,7 +349,10 @@ class Gateway:
             if account is None:
                 await _refuse(websocket, request_id, "unauthorized", msg("missing or wrong credentials"), 4401, locale)
                 return None
-            return request_id, account, await self.hub.open(doc_id), created, locale
+            document = await self.hub.open(doc_id)
+            if created:
+                _set_up(document.document, account.user, locale)
+            return request_id, account, document, created, locale
         except HubError as exc:
             await _refuse(websocket, request_id, exc.code, exc.message, _CLOSE.get(exc.code, 4400), locale)
         except AuthRefused as exc:
@@ -356,6 +360,19 @@ class Gateway:
         except ValueError as exc:  # the name or password of a new document is not acceptable
             await _refuse(websocket, request_id, "bad_request", str(exc), 4400)
         return None
+
+
+def _set_up(document, author: str, locale: str) -> None:
+    """What a new document starts with (``DocumentModel.setup_commands``: a workbook's first sheet, a text's language,
+    D915), as one ``Setup`` entry by its maker that is nobody's undo step (UX-33). Before, her client did this as her
+    own first steps, and her first Ctrl+Z took them back."""
+    try:
+        language: str | None = normalize_language(locale)
+    except LanguageError:
+        language = None
+    commands = type(document.model).setup_commands(language)
+    if commands:
+        document.execute(Setup(tuple(commands)), author=author)
 
 
 async def _refuse(

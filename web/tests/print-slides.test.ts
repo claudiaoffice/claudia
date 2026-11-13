@@ -1,7 +1,7 @@
 // Printing a presentation (D917, D918): the slide session's print setup and language, the bar's choices for slides,
 // and the print sources that let one preview print a text and a presentation alike.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { effectScope, nextTick, reactive } from 'vue'
+import { reactive } from 'vue'
 import type { PrintSetupData } from '@claudia/layout'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { SlideSession } from '~/lib/slide-session'
@@ -20,7 +20,7 @@ import {
   withSlidePaper,
 } from '~/lib/print/setup'
 import { pdfOfPages, slideDocument, slideSource, textSource, type PrintPages } from '~/lib/print/source'
-import { useCreatorLanguage, usePrint } from '~/lib/print/use-print'
+import { usePrint } from '~/lib/print/use-print'
 import type { PrintAssets } from '~/lib/print/assets'
 
 const layoutCalls = vi.hoisted(() => ({ slides: [] as unknown[], text: [] as unknown[], pdf: [] as unknown[] }))
@@ -353,33 +353,5 @@ describe('what every window that prints has (D906, D918)', () => {
     expect(focus).toHaveBeenCalledOnce()
     usePrint().close() // nothing to focus
     vi.useRealTimers()
-  })
-  it('gives a document just made the language of its maker, once', async () => {
-    const scope = effectScope()
-    const session = reactive({ justCreated: true, readOnly: false, state: { language: undefined as string | null | undefined }, setLanguage: vi.fn() })
-    scope.run(() => useCreatorLanguage(session, () => 'de'))
-    expect(session.setLanguage).not.toHaveBeenCalled() // not known yet
-    session.state.language = null
-    await nextTick()
-    expect(session.setLanguage).toHaveBeenCalledWith('de')
-    session.state.language = 'de'
-    await nextTick()
-    session.state.language = null
-    await nextTick()
-    expect(session.setLanguage).toHaveBeenCalledOnce()
-    scope.stop()
-  })
-  it('leaves an opened document, and one that is only looked at, as they are', async () => {
-    const scope = effectScope()
-    const opened = reactive({ justCreated: false, readOnly: false, state: { language: null as string | null }, setLanguage: vi.fn() })
-    const looked = reactive({ justCreated: true, readOnly: true, state: { language: null as string | null }, setLanguage: vi.fn() })
-    scope.run(() => {
-      useCreatorLanguage(opened, () => 'de')
-      useCreatorLanguage(looked, () => 'de')
-    })
-    await nextTick()
-    expect(opened.setLanguage).not.toHaveBeenCalled()
-    expect(looked.setLanguage).not.toHaveBeenCalled()
-    scope.stop()
   })
 })

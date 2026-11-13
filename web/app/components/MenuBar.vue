@@ -9,6 +9,7 @@
 // submenu (`items`, used by "Paste as", "Row" and "Column" — D130).
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from '~/lib/i18n'
+import { hintOf } from '~/lib/shortcuts'
 
 const { t } = useI18n()
 
@@ -54,6 +55,12 @@ const clickable = computed(() => (openMenu.value?.items ?? []).filter((it) => !i
 const activeTop = computed<MenuItem | null>(() => (activeItem.value === null ? null : (clickable.value[activeItem.value] ?? null)))
 const subItems = computed(() => (activeTop.value?.items ?? []).filter((it) => !it.separator))
 const activeSubItem = computed<MenuItem | null>(() => (activeSub.value === null ? null : (subItems.value[activeSub.value] ?? null)))
+
+/** The key beside an entry: the one table's (`keys.generated.ts`, the same in every client, UX-35) for an entry with an
+ * id, else what the entry says itself (the List flyout's Tab, an id-less entry). */
+function hintFor(item: MenuItem): string | undefined {
+  return hintOf(item.id) ?? item.hint
+}
 
 function idOf(menuIndex: number, item: MenuItem | null | undefined): string | undefined {
   return item ? `menuitem-${menuIndex}-${item.label}` : undefined
@@ -311,7 +318,7 @@ onBeforeUnmount(() => {
                 @mouseenter="enterItem(item)"
               >
                 <span><i v-if="item.checked !== undefined" class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</i><span class="label" :style="item.css">{{ item.label }}</span></span>
-                <kbd v-if="item.hint">{{ item.hint }}</kbd>
+                <kbd v-if="hintFor(item)">{{ hintFor(item) }}</kbd>
                 <span v-if="item.items" class="arrow" aria-hidden="true">▸</span>
               </button>
               <ul v-if="item.items && activeTop === item && activeSub !== null" class="drop sub" role="menu" :aria-label="item.label">
@@ -330,7 +337,7 @@ onBeforeUnmount(() => {
                       @mouseenter="!sub.disabled && (activeSub = subItems.indexOf(sub))"
                     >
                       <span><i v-if="sub.checked !== undefined" class="tick" aria-hidden="true">{{ sub.checked ? '✓' : '' }}</i><span class="label" :style="sub.css">{{ sub.label }}</span></span>
-                      <kbd v-if="sub.hint">{{ sub.hint }}</kbd>
+                      <kbd v-if="hintFor(sub)">{{ hintFor(sub) }}</kbd>
                     </button>
                   </li>
                 </template>

@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import ClassVar, Self, TypeIs
 
 from claudia_core import (
+    Command,
     CommandRegistry,
     DocumentModel,
     ObjectBody,
@@ -26,6 +27,7 @@ from claudia_core import (
     ObjectSet,
     Palette,
     Region,
+    SetLanguage,
     StyleBook,
     VisualObject,
     builtin_palette,
@@ -120,6 +122,12 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model = cls()
         model.insert_slide(FIRST_SLIDE)
         return model
+
+    @classmethod
+    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
+        """A new presentation starts in the language of its maker's interface (D915), set by the server when it creates
+        the document rather than by her client as her own first step (UX-33)."""
+        return () if language is None else (SetLanguage(language),)
 
     def serialize(self) -> dict:
         return {

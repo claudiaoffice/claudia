@@ -61,22 +61,22 @@ export interface FormatMenu {
   more?: MenuItem[]
 }
 
-/** The List entry: a flyout of what can be done to the paragraphs at the caret. It has no action id on purpose: the
- * native shells' menus have the four entries of D300 and the contract does not know this one yet. */
+/** The List entry: a flyout of what can be done to the paragraphs at the caret. Its entries have action ids, and the
+ * native shells' menus have them too (UX-36): in every app, as here, disabled where there are no paragraphs. */
 function listItem(t: (text: string) => string, list: ListMenu): MenuItem {
   const off = !!list.unavailable
   const locked = off || !!list.readonly
   const flyout: MenuItem[] = []
   if (list.unavailable) flyout.push({ label: list.unavailable, disabled: true })
   flyout.push(
-    { label: t('Bulleted list'), hint: list.hints?.bulleted, checked: list.current === 'bullets', disabled: locked, action: () => list.bulleted() },
-    { label: t('Numbered list'), hint: list.hints?.numbered, checked: list.current === 'numbers', disabled: locked, action: () => list.numbered() },
+    { id: 'format.bulleted-list', label: t('Bulleted List'), hint: list.hints?.bulleted, checked: list.current === 'bullets', disabled: locked, action: () => list.bulleted() },
+    { id: 'format.numbered-list', label: t('Numbered List'), hint: list.hints?.numbered, checked: list.current === 'numbers', disabled: locked, action: () => list.numbered() },
     { label: '', separator: true },
-    { label: t('Continue previous list'), disabled: locked || !list.canContinue, action: () => list.continueList() },
-    { label: t('Start at…'), disabled: locked || !list.canNest, action: () => list.startAt() },
+    { id: 'format.list-continue', label: t('Continue Previous List'), disabled: locked || !list.canContinue, action: () => list.continueList() },
+    { id: 'format.list-start', label: t('Start At…'), disabled: locked || !list.canNest, action: () => list.startAt() },
     { label: '', separator: true },
-    { label: t('Indent'), hint: list.hints?.indent, disabled: locked || !list.canNest, action: () => list.indent() },
-    { label: t('Outdent'), hint: list.hints?.outdent, disabled: locked || !list.canNest, action: () => list.outdent() },
+    { id: 'format.list-indent', label: t('Indent'), hint: list.hints?.indent, disabled: locked || !list.canNest, action: () => list.indent() },
+    { id: 'format.list-outdent', label: t('Outdent'), hint: list.hints?.outdent, disabled: locked || !list.canNest, action: () => list.outdent() },
   )
   return { label: t('List'), items: flyout, disabled: off }
 }

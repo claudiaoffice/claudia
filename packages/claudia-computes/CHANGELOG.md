@@ -21,6 +21,9 @@ Describing objects (BITV 1.1.1). State schema 8 → 9. Search on claudia-search 
   `MAX_LISTED` are claudia-search's. A plan no longer carries the cell content; `replace_command` makes it. The package
   depends on claudia-search.
 
+### Added (UX-33)
+- `WorkbookModel.setup_commands`: a new workbook starts with its first sheet, `s1` "Sheet1", made by the server as nobody's undo step (UX-33). The web client no longer adds it.
+
 ## [0.5.0] - 2026-11-13
 
 The function catalog can be said in another language (E13.8, D323); the package still carries no catalog. An outcome

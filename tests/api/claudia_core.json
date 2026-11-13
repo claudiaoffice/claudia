@@ -1,5 +1,5 @@
 {
- "version": "0.19.0",
+ "version": "0.20.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -476,7 +476,8 @@
    "requirements": "(self) -> 'Requirements'",
    "restore": "(state: 'dict') -> 'Self'",
    "serialize": "(self) -> 'dict'",
-   "settle": "(self, ctx: 'Context') -> 'None'"
+   "settle": "(self, ctx: 'Context') -> 'None'",
+   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'"
   },
   "properties": []
  },
@@ -1520,6 +1521,19 @@
   "properties": [
    "label",
    "summary"
+  ]
+ },
+ "Setup": {
+  "class": [
+   "Batch"
+  ],
+  "init": "(commands: 'tuple[Command, ...]', name: 'str | None' = None) -> None",
+  "methods": {
+   "redacted": "(self) -> 'Command'"
+  },
+  "properties": [
+   "label",
+   "undoable"
   ]
  },
  "ShapeDefinition": {

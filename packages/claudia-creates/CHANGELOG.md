@@ -14,6 +14,9 @@ Describing objects (BITV 1.1.1). State schema 7 → 8.
 - Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
   rebuilt from the log.
 
+### Added (UX-33)
+- `SlideModel.setup_commands`: a new presentation starts in the language of its maker's interface (D915, D917), set by the server as nobody's undo step (UX-33).
+
 ## [0.8.0] - 2026-11-13
 
 How a presentation prints, and its language (D917).

@@ -44,6 +44,7 @@ from .identity import UnknownApp
 __all__ = [
     "Action",
     "Kind",
+    "KeyOwner",
     "LANGUAGES",
     "Manifest",
     "Menu",
@@ -98,6 +99,22 @@ class Kind(enum.Enum):
     """The web view's own editing machinery does it (WebKit editing commands such as cut, copy, paste)."""
 
 
+class KeyOwner(enum.Enum):
+    """Who listens for an action's key (UX-35, D340). The key itself is the same in every client: the web app, and the
+    Linux, Windows and macOS shells, which show it in their menus."""
+
+    PAGE = "page"
+    """The page listens, in every client (``web/app/lib/keys.generated.ts``, made from this manifest). A shell only
+    shows the key: binding it too would take it away from the page's own rules (no shortcut while typing in a
+    field)."""
+    SHELL = "shell"
+    """The shell binds the key itself and sends the action. That is Quit, About, and the one key a web view would
+    otherwise keep for its own context menu (Shift+F10)."""
+    VIEW = "view"
+    """The document view or the browser handles the key where it is pressed (Enter, Delete, Tab, the clipboard). Shown
+    in the menus, listened for by nobody else."""
+
+
 @dataclass(frozen=True, slots=True)
 class Action:
     """One menu item."""
@@ -109,7 +126,9 @@ class Action:
     kind: Kind
     tooltip: str = ""
     accelerators: tuple[str, ...] = ()
-    """Only keys that the shell handles. A key the page already handles (Ctrl+Z, Ctrl+S) is never bound twice."""
+    """The action's key, in GTK's notation, the same in every app and every client (UX-35, D340); who listens for it
+    is :attr:`key_owner`. Empty only for the few actions that have no key on purpose (the language picker's own
+    autonyms)."""
     checkable: bool = False
     editing: str | None = None
     """For :attr:`Kind.EDITING`: the name of the WebKit editing command (``Cut``, ``Copy``, ``Paste``, ...)."""
@@ -120,6 +139,8 @@ class Action:
     ``describe()`` can hand it to a shell that never imports this package (``clients/macos``). Unset for everything
     that is not a standard editing command — macOS has no selector for "paste as plain text" or an app's own
     commands, and giving those a Cocoa role would route the key to a native editing action with no page effect."""
+    key_owner: KeyOwner = KeyOwner.PAGE
+    """Who listens for :attr:`accelerators`: see :class:`KeyOwner`."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -199,6 +220,7 @@ class Manifest:
                 "kind": action.kind.value,
                 "checkable": action.checkable,
                 "accelerators": list(action.accelerators),
+                "key_owner": action.key_owner.value,
                 "role": action.role,
             }
 
@@ -225,24 +247,46 @@ def _page(
     accelerators: tuple[str, ...] = (),
     checkable: bool = False,
     role: str | None = None,
+    key_owner: KeyOwner = KeyOwner.PAGE,
 ):
-    return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable, role=role)
+    return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable, role=role, key_owner=key_owner)
+
+
+def _shell(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str, ...]) -> Action:
+    return Action(action_id, label, Kind.SHELL, tooltip, accelerators, key_owner=KeyOwner.SHELL)
 
 
 # --------------------------------------------------------------------------------------------- shared across apps
 # D120's shared blocks, written once so the three manifests below cannot drift from each other by a typo the way the
 # three ``onWindowKey`` handlers did on the web side before D122.
+#
+# The keys (UX-35, D340) are one table for the three apps and every client. They keep out of the way of what a browser
+# keeps for itself (Ctrl+N, Ctrl+W, Ctrl+T, Ctrl+Q never reach a page), of what Ctrl+Alt types on a German Windows
+# keyboard (AltGr: Q, E, M and the digits), and of the desktop's own (Ctrl+Alt+T, Ctrl+Alt+L on Ubuntu). An app's own
+# commands are Ctrl+Alt+letter, the rare and weighty ones of File ▸ Manage are Ctrl+Alt+Shift+letter.
 
 
-def _file_menu(*, title: str) -> Menu:
-    """New, Open… · Save, Save new checkpoint…, Download · Manage ▸ (Share…, Assign new owner…, Accept
-    ownership…, Leave document…, Export…, Delete from server…) · Close document, Quit (D123, D124's grouping;
-    D141's Manage submenu, renamed from the plain "Share…" item it grew out of)."""
+def _file_menu(*, title: str, prints: bool) -> Menu:
+    """New, Open… · Save, Save new checkpoint…, Download, Print… (the apps that lay out pages, D906) · Manage ▸
+    (Share…, Assign new owner…, Accept ownership…, Leave document…, Export…, Delete from server…) · Close document,
+    Quit (D123, D124's grouping; D141's Manage submenu)."""
+    keep: tuple[Action, ...] = (
+        _page("file.save", "Save", "Make a checkpoint of the document", accelerators=("<Primary>s",)),
+        _page(
+            "file.save-as",
+            "Save New Checkpoint…",
+            "Make a checkpoint and give it a name",
+            accelerators=("<Primary><Shift>s",),
+        ),
+        _page("file.download", "Download", "Download the document to this computer", accelerators=("<Primary><Alt>s",)),
+    )
+    if prints:
+        keep = (*keep, _page("file.print", "Print…", "See the pages and print them", accelerators=("<Primary>p",)))
     return Menu(
         "File",
         (
             (
-                _page("file.new", "New", "Start a new document", accelerators=("<Primary>n",)),
+                _page("file.new", "New", "Start a new document", accelerators=("<Primary><Alt>n",)),
                 _page(
                     "file.open",
                     "Open…",
@@ -250,75 +294,111 @@ def _file_menu(*, title: str) -> Menu:
                     accelerators=("<Primary>o",),
                 ),
             ),
-            (
-                _page("file.save", "Save", "Make a checkpoint of the document"),
-                _page("file.save-as", "Save New Checkpoint…", "Make a checkpoint and give it a name"),
-                _page("file.download", "Download", "Download the document to this computer"),
-            ),
+            keep,
             (
                 Submenu(
                     "Manage",
                     (
-                        _page("file.manage.share", "Share…", "Let other people into the document"),
+                        _page(
+                            "file.manage.share",
+                            "Share…",
+                            "Let other people into the document",
+                            accelerators=("<Primary><Alt><Shift>s",),
+                        ),
                         _page(
                             "file.manage.assign-owner",
                             "Assign New Owner…",
                             "Hand this document over to somebody else",
+                            accelerators=("<Primary><Alt><Shift>o",),
                         ),
                         _page(
                             "file.manage.accept-owner",
                             "Accept Ownership…",
                             "Accept a document that was handed over to you",
+                            accelerators=("<Primary><Alt><Shift>c",),
                         ),
-                        _page("file.manage.leave", "Leave Document…", "Remove yourself from this document"),
+                        _page(
+                            "file.manage.leave",
+                            "Leave Document…",
+                            "Remove yourself from this document",
+                            accelerators=("<Primary><Alt><Shift>l",),
+                        ),
                         _page(
                             "file.manage.export",
                             "Export…",
                             "Save the document's content in Claudia's own format",
+                            accelerators=("<Primary><Alt><Shift>x",),
                         ),
                         _page(
                             "file.manage.delete",
                             "Delete From Server…",
                             "Remove this document from the server for good",
+                            accelerators=("<Primary><Alt><Shift>r",),
                         ),
                     ),
                 ),
             ),
             (
-                _page("file.close", "Close Document", "Back to the list of documents"),
-                Action("file.quit", "Quit", Kind.SHELL, f"Close {title}", accelerators=("<Primary>q",)),
+                _page(
+                    "file.close", "Close Document", "Back to the list of documents", accelerators=("<Primary><Alt>w",)
+                ),
+                _shell("file.quit", "Quit", f"Close {title}", accelerators=("<Primary>q",)),
             ),
         ),
     )
 
 
 def _shared_edit_block() -> tuple[Action, ...]:
-    """Undo, Redo — identical in every app (D120); their accelerators are page-handled (``lib/shortcuts.ts``), not
-    shell-handled, so none are bound here, the same as before this round. Each still carries its macOS role
-    (D158): on that shell the key equivalent needs one to reach the item at all, whether or not the shell itself
-    binds an accelerator for it."""
+    """Undo, Redo — identical in every app (D120). Each also carries its macOS role (D158): on that shell the key
+    equivalent needs one to reach the item at all."""
     return (
-        _page("edit.undo", "Undo", "Take back your last step", role="undo:"),
-        _page("edit.redo", "Redo", "Do your last undone step again", role="redo:"),
+        _page("edit.undo", "Undo", "Take back your last step", accelerators=("<Primary>z",), role="undo:"),
+        _page("edit.redo", "Redo", "Do your last undone step again", accelerators=("<Primary><Shift>z",), role="redo:"),
     )
 
 
 def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
-    """Copy, Cut, Paste, Paste as ▸ Plain text — identical in every app (D120).
+    """Copy, Cut, Paste, Paste as ▸ Plain text — identical in every app (D120). The keys are the browser's own in
+    every client (:attr:`KeyOwner.VIEW`): the clipboard events reach the page from there.
 
-    ``native=True`` (composes, carried over unchanged from before this round) dispatches straight to WebKit's own
-    editing commands. ``native=False`` (computes, creates — both new to the GTK shell, D121) goes through the page
-    instead: a cell grid's paste needs to split the clipboard by tabs and newlines onto the current selection, and a
-    slide canvas's paste needs to land in whichever text frame is being edited, neither of which WebKit's generic
-    "insert this text here" command knows how to do. The page's own ``lib/clipboard.ts`` is what actually does this.
+    ``native=True`` (composes) dispatches the menu item straight to WebKit's own editing commands. ``native=False``
+    (computes, creates) goes through the page instead: a cell grid's paste needs to split the clipboard by tabs and
+    newlines onto the current selection, and a slide canvas's paste needs to land in whichever text frame is being
+    edited, neither of which WebKit's generic "insert this text here" command knows how to do.
     """
+    view = KeyOwner.VIEW
     if native:
         return (
             Action(
-                "edit.copy", "Copy", Kind.EDITING, "Copy the selection to the clipboard", editing="Copy", role="copy:"
+                "edit.copy",
+                "Copy",
+                Kind.EDITING,
+                "Copy the selection to the clipboard",
+                ("<Primary>c",),
+                editing="Copy",
+                role="copy:",
+                key_owner=view,
             ),
-            Action("edit.cut", "Cut", Kind.EDITING, "Move the selection to the clipboard", editing="Cut", role="cut:"),
-            Action("edit.paste", "Paste", Kind.EDITING, "Insert the clipboard", editing="Paste", role="paste:"),
+            Action(
+                "edit.cut",
+                "Cut",
+                Kind.EDITING,
+                "Move the selection to the clipboard",
+                ("<Primary>x",),
+                editing="Cut",
+                role="cut:",
+                key_owner=view,
+            ),
+            Action(
+                "edit.paste",
+                "Paste",
+                Kind.EDITING,
+                "Insert the clipboard",
+                ("<Primary>v",),
+                editing="Paste",
+                role="paste:",
+                key_owner=view,
+            ),
             Submenu(
                 "Paste As",
                 (
@@ -327,17 +407,169 @@ def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
                         "Plain Text",
                         Kind.EDITING,
                         "Insert the clipboard without formatting",
+                        ("<Primary><Shift>v",),
                         editing="PasteAsPlainText",
+                        key_owner=view,
                     ),
                 ),
             ),
         )
     return (
-        _page("edit.copy", "Copy", "Copy the selection to the clipboard", role="copy:"),
-        _page("edit.cut", "Cut", "Move the selection to the clipboard", role="cut:"),
-        _page("edit.paste", "Paste", "Insert the clipboard", role="paste:"),
-        Submenu("Paste As", (_page("edit.paste-as-plain", "Plain Text", "Insert the clipboard without formatting"),)),
+        _page(
+            "edit.copy",
+            "Copy",
+            "Copy the selection to the clipboard",
+            accelerators=("<Primary>c",),
+            role="copy:",
+            key_owner=view,
+        ),
+        _page(
+            "edit.cut",
+            "Cut",
+            "Move the selection to the clipboard",
+            accelerators=("<Primary>x",),
+            role="cut:",
+            key_owner=view,
+        ),
+        _page(
+            "edit.paste", "Paste", "Insert the clipboard", accelerators=("<Primary>v",), role="paste:", key_owner=view
+        ),
+        Submenu(
+            "Paste As",
+            (
+                _page(
+                    "edit.paste-as-plain",
+                    "Plain Text",
+                    "Insert the clipboard without formatting",
+                    accelerators=("<Primary><Shift>v",),
+                    key_owner=view,
+                ),
+            ),
+        ),
     )
+
+
+def _search_block() -> tuple[Action, ...]:
+    """E5.15: the same entry, label and key in every app that searches (D281). Ctrl+H, which opens the panel with
+    Replace showing, is a second way in and has no menu entry of its own."""
+    return (
+        _page(
+            "edit.search-replace",
+            "Search & Replace…",
+            "Find text, formulas and values, and replace them",
+            accelerators=("<Primary>f",),
+        ),
+    )
+
+
+def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = False) -> Menu:
+    """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
+    and where there are objects, Describe Object… (BITV 1.1.1). List ▸ is in every app as on the web; outside a text
+    the page reports its entries disabled. Computes adds Clear Cell Style, which the web has in Apply Style's flyout."""
+    styles: tuple[MenuEntry, ...] = (
+        _page(
+            "format.apply-style",
+            "Apply Style…",
+            "Choose a style for the selection, each drawn in its own look",
+            accelerators=("<Primary><Alt>a",),
+        ),
+    )
+    if clear_cell_style:
+        styles = (
+            *styles,
+            _page(
+                "format.clear-cell-style",
+                "Clear Cell Style",
+                "Take the selected cells' own style off, back to the table's",
+                accelerators=("<Primary><Alt><Shift>k",),
+            ),
+        )
+    styles = (
+        *styles,
+        _page(
+            "format.look",
+            "Edit This Style…",
+            look,
+            accelerators=("<Shift>F10",),
+            # A web view keeps Shift+F10 for its own context menu, so the shell takes it first (as before UX-35).
+            key_owner=KeyOwner.SHELL,
+        ),
+        _page(
+            "format.all-styles",
+            "All Styles…",
+            "List, rename and tidy the styles of this document",
+            accelerators=("<Primary><Alt><Shift>a",),
+        ),
+        Submenu(
+            "List",
+            (
+                _page(
+                    "format.bulleted-list",
+                    "Bulleted List",
+                    "Make the paragraphs a list with bullets, or plain again",
+                    accelerators=("<Primary><Shift>8",),
+                    checkable=True,
+                ),
+                _page(
+                    "format.numbered-list",
+                    "Numbered List",
+                    "Make the paragraphs a numbered list, or plain again",
+                    accelerators=("<Primary><Shift>7",),
+                    checkable=True,
+                ),
+                _page(
+                    "format.list-continue",
+                    "Continue Previous List",
+                    "Go on counting where the list before this one stopped",
+                    accelerators=("<Primary><Alt><Shift>p",),
+                ),
+                _page(
+                    "format.list-start",
+                    "Start At…",
+                    "The number this list starts at",
+                    accelerators=("<Primary><Alt><Shift>n",),
+                ),
+                _page(
+                    "format.list-indent",
+                    "Indent",
+                    "Move the item one level in",
+                    accelerators=("Tab",),
+                    key_owner=KeyOwner.VIEW,
+                ),
+                _page(
+                    "format.list-outdent",
+                    "Outdent",
+                    "Move the item one level out",
+                    accelerators=("<Shift>Tab",),
+                    key_owner=KeyOwner.VIEW,
+                ),
+            ),
+        ),
+    )
+    sections: tuple[tuple[MenuEntry, ...], ...] = (
+        styles,
+        (
+            _page(
+                "format.colours",
+                "Colours…",
+                "The colours of this document, by what each one means",
+                accelerators=("<Primary><Alt>k",),
+            ),
+        ),
+    )
+    if describe:
+        sections = (
+            *sections,
+            (
+                _page(
+                    "format.describe",
+                    "Describe Object…",
+                    "Say what the object you have selected shows to someone who cannot see it",
+                    accelerators=("<Primary><Alt>d",),
+                ),
+            ),
+        )
+    return Menu("Format", sections)
 
 
 def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
@@ -349,17 +581,37 @@ def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
             "view.authors",
             "Show Who Wrote What",
             "Colour the text by the person who wrote it" if authors else "Not available yet",
+            accelerators=("<Primary><Alt>u",),
             checkable=True,
         ),
-        _page("view.panel", "History and Chat", "Show or hide the history and the chat", checkable=True),
-        _page("view.dark", "Dark Mode", "Follow or override the system's light/dark setting", checkable=True),
+        _page(
+            "view.panel",
+            "History and Chat",
+            "Show or hide the history and the chat",
+            accelerators=("<Primary><Alt>h",),
+            checkable=True,
+        ),
+        _page(
+            "view.dark",
+            "Dark Mode",
+            "Follow or override the system's light/dark setting",
+            accelerators=("<Primary><Alt><Shift>d",),
+            checkable=True,
+        ),
+    )
+
+
+def _tools_ask() -> Action:
+    return _page(
+        "tools.ask", "Ask the Assistant…", "Write to the assistant in the chat", accelerators=("<Primary><Alt>j",)
     )
 
 
 def _config_menu() -> Menu:
-    """Shortcuts (D120, D122: an editable remapping UI is deferred), then App Language (the owner's second i18n
-    round): one checkable ``Kind.PAGE`` action per :data:`LANGUAGES` entry, in its own section/flyout.
+    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), then App Language (the owner's
+    second i18n round): one checkable ``Kind.PAGE`` action per :data:`LANGUAGES` entry, in its own section/flyout.
 
+    The language entries are the one place without a key: each is a language's own name, and there may be many.
     Mutual exclusion (picking one unchecks the rest) is enforced nowhere in this data — it is just ``LANGUAGES``
     many independent checkable actions, the same primitive ``view.dark`` already uses. The page is the one source of
     truth for which is active (it owns the catalog): a click sends the usual ``action`` message, the page's own
@@ -369,7 +621,14 @@ def _config_menu() -> Menu:
     return Menu(
         "Config",
         (
-            (_page("config.shortcuts", "Shortcuts", "The keyboard shortcuts this app uses", accelerators=("F1",)),),
+            (
+                _page(
+                    "config.shortcuts",
+                    "Shortcuts",
+                    "The keyboard shortcuts this app uses",
+                    accelerators=("<Primary>question",),
+                ),
+            ),
             (
                 Submenu(
                     "App Language",
@@ -381,17 +640,38 @@ def _config_menu() -> Menu:
 
 
 def _help_menu(title: str) -> Menu:
-    """Ask ai, then the two not-yet-real stubs, then About (D120, D125, D126) — identical shape in every app; only
-    the About dialog's own title differs."""
+    """Ask ai, How do I…?, Documentation, About (D120, D125, D126) — identical shape in every app; only the About
+    dialog's own title differs. F1 is help, as everywhere."""
     return Menu(
         "Help",
         (
             (
-                _page("help.ask", "Ask ai", "Open the chat with an empty prompt"),
-                _page("help.how-to", "How Do I…?", "Not available yet"),
-                _page("help.docs", "Documentation", "Not available yet"),
-                Action("help.about", f"About {title}", Kind.SHELL, "Version, authors and licence"),
+                _page("help.ask", "Ask ai", "Open the chat with an empty prompt", accelerators=("<Primary>F1",)),
+                _page("help.how-to", "How Do I…?", "Answers to what people often want to do", accelerators=("F1",)),
+                _page(
+                    "help.docs", "Documentation", "Every function and feature, to look up", accelerators=("<Shift>F1",)
+                ),
+                _shell(
+                    "help.about", f"About {title}", "Version, authors and licence", accelerators=("<Primary><Shift>F1",)
+                ),
             ),
+        ),
+    )
+
+
+def _manifest(
+    app: str, title: str, *, edit: Menu, format_menu: Menu, view: Menu, tools: Menu, prints: bool
+) -> Manifest:
+    return Manifest(
+        app,
+        (
+            _file_menu(title=title, prints=prints),
+            edit,
+            format_menu,
+            view,
+            tools,
+            _config_menu(),
+            _help_menu(title),
         ),
     )
 
@@ -400,137 +680,139 @@ def _help_menu(title: str) -> Menu:
 
 
 def composes() -> Manifest:
-    """The menus of claudia composes in the Linux client."""
-    edit_menu = Menu("Edit", (_shared_edit_block(), _shared_clipboard_block(native=True)))
-    format_menu = Menu(
-        "Format",
+    """The menus of claudia composes."""
+    edit_menu = Menu(
+        "Edit",
         (
+            _shared_edit_block(),
+            _shared_clipboard_block(native=True),
             (
-                _page(
-                    "format.apply-style",
-                    "Apply Style…",
-                    "Choose a style for the selection, each drawn in its own look",
+                Submenu(
+                    "Insert",
+                    (
+                        _page(
+                            "edit.soft-hyphen",
+                            "Soft Hyphen",
+                            "Where the word may be broken at the end of a line",
+                            accelerators=("<Primary>minus",),
+                        ),
+                        _page(
+                            "edit.nonbreaking-hyphen",
+                            "Non-breaking Hyphen",
+                            "A hyphen the line is never broken at",
+                            accelerators=("<Primary>underscore",),
+                        ),
+                    ),
                 ),
-                _page(
-                    "format.look",
-                    "Edit This Style…",
-                    "Change how this kind of paragraph looks",
-                    accelerators=("<Shift>F10",),
-                ),
-                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
             ),
-            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
         ),
     )
     view_menu = Menu(
         "View",
         (
             _shared_view_block(authors=True),
-            (_page("view.page", "Page", "Show the text as pages instead of a flowing text", checkable=True),),
+            (
+                _page(
+                    "view.page",
+                    "Page",
+                    "Show the text as pages instead of a flowing text",
+                    accelerators=("<Primary><Alt>p",),
+                    checkable=True,
+                ),
+            ),
         ),
     )
-    tools_menu = Menu(
-        "Tools",
-        (
-            # Only the generic entry (D126): the canned demo requests and Insert Sample Text went (2026-11-12).
-            (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
-        ),
-    )
-    return Manifest(
+    # Tools has only the generic entry (D126): the canned demo requests and Insert Sample Text went (2026-11-12).
+    return _manifest(
         "composes",
-        (
-            _file_menu(title="Claudia Composes"),
-            edit_menu,
-            format_menu,
-            view_menu,
-            tools_menu,
-            _config_menu(),
-            _help_menu("Claudia Composes"),
-        ),
+        "Claudia Composes",
+        edit=edit_menu,
+        format_menu=_format_menu(look="Change how this kind of paragraph looks"),
+        view=view_menu,
+        tools=Menu("Tools", ((_tools_ask(),),)),
+        prints=True,
     )
 
 
 def computes() -> Manifest:
-    """The menus of claudia computes in the Linux client (new, D121 — no window or application class yet)."""
+    """The menus of claudia computes."""
     edit_menu = Menu(
         "Edit",
         (
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
+            _search_block(),
             (
-                # E5.15: the same entry, label and shortcut in every app (D281). Ctrl+H, which opens the panel with
-                # Replace showing, is a second way in and has no menu entry of its own.
-                _page(
-                    "edit.search-replace",
-                    "Search & Replace…",
-                    "Find text, formulas and values, and replace them",
-                    accelerators=("<Primary>f",),
-                ),
+                _page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document", accelerators=("<Shift>F11",)),
+                _page("edit.image", "Image…", "Put a picture on the sheet", accelerators=("<Primary><Alt>i",)),
+                _page("edit.chart", "Chart…", "Add a chart of the selected cells", accelerators=("<Primary><Alt>c",)),
             ),
-            (_page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document"),),
             (
-                # D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ /
-                # Column ▸ rather than six flat items, reusing the same submenu mechanism Paste as ▸ already needed.
+                # D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ / Column ▸ rather than six flat items.
                 Submenu(
                     "Row",
                     (
-                        _page("edit.row-insert-above", "Insert Above", "Insert a row above the selection"),
-                        _page("edit.row-insert-below", "Insert Below", "Insert a row below the selection"),
-                        _page("edit.row-delete", "Delete", "Delete the selected rows"),
+                        _page(
+                            "edit.row-insert-above",
+                            "Insert Above",
+                            "Insert a row above the selection",
+                            accelerators=("<Alt><Shift>Up",),
+                        ),
+                        _page(
+                            "edit.row-insert-below",
+                            "Insert Below",
+                            "Insert a row below the selection",
+                            accelerators=("<Alt><Shift>Down",),
+                        ),
+                        _page(
+                            "edit.row-delete",
+                            "Delete",
+                            "Delete the selected rows",
+                            accelerators=("<Primary><Alt>minus",),
+                        ),
                     ),
                 ),
                 Submenu(
                     "Column",
                     (
-                        _page("edit.column-insert-left", "Insert Left", "Insert a column to the left of the selection"),
+                        _page(
+                            "edit.column-insert-left",
+                            "Insert Left",
+                            "Insert a column to the left of the selection",
+                            accelerators=("<Alt><Shift>Left",),
+                        ),
                         _page(
                             "edit.column-insert-right",
                             "Insert Right",
                             "Insert a column to the right of the selection",
+                            accelerators=("<Alt><Shift>Right",),
                         ),
-                        _page("edit.column-delete", "Delete", "Delete the selected columns"),
+                        _page(
+                            "edit.column-delete",
+                            "Delete",
+                            "Delete the selected columns",
+                            accelerators=("<Primary><Alt>underscore",),  # Shift+- types "_"
+                        ),
                     ),
                 ),
             ),
-            (_page("edit.clear", "Clear Cells", "Clear the selected cells"),),
-        ),
-    )
-    format_menu = Menu(
-        "Format",
-        (
             (
                 _page(
-                    "format.apply-style",
-                    "Apply Style…",
-                    "Choose a style for the selection, each drawn in its own look",
-                ),
-                _page(
-                    "format.look",
-                    "Edit This Style…",
-                    "Change how the object you have selected looks",
-                    accelerators=("<Shift>F10",),
-                ),
-                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
-            ),
-            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
-            # BITV 1.1.1: say what the selected object shows to someone who cannot see it, or mark it as decoration.
-            (
-                _page(
-                    "format.describe",
-                    "Describe Object…",
-                    "Say what the object you have selected shows to someone who cannot see it",
-                    accelerators=("<Primary><Alt>d",),
+                    "edit.clear",
+                    "Clear Cells",
+                    "Clear the selected cells",
+                    accelerators=("Delete",),
+                    key_owner=KeyOwner.VIEW,
                 ),
             ),
         ),
     )
-    view_menu = Menu("View", (_shared_view_block(authors=False),))
     tools_menu = Menu(
         "Tools",
         (
             # Only the generic entry (D126): "Ask for an Example Budget" was taken out (2026-11-12).
-            (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
-            # Random numbers, alternatives and following a computation (E6.21–E6.23, D292–D297): every entry a key.
+            (_tools_ask(),),
+            # Random numbers, alternatives and following a computation (E6.21–E6.23, D292–D297).
             (
                 _page(
                     "tools.random",
@@ -558,83 +840,97 @@ def computes() -> Manifest:
                     checkable=True,
                 ),
             ),
+            # Names, tables and SQL() (E6.5, D600–D609).
+            (
+                _page(
+                    "tools.names",
+                    "Names…",
+                    "The named ranges and tables of this workbook",
+                    accelerators=("<Primary>F3",),
+                ),
+                _page(
+                    "tools.sql",
+                    "SQL Query…",
+                    "Put the result of a query on the selected cell",
+                    accelerators=("<Primary><Alt>y",),
+                ),
+            ),
         ),
     )
-    return Manifest(
+    return _manifest(
         "computes",
-        (
-            _file_menu(title="Claudia Computes"),
-            edit_menu,
-            format_menu,
-            view_menu,
-            tools_menu,
-            _config_menu(),
-            _help_menu("Claudia Computes"),
+        "Claudia Computes",
+        edit=edit_menu,
+        format_menu=_format_menu(
+            look="Change how the object you have selected looks", clear_cell_style=True, describe=True
         ),
+        view=Menu("View", (_shared_view_block(authors=False),)),
+        tools=tools_menu,
+        prints=False,
     )
 
 
 def creates() -> Manifest:
-    """The menus of claudia creates in the Linux client (new, D121 — no window or application class yet).
+    """The menus of claudia creates.
 
     The shape library (``InsertBar``'s per-document list) is dynamic, like composes' style names — see this module's
-    docstring — so it has no entry here; only the fixed actions around it (New slide, Edit text, Text box, Delete) do.
+    docstring — so it has no entry here; only the fixed actions around it do.
     """
     edit_menu = Menu(
         "Edit",
         (
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
-            (_page("edit.new-slide", "New Slide", "Add a new slide to the presentation"),),
             (
-                _page("edit.edit-text", "Edit Text", "Write in the selected text box"),
-                _page("edit.text-box", "Text Box", "Add a text box to the slide"),
+                _page(
+                    "edit.new-slide", "New Slide", "Add a new slide to the presentation", accelerators=("<Primary>m",)
+                ),
             ),
-            (_page("edit.delete", "Delete", "Take the selected object off the slide"),),
+            (
+                _page(
+                    "edit.edit-text",
+                    "Edit Text",
+                    "Write in the selected text box",
+                    accelerators=("Return",),
+                    key_owner=KeyOwner.VIEW,
+                ),
+                _page("edit.text-box", "Text Box", "Add a text box to the slide", accelerators=("<Primary><Alt>b",)),
+                _page("edit.image", "Image…", "Put a picture on the slide", accelerators=("<Primary><Alt>i",)),
+            ),
+            (
+                _page(
+                    "edit.delete",
+                    "Delete",
+                    "Take the selected object off the slide",
+                    accelerators=("Delete",),
+                    key_owner=KeyOwner.VIEW,
+                ),
+            ),
         ),
     )
-    format_menu = Menu(
-        "Format",
+    view_menu = Menu(
+        "View",
         (
+            _shared_view_block(authors=False),
             (
                 _page(
-                    "format.apply-style",
-                    "Apply Style…",
-                    "Choose a style for the selection, each drawn in its own look",
-                ),
-                _page(
-                    "format.look",
-                    "Edit This Style…",
-                    "Change how the object you have selected looks",
-                    accelerators=("<Shift>F10",),
-                ),
-                _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
-            ),
-            (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
-            # BITV 1.1.1: say what the selected object shows to someone who cannot see it, or mark it as decoration.
-            (
-                _page(
-                    "format.describe",
-                    "Describe Object…",
-                    "Say what the object you have selected shows to someone who cannot see it",
-                    accelerators=("<Primary><Alt>d",),
+                    "view.grid",
+                    "Show Grid",
+                    "Show the grid that objects snap to",
+                    accelerators=("<Primary><Alt>g",),
+                    checkable=True,
                 ),
             ),
         ),
     )
-    view_menu = Menu("View", (_shared_view_block(authors=False),))
-    tools_menu = Menu("Tools", ((_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),))
-    return Manifest(
+    return _manifest(
         "creates",
-        (
-            _file_menu(title="Claudia Creates"),
-            edit_menu,
-            format_menu,
-            view_menu,
-            tools_menu,
-            _config_menu(),
-            _help_menu("Claudia Creates"),
-        ),
+        "Claudia Creates",
+        edit=edit_menu,
+        format_menu=_format_menu(look="Change how the object you have selected looks", describe=True),
+        view=view_menu,
+        tools=Menu("Tools", ((_tools_ask(),),)),
+        prints=True,
     )
 
 
@@ -666,6 +962,10 @@ def _item_element(parent: ET.Element, action: Action, translate: Translate) -> N
     label.text = translate(action.label) if _translatable(action) else action.label
     target = ET.SubElement(item, "attribute", name="action")
     target.text = f"win.{action.id}"
+    if action.accelerators:
+        # Shown, whoever listens for it: GTK draws the ``accel`` attribute next to the label without binding it.
+        accel = ET.SubElement(item, "attribute", name="accel")
+        accel.text = action.accelerators[0]
 
 
 def _submenu_element(parent: ET.Element, submenu: Submenu, translate: Translate) -> None:
