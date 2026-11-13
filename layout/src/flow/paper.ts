@@ -33,6 +33,8 @@ export const PAPER_SIZES: readonly PaperSize[] = [
   inch('legal', 'Legal', 8500, 14000, '8.5 × 14 in'),
   inch('tabloid', 'Tabloid', 11000, 17000, '11 × 17 in'),
   inch('executive', 'Executive', 7250, 10500, '7.25 × 10.5 in'),
+  // a widescreen slide as PowerPoint makes it (13.333 × 7.5 in): a presentation printed slide to page (D917)
+  { id: 'slide', name: 'Slide size', width: 540000, height: 960000, label: '16:9 · 338.7 × 190.5 mm' },
 ]
 
 /** A preset by id (`a4`, `letter`), or `undefined`. */

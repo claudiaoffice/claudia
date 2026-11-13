@@ -1,31 +1,30 @@
 <script setup lang="ts">
-// File ▸ Print… (D906): the main window shows the pages instead of the text. The pages are laid out here, in this
-// browser, by the layout library (D901), and drawn from the very display list the PDF is written from: Print hands
-// that PDF to the browser's print dialog, Download PDF saves it. Paper, orientation, margins and page numbers belong
-// to the document (D904): changing them is a step in the history, for everybody.
+// File ▸ Print… (D906, D918): the main window shows the pages instead of the document. The pages are laid out here,
+// in this browser, by the layout library (D901), and drawn from the very display list the PDF is written from: Print
+// hands that PDF to the browser's print dialog, Download PDF saves it. How a document prints belongs to it (D904,
+// D917): changing it is a step in the history, for everybody. One component for every app that prints: what it
+// prints and what it offers comes from a `PrintSource` (`lib/print/source.ts`), so the bar reads the same everywhere.
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import { PAPER_SIZES, type PageSetupData, type TextPages } from '@claudia/layout'
-import type { TextSession, PrintExtras } from '~/lib/text-session'
+import type { PageSetupData, SlideLayout } from '@claudia/layout'
 import { printAssets, type PrintAssets } from '~/lib/print/assets'
 import { facesOf, pageSvg, registerFaces } from '~/lib/print/paint'
-import { DEFAULT_PAGE, MARGINS, describe, marginPreset, mm, withCustomSize, withPaper } from '~/lib/print/setup'
-import { fromBase64, layOut, pdfOf, textDocument } from '~/lib/print/document'
+import { marginPreset, mm, withCustomSize, withPaper } from '~/lib/print/setup'
+import { fromBase64 } from '~/lib/print/document'
+import { pdfOfPages, type PrintPages, type PrintSource } from '~/lib/print/source'
 
-const props = defineProps<{ session: TextSession }>()
+const props = defineProps<{ source: PrintSource }>()
 const emit = defineEmits<{ close: [] }>()
-const session = props.session
-const state = session.state
+const source = props.source
 
-const page = computed<PageSetupData>(() => state.page ?? DEFAULT_PAGE)
-const canChange = computed(() => !session.readOnly && state.page !== null)
+const page = computed<PageSetupData>(() => source.page())
+const canChange = computed(() => source.canChange())
 const assets = shallowRef<PrintAssets | null>(null)
-const result = shallowRef<TextPages | null>(null)
+const result = shallowRef<PrintPages | null>(null)
 /** The page setup `result` was laid out on (the one shown; `page` may be newer while a layout runs). */
 const laidOn = shallowRef<PageSetupData | null>(null)
 const svgs = ref<string[]>([])
 const problem = ref<string | null>(null)
 const busy = ref(true)
-const extras = shallowRef<PrintExtras | null>(null)
 const images = new Map<string, Uint8Array>()
 const imageUrls = new Map<string, string>()
 const zoom = ref<'two' | 'width' | number>('two')
@@ -37,6 +36,15 @@ const custom = ref({ w: mm(page.value.width), h: mm(page.value.height) })
 /** The type of a picture's bytes, for showing it. */
 const mimeOf = (b: Uint8Array) =>
   b[0] === 0x89 ? 'image/png' : b[0] === 0xff ? 'image/jpeg' : b[0] === 0x47 ? 'image/gif' : b[0] === 0x42 ? 'image/bmp' : 'application/octet-stream'
+/** The document's pictures as bytes (for the PDF) and as URLs (for the screen); each is decoded once. */
+function takeImages() {
+  for (const img of source.images()) {
+    if (images.has(img.id)) continue
+    const bytes = fromBase64(img.data)
+    images.set(img.id, bytes)
+    imageUrls.set(img.id, URL.createObjectURL(new Blob([bytes as BlobPart], { type: img.format === 'svg' ? 'image/svg+xml' : `image/${img.format}` })))
+  }
+}
 
 // ------------------------------------------------------------------------------ laying out
 let run = 0
@@ -46,7 +54,8 @@ async function relayout() {
   try {
     const a = (assets.value ??= await printAssets())
     const setup = page.value
-    const laid = await layOut(a, textDocument(state.blocks, state.styles, setup, extras.value, state.language))
+    takeImages()
+    const laid = await source.layOut(a)
     // the pictures SVG pictures carry inside them, for the screen
     for (const [id, bytes] of laid.embedded) if (!imageUrls.has(id)) imageUrls.set(id, URL.createObjectURL(new Blob([bytes as BlobPart], { type: mimeOf(bytes) })))
     await registerFaces(a.fonts, facesOf(laid.list.pages))
@@ -69,8 +78,8 @@ function soon() {
     current = relayout()
   }, 120)
 }
-/** The pages as the text and the page setup are now: a layout that is waiting runs at once. */
-async function settled(): Promise<TextPages | null> {
+/** The pages as the document and its print setup are now: a layout that is waiting runs at once. */
+async function settled(): Promise<PrintPages | null> {
   if (timer) {
     clearTimeout(timer)
     timer = null
@@ -83,23 +92,14 @@ async function settled(): Promise<TextPages | null> {
   } while (seen !== current)
   return result.value
 }
-watch(() => [state.blocks, state.styles, state.page, state.language], soon, { deep: true })
+watch(() => source.watched(), soon, { deep: true })
 
 onMounted(async () => {
   window.addEventListener('keydown', onKey, true)
   const observer = new ResizeObserver(() => (width.value = canvas.value?.clientWidth ?? 1000))
   if (canvas.value) observer.observe(canvas.value)
   onBeforeUnmount(() => observer.disconnect())
-  try {
-    extras.value = await session.printExtras()
-    for (const img of extras.value.images) {
-      const bytes = fromBase64(img.data)
-      images.set(img.id, bytes)
-      imageUrls.set(img.id, URL.createObjectURL(new Blob([bytes as BlobPart], { type: img.format === 'svg' ? 'image/svg+xml' : `image/${img.format}` })))
-    }
-  } catch {
-    extras.value = null // objects are not printed; the text is
-  }
+  await source.prepare()
   current = relayout()
   await current
 })
@@ -112,7 +112,10 @@ onBeforeUnmount(() => {
 
 // ------------------------------------------------------------------------------ the bar
 function change(next: PageSetupData) {
-  if (canChange.value) void session.setPage(next)
+  if (canChange.value) source.setPage(next)
+}
+function chooseLayout(layout: string) {
+  if (canChange.value) source.setLayout(layout as SlideLayout)
 }
 function choosePaper(id: string) {
   if (id === 'custom') {
@@ -121,7 +124,7 @@ function choosePaper(id: string) {
     return
   }
   customOpen.value = false
-  change(withPaper(page.value, id))
+  change(source.withPaper?.(page.value, id) ?? withPaper(page.value, id))
 }
 function applyCustom() {
   customOpen.value = false
@@ -129,7 +132,7 @@ function applyCustom() {
   if (w >= 25 && h >= 25 && w <= 1200 && h <= 1200) change(withCustomSize(page.value, w, h))
 }
 // ------------------------------------------------------------------------------ the language (D915)
-/** The languages offered: those the server can hyphenate, and the text's own if it is another one. */
+/** The languages offered: those the server can hyphenate, and the document's own if it is another one. */
 const languages = computed(() => {
   // short names for a narrow bar: "German", and the region where one language comes twice: "English (GB)"
   const all = assets.value?.languages ?? []
@@ -139,17 +142,17 @@ const languages = computed(() => {
     const region = l.tag.split('-')[1]
     return { tag: l.tag, name: twice && region ? `${base(l.name)} (${region})` : base(l.name), title: l.name }
   })
-  const own = state.language
+  const own = source.language()
   if (own && !listed.some((l) => l.tag.toLowerCase() === own.toLowerCase())) listed.push({ tag: own, name: own, title: `${own}: no hyphenation patterns on this server` })
   return listed.sort((a, b) => a.name.localeCompare(b.name))
 })
-const canSetLanguage = computed(() => !session.readOnly && state.language !== undefined)
+const canSetLanguage = computed(() => source.canSetLanguage())
 function chooseLanguage(tag: string) {
-  if (canSetLanguage.value) void session.setLanguage(tag || null)
+  if (canSetLanguage.value) source.setLanguage(tag || null)
 }
 
 function chooseMargins(id: string) {
-  const m = MARGINS.find((x) => x.id === id)
+  const m = source.margins.find((x) => x.id === id)
   if (m) change({ ...page.value, margins: [m.mpt, m.mpt, m.mpt, m.mpt] })
 }
 
@@ -169,18 +172,17 @@ const pageStyle = computed(() => {
 })
 
 // ------------------------------------------------------------------------------ out
-const title = computed(() => state.doc || 'document')
 async function pdf(): Promise<Uint8Array | null> {
   const r = await settled()
   const a = assets.value
-  return a && r ? pdfOf(a, r, images, title.value, state.language) : null
+  return a && r ? pdfOfPages(a, r, images, source) : null
 }
 async function download() {
   const bytes = await pdf()
   if (!bytes) return
   const a = document.createElement('a')
   a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/pdf' }))
-  a.download = `${title.value}.pdf`
+  a.download = `${source.title()}.pdf`
   a.click()
   setTimeout(() => URL.revokeObjectURL(a.href), 60_000)
 }
@@ -215,7 +217,7 @@ async function print() {
   document.body.appendChild(frame)
 }
 
-// Ctrl+P is the window's shortcut (TextWorkspace's `PRINT`): it opens this preview and, once open, prints.
+// Ctrl+P is the window's shortcut (the workspaces' `PRINT`): it opens this preview and, once open, prints.
 function onKey(event: KeyboardEvent) {
   if (event.key === 'Escape' && !customOpen.value) {
     event.preventDefault()
@@ -236,18 +238,28 @@ const noteText = computed(() => [
     ),
   ),
 ])
-const status = computed(() => (result.value && laidOn.value ? describe(laidOn.value, result.value.list.pages.length) : ''))
+const status = computed(() => (result.value && laidOn.value ? source.status(result.value, laidOn.value) : ''))
+const paperListed = computed(() => source.papers.some((p) => p.id === page.value.paper))
+const margin = computed(() => marginPreset(page.value, source.margins))
 defineExpose({ print, download, status })
 </script>
 
 <template>
   <section class="preview" data-testid="print-preview" aria-label="Print preview">
     <div class="bar" role="toolbar" aria-label="Print">
-      <button class="back" type="button" title="Back to the text (Esc)" data-testid="print-close" @click="emit('close')"><span aria-hidden="true">←</span> Print preview</button>
+      <button class="back" type="button" :title="`Back to ${source.back} (Esc)`" data-testid="print-close" @click="emit('close')"><span aria-hidden="true">←</span> Print preview</button>
       <span class="sep" />
+      <label v-if="source.layouts.length" class="lbl" title="How many slides go on a page">Layout
+        <select data-testid="print-layout" :value="source.layout() ?? ''" :disabled="!canChange" @change="chooseLayout(($event.target as HTMLSelectElement).value)">
+          <option v-for="l in source.layouts.filter((x) => x.value === 'slides')" :key="l.value" :value="l.value">{{ l.label }}</option>
+          <optgroup label="Handouts">
+            <option v-for="l in source.layouts.filter((x) => x.value !== 'slides')" :key="l.value" :value="l.value">{{ l.label }}</option>
+          </optgroup>
+        </select>
+      </label>
       <label class="lbl">Paper
-        <select data-testid="print-paper" :value="PAPER_SIZES.some((p) => p.id === page.paper) ? page.paper : 'custom'" :disabled="!canChange" @change="choosePaper(($event.target as HTMLSelectElement).value)">
-          <option v-for="p in PAPER_SIZES" :key="p.id" :value="p.id">{{ p.name }} · {{ p.label }}</option>
+        <select data-testid="print-paper" :value="paperListed ? page.paper : 'custom'" :disabled="!canChange" @change="choosePaper(($event.target as HTMLSelectElement).value)">
+          <option v-for="p in source.papers" :key="p.id" :value="p.id">{{ p.name }} · {{ p.label }}</option>
           <option value="custom">{{ page.paper === 'custom' ? `${mm(page.width)} × ${mm(page.height)} mm` : 'Custom…' }}</option>
         </select>
       </label>
@@ -261,13 +273,13 @@ defineExpose({ print, download, status })
         <button type="button" :aria-pressed="page.orientation === 'landscape'" :disabled="!canChange" data-testid="print-landscape" @click="change({ ...page, orientation: 'landscape' })">Landscape</button>
       </div>
       <label class="lbl">Margins
-        <select data-testid="print-margins" :value="marginPreset(page) ?? 'own'" :disabled="!canChange" @change="chooseMargins(($event.target as HTMLSelectElement).value)">
-          <option v-for="m in MARGINS" :key="m.id" :value="m.id">{{ m.label }}</option>
-          <option v-if="!marginPreset(page)" value="own" disabled>the document's own</option>
+        <select data-testid="print-margins" :value="margin ?? 'own'" :disabled="!canChange" @change="chooseMargins(($event.target as HTMLSelectElement).value)">
+          <option v-for="m in source.margins" :key="m.id" :value="m.id">{{ m.label }}</option>
+          <option v-if="!margin" value="own" disabled>the document's own</option>
         </select>
       </label>
-      <label class="lbl" title="The language of the text: its words are hyphenated by it">Language
-        <select class="narrow" data-testid="print-language" :value="state.language ?? ''" :disabled="!canSetLanguage" @change="chooseLanguage(($event.target as HTMLSelectElement).value)">
+      <label class="lbl" title="The language of the document: its words are hyphenated by it">Language
+        <select class="narrow" data-testid="print-language" :value="source.language() ?? ''" :disabled="!canSetLanguage" @change="chooseLanguage(($event.target as HTMLSelectElement).value)">
           <option value="">Not set</option>
           <option v-for="l in languages" :key="l.tag" :value="l.tag" :title="l.title">{{ l.name }}</option>
         </select>
@@ -338,7 +350,7 @@ defineExpose({ print, download, status })
 }
 .lbl select {
   height: 30px;
-  max-width: 158px;
+  max-width: 184px; /* "A4 · 210 × 297 mm", "Slide size · 16:9 · …", "3 per page, with lines" */
   font-size: 13px;
   border: 1px solid var(--line-field);
   border-radius: 7px;

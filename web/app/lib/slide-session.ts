@@ -6,6 +6,7 @@ import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
+import type { PrintSetupData } from '@claudia/layout'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
@@ -43,6 +44,11 @@ export interface SlideState extends BaseState {
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
   styleModel: StyleModel | null
   selected: string | null
+  /** How the presentation is printed (D917): layout and page; `null` for a server that does not know printing. */
+  printSetup: PrintSetupData | null
+  /** The language of the presentation (D915, D917), a BCP 47 tag; `null` when not set, `undefined` for a server
+   *  that does not know languages. */
+  language: string | null | undefined
 }
 
 export class SlideSession extends BaseSession<SlideState> {
@@ -62,6 +68,8 @@ export class SlideSession extends BaseSession<SlideState> {
       palette: null,
       styleModel: null,
       selected: null,
+      printSetup: null,
+      language: undefined,
     })
   }
 
@@ -78,6 +86,16 @@ export class SlideSession extends BaseSession<SlideState> {
       link.request<StyleModel>('style_model'),
     ])
     const loaded = await Promise.all(slides.map((slide) => link.request<{ objects: SlideObject[] }>('slide', { slide: slide.id })))
+    // an older server knows neither: the preview then starts from slide-sized pages and offers no language
+    const [printSetup, language] = await Promise.all([
+      link.request<PrintSetupData>('print_setup').catch(() => null),
+      link
+        .request<{ language: string | null }>('language')
+        .then((a) => a.language)
+        .catch(() => undefined),
+    ])
+    s.printSetup = printSetup
+    s.language = language
     s.objects = {}
     s.order = {}
     slides.forEach((slide, i) => {
@@ -151,6 +169,12 @@ export class SlideSession extends BaseSession<SlideState> {
       case 'slides':
         this.track(this.reload())
         return true
+      case 'print_setup':
+        s.printSetup = data.setup as PrintSetupData
+        return true
+      case 'language':
+        s.language = (data.language as string | null) ?? null
+        return true
     }
     return false
   }
@@ -195,6 +219,18 @@ export class SlideSession extends BaseSession<SlideState> {
     if (done === false) return null
     await this.select(done.object)
     return done.object
+  }
+
+  /** Print the presentation another way (D917): layout and page, one step for everybody. */
+  async setPrintSetup(setup: PrintSetupData): Promise<boolean> {
+    if (this.readOnly) return false
+    return (await this.attempt('set_print_setup', { setup, base: this.state.revision })) !== false
+  }
+
+  /** Say which language the presentation is written in (D917), or `null` for not known: one step, for everybody. */
+  async setLanguage(language: string | null): Promise<boolean> {
+    if (this.readOnly) return false
+    return (await this.attempt('set_language', { language, base: this.state.revision })) !== false
   }
 
   async addSlide(): Promise<string | null> {

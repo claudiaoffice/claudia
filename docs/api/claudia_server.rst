@@ -88,6 +88,15 @@ app's view of its documents for the model.
 .. autoclass:: claudia_server.lens.Lens
 .. autoclass:: claudia_server.lens.Recorder
 
+Printing
+--------
+
+What the apps that print share (D917): the ``language`` and ``set_language`` methods, and the rule that only people
+(not the AI) change how a document prints.
+
+.. autofunction:: claudia_server.printing.add_language_methods
+.. autofunction:: claudia_server.printing.people_only
+
 Fonts
 -----
 

@@ -3,6 +3,20 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.8.0] - 2026-11-13
+
+How a presentation prints, and its language (D917).
+
+### Added
+- `PrintSetup(layout, page)` (`claudia_creates.printing`): `layout` is one of `LAYOUTS` — `slides`, `handouts-2`,
+  `handouts-3` (with lines for notes), `handouts-4`, `handouts-6`, `handouts-9` — and `page` a `claudia_core.PageSetup`;
+  the default is one slide to a page of the slide's size, landscape, without margins. `PrintSetupError` for a layout
+  that does not exist; `describe()` reads "6 slides a page on A4, portrait".
+- `SetPrintSetup(setup)` (summary "set printing to …"), one step with its exact inverse, event
+  `{type: "print_setup", setup}` (`PrintSetupChanged`).
+- `SlideModel.print_setup` and `SlideModel.language` (`claudia_core.SetLanguage`, re-exported here); state schema 7.
+  Older presentations get the default print setup and no language.
+
 ## [0.7.0] - 2026-11-10
 
 The styling-suite plan, steps 1.2 to 1.6.

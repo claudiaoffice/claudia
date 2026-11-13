@@ -1,5 +1,7 @@
 """The language of a text (D915): a BCP 47 tag stored with the text, set in one step that can be undone."""
 
+import json
+
 import pytest
 
 from claudia_composes import BUILTIN_STYLES, LanguageError, SetLanguage, TextModel, normalize_language
@@ -54,3 +56,15 @@ def test_body_text_is_hyphenated_and_titles_and_headings_are_not():
     assert styles["body"]["hyphens"] == "auto"
     for heading in ("title", "heading-1", "heading-2"):
         assert styles[heading]["hyphens"] == "manual"
+
+
+def test_a_log_written_before_the_language_moved_to_the_kernel_still_opens():
+    """D917: ``composes.SetLanguage`` was the command's kind for a day; its logs replay to the same text."""
+    doc = Document(TextModel())
+    doc.execute(SetLanguage("de"), author="anna")
+    written = json.dumps(doc.log.to_data())
+    assert "core.SetLanguage" in written
+    log = CommandLog.from_data(
+        json.loads(written.replace("core.SetLanguage", "composes.SetLanguage")), TextModel.registry
+    )
+    assert Document.open(TextModel, log).model.language == "de"

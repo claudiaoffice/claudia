@@ -3,6 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.6.0] - 2026-11-13
+
+The page setup and the language are the kernel's (D917).
+
+### Changed
+- `PageSetup`, `PageSetupError`, `PAPERS`, `normalize_language`, `LanguageError`, `SetLanguage` and
+  `LanguageChanged` are `claudia_core`'s; `claudia_composes` and its `page` and `language` modules re-export them, so
+  imports keep working. `PAPERS` lists the paper `slide` too (a text is not offered it).
+- **Breaking (log format, read compatibly):** a language change is written as `core.SetLanguage`. Logs that wrote
+  `composes.SetLanguage` still replay, through an alias command registered under the old kind.
+
 ## [0.5.0] - 2026-11-12
 
 The language of a text, and hyphenation (D912, D915).

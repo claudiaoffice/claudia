@@ -4,6 +4,18 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.17.0] - 2026-11-13
+
+Page setup and language for every app (D917).
+
+### Added
+- `claudia_core.page`: `PageSetup`, `PageSetupError` and `PAPERS`, moved here from `claudia_composes` unchanged, plus
+  the paper `slide` (7.5 × 13.333 in, a 16:9 slide; `describe()` says "Slide size"). The margins error now speaks of
+  the content rather than the text.
+- `claudia_core.language`: `normalize_language` and `LanguageError`, moved here from `claudia_composes`, and the
+  command `SetLanguage` (kind `core.SetLanguage`) with the event `LanguageChanged` (`{type: "language", language}`),
+  for every model with a `language` attribute; on another model it raises `TypeError`. Every app's registry has it.
+
 ## [0.16.0] - 2026-11-12
 
 Hyphenation (D912).

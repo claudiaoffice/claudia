@@ -25,6 +25,9 @@ import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import SlideCanvas from './SlideCanvas.vue'
 import ImageImportDialog from './ImageImportDialog.vue'
+import PrintPreview from './PrintPreview.vue'
+import { slideSource } from '~/lib/print/source'
+import { useCreatorLanguage, usePrint } from '~/lib/print/use-print'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: SlideSession }>()
@@ -48,6 +51,13 @@ const EXPORT_FORMATS = [
 ]
 
 const readonly = computed(() => state.me.role === 'viewer')
+
+// A new presentation starts in the language of its maker's interface (D915, D917); File ▸ Print… shows the pages in
+// place of the slide (D906, D918). Both as in every app that prints (`lib/print/use-print.ts`).
+useCreatorLanguage(session, () => locale.value)
+const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => canvas.value?.focus())
+const printSource = slideSource(session)
+const extraShortcuts = [PRINT]
 const styling: ObjectStyling = {
   get readOnly() {
     return session.readOnly
@@ -148,6 +158,7 @@ const shared = computed<DocumentMenuContext>(() => ({
   open: (dialog) => frame.value?.openDialog(dialog),
   leave: (opts) => emit('leave', opts),
   save: () => frame.value?.checkpoint(null),
+  print: openPrint,
 }))
 
 const menus = computed<Menu[]>(() => {
@@ -219,12 +230,14 @@ const SHORTCUT_NOTES: [string, string][] = [
     :session="session"
     :menus="menus"
     :export-formats="EXPORT_FORMATS"
+    :extra-shortcuts="extraShortcuts"
     :shortcut-notes="SHORTCUT_NOTES"
     @leave="(opts) => emit('leave', opts)"
     @saved="canvas?.focus()"
   >
     <template #toolbar>
       <InsertBar
+        v-if="!printing"
         :shapes="state.library"
         :can-delete="state.selected !== null"
         :can-undo="state.canUndo"
@@ -245,7 +258,8 @@ const SHORTCUT_NOTES: [string, string][] = [
         <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" caption="Label" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
       </InsertBar>
     </template>
-    <SlideCanvas v-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
+    <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
+    <SlideCanvas v-else-if="state.activeSlide" ref="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
     <div v-else class="noslide">This presentation has no slide.</div>
     <template #overlay>
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
@@ -253,7 +267,7 @@ const SHORTCUT_NOTES: [string, string][] = [
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
     <template #footer>
-      <footer class="foot">
+      <footer v-if="!printing" class="foot">
         <div class="tabs" role="tablist" aria-label="slides">
           <button
             v-for="(s, i) in state.slides"

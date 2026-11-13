@@ -23,6 +23,8 @@
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
+    page         PageSetup: the paper, orientation, margins and page numbers a document prints on (D904, D917)
+    language     the language a document is written in, and SetLanguage (D915, D917)
 
 The kernel contains no spreadbook, text or slide code and does no I/O.
 """
@@ -104,6 +106,7 @@ from .facets import (
     fits,
 )
 from .history import History, Step
+from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
 from .log import CommandLog, Entry
 from .manifest import (
     Environment,
@@ -152,6 +155,7 @@ from .objects import (
     VisualObject,
     paragraph_for,
 )
+from .page import PAPERS, PageSetup, PageSetupError
 from .palette import (
     BUILTIN_ROLES,
     MAX_ROLES,
@@ -254,6 +258,8 @@ __all__ = [
     "History",
     "HistoryChanged",
     "Hold",
+    "LanguageChanged",
+    "LanguageError",
     "ImageAsset",
     "ImageError",
     "ImageImport",
@@ -268,6 +274,9 @@ __all__ = [
     "MAX_IMAGE_BYTES",
     "MAX_OBJECTS_PER_CONTAINER",
     "MAX_PARAGRAPH_TEXT",
+    "PageSetup",
+    "PageSetupError",
+    "PAPERS",
     "MAX_ROLES",
     "MAX_SELECTION",
     "MemoryStore",
@@ -276,6 +285,7 @@ __all__ = [
     "MoveObject",
     "new_registry",
     "normalized",
+    "normalize_language",
     "OBJECT_KINDS",
     "ObjectBody",
     "ObjectModel",
@@ -326,6 +336,7 @@ __all__ = [
     "SetParagraphStyle",
     "SetRole",
     "SetSnap",
+    "SetLanguage",
     "SetText",
     "ShapeDefinition",
     "ShapeError",

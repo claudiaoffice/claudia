@@ -3,8 +3,8 @@
 The page layout of the Claudia office suite: one deterministic TypeScript library that turns a document into pages
 and pages into a PDF, the same byte for byte on every machine, browser and operating system (D901, D910).
 
-It is written once and shared by the three apps. Today composes uses it for its print preview (File ▸ Print…, D906);
-computes and creates will reuse its parts with adapters of their own (D902).
+It is written once and shared by the three apps. composes and creates use it for their print preview (File ▸ Print…,
+D906, D918); computes will reuse its parts with an adapter of its own (D902).
 
 ## Parts
 
@@ -18,7 +18,9 @@ computes and creates will reuse its parts with adapters of their own (D902).
 | SVG | `svg/` | Any SVG picture as display items: an XML reader of its own, styles, transforms, paths, gradients, clip paths, text in the server's fonts (D914) |
 | Images | `image/` | PNG, JPEG, GIF and BMP decoders of its own |
 | PDF | `pdf/writer.ts` | A PDF from a display list: embedded subset fonts (CID = GID, ToUnicode), images, gradients, clipping, transparency groups |
-| Apps | `apps/composes.ts` | A composes text as the server sends it, to pages |
+| Apps | `apps/objects.ts` | What the apps share: a floating object (text box, shape with its label, picture) drawn into a rectangle, the style sheet, page numbers |
+| | `apps/composes.ts` | A composes text as the server sends it, to pages |
+| | `apps/creates.ts` | A presentation as the server sends it, to pages: one slide to a page or handouts of 2, 3 (with lines), 4, 6 or 9 (D917) |
 
 ## Rules
 

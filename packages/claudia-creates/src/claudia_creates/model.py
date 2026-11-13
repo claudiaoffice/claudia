@@ -32,6 +32,7 @@ from claudia_core import (
     new_registry,
 )
 
+from .printing import PrintSetup
 from .styles import builtin_styles
 
 SLIDE_WIDTH = 1600
@@ -90,12 +91,24 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     :class:`~claudia_core.ObjectModel`."""
 
     app: ClassVar[str] = "creates"
-    state_schema: ClassVar[int] = 6  # 6: the presentation carries its own colour palette (D200)
+    # 6: the presentation carries its own colour palette (D200)
+    # 7: how it is printed, and its language (D917)
+    state_schema: ClassVar[int] = 7
     registry: ClassVar[CommandRegistry] = new_registry()
 
-    def __init__(self, styles: StyleBook | None = None, palette: Palette | None = None) -> None:
+    def __init__(
+        self,
+        styles: StyleBook | None = None,
+        palette: Palette | None = None,
+        print_setup: PrintSetup | None = None,
+        language: str | None = None,
+    ) -> None:
         super().__init__()
         self.slides: list[str] = []
+        #: How the slides are printed, as a layout and a page (D917).
+        self.print_setup: PrintSetup = print_setup if print_setup is not None else PrintSetup()
+        #: The language of the presentation, a BCP 47 tag, or ``None`` when it is not known (D915, D917).
+        self.language: str | None = language
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
         #: The colours of this presentation, by what they mean. Part of the document, so it looks the same on
         #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
@@ -116,11 +129,17 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
+            "print_setup": self.print_setup.to_data(),
+            "language": self.language,
         }
 
     @classmethod
     def restore(cls, state: dict) -> Self:
-        model = cls(StyleBook.from_data(state["styles"]), Palette.from_data(state["palette"]))
+        # schema 6 and earlier: printed slide-sized, no language
+        setup = PrintSetup.from_data(state["print_setup"]) if "print_setup" in state else None
+        model = cls(
+            StyleBook.from_data(state["styles"]), Palette.from_data(state["palette"]), setup, state.get("language")
+        )
         model.slides = list(state["slides"])
         for slide in model.slides:
             model.open_container(slide)

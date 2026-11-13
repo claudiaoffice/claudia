@@ -497,3 +497,61 @@ def test_every_app_offers_the_same_object_style_methods():
 
     for methods in (creates_methods, computes_methods, composes_methods):
         assert {"set_object_style", "set_paragraph_style", "deviate_object_style"} <= set(methods.names())
+
+
+# ------------------------------------------------------------------------------ printing (D917)
+def test_a_presentation_prints_slide_sized_until_someone_sets_it_up_otherwise(deck):
+    setup = call(deck, "print_setup")
+    assert setup["layout"] == "slides"
+    assert setup["page"]["paper"] == "slide" and setup["page"]["orientation"] == "landscape"
+    assert setup["page"]["margins"] == [0, 0, 0, 0]
+    handouts = {
+        "layout": "handouts-6",
+        "page": {
+            **setup["page"],
+            "paper": "a4",
+            "width": 595276,
+            "height": 841890,
+            "orientation": "portrait",
+            "margins": [36000] * 4,
+        },
+    }
+    call(deck, "set_print_setup", {"setup": handouts}, BEN)
+    assert call(deck, "print_setup", account=VERA) == handouts
+    assert list(deck.log)[-1].command.summary == "set printing to 6 slides a page on A4, portrait"
+    call(deck, "undo", {})  # nothing of ann's to undo; ben's step stays
+    assert call(deck, "print_setup")["layout"] == "handouts-6"
+
+
+@pytest.mark.parametrize(
+    "setup",
+    [
+        {"layout": "handouts-5", "page": {"paper": "a4", "width": 595276, "height": 841890}},
+        {"layout": "slides", "page": {"paper": "a4", "width": 1, "height": 841890}},
+        {"layout": "slides"},
+        "slides",
+    ],
+)
+def test_a_print_setup_that_cannot_be_used_is_refused(deck, setup):
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_print_setup", {"setup": setup})
+    assert caught.value.code in ("command_error", "bad_request")
+
+
+def test_viewers_and_the_assistant_do_not_change_how_a_deck_prints_or_its_language(deck):
+    setup = call(deck, "print_setup")
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_print_setup", {"setup": setup}, VERA)
+    assert caught.value.code == "forbidden"
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_language", {"language": "de"}, Account("assistant", "editor", system=True))
+    assert caught.value.code == "forbidden"
+
+
+def test_a_presentation_has_a_language_like_a_text(deck):
+    assert call(deck, "language") == {"language": None}
+    call(deck, "set_language", {"language": "EN-gb"}, BEN)
+    assert call(deck, "language") == {"language": "en-GB"}
+    with pytest.raises(RequestError) as caught:
+        call(deck, "set_language", {"language": "english!"})
+    assert caught.value.code == "command_error"

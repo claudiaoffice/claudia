@@ -2,7 +2,8 @@
 
 Everything about objects — shapes, images, text boxes: define, forget, add, remove, move, resize, rotate, retext,
 snap — is shared with composes and computes and lives in :mod:`claudia_core.objects` (E10.16). What is left here
-is what only a presentation has: slides.
+is what only a presentation has: slides, and how it is printed (D917). Its language is the kernel's
+(:class:`~claudia_core.SetLanguage`), the same command composes uses.
 
 Every command carries final values and returns its exact inverse, so undo, replay and checkpoints work on the
 kernel without any creates-specific code in it.
@@ -15,8 +16,9 @@ from typing import ClassVar
 
 from claudia_core import AddObject, Command, Context
 
-from .events import SlidesChanged
+from .events import PrintSetupChanged, SlidesChanged
 from .model import SlideModel
+from .printing import PrintSetup
 
 register = SlideModel.registry.register
 
@@ -91,3 +93,33 @@ class RemoveSlide(Command):
 
     def redacted(self) -> Command:
         return self
+
+
+@register
+@dataclass(frozen=True)
+class SetPrintSetup(Command):
+    """Say how the presentation is printed (D917): the layout and the page. One step for everybody."""
+
+    kind: ClassVar[str] = "creates.SetPrintSetup"
+    setup: PrintSetup
+
+    @property
+    def label(self) -> str:
+        return "Print setup"
+
+    @property
+    def summary(self) -> str:
+        return f"set printing to {self.setup.describe()}"
+
+    def apply(self, ctx: Context[SlideModel]) -> Command:
+        old = ctx.model.print_setup
+        ctx.model.print_setup = self.setup
+        ctx.emit(PrintSetupChanged(self.setup.to_data()))
+        return SetPrintSetup(old)
+
+    def to_data(self) -> dict:
+        return {"setup": self.setup.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetPrintSetup:
+        return cls(PrintSetup.from_data(data["setup"]))

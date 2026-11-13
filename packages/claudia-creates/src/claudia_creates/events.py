@@ -19,3 +19,14 @@ class SlidesChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "slides"}
+
+
+@dataclass(frozen=True)
+class PrintSetupChanged:
+    """How the presentation is printed changed (D917): the whole new setup."""
+
+    setup: dict
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "print_setup", "setup": self.setup}

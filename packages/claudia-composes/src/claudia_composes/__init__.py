@@ -3,8 +3,8 @@
 model      TextModel, TextObject: paragraphs, authorship, open suggestions, styles, and floating objects (E10.16)
 anchors    BlockAnchor: where an object hangs in a text, and why it follows the text where a sheet's is frozen
 commands   InsertText, DeleteText, SplitBlock, JoinBlocks, SetStyle, SetPageSetup, SetLanguage, suggestions (D63)
-page       PageSetup: the paper, orientation, margins and page numbers a text is printed with (D904)
-language   normalize_language: the BCP 47 tag of the language a text is written in (D915)
+page       PageSetup (the kernel's, D917): the paper, orientation, margins and page numbers a text prints on
+language   normalize_language, SetLanguage (the kernel's, D917): the language a text is written in (D915)
 region     TextRange, and ``word_window``: the ± n words zone around a cursor (D11)
 runs       authorship runs (E9.10), kept by the commands so that the log alone rebuilds them
 events     what a client that holds the paragraphs needs to follow them

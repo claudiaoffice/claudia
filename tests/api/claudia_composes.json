@@ -1,5 +1,5 @@
 {
- "version": "0.5.0",
+ "version": "0.6.0",
  "AcceptSuggestion": {
   "class": [
    "TextCommand"
@@ -254,7 +254,7 @@
   "properties": []
  },
  "PAPERS": {
-  "value": "{'a3': (841890, 1190551), 'a4': (595276, 841890), 'a5': (419528, 595276), 'a6': (297638, 419528), 'b5': (498898, 708661), 'letter': (612000, 792000), 'legal': (612000, 1008000), 'tabloid': (792000, 1224000), 'executive': (522000, 756000)}"
+  "value": "{'a3': (841890, 1190551), 'a4': (595276, 841890), 'a5': (419528, 595276), 'a6': (297638, 419528), 'b5': (498898, 708661), 'letter': (612000, 792000), 'legal': (612000, 1008000), 'tabloid': (792000, 1224000), 'executive': (522000, 756000), 'slide': (540000, 960000)}"
  },
  "PageSetup": {
   "class": [
@@ -395,8 +395,8 @@
   ],
   "init": "(language: 'str | None') -> None",
   "methods": {
-   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
-   "from_data": "(data, registry) -> 'SetLanguage'",
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [

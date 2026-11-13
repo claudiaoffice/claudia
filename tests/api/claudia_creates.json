@@ -1,5 +1,5 @@
 {
- "version": "0.7.0",
+ "version": "0.8.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -136,6 +136,9 @@
   },
   "properties": []
  },
+ "LAYOUTS": {
+  "value": "('slides', 'handouts-2', 'handouts-3', 'handouts-4', 'handouts-6', 'handouts-9')"
+ },
  "MoveObject": {
   "class": [
    "Command"
@@ -203,6 +206,36 @@
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
   },
+  "properties": []
+ },
+ "PrintSetup": {
+  "class": [
+   "object"
+  ],
+  "init": "(layout: 'str' = 'slides', page: 'PageSetup' = <factory>) -> None",
+  "methods": {
+   "describe": "(self) -> 'str'",
+   "from_data": "(data: 'object') -> 'Self'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PrintSetupChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(setup: 'dict') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PrintSetupError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
   "properties": []
  },
  "RemoveObject": {
@@ -291,6 +324,21 @@
  "SLIDE_WIDTH": {
   "value": "1600"
  },
+ "SetLanguage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(language: 'str | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetParagraphStyle": {
   "class": [
    "Command"
@@ -302,6 +350,21 @@
    "redacted": "(self) -> 'Command'",
    "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetPrintSetup": {
+  "class": [
+   "Command"
+  ],
+  "init": "(setup: 'PrintSetup') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetPrintSetup'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -404,7 +467,7 @@
    "DocumentModel",
    "ObjectModel"
   ],
-  "init": "(styles: 'StyleBook | None' = None, palette: 'Palette | None' = None) -> 'None'",
+  "init": "(styles: 'StyleBook | None' = None, palette: 'Palette | None' = None, print_setup: 'PrintSetup | None' = None, language: 'str | None' = None) -> 'None'",
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'SlideAnchor'",
    "check_anchor": "(self, anchor: 'SlideAnchor', body: 'ObjectBody') -> 'None'",

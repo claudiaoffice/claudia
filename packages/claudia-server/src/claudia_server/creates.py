@@ -29,6 +29,7 @@ from claudia_core import (
     ImageImport,
     MoveObject,
     ObjectBody,
+    PageSetupError,
     RemoveObject,
     ResizeObject,
     RotateObject,
@@ -38,10 +39,11 @@ from claudia_core import (
     paragraph_for,
 )
 from claudia_core.clock import utc_now
-from claudia_creates import AddSlide, ShapeLibrary, SlideAnchor, SlideModel
+from claudia_creates import AddSlide, PrintSetup, PrintSetupError, SetPrintSetup, ShapeLibrary, SlideAnchor, SlideModel
 
 from .images import image_bytes
 from .office_export import document_info, office_export
+from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .styles import add_style_methods
 
@@ -160,13 +162,42 @@ def _add_object_methods(table: MethodTable) -> None:
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
 
 
+def _add_print_methods(table: MethodTable) -> None:
+    """How the presentation is printed (D917), and its language (the kernel's, the same methods as composes')."""
+    add_language_methods(table)
+
+    @table.method("print_setup")
+    def _print_setup(ctx):
+        """How the presentation is printed (D917): `{layout, page}`, `layout` one of `slides`, `handouts-2`,
+        `handouts-3`, `handouts-4`, `handouts-6`, `handouts-9`, and `page` as composes' `page` (paper, width,
+        height, orientation, margins, page_numbers; lengths in mpt)."""
+        return _deck(ctx).print_setup.to_data()
+
+    @table.method("set_print_setup", "setup:dict base:revision?", write=True)
+    def _set_print_setup(ctx, *, setup, base):
+        """Print the presentation another way (`setup` as `print_setup` returns it). One step for everybody, in
+        the history. `command_error` names what is wrong with a setup that cannot be used."""
+        people_only(ctx)
+        try:
+            command = SetPrintSetup(PrintSetup.from_data(setup))
+        except (PrintSetupError, PageSetupError) as exc:
+            raise RequestError("command_error", str(exc)) from None
+        return _done(ctx, command, base)
+
+
+def _add_shared_methods(table: MethodTable) -> None:
+    """What presentations answer the way the other apps do: ``styles``, ``palette``, ``change_style``,
+    ``rename_style``, ``check_css`` and ``set_object_style`` (E1.10, D200), the objects (E10.16), and printing and
+    the language (D917)."""
+    add_style_methods(table)
+    _add_object_methods(table)
+    _add_print_methods(table)
+
+
 def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     """The method table of presentations on a server whose shape library is ``library``."""
     table = core_methods.extended()
-    # ``styles``, ``palette``, ``change_style``, ``rename_style``, ``check_css`` and ``set_object_style``
-    # are the same in every app (E1.10, D200).
-    add_style_methods(table)
-    _add_object_methods(table)
+    _add_shared_methods(table)
 
     @table.method("slides")
     def _slides(ctx):
