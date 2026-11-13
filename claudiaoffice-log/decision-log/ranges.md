@@ -22,7 +22,8 @@ Unused numbers in a closed block stay unused.
 | D251–D260 | E5.11 macOS client: three apps, command line, server flow (branch `macos-client-complete`) | 2026-11-10 | open |
 | D261–D270 | the AI agent: rights, modes, proposals, Claude as a provider (E7; branch `ai_server`) | 2026-11-11 | open |
 | D271–D280 | E5.11 Windows client: three apps, command line, server flow (branch `win-client-complete`) | 2026-11-12 | open |
-| D281–D290 | *free — next branch or agent to ask* | | open |
+| D281–D290 | search & replace in all three apps: the dialog, the pattern builder, the engine, replace in computes (branch `regex-builder`; D281–D287 used) | 2026-11-13 | open |
+| D291–D299 | *free — next branch or agent to ask* | | open |
 
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D315 used) | 2026-11-10 | open |
 | D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D916 used) | 2026-11-12 | open |

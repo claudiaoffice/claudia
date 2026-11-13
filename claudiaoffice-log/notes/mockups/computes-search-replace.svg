@@ -1,0 +1,292 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="sh2" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dy="3" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#F7F3EC"/>
+<rect x="0.0" y="0.0" width="1280.0" height="46.0" rx="0" fill="#FBF9F5"/>
+<line x1="0.0" y1="46.0" x2="1280.0" y2="46.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="14.0" y="11.0" width="24.0" height="24.0" rx="6" fill="#13917F"/>
+<path d="M19 20 H33" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19 28 C22.5 24.5 25 31 28.5 28 C30 26.5 31.5 27 33 27.8" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="50.0" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Budget 2027</text>
+<text x="190.0" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">File</text>
+<path d="M221.4475 22 L225.04749999999999 25.6 L228.64749999999998 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="245.4" y="9.0" width="56.5" height="28.0" rx="7" fill="#E7E1F4"/>
+<text x="253.4" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Edit</text>
+<path d="M285.975 22 L289.57500000000005 25.6 L293.175 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="318.0" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Format</text>
+<path d="M371.09000000000003 22 L374.69000000000005 25.6 L378.29 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="403.1" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">View</text>
+<path d="M441.82750000000004 22 L445.42750000000007 25.6 L449.02750000000003 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="473.8" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Tools</text>
+<path d="M516.75 22 L520.35 25.6 L523.95 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="548.8" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Config</text>
+<path d="M597.0725 22 L600.6725 25.6 L604.2725 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="629.1" y="28.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Help</text>
+<path d="M664.0975 22 L667.6975 25.6 L671.2975 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1044.0" cy="23.0" r="11" fill="#D6477A"/>
+<text x="1044.0" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle" xml:space="preserve">A</text>
+<circle cx="1071.0" cy="23.0" r="11" fill="#13917F"/>
+<text x="1071.0" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle" xml:space="preserve">T</text>
+<circle cx="1098.0" cy="23.0" r="11" fill="#5B4BC4"/>
+<text x="1098.0" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle" xml:space="preserve">ai</text>
+<circle cx="1130.0" cy="23.0" r="3.5" fill="#13917F"/>
+<text x="1266.0" y="27.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end" xml:space="preserve">demo.claudia-office.de</text>
+<rect x="0.0" y="47.0" width="1280.0" height="34.0" rx="0" fill="#FFFFFF"/>
+<line x1="0.0" y1="81.0" x2="1280.0" y2="81.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="10.0" y="52.0" width="120.0" height="24.0" rx="6" fill="#FBF9F5" stroke="#D6CFE4" stroke-width="1"/>
+<text x="21.0" y="69.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">B2</text>
+<path d="M113 62 L116.6 65.6 L120.2 62" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="140.0" y1="55.0" x2="140.0" y2="73.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="150.0" y="69.0" font-family="Fraunces, Georgia, serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" font-style="italic" xml:space="preserve">fx</text>
+<text x="176.0" y="69.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">€ 1.240</text>
+<rect x="0.0" y="766.0" width="1280.0" height="34.0" rx="0" fill="#F2EEE6"/>
+<line x1="0.0" y1="766.0" x2="1280.0" y2="766.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="12.0" y="767.0" width="70.0" height="33.0" rx="0" fill="#FFFFFF"/>
+<rect x="12.0" y="797.0" width="70.0" height="3.0" rx="0" fill="#13917F"/>
+<text x="47.0" y="788.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="middle" xml:space="preserve">Costs</text>
+<text x="112.0" y="788.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">Rates</text>
+<text x="150.0" y="789.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="17" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">+</text>
+<clipPath id="g"><rect x="0" y="82" width="862" height="684"/></clipPath>
+<g clip-path="url(#g)">
+<rect x="0.0" y="82.0" width="862.0" height="684.0" rx="0" fill="#FFFFFF"/>
+<rect x="0.0" y="82.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<rect x="44.0" y="82.0" width="150.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="119.0" y="99.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="500" text-anchor="middle" xml:space="preserve">A</text>
+<line x1="44.0" y1="82.0" x2="44.0" y2="766.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="194.0" y="82.0" width="130.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="259.0" y="99.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="500" text-anchor="middle" xml:space="preserve">B</text>
+<line x1="194.0" y1="82.0" x2="194.0" y2="766.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="324.0" y="82.0" width="150.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="399.0" y="99.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="500" text-anchor="middle" xml:space="preserve">C</text>
+<line x1="324.0" y1="82.0" x2="324.0" y2="766.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="474.0" y="82.0" width="150.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="549.0" y="99.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="500" text-anchor="middle" xml:space="preserve">D</text>
+<line x1="474.0" y1="82.0" x2="474.0" y2="766.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="624.0" y="82.0" width="130.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="689.0" y="99.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="500" text-anchor="middle" xml:space="preserve">E</text>
+<line x1="624.0" y1="82.0" x2="624.0" y2="766.0" stroke="#ECE7DE" stroke-width="1"/>
+<line x1="754.0" y1="82.0" x2="754.0" y2="766.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="108.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="125.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">1</text>
+<line x1="0.0" y1="108.0" x2="862.0" y2="108.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="134.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="151.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">2</text>
+<line x1="0.0" y1="134.0" x2="862.0" y2="134.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="160.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="177.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">3</text>
+<line x1="0.0" y1="160.0" x2="862.0" y2="160.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="186.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="203.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">4</text>
+<line x1="0.0" y1="186.0" x2="862.0" y2="186.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="212.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="229.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">5</text>
+<line x1="0.0" y1="212.0" x2="862.0" y2="212.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="238.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="255.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">6</text>
+<line x1="0.0" y1="238.0" x2="862.0" y2="238.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="264.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="281.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">7</text>
+<line x1="0.0" y1="264.0" x2="862.0" y2="264.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="290.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="307.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">8</text>
+<line x1="0.0" y1="290.0" x2="862.0" y2="290.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="316.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="333.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">9</text>
+<line x1="0.0" y1="316.0" x2="862.0" y2="316.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="342.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="359.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">10</text>
+<line x1="0.0" y1="342.0" x2="862.0" y2="342.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="368.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="385.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">11</text>
+<line x1="0.0" y1="368.0" x2="862.0" y2="368.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="394.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="411.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">12</text>
+<line x1="0.0" y1="394.0" x2="862.0" y2="394.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="420.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="437.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">13</text>
+<line x1="0.0" y1="420.0" x2="862.0" y2="420.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="446.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="463.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">14</text>
+<line x1="0.0" y1="446.0" x2="862.0" y2="446.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="472.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="489.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">15</text>
+<line x1="0.0" y1="472.0" x2="862.0" y2="472.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="498.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="515.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">16</text>
+<line x1="0.0" y1="498.0" x2="862.0" y2="498.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="524.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="541.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">17</text>
+<line x1="0.0" y1="524.0" x2="862.0" y2="524.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="550.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="567.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">18</text>
+<line x1="0.0" y1="550.0" x2="862.0" y2="550.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="576.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="593.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">19</text>
+<line x1="0.0" y1="576.0" x2="862.0" y2="576.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="602.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="619.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">20</text>
+<line x1="0.0" y1="602.0" x2="862.0" y2="602.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="628.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="645.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">21</text>
+<line x1="0.0" y1="628.0" x2="862.0" y2="628.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="654.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="671.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">22</text>
+<line x1="0.0" y1="654.0" x2="862.0" y2="654.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="680.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="697.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">23</text>
+<line x1="0.0" y1="680.0" x2="862.0" y2="680.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="706.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="723.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">24</text>
+<line x1="0.0" y1="706.0" x2="862.0" y2="706.0" stroke="#ECE7DE" stroke-width="1"/>
+<rect x="0.0" y="732.0" width="44.0" height="26.0" rx="0" fill="#FBF9F5"/>
+<text x="22.0" y="749.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="middle" xml:space="preserve">25</text>
+<line x1="0.0" y1="732.0" x2="862.0" y2="732.0" stroke="#ECE7DE" stroke-width="1"/>
+<text x="52.0" y="125.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Item</text>
+<text x="202.0" y="125.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Amount</text>
+<text x="332.0" y="125.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">In EUR</text>
+<text x="482.0" y="125.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Source</text>
+<text x="632.0" y="125.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Note</text>
+<text x="52.0" y="151.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Flights</text>
+<rect x="194.5" y="134.5" width="129.0" height="25.0" rx="0" fill="#DDF1EE"/>
+<rect x="201.0" y="140.5" width="63.3" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="202.0" y="151.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">1.240 EUR</text>
+<text x="412.8" y="151.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">1.240,00</text>
+<text x="482.0" y="151.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Rates (2027)</text>
+<text x="632.0" y="151.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">booked</text>
+<text x="52.0" y="177.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Hotel</text>
+<text x="202.0" y="177.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">€ 980 (EUR)</text>
+<text x="420.8" y="177.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">980,00</text>
+<text x="482.0" y="177.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Rates (2027)</text>
+<text x="52.0" y="203.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Meals</text>
+<text x="202.0" y="203.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">$ 310</text>
+<text x="420.8" y="203.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">285,20</text>
+<text x="482.0" y="203.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Rates (2027)</text>
+<text x="632.0" y="203.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">per diem</text>
+<text x="52.0" y="229.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Taxi</text>
+<text x="202.0" y="229.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">£ 95</text>
+<text x="437.8" y="229.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">111,15</text>
+<text x="482.0" y="229.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Rates (2027)</text>
+<text x="52.0" y="255.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Visa</text>
+<text x="202.0" y="255.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">150 EUR</text>
+<text x="425.0" y="255.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">150,00</text>
+<text x="482.0" y="255.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">—</text>
+<text x="52.0" y="281.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Software</text>
+<text x="202.0" y="281.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">€ 2.400 EUR</text>
+<text x="408.5" y="281.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">2.400,00</text>
+<text x="482.0" y="281.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">—</text>
+<text x="632.0" y="281.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">annual</text>
+<text x="52.0" y="307.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Train</text>
+<rect x="194.5" y="290.5" width="129.0" height="25.0" rx="0" fill="#DDF1EE"/>
+<rect x="201.0" y="296.5" width="67.5" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="202.0" y="307.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">64,50 EUR</text>
+<text x="429.0" y="307.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">64,50</text>
+<text x="482.0" y="307.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">—</text>
+<text x="52.0" y="333.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Insurance</text>
+<rect x="194.5" y="316.5" width="129.0" height="25.0" rx="0" fill="#FFFFFF"/>
+<text x="202.0" y="333.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">€45</text>
+<rect x="306.0" y="327.5" width="10.0" height="7.0" rx="1.5" fill="#D6477A"/>
+<path d="M308.2 327.5 V326 a2.8 2.8 0 0 1 5.6 0 V327.5" fill="none" stroke="#D6477A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="429.0" y="333.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">45,00</text>
+<text x="482.0" y="333.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">—</text>
+<text x="52.0" y="359.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Total</text>
+<text x="408.5" y="359.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">5.275,85</text>
+<rect x="194.0" y="134.0" width="130.0" height="26.0" rx="0" fill="none" stroke="#5B4BC4" stroke-width="2.2"/>
+<rect x="194.0" y="316.0" width="130.0" height="26.0" rx="0" fill="none" stroke="#D6477A" stroke-width="2.2"/>
+</g>
+<rect x="868.0" y="92.0" width="388.0" height="678.0" rx="12" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<text x="888.0" y="122.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Search &amp; replace</text>
+<circle cx="1200.0" cy="111.0" r="1.5" fill="#6B6580"/>
+<circle cx="1200.0" cy="116.0" r="1.5" fill="#6B6580"/>
+<circle cx="1200.0" cy="121.0" r="1.5" fill="#6B6580"/>
+<path d="M1228 112 L1236 120 M1236 112 L1228 120" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="868.0" y1="138.0" x2="1256.0" y2="138.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="884.0" y="156.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">FIND</text>
+<rect x="882.0" y="162.0" width="126.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="892.0" y="182.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">the text</text>
+<path d="M990 176.5 L993.6 180.1 L997.2 176.5" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1016.0" y="167.0" width="23.9" height="22.0" rx="6" fill="#E7E1F4"/>
+<text x="1024.0" y="182.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">€</text>
+<rect x="1150.0" y="162.0" width="92.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="1160.0" y="182.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">once</text>
+<path d="M1222 177 L1225.6 180.6 L1229.2 177" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="882.0" y="196.0" width="126.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="892.0" y="216.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">a space</text>
+<path d="M990 210.5 L993.6 214.1 L997.2 210.5" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1150.0" y="196.0" width="92.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="1160.0" y="216.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">optional</text>
+<path d="M1222 211 L1225.6 214.6 L1229.2 211" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="882.0" y="230.0" width="126.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="892.0" y="250.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">a number</text>
+<path d="M990 244.5 L993.6 248.1 L997.2 244.5" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1150.0" y="230.0" width="92.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="1160.0" y="250.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">once</text>
+<path d="M1222 245 L1225.6 248.6 L1229.2 245" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1016.0" y="235.0" width="98.0" height="22.0" rx="11" fill="#DDF1EE" stroke="#13917F" stroke-width="1"/>
+<path d="M1022 246.5 L1025 249.5 L1030 243" fill="none" stroke="#13917F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1038.0" y="250.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">amount</text>
+<text x="884.0" y="280.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">ONLY IN CELLS THAT…</text>
+<rect x="882.0" y="288.0" width="148.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="892.0" y="308.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">do not contain</text>
+<path d="M1012 302.5 L1015.6 306.1 L1019.2 302.5" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1038.0" y="288.0" width="150.0" height="32.0" rx="7" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="1048.0" y="308.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">EUR</text>
+<path d="M1204 300 L1212 308 M1212 300 L1204 308" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="884.0" y="344.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">REPLACE WITH</text>
+<rect x="882.0" y="352.0" width="360.0" height="36.0" rx="8" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.6"/>
+<rect x="890.0" y="359.0" width="98.0" height="22.0" rx="11" fill="#DDF1EE" stroke="#13917F" stroke-width="1"/>
+<path d="M896 370.5 L899 373.5 L904 367" fill="none" stroke="#13917F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="912.0" y="374.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">amount</text>
+<text x="996.0" y="375.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"> EUR</text>
+<text x="884.0" y="406.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Kept parts, click to insert:</text>
+<rect x="1028.0" y="391.0" width="98.0" height="22.0" rx="11" fill="#FFFFFF" stroke="#13917F" stroke-width="1"/>
+<text x="1058.0" y="406.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">amount</text>
+<text x="884.0" y="434.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">LOOK IN</text>
+<rect x="882.0" y="442.0" width="71.8" height="26.0" rx="13" fill="#DDF1EE" stroke="#13917F" stroke-width="1"/>
+<path d="M889 455.5 L892 458.5 L897 452.0" fill="none" stroke="#13917F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="904.0" y="459.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Text</text>
+<text x="937.9" y="459.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">3</text>
+<rect x="959.8" y="442.0" width="101.2" height="26.0" rx="13" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="981.8" y="459.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Formulas</text>
+<text x="1045.0" y="459.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">4</text>
+<rect x="1067.0" y="442.0" width="85.4" height="26.0" rx="13" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="1089.0" y="459.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Values</text>
+<text x="1136.5" y="459.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">0</text>
+<rect x="1134.4" y="453.0" width="10.0" height="7.0" rx="1.5" fill="#6B6580"/>
+<path d="M1136.585 453.0 V451.5 a2.8 2.8 0 0 1 5.6 0 V453.0" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M892 482 L898.5 493 L885.5 493 Z" fill="none" stroke="#8A5A00" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M892 486 V489.5" fill="none" stroke="#8A5A00" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="892.0" cy="491.4" r="0.8" fill="#8A5A00"/>
+<text x="908.0" y="492.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#8A5A00" font-weight="500" text-anchor="start" xml:space="preserve">“€” also appears in 4 formulas, which are left alone.</text>
+<line x1="868.0" y1="510.0" x2="1256.0" y2="510.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="884.0" y="536.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">3 matches</text>
+<text x="958.9" y="536.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">· 2 will change, 1 skipped</text>
+<rect x="876.0" y="546.0" width="372.0" height="40.0" rx="6" fill="#E7E1F4"/>
+<rect x="876.0" y="551.0" width="3.0" height="30.0" rx="1.5" fill="#5B4BC4"/>
+<rect x="888.0" y="558.5" width="15.0" height="15.0" rx="4" fill="#13917F"/>
+<path d="M891.5 566.5 L894.5 569.5 L899.5 563.0" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="912.0" y="570.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Costs!B2</text>
+<rect x="977.0" y="559.0" width="46.8" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="978.0" y="570.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">€ 1.240</text>
+<path d="M1030.75 566.0 h12 m-4 -4 l4 4 l-4 4" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1050.8" y="570.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#0F7D6E" font-weight="500" text-anchor="start" xml:space="preserve">1.240 EUR</text>
+<rect x="888.0" y="600.5" width="15.0" height="15.0" rx="4" fill="#13917F"/>
+<path d="M891.5 608.5 L894.5 611.5 L899.5 605.0" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="912.0" y="612.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Costs!B8</text>
+<rect x="977.0" y="601.0" width="51.0" height="16.5" rx="3" fill="#F7C58B"/>
+<text x="978.0" y="612.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">€ 64,50</text>
+<path d="M1035.0 608.0 h12 m-4 -4 l4 4 l-4 4" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1055.0" y="612.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#0F7D6E" font-weight="500" text-anchor="start" xml:space="preserve">64,50 EUR</text>
+<rect x="888.0" y="642.5" width="15.0" height="15.0" rx="4" fill="#F2EEE6" stroke="#D6CFE4" stroke-width="1"/>
+<text x="912.0" y="654.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Costs!B9</text>
+<rect x="978.0" y="648.5" width="10.0" height="7.0" rx="1.5" fill="#D6477A"/>
+<path d="M980.2 648.5 V647.0 a2.8 2.8 0 0 1 5.6 0 V648.5" fill="none" stroke="#D6477A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="994.0" y="654.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#D6477A" font-weight="500" text-anchor="start" xml:space="preserve">locked by Anna</text>
+<text x="1091.2" y="654.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">skipped</text>
+<line x1="868.0" y1="682.0" x2="1256.0" y2="682.0" stroke="#E3DED5" stroke-width="1"/>
+<rect x="882.0" y="696.0" width="150.0" height="36.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="957.0" y="718.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="middle" xml:space="preserve">Replace this one</text>
+<rect x="1052.0" y="696.0" width="190.0" height="36.0" rx="8" fill="#13917F"/>
+<text x="1147.0" y="718.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" font-weight="500" text-anchor="middle" xml:space="preserve">Replace all 2</text>
+<text x="884.0" y="754.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">One step in the history. Undo brings it back.</text>
+<rect x="36.0" y="640.0" width="480.0" height="52.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="50.0" y="662.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5B4BC4" font-weight="500" text-anchor="start" xml:space="preserve">Quick path</text>
+<text x="50.0" y="680.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">The sheet already shows the result before anything is replaced.</text>
+</svg>

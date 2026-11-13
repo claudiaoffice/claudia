@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="780" viewBox="0 0 1100 780"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="sh2" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dy="3" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0.0" y="0.0" width="1100.0" height="780.0" rx="0" fill="#F7F3EC"/>
+<text x="36.0" y="40.0" font-family="Fraunces, Georgia, serif" font-size="18" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">“Write the pattern yourself” — the same dialog, reached from the ⋯ menu</text>
+<text x="36.0" y="62.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Not on the surface. Like the CSS view of a style, it starts from what the builder made, so it also teaches.</text>
+<rect x="36.0" y="84.0" width="388.0" height="668.0" rx="12" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh)"/>
+<text x="56.0" y="114.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14.5" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Search &amp; replace</text>
+<circle cx="368.0" cy="103.0" r="1.5" fill="#6B6580"/>
+<circle cx="368.0" cy="108.0" r="1.5" fill="#6B6580"/>
+<circle cx="368.0" cy="113.0" r="1.5" fill="#6B6580"/>
+<path d="M396 104 L404 112 M404 104 L396 112" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="36.0" y1="130.0" x2="424.0" y2="130.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="52.0" y="150.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">FIND — PATTERN</text>
+<rect x="50.0" y="158.0" width="360.0" height="40.0" rx="8" fill="#FFFFFF" stroke="#0F7D6E" stroke-width="1.6"/>
+<text x="62.0" y="183.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">€\s?(\d+(?:[.,]\d+)*)</text>
+<text x="402.0" y="182.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#0F7D6E" font-weight="500" text-anchor="end" xml:space="preserve">✓</text>
+<text x="52.0" y="220.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">ONLY IN CELLS MATCHING (OPTIONAL)</text>
+<rect x="50.0" y="228.0" width="360.0" height="40.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="62.0" y="253.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">^(?!.*EUR)</text>
+<text x="52.0" y="290.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">REPLACE WITH</text>
+<rect x="50.0" y="298.0" width="360.0" height="40.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="62.0" y="323.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">\1 EUR</text>
+<rect x="50.0" y="352.0" width="130.0" height="26.0" rx="13" fill="#DDF1EE" stroke="#13917F" stroke-width="1"/>
+<path d="M57 365.5 L60 368.5 L65 362" fill="none" stroke="#13917F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="74.0" y="370.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Ignore capitals</text>
+<text x="196.0" y="370.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Pattern syntax: Python re</text>
+<rect x="50.0" y="392.0" width="360.0" height="30.0" rx="7" fill="#E3F4F0"/>
+<text x="62.0" y="412.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#0F7D6E" font-weight="500" text-anchor="start" xml:space="preserve">Valid. 3 matches in 3 cells.</text>
+<line x1="36.0" y1="438.0" x2="424.0" y2="438.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="52.0" y="462.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">TRY IT ON A SAMPLE</text>
+<rect x="50.0" y="470.0" width="360.0" height="36.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="62.0" y="493.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Total: </text>
+<rect x="102.2" y="479.0" width="14.5" height="20.0" rx="3" fill="#F7C58B"/>
+<text x="103.2" y="493.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">€ </text>
+<rect x="114.7" y="479.0" width="36.1" height="20.0" rx="3" fill="#DDF1EE" stroke="#13917F" stroke-width="1"/>
+<text x="115.7" y="493.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">1.240</text>
+<text x="149.8" y="493.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"> incl. VAT</text>
+<text x="52.0" y="530.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Part 1 is “1.240”. It becomes “1.240 EUR” in the cell.</text>
+<line x1="36.0" y1="550.0" x2="424.0" y2="550.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="52.0" y="574.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="500" text-anchor="start" xml:space="preserve">IF THERE IS A MISTAKE</text>
+<rect x="50.0" y="582.0" width="360.0" height="40.0" rx="8" fill="#FFFFFF" stroke="#B3261E" stroke-width="1.6"/>
+<text x="62.0" y="607.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">€\s?(\d+(?:[.,]\d+*</text>
+<rect x="50.0" y="628.0" width="360.0" height="42.0" rx="7" fill="#FBE4E2"/>
+<path d="M64 644 L70.5 655 L57.5 655 Z" fill="none" stroke="#B3261E" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M64 648 V651.5" fill="none" stroke="#B3261E" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="64.0" cy="653.4" r="0.8" fill="#B3261E"/>
+<text x="82.0" y="645.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#B3261E" font-weight="500" text-anchor="start" xml:space="preserve">A bracket is never closed.</text>
+<text x="82.0" y="661.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#B3261E" font-weight="400" text-anchor="start" xml:space="preserve">The “(” at character 4 has no “)”. Nothing is replaced.</text>
+<line x1="36.0" y1="686.0" x2="424.0" y2="686.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="52.0" y="704.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">Made by the builder. If you edit it</text>
+<text x="52.0" y="720.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">here, the builder can no longer</text>
+<text x="52.0" y="736.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">show it.</text>
+<rect x="260.0" y="698.0" width="150.0" height="34.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1"/>
+<text x="335.0" y="719.5" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="500" text-anchor="middle" xml:space="preserve">Back to the builder</text>
+<rect x="480.0" y="100.0" width="236.0" height="118.0" rx="10" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<rect x="486.0" y="106.0" width="224.0" height="30.0" rx="7" fill="#E7E1F4"/>
+<text x="496.0" y="126.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start" xml:space="preserve">Write the pattern yourself…</text>
+<text x="496.0" y="156.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Start over</text>
+<line x1="488.0" y1="170.0" x2="708.0" y2="170.0" stroke="#E3DED5" stroke-width="1"/>
+<text x="496.0" y="192.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">About searching and patterns</text>
+<text x="496.0" y="208.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="1" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve"></text>
+<text x="736.0" y="124.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start" xml:space="preserve">← the ⋯ menu of the panel</text>
+<rect x="480.0" y="250.0" width="580.0" height="88.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="494.0" y="272.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5B4BC4" font-weight="500" text-anchor="start" xml:space="preserve">TWO FIELDS, ONE ENGINE</text>
+<text x="494.0" y="292.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Find is the pattern for the text to change. “Only in cells matching” is a second</text>
+<text x="494.0" y="310.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">pattern that must match the whole cell. The builder’s conditions compile to it.</text>
+<text x="494.0" y="328.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Replace is plain text; \1, \2 … stand for kept parts.</text>
+<rect x="480.0" y="380.0" width="580.0" height="70.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="494.0" y="402.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5B4BC4" font-weight="500" text-anchor="start" xml:space="preserve">ERRORS WHILE TYPING</text>
+<text x="494.0" y="422.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">The server checks the pattern as you type, as it does for CSS. A mistake gives</text>
+<text x="494.0" y="440.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">one sentence and a character position, and the Replace buttons stay off.</text>
+<rect x="480.0" y="480.0" width="580.0" height="70.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="494.0" y="502.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5B4BC4" font-weight="500" text-anchor="start" xml:space="preserve">NO WAY BACK, SAID PLAINLY</text>
+<text x="494.0" y="522.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">The builder cannot read arbitrary patterns. “Back to the builder” keeps the last</text>
+<text x="494.0" y="540.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">state the builder made and drops the text edits, after a short confirmation.</text>
+<rect x="480.0" y="580.0" width="580.0" height="70.0" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" filter="url(#sh2)"/>
+<text x="494.0" y="602.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#13917F" font-weight="500" text-anchor="start" xml:space="preserve">FOR EVERYONE, TOO</text>
+<text x="494.0" y="622.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">Opening it shows the sentence the builder had made, so a pattern can be learned</text>
+<text x="494.0" y="640.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start" xml:space="preserve">from its own explanation. “About searching and patterns” has worked examples.</text>
+</svg>
