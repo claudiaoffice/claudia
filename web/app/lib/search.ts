@@ -1,10 +1,11 @@
 // Search & replace, the part that needs no Vue and no DOM (E5.15, D281–D286): what a person builds in the panel, what
-// is asked of the server for it, the sentence that says in her words what it does, and what the answers become on the
-// sheet. The panel (`SearchPanel.vue`) and the app's host (`sheet-search-host.ts`) are thin around this.
+// is asked of the server for it, the sentence that says in her words what it does, and what the answers are. Nothing
+// here knows sheets: every place is the app's own `at` (CODE-18), and the app's `SearchHost` reads it (computes:
+// `sheet-search-host.ts`, which also draws the matches on the grid). The panel (`SearchPanel.vue`) is thin around this.
 //
 // The person never reads the word "regular expression": the quick field is plain text, the builder is parts and
 // conditions, and a pattern is something she writes herself, deliberately, from the ⋯ menu. The server compiles all
-// three the same way (`claudia_core.search`).
+// three the same way (`claudia_search`, with a time limit on every pattern).
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 
@@ -285,29 +286,29 @@ export function sentence(model: SearchModel, t: Translate): string {
 }
 
 // ----------------------------------------------------------------------------------------------------- the answers
+/** Where something is, in the app's own words: a cell is `{ sheet, row, col }`. Only the app's host reads it; the panel
+ *  keys and names it through the host and sends it back unchanged (CODE-18). */
+export type SearchPlace = Readonly<Record<string, string | number | boolean | null>>
+
 export interface SearchMatch {
-  sheet: string
-  row: number
-  col: number
+  at: SearchPlace
   kind: 'text' | 'formula' | 'value'
-  /** Its place among the matches of its cell. */
+  /** Its place among the matches of its text. */
   number: number
   start: number
   end: number
   parts: string[]
   /** What a replacement would make of it: `null` for a value, or when there is no replacement. */
   after: string | null
-  /** The stretch of the cell around the match, `excerpt` being the match inside it. */
+  /** The stretch of the text around the match, `excerpt` being the match inside it. */
   text: string
   excerpt: [number, number]
-  /** Whether the cell goes on before, and after, `text`. */
+  /** Whether the text goes on before, and after, `text`. */
   clipped: [boolean, boolean]
 }
 
 export interface LeftOut {
-  sheet: string
-  row: number
-  col: number
+  at: SearchPlace
   kind: string
   /** Why: the condition that failed, as it was sent, or `{ kind: 'filter' }`. */
   why: { kind: string; text?: string; chars?: string }
@@ -327,24 +328,21 @@ export interface SearchAnswer {
   counts: { text: number; formulas: number; values: number }
   total: number
   truncated: boolean
+  /** The search stopped at its time limit; what it had found by then is listed. */
   timed_out: boolean
   pattern?: { find: string; filter: string; replace: string }
   error?: PatternProblem
 }
 
 export interface Change {
-  sheet: string
-  row: number
-  col: number
+  at: SearchPlace
   kind: string
   before: string
   after: string
 }
 
 export interface Skipped {
-  sheet: string
-  row: number
-  col: number
+  at: SearchPlace
   kind: string
   reason: 'locked' | 'formula' | 'too_long'
   by: string | null
@@ -355,6 +353,8 @@ export interface PreviewAnswer {
   changes: Change[]
   skipped: Skipped[]
   total: number
+  /** The preview stopped at its time limit and is not complete; replacing would be refused. */
+  timed_out?: boolean
   error?: PatternProblem
 }
 
@@ -362,6 +362,39 @@ export interface ReplaceAnswer {
   revision: string | null
   replaced: number
   skipped: Skipped[]
+}
+
+/** A match, or with `match: null` everything at a place, that a replacement leaves alone. */
+export interface SearchLeave {
+  at: SearchPlace
+  match: number | null
+}
+
+/** What the panel needs from an app (E5.15, D282): what can be searched, where, and how to name and show a place. */
+export interface SearchHost<Scope = unknown> {
+  /** Can only look: Replace is off. */
+  readonly readonly: boolean
+  /** What can be looked in, and where. */
+  readonly kinds: (keyof Kinds)[]
+  readonly scopes: string[]
+  /** Parts of the builder that only this app has (a cell reference). */
+  readonly extraParts: PartWhat[]
+  /** What the scope is called in the list: "This sheet". */
+  scopeLabel(scope: string): string
+  /** The scope as the server wants it. */
+  scopeOf(scope: string): Scope
+  /** Looks in every kind; which are shown is the panel's choice. `null`: no answer. */
+  find(query: SearchQuery, scope: Scope): Promise<SearchAnswer | null>
+  preview(query: SearchQuery, kinds: Kinds, scope: Scope, leave: SearchLeave[]): Promise<PreviewAnswer | null>
+  replace(query: SearchQuery, kinds: Kinds, scope: Scope, leave: SearchLeave[]): Promise<ReplaceAnswer | false>
+  /** One string per place, for lists and sets: the same place always gives the same key. */
+  keyOf(at: SearchPlace): string
+  /** The place as a person reads it: `Costs!B2`. */
+  where(at: SearchPlace): string
+  /** Show the place in the document. */
+  jump(at: SearchPlace): void
+  /** Changes when the document does, so that a search that is showing can run again. */
+  revision(): string | null
 }
 
 const KIND_OF: Record<keyof Kinds, SearchMatch['kind']> = { text: 'text', formulas: 'formula', values: 'value' }
@@ -372,18 +405,6 @@ export function shownMatches(matches: SearchMatch[], kinds: Kinds): SearchMatch[
   return matches.filter((m) => wanted.has(m.kind))
 }
 
-/** The cell with its sheet, as a formula would name it: `Costs!B2`. */
-export function whereLabel(match: { sheet: string; row: number; col: number }, sheetName: (id: string) => string): string {
-  return `${sheetName(match.sheet)}!${columnLetters(match.col)}${match.row + 1}`
-}
-
-function columnLetters(col: number): string {
-  let name = ''
-  for (let n = col; n >= 0; n = Math.floor(n / 26) - 1) name = String.fromCharCode(65 + (n % 26)) + name
-  return name
-}
-
-/** The excerpt of a match cut into what comes before it, the match and what follows, with dots where the cell goes on. */
 export function excerptOf(match: SearchMatch): { before: string; hit: string; after: string } {
   const [from, to] = match.excerpt
   return {
@@ -450,9 +471,6 @@ export function explainError(problem: PatternProblem, t: Translate): { headline:
   } else if (message.startsWith('bad escape')) {
     headline = t('This backslash does not mean anything here.')
     detail = at === null ? t('Nothing is replaced.') : t('Look at the backslash at character {position}. Nothing is replaced.', { position: at })
-  } else if (message.startsWith('this pattern could backtrack')) {
-    headline = t('This pattern could take far too long on some texts.')
-    detail = t('It is not run, so nothing is found or replaced. Try making the repeated part more specific.')
   } else if (message.startsWith('this pattern is nested too deeply')) {
     headline = t('This pattern has too many brackets inside each other.')
     detail = t('It is not run, so nothing is found or replaced.')
@@ -461,43 +479,6 @@ export function explainError(problem: PatternProblem, t: Translate): { headline:
     detail = t('Nothing is replaced.')
   }
   return { headline, detail, where, field }
-}
-
-// --------------------------------------------------------------------------------------------------- on the sheet
-const keyOf = (row: number, col: number) => row * 100_000 + col // as `SheetGrid.vue` keys a cell
-
-export interface CellMark {
-  current: boolean
-  /** The match is in a formula, not in what the cell shows: drawn with a corner mark too. */
-  formula: boolean
-}
-
-/** What the grid draws for a search: the cells with matches, what a replacement would show instead, and the cells it skips. */
-export interface SearchMarks {
-  cells: Map<number, CellMark>
-  after: Map<number, string>
-  blocked: Map<number, string>
-}
-
-export const NO_MARKS: SearchMarks = { cells: new Map(), after: new Map(), blocked: new Map() }
-
-/** The marks for one sheet; `current` is the index in `matches` of the match being looked at. */
-export function marksFor(
-  matches: SearchMatch[],
-  sheet: string,
-  current: number | null,
-  preview?: { changes: Change[]; skipped: Skipped[] } | null,
-): SearchMarks {
-  const marks: SearchMarks = { cells: new Map(), after: new Map(), blocked: new Map() }
-  matches.forEach((m, index) => {
-    if (m.sheet !== sheet) return
-    const key = keyOf(m.row, m.col)
-    const seen = marks.cells.get(key)
-    marks.cells.set(key, { current: index === current || seen?.current === true, formula: m.kind === 'formula' || seen?.formula === true })
-  })
-  for (const c of preview?.changes ?? []) if (c.sheet === sheet && c.kind === 'text') marks.after.set(keyOf(c.row, c.col), c.after)
-  for (const s of preview?.skipped ?? []) if (s.sheet === sheet && s.reason === 'locked') marks.blocked.set(keyOf(s.row, s.col), s.by ?? '')
-  return marks
 }
 
 // ------------------------------------------------------------------------------------------------ newest answer wins

@@ -26,11 +26,11 @@ import {
   type PartWhat,
   type PreviewAnswer,
   type SearchAnswer,
+  type SearchHost,
+  type SearchLeave,
   type SearchMatch,
   type SearchModel,
 } from '~/lib/search'
-import type { ScopeId, SearchHost } from '~/lib/sheet-search-host'
-import type { SearchLeave } from '~/lib/session'
 import Popover from './Popover.vue'
 
 const props = defineProps<{
@@ -52,7 +52,7 @@ const { t } = useI18n()
 const model = reactive<SearchModel>(emptyModel())
 const replaceOpen = ref(props.replace === true)
 const kinds = reactive<Kinds>({ text: true, formulas: true, values: true })
-const scope = ref<ScopeId>('sheet')
+const scope = ref<string>(props.host.scopes[0] ?? '')
 const answer = ref<SearchAnswer | null>(null)
 const preview = ref<PreviewAnswer | null>(null)
 const current = ref<number | null>(null)
@@ -75,13 +75,13 @@ const shown = computed(() => (answer.value ? shownMatches(answer.value.matches, 
 const problem = computed(() => (answer.value?.error ? explainError(answer.value.error, t) : null))
 const said = computed(() => (model.mode === 'builder' ? sentence(model, t) : ''))
 const names = computed(() => keptNames(model))
-const cellCount = computed(() => new Set(shown.value.map((m) => `${m.sheet},${m.row},${m.col}`)).size)
+const cellCount = computed(() => new Set(shown.value.map((m) => props.host.keyOf(m.at))).size)
 const left = computed(() => (answer.value?.left_out ?? []).filter((o) => (kinds[o.kind === 'formula' ? 'formulas' : o.kind === 'value' ? 'values' : 'text'] ?? true)))
 
-const matchKey = (m: SearchMatch) => `${m.sheet},${m.row},${m.col},${m.number}`
+const matchKey = (m: SearchMatch) => `${props.host.keyOf(m.at)}#${m.number}`
 const replaceable = (m: SearchMatch) => m.kind !== 'value'
 const leave = computed<SearchLeave[]>(() =>
-  shown.value.filter((m) => unchecked.has(matchKey(m))).map((m) => ({ sheet: m.sheet, row: m.row, col: m.col, match: m.number })),
+  shown.value.filter((m) => unchecked.has(matchKey(m))).map((m) => ({ at: m.at, match: m.number })),
 )
 
 /** A line the live region says: how many matches there are. */
@@ -156,7 +156,7 @@ function go(index: number) {
   if (matches.length === 0) return
   const at = (index + matches.length) % matches.length
   current.value = at
-  props.host.jump(matches[at]!)
+  props.host.jump(matches[at]!.at)
 }
 const next = () => go(current.value === null ? 0 : current.value + 1)
 const previous = () => go(current.value === null ? shown.value.length - 1 : current.value - 1)
@@ -295,7 +295,7 @@ async function doReplace(only?: SearchMatch) {
   const asked = query.value
   if (!asked || busy.value || problem.value) return
   const leaving: SearchLeave[] = only
-    ? shown.value.filter((m) => m !== only && replaceable(m)).map((m) => ({ sheet: m.sheet, row: m.row, col: m.col, match: m.number }))
+    ? shown.value.filter((m) => m !== only && replaceable(m)).map((m) => ({ at: m.at, match: m.number }))
     : leave.value
   busy.value = true
   const done = await props.host.replace(asked, kinds, props.host.scopeOf(scope.value), leaving)
@@ -508,7 +508,7 @@ watch(() => props.replace, (on) => on && openReplace())
         </div>
         <div class="row flags">
           <select v-model="scope" class="field" :aria-label="t('Where to look')">
-            <option v-for="id in host.scopes" :key="id" :value="id">{{ id === 'sheet' ? t('This sheet') : id === 'all' ? t('All sheets') : t('Selection') }}</option>
+            <option v-for="id in host.scopes" :key="id" :value="id">{{ host.scopeLabel(id) }}</option>
           </select>
           <label class="toggle" :class="{ on: model.matchCase }"><input v-model="model.matchCase" type="checkbox">{{ t('Match case') }}</label>
           <label v-if="model.mode !== 'pattern'" class="toggle" :class="{ on: model.whole === 'entire' }"><input type="checkbox" :checked="model.whole === 'entire'" @change="model.whole = ($event.target as HTMLInputElement).checked ? 'entire' : 'none'">{{ t('Whole cell') }}</label>
@@ -558,25 +558,25 @@ watch(() => props.replace, (on) => on && openReplace())
           :class="{ on: current === index, replaced: replacing && replaceable(m) }"
           :aria-current="current === index ? 'true' : undefined"
         >
-          <input v-if="replacing && replaceable(m)" type="checkbox" :checked="!unchecked.has(matchKey(m))" :aria-label="t('Replace {where}', { where: host.where(m) })" @change="($event.target as HTMLInputElement).checked ? unchecked.delete(matchKey(m)) : unchecked.add(matchKey(m))">
+          <input v-if="replacing && replaceable(m)" type="checkbox" :checked="!unchecked.has(matchKey(m))" :aria-label="t('Replace {where}', { where: host.where(m.at) })" @change="($event.target as HTMLInputElement).checked ? unchecked.delete(matchKey(m)) : unchecked.add(matchKey(m))">
           <button type="button" class="row" @click="go(index)">
-            <span class="where mono">{{ host.where(m) }}</span>
+            <span class="where mono">{{ host.where(m.at) }}</span>
             <span class="excerpt" :class="{ code: m.kind === 'formula' }">
               {{ excerptOf(m).before }}<mark>{{ excerptOf(m).hit }}</mark><template v-if="replacing && replaceable(m) && m.after !== null"> → <span class="after">{{ m.after }}</span></template><template v-else>{{ excerptOf(m).after }}</template>
             </span>
             <span class="kind">{{ m.kind === 'formula' ? t('formula') : m.kind === 'value' ? t('value') : t('text') }}</span>
           </button>
         </li>
-        <li v-for="s in skippedRows" :key="`${s.sheet},${s.row},${s.col}`" class="skipped">
-          <input type="checkbox" disabled :aria-label="t('Skipped {where}', { where: host.where(s) })">
-          <span class="row"><span class="where mono">{{ host.where(s) }}</span><span class="why">🔒 {{ why(s.reason, s.by) }}</span><span class="kind">{{ t('skipped') }}</span></span>
+        <li v-for="s in skippedRows" :key="host.keyOf(s.at)" class="skipped">
+          <input type="checkbox" disabled :aria-label="t('Skipped {where}', { where: host.where(s.at) })">
+          <span class="row"><span class="where mono">{{ host.where(s.at) }}</span><span class="why">🔒 {{ why(s.reason, s.by) }}</span><span class="kind">{{ t('skipped') }}</span></span>
         </li>
         <li v-if="shown.length > limit" class="more"><button type="button" class="link" @click="limit += 200">{{ t('Show more') }}</button></li>
       </ul>
       <details v-if="left.length" class="leftout" :open="showAllLeft" @toggle="showAllLeft = ($event.target as HTMLDetailsElement).open">
         <summary>{{ t('Left out ({count})', { count: left.length }) }} <span class="sub">{{ leftReasons }}</span></summary>
         <ul class="list">
-          <li v-for="o in left" :key="`${o.sheet},${o.row},${o.col},${o.kind}`"><span class="row"><span class="where mono">{{ host.where(o) }}</span><span class="why">{{ whyLeftOut(o.why, t) }}</span></span></li>
+          <li v-for="o in left" :key="`${host.keyOf(o.at)}#${o.kind}`"><span class="row"><span class="where mono">{{ host.where(o.at) }}</span><span class="why">{{ whyLeftOut(o.why, t) }}</span></span></li>
         </ul>
       </details>
       <p v-if="status" class="status" role="status">{{ status }}</p>

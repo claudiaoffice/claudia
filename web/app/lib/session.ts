@@ -13,7 +13,7 @@ import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
 import type { NameDraft, NameInfo } from './names'
-import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchQuery } from './search'
+import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
 import type { OutcomeTable } from './outcomes'
 import type { Reach, Trace, Window } from './follow'
 
@@ -134,13 +134,8 @@ export interface SearchScope {
   range?: [number, number, number, number]
 }
 
-/** A match, or with `match: null` a whole cell, that a replacement leaves alone. */
-export interface SearchLeave {
-  sheet: string
-  row: number
-  col: number
-  match: number | null
-}
+/** A match, or with `match: null` everything at a place, that a replacement leaves alone (`lib/search.ts`). */
+export type { SearchLeave } from './search'
 
 export class Session extends BaseSession<State> {
   private loaded = new Set<string>()

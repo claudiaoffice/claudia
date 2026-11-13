@@ -15,6 +15,18 @@ Describing objects (BITV 1.1.1), in creates and computes (composes has no object
   picture given both is refused.
 - The objects of a slide or a sheet are listed with `description` and `decorative`.
 
+### Changed
+- **Breaking** (network): search and replace in a workbook name every place as `at` = `{sheet, row, col}`: a match is
+  `{at, kind, number, …}`, a left-out cell `{at, kind, why}`, a change `{at, kind, before, after}`, a skipped cell
+  `{at, kind, reason, by}`; `leave` takes `{at, match}` (was `{sheet, row, col, match}`, now refused). The same shape
+  will serve composes and creates (CODE-18). The methods moved to `claudia_server.computes_search`.
+- The search runs on `claudia_search` (`regex`): one request searches for `SEARCH_SECONDS` (2 s) at most, inside a
+  pattern too, and then answers `timed_out` with what it had found (SEC-18; before, the 2 s were checked only between
+  cells, and one pattern on one cell could hold the server for minutes). `search_preview` answers `timed_out` as
+  well; `search_replace` refuses (`command_error`) rather than replace part of what was asked (PERF-11).
+- A pattern that "could backtrack without end" is no longer refused as an `error`: it runs until the deadline.
+- `leave` holds at most 10000 items.
+
 ### Fixed
 - `GET /api/fonts/{sha256}` and `/api/fonts/{sha256}.woff2` no longer run on the event loop (PERF-09). Making a WOFF2
   file takes seconds (2.4 s for an ordinary 740 KB font), and every other request of every document waited for it the

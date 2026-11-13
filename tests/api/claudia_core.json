@@ -1,5 +1,5 @@
 {
- "version": "0.18.0",
+ "version": "0.19.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -265,20 +265,6 @@
    "register": "(self, cls: 'type[Command]') -> 'type[Command]'",
    "schemas": "(self) -> 'dict[str, int]'",
    "upcaster": "(self, kind: 'str', from_schema: 'int') -> 'Callable'"
-  },
-  "properties": []
- },
- "CompiledSearch": {
-  "class": [
-   "object"
-  ],
-  "init": "(find: 're.Pattern | None', filtered: 're.Pattern | None', template: 'str | None', sources: 'tuple[str, str, str]', reasons: 'tuple[Condition, ...]')",
-  "methods": {
-   "admits": "(self, text: 'str') -> 'bool'",
-   "left_out": "(self, text: 'str') -> 'dict | None'",
-   "matches": "(self, text: 'str') -> 'list[Match]'",
-   "pattern_text": "(self) -> 'dict[str, str]'",
-   "replaced": "(self, text: 'str', leave: 'set[int] | frozenset[int]' = frozenset()) -> 'str'"
   },
   "properties": []
  },
@@ -872,14 +858,6 @@
   },
   "properties": []
  },
- "Match": {
-  "class": [
-   "object"
-  ],
-  "init": "(start: 'int', end: 'int', kept: 'tuple[str, ...]' = (), after: 'str | None' = None) -> None",
-  "methods": {},
-  "properties": []
- },
  "MemoryStore": {
   "class": [
    "object"
@@ -1095,18 +1073,6 @@
    "on_command": "(self, command: 'Command') -> 'None'",
    "release": "(self, owner: 'str') -> 'None'",
    "show": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Hold'"
-  },
-  "properties": []
- },
- "Query": {
-  "class": [
-   "object"
-  ],
-  "init": "(mode: 'str', text: 'str' = '', parts: 'tuple[Part, ...]' = (), conditions: 'tuple[Condition, ...]' = (), combine: 'str' = 'all', find: 'str' = '', filter: 'str' = '', replace: 'tuple[tuple[str, str], ...] | str | None' = None, match_case: 'bool' = False, whole: 'str' = 'none') -> None",
-  "methods": {
-   "compile": "(self, extra_parts: 'Mapping[str, str] | None' = None) -> 'CompiledSearch'",
-   "from_data": "(data: 'Any') -> 'Query'",
-   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -1432,14 +1398,6 @@
   "properties": [
    "counts"
   ]
- },
- "SearchError": {
-  "class": [
-   "ValueError"
-  ],
-  "init": "(message: 'str', field: 'str' = 'query', position: 'int | None' = None)",
-  "methods": {},
-  "properties": []
  },
  "SetLanguage": {
   "class": [

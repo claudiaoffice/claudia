@@ -120,10 +120,10 @@ statement in the docs or on the website).
 | CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | open; 14 identical files at `cfa2d91` (11 before) |
 | CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
 | CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |
-| SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **new, open** |
+| SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |
 | PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |
-| PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **new, open** |
+| PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |
 | UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **new, open** |
 | UX-34 | **P1** | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | **new, needs decision** |
 | UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **new, open** |
@@ -135,10 +135,10 @@ statement in the docs or on the website).
 | PROC-21 | P2 | Process / CD | The demo deployment checks `demo.claudiaoffice.de`, a domain that is not ours | **fixed** 2026-11-13 |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |
 | CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **new, open** |
-| CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **new, open** |
+| CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **fixed** 2026-11-13 (D289) |
 | CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |
 | CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |
-| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | **new, open** |
+| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13 |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
@@ -1179,7 +1179,7 @@ changes, and the `windows-client` job now runs the same `--check` for `clients/m
 
 ## Round of 2026-11-13 at `cfa2d91`
 
-### SEC-18 · A search pattern the static guard lets through freezes the whole server · P1 · new, open
+### SEC-18 · A search pattern the static guard lets through freezes the whole server · P1 · fixed 2026-11-13
 **Evidence (measured).** `claudia_core.search` refuses patterns that "could backtrack without end" by looking at their
 shape (`_backtracks`), because Python's `re` cannot be interrupted. Two shapes pass it and are exponential: `(a|a?)+!`
 takes 12.5 s on 24 characters, `(x\w*)*!` 1.2 s, each doubling with every further character (`(\w|\d)+!` and
@@ -1193,6 +1193,12 @@ the `regex` package with its `timeout=` (also gives `\p{L}`; D287 is still open 
 **Test:** `packages/claudia-core/tests/test_search.py::test_a_pattern_the_guard_lets_through_still_cannot_hold_the_server`
 (strict `xfail` until fixed; remove the mark with the fix). Add a server test that `/api/health` answers while a search
 runs.
+**Fixed (D288).** The engine moved to the new package claudia-search and runs patterns on `regex` with a deadline inside
+the pattern (`re` still reads them, so syntax and messages are unchanged); the shape guard is gone. One deadline per
+request, 2 s. Measured: `(a|a?)+!` and `(x\w*)*!` now finish at once on 10,000 characters; `(?:a|aa)+!`, which `regex`
+cannot shortcut, stops at its deadline. **Tests:** `claudia-search/tests/test_engine.py` (every former freezer within
+its deadline, every method keeps it, the default limit), `test_scan.py`, and in the server
+`test_a_pattern_that_could_run_forever_stops_at_the_deadline_and_says_so`.
 
 ### PERF-09 · Making a webfont blocked every request of every document for seconds · P2 · fixed 2026-11-13
 **Evidence (measured).** `GET /api/fonts/{sha256}.woff2` made the WOFF2 file on first use inside an `async` handler:
@@ -1210,9 +1216,11 @@ pool (CODE-13) and send them as their own event (`outcomes` with the revision th
 older run). Then lower `MAX_WORK` for the synchronous path to what fits in ~50 ms, or drop it. **Test:** a server test
 with the model above that an edit is answered in < 200 ms and the outcomes event follows.
 
-### PERF-11 · Search preview and replace have no time budget · P3 · new, open
+### PERF-11 · Search preview and replace have no time budget · P3 · fixed 2026-11-13
 `_plan` (`search_preview`, `search_replace`) scans the whole scope with no deadline; only `search_find` has one. With
 SEC-18 fixed this is linear, but a large workbook still holds the loop. **Fix:** the same budget, or the same worker.
+**Fixed.** The same deadline: `search_preview` answers `timed_out`, `search_replace` refuses (`command_error`) rather
+than replace part of it. **Test:** `test_a_preview_that_ran_out_of_time_says_so_and_a_replace_refuses`.
 
 ### UX-33 · A new document starts with an undoable step · P2 · new, open
 **Evidence (measured, screenshots).** In a new workbook Edit's first item is "Undo Add sheet"; Ctrl+Z leaves "This
@@ -1289,11 +1297,16 @@ PROC-11. **Fix:** make it blocking; pin the LibreOffice version in the log line 
 `tests/e2e` reads `CLAUDIA_CHROMIUM`, five `web/e2e` scripts `CHROME`, five `CHROMIUM`, the rest nothing. **Fix:** one
 `web/e2e/browser.cjs` (`launch()` reading `CLAUDIA_CHROMIUM`, with `--no-sandbox` where needed) used by every script.
 
-### CODE-18 · The search "for all three apps" speaks only in sheets · P2 · new, open
+### CODE-18 · The search "for all three apps" speaks only in sheets · P2 · fixed 2026-11-13
 `SearchPanel.vue` says it is one panel for all apps (D284), but matches, `leave`, `skipped` and `left_out` are
 `{sheet, row, col}` in the panel, in `session.ts` and in the protocol. Composes (paragraph, offset) and creates (slide,
 object) will not fit. **Fix before search reaches composes:** an opaque `where` (a key and a label from the host) in the
 panel and the protocol; computes maps it to its cells. Discuss first: it changes the method signatures (API version).
+**Fixed (D289).** Every answer names its place as `at` (`{sheet, row, col}` in a workbook), `leave` is `{at, match}`; the
+search over a document's texts is app-neutral (`claudia_search.scan`, `plan`); the web panel reads places only through
+its host (`keyOf`, `where`, `jump`, `scopeLabel`). Left: the panel's words ("Whole cell") and kinds are computes'.
+**Tests:** `claudia-search/tests/test_scan.py` (places that are not cells), the server's
+`test_every_answer_names_a_cell_by_its_at` and `test_leave_takes_only_cells_it_can_read`, `web/tests/sheet-search-host.test.ts`.
 
 ### CODE-19 · Debugging code left in the journal · P3 · new, open
 `claudia_container/journal.py` keeps `_open_in_this_process` (scans every object of the garbage collector) from the

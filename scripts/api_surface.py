@@ -35,6 +35,7 @@ PACKAGES = (
     "claudia_computes_io",
     "claudia_creates_io",
     "claudia_test_documents",
+    "claudia_search",
 )
 
 

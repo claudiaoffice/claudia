@@ -35,6 +35,9 @@ nitpick_ignore_regex = [
     (r"py:class", r"(os|pathlib|ssl)\.\w+|(fastapi|starlette)\..*"),
     # lxml's element type in the signatures of claudia-odf-io (no network for intersphinx)
     (r"py:class", r"lxml\..*"),
+    # the `regex` package's compiled pattern in claudia-search, and the clock its deadlines are read on
+    (r"py:class", r"_?regex\..*"),
+    (r"py:func", r"time\.monotonic"),
     # the Linux client's connector: the TypeVar of its worker alias
     (r"py:class", r"claudia_shell_gtk\.connector\.T"),
     # WorkerPool.submit's own TypeVar/ParamSpec (P, R): not a class to link to

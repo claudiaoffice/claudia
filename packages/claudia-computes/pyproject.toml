@@ -3,7 +3,7 @@ name = "claudia-computes"
 dynamic = ["version"]
 description = "claudia-computes"
 requires-python = ">=3.14"
-dependencies = ["claudia-core"]
+dependencies = ["claudia-core", "claudia-search"]
 
 [build-system]
 requires = ["hatchling"]
@@ -17,3 +17,4 @@ packages = ["src/claudia_computes"]
 
 [tool.uv.sources]
 claudia-core = { workspace = true }
+claudia-search = { workspace = true }

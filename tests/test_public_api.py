@@ -36,6 +36,7 @@ CHANGELOGS = {
     "claudia_computes_io": ROOT / "packages" / "claudia-computes-io" / "CHANGELOG.md",
     "claudia_creates_io": ROOT / "packages" / "claudia-creates-io" / "CHANGELOG.md",
     "claudia_test_documents": ROOT / "packages" / "claudia-test-documents" / "CHANGELOG.md",
+    "claudia_search": ROOT / "packages" / "claudia-search" / "CHANGELOG.md",
 }
 
 

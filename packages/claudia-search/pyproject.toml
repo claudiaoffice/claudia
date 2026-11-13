@@ -1,0 +1,17 @@
+[project]
+name = "claudia-search"
+dynamic = ["version"]
+description = "claudia-search: the search engine of all three apps (E1.12, D284): what to find, compiled and run with a time limit"
+requires-python = ">=3.14"
+# `regex` (D287): Python's `re` cannot be stopped, `regex` takes a timeout. Apache-2.0 AND CNRI-Python.
+dependencies = ["regex>=2025.9.1"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_search/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_search"]

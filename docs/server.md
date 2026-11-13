@@ -73,8 +73,11 @@ On a server with an access secret, `"access": "<secret>"` goes into `hello` when
   finds in text, formulas and values, with where, how it reads, what a replacement would make of it and the cells it
   left out with the reason), `search_preview` (what `search_replace` would change, and what it skips because somebody
   holds it) and `search_replace` (one history step; cells held by somebody else are skipped and named, not refused). A
-  query is one of `{mode: "text"}`, `{mode: "builder"}` or `{mode: "pattern"}` (`claudia_core.search`); a mistake in a
-  pattern comes back as `error: {message, field, position}` so that a client can show it while a person types. Texts (`--model claudia_composes:TextModel`) add `blocks`, `suggestions`,
+  query is one of `{mode: "text"}`, `{mode: "builder"}` or `{mode: "pattern"}` (`claudia_search`); a mistake in a
+  pattern comes back as `error: {message, field, position}` so that a client can show it while a person types. Every
+  place in an answer is `at`, the app's own description of it (a cell: `{sheet, row, col}`), and `leave` sends the
+  same `at` back (`{at, match}`). One request searches for two seconds at most, inside a pattern too (`regex` with a
+  timeout, SEC-18): `timed_out` says it stopped, and `search_replace` then refuses rather than replace part of it. Texts (`--model claudia_composes:TextModel`) add `blocks`, `suggestions`,
   `replace_text` (a range replaced by text; line breaks start paragraphs; one request is one history step),
   `set_style`, the style methods `styles`, `change_style`, `deviate_style`, `rename_style` and `check_css` (a style is
   CSS from the kernel's allow-list; a change either alters the style for all its uses or deviates into a new style

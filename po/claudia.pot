@@ -97,7 +97,7 @@ msgstr ""
 msgid "@ai review this text"
 msgstr ""
 
-#: web/app/lib/search.ts:439
+#: web/app/lib/search.ts:460
 msgid "A bracket is never closed."
 msgstr ""
 
@@ -105,7 +105,7 @@ msgstr ""
 msgid "A change here changes every use of “{name}”"
 msgstr ""
 
-#: web/app/lib/search.ts:442
+#: web/app/lib/search.ts:463
 msgid "A closing bracket has no opening one."
 msgstr ""
 
@@ -145,7 +145,7 @@ msgstr ""
 msgid "A request beyond this number is refused before anything is written."
 msgstr ""
 
-#: web/app/lib/search.ts:448
+#: web/app/lib/search.ts:469
 msgid "A square bracket is never closed."
 msgstr ""
 
@@ -221,7 +221,7 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1107
+#: web/app/components/Workspace.vue:1108
 msgid "Add Sheet"
 msgstr ""
 
@@ -293,7 +293,7 @@ msgstr ""
 msgid "All four sides"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:511
+#: web/app/lib/sheet-search-host.ts:45
 msgid "All sheets"
 msgstr ""
 
@@ -349,7 +349,7 @@ msgstr ""
 msgid "Arrows"
 msgstr ""
 
-#: web/app/components/Workspace.vue:971
+#: web/app/components/Workspace.vue:972
 msgid "Arrows, Tab, Enter"
 msgstr ""
 
@@ -529,7 +529,7 @@ msgstr ""
 msgid "Cell"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1106
+#: web/app/components/Workspace.vue:1107
 msgid "Cell menu"
 msgstr ""
 
@@ -545,7 +545,7 @@ msgstr ""
 msgid "Cells are"
 msgstr ""
 
-#: web/app/components/Workspace.vue:762
+#: web/app/components/Workspace.vue:763
 msgid "Cells hold no lists"
 msgstr ""
 
@@ -589,11 +589,11 @@ msgstr ""
 msgid "Chart"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1049
+#: web/app/components/Workspace.vue:1050
 msgid "Chart: {name}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:904
+#: web/app/components/Workspace.vue:905
 msgid "Chart…"
 msgstr ""
 
@@ -629,11 +629,11 @@ msgstr ""
 msgid "Claudia's server needs Python 3.14, and none was found.\nSet CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed (in a checkout: run 'uv sync' and the interpreter is .venv/bin/python)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:929
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:930
 msgid "Clear Cells"
 msgstr ""
 
-#: web/app/components/Workspace.vue:788 web/app/lib/noun-phrases.ts:97
+#: web/app/components/Workspace.vue:789 web/app/lib/noun-phrases.ts:97
 msgid "Clear cell style"
 msgstr ""
 
@@ -685,7 +685,7 @@ msgstr ""
 msgid "Colours…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:920
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:921
 msgid "Column"
 msgstr ""
 
@@ -837,7 +837,7 @@ msgstr ""
 msgid "Ctrl + Backspace / Delete"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:236 web/app/components/TextWorkspace.vue:305 web/app/components/Workspace.vue:977
+#: web/app/components/SlideWorkspace.vue:236 web/app/components/TextWorkspace.vue:305 web/app/components/Workspace.vue:978
 msgid "Ctrl + C / X / V"
 msgstr ""
 
@@ -845,7 +845,7 @@ msgstr ""
 msgid "Ctrl + Shift + -"
 msgstr ""
 
-#: web/app/components/Workspace.vue:974
+#: web/app/components/Workspace.vue:975
 msgid "Ctrl + arrows"
 msgstr ""
 
@@ -913,7 +913,7 @@ msgstr ""
 msgid "Del"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/SlideWorkspace.vue:197 web/app/components/Workspace.vue:915 web/app/components/Workspace.vue:925 web/app/lib/object-menu.ts:52
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/SlideWorkspace.vue:197 web/app/components/Workspace.vue:916 web/app/components/Workspace.vue:926 web/app/lib/object-menu.ts:52
 msgid "Delete"
 msgstr ""
 
@@ -949,7 +949,7 @@ msgstr ""
 msgid "Delete this document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:205 web/app/components/Workspace.vue:937 web/app/lib/descriptions.ts:60
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:205 web/app/components/Workspace.vue:938 web/app/lib/descriptions.ts:60
 msgid "Describe Object…"
 msgstr ""
 
@@ -1049,7 +1049,7 @@ msgstr ""
 msgid "Drag"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1022
+#: web/app/components/Workspace.vue:1023
 msgid "Draw new random numbers ({key})"
 msgstr ""
 
@@ -1057,11 +1057,11 @@ msgstr ""
 msgid "Draw new random numbers for everybody"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1026
+#: web/app/components/Workspace.vue:1027
 msgid "Draw {n}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1023
+#: web/app/components/Workspace.vue:1024
 msgid "Draw {n}: draw new random numbers"
 msgstr ""
 
@@ -1077,7 +1077,7 @@ msgstr ""
 msgid "Easy to see"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:176 web/app/components/StylesDialog.vue:74 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:887
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:176 web/app/components/StylesDialog.vue:74 web/app/components/TextWorkspace.vue:200 web/app/components/Workspace.vue:888
 msgid "Edit"
 msgstr ""
 
@@ -1101,7 +1101,7 @@ msgstr ""
 msgid "Enter"
 msgstr ""
 
-#: web/app/components/Workspace.vue:976
+#: web/app/components/Workspace.vue:977
 msgid "Enter / Tab / Esc"
 msgstr ""
 
@@ -1153,7 +1153,7 @@ msgstr ""
 msgid "Export…"
 msgstr ""
 
-#: web/app/components/Workspace.vue:972
+#: web/app/components/Workspace.vue:973
 msgid "F6 / Shift + F6"
 msgstr ""
 
@@ -1185,7 +1185,7 @@ msgstr ""
 msgid "Fill in your name and password."
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:398 web/app/components/SearchPanel.vue:399 web/app/components/SearchPanel.vue:413 web/app/lib/search.ts:432
+#: web/app/components/SearchPanel.vue:398 web/app/components/SearchPanel.vue:399 web/app/components/SearchPanel.vue:413 web/app/lib/search.ts:453
 msgid "Find"
 msgstr ""
 
@@ -1201,15 +1201,15 @@ msgstr ""
 msgid "Find — pattern"
 msgstr ""
 
-#: web/app/lib/search.ts:281
+#: web/app/lib/search.ts:282
 msgid "Finds the cells that {conditions}."
 msgstr ""
 
-#: web/app/lib/search.ts:279
+#: web/app/lib/search.ts:280
 msgid "Finds {parts} in cells that {conditions}."
 msgstr ""
 
-#: web/app/lib/search.ts:280
+#: web/app/lib/search.ts:281
 msgid "Finds {parts}."
 msgstr ""
 
@@ -1237,7 +1237,7 @@ msgstr ""
 msgid "Flow: the text runs to the width of the window"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:623 web/app/components/Workspace.vue:878 web/app/components/Workspace.vue:957
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:624 web/app/components/Workspace.vue:879 web/app/components/Workspace.vue:958
 msgid "Follow Computation"
 msgstr ""
 
@@ -1273,7 +1273,7 @@ msgstr ""
 msgid "For"
 msgstr ""
 
-#: web/app/components/Workspace.vue:783
+#: web/app/components/Workspace.vue:784
 msgid "For cell {cell}"
 msgstr ""
 
@@ -1281,11 +1281,11 @@ msgstr ""
 msgid "For the cell"
 msgstr ""
 
-#: web/app/components/Workspace.vue:783
+#: web/app/components/Workspace.vue:784
 msgid "For the {count} selected cells"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1107
+#: web/app/components/Workspace.vue:1108
 msgid "Forecast"
 msgstr ""
 
@@ -1293,7 +1293,7 @@ msgstr ""
 msgid "Forget every hidden line"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:55 web/app/components/SlideWorkspace.vue:201 web/app/components/TextWorkspace.vue:215 web/app/components/Workspace.vue:933
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:55 web/app/components/SlideWorkspace.vue:201 web/app/components/TextWorkspace.vue:215 web/app/components/Workspace.vue:934
 msgid "Format"
 msgstr ""
 
@@ -1517,7 +1517,7 @@ msgstr ""
 msgid "Image properties"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:193 web/app/components/Workspace.vue:903
+#: web/app/components/SlideWorkspace.vue:193 web/app/components/Workspace.vue:904
 msgid "Image…"
 msgstr ""
 
@@ -1569,11 +1569,11 @@ msgstr ""
 msgid "Insert"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:913
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:914
 msgid "Insert Above"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:914
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:915
 msgid "Insert Below"
 msgstr ""
 
@@ -1585,11 +1585,11 @@ msgstr ""
 msgid "Insert Column Right"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:923
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:924
 msgid "Insert Left"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:924
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:925
 msgid "Insert Right"
 msgstr ""
 
@@ -1649,12 +1649,8 @@ msgstr ""
 msgid "Iris"
 msgstr ""
 
-#: web/app/lib/search.ts:458
+#: web/app/lib/search.ts:476
 msgid "It is not run, so nothing is found or replaced."
-msgstr ""
-
-#: web/app/lib/search.ts:455
-msgid "It is not run, so nothing is found or replaced. Try making the repeated part more specific."
 msgstr ""
 
 #: web/app/components/StyleSpec.vue:166
@@ -1793,7 +1789,7 @@ msgstr ""
 msgid "Look"
 msgstr ""
 
-#: web/app/lib/search.ts:452
+#: web/app/lib/search.ts:473
 msgid "Look at the backslash at character {position}. Nothing is replaced."
 msgstr ""
 
@@ -1901,7 +1897,7 @@ msgstr ""
 msgid "Multiplies the ranges cell by cell (they must have the same shape) and adds up the products."
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/ShareDialog.vue:44 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1107
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/ShareDialog.vue:44 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1108
 msgid "Name"
 msgstr ""
 
@@ -1937,7 +1933,7 @@ msgstr ""
 msgid "Names"
 msgstr ""
 
-#: web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:959
+#: web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:960
 msgid "Names…"
 msgstr ""
 
@@ -1945,7 +1941,7 @@ msgstr ""
 msgid "New"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:902
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:903
 msgid "New Sheet…"
 msgstr ""
 
@@ -1969,7 +1965,7 @@ msgstr ""
 msgid "New password (at least 8 characters)"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:57 web/app/components/Workspace.vue:1107
+#: web/app/components/FooterBar.vue:57 web/app/components/Workspace.vue:1108
 msgid "New sheet"
 msgstr ""
 
@@ -1977,7 +1973,7 @@ msgstr ""
 msgid "Next ({others})"
 msgstr ""
 
-#: web/app/components/Workspace.vue:664
+#: web/app/components/Workspace.vue:665
 msgid "Next Object"
 msgstr ""
 
@@ -2017,7 +2013,7 @@ msgstr ""
 msgid "No styles fit what is selected"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:109 web/app/components/TextWorkspace.vue:218 web/app/components/Workspace.vue:754
+#: web/app/components/SlideWorkspace.vue:109 web/app/components/TextWorkspace.vue:218 web/app/components/Workspace.vue:755
 msgid "No styles yet"
 msgstr ""
 
@@ -2077,7 +2073,7 @@ msgstr ""
 msgid "Nothing is called like that."
 msgstr ""
 
-#: web/app/lib/search.ts:440 web/app/lib/search.ts:443 web/app/lib/search.ts:446 web/app/lib/search.ts:449 web/app/lib/search.ts:452 web/app/lib/search.ts:461
+#: web/app/lib/search.ts:461 web/app/lib/search.ts:464 web/app/lib/search.ts:467 web/app/lib/search.ts:470 web/app/lib/search.ts:473 web/app/lib/search.ts:479
 msgid "Nothing is replaced."
 msgstr ""
 
@@ -2145,7 +2141,7 @@ msgstr ""
 msgid "One step in the history. Undo brings it back."
 msgstr ""
 
-#: web/app/lib/search.ts:432
+#: web/app/lib/search.ts:453
 msgid "Only in cells matching"
 msgstr ""
 
@@ -2177,11 +2173,11 @@ msgstr ""
 msgid "Only the {unnamed} waiting for a name"
 msgstr ""
 
-#: web/app/lib/search.ts:282
+#: web/app/lib/search.ts:283
 msgid "Only when it is the whole cell."
 msgstr ""
 
-#: web/app/lib/search.ts:283
+#: web/app/lib/search.ts:284
 msgid "Only whole words."
 msgstr ""
 
@@ -2237,7 +2233,7 @@ msgstr ""
 msgid "Other arguments are handed to GTK."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:622 web/app/components/Workspace.vue:877 web/app/components/Workspace.vue:956
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:623 web/app/components/Workspace.vue:878 web/app/components/Workspace.vue:957
 msgid "Outcomes of This Cell…"
 msgstr ""
 
@@ -2353,7 +2349,7 @@ msgstr ""
 msgid "PowerPoint presentation (.pptx)"
 msgstr ""
 
-#: web/app/components/Workspace.vue:665
+#: web/app/components/Workspace.vue:666
 msgid "Previous Object"
 msgstr ""
 
@@ -2393,7 +2389,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:621 web/app/components/Workspace.vue:954
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:622 web/app/components/Workspace.vue:955
 msgid "Random Generator…"
 msgstr ""
 
@@ -2501,7 +2497,7 @@ msgstr ""
 msgid "Replace this one"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:481 web/app/components/SearchPanel.vue:527 web/app/components/SearchPanel.vue:528 web/app/components/SearchPanel.vue:529 web/app/lib/search.ts:432
+#: web/app/components/SearchPanel.vue:481 web/app/components/SearchPanel.vue:527 web/app/components/SearchPanel.vue:528 web/app/components/SearchPanel.vue:529 web/app/lib/search.ts:453
 msgid "Replace with"
 msgstr ""
 
@@ -2533,7 +2529,7 @@ msgstr ""
 msgid "Require a secret to create or list documents"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:620 web/app/components/Workspace.vue:879 web/app/components/Workspace.vue:955
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:621 web/app/components/Workspace.vue:880 web/app/components/Workspace.vue:956
 msgid "Resample Random Numbers"
 msgstr ""
 
@@ -2593,7 +2589,7 @@ msgstr ""
 msgid "Rounds up to a multiple of the significance (1 unless given; its sign is ignored)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:910
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:911
 msgid "Row"
 msgstr ""
 
@@ -2633,7 +2629,7 @@ msgstr ""
 msgid "SQL editor"
 msgstr ""
 
-#: web/app/components/Workspace.vue:960
+#: web/app/components/Workspace.vue:961
 msgid "SQL query…"
 msgstr ""
 
@@ -2721,7 +2717,7 @@ msgstr ""
 msgid "Select an object to style it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:783
+#: web/app/components/Workspace.vue:784
 msgid "Select cells or an object to style them"
 msgstr ""
 
@@ -2729,11 +2725,11 @@ msgstr ""
 msgid "Select {blocker}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:634
+#: web/app/components/Workspace.vue:635
 msgid "Selected: {name}"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:511
+#: web/app/lib/sheet-search-host.ts:45
 msgid "Selection"
 msgstr ""
 
@@ -2801,7 +2797,7 @@ msgstr ""
 msgid "Shift"
 msgstr ""
 
-#: web/app/components/Workspace.vue:973
+#: web/app/components/Workspace.vue:974
 msgid "Shift + arrows or drag"
 msgstr ""
 
@@ -2881,11 +2877,11 @@ msgstr ""
 msgid "Soft hyphen"
 msgstr ""
 
-#: web/app/lib/search.ts:445
+#: web/app/lib/search.ts:466
 msgid "Something is repeated that is not there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:426 web/app/lib/session.ts:565
+#: web/app/lib/base-session.ts:426 web/app/lib/session.ts:560
 msgid "Something went wrong."
 msgstr ""
 
@@ -2917,7 +2913,7 @@ msgstr ""
 msgid "Starting {app}…"
 msgstr ""
 
-#: web/app/components/Workspace.vue:878
+#: web/app/components/Workspace.vue:879
 msgid "Stop Following"
 msgstr ""
 
@@ -3313,11 +3309,11 @@ msgstr ""
 msgid "The remainder of a division; it has the sign of the divisor."
 msgstr ""
 
-#: web/app/lib/search.ts:446
+#: web/app/lib/search.ts:467
 msgid "The repeat at character {position} has nothing before it. Nothing is replaced."
 msgstr ""
 
-#: web/app/lib/search.ts:460
+#: web/app/lib/search.ts:478
 msgid "The replacement uses a kept part that the pattern does not have."
 msgstr ""
 
@@ -3453,15 +3449,15 @@ msgstr ""
 msgid "The words will be hard to read on this background."
 msgstr ""
 
-#: web/app/lib/search.ts:440
+#: web/app/lib/search.ts:461
 msgid "The “(” at character {position} has no “)”. Nothing is replaced."
 msgstr ""
 
-#: web/app/lib/search.ts:443
+#: web/app/lib/search.ts:464
 msgid "The “)” at character {position} has no “(”. Nothing is replaced."
 msgstr ""
 
-#: web/app/lib/search.ts:449
+#: web/app/lib/search.ts:470
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr ""
 
@@ -3509,11 +3505,11 @@ msgstr ""
 msgid "This also appears in {count} formulas, which are left alone."
 msgstr ""
 
-#: web/app/lib/search.ts:451
+#: web/app/lib/search.ts:472
 msgid "This backslash does not mean anything here."
 msgstr ""
 
-#: web/app/components/Workspace.vue:703
+#: web/app/components/Workspace.vue:704
 msgid "This cell has no alternatives and does not depend on any."
 msgstr ""
 
@@ -3529,7 +3525,7 @@ msgstr ""
 msgid "This chart only"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1050
+#: web/app/components/Workspace.vue:1051
 msgid "This chart's definition is gone."
 msgstr ""
 
@@ -3541,7 +3537,7 @@ msgstr ""
 msgid "This computer"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1082
+#: web/app/components/Workspace.vue:1083
 msgid "This document has no sheet yet."
 msgstr ""
 
@@ -3577,11 +3573,7 @@ msgstr ""
 msgid "This paragraph only"
 msgstr ""
 
-#: web/app/lib/search.ts:454
-msgid "This pattern could take far too long on some texts."
-msgstr ""
-
-#: web/app/lib/search.ts:457
+#: web/app/lib/search.ts:475
 msgid "This pattern has too many brackets inside each other."
 msgstr ""
 
@@ -3617,7 +3609,7 @@ msgstr ""
 msgid "This shape only"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:511
+#: web/app/lib/sheet-search-host.ts:45
 msgid "This sheet"
 msgstr ""
 
@@ -3641,7 +3633,7 @@ msgstr ""
 msgid "Too faint"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:224 web/app/components/TextWorkspace.vue:261 web/app/components/Workspace.vue:949
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:224 web/app/components/TextWorkspace.vue:261 web/app/components/Workspace.vue:950
 msgid "Tools"
 msgstr ""
 
@@ -3669,7 +3661,7 @@ msgstr ""
 msgid "Type the address of a server, such as demo.example.org:8420."
 msgstr ""
 
-#: web/app/components/Workspace.vue:975
+#: web/app/components/Workspace.vue:976
 msgid "Type, F2 or double click"
 msgstr ""
 
@@ -3741,7 +3733,7 @@ msgstr ""
 msgid "Vertical alignment"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:209 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:249 web/app/components/Workspace.vue:941
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:209 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:249 web/app/components/Workspace.vue:942
 msgid "View"
 msgstr ""
 
@@ -3925,7 +3917,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:292 web/app/components/SlideCanvas.vue:329 web/app/components/Workspace.vue:255 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:382 web/app/components/Workspace.vue:442 web/app/components/Workspace.vue:448 web/app/components/Workspace.vue:498 web/app/components/Workspace.vue:649 web/app/components/Workspace.vue:696 web/app/components/Workspace.vue:816 web/app/lib/base-session.ts:435 web/app/lib/text-session.ts:382
+#: web/app/components/SlideCanvas.vue:292 web/app/components/SlideCanvas.vue:329 web/app/components/Workspace.vue:255 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:382 web/app/components/Workspace.vue:442 web/app/components/Workspace.vue:448 web/app/components/Workspace.vue:498 web/app/components/Workspace.vue:650 web/app/components/Workspace.vue:697 web/app/components/Workspace.vue:817 web/app/lib/base-session.ts:435 web/app/lib/text-session.ts:382
 msgid "You can only look at this document."
 msgstr ""
 
@@ -3965,15 +3957,15 @@ msgstr ""
 msgid "Zoom"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:190 web/app/lib/search.ts:231
+#: web/app/components/SearchPanel.vue:190 web/app/lib/search.ts:232
 msgid "a cell reference"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:183 web/app/lib/search.ts:213
+#: web/app/components/SearchPanel.vue:183 web/app/lib/search.ts:214
 msgid "a digit"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:182 web/app/lib/search.ts:210
+#: web/app/components/SearchPanel.vue:182 web/app/lib/search.ts:211
 msgid "a letter"
 msgstr ""
 
@@ -3993,7 +3985,7 @@ msgstr ""
 msgid "a non-breaking hyphen: a hyphen the line is never broken after"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:186 web/app/lib/search.ts:222
+#: web/app/components/SearchPanel.vue:186 web/app/lib/search.ts:223
 msgid "a number"
 msgstr ""
 
@@ -4033,7 +4025,7 @@ msgstr ""
 msgid "a soft hyphen: where a word may be broken at the end of a line in the pages"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:184 web/app/lib/search.ts:216
+#: web/app/components/SearchPanel.vue:184 web/app/lib/search.ts:217
 msgid "a space"
 msgstr ""
 
@@ -4057,7 +4049,7 @@ msgstr ""
 msgid "about this cell"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:686
+#: packages/claudia-server/src/claudia_server/computes.py:675
 msgid "add_chart: the name must have 1 to {limit} characters"
 msgstr ""
 
@@ -4077,7 +4069,7 @@ msgstr ""
 msgid "add_object: use add_image to put a picture on a slide"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:506
+#: packages/claudia-server/src/claudia_server/computes.py:495
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr ""
 
@@ -4117,7 +4109,7 @@ msgstr ""
 msgid "ann"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:185 web/app/lib/search.ts:219
+#: web/app/components/SearchPanel.vue:185 web/app/lib/search.ts:220
 msgid "any character"
 msgstr ""
 
@@ -4125,7 +4117,7 @@ msgstr ""
 msgid "any character except"
 msgstr ""
 
-#: web/app/lib/search.ts:207
+#: web/app/lib/search.ts:208
 msgid "any character except {chars}"
 msgstr ""
 
@@ -4141,7 +4133,7 @@ msgstr ""
 msgid "any one of these may hold"
 msgstr ""
 
-#: web/app/lib/search.ts:204
+#: web/app/lib/search.ts:205
 msgid "any one of {chars}"
 msgstr ""
 
@@ -4149,11 +4141,11 @@ msgstr ""
 msgid "are exactly"
 msgstr ""
 
-#: web/app/lib/search.ts:261
+#: web/app/lib/search.ts:262
 msgid "are exactly “{text}”"
 msgstr ""
 
-#: web/app/lib/search.ts:410
+#: web/app/lib/search.ts:431
 msgid "are not exactly “{text}”"
 msgstr ""
 
@@ -4197,7 +4189,7 @@ msgstr ""
 msgid "cell content"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:456
+#: packages/claudia-server/src/claudia_server/computes.py:445
 msgid "cell_styles: the window must not end before it starts"
 msgstr ""
 
@@ -4205,11 +4197,11 @@ msgstr ""
 msgid "cells"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:413
+#: packages/claudia-server/src/claudia_server/computes.py:402
 msgid "cells: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:417
+#: packages/claudia-server/src/claudia_server/computes.py:406
 msgid "cells: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -4253,7 +4245,7 @@ msgstr ""
 msgid "column {n}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1030
+#: web/app/components/Workspace.vue:1031
 msgid "completions"
 msgstr ""
 
@@ -4269,7 +4261,7 @@ msgstr ""
 msgid "contain none of"
 msgstr ""
 
-#: web/app/lib/search.ts:265 web/app/lib/search.ts:412
+#: web/app/lib/search.ts:266 web/app/lib/search.ts:433
 msgid "contain none of {chars}"
 msgstr ""
 
@@ -4277,27 +4269,27 @@ msgstr ""
 msgid "contain one of"
 msgstr ""
 
-#: web/app/lib/search.ts:263 web/app/lib/search.ts:414
+#: web/app/lib/search.ts:264 web/app/lib/search.ts:435
 msgid "contain one of {chars}"
 msgstr ""
 
-#: web/app/lib/search.ts:253 web/app/lib/search.ts:402
+#: web/app/lib/search.ts:254 web/app/lib/search.ts:423
 msgid "contain “{text}”"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:236 web/app/components/TextWorkspace.vue:305 web/app/components/Workspace.vue:977
+#: web/app/components/SlideWorkspace.vue:236 web/app/components/TextWorkspace.vue:305 web/app/components/Workspace.vue:978
 msgid "copy, cut and paste, also from and to other programs"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:634
+#: packages/claudia-server/src/claudia_server/computes.py:623
 msgid "define_diagram: id and format are assigned by the server"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:992
+#: packages/claudia-server/src/claudia_server/computes.py:981
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1006
+#: packages/claudia-server/src/claudia_server/computes.py:995
 msgid "define_sql: {problem}"
 msgstr ""
 
@@ -4317,19 +4309,19 @@ msgstr ""
 msgid "do not contain"
 msgstr ""
 
-#: web/app/lib/search.ts:255 web/app/lib/search.ts:404
+#: web/app/lib/search.ts:256 web/app/lib/search.ts:425
 msgid "do not contain “{text}”"
 msgstr ""
 
-#: web/app/lib/search.ts:408
+#: web/app/lib/search.ts:429
 msgid "do not end with “{text}”"
 msgstr ""
 
-#: web/app/lib/search.ts:416
+#: web/app/lib/search.ts:437
 msgid "do not match the pattern for cells"
 msgstr ""
 
-#: web/app/lib/search.ts:406
+#: web/app/lib/search.ts:427
 msgid "do not start with “{text}”"
 msgstr ""
 
@@ -4353,7 +4345,7 @@ msgstr ""
 msgid "edit"
 msgstr ""
 
-#: web/app/components/Workspace.vue:975
+#: web/app/components/Workspace.vue:976
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr ""
 
@@ -4373,7 +4365,7 @@ msgstr ""
 msgid "end with"
 msgstr ""
 
-#: web/app/lib/search.ts:259
+#: web/app/lib/search.ts:260
 msgid "end with “{text}”"
 msgstr ""
 
@@ -4409,7 +4401,7 @@ msgstr ""
 msgid "export_office: format must be \"pptx\" or \"odp\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:261
+#: packages/claudia-server/src/claudia_server/computes.py:250
 msgid "export_office: format must be \"xlsx\" or \"ods\""
 msgstr ""
 
@@ -4497,7 +4489,7 @@ msgstr ""
 msgid "is working"
 msgstr ""
 
-#: web/app/components/Workspace.vue:974
+#: web/app/components/Workspace.vue:975
 msgid "jump to the edge of a block of data"
 msgstr ""
 
@@ -4505,7 +4497,7 @@ msgstr ""
 msgid "just now"
 msgstr ""
 
-#: web/app/components/Workspace.vue:976
+#: web/app/components/Workspace.vue:977
 msgid "keep and go down / keep and go right / cancel"
 msgstr ""
 
@@ -4517,16 +4509,24 @@ msgstr ""
 msgid "least"
 msgstr ""
 
-#: web/app/components/Workspace.vue:972
+#: web/app/components/Workspace.vue:973
 msgid "leave the table: on to the next / back to the previous part of the window"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1131
-msgid "leave: each is {sheet, row, col, match}, match being a number or null"
+#: packages/claudia-server/src/claudia_server/computes_search.py:206
+msgid "leave: at most {limit} at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1135
+#: packages/claudia-server/src/claudia_server/computes_search.py:216
+msgid "leave: each is {at, match}, at being a cell {sheet, row, col} and match a number or null"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes_search.py:222
 msgid "leave: match is the number of a match in the cell, or null for all"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes_search.py:219
+msgid "leave: that cell is outside any sheet"
 msgstr ""
 
 #: web/app/components/FooterBar.vue:65 web/app/components/SlideWorkspace.vue:302 web/app/components/TextWorkspace.vue:336
@@ -4601,7 +4601,7 @@ msgstr ""
 msgid "move it; the handles resize it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:971
+#: web/app/components/Workspace.vue:972
 msgid "move through the table"
 msgstr ""
 
@@ -4649,7 +4649,7 @@ msgstr ""
 msgid "no document {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:813
+#: packages/claudia-server/src/claudia_server/computes.py:802
 msgid "no function named {name!r}"
 msgstr ""
 
@@ -4745,7 +4745,7 @@ msgstr ""
 msgid "optional"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:366
+#: packages/claudia-server/src/claudia_server/computes.py:355
 msgid "outcome_table: combine must be \"all\" or \"pair\""
 msgstr ""
 
@@ -4817,19 +4817,19 @@ msgstr ""
 msgid "query result"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:334
+#: packages/claudia-server/src/claudia_server/computes.py:323
 msgid "random_preview: params must be numbers"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:339
+#: packages/claudia-server/src/claudia_server/computes.py:328
 msgid "random_preview: there is no distribution {distribution!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:345
+#: packages/claudia-server/src/claudia_server/computes.py:334
 msgid "random_preview: {problem}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:320
+#: packages/claudia-server/src/claudia_server/computes.py:309
 msgid "random_preview: {what} must be a number or null"
 msgstr ""
 
@@ -4849,23 +4849,23 @@ msgstr ""
 msgid "request failed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:545
+#: packages/claudia-server/src/claudia_server/computes.py:534
 msgid "resize_lines: at most {limit} lines at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:569
+#: packages/claudia-server/src/claudia_server/computes.py:558
 msgid "resize_lines: axis must be \"row\" or \"col\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:552
+#: packages/claudia-server/src/claudia_server/computes.py:541
 msgid "resize_lines: each line is [index, size]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:557
+#: packages/claudia-server/src/claudia_server/computes.py:546
 msgid "resize_lines: size must be a number or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:559
+#: packages/claudia-server/src/claudia_server/computes.py:548
 msgid "resize_lines: size must be between {lo} and {hi}"
 msgstr ""
 
@@ -4893,11 +4893,15 @@ msgstr ""
 msgid "search help"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1218
+#: packages/claudia-server/src/claudia_server/computes_search.py:125
 msgid "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search"
 msgstr ""
 
-#: web/app/components/Workspace.vue:973
+#: packages/claudia-server/src/claudia_server/computes_search.py:117
+msgid "search_replace: the search took longer than {seconds} seconds, so nothing was replaced: narrow it"
+msgstr ""
+
+#: web/app/components/Workspace.vue:974
 msgid "select a block"
 msgstr ""
 
@@ -4909,15 +4913,15 @@ msgstr ""
 msgid "send"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:431
+#: packages/claudia-server/src/claudia_server/computes.py:420
 msgid "set_cells: at most {limit} cells at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:435
+#: packages/claudia-server/src/claudia_server/computes.py:424
 msgid "set_cells: each cell is an object with row, col and input"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:440
+#: packages/claudia-server/src/claudia_server/computes.py:429
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr ""
 
@@ -4969,7 +4973,7 @@ msgstr ""
 msgid "spread of the logarithm"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:961
+#: packages/claudia-server/src/claudia_server/computes.py:950
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr ""
 
@@ -4977,11 +4981,11 @@ msgstr ""
 msgid "start with"
 msgstr ""
 
-#: web/app/lib/search.ts:257
+#: web/app/lib/search.ts:258
 msgid "start with “{text}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:523
+#: packages/claudia-server/src/claudia_server/computes.py:512
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr ""
 
@@ -5089,7 +5093,7 @@ msgstr ""
 msgid "the document's own"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:188 web/app/lib/search.ts:228
+#: web/app/components/SearchPanel.vue:188 web/app/lib/search.ts:229
 msgid "the end of the cell"
 msgstr ""
 
@@ -5165,7 +5169,7 @@ msgstr ""
 msgid "the slides"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:187 web/app/lib/search.ts:225
+#: web/app/components/SearchPanel.vue:187 web/app/lib/search.ts:226
 msgid "the start of the cell"
 msgstr ""
 
@@ -5173,7 +5177,7 @@ msgstr ""
 msgid "the text"
 msgstr ""
 
-#: web/app/lib/search.ts:201
+#: web/app/lib/search.ts:202
 msgid "the text “{text}”"
 msgstr ""
 
@@ -5233,7 +5237,7 @@ msgstr ""
 msgid "this document is not a text"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:195
+#: packages/claudia-server/src/claudia_server/computes.py:181
 msgid "this document is not a workbook"
 msgstr ""
 
@@ -5289,19 +5293,19 @@ msgstr ""
 msgid "tobi"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:384
+#: packages/claudia-server/src/claudia_server/computes.py:373
 msgid "trace: reach must be one of {reaches}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:392
+#: packages/claudia-server/src/claudia_server/computes.py:381
 msgid "trace: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:388
+#: packages/claudia-server/src/claudia_server/computes.py:377
 msgid "trace: window is [row0, col0, row1, col1]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:395
+#: packages/claudia-server/src/claudia_server/computes.py:384
 msgid "trace: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -5321,7 +5325,7 @@ msgstr ""
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:583 packages/claudia-server/src/claudia_server/computes.py:669 packages/claudia-server/src/claudia_server/computes.py:718 packages/claudia-server/src/claudia_server/computes.py:957 packages/claudia-server/src/claudia_server/computes.py:987
+#: packages/claudia-server/src/claudia_server/computes.py:572 packages/claudia-server/src/claudia_server/computes.py:658 packages/claudia-server/src/claudia_server/computes.py:707 packages/claudia-server/src/claudia_server/computes.py:946 packages/claudia-server/src/claudia_server/computes.py:976
 msgid "unknown sheet {sheet!r}"
 msgstr ""
 
@@ -5517,15 +5521,15 @@ msgstr ""
 msgid "{count} slides on {pages}"
 msgstr ""
 
-#: web/app/lib/search.ts:275
+#: web/app/lib/search.ts:276
 msgid "{first} and {next}"
 msgstr ""
 
-#: web/app/lib/search.ts:275
+#: web/app/lib/search.ts:276
 msgid "{first} or {next}"
 msgstr ""
 
-#: web/app/lib/search.ts:274
+#: web/app/lib/search.ts:275
 msgid "{first}, then {next}"
 msgstr ""
 
@@ -5629,23 +5633,23 @@ msgstr ""
 msgid "{line}'s width, in pixels"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1045
+#: packages/claudia-server/src/claudia_server/computes_search.py:184
 msgid "{method}: a range is [first row, first column, last row, last column]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1034
+#: packages/claudia-server/src/claudia_server/computes_search.py:173
 msgid "{method}: a range is on a sheet: say which"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1031
+#: packages/claudia-server/src/claudia_server/computes_search.py:170
 msgid "{method}: a scope has a sheet and, on it, a range"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1038
+#: packages/claudia-server/src/claudia_server/computes_search.py:177
 msgid "{method}: a sheet is named by its id"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1021
+#: packages/claudia-server/src/claudia_server/computes_search.py:158
 msgid "{method}: kinds is a list of {kinds}"
 msgstr ""
 
@@ -5781,7 +5785,7 @@ msgstr ""
 msgid "{user} selected this"
 msgstr ""
 
-#: web/app/lib/search.ts:246
+#: web/app/lib/search.ts:247
 msgid "{what} (kept as “{name}”)"
 msgstr ""
 
@@ -5789,27 +5793,27 @@ msgstr ""
 msgid "{what} is outside the paragraph"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:202
+#: packages/claudia-server/src/claudia_server/computes.py:191
 msgid "{what} must be a whole number from 0 to {last}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:276
+#: packages/claudia-server/src/claudia_server/computes.py:265
 msgid "{what} must be a whole number from {low} to {high}"
 msgstr ""
 
-#: web/app/lib/search.ts:238
+#: web/app/lib/search.ts:239
 msgid "{what}, any number of times"
 msgstr ""
 
-#: web/app/lib/search.ts:239
+#: web/app/lib/search.ts:240
 msgid "{what}, exactly {n} times"
 msgstr ""
 
-#: web/app/lib/search.ts:237
+#: web/app/lib/search.ts:238
 msgid "{what}, one or more times"
 msgstr ""
 
-#: web/app/lib/search.ts:236
+#: web/app/lib/search.ts:237
 msgid "{what}, optionally"
 msgstr ""
 
@@ -5821,43 +5825,43 @@ msgstr ""
 msgid "{what}, {n} errors"
 msgstr ""
 
-#: web/app/lib/search.ts:242
+#: web/app/lib/search.ts:243
 msgid "{what}, {n} to {m} times"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:847
+#: packages/claudia-server/src/claudia_server/computes.py:836
 msgid "{what}: anchor is {{sheet, row, col}} on a sheet of this document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:862
+#: packages/claudia-server/src/claudia_server/computes.py:851
 msgid "{what}: give a range or an anchor (the cell of a SQL() formula), not both"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:831
+#: packages/claudia-server/src/claudia_server/computes.py:820
 msgid "{what}: range is {{sheet, row0, col0, row1, col1}}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:825
+#: packages/claudia-server/src/claudia_server/computes.py:814
 msgid "{what}: scope must be a sheet id or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:857
+#: packages/claudia-server/src/claudia_server/computes.py:846
 msgid "{what}: the definition is an object with {allowed}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:840
+#: packages/claudia-server/src/claudia_server/computes.py:829
 msgid "{what}: the range must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:238
+#: packages/claudia-server/src/claudia_server/computes.py:227
 msgid "{what}: this document does not know the diagram {diagram_id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:835
+#: packages/claudia-server/src/claudia_server/computes.py:824
 msgid "{what}: this document does not know the sheet {sheet!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:876
+#: packages/claudia-server/src/claudia_server/computes.py:865
 msgid "{what}: {problem}"
 msgstr ""
 

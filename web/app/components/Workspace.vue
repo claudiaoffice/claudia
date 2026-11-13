@@ -47,8 +47,8 @@ import { sheetArea } from '~/lib/cell-styles'
 import { describeShortcut, objectName, pictureAlt } from '~/lib/descriptions'
 import { selectionAnnouncement } from '~/lib/grid-a11y'
 import { chordLabel, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
-import { marksFor, NO_MARKS, type PreviewAnswer, type SearchMatch } from '~/lib/search'
-import { sheetSearchHost } from '~/lib/sheet-search-host'
+import type { PreviewAnswer, SearchMatch } from '~/lib/search'
+import { marksFor, NO_MARKS, sheetSearchHost } from '~/lib/sheet-search-host'
 import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~/lib/follow'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
@@ -592,6 +592,7 @@ const searchHost = sheetSearchHost({
   session,
   selection: () => sel.value,
   goTo: (sheet, row, col) => void goToCell(sheet, row, col),
+  t,
 })
 /** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */
 async function goToCell(sheet: string, row: number, col: number) {

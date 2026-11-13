@@ -4,9 +4,14 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
-## [Unreleased]
+## [0.19.0] - 2026-11-13
 
-What an object says to someone who cannot see it (BITV 1.1.1).
+What an object says to someone who cannot see it (BITV 1.1.1); the search engine moves out of the kernel (SEC-18).
+
+### Removed
+- **Breaking**: `Query`, `CompiledSearch`, `Match` and `SearchError` (the module `claudia_core.search`). They are in the
+  new package claudia-search (`claudia_search`), which runs patterns on `regex` with a deadline: the kernel imports the
+  standard library only (CONTRIBUTING, rule 6), and Python's `re` cannot be stopped (SEC-18).
 
 ### Added
 - `ObjectBody.description` (at most `MAX_ALT_CHARS` characters) and `ObjectBody.decorative`, the same in every app. A
