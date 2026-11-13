@@ -74,7 +74,7 @@ ISSUES = "https://github.com/claudiaoffice/claudia/issues"
 LEGAL = "https://github.com/claudiaoffice/claudia/blob/main/LICENSE"
 
 
-def about_links() -> tuple[tuple[str, str], ...]:
+def about_links(translate: Translate = lambda text: text) -> tuple[tuple[str, str], ...]:
     """The three outbound links every About dialog shows, in this order (D28, the owner's 2026-11-06 report that the
     web and Linux About dialogs had drifted apart): data, so both can be tested without GTK (``window.py``'s
     ``_show_about`` is what actually builds the dialog). The licence is linked rather than shown in full here, for
@@ -84,7 +84,7 @@ def about_links() -> tuple[tuple[str, str], ...]:
     Web's own copy of this list is ``AboutDialog.vue``'s ``LINKS`` — there is no shared manifest for the two shells
     to read this from, so a change here needs the same change made there by hand.
     """
-    return (("Website", WEBSITE), ("Report an Issue", ISSUES), ("Legal", LEGAL))
+    return ((translate("Website"), WEBSITE), (translate("Report an Issue"), ISSUES), (translate("Legal"), LEGAL))
 
 
 class Kind(enum.Enum):
@@ -457,6 +457,16 @@ def computes() -> Manifest:
         (
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
+            (
+                # E5.15: the same entry, label and shortcut in every app (D281). Ctrl+H, which opens the panel with
+                # Replace showing, is a second way in and has no menu entry of its own.
+                _page(
+                    "edit.search-replace",
+                    "Search & Replace…",
+                    "Find text, formulas and values, and replace them",
+                    accelerators=("<Primary>f",),
+                ),
+            ),
             (_page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document"),),
             (
                 # D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ /
@@ -503,6 +513,15 @@ def computes() -> Manifest:
                 _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
             ),
             (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+            # BITV 1.1.1: say what the selected object shows to someone who cannot see it, or mark it as decoration.
+            (
+                _page(
+                    "format.describe",
+                    "Describe Object…",
+                    "Say what the object you have selected shows to someone who cannot see it",
+                    accelerators=("<Primary><Alt>d",),
+                ),
+            ),
         ),
     )
     view_menu = Menu("View", (_shared_view_block(authors=False),))
@@ -511,6 +530,34 @@ def computes() -> Manifest:
         (
             # Only the generic entry (D126): "Ask for an Example Budget" was taken out (2026-11-12).
             (_page("tools.ask", "Ask the Assistant…", "Write to the assistant in the chat"),),
+            # Random numbers, alternatives and following a computation (E6.21–E6.23, D292–D297): every entry a key.
+            (
+                _page(
+                    "tools.random",
+                    "Random Generator…",
+                    "Pick a distribution and put RANDOM into the cell",
+                    accelerators=("<Primary><Alt>r",),
+                ),
+                _page(
+                    "tools.resample",
+                    "Resample Random Numbers",
+                    "Draw new random numbers for everybody",
+                    accelerators=("F9",),
+                ),
+                _page(
+                    "tools.outcomes",
+                    "Outcomes of This Cell…",
+                    "Every outcome of the alternatives this cell depends on",
+                    accelerators=("<Primary><Alt>o",),
+                ),
+                _page(
+                    "tools.follow",
+                    "Follow Computation",
+                    "Light up the cells that take part in this cell's computation",
+                    accelerators=("<Primary><Alt>f",),
+                    checkable=True,
+                ),
+            ),
         ),
     )
     return Manifest(
@@ -544,7 +591,7 @@ def creates() -> Manifest:
                     "edit.slide-time",
                     "Plan the Time of This Slide…",
                     "How long you want to spend on this slide; the bar below the slides adds the times up",
-                    accelerators=("<Primary><Alt>d",),
+                    accelerators=("<Primary><Alt>m",),
                 ),
             ),
             (
@@ -572,13 +619,22 @@ def creates() -> Manifest:
                 _page("format.all-styles", "All Styles…", "List, rename and tidy the styles of this document"),
             ),
             (_page("format.colours", "Colours…", "The colours of this document, by what each one means"),),
+            # BITV 1.1.1: say what the selected object shows to someone who cannot see it, or mark it as decoration.
+            (
+                _page(
+                    "format.describe",
+                    "Describe Object…",
+                    "Say what the object you have selected shows to someone who cannot see it",
+                    accelerators=("<Primary><Alt>d",),
+                ),
+            ),
         ),
     )
     view_menu = Menu(
         "View",
         (
             _shared_view_block(authors=False),
-            # The show (E10.2, D295). F5 is a system key on a Mac and cannot be the only way in, so each entry also has
+            # The show (E10.2, D344). F5 is a system key on a Mac and cannot be the only way in, so each entry also has
             # a chord on a letter that every system leaves alone; the page handles both (``lib/present-keys.ts``).
             (
                 _page(

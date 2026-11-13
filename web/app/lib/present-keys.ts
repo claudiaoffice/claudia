@@ -1,4 +1,4 @@
-// The keys that start the show and that belong to its notes and times (E10.2, D295).
+// The keys that start the show and that belong to its notes and times (E10.2, D344).
 //
 // F5 and Shift+F5 are the habit of every presentation program on Windows and Linux. On a Mac they are not ours: F5 is a
 // system key there (the spike's Safari result, `spikes/e10-2-presenter-window/results/`), and a browser gets it only
@@ -17,7 +17,7 @@ const LETTER_KEY: Record<PresentAction, KeyChord> = {
   start: { key: 'p', code: 'KeyP', ctrl: true, alt: true },
   here: { key: 'p', code: 'KeyP', ctrl: true, alt: true, shift: true },
   notes: { key: 'n', code: 'KeyN', ctrl: true, alt: true },
-  time: { key: 'd', code: 'KeyD', ctrl: true, alt: true },
+  time: { key: 'm', code: 'KeyM', ctrl: true, alt: true },
 }
 
 /** Whether this is a Mac, where F5 is not ours. */
@@ -47,10 +47,10 @@ export function presentShortcuts(
   enabled: Partial<Record<PresentAction, () => boolean>> = {},
 ): ShortcutDef[] {
   const label: Record<PresentAction, string> = {
-    start: t('Present from the first slide'),
-    here: t('Present from this slide'),
-    notes: t('Show or hide the speaker notes'),
-    time: t('Plan the time of this slide'),
+    start: t('Present from the First Slide'),
+    here: t('Present from This Slide'),
+    notes: t('Speaker Notes'),
+    time: t('Plan the Time of This Slide…'),
   }
   const id: Record<PresentAction, string> = {
     start: 'view.present-start',

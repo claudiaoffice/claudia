@@ -20,6 +20,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from importlib import resources
+from pathlib import Path
 from typing import Any, Protocol
 
 from ._gi import Adw, Gio, GLib, Gtk
@@ -203,7 +204,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
                 on_message=self._bridge.receive,
                 on_reset=self._page_is_reloading,
                 on_problem=self.show_error,
-                on_download=lambda path: self.toast(f"Saved {path.name} to {path.parent.name}"),
+                on_download=self._announce_download,
                 pinned=self._trust.pinned,
             )
             self.web_slot.append(self._page.widget)
@@ -229,6 +230,10 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         """Tell the page why a connection was not made; without a page that can hear it, show the window's own error."""
         if self._page is None or not self._bridge.send_connect_failed(code, message):
             self.show_error(_("Could not connect"), message)
+
+    def _announce_download(self, path: Path) -> None:
+        """Say where a finished download went."""
+        self.toast(_("Saved {name} to {folder}").format(name=path.name, folder=path.parent.name))
 
     def toast(self, text: str) -> None:
         """A short message at the bottom of the window."""
@@ -356,7 +361,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         body.append(version)
 
         links = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, halign=Gtk.Align.CENTER)
-        for label, url in about_links():
+        for label, url in about_links(_):
             button = Gtk.Button(label=label)
             button.add_css_class("about-link")
             button.connect("clicked", lambda _b, u=url: self._open_link(u))

@@ -8,6 +8,9 @@
 // anywhere else) and keeps one `keydown` listener on the bar doing all of the work, for the bar and for one level of
 // submenu (`items`, used by "Paste as", "Row" and "Column" — D130).
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 export interface MenuItem {
   /** The shell-contract action id (`file.save`, …) for an item a native shell can also drive. Omit for an item that
@@ -269,7 +272,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <nav ref="root" class="menus" aria-label="menu" @keydown="onKeydown">
+  <nav ref="root" class="menus" :aria-label="t('menu')" @keydown="onKeydown">
     <div role="menubar" class="bar">
       <div v-for="(menu, i) in menus" :key="menu.label" class="menu">
         <button

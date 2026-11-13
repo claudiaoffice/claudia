@@ -88,3 +88,16 @@ class CellStylesChanged:
     def to_data(self) -> dict:
         """The event as it goes to the clients: the sheet and the area whose styles changed."""
         return {"type": "cell_styles", "sheet": self.sheet, "area": list(self.area)}
+
+
+@dataclass(frozen=True)
+class RandomChanged:
+    """The document's random seed or draw number changed (a resample, or a new seed): the numbers drawn from it
+    changed too, and arrive as ``CellsChanged``. This tells a client what to show for the draw number."""
+
+    seed: int
+    draw: int
+
+    def to_data(self) -> dict:
+        """The event as it goes to the clients."""
+        return {"type": "random", "seed": self.seed, "draw": self.draw}

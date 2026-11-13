@@ -10,6 +10,7 @@ charts    ChartSpec: what a diagram draws, computes' own ``DiagramDefinition`` (
 region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
 styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
 entry     parse_input: what typing into a cell means
+search    scan and plan_replacement: search and replace in text, formulas and values (E6.20)
 
 
 A floating object is a shared ``ObjectBody`` plus a ``CellAnchor``: only the anchor is this app's. The anchor and
@@ -33,6 +34,7 @@ from claudia_core import (  # noqa: F401
     DefineDiagram,
     DefineImage,
     DefineShape,
+    DescribeObject,
     DiagramDefinition,
     ForgetDiagram,
     ForgetImage,
@@ -57,7 +59,18 @@ from . import commands, name_commands  # noqa: F401  (registers the commands)
 from ._version import __version__
 from .cellstyles import CELL_SLOTS, DEFAULT_CELL_STYLE, LAYERS, MAX_STYLE_RANGES, CellStyles, layer_of
 from .charts import CHART_KINDS, ChartError, ChartSpec
-from .commands import AddChart, AddSheet, RemoveChart, RemoveSheet, ResizeLines, SetCells, SetCellStyle, Structure
+from .commands import (
+    AddChart,
+    AddSheet,
+    RemoveChart,
+    RemoveSheet,
+    Resample,
+    ResizeLines,
+    SetCells,
+    SetCellStyle,
+    SetRandomSeed,
+    Structure,
+)
 from .entry import parse_input
 from .events import (
     CellStylesChanged,
@@ -66,9 +79,10 @@ from .events import (
     ImagesChanged,
     NamesChanged,
     ObjectsChanged,
+    RandomChanged,
     ShapesChanged,
 )
-from .functions.help import FunctionHelp, function_catalog, get_function, search_functions
+from .functions.help import FunctionHelp, function_catalog, get_function, search_functions, translatable_texts
 from .model import (
     MAX_OBJECTS_PER_SHEET,
     MIN_OBJECT_SIZE,
@@ -83,6 +97,7 @@ from .model import (
 )
 from .name_commands import DefineName, RemoveName, RenameName, RestoreNames
 from .names import PURPOSES, NamedRange, Names
+from .outcomes import AltInput, OutcomeRow, OutcomeTable, Swing
 from .refs import (
     CellRef,
     DeleteCols,
@@ -97,8 +112,14 @@ from .refs import (
 )
 from .region import CellRegion
 from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
+from .trace import Trace
 
 __all__ = [
+    "Trace",
+    "Swing",
+    "OutcomeTable",
+    "OutcomeRow",
+    "AltInput",
     "__version__",
     "AddChart",
     "AddObject",
@@ -125,6 +146,7 @@ __all__ = [
     "DefineName",
     "DefineImage",
     "DefineShape",
+    "DescribeObject",
     "DeleteCols",
     "DeleteRows",
     "DiagramDefinition",
@@ -156,18 +178,21 @@ __all__ = [
     "parse_range_ref",
     "RangeRef",
     "RefParseError",
+    "RandomChanged",
     "RemoveChart",
     "RemoveName",
     "RenameName",
     "RestoreNames",
     "RemoveObject",
     "RemoveSheet",
+    "Resample",
     "ResizeLines",
     "ResizeObject",
     "RotateObject",
     "Run",
     "SetCells",
     "SetCellStyle",
+    "SetRandomSeed",
     "SetParagraphStyle",
     "SetSnap",
     "SetText",
@@ -182,4 +207,5 @@ __all__ = [
     "function_catalog",
     "get_function",
     "search_functions",
+    "translatable_texts",
 ]

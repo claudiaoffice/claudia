@@ -7,9 +7,15 @@
 import { computed, ref } from 'vue'
 import { menuCss } from '~/lib/style-css'
 import { galleryFor, type StyleHost } from '~/lib/style-host'
+import { useI18n } from '~/lib/i18n'
+import { markByPurpose } from '~/lib/noun-phrases'
+
+const { t } = useI18n()
 
 /** `caption`: the word before the button (“Style”; creates' second picker on a shape says “Label”). */
-const props = withDefaults(defineProps<{ host: StyleHost; hint?: string; caption?: string; testid?: string }>(), { hint: undefined, caption: 'Style', testid: 'style-picker' })
+const props = withDefaults(defineProps<{ host: StyleHost; hint?: string; caption?: string; testid?: string }>(), { hint: undefined, caption: undefined, testid: 'style-picker' })
+/** The caption shown: the given one, else “Style”. */
+const captionText = computed(() => props.caption ?? t('Style'))
 const emit = defineEmits<{ look: []; styled: [] }>()
 
 const at = ref<{ x: number; y: number } | null>(null)
@@ -36,7 +42,7 @@ function look() {
 
 <template>
   <div class="picker">
-    <span class="caption" aria-hidden="true">{{ caption }}</span>
+    <span class="caption" aria-hidden="true">{{ captionText }}</span>
     <button
       ref="button"
       class="btn"
@@ -44,7 +50,7 @@ function look() {
       aria-haspopup="listbox"
       :aria-expanded="!!at"
       :disabled="off"
-      :title="`${caption}: mark the ${host.noun} by what it is for`"
+      :title="markByPurpose(host.noun, captionText)"
       :data-testid="testid"
       @mousedown.prevent
       @click="toggle"
@@ -52,8 +58,8 @@ function look() {
       <span class="name"><span class="look" :style="current ? menuCss(current.resolved) : undefined">{{ current?.name ?? '—' }}</span></span>
       <span class="caret">▾</span>
     </button>
-    <Popover v-if="at" :x="at.x" :y="at.y" :width="240" :anchor="button" label="Styles" @close="at = null">
-      <ul class="list" role="listbox" aria-label="Styles">
+    <Popover v-if="at" :x="at.x" :y="at.y" :width="240" :anchor="button" :label="t('Styles')" @close="at = null">
+      <ul class="list" role="listbox" :aria-label="t('Styles')">
         <li v-for="s in [...offered.own, ...offered.bundles]" :key="s.id" role="option" :aria-selected="s.id === current?.id">
           <button type="button" :data-style="s.id" @click="choose(s.id)">
             <span class="tick" aria-hidden="true">{{ s.id === current?.id ? '✓' : '' }}</span>
@@ -62,7 +68,7 @@ function look() {
         </li>
       </ul>
       <button type="button" class="edit" data-testid="picker-look" @click="look">
-        <span>Edit this style…</span><span v-if="hint" class="hint mono">{{ hint }}</span>
+        <span>{{ t('Edit This Style…') }}</span><span v-if="hint" class="hint mono">{{ hint }}</span>
       </button>
     </Popover>
   </div>

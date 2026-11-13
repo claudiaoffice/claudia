@@ -129,7 +129,7 @@ release accepts minimatch 11."""
 "claudia-client" = 88
 "claudia-composes" = 90
 "claudia-composes-io" = 95
-"claudia-computes" = 91
+"claudia-computes" = 92
 "claudia-computes-io" = 95
 "claudia-container" = 91
 "claudia-core" = 94

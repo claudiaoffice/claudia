@@ -1,10 +1,10 @@
 <script setup lang="ts">
 // The show (E10.2): the audience view, the presenter view, the overview, a blank screen and the end, in one window
-// over the workspace (D296 is open for a second window; this is the one-screen show, `P` swapping the two views).
+// over the workspace (D345 is open for a second window; this is the one-screen show, `P` swapping the two views).
 //
-// It runs on a frozen copy of the presentation (D292, `lib/frozen.ts`): a colleague's edit changes nothing on the
+// It runs on a frozen copy of the presentation (D341, `lib/frozen.ts`): a colleague's edit changes nothing on the
 // screen; the presenter view says how many steps the document has taken since and offers to take them in between
-// slides. Showing is read-only and local (D291): it writes no command, takes no lock and leaves nothing in the
+// slides. Showing is read-only and local (D340): it writes no command, takes no lock and leaves nothing in the
 // history. The keys, the order of the slides and the clock are `lib/show.ts`; this draws them.
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { freeze, showSlides, type FrozenDeck } from '~/lib/frozen'
@@ -34,7 +34,7 @@ const slideId = computed(() => show.current.id)
 const position = computed(() => t('{n} / {total}', { n: show.index + 1, total: show.slides.length }))
 const changes = computed(() => changesSince(deck.value.revision, props.session.state.revision))
 const next = computed(() => show.next)
-/** What a screen reader hears when a slide comes up: its place and its first words (D297). */
+/** What a screen reader hears when a slide comes up: its place and its first words (D346). */
 const announcement = computed(() => {
   if (show.ended) return t('End of presentation')
   const title = (deck.value.objects[slideId.value] ?? []).map((o) => wordsOf(o)).find((words) => words.trim()) ?? ''
@@ -96,7 +96,7 @@ async function toggleFullscreen() {
     if (document.fullscreenElement) await document.exitFullscreen()
     else await root.value?.requestFullscreen()
   } catch {
-    /* a shell that does not allow it (D296): the show covers the window instead */
+    /* a shell that does not allow it (D345): the show covers the window instead */
   }
 }
 function fullscreenChanged() {

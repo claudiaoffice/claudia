@@ -8,6 +8,9 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import type { Frame } from '~/lib/geometry'
 import { IMAGE_FILE_ACCEPT, MAX_IMAGE_BYTES, fileToBase64 } from '~/lib/images'
 import type { SlideSession } from '~/lib/slide-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   session: SlideSession
@@ -22,10 +25,12 @@ const file = ref<File | null>(null)
 const previewUrl = ref('')
 const naturalSize = ref<{ width: number; height: number } | null>(null)
 const alt = ref('')
+/** A picture that only decorates needs no words; a screen reader skips it (BITV 1.1.1). */
+const decorative = ref(false)
 const fileError = ref('')
 const busy = ref(false)
 
-const canSubmit = computed(() => file.value !== null && naturalSize.value !== null && alt.value.trim() !== '' && !busy.value)
+const canSubmit = computed(() => file.value !== null && naturalSize.value !== null && (decorative.value || alt.value.trim() !== '') && !busy.value)
 
 function reset() {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
@@ -45,7 +50,7 @@ function onFileChange(event: Event) {
   fileError.value = ''
   if (!picked) return
   if (picked.size > MAX_IMAGE_BYTES) {
-    fileError.value = `That file is too big (at most ${Math.floor(MAX_IMAGE_BYTES / (1024 * 1024))} MB).`
+    fileError.value = t('That file is too big (at most {mb} MB).', { mb: Math.floor(MAX_IMAGE_BYTES / (1024 * 1024)) })
     return
   }
   file.value = picked
@@ -60,7 +65,7 @@ function onPreviewLoad(event: Event) {
 }
 
 function onPreviewError() {
-  fileError.value = 'This does not look like a picture the browser can show.'
+  fileError.value = t('This does not look like a picture the browser can show.')
   reset()
 }
 
@@ -70,7 +75,7 @@ async function submit() {
   const data = await fileToBase64(file.value)
   const aspect = naturalSize.value.width / naturalSize.value.height
   const id = await props.session.addImage(
-    { data, alt: alt.value.trim(), sourceName: file.value.name, sourcePath: null },
+    { data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: null },
     props.frameFor(aspect),
   )
   busy.value = false
@@ -79,27 +84,33 @@ async function submit() {
 </script>
 
 <template>
-  <Modal title="Insert image" :width="440" @close="emit('close')">
+  <Modal :title="t('Insert image')" :width="440" @close="emit('close')">
     <form class="form" @submit.prevent="submit">
       <input ref="fileInput" type="file" :accept="IMAGE_FILE_ACCEPT" class="hidden-input" @change="onFileChange" >
       <div class="picker">
-        <button type="button" class="btn" @click="choose">{{ file ? 'Choose a different file…' : 'Choose a file…' }}</button>
+        <button type="button" class="btn" @click="choose">{{ file ? t('Choose a different file…') : t('Choose a file…') }}</button>
         <span v-if="file" class="filename">{{ file.name }}</span>
       </div>
       <p v-if="fileError" class="error" role="alert">{{ fileError }}</p>
       <div v-if="previewUrl" class="preview">
         <img :src="previewUrl" alt="" @load="onPreviewLoad" @error="onPreviewError" >
       </div>
-      <label class="field">Description (read aloud to someone who cannot see it)<input v-model="alt" autocomplete="off" maxlength="300" ></label>
+      <label class="field">{{ t('Description (read aloud to someone who cannot see it)') }}<input v-model="alt" autocomplete="off" maxlength="300" :disabled="decorative" ></label>
+      <label class="check"><input v-model="decorative" type="checkbox" > {{ t('Decorative: only for looks, a screen reader skips it') }}</label>
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? 'Inserting…' : 'Insert' }}</button>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
+        <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? t('Inserting…') : t('Insert') }}</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
       </div>
     </form>
   </Modal>
 </template>
 
 <style scoped>
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 .form {
   display: grid;
   gap: 14px;

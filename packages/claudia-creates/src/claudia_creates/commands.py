@@ -2,7 +2,7 @@
 
 Everything about objects — shapes, images, text boxes: define, forget, add, remove, move, resize, rotate, retext,
 snap — is shared with composes and computes and lives in :mod:`claudia_core.objects` (E10.16). What is left here
-is what only a presentation has: slides, their speaker notes (D293) and planned times (D294), and how it is
+is what only a presentation has: slides, their speaker notes (D342) and planned times (D343), and how it is
 printed (D917). Its language is the kernel's
 (:class:`~claudia_core.SetLanguage`), the same command composes uses.
 
@@ -140,7 +140,7 @@ class SetPrintSetup(Command):
 @register
 @dataclass(frozen=True)
 class SetSlideNotes(Command):
-    """Set the speaker notes of a slide (D293): Markdown, shown formatted in the presenter view and nowhere else.
+    """Set the speaker notes of a slide (D342): Markdown, shown formatted in the presenter view and nowhere else.
     ``""`` clears them."""
 
     kind: ClassVar[str] = "creates.SetSlideNotes"
@@ -184,7 +184,7 @@ class SetSlideNotes(Command):
 @register
 @dataclass(frozen=True)
 class SetSlideTime(Command):
-    """Set the planned time of a slide (D294) in whole seconds; ``None`` clears it."""
+    """Set the planned time of a slide (D343) in whole seconds; ``None`` clears it."""
 
     kind: ClassVar[str] = "creates.SetSlideTime"
     slide: str

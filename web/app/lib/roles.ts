@@ -8,6 +8,7 @@
 // Not to be confused with `palette.ts`, which is the *app's* own brand swatches in the colour picker. This file is
 // about the palette a document carries.
 import type { ColourRole, Reading } from './objects'
+import { translate as t } from './i18n'
 
 export type { ColourRole, Reading } from './objects'
 
@@ -34,10 +35,10 @@ export function roleValue(role: string, opacity: number | null = null): string {
 /** What to call a value in the interface: the role's name, or the colour itself when it is off the palette. */
 export function nameOf(value: string | undefined, roles: ColourRole[]): string {
   const named = roleIn(value)
-  if (!named) return (value ?? '').trim() || 'None'
+  if (!named) return (value ?? '').trim() || t('None')
   const role = roles.find((r) => r.id === named.role)
   const label = role?.name ?? named.role
-  return named.opacity === null ? label : `${label} at ${named.opacity}%`
+  return named.opacity === null ? label : t('{label} at {opacity}%', { label, opacity: named.opacity })
 }
 
 /** The colour to paint a swatch with: a role resolved from the palette, or the literal as given. */
@@ -157,8 +158,8 @@ export function troubleWith(reading: Reading, roles: ColourRole[]): string | nul
   const fore = roles.find((r) => r.id === reading.foreground)?.name ?? reading.foreground
   const back = roles.find((r) => r.id === reading.background)?.name ?? reading.background
   return reading.words
-    ? `${fore} on ${back} will be hard to read.`
-    : `${fore} will be hard to make out against ${back}.`
+    ? t('{fore} on {back} will be hard to read.', { fore, back })
+    : t('{fore} will be hard to make out against {back}.', { fore, back })
 }
 
 /** Every reading that fails, worst first — what a palette dialog shows after a change. */

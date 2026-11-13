@@ -5,6 +5,7 @@ import { Session } from './session'
 import { SlideSession } from './slide-session'
 import { TextSession } from './text-session'
 
+import { translate as t } from './i18n'
 export type AnySession = Session | TextSession | SlideSession
 
 /** What `/api/docs` answers: the app this server serves, and the documents it holds. */
@@ -42,9 +43,9 @@ export async function fetchDocsListing(origin: string, fetchImpl: typeof fetch =
   try {
     response = await fetchImpl(`${origin}/api/docs`)
   } catch {
-    return { error: 'The server cannot be reached.' }
+    return { error: t('The server cannot be reached.') }
   }
-  if (response.status === 404) return { error: 'This server does not list its documents. Type the name of yours.' }
+  if (response.status === 404) return { error: t('This server does not list its documents. Type the name of yours.') }
   let body: unknown = null
   try {
     body = await response.json()
@@ -53,10 +54,10 @@ export async function fetchDocsListing(origin: string, fetchImpl: typeof fetch =
   }
   if (!response.ok) {
     const detail = (body as { detail?: unknown } | null)?.detail
-    return { error: typeof detail === 'string' ? detail : `The server answered with an error (${response.status}).` }
+    return { error: typeof detail === 'string' ? detail : t('The server answered with an error ({status}).', { status: response.status }) }
   }
   const said = body as ServerListing | null
-  if (!said || !Array.isArray(said.documents)) return { error: 'The server did not answer with a document list.' }
+  if (!said || !Array.isArray(said.documents)) return { error: t('The server did not answer with a document list.') }
   return { app: said.app ?? '', documents: said.documents as Listed[] }
 }
 

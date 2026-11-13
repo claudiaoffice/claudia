@@ -5,9 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [0.9.0] - 2026-11-13
 
-Speaker notes and planned times (E10.2, D293, D294).
+Describing objects (BITV 1.1.1), speaker notes and planned times (E10.2, D342, D343). State schema 7 → 8 → 9.
 
 ### Added
+- `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`).
 - `SetSlideNotes(slide, notes)` (summary "edited the speaker notes of …"): the Markdown notes of a slide, at most
   `MAX_NOTES_LENGTH` characters, `""` clears them; one step with its exact inverse; event
   `{type: "slide_notes", slide, notes}` (`SlideNotesChanged`).
@@ -18,7 +19,9 @@ Speaker notes and planned times (E10.2, D293, D294).
   come back from a checkpoint like anything else.
 
 ### Changed
-- State schema 8 (was 7): `notes` and `times` per slide. An older document opens with none.
+- Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
+  rebuilt from the log (schema 8).
+- State schema 9: `notes` and `times` per slide. An older document opens with none.
 - Removing a slide removes its notes and time, and undoing the removal brings them back.
 
 ## [0.8.0] - 2026-11-13

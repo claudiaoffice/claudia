@@ -12,8 +12,8 @@ An object is two things, and keeping them apart is the whole point of this modul
 
 :class:`~claudia_core.VisualObject` is the pair. :class:`~claudia_core.ObjectModel` is the mixin an app's
 model inherits to hold objects, their stacking order, their shape outlines and their image assets. The
-commands below — define and forget a shape or an image, add, remove, move, resize, retext, rotate and snap an
-object — are written once, against the anchor protocol, and are the same command in every app.
+commands below — define and forget a shape or an image, add, remove, move, resize, retext, rotate, snap and
+describe an object — are written once, against the anchor protocol, and are the same command in every app.
 
 An anchor crosses the wire and the log as plain data, exactly as a :class:`~claudia_core.Region` does, and is
 read back by the one app-specific door, :meth:`~claudia_core.ObjectModel.anchor_from_data`. A command
@@ -31,7 +31,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime_checkable
 
-from .assets import ImageAsset, ImageImport
+from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Command, CommandRegistry, core_commands
 from .facets import SLOTS, fits
 from .paragraphs import Paragraph
@@ -65,7 +65,11 @@ _BODY_FIELDS = (
     "diagram",
     "rotation",
     "snap",
+    "description",
+    "decorative",
 )
+#: The fields documents written before descriptions existed lack (``ObjectBody.from_data`` fills them in).
+_LATER_FIELDS = ("description", "decorative")
 
 
 def _is_whole(value: object) -> TypeIs[int]:
@@ -150,7 +154,12 @@ class ObjectBody:
     id of a :class:`DiagramDefinition` the document knows (E6.6) — opaque to the kernel, the way an anchor is.
     ``rotation`` is whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15,
     D214): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
-    document state."""
+    document state.
+
+    ``description`` is what the object says to someone who cannot see it, and ``decorative`` says it has nothing to
+    say (a flourish, a divider): a decorative object has no description. Both are the same in every kind of
+    object, and a screen reader, a tagged PDF and an office file each get them from here. A picture that has no
+    description of its own is described by the words it was imported with."""
 
     id: str
     kind: str
@@ -164,6 +173,12 @@ class ObjectBody:
     diagram: str | None = None
     rotation: int = 0
     snap: bool = True
+    description: str = ""
+    decorative: bool = False
+
+    def __post_init__(self) -> None:
+        if self.imported is not None and not self.description and not self.decorative:
+            object.__setattr__(self, "description", self.imported.alt)
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores. Carries ``imported`` unmasked (the log is not a client)."""
@@ -185,7 +200,8 @@ class ObjectBody:
     def from_data(cls, data: dict) -> ObjectBody:
         """Inverse of :meth:`to_data`; whether the values make sense is the model's business
         (:meth:`~claudia_core.ObjectModel.check_object`)."""
-        if set(data) != set(_BODY_FIELDS):
+        earlier = tuple(name for name in _BODY_FIELDS if name not in _LATER_FIELDS)
+        if set(data) != set(_BODY_FIELDS) and set(data) != set(earlier):
             raise ValueError("an object body has exactly these fields: " + ", ".join(_BODY_FIELDS))
         imported, paragraph = data["imported"], data["paragraph"]
         return cls(
@@ -551,7 +567,18 @@ class ObjectModel[A: Anchor]:
             raise ValueError("the rotation must be whole degrees from 0 to 359")
         if type(body.snap) is not bool:
             raise ValueError("snap must be true or false")
+        self._check_description(body)
         self.check_anchor(obj.anchor, body)
+
+    @staticmethod
+    def _check_description(body: ObjectBody) -> None:
+        """``ValueError`` unless the description is short text and a decorative object has none."""
+        if not isinstance(body.description, str) or len(body.description) > MAX_ALT_CHARS:
+            raise ValueError(f"the description is text of at most {MAX_ALT_CHARS} characters")
+        if type(body.decorative) is not bool:
+            raise ValueError("decorative must be true or false")
+        if body.decorative and body.description:
+            raise ValueError("a decorative object has no description")
 
     @staticmethod
     def _check_slot(styles: Any, kind: str, index: int, style_id: str) -> None:
@@ -723,7 +750,15 @@ def _target(command: Command) -> str | None:
     if isinstance(command, AddObject):
         return command.object_id
     kinds = (
-        MoveObject | ResizeObject | SetText | SetParagraph | SetSnap | SetParagraphStyle | RotateObject | RemoveObject
+        MoveObject
+        | ResizeObject
+        | SetText
+        | SetParagraph
+        | SetSnap
+        | DescribeObject
+        | SetParagraphStyle
+        | RotateObject
+        | RemoveObject
     )
     if isinstance(command, kinds):
         return command.id
@@ -1025,6 +1060,7 @@ class AddObject(Command):
     The body is the shared part; ``anchor`` is plain data the app reads back (see the module description)."""
 
     kind: ClassVar[str] = "core.AddObject"
+    schema: ClassVar[int] = 2  # 1: a body without ``description`` and ``decorative``
     body: ObjectBody
     anchor: dict
     at: int | None = None
@@ -1045,7 +1081,9 @@ class AddObject(Command):
             words = self.body.paragraph.text if self.body.paragraph else ""
             return f"Added a text box: {_quote(words)}" if words.strip() else "Added a text box"
         if self.body.kind == "image":
-            alt = self.body.imported.alt if self.body.imported else ""
+            if self.body.decorative:
+                return "Added a decorative image"
+            alt = self.body.description
             return f"Added an image: {_quote(alt)}" if alt.strip() else "Added an image"
         if self.body.kind == "diagram":
             return "Added a diagram"
@@ -1513,3 +1551,71 @@ class SetSnap(Command):
 
     def redacted(self) -> Command:
         return self
+
+
+@core_commands.upcaster("core.AddObject", 1)
+def _objects_with_descriptions(data: dict) -> dict:
+    """Schema 1 bodies had no description and no decorative flag: a picture is described by its import's alt text."""
+    body = dict(data["body"])
+    imported = body.get("imported")
+    body.setdefault("description", "" if imported is None else imported["alt"])
+    body.setdefault("decorative", False)
+    return {**data, "body": body}
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class DescribeObject(Command):
+    """Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1).
+
+    A decorative object has no description, so the two are set together: marking one decorative drops its
+    description, and giving a description un-marks it. An object left with neither is simply not described yet —
+    the model allows it, a picture's entry points do not. The inverse restores both."""
+
+    kind: ClassVar[str] = "core.DescribeObject"
+    id: str
+    description: str
+    decorative: bool = False
+
+    @property
+    def label(self) -> str:
+        return "Mark as decorative" if self.decorative else "Describe object"
+
+    @property
+    def summary(self) -> str:
+        if self.decorative:
+            return "Marked an object as decorative"
+        if self.description.strip():
+            return f"Described an object: {_quote(self.description)}"
+        return "Removed an object's description"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        old = model.get_object(self.id)
+        new = old.with_body(description=self.description, decorative=self.decorative)
+        model.replace_object(new)
+        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        return DescribeObject(self.id, old.body.description, old.body.decorative)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "description": self.description, "decorative": self.decorative}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> DescribeObject:
+        return cls(data["id"], data["description"], data["decorative"])
+
+    def regions(self, model: object) -> tuple[ObjectSet, ...]:
+        return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """Moving, sizing or retexting the object does not matter to how it is described; another description or
+        a removal/re-creation does."""
+        return (
+            None if isinstance(other, DescribeObject | RemoveObject | AddObject) and _target(other) == self.id else self
+        )
+
+    def redacted(self) -> Command:
+        return DescribeObject(self.id, "", self.decorative)
+
+    def stub(self) -> dict:
+        return {"id": self.id}

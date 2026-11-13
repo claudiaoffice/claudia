@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560">
+<defs><clipPath id="gridclip"><rect x="0" y="112" width="1280" height="624"/></clipPath><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker></defs>
+<rect x="0.0" y="0.0" width="1000.0" height="560.0" rx="0" fill="#F7F3EC"/>
+<text x="40.0" y="56.0" font-family="Fraunces, 'DejaVu Serif', serif" font-size="26" font-weight="600" fill="#1F1A33" text-anchor="start">Menu entries (all with shortcuts)</text>
+<text x="40.0" y="82.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#6E6885" text-anchor="start">New entries in strong type; existing items stay as they are. Shortcuts are proposals — to check against GNOME and Firefox.</text>
+<rect x="40.0" y="110.0" width="66.0" height="32.0" rx="8" fill="#E6E1F8"/>
+<text x="52.0" y="131.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="600" fill="#1F1A33" text-anchor="start">Tools</text>
+<path d="M90.5,124.5 L94,128 L97.5,124.5" fill="none" stroke="#1F1A33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="40.0" y="156.0" width="380.0" height="252.0" rx="12" fill="#1F1A33" opacity="0.05"/>
+<rect x="37.0" y="153.0" width="386.0" height="258.0" rx="15" fill="#1F1A33" opacity="0.05"/>
+<rect x="34.0" y="150.0" width="392.0" height="264.0" rx="18" fill="#1F1A33" opacity="0.05"/>
+<rect x="31.0" y="147.0" width="398.0" height="270.0" rx="21" fill="#1F1A33" opacity="0.06"/>
+<rect x="40.0" y="150.0" width="380.0" height="252.0" rx="10" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<rect x="46.0" y="156.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="68.0" y="176.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">Random generator…</text>
+<text x="404.0" y="176.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">Ctrl+Alt+R</text>
+<rect x="46.0" y="188.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="68.0" y="208.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">Resample random numbers</text>
+<text x="404.0" y="208.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">F9</text>
+<rect x="46.0" y="220.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="68.0" y="240.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">Simulate…  (optional, see notes)</text>
+<text x="404.0" y="240.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">Ctrl+Alt+S</text>
+<line x1="48.0" y1="256.0" x2="412.0" y2="256.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<rect x="46.0" y="260.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="68.0" y="280.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">Outcomes of this cell…</text>
+<text x="404.0" y="280.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">Ctrl+Alt+O</text>
+<rect x="46.0" y="292.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="68.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">✓  Follow computation</text>
+<text x="404.0" y="312.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">Ctrl+Alt+F</text>
+<line x1="48.0" y1="328.0" x2="412.0" y2="328.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<text x="68.0" y="352.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#A59EBC" text-anchor="start">Font manager…</text>
+<text x="404.0" y="352.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#B9B3CC" text-anchor="end"></text>
+<text x="68.0" y="384.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#A59EBC" text-anchor="start">… other existing Tools items</text>
+<text x="404.0" y="384.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#B9B3CC" text-anchor="end"></text>
+<text x="500.0" y="130.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="700" fill="#1F1A33" text-anchor="start">Context menu on a cell</text>
+<rect x="500.0" y="156.0" width="380.0" height="148.0" rx="12" fill="#1F1A33" opacity="0.05"/>
+<rect x="497.0" y="153.0" width="386.0" height="154.0" rx="15" fill="#1F1A33" opacity="0.05"/>
+<rect x="494.0" y="150.0" width="392.0" height="160.0" rx="18" fill="#1F1A33" opacity="0.05"/>
+<rect x="491.0" y="147.0" width="398.0" height="166.0" rx="21" fill="#1F1A33" opacity="0.06"/>
+<rect x="500.0" y="150.0" width="380.0" height="148.0" rx="10" fill="#FFFFFF" stroke="#D4CEE0" stroke-width="1"/>
+<text x="528.0" y="176.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#A59EBC" text-anchor="start">Cut / Copy / Paste / Paste as…</text>
+<text x="864.0" y="176.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#B9B3CC" text-anchor="end"></text>
+<line x1="508.0" y1="192.0" x2="872.0" y2="192.0" stroke="#E1DCEA" stroke-width="1" stroke-linecap="butt"/>
+<rect x="506.0" y="196.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="528.0" y="216.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">Outcomes of this cell…</text>
+<text x="864.0" y="216.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">Ctrl+Alt+O</text>
+<rect x="506.0" y="228.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="528.0" y="248.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">Follow computation</text>
+<text x="864.0" y="248.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">Ctrl+Alt+F</text>
+<rect x="506.0" y="260.0" width="368.0" height="30.0" rx="7" fill="#E6E1F8" opacity="0.0"/>
+<text x="528.0" y="280.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start">Resample random numbers</text>
+<text x="864.0" y="280.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="end">F9</text>
+<text x="500.0" y="380.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Outcomes is only enabled on cells that have alternatives</text>
+<text x="500.0" y="398.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">or depend on RANDOM(); otherwise it is greyed out.</text>
+<text x="500.0" y="430.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">Excel’s own recalc key F9 keeps its meaning: it draws</text>
+<text x="500.0" y="448.0" font-family="Inter, 'Noto Sans', 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#6E6885" text-anchor="start">fresh random numbers for the whole document.</text>
+</svg>

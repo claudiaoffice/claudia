@@ -2,6 +2,7 @@
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
+import { describeParams } from './descriptions'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
@@ -39,9 +40,9 @@ export interface SlideState extends BaseState {
   shapes: Record<string, ShapeDef> // what this document has taken in, by id
   images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id (E10.8)
   styles: Record<string, StyleDef>
-  /** The speaker notes of the slides, Markdown, by slide; a slide without any is not here (D293). */
+  /** The speaker notes of the slides, Markdown, by slide; a slide without any is not here (D342). */
   notes: Record<string, string>
-  /** The planned time of the slides in whole seconds, by slide; a slide without one is not here (D294). */
+  /** The planned time of the slides in whole seconds, by slide; a slide without one is not here (D343). */
   times: Record<string, number>
   /** The document's colour roles and how they read against each other (D200); the styles are what is drawn from. */
   palette: PaletteEvent | null
@@ -225,7 +226,7 @@ export class SlideSession extends BaseSession<SlideState> {
    * `null`. Clipboard and drag-and-drop import are not built yet; this is the "browse a file" path only.
    */
   async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null },
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
     frame: Frame,
   ): Promise<string | null> {
     const done = await this.attempt('add_image', {
@@ -234,6 +235,7 @@ export class SlideSession extends BaseSession<SlideState> {
       alt: picture.alt,
       source_name: picture.sourceName,
       source_path: picture.sourcePath,
+      ...(picture.decorative ? { decorative: true } : {}),
       ...frame,
       base: this.state.revision,
     })
@@ -254,7 +256,7 @@ export class SlideSession extends BaseSession<SlideState> {
     return (await this.attempt('set_language', { language, base: this.state.revision })) !== false
   }
 
-  // -- what a talk is prepared with: speaker notes and planned times (D293, D294)
+  // -- what a talk is prepared with: speaker notes and planned times (D342, D343)
   /** The speaker notes of a slide, Markdown; `""` if it has none. */
   notesOf(slide: string): string {
     return this.state.notes[slide] ?? ''
@@ -266,20 +268,20 @@ export class SlideSession extends BaseSession<SlideState> {
   }
 
   /** How long the talk is planned to take: the planned times added up, how many slides have one and how many do not
-   * (D294: a slide without a time counts nothing, and the person is told so rather than given a guess). */
+   * (D343: a slide without a time counts nothing, and the person is told so rather than given a guess). */
   plan(): { seconds: number; planned: number; unplanned: number } {
     const ids = this.state.slides.map((slide) => slide.id)
     const times = ids.map((id) => this.state.times[id]).filter((seconds): seconds is number => seconds !== undefined)
     return { seconds: times.reduce((a, b) => a + b, 0), planned: times.length, unplanned: ids.length - times.length }
   }
 
-  /** Write the notes of a slide (D293): one step in the history, for everybody. `""` clears them. */
+  /** Write the notes of a slide (D342): one step in the history, for everybody. `""` clears them. */
   async setNotes(slide: string, notes: string): Promise<boolean> {
     if (this.readOnly) return false
     return (await this.attempt('set_slide_notes', { slide, notes, base: this.state.revision })) !== false
   }
 
-  /** Plan a time for a slide (D294), whole seconds; `null` takes the plan away. */
+  /** Plan a time for a slide (D343), whole seconds; `null` takes the plan away. */
   async setTime(slide: string, seconds: number | null): Promise<boolean> {
     if (this.readOnly) return false
     return (await this.attempt('set_slide_time', { slide, seconds, base: this.state.revision })) !== false
@@ -307,6 +309,12 @@ export class SlideSession extends BaseSession<SlideState> {
   /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
   async setSnap(id: string, snap: boolean): Promise<boolean> {
     return (await this.attempt('set_snap', { id, snap, base: this.state.revision })) !== false
+  }
+
+  /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
+   * history. A picture needs one or the other, which the server insists on. */
+  async describe(id: string, description: string, decorative: boolean): Promise<boolean> {
+    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
   }
 
   async remove(id: string): Promise<boolean> {

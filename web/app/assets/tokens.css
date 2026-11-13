@@ -5,6 +5,11 @@
  * dividers) was also pressed into service as the colour of a field's border, at 1.33:1 against a 3:1 UI-component
  * floor. The fix: `--muted` moves to 65% ink (5.24:1 / 4.74:1), and a field border gets its own token, `--line-field`,
  * separate from `--line`'s decorative 14% so one can change without the other breaking again.
+ *
+ * 2026-11-13 (BITV, 1.4.3): `--app-dark` is also text on white, on paper and on the app's own soft tint (an active
+ * tab, a pressed mark), where computes' teal measured 4.36:1 and creates' apricot 4.25:1. Teal moved from #0f7d6e to
+ * #0d7768 (4.73:1 on its soft tint) and apricot from #b9651c to #9c5314 (5.05:1); `tests/tokens.test.ts` now holds
+ * every such pair to 4.5:1, so the next colour cannot slip below it unnoticed.
  */
 :root {
   /* Native form controls (a `<select>`'s own popup, checkboxes, scrollbars) are drawn by the browser engine itself,
@@ -35,7 +40,7 @@
   --danger-dark: #a01822;
 
   --app: var(--teal); /* this is computes */
-  --app-dark: #0f7d6e;
+  --app-dark: #0d7768;
   --app-soft: color-mix(in srgb, var(--teal) 12%, white);
 
   /* Rose and teal as *text* (an error message, a link) rather than as a filled background: the base colours measure
@@ -43,7 +48,7 @@
    * these are the same values, named for this use so a background usage is never accidentally swapped to the dark one
    * (the design system's rule is still: Rose and Teal are backgrounds with white text; these two are the exception). */
   --rose-dark: #b8386a;
-  --teal-dark: #0f7d6e;
+  --teal-dark: #0d7768;
   /* The wordmark only: Rose lightened for a dark background (7.7:1 on `--page-dark`, 6.6:1 on `--surface-dark`) —
    * the inverse of `--rose-dark` above, which is Rose darkened for a light one. */
   --rose-light: #ef87ac;
@@ -104,7 +109,7 @@
 }
 :root[data-app='creates'] {
   --app: var(--apricot);
-  --app-dark: #b9651c;
+  --app-dark: #9c5314;
   --app-soft: color-mix(in srgb, var(--apricot) 18%, white);
 }
 

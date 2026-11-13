@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import re
 
+from .alternatives import formula_for, parse_alternatives
 from .model import Content, content_of
 
 _INT = re.compile(r"[+-]?[0-9]+")
@@ -17,7 +18,8 @@ def parse_input(text: str) -> Content:
 
     Nothing (or only blanks) empties the cell; a leading apostrophe keeps the rest as text (``'007``, ``'=1+1``); text
     starting with ``=`` and having more after it is a formula (it is read when it is stored: a formula that cannot be
-    read is kept and shows ``#ERROR!``, so that it can be corrected, not retyped); TRUE and FALSE
+    read is kept and shows ``#ERROR!``, so that it can be corrected, not retyped); a list in braces
+    (``{800, 1000, 1300}``) is alternatives, stored as the formula ``=ALTERNATIVES(...)`` (D294); TRUE and FALSE
     in any case are booleans; whole numbers are integers and decimals with a point or an exponent are floats; anything
     else, including a number the computer cannot hold, stays text."""
     if text.startswith("'"):
@@ -27,6 +29,8 @@ def parse_input(text: str) -> Content:
         return None
     if word[0] == "=" and len(word) > 1:
         return {"t": "formula", "v": word}
+    if word[0] == "{" and (alternatives := parse_alternatives(word)) is not None:
+        return {"t": "formula", "v": formula_for(alternatives)}
     if word.upper() in ("TRUE", "FALSE"):
         return content_of(word.upper() == "TRUE")
     if _INT.fullmatch(word):

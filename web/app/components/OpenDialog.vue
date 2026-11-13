@@ -7,6 +7,9 @@ import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
 import { createShellBridge, detectHandler, isApp, type ShellBridge } from '~/lib/shell-bridge'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** File ▸ New (D123): land with the document field blank and focused, instead of the one just closed. */
@@ -60,16 +63,16 @@ const words = computed(
   () =>
     ({
       composes: {
-        headline: 'Write together.',
-        sub: 'Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide.',
+        headline: t('Write together.'),
+        sub: t('Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide.'),
       },
       creates: {
-        headline: 'Say it on a slide.',
-        sub: 'Open a presentation, or start a new one. Everybody you invite works on the same slides at the same time.',
+        headline: t('Say it on a slide.'),
+        sub: t('Open a presentation, or start a new one. Everybody you invite works on the same slides at the same time.'),
       },
     })[app.value] ?? {
-      headline: 'Think with your data.',
-      sub: 'Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant.',
+      headline: t('Think with your data.'),
+      sub: t('Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant.'),
     },
 )
 watchEffect(() => {
@@ -216,12 +219,12 @@ function goToTyped() {
   if (shell.value?.canConnect) {
     const typed = connectAddress.value.trim()
     if (typed) connectInShell(typed)
-    else connectError.value = 'Type a server address.'
+    else connectError.value = t('Type a server address.')
     return
   }
   const target = normalizeServerInput(connectAddress.value, location.protocol)
   if (!target) {
-    connectError.value = 'Type a server address.'
+    connectError.value = t('Type a server address.')
     return
   }
   location.href = `${target}/`
@@ -254,8 +257,8 @@ async function go(how: 'open' | 'create' | 'recover') {
   if (missing) {
     error.value =
       how === 'recover'
-        ? 'Fill in the document, your name, the recovery key and a new password.'
-        : 'Fill in the document, your name and your password.'
+        ? t('Fill in the document, your name, the recovery key and a new password.')
+        : t('Fill in the document, your name and your password.')
     return
   }
   busy.value = true
@@ -284,11 +287,11 @@ async function go(how: 'open' | 'create' | 'recover') {
     error.value =
       failure?.code === 'unauthorized'
         ? how === 'create'
-          ? 'That document exists already — or the name or password is not acceptable. Try Open.'
+          ? t('That document exists already — or the name or password is not acceptable. Try Open.')
           : how === 'recover'
-            ? 'That recovery key does not fit this document.'
-            : 'The name or password is not right (or there is no such document).'
-        : (failure?.message ?? 'Could not connect.')
+            ? t('That recovery key does not fit this document.')
+            : t('The name or password is not right (or there is no such document).')
+        : (failure?.message ?? t('Could not connect.'))
     session?.close()
   } finally {
     busy.value = false
@@ -303,15 +306,15 @@ async function go(how: 'open' | 'create' | 'recover') {
       <span class="tag"><AppIcon :size="20" :app="app" /> {{ app }}</span>
     </header>
     <section class="card">
-      <nav class="servers" aria-label="Server bookmarks">
-        <div class="servers-title">Servers</div>
+      <nav class="servers" :aria-label="t('Server bookmarks')">
+        <div class="servers-title">{{ t('Servers') }}</div>
         <ul>
           <li v-for="b in bookmarks" :key="b.origin">
             <input
               v-if="renamingOrigin === b.origin"
               v-model="renameText"
               class="rename"
-              :aria-label="`Rename ${b.label}`"
+              :aria-label="t('Rename {server}', { server: b.label })"
               autofocus
               @keydown.enter="commitRename"
               @keydown.escape="cancelRename"
@@ -325,12 +328,12 @@ async function go(how: 'open' | 'create' | 'recover') {
                   <span class="server-host">{{ hostOf(b.origin) }}</span>
                 </span>
               </button>
-              <button v-if="!b.local" type="button" class="server-action" title="Rename" :aria-label="`Rename ${b.label}`" @click="startRename(b)">
+              <button v-if="!b.local" type="button" class="server-action" :title="t('Rename')" :aria-label="t('Rename {server}', { server: b.label })" @click="startRename(b)">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
                 </svg>
               </button>
-              <button v-if="!viaShell || b.origin === origin" type="button" class="server-action" :title="`Manage ${b.label}…`" :aria-label="`Manage ${b.label}…`" @click="manage(b)">
+              <button v-if="!viaShell || b.origin === origin" type="button" class="server-action" :title="t('Manage {server}…', { server: b.label })" :aria-label="t('Manage {server}…', { server: b.label })" @click="manage(b)">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="3" />
                   <path
@@ -341,15 +344,15 @@ async function go(how: 'open' | 'create' | 'recover') {
             </template>
           </li>
         </ul>
-        <button v-if="!connecting" type="button" class="connect-start" @click="startConnect">+ Connect to a server…</button>
+        <button v-if="!connecting" type="button" class="connect-start" @click="startConnect">{{ t('+ Connect to a server…') }}</button>
         <form v-else class="connect-form" @submit.prevent="goToTyped">
-          <input v-model="connectAddress" aria-label="Server address" placeholder="example.com:8420" autofocus >
+          <input v-model="connectAddress" :aria-label="t('Server address')" :placeholder="t('example.com:8420')" autofocus >
           <div class="connect-buttons">
-            <button type="submit" class="btn primary small" :disabled="connectPending">Go</button>
-            <button type="button" class="btn small" @click="connecting = false">Cancel</button>
+            <button type="submit" class="btn primary small" :disabled="connectPending">{{ t('Go') }}</button>
+            <button type="button" class="btn small" @click="connecting = false">{{ t('Cancel') }}</button>
           </div>
         </form>
-        <p v-if="connectPending" class="hint" role="status">Connecting…</p>
+        <p v-if="connectPending" class="hint" role="status">{{ t('Connecting…') }}</p>
         <p v-if="connectError" class="error" role="alert">{{ connectError }}</p>
       </nav>
 
@@ -359,47 +362,46 @@ async function go(how: 'open' | 'create' | 'recover') {
 
       <div class="cols">
         <div class="list">
-          <h2>On this server</h2>
+          <h2>{{ t('On this server') }}</h2>
           <p v-if="listError" class="hint">{{ listError }}</p>
-          <p v-else-if="!documents.length" class="hint">Nothing yet. Create the first document.</p>
+          <p v-else-if="!documents.length" class="hint">{{ t('Nothing yet. Create the first document.') }}</p>
           <ul v-else>
             <li v-for="d in documents" :key="d.id">
               <button type="button" :class="{ chosen: d.id === doc }" @click="doc = d.id">
                 <span class="name">{{ d.id }}</span>
-                <span class="meta">{{ ago(d.modified) }}<template v-if="d.online"> · {{ d.online }} here now</template></span>
+                <span class="meta">{{ ago(d.modified) }}<template v-if="d.online"> {{ t('· {online} here now', { online: d.online }) }}</template></span>
               </button>
             </li>
           </ul>
         </div>
 
         <form @submit.prevent="go(recovering ? 'recover' : 'open')">
-          <label class="field">Document<input ref="docField" v-model="doc" name="document" autocomplete="off" placeholder="budget-2027" ></label>
-          <label class="field">Your name<input v-model="user" name="user" autocomplete="username" placeholder="ann" ></label>
+          <label class="field">{{ t('Document') }}<input ref="docField" v-model="doc" name="document" autocomplete="off" :placeholder="t('budget-2027')" ></label>
+          <label class="field">{{ t('Your name') }}<input v-model="user" name="user" autocomplete="username" :placeholder="t('ann')" ></label>
           <label v-if="recovering" class="field">
-            Recovery key<input v-model="recoveryKey" name="recovery-key" autocomplete="off" spellcheck="false" placeholder="ABCD-EFGH-…" >
+            {{ t('Recovery key') }}<input v-model="recoveryKey" name="recovery-key" autocomplete="off" spellcheck="false" :placeholder="t('ABCD-EFGH-…')" >
           </label>
           <label class="field">
-            {{ recovering ? 'New password' : 'Password' }}
+            {{ recovering ? t('New password') : t('Password') }}
             <input v-model="password" name="password" type="password" :autocomplete="recovering ? 'new-password' : 'current-password'" >
           </label>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
           <div class="buttons">
             <template v-if="recovering">
-              <button class="btn primary" type="submit" :disabled="busy">Get back in</button>
-              <button class="btn" type="button" :disabled="busy" @click="recovering = false">Back</button>
+              <button class="btn primary" type="submit" :disabled="busy">{{ t('Get back in') }}</button>
+              <button class="btn" type="button" :disabled="busy" @click="recovering = false">{{ t('Back') }}</button>
             </template>
             <template v-else>
-              <button class="btn primary" type="submit" :disabled="busy">Open</button>
-              <button class="btn" type="button" :disabled="busy" @click="go('create')">Create document</button>
+              <button class="btn primary" type="submit" :disabled="busy">{{ t('Open') }}</button>
+              <button class="btn" type="button" :disabled="busy" @click="go('create')">{{ t('Create document') }}</button>
             </template>
           </div>
           <p v-if="recovering" class="hint">
-            The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new
-            password; you keep what you were allowed to do.
+            {{ t('The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do.') }}
           </p>
           <template v-else>
-            <p class="hint">A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).</p>
-            <p class="hint"><button class="link" type="button" @click="recovering = true">I forgot my password</button></p>
+            <p class="hint">{{ t('A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).') }}</p>
+            <p class="hint"><button class="link" type="button" @click="recovering = true">{{ t('I forgot my password') }}</button></p>
           </template>
         </form>
       </div>

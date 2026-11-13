@@ -1,7 +1,7 @@
 """The methods of the presentation app: what a slide view needs to show a slide and to take what people do on it.
 
 ``creates_methods`` is ``core_methods`` plus ``slides``, ``slide``, ``shapes``, ``styles``, ``add_slide``,
-``set_slide_notes``, ``set_slide_time`` (speaker notes and planned times, D293, D294),
+``set_slide_notes``, ``set_slide_time`` (speaker notes and planned times, D342, D343),
 ``add_object``, ``add_image``, ``move_object``, ``resize_object``, ``set_text``, ``set_snap`` and
 ``remove_object``. Positions and sizes are whole units of the slide space (1600 by 900). A shape is chosen by its
 id from the server's shape library;
@@ -27,6 +27,7 @@ from claudia_core import (
     Batch,
     DefineImage,
     DefineShape,
+    DescribeObject,
     ImageImport,
     MoveObject,
     ObjectBody,
@@ -52,7 +53,8 @@ from claudia_creates import (
     SlideModel,
 )
 
-from .images import image_bytes
+from .i18n import msg
+from .images import image_bytes, picture_words
 from .office_export import document_info, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
@@ -69,7 +71,7 @@ PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}
 def _deck(ctx: Context) -> SlideModel:
     model = ctx.document.model
     if not isinstance(model, SlideModel):
-        raise RequestError("command_error", "this document is not a presentation")
+        raise RequestError("command_error", msg("this document is not a presentation"))
     return model
 
 
@@ -92,9 +94,10 @@ def _done(ctx: Context, command, base, **extra) -> dict:
     return {**extra, "revision": applied.revision.to_data()}
 
 
-def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, base):
+def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, decorative, base):
     """Import a picture from disk and put it on a slide: `data` is the file's bytes, base64. `alt` is a short,
-    required description of what it shows. `source_name` is the file name as the client has it; `source_path`
+    required description of what it shows — unless the picture is only `decorative` (a flourish, a divider),
+    when it has none and `alt` is empty. `source_name` is the file name as the client has it; `source_path`
     is its full path if the client could supply one (a plain web browser cannot, for its own security — send
     `null`). Clipboard and drag-and-drop imports are not implemented yet; this is the "browse a file" path.
     Returns the new object's id and the revision. The image keeps its own proportions.
@@ -102,12 +105,13 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, b
     Module-level, not nested in `creates_methods_with`, because it needs no shape library: only `add_object`
     and `shapes` read from one."""
     deck = _deck(ctx)
+    words = picture_words(alt, bool(decorative))
     asset = decode_image(data)
     steps: list = [] if asset.id in deck.images else [DefineImage(asset)]
     imported = ImageImport.from_data(
         {
             "asset": asset.id,
-            "alt": alt,
+            "alt": words,
             "imported_by": ctx.user,
             "imported_at": utc_now(),
             "source": "disk",
@@ -116,7 +120,9 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, b
         }
     )
     object_id = _fresh("o", deck.objects)
-    body = ObjectBody(object_id, "image", w, h, STYLE_OF_KIND["image"], image=asset.id, imported=imported)
+    body = ObjectBody(
+        object_id, "image", w, h, STYLE_OF_KIND["image"], image=asset.id, imported=imported, decorative=bool(decorative)
+    )
     steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
     return _done(ctx, command, base, object=object_id)
@@ -150,6 +156,14 @@ def _set_snap(ctx, *, id, snap, base):
     return _done(ctx, SetSnap(id, snap), base)
 
 
+def _describe_object(ctx, *, id, description, decorative, base):
+    """Say what an object is to someone who cannot see it (`description`, a short sentence), or that it is only
+    decoration (`decorative` true, and then no description). A picture needs one or the other."""
+    if _deck(ctx).get_object(id).body.kind == "image":
+        picture_words(description, bool(decorative))
+    return _done(ctx, DescribeObject(id, description, bool(decorative)), base)
+
+
 def _remove_object(ctx, *, id, base):
     """Take an object off its slide. Undo brings it back in the same place of the stacking order."""
     return _done(ctx, RemoveObject(id), base)
@@ -162,7 +176,8 @@ def _add_object_methods(table: MethodTable) -> None:
     table.kind("image")(image_bytes)
     table.method(
         "add_image",
-        "slide:str x:int y:int w:int h:int data:image alt:str source_name:str source_path:str? base:revision?",
+        "slide:str x:int y:int w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? "
+        "base:revision?",
         write=True,
     )(_add_image)
     table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
@@ -170,6 +185,9 @@ def _add_object_methods(table: MethodTable) -> None:
     table.method("rotate_object", "id:str rotation:int base:revision?", write=True)(_rotate_object)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
+    table.method("describe_object", "id:str description:text decorative:bool? base:revision?", write=True)(
+        _describe_object
+    )
     table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
 
 
@@ -197,17 +215,17 @@ def _add_print_methods(table: MethodTable) -> None:
 
 
 def _add_plan_methods(table: MethodTable) -> None:
-    """The speaker notes (D293) and planned times (D294) of the slides: what a talk is prepared with."""
+    """The speaker notes (D342) and planned times (D343) of the slides: what a talk is prepared with."""
 
     @table.method("set_slide_notes", "slide:str notes:text base:revision?", write=True)
     def _set_slide_notes(ctx, *, slide, notes, base):
-        """Set the speaker notes of a slide (D293), Markdown, shown formatted in the presenter view only; `""` clears
+        """Set the speaker notes of a slide (D342), Markdown, shown formatted in the presenter view only; `""` clears
         them. `command_error` for an unknown slide or notes that cannot be kept."""
         return _done(ctx, SetSlideNotes(slide, notes), base)
 
     @table.method("set_slide_time", "slide:str seconds:int? base:revision?", write=True)
     def _set_slide_time(ctx, *, slide, seconds, base):
-        """Set the planned time of a slide (D294) in whole seconds, 1 to 86400; `null` clears it. `command_error`
+        """Set the planned time of a slide (D343) in whole seconds, 1 to 86400; `null` clears it. `command_error`
         for an unknown slide or a time that makes no sense."""
         return _done(ctx, SetSlideTime(slide, seconds), base)
 
@@ -215,7 +233,7 @@ def _add_plan_methods(table: MethodTable) -> None:
 def _add_shared_methods(table: MethodTable) -> None:
     """What presentations answer the way the other apps do: ``styles``, ``palette``, ``change_style``,
     ``rename_style``, ``check_css`` and ``set_object_style`` (E1.10, D200), the objects (E10.16), the notes and
-    planned times (D293, D294), and printing and the language (D917)."""
+    planned times (D342, D343), and printing and the language (D917)."""
     add_style_methods(table)
     _add_object_methods(table)
     _add_print_methods(table)
@@ -230,7 +248,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("slides")
     def _slides(ctx):
         """The slides in order, each as `{id, objects, seconds, has_notes}`: how many things are on it, its planned
-        time in seconds (`null` when it has none, D294) and whether it has speaker notes (D293, read them with
+        time in seconds (`null` when it has none, D343) and whether it has speaker notes (D342, read them with
         `slide`)."""
         deck = _deck(ctx)
         return [
@@ -246,7 +264,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("slide", "slide:str")
     def _slide(ctx, slide):
         """One slide as `{revision, slide, objects, notes, seconds}`: its objects, the one in front last, its speaker
-        notes in Markdown (`""` if none, D293) and its planned time in seconds (`null` if none, D294). An object is
+        notes in Markdown (`""` if none, D342) and its planned time in seconds (`null` if none, D343). An object is
         `{id, kind, w, h, style, text, shape, image, imported, rotation, snap, anchor}` — the same shape in all
         three apps except for `anchor`, which here is `{kind: "slide", container: <slide>, x, y}` (E10.16).
         `imported`'s `source_path` is only sent to the person who imported that image (everyone else sees `null`
@@ -255,7 +273,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         `set_snap`."""
         deck = _deck(ctx)
         if slide not in deck.slides:
-            raise RequestError("command_error", f"unknown slide {slide!r}")
+            raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
         objects = [obj.to_data_for(ctx.user) for obj in deck.objects_on(slide)]
         return {
             "revision": _rev(ctx),
@@ -292,7 +310,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         changes, no history, no chat -- just the deck as it stands now (D212); an odp says in its metadata when the
         deck was made and last changed, and by whom, read from the log (D411)."""
         if format not in ("pptx", "odp"):
-            raise RequestError("bad_request", 'export_office: format must be "pptx" or "odp"')
+            raise RequestError("bad_request", msg('export_office: format must be "pptx" or "odp"'))
         deck = _deck(ctx)
         if format == "pptx":
             return office_export(format, slides_to_pptx(deck))
@@ -315,16 +333,18 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         style of its kind. Returns the new object's id and the revision. A circle must keep its proportions."""
         deck = _deck(ctx)
         if kind not in OBJECT_KINDS:
-            raise RequestError("bad_request", f"add_object: kind must be one of {', '.join(OBJECT_KINDS)}")
+            raise RequestError(
+                "bad_request", msg("add_object: kind must be one of {kinds}", kinds=", ".join(OBJECT_KINDS))
+            )
         if kind == "shape" and shape is None:
-            raise RequestError("bad_request", "add_object: a shape needs the id of its outline")
+            raise RequestError("bad_request", msg("add_object: a shape needs the id of its outline"))
         if kind == "image":
-            raise RequestError("bad_request", "add_object: use add_image to put a picture on a slide")
+            raise RequestError("bad_request", msg("add_object: use add_image to put a picture on a slide"))
         steps: list = []
         if shape is not None and shape not in deck.shapes:
             outline = library.get(shape)
             if outline is None:
-                raise RequestError("bad_request", f"add_object: this server has no shape {shape!r}")
+                raise RequestError("bad_request", msg("add_object: this server has no shape {shape!r}", shape=shape))
             steps.append(DefineShape(outline))
         object_id = _fresh("o", deck.objects)
         style = STYLE_OF_KIND[kind]

@@ -733,7 +733,7 @@ def test_random_moves_and_retexts_always_give_the_edited_deck_and_leave_the_rest
         assert new.startswith(old[: old.index("<draw:page")])
 
 
-# -- speaker notes (D293, D298) and planned times (D294) -----------------------------------------------------------
+# -- speaker notes (D342, D347) and planned times (D343) -----------------------------------------------------------
 TEXT_STYLES = (
     '<style:style style:name="Tb" style:family="text"><style:text-properties fo:font-weight="bold"/></style:style>'
     '<style:style style:name="Ti" style:family="text"><style:text-properties fo:font-style="italic"/></style:style>'
@@ -952,3 +952,39 @@ def test_bold_notes_add_one_text_style_and_the_notes_frame_keeps_its_place():
     edited, _, _ = edit(RICH, lambda model: model.set_notes("s1", "Say this **fast**"))
     assert odp_to_slides(edited).notes_of("s1") == "Say this **fast**"
     assert content(edited).count('style:family="text"') == 1 and problems(edited) == []
+
+
+# -- what an object says to someone who cannot see it (BITV 1.1.1) -------------------------------------------------
+def a_deck_with_picture(**changes) -> SlideModel:
+    deck = SlideModel.empty()
+    asset = a_gif()
+    deck.define_image(asset)
+    body = ObjectBody("o1", "image", 40, 20, "plain-image", image=asset.id, imported=an_import(asset), **changes)
+    deck.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
+    return deck
+
+
+def a_picture_frame(data: bytes):
+    (frame,) = etree.fromstring(read_parts(data)["content.xml"]).iter(f"{{{NS['draw']}}}frame")
+    return frame
+
+
+def test_a_picture_carries_its_description_as_svg_desc():
+    frame = a_picture_frame(slides_to_odp(a_deck_with_picture(description="two cyclists at a finish line")))
+    assert frame.find("svg:desc", NS).text == "two cyclists at a finish line"
+
+
+def test_a_picture_without_a_description_of_its_own_is_described_by_what_it_was_imported_with():
+    assert a_picture_frame(slides_to_odp(a_deck_with_picture())).find("svg:desc", NS).text == "a picture"
+
+
+def test_a_decorative_picture_has_no_text_alternative_in_the_file():
+    frame = a_picture_frame(slides_to_odp(a_deck_with_picture(decorative=True)))
+    assert frame.find("svg:desc", NS) is None and frame.find("svg:title", NS) is None
+
+
+def test_the_export_report_says_odf_cannot_keep_the_decorative_mark():
+    """ODF 1.3 has no attribute for it, so a reader of the file sees an undescribed picture: that is a loss."""
+    losses = odp_export_losses(a_deck_with_picture(decorative=True))
+    assert [(loss.kind, loss.count) for loss in losses] == [("decorative", 1)]
+    assert odp_export_losses(a_deck_with_picture()) == ()

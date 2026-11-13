@@ -89,8 +89,10 @@ def font_router(service: FontService, substitutions: Mapping[str, str]) -> APIRo
         # the listing changes when fonts are added, so it is checked each time; the files below never change
         return JSONResponse(service.listing(substitutions), headers={"Cache-Control": "no-cache"})
 
+    # Not `async`: FastAPI runs a plain function in its thread pool. Making a WOFF2 file takes seconds (PERF-09) and
+    # reading and hashing a large font takes a while too; on the event loop every other request would wait for it.
     @router.get("/{name}")
-    async def font_file(name: str) -> Response:
+    def font_file(name: str) -> Response:
         if name.endswith(".woff2"):
             font = find(name.removesuffix(".woff2"))
             try:

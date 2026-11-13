@@ -6,7 +6,26 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
-Lists (E9.21).
+What an object says to someone who cannot see it (BITV 1.1.1).
+
+### Added
+- `ObjectBody.description` (at most `MAX_ALT_CHARS` characters) and `ObjectBody.decorative`, the same in every app. A
+  decorative object has no description. A picture that has no description of its own is described by the words it was
+  imported with, so documents written before the fields existed keep what they said (`ObjectBody.from_data` still reads
+  a body without the two fields).
+- The command `DescribeObject(id, description, decorative=False)` (`core.DescribeObject`): one history step with its
+  exact inverse; its redacted form keeps the flag and drops the words.
+
+### Changed
+- `AddObject` is schema 2 (the body has the two new fields); schema 1 data is brought up to date by a registered
+  upcaster. A model's `state_schema` is raised by one in each app that holds objects, which retires cached snapshots only.
+- **Breaking** (small): `ImageImport.from_data` accepts an empty `alt`. Whether a picture needs words is the object's
+  business now; a picture that is neither described nor decorative is refused by the server's `add_image` and
+  `describe_object`, not by the kernel, so that a redacted or imported history always replays.
+
+## [0.18.0] - 2026-11-13
+
+Lists (E9.21); search, the engine (E1.12, D281–D284).
 
 ### Added
 - `ListItem(list, level)` and `Paragraph.item`: a paragraph may be an item of a list, at a level 0 to 8
@@ -17,6 +36,14 @@ Lists (E9.21).
   `numbering_labels(entries, lists)`, the one pure function that derives every item's `Label(marker, path)`.
 - The commands `CreateList`, `ChangeList` and `RemoveList` (the undo of a create, refused while `list_in_use` says an
   item uses the list) and the event `ListsChanged`. A model that holds lists has a `lists` attribute (a `ListBook`).
+- `claudia_core.search`: what a person wants to find, compiled to a pattern and run on plain texts, for all three apps.
+  `Query.from_data(data)` reads a search in one of three modes (`text`: what is typed is what is found; `builder`:
+  parts to find, each *what x how many*, optionally kept under a name, plus conditions on the whole text; `pattern`:
+  her own pattern, a filter and a replacement) and checks everything a client could get wrong; `Query.compile(extra_parts)`
+  makes a `CompiledSearch` (`matches`, `admits`, `left_out`, `replaced`, `pattern_text`) that returns `Match` spans.
+  An app adds parts of its own through `extra_parts`. `SearchError` carries the message, the field and the
+  character position of a mistake. The engine is Python's `re`; since that cannot be interrupted, a pattern that could
+  backtrack without end (`(a+)+$`, `(a|aa)+$`) is refused before it runs, and patterns, parts and texts have size caps.
 
 ## [0.17.0] - 2026-11-13
 

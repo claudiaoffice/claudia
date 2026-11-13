@@ -421,7 +421,7 @@ def test_image_import_masking_is_a_no_op_when_there_is_no_path_to_hide():
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [
-        ({"alt": ""}, "needs a short description"),
+        ({"alt": None}, "alt: text"),
         ({"alt": "x" * 400}, "at most"),
         ({"source": "usb-stick"}, "'disk' or 'clipboard'"),
         ({"source_path": 5}, "source_path"),
@@ -496,3 +496,9 @@ def test_png_with_zero_dimensions_is_refused():
     bad = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 0, 3, 8, 2, 0, 0, 0)) + chunk(b"IEND", b"")
     with pytest.raises(ImageError, match="positive width and height"):
         decode_image(bad)
+
+
+def test_a_decorative_picture_is_imported_with_no_alt_text_at_all():
+    """Whether a picture needs a description is the object's business (``DescribeObject``); the record only says
+    what was said when it came in, which for a flourish is nothing."""
+    assert ImageImport.from_data(make_import(alt="").to_data()).alt == ""

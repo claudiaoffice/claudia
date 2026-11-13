@@ -355,7 +355,7 @@ def test_changing_a_role_changes_what_the_exported_file_holds():
     assert reopened.slides[1].shapes[0].line.color.rgb == RGBColor.from_string("008080")
 
 
-# -- speaker notes (D293, D298) and planned times (D294) -----------------------------------------------------------
+# -- speaker notes (D342, D347) and planned times (D343) -----------------------------------------------------------
 def _notes_of(prs, index):
     """The notes of a slide as ``(text, bold flags per run)`` per paragraph, or ``None`` if it has no notes page."""
     slide = prs.slides[index]
@@ -523,3 +523,66 @@ def test_notes_in_a_plain_text_box_are_replaced_where_they_are():
     assert len(pptx.Presentation(BytesIO(edited)).slides[0].notes_slide.shapes) == len(
         pptx.Presentation(BytesIO(original)).slides[0].notes_slide.shapes
     )
+
+
+# -- what an object says to someone who cannot see it (BITV 1.1.1) -------------------------------------------------
+_ADEC = "http://schemas.microsoft.com/office/drawing/2017/decorative"
+_ADEC_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
+
+
+def _properties(shape):
+    """The shape's own non-visual drawing properties (``p:cNvPr``), where PowerPoint keeps its alt text."""
+    return shape._element.xpath("./*[1]/p:cNvPr")[0]
+
+
+def _exported_shape(obj, *, shapes=()):
+    model = SlideModel.empty()
+    for shape in shapes:
+        model.define_shape(shape)
+    if obj.body.image:
+        model.define_image(_image_asset())
+    model.insert_object(obj)
+    prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
+    return prs.slides[0].shapes[0]
+
+
+def test_a_picture_carries_its_description_as_alt_text():
+    asset = _image_asset()
+    picture = _image_object("o1", "s1", 10, 10, 400, 200, asset)
+    picture = VisualObject(replace(picture.body, description="two cyclists at a finish line"), picture.anchor)
+    assert _properties(_exported_shape(picture)).get("descr") == "two cyclists at a finish line"
+
+
+def test_a_picture_without_a_description_of_its_own_is_described_by_what_it_was_imported_with():
+    picture = _image_object("o1", "s1", 10, 10, 400, 200, _image_asset())
+    assert _properties(_exported_shape(picture)).get("descr") == "a sample picture"
+
+
+def test_a_shape_and_a_text_box_carry_their_description_too():
+    box = _object("o1", "s1", "text", 10, 10, 400, 100, "body-text", "Hello")
+    box = VisualObject(replace(box.body, description="the greeting"), box.anchor)
+    assert _properties(_exported_shape(box)).get("descr") == "the greeting"
+    circle = _object("o2", "s1", "shape", 10, 10, 200, 200, "plain-shape", "", "circle")
+    circle = VisualObject(replace(circle.body, description="a circle that stands for the server"), circle.anchor)
+    assert _properties(_exported_shape(circle, shapes=(_CIRCLE,))).get("descr") == "a circle that stands for the server"
+
+
+def test_an_object_nobody_described_has_no_alt_text_attribute_at_all():
+    box = _object("o1", "s1", "text", 10, 10, 400, 100, "body-text", "Hello")
+    assert _properties(_exported_shape(box)).get("descr") is None
+
+
+def test_a_decorative_picture_is_marked_the_way_powerpoint_marks_one_and_has_no_alt_text():
+    picture = _image_object("o1", "s1", 10, 10, 400, 200, _image_asset())
+    picture = VisualObject(replace(picture.body, decorative=True, description=""), picture.anchor)
+    properties = _properties(_exported_shape(picture))
+    assert properties.get("descr") == "", "a decorative object has no text alternative, not even its file name"
+    (ext,) = properties.xpath("./a:extLst/a:ext")
+    assert ext.get("uri") == _ADEC_URI
+    (mark,) = list(ext)
+    assert etree.QName(mark).text == f"{{{_ADEC}}}decorative" and mark.get("val") == "1"
+
+
+def test_an_object_that_is_not_decorative_carries_no_decorative_mark():
+    picture = _image_object("o1", "s1", 10, 10, 400, 200, _image_asset())
+    assert _properties(_exported_shape(picture)).xpath("./a:extLst") == []

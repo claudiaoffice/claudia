@@ -1,16 +1,16 @@
 // The show (E10.2): which slide is on the screen, the overview, a blank screen, the typed slide number and the clock of the
-// talk. It holds no slides of its own, only ids, planned times and notes frozen when the show started (D292), and no
+// talk. It holds no slides of its own, only ids, planned times and notes frozen when the show started (D341), and no
 // DOM: the component draws it and feeds it keys and the time (`now`, in seconds), so every rule is tested in Node.
 //
-// Showing is read-only and local (D291): nothing here writes to the document, takes a lock or leaves a step in the
+// Showing is read-only and local (D340): nothing here writes to the document, takes a lock or leaves a step in the
 // history.
 import type { KeyLike } from './shortcuts'
 
 export interface ShowSlide {
   id: string
-  /** The planned time in whole seconds, or null (D294). */
+  /** The planned time in whole seconds, or null (D343). */
   seconds: number | null
-  /** The speaker notes, Markdown (D293). */
+  /** The speaker notes, Markdown (D342). */
   notes: string
 }
 
@@ -48,7 +48,7 @@ export function showAction(event: KeyLike): ShowAction | null {
 }
 
 /** How many steps the document has taken since the show started, if both are revisions of one line (`main:12`). It
- * is what "Changes since you started: N" says (D292); across lines, or without a revision, nobody can tell. */
+ * is what "Changes since you started: N" says (D341); across lines, or without a revision, nobody can tell. */
 export function changesSince(started: string | null, now: string | null): number | null {
   const a = /^(.*):(\d+)$/.exec(started ?? '')
   const b = /^(.*):(\d+)$/.exec(now ?? '')
@@ -112,7 +112,7 @@ export class Show {
     return this.current.seconds
   }
 
-  /** Take in a newer copy of the slides, between two of them (D292): the slide that is shown stays shown, found by its id
+  /** Take in a newer copy of the slides, between two of them (D341): the slide that is shown stays shown, found by its id
    * (the nearest place if it is gone), and the clock and what was spent on each slide go on. From the end screen, a
    * slide that came in after the last one is the one to show next. */
   update(slides: ShowSlide[]): void {

@@ -8,6 +8,9 @@ import type { Block, Pos } from '~/lib/blocks'
 import { itemLayout } from '~/lib/list-layout'
 import { paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null }>()
 const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }] }>()
@@ -121,9 +124,9 @@ function segmentsOf(block: Block): Seg[] {
 const hasOverlay = (block: Block) => [state.sending, state.pending].some((u) => u && u.at.block === block.id)
 
 function title(seg: TextSeg): string | undefined {
-  if (seg.via) return `${seg.author ?? 'someone'}, from a suggestion of ${seg.via}`
-  if (props.authors && seg.author) return `written by ${seg.author}`
-  return seg.zoneOwner ? `${seg.zoneOwner} is writing here` : undefined
+  if (seg.via) return t('{author}, from a suggestion of {via}', { author: seg.author ?? t('someone'), via: seg.via })
+  if (props.authors && seg.author) return t('written by {author}', { author: seg.author })
+  return seg.zoneOwner ? t('{author} is writing here', { author: seg.zoneOwner }) : undefined
 }
 
 // ------------------------------------------------------------------------------ page <-> model
@@ -382,7 +385,7 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
         :contenteditable="!session.readOnly"
         role="textbox"
         aria-multiline="true"
-        aria-label="the text"
+        :aria-label="t('the text')"
         :aria-readonly="session.readOnly"
         spellcheck="true"
         data-testid="text"

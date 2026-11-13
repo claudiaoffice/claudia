@@ -1,7 +1,7 @@
 // Presenter mode, in a real browser (E10.2): notes and a planned time per slide, the show with its audience view,
 // presenter view, overview and blank screen, and the keys that start it (F5 and the Mac-safe chord). Start a
 // presentation server first:
-//   uv run python scripts/start.py creates --no-browser      (URL defaults to http://127.0.0.1:8765/)
+//   uv run python scripts/start.py creates --no-browser      (URL defaults to http://127.0.0.1:8765/; CI passes URL=)
 // BROWSER=firefox runs it in Firefox (the owner's main browser); CHROME=/path/to/chrome uses a browser that is installed.
 const { chromium, firefox } = require('playwright')
 const assert = require('node:assert/strict')
@@ -165,7 +165,7 @@ async function planTime(page, typed) {
     await page.keyboard.press('Escape')
     await show(page).waitFor({ state: 'detached' })
 
-    // ---- the document is as it was: showing writes nothing (D291)
+    // ---- the document is as it was: showing writes nothing (D340)
     assert.match(await text(page, 'plan-total'), /3:30/)
 
     assert.deepEqual(errors, [])

@@ -1,9 +1,10 @@
-# QA review — 2026-11-12
+# QA review — 2026-11-13
 
-Repository `claudiaoffice/claudia` at `7e619a2` ("Merge pull request #28 from claudiaoffice/ai_server"), every feature
-branch merged; the patch was then moved onto `d696927` (the Windows client rework merged on top) and re-run there. Reviewer: QA role. Previous rounds: 2026-11-02 (`f8df891`), 2026-11-05 (`54d1245`, this file's earlier
-version, in git), 2026-11-10 (`301ded6`, `implementation-notes/implementation-notes-qa-2026-11-10.md`). Every finding
-has an entry with evidence and acceptance test in `bugtracker.md`; this file gives the marks and the order of work.
+Repository `claudiaoffice/claudia` at `cfa2d91` ("Accessibility improvements, especially in grid of computes"), every
+feature branch merged: printing in composes and creates with the layout library, lists and anchors, search and replace
+with the pattern builder, random numbers and scenarios, the i18n push, the BITV fixes. Reviewer: QA role. Previous
+rounds: 11-02, 11-05, 11-10, 11-12 (this file's earlier versions, in git). Every finding has an entry with evidence, a fix
+and an acceptance test in `bugtracker.md` (section "Round of 2026-11-13"); this file gives the marks and the order of work.
 
 **Aim of the round:** a stable intermediate version — documented, integrated, tested, CI green — not new features.
 
@@ -11,101 +12,73 @@ has an entry with evidence and acceptance test in `bugtracker.md`; this file giv
 
 ## What was run
 
-| Check | At `7e619a2` | With this round's patch |
+| Check | At `cfa2d91` | With this round's patch |
 |---|---|---|
-| `check_debt.py --ci` (CI's Python job) | **failed**: tests (CHANGELOG 0.13.0 twice), docs (3 unresolved refs) | passes |
-| `pytest` | 4,052 passed, 1 failed, 9 skipped | 4,112 passed, 8 skipped, 0 failed |
-| Linux client, Python 3.12 + GTK 4 + WebKitGTK 6.0 under Xvfb | **1 failed** (e2e race) | 558 passed, 6 skipped (also under the new CSP) |
-| `odf_libreoffice_check.py` with LibreOffice 24.2 | **crashed** building its deck | 31 of 31 read by LibreOffice |
+| `check_debt.py --ci` (CI's Python job, all three OSes) | **failed**: 1 test (PROC-18) | passes, with the Linux client and the e2e greeting |
+| `pytest` | 4,875 passed, **1 failed**, 9 skipped | 4,904 passed, 2 xfailed (SEC-18), 9 skipped (Windows-only, OpenVINO) |
+| `web/e2e`, 18 browser scripts | **`demo.cjs` failed** (PROC-20); 6 scripts not in CI | all 18 pass, in CI's order, all now in CI |
 | `tests/e2e` (three servers, real browser) | passes | passes |
-| `web/e2e/*.cjs`, seven browser scripts | **2 failed** (demo: AI inert; styling: stale selector) | all 7 pass |
-| web: eslint, vitest + coverage, `nuxt typecheck` | pass | pass |
-| `web/e2e` Windows and macOS shell windows (Neutralino faked, real frame) | — (added in `d696927`) | pass, also under the new CSP |
-| Under the new CSP (SEC-13): a Plotly chart, the settings page, an injected inline script | — | chart and page work, the injected script is refused, no other report |
-| `npm audit` (SEC-08) | clean | clean |
-| Coverage floors | all held | all held; seven floors raised (composes 83 → 88 with the new tests) |
-| `./start.sh all`, `./start.sh --ai` | ran | ran: OpenVINO GenAI installed by the launcher, the model folder handed to computes only |
+| Linux client, Python 3.12 + GTK 4 + WebKitGTK 6.0 under Xvfb | **1 failed** (PROC-20) | 572 passed, 6 skipped |
+| Windows client: vitest, types, build, menu check | pass (335) | pass |
+| macOS client: vitest, types, build | pass (333) — but **run by no CI job** | pass, now a CI job |
+| web: eslint, vitest + coverage, `nuxt typecheck` | pass (952 tests; app/lib 88 % statements) | pass |
+| layout library: types, tests, TypeDoc | pass (115 tests; 2 TypeDoc warnings) | pass |
+| `odf_libreoffice_check.py`, LibreOffice 24.2 | 31 of 31 | 31 of 31 |
+| `npm audit` / `pip-audit` (by hand) | clean / clean | — |
+| Coverage floors | all held | all held |
 
-Browsers: Chrome for Testing 153 (no Firefox here). Not run: Windows/macOS clients, a real language model (no
-download possible from this machine), the live demo.
+Browsers: Chromium 153 only (no Firefox here). Not run: Windows/macOS on their own systems, a screen reader, a real
+language model, the live demo, the Docker image (no daemon: Dockerfile read only).
+
+**CI was red at `cfa2d91` in three jobs** (Python on all OSes, e2e, Linux client) — the same shape as last round:
+each branch was green alone, the merge broke tests that belong to another branch.
 
 ---
 
 ## Marks (1 very good … 5 needs rework, prio)
 
-| Area | Mark | Previous (11-05) | In one line |
+| Area | Mark | Previous (11-12) | In one line |
 |---|---|---|---|
-| **UX and UI: consistency and usability** | **3** | 4 | Accessibility moved for real (keyboard menus, native dialogs, dark mode, contrast); what now costs is consistency between the three apps, and an AI that promised what it could not do. |
-| **Code quality and technical debt** | **2** | 2 | Still unusually disciplined (one gate, ~4,650 Python and 655 web tests, typed, API-snapshotted, coverage floors, low complexity); the debt is in *merging*: four CI failures came only from branches meeting, and the tracker lags the code. |
-| **Security** | **4** | 3 | The container, sandbox and AI dispatch are sound, but the new server-settings surface has a P1: the first anonymous visitor of an exposed server becomes its administrator (SEC-12). |
-| **Performance** | **2** | 3 | The two measured hot paths (PERF-01, PERF-05) are fixed and guarded: a grid window is O(window), the extent O(1). Left: per-edit `fsync` on the event loop with a worker pool that nothing uses. |
-| **Gaps, computes** | 3 | — | Formulas, names, SQL, charts, images, ods/xlsx export: a real spreadsheet. Missing the Bret Victor half (live controls, dependencies, what-if) and an accessible grid. |
-| **Gaps, composes** | 3 | — | Styles-first editing and suggestions are the best-designed flow in the suite. No layout/pagination, no model-driven AI (stand-in only), no import. |
-| **Gaps, creates** | 4 | — | Slides, boxes, three shapes, images, odp/pptx export. No AI, no presentation mode, no templates/layouts; the chat advertises an `@ai` that does not exist. |
-| **Overall, for a pre-release** | **3** | 3 | A healthier 3: CI can be green, the AI works again, and the remaining P1 is small and well understood. |
+| **UX and UI: consistency and usability** | **3** | 3 | Accessibility took a real step (grid structure, F6, descriptions, contrast all merged); the cost is now integration: the AI refuses by default in two apps, new features missing from the desktop menus, a third of the menu without shortcuts. |
+| **Code quality and technical debt** | **2** | 2 | The code is still disciplined (one gate, ~7,200 automated tests, typed, coverage floors, docstrings that explain decisions). The debt is structural: CPU-heavy work lands on the event loop because the worker pool has no callers, and merges keep breaking CI. |
+| **Security** | **3** | 4 | SEC-12 is now your conscious decision and not counted. New P1: a search pattern that slips past the static guard freezes the whole server for anybody with access to one document (SEC-18). SEC-17 and SEC-15 still open. |
+| **Performance** | **3** | 2 | Two new features do seconds of work synchronously: what-if outcomes (9 s per edit in a 1,000-cell model, PERF-10) and search (SEC-18). Webfont generation (up to 37 s on the loop) fixed in this patch. |
+| **Gaps, computes** | **2** | 3 | Random numbers, scenarios with outcome distributions, Follow, search & replace with a builder, an accessible grid: the Bret Victor half has arrived. Missing: print, AI proposals, number/date formats, import on the wire. |
+| **Gaps, composes** | **3** | 3 | Print with deterministic pages and lists landed. Still a stand-in AI, no import, no outline view, no search. |
+| **Gaps, creates** | **3** | 4 | Print, descriptions, the style picker. No templates/layouts (the core of the vision for creates), no presenter mode, the AI acts only and refuses by default. |
+| **Overall, for a pre-release** | **3** | 3 | Feature-wise the best state so far. To call it a stable intermediate version: green CI on `main`, SEC-18, UX-34. |
 
 ### UX, in more detail
 
-Fixed since 11-05, re-checked in this tree: UX-01 (menu keyboard and ARIA), UX-03 (native `<dialog>`), UX-05 (dark
-mode with system default and override), most of UX-04 (all neutral text ≥ 4.5:1, field borders ≥ 3:1 in both themes).
-Still open: **UX-02**, the grid has no row/cell structure for a screen reader — the single biggest accessibility gap,
-because the grid *is* computes.
+Re-checked as merged and working (browser scripts pass): UX-02 grid structure, UX-04 contrast, UX-28 to UX-31.
 
-New, from looking at the three apps side by side:
+New, from using the three apps side by side (screenshots in the chat of 2026-11-13):
 
-* **UX-20 (P1, fixed):** since the act/suggest merge, `@ai` in computes always answered "Switch to act mode" — a switch
-  no client has. The server read a missing mode as *suggest*, against its own method description. Fixed as agreed.
-* **UX-21:** creates' chat says "@ai to ask the assistant" with no AI in the document; a hint must come from what the
-  server says is there.
-* **UX-22:** three history dialects: `ann A1 = Item` / `ann typed "…"`, `style title` / `Added a text box`, `Add shape`.
-  One rule (past tense, lower case, names not ids) and a test per app.
-* **UX-23:** composes puts its suggestions above the panel tabs, the others put tabs on top; undo/redo sit in three
-  different places. The decided History filter row (All / Conversation / Changes) is not built.
-
-Visual design on its own stays a 2: the palette, the type and the three-app identity hold, and the styling dialog is
-still the most thoughtful interaction in the suite.
+* **UX-34 (P1, needs decision):** D262 makes *suggest* the default; only composes can propose. In computes and creates
+  every change the AI is asked for is refused until the person finds the switch.
+* **UX-33:** a new workbook's first Ctrl+Z removes its only sheet ("This document has no sheet yet."); a new text or deck
+  offers "Undo Language".
+* **UX-36:** Print, lists, the hyphen characters, Image, Chart, Names, SQL, Clear Cell Style, View ▸ Grid are on the web
+  menus but not on the desktop menus — and the desktop shells hide the web menu bar.
+* **UX-35:** 30–37 entries per app have no shortcut (rule: every entry has one). Needs one key table from design first.
+* **UX-37:** composes offers an act/suggest switch that changes nothing.
+* Still open: UX-22 (three history dialects — "add sheet Sheet1", "set the language to en", "undo · remove a sheet"),
+  UX-23 (undo/redo buttons in computes' and creates' bars, none in composes; "History & chat" vs "History & Chat").
 
 ### Code quality, in more detail
 
-What is good and should not be "fixed": the gate (`check_debt.py`) that CI and laptops share; coverage floors that
-only go up; the public-API snapshots; vulture with a reasoned whitelist; docstrings that explain decisions; McCabe
-complexity — only six functions in all of `packages/*/src` exceed 12, none exceeds 16.
+What is good and should not be "fixed": the gate shared by CI and laptops; the guards on decisions, backlog and notes;
+the pattern builder's design (one engine on the server, D284); the deterministic layout library with pinned WASM and
+fonts; the i18n pipeline (1,476 strings, German complete).
 
-What cost this round, and why it is process rather than code:
+What costs:
 
-* **Parallel branches collide on the same numbers.** Two branches released claudia-core 0.13.0 (PROC-09); one branch
-  added types to a signature that the docs branch never listed (PROC-10). Rule: *the version and the API reference are
-  the last thing a branch touches, after merging `main`, and the gate runs after that merge*.
-* **A check that may fail is a check nobody reads.** The LibreOffice job is `continue-on-error`, so its crash went
-  unseen (PROC-11). Now its model-building half runs in the normal suite.
-* **The tracker drifts.** Five fixed items were still "verified open"; E7.7 was `todo, 0 %` with a "built" paragraph;
-  64 of 90 in-progress stories sit at exactly 50 % (PROC-15).
-* **Built but not wired:** `WorkerPool` (E3.5) is created and stopped by every hub and called by nothing (CODE-13).
-* **Two copies of one shell:** since `d696927` the Windows client follows the macOS design and has its features, by
-  copying — 11 of 22 source files are byte-identical in both (CODE-14). Move them into one shared package; until then
-  a test that keeps the copies identical.
-
-### Security, in more detail
-
-* **SEC-12 (P1, recommendation only, as agreed):** `POST /api/admin/setup` on an exposed server with no administrator
-  is open to anyone, even with `CLAUDIA_ACCESS_SECRET` set — reproduced. Fix: a one-time setup code printed in the
-  server log and required by `setup` (plus the access secret when set); one field in `FirstAdminSetup.vue`.
-  Mitigation for the demo now: claim the administrator right after each deploy, or block `/api/admin/` at the proxy.
-* **SEC-17 (P2):** a viewer's live connection receives the history and chat the container withholds from her. Found
-  on 11-05, never numbered, so never picked up.
-* **SEC-13 (P2, fixed in this patch):** there was no CSP / `frame-ancestors` / `nosniff` / `Referrer-Policy`. Now
-  every answer has them; scripts are allowed by hash, framing only by the desktop shells' local page (D251).
-* **SEC-15 (P2, P1 when import ships):** the office readers read every zip part whole and three call sites parse XML
-  with lxml defaults; harden before the import UI sends a file.
-* **SEC-14, SEC-16 (P3):** Swagger UI from a CDN; any executable accepted as "xelatex".
-* Still open from earlier rounds: SEC-05 (redaction leaves bytes), SEC-06 (certificate is an unconstrained CA), SEC-11
-  (no login back-off, now also for administrators), SEC-08 half (`pip-audit`).
-
-### Performance, in more detail
-
-Re-measured: a 64×16 grid window costs 0.06–0.11 ms from 10k to 500k cells (was 21 ms at 500k); the extent is 0.001
-ms (was 38 ms). Both guarded. Open: PERF-02 (an `fsync` per edit on the event loop), PERF-06 (packing on the loop),
-PERF-07 (structure edits recalculate everything), PERF-08 (the first chart loads 4.6 MB of Plotly for a bar).
+* **The worker pool (CODE-13) is the missing piece.** SEC-18 and PERF-10 are both "CPU work that cannot be stopped,
+  on the event loop". D284 even says "runs in the worker pool"; the as-built note replaced that with a heuristic.
+* **Merging breaks CI, again** (PROC-18, PROC-20). Every branch was green on its own.
+* **Search is computes-shaped** (CODE-18): the panel and protocol say `{sheet, row, col}`, though the panel is meant for
+  all three apps. Cheaper to change before composes and creates use it.
+* The Windows and macOS shells now share 14 identical files (CODE-14, was 11).
 
 ---
 
@@ -115,90 +88,49 @@ Each one is a bugtracker entry with evidence, a fix and an acceptance test; pick
 
 | # | What | Items | Who | Size |
 |---|---|---|---|---|
-| 1 | Close the administrator bootstrap: setup code + access secret; then login back-off | SEC-12, SEC-11 | server dev + one field (designer: mock-up) | 1–2 days |
-| 2 | Withhold history and chat from viewers on the wire | SEC-17 | server dev, product call on public chat | 1 day |
-| 3 | The act/suggest switch in the three clients, from `notes/mockups/ai-suggest-mode.svg`; chat hints from what the server has | E7.7, UX-21 | web + shells | 2–3 days |
-| 4 | ~~Security headers on the web app~~ — **done in this patch** | SEC-13 | | |
-| 5 | Journal append and packing off the event loop; wire or remove `WorkerPool` | PERF-02, PERF-06, CODE-13 | server dev | 1–2 days |
-| 6 | One phrasing rule for the history, and one panel layout and undo place across apps | UX-22, UX-23 | designer first (mock-ups), then web | 2–3 days |
-| 7 | Accessible grid (`row`/`gridcell`, `aria-activedescendant`), with the E5.10 baseline | UX-02, E5.10 | web | 3–5 days |
-| 8 | Harden the office readers before import goes on the wire | SEC-15 | io dev | 1 day |
-| 9 | One shared Neutralino core for both shells, or a test that the copies stay identical | CODE-14, E5.11 | shell dev | 1–2 days |
-| 10 | Merge rule (version and API docs last, gate after merging `main`), tracker hygiene, `progress: 50` check | PROC-09, PROC-15 | everybody / gate | ½ day |
-| 11 | Small ones: Plotly partial bundle (PERF-08), Swagger off by default (SEC-14), typeset program check (SEC-16), creates' `--app-dark` contrast (UX-04) | | | ½ day each |
+| 1 | **Main stays green:** merge through a pull request with the CI jobs required (branch protection), or run `check_debt.py --ci` plus the e2e step after merging, before pushing | PROC-18, PROC-20 | owner | ½ hour once |
+| 2 | Make the search interruptible: `regex` with `timeout=` (closes D287 too) or the worker pool; keep the guard as early feedback | SEC-18, PERF-11 | server dev | 1 day |
+| 3 | The AI default in computes and creates: decide among (a) proposals first, (b) switch disabled with a line until then, (c) per-app default | UX-34, UX-37 | owner decides; web dev | ½ day for (b) |
+| 4 | Put the worker pool to work: outcomes computed off the loop and sent as their own event | PERF-10, CODE-13 | server dev, web dev | 2 days |
+| 5 | A new document has nothing to undo: first sheet and language as part of creating it | UX-33 | server dev, web dev | 1 day |
+| 6 | Desktop menu parity, then one key table for all three apps | UX-36, UX-35 | shell dev; designer for the key table | 1 + 1 days |
+| 7 | An opaque location in search before composes and creates get it (API version) | CODE-18 | server dev, web dev | 1 day |
+| 8 | Carry-overs that still matter: viewers get history on the wire; harden the office readers before import goes live; login back-off | SEC-17, SEC-15, SEC-11 | server dev, io dev | 1 day each |
+| 9 | Small ones: LibreOffice job blocking (PROC-22), one browser variable (CODE-17), journal diagnostic out (CODE-19), pin uv in the Dockerfile (CODE-20), split `computes.py` (CODE-21), `pip-audit` in the gate (SEC-08) | | | ½ day each |
 
 ### Gaps and edge cases, per app
 
-**computes.** Built: sheets, formulas (Excel syntax, growing library), names and structured references, `SQL()`
-spilling, bar charts, images on the object layer, styles by purpose, ods/xlsx export. Gaps: live controls, dependency
-view, what-if (E6.10, E6.11, E4.8 — the Bret Victor core of the vision); number and date formats (E6.14); the AI can
-act but not propose (E7.8), so *suggest* refuses; import of ods/xlsx is not on the wire; the grid is not accessible
-(UX-02). Edge cases to test next: structure edits on a sheet with spilled `SQL()` results and charts reading them;
-undo of a structure edit that another person's formula depends on.
+**computes.** Built: sheets, formulas, names and structured references, `SQL()`, bar charts, images, styles by purpose,
+ods/xlsx export, random numbers with a seed and resampling, alternatives with outcome distributions, Follow, search &
+replace with a builder, an accessible grid. Gaps: File ▸ Print (composes and creates have it); AI proposals (E7.8);
+number and date formats; import not on the wire. Edge cases to test next: an alternative input deleted by a structure
+edit while its outcomes are shown; `search_replace` into a cell that a spilled `SQL()` result covers; resample by two
+people at once followed by one person's undo; a seed set in one session and the outcomes reproduced in another.
 
-**composes.** Built: paragraphs, styles first with an invitation to name, deviations, flow/page views, authorship,
-AI suggestions anchored to text, objects that follow the text (now tested), odt/docx export. Gaps: deterministic
-layout and pagination (E9.4, your leaning: in the browser, deterministic); a model-driven AI (only the scripted
-stand-in: no lens for texts, E7.5); import; outline view; citations (E9.15–E9.18). Edge cases: a suggestion whose
-anchor paragraph is joined into another while it is open; an object anchored at the very end of a paragraph that is
-split there.
+**composes.** Built: styles first, suggestions, authorship, flow/page view, deterministic pages and print, lists and
+anchors, hyphenation, describe-language (D915), odt/docx export. Gaps: a model-driven AI (E7.5), import, outline view,
+search (decided after computes), the references UI for anchors. Edge cases: a numbered heading list split across a page
+break and printed; an anchor whose paragraph is deleted while another person's reference points to it; a language
+change undone in a text with hyphenation (does the page reflow?).
 
-**creates.** Built: slides, text boxes, circle/rectangle/triangle, images, grid and snap, styles in two slots, odp/pptx
-export. Gaps: no AI participant at all (E7.9; the chat hint promises one, UX-21); no presentation mode (E10.2);
-templates and layouts (E10.4); only three shapes. Edge cases: a style deleted while a shape's label uses it (guarded
-by `style_in_use`, worth a browser test); objects outside the slide after a slide-size change.
+**creates.** Built: slides, text boxes, shapes, images, grid, styles with a bar picker, descriptions, print, odp/pptx
+export, an acting AI. Gaps: templates and layouts (E10.4, the heart of the creates vision), presenter mode (E10.2, spike
+first), proposals for the AI, more shapes. Edge cases: printing a deck whose objects lie partly outside the slide; a
+decorative image exported to pptx and opened in PowerPoint (the extension was written from memory, UX-31).
 
-**Across the suite.** Admin bootstrap (SEC-12); one AI model per app server rather than the shared AI server of D2 —
-with `./start.sh all --ai` only computes loads it, because each server would load its own copy; the Windows and macOS
-shells as two copies of one code base (CODE-14); the History filter row decided but not built.
+**Across the suite.** One undo model for setup steps (UX-33); one menu and shortcut table across web and desktop
+(UX-35, UX-36); the worker pool for anything CPU-bound (CODE-13); one history phrasing (UX-22).
 
 ---
 
 ## The things you already knew
 
-* **A start script with the AI running:** `./start.sh all --ai` (built). It takes the one model folder in `ai-models/`
-  (or `--ai MODEL_DIR`, `--ai-device CPU`), installs OpenVINO GenAI into the environment the first time
-  (`uv sync --inexact --package claudia-server --extra openvino`), hands the model to computes only (composes and
-  creates would refuse to start with it: they have no lens yet) and waits up to 15 minutes for the model to load
-  before opening the browser. Tested up to loading; no real model could be downloaded here.
-* **Document folders:** `demo-docs*` is what the script used before commit 2938f0a, `docs-<app>` after it; nothing ever
-  moved the old ones. Now (agreed): `.claudia/<app>/documents` and `.claudia/<app>/state` per checkout, `--dir DIR`
-  means `DIR/<app>/…` for one app and for `all`, each server gets its own state (they shared one certificate and one
-  administrator list before, in the folder tree the Linux desktop app uses), and old folders are named at start with
-  where to move them — never moved automatically. Left as they are, for a later decision: the server puts a `docs/`
-  folder inside whatever `--dir` it gets, and its own default state folder on Windows is the roaming `%APPDATA%` while
-  the Windows shell uses `%LOCALAPPDATA%`.
-* **Python version:** the cause is that nothing pinned 3.14: `requires-python = ">=3.14"` lets `uv` pick 3.15 where it
-  is installed, and `openvino-genai` publishes only cp314 wheels (no sdist) in `uv.lock`. `.python-version` now says
-  3.14 and a test keeps it, every package's floor, CI, the Dockerfile and the Debian build in step. The server needs
-  **3.14** exactly for now; the Linux desktop shell itself runs on the distribution's Python ≥ 3.12.
+Your message ended with "Two things I already know:" and nothing after it. Send them and they get the same treatment.
 
 ## What this round's patch contains
 
-Security: SEC-13, CSP and the other security headers on every answer of the three apps' servers. CI: PROC-09 to
-PROC-14 and PROC-16 (a flaky undo timing guard) fixed (changelog renumbered to 0.15.0 with snapshot, docs references, LibreOffice script and
-a test for it, Linux e2e wait, Python pin with a test, stale e2e selector). Behaviour: UX-20 (missing AI mode = act),
-the launcher's AI option and folder layout (CODE-15). Tests added: objects following text in composes, the server's
-default state folder and private files, the launcher's new options. Tracker: statuses re-checked, 22 new items. No
-other behaviour changed.
-
----
-
-## Follow-up on `e56e8f9` (the same day): the owner's usability list
-
-Reviewed what had been merged: the security headers are this round's patch unchanged; the act/suggest switch
-(`SidePanel.vue`, `lib/ai-mode.ts`) works and is kept per person and document, but its unchosen half was ink on the
-dark panel (invisible in the light theme), it sat inside the chat, it was not a keyboard radio group, a comment and
-the E7.7 note still said a missing mode means *suggest*, and `demo.cjs` failed again because the client now sends
-*suggest* (UX-26, PROC-17). Fixed, together with the owner's list:
-
-| Asked for | Done |
-|---|---|
-| Creates styles broken: a named style could not be applied to another text box | A style picker in creates' bar like composes' and computes', plus a "Label" picker for a shape's words; All styles… counts "objects" (UX-24, UX-25); `web/e2e/creates-styles.cjs` |
-| Apply style in creates' Format menu like the other apps | The flyout was there and worked; what was missing was the bar picker above. The macOS client's generated creates menu lacked Apply Style… (CODE-16, now checked in CI) |
-| The AI agent in creates | Model-driven per E7.9/D265 (`slide_lens.py`, `MODEL_METHODS["creates"]`); without a model `@ai` says how to give it one; `./start.sh creates --ai`, `all --ai` |
-| Remove Insert sample text, Review this text / paragraph (composes), Ask for an example budget (computes) | Gone from the web menus, the native manifest and the generated Windows/macOS menus; D126 annotated |
-| AI switch directly above History & Chat \| Help, unchosen half visible | Done, contrast checked in `demo.cjs` |
-| Remove the Suggestions block above the tabs (composes) | Removed; a suggestion opens where it is marked in the text (card with Accept / Reject / Next), and the count in the bottom bar opens the first (`SuggestionPopover.vue`) |
-
-New, open: UX-27 (a new object lands exactly on the previous one).
+CI and tests: PROC-18 (notes check reads build outputs from `.gitignore`), PROC-19 (six browser scripts, a macOS client
+job, `layout/**` in the image and .deb triggers, with `tests/test_ci_workflow.py` to keep it so), PROC-20 (`demo.cjs`,
+Linux client e2e), PROC-21 (demo domain). Performance: PERF-09 (fonts route off the event loop, with a test). Security:
+SEC-18 recorded with a strict-xfail test, no fix (approach to agree). Docs: DOC-02 (launcher name). Tracker: the `bitv`
+items marked merged, 21 new items. No other behaviour changed.

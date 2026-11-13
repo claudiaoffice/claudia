@@ -21,16 +21,16 @@ const text = (extra: object = {}): SlideObject => ({
 const shape = (extra: object = {}): SlideObject => ({ ...text(extra), id: 's1-shape', kind: 'shape', shape: 'circle' })
 const image = (extra: object = {}): SlideObject => ({ ...text(extra), id: 'i1', kind: 'image', shape: null, image: 'a'.repeat(64) })
 
-const actions = () => ({ edit: vi.fn(), remove: vi.fn(), cut: vi.fn(), copy: vi.fn(), properties: vi.fn(), setSnap: vi.fn(), style: vi.fn() })
+const actions = () => ({ edit: vi.fn(), remove: vi.fn(), cut: vi.fn(), copy: vi.fn(), properties: vi.fn(), setSnap: vi.fn(), style: vi.fn(), describe: vi.fn() })
 
 describe('contextMenuItems', () => {
   it('offers Edit text, the grid toggle and Delete for a text object, each wired to its own action', () => {
     const a = actions()
     const items = contextMenuItems(text(), false, a)
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Edit text', 'Release from grid', 'Delete'])
+    expect(labels).toEqual(['Style…', 'Describe…', 'Edit Text', 'Release from grid', 'Delete'])
 
-    items.find((i) => i.label === 'Edit text')!.action!()
+    items.find((i) => i.label === 'Edit Text')!.action!()
     expect(a.edit).toHaveBeenCalledOnce()
     expect(a.remove).not.toHaveBeenCalled()
 
@@ -40,20 +40,20 @@ describe('contextMenuItems', () => {
 
   it('offers Edit text for a shape too, the same as the Edit menu does (Enter/F2 works on it there)', () => {
     const items = contextMenuItems(shape(), false, actions())
-    expect(items.map((i) => i.label)).toContain('Edit text')
+    expect(items.map((i) => i.label)).toContain('Edit Text')
   })
 
   it('leaves Cut/Copy/Properties off a text object or shape, unchanged from before the image-properties bug fix', () => {
     const items = contextMenuItems(shape(), false, actions())
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Edit text', 'Release from grid', 'Delete'])
+    expect(labels).toEqual(['Style…', 'Describe…', 'Edit Text', 'Release from grid', 'Delete'])
   })
 
   it('offers Cut, Copy, Properties, the grid toggle and Delete for an image, in that order, no Edit text (it has no text to write)', () => {
     const a = actions()
     const items = contextMenuItems(image(), false, a)
     const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Cut', 'Copy', 'Properties', 'Release from grid', 'Delete'])
+    expect(labels).toEqual(['Style…', 'Describe…', 'Cut', 'Copy', 'Properties', 'Release from grid', 'Delete'])
 
     items.find((i) => i.label === 'Cut')!.action!()
     expect(a.cut).toHaveBeenCalledOnce()
@@ -81,7 +81,7 @@ describe('contextMenuItems', () => {
 
   it('gives Edit text, Cut and Delete their usual keyboard hints, so the menu teaches the shortcut too', () => {
     const textItems = contextMenuItems(text(), false, actions())
-    expect(textItems.find((i) => i.label === 'Edit text')!.hint).toBe('Enter')
+    expect(textItems.find((i) => i.label === 'Edit Text')!.hint).toBe('Enter')
     expect(textItems.find((i) => i.label === 'Delete')!.hint).toBe('Del')
 
     const imageItems = contextMenuItems(image(), false, actions())
@@ -131,5 +131,22 @@ describe('Style… (E9.7, D203)', () => {
   it('is disabled for a viewer: a style change is a change to the document', () => {
     const items = contextMenuItems(shape(), true, actions())
     expect(items.find((i) => i.label === 'Style…')!.disabled).toBe(true)
+  })
+})
+
+describe('contextMenuItems: describing an object (BITV 1.1.1)', () => {
+  it('offers Describe… on every kind, with its key, and runs the describe action', () => {
+    for (const o of [text(), shape(), image()]) {
+      const a = actions()
+      const item = contextMenuItems(o, false, a).find((i) => i.label === 'Describe…')!
+      expect(item.hint).toBe('Ctrl+Alt+D')
+      expect(item.disabled).toBe(false)
+      item.action!()
+      expect(a.describe).toHaveBeenCalledOnce()
+    }
+  })
+
+  it('is disabled for a viewer, who may look but not change', () => {
+    expect(contextMenuItems(image(), true, actions()).find((i) => i.label === 'Describe…')!.disabled).toBe(true)
   })
 })

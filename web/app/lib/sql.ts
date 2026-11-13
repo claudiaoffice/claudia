@@ -1,5 +1,7 @@
 // The SQL editor's text work (E4.9/E6.5, mock 4): reading the query out of a `=SQL("…")` cell, putting a word where
 // the caret is, and how long a preview took. Pure, so every rule is tested (`tests/sql.test.ts`).
+import { translate as t } from './i18n'
+import { currentLocale } from './locale'
 
 /** The query of a cell that holds exactly `=SQL("…")`, or `null` for any other formula — one with parameters or
  * something around the call is edited as the formula it is, not in the editor, which could not give it back. Inside
@@ -19,7 +21,8 @@ export function insertAt(text: string, caret: number, insert: string, end = care
 
 /** "12 rows · 0.4 ms", singular and rounded the way the preview chips say it. */
 export function previewSummary(rowCount: number, ms: number, capped: boolean): string {
-  const rows = `${rowCount.toLocaleString('en-US')} row${rowCount === 1 ? '' : 's'}`
+  const count = rowCount.toLocaleString(currentLocale())
+  const rows = rowCount === 1 ? t('{count} row', { count }) : t('{count} rows', { count })
   const time = ms < 1 ? '< 1 ms' : `${Math.round(ms)} ms`
   return `${rows}${capped ? '+' : ''} · ${time}`
 }

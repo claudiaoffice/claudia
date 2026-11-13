@@ -121,6 +121,7 @@ URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour r
 URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
 npm run e2e:resilience       # starts its own server on 8766, restarts it, checks that both browsers come back
 npm run e2e:recovery         # starts its own server on 8767: the recovery key, shown once, and a new one
+npm run e2e:search           # starts its own server on 8768: Edit ▸ Search & replace, the marks, the builder, one undoable replace
 npm run e2e:macos-shell      # the macOS client's window: its shell page and core in Chromium, the web app in the frame
 npm run e2e:windows-shell    # the same for the Windows client
 ```
@@ -186,13 +187,13 @@ prints is part of it, one step in its history for everybody; a viewer sees the p
 
 Every slide has **speaker notes** (Markdown, a field under the slide) and a **planned time** (the ⏱ chip beside it:
 `2` is two minutes, `2:30`, `90s`, `1h`; the buttons 1, 2, 3, 5 and 10 min). Both are document content, one step in the
-history, readable by a viewer and written by whoever may edit (D293, D294). The tab of each slide shows its time and
+history, readable by a viewer and written by whoever may edit (D342, D343). The tab of each slide shows its time and
 the bar below adds them up, with how many slides have none yet. View ▸ Speaker notes hides the field (a personal
 setting, `lib/show-prefs.ts`).
 
 **Present** (the apricot button, View ▸ Present from the first slide / from this slide) opens the show over the
 workspace: **F5** from the first slide, **Shift+F5** from this one, and **Ctrl+Alt+P** / **Ctrl+Alt+Shift+P** where F5 is a
-system key (a Mac, D295). It is read-only and local (D291) and runs on a frozen copy of the presentation (D292,
+system key (a Mac, D344). It is read-only and local (D340) and runs on a frozen copy of the presentation (D341,
 `lib/frozen.ts`): a colleague's edit changes nothing on the screen, and the presenter view says "Changes since you
 started: N" with an **Update now** button. In the show: ← → Space PageUp PageDown Backspace go through the slides,
 Home and End jump, a typed number and Enter go to that slide, **G** the overview, **B** a blank screen, **P** swaps
@@ -201,4 +202,4 @@ planned total, the pace, this slide against its time, the clock), **F** toggles 
 layer and then ends. The window announces each slide to a screen reader and respects reduced motion. The rules are in
 `lib/show.ts` (tested without a browser); `components/PresentShow.vue` draws them; `e2e/present.cjs`
 (`npm run e2e:present`, `BROWSER=firefox` for Firefox) drives all of it. A second audience window on another screen is
-not built yet (D296).
+not built yet (D345).

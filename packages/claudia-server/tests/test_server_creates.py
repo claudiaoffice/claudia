@@ -261,6 +261,7 @@ def test_viewers_may_look_but_not_change(deck):
         ("move_object", {"id": box, "x": 1, "y": 1}),
         ("set_text", {"id": box, "text": "x"}),
         ("set_snap", {"id": box, "snap": False}),
+        ("describe_object", {"id": box, "description": "x"}),
         ("remove_object", {"id": box}),
         ("add_slide", {}),
         ("set_slide_notes", {"slide": "s1", "notes": "x"}),
@@ -271,7 +272,7 @@ def test_viewers_may_look_but_not_change(deck):
         assert caught.value.code == "forbidden"
 
 
-# -- speaker notes and planned times (E10.2, D293, D294) -----------------------------------------------------------
+# -- speaker notes and planned times (E10.2, D342, D343) -----------------------------------------------------------
 def test_notes_and_planned_times_are_set_and_read_back(deck):
     call(deck, "set_slide_notes", {"slide": "s1", "notes": "Start with **2019**."})
     call(deck, "set_slide_time", {"slide": "s1", "seconds": 120})
@@ -335,6 +336,7 @@ def test_the_methods_are_described_for_client_developers(deck):
         "set_snap",
         "set_slide_notes",
         "set_slide_time",
+        "describe_object",
     ):
         assert described[name]["doc"], name
     assert described["add_object"]["write"] and not described["slide"]["write"]
@@ -405,6 +407,59 @@ def test_add_image_needs_a_real_image_and_a_description(deck):
     with pytest.raises(RequestError) as caught:
         add_image(deck, alt="")
     assert caught.value.code == "command_error"  # every imported image needs a description
+
+
+def test_a_decorative_picture_is_imported_with_no_description(deck):
+    add_image(deck, alt="", decorative=True)
+    (obj,) = objects(deck)
+    assert obj["decorative"] is True and obj["description"] == "" and obj["imported"]["alt"] == ""
+
+
+def test_a_decorative_picture_is_not_also_described(deck):
+    with pytest.raises(RequestError, match="decorative") as caught:
+        add_image(deck, alt="a flourish", decorative=True)
+    assert caught.value.code == "command_error"
+    assert objects(deck) == []
+
+
+def test_a_picture_that_is_not_decorative_needs_its_description_and_says_so(deck):
+    with pytest.raises(RequestError, match="decorative") as caught:
+        add_image(deck, alt="   ")
+    assert caught.value.code == "command_error", "the message names the way out: mark it decorative"
+
+
+# -- what an object says to someone who cannot see it (BITV 1.1.1) ------------------------------------------------
+def test_an_object_is_described_and_the_slide_lists_the_description(deck):
+    box = add_shape(deck)
+    assert (objects(deck)[0]["description"], objects(deck)[0]["decorative"]) == ("", False)
+    added = call(deck, "describe_object", {"id": box, "description": "a grey box that stands for the server"})
+    assert added["revision"]
+    assert objects(deck)[0]["description"] == "a grey box that stands for the server"
+    assert deck.history_for("ann").undo_label == "Describe object"
+
+
+def test_an_object_is_marked_as_decoration_in_one_step(deck):
+    box = add_shape(deck)
+    call(deck, "describe_object", {"id": box, "description": "", "decorative": True})
+    assert (objects(deck)[0]["description"], objects(deck)[0]["decorative"]) == ("", True)
+    assert deck.history_for("ann").undo_label == "Mark as decorative"
+    deck.undo("ann")
+    assert objects(deck)[0]["decorative"] is False
+
+
+def test_a_picture_cannot_be_left_with_neither_a_description_nor_the_decorative_mark(deck):
+    """The model allows an object not described yet; the way in for a person or the AI does not for a picture."""
+    picture = add_image(deck)
+    with pytest.raises(RequestError, match="decorative") as caught:
+        call(deck, "describe_object", {"id": picture, "description": ""})
+    assert caught.value.code == "command_error"
+    assert objects(deck)[0]["description"] == "a sample picture", "a refused request changes nothing"
+
+
+def test_describing_an_object_that_is_not_there_is_refused(deck):
+    with pytest.raises(RequestError, match="ghost") as caught:
+        call(deck, "describe_object", {"id": "ghost", "description": "x"})
+    assert caught.value.code == "command_error"
 
 
 def test_add_object_refuses_kind_image_and_points_to_add_image(deck):

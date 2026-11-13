@@ -1,6 +1,6 @@
-"""The Markdown of speaker notes as the lines of a file that has none (D298).
+"""The Markdown of speaker notes as the lines of a file that has none (D347).
 
-A slide's notes are Markdown in the model (D293), and neither pptx nor odp has Markdown: both hold paragraphs of
+A slide's notes are Markdown in the model (D342), and neither pptx nor odp has Markdown: both hold paragraphs of
 runs that are bold or italic or neither. So the file gets what Markdown *means* -- ``**bold**`` a bold run, a
 heading a bold line, a bullet a ``•`` in front of the line -- and a link, a code span, a picture or a quote is
 written as plain words, which :func:`markdown_to_lines` says it did, so an export can report it.

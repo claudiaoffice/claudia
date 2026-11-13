@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { columnName, inputOf, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { cellLabel, columnName, inputOf, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
 import { cellLook, styleAt, within, type CellLook } from '~/lib/cell-styles'
+import { cycleObject, objectName } from '~/lib/descriptions'
+import { ariaColCount, ariaRowCount, cellDomId, cellName, colIndexOf, rowIndexOf } from '~/lib/grid-a11y'
 import { imageDataUrl } from '~/lib/images'
 import { besideRect } from '~/lib/geometry'
 import {
@@ -18,9 +20,13 @@ import {
   type Axis,
   type SizeTable,
 } from '~/lib/line-sizes'
+import { NO_MARKS, type SearchMarks } from '~/lib/search'
 import { purposeVar, tableBoxes, type NameInfo, type TableBox } from '~/lib/names'
 import { objectStyleHost } from '~/lib/object-style-host'
+import { useI18n } from '~/lib/i18n'
+import { chipsOf, dotFractions, outcomeCaption, type Alt, type Summary } from '~/lib/outcomes'
 import { colorOf, inkOn } from '~/lib/people'
+import { ROLE_SHAPE, roleAt, type Role } from '~/lib/follow'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
 import type { Session, SheetObject } from '~/lib/session'
@@ -46,6 +52,8 @@ const props = defineProps<{
   anchored: boolean
   /** The selected cells as a style host (`lib/cell-style-host.ts`): what the popover styles with no object selected. */
   cellHost?: StyleHost
+  /** What a search found on this sheet, and what a replacement would show (`lib/search.ts`, E5.15). */
+  marks?: SearchMarks
 }>()
 const emit = defineEmits<{
   /** Asks the workspace to open the all-styles dialog, which owns the modal layer. */
@@ -67,6 +75,10 @@ const emit = defineEmits<{
   object: [selected: boolean]
   /** The purpose chip on a table's header was pressed (mock 2): open the purpose menu for that column at this point. */
   tableMenu: [table: NameInfo, offset: number, x: number, y: number]
+  /** A cell was right-clicked (and selected, unless it is in the selection already): open its menu at this point. */
+  cellMenu: [x: number, y: number]
+  /** The cells in view changed (scrolling, resizing): what a followed computation has to cover (E6.23). */
+  view: [view: { r0: number; r1: number; c0: number; c1: number }]
 }>()
 
 const W = DEFAULT_COL_WIDTH // a column's width when it has no size of its own
@@ -82,6 +94,7 @@ const size = ref({ w: 800, h: 600 })
 let observer: ResizeObserver | null = null
 
 const state = props.session.state
+const { t } = useI18n()
 
 // ------------------------------------------------------------------------------ row heights and column widths
 // Sparse, like the server's own storage (D135): most lines are `H`/`W`, a few have their own size. While a border
@@ -168,24 +181,84 @@ const painted = computed(() => {
     if (!look) looks.set(id, (look = cellLook(styles, facets, box, words, kind)))
     return look
   }
-  type Drawn = { key: number; left: number; top: number; width: number; height: number }
+  type Drawn = { key: number; row: number; col: number; left: number; top: number; width: number; height: number }
   const boxes: (Drawn & { css: Record<string, string> })[] = []
-  const texts: (Drawn & { text: string; kind: string; look: CellLook; spill: boolean; head: boolean })[] = []
+  const texts: (Drawn & {
+    text: string
+    kind: string
+    look: CellLook
+    spill: boolean
+    head: boolean
+    /** The alternatives of an input cell, as the chips drawn in it (E6.21). */
+    chips: string[]
+    /** What came out of a result of alternatives: its dots, and a caption for a screen reader (E6.21). */
+    out: { dots: number[]; caption: string } | null
+    /** The part the cell plays in the computation that is followed, and whether it is dimmed instead (E6.23). */
+    role: Role | null
+    dim: boolean
+  })[] = []
   const heads = headCells.value
+  const trace = state.trace // only the cells of this sheet are in it: another sheet's trace lights none of these
+  const followed = trace !== null && trace.sheet === props.sheet
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const content = props.session.cell(props.sheet, r, c)
       const box = ranges.length ? styleAt(ranges, r, c, 'box').style : 'body-text'
       const words = ranges.length ? styleAt(ranges, r, c, 'words').style : 'body-text'
       const look = lookOf(box, words, content?.t)
-      const at = { key: r * 100_000 + c, left: x(c), top: y(r), width: colWidthAt(c), height: rowHeightAt(r) }
+      const at = { key: r * 100_000 + c, row: r, col: c, left: x(c), top: y(r), width: colWidthAt(c), height: rowHeightAt(r) }
       if (!look.plain) boxes.push({ ...at, css: look.box })
       if (content === null || (editHere.value && props.edit!.row === r && props.edit!.col === c)) continue
-      texts.push({ ...at, text: show(content), kind: content.t, look, spill: content.spill === true, head: heads.has(at.key) })
+      const role = followed ? roleAt(trace, r, c) : null
+      texts.push({
+        ...at,
+        text: props.marks?.after.get(at.key) ?? show(content),
+        kind: content.t,
+        look,
+        spill: content.spill === true,
+        head: heads.has(at.key),
+        chips: content.alts ? chipsOf(content.alts as Alt[]) : [],
+        out: content.out ? outcomeOf(content.out) : null,
+        role,
+        dim: followed && role === null,
+      })
     }
   }
   return { boxes, texts }
 })
+
+/** The cells a search marks in the window: a band and an underline (never colour alone), a corner for a hit inside a
+ * formula, a heavier frame for the one being looked at, and a lock for a cell a replacement would have to skip. */
+const found = computed(() => {
+  const marks = props.marks ?? NO_MARKS
+  const { r0, r1, c0, c1 } = range.value
+  const out: { key: number; style: Record<string, string>; current: boolean; formula: boolean; blocked: string | null; changes: boolean }[] = []
+  const keys = new Set<number>([...marks.cells.keys(), ...marks.blocked.keys()])
+  for (const key of keys) {
+    const r = Math.floor(key / 100_000)
+    const c = key % 100_000
+    if (r < r0 || r > r1 || c < c0 || c > c1) continue
+    const mark = marks.cells.get(key)
+    out.push({
+      key,
+      style: { left: `${x(c)}px`, top: `${y(r)}px`, width: `${colWidthAt(c)}px`, height: `${rowHeightAt(r)}px` },
+      current: mark?.current === true,
+      formula: mark?.formula === true,
+      blocked: marks.blocked.get(key) ?? null,
+      changes: marks.after.has(key),
+    })
+  }
+  return out
+})
+/** The dots under the median of a result cell, and what a screen reader hears of them. */
+function outcomeOf(summary: Summary): { dots: number[]; caption: string } {
+  return { dots: dotFractions(summary.points), caption: outcomeCaption(summary, t) }
+}
+/** What a screen reader hears of a cell's part in the computation (the shape and bar say it to the eye, BITV). */
+function roleLabel(role: Role): string {
+  if (role === 'input') return t('Input of the computation')
+  return role === 'calc' ? t('Calculation step') : t('Result of the computation')
+}
 
 const PADDING = ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']
 
@@ -197,16 +270,74 @@ function textStyle(cell: { left: number; top: number; width: number; height: num
   return { ...words, left: `${cell.left}px`, top: `${cell.top}px`, width: `${cell.width}px`, height: `${cell.height}px` }
 }
 
+// ------------------------------------------------------------------------------ the grid's structure for a screen reader (UX-02)
+// The cells are drawn by hand and only those on screen are elements, so the structure is said in ARIA: the size of the
+// whole sheet, the row and column each drawn element sits in, and — since the focus stays on the grid itself —
+// `aria-activedescendant` naming the cell the person is in. That cell is always drawn, empty or not, or there would be
+// nothing to name. Words for it are `lib/grid-a11y.ts`'s; this is only where they are put.
+const gridId = useId()
+const idOf = (row: number, col: number) => cellDomId(gridId, row, col)
+
+/** The active cell's name: where it is, what is in it, and what the eye gets from colour, shape or dots. */
+const activeName = computed(() => {
+  void state.generation
+  const { row, col } = props.sel
+  const ref = cellLabel(row, col)
+  const content = props.session.cell(props.sheet, row, col)
+  if (content === null) return cellName(null, ref)
+  const trace = state.trace
+  const role = trace !== null && trace.sheet === props.sheet ? roleAt(trace, row, col) : null
+  return cellName({
+    ref,
+    text: props.marks?.after.get(row * 100_000 + col) ?? show(content),
+    kind: content.t,
+    formula: content.f !== undefined && content.spill !== true,
+    spill: content.spill === true,
+    error: content.t === 'error' ? (content.d ?? '') : null,
+    alternatives: content.alts ? chipsOf(content.alts as Alt[]) : [],
+    outcome: content.out ? outcomeCaption(content.out, t) : null,
+    role: role ? roleLabel(role) : null,
+  })
+})
+
+/** The drawn rows: each with the cells that have something in them, and — in the active cell's row, when that cell is
+ * empty — a blank one, so the active cell is always an element. */
+const gridRows = computed(() => {
+  const { r0, r1, c0, c1 } = range.value
+  const byRow = new Map<number, typeof painted.value.texts>()
+  for (const cell of painted.value.texts) {
+    const list = byRow.get(cell.row)
+    if (list) list.push(cell)
+    else byRow.set(cell.row, [cell])
+  }
+  const { row: ar, col: ac } = props.sel
+  const activeInView = ar >= r0 && ar <= r1 && ac >= c0 && ac <= c1
+  const b = bounds(props.sel)
+  const rows = []
+  for (let r = r0; r <= r1; r++) {
+    const cells = byRow.get(r) ?? []
+    const blank = activeInView && r === ar && !cells.some((c) => c.col === ac) ? { col: ac, left: x(ac), top: y(ar), width: colWidthAt(ac), height: rowHeightAt(ar) } : null
+    rows.push({ r, top: y(r), height: rowHeightAt(r), on: r >= b.r0 && r <= b.r1, cells, blank })
+  }
+  return rows
+})
+const inSelection = (row: number, col: number) => {
+  const b = bounds(props.sel)
+  return row >= b.r0 && row <= b.r1 && col >= b.c0 && col <= b.c1
+}
+/** The cell `aria-activedescendant` names: only one that is drawn, and not while the editor has taken the focus. */
+const activeDescendant = computed(() => {
+  if (editHere.value) return undefined
+  const row = gridRows.value.find((r) => r.r === props.sel.row)
+  if (!row) return undefined
+  const drawn = row.blank !== null || row.cells.some((c) => c.col === props.sel.col)
+  return drawn ? idOf(props.sel.row, props.sel.col) : undefined
+})
+
 const colHeads = computed(() => {
   const b = bounds(props.sel)
   const out = []
   for (let c = range.value.c0; c <= range.value.c1; c++) out.push({ c, left: x(c), width: colWidthAt(c), name: columnName(c), on: c >= b.c0 && c <= b.c1 })
-  return out
-})
-const rowHeads = computed(() => {
-  const b = bounds(props.sel)
-  const out = []
-  for (let r = range.value.r0; r <= range.value.r1; r++) out.push({ r, top: y(r), height: rowHeightAt(r), on: r >= b.r0 && r <= b.r1 })
   return out
 })
 
@@ -257,6 +388,14 @@ function anchorOf(o: SheetObject): { row: number; col: number } {
 function objectStyle(o: SheetObject) {
   const { row, col } = anchorOf(o)
   return { left: `${x(col)}px`, top: `${y(row)}px`, width: `${o.w}px`, height: `${o.h}px` }
+}
+/** What a screen reader says for an object on the sheet: its kind and description, or that it is decoration. */
+const nameOf = (o: SheetObject) => objectName(o)
+/** Step the selection through the floating objects from the keyboard (Ctrl+Alt+PageDown / PageUp), keeping it in view. */
+function stepObject(step: 1 | -1) {
+  const id = cycleObject(objects.value.map((o) => o.id), selectedObject.value, step)
+  selectedObject.value = id
+  if (id !== null) void nextTick(() => viewport.value?.querySelector(`[data-object="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }))
 }
 function pictureSrc(o: SheetObject): string | null {
   const asset = o.image ? state.images[o.image] : null
@@ -338,6 +477,7 @@ const editorStyle = computed(() => {
 
 // ------------------------------------------------------------------------------ loading what is in view
 let pending = 0
+
 function load() {
   cancelAnimationFrame(pending)
   pending = requestAnimationFrame(() => {
@@ -363,6 +503,7 @@ function measure() {
 
 onMounted(() => {
   measure()
+  emit('view', { ...range.value })
   observer = new ResizeObserver(measure)
   if (viewport.value) observer.observe(viewport.value)
   viewport.value?.focus()
@@ -524,6 +665,10 @@ interface ResizeDrag {
 }
 const resizeDrag = ref<ResizeDrag | null>(null)
 
+// The cells in view, for following a computation (E6.23). Here, after `resizeDrag`, which `range` reads when it is first
+// worked out (a watch does that at once); the first report is in `onMounted`.
+watch(range, (view) => emit('view', { ...view }))
+
 function dragTarget(axis: Axis, index: number): { first: number; lines: number[] } {
   const b = bounds(props.sel)
   const whole = axis === 'col' ? props.sel.row === 0 && props.sel.row2 === VIEW_ROWS - 1 : props.sel.col === 0 && props.sel.col2 === VIEW_COLS - 1
@@ -599,7 +744,16 @@ function onHeaderHover(event: MouseEvent) {
 function onHeaderContext(event: MouseEvent) {
   if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu, as in TextEditor.vue
   const hit = cellAt(event)
-  if (!hit || hit.rowHead === hit.colHead) return // a normal cell, or the corner: no menu for either
+  if (hit && !hit.rowHead && !hit.colHead) {
+    // A cell (E6.21–E6.23, mock computes-random-alternatives-follow-menus): outcomes, follow, resample, the clipboard.
+    event.preventDefault()
+    const at = bounds(props.sel)
+    const inside = hit.row >= at.r0 && hit.row <= at.r1 && hit.col >= at.c0 && hit.col <= at.c1
+    if (!inside) emit('select', { row: hit.row, col: hit.col, row2: hit.row, col2: hit.col }, false)
+    emit('cellMenu', event.clientX, event.clientY)
+    return
+  }
+  if (!hit || hit.rowHead === hit.colHead) return // the corner has no menu
   event.preventDefault()
   const axis: Axis = hit.colHead ? 'col' : 'row'
   const index = axis === 'col' ? hit.col : hit.row
@@ -765,6 +919,7 @@ defineExpose({
   anchorPoint,
   focus: () => viewport.value?.focus(),
   selectObject: (id: string) => (selectedObject.value = id),
+  stepObject,
   openStyleMenu,
   /** What the Format menu ticks and disables itself by. */
   selectedObject: () => selectedObject.value,
@@ -778,7 +933,11 @@ defineExpose({
     :class="{ 'resize-col': hoverAxis === 'col' || resizeDrag?.axis === 'col', 'resize-row': hoverAxis === 'row' || resizeDrag?.axis === 'row' }"
     tabindex="0"
     role="grid"
-    aria-label="table"
+    :aria-label="t('Sheet {name}', { name: sheet })"
+    :aria-rowcount="ariaRowCount(VIEW_ROWS)"
+    :aria-colcount="ariaColCount(VIEW_COLS)"
+    aria-multiselectable="true"
+    :aria-activedescendant="activeDescendant"
     @scroll.passive="onScroll"
     @mousedown="onDown"
     @mousemove.passive="onHeaderHover"
@@ -791,14 +950,15 @@ defineExpose({
     <div class="canvas" :style="{ width: `${totalW}px`, height: `${totalH}px` }">
       <div class="stage" :style="{ width: `${size.w}px`, height: `${size.h}px` }">
         <div
-          v-for="t in tables"
-          :key="t.key"
+          v-for="tb in tables"
+          :key="tb.key"
           class="table"
-          :class="[t.kind, t.kind === 'frame' || t.kind === 'ghost' ? `purpose-${t.purpose}` : '']"
-          :style="tableStyle(t)"
-          :data-table="t.table.name"
+          :class="[tb.kind, tb.kind === 'frame' || tb.kind === 'ghost' ? `purpose-${tb.purpose}` : '']"
+          :style="tableStyle(tb)"
+          :data-table="tb.table.name"
+          aria-hidden="true"
         >
-          <span v-if="t.kind === 'ghost'" class="ghost-label">type here to add a row</span>
+          <span v-if="tb.kind === 'ghost'" class="ghost-label">{{ t('type here to add a row') }}</span>
         </div>
         <div v-for="rl in rowLines" :key="`r${rl.key}`" class="gridline horiz" :style="{ top: `${rl.top}px` }" />
         <div v-for="cl in colLines" :key="`c${cl.key}`" class="gridline vert" :style="{ left: `${cl.left}px` }" />
@@ -808,29 +968,73 @@ defineExpose({
           class="cellbox"
           :style="{ ...b.css, left: `${b.left}px`, top: `${b.top}px`, width: `${b.width}px`, height: `${b.height}px` }"
         />
-        <div
-          v-for="cell in painted.texts"
-          :key="cell.key"
-          class="cell"
-          :class="[cell.kind, cell.look.align, cell.look.valign, { wrap: cell.look.wrap, spill: cell.spill, head: cell.head }]"
-          :style="textStyle(cell)"
-        >
-          <span class="words">{{ cell.text }}</span>
+        <div v-for="row in gridRows" :key="`row${row.r}`" class="gridrow" role="row" :aria-rowindex="rowIndexOf(row.r)">
+          <div class="rowhead" :class="{ on: row.on }" role="rowheader" aria-colindex="1" :style="{ top: `${row.top}px`, height: `${row.height}px` }">{{ row.r + 1 }}</div>
+          <div
+            v-for="cell in row.cells"
+            :id="idOf(cell.row, cell.col)"
+            :key="cell.key"
+            class="cell"
+            role="gridcell"
+            :aria-colindex="colIndexOf(cell.col)"
+            :aria-selected="inSelection(cell.row, cell.col)"
+            :aria-label="cell.row === sel.row && cell.col === sel.col ? activeName : undefined"
+            :class="[
+              cell.kind,
+              cell.look.align,
+              cell.look.valign,
+              { wrap: cell.look.wrap, spill: cell.spill, head: cell.head, alts: cell.chips.length > 0, dim: cell.dim },
+              cell.role ? `lit lit-${cell.role}` : '',
+            ]"
+            :style="textStyle(cell)"
+            :data-role="cell.role ?? undefined"
+            :title="cell.role ? roleLabel(cell.role) : undefined"
+          >
+            <span v-if="cell.role" class="mark" :class="ROLE_SHAPE[cell.role]" aria-hidden="true" />
+            <span v-if="cell.chips.length" class="chips" role="list">
+              <span v-for="(chip, i) in cell.chips" :key="i" class="alt" role="listitem">{{ chip }}</span>
+            </span>
+            <template v-else-if="cell.out">
+              <span class="words"><span class="approx" aria-hidden="true">≈ </span>{{ cell.text }}</span>
+              <span class="strip" role="img" :aria-label="cell.out.caption">
+                <span v-for="(f, i) in cell.out.dots" :key="i" class="dot" :style="{ left: `${f * 100}%` }" />
+              </span>
+            </template>
+            <span v-else class="words">{{ cell.text }}</span>
+          </div>
+          <div
+            v-if="row.blank"
+            :id="idOf(row.r, row.blank.col)"
+            class="cell blank"
+            role="gridcell"
+            :aria-colindex="colIndexOf(row.blank.col)"
+            :aria-selected="true"
+            :aria-label="activeName"
+            :style="{ left: `${row.blank.left}px`, top: `${row.blank.top}px`, width: `${row.blank.width}px`, height: `${row.blank.height}px` }"
+          />
         </div>
 
-        <template v-for="t in tables" :key="`chip-${t.key}`">
+        <template v-for="tb in tables" :key="`chip-${tb.key}`">
           <button
-            v-if="t.kind === 'head' && t.table.kind === 'range'"
+            v-if="tb.kind === 'head' && tb.table.kind === 'range'"
             type="button"
             class="chip"
-            :style="{ left: `${x(t.c0) + colWidthAt(t.c0) - 20}px`, top: `${y(t.r0) + 5}px` }"
-            :title="`${t.table.name} · ${t.purpose} — change what this column is for`"
-            :aria-label="`purpose of ${t.table.name} column ${t.offset + 1}`"
+            :style="{ left: `${x(tb.c0) + colWidthAt(tb.c0) - 20}px`, top: `${y(tb.r0) + 5}px` }"
+            :title="t('{name} · {purpose} — change what this column is for', { name: tb.table.name, purpose: tb.purpose })"
+            :aria-label="t('purpose of {name} column {n}', { name: tb.table.name, n: tb.offset + 1 })"
             @mousedown.stop.prevent
-            @click="onChip($event, t)"
+            @click="onChip($event, tb)"
           >▾</button>
         </template>
 
+        <div
+          v-for="f in found"
+          :key="`f${f.key}`"
+          class="found"
+          :class="{ current: f.current, formula: f.formula, blocked: f.blocked !== null, changes: f.changes }"
+          :style="f.style"
+          :data-search-mark="f.current ? 'current' : 'match'"
+        />
         <div class="selection" :class="{ picking: edit && pointing }" :style="selectionStyle" />
         <div class="active" :class="{ picking: edit && pointing }" :style="activeStyle" />
         <div v-for="r in referenced" :key="r.key" class="reference" :style="{ ...r.style, '--color': r.color }" />
@@ -842,15 +1046,18 @@ defineExpose({
           :class="{ selected: o.id === selectedObject }"
           :data-object="o.id"
           :style="objectStyle(o)"
+          :role="o.decorative ? 'presentation' : 'img'"
+          :aria-label="o.decorative ? undefined : nameOf(o)"
+          :aria-hidden="o.decorative ? 'true' : undefined"
           @mousedown.stop="onObjectDown($event, o)"
           @dblclick.stop
         >
           <ChartView v-if="o.kind === 'diagram' && o.diagram" :session="session" :diagram-id="o.diagram" :width="o.w" :height="o.h" />
-          <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="o.imported?.alt ?? ''" draggable="false" >
+          <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >
         </div>
 
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
-          <span class="tag">{{ o.name }}<template v-if="o.locked"> · editing</template></span>
+          <span class="tag">{{ o.name }}<template v-if="o.locked"> {{ t('· editing') }}</template></span>
         </div>
 
         <div v-if="activeBorder" class="active-border" :class="activeBorder.axis" :style="activeBorder.axis === 'col' ? { left: `${activeBorder.pos}px` } : { top: `${activeBorder.pos}px` }" />
@@ -865,20 +1072,17 @@ defineExpose({
           :value="edit!.text"
           spellcheck="false"
           autocomplete="off"
-          aria-label="editing cell"
+          :aria-label="t('editing cell')"
           @input="onEditorInput"
           @keyup="reportCaret"
           @click="reportCaret"
           @keydown="onEditorKey"
         >
 
-        <div class="colheads">
-          <div v-for="h in colHeads" :key="h.c" class="colhead" :class="{ on: h.on }" :style="{ left: `${h.left - HW}px`, width: `${h.width}px` }">{{ h.name }}</div>
+        <div class="colheads" role="row" aria-rowindex="1">
+          <div v-for="h in colHeads" :key="h.c" class="colhead" :class="{ on: h.on }" role="columnheader" :aria-colindex="colIndexOf(h.c)" :style="{ left: `${h.left - HW}px`, width: `${h.width}px` }">{{ h.name }}</div>
         </div>
-        <div class="rowheads">
-          <div v-for="h in rowHeads" :key="h.r" class="rowhead" :class="{ on: h.on }" :style="{ top: `${h.top - HH}px`, height: `${h.height}px` }">{{ h.r + 1 }}</div>
-        </div>
-        <div class="corner" />
+        <div class="corner" aria-hidden="true" />
       </div>
     </div>
     <StyleMenu v-if="styleMenu" :host="styleMenu.cells && cellHost ? cellHost : styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
@@ -967,6 +1171,85 @@ defineExpose({
 .cell.error {
   font-weight: 500;
 }
+/* Alternatives (E6.21, mocks computes-alternatives-*): an input cell with several values shows each as a chip. */
+.cell.alts {
+  gap: 3px;
+}
+.cell .chips {
+  display: flex;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+.cell .alt {
+  flex: none;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--apricot) 80%, var(--ink));
+  border-radius: 9px;
+  background: var(--purpose-input);
+  color: var(--ink);
+  font-size: 0.85em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+/* A result of alternatives: the median, and under it one dot for each outcome (thinned), from least to greatest. */
+.cell .approx {
+  color: var(--muted);
+}
+.cell .strip {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 2px;
+  height: 4px;
+  pointer-events: none;
+}
+.cell .strip .dot {
+  position: absolute;
+  top: 0;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--app-text);
+}
+/* Following a computation (E6.23, mocks computes-follow-computation-*): the connected cells light up with the part
+ * they play — a bar at the left, a shape and a tint — and every other cell dims. Shape and bar, not colour alone
+ * (BITV); the dimmed text keeps better than 4.5:1 on both surfaces. Nothing is drawn between cells. */
+.cell.lit {
+  --role: var(--iris);
+  background: color-mix(in srgb, var(--role) 18%, var(--surface));
+  box-shadow: inset 3px 0 0 var(--role);
+  padding-left: 12px;
+}
+.cell.lit-input {
+  --role: var(--apricot);
+}
+.cell.lit-calc {
+  --role: var(--iris);
+}
+.cell.lit-output {
+  --role: var(--teal);
+}
+.cell.dim {
+  opacity: 0.72;
+}
+.cell .mark {
+  position: absolute;
+  left: 4px;
+  top: 3px;
+  width: 6px;
+  height: 6px;
+  background: var(--role);
+  pointer-events: none;
+}
+.cell .mark.dot {
+  border-radius: 50%;
+}
+.cell .mark.diamond {
+  transform: rotate(45deg) scale(0.85);
+}
 /* A cell's box: its background and borders, under the words and the selection. */
 .cellbox {
   position: absolute;
@@ -1047,6 +1330,32 @@ defineExpose({
 .selection.picking,
 .active.picking {
   border-style: dashed;
+}
+.found {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--purpose-input) 55%, transparent);
+  border-bottom: 3px solid var(--app);
+}
+.found.current {
+  border: 2px solid var(--ink);
+  background: color-mix(in srgb, var(--purpose-input) 80%, transparent);
+}
+.found.formula::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-top: 8px solid var(--app);
+  border-left: 8px solid transparent;
+}
+.found.blocked {
+  background: repeating-linear-gradient(135deg, transparent 0 4px, var(--faint) 4px 8px);
+  border-bottom-style: dashed;
+}
+.found.changes {
+  background: color-mix(in srgb, var(--app) 22%, transparent);
 }
 .reference {
   position: absolute;
@@ -1132,21 +1441,16 @@ defineExpose({
   outline: none;
   user-select: text;
 }
+.gridrow {
+  height: 0; /* a row is only a name for its cells for a screen reader: they are placed by the stage, not by it */
+}
 .colheads {
+  z-index: 3;
   position: absolute;
   top: 0;
   left: 52px;
   right: 0;
   height: 26px;
-  overflow: hidden;
-  pointer-events: none;
-}
-.rowheads {
-  position: absolute;
-  top: 26px;
-  left: 0;
-  bottom: 0;
-  width: 52px;
   overflow: hidden;
   pointer-events: none;
 }
@@ -1167,8 +1471,10 @@ defineExpose({
   height: 26px;
 }
 .rowhead {
+  z-index: 2; /* above the cells that scroll beneath it, below the corner and the column letters */
   left: 0;
   width: 52px;
+  pointer-events: none;
 }
 .colhead.on,
 .rowhead.on {
@@ -1177,6 +1483,7 @@ defineExpose({
   font-weight: 500;
 }
 .corner {
+  z-index: 4;
   left: 0;
   top: 0;
   width: 52px;

@@ -1,5 +1,5 @@
 {
- "version": "0.26.0",
+ "version": "0.28.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -159,6 +159,7 @@
    "deliver": "(self, message: 'dict') -> 'None'",
    "handle": "(self, raw: 'str | bytes') -> 'None'",
    "person": "(self) -> 'dict'",
+   "set_locale": "(self, locale: 'str') -> 'None'",
    "welcome": "(self) -> 'dict'"
   },
   "properties": []
@@ -261,9 +262,11 @@
   "init": "(topics: 'Iterable[Topic]' = ())",
   "methods": {
    "add": "(self, topic: 'Topic') -> 'None'",
-   "get": "(self, topic_id: 'str') -> 'Topic | None'",
+   "check": "(self) -> 'None'",
+   "get": "(self, topic_id: 'str', language: 'str' = 'en') -> 'Topic | None'",
    "load_folder": "(self, folder: 'Path') -> 'None'",
-   "search": "(self, query: 'str', *, app: 'str | None' = None) -> 'list[Topic]'"
+   "search": "(self, query: 'str', *, app: 'str | None' = None, language: 'str' = 'en') -> 'list[Topic]'",
+   "stale": "(self) -> 'list[tuple[str, str]]'"
   },
   "properties": []
  },
@@ -396,7 +399,7 @@
   ],
   "init": "(code: 'str', message: 'str', detail: 'str | None' = None)",
   "methods": {
-   "to_dict": "(self) -> 'dict'"
+   "to_dict": "(self, locale: 'str' = 'en') -> 'dict'"
   },
   "properties": []
  },
@@ -541,7 +544,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', title: 'str', apps: 'tuple[str, ...]', language: 'str', tags: 'tuple[str, ...]', explains: 'tuple[str, ...]', body: 'str') -> None",
+  "init": "(id: 'str', title: 'str', apps: 'tuple[str, ...]', language: 'str', tags: 'tuple[str, ...]', explains: 'tuple[str, ...]', body: 'str', source_hash: 'str' = '', fingerprint: 'str' = '') -> None",
   "methods": {
    "summary": "(self) -> 'dict'",
    "to_data": "(self) -> 'dict'"

@@ -1,5 +1,5 @@
 #!/bin/sh
-#   ./start-client.sh [composes|computes|creates] [--server URL] [--debug]      (the app defaults to composes)
+#   ./start-linux-client.sh [composes|computes|creates] [--server URL] [--debug]      (the app defaults to composes)
 #
 # Starts the Linux desktop client (clients/linux, the GTK shell) directly — distinct from ./start.sh, which starts a
 # server and opens it in a browser instead. See clients/linux/README.md's "Two interpreters" for the full story; in
@@ -33,7 +33,7 @@ if [ ! -x /usr/bin/python3 ]; then
     exit 1
 fi
 
-# The first argument names the app unless it is an option: ./start-client.sh --debug starts composes, as it always did.
+# The first argument names the app unless it is an option: ./start-linux-client.sh --debug starts composes, as it always did.
 case "${1:-}" in
     composes|computes|creates) app="$1"; shift ;;
     *) app=composes ;;

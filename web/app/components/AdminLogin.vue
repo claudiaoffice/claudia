@@ -9,6 +9,9 @@
 // one screen earlier.
 import { ref } from 'vue'
 import type { useAdminSession } from '~/lib/admin-session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ label: string; session: ReturnType<typeof useAdminSession> }>()
 const emit = defineEmits<{ close: [] }>()
@@ -20,7 +23,7 @@ const formError = ref('')
 async function signIn() {
   formError.value = ''
   if (!name.value.trim() || !password.value) {
-    formError.value = 'Fill in your name and password.'
+    formError.value = t('Fill in your name and password.')
     return
   }
   const error = await props.session.login(name.value.trim(), password.value)
@@ -31,24 +34,24 @@ async function signIn() {
 <template>
   <div class="login">
     <header class="bar">
-      Server settings
-      <button class="close" type="button" aria-label="Close" @click="emit('close')">×</button>
+      {{ t('Server settings') }}
+      <button class="close" type="button" :aria-label="t('Close')" @click="emit('close')">×</button>
     </header>
     <form class="body" @submit.prevent="signIn">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--iris)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shield">
         <path d="M12 2l8 3.5v5.3c0 5-3.4 8.9-8 10.2-4.6-1.3-8-5.2-8-10.2V5.5L12 2z" /><path d="M9.5 12l1.8 1.8 3.2-3.6" />
       </svg>
-      <h1>Sign in to {{ label }}</h1>
-      <p class="lead">These settings are for administrators only. Sign in with your name and password to continue.</p>
+      <h1>{{ t('Sign in to {label}', { label }) }}</h1>
+      <p class="lead">{{ t('These settings are for administrators only. Sign in with your name and password to continue.') }}</p>
 
-      <label class="field">Your name<input v-model="name" type="text" autocomplete="username" autofocus ></label>
-      <label class="field">Password<input v-model="password" type="password" autocomplete="current-password" ></label>
+      <label class="field">{{ t('Your name') }}<input v-model="name" type="text" autocomplete="username" autofocus ></label>
+      <label class="field">{{ t('Password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
 
       <p v-if="formError" class="error" role="alert">{{ formError }}</p>
 
       <div class="spacer" />
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="session.busy.value">Sign in</button>
+        <button class="btn primary" type="submit" :disabled="session.busy.value">{{ t('Sign in') }}</button>
       </div>
     </form>
   </div>

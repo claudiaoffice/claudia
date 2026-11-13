@@ -3,6 +3,9 @@ import { computed } from 'vue'
 import { show } from '~/lib/cells'
 import type { Summary } from '~/lib/selection'
 import type { State } from '~/lib/session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   state: State
@@ -12,6 +15,8 @@ const props = defineProps<{
    * which is active lives in `Workspace.vue` — there is nothing of this in the document itself, unlike
    * `state.activeSheet`, so two people looking at the same document may each have a different tab open. */
   activeChart: string | null
+  /** How many cells of the computation being followed each sheet has (E6.23): a marker on the tab of the others. */
+  marks?: Record<string, number>
 }>()
 defineEmits<{ pick: [id: string, kind: 'sheet' | 'chart']; add: [] }>()
 
@@ -21,44 +26,56 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
 
 <template>
   <footer class="foot">
-    <div class="tabs" role="tablist" aria-label="sheets">
-      <button
-        v-for="s in state.sheets"
-        :key="s.id"
-        type="button"
-        role="tab"
-        :aria-selected="activeChart === null && s.id === state.activeSheet"
-        :class="{ on: activeChart === null && s.id === state.activeSheet }"
-        @click="$emit('pick', s.id, 'sheet')"
-      >
-        {{ s.name }}
-      </button>
-      <span v-if="state.charts.length" class="sep" aria-hidden="true" />
-      <button
-        v-for="c in state.charts"
-        :key="c.id"
-        type="button"
-        role="tab"
-        :aria-selected="activeChart === c.id"
-        :class="{ on: activeChart === c.id, chart: true }"
-        @click="$emit('pick', c.id, 'chart')"
-      >
-        {{ c.name }}
-      </button>
-      <button v-if="canAdd" type="button" class="add" title="New sheet" aria-label="new sheet" @click="$emit('add')">+</button>
+    <div class="tabs">
+      <div class="tablist" role="tablist" :aria-label="t('sheets')">
+        <button
+          v-for="s in state.sheets"
+          :key="s.id"
+          type="button"
+          role="tab"
+          :aria-selected="activeChart === null && s.id === state.activeSheet"
+          :class="{ on: activeChart === null && s.id === state.activeSheet }"
+          @click="$emit('pick', s.id, 'sheet')"
+        >
+          {{ s.name }}
+          <span v-if="marks?.[s.id]" class="mark" :title="`${marks[s.id]}`" :aria-label="`${marks[s.id]} connected cells on this sheet`">◆ {{ marks[s.id] }}</span>
+        </button>
+        <span v-if="state.charts.length" class="sep" aria-hidden="true" />
+        <button
+          v-for="c in state.charts"
+          :key="c.id"
+          type="button"
+          role="tab"
+          :aria-selected="activeChart === c.id"
+          :class="{ on: activeChart === c.id, chart: true }"
+          @click="$emit('pick', c.id, 'chart')"
+        >
+          {{ c.name }}
+        </button>
+      </div>
+      <!-- a button that adds a sheet is not a tab: it sits beside the tab list, not in it -->
+      <button v-if="canAdd" type="button" class="add" :title="t('New sheet')" :aria-label="t('new sheet')" @click="$emit('add')">+</button>
     </div>
     <div class="stats mono" aria-live="polite">
       <template v-if="summary.numbers > 1">
-        <span>Sum <b>{{ shownSum }}</b></span>
-        <span>Average <b>{{ shownAverage }}</b></span>
+        <TransText :text="t('Sum {value}')"><template #value><b>{{ shownSum }}</b></template></TransText>
+        <TransText :text="t('Average {value}')"><template #value><b>{{ shownAverage }}</b></template></TransText>
       </template>
-      <span v-if="summary.count > 1">Count <b>{{ summary.count }}</b></span>
-      <span class="rev" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
+      <TransText v-if="summary.count > 1" :text="t('Count {value}')"><template #value><b>{{ summary.count }}</b></template></TransText>
+      <span class="rev" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
     </div>
   </footer>
 </template>
 
 <style scoped>
+.tabs .mark {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--iris) 18%, var(--surface));
+  color: var(--text);
+  font-size: 11px;
+}
 .foot {
   display: flex;
   justify-content: space-between;
@@ -73,6 +90,10 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
   display: flex;
   gap: 4px;
   overflow-x: auto;
+}
+.tablist {
+  display: flex;
+  gap: 4px;
 }
 .tabs button {
   border: 0;
@@ -124,8 +145,5 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
 .stats b {
   color: var(--ink);
   font-weight: 500;
-}
-.rev {
-  opacity: 0.8;
 }
 </style>

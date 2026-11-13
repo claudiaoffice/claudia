@@ -1,4 +1,4 @@
-"""The Markdown of speaker notes as the lines of a file that has no Markdown (D298): pptx and odp both."""
+"""The Markdown of speaker notes as the lines of a file that has no Markdown (D347): pptx and odp both."""
 
 from __future__ import annotations
 

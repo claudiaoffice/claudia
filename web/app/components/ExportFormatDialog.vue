@@ -5,6 +5,9 @@
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { downloadBase64, downloadText } from '~/lib/download'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 /** One target format this app offers. `local`, when given, builds the file here, with no server round trip (the
  * only case today is composes' Markdown, which is already in the browser as `state.blocks`); its absence means
@@ -42,20 +45,19 @@ async function exportNow() {
 </script>
 
 <template>
-  <Modal title="Export this document" @close="emit('close')">
-    <p class="lead">
-      This saves <b>{{ session.state.doc }}</b>'s current content to this computer, in the format you pick below. It does not include the
-      document's history or chat, and no tracked changes are kept — just the content as it stands now.
-    </p>
+  <Modal :title="t('Export this document')" @close="emit('close')">
+    <TransText tag="p" class="lead" :text="t('This saves the current content of {doc} to this computer, in the format you pick below. It does not include the document\'s history or chat, and no tracked changes are kept — just the content as it stands now.')">
+      <template #doc><b>{{ session.state.doc }}</b></template>
+    </TransText>
     <label v-if="!done && formats.length > 1" class="field">
-      Save as<select v-model="chosen">
+      {{ t('Save as') }}<select v-model="chosen">
         <option v-for="f in formats" :key="f.value" :value="f.value">{{ f.label }}</option>
       </select>
     </label>
-    <p v-if="done" class="lead">Exported.</p>
+    <p v-if="done" class="lead">{{ t('Exported.') }}</p>
     <div class="buttons">
-      <button v-if="!done" class="btn primary" type="button" :disabled="busy" @click="exportNow">Export</button>
-      <button class="btn" type="button" @click="emit('close')">{{ done ? 'Done' : 'Cancel' }}</button>
+      <button v-if="!done" class="btn primary" type="button" :disabled="busy" @click="exportNow">{{ t('Export') }}</button>
+      <button class="btn" type="button" @click="emit('close')">{{ done ? t('Done') : t('Cancel') }}</button>
     </div>
   </Modal>
 </template>

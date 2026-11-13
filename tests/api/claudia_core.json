@@ -1,5 +1,5 @@
 {
- "version": "0.17.0",
+ "version": "0.18.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -268,6 +268,20 @@
   },
   "properties": []
  },
+ "CompiledSearch": {
+  "class": [
+   "object"
+  ],
+  "init": "(find: 're.Pattern | None', filtered: 're.Pattern | None', template: 'str | None', sources: 'tuple[str, str, str]', reasons: 'tuple[Condition, ...]')",
+  "methods": {
+   "admits": "(self, text: 'str') -> 'bool'",
+   "left_out": "(self, text: 'str') -> 'dict | None'",
+   "matches": "(self, text: 'str') -> 'list[Match]'",
+   "pattern_text": "(self) -> 'dict[str, str]'",
+   "replaced": "(self, text: 'str', leave: 'set[int] | frozenset[int]' = frozenset()) -> 'str'"
+  },
+  "properties": []
+ },
  "Context": {
   "class": [
    "Generic"
@@ -370,6 +384,25 @@
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
    "redacted": "(self) -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DescribeObject": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', description: 'str', decorative: 'bool' = False) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DescribeObject'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -839,6 +872,14 @@
   },
   "properties": []
  },
+ "Match": {
+  "class": [
+   "object"
+  ],
+  "init": "(start: 'int', end: 'int', kept: 'tuple[str, ...]' = (), after: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
  "MemoryStore": {
   "class": [
    "object"
@@ -891,7 +932,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True) -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
@@ -1054,6 +1095,18 @@
    "on_command": "(self, command: 'Command') -> 'None'",
    "release": "(self, owner: 'str') -> 'None'",
    "show": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Hold'"
+  },
+  "properties": []
+ },
+ "Query": {
+  "class": [
+   "object"
+  ],
+  "init": "(mode: 'str', text: 'str' = '', parts: 'tuple[Part, ...]' = (), conditions: 'tuple[Condition, ...]' = (), combine: 'str' = 'all', find: 'str' = '', filter: 'str' = '', replace: 'tuple[tuple[str, str], ...] | str | None' = None, match_case: 'bool' = False, whole: 'str' = 'none') -> None",
+  "methods": {
+   "compile": "(self, extra_parts: 'Mapping[str, str] | None' = None) -> 'CompiledSearch'",
+   "from_data": "(data: 'Any') -> 'Query'",
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -1379,6 +1432,14 @@
   "properties": [
    "counts"
   ]
+ },
+ "SearchError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(message: 'str', field: 'str' = 'query', position: 'int | None' = None)",
+  "methods": {},
+  "properties": []
  },
  "SetLanguage": {
   "class": [

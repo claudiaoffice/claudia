@@ -9,6 +9,7 @@
 import type { MenuItem } from '../components/MenuBar.vue'
 import type { SlideObject } from './slide-session'
 
+import { translate as t } from './i18n'
 export interface ObjectMenuActions {
   edit: () => void
   /** Open the style menu on this object: its fill, its border, and the style its words follow (E9.7, D203). */
@@ -17,6 +18,8 @@ export interface ObjectMenuActions {
   cut: () => void
   copy: () => void
   properties: () => void
+  /** Say what the object shows to someone who cannot see it, or mark it as decoration (BITV 1.1.1). */
+  describe: () => void
   setSnap: (snap: boolean) => void
 }
 
@@ -24,27 +27,28 @@ export function contextMenuItems(o: SlideObject, readonly: boolean, actions: Obj
   const items: MenuItem[] = []
   // "Style…" first and for every kind: a picture has no fill and no words, but it does have a border and a place
   // in the stacking order, so the menu has something to offer for all four kinds (D178, D181).
-  items.push({ label: 'Style…', action: actions.style, disabled: readonly })
+  items.push({ label: t('Style…'), action: actions.style, disabled: readonly })
+  items.push({ label: t('Describe…'), hint: t('Ctrl+Alt+D'), action: actions.describe, disabled: readonly })
   items.push({ label: '', separator: true })
   if (o.kind === 'image') {
     // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call — not a second,
     // image-specific clipboard. Copy never needs write access, same as `edit.copy` is never disabled either.
-    items.push({ label: 'Cut', hint: 'Ctrl+X', action: actions.cut, disabled: readonly })
-    items.push({ label: 'Copy', hint: 'Ctrl+C', action: actions.copy })
+    items.push({ label: t('Cut'), hint: t('Ctrl+X'), action: actions.cut, disabled: readonly })
+    items.push({ label: t('Copy'), hint: t('Ctrl+C'), action: actions.copy })
     items.push({ label: '', separator: true })
-    items.push({ label: 'Properties', action: actions.properties })
+    items.push({ label: t('Properties'), action: actions.properties })
     items.push({ label: '', separator: true })
   } else {
     // A picture has no text to write — `SlideCanvas.vue`'s own `beginEdit` already refuses it for the same reason
     // (Enter/F2 does nothing on an image either), so the item is left off entirely rather than shown disabled.
-    items.push({ label: 'Edit text', hint: 'Enter', action: actions.edit, disabled: readonly })
+    items.push({ label: t('Edit Text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
     items.push({ label: '', separator: true })
   }
   // The grid is only a helper the view draws; whether this object follows it is real document state (E10.15).
   // One item whose label swaps, like "Undo <label>" does, rather than a checkbox: ContextMenu.vue renders a
   // label and a hint only, and a swapping label needs no change there.
-  items.push({ label: o.snap ? 'Release from grid' : 'Snap to grid', action: () => actions.setSnap(!o.snap), disabled: readonly })
+  items.push({ label: o.snap ? t('Release from grid') : t('Snap to grid'), action: () => actions.setSnap(!o.snap), disabled: readonly })
   items.push({ label: '', separator: true })
-  items.push({ label: 'Delete', hint: 'Del', action: actions.remove, disabled: readonly })
+  items.push({ label: t('Delete'), hint: t('Del'), action: actions.remove, disabled: readonly })
   return items
 }

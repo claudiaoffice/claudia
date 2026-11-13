@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from claudia_computes.formula.forms import CORE_NAMES
-from claudia_computes.functions.help import function_catalog, get_function, search_functions
+from claudia_computes.functions.help import function_catalog, get_function, search_functions, translatable_texts
 
 CATALOG = function_catalog()
 
@@ -69,3 +69,55 @@ def test_search_by_description_finds_a_function_whose_name_does_not_mention_the_
 
 def test_search_is_case_insensitive():
     assert search_functions("xlookup") == search_functions("XLOOKUP") == search_functions("XlookUp")
+
+
+# ------------------------------------------------------------------------------- in another language (E13.8, D323)
+GERMAN = {
+    "The sum of the numbers in the ranges. Text and empty cells are skipped.": "Die Summe der Zahlen in den Bereichen.",
+    "{formula}  gives  {result}": "{formula}  ergibt  {result}",
+    "{formula}  gives  {result}  (with {given})": "{formula}  ergibt  {result}  (mit {given})",
+}
+
+
+def say_in_german(text: str) -> str:
+    return GERMAN.get(text, text)
+
+
+def test_translating_with_no_words_changed_gives_the_same_entry():
+    sum_entry = get_function("SUM")
+    assert sum_entry is not None
+    assert sum_entry.translated(lambda text: text) is sum_entry
+
+
+def test_a_library_entry_is_said_in_another_language_in_all_three_texts():
+    sum_entry = get_function("SUM")
+    assert sum_entry is not None
+    german = sum_entry.translated(say_in_german)
+    assert german.description == "Die Summe der Zahlen in den Bereichen."
+    assert german.tooltip == "SUM(*values): Die Summe der Zahlen in den Bereichen."
+    assert german.help.startswith(german.tooltip + "\n\n")
+    assert "ergibt" in german.help and "gives" not in german.help
+    assert (german.name, german.signature, german.source) == (sum_entry.name, sum_entry.signature, "library")
+
+
+def test_an_example_with_cells_says_which_cells_it_reads():
+    entry = next(entry for entry in CATALOG if entry.source == "library" and any(e.cells for e in entry.examples))
+    german = entry.translated(say_in_german)
+    assert "(mit " in german.help and "(with " not in german.help
+
+
+def test_a_core_entry_is_said_in_another_language_from_its_description():
+    xlookup = get_function("XLOOKUP")
+    assert xlookup is not None
+    seen = []
+    german = xlookup.translated(lambda text: seen.append(text) or "Zeile: " + text[:10])
+    assert seen == [xlookup.description]
+    assert german.tooltip == f"{xlookup.signature}: Zeile: {xlookup.description[:10]}"
+    assert german.help == german.tooltip
+
+
+def test_the_texts_to_translate_are_every_description_and_the_example_templates():
+    texts = translatable_texts()
+    assert texts == sorted(set(texts))
+    assert {entry.description for entry in CATALOG if entry.description} <= set(texts)
+    assert "{formula}  gives  {result}" in texts and "{formula}  gives  {result}  (with {given})" in texts

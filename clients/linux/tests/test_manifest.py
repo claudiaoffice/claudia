@@ -212,9 +212,26 @@ def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manife
 def test_every_app_offers_the_same_three_format_actions(app_name: str, request: pytest.FixtureRequest) -> None:
     """Was a single inert stub while only composes had styles (D125). All three have them now (D203), and the
     colours a document is painted from are the same dialog everywhere (D200), so the menu is the same everywhere
-    too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two."""
+    too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two.
+    The two that have floating objects also say what an object shows to someone who cannot see it (BITV 1.1.1)."""
     m = request.getfixturevalue(app_name)
-    assert action_ids(m.menu("Format")) == ["format.apply-style", "format.look", "format.all-styles", "format.colours"]
+    assert action_ids(m.menu("Format")) == [
+        "format.apply-style",
+        "format.look",
+        "format.all-styles",
+        "format.colours",
+        "format.describe",
+    ]
+
+
+@pytest.mark.parametrize("app_name", ["computes", "creates"])
+def test_describe_object_is_a_page_action_with_its_own_key(app_name: str, request: pytest.FixtureRequest) -> None:
+    """Every menu entry has a key (project rule): Ctrl+Alt+D, the chord the page binds to the same action."""
+    m = request.getfixturevalue(app_name)
+    describe = m.action("format.describe")
+    assert describe.kind is Kind.PAGE and describe.label == "Describe Object…"
+    assert describe.accelerators == ("<Primary><Alt>d",)
+    assert "format.describe" not in action_ids(request.getfixturevalue("composes").menu("Format"))
 
 
 @pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
@@ -229,13 +246,15 @@ def test_apply_style_is_one_page_action_that_opens_the_pages_popover(
     assert [a.id for a in first] == ["format.apply-style", "format.look", "format.all-styles"]
 
 
-def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(computes: manifest.Manifest) -> None:
+def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_then_clear(
+    computes: manifest.Manifest,
+) -> None:
     """D123 (where new items land) and D130 (confirmed by the owner 2026-11-10 — grouped
-    into two submenus of three items each, not six flat items)."""
+    into two submenus of three items each, not six flat items); E5.15 put Search & Replace… ahead of them."""
     edit = computes.menu("Edit")
     tail = entries(edit)[6:]  # past the shared Undo…Paste-as block
-    assert [e.label for e in tail] == ["New Sheet…", "Row", "Column", "Clear Cells"]
-    row, column = tail[1], tail[2]
+    assert [e.label for e in tail] == ["Search & Replace…", "New Sheet…", "Row", "Column", "Clear Cells"]
+    row, column = tail[2], tail[3]
     assert isinstance(row, Submenu)
     assert [a.id for a in row.items] == ["edit.row-insert-above", "edit.row-insert-below", "edit.row-delete"]
     assert isinstance(column, Submenu) and [a.id for a in column.items] == [
@@ -243,6 +262,13 @@ def test_computes_edit_has_new_sheet_then_row_and_column_submenus_then_clear(com
         "edit.column-insert-right",
         "edit.column-delete",
     ]
+
+
+def test_computes_search_and_replace_is_a_page_action_with_ctrl_f(computes: manifest.Manifest) -> None:
+    """E5.15, D281: the web page owns the panel, so the entry is a page action with the shortcut the menu shows."""
+    (search,) = [a for a in computes.menu("Edit").all_actions() if a.id == "edit.search-replace"]
+    assert search.kind is Kind.PAGE
+    assert search.accelerators == ("<Primary>f",)
 
 
 def test_creates_edit_has_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:
@@ -256,14 +282,14 @@ def test_creates_edit_has_new_slide_edit_text_text_box_then_delete(creates: mani
 def test_creates_view_has_the_show_and_the_notes_each_with_a_chord_a_mac_leaves_alone(
     creates: manifest.Manifest,
 ) -> None:
-    """E10.2, D295: F5 is a system key on a Mac (the spike's Safari result), so every entry that starts the show
+    """E10.2, D344: F5 is a system key on a Mac (the spike's Safari result), so every entry that starts the show
     has a second chord on a letter, and the planned time has one too (every menu entry has a key)."""
     view = {a.id: a for a in creates.menu("View").all_actions()}
     assert view["view.present-start"].accelerators == ("F5", "<Primary><Alt>p")
     assert view["view.present-here"].accelerators == ("<Shift>F5", "<Primary><Alt><Shift>p")
     assert view["view.speaker-notes"].checkable is True
     edit = {a.id: a for a in creates.menu("Edit").all_actions()}
-    assert edit["edit.slide-time"].accelerators == ("<Primary><Alt>d",)
+    assert edit["edit.slide-time"].accelerators == ("<Primary><Alt>m",)
 
 
 # ------------------------------------------------------------------------------------------------- ids and actions
@@ -325,6 +351,9 @@ def test_checkable_actions_are_the_view_toggles_and_the_language_picker(app: man
         assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"} | language_ids
     elif app.app == "creates":
         assert checkable == {"view.authors", "view.panel", "view.dark", "view.speaker-notes"} | language_ids
+    elif app.app == "computes":
+        # ... and Tools ▸ Follow Computation (E6.23), which is on while a computation is followed.
+        assert checkable == {"view.authors", "view.panel", "view.dark", "tools.follow"} | language_ids
     else:
         assert checkable == {"view.authors", "view.panel", "view.dark"} | language_ids
 
@@ -526,3 +555,18 @@ def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() 
     with pytest.raises(identity.UnknownApp) as problem:
         manifest.for_app("drawbook")
     assert "composes" in str(problem.value)
+
+
+def test_computes_tools_menu_has_random_outcomes_and_follow_entries_each_with_a_key(
+    computes: manifest.Manifest,
+) -> None:
+    """E6.21–E6.23: every menu entry has a shortcut (project rule); F9 keeps Excel's meaning of "draw again"."""
+    keys = {
+        "tools.random": ("<Primary><Alt>r",),
+        "tools.resample": ("F9",),
+        "tools.outcomes": ("<Primary><Alt>o",),
+        "tools.follow": ("<Primary><Alt>f",),
+    }
+    for action_id, accelerators in keys.items():
+        assert computes.action(action_id).accelerators == accelerators, action_id
+        assert computes.action(action_id).kind is Kind.PAGE, action_id

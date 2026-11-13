@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_SECONDS, PLAN_CHIPS, formatTime, parseTime, stepTime } from '~/lib/show-time'
 
-describe('showing a time (D294)', () => {
+describe('showing a time (D343)', () => {
   it('writes minutes and seconds, and hours only when there are some', () => {
     expect([0, 5, 60, 125, 3599, 3600, 3725].map(formatTime)).toEqual(['0:00', '0:05', '1:00', '2:05', '59:59', '1:00:00', '1:02:05'])
   })

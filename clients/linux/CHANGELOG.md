@@ -6,11 +6,21 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 First slice of the native Linux client (epic 5).
 
+### Added (alt text and decorative objects, BITV 1.1.1)
+- Format ▸ Describe Object… (Ctrl+Alt+D, action `format.describe`) in claudia computes and claudia creates: the page
+  opens its own dialog to describe the selected object or mark it as decoration. A new page action, so the contract
+  version is unchanged; the macOS and Windows menus follow by regeneration.
+
+### Added (computes: random numbers, alternatives, following)
+- Tools ▸ Random Generator… (Ctrl+Alt+R), Resample Random Numbers (F9), Outcomes of This Cell… (Ctrl+Alt+O) and Follow
+  Computation (Ctrl+Alt+F, checkable) in claudia computes (E6.21–E6.23); the macOS and Windows menus follow by
+  regeneration. The drawing is the web page's own.
+
 ### Added (presenter mode, E10.2)
 - Creates' menu manifest: View ▸ Present from the First Slide (`F5`, `Ctrl+Alt+P`), Present from This Slide
   (`Shift+F5`, `Ctrl+Alt+Shift+P`), Speaker Notes (`Ctrl+Alt+N`, checkable); Edit ▸ Plan the Time of This Slide…
-  (`Ctrl+Alt+D`). Page actions, no contract change; the German texts are in the catalog. The two-window show and
-  fullscreen from the shell (a `create` handler for new windows) wait for the spike's runs (D296).
+  (`Ctrl+Alt+M`). Page actions, no contract change; the German texts are in the catalog. The two-window show and
+  fullscreen from the shell (a `create` handler for new windows) wait for the spike's runs (D345).
 
 ### Added (all three apps, other servers, HTTPS)
 - `claudia-computes` and `claudia-creates` beside `claudia-composes`: one shell for every app (`identity.names()`),

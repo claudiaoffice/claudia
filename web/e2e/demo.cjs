@@ -41,7 +41,8 @@ async function click(page, row, col) {
   const p = await cellAt(page, row, col)
   await page.mouse.click(p.x, p.y)
 }
-const cells = (page) => page.$$eval('.cell', (els) => els.map((e) => e.textContent.trim()))
+// `.cell.blank` is the empty active cell the grid draws for screen readers (UX-02), not a cell with content
+const cells = (page) => page.$$eval('.cell:not(.blank)', (els) => els.map((e) => e.textContent.trim()))
 const history = (page) => page.$$eval('.entry', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()))
 const chat = (page) => page.$$eval('.msg', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()))
 async function waitFor(page, fn, arg, what) {
@@ -76,7 +77,7 @@ async function menu(page, title, ...path) {
     await ann.keyboard.press('Enter')
     await ann.keyboard.type('450') // the selection moved down to B3 after Enter
     await ann.keyboard.press('Enter')
-    await waitFor(ann, () => [...document.querySelectorAll('.cell')].length >= 5, null, 'cells')
+    await waitFor(ann, () => [...document.querySelectorAll('.cell:not(.blank)')].length >= 5, null, 'cells')
     assert.deepEqual((await cells(ann)).sort(), ['1200', '450', 'Amount', 'Item', 'Rent'].sort())
     const entries = await history(ann)
     assert.ok(entries.some((e) => e.includes('B2 = 1200')), 'history says B2 = 1200: ' + entries.join(' | '))
@@ -84,7 +85,7 @@ async function menu(page, title, ...path) {
     await ann.screenshot({ path: `${SHOTS}/03-ann-typed.png` })
 
     // numbers are right-aligned, text left
-    const aligns = await ann.$$eval('.cell', (els) => els.map((e) => [e.textContent.trim(), e.className]))
+    const aligns = await ann.$$eval('.cell:not(.blank)', (els) => els.map((e) => [e.textContent.trim(), e.className]))
     assert.ok(aligns.find(([t, c]) => t === '1200' && c.includes('right')))
 
     // status bar sums the selection
@@ -105,7 +106,7 @@ async function menu(page, title, ...path) {
 
     // ---- ben joins; he sees the table, the history and who is here
     const ben = await open(browser, BEN, false)
-    await waitFor(ben, () => [...document.querySelectorAll('.cell')].length >= 5, null, "ben's cells")
+    await waitFor(ben, () => [...document.querySelectorAll('.cell:not(.blank)')].length >= 5, null, "ben's cells")
     assert.ok((await history(ben)).some((e) => e.includes('B2 = 1200')))
     const people = await ben.$$eval('.people li', (els) => els.map((e) => e.title))
     assert.ok(people.some((t) => t.startsWith('ann')) && people.some((t) => t === 'ai'), 'people: ' + people)
@@ -126,7 +127,7 @@ async function menu(page, title, ...path) {
     await ben.keyboard.press('Control+a')
     await ben.keyboard.type('1300')
     await ben.keyboard.press('Enter')
-    await waitFor(ann, () => [...document.querySelectorAll('.cell')].some((e) => e.textContent.trim() === '1300'), null, 'ann sees 1300')
+    await waitFor(ann, () => [...document.querySelectorAll('.cell:not(.blank)')].some((e) => e.textContent.trim() === '1300'), null, 'ann sees 1300')
     await waitFor(ann, () => !document.querySelector('.outline.locked'), null, 'lock released')
     assert.ok((await history(ann)).some((e) => e.includes('ben') && e.includes('B2 = 1300')))
     log('ben changed B2 to 1300; ann sees it live')
@@ -159,7 +160,7 @@ async function menu(page, title, ...path) {
     const aiOutline = await ann.locator('.outline.ai').count()
     log('ai cursor visible while it works:', aiOutline > 0)
     await waitFor(ann, () => [...document.querySelectorAll('.msg.ai')].some((e) => e.textContent.includes('Done.')), null, 'ai done')
-    await waitFor(ben, () => [...document.querySelectorAll('.cell')].some((e) => e.textContent.trim() === 'Savings'), null, 'ben sees the budget')
+    await waitFor(ben, () => [...document.querySelectorAll('.cell:not(.blank)')].some((e) => e.textContent.trim() === 'Savings'), null, 'ben sees the budget')
     const aiEntries = (await history(ben)).filter((e) => e.startsWith('ai'))
     assert.ok(aiEntries.length >= 5, 'ai made entries: ' + aiEntries.length)
     assert.equal((await chat(ben)).filter((m) => m.startsWith('ai→')).length, 0, 'ben does not see the answer meant for ann')
@@ -194,7 +195,7 @@ async function menu(page, title, ...path) {
     await ann.fill('input[name=password]', ANN[1])
     await ann.click('button:text-is("Open")')
     await ann.waitForSelector('.viewport')
-    await waitFor(ann, () => [...document.querySelectorAll('.cell')].some((e) => e.textContent.trim() === 'Savings'), null, 'cells after reload')
+    await waitFor(ann, () => [...document.querySelectorAll('.cell:not(.blank)')].some((e) => e.textContent.trim() === 'Savings'), null, 'cells after reload')
     assert.ok((await chat(ann)).some((m) => m.includes('example budget') || m.includes('Done.')), 'chat is back')
     log('after a reload the table, history and chat are back')
 

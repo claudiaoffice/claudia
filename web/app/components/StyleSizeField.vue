@@ -2,6 +2,9 @@
 // The size of the type: a number with − and + around it. Units stay as the style has them (pt, px, em…).
 import { computed, ref, watch } from 'vue'
 import { fontSizeOf, type Css } from '~/lib/style-css'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ look: Css; disabled?: boolean }>()
 const emit = defineEmits<{ step: [direction: 1 | -1]; size: [value: number, unit: string] }>()
@@ -18,11 +21,11 @@ function commit() {
 </script>
 
 <template>
-  <div class="size" role="group" aria-label="Size" data-testid="size-field">
-    <button type="button" :disabled="disabled" aria-label="Smaller" title="Smaller" @click="emit('step', -1)">−</button>
-    <input v-model="typed" inputmode="decimal" aria-label="Font size" :disabled="disabled" @keydown.enter.prevent="commit" @blur="commit" >
+  <div class="size" role="group" :aria-label="t('Size')" data-testid="size-field">
+    <button type="button" :disabled="disabled" :aria-label="t('Smaller')" :title="t('Smaller')" @click="emit('step', -1)">−</button>
+    <input v-model="typed" inputmode="decimal" :aria-label="t('Font size')" :disabled="disabled" @keydown.enter.prevent="commit" @blur="commit" >
     <span class="unit mono">{{ size?.unit ?? 'pt' }}</span>
-    <button type="button" :disabled="disabled" aria-label="Larger" title="Larger" @click="emit('step', 1)">+</button>
+    <button type="button" :disabled="disabled" :aria-label="t('Larger')" :title="t('Larger')" @click="emit('step', 1)">+</button>
   </div>
 </template>
 

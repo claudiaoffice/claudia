@@ -55,6 +55,7 @@ from claudia_core import (
 )
 
 from .composes_lists import add_list_methods
+from .i18n import msg
 from .office_export import office_export
 from .printing import add_language_methods
 from .protocol import Context, RequestError, core_methods
@@ -73,14 +74,14 @@ composes_methods = core_methods.extended()
 def _text(ctx: Context) -> TextModel:
     model = ctx.document.model
     if not isinstance(model, TextModel):
-        raise RequestError("command_error", "this document is not a text")
+        raise RequestError("command_error", msg("this document is not a text"))
     return model
 
 
 def _people_only(ctx: Context) -> None:
     """The assistant suggests; it does not write (D63)."""
     if ctx.account.system:
-        raise RequestError("forbidden", "the assistant can only make suggestions; people write the text")
+        raise RequestError("forbidden", msg("the assistant can only make suggestions; people write the text"))
 
 
 class _BlockTargets:
@@ -117,7 +118,7 @@ def _rev(ctx: Context) -> str | None:
 
 def _inside(model: TextModel, block: str, offset: int, what: str = "offset") -> int:
     if not 0 <= offset <= len(model.block(block).text):
-        raise RequestError("command_error", f"{what} is outside the paragraph")
+        raise RequestError("command_error", msg("{what} is outside the paragraph", what=what))
     return offset
 
 
@@ -160,7 +161,7 @@ def _export_office(ctx, *, format, tracked_changes):
     dated with when it was proposed, by whom. An odt also says in its metadata when the document was made and last
     changed, and by whom: all read from the document's log (D411)."""
     if format not in ("docx", "odt"):
-        raise RequestError("bad_request", 'export_office: format must be "docx" or "odt"')
+        raise RequestError("bad_request", msg('export_office: format must be "docx" or "odt"'))
     model = _text(ctx)
     info, times = export_info(ctx.document.log, ctx.document.branch)
     if format == "docx":
@@ -177,12 +178,12 @@ def edit_plan(
     ends up (``(paragraph, offset)``). Paragraphs in between go away; the last one's rest is joined to the first."""
     i, j = model.index_of(first), model.index_of(last)
     if j < i or (i == j and end < start):
-        raise RequestError("command_error", "the range ends before it starts")
+        raise RequestError("command_error", msg("the range ends before it starts"))
     _inside(model, first, start, "start")
     _inside(model, last, end, "end")
     lines = text.split("\n")
     if len(lines) - 1 > MAX_NEW_PARAGRAPHS or len(model.blocks) + len(lines) > MAX_BLOCKS:
-        raise RequestError("command_error", "that would make too many paragraphs")
+        raise RequestError("command_error", msg("that would make too many paragraphs"))
     blocks = model.blocks
     commands: list[Command] = []
     if i == j:
@@ -311,7 +312,13 @@ def _deviate_style(ctx, *, parent, blocks, set, text, base):
     _people_only(ctx)
     model = _text(ctx)
     if len(blocks) > MAX_STYLED_BLOCKS or not all(isinstance(b, str) for b in blocks):
-        raise RequestError("bad_request", f"blocks must be a list of at most {MAX_STYLED_BLOCKS} paragraph ids")
+        raise RequestError(
+            "bad_request",
+            msg(
+                "blocks must be a list of at most {limit} paragraph ids",
+                limit=MAX_STYLED_BLOCKS,
+            ),
+        )
     try:
         inherited = model.styles.computed(parent)
     except KeyError as exc:
@@ -322,7 +329,8 @@ def _deviate_style(ctx, *, parent, blocks, set, text, base):
     own = {name: value for name, value in given.items() if inherited.get(name) != value}
     if not own:
         raise RequestError(
-            "command_error", "the new style would look just like “" + model.styles.get(parent).name + "”"
+            "command_error",
+            msg("the new style would look just like “{name}”", name=model.styles.get(parent).name),
         )
     name = model.styles.provisional_name(parent)
     kind = model.styles.get(parent).kind  # a deviation is of its parent's kind (D305)
@@ -336,7 +344,7 @@ def _deviate_style(ctx, *, parent, blocks, set, text, base):
 def _regions_at(ctx: Context, block: str, offset: int, words: int) -> list[TextRange]:
     model = _text(ctx)
     if not 0 <= words <= MAX_ZONE_WORDS:
-        raise RequestError("bad_request", f"words must be from 0 to {MAX_ZONE_WORDS}")
+        raise RequestError("bad_request", msg("words must be from 0 to {limit}", limit=MAX_ZONE_WORDS))
     _inside(model, block, offset)
     zone = word_window(model.block(block).text, offset, words, block)
     return [zone, TextRange(block, offset, offset)]
@@ -368,7 +376,7 @@ def _suggest(ctx, *, block, start, end, reason, replacement, base):
     """The assistant only: propose that the text from `start` up to `end` of `block` be replaced by `replacement`
     (empty text proposes a deletion), or, with no `replacement`, remark on it. Changes no text. Returns the id."""
     if not ctx.account.system:
-        raise RequestError("forbidden", "only the assistant makes suggestions")
+        raise RequestError("forbidden", msg("only the assistant makes suggestions"))
     model = _text(ctx)
     original = model.block(block).text[start:end]
     command = ProposeSuggestion(model.fresh_suggestion_id(), block, start, end, original, replacement, reason)
@@ -383,7 +391,7 @@ def _accept(ctx, *, id, base):
     _people_only(ctx)
     suggestion = _text(ctx).suggestion(id)
     if suggestion.replacement is None:
-        raise RequestError("command_error", "a remark suggests no change; dismiss it instead")
+        raise RequestError("command_error", msg("a remark suggests no change; dismiss it instead"))
     anchor = suggestion.anchor
     command = AcceptSuggestion(id, anchor.block, anchor.start, anchor.end, suggestion.replacement, suggestion.author)
     applied = ctx.document.execute(command, author=ctx.user, base=base)
@@ -396,7 +404,7 @@ def _reject(ctx, *, id, base):
     _people_only(ctx)
     suggestion = _text(ctx).suggestion(id)
     if suggestion.state != "open":
-        raise RequestError("command_error", "this suggestion is not open any more")
+        raise RequestError("command_error", msg("this suggestion is not open any more"))
     state = "dismissed" if suggestion.replacement is None else "rejected"
     applied = ctx.document.execute(ResolveSuggestion(id, state), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}

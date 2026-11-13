@@ -8,10 +8,14 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import type { FrameDialog } from '~/lib/document-menus'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
-import { chordLabel, installWindowShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { cycleRegions, windowRegions } from '~/lib/regions'
+import { chordLabel, installWindowShortcuts, regionShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
 import type { ExportFormatOption } from './ExportFormatDialog.vue'
 import type { Menu } from './MenuBar.vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -33,12 +37,18 @@ const panelOpen = ref(true)
 const dialog = ref<FrameDialog | null>(null)
 const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
 const readonly = computed(() => state.me.role === 'viewer')
+const frame = ref<HTMLElement | null>(null)
+
+/** F6 / Shift+F6: on to the next (or back to the previous) part of the window (WCAG 2.1.2, 2.4.1). */
+function moveBetweenRegions(backwards: boolean) {
+  if (frame.value) cycleRegions(windowRegions(frame.value), document.activeElement, backwards)
+}
 
 /** Save a checkpoint. What is still being typed is sent first, so the checkpoint holds it (composes, `flush`). */
 async function checkpoint(label: string | null) {
   dialog.value = null
   await props.session.flush()
-  if (await props.session.saveCheckpoint(label || null)) props.session.notice('Checkpoint saved.')
+  if (await props.session.saveCheckpoint(label || null)) props.session.notice(t('Checkpoint saved.'))
   emit('saved')
 }
 
@@ -71,6 +81,7 @@ const shortcuts = computed<ShortcutDef[]>(() => [
       if (!readonly.value) void checkpoint(null)
     },
   }),
+  ...regionShortcuts({ next: () => moveBetweenRegions(false), previous: () => moveBetweenRegions(true) }),
   ...props.extraShortcuts,
 ])
 installWindowShortcuts(() => shortcuts.value)
@@ -111,14 +122,14 @@ onBeforeUnmount(() => clearTimeout(timer))
 </script>
 
 <template>
-  <div class="frame">
+  <div ref="frame" class="frame">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
-    <div v-if="state.status === 'reconnecting'" class="banner" role="alert">The connection was lost. Trying to get back… what you do now is not saved.</div>
-    <MenuBar :class="{ hidden: shell.nativeMenu }" :menus="menus" />
+    <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
+    <MenuBar data-region="menus" :class="{ hidden: shell.nativeMenu }" :menus="menus" />
     <slot name="toolbar" />
     <div class="main" :class="{ wide: !panelOpen }">
       <slot />
-      <SidePanel v-show="panelOpen" ref="panel" :session="session">
+      <SidePanel v-show="panelOpen" ref="panel" data-region="panel" :session="session">
         <template #top><slot name="side-top" /></template>
       </SidePanel>
     </div>
@@ -126,10 +137,10 @@ onBeforeUnmount(() => clearTimeout(timer))
 
     <PromptDialog
       v-if="dialog === 'checkpoint'"
-      title="Save new checkpoint"
-      label="Name of this state (you can leave it empty)"
-      ok="Save"
-      placeholder="before the review"
+      :title="t('Save new checkpoint')"
+      :label="t('Name of this state (you can leave it empty)')"
+      :ok="t('Save')"
+      :placeholder="t('before the review')"
       @ok="checkpoint"
       @close="dialog = null"
     />
@@ -153,9 +164,9 @@ onBeforeUnmount(() => clearTimeout(timer))
 
     <div v-if="state.status === 'closed'" class="gone" role="alertdialog">
       <div>
-        <h2>You are not connected any more</h2>
-        <p>{{ state.error || 'The connection was closed.' }}</p>
-        <button class="btn primary" type="button" @click="emit('leave')">Back to the documents</button>
+        <h2>{{ t('You are not connected any more') }}</h2>
+        <p>{{ state.error || t('The connection was closed.') }}</p>
+        <button class="btn primary" type="button" @click="emit('leave')">{{ t('Back to the documents') }}</button>
       </div>
     </div>
   </div>

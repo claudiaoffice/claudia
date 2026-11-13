@@ -132,6 +132,7 @@ function server(link: FakeLink, objects: any[] = []) {
     resize_object: () => ({ revision: 'main:2' }),
     set_text: () => ({ revision: 'main:2' }),
     set_snap: () => ({ revision: 'main:2' }),
+    describe_object: () => ({ revision: 'main:2' }),
     remove_object: () => ({ revision: 'main:2' }),
     add_slide: () => ({ slide: 's2', revision: 'main:2' }),
     lock: () => ({}),
@@ -293,6 +294,26 @@ describe('making changes', () => {
     })
     expect(state.selected).toBe('i1')
   })
+  it('imports a decorative picture with the mark and no words (BITV 1.1.1)', async () => {
+    const { link, session } = await opened()
+    await session.addImage({ data: 'AA==', alt: '', sourceName: 'rule.gif', sourcePath: null, decorative: true }, { x: 0, y: 0, w: 400, h: 200 })
+    expect(link.last('add_image')).toMatchObject({ alt: '', decorative: true })
+  })
+  it('does not send the decorative mark for a picture that is described', async () => {
+    const { link, session } = await opened()
+    await session.addImage({ data: 'AA==', alt: 'a chart', sourceName: 'chart.gif', sourcePath: null }, { x: 0, y: 0, w: 400, h: 200 })
+    expect(link.last('add_image')).not.toHaveProperty('decorative')
+  })
+  it('describes an object, trimmed, as its own step', async () => {
+    const { link, session } = await opened([text('a')])
+    expect(await session.describe('a', '  the greeting ', false)).toBe(true)
+    expect(link.last('describe_object')).toEqual({ id: 'a', description: 'the greeting', decorative: false, base: 'main:0' })
+  })
+  it('marks an object as decoration and sends no words with it', async () => {
+    const { link, session } = await opened([text('a')])
+    await session.describe('a', 'typed before the tick', true)
+    expect(link.last('describe_object')).toEqual({ id: 'a', description: '', decorative: true, base: 'main:0' })
+  })
   it('does not select anything when importing a picture failed, and says why', async () => {
     const { link, session, state } = await opened()
     link.handlers.add_image = () => {
@@ -406,7 +427,7 @@ describe('selecting', () => {
 })
 
 
-describe('speaker notes and planned times (D293, D294)', () => {
+describe('speaker notes and planned times (D342, D343)', () => {
   async function planned() {
     const link = new FakeLink()
     server(link)

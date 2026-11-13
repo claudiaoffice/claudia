@@ -146,7 +146,7 @@ async function type(page, row, col, input) {
     // 8. another sheet
     await page.click('button[aria-label="new sheet"]')
     await page.fill('.modal input', 'Other data')
-    await page.click('.modal button:has-text("Add sheet")')
+    await page.click('.modal button:has-text("Add Sheet")')
     await page.waitForSelector('.tab.on:has-text("Other data"), [role=tab].on:has-text("Other data")')
     await type(page, 0, 0, '5')
     await page.click('[role=tab]:has-text("Sheet1")')

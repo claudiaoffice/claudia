@@ -11,9 +11,9 @@ preservation from day one**.
   has no model for -- is still there, and every byte of ``content.xml`` outside what was edited is the original's. A
   moved object changes its start tag and nothing else.
 
-A slide's speaker notes are the words of its notes page (D298): the Markdown of the model is written as paragraphs with
+A slide's speaker notes are the words of its notes page (D347): the Markdown of the model is written as paragraphs with
 bold and italic spans (``_notes.py``), read back the same way, and an edit patches only the text box of the notes
-frame. A planned time (D294) is not written -- an odp has no such thing -- and ``odp_export_losses`` says so.
+frame. A planned time (D343) is not written -- an odp has no such thing -- and ``odp_export_losses`` says so.
 
 What the model sees of an odp: every ``draw:page`` is a slide (``s1``, ``s2``... by its place) and every text box
 (a ``draw:frame`` holding a ``draw:text-box``), ellipse, rectangle and triangle directly on it is an object (``o1``,
@@ -825,8 +825,8 @@ class _Writer:
         image = etree.SubElement(frame, _q("draw", "image"))
         for name, value in (("href", href), ("type", "simple"), ("show", "embed"), ("actuate", "onLoad")):
             image.set(_q("xlink", name), value)
-        if body.imported is not None and body.imported.alt:
-            etree.SubElement(frame, _q("svg", "desc")).text = xml_safe(body.imported.alt)
+        if body.description:  # a decorative picture has none: ODF 1.3 has no way to say more (see odp_export_losses)
+            etree.SubElement(frame, _q("svg", "desc")).text = xml_safe(body.description)
         return frame
 
 
@@ -893,10 +893,12 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None) -> byt
 
 def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
     """What :func:`slides_to_odp` cannot put into the file for ``model``, each as a code with how many: ``"authorship"``
-    (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle) and an
-    ``"image-missing"`` (an image the document has no picture for); for notes ``"notes-link"``, ``"notes-image"``,
-    ``"notes-code"`` and ``"notes-quote"`` (how many slides use what the file shows only as plain words), and
-    ``"planned-time"`` (how many slides have a planned time, which an odp has no place for, D294)."""
+    (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle), an
+    ``"image-missing"`` (an image the document has no picture for) and ``"decorative"`` (an object marked as
+    decoration: ODF 1.3 has no attribute for it, so a reader of the file sees an object nobody described); for notes
+    ``"notes-link"``, ``"notes-image"``, ``"notes-code"`` and ``"notes-quote"`` (how many slides use what the file shows
+    only as plain words), and ``"planned-time"`` (how many slides have a planned time, which an odp has no place for,
+    D343)."""
     losses = LossLog()
     authored = sum(
         1
@@ -913,6 +915,9 @@ def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
         losses.add(f"notes-{feature}", count=used[feature])
     if timed := sum(1 for slide_id in model.slides if slide_id in model.times):
         losses.add("planned-time", count=timed)
+    decorative = sum(1 for obj in model.objects.values() if obj.body.decorative)
+    if decorative:
+        losses.add("decorative", count=decorative)
     for obj in model.objects.values():  # pragma: no cover - neither can be in a presentation yet (see above)
         if obj.body.kind == "diagram":
             losses.add("diagram")

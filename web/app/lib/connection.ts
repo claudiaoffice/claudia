@@ -4,6 +4,7 @@
 import { adminUrl, list as listBookmarks, type Bookmark } from './server-bookmarks'
 import type { BaseState } from './base-session'
 
+import { translate as t } from './i18n'
 export type ConnectionStatus = BaseState['status']
 
 /** The server a session is actually talking to, as an origin (`protocol://host`). `host` is blank until a session
@@ -24,20 +25,20 @@ export function friendlyLabel(origin: string, host: string, bookmarks: Bookmark[
 export function statusWord(status: ConnectionStatus): string {
   switch (status) {
     case 'open':
-      return 'Connected'
+      return t('Connected')
     case 'reconnecting':
-      return 'Reconnecting…'
+      return t('Reconnecting…')
     case 'connecting':
-      return 'Connecting…'
+      return t('Connecting…')
     default:
-      return 'Offline'
+      return t('Offline')
   }
 }
 
 /** The health button's own `aria-label` — spoken on focus, before anyone opens the tooltip. */
 export function indicatorLabel(label: string, status: ConnectionStatus): string {
   const word = status === 'open' ? 'healthy' : status === 'reconnecting' || status === 'connecting' ? 'reconnecting' : 'offline'
-  return `Connection to ${label}: ${word}. Show details.`
+  return t('Connection to {label}: {word}. Show details.', { label, word })
 }
 
 /** Whether "Manage this server…" should be a live link right now, rather than an inert, dimmed one — true only

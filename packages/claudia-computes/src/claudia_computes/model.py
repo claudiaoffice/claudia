@@ -41,10 +41,13 @@ from .formula.rewrite import adjusted, renamed_name, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
 from .names import NamedRange, NameKey, Names, Rect, key_of, name_problem
+from .outcomes import InputCell, OutcomeTable, Summary
 from .refs import CellRef, Position, RangeRef, SheetId, StructuralEdit, column_name
 from .spill import Table
 from .sql import column_names, column_type, run_query
 from .styles import builtin_styles
+from .trace import Trace, Window
+from .trace import follow as follow_computation
 from .values import ErrorValue, Value, format_value
 
 Content = dict | None  # None (empty) or {"t": "int"|"float"|"text"|"bool"|"formula", "v": ...}
@@ -224,6 +227,10 @@ class Sheet:
         #: Cells that show a part of the result of a ``SQL()`` formula (``position -> the formula's key``): they are
         #: not stored (they are not in ``cells``), they cannot be written and the formula owns them (E6.5).
         self.spilled: dict[Position, tuple[SheetId, int, int]] = {}
+        #: Derived, not stored (kept by ``claudia_computes.outcomes`` after every calculation): the cells that hold
+        #: alternatives (``{800, 1000, 1300}``) and, for the cells that depend on them, where their outcomes lie.
+        self.alternatives: dict[Position, InputCell] = {}
+        self.outcomes: dict[Position, Summary] = {}
         self._tick = 0
         self._epoch = 0  # the tick of the last change to every column at once (rows moved)
         self._columns: dict[int, int] = {}  # column -> tick of its last change
@@ -395,7 +402,15 @@ class Sheet:
             return content
         value = self.grid.get(position)
         shown = content_of(0 if value is None else value)
-        return {**shown, "f": content["v"]}  # type: ignore[dict-item]
+        view = {**shown, "f": content["v"]}  # type: ignore[dict-item]
+        alternatives = self.alternatives.get(position)
+        if alternatives is not None:  # (an input: the formula bar shows what was typed, the client the alternatives)
+            view["f"] = alternatives.text
+            view["alts"] = [alt.to_data() for alt in alternatives.alts]
+        outcomes = self.outcomes.get(position)
+        if outcomes is not None:
+            view["out"] = outcomes.to_data()
+        return view
 
 
 class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
@@ -407,7 +422,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 5: the workbook carries its own colour palette (D200)
     # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
     # 7: the workbook carries names: named ranges, tables and query results (E6.5, D600)
-    state_schema: ClassVar[int] = 7
+    # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
+    state_schema: ClassVar[int] = 9  # 8: object bodies without a description
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
@@ -434,6 +450,10 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.charts: dict[str, Chart] = {}
         #: Named ranges, tables and the results of ``SQL()`` formulas (E6.5): see :class:`~claudia_computes.Names`.
         self.names = Names()
+        #: The seed and the draw number every random number is a function of (D291). Both are part of the document, so
+        #: everybody sees the same numbers; ``Resample`` raises the draw number, ``SetRandomSeed`` changes the seed.
+        self.random_seed = 0
+        self.random_draw = 0
 
     @classmethod
     def empty(cls) -> Self:
@@ -450,6 +470,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "objects": self.objects_to_data(),
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),
+            "random": {"seed": self.random_seed, "draw": self.random_draw},
         }
 
     @classmethod
@@ -466,6 +487,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         model.restore_objects(state["objects"], state["images"], state["shapes"], state["diagrams"])
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
+        model.random_seed, model.random_draw = state["random"]["seed"], state["random"]["draw"]
         model._calculate_loaded()
         return model
 
@@ -652,6 +674,21 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     def settle(self, ctx) -> None:
         self.calc.settle(ctx)
+
+    def trace(
+        self, sheet_id: SheetId, row: int, col: int, *, reach: str = "group", window: Window | None = None
+    ) -> Trace:
+        """The cells that take part in a calculation with this cell, each with its part (input, calc or output): see
+        ``claudia_computes.trace``. ``reach`` is ``"group"`` or ``"chain"``; ``window`` cuts the cells listed to what
+        a client shows (first row, first column, last row, last column)."""
+        return follow_computation(self, sheet_id, row, col, reach=reach, window=window)
+
+    def outcome_table(self, sheet_id: SheetId, row: int, col: int, *, combine: str = "all") -> OutcomeTable | None:
+        """Every outcome of a cell that depends on alternatives, with the alternatives that make them (``combine``:
+        ``"all"`` combinations, or ``"pair"``: the first alternatives together, the second ones, ...); ``None`` for a
+        cell that depends on none. A ``ValueError`` when pairing inputs that have different numbers of alternatives."""
+        self.sheet(sheet_id)
+        return self.calc.outcomes.table((sheet_id, row, col), combine)
 
     # -- names (formulas name sheets, the model knows them by id)
     def sheet_id_of(self, name: str) -> SheetId | None:

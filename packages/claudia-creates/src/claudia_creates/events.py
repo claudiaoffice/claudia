@@ -34,7 +34,7 @@ class PrintSetupChanged:
 
 @dataclass(frozen=True)
 class SlideNotesChanged:
-    """The speaker notes of a slide changed (D293): the slide and its whole new notes, ``""`` when cleared."""
+    """The speaker notes of a slide changed (D342): the slide and its whole new notes, ``""`` when cleared."""
 
     slide: str
     notes: str
@@ -46,7 +46,7 @@ class SlideNotesChanged:
 
 @dataclass(frozen=True)
 class SlideTimeChanged:
-    """The planned time of a slide changed (D294): the slide and its new time in seconds, ``None`` when cleared."""
+    """The planned time of a slide changed (D343): the slide and its new time in seconds, ``None`` when cleared."""
 
     slide: str
     seconds: int | None

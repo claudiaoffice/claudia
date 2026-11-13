@@ -3,6 +3,9 @@
 // is wrong is shown at once with its line; nothing is sent until it is right. The lines below say where the rest comes from.
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { formatCss, provenance, type CssCheck, type StyleView } from '~/lib/style-css'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   current: StyleView
@@ -57,8 +60,8 @@ function apply() {
 <template>
   <div class="css" data-testid="css-view">
     <p class="hint">
-      <template v-if="scope === 'every'">What “{{ current.name }}” sets itself. The rest comes from its parent.</template>
-      <template v-else>CSS for this text only. It is added to “{{ current.name }}”, in a new style.</template>
+      <template v-if="scope === 'every'">{{ t('What “{name}” sets itself. The rest comes from its parent.', { name: current.name }) }}</template>
+      <template v-else>{{ t('CSS for this text only. It is added to “{name}”, in a new style.', { name: current.name }) }}</template>
     </p>
     <textarea
       v-model="text"
@@ -67,7 +70,7 @@ function apply() {
       spellcheck="false"
       autocapitalize="off"
       autocomplete="off"
-      aria-label="CSS of the style"
+      :aria-label="t('CSS of the style')"
       :readonly="readOnly"
       :placeholder="scope === 'new' ? 'color: #5b4bc4;\nfont-weight: bold;' : ''"
       @keydown.ctrl.enter.prevent="apply"
@@ -79,11 +82,11 @@ function apply() {
       </li>
     </ul>
     <div class="actions">
-      <button class="btn primary" type="button" :disabled="!ok" data-testid="css-apply" @click="apply">Apply</button>
-      <span class="keys mono">Ctrl+Enter</span>
+      <button class="btn primary" type="button" :disabled="!ok" data-testid="css-apply" @click="apply">{{ t('Apply') }}</button>
+      <span class="keys mono">{{ t('Ctrl+Enter') }}</span>
     </div>
     <details v-if="inherited.length" class="from">
-      <summary>From the styles it is based on</summary>
+      <summary>{{ t('From the styles it is based on') }}</summary>
       <ul>
         <li v-for="p in inherited" :key="p.property" class="mono">
           {{ p.property }}: {{ p.value }}; <span>{{ nameOf(p.from) }}</span>

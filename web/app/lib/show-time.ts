@@ -1,4 +1,4 @@
-// Planned times (D294) as people say and read them: `2` is two minutes, `2:30` two and a half, `90s` ninety seconds.
+// Planned times (D343) as people say and read them: `2` is two minutes, `2:30` two and a half, `90s` ninety seconds.
 // Whole seconds in the document, from one second to a day (the server's own limits, `MAX_SLIDE_SECONDS`).
 
 export const MAX_SECONDS = 86400

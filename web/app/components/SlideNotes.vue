@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// The speaker notes of the slide that is shown and its planned time (D293, D294): a Markdown field under the slide and a
+// The speaker notes of the slide that is shown and its planned time (D342, D343): a Markdown field under the slide and a
 // clock chip beside it. Both are document content, written like any other edit — one step in the history, for
 // everybody, undoable — and read-only for a viewer. The notes show formatted in the presenter view only; never on the
 // slide.

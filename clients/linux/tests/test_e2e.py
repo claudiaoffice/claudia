@@ -133,8 +133,9 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     page_action.activate(None)
     pump(lambda: page_action.get_state().get_boolean() is False, timeout=15, what="the Page View tick to go")
 
-    # Undo is not possible yet; after typing it is (in the page, the way the browser types: `insertText`).
-    assert not window.lookup_action("edit.undo").get_enabled()
+    # After typing, Undo is possible (in the page, the way the browser types: `insertText`). It may be possible
+    # before already: a new text's first step is its language, set by its maker's client (D915; UX-33 asks whether
+    # that step should be undoable at all).
     pump(lambda: evaluate(view, TYPE_A_WORD) == "typed", timeout=15, what="the text to take a word")
     pump(lambda: window.lookup_action("edit.undo").get_enabled(), timeout=15, what="Undo to become possible")
 

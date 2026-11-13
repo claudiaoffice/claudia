@@ -41,6 +41,8 @@ from zipfile import BadZipFile
 from lxml import etree
 
 from claudia_computes import Content, Sheet, SheetId, WorkbookModel, function_catalog
+from claudia_computes.formula import Call, parse_formula
+from claudia_computes.formula.nodes import walk
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
 from claudia_computes.values import INT_LIMIT, ErrorValue, Value
 from claudia_odf_io import (
@@ -61,6 +63,7 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .openformula import Untranslatable, from_openformula, to_openformula
 from .xlsx import UnsupportedEdit
 
@@ -89,7 +92,19 @@ _VALUE_ATTRIBUTES = (
     ("table", "formula"),
 )
 _MATRIX = (("table", "number-matrix-columns-spanned"), ("table", "number-matrix-rows-spanned"))
-_ORDER = ("formula", "date", "error-value", "chart", "picture", "object", "shape", "comment", "merge", "look")
+_ORDER = (
+    "formula",
+    "alternatives",
+    "date",
+    "error-value",
+    "chart",
+    "picture",
+    "object",
+    "shape",
+    "comment",
+    "merge",
+    "look",
+)
 
 
 def _q(prefix: str, local: str) -> str:
@@ -263,15 +278,62 @@ def _read_cell(cell: etree._Element) -> tuple[Content, list[tuple[str, str]]]:
     if kind and constant is not None:
         lost.append((kind, ""))
     attribute = cell.get(_q("table", "formula"))
-    if attribute is None:
-        return constant, lost
-    try:
-        if any(cell.get(_q(*name)) is not None for name in _MATRIX):
-            raise Untranslatable("array")
-        return {"t": "formula", "v": from_openformula(attribute, _functions())}, lost
-    except Untranslatable as why:
-        lost.append(("formula", why.reason))
-        return constant, lost
+    content = constant
+    if attribute is not None:
+        try:
+            if any(cell.get(_q(*name)) is not None for name in _MATRIX):
+                raise Untranslatable("array")
+            content = {"t": "formula", "v": _model_formula(attribute)}
+        except Untranslatable as why:
+            lost.append(("formula", why.reason))
+    return restore_alternatives(content, _note_of(cell)), lost
+
+
+def _model_formula(attribute: str) -> str:
+    """The model's text of a ``table:formula``: the inverse functions of ``RAND()`` read as ``RANDOM`` (they are the
+    names the other programs have), and a function the model lacks is :class:`Untranslatable`."""
+    text = from_excel(from_openformula(attribute, _functions() | INVERSE_NAMES))
+    formula = parse_formula(text)
+    for node in walk(formula.ast) if formula.ast is not None else ():
+        if isinstance(node, Call) and node.name not in _functions():
+            raise Untranslatable("function", node.name)
+    return text
+
+
+def _plain(element: etree._Element) -> str:
+    """All the text inside ``element``."""
+    return "".join(str(part) for part in element.itertext())
+
+
+def _note_of(cell: etree._Element) -> str | None:
+    """The line of a cell's comment that says what its alternatives are, if claudia wrote one."""
+    annotation = cell.find("office:annotation", NS)
+    if annotation is None:
+        return None
+    for paragraph in annotation.iter(_q("text", "p")):
+        text = _plain(paragraph)
+        if text.startswith(NOTE_MARKER):
+            return text
+    return None
+
+
+def _set_note(cell: etree._Element, note: str | None) -> None:
+    """Give the cell the claudia note ``note`` in its comment (``None``: none), and leave anybody else's words alone."""
+    annotation = cell.find("office:annotation", NS)
+    if annotation is not None:
+        for paragraph in [p for p in annotation.iter(_q("text", "p")) if _plain(p).startswith(NOTE_MARKER)]:
+            paragraph.getparent().remove(paragraph)  # type: ignore[union-attr]
+        if annotation.find("text:p", NS) is None and note is None:
+            cell.remove(annotation)
+            return
+    if note is None:
+        return
+    if annotation is None:
+        annotation = _el("office", "annotation")
+        creator = etree.SubElement(annotation, _q("dc", "creator"))
+        creator.text = "claudia"
+        cell.insert(0, annotation)
+    set_text(etree.SubElement(annotation, _q("text", "p")), xml_safe(note))
 
 
 def _cell_losses(cell: etree._Element, content: Content) -> list[tuple[str, str]]:
@@ -281,8 +343,9 @@ def _cell_losses(cell: etree._Element, content: Content) -> list[tuple[str, str]
         lost.append(("look", ""))
     if any(int(cell.get(_q("table", name)) or 1) > 1 for name in ("number-columns-spanned", "number-rows-spanned")):
         lost.append(("merge", ""))
-    if cell.find("office:annotation", NS) is not None:
-        lost.append(("comment", ""))
+    annotation = cell.find("office:annotation", NS)
+    if annotation is not None and any(not _plain(p).startswith(NOTE_MARKER) for p in annotation.iter(_q("text", "p"))):
+        lost.append(("comment", ""))  # (claudia's own note about alternatives is not one: it is read back)
     for paragraph in _paragraphs_of(cell):
         lost.extend(
             ("formatting", "") for span in paragraph.iter(_q("text", "span")) if span.get(_q("text", "style-name"))
@@ -496,7 +559,7 @@ def _fill(cell: etree._Element, attributes: Mapping[str, str], lines: list[str])
 def _formula_attribute(content: dict, lost: LossLog | None) -> str | None:
     """The ``table:formula`` of a formula content, or ``None`` (and a loss) when OpenFormula cannot say it."""
     try:
-        return to_openformula(content["v"])
+        return to_openformula(to_excel(content["v"]))
     except Untranslatable as why:
         if lost is not None:
             lost.add("formula", why.reason)
@@ -506,8 +569,11 @@ def _formula_attribute(content: dict, lost: LossLog | None) -> str | None:
 def _new_cell(content: Content, value: Value, lost: LossLog | None) -> etree._Element:
     """A cell holding ``content``; ``value`` is what a formula shows."""
     cell = _el("table", "table-cell")
+    written = with_note(content)
+    content = written.content
     if content is None:
         return cell
+    _set_note(cell, written.note)
     if content["t"] == "formula":
         attribute = _formula_attribute(content, lost)
         if attribute is not None:
@@ -597,8 +663,11 @@ def ods_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     losses = LossLog()
     for sheet in model.sheets.values():
         for content in sheet.cells.values():
-            if content["t"] == "formula":
-                _formula_attribute(content, losses)
+            written = with_note(content)
+            if written.note is not None:
+                losses.add("alternatives")
+            if written.content is not None and written.content["t"] == "formula":
+                _formula_attribute(written.content, losses)
         if sheet.row_heights or sheet.col_widths:
             losses.add("layout")
     if model.charts:
@@ -908,7 +977,9 @@ class _Patch:
         for prefix, local in _VALUE_ATTRIBUTES:
             _unset(cell, _q(prefix, local))
         _unset(cell, _q("table", "number-columns-repeated"))
-        content = change.content
+        written = with_note(change.content)
+        content = written.content
+        _set_note(cell, written.note)
         if content is None:
             return cell
         if content["t"] == "formula":

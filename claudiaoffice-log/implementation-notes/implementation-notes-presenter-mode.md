@@ -1,7 +1,7 @@
 # Implementation notes: presenter mode in creates (E10.2)
 
 Written 2026-11-13, branch `presenter`. The design and the answers are in `notes/e10-2-presenter-mode.md`; the decisions are
-D291–D299. This file keeps what the code does not say.
+D340–D348. This file keeps what the code does not say.
 
 ## Things that were not obvious
 
@@ -27,16 +27,16 @@ D291–D299. This file keeps what the code does not say.
 
 ## Keys
 
-See D295. The F5 chords are the habit; the Ctrl+Alt letters are the ones that reach a page on every system. A chord that
+See D344. The F5 chords are the habit; the Ctrl+Alt letters are the ones that reach a page on every system. A chord that
 is a letter is matched by `code`, not by `key`: Option+P types a different character on a Mac. Ctrl+Alt+T would have been
-natural for the time and is a terminal on GNOME, hence Ctrl+Alt+D.
+natural for the time and is a terminal on GNOME; Ctrl+Alt+D is Describe Object (main, BITV 1.1.1), hence Ctrl+Alt+M.
 
 ## Known limits
 
 - F5 and the letter chords are not taken while the focus is in a field, except F5 in the notes field (which the field
   forwards itself): the window's key handler leaves text fields alone, so Ctrl+Alt+P typed in the notes field does
   nothing.
-- Pace is the plain difference to the schedule of the planned times (D299 is undecided); a slide without a time
+- Pace is the plain difference to the schedule of the planned times (D348 is undecided); a slide without a time
   contributes nothing.
 - `requestFullscreen` is asked for when the show opens and refused silently where the browser or a shell frame does not
   allow it; the show then fills the window.

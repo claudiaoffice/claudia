@@ -24,7 +24,7 @@ function fake() {
   return { session, state }
 }
 
-describe('the deck as it was when the show started (D292)', () => {
+describe('the deck as it was when the show started (D341)', () => {
   it('holds the slides with their notes, times and objects', () => {
     const { session } = fake()
     const deck = freeze(session)

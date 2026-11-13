@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { MenuItem } from '~/components/MenuBar.vue'
 import {
+  SEARCH_CHORD,
   SHARED_HINTS,
   askItem,
   clipboardItems,
@@ -9,11 +10,13 @@ import {
   fileMenu,
   helpMenu,
   panelItem,
+  searchItem,
   undoRedoItems,
   type DocumentMenuContext,
   type FrameDialog,
 } from '~/lib/document-menus'
 import { LANGUAGES } from '~/lib/i18n'
+import { chordLabel } from '~/lib/shortcuts'
 
 const t = (msgid: string, vars?: Record<string, string | number>) =>
   vars ? msgid.replace(/\{(\w+)\}/g, (_, name: string) => String(vars[name])) : msgid
@@ -157,5 +160,24 @@ describe('View, Tools, Config and Help pieces', () => {
     expect(asked).toEqual(['@ai ', 'help:how-to', 'help:docs'])
     expect(calls).toEqual(['open:about'])
     expect(askItem(c, (text) => asked.push(text)).id).toBe('tools.ask')
+  })
+})
+
+describe('searchItem: Edit ▸ Search & Replace… (D281, E5.15)', () => {
+  it('is one entry with its shortcut, and opens the panel', () => {
+    const { c } = context()
+    const opened: string[] = []
+    const item = searchItem(c, { open: () => opened.push('open') })
+    expect([item.id, item.label, item.hint]).toEqual(['edit.search-replace', 'Search & Replace…', 'Ctrl+F'])
+    item.action!()
+    expect(opened).toEqual(['open'])
+  })
+
+  it('may be used by somebody who can only look: finding changes nothing', () => {
+    expect(searchItem(context('viewer').c, { open: () => {} }).disabled).toBeFalsy()
+  })
+
+  it('shows the shortcut the window really listens for', () => {
+    expect(searchItem(context().c, { open: () => {} }).hint).toBe(chordLabel(SEARCH_CHORD))
   })
 })

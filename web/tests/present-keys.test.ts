@@ -15,7 +15,7 @@ describe('the keys that start the show', () => {
   })
   it('has no function key for the notes and the time, on any system', () => {
     expect(presentChord('notes', false)).toEqual(presentChord('notes', true))
-    expect(presentHint('time', false)).toBe('Ctrl+Alt+D')
+    expect(presentHint('time', false)).toBe('Ctrl+Alt+M')
   })
   it('knows a Mac by its platform', () => {
     expect(onMac({ platform: 'MacIntel' })).toBe(true)

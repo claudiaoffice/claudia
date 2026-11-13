@@ -72,7 +72,7 @@ defineExpose({ focus })
   <div class="help">
     <div class="searchRow">
       <svg class="icon" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M14 14l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
-      <input ref="searchBox" v-model="query" type="search" :placeholder="t('Search help…')" aria-label="search help" >
+      <input ref="searchBox" v-model="query" type="search" :placeholder="t('Search help…')" :aria-label="t('search help')" >
     </div>
 
     <div v-if="open" class="topic">
@@ -99,11 +99,11 @@ defineExpose({ focus })
             </button>
           </li>
         </ul>
-        <p v-else-if="!loading" class="empty">No function matches "{{ query }}".</p>
+        <p v-else-if="!loading" class="empty">{{ t('No function matches "{query}".', { query }) }}</p>
       </section>
 
       <section ref="howToSection">
-        <h2>{{ t('How do I…?') }} <span class="count">{{ topics.length }}</span></h2>
+        <h2>{{ t('How Do I…?') }} <span class="count">{{ topics.length }}</span></h2>
         <ul v-if="topics.length" class="list">
           <li v-for="topic in topics" :key="topic.id">
             <button type="button" @click="openTopic(topic.id)">
@@ -112,10 +112,10 @@ defineExpose({ focus })
             </button>
           </li>
         </ul>
-        <p v-else-if="!loading" class="empty">No guide matches "{{ query }}".</p>
+        <p v-else-if="!loading" class="empty">{{ t('No guide matches "{query}".', { query }) }}</p>
       </section>
 
-      <p class="askHint">{{ t('Not finding it? Say') }} <b>@ai</b> {{ t('in the chat.') }}</p>
+      <TransText tag="p" class="askHint" :text="t('Not finding it? Say {mention} in the chat.')"><template #mention><b>@ai</b></template></TransText>
     </div>
   </div>
 </template>

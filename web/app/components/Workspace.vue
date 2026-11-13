@@ -34,20 +34,28 @@ import {
   fileMenu,
   helpMenu,
   panelItem,
+  searchItem,
   undoRedoItems,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
 import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
+import { forThe } from '~/lib/noun-phrases'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
-import { chordLabel, type ShortcutDef } from '~/lib/shortcuts'
+import { describeShortcut, objectName, pictureAlt } from '~/lib/descriptions'
+import { selectionAnnouncement } from '~/lib/grid-a11y'
+import { chordLabel, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { marksFor, NO_MARKS, type PreviewAnswer, type SearchMatch } from '~/lib/search'
+import { sheetSearchHost } from '~/lib/sheet-search-host'
+import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~/lib/follow'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
 import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
+import SearchPanel from './SearchPanel.vue'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
@@ -67,16 +75,17 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 /** computes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours'>(null)
+const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours' | 'random'>(null)
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 
 const EXPORT_FORMATS = [
-  { value: 'xlsx', label: 'Excel workbook (.xlsx)' },
-  { value: 'ods', label: 'OpenDocument spreadsheet (.ods)' },
+  { value: 'xlsx', get label() { return t('Excel workbook (.xlsx)') } },
+  { value: 'ods', get label() { return t('OpenDocument spreadsheet (.ods)') } },
 ]
 /** The chart tab shown instead of a sheet, or `null` for a sheet (`FooterBar.vue`'s own docstring on why this
  * is not part of `state`). Reset to `null` if its tab disappears (removed here, or by someone else). */
 const activeChart = ref<string | null>(null)
+const activeChartName = computed(() => state.charts.find((c) => c.id === activeChart.value)?.name ?? '')
 const activeChartSpec = computed(() => state.charts.find((c) => c.id === activeChart.value)?.spec_id ?? null)
 watch(
   () => state.charts,
@@ -89,6 +98,7 @@ const grid = ref<{
   selectObject: (id: string) => void
   openStyleMenu: (at?: { x: number; y: number }, mode?: 'edit' | 'apply') => void
   selectedObject: () => string | null
+  stepObject: (step: 1 | -1) => void
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
 } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
@@ -239,10 +249,10 @@ const sqlEditor = ref<{ row: number; col: number; x: number; y: number; query: s
 const note = ref<{ x: number; y: number; row: number; col: number; kind: 'spill' | 'blocked' | 'sql'; from: string; detail: string } | null>(null)
 
 const sheetName = (id: string) => state.sheets.find((s) => s.id === id)?.name ?? ''
-const scopeName = (scope: string | null) => (scope === null ? 'Workbook' : sheetName(scope) || 'Sheet')
+const scopeName = (scope: string | null) => (scope === null ? t('Workbook') : sheetName(scope) || t('Sheet'))
 
 function openDefine(action: Extract<NameBoxAction, { kind: 'define' | 'redefine' }>) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const box = document.querySelector<HTMLInputElement>('input[aria-label="cell"]')?.getBoundingClientRect()
   const region: NameRegion = { sheet: state.activeSheet, row0: b.value.r0, col0: b.value.c0, row1: b.value.r1, col1: b.value.c1 }
   const rows = Math.min(2, b.value.r1 - b.value.r0 + 1)
@@ -287,7 +297,7 @@ async function pickPurpose(offset: number | null, purpose: Purpose) {
 /** The cell the SQL editor writes to: the active cell, or the cell of the query that fills it when it is a part of a
  * result — with what is already in it. */
 function openSql(at?: { row: number; col: number }) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   let row = at?.row ?? sel.value.row
   let col = at?.col ?? sel.value.col
   const here = session.cell(state.activeSheet, row, col)
@@ -351,7 +361,7 @@ async function noteCopyValues() {
   const owner = n ? session.cell(state.activeSheet, n.row, n.col)?.from : undefined
   const name = owner ? state.names.find((x) => x.anchor?.row === owner[0] && x.anchor.col === owner[1] && x.anchor.sheet === state.activeSheet) : undefined
   const g = name?.region
-  if (!g) return session.notice('This result has no name to take its cells from: select them and copy (Ctrl+C).', 'info')
+  if (!g) return session.notice(t('This result has no name to take its cells from: select them and copy (Ctrl+C).'), 'info')
   const rows: string[] = []
   for (let r = g.row0; r <= Math.min(g.row1, g.row0 + 10_000); r++) {
     const line: string[] = []
@@ -360,16 +370,16 @@ async function noteCopyValues() {
   }
   try {
     await navigator.clipboard.writeText(rows.join('\n'))
-    session.notice('Copied the result as values.', 'info')
+    session.notice(t('Copied the result as values.'), 'info')
   } catch {
-    session.notice('The browser did not allow copying.', 'warning')
+    session.notice(t('The browser did not allow copying.'), 'warning')
   }
 }
 
 // ------------------------------------------------------------------------------ editing
 async function beginEdit(initial?: string) {
   if (edit.value) return
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const { row, col } = sel.value
   if (session.cell(state.activeSheet, row, col)?.spill) return noteFor(row, col) // (part of a query result: say so)
   original = inputOf(session.cell(state.activeSheet, row, col))
@@ -429,17 +439,17 @@ watch(currentFunctionName, async (name) => {
 const formulaExample = computed(() => formulaHelp.value?.help.split('\n\n')[1]?.split('\n')[0] ?? '')
 
 async function clearSelection() {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const cells = session.filledIn(state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
   if (cells.length) await session.setCells(state.activeSheet, cells.map(([row, col]) => ({ row, col, input: '' })))
 }
 
 async function paste(rows: string[][]) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const cells = rows.flatMap((line, i) => line.map((input, j) => ({ row: b.value.r0 + i, col: b.value.c0 + j, input })))
   if (!cells.length) return
-  if (cells.length > 10_000) return session.notice('That is too much to paste at once (at most 10,000 cells).', 'warning')
-  if (cells.some((c) => c.row >= VIEW_ROWS || c.col >= VIEW_COLS)) return session.notice('That does not fit on the sheet.', 'warning')
+  if (cells.length > 10_000) return session.notice(t('That is too much to paste at once (at most 10,000 cells).'), 'warning')
+  if (cells.some((c) => c.row >= VIEW_ROWS || c.col >= VIEW_COLS)) return session.notice(t('That does not fit on the sheet.'), 'warning')
   if (await session.setCells(state.activeSheet, cells)) {
     const last = cells[cells.length - 1]!
     sel.value = { row: b.value.r0, col: b.value.c0, row2: last.row, col2: last.col }
@@ -485,7 +495,7 @@ async function addSheet(name: string) {
 }
 
 async function structure(axis: 'row' | 'col', insert: boolean, after = false) {
-  if (readonly.value) return session.notice('You can only look at this document.', 'warning')
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const first = axis === 'row' ? b.value.r0 : b.value.c0
   const last = axis === 'row' ? b.value.r1 : b.value.c1
   const count = last - first + 1
@@ -569,8 +579,171 @@ const objectSelected = ref(false)
 const activeHost = computed(() => (objectSelected.value ? styleHost : cellHost))
 
 /** Edit this style… at the active cell, or beside the selected object (D300, D302). */
-const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => grid.value?.openStyleMenu() }
-const extraShortcuts = [LOOK]
+const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: { key: 'F10', shift: true }, run: () => grid.value?.openStyleMenu() }
+
+// ------------------------------------------------------------------------------ Search & replace (E5.15)
+// The panel is one component for the three apps; this is the sheet's side of it: where it can look, how a match is
+// named and gone to, and the marks the grid draws for what it found.
+const searchOpen = ref(false)
+const searchReplace = ref(false)
+const searchPanel = ref<{ focus: () => void; openReplace: () => void } | null>(null)
+const searchView = ref<{ matches: SearchMatch[]; current: number | null; preview: PreviewAnswer | null }>({ matches: [], current: null, preview: null })
+const searchHost = sheetSearchHost({
+  session,
+  selection: () => sel.value,
+  goTo: (sheet, row, col) => void goToCell(sheet, row, col),
+})
+/** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */
+async function goToCell(sheet: string, row: number, col: number) {
+  if (sheet !== state.activeSheet || activeChart.value) await pickTab(sheet, 'sheet')
+  sel.value = single(row, col)
+}
+function openSearch(replace = false) {
+  searchOpen.value = true
+  searchReplace.value = replace && !readonly.value
+  void nextTick(() => (replace && !readonly.value ? searchPanel.value?.openReplace() : searchPanel.value?.focus()))
+}
+function closeSearch() {
+  searchOpen.value = false
+  searchReplace.value = false
+  searchView.value = { matches: [], current: null, preview: null }
+  grid.value?.focus()
+}
+const searchMarks = computed(() =>
+  searchOpen.value && state.activeSheet
+    ? marksFor(searchView.value.matches, state.activeSheet, searchView.value.current, searchView.value.preview)
+    : NO_MARKS,
+)
+
+// ------------------------------------------------------------------------------ random numbers, alternatives, following (E6.21–E6.23)
+// Chords are by physical key (`code`): with Alt held, the character a key types differs by layout and platform.
+const RESAMPLE: ShortcutDef = { id: 'tools.resample', get label() { return t('Resample Random Numbers') }, chord: { key: 'F9' }, run: () => void resample() }
+const RANDOM_GENERATOR: ShortcutDef = { id: 'tools.random', get label() { return t('Random Generator…') }, chord: { key: 'r', code: 'KeyR', ctrl: true, alt: true }, run: () => openRandom() }
+const OUTCOMES: ShortcutDef = { id: 'tools.outcomes', get label() { return t('Outcomes of This Cell…') }, chord: { key: 'o', code: 'KeyO', ctrl: true, alt: true }, run: () => openOutcomes() }
+const FOLLOW: ShortcutDef = { id: 'tools.follow', get label() { return t('Follow Computation') }, chord: { key: 'f', code: 'KeyF', ctrl: true, alt: true }, run: () => toggleFollow() }
+
+// ------------------------------------------------------------------------------ what a screen reader is told of the selection (UX-02)
+// The active cell speaks for itself (`aria-activedescendant` on the grid); a block of cells, a whole row or column and
+// a floating object do not, so they are said here, in a polite live region — a moment after the selection settles, so
+// that dragging a range across a screen says its final size once and not every step on the way.
+const announcement = ref('')
+let announceTimer: ReturnType<typeof setTimeout> | undefined
+function say() {
+  const id = objectSelected.value ? grid.value?.selectedObject() : null
+  const object = id ? state.objects[id] : undefined
+  announcement.value = object ? t('Selected: {name}', { name: objectName(object) }) : (selectionAnnouncement(sel.value, VIEW_ROWS, VIEW_COLS) ?? '')
+}
+watch([sel, objectSelected], () => {
+  clearTimeout(announceTimer)
+  announceTimer = setTimeout(say, 300)
+})
+onBeforeUnmount(() => clearTimeout(announceTimer))
+
+// ------------------------------------------------------------------------------ describing a floating object (BITV 1.1.1)
+/** The object whose description is being written; the dialog is the one slides use. */
+const describing = ref<string | null>(null)
+const describingObject = computed(() => (describing.value ? state.objects[describing.value] ?? null : null))
+function openDescribe() {
+  const id = grid.value?.selectedObject()
+  if (!id || !state.objects[id]) return
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  describing.value = id
+}
+async function saveDescription(params: { description: string; decorative: boolean }) {
+  const id = describing.value
+  describing.value = null
+  if (id) await session.describeObject(id, params.description, params.decorative)
+  grid.value?.focus()
+}
+function closeDescribe() {
+  describing.value = null
+  grid.value?.focus()
+}
+const DESCRIBE = describeShortcut(openDescribe, () => !!grid.value?.selectedObject() && !readonly.value)
+/** Ctrl+Alt+PageDown / PageUp: the keyboard's way to a floating object, which only the mouse reached before. */
+const NEXT_OBJECT: ShortcutDef = { id: 'view.nextObject', get label() { return t('Next Object') }, chord: { key: 'PageDown', ctrl: true, alt: true }, run: () => grid.value?.stepObject(1) }
+const PREVIOUS_OBJECT: ShortcutDef = { id: 'view.previousObject', get label() { return t('Previous Object') }, chord: { key: 'PageUp', ctrl: true, alt: true }, run: () => grid.value?.stepObject(-1) }
+
+const extraShortcuts = [
+  LOOK,
+  DESCRIBE,
+  NEXT_OBJECT,
+  PREVIOUS_OBJECT,
+  ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value }),
+  RESAMPLE,
+  RANDOM_GENERATOR,
+  OUTCOMES,
+  FOLLOW,
+]
+
+/** Where the cell menu is open (right click on a cell), and the outcomes popover (which cell, at which point). */
+const cellMenu = ref<{ x: number; y: number } | null>(null)
+const outcomes = ref<{ row: number; col: number; x: number; y: number } | null>(null)
+/** Following a computation: the cell under the cursor is the one followed, so selecting another one moves the lights. */
+const following = ref(false)
+const reach = ref<Reach>('group')
+let asked: Window | null = null
+let view = { r0: 0, r1: 0, c0: 0, c1: 0 }
+
+const activeContent = computed(() => {
+  void state.generation
+  return session.cell(state.activeSheet, sel.value.row, sel.value.col)
+})
+/** "Outcomes" is for a cell that has alternatives or a result of them (or of random numbers). */
+const hasOutcomes = computed(() => !!(activeContent.value?.alts || activeContent.value?.out))
+
+async function resample() {
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  await session.resample()
+}
+function openRandom() {
+  if (state.activeSheet && !activeChart.value) dialog.value = 'random'
+}
+function openOutcomes(at?: { x: number; y: number }) {
+  if (!hasOutcomes.value) return session.notice(t('This cell has no alternatives and does not depend on any.'), 'info')
+  const box = grid.value?.anchorPoint(sel.value.row, sel.value.col)
+  outcomes.value = { row: sel.value.row, col: sel.value.col, x: at?.x ?? box?.x ?? 120, y: at?.y ?? (box ? box.y + 24 : 160) }
+}
+function insertRandom(formula: string) {
+  dialog.value = null
+  void session.setCells(state.activeSheet, [{ row: sel.value.row, col: sel.value.col, input: formula }]) // (the server's formula already starts with "=")
+}
+
+function followNow(force = false) {
+  if (!following.value || !state.activeSheet || activeChart.value) return
+  if (!force && asked && coversWindow(asked, view) && state.trace?.row === sel.value.row && state.trace?.col === sel.value.col && state.trace?.reach === reach.value) return
+  asked = windowAround(view, VIEW_ROWS, VIEW_COLS)
+  void session.follow(state.activeSheet, sel.value.row, sel.value.col, reach.value, asked)
+}
+function toggleFollow() {
+  if (following.value) return stopFollowing()
+  if (!state.activeSheet || activeChart.value) return
+  following.value = true
+  followNow(true)
+}
+function stopFollowing() {
+  following.value = false
+  asked = null
+  session.unfollow()
+}
+function setReach(next: Reach) {
+  reach.value = next
+  followNow(true)
+}
+function seen(next: { r0: number; r1: number; c0: number; c1: number }) {
+  view = next
+  followNow()
+}
+watch([() => sel.value.row, () => sel.value.col, () => state.activeSheet], () => followNow(true))
+function onFollowKey(event: KeyboardEvent) {
+  if (event.key === 'Escape' && !edit.value && !dialog.value && !outcomes.value && !cellMenu.value && !searchOpen.value) stopFollowing()
+}
+watch(following, (now) => {
+  if (now) window.addEventListener('keydown', onFollowKey)
+  else window.removeEventListener('keydown', onFollowKey)
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onFollowKey))
+const marks = computed(() => tabMarks(state.trace))
 
 /**
  * The Format menu (D300): what it styles follows the selection — the selected cells (`computes-cell-styles.svg`,
@@ -593,7 +766,7 @@ function styleItems() {
     return formatItems(t, {
       ...common,
       groups: [offered.own, offered.bundles],
-      heading: t('For the {thing}', { thing: styleHost.noun }),
+      heading: forThe(),
       current: styleHost.current?.id,
       canApply: !readonly.value,
       apply: (id) => void styleHost.apply(id),
@@ -640,7 +813,7 @@ async function headerDelete() {
 function headerResize() {
   if (readonly.value) {
     headerMenu.value = null
-    return session.notice('You can only look at this document.', 'warning')
+    return session.notice(t('You can only look at this document.'), 'warning')
   }
   dialog.value = headerMenu.value!.axis === 'row' ? 'row-size' : 'col-size'
   headerMenu.value = null
@@ -697,6 +870,15 @@ function ask(text: string) {
   frame.value?.ask(text)
 }
 
+/** The cell's own menu (right click): the clipboard, then outcomes, follow and resample (mock computes-random-alternatives-follow-menus). */
+const cellMenuItems = computed(() => [
+  ...clipboardItems(shared.value, () => pasteFromClipboard()),
+  { label: '', separator: true },
+  { id: 'tools.outcomes', label: t('Outcomes of This Cell…'), hint: chordLabel(OUTCOMES.chord), action: () => openOutcomes(cellMenu.value ?? undefined), disabled: !hasOutcomes.value },
+  { id: 'tools.follow', label: following.value ? t('Stop Following') : t('Follow Computation'), hint: chordLabel(FOLLOW.chord), action: () => toggleFollow() },
+  { id: 'tools.resample', label: t('Resample Random Numbers'), hint: chordLabel(RESAMPLE.chord), action: () => void resample(), disabled: readonly.value },
+])
+
 const menus = computed<Menu[]>(() => {
   const c = shared.value
   return [
@@ -715,7 +897,9 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
-        { id: 'edit.new-sheet', label: t('New sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
+        searchItem(c, { open: () => openSearch() }),
+        { label: '', separator: true },
+        { id: 'edit.new-sheet', label: t('New Sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
         { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
         { id: 'edit.chart', label: t('Chart…'), action: () => (dialog.value = 'chart'), disabled: readonly.value },
         { label: '', separator: true },
@@ -726,8 +910,8 @@ const menus = computed<Menu[]>(() => {
           label: t('Row'),
           disabled: readonly.value,
           items: [
-            { id: 'edit.row-insert-above', label: t('Insert above'), action: () => structure('row', true), disabled: readonly.value },
-            { id: 'edit.row-insert-below', label: t('Insert below'), action: () => structure('row', true, true), disabled: readonly.value },
+            { id: 'edit.row-insert-above', label: t('Insert Above'), action: () => structure('row', true), disabled: readonly.value },
+            { id: 'edit.row-insert-below', label: t('Insert Below'), action: () => structure('row', true, true), disabled: readonly.value },
             { id: 'edit.row-delete', label: t('Delete'), action: () => structure('row', false), disabled: readonly.value },
           ],
         },
@@ -736,16 +920,23 @@ const menus = computed<Menu[]>(() => {
           label: t('Column'),
           disabled: readonly.value,
           items: [
-            { id: 'edit.column-insert-left', label: t('Insert left'), action: () => structure('col', true), disabled: readonly.value },
-            { id: 'edit.column-insert-right', label: t('Insert right'), action: () => structure('col', true, true), disabled: readonly.value },
+            { id: 'edit.column-insert-left', label: t('Insert Left'), action: () => structure('col', true), disabled: readonly.value },
+            { id: 'edit.column-insert-right', label: t('Insert Right'), action: () => structure('col', true, true), disabled: readonly.value },
             { id: 'edit.column-delete', label: t('Delete'), action: () => structure('col', false), disabled: readonly.value },
           ],
         },
         { label: '', separator: true },
-        { id: 'edit.clear', label: t('Clear cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
+        { id: 'edit.clear', label: t('Clear Cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
       ],
     },
-    { label: t('Format'), items: styleItems() },
+    {
+      label: t('Format'),
+      items: [
+        ...styleItems(),
+        { label: '', separator: true },
+        { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value || !grid.value?.selectedObject() },
+      ],
+    },
     {
       label: t('View'),
       items: [
@@ -760,6 +951,11 @@ const menus = computed<Menu[]>(() => {
         // "Ask for an example budget" was a demo prop, taken out at the owner's request (2026-11-12, D126 keeps "Ask ai").
         askItem(c, ask),
         { label: '', separator: true },
+        { id: 'tools.random', label: t('Random Generator…'), hint: chordLabel(RANDOM_GENERATOR.chord), action: () => openRandom(), disabled: readonly.value },
+        { id: 'tools.resample', label: t('Resample Random Numbers'), hint: chordLabel(RESAMPLE.chord), action: () => void resample(), disabled: readonly.value },
+        { id: 'tools.outcomes', label: t('Outcomes of This Cell…'), hint: chordLabel(OUTCOMES.chord), action: () => openOutcomes(), disabled: !hasOutcomes.value },
+        { id: 'tools.follow', label: t('Follow Computation'), hint: chordLabel(FOLLOW.chord), checked: following.value, action: () => toggleFollow() },
+        { label: '', separator: true },
         { id: 'tools.names', label: t('Names…'), action: () => (dialog.value = 'names') },
         { id: 'tools.sql', label: t('SQL query…'), action: () => openSql(), disabled: readonly.value },
       ],
@@ -771,14 +967,15 @@ const menus = computed<Menu[]>(() => {
 
 // Config ▸ Shortcuts: the grid's own mouse and keyboard conventions, which are not a single `keydown` chord and so
 // were never candidates for the shared map.
-const SHORTCUT_NOTES: [string, string][] = [
-  ['Arrows, Tab, Enter', 'move through the table'],
-  ['Shift + arrows or drag', 'select a block'],
-  ['Ctrl + arrows', 'jump to the edge of a block of data'],
-  ['Type, F2 or double click', 'edit a cell (others are kept out of it while you do)'],
-  ['Enter / Tab / Esc', 'keep and go down / keep and go right / cancel'],
-  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
-]
+const SHORTCUT_NOTES = computed<[string, string][]>(() => [
+  [t('Arrows, Tab, Enter'), t('move through the table')],
+  [t('F6 / Shift + F6'), t('leave the table: on to the next / back to the previous part of the window')],
+  [t('Shift + arrows or drag'), t('select a block')],
+  [t('Ctrl + arrows'), t('jump to the edge of a block of data')],
+  [t('Type, F2 or double click'), t('edit a cell (others are kept out of it while you do)')],
+  [t('Enter / Tab / Esc'), t('keep and go down / keep and go right / cancel')],
+  [t('Ctrl + C / X / V'), t('copy, cut and paste, also from and to other programs')],
+])
 </script>
 
 <template>
@@ -794,7 +991,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     @saved="grid?.focus()"
   >
     <template #toolbar>
-      <div class="formulaRow">
+      <div class="formulaRow" data-region="toolbar">
         <FormulaBar
           :label="label"
           :text="formulaText"
@@ -817,8 +1014,20 @@ const SHORTCUT_NOTES: [string, string][] = [
           @redo="session.redo()"
         >
           <StylePicker v-if="state.activeSheet && !activeChart" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
+          <button
+            v-if="state.activeSheet && !activeChart"
+            type="button"
+            class="draw"
+            :disabled="readonly"
+            :title="t('Draw new random numbers ({key})', { key: chordLabel(RESAMPLE.chord) })"
+            :aria-label="t('Draw {n}: draw new random numbers', { n: state.random?.draw ?? 1 })"
+            @click="resample()"
+          >
+            {{ t('Draw {n}', { n: state.random?.draw ?? 1 }) }}
+          </button>
         </FormulaBar>
-        <ul v-if="completing" class="completion" :class="{ below: formulaHelp }" role="listbox" aria-label="completions" data-testid="completion">
+        <FollowPill v-if="following && state.trace" class="followPill" :trace="state.trace" @reach="setReach" @stop="stopFollowing" />
+        <ul v-if="completing" class="completion" :class="{ below: formulaHelp }" role="listbox" :aria-label="t('completions')" data-testid="completion">
           <li
             v-for="(item, i) in completing.items"
             :key="item.label"
@@ -837,12 +1046,13 @@ const SHORTCUT_NOTES: [string, string][] = [
       </div>
     </template>
     <div v-if="activeChart" class="chart-tab">
-      <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" />
-      <div v-else class="nosheet">This chart's definition is gone.</div>
+      <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" :label="t('Chart: {name}', { name: activeChartName })" />
+      <div v-else class="nosheet">{{ t('This chart\'s definition is gone.') }}</div>
     </div>
     <SheetGrid
       v-else-if="state.activeSheet"
       ref="grid"
+      data-region="document"
       :session="session"
       :sheet="state.activeSheet"
       :sel="sel"
@@ -850,6 +1060,7 @@ const SHORTCUT_NOTES: [string, string][] = [
       :pointing="pointing"
       :anchored="pointed"
       :cell-host="cellHost"
+      :marks="searchMarks"
       @object="objectSelected = $event"
       @styles="dialog = 'styles'"
       @select="select"
@@ -865,13 +1076,36 @@ const SHORTCUT_NOTES: [string, string][] = [
       @select-all="sel = { row: 0, col: 0, row2: VIEW_ROWS - 1, col2: VIEW_COLS - 1 }"
       @header-menu="openHeaderMenu"
       @table-menu="openTableMenu"
+      @cell-menu="(x, y) => (cellMenu = { x, y })"
+      @view="seen"
     />
-    <div v-else class="nosheet">This document has no sheet yet.</div>
+    <div v-else class="nosheet">{{ t('This document has no sheet yet.') }}</div>
+    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
     <template #footer>
-      <FooterBar :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" @pick="pickTab" @add="dialog = 'sheet'" />
+      <FooterBar data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" />
     </template>
     <template #overlay>
-      <PromptDialog v-if="dialog === 'sheet'" title="New sheet" label="Name" ok="Add sheet" required placeholder="Forecast" @ok="addSheet" @close="dialog = null" />
+      <SearchPanel
+        v-if="searchOpen"
+        ref="searchPanel"
+        :host="searchHost"
+        :replace="searchReplace"
+        @close="closeSearch"
+        @view="searchView = $event"
+        @help="frame?.openHelp('how-to')"
+      />
+      <RandomDialog
+        v-if="dialog === 'random'"
+        :session="session"
+        :target="label"
+        :readonly="readonly"
+        @close="dialog = null"
+        @insert="insertRandom"
+      />
+      <OutcomePopover v-if="outcomes" :session="session" :sheet="state.activeSheet" :row="outcomes.row" :col="outcomes.col" :x="outcomes.x" :y="outcomes.y" @close="outcomes = null" />
+      <ContextMenu v-if="cellMenu" :x="cellMenu.x" :y="cellMenu.y" :items="cellMenuItems" :width="290" :label="t('Cell menu')" @close="cellMenu = null" />
+      <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
+      <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
       <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog
         v-if="dialog === 'chart'"
@@ -962,6 +1196,29 @@ const SHORTCUT_NOTES: [string, string][] = [
 <style scoped>
 .formulaRow {
   position: relative;
+}
+/* "Draw N" (E6.22): fresh random numbers for everybody, in the formula row where the person is working on cells. */
+.draw {
+  flex: none;
+  border: 1px solid var(--line-field);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 3px 12px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.draw:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* The strip of a followed computation floats at the top right of the grid, over the corner of the column letters. */
+.followPill {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  right: 16px;
 }
 .completion {
   position: absolute;

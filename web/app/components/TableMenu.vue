@@ -2,25 +2,28 @@
 // The menu on a table's header chip (E6.5, mock 2): what this column is for, or what the whole table is for. The
 // cells are tinted by it, so the choice shows at once. Text only, like every menu here (HeaderMenu.vue).
 import { columnPurpose, PURPOSES, type NameInfo, type Purpose } from '~/lib/names'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ table: NameInfo; offset: number; x: number; y: number; readonly: boolean }>()
 const emit = defineEmits<{ pick: [offset: number | null, purpose: Purpose]; close: [] }>()
 
-const column = props.table.columns[props.offset]?.name ?? `Column ${props.offset + 1}`
+const column = props.table.columns[props.offset]?.name ?? t('Column {n}', { n: props.offset + 1 })
 const current = columnPurpose(props.table, props.offset)
 </script>
 
 <template>
-  <Popover :x="x" :y="y" :width="236" :label="`purpose of ${table.name}`" @close="emit('close')">
+  <Popover :x="x" :y="y" :width="236" :label="t('purpose of {name}', { name: table.name })" @close="emit('close')">
     <div class="menu" data-testid="table-menu">
-      <p class="title">{{ column }} <span class="dim">in {{ table.name }}</span></p>
+      <p class="title">{{ column }} <span class="dim">{{ t('in {name}', { name: table.name }) }}</span></p>
       <button v-for="p in PURPOSES.filter((q) => q.value !== 'result')" :key="p.value" type="button" :disabled="readonly" :class="{ on: p.value === current }" @click="emit('pick', offset, p.value)">
         <span class="swatch" :style="{ background: `var(--purpose-${p.value})` }" />
         <span class="what">{{ p.label }}<small>{{ p.hint }}</small></span>
         <span v-if="p.value === current" class="tick" aria-hidden="true">✓</span>
       </button>
       <div class="sep" />
-      <p class="title">Whole table</p>
+      <p class="title">{{ t('Whole table') }}</p>
       <div class="row">
         <button v-for="p in PURPOSES.filter((q) => q.value !== 'result')" :key="p.value" type="button" class="small" :disabled="readonly" @click="emit('pick', null, p.value)">{{ p.label }}</button>
       </div>

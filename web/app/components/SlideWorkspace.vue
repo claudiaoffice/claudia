@@ -19,6 +19,8 @@ import {
 import { useI18n } from '~/lib/i18n'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { galleryFor } from '~/lib/style-host'
+import { describeShortcut } from '~/lib/descriptions'
+import { chordLabel } from '~/lib/shortcuts'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
 import { useTheme } from '~/lib/theme'
@@ -51,14 +53,14 @@ const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
 const dialog = ref<null | 'styles' | 'colours'>(null)
 const EXPORT_FORMATS = [
-  { value: 'pptx', label: 'PowerPoint presentation (.pptx)' },
-  { value: 'odp', label: 'OpenDocument presentation (.odp)' },
+  { value: 'pptx', get label() { return t('PowerPoint presentation (.pptx)') } },
+  { value: 'odp', get label() { return t('OpenDocument presentation (.odp)') } },
 ]
 
 const readonly = computed(() => state.me.role === 'viewer')
 
 // ------------------------------------------------------------------------------ the show and the notes (E10.2)
-// Presenting is read-only and local (D291): a viewer may do it too, and it writes nothing to the document.
+// Presenting is read-only and local (D340): a viewer may do it too, and it writes nothing to the document.
 const { shown: notesShown, toggle: toggleNotes } = useNotesShown()
 const notes = ref<InstanceType<typeof SlideNotes> | null>(null)
 const presenting = ref<{ from: number } | null>(null)
@@ -85,8 +87,13 @@ async function planTime() {
 useCreatorLanguage(session, () => locale.value)
 const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => canvas.value?.focus())
 const printSource = slideSource(session)
+const describeSelected = describeShortcut(
+  () => canvas.value?.openDescribe(),
+  () => state.selected !== null && !readonly.value,
+)
 const extraShortcuts = [
   PRINT,
+  describeSelected,
   ...presentShortcuts(
     t,
     { start: () => present('start'), here: () => present('here'), notes: toggleNotes, time: () => void planTime() },
@@ -215,17 +222,17 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
-        { id: 'edit.new-slide', label: t('New slide'), action: () => session.addSlide(), disabled: readonly.value },
+        { id: 'edit.new-slide', label: t('New Slide'), action: () => session.addSlide(), disabled: readonly.value },
         {
           id: 'edit.slide-time',
-          label: t('Plan the time of this slide…'),
+          label: t('Plan the Time of This Slide…'),
           hint: presentHint('time', mac),
           action: () => planTime(),
           disabled: readonly.value || !state.activeSlide,
         },
         { label: '', separator: true },
-        { id: 'edit.edit-text', label: t('Edit text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
-        { id: 'edit.text-box', label: t('Text box'), action: () => addText(), disabled: readonly.value },
+        { id: 'edit.edit-text', label: t('Edit Text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
+        { id: 'edit.text-box', label: t('Text Box'), action: () => addText(), disabled: readonly.value },
         { id: 'edit.image', label: t('Image…'), action: () => (showImageDialog.value = true), disabled: readonly.value },
         { label: '', separator: true },
         ...state.library.map((s) => ({ label: s.name, action: () => addShape(s.id), disabled: readonly.value })),
@@ -233,14 +240,21 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
       ],
     },
-    { label: t('Format'), items: styleItems() },
+    {
+      label: t('Format'),
+      items: [
+        ...styleItems(),
+        { label: '', separator: true },
+        { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(describeSelected.chord), action: () => canvas.value?.openDescribe(), disabled: readonly.value || !state.selected },
+      ],
+    },
     {
       label: t('View'),
       items: [
         authorsItemUnavailable(c), // creates tracks no per-object authorship yet
         {
           id: 'view.grid',
-          label: 'Show grid',
+          label: t('Show grid'),
           checked: gridShown.value,
           action: (x) => {
             if (x === undefined || (x === 'on') !== gridShown.value) toggleGrid()
@@ -249,11 +263,11 @@ const menus = computed<Menu[]>(() => {
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
         darkItem(c, { on: dark, toggle: toggleDark }),
         { label: '', separator: true },
-        { id: 'view.present-start', label: t('Present from the first slide'), hint: presentHint('start', mac), action: () => present('start'), disabled: !state.slides.length },
-        { id: 'view.present-here', label: t('Present from this slide'), hint: presentHint('here', mac), action: () => present('here'), disabled: !state.slides.length },
+        { id: 'view.present-start', label: t('Present from the First Slide'), hint: presentHint('start', mac), action: () => present('start'), disabled: !state.slides.length },
+        { id: 'view.present-here', label: t('Present from This Slide'), hint: presentHint('here', mac), action: () => present('here'), disabled: !state.slides.length },
         {
           id: 'view.speaker-notes',
-          label: t('Speaker notes'),
+          label: t('Speaker Notes'),
           hint: presentHint('notes', mac),
           checked: notesShown.value,
           action: (x) => {
@@ -269,13 +283,13 @@ const menus = computed<Menu[]>(() => {
 })
 
 /** Config ▸ Shortcuts: the slide's own mouse and keyboard conventions, which are not a single key chord. */
-const SHORTCUT_NOTES: [string, string][] = [
-  ['Click', 'select an object (colleagues cannot change it while you hold it)'],
-  ['Drag', 'move it; the handles resize it'],
-  ['Double-click, Enter', 'write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it'],
-  ['Arrows', 'move it by 10 units; with Shift by 1'],
-  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
-]
+const SHORTCUT_NOTES = computed<[string, string][]>(() => [
+  [t('Click'), t('select an object (colleagues cannot change it while you hold it)')],
+  [t('Drag'), t('move it; the handles resize it')],
+  [t('Double-click, Enter'), t('write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it')],
+  [t('Arrows'), t('move it by 10 units; with Shift by 1')],
+  [t('Ctrl + C / X / V'), t('copy, cut and paste, also from and to other programs')],
+])
 </script>
 
 <template>
@@ -293,6 +307,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     <template #toolbar>
       <InsertBar
         v-if="!printing"
+        data-region="toolbar"
         :shapes="state.library"
         :can-delete="state.selected !== null"
         :can-undo="state.canUndo"
@@ -313,15 +328,15 @@ const SHORTCUT_NOTES: [string, string][] = [
         <!-- Applying a style where composes and computes have it (owner's report, 2026-11-12): the popover only shows a
              style's look (UX-14), so without this a named style could be applied only from Format ▸ Apply style. -->
         <StylePicker :host="styleHost" :hint="'Shift+F10'" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
-        <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" caption="Label" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
+        <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" :caption="t('Label')" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
       </InsertBar>
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
     <div v-else-if="state.activeSlide" class="stage">
-      <SlideCanvas ref="canvas" class="canvas" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
+      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
       <SlideNotes v-if="notesShown" ref="notes" :session="session" :hint="presentHint('time', mac)" :t="t" @present="present" />
     </div>
-    <div v-else class="noslide">This presentation has no slide.</div>
+    <div v-else class="noslide">{{ t('This presentation has no slide.') }}</div>
     <template #overlay>
       <PresentShow v-if="presenting" :session="session" :from="presenting.from" view="audience" :t="t" @close="endShow" />
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
@@ -330,7 +345,7 @@ const SHORTCUT_NOTES: [string, string][] = [
     </template>
     <template #footer>
       <footer v-if="!printing" class="foot">
-        <div class="tabs" role="tablist" aria-label="slides">
+        <div class="tabs" role="tablist" :aria-label="t('slides')">
           <button
             v-for="(s, i) in state.slides"
             :key="s.id"
@@ -340,16 +355,16 @@ const SHORTCUT_NOTES: [string, string][] = [
             :class="{ on: s.id === state.activeSlide }"
             @click="session.showSlide(s.id)"
           >
-            Slide {{ i + 1 }}<span v-if="session.secondsOf(s.id) !== null" class="time mono">{{ formatTime(session.secondsOf(s.id)!) }}</span>
+            {{ t('Slide {n}', { n: i + 1 }) }}<span v-if="session.secondsOf(s.id) !== null" class="time mono">{{ formatTime(session.secondsOf(s.id)!) }}</span>
           </button>
-          <button v-if="!readonly" type="button" class="add" title="New slide" aria-label="new slide" @click="session.addSlide()">+</button>
+          <button v-if="!readonly" type="button" class="add" :title="t('New Slide')" :aria-label="t('new slide')" @click="session.addSlide()">+</button>
         </div>
         <div class="stats mono">
           <span v-if="here >= 0">{{ here + 1 }} / {{ state.slides.length }}</span>
           <span v-if="plan.planned" class="plan" data-testid="plan-total" :title="t('The planned times of the slides, added up')">
             {{ t('Planned {time}', { time: formatTime(plan.seconds) }) }}<template v-if="plan.unplanned"> · {{ t('{n} without a time', { n: plan.unplanned }) }}</template>
           </span>
-          <span class="rev" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
+          <span class="rev" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
         </div>
       </footer>
     </template>
@@ -427,8 +442,5 @@ const SHORTCUT_NOTES: [string, string][] = [
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
-}
-.rev {
-  opacity: 0.8;
 }
 </style>

@@ -5,9 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
-Lists (E9.21). State schema 7 → 8.
+Lists (E9.21). State schema 7 → 8. Describing objects (BITV 1.1.1): schema 8 → 9.
 
 ### Added
+- `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`); object bodies carry `description`
+  and `decorative` (see the core changelog).
 - `SetListItem(block, item)`: make a paragraph an item of a list at a level, or a plain paragraph again.
 - `TextModel.lists` (a `ListBook`), `TextModel.labels()` (the marker of every item, derived and cached until the
   structure or the lists change), `TextModel.list_in_use` and `TextModel.set_item`.

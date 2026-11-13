@@ -110,9 +110,9 @@ function closeSuggestion() {
 /** File ▸ Export… (D212, D401): Markdown is built here from `state.blocks`, Word and OpenDocument text by the server. The window sends what is
  * still being typed before it opens the dialog (`DocumentFrame.openDialog`), so both see the text as it stands. */
 const exportFormats = [
-  { value: 'md', label: 'Markdown (.md)', mimeType: 'text/markdown', local: () => toMarkdown(state.blocks) },
-  { value: 'docx', label: 'Word document (.docx)' },
-  { value: 'odt', label: 'OpenDocument text (.odt)' },
+  { value: 'md', get label() { return t('Markdown (.md)') }, mimeType: 'text/markdown', local: () => toMarkdown(state.blocks) },
+  { value: 'docx', get label() { return t('Word document (.docx)') } },
+  { value: 'odt', get label() { return t('OpenDocument text (.odt)') } },
 ]
 
 function openStyleMenu(at = editor.value?.caretPoint() ?? { x: 80, y: 120 }, mode: 'edit' | 'apply' = 'edit') {
@@ -149,15 +149,15 @@ async function pasteFromClipboard() {
 
 // ------------------------------------------------------------------------------ menus and shortcuts
 // D122: composes' one shortcut of its own, on top of the window's Undo, Redo and Save.
-const LOOK: ShortcutDef = { id: 'format.look', label: 'Edit this style…', chord: { key: 'F10', shift: true }, run: () => openStyleMenu() }
+const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: { key: 'F10', shift: true }, run: () => openStyleMenu() }
 // D912: a soft hyphen says where a word may be broken, a non-breaking hyphen where it may not (as in Word and
 // LibreOffice). Both are invisible in the text unless the pages break there.
 const typing = () => !printing.value && !session.readOnly
-const SOFT_HYPHEN: ShortcutDef = { id: 'edit.soft-hyphen', label: 'Soft hyphen', chord: { key: '-', ctrl: true }, run: () => session.type('\u00ad'), enabled: typing }
-const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', label: 'Non-breaking hyphen', chord: { key: '_', ctrl: true, shift: true }, run: () => session.type('\u2011'), enabled: typing }
+const SOFT_HYPHEN: ShortcutDef = { id: 'edit.soft-hyphen', get label() { return t('Soft hyphen') }, chord: { key: '-', ctrl: true }, run: () => session.type('\u00ad'), enabled: typing }
+const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', get label() { return t('Non-breaking hyphen') }, chord: { key: '_', ctrl: true, shift: true }, run: () => session.type('\u2011'), enabled: typing }
 // E9.21: bullets and numbers, on the keys of the digits (Google Docs' Ctrl+Shift+8 and 7), whatever they type.
-const BULLETS: ShortcutDef = { id: 'format.bulleted-list', label: 'Bulleted list', chord: { key: '8', code: 'Digit8', ctrl: true, shift: true }, run: () => makeList('bullets'), enabled: () => !readonly.value }
-const NUMBERS: ShortcutDef = { id: 'format.numbered-list', label: 'Numbered list', chord: { key: '7', code: 'Digit7', ctrl: true, shift: true }, run: () => makeList('numbers'), enabled: () => !readonly.value }
+const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return t('Bulleted list') }, chord: { key: '8', code: 'Digit8', ctrl: true, shift: true }, run: () => makeList('bullets'), enabled: () => !readonly.value }
+const NUMBERS: ShortcutDef = { id: 'format.numbered-list', get label() { return t('Numbered list') }, chord: { key: '7', code: 'Digit7', ctrl: true, shift: true }, run: () => makeList('numbers'), enabled: () => !readonly.value }
 const extraShortcuts = [LOOK, PRINT, SOFT_HYPHEN, HARD_HYPHEN, BULLETS, NUMBERS]
 
 function makeList(scheme: 'bullets' | 'numbers') {
@@ -248,7 +248,7 @@ const menus = computed<Menu[]>(() => {
     {
       label: t('View'),
       items: [
-        { id: 'view.authors', label: t('Show who wrote what'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
+        { id: 'view.authors', label: t('Show Who Wrote What'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
         darkItem(c, { on: dark, toggle: toggleDark }),
         { label: '', separator: true },
@@ -296,17 +296,17 @@ function customStyles(): StyleView[] {
 
 // Config ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native
 // Ctrl+C/X/V, which the browser already handles for whatever has focus.
-const SHORTCUT_NOTES: [string, string][] = [
-  ['Type', 'write; a word is sent when it ends, and the others see where you are'],
-  ['Enter', 'end the paragraph (after a heading the next one is body text); in a list, the next item; on an empty item, out of the list'],
-  ['Tab / Shift + Tab', 'in a list, one level in or out'],
-  ['Backspace / Delete', 'delete; at the edge of a paragraph it joins the one next to it'],
-  ['Ctrl + Backspace / Delete', 'delete a word'],
-  ['Ctrl + C / X / V', 'copy, cut and paste, also from and to other programs'],
-  ['Ctrl + -', 'a soft hyphen: where a word may be broken at the end of a line in the pages'],
-  ['Ctrl + Shift + -', 'a non-breaking hyphen: a hyphen the line is never broken after'],
-  ['@ai review this text', 'the assistant suggests changes; you accept or reject each'],
-]
+const SHORTCUT_NOTES = computed<[string, string][]>(() => [
+  [t('Type'), t('write; a word is sent when it ends, and the others see where you are')],
+  [t('Enter'), t('end the paragraph (after a heading the next one is body text); in a list, the next item; on an empty item, out of the list')],
+  [t('Tab / Shift + Tab'), t('in a list, one level in or out')],
+  [t('Backspace / Delete'), t('delete; at the edge of a paragraph it joins the one next to it')],
+  [t('Ctrl + Backspace / Delete'), t('delete a word')],
+  [t('Ctrl + C / X / V'), t('copy, cut and paste, also from and to other programs')],
+  [t('Ctrl + -'), t('a soft hyphen: where a word may be broken at the end of a line in the pages')],
+  [t('Ctrl + Shift + -'), t('a non-breaking hyphen: a hyphen the line is never broken after')],
+  [t('@ai review this text'), t('the assistant suggests changes; you accept or reject each')],
+])
 </script>
 
 <template>
@@ -322,25 +322,25 @@ const SHORTCUT_NOTES: [string, string][] = [
     @leave="(opts) => emit('leave', opts)"
   >
     <template #toolbar>
-      <StyleBar v-if="!printing" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
+      <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
-          <span><b data-testid="words">{{ words }}</b> {{ words === 1 ? 'word' : 'words' }}</span>
-          <span><b>{{ state.blocks.length }}</b> {{ state.blocks.length === 1 ? 'paragraph' : 'paragraphs' }}</span>
-          <button v-if="openSuggestions" type="button" class="sugs" data-testid="open-suggestions" title="Open the first suggestion" @click="pickNext()"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? 'suggestion' : 'suggestions' }}</button>
+          <span><b data-testid="words">{{ words }}</b> {{ words === 1 ? t('word') : t('words') }}</span>
+          <span><b>{{ state.blocks.length }}</b> {{ state.blocks.length === 1 ? t('paragraph') : t('paragraphs') }}</span>
+          <button v-if="openSuggestions" type="button" class="sugs" data-testid="open-suggestions" :title="t('Open the first suggestion')" @click="pickNext()"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? t('suggestion') : t('suggestions') }}</button>
         </div>
-        <span class="rev mono" :title="`line ${state.line}`">{{ state.revision ?? 'empty' }}</span>
+        <span class="rev mono" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
       </footer>
     </template>
     <template #overlay>
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
-      <PromptDialog v-if="dialog === 'list-start'" title="Start numbering at" label="First number" ok="Start" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
+      <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
   </DocumentFrame>

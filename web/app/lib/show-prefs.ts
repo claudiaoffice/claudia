@@ -1,4 +1,4 @@
-// Whether the speaker notes are shown under the slide (View ▸ Speaker notes, D293): a per-person preference like the
+// Whether the speaker notes are shown under the slide (View ▸ Speaker notes, D342): a per-person preference like the
 // grid and dark mode (`lib/grid.ts`), never part of the document. On by default: a slide's notes are what a talk is
 // prepared with, and a field nobody sees is a field nobody fills in.
 import { ref } from 'vue' // only the Vue wiring at the end uses this

@@ -1,4 +1,4 @@
-// The presentation as it was when the show started (D292): a copy of the slides, their objects, notes and planned
+// The presentation as it was when the show started (D341): a copy of the slides, their objects, notes and planned
 // times, and of the styles, shapes and pictures they are drawn from. The show runs on it and on nothing else, so a
 // colleague's edit changes nothing on the screen in front of the audience; the presenter view says how many steps the
 // document has taken since, and offers to take them in between slides.

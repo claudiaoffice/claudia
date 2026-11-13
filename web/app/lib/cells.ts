@@ -1,4 +1,5 @@
 // Cells as people see and type them: A1 labels, how a stored value is shown, and what typing it again would need.
+import type { Alt, Summary } from './outcomes'
 
 /** What a cell holds as the server sends it. A formula comes as the value it gave, with its text under `f`; an error
  * (`t: 'error'`) has its code in `v` and may say why under `d`. */
@@ -11,6 +12,10 @@ export type Content = {
   spill?: boolean
   /** For such a cell, the `[row, col]` of the formula that fills it. */
   from?: [number, number]
+  /** An input with alternatives, `{800, 1000, 1300}` (E6.21): each alternative as typed content. `f` is what was typed. */
+  alts?: Alt[]
+  /** A result of alternatives: what came out of running each of them through the calculation (E6.21). */
+  out?: Summary
 } | null
 
 export const MAX_ROWS = 1_048_576

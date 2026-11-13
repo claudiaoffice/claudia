@@ -5,6 +5,7 @@ import { ref, watch, type Ref } from 'vue'
 import { PRINT_CHORD } from '../document-menus'
 import type { ShortcutDef } from '../shortcuts'
 
+import { translate as t } from '../i18n'
 export interface Printing {
   /** whether the preview is shown in place of the document */
   printing: Ref<boolean>
@@ -29,7 +30,7 @@ export function usePrint(then: () => void = () => {}): Printing {
     printing.value = false
     setTimeout(then)
   }
-  return { printing, preview, open, close, shortcut: { id: 'file.print', label: 'Print…', chord: PRINT_CHORD, run: open } }
+  return { printing, preview, open, close, shortcut: { id: 'file.print', get label() { return t('Print…') }, chord: PRINT_CHORD, run: open } }
 }
 
 /** A session that has a language: composes' and creates'. */

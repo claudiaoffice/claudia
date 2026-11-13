@@ -124,6 +124,7 @@ The object commands, the same in all three apps:
 .. autoclass:: claudia_core.SetObjectStyle
 .. autoclass:: claudia_core.SetParagraphStyle
 .. autoclass:: claudia_core.SetSnap
+.. autoclass:: claudia_core.DescribeObject
 .. autoclass:: claudia_core.DefineShape
 .. autoclass:: claudia_core.ForgetShape
 .. autoclass:: claudia_core.DefineImage

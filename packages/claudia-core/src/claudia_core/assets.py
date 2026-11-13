@@ -183,8 +183,8 @@ class ImageImport:
         fields = ("asset", "alt", "imported_by", "imported_at", "source", "source_name", "source_path")
         if set(data) != set(fields):
             raise ImageError("an image import record has exactly these fields: " + ", ".join(fields))
-        if not isinstance(data["alt"], str) or not data["alt"].strip():
-            raise ImageError("alt: every imported image needs a short description of what it shows")
+        if not isinstance(data["alt"], str):
+            raise ImageError("alt: text (empty for a decorative picture)")
         if len(data["alt"]) > MAX_ALT_CHARS:
             raise ImageError(f"alt: at most {MAX_ALT_CHARS} characters")
         if not isinstance(data["source_name"], str) or len(data["source_name"]) > MAX_SOURCE_NAME_CHARS:

@@ -3,6 +3,72 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+Describing objects (BITV 1.1.1). State schema 8 → 9.
+
+### Added
+- `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`).
+
+### Changed
+- Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
+  rebuilt from the log.
+
+## [0.5.0] - 2026-11-13
+
+The function catalog can be said in another language (E13.8, D323); the package still carries no catalog. An outcome
+input is named by its named range (E6.21).
+
+### Added
+- `FunctionHelp.translated(translate)`: the entry with its description, tooltip and help text said by the function
+  `translate` (the identity gives the same entry); `FunctionHelp.examples` holds a library function's worked examples.
+- `translatable_texts()`: every text a translator is given for the catalog (the descriptions, the notes of examples and
+  the two wordings of an example, `functions.base.GIVES` and `GIVES_WITH`).
+- `Bound.get_tooltip(translate)` and `Bound.get_help(translate)` take the same function, and
+  `functions.base.example_lines(examples, translate)` puts a function's examples into lines of text.
+
+### Changed
+- The outcome table names an input by its named range when the input cell is exactly one (`OutcomeTable.inputs[].label`),
+  and only otherwise by the text to its left (E6.21).
+
+## [0.4.0] - 2026-11-13
+
+Random numbers, alternatives and following a computation (E6.21–E6.23, D291–D299).
+
+### Added
+- **`RANDOM(...)`** (E6.22, D291–D293): the same numbers for every user, because a number is a function of the
+  workbook's seed, its draw number, the cell and the position in the cell's call (`claudia_computes.draws`, BLAKE2b),
+  never of a clock or a generator's state. `RANDOM()` is Excel's `RAND()`; `RANDOM("dist", params…)` draws from
+  uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson or a discrete
+  list of values with weights (`claudia_computes.distributions`, quantile functions in `claudia_computes.special`),
+  optionally cut to `low`/`high`. `Resample` (relative, so undo works after colleagues' changes) and
+  `SetRandomSeed` are logged commands, `RandomChanged` an event; workbook state schema 8 keeps seed and draw number.
+- **Alternatives** (E6.21, D294–D296): an input cell may hold `{a, b, c}` (stored as `=ALTERNATIVES(a,b,c)`, or
+  `=SCENARIOS("name", a, b, …)` with a name), each alternative a value or a formula. `Sheet.alternatives` and
+  `Sheet.outcomes` are derived: for every cell that depends on alternatives, the value for each combination, its
+  median and spread, computed by running the calculation over the cells that take part (`claudia_computes.outcomes`;
+  above 10 000 combinations a seeded sample, with common random numbers). `WorkbookModel.outcome_table(sheet, row,
+  col, combine)` lists every outcome with the alternatives behind it and a sensitivity per input (`combine="pair"`
+  takes the first alternatives together, the second ones, …).
+- **Follow a computation** (E6.23, D297): `WorkbookModel.trace(sheet, row, col, reach, window)` gives the cells connected
+  to a cell, each as `input`, `calc` or `output`, cut to the visible window, with counts for other sheets
+  (`claudia_computes.trace`). A view, not an edit.
+- New public names: `Resample`, `SetRandomSeed`, `RandomChanged`, `AltInput`, `OutcomeRow`, `OutcomeTable`, `Swing`,
+  `Trace`.
+
+## [0.3.1] - 2026-11-13
+
+Search and replace in workbooks (E6.20, D285, D286). No change to `__all__`.
+
+### Added
+- `claudia_computes.search` (a module, not part of `__all__`): `scan` looks for a compiled search in the *text*, the
+  *formulas* and the *values* of a workbook (on every sheet, one sheet or a selection, within a time limit), listing
+  matches with the kept parts and what a replacement would make of each, and the cells left out with the reason;
+  `plan_replacement` says which cells a replacement would change and which it skips (held by somebody else, a formula
+  that would no longer read, a text that would be too long); `replace_command` makes it one `Batch` of `SetCells`,
+  one per row and run of columns, that stores the cells as they will be, never the pattern. The part `cellref`
+  (`B4`, `$A$2`) is computes' own.
+
 ## [0.3.0] - 2026-11-12
 
 The styling-suite plan, steps 1.1 to 2.6 (D300–D318).

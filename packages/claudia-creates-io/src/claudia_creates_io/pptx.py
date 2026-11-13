@@ -20,9 +20,9 @@ an arbitrary embedded picture back into an :class:`~claudia_core.ImageAsset` is 
 (unlike export, D213, this has no existing asset to fall back on) -- so it stays beyond-claudia content, same as
 a table or a chart.
 
-A slide's speaker notes are the notes page of its slide (D298): the Markdown of the model written as paragraphs of
+A slide's speaker notes are the notes page of its slide (D347): the Markdown of the model written as paragraphs of
 bold and italic runs (``_notes.py``) and read back the same way, and an edit to them is patched onto the original's
-notes page. A planned time (D294) is *not* written: the only time a pptx holds is the one that advances a slide by
+notes page. A planned time (D343) is *not* written: the only time a pptx holds is the one that advances a slide by
 itself, which is not the time a person means to spend on it, so planned times travel in claudia's own format.
 """
 
@@ -128,6 +128,26 @@ def _style_shape(shape, css: dict[str, str], pt_per_unit: float, over: str | Non
         shape.line.width = width
 
 
+_DRAWINGML = "http://schemas.openxmlformats.org/drawingml/2006/main"
+#: How PowerPoint (2019 and later) marks an object as decorative: an extension of its non-visual properties.
+_DECORATIVE_NS = "http://schemas.microsoft.com/office/drawing/2017/decorative"
+_DECORATIVE_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
+
+
+def _describe(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's own shape classes are not one type)
+    """What the object says to someone who cannot see it (BITV 1.1.1): its description as the alt text PowerPoint
+    keeps on the shape, or — for a decorative object, which has no text alternative — PowerPoint's own mark."""
+    properties = shape._element.xpath("./*[1]/p:cNvPr")[0]
+    if body.decorative:
+        properties.set("descr", "")  # (python-pptx names a picture's alt text after its file: "image.gif")
+        ext = etree.SubElement(etree.SubElement(properties, f"{{{_DRAWINGML}}}extLst"), f"{{{_DRAWINGML}}}ext")
+        ext.set("uri", _DECORATIVE_URI)
+        mark = etree.SubElement(ext, f"{{{_DECORATIVE_NS}}}decorative", nsmap={"adec": _DECORATIVE_NS})
+        mark.set("val", "1")
+    elif body.description:
+        properties.set("descr", body.description)
+
+
 def slides_to_pptx(model: SlideModel) -> bytes:
     """``model`` as pptx bytes: one slide per slide id, its objects added bottom to top so the stacking order
     (the last one is in front) comes out the same as it is drawn in claudia-creates. An image object is written
@@ -159,10 +179,11 @@ def slides_to_pptx(model: SlideModel) -> bytes:
                 shape = slide.shapes.add_textbox(*box)
                 shape.text_frame.text = words
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
+                _describe(shape, body)
             elif body.kind == "image":
                 asset = model.images.get(body.image) if body.image else None
                 if asset is not None:
-                    slide.shapes.add_picture(BytesIO(asset.data), *box)
+                    _describe(slide.shapes.add_picture(BytesIO(asset.data), *box), body)
             else:
                 definition = model.shapes.get(body.shape) if body.shape else None
                 auto_shape = _AUTOSHAPE.get(definition.id if definition else "", MSO_SHAPE.RECTANGLE)
@@ -170,6 +191,7 @@ def slides_to_pptx(model: SlideModel) -> bytes:
                 shape.text_frame.text = words
                 _style_shape(shape, css, pt_per_unit, page)
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
+                _describe(shape, body)
     out = BytesIO()
     prs.save(out)
     return out.getvalue()

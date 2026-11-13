@@ -5,6 +5,9 @@
 import { computed, ref } from 'vue'
 import { nameProblem, purposeLabel, referLabel, type NameInfo } from '~/lib/names'
 import type { Session } from '~/lib/session'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ session: Session; readonly: boolean; scopeName: (scope: string | null) => string }>()
 const emit = defineEmits<{ close: []; goto: [name: NameInfo]; editQuery: [name: NameInfo] }>()
@@ -48,26 +51,28 @@ async function remove(name: NameInfo) {
 </script>
 
 <template>
-  <Modal title="Names" :width="780" @close="emit('close')">
+  <Modal :title="t('Names')" :width="780" @close="emit('close')">
     <div class="names" data-testid="names-dialog">
-      <input v-model="filter" class="filter" type="search" placeholder="Find a name or cells" aria-label="find a name" autocomplete="off" >
+      <input v-model="filter" class="filter" type="search" :placeholder="t('Find a name or cells')" :aria-label="t('find a name')" autocomplete="off" >
       <p v-if="!session.state.names.length" class="empty">
-        No names yet. Select cells, type a word in the box left of the formula bar and press Enter — then <span class="mono">=SUM(Sales[Amount])</span> and
-        <span class="mono">SELECT … FROM Sales</span> work.
+        <TransText :text="t('No names yet. Select cells, type a word in the box left of the formula bar and press Enter — then {formula} and {query} work.')">
+          <template #formula><span class="mono">=SUM(Sales[Amount])</span></template>
+          <template #query><span class="mono">SELECT … FROM Sales</span></template>
+        </TransText>
       </p>
-      <p v-else-if="!rows.length" class="empty">Nothing is called like that.</p>
+      <p v-else-if="!rows.length" class="empty">{{ t('Nothing is called like that.') }}</p>
       <table v-else>
         <thead>
-          <tr><th>Name</th><th>Works on</th><th>Refers to</th><th>Rows</th><th>For</th><th /></tr>
+          <tr><th>{{ t('Name') }}</th><th>{{ t('Works on') }}</th><th>{{ t('Refers to') }}</th><th>{{ t('Rows') }}</th><th>{{ t('For') }}</th><th /></tr>
         </thead>
         <tbody>
           <tr v-for="n in rows" :key="`${n.scope}:${n.name}`" :data-name="n.name">
             <td class="mono strong">
               <form v-if="renaming && same(renaming.name, n)" class="inline" @submit.prevent="finishRename">
-                <input v-model="renaming.text" class="mono" aria-label="new name" autofocus autocomplete="off" spellcheck="false" @keydown.esc.stop="renaming = null" >
+                <input v-model="renaming.text" class="mono" :aria-label="t('new name')" autofocus autocomplete="off" spellcheck="false" @keydown.esc.stop="renaming = null" >
                 <span v-if="renameProblem" class="problem">{{ renameProblem }}</span>
               </form>
-              <template v-else>{{ n.name }} <span v-if="n.kind === 'result'" class="badge">SQL</span></template>
+              <template v-else>{{ n.name }} <span v-if="n.kind === 'result'" class="badge">{{ t('SQL') }}</span></template>
             </td>
             <td>{{ scopeName(n.scope) }}</td>
             <td class="mono">{{ referLabel(n) }}</td>
@@ -75,25 +80,25 @@ async function remove(name: NameInfo) {
             <td>{{ purposeLabel(n.purpose) }}</td>
             <td class="actions">
               <template v-if="confirming && same(confirming, n)">
-                <span class="ask">Take {{ n.name }} away?</span>
-                <button type="button" class="link danger" :disabled="busy" @click="remove(n)">Take away</button>
-                <button type="button" class="link" @click="confirming = null">Keep</button>
+                <span class="ask">{{ t('Take {name} away?', { name: n.name }) }}</span>
+                <button type="button" class="link danger" :disabled="busy" @click="remove(n)">{{ t('Take away') }}</button>
+                <button type="button" class="link" @click="confirming = null">{{ t('Keep') }}</button>
               </template>
               <template v-else-if="renaming && same(renaming.name, n)">
-                <button type="button" class="link" :disabled="busy || renameProblem !== null" @click="finishRename">Rename</button>
-                <button type="button" class="link" @click="renaming = null">Cancel</button>
+                <button type="button" class="link" :disabled="busy || renameProblem !== null" @click="finishRename">{{ t('Rename') }}</button>
+                <button type="button" class="link" @click="renaming = null">{{ t('Cancel') }}</button>
               </template>
               <template v-else>
-                <button type="button" class="link" :disabled="n.region === null" @click="emit('goto', n); emit('close')">Go to</button>
-                <button v-if="n.kind === 'result'" type="button" class="link" @click="emit('editQuery', n); emit('close')">Edit query…</button>
-                <button type="button" class="link" :disabled="readonly" @click="startRename(n)">Rename</button>
-                <button type="button" class="link danger" :disabled="readonly" @click="confirming = n">Delete</button>
+                <button type="button" class="link" :disabled="n.region === null" @click="emit('goto', n); emit('close')">{{ t('Go to') }}</button>
+                <button v-if="n.kind === 'result'" type="button" class="link" @click="emit('editQuery', n); emit('close')">{{ t('Edit query…') }}</button>
+                <button type="button" class="link" :disabled="readonly" @click="startRename(n)">{{ t('Rename') }}</button>
+                <button type="button" class="link danger" :disabled="readonly" @click="confirming = n">{{ t('Delete') }}</button>
               </template>
             </td>
           </tr>
         </tbody>
       </table>
-      <div class="buttons"><button class="btn" type="button" @click="emit('close')">Close</button></div>
+      <div class="buttons"><button class="btn" type="button" @click="emit('close')">{{ t('Close') }}</button></div>
     </div>
   </Modal>
 </template>

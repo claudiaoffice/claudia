@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{ title: string; label: string; ok: string; placeholder?: string; required?: boolean; initial?: string }>(),
@@ -24,7 +27,7 @@ function submit() {
       <label class="field">{{ label }}<input ref="field" v-model="value" :placeholder="placeholder" autocomplete="off" ></label>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="required && !value.trim()">{{ ok }}</button>
-        <button class="btn" type="button" @click="emit('close')">Cancel</button>
+        <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
       </div>
     </form>
   </Modal>

@@ -34,12 +34,14 @@ from typing import TYPE_CHECKING
 from .events import CellsChanged
 from .formula import Formula, parse_formula, print_formula
 from .formula.compiler import Binding, Compiler, Evaluator
+from .formula.forms.alternatives import labels_of
 from .formula.nodes import Call, walk
 from .formula.operators import single
 from .formula.scope import Scope
 from .functions.range import Range
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS
+from .outcomes import Outcomes
 from .refs import Position, SheetId, column_name
 from .spill import Table
 from .values import CIRC, SPILL, SYNTAX, ErrorValue, FormulaError, Value
@@ -67,7 +69,18 @@ class Compiled:
     ``Binding``), and the cells of the ``SQL()`` formulas whose results it uses (``anchors``). ``mentions`` are
     the texts of the names it uses, found or not; it is compiled again when what one of them means changes."""
 
-    __slots__ = ("cells", "dynamic", "evaluate", "formula", "mentions", "ranges", "reads", "records")
+    __slots__ = (
+        "alternatives",
+        "cells",
+        "dynamic",
+        "evaluate",
+        "formula",
+        "mentions",
+        "random",
+        "ranges",
+        "reads",
+        "records",
+    )
 
     def __init__(
         self,
@@ -79,6 +92,11 @@ class Compiled:
         self.formula = formula
         self.evaluate = evaluate
         self.dynamic = formula.dynamic
+        self.random = formula.random
+        # The names of the alternatives when the formula is a cell with alternatives (an input of what-if outcomes:
+        # one alternative is no choice at all).
+        labels = labels_of(formula.ast)
+        self.alternatives: tuple[str | None, ...] | None = labels if labels is not None and len(labels) > 1 else None
         # A formula with a query reads the tables it names, which its text does not: where it looked is recorded
         # (like a dynamic formula's), but it is calculated again only when what it read changes.
         self.records = formula.ast is not None and any(
@@ -390,6 +408,11 @@ class Calculator:
         self.formulas: dict[Key, Compiled] = {}
         self.by_sheet: dict[SheetId, set[Key]] = defaultdict(set)  # the formulas on a sheet
         self.dynamic: set[Key] = set()  # the formulas that read where they like
+        self.random: set[Key] = set()  # the formulas that draw random numbers: calculated again on a resample
+        self.alternatives: dict[Key, tuple[str | None, ...]] = {}  # the cells with alternatives -> their names (D294)
+        self.choice: dict[Key, int] = {}  # which alternative a cell with alternatives gives, while outcomes are run
+        self.graph_version = 0  # changes whenever a formula is defined or removed (what depends on what may differ)
+        self.outcomes = Outcomes(self)
         self.referring: dict[SheetId, set[Key]] = defaultdict(set)  # the formulas that name cells of a sheet
         self._name_users: dict[str, set[Key]] = defaultdict(set)  # name text (casefolded) -> the formulas using it
         self._cell_readers: dict[Key, set[Key]] = defaultdict(set)
@@ -490,6 +513,11 @@ class Calculator:
         self.by_sheet[sheet].add(key)
         if compiled.dynamic:
             self.dynamic.add(key)
+        if compiled.random:
+            self.random.add(key)
+        if compiled.alternatives is not None:
+            self.alternatives[key] = compiled.alternatives
+        self.graph_version += 1
         for target in {area.sheet or sheet for area in compiled.formula.refs}:
             self.referring[target].add(key)
         for cell in compiled.cells:
@@ -509,6 +537,9 @@ class Calculator:
         sheet = key[0]
         self.by_sheet[sheet].discard(key)
         self.dynamic.discard(key)
+        self.random.discard(key)
+        self.alternatives.pop(key, None)
+        self.graph_version += 1
         for target in {area.sheet or sheet for area in compiled.formula.refs}:
             self.referring[target].discard(key)
         for cell in compiled.cells:
@@ -599,6 +630,11 @@ class Calculator:
         self.formulas.clear()
         self.by_sheet.clear()
         self.dynamic.clear()
+        self.random.clear()
+        self.alternatives.clear()
+        self.choice.clear()
+        self.outcomes.reset()
+        self.graph_version += 1
         self.referring.clear()
         self._name_users.clear()
         self._cell_readers.clear()
@@ -609,6 +645,10 @@ class Calculator:
         self.orphaned.clear()
         self.touched.clear()
         self.forced.clear()
+
+    def redraw(self) -> None:
+        """The seed or the draw number changed: every formula that draws random numbers is calculated again."""
+        self.forced |= self.random
 
     def closure(self) -> set[Key]:
         """Every formula that must be calculated: the forced ones, those that depend on what changed or on them, and
@@ -632,6 +672,8 @@ class Calculator:
             self.touched.clear()
             self.forced.clear()
             self.everything = False
+            for sheet, positions in self.outcomes.refresh(set()).items():  # (the last cells with alternatives went)
+                self.orphaned[sheet] |= positions
             self._tell_orphans(ctx)
             return
         if not (self.touched or self.forced or self.everything):
@@ -642,6 +684,8 @@ class Calculator:
         self.forced.clear()
         self.everything = False
         shown = self._calculate(todo)
+        for sheet, positions in self.outcomes.refresh(todo).items():  # (alternatives and outcomes changed there)
+            shown[sheet] |= positions
         for sheet, row, col in forced:  # (new or rewritten formulas are shown even when the value came out the same)
             shown[sheet].add((row, col))
         for sheet, positions in self.orphaned.items():  # (cells whose result went away)
@@ -658,6 +702,7 @@ class Calculator:
     def recalculate_all(self) -> None:
         """Calculate every formula (a document was opened from a snapshot)."""
         self._calculate(set(self.formulas))
+        self.outcomes.refresh(None)
         self.touched.clear()
         self.forced.clear()
         self.everything = False
@@ -667,6 +712,8 @@ class Calculator:
         scope.indexes = self._lookup_indexes
         scope.names = self.model.names
         scope.spills = self.spills
+        scope.seed, scope.draw = self.model.random_seed, self.model.random_draw
+        scope.choice = self.choice
         return scope
 
     def scope_for(self, home: SheetId) -> Scope:

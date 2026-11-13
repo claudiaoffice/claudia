@@ -3,7 +3,7 @@
 // build time, so there is one place to edit a string and no second catalog to keep in sync. `useI18n`, at the foot
 // of this file, is where the owner's second i18n round (D148's groundwork, D160) actually moved menu chrome into
 // this pipeline — before it, `loadCatalog` finding nothing was the normal case for every locale, not just 'en'.
-import { onMounted, ref, triggerRef } from 'vue' // only the Vue wiring at the end uses these
+import { onMounted, ref, shallowRef, triggerRef, watch } from 'vue' // only the Vue wiring at the end uses these
 import { currentLocale, setLocale as persistLocale } from './locale'
 
 export type Catalog = Record<string, string>
@@ -25,6 +25,21 @@ export function appLanguage(locale: string): string {
   const tags = LANGUAGES.map(([tag]) => tag)
   const lower = locale.toLowerCase()
   return tags.find((tag) => tag === lower) ?? tags.find((tag) => tag === lower.split('-')[0]) ?? 'en'
+}
+
+/** The language the words on the screen are really in (WCAG 3.1.1): the App Language of `locale` once its catalog has
+ *  loaded, else English, which is what every string renders as while a catalog is missing. This, not the browser's
+ *  own tag, is what the page's `lang` must say, because a screen reader chooses its voice by it. */
+export function languageOf(locale: string, catalog: Catalog): string {
+  const language = appLanguage(locale)
+  return language === 'en' || Object.keys(catalog).length > 0 ? language : 'en'
+}
+
+/** Declares the page's language (`<html lang>`). `root` is the page's root element; without one, and outside a
+ *  browser, there is nothing to declare it on. */
+export function setPageLanguage(language: string, root?: { lang: string }): void {
+  const element = root ?? (typeof document !== 'undefined' ? document.documentElement : undefined)
+  if (element) element.lang = language
 }
 
 /** Fetch the catalog for `locale`'s App Language (as `po_to_json.py` writes it, under `/i18n/<language>.json`).
@@ -66,37 +81,63 @@ export function createTranslator(catalog: Catalog): (msgid: string, vars?: Recor
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring
 
+// One language and one catalog for the whole page, shared by every component and every plain module (D160's
+// first round gave each `useI18n()` call its own, so only the workspace that called `choose` switched live; the
+// side panel, the dialogs and the session's notices would have stayed in the old language). `shallowRef`: the
+// catalog is replaced whole, never edited, so Vue need not make a few hundred entries deeply reactive.
+const activeLocale = ref(appLanguage(currentLocale()))
+const activeCatalog = shallowRef<Catalog>({})
+let loadedFor: string | null = null
+let loading: Promise<void> | null = null
+
+async function loadFor(tag: string): Promise<void> {
+  activeCatalog.value = await loadCatalog(tag)
+  loadedFor = tag
+  setPageLanguage(languageOf(tag, activeCatalog.value))
+}
+
+/** Loads the active language's catalog unless it is loaded already (or being loaded). Every component's `onMounted`
+ * calls this, so the first one to mount does the fetch and the rest find it done. */
+function ensureLoaded(): Promise<void> {
+  if (loadedFor === activeLocale.value) return Promise.resolve()
+  loading ??= loadFor(activeLocale.value).finally(() => {
+    loading = null
+  })
+  return loading
+}
+
 /**
- * The Config ▸ App Language menu's own state (the owner's second i18n round, D160): a `locale` ref every
- * workspace's `menus` computed reads from (so every `config.language.<tag>` item's own `checked` recomputes from
- * this one ref — `manifest.py`'s own docstring describes the same "one ref, no special-cased mutual exclusion"
- * design for the Linux client's native menu), and a `t` that looks up the *currently loaded* catalog, so a
- * `computed<Menu[]>` that calls it is automatically re-run once `choose` finishes loading a new one.
- *
- * Deliberately not reactive-on-every-letter: `t` is read many times while building one `menus` array, so it stays
- * a plain function closed over `catalog.value` (re-reading it fresh on every call) rather than, say, a `computed`
- * per string — there is no per-string computed to invalidate, only the one `catalog` ref the whole menu bar
- * depends on together.
+ * Translate `msgid` with the catalog of the language that is active *now*. Reading `activeCatalog.value` is what
+ * makes a template or `computed` that calls this re-render when `choose` loads another language. Plain modules
+ * (the sessions' notices, the menu builders) import it as ``import { translate as t } from './i18n'`` so that
+ * `scripts/extract_i18n.py`, which only recognises an unqualified `t(...)` call, still finds their strings.
+ */
+export function translate(msgid: string, vars?: Record<string, string | number>): string {
+  return createTranslator(activeCatalog.value)(msgid, vars)
+}
+
+/** The App Language now, a tag such as `de`: what a session tells the server to speak to this window (D323). */
+export function languageNow(): string {
+  return activeLocale.value
+}
+
+/** Calls `handler` with the tag of the App Language each time it is chosen; returns what stops it. A plain module
+ * (a session) listens with this instead of calling `useI18n()`, which belongs to a component. */
+export function onLanguageChange(handler: (tag: string) => void): () => void {
+  return watch(activeLocale, (tag) => handler(tag))
+}
+
+/**
+ * The App Language (the Config ▸ App Language menu's own state, D160): the shared `locale` ref every workspace's
+ * `menus` computed reads (so every `config.language.<tag>` item's `checked` recomputes from this one ref —
+ * `manifest.py`'s docstring describes the same "one ref, no special-cased mutual exclusion" design for the Linux
+ * client's native menu), `t` for the catalog loaded now, and `choose` to switch.
  */
 export function useI18n() {
-  // The App Language, not the raw browser tag: the menu checks one of its own entries, never none of them.
-  const locale = ref(appLanguage(currentLocale()))
-  const catalog = ref<Catalog>({})
+  onMounted(() => void ensureLoaded())
 
-  async function loadFor(tag: string): Promise<void> {
-    catalog.value = await loadCatalog(tag)
-  }
-
-  onMounted(() => void loadFor(locale.value))
-
-  // Not named `t` here: `scripts/extract_i18n.py`'s regex looks for the literal text "t(" with nothing word-like
-  // or a dot right before it, which a `function t(...)` *declaration* satisfies just as well as a real call does
-  // (the lookbehind only rules out `format(`-style false positives, not this one) — the function is exposed as
-  // `t` only on the object `useI18n` returns, below, never declared under that name itself.
-  function translate(msgid: string, vars?: Record<string, string | number>): string {
-    return createTranslator(catalog.value)(msgid, vars)
-  }
-
+  // Exposed as `t` only on the object returned below, never declared under that name: the extractor's regex would
+  // take a `function t(...)` *declaration* for a call (the module's `translate` above is the declaration).
   /** Picks `tag` as the active language: persists it, switches `locale` (so every `checked` built from it
    * recomputes), and loads its catalog. `triggerRef` also fires that recompute when `tag` was already active —
    * a native shell's own menu item optimistically unchecks itself on *any* activation, checked ones included
@@ -104,12 +145,13 @@ export function useI18n() {
    * this, re-picking the already-active language would leave that native checkmark stuck off, since a ref
    * assignment Vue sees as unchanged triggers no dependents and so sends no correcting report at all. */
   async function choose(tag: string): Promise<void> {
-    const changed = tag !== locale.value
+    const changed = tag !== activeLocale.value
     persistLocale(tag)
-    locale.value = tag
+    activeLocale.value = tag
     if (changed) await loadFor(tag)
-    triggerRef(locale)
+    else setPageLanguage(languageOf(tag, activeCatalog.value)) // (`loadFor` declares it when the language changes)
+    triggerRef(activeLocale)
   }
 
-  return { locale, t: translate, choose }
+  return { locale: activeLocale, t: translate, choose }
 }

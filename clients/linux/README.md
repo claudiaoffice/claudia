@@ -41,7 +41,7 @@ clients/
 uv sync                                   # the server's Python 3.14 environment: .venv
 (cd web && npm ci && npm run build)       # the web frontend: web/.output/public
 sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-webkit-6.0      # Fedora: python3-gobject gtk4 libadwaita webkitgtk6.0
-./start-client.sh computes                # or composes, creates; builds the frontend first
+./start-linux-client.sh computes                # or composes, creates; builds the frontend first
 # or, by hand:
 cd clients/linux && PYTHONPATH=src /usr/bin/python3 -m claudia_shell_gtk computes
 ```

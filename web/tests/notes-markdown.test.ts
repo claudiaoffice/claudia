@@ -3,7 +3,7 @@ import { parseNotes, type NoteLine } from '~/lib/notes-markdown'
 
 const plain = (lines: NoteLine[]) => lines.map((l) => (l.blank ? '' : l.spans.map((s) => s.text).join('')))
 
-describe('notes written in Markdown (D298)', () => {
+describe('notes written in Markdown (D347)', () => {
   it('keeps a line for each line and one empty line for any number of blank ones', () => {
     expect(plain(parseNotes('Open with the story\nThen the numbers\n\n\n\nEnd'))).toEqual(['Open with the story', 'Then the numbers', '', 'End'])
   })

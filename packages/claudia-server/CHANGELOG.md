@@ -5,10 +5,53 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+Describing objects (BITV 1.1.1), in creates and computes (composes has no object methods yet).
+
 ### Added
-- Creates methods `set_slide_notes(slide, notes, base?)` and `set_slide_time(slide, seconds, base?)` (D293, D294).
+- Creates methods `set_slide_notes(slide, notes, base?)` and `set_slide_time(slide, seconds, base?)` (D342, D343).
   `slides` answers each slide as `{id, objects, seconds, has_notes}` and `slide` adds `notes` and `seconds`. The AI
   may write notes (`set_slide_notes`) but not planned times.
+- `describe_object(id, description, decorative?, base?)`: say what an object is to someone who cannot see it, or that it is
+  only decoration (then no description). A picture needs one or the other. One history step, "Describe object" or "Mark
+  as decorative".
+- `add_image` takes `decorative` (optional). A decorative picture has an empty `alt`; any other still needs words, and a
+  picture given both is refused.
+- The objects of a slide or a sheet are listed with `description` and `decorative`.
+
+### Fixed
+- `GET /api/fonts/{sha256}` and `/api/fonts/{sha256}.woff2` no longer run on the event loop (PERF-09). Making a WOFF2
+  file takes seconds (2.4 s for an ordinary 740 KB font), and every other request of every document waited for it the
+  first time a page asked for a font.
+
+## [0.28.0] - 2026-11-13
+
+Help and function documentation in German (E13.8, D323).
+
+### Added
+- `set_locale(locale)`: the person chose another interface language in this window; what the server says to it from
+  then on (errors, help, function descriptions) is in it. Any role may call it; answers `{locale}` as understood. The
+  web app sends it when the language changes and after a reconnect. `Context.set_locale` is the callback behind it.
+- Help topics can be translated: `<topic>.<language>.md` next to the English file, with the same `id`, its own
+  `language` and a `source-hash` (the `fingerprint` of the English file it was made from). `HelpLibrary.get(id,
+  language)` and `search(query, language=)` give the translation where there is one and English where not
+  (`help_search` and `help_topic` use the connection's locale; `help_topic` says which `language` it answered in);
+  `HelpLibrary.stale()` lists translations older than their source and `check()` refuses one without its source. A
+  test fails on a stale translation. `Topic` gained `source_hash` and `fingerprint`.
+- `functions` and `function_help` say the descriptions and the words of the worked examples in the connection's
+  language (German first), the formulas, results and signatures unchanged.
+
+## [0.27.0] - 2026-11-13
+
+The server's own messages are said in the language of the connection (E5.7, D31, D322).
+
+### Changed
+- A `RequestError`'s message may be a `claudia_server.i18n.Message` (`msg("{what}: at most {limit} cells at a time",
+  limit=500)`): it reads as its English text and `RequestError.to_dict(locale)` says it in the language of the
+  connection it is sent to (the `locale` of `hello`, `Context.locale`). The server's own request errors, the refusals of
+  `hello` and `HubError` are written that way, with German as the first catalog
+  (`claudia_server/locale/<language>/LC_MESSAGES/claudia.mo`, built from `po/<language>.po`). What the document packages
+  raise (`str(exc)`) and the assistant's own chat texts stay English until they carry templates too (E5.17). The wire
+  protocol is unchanged: `message` is still one string, and a client that sends no `locale` gets English.
 
 ### Security
 - Every HTTP answer carries a `Content-Security-Policy` (scripts from this server and the start page's inline scripts
@@ -22,12 +65,26 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   client had (QA 2026-11-12, UX-20). A client still starts with *suggest* (`DEFAULT_MODE`, D262) once it has the switch.
 
 ### Added
+- Random numbers, alternatives and following a computation in the computes app (E6.21–E6.23): `random_state`,
+  `resample` (F9, steps 1–1000), `set_random_seed`, `outcome_table` (`sheet, row, col, combine`: all or paired
+  combinations) and `trace` (`sheet, row, col, reach, window`: the lit cells of a window). `cells` carries `alts`
+  (the alternatives of an input) and `out` (the median and spread of an outcome). `export_office` answers `losses`
+  for xlsx too. The protocol version stays 2: only methods and fields were added.
+- `random_preview` (`distribution, params, low, high, draws`): what the Random generator dialog shows — the formula to
+  type, the text an Excel file would hold, and up to 1000 draws of the distribution itself (E6.22).
 - Lists in the text app (E9.21, `claudia_server.composes_lists`): `make_list(blocks, scheme)` (bullets, numbers or, with
   a null scheme, none; asking for what the paragraphs are takes them out, the other kind of a whole list changes its
   scheme, anything else starts a new list), `indent_item(blocks, by)` (answers how many items moved), `continue_list(block)`
   and `list_start(list, start)`; each is one history step and the assistant has no access (D63). `blocks` also
   answers `lists` and `schemes`, and gives every list item an `item` and a derived `label` (`{marker, path}`). The
   events `item`, `labels` and `lists` follow the document.
+- Search and replace in workbooks (E6.20, D284-D286): `search_find`, `search_preview` and `search_replace` look in text,
+  formulas and values on every sheet, one sheet or a selection; show what a replacement would change; and replace in
+  one history step, skipping and naming the cells somebody else holds. A mistake in a person's pattern, or a pattern
+  that could run without end, is answered as `error: {message, field, position}`, not as a failed request. A search
+  stops after two seconds (`computes.SEARCH_SECONDS`; the answer says `timed_out`) and a replacement may change
+  10000 cells. The AI user may call `search_replace` (`apps.MODEL_METHODS`). New methods of an app do not change
+  `PROTOCOL_VERSION`.
 - One style API for all three apps (`claudia_server.style_targets`, the styling-suite plan step 1.5):
   `style_model` (facets, kinds, slots with the kinds each takes, and the target keys this app accepts),
   `apply_style(targets, style, slot?)`, `deviate(parent, targets, slot?, set|text)` and `style_uses`. A target is

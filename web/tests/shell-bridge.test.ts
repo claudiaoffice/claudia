@@ -237,6 +237,21 @@ describe('tabTitle', () => {
     expect(tabTitle('')).toBe('Claudia')
     expect(tabTitle('bogus')).toBe('Claudia')
   })
+
+  // WCAG 2.4.2 (BITV 2.0): a title says what the page is. Two tabs of the same app are told apart by the document.
+  it('puts the document first when one is open, so two tabs of the same app differ', () => {
+    expect(tabTitle('computes', 'budget 2027')).toBe('budget 2027 – Claudia Computes')
+    expect(tabTitle('creates', 'kickoff')).toBe('kickoff – Claudia Creates')
+  })
+
+  it('names just the app for an empty or missing document name', () => {
+    expect(tabTitle('composes', '')).toBe('Claudia Composes')
+    expect(tabTitle('composes', undefined)).toBe('Claudia Composes')
+  })
+
+  it('does not put a document name on the generic title', () => {
+    expect(tabTitle(undefined, 'budget 2027')).toBe('Claudia')
+  })
 })
 
 /** A window that has a parent, as a page in a Neutralino shell's frame does. */

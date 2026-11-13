@@ -38,9 +38,9 @@ from .styles import builtin_styles
 SLIDE_WIDTH = 1600
 SLIDE_HEIGHT = 900
 FIRST_SLIDE = "s1"  # the slide of a new presentation
-#: The longest speaker notes of a slide, in characters (D293): a page of text, not a manuscript.
+#: The longest speaker notes of a slide, in characters (D342): a page of text, not a manuscript.
 MAX_NOTES_LENGTH = 20000
-#: The longest planned time of a slide, in seconds: one day (D294).
+#: The longest planned time of a slide, in seconds: one day (D343).
 MAX_SLIDE_SECONDS = 86400
 
 _ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
@@ -115,8 +115,9 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     app: ClassVar[str] = "creates"
     # 6: the presentation carries its own colour palette (D200)
     # 7: how it is printed, and its language (D917)
-    # 8: speaker notes (Markdown, D293) and planned times (D294) of the slides
-    state_schema: ClassVar[int] = 8
+    # 8: object bodies carry a description (alternative text)
+    # 9: speaker notes (Markdown, D342) and planned times (D343) of the slides
+    state_schema: ClassVar[int] = 9
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -128,9 +129,9 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     ) -> None:
         super().__init__()
         self.slides: list[str] = []
-        #: The speaker notes of the slides that have any, as written in Markdown (D293).
+        #: The speaker notes of the slides that have any, as written in Markdown (D342).
         self.notes: dict[str, str] = {}
-        #: The planned time of the slides that have one, in whole seconds (D294).
+        #: The planned time of the slides that have one, in whole seconds (D343).
         self.times: dict[str, int] = {}
         #: How the slides are printed, as a layout and a page (D917).
         self.print_setup: PrintSetup = print_setup if print_setup is not None else PrintSetup()
@@ -172,7 +173,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.slides = list(state["slides"])
         for slide in model.slides:
             model.open_container(slide)
-        # schema 7 and earlier: no notes and no planned times
+        # schema 8 and earlier: no notes and no planned times
         model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.slides and v}
         model.times = {k: v for k, v in state.get("times", {}).items() if k in model.slides}
         model.restore_objects(state["objects"], state["images"], state["shapes"])

@@ -34,6 +34,7 @@ from claudia_core import (
     validate_css,
 )
 
+from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
 
 #: How many targets one request may name (composes has the same bound for paragraphs, D75).
@@ -112,16 +113,18 @@ class _Resolver:
 
     def __init__(self, ctx: Context, adapters: dict[str, StyleTarget], slots: SlotTable, given: object):
         if not isinstance(given, list) or not given or len(given) > MAX_TARGETS:
-            raise RequestError("bad_request", f"targets is a list of 1 to {MAX_TARGETS} targets")
+            raise RequestError("bad_request", msg("targets is a list of 1 to {limit} targets", limit=MAX_TARGETS))
         self.model = ctx.document.model
         self.slots = slots
         self.items: list[tuple[StyleTarget, dict, str]] = []
         for target in given:
             if not isinstance(target, dict):
-                raise RequestError("bad_request", 'a target is an object such as {"object": id}')
+                raise RequestError("bad_request", msg('a target is an object such as {"object": id}'))
             keys = [key for key in adapters if key in target]
             if len(keys) != 1:
-                raise RequestError("bad_request", f"a target names one of: {', '.join(adapters)}")
+                raise RequestError(
+                    "bad_request", msg("a target names one of: {adapters}", adapters=", ".join(adapters))
+                )
             adapter = adapters[keys[0]]
             try:
                 thing = adapter.thing(self.model, target)
@@ -137,7 +140,10 @@ class _Resolver:
         if slot is None:
             return names
         if slot not in names:
-            raise RequestError("command_error", f"a {thing} has no slot “{slot}”; it has {', '.join(names)}")
+            raise RequestError(
+                "command_error",
+                msg("a {thing} has no slot “{slot}”; it has {slots}", thing=thing, slot=slot, slots=", ".join(names)),
+            )
         return [slot]
 
     def commands(self, style: StyleDef, slot: str | None, only_holding: str | None = None) -> list[Command]:
@@ -151,7 +157,15 @@ class _Resolver:
             fitting = [n for n in names if fits(style.kind, self.slots.slot(thing, n))]
             if not fitting:
                 where = f"the {slot} of a {thing}" if slot else f"any slot of a {thing}"
-                raise RequestError("command_error", f"“{style.name}” is a {style.kind} style and does not fit {where}")
+                raise RequestError(
+                    "command_error",
+                    msg(
+                        "“{name}” is a {kind} style and does not fit {where}",
+                        name=style.name,
+                        kind=style.kind,
+                        where=where,
+                    ),
+                )
             steps.extend(adapter.command(self.model, target, name, style.id) for name in fitting)
         return steps
 
@@ -159,7 +173,7 @@ class _Resolver:
 def _book(ctx: Context) -> StyleBook:
     book = getattr(ctx.document.model, "styles", None)
     if not isinstance(book, StyleBook):
-        raise RequestError("bad_request", "this document has no styles")
+        raise RequestError("bad_request", msg("this document has no styles"))
     return book
 
 
@@ -227,7 +241,7 @@ def add_target_methods(
         wanted = validate_css(own_css(set, text) or {})
         own = {name: value for name, value in wanted.items() if inherited.get(name) != value}
         if not own:
-            raise RequestError("command_error", f"the new style would look just like “{source.name}”")
+            raise RequestError("command_error", msg("the new style would look just like “{name}”", name=source.name))
         name = book.provisional_name(parent)
         made = StyleDef(book.unique_id(name), name, "", parent, own, to_name=True, kind=source.kind)
         steps = [CreateStyle(made), *resolver.commands(made, slot, only_holding=parent)]

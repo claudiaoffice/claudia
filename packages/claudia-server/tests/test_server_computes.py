@@ -5,11 +5,12 @@ import struct
 
 import pytest
 
-from claudia_computes import AddSheet, WorkbookModel
+from claudia_computes import AddSheet, CellRegion, WorkbookModel
 from claudia_computes.model import MAX_ROWS
 from claudia_core import Document, MemoryStore
 from claudia_server.auth import Account
 from claudia_server.computes import computes_methods
+from claudia_server.i18n import translate
 from claudia_server.protocol import Context, Limits, RequestError, core_methods
 
 ANN = Account("ann", "owner")
@@ -22,8 +23,8 @@ def book():
     return Document(WorkbookModel(), store=MemoryStore())
 
 
-def call(doc, name, params=None, account=ANN):
-    ctx = Context(doc, account, Limits(), users=lambda: ["ann", "ben"], lock_seconds=30.0)
+def call(doc, name, params=None, account=ANN, locale="en"):
+    ctx = Context(doc, account, Limits(), users=lambda: ["ann", "ben"], lock_seconds=30.0, locale=locale)
     return computes_methods.dispatch(ctx, name, params)
 
 
@@ -223,9 +224,12 @@ def test_export_office_returns_an_ods_that_round_trips_with_its_values_and_says_
     assert answer["losses"] == []
 
 
-def test_export_office_to_xlsx_has_no_loss_list(book):
+def test_export_office_to_xlsx_lists_what_excel_cannot_hold(book):
     call(book, "add_sheet", {"name": "Costs"})
-    assert "losses" not in call(book, "export_office", {"format": "xlsx"})
+    assert call(book, "export_office", {"format": "xlsx"})["losses"] == []
+    typed(book, "s1", [(0, 0, '=RANDOM("triangular",1,2,3)'), (1, 0, "{1, 2}")])
+    losses = call(book, "export_office", {"format": "xlsx"})["losses"]
+    assert {(x["kind"], x["detail"]): x["count"] for x in losses} == {("formula", "random"): 1, ("alternatives", ""): 1}
 
 
 def test_export_office_rejects_an_unknown_format(book):
@@ -339,6 +343,50 @@ def test_inserting_rows_moves_formulas_and_what_they_read(book):
     typed(book, "s1", [(0, 0, "5"), (1, 0, "=A1*2")])
     call(book, "structure", {"sheet": "s1", "axis": "row", "insert": True, "at": 0})
     assert window(book)[(2, 0)] == {"t": "int", "v": 10, "f": "=A2*2"}
+
+
+# -- what an object says to someone who cannot see it (BITV 1.1.1) -----------------------------------------------
+def test_a_decorative_picture_is_imported_with_no_description(book):
+    call(book, "add_sheet", {"name": "S"})
+    add_image(book, alt="", decorative=True)
+    (obj,) = objects(book)
+    assert obj["decorative"] is True and obj["description"] == "" and obj["imported"]["alt"] == ""
+
+
+def test_a_picture_needs_a_description_or_the_decorative_mark(book):
+    call(book, "add_sheet", {"name": "S"})
+    with pytest.raises(RequestError, match="decorative") as caught:
+        add_image(book, alt="")
+    assert caught.value.code == "command_error"
+    with pytest.raises(RequestError, match="decorative") as caught:
+        add_image(book, alt="a flourish", decorative=True)
+    assert caught.value.code == "command_error"
+
+
+def test_a_picture_is_described_better_later_and_marked_decorative_later_still(book):
+    call(book, "add_sheet", {"name": "S"})
+    picture = add_image(book)
+    call(book, "describe_object", {"id": picture, "description": "the quarterly sales chart as a picture"})
+    assert objects(book)[0]["description"] == "the quarterly sales chart as a picture"
+    assert book.history_for("ann").undo_label == "Describe object"
+    call(book, "describe_object", {"id": picture, "description": "", "decorative": True})
+    assert (objects(book)[0]["description"], objects(book)[0]["decorative"]) == ("", True)
+
+
+def test_a_picture_cannot_be_left_with_neither_a_description_nor_the_decorative_mark(book):
+    call(book, "add_sheet", {"name": "S"})
+    picture = add_image(book)
+    with pytest.raises(RequestError, match="decorative") as caught:
+        call(book, "describe_object", {"id": picture, "description": ""})
+    assert caught.value.code == "command_error"
+
+
+def test_a_viewer_may_not_describe(book):
+    call(book, "add_sheet", {"name": "S"})
+    picture = add_image(book)
+    with pytest.raises(RequestError) as caught:
+        call(book, "describe_object", {"id": picture, "description": "x"}, account=VERA)
+    assert caught.value.code == "forbidden"
 
 
 # -- images and floating objects (E6.17): add_image, move_object, remove_object, and the never-resize guarantee
@@ -494,6 +542,36 @@ def test_function_help_gives_the_full_text_by_name_case_insensitively(book):
     assert found["name"] == "ROUND"
     assert found["signature"] == "ROUND(number, digits?)"
     assert "2.68" in found["help"]  # the worked example survives into the full help text
+
+
+def test_function_help_is_in_the_language_of_the_connection(book):
+    """E13.8, D323: descriptions and the words of the worked examples are German for a German window; the formula,
+    its result and the signature are not words and stay as they are."""
+    german = call(book, "function_help", {"name": "round"}, locale="de")
+    english = call(book, "function_help", {"name": "round"})
+    assert german["signature"] == english["signature"] and "2.68" in german["help"]
+    assert german["tooltip"].startswith("ROUND(number, digits?): Rundet")
+    assert "ergibt" in german["help"] and "gives" not in german["help"]
+    assert "Rundet" not in english["help"] and "gives" in english["help"]
+
+
+def test_functions_are_listed_and_searched_in_the_language_of_the_connection(book):
+    summed = {f["name"]: f["tooltip"] for f in call(book, "functions", {"query": "Summe"}, locale="de")}
+    assert (
+        summed["SUM"]
+        == "SUM(*values): Die Summe der Zahlen in den Bereichen. Text und leere Zellen werden übersprungen."
+    )
+    assert call(book, "functions", {"query": "Summe"}) == []  # English has no word "Summe"
+    assert [f["name"] for f in call(book, "functions", {"query": "sum"}, locale="de")][:1] == ["SUM"]
+
+
+def test_every_function_has_a_german_description():
+    """Nothing in the catalog is left out of ``po/de.po``: a new function comes with its translation."""
+    from claudia_computes import function_catalog
+
+    for entry in function_catalog():
+        if entry.description:
+            assert entry.translated(lambda text: translate(text, "de")).description != entry.description, entry.name
 
 
 def test_function_help_refuses_an_unknown_name(book):
@@ -767,3 +845,413 @@ def test_moving_and_removing_a_diagram_object_undo_round_trips_like_any_object(b
     call(book, "remove_object", {"id": obj["id"]})
     book.undo("ann")
     assert [o["id"] for o in objects(book)] == [added["object"]]
+
+
+# ------------------------------------------------------------------------------------------ search and replace (E6.20)
+def budget_sheet(doc):
+    doc.execute(AddSheet("s1", "Sheet1"), author="ann")
+    typed(
+        doc,
+        "s1",
+        [
+            (0, 0, "Travel"),
+            (0, 1, "€12,50"),
+            (1, 1, "€80"),
+            (2, 1, "$9.90 EUR"),
+            (3, 1, '=VALUE(SUBSTITUTE(B1,"€",""))+1'),
+            (4, 1, "42"),
+        ],
+    )
+
+
+def search(doc, query, account=ANN, **more):
+    return call(doc, "search_find", {"query": query, **more}, account=account)
+
+
+def text(value, **more):
+    return {"mode": "text", "text": value, **more}
+
+
+def test_a_quick_search_lists_matches_with_where_and_what_kind(book):
+    budget_sheet(book)
+    found = search(book, text("€"), kinds=["text", "formulas"])
+    assert [(m["row"], m["col"], m["kind"], m["start"], m["end"]) for m in found["matches"]] == [
+        (0, 1, "text", 0, 1),
+        (1, 1, "text", 0, 1),
+        (3, 1, "formula", 22, 23),
+    ]
+    assert found["counts"] == {"text": 2, "formulas": 1, "values": 0}
+    assert found["total"] == 3 and not found["truncated"] and not found["timed_out"]
+    assert found["revision"] == book.revision.to_data()
+
+
+def test_a_match_says_what_it_is_in_and_how_it_reads_there(book):
+    budget_sheet(book)
+    match = search(book, text("12,5"))["matches"][0]
+    assert match["sheet"] == "s1" and match["text"] == "€12,50" and match["excerpt"] == [1, 5]
+    assert match["clipped"] == [False, False]
+    assert match["number"] == 0 and match["parts"] == [] and match["after"] is None
+
+
+def test_search_looks_in_text_unless_told_otherwise(book):
+    budget_sheet(book)
+    assert [(m["row"]) for m in search(book, text("42"))["matches"]] == []
+    assert [(m["row"]) for m in search(book, text("42"), kinds=["values"])["matches"]] == [4]
+
+
+def test_a_long_cell_is_cut_around_the_match_and_says_so(book):
+    budget_sheet(book)
+    typed(book, "s1", [(8, 0, "a" * 200 + "NEEDLE" + "b" * 200)])
+    match = search(book, text("needle"))["matches"][0]
+    assert match["start"] == 200 and match["clipped"] == [True, True]
+    assert match["text"][match["excerpt"][0] : match["excerpt"][1]] == "NEEDLE"
+
+
+def test_the_scope_is_a_sheet_or_a_selection(book):
+    budget_sheet(book)
+    call(book, "add_sheet", {"name": "Other"})
+    typed(book, "s2", [(0, 0, "€ elsewhere")])
+    assert len(search(book, text("€"))["matches"]) == 3  # all sheets
+    assert len(search(book, text("€"), scope={"sheet": "s2"})["matches"]) == 1
+    selected = search(book, text("€"), scope={"sheet": "s1", "range": [1, 0, 2, 1]})
+    assert [(m["row"], m["col"]) for m in selected["matches"]] == [(1, 1)]
+
+
+def test_a_selection_needs_its_sheet_and_four_numbers(book):
+    budget_sheet(book)
+    for scope in ({"range": [0, 0, 1, 1]}, {"sheet": "s1", "range": [0, 0, 1]}, {"sheet": "s1", "range": [1, 0, 0, 0]}):
+        with pytest.raises(RequestError) as caught:
+            search(book, text("x"), scope=scope)
+        assert caught.value.code == "bad_request"
+    with pytest.raises(RequestError) as caught:
+        search(book, text("x"), scope={"sheet": "nope"})
+    assert caught.value.code == "command_error"
+
+
+def test_a_search_in_the_builders_words(book):
+    budget_sheet(book)
+    query = {
+        "mode": "builder",
+        "parts": [{"what": "any_of", "chars": "€$£"}, {"what": "number", "keep": "amount"}],
+        "conditions": [{"kind": "not_contains", "text": "EUR"}],
+        "replace": [{"keep": "amount"}, {"text": " EUR"}],
+    }
+    found = search(book, query)
+    assert [(m["row"], m["parts"], m["after"]) for m in found["matches"]] == [
+        (0, ["12,50"], "12,50 EUR"),
+        (1, ["80"], "80 EUR"),
+    ]
+    assert [(o["row"], o["why"]) for o in found["left_out"]] == [(2, {"kind": "not_contains", "text": "EUR"})]
+    assert found["pattern"] == {"find": r"[€$£](\d+(?:[.,]\d+)*)", "filter": "^(?!.*EUR)", "replace": r"\g<1> EUR"}
+
+
+def test_a_typed_pattern_is_searched_as_it_is_and_a_cell_reference_is_a_part(book):
+    budget_sheet(book)
+    found = search(book, {"mode": "pattern", "find": r"\d+,\d+"})
+    assert [m["row"] for m in found["matches"]] == [0]
+    refs = search(book, {"mode": "builder", "parts": [{"what": "cellref"}]}, kinds=["formulas"])
+    assert [(m["row"], m["text"][m["excerpt"][0] : m["excerpt"][1]]) for m in refs["matches"]] == [(3, "B1")]
+
+
+def test_a_mistake_in_the_pattern_comes_back_as_a_result_not_an_error(book):
+    budget_sheet(book)
+    found = search(book, {"mode": "pattern", "find": "a(bc"})
+    assert found["error"] == {"message": "missing ), unterminated subpattern", "field": "find", "position": 1}
+    assert found["matches"] == [] and found["counts"] == {"text": 0, "formulas": 0, "values": 0}
+
+
+def test_a_pattern_that_could_run_forever_is_refused_in_the_same_way(book):
+    budget_sheet(book)
+    found = search(book, {"mode": "pattern", "find": "(a+)+$"})
+    assert found["error"]["field"] == "find" and "repeat" in found["error"]["message"]
+
+
+def test_a_query_that_is_not_a_query_is_a_bad_request(book):
+    budget_sheet(book)
+    for bad in ({}, {"mode": "regex"}, {"mode": "text"}, {"mode": "text", "text": 5}):
+        found = search(book, bad)
+        assert found["error"]["message"] and found["matches"] == []
+
+
+def test_unknown_kinds_are_a_bad_request(book):
+    budget_sheet(book)
+    with pytest.raises(RequestError) as caught:
+        search(book, text("x"), kinds=["words"])
+    assert caught.value.code == "bad_request"
+
+
+def test_a_search_that_runs_out_of_time_says_so(book, monkeypatch):
+    budget_sheet(book)
+    monkeypatch.setattr("claudia_server.computes.SEARCH_SECONDS", 0.0)
+    found = search(book, text("€"))
+    assert found["timed_out"] and found["matches"] == []
+
+
+def test_a_viewer_may_search(book):
+    budget_sheet(book)
+    assert len(search(book, text("€"), account=VERA)["matches"]) == 2
+
+
+def test_the_preview_says_what_would_change_and_changes_nothing(book):
+    budget_sheet(book)
+    before = book.revision
+    shown = call(book, "search_preview", {"query": text("€", replace=[{"text": "EUR "}])}, account=VERA)
+    assert [(c["row"], c["before"], c["after"]) for c in shown["changes"]] == [
+        (0, "€12,50", "EUR 12,50"),
+        (1, "€80", "EUR 80"),
+    ]
+    assert shown["skipped"] == [] and shown["total"] == 2
+    assert book.revision == before
+
+
+def test_replace_changes_the_cells_in_one_step_and_says_how_many(book):
+    budget_sheet(book)
+    done = call(book, "search_replace", {"query": text("€", replace=[{"text": "EUR "}])})
+    assert done["replaced"] == 2 and done["skipped"] == []
+    assert [book.model.get("s1", r, 1)["v"] for r in (0, 1)] == ["EUR 12,50", "EUR 80"]
+    assert book.log.get(book.revision).command.label == "Replace in 2 cells"
+    book.undo("ann")
+    assert [book.model.get("s1", r, 1)["v"] for r in (0, 1)] == ["€12,50", "€80"]
+
+
+def test_replace_leaves_formulas_alone_unless_they_are_asked_for(book):
+    budget_sheet(book)
+    call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
+    assert "€" in book.model.get("s1", 3, 1)["v"]
+    call(book, "search_replace", {"query": text("€", replace=[{"text": "$"}]), "kinds": ["formulas"]})
+    assert book.model.get("s1", 3, 1)["v"] == '=VALUE(SUBSTITUTE(B1,"$",""))+1'
+
+
+def test_replace_can_leave_a_match_or_a_cell_alone(book):
+    budget_sheet(book)
+    typed(book, "s1", [(6, 0, "a-b-c")])
+    call(
+        book,
+        "search_replace",
+        {
+            "query": text("-", replace=[{"text": "+"}]),
+            "leave": [{"sheet": "s1", "row": 6, "col": 0, "match": 0}],
+        },
+    )
+    assert book.model.get("s1", 6, 0)["v"] == "a-b+c"
+    call(
+        book,
+        "search_replace",
+        {"query": text("€", replace=[{"text": ""}]), "leave": [{"sheet": "s1", "row": 0, "col": 1, "match": None}]},
+    )
+    assert book.model.get("s1", 0, 1)["v"] == "€12,50" and book.model.get("s1", 1, 1)["v"] == "80"
+
+
+def test_a_cell_somebody_else_holds_is_skipped_and_named(book):
+    budget_sheet(book)
+    book.lock("ben", [CellRegion.of("s1", 1, 1, 1, 1)], 30)
+    shown = call(book, "search_preview", {"query": text("€", replace=[{"text": ""}])})
+    assert [(s["row"], s["reason"], s["by"]) for s in shown["skipped"]] == [(1, "locked", "ben")]
+    done = call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
+    assert done["replaced"] == 1 and done["skipped"] == shown["skipped"]
+    assert book.model.get("s1", 0, 1)["v"] == "12,50" and book.model.get("s1", 1, 1)["v"] == "€80"
+
+
+def test_my_own_hold_does_not_stop_me(book):
+    budget_sheet(book)
+    book.lock("ann", [CellRegion.of("s1", 0, 0, 5, 5)], 30)
+    assert call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})["replaced"] == 2
+
+
+def test_a_viewer_cannot_replace(book):
+    budget_sheet(book)
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])}, account=VERA)
+    assert caught.value.code == "forbidden"
+
+
+def test_replace_needs_something_to_replace_with(book):
+    budget_sheet(book)
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_replace", {"query": text("€")})
+    assert caught.value.code == "command_error" and "replace" in caught.value.message
+
+
+def test_replace_that_changes_nothing_makes_no_history(book):
+    budget_sheet(book)
+    before = book.revision
+    done = call(book, "search_replace", {"query": text("zzz", replace=[{"text": "y"}])})
+    assert done["replaced"] == 0 and done["revision"] == before.to_data()
+    assert book.revision == before
+
+
+def test_replace_refuses_more_cells_than_one_step_may_change(book, monkeypatch):
+    budget_sheet(book)
+    monkeypatch.setattr("claudia_server.computes.MAX_REPLACED_CELLS", 1)
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
+    assert caught.value.code == "bad_request" and "narrow" in caught.value.message
+    assert book.model.get("s1", 0, 1)["v"] == "€12,50"
+
+
+def test_replace_takes_the_base_revision_like_every_write(book):
+    budget_sheet(book)
+    done = call(book, "search_replace", {"query": text("€", replace=[{"text": ""}]), "base": book.revision.to_data()})
+    assert done["replaced"] == 2
+
+
+def test_the_assistant_may_replace_too():
+    from claudia_server.apps import MODEL_METHODS
+
+    assert "search_replace" in MODEL_METHODS["computes"]
+
+
+# ------------------------------------------------------------------ random numbers, alternatives, follow (E6.21-E6.23)
+@pytest.fixture
+def pricing(book):
+    call(book, "add_sheet", {"name": "Pricing"})
+    typed(
+        book,
+        "s1",
+        [
+            (1, 1, "24"),
+            (2, 1, "{800, 1000, 1300}"),
+            (3, 1, "{9.5, 11, 14}"),
+            (4, 1, "8500"),
+            (6, 1, "=B2*B3"),
+            (7, 1, "=B5+B3*B4"),
+            (8, 1, "=B7-B8"),
+            (0, 3, '=RANDOM("normal",1000,150)'),
+        ],
+    )
+    return book
+
+
+def test_cells_carry_alternatives_and_outcomes_for_a_client(pricing):
+    cells = {
+        (r, c): v
+        for r, c, v in call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 10, "col0": 0, "col1": 5})["cells"]
+    }
+    assert cells[(2, 1)]["f"] == "{800, 1000, 1300}"
+    assert [a["v"] for a in cells[(2, 1)]["alts"]] == [800, 1000, 1300]
+    assert cells[(8, 1)]["out"]["n"] == 9 and cells[(8, 1)]["out"]["median"] == 4500
+
+
+def test_the_random_state_is_asked_for_and_resampled(pricing):
+    assert call(pricing, "random_state") == {"revision": "main:2", "seed": 0, "draw": 0}
+    before = call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"]
+    answer = call(pricing, "resample")
+    assert answer["draw"] == 1 and answer["revision"] == "main:3"
+    after = call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"]
+    assert after != before
+    assert call(pricing, "resample", {"steps": 4})["draw"] == 5
+
+
+def test_a_seed_makes_the_numbers_reproducible(pricing):
+    call(pricing, "set_random_seed", {"seed": 42})
+    first = call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"]
+    call(pricing, "set_random_seed", {"seed": 7})
+    call(pricing, "set_random_seed", {"seed": 42})
+    assert (
+        call(pricing, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 3, "col1": 3})["cells"][0][2]["v"] == first
+    )
+    assert call(pricing, "random_state")["seed"] == 42
+
+
+def test_resampling_and_seeds_are_checked_and_are_for_editors(pricing):
+    for params in ({"steps": 0}, {"steps": 1001}, {"steps": "many"}):
+        with pytest.raises(RequestError):
+            call(pricing, "resample", params)
+    for params in ({"seed": -1}, {"seed": 2**60}, {"seed": 1.5}):
+        with pytest.raises(RequestError):
+            call(pricing, "set_random_seed", params)
+    with pytest.raises(RequestError):
+        call(pricing, "resample", account=VERA)
+    assert call(pricing, "random_state", account=VERA)["draw"] == 0
+
+
+def test_the_outcomes_of_a_cell_come_as_a_table(pricing):
+    answer = call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1})
+    table = answer["table"]
+    assert [i["row"] for i in table["inputs"]] == [2, 3] and table["inputs"][0]["count"] == 3
+    assert [r["value"]["v"] for r in table["rows"]] == [3100, 1900, -500, 6000, 4500, 1500, 10350, 8400, 4500]
+    assert table["rows"][1]["choice"] == [0, 1] and table["sampled"] is False
+    assert {s["input"] for s in table["sensitivity"]} == {0, 1}
+
+
+def test_outcome_tables_can_pair_inputs_and_say_when_they_cannot(pricing):
+    paired = call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1, "combine": "pair"})["table"]
+    assert [r["choice"] for r in paired["rows"]] == [[0, 0], [1, 1], [2, 2]]
+    typed(pricing, "s1", [(3, 1, "{9.5, 11}")])
+    with pytest.raises(RequestError) as why:
+        call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1, "combine": "pair"})
+    assert why.value.code == "command_error"
+    with pytest.raises(RequestError):
+        call(pricing, "outcome_table", {"sheet": "s1", "row": 8, "col": 1, "combine": "sideways"})
+
+
+def test_a_cell_without_outcomes_has_no_table(pricing):
+    assert call(pricing, "outcome_table", {"sheet": "s1", "row": 4, "col": 1})["table"] is None
+
+
+def test_following_a_computation_lights_the_connected_cells_of_a_window(pricing):
+    answer = call(pricing, "trace", {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0, 20, 5]})
+    trace = answer["trace"]
+    roles = {(r, c): role for r, c, role in trace["cells"]}
+    assert roles[(1, 1)] == "input" and roles[(6, 1)] == "calc" and roles[(8, 1)] == "output"
+    assert (0, 3) not in roles and trace["connected"] is True and trace["reach"] == "group"
+
+
+def test_following_can_be_cut_to_a_chain_and_to_a_window(pricing):
+    chain = call(pricing, "trace", {"sheet": "s1", "row": 6, "col": 1, "reach": "chain"})["trace"]
+    assert {(r, c) for r, c, _ in chain["cells"]} == {(1, 1), (2, 1), (6, 1), (8, 1)}
+    cut = call(pricing, "trace", {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0, 3, 5]})["trace"]
+    assert {r for r, _, _ in cut["cells"]} <= {0, 1, 2, 3}
+
+
+def test_following_checks_what_it_is_given(pricing):
+    for params in (
+        {"sheet": "s1", "row": 8, "col": 1, "reach": "all"},
+        {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0]},
+        {"sheet": "s1", "row": 8, "col": 1, "window": [5, 0, 1, 5]},
+        {"sheet": "s1", "row": 8, "col": 1, "window": [0, 0, 100000, 100]},
+        {"sheet": "nope", "row": 0, "col": 0},
+    ):
+        with pytest.raises(RequestError):
+            call(pricing, "trace", params)
+
+
+# ------------------------------------------------------------------ the Random generator's preview (E6.22)
+def test_a_distribution_can_be_previewed_before_it_is_typed(book):
+    answer = call(book, "random_preview", {"distribution": "normal", "params": [1000, 150]})
+    assert answer["formula"] == '=RANDOM("normal",1000,150)'
+    assert answer["excel"] == "=NORMINV(RAND(),1000,150)"
+    draws = answer["draws"]
+    assert len(draws) == 200 and draws == sorted(draws)
+    assert 990 < draws[100] < 1010 and answer["continuous"] is True
+
+
+def test_a_preview_with_limits_stays_between_them(book):
+    answer = call(book, "random_preview", {"distribution": "normal", "params": [1000, 150], "low": 900, "high": None})
+    assert answer["formula"] == '=RANDOM("normal",1000,150,900,)'
+    assert min(answer["draws"]) >= 900
+
+
+def test_a_preview_says_when_excel_has_no_formula_for_it(book):
+    answer = call(book, "random_preview", {"distribution": "triangular", "params": [9, 11, 14], "draws": 10})
+    assert answer["excel"] is None and len(answer["draws"]) == 10
+
+
+def test_a_discrete_preview_takes_values_and_weights(book):
+    answer = call(book, "random_preview", {"distribution": "discrete", "params": [1, 3, 2, 1]})
+    assert answer["formula"] == '=RANDOM("discrete",1,3,2,1)' and answer["continuous"] is False
+    assert set(answer["draws"]) == {1, 2}
+
+
+def test_a_preview_checks_what_it_is_given(book):
+    for params in (
+        {"distribution": "nope", "params": [1]},
+        {"distribution": "normal", "params": [1]},
+        {"distribution": "normal", "params": [1, -2]},
+        {"distribution": "normal", "params": ["x", 2]},
+        {"distribution": "poisson", "params": [3], "low": 1},
+        {"distribution": "normal", "params": [1, 2], "draws": 0},
+        {"distribution": "normal", "params": [1, 2], "draws": 5000},
+    ):
+        with pytest.raises(RequestError):
+            call(book, "random_preview", params)

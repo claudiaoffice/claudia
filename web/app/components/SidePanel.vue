@@ -136,7 +136,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
 </script>
 
 <template>
-  <aside class="panel" aria-label="document panel">
+  <aside class="panel" :aria-label="t('document panel')">
     <slot name="top" />
 
     <!-- How the AI treats my requests here (D262): directly above the tabs, so it reads as a setting of the whole
@@ -163,23 +163,23 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
       <button type="button" role="tab" :aria-selected="tab === 'help'" :class="{ active: tab === 'help' }" @click="tab = 'help'">{{ t('Help') }}</button>
     </div>
 
-    <div v-show="tab === 'history'" class="historyChat" aria-label="history and chat">
+    <div v-show="tab === 'history'" class="historyChat" :aria-label="t('history and chat')">
     <div v-if="myProposal" class="proposal" role="alert">
       <p class="ask">
-        <b>{{ myProposal.by }}</b> suggests going to {{ myProposal.label }}.
-        <span v-if="stillWaitingOn.length" class="waiting">Waiting on {{ stillWaitingOn.join(', ') }}.</span>
+        <TransText :text="t('{who} suggests going to {line}.', { line: myProposal.label })"><template #who><b>{{ myProposal.by }}</b></template></TransText>
+        <span v-if="stillWaitingOn.length" class="waiting">{{ t('Waiting on {names}.', { names: stillWaitingOn.join(', ') }) }}</span>
       </p>
       <div class="buttons">
-        <button v-if="canWrite && !haveAgreed" type="button" class="agree" @click="agree">Agree</button>
-        <button v-if="canWrite" type="button" class="decline" @click="decline">Decline</button>
-        <button v-if="canWithdraw" type="button" class="withdraw" @click="withdraw">Withdraw</button>
+        <button v-if="canWrite && !haveAgreed" type="button" class="agree" @click="agree">{{ t('Agree') }}</button>
+        <button v-if="canWrite" type="button" class="decline" @click="decline">{{ t('Decline') }}</button>
+        <button v-if="canWithdraw" type="button" class="withdraw" @click="withdraw">{{ t('Withdraw') }}</button>
       </div>
     </div>
 
     <section class="history">
       <h2>{{ t('History') }} <span class="count">{{ state.entries.length }}</span></h2>
-      <ol ref="history" class="log mono" aria-label="everything that was done to this document">
-        <li v-if="!rows.length" class="empty">Nothing yet. {{ { composes: 'Start writing.', creates: 'Put a text box on the slide.' }[state.app] ?? 'Type into a cell.' }}</li>
+      <ol ref="history" class="log mono" :aria-label="t('everything that was done to this document')">
+        <li v-if="!rows.length" class="empty">{{ state.app === 'composes' ? t('Nothing yet. Start writing.') : state.app === 'creates' ? t('Nothing yet. Put a text box on the slide.') : t('Nothing yet. Type into a cell.') }}</li>
         <template v-for="(row, i) in rows" :key="i">
           <li v-if="row.kind === 'entry'" class="entry" :class="{ undo: row.entry.origin !== 'do' }">
             <span class="dot" :style="{ background: colorOf(state, row.entry.author ?? '') }" />
@@ -190,8 +190,8 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
             <time>{{ clock(row.entry.time) }}</time>
           </li>
           <li v-else class="mark">
-            <span>◆ saved: {{ row.label }}<template v-if="row.author"> · {{ row.author }}</template></span>
-            <button v-if="canWrite && !myProposal" type="button" class="suggest" title="Suggest going back to this checkpoint" @click="suggestRestore(row.number)">↺ restore</button>
+            <span>{{ t('◆ saved: {label}', { label: row.label }) }}<template v-if="row.author"> · {{ row.author }}</template></span>
+            <button v-if="canWrite && !myProposal" type="button" class="suggest" :title="t('Suggest going back to this checkpoint')" @click="suggestRestore(row.number)">{{ t('↺ restore') }}</button>
           </li>
         </template>
       </ol>
@@ -199,29 +199,29 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
 
     <section v-if="state.lines.length > 1 || hiddenLines.length" class="lines">
       <h2>
-        Lines <span class="count">{{ state.lines.length }}</span>
-        <select v-if="isOwner" class="policy" :value="state.restorePolicy" title="What silence at a suggestion's deadline means" @change="setPolicy(($event.target as HTMLSelectElement).value as 'consensus' | 'veto')">
-          <option value="consensus">silence = decline</option>
-          <option value="veto">silence = agree</option>
+        {{ t('Lines') }} <span class="count">{{ state.lines.length }}</span>
+        <select v-if="isOwner" class="policy" :value="state.restorePolicy" :title="t('What silence at a suggestion\'s deadline means')" @change="setPolicy(($event.target as HTMLSelectElement).value as 'consensus' | 'veto')">
+          <option value="consensus">{{ t('silence = decline') }}</option>
+          <option value="veto">{{ t('silence = agree') }}</option>
         </select>
       </h2>
       <ol class="lineList">
         <li v-for="line in state.lines" :key="line.name" class="line" :class="{ active: line.active }">
           <span class="name"><span v-if="line.active" class="dot" />{{ line.name }}</span>
           <span class="actions">
-            <button type="button" @click="togglePeek(line.name)">{{ peeked[line.name] ? 'close' : 'peek' }}</button>
-            <button v-if="!line.active && canWrite && !myProposal" type="button" @click="suggestSwitch(line.name)">suggest switching here</button>
+            <button type="button" @click="togglePeek(line.name)">{{ peeked[line.name] ? t('close') : t('peek') }}</button>
+            <button v-if="!line.active && canWrite && !myProposal" type="button" @click="suggestSwitch(line.name)">{{ t('suggest switching here') }}</button>
           </span>
           <pre v-if="peeked[line.name]" class="peekBox mono">{{ JSON.stringify(peeked[line.name]!.state, null, 1) }}</pre>
         </li>
       </ol>
-      <button v-if="isOwner && hiddenLines.length && !myProposal" type="button" class="discard" @click="discard">Forget every hidden line</button>
+      <button v-if="isOwner && hiddenLines.length && !myProposal" type="button" class="discard" @click="discard">{{ t('Forget every hidden line') }}</button>
     </section>
 
     <section class="chat">
       <h2>{{ t('Chat') }}</h2>
       <ol ref="chatLog" class="messages" aria-live="polite">
-        <li v-if="!state.chat.length" class="empty">Write to everybody, or <b>@ai</b> to ask the assistant. Say <b>@ai help</b> to see what it can do.</li>
+        <li v-if="!state.chat.length" class="empty"><TransText :text="t('Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do.')"><template #ask><b>@ai</b></template><template #help><b>@ai help</b></template></TransText></li>
         <li
           v-for="m in state.chat"
           :key="m.number"
@@ -237,19 +237,19 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
         </li>
         <li v-if="others.length" class="typing">
           <span class="author" :style="{ background: colorOf(state, others[0]!), color: inkOn(colorOf(state, others[0]!)) }">{{ others[0] }}</span>
-          is working<span class="dots"><i /><i /><i /></span>
+          {{ t('is working') }}<span class="dots"><i /><i /><i /></span>
         </li>
       </ol>
       <form class="write" @submit.prevent="send">
         <input
           ref="input"
           v-model="draft"
-          aria-label="chat message"
-          placeholder="Message everyone, or @ai …"
+          :aria-label="t('chat message')"
+          :placeholder="t('Message everyone, or @ai …')"
           autocomplete="off"
           maxlength="2000"
         >
-        <button class="send" type="submit" aria-label="send" :disabled="!draft.trim()">
+        <button class="send" type="submit" :aria-label="t('send')" :disabled="!draft.trim()">
           <svg viewBox="0 0 20 20" width="16" height="16"><path d="M4 10h11m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
       </form>
@@ -372,7 +372,7 @@ ol {
   color: var(--apricot);
 }
 time {
-  color: rgb(230 224 245 / 45%);
+  color: rgb(230 224 245 / 62%); /* 45% was 3.7:1 on the panel; 62% is 6:1 (BITV 1.4.3) */
   font-size: 11px;
 }
 .mark {

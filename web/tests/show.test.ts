@@ -151,7 +151,7 @@ describe('jumping by number', () => {
   })
 })
 
-describe('the clock of the talk (D294)', () => {
+describe('the clock of the talk (D343)', () => {
   it('counts the time since the start, and on this slide', () => {
     const show = new Show(slides(60, 120), { from: 0, now: 100 })
     expect(show.elapsed(130)).toBe(30)
@@ -208,7 +208,7 @@ describe('the clock of the talk (D294)', () => {
   })
 })
 
-describe('taking in what colleagues changed (D292)', () => {
+describe('taking in what colleagues changed (D341)', () => {
   const list = (...ids: string[]): ShowSlide[] => ids.map((id) => ({ id, seconds: 60, notes: '' }))
   it('stays on the same slide when slides come in before it', () => {
     const show = new Show(list('s1', 's2', 's3'), { from: 1, now: 0 })

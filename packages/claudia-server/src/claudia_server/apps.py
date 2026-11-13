@@ -53,9 +53,9 @@ _ENGINES: dict[str, Callable[[], Engine]] = {
 # dispatch for both the model-driven engine and the scripted stand-in alike (SEC-10). An app with no entry here gets
 # none, so an assistant for it can write nothing until somebody decides what it may do.
 MODEL_METHODS = {
-    "computes": ("set_cells", "add_sheet", "structure", "resize_lines"),
+    "computes": ("set_cells", "add_sheet", "structure", "resize_lines", "search_replace"),
     "composes": ("suggest",),
-    # D265: slides and the objects that need no binary data, their words and their words' style; D293: the speaker
+    # D265: slides and the objects that need no binary data, their words and their words' style; D342: the speaker
     # notes. Not images, export, snapping or rotation to begin with, and not the planned times (people plan).
     "creates": (
         "add_slide",

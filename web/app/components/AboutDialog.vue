@@ -11,6 +11,9 @@
 // doesn't version itself independently of the contract yet (the Linux shell's own `__version__` is that build
 // number, and has no web equivalent to show here).
 import { APP_NAME, SHELL_CONTRACT_VERSION } from '~/lib/shell-bridge'
+import { useI18n } from '~/lib/i18n'
+
+const { t } = useI18n()
 
 defineProps<{ app: 'composes' | 'computes' | 'creates' }>()
 const emit = defineEmits<{ close: [] }>()
@@ -20,22 +23,22 @@ const TITLE = APP_NAME
 // Kept in step with `window.py`'s `about_links()` by hand: the two shells have no manifest in common for this, so
 // whichever one of us changes this list has to change the other too.
 const LINKS: { label: string; href: string }[] = [
-  { label: 'Website', href: 'https://www.claudia-office.de' },
-  { label: 'Report an Issue', href: 'https://github.com/claudiaoffice/claudia/issues' },
-  { label: 'Legal', href: 'https://github.com/claudiaoffice/claudia/blob/main/LICENSE' },
+  { get label() { return t('Website') }, href: 'https://www.claudia-office.de' },
+  { get label() { return t('Report an Issue') }, href: 'https://github.com/claudiaoffice/claudia/issues' },
+  { get label() { return t('Legal') }, href: 'https://github.com/claudiaoffice/claudia/blob/main/LICENSE' },
 ]
 </script>
 
 <template>
-  <Modal title="About claudia" @close="emit('close')">
+  <Modal :title="t('About claudia')" @close="emit('close')">
     <div class="about">
       <AppIcon :size="64" :app="app" />
       <h3>{{ TITLE[app] }}</h3>
-      <p class="version mono">Shell contract v{{ SHELL_CONTRACT_VERSION }}</p>
+      <p class="version mono">{{ t('Shell contract v{SHELL_CONTRACT_VERSION}', { SHELL_CONTRACT_VERSION }) }}</p>
       <div class="links">
         <a v-for="link in LINKS" :key="link.label" class="btn" :href="link.href" target="_blank" rel="noopener">{{ link.label }}</a>
       </div>
-      <button class="btn primary" type="button" @click="emit('close')">Close</button>
+      <button class="btn primary" type="button" @click="emit('close')">{{ t('Close') }}</button>
     </div>
   </Modal>
 </template>

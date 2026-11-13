@@ -3,6 +3,20 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-13
+
+Random numbers and alternatives in Excel and OpenDocument files (E6.22, D298, D299).
+
+### Added
+- `RANDOM("dist", …)` is written as the Excel formula that draws the same distribution (`NORMINV(RAND(),…)`,
+  `LOGINV`, `BETAINV`, `GAMMAINV`, `CRITBINOM`, arithmetic on `RAND()` for uniform, exponential, weibull and pert, a
+  `LOOKUP` for a discrete list), with the legacy names, which every Excel and LibreOffice version reads, and OpenFormula
+  in ods. Those formulas are read back as `RANDOM`. A draw Excel has no single formula for (triangular, poisson, a
+  discrete list that is not literal) is written as its value and reported as a loss (`formula`, `random`).
+- Alternatives are written as the first alternative with a cell note (xlsx comment, ods annotation) that lists
+  them; claudia restores them when it reads the file again and the cell still holds the first one. Reported as a loss
+  (`alternatives`). `xlsx_export_losses` now reports both kinds, as `ods_export_losses` does.
+
 ## [0.2.0] - 2026-11-11
 
 OpenDocument spreadsheets, with maximum preservation from the start (D401, D413).

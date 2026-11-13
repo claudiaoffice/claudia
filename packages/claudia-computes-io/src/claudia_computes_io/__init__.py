@@ -11,7 +11,7 @@ only the cells that changed onto the original bytes (``apply_edits_to_ods``), ea
 be kept (``ods_export_losses``, ``ods_import_losses``). Formulas are translated between the model's Excel language
 and OpenFormula by :func:`to_openformula` and :func:`from_openformula`.
 
-xlsx   workbook_to_xlsx, xlsx_to_workbook, apply_edits_to_xlsx, UnsupportedEdit, add_pivot_table
+xlsx   workbook_to_xlsx, xlsx_to_workbook, apply_edits_to_xlsx, xlsx_export_losses, UnsupportedEdit, add_pivot_table
 ods    workbook_to_ods, ods_to_workbook, apply_edits_to_ods, ods_export_losses, ods_import_losses
 formulas   to_openformula, from_openformula, Untranslatable
 """
@@ -19,7 +19,14 @@ formulas   to_openformula, from_openformula, Untranslatable
 from ._version import __version__
 from .ods import apply_edits_to_ods, ods_export_losses, ods_import_losses, ods_to_workbook, workbook_to_ods
 from .openformula import Untranslatable, from_openformula, to_openformula
-from .xlsx import UnsupportedEdit, add_pivot_table, apply_edits_to_xlsx, workbook_to_xlsx, xlsx_to_workbook
+from .xlsx import (
+    UnsupportedEdit,
+    add_pivot_table,
+    apply_edits_to_xlsx,
+    workbook_to_xlsx,
+    xlsx_export_losses,
+    xlsx_to_workbook,
+)
 
 __all__ = [
     "__version__",
@@ -35,5 +42,6 @@ __all__ = [
     "to_openformula",
     "workbook_to_ods",
     "workbook_to_xlsx",
+    "xlsx_export_losses",
     "xlsx_to_workbook",
 ]

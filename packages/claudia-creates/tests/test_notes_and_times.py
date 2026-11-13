@@ -1,4 +1,4 @@
-"""Speaker notes and planned times of a slide (E10.2, D293, D294): both are document content, so setting them is a
+"""Speaker notes and planned times of a slide (E10.2, D342, D343): both are document content, so setting them is a
 command with an exact inverse; both survive the log and a snapshot; removing a slide and undoing it brings them back."""
 
 import pytest
@@ -133,7 +133,7 @@ def test_a_snapshot_of_schema_7_opens_without_notes_or_times(doc):
     del state["notes"], state["times"]
     old = SlideModel.restore(state)
     assert (old.notes_of("s1"), old.time_of("s1"), old.total_time()) == ("", None, 0)
-    assert SlideModel.state_schema == 8
+    assert SlideModel.state_schema == 9
 
 
 def test_undoing_my_notes_after_a_colleague_changed_them_is_refused(doc):

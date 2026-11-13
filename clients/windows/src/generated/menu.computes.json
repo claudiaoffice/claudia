@@ -192,6 +192,18 @@
         ],
         [
           {
+            "accelerators": [
+              "<Primary>f"
+            ],
+            "checkable": false,
+            "id": "edit.search-replace",
+            "kind": "page",
+            "label": "Search & Replace\u2026",
+            "role": null
+          }
+        ],
+        [
+          {
             "accelerators": [],
             "checkable": false,
             "id": "edit.new-sheet",
@@ -312,6 +324,18 @@
             "label": "Colours\u2026",
             "role": null
           }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "id": "format.describe",
+            "kind": "page",
+            "label": "Describe Object\u2026",
+            "role": null
+          }
         ]
       ]
     },
@@ -356,6 +380,48 @@
             "id": "tools.ask",
             "kind": "page",
             "label": "Ask the Assistant\u2026",
+            "role": null
+          }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>r"
+            ],
+            "checkable": false,
+            "id": "tools.random",
+            "kind": "page",
+            "label": "Random Generator\u2026",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "F9"
+            ],
+            "checkable": false,
+            "id": "tools.resample",
+            "kind": "page",
+            "label": "Resample Random Numbers",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>o"
+            ],
+            "checkable": false,
+            "id": "tools.outcomes",
+            "kind": "page",
+            "label": "Outcomes of This Cell\u2026",
+            "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>f"
+            ],
+            "checkable": true,
+            "id": "tools.follow",
+            "kind": "page",
+            "label": "Follow Computation",
             "role": null
           }
         ]

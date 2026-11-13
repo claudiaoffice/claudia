@@ -9,7 +9,9 @@ draft"). Statuses below were re-checked against `54d1245` on 2026-11-05 — ever
 fixed* was re-tested or re-read in that tree, not carried over on trust. Fourth round 2026-11-12 at `7e619a2` (all
 feature branches merged): new items UX-20 to UX-23, SEC-12 to SEC-17, PERF-08, PROC-09 to PROC-16, CODE-13 to CODE-15 (and in the follow-up on `e56e8f9`: UX-24 to UX-27, PROC-17, CODE-16);
 the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-checked in that tree
-(`qa-recommendations.md`).
+(`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
+scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
+DOC-02; the `bitv` items re-checked as merged.
 
 ## How to add a bug
 
@@ -35,7 +37,7 @@ statement in the docs or on the website).
 | SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | verified open |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |
 | SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |
-| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` open |
+| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` open (run by hand 2026-11-13: clean) |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
 | SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12) |
@@ -54,12 +56,12 @@ statement in the docs or on the website).
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |
 | PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |
 | UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |
-| UX-02 | P2 | UX | The grid has no accessible structure | verified open (2026-11-12) |
+| UX-02 | P2 | UX | The grid has no accessible structure | fixed, merged at `cfa2d91` (`grid-a11y.cjs` passes; no screen reader run yet) |
 | UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |
-| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | mostly fixed; one residue (re-measured 2026-11-12) |
+| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | fixed, merged at `fd4b087` (guarded by a test) |
 | UX-05 | P3 | UX | No dark mode | fixed (2026-11-12) |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |
-| UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open (not re-checked) |
+| UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open; the website is not in this repository (searched 2026-11-13) |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
 | UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
@@ -78,6 +80,11 @@ statement in the docs or on the website).
 | UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |
 | UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |
 | UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |
+| UX-28 | P2 | UX / BITV | The page declares no language (WCAG 3.1.1) | fixed, merged at `fd4b087` |
+| UX-29 | P2 | UX / BITV | A keyboard user cannot leave the grid, nor skip the menus and toolbar (WCAG 2.1.2, 2.4.1) | fixed, merged at `fd4b087` (`regions.cjs` passes) |
+| UX-30 | P3 | UX / BITV | The tab title does not name the document (WCAG 2.4.2) | fixed, merged at `fd4b087` |
+| UX-31 | P2 | UX / BITV | Pictures, charts and shapes had no description of their own, and nothing could be marked as decoration (WCAG 1.1.1) | fixed, merged at `cfa2d91` (`describe*.cjs` pass); design to confirm |
+| UX-32 | P3 | UX / BITV | The workspace pages have no landmarks (axe `landmark-one-main`, `region`; WCAG 1.3.1, 2.4.1) | **new, open** |
 | UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |
 | UX-27 | P3 | UX / creates | A new object lands exactly on the previous one, so the second hides the first | **new, open** |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
@@ -109,10 +116,30 @@ statement in the docs or on the website).
 | CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed |
 | CODE-11 | P3 | Code | Windows client: its generated menu is stale, and a test depends on the clone's folder name | **fixed** |
 | CODE-12 | P3 | Code | `.gitignore` ignores the tracked `docs/` sources; two test documents are committed | **fixed** |
-| CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | **new, open** |
-| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | **new, open** |
+| CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | open (re-checked 2026-11-13; now also SEC-18, PERF-10) |
+| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | open; 14 identical files at `cfa2d91` (11 before) |
 | CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
 | CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |
+| SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **new, open** |
+| PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |
+| PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |
+| PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **new, open** |
+| UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **new, open** |
+| UX-34 | **P1** | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | **new, needs decision** |
+| UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **new, open** |
+| UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **new, open** |
+| UX-37 | P3 | UX / composes | composes shows an act/suggest switch that changes nothing | **new, open** |
+| PROC-18 | **P1** | Process / CI | The gate fails on every fresh clone: a note names `web/public/wasm`, a build output | **fixed** 2026-11-13 |
+| PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |
+| PROC-20 | **P1** | Process / CI | Two end-to-end tests on `main` fail: `demo.cjs` (the grid's blank active cell) and the Linux client (D915) | **fixed** 2026-11-13 |
+| PROC-21 | P2 | Process / CD | The demo deployment checks `demo.claudiaoffice.de`, a domain that is not ours | **fixed** 2026-11-13 |
+| PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |
+| CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **new, open** |
+| CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **new, open** |
+| CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |
+| CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |
+| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | **new, open** |
+| DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
@@ -390,7 +417,7 @@ bar.
 **Re-checked 2026-11-12: fixed (read).** `MenuBar.vue` now has `aria-haspopup`/`aria-expanded` and arrow-key
 handling (commit 47519fa). Not yet tried with Orca or NVDA.
 
-### UX-02 · The grid has no accessible structure · P2 · verified open
+### UX-02 · The grid has no accessible structure · P2 · fixed on `bitv`, awaiting commit
 **Evidence (read, `54d1245`).** `SheetGrid.vue` has exactly two ARIA attributes: `role="grid"` and
 `aria-label="table"` (plus `aria-label="editing cell"` on the editor). No `role="row"`, no `role="gridcell"`, no
 `aria-rowcount`/`aria-colcount`, no `aria-rowindex`/`aria-colindex`, no `aria-activedescendant`, no `aria-selected`. A
@@ -407,6 +434,25 @@ cell, and a live region for values changed by other people.
 **Re-checked 2026-11-12: still open.** `SheetGrid.vue` has `role="grid"` and still no `row`/`gridcell`,
 `aria-rowindex`/`aria-colindex` or `aria-activedescendant`. The grid is the one part of computes a screen-reader user
 cannot work with; E5.10 (accessibility baseline) is `todo`.
+
+**Fixed on `bitv` (2026-11-13).** `SheetGrid.vue` now says what it is: `aria-rowcount` 10001 and `aria-colcount` 703 (the
+sheet and its header row and column), `aria-multiselectable`, a name that includes the sheet; the column letters are a
+`row` of `columnheader`s (row 1); every drawn row is a `row` with `aria-rowindex`, a `rowheader` and its `gridcell`s with
+`aria-colindex` and `aria-selected`. Focus stays on the grid and `aria-activedescendant` names the active cell, which is
+always drawn, empty or not; its name is "B2, 9600, formula", "B3, error #DIV/0!: …", "B5, empty", with alternatives,
+outcomes and the part in a followed computation said in words (`lib/grid-a11y.ts`, tested first). A range, a whole
+row or column and a selected object are said once the selection settles, in a polite live region next to the grid
+(`Workspace.vue`). The header and row-number layers keep their look by z-order instead of by clipping containers.
+**Test:** `web/tests/grid-a11y.test.ts` (words), `web/e2e/grid-a11y.cjs` (structure, the active cell's name through
+Home/arrows, the range announcement, and axe-core 4.14 over the whole computes page against WCAG 2.0/2.1/2.2 A and AA:
+no violations). Found and fixed on the way, outside the grid: the sheet tab list contained the "new sheet" button
+(`aria-required-children`), the Draw button's name did not contain its visible text (2.5.3), and two texts fell below 4.5:1
+(the history panel's times on the dark panel, 45% to 62%; the revision label's 80% opacity).
+**Not done / not known.** No screen reader (NVDA, JAWS, Orca, VoiceOver) was run, so how they read the row wrappers and
+`aria-activedescendant` is unverified, and axe lists items for a person to judge (four contrast checks on overlays, three
+names). Whole rows and columns are announced, not marked cell by cell (only the drawn cells carry `aria-selected`). The
+other apps are not grids. Another person's or the `ai`'s changes to cells are not announced (the original fix asked for
+that): a separate story.
 
 ### UX-03 · Dialogs do not manage focus · P2 · verified open
 **Evidence (read, `54d1245`).** `Modal.vue` is a plain element with a global `keydown` listener for Escape. No
@@ -451,6 +497,12 @@ palette cannot regress silently.
 text (`FooterBar.vue` `.tabs button.on`, `StyleSpec.vue`, `SlideWorkspace.vue`): needs ≥ 4.5:1 (e.g. `#a75a17`). And
 `--iris` as text on the dark surface is 2.44:1 — nothing uses it that way today, but nothing stops it. **Acceptance.**
 A vitest that reads `tokens.css` and checks every text token against both surfaces, so the next colour cannot regress.
+
+**Fixed on `bitv` (2026-11-13), awaiting commit.** `web/tests/tokens.test.ts` is that vitest (arithmetic in
+`web/tests/contrast.ts`). It showed the residue was wider than measured: `--app-dark` is also text on the app's own soft
+tint, where computes' teal measured 4.36:1 as well, and the suggested `#a75a17` for creates would have reached only
+4.49:1 there. Now teal `#0d7768` (4.73:1 on its soft tint, 4.92:1 on paper) and apricot `#9c5314` (5.05:1, 5.19:1);
+composes' `#b8386a` already passed. `--iris` as text on the dark surface stays unfixed and unguarded: nothing uses it.
 
 ### UX-05 · No dark mode · P3 · verified open
 **Evidence (measured).** `web/app/assets/tokens.css` contains **zero** `prefers-color-scheme` rules, and `--surface` is
@@ -1068,6 +1120,54 @@ by `demo.cjs`), a real radio group (arrow keys, one tab stop).
 dragging. **Fix.** Offset each new object by one grid step (or place it in the first free spot) when another object
 sits exactly there.
 
+### UX-28 · The page declares no language · P2 · fixed on `bitv`, awaiting commit
+**Evidence (read, 2026-11-13).** No `lang` on `<html>`: `nuxt.config.ts` set none and nothing in `web/app` did, so a screen
+reader chose its voice by guesswork, for a UI that is German or English (WCAG 3.1.1, level A). **Fix.** `lang="en"` in the
+build, and `useI18n` declares the language once its catalog has loaded (`languageOf`, `setPageLanguage` in
+`web/app/lib/i18n.ts`): a German browser whose catalog did not load stays `en`, because that is what is on the screen.
+The open dialog and the admin pages are English only; `app.vue` puts `en` back when a document is left. **Test:**
+`web/tests/i18n.test.ts`; `web/e2e/regions.cjs` checks `en`, and a `de-DE` browser was checked by hand to give `de`.
+
+### UX-29 · A keyboard user cannot leave the grid · P2 · fixed on `bitv`, awaiting commit
+**Evidence (read, 2026-11-13).** `SheetGrid.vue`'s `onKey` takes Tab and Shift+Tab for stepping between cells and
+`preventDefault`s them, and nothing else moved focus out (WCAG 2.1.2 no keyboard trap, 2.4.1 bypass blocks). **Fix.** F6 and
+Shift+F6 go to the next and previous part of the window (menus, toolbar, document, panel, footer; hidden or empty parts
+are skipped; wrapping round), in all three apps, and from the formula bar. `web/app/lib/regions.ts` (`cycleRegions`),
+`regionShortcuts` in `shortcuts.ts`, wired once in `DocumentFrame.vue`; parts are marked `data-region`. Listed in
+Config ▸ Shortcuts. **Test:** `web/tests/regions.test.ts`, `shortcuts.test.ts`, `web/e2e/regions.cjs` (Chrome only).
+**Left.** F6 does not work while a cell is being edited in the grid (the editor keeps its keys: finish with Enter or Esc);
+in a browser tab F6 may also be claimed by the browser (Firefox not tried); no menu item carries it.
+
+### UX-30 · The tab title does not name the document · P3 · fixed on `bitv`, awaiting commit
+Every tab of one app read "Claudia Computes" (WCAG 2.4.2). `tabTitle(app, documentName)` now gives
+"budget 2027 – Claudia Computes". **Test:** `web/tests/shell-bridge.test.ts`, `regions.cjs`.
+
+### UX-31 · Pictures, charts and shapes had no description of their own · P2 · fixed on `bitv`, awaiting commit
+**Evidence.** An image had its alt text only from the import (and the import dialog of the sheet insisted on one); a shape,
+a text box and a chart had none; nothing said that an object is only decoration, so a screen reader read "image" for
+every flourish (WCAG 1.1.1, BITV 1.1.1 Nicht-Text-Inhalte).
+**Fix.** Every object has `description` and `decorative` (`claudia_core.ObjectBody`, command schema 2 with an upcaster, so
+old documents replay), a new undoable command `DescribeObject`, and the server method `describe_object` in computes and
+creates (composes has no objects yet). A picture still needs words or the decorative mark; for anything else a description
+is optional. Format ▸ Describe Object… (Ctrl+Alt+D, `format.describe`, also on the Windows/macOS menus) and the object's
+context menu on a slide ("Describe…") open one dialog with a 300-character counter and a "Decorative" box; the import
+dialogs have the box too. The accessible name of an object is its kind plus its description ("Picture: …", "Picture
+(decorative)", "Picture (no description)"); a decoration is `role="presentation"` and hidden. Ctrl+Alt+PageDown/PageUp step
+through the objects of a sheet, which only the mouse reached. A chart tab is named by its chart.
+**Export.** PPTX: `descr` on `p:cNvPr` and the decorative extension (`adec:decorative`, from memory of the 2017 extension:
+**verify in PowerPoint**). ODP: `svg:desc`; ODF 1.3 has no attribute for decorative, so the export reports a loss
+(`odp_export_losses`). ODS and XLSX write no floating objects yet. Import of descriptions from those files is not built.
+**Test:** `packages/claudia-core/tests/test_object_description.py`, `claudia-creates/tests/test_descriptions.py`, the server
+tests of both apps, `claudia-creates-io` pptx/odp tests, `web/tests/descriptions.test.ts`, `object-menu.test.ts`,
+`object-cycle.test.ts`, `clients/linux/tests/test_manifest.py`, `web/e2e/describe.cjs`, `describe-creates.cjs`.
+**Design to confirm:** `notes/mockups/describe-object-and-grid-structure.svg` (built before it was agreed).
+
+### UX-32 · The workspace pages have no landmarks · P3 · new, open
+axe (best-practice rules, not WCAG ones) finds no `main` landmark and content outside any landmark on the computes page.
+F6 and the skip link (UX-29) are the bypass the page has; landmarks would give screen readers the same jump list: `header`
+for the menu and toolbar, `main` for the document, `complementary` for the panel, `contentinfo` for the footer. Needs a look at
+how `DocumentFrame.vue` is laid out in all three apps before touching it.
+
 ### PROC-17 · `demo.cjs` fails once the client sends *suggest* · P2 · fixed 2026-11-12
 The switch (E7.7) made every client send *suggest* by default; computes cannot propose yet, so `@ai build an example
 budget` was refused and the script waited for "Done." in vain. It now chooses "Act at once" first and checks the switch.
@@ -1076,6 +1176,141 @@ budget` was refused and the script waited for "Done." in vain. It now chooses "A
 `clients/macos/src/generated/menu.creates.json` had no Format ▸ Apply Style… (the Linux manifest has had it); the
 Windows job runs `generate_menu.py --all --check`, but no job does that for macOS. Regenerated with this round's menu
 changes, and the `windows-client` job now runs the same `--check` for `clients/macos` (Python, no Mac needed).
+
+## Round of 2026-11-13 at `cfa2d91`
+
+### SEC-18 · A search pattern the static guard lets through freezes the whole server · P1 · new, open
+**Evidence (measured).** `claudia_core.search` refuses patterns that "could backtrack without end" by looking at their
+shape (`_backtracks`), because Python's `re` cannot be interrupted. Two shapes pass it and are exponential: `(a|a?)+!`
+takes 12.5 s on 24 characters, `(x\w*)*!` 1.2 s, each doubling with every further character (`(\w|\d)+!` and
+`(.|\s)*!` pass too, Python happens to optimise them). `search_find` checks its 2 s budget *between* cells, and every
+method runs synchronously on the event loop, so one request from anybody who can open a document stops every document on
+that server for minutes. The AI user searches through the same methods (D261). D284 asked for "a time budget in the worker
+pool"; the as-built note replaced it with the guard.
+**Fix (to agree, see the recommendations).** Make the search interruptible instead of making the guard longer: either
+the `regex` package with its `timeout=` (also gives `\p{L}`; D287 is still open for exactly this), or the search in the
+`WorkerPool` (CODE-13) with a hard deadline that kills the worker. Keep the guard as a quick early answer while typing.
+**Test:** `packages/claudia-core/tests/test_search.py::test_a_pattern_the_guard_lets_through_still_cannot_hold_the_server`
+(strict `xfail` until fixed; remove the mark with the fix). Add a server test that `/api/health` answers while a search
+runs.
+
+### PERF-09 · Making a webfont blocked every request of every document for seconds · P2 · fixed 2026-11-13
+**Evidence (measured).** `GET /api/fonts/{sha256}.woff2` made the WOFF2 file on first use inside an `async` handler:
+2.4 s for DejaVu Sans (740 KB), 37 s for a 10 MB font. A page asks for several fonts on first load after a deploy.
+**Fix.** The route is a plain function, so FastAPI runs it in its thread pool (`claudia_server/fonts.py`). **Test:**
+`test_server_fonts.py::test_making_a_webfont_does_not_hold_up_the_rest_of_the_server`.
+
+### PERF-10 · What-if outcomes are recalculated on the event loop · P2 · new, open
+**Evidence (measured).** Three inputs with 30 alternatives each and 1,000 formulas reading them: every edit of an input
+*or of any of the 1,000 dependent cells* takes 9.0–9.5 s (`outcomes.py`: 27,000 combinations, sampled to 2,000 ×
+1,000 cells, `MAX_WORK = 2_000_000`). An edit elsewhere costs 1 ms. The calculation is synchronous inside the command, so
+the server answers nobody for those seconds.
+**Fix.** Apply the edit and answer at once with the first alternatives' values; compute the summaries in the worker
+pool (CODE-13) and send them as their own event (`outcomes` with the revision they belong to; a newer revision cancels an
+older run). Then lower `MAX_WORK` for the synchronous path to what fits in ~50 ms, or drop it. **Test:** a server test
+with the model above that an edit is answered in < 200 ms and the outcomes event follows.
+
+### PERF-11 · Search preview and replace have no time budget · P3 · new, open
+`_plan` (`search_preview`, `search_replace`) scans the whole scope with no deadline; only `search_find` has one. With
+SEC-18 fixed this is linear, but a large workbook still holds the loop. **Fix:** the same budget, or the same worker.
+
+### UX-33 · A new document starts with an undoable step · P2 · new, open
+**Evidence (measured, screenshots).** In a new workbook Edit's first item is "Undo Add sheet"; Ctrl+Z leaves "This
+document has no sheet yet." In a new text or deck it is "Undo Language" (D915: the maker's client sets the language right
+after creating). A person's first Ctrl+Z undoes something she never did. It also broke the Linux client's end-to-end
+test (PROC-20).
+**Fix.** Make the first sheet and the starting language part of creating the document (a `create` parameter, or a
+setup step the log marks as not undoable), not a command in the person's undo stack. **Test:** per app, a new document
+has nothing to undo; a browser script presses Ctrl+Z in a new workbook and still sees Sheet1.
+
+### UX-34 · In computes and creates the AI refuses every change by default · P1 · new, needs decision
+**Evidence (read and measured).** D262 makes *suggest* the default in all three apps and says proposals (D263) must come
+before the AI writes anything in computes or creates. Proposals exist only in composes (`SUGGEST_METHODS`:
+`computes: ()`, `creates: ()`), so with the default switch every request that would change something is answered "I
+cannot prepare a proposal in this app yet … Switch to act mode". To a first-time user the AI looks broken — UX-20's
+symptom again, now by design.
+**Options.** (a) Build proposals for computes and creates first (E7.8, D263; days). (b) Until then show what composes
+shows: the switch disabled with one line, here "This app's AI acts; it cannot suggest yet", and send *act*. (c) Per-app
+default. Recommendation: (b) now, (a) as planned. **Test:** `demo.cjs` asks `@ai` without touching the switch and sees
+a change.
+
+### UX-35 · Menu entries without a shortcut · P2 · new, open
+**Evidence (measured).** The project rule is that every menu entry has a key shortcut. In the shared manifest 30
+(composes), 37 (computes) and 33 (creates) entries have none. Part of that is display only: Save, Undo, Redo, Copy, Cut,
+Paste are handled by the page and therefore not bound natively (`test_keys_the_page_handles_itself_are_not_bound_a_second_time`),
+so the GNOME menu shows no key for them. Truly without a key: New, Open, Save New Checkpoint, Download, Manage ▸ (6),
+Close, Paste As ▸ Plain Text, Apply Style, All Styles, Colours, the View toggles, Ask the Assistant, Help ▸ (4),
+computes' New Sheet, Row ▸, Column ▸, Clear Cells, Image, Chart, Names, SQL; creates' New Slide, Text Box, shapes.
+**Fix.** Designer: one key table for the three apps (GNOME HIG first: Ctrl+N, Ctrl+O, Ctrl+W, Ctrl+Shift+S, F1, F10…),
+with an explicit, short list of exemptions (the language picker). Shell: show the page's keys in the native menu with
+GMenu's `accel` attribute (display only, no binding). **Test:** a manifest test "every action has an accelerator or is
+on the exemption list", and the same over the web menus.
+
+### UX-36 · Features of this round are missing from the native desktop menus · P2 · new, open
+**Evidence (measured: web menu ids against `manifest.for_app`).** The desktop shells hide the web menu bar and show the
+manifest's menu instead, so these are not in the desktop menus: File ▸ Print… (composes, creates), Format ▸ Bulleted /
+Numbered List, Edit ▸ Soft Hyphen, Non-breaking Hyphen (composes); Edit ▸ Image…, Chart…, Format ▸ Clear Cell Style,
+Tools ▸ Names…, SQL… (computes); Edit ▸ Image…, View ▸ Grid (creates). Some are reachable by toolbar or key, Print only by
+Ctrl+P. The project rule "check whether the desktop clients need adapting" was not caught by any test, because the
+existing test checks only the other direction (native ids exist in the web source).
+**Fix.** Add the actions to `manifest.py`, regenerate the Windows and macOS menus, translate. **Test:** the reverse
+check: every web menu `id` of an app is in its manifest, or on a named list of web-only items with the reason.
+
+### UX-37 · composes shows an act/suggest switch that changes nothing · P3 · new, open
+The switch is live in composes and says beneath it "Text documents: the AI suggests either way." A control that does
+nothing should not be offered. **Fix:** show the line in place of the switch (or disable it), the same component as
+UX-34 (b).
+
+### PROC-18 · The gate fails on every fresh clone · P1 · fixed 2026-11-13
+`tests/test_notes_claim_built_files.py` read `web/public/wasm` in `notes/e9-print-and-layout.md` as a claim about the
+tree; that folder is made by `npm run build`, so CI's Python job (no build) failed on all three OSes. The check now
+skips paths `.gitignore` names (build output). **Test:** `test_a_build_output_named_in_gitignore_is_not_expected_in_a_fresh_checkout`.
+
+### PROC-19 · Browser scripts and a client that CI never ran · P2 · fixed 2026-11-13
+`e2e:lists`, `e2e:regions`, `e2e:grid-a11y`, `e2e:describe`, `e2e:describe-creates` and `e2e:macos-shell` were in
+`web/package.json` and in no workflow; the macOS client's vitest, type check and build ran nowhere; `docker.yml` and
+`deb.yml` did not run for a change in `layout/`, which the web app links. All added (all 18 scripts pass locally in CI's
+order). **Test:** `tests/test_ci_workflow.py`.
+
+### PROC-20 · Two end-to-end tests on `main` fail · P1 · fixed 2026-11-13
+`demo.cjs` counted the grid's empty active cell (`.cell.blank`, drawn for `aria-activedescendant`, UX-02) as a cell; the
+Linux client's test asserted that a new text has nothing to undo, which D915 changed (UX-33). CI's `e2e` and
+`linux-client` jobs were red at `cfa2d91`. Both tests corrected.
+
+### PROC-21 · The demo deployment checked the wrong domain · P2 · fixed 2026-11-13
+`deploy-demo.yml` defaulted `DEMO_URL` to `demo.claudiaoffice.de`; the domain is `claudia-office.de`. Without the
+repository variable set, the last step failed after a good deployment (or checked somebody else's host).
+
+### PROC-22 · The LibreOffice job may still fail silently · P3 · new, open
+`odf-libreoffice` is `continue-on-error` "until it has a track record". It has read 31 of 31 files in every round since
+PROC-11. **Fix:** make it blocking; pin the LibreOffice version in the log line so a distribution update is visible.
+
+### CODE-17 · Three names for "use this browser" · P3 · new, open
+`tests/e2e` reads `CLAUDIA_CHROMIUM`, five `web/e2e` scripts `CHROME`, five `CHROMIUM`, the rest nothing. **Fix:** one
+`web/e2e/browser.cjs` (`launch()` reading `CLAUDIA_CHROMIUM`, with `--no-sandbox` where needed) used by every script.
+
+### CODE-18 · The search "for all three apps" speaks only in sheets · P2 · new, open
+`SearchPanel.vue` says it is one panel for all apps (D284), but matches, `leave`, `skipped` and `left_out` are
+`{sheet, row, col}` in the panel, in `session.ts` and in the protocol. Composes (paragraph, offset) and creates (slide,
+object) will not fit. **Fix before search reaches composes:** an opaque `where` (a key and a label from the host) in the
+panel and the protocol; computes maps it to its cells. Discuss first: it changes the method signatures (API version).
+
+### CODE-19 · Debugging code left in the journal · P3 · new, open
+`claudia_container/journal.py` keeps `_open_in_this_process` (scans every object of the garbage collector) from the
+Windows CI hunt, and `_replace` sleeps up to ~10 s on Windows on the event loop (with PERF-02). The CI cause was
+Controlled Folder Access. **Fix:** drop the diagnostic; move the retry off the loop with PERF-02.
+
+### CODE-20 · The image's build tool is not pinned · P3 · new, open
+`COPY --from=ghcr.io/astral-sh/uv:latest`: a new uv can change the image without a commit. **Fix:** pin a version (and
+digest), updated by Dependabot.
+
+### CODE-21 · One module for every computes method · P3 · new, open
+`claudia_server/computes.py` is 1,228 lines: cells, names, SQL, styles, images, charts, random numbers, outcomes, search.
+composes already split its lists out (`composes_lists.py`). **Fix:** one module per feature, registered on the same table.
+
+### DOC-02 · Stale launcher name · P3 · fixed 2026-11-13
+`start-client.sh` became `start-linux-client.sh` (148610e); `clients/linux/README.md`, the script's own usage text and
+the macOS and Windows launchers' comments still named the old file. Changelogs and dated notes keep the old name.
 
 ## Website
 
@@ -1113,6 +1348,11 @@ passwords and encryption at rest, recovery keys, formulas, styles, three apps, a
   parses the tree needs 3.14.
 - Credentials travel in the first WebSocket frame, never in a URL; the name `ai` is protected Unicode-aware; message
   size, text length, region count and `set_cells` size are limited; slow clients are dropped rather than buffered.
+
+## Not reviewed (and why), round of 2026-11-13
+Firefox (no Firefox here; every browser script ran in Chromium 153 only), the Windows and macOS clients on their own
+systems (their window scripts ran with Neutralino faked), a screen reader, a real language model, the live demo, the
+Docker image (no Docker daemon here: the Dockerfile was read, not built), the print output on paper or in Acrobat.
 
 ## Not reviewed (and why), round of 2026-11-12
 

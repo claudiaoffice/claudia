@@ -14,6 +14,9 @@ const props = defineProps<{
    * redraws on resize instead. */
   width?: number
   height?: number
+  /** What a screen reader calls the picture, when this view is the whole of what it shows (a chart tab). A floating
+   * object is named by the object that holds it, so it passes none. */
+  label?: string
 }>()
 
 const el = ref<HTMLDivElement | null>(null)
@@ -69,7 +72,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="el" class="chart-view" :class="{ fixed: width !== undefined }" :style="width !== undefined ? { width: `${width}px`, height: `${height}px` } : {}" />
+  <div ref="el" class="chart-view" :role="label ? 'img' : undefined" :aria-label="label" :class="{ fixed: width !== undefined }" :style="width !== undefined ? { width: `${width}px`, height: `${height}px` } : {}" />
 </template>
 
 <style scoped>

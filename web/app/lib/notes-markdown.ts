@@ -1,4 +1,4 @@
-// The speaker notes of a slide are Markdown (D293), read the same small way everywhere (D298): paragraphs, strong and
+// The speaker notes of a slide are Markdown (D342), read the same small way everywhere (D347): paragraphs, strong and
 // emphasis, bullets and numbers (two spaces a level), headings (shown as bold lines), block quotes, links, code. It is
 // never HTML: the notes are turned into lines of spans and the component draws those, so what a colleague wrote cannot
 // put markup, a picture or a script on someone's screen. A link shows its words and its address and is not
