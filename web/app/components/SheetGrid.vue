@@ -18,6 +18,7 @@ import {
   type Axis,
   type SizeTable,
 } from '~/lib/line-sizes'
+import { NO_MARKS, type SearchMarks } from '~/lib/search'
 import { purposeVar, tableBoxes, type NameInfo, type TableBox } from '~/lib/names'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
@@ -46,6 +47,8 @@ const props = defineProps<{
   anchored: boolean
   /** The selected cells as a style host (`lib/cell-style-host.ts`): what the popover styles with no object selected. */
   cellHost?: StyleHost
+  /** What a search found on this sheet, and what a replacement would show (`lib/search.ts`, E5.15). */
+  marks?: SearchMarks
 }>()
 const emit = defineEmits<{
   /** Asks the workspace to open the all-styles dialog, which owns the modal layer. */
@@ -181,10 +184,34 @@ const painted = computed(() => {
       const at = { key: r * 100_000 + c, left: x(c), top: y(r), width: colWidthAt(c), height: rowHeightAt(r) }
       if (!look.plain) boxes.push({ ...at, css: look.box })
       if (content === null || (editHere.value && props.edit!.row === r && props.edit!.col === c)) continue
-      texts.push({ ...at, text: show(content), kind: content.t, look, spill: content.spill === true, head: heads.has(at.key) })
+      texts.push({ ...at, text: props.marks?.after.get(at.key) ?? show(content), kind: content.t, look, spill: content.spill === true, head: heads.has(at.key) })
     }
   }
   return { boxes, texts }
+})
+
+/** The cells a search marks in the window: a band and an underline (never colour alone), a corner for a hit inside a
+ * formula, a heavier frame for the one being looked at, and a lock for a cell a replacement would have to skip. */
+const found = computed(() => {
+  const marks = props.marks ?? NO_MARKS
+  const { r0, r1, c0, c1 } = range.value
+  const out: { key: number; style: Record<string, string>; current: boolean; formula: boolean; blocked: string | null; changes: boolean }[] = []
+  const keys = new Set<number>([...marks.cells.keys(), ...marks.blocked.keys()])
+  for (const key of keys) {
+    const r = Math.floor(key / 100_000)
+    const c = key % 100_000
+    if (r < r0 || r > r1 || c < c0 || c > c1) continue
+    const mark = marks.cells.get(key)
+    out.push({
+      key,
+      style: { left: `${x(c)}px`, top: `${y(r)}px`, width: `${colWidthAt(c)}px`, height: `${rowHeightAt(r)}px` },
+      current: mark?.current === true,
+      formula: mark?.formula === true,
+      blocked: marks.blocked.get(key) ?? null,
+      changes: marks.after.has(key),
+    })
+  }
+  return out
 })
 
 const PADDING = ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']
@@ -831,6 +858,14 @@ defineExpose({
           >▾</button>
         </template>
 
+        <div
+          v-for="f in found"
+          :key="`f${f.key}`"
+          class="found"
+          :class="{ current: f.current, formula: f.formula, blocked: f.blocked !== null, changes: f.changes }"
+          :style="f.style"
+          :data-search-mark="f.current ? 'current' : 'match'"
+        />
         <div class="selection" :class="{ picking: edit && pointing }" :style="selectionStyle" />
         <div class="active" :class="{ picking: edit && pointing }" :style="activeStyle" />
         <div v-for="r in referenced" :key="r.key" class="reference" :style="{ ...r.style, '--color': r.color }" />
@@ -1047,6 +1082,32 @@ defineExpose({
 .selection.picking,
 .active.picking {
   border-style: dashed;
+}
+.found {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--purpose-input) 55%, transparent);
+  border-bottom: 3px solid var(--app);
+}
+.found.current {
+  border: 2px solid var(--ink);
+  background: color-mix(in srgb, var(--purpose-input) 80%, transparent);
+}
+.found.formula::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-top: 8px solid var(--app);
+  border-left: 8px solid transparent;
+}
+.found.blocked {
+  background: repeating-linear-gradient(135deg, transparent 0 4px, var(--faint) 4px 8px);
+  border-bottom-style: dashed;
+}
+.found.changes {
+  background: color-mix(in srgb, var(--app) 22%, transparent);
 }
 .reference {
   position: absolute;

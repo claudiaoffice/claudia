@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { chordLabel, dispatch, isTypingTarget, matches, sharedShortcuts } from '~/lib/shortcuts'
+import { chordLabel, dispatch, isTypingTarget, matches, searchShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 
 function key(partial: Partial<{ key: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }>) {
   return { key: '', ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...partial }
@@ -63,5 +63,28 @@ describe('isTypingTarget', () => {
     expect(isTypingTarget({ tagName: 'TEXTAREA' })).toBe(true)
     expect(isTypingTarget({ tagName: 'DIV' })).toBe(false)
     expect(isTypingTarget(null)).toBe(false)
+  })
+})
+
+describe('searchShortcuts', () => {
+  it('is Find (Ctrl+F) and Replace (Ctrl+H), with the ids of the shell contract where there is one', () => {
+    const find = vi.fn()
+    const replace = vi.fn()
+    const defs = searchShortcuts({ find, replace, canReplace: () => true })
+    expect(defs.map((d) => [d.id, chordLabel(d.chord)])).toEqual([
+      ['edit.search-replace', 'Ctrl+F'],
+      ['edit.replace', 'Ctrl+H'],
+    ])
+    dispatch(defs, key({ key: 'f', ctrlKey: true }))
+    dispatch(defs, key({ key: 'h', ctrlKey: true }))
+    expect(find).toHaveBeenCalledOnce()
+    expect(replace).toHaveBeenCalledOnce()
+  })
+
+  it('does not replace for somebody who can only look, and leaves Ctrl+H to the browser then', () => {
+    const replace = vi.fn()
+    const defs = searchShortcuts({ find: () => {}, replace, canReplace: () => false })
+    expect(dispatch(defs, key({ key: 'h', ctrlKey: true }))).toBeNull()
+    expect(replace).not.toHaveBeenCalled()
   })
 })

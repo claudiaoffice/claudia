@@ -42,6 +42,9 @@ export interface DocumentMenuContext {
   print?: () => void
 }
 
+/** The shortcut of Edit ▸ Search & replace… (E5.15); `searchShortcuts` in `shortcuts.ts` is what listens for it. */
+export const SEARCH_CHORD = { key: 'f', ctrl: true } as const
+
 /** The shortcut of File ▸ Print… (D906). */
 export const PRINT_CHORD = { key: 'p', ctrl: true } as const
 
@@ -134,6 +137,13 @@ export function clipboardItems(c: DocumentMenuContext, paste: () => void): MenuI
       items: [{ id: 'edit.paste-as-plain', label: t('Plain text'), action: () => paste(), disabled: viewer }],
     },
   ]
+}
+
+/** Edit ▸ Search & replace…, the same entry in every app (D281): opens the floating panel. Finding changes nothing, so
+ * it is there for somebody who can only look; the panel itself keeps Replace off for them. */
+export function searchItem(c: DocumentMenuContext, search: { open: () => void }): MenuItem {
+  const { t } = c
+  return { id: 'edit.search-replace', label: t('Search & replace…'), hint: chordLabel(SEARCH_CHORD), action: () => search.open() }
 }
 
 /** View ▸ History and chat. */

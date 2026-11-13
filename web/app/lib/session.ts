@@ -11,6 +11,7 @@ import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
 import type { NameDraft, NameInfo } from './names'
+import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchQuery } from './search'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
 
@@ -94,6 +95,20 @@ export interface State extends BaseState {
 }
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
+
+/** Where a search looks: every sheet, one sheet, or a block of cells on it (first row, first column, last row, last column). */
+export interface SearchScope {
+  sheet?: string
+  range?: [number, number, number, number]
+}
+
+/** A match, or with `match: null` a whole cell, that a replacement leaves alone. */
+export interface SearchLeave {
+  sheet: string
+  row: number
+  col: number
+  match: number | null
+}
 
 export class Session extends BaseSession<State> {
   private loaded = new Set<string>()
@@ -489,6 +504,32 @@ export class Session extends BaseSession<State> {
   async setCells(sheet: string, cells: { row: number; col: number; input: string }[]): Promise<boolean> {
     const done = await this.attempt('set_cells', { sheet, cells, base: this.state.revision })
     return done !== false
+  }
+
+  // ------------------------------------------------------------------------------ search and replace (E6.20)
+  /** What a search finds on `scope` (`{}`: every sheet; `{sheet}`; `{sheet, range}`), in the kinds of text asked for.
+   *  `null` when it could not be asked: a search runs while she types, so a failure makes no noise. */
+  async searchFind(query: SearchQuery, kinds: string[], scope: SearchScope): Promise<SearchAnswer | null> {
+    try {
+      return await this.need().request<SearchAnswer>('search_find', { query, kinds, scope })
+    } catch {
+      return null
+    }
+  }
+
+  /** What a replacement would change and what it would skip (and why); nothing is changed. */
+  async searchPreview(query: SearchQuery, kinds: string[], scope: SearchScope, leave: SearchLeave[]): Promise<PreviewAnswer | null> {
+    try {
+      return await this.need().request<PreviewAnswer>('search_preview', { query, kinds, scope, leave })
+    } catch {
+      return null
+    }
+  }
+
+  /** Replaces, in one step of the history; `false` after telling the person why it did not work. */
+  async searchReplace(query: SearchQuery, kinds: string[], scope: SearchScope, leave: SearchLeave[]): Promise<ReplaceAnswer | false> {
+    const done = await this.attempt('search_replace', { query, kinds, scope, leave, base: this.state.revision })
+    return done === false ? false : (done as unknown as ReplaceAnswer)
   }
 
   async addSheet(name: string): Promise<boolean> {

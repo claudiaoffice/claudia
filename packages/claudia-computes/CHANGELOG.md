@@ -3,6 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.1] - 2026-11-13
+
+Search and replace in workbooks (E6.20, D285, D286). No change to `__all__`.
+
+### Added
+- `claudia_computes.search` (a module, not part of `__all__`): `scan` looks for a compiled search in the *text*, the
+  *formulas* and the *values* of a workbook (on every sheet, one sheet or a selection, within a time limit), listing
+  matches with the kept parts and what a replacement would make of each, and the cells left out with the reason;
+  `plan_replacement` says which cells a replacement would change and which it skips (held by somebody else, a formula
+  that would no longer read, a text that would be too long); `replace_command` makes it one `Batch` of `SetCells`,
+  one per row and run of columns, that stores the cells as they will be, never the pattern. The part `cellref`
+  (`B4`, `$A$2`) is computes' own.
+
 ## [0.3.0] - 2026-11-12
 
 The styling-suite plan, steps 1.1 to 2.6 (D300–D318).

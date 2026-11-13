@@ -42,6 +42,16 @@ export function sharedShortcuts(actions: { undo: () => void; redo: () => void; s
   ]
 }
 
+/** Find and Replace (E5.15, D281): Ctrl+F opens Search & replace, Ctrl+H opens it with Replace already showing. Ctrl+H
+ * is only taken where a replacement can be made; for somebody who can only look the browser keeps it. The same
+ * two in every app, so the table lives here. */
+export function searchShortcuts(actions: { find: () => void; replace: () => void; canReplace: () => boolean }): ShortcutDef[] {
+  return [
+    { id: 'edit.search-replace', label: 'Search & replace', chord: { key: 'f', ctrl: true }, run: actions.find },
+    { id: 'edit.replace', label: 'Replace', chord: { key: 'h', ctrl: true }, run: actions.replace, enabled: actions.canReplace },
+  ]
+}
+
 /** `Ctrl+Shift+Z` for the Config ▸ Shortcuts list and the menu's `hint`. */
 export function chordLabel(chord: KeyChord): string {
   const parts: string[] = []

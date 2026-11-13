@@ -457,6 +457,16 @@ def computes() -> Manifest:
         (
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
+            (
+                # E5.15: the same entry, label and shortcut in every app (D281). Ctrl+H, which opens the panel with
+                # Replace showing, is a second way in and has no menu entry of its own.
+                _page(
+                    "edit.search-replace",
+                    "Search & Replace…",
+                    "Find text, formulas and values, and replace them",
+                    accelerators=("<Primary>f",),
+                ),
+            ),
             (_page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document"),),
             (
                 # D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ /
