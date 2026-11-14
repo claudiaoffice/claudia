@@ -43,8 +43,7 @@ const origin = computed(() => `${location.protocol}//${server.value}`)
 // view leave the server it showed.)
 const stored = ref<Bookmark[]>(listBookmarks())
 const shell = ref<(ShellBridge & { detach: () => void }) | null>(null)
-// Hosted by a native shell: the macOS WebKit handler, or the parent window of a Neutralino iframe (Windows, Linux).
-const inShell = (detectHandler() ?? detectParentSink()) !== null
+const inShell = (detectHandler() ?? detectParentSink()) !== null // a native shell: WebKit's handler, or a Neutralino parent
 const viaShell = computed(() => shell.value?.hasServerList === true)
 const bookmarks = computed<Bookmark[]>(() => (viaShell.value ? (shell.value?.servers ?? []) : stored.value))
 /** The label to give the server this page is on once it is clear where the list lives (see `settle`). */

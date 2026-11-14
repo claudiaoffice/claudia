@@ -137,8 +137,13 @@ async function waitSummary(page, expected) {
     await waitCell(page, 1, 0, 'Fee USD')
     log('ok replaced in two cells')
     await click(page, 4, 4)
+    // Ctrl+Z is the grid's only once the focus has left the panel's fields (in a field it is that field's own undo)
+    await page.waitForFunction(() => !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName ?? ''), null, { timeout: 5000 })
     await page.keyboard.press('Control+z')
-    await waitCell(page, 0, 0, 'Cost EUR')
+    await waitCell(page, 0, 0, 'Cost EUR').catch(async (problem) => {
+      const focus = await page.evaluate(() => `${document.activeElement?.tagName}.${document.activeElement?.className}`)
+      throw new Error(`${problem.message}; the focus was in ${focus}`)
+    })
     await waitCell(page, 1, 0, 'Fee EUR')
     log('ok one Undo brings both back')
 
