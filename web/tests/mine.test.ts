@@ -8,6 +8,7 @@ import {
   keyOf,
   listCollections,
   listMine,
+  parseKey,
   rememberOpened,
   setInCollection,
 } from '~/lib/mine'
@@ -97,13 +98,20 @@ describe('collections', () => {
     expect(listCollections(store)).toEqual([])
     expect(listMine(store)).toHaveLength(1)
   })
-  it('show their documents in the order of Mine', () => {
+  it('show their documents in the order they were put in, also those never opened from here', () => {
     const store = memoryStorage()
-    rememberOpened(budget, '2026-11-14T10:00:00Z', store)
     rememberOpened(notes, '2026-11-14T11:00:00Z', store)
     createCollection('Both', store)
     setInCollection('Both', keyOf(budget), true, store)
     setInCollection('Both', keyOf(notes), true, store)
-    expect(entriesOf(listCollections(store)[0], listMine(store)).map((e) => e.id)).toEqual(['notes', 'budget'])
+    const shown = entriesOf(listCollections(store)[0], listMine(store))
+    expect(shown.map((e) => [e.id, e.opened])).toEqual([
+      ['budget', ''],
+      ['notes', '2026-11-14T11:00:00Z'],
+    ])
+  })
+  it('read back the place, app and id of a key', () => {
+    expect(parseKey(keyOf(budget))).toEqual(budget)
+    expect(parseKey('not a key at all')).toBeNull()
   })
 })

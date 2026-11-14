@@ -55,6 +55,10 @@ defineExpose({ reopen: () => dialog.value?.showModal() })
   padding: 24px 26px;
   box-shadow: var(--shadow);
   display: grid;
+  /* minmax(0, 1fr): a long unbreakable word (a file name) wraps instead of widening the dialog past the screen */
+  grid-template-columns: minmax(0, 1fr);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
   gap: 14px;
 }
 .modal::backdrop {
@@ -63,5 +67,6 @@ defineExpose({ reopen: () => dialog.value?.showModal() })
 h2 {
   margin: 0;
   font: 400 24px/1.1 var(--font-display);
+  overflow-wrap: anywhere;
 }
 </style>

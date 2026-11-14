@@ -119,8 +119,20 @@ export function deleteCollection(name: string, store: Store | null = storage()):
   return next
 }
 
-/** The entries of Mine that a collection holds, in Mine's order. */
+/** The place, app and id a `keyOf` names; `null` for a key that is not one. */
+export function parseKey(key: string): { origin: string; app: string; id: string } | null {
+  const [origin, app, id, ...rest] = key.split(' ')
+  return origin && app && id && rest.length === 0 ? { origin, app, id } : null
+}
+
+/** The documents a collection holds, in the order they were put in. One that is also in Mine says when it was last
+ *  opened; one that was put in from a place's list without being opened has `opened: ''`. */
 export function entriesOf(collection: Collection, mine: MineEntry[]): MineEntry[] {
-  const keys = new Set(collection.entries)
-  return mine.filter((e) => keys.has(keyOf(e)))
+  const opened = new Map(mine.map((e) => [keyOf(e), e]))
+  return collection.entries.flatMap((key) => {
+    const known = opened.get(key)
+    if (known) return [known]
+    const named = parseKey(key)
+    return named ? [{ ...named, opened: '' }] : []
+  })
 }

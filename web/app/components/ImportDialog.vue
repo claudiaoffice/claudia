@@ -53,10 +53,10 @@ function submit() {
 </script>
 
 <template>
-  <Modal :title="t('Open {name}', { name: file.name })" :width="560" @close="emit('close')">
+  <Modal :title="t('Open a file')" :width="560" @close="emit('close')">
     <div class="file">
       <AppIcon :size="34" :app="file.app" />
-      <div>
+      <div class="about">
         <div class="name">{{ file.name }}</div>
         <div class="meta">{{ claudia ? t('Sealed Claudia document') : file.kind }} · {{ size(file.size) }}</div>
       </div>
@@ -102,8 +102,12 @@ function submit() {
   gap: 12px;
   align-items: center;
 }
+.about {
+  min-width: 0;
+}
 .name {
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 .meta,
 .hint {
@@ -118,10 +122,17 @@ function submit() {
 .lead,
 .where {
   margin: 0;
+  overflow-wrap: anywhere;
+}
+.form input {
+  min-width: 0;
+}
+.check span {
+  min-width: 0;
 }
 .two {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
 }
 .check {

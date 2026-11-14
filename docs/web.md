@@ -13,7 +13,9 @@ page, `tokens.css`).
 The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, the same component in a dialog):
 
 * **My places** on the left: the servers of this browser (or of the desktop shell), "This computer" for a local one,
-  "+ Connect to a server…". **Collections** below: groups a person makes of documents from any place.
+  "+ Connect to a server…". **Collections** below: groups a person makes of documents from any place. A document
+  goes into a collection with the bookmark button at the end of its row (Mine or the place's list: a menu of the
+  collections with a tick for each it is in, and "New collection…"), or by dragging its row onto a collection.
 * **Search** (Ctrl+F) over Mine and the place shown, by name; **Open a File…** (Ctrl+Shift+O, or drop a file on the
   page) for Word, Excel, PowerPoint, OpenDocument and Claudia files (`ImportDialog.vue`, D438–D442).
 * **Mine** on top: the documents opened from this browser, on any place (`lib/mine.ts`); then every app's documents of
@@ -21,6 +23,8 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
 * On the right, open a document with a name and password; **Create document** asks for Table, Text or Slides first on
   a server of several apps.
 * A document opened from File ▸ Open… replaces the one in the window (`lib/switch-session.ts`).
+* Long names do not stretch anything: a row shows the name on up to two lines (the whole name as its tooltip), the
+  columns and dialogs keep their width, and the page scrolls when the window is short.
 
 ## What it shows (computes)
 

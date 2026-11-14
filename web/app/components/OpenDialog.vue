@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
 import { OPENABLE, appOfServer, fetchDocsListing, filterListed, openSession, placeUpload, uploadFile, type AnySession, type Listed, type Uploaded } from '~/lib/open'
 import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, rememberOpened, setInCollection, type MineEntry } from '~/lib/mine'
@@ -96,7 +96,6 @@ const mineHere = computed(() => {
   return filterListed(shown, query.value, appFilter.value)
 })
 const chosenKey = computed(() => keyOf({ origin: origin.value, app: docApp.value, id: doc.value.trim() }))
-const chosenIsMine = computed(() => mine.value.some((e) => keyOf(e) === chosenKey.value))
 const words = computed(
   () =>
     ({
@@ -341,7 +340,62 @@ function toggleIn(name: string, inside: boolean) {
 }
 
 function isIn(name: string): boolean {
-  return collections.value.find((c) => c.name === name)?.entries.includes(chosenKey.value) ?? false
+  return isInKey(name, chosenKey.value)
+}
+
+/** What names a listed document of this place in Mine and in collections. */
+function placeKey(d: Listed): string {
+  return keyOf({ origin: origin.value, app: d.app, id: d.id })
+}
+
+function isInKey(name: string, key: string): boolean {
+  return collections.value.find((c) => c.name === name)?.entries.includes(key) ?? false
+}
+
+function toggleKey(name: string, key: string) {
+  collections.value = setInCollection(name, key, !isInKey(name, key))
+}
+
+/** The bookmark button of a row: which collections the document is in, and a new one ("mine <key>" or "place <key>":
+ * the same document can be a row in both lists, and only the one clicked opens). */
+const menuFor = ref<string | null>(null)
+const menuNewName = ref('')
+async function toggleMenu(key: string) {
+  menuFor.value = menuFor.value === key ? null : key
+  menuNewName.value = ''
+  if (menuFor.value === null) return
+  await nextTick()
+  document.querySelector<HTMLElement>('.collection-menu button, .collection-menu input')?.focus()
+}
+function newCollectionWith(key: string) {
+  const name = menuNewName.value.trim()
+  if (!name) return
+  collections.value = createCollection(name)
+  const made = collections.value.find((c) => c.name.toLowerCase() === name.toLowerCase())
+  if (made && !isInKey(made.name, key)) toggleKey(made.name, key)
+  menuNewName.value = ''
+}
+function closeMenu() {
+  menuFor.value = null
+}
+onMounted(() => window.addEventListener('click', closeMenu))
+onBeforeUnmount(() => window.removeEventListener('click', closeMenu))
+
+/** Dragging a document onto a collection puts it in (the bookmark button does the same from the keyboard). */
+const DOC_TYPE = 'application/x-claudia-document'
+const dropTarget = ref<string | null>(null)
+function dragDoc(event: DragEvent, key: string) {
+  event.dataTransfer?.setData(DOC_TYPE, key)
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'link'
+}
+function dropOn(name: string, event: DragEvent) {
+  dropTarget.value = null
+  const key = event.dataTransfer?.getData(DOC_TYPE)
+  if (key && !isInKey(name, key)) toggleKey(name, key)
+}
+/** Only a file from the computer lights the page up as a place to drop. */
+function onDragOver(event: DragEvent) {
+  if (event.dataTransfer?.types.includes('Files')) dragging.value = true
 }
 
 // A name typed by hand belongs to whichever app has a document of that name here (the old address then decides).
@@ -484,7 +538,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
     v-bind="modal ? { title: t('Open'), width: 1080 } : { class: 'open' }"
     :class="{ dragging }"
     @close="emit('close')"
-    @dragover.prevent="dragging = true"
+    @dragover.prevent="onDragOver"
     @dragleave.self="dragging = false"
     @drop.prevent="onDrop"
   >
@@ -544,7 +598,16 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
         <div class="servers-title collections-title">{{ t('Collections') }}</div>
         <ul class="collections">
           <li v-for="c in collections" :key="c.name">
-            <button type="button" class="server" :aria-current="shownCollection === c.name ? 'true' : undefined" @click="shownCollection = shownCollection === c.name ? null : c.name">
+            <button
+              type="button"
+              class="server"
+              :class="{ target: dropTarget === c.name }"
+              :aria-current="shownCollection === c.name ? 'true' : undefined"
+              @click="shownCollection = shownCollection === c.name ? null : c.name"
+              @dragover.prevent.stop="dropTarget = c.name"
+              @dragleave="dropTarget = null"
+              @drop.prevent.stop="dropOn(c.name, $event)"
+            >
               <svg width="12" height="15" viewBox="0 0 12 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 1h10v13l-5-4-5 4z" /></svg>
               <span class="server-text"><span class="server-name">{{ c.name }}</span></span>
               <span class="count">{{ c.entries.length }}</span>
@@ -585,15 +648,53 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
           <div>
             <div class="mine">
               <h2>{{ shownCollection === null ? t('Mine · opened before') : t('In {name}', { name: shownCollection }) }}</h2>
-              <p v-if="!mineHere.length" class="hint">{{ shownCollection === null ? t('Nothing opened yet from this browser.') : t('Nothing in this collection yet.') }}</p>
+              <p v-if="!mineHere.length" class="hint">
+                {{ shownCollection === null ? t('Nothing opened yet from this browser.') : t('Nothing in this collection yet. Add a document with the bookmark button next to it, or drag it onto the collection.') }}
+              </p>
               <ul v-else>
-                <li v-for="e in mineHere" :key="keyOf(e)">
-                  <button type="button" :class="{ chosen: e.origin === origin && e.id === doc && e.app === docApp }" @click="chooseMine(e)">
+                <li v-for="e in mineHere" :key="keyOf(e)" draggable="true" @dragstart="dragDoc($event, keyOf(e))">
+                  <button type="button" class="doc" :title="e.id" :class="{ chosen: e.origin === origin && e.id === doc && e.app === docApp }" @click="chooseMine(e)">
                     <AppIcon :size="22" :app="e.app" />
                     <span class="name">{{ e.id }}</span>
-                    <span class="meta">{{ e.origin === origin ? placeLabel : hostOf(e.origin) }} · {{ ago(e.opened) }}</span>
+                    <span class="meta">{{ e.origin === origin ? placeLabel : hostOf(e.origin) }}<template v-if="e.opened"> · {{ ago(e.opened) }}</template></span>
                   </button>
-                  <button type="button" class="server-action" :title="t('Take {id} off Mine', { id: e.id })" :aria-label="t('Take {id} off Mine', { id: e.id })" @click="forget(e)">×</button>
+                  <div class="row-actions">
+                    <button
+                      type="button"
+                      class="server-action"
+                      aria-haspopup="menu"
+                      :aria-expanded="menuFor === 'mine ' + keyOf(e)"
+                      :title="t('Collections of {id}…', { id: e.id })"
+                      :aria-label="t('Collections of {id}…', { id: e.id })"
+                      @click.stop="toggleMenu('mine ' + keyOf(e))"
+                    >
+                      <svg width="12" height="15" viewBox="0 0 12 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 1h10v13l-5-4-5 4z" /></svg>
+                    </button>
+                    <button
+                      v-if="shownCollection === null"
+                      type="button"
+                      class="server-action"
+                      :title="t('Take {id} off Mine', { id: e.id })"
+                      :aria-label="t('Take {id} off Mine', { id: e.id })"
+                      @click="forget(e)"
+                    >×</button>
+                    <button
+                      v-else
+                      type="button"
+                      class="server-action"
+                      :title="t('Take {id} out of {name}', { id: e.id, name: shownCollection })"
+                      :aria-label="t('Take {id} out of {name}', { id: e.id, name: shownCollection })"
+                      @click="toggleKey(shownCollection, keyOf(e))"
+                    >×</button>
+                  </div>
+                  <div v-if="menuFor === 'mine ' + keyOf(e)" class="collection-menu" role="menu" @click.stop @keydown.escape="menuFor = null">
+                    <button v-for="c in collections" :key="c.name" type="button" role="menuitemcheckbox" :aria-checked="isInKey(c.name, keyOf(e))" @click="toggleKey(c.name, keyOf(e))">
+                      <span class="tick" aria-hidden="true">{{ isInKey(c.name, keyOf(e)) ? '✓' : '' }}</span>{{ c.name }}
+                    </button>
+                    <form class="menu-new" @submit.prevent="newCollectionWith(keyOf(e))">
+                      <input v-model="menuNewName" :aria-label="t('New collection')" :placeholder="t('New collection…')" >
+                    </form>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -608,12 +709,33 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
               <p v-if="listError" class="hint">{{ listError }}</p>
               <p v-else-if="!documents.length" class="hint">{{ t('Nothing yet. Create the first document.') }}</p>
               <ul v-else>
-                <li v-for="d in placeDocs" :key="d.app + ' ' + d.id">
-                  <button type="button" :class="{ chosen: d.id === doc && (!docApp || d.app === docApp) }" @click="choose(d.id, d.app)">
+                <li v-for="d in placeDocs" :key="d.app + ' ' + d.id" draggable="true" @dragstart="dragDoc($event, placeKey(d))">
+                  <button type="button" class="doc" :title="d.id" :class="{ chosen: d.id === doc && (!docApp || d.app === docApp), plain: !isSuite }" @click="choose(d.id, d.app)">
                     <AppIcon v-if="isSuite" :size="22" :app="d.app" />
                     <span class="name">{{ d.id }}</span>
                     <span class="meta"><template v-if="isSuite">{{ APP_WORDS[d.app]?.() ?? d.app }} · </template>{{ ago(d.modified) }}<template v-if="d.online"> {{ t('· {online} here now', { online: d.online }) }}</template></span>
                   </button>
+                  <div class="row-actions">
+                    <button
+                      type="button"
+                      class="server-action"
+                      aria-haspopup="menu"
+                      :aria-expanded="menuFor === 'place ' + placeKey(d)"
+                      :title="t('Collections of {id}…', { id: d.id })"
+                      :aria-label="t('Collections of {id}…', { id: d.id })"
+                      @click.stop="toggleMenu('place ' + placeKey(d))"
+                    >
+                      <svg width="12" height="15" viewBox="0 0 12 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 1h10v13l-5-4-5 4z" /></svg>
+                    </button>
+                  </div>
+                  <div v-if="menuFor === 'place ' + placeKey(d)" class="collection-menu" role="menu" @click.stop @keydown.escape="menuFor = null">
+                    <button v-for="c in collections" :key="c.name" type="button" role="menuitemcheckbox" :aria-checked="isInKey(c.name, placeKey(d))" @click="toggleKey(c.name, placeKey(d))">
+                      <span class="tick" aria-hidden="true">{{ isInKey(c.name, placeKey(d)) ? '✓' : '' }}</span>{{ c.name }}
+                    </button>
+                    <form class="menu-new" @submit.prevent="newCollectionWith(placeKey(d))">
+                      <input v-model="menuNewName" :aria-label="t('New collection')" :placeholder="t('New collection…')" >
+                    </form>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -644,7 +766,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
           </p>
           <template v-else>
             <p class="hint"><button class="link" type="button" @click="recovering = true">{{ t('I forgot my password') }}</button></p>
-            <fieldset v-if="chosenIsMine && collections.length" class="in-collections">
+            <fieldset v-if="docApp && collections.length" class="in-collections">
               <legend>{{ t('In collections') }}</legend>
               <label v-for="c in collections" :key="c.name" class="check">
                 <input type="checkbox" :checked="isIn(c.name)" @change="toggleIn(c.name, ($event.target as HTMLInputElement).checked)" > {{ c.name }}
@@ -691,7 +813,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
 
 <style scoped>
 .open {
-  min-height: 100%;
+  height: 100%;
   display: grid;
   grid-template-rows: auto 1fr;
   background: linear-gradient(160deg, var(--paper) 55%, var(--mist));
@@ -863,8 +985,19 @@ h1 {
 }
 .cols {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 36px;
+  /* minmax(0, …): a long document name must not push the form out of the card */
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 32px;
+}
+.cols form {
+  min-width: 0;
+}
+.cols form input {
+  width: 100%;
+  min-width: 0;
+}
+.card {
+  margin-bottom: 4vh;
 }
 h2 {
   font: 500 12px/1 var(--font-ui);
@@ -882,11 +1015,7 @@ ul {
   max-height: 300px;
   overflow: auto;
 }
-.list button:hover,
-.list button.chosen {
-  border-color: var(--app);
-  background: var(--app-soft);
-}
+
 .name {
   font-weight: 500;
 }
@@ -991,29 +1120,101 @@ form {
 .mine li,
 .list li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
 }
-.mine button:not(.server-action),
-.list button {
-  width: 100%;
+.mine li,
+.list li {
+  position: relative;
+}
+.doc {
+  flex: 1 1 0;
+  min-width: 0;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* the name gets the whole width and up to two lines; where and when go underneath */
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   column-gap: 10px;
+  row-gap: 1px;
   text-align: left;
   border: 1px solid var(--line-field);
   background: transparent;
   border-radius: 10px;
   padding: 8px 12px;
 }
-.list button:not(:has(svg)) {
-  grid-template-columns: 1fr auto;
+.doc.plain {
+  grid-template-columns: minmax(0, 1fr);
 }
-.mine button:not(.server-action):hover,
-.mine button.chosen {
+.doc > :not(.name, .meta) {
+  grid-row: span 2;
+}
+.doc .name {
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.doc .meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc:hover,
+.doc.chosen {
   border-color: var(--app);
   background: var(--app-soft);
+}
+.row-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+/* in the flow under its row, not floating: the lists scroll, and a floating menu would be cut off by them */
+.collection-menu {
+  flex: 1 0 100%;
+  margin: 2px 0 4px;
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-field);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.collection-menu button {
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font: 13px var(--font-ui);
+  cursor: pointer;
+}
+.collection-menu button:hover,
+.collection-menu button:focus-visible {
+  background: var(--app-soft);
+}
+.tick {
+  width: 14px;
+  color: var(--app-text);
+}
+.menu-new input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--line-field);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font: 13px var(--font-ui);
+}
+.server.target {
+  outline: 2px dashed var(--app);
 }
 .list-head {
   display: flex;

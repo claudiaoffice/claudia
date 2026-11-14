@@ -8,8 +8,11 @@ Work plan for Nov 14/15th 2026
 	- [x] bitv, if necessary
 - [ ] clean up branches, delete remote ones too
 - [ ] focus topics
-	- [ ] file management => to do this, introduce the one-server approach
+	- [x] file management => to do this, introduce the one-server approach
 		- [ ] use worker pool for real!
+		- [ ] progress bar when importing
+		- [ ] size of import dialog may be too small => needs to adapt to filename
+		- [ ] 
 	- [ ] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] performance

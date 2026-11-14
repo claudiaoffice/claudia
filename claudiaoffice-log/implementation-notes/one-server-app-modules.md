@@ -48,6 +48,15 @@ Windows shell, then offloading heavy jobs to the worker pool (D436).
   `e2e:search` times out in `waitSummary`, and `e2e:keys` finds no shortcut next to the "Image…" menu entry. Not
   caused by this patch and not investigated yet; `e2e`, `e2e:composes`, `e2e:slides`, `e2e:resilience`,
   `e2e:recovery` and `tests/e2e` pass with it.
+* **Long names on the front page (fixed after the owner's first try, 2026-11-14).** Grid columns of `1fr` and an
+  implicit grid track in `Modal.vue` grew to the longest unbreakable name, pushing the form out of the card and the
+  import dialog past the window; the page had `min-height` and so never scrolled to "Or start a new one". Now:
+  `minmax(0, …)` columns, a two-line clamped name with the details underneath, the import dialog's title is
+  "Open a file" (the name is shown and wraps below it), and `.open` has a fixed height with `overflow: auto`. Adding to
+  a collection was only possible after choosing a document from Mine; every row now has a bookmark button with the
+  collections as a checkbox menu (in the flow under the row: the lists scroll, a floating menu was cut off) and rows
+  can be dragged onto a collection. `entriesOf` shows a document put in from the place's list even if it was never
+  opened from this browser.
 * **Imports are not lazy yet.** `claudia_server` imports every app package, so a server of one app still loads all
   three. That matters once modules run in their own processes (D436) and is done there.
 
