@@ -23,6 +23,7 @@ __all__ = [
     "MAX_MESSAGE_BYTES",
     "MAX_SERVER_LIST",
     "SUPPORTED_VERSIONS",
+    "VIEWS",
     "ContractError",
     "Message",
     "UnknownMessageType",
@@ -42,6 +43,9 @@ SUPPORTED_VERSIONS: tuple[int, ...] = (1,)
 """The versions this shell understands, oldest first."""
 MAX_MESSAGE_BYTES = 64 * 1024
 """A message longer than this is refused unread, because the page is not trusted to be polite."""
+VIEWS = ("start", "document")
+"""What a page says it is in its ``hello`` (sheet 11): the front page, or a document. The shell shows the short menu
+for the one and the whole menu for the other; a page that does not say gets the whole menu."""
 
 Message = dict[str, Any]
 
@@ -152,6 +156,8 @@ def _check_hello(message: Message) -> None:
     if "app" in message:  # a page that does not know yet which app its server runs (it wants a login first) omits it
         _token(message["app"], "'app'")
     _text(message, "frontend", limit=64)
+    if message.get("view", "document") not in VIEWS:
+        raise _bad("'view' is 'start' or 'document'")
 
 
 def _check_welcome(message: Message) -> None:

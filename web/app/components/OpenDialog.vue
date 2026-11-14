@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { appOfFileName, appOfServer, fetchDocsListing, filterListed, openSession, openableFor, placeUpload, uploadFile, type AnySession, type Listed, type Uploaded } from '~/lib/open'
+import { appOfFileName, appOfServer, fetchDocsListing, filterListed, openSession, openableFor, placeUpload, sendFile, type AnySession, type Listed, type Upload, type Uploaded } from '~/lib/open'
+import type { ImportPhase } from '~/lib/import-progress'
 import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, parseKey, rememberOpened, setInCollection, type MineEntry } from '~/lib/mine'
 import { holdPresence } from '~/lib/presence'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
 import { createShellBridge, detectHandler, isApp, type ShellBridge } from '~/lib/shell-bridge'
-import { useI18n } from '~/lib/i18n'
+import { LANGUAGES, useI18n } from '~/lib/i18n'
+import { useTheme } from '~/lib/theme'
 import Modal from './Modal.vue'
 
-const { t } = useI18n()
+const { t, locale, choose: chooseLanguage } = useI18n()
+const { dark, toggle: toggleDark } = useTheme()
 
 const props = defineProps<{
   /** File ▸ New (D123): land with the document field blank and focused, instead of the one just closed. */
@@ -84,8 +87,13 @@ const mine = ref<MineEntry[]>(listMine())
 const collections = ref(listCollections())
 const shownCollection = ref<string | null>(null)
 const newCollection = ref<string | null>(null)
-/** A file from the computer, held by the server until it becomes a document (D440). */
+/** A file from the computer, held by the server until it becomes a document (D440); while it is still on its way,
+ * what is known from its name. */
 const incoming = shallowRef<Uploaded | null>(null)
+/** Where that file is: sending, waiting for Open, reading, opening (the one bar of sheet 11). */
+const importPhase = ref<ImportPhase>('sending')
+const importSent = ref(0)
+let upload: Upload | null = null
 const importError = ref('')
 const notice = ref('')
 const dragging = ref(false)
@@ -175,6 +183,9 @@ function remember(key: string, value: string) {
  * label without making anybody open a document first. Both are plain absolute fetches, same as `/api/docs` always
  * was, so pointing this page at another server with `?server=` in dev keeps working exactly as it does today.
  */
+/** The first look at the server (its apps among it): Create waits for it, so that a person — or a script — quick
+ * enough to press Create before the list is there is not asked for a kind on a server of one app. */
+let listed: Promise<void> = Promise.resolve()
 async function loadServer() {
   listError.value = ''
   const listing = await fetchDocsListing(origin.value)
@@ -218,6 +229,27 @@ function settle() {
 
 /** Say hello to the shell, if there is one (not before this page knows which app its server runs, when it can). */
 const shellRemovers: Array<() => void> = []
+
+/** The native menu's entries on the front page (sheet 11): File ▸ New, Open…, Open a File…, View ▸ Dark Mode and
+ * Config ▸ App Language. The shell shows no others here. */
+function onShellAction(action: string, target?: string) {
+  if (action === 'file.open-file') chooseFile()
+  else if (action === 'file.open') searchField.value?.focus()
+  else if (action === 'file.new') newStart.value?.focus()
+  else if (action === 'view.dark') {
+    if (target === undefined || (target === 'on') !== dark()) toggleDark()
+  } else if (action.startsWith('config.language.')) void chooseLanguage(action.slice('config.language.'.length))
+}
+
+/** The ticks of Dark Mode and the language, for the shell's menu (only while this page owns the bridge). */
+watchEffect(() => {
+  const bridge = shell.value
+  if (!bridge?.ready || props.modal) return
+  bridge.reportStates({
+    'view.dark': { checked: dark() },
+    ...Object.fromEntries(LANGUAGES.map(([tag]) => [`config.language.${tag}`, { checked: locale.value === tag }])),
+  })
+})
 function attachShell() {
   if (!inShell) return
   if (props.modal) {
@@ -232,12 +264,8 @@ function attachShell() {
     )
     return
   }
-  const bridge = createShellBridge(isApp(app.value) ? app.value : undefined, undefined, (b) => reactive(b) as typeof b)
-  bridge.onAction((action) => {
-    if (action === 'file.open-file') chooseFile()
-    else if (action === 'file.open') searchField.value?.focus()
-    else if (action === 'file.new') newStart.value?.focus()
-  })
+  const bridge = createShellBridge(isApp(app.value) ? app.value : undefined, undefined, (b) => reactive(b) as typeof b, 'start')
+  bridge.onAction(onShellAction)
   bridge.onConnectFailed((_code, message) => {
     connectPending.value = false
     connectError.value = message
@@ -282,7 +310,8 @@ onMounted(async () => {
   user.value = remembered('claudia.user')
   if (!doc.value && !props.startFresh) doc.value = remembered('claudia.doc')
   if (props.startFresh) docField.value?.focus()
-  await loadServer()
+  listed = loadServer()
+  await listed
   attachShell()
   settle()
 })
@@ -492,12 +521,48 @@ async function takeFile(file: File | undefined) {
     refusal.value = refusalFor(named)
     return
   }
-  busy.value = true
-  const answer = await uploadFile(origin.value, file)
-  busy.value = false
-  if ('error' in answer) error.value = answer.error
-  else if (own && answer.app !== own) refusal.value = refusalFor(answer.app)
-  else incoming.value = answer
+  // The dialog comes at once, with what the name tells; the server's answer fills in the rest.
+  const dot = file.name.lastIndexOf('.')
+  const extension = dot < 0 ? '' : file.name.slice(dot + 1).toLowerCase()
+  incoming.value = {
+    upload: '',
+    name: file.name,
+    format: extension,
+    app: named ?? '',
+    size: file.size,
+    hosted: true,
+    suggested_id: dot < 0 ? file.name : file.name.slice(0, dot),
+  }
+  importPhase.value = 'sending'
+  importSent.value = 0
+  const sending = sendFile(origin.value, file, (fraction) => {
+    importSent.value = fraction
+  })
+  upload = sending
+  const answer = await sending.done
+  if (upload !== sending) return // given up, or another file was chosen meanwhile
+  upload = null
+  if ('cancelled' in answer) return
+  if ('error' in answer) {
+    importError.value = answer.error
+    return
+  }
+  if (own && answer.app !== own) {
+    incoming.value = null
+    refusal.value = refusalFor(answer.app)
+    return
+  }
+  incoming.value = answer
+  importSent.value = 1
+  importPhase.value = 'sent'
+}
+
+/** Cancel in the import dialog: stop sending, and forget the file. */
+function dropIncoming() {
+  upload?.abort()
+  upload = null
+  incoming.value = null
+  importError.value = ''
 }
 
 function onPicked(event: Event) {
@@ -519,9 +584,15 @@ async function importFile(values: { id: string; user: string; password: string; 
   user.value = values.user
   password.value = values.password
   newApp.value = file.app
-  await go('create', { upload: file.upload, keep: values.keep })
-  if (error.value) importError.value = error.value
-  else incoming.value = null
+  importError.value = ''
+  importPhase.value = 'reading'
+  await go('create', { upload: file.upload, keep: values.keep }, () => {
+    importPhase.value = 'opening'
+  })
+  if (error.value) {
+    importError.value = error.value
+    importPhase.value = 'sent' // Open again, with whatever is to be changed
+  } else incoming.value = null
 }
 
 /** A Claudia file goes in as it is (D442), then is opened with its own name and password. */
@@ -529,10 +600,12 @@ async function placeFile() {
   const file = incoming.value
   if (!file) return
   busy.value = true
+  importPhase.value = 'reading'
   const answer = await placeUpload(origin.value, file.upload)
   busy.value = false
   if ('error' in answer) {
     importError.value = answer.error
+    importPhase.value = 'sent'
     return
   }
   incoming.value = null
@@ -558,8 +631,9 @@ function proceed() {
  * document, or comes in with the recovery key and the new password. Every later connection (the session's own, and its
  * reconnects) is an ordinary login with what the person typed, which by then is right.
  */
-async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean }) {
+async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean }, onAnswered?: () => void) {
   error.value = ''
+  if (how === 'create') await listed
   if (how === 'create' && !newApp.value) {
     error.value = t('Choose Table, Text or Slides first.')
     return
@@ -590,7 +664,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
   }
   let session: AnySession | null = null
   try {
-    session = await openSession(factory, { host: server.value })
+    session = await openSession(factory, { host: server.value }, onAnswered)
     recoveryKey.value = ''
     const key = session.justCreated ? await session.newRecoveryKey({ quiet: true }) : null
     if (key) fresh.value = { session, key }
@@ -884,7 +958,9 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       :user="user"
       :busy="busy"
       :error="importError"
-      @close="incoming = null"
+      :phase="importPhase"
+      :sent="importSent"
+      @close="dropIncoming"
       @import="importFile"
       @place="placeFile"
       @existing="openExisting"

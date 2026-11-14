@@ -77,11 +77,13 @@ export function appOfServer(said: ServerListing | null | undefined): string {
   return said?.app || said?.documents?.[0]?.app || 'claudia'
 }
 
-/** Connect, and give back the session of the document's app, loaded and open. A refused handshake is thrown. */
-export async function openSession(makeLink: () => LinkLike, options: SessionOptions = {}): Promise<AnySession> {
+/** Connect, and give back the session of the document's app, loaded and open. A refused handshake is thrown.
+ * `onAnswered` is called once the server has answered, before the document is loaded. */
+export async function openSession(makeLink: () => LinkLike, options: SessionOptions = {}, onAnswered?: () => void): Promise<AnySession> {
   const probe = makeLink()
   const welcome = await probe.connect()
   probe.close()
+  onAnswered?.() // the server has made or found the document (an imported file has been read): now it is loaded
   const session: AnySession =
     welcome.app === 'composes'
       ? new TextSession(makeLink, options)
@@ -157,22 +159,48 @@ export function appOfFileName(name: string): string | null {
   return Object.entries(FORMATS).find(([, formats]) => formats.includes(extension))?.[0] ?? null
 }
 
-/** Hand a file to the server (D440). The answer, or a message fit to show. */
-export async function uploadFile(origin: string, file: Blob & { name: string }, fetchImpl: typeof fetch = fetch): Promise<Uploaded | { error: string }> {
-  let response: Response
+/** A file on its way to the server: `done` is the answer, a message fit to show, or `{ cancelled }` after `abort`. */
+export interface Upload {
+  done: Promise<Uploaded | { error: string } | { cancelled: true }>
+  abort: () => void
+}
+
+/** Hand a file to the server (D440), telling `onProgress` how much of it is there (0 to 1) as it goes: a large file
+ * takes a while, and `fetch` cannot tell how far an upload is, so this is an `XMLHttpRequest`. */
+export function sendFile(
+  origin: string,
+  file: Blob & { name: string },
+  onProgress: (fraction: number) => void,
+  makeXhr: () => XMLHttpRequest = () => new XMLHttpRequest(),
+): Upload {
+  const xhr = makeXhr()
+  const done = new Promise<Uploaded | { error: string } | { cancelled: true }>((resolve) => {
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0) onProgress(event.loaded / event.total)
+    }
+    xhr.onload = () => resolve(answerOf(xhr.status, xhr.responseText))
+    xhr.onerror = () => resolve({ error: t('The server cannot be reached.') })
+    xhr.onabort = () => resolve({ cancelled: true })
+  })
+  xhr.open('POST', `${origin}/api/uploads`)
+  xhr.setRequestHeader('content-type', 'application/octet-stream')
+  xhr.setRequestHeader('x-claudia-name', encodeURIComponent(file.name))
+  xhr.send(file)
+  return { done, abort: () => xhr.abort() }
+}
+
+function answerOf(status: number, text: string): Uploaded | { error: string } {
+  if (status === 413) return { error: t('The file is too large for this server.') }
+  if (status === 415) return { error: t('This is not a file Claudia can open.') }
+  let body: unknown = null
   try {
-    response = await fetchImpl(`${origin}/api/uploads`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/octet-stream', 'x-claudia-name': encodeURIComponent(file.name) },
-      body: file,
-    })
+    body = JSON.parse(text)
   } catch {
-    return { error: t('The server cannot be reached.') }
+    /* no JSON: the status says enough */
   }
-  if (response.status === 413) return { error: t('The file is too large for this server.') }
-  if (response.status === 415) return { error: t('This is not a file Claudia can open.') }
-  if (!response.ok) return { error: await detail(response) }
-  return (await response.json()) as Uploaded
+  if (status >= 200 && status < 300 && body) return body as Uploaded
+  const said = (body as { detail?: unknown } | null)?.detail
+  return { error: typeof said === 'string' ? said : t('The server answered with an error ({status}).', { status }) }
 }
 
 /** Put an uploaded Claudia file into this server as it is (D442). */

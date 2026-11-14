@@ -29,6 +29,12 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
   before uploading and by what the server read in it after. The native menu's File ▸ New, Open… and Open a File…
   work on the front page too. File ▸ Open… in a document borrows the document's bridge (`shellBridge`) instead of
   making a second one.
+* **Opening a file** (D446): the import dialog comes as soon as a file is chosen or dropped, with one bar in three
+  parts — sending (measured, `sendFile` in `lib/open.ts` over `XMLHttpRequest`), reading on the server and opening
+  (not measurable, so moving stripes); `lib/import-progress.ts` says what the bar shows. Open waits for the file.
+* **The front page says it is the front page** (`hello` `view: "start"`, D447), so a desktop app shows its short menu,
+  and answers File ▸ New, Open…, Open a File…, View ▸ Dark Mode and Config ▸ App Language, reporting the ticks. A
+  document says `view: "document"`.
 * The front page holds the presence socket (`lib/presence.ts`, `/api/presence`, D434, D445) while it is shown, so a
   server started with `--exit-when-idle` knows it is in use; a dropped socket comes back after 1, 2, 4… s (30 s at most).
 * Long names do not stretch anything: a row shows the name on up to two lines (the whole name as its tooltip), the

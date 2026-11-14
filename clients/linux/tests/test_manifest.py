@@ -596,6 +596,44 @@ def _flatten(menu: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+# ------------------------------------------------------------------------- the short menu of the front page (sheet 11)
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_the_front_page_menu_has_only_what_works_without_a_document(app_name: str) -> None:
+    short = manifest.for_start(manifest.for_app(app_name))
+    assert [menu.label for menu in short.menus] == ["File", "View", "Config", "Help"]
+    ids = [action.id for action in short.actions]
+    assert ids == [
+        "file.new",
+        "file.open",
+        "file.open-file",
+        "file.quit",
+        "view.dark",
+        "config.language.en",
+        "config.language.de",
+        "help.about",
+    ]
+
+
+def test_the_front_page_menu_keeps_the_language_flyout_and_drops_empty_sections(composes: manifest.Manifest) -> None:
+    config = manifest.for_start(composes).menu("Config")
+    assert len(config.sections) == 1
+    (flyout,) = config.sections[0]
+    assert isinstance(flyout, manifest.Submenu) and flyout.label == "App Language"
+    assert all(section for menu in manifest.for_start(composes).menus for section in menu.sections)
+
+
+def test_the_listing_says_which_actions_belong_on_the_front_page(composes: manifest.Manifest) -> None:
+    listed = {
+        a["id"]: a["start"]
+        for m in composes.describe()["menus"]
+        for s in m["sections"]
+        for e in s
+        for a in e.get("items", [e])
+    }
+    assert listed["file.open-file"] is True and listed["config.language.de"] is True
+    assert listed["edit.cut"] is False and listed["help.how-to"] is False
+
+
 def test_about_links_are_website_then_report_an_issue_then_legal() -> None:
     """D28's shared About dialog (``window.py``'s ``_show_about``, ``AboutDialog.vue``'s own ``LINKS``): this is the
     one side of that agreement GTK can test without a display — the three links, their order and their targets."""

@@ -48,6 +48,8 @@ export interface PageEnv {
   version: string
   /** The native menu, as `menu.ts` built it for this app. */
   menu: readonly WindowMenuItem[]
+  /** The short menu of the front page (sheet 11); without it the whole menu is always shown. */
+  startMenu?: readonly WindowMenuItem[]
   neutralino: NeutralinoLike
   frame: FrameLike
   status: StatusView
@@ -89,6 +91,8 @@ const HELLO_WAIT_MS = 5000
 
 export class ShellPage {
   private menu: WindowMenuItem[]
+  /** Which menu is shown: the front page's short one (first, before any page) or a document's whole one. */
+  private view: 'start' | 'document' = 'start'
   private readonly known: KnownAction[]
   private readonly checked: Record<string, boolean> = {}
   private readonly bridge: Bridge
@@ -99,8 +103,8 @@ export class ShellPage {
   private coreSeen = false
 
   constructor(private readonly env: PageEnv) {
-    this.menu = env.menu.map((item) => structuredClone(item))
-    this.known = knownActions(this.menu)
+    this.menu = (env.startMenu ?? env.menu).map((item) => structuredClone(item))
+    this.known = knownActions(env.menu.map((item) => structuredClone(item))) // the whole menu knows every action
     this.bridge = new Bridge({
       app: env.app,
       known: this.known,
@@ -111,6 +115,7 @@ export class ShellPage {
       ...(env.locale !== undefined ? { locale: env.locale } : {}),
       onStates: (states) => this.applyStates(states),
       onReady: () => {
+        this.showView(this.bridge.view)
         this.env.status.hide()
         this.ask({ kind: 'want_servers' })
       },
@@ -289,6 +294,15 @@ export class ShellPage {
     if (!this.bridge.sendAction(route.action, route.target)) {
       this.log(`the menu item '${route.action}' was not sent: the page in the frame has not said hello (there is nobody to do it)`)
     }
+  }
+
+  /** The front page's short menu or a document's whole one (sheet 11), as the page said in its hello. The page reports
+   * its ticks again after hello, so the new menu starts from the manifest's. */
+  private showView(view: 'start' | 'document'): void {
+    if (view === this.view || this.env.startMenu === undefined) return
+    this.view = view
+    this.menu = (view === 'start' ? this.env.startMenu : this.env.menu).map((item) => structuredClone(item))
+    this.applyStates({})
   }
 
   private applyStates(states: Record<string, ActionState>): void {

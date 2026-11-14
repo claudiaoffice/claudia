@@ -366,7 +366,8 @@ administration per server); D433 (old commands keep working); D434 (stop when id
 Later in the round (2026-11-14), before the desktop shells were changed: the owner wants a desktop app to stay that
 app although its server hosts all three, and doubted that the server should stop by itself. D444 (a desktop window
 shows its own app only); D445 (the desktop apps share one local server on a fixed port, which stops ten minutes after
-nothing is connected; supersedes D119 and D161)
+nothing is connected; supersedes D119 and D161). After the owner tried it (sheet 11): D446 (one progress bar for an
+import) and D447 (the desktop front page's short native menu)
 
 ## Opening files from the computer (branch `one-server`, 2026-11-14)
 

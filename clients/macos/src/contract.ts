@@ -98,6 +98,7 @@ const CHECKS: Record<string, Check> = {
     version(message)
     if ('app' in message) token(message.app, "'app'") // a page that does not know its app yet omits it
     text(message, 'frontend', 64)
+    if ('view' in message && message.view !== 'start' && message.view !== 'document') throw bad("'view' is 'start' or 'document'")
   },
   welcome(message) {
     version(message)

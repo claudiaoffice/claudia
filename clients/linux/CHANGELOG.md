@@ -8,6 +8,10 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 - Shell contract v1, additive: `welcome` may carry `app`, the app this window is. On a server of several apps the
   page then lists only that app's documents and refuses files of another kind. A shell that leaves it out gets the
   page of a browser tab.
+- Shell contract v1, additive: `hello` may carry `view` (`start` or `document`, D447). The window shows the front
+  page's short menu (`manifest.for_start`, `on_start`: File New/Open/Open a File/Quit, View Dark Mode, Config App
+  Language, Help About) and switches the other actions off; a document, or a page that does not say, gets the whole
+  menu. The listing for macOS and Windows carries `start` on every action.
 
 ### Changed (one key table, every menu entry everywhere: UX-35, UX-36)
 - Every menu entry has a key, the same in every app and every client (`manifest.py`, D360); only the language

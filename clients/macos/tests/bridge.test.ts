@@ -71,6 +71,22 @@ describe('hello', () => {
   })
 })
 
+describe('the view a page says it is (sheet 11)', () => {
+  it('remembers the front page and a document, and takes a page that does not say for a document', () => {
+    const { say, bridge, sent } = make()
+    expect(bridge.view).toBe('document')
+    say({ type: 'hello', contract: 1, view: 'start' })
+    expect(bridge.view).toBe('start')
+    say({ type: 'hello', contract: 1, app: 'creates', view: 'document' })
+    expect(bridge.view).toBe('document')
+    say({ type: 'hello', contract: 1, view: 'start' })
+    say({ type: 'hello', contract: 1, app: 'creates' })
+    expect(bridge.view).toBe('document')
+    say({ type: 'hello', contract: 1, view: 'settings' })
+    expect(sent.at(-1)).toMatchObject({ type: 'error', code: 'bad_message' })
+  })
+})
+
 describe('messages that need a hello first', () => {
   it('are refused before it', () => {
     const { sent, say, calls } = make()

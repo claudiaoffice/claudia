@@ -31,7 +31,7 @@ from .connection import check as default_check
 from .connector import Connector, ServerBook, Work, run_threaded
 from .i18n import translate as _
 from .identity import AppIdentity
-from .manifest import Action, Kind, Manifest, about_links, menu_button_id, menu_xml
+from .manifest import Action, Kind, Manifest, about_links, for_start, menu_button_id, menu_xml, on_start
 from .settings import save_shell_locale
 from .trust import TrustStore
 
@@ -158,15 +158,31 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         self.set_title(identity.title)
         self.set_icon_name(identity.application_id)
         self.show_starting(_("Starting {app}…").format(app=identity.title))
+        self._menu_models: dict[str, dict[str, Any]] = {}
         self._attach_menus()
         for action in manifest.actions:
             self._add_action(action)
+        self._show_view("start")  # the front page comes first
 
     def _attach_menus(self) -> None:
-        """Give every menu button the menu of the app's manifest (see ``data/window.ui``)."""
-        builder = Gtk.Builder.new_from_string(menu_xml(self._manifest, translate=_), -1)
+        """Give every menu button the menu of the app's manifest (see ``data/window.ui``); keep the short menu of the
+        front page (``manifest.for_start``, sheet 11) at hand too."""
+        for view, spec in (("start", for_start(self._manifest)), ("document", self._manifest)):
+            builder = Gtk.Builder.new_from_string(menu_xml(spec, translate=_), -1)
+            self._menu_models[view] = {menu.id: builder.get_object(menu.id) for menu in spec.menus}
         for menu in self._manifest.menus:
-            getattr(self, menu_button_id(menu.id)).set_menu_model(builder.get_object(menu.id))
+            getattr(self, menu_button_id(menu.id)).set_menu_model(self._menu_models["document"][menu.id])
+
+    def _show_view(self, view: str) -> None:
+        """The front page's short menu (``start``) or the whole one (``document``): a menu with nothing in it for the
+        view is not shown at all, rather than greyed out."""
+        models = self._menu_models["start" if view == "start" else "document"]
+        for menu in self._manifest.menus:
+            button = getattr(self, menu_button_id(menu.id))
+            model = models.get(menu.id)
+            button.set_visible(model is not None)
+            if model is not None:
+                button.set_menu_model(model)
 
     # ------------------------------------------------------------------------------------------------ what is shown
 
@@ -299,9 +315,12 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         Adw.StyleManager.get_default().set_color_scheme(scheme)
 
     def _set_page_actions_enabled(self, enabled: bool) -> None:
+        """All page actions off, or on for what the page is: on the front page only those of its short menu, so that
+        a key of a hidden entry does nothing there either."""
+        whole = self._bridge.view != "start"
         for spec in self._manifest.actions:
             if spec.kind is Kind.PAGE:
-                self.lookup_action(spec.id).set_enabled(enabled)
+                self.lookup_action(spec.id).set_enabled(enabled and (whole or on_start(spec.id)))
 
     def _set_editing_enabled(self, enabled: bool) -> None:
         for spec in self._manifest.actions:
@@ -309,6 +328,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
                 self.lookup_action(spec.id).set_enabled(enabled)
 
     def _page_is_ready(self) -> None:
+        self._show_view(self._bridge.view)
         self._set_page_actions_enabled(True)
 
     def _page_is_reloading(self) -> None:

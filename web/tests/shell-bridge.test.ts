@@ -14,6 +14,16 @@ describe('ShellBridge', () => {
     expect(posted).toEqual([{ type: 'hello', contract: 1, app: 'composes' }])
   })
 
+  it('says whether it is the front page or a document, when it knows (sheet 11)', () => {
+    const { sink, posted } = fakeSink()
+    new ShellBridge(undefined, sink, 'start')
+    new ShellBridge('computes', sink, 'document')
+    expect(posted).toEqual([
+      { type: 'hello', contract: 1, view: 'start' },
+      { type: 'hello', contract: 1, app: 'computes', view: 'document' },
+    ])
+  })
+
   it('becomes ready and picks up capabilities from welcome', () => {
     const { sink } = fakeSink()
     const bridge = new ShellBridge('computes', sink)

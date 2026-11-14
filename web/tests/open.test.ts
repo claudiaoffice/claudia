@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { OPENABLE, appOfFileName, appOfServer, fetchDocsListing, filterListed, isSlides, openSession, openableFor, placeUpload, uploadFile } from '~/lib/open'
+import { OPENABLE, appOfFileName, appOfServer, fetchDocsListing, filterListed, isSlides, openSession, openableFor, placeUpload, sendFile, type Upload } from '~/lib/open'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { SlideSession } from '~/lib/slide-session'
@@ -114,6 +114,15 @@ describe('openSession', () => {
     const { factory } = links({ ...welcome('creates'), created: true }, true)
     const session = await openSession(factory)
     expect(session.justCreated).toBe(true)
+  })
+
+  it('says when the server has answered, before the document is loaded (an import has been read by then)', async () => {
+    const { factory } = links(welcome('computes'), true)
+    const order: string[] = []
+    const opening = openSession(factory, {}, () => order.push('answered'))
+    order.push('waiting')
+    await opening
+    expect(order).toEqual(['waiting', 'answered'])
   })
 
   it('does not say so for a document that was there before', async () => {
@@ -239,23 +248,82 @@ describe('filterListed', () => {
   })
 })
 
-describe('uploadFile and placeUpload', () => {
+/** An XMLHttpRequest that a test drives: progress, then an answer (or a failure). */
+class FakeXhr {
+  static last: FakeXhr | null = null
+  method = ''
+  url = ''
+  headers: Record<string, string> = {}
+  body: unknown = null
+  status = 0
+  responseText = ''
+  aborted = false
+  upload: { onprogress: ((e: { loaded: number; total: number; lengthComputable: boolean }) => void) | null } = { onprogress: null }
+  onload: (() => void) | null = null
+  onerror: (() => void) | null = null
+  onabort: (() => void) | null = null
+  constructor() {
+    FakeXhr.last = this
+  }
+  open(method: string, url: string) {
+    this.method = method
+    this.url = url
+  }
+  setRequestHeader(name: string, value: string) {
+    this.headers[name.toLowerCase()] = value
+  }
+  send(body: unknown) {
+    this.body = body
+  }
+  abort() {
+    this.aborted = true
+    this.onabort?.()
+  }
+  progress(loaded: number, total: number) {
+    this.upload.onprogress?.({ loaded, total, lengthComputable: true })
+  }
+  answer(status: number, body: unknown) {
+    this.status = status
+    this.responseText = JSON.stringify(body)
+    this.onload?.()
+  }
+}
+const makeXhr = () => new FakeXhr() as unknown as XMLHttpRequest
+
+describe('sendFile and placeUpload', () => {
   const file = Object.assign(new Blob(['PK']), { name: 'Budget 2026.xlsx' })
-  it('sends the bytes with the name percent-encoded and answers what the server says', async () => {
-    let sent: RequestInit | undefined
-    const answer = await uploadFile('http://h', file, (async (_url: string, init?: RequestInit) => {
-      sent = init
-      return new Response(JSON.stringify({ upload: 't', format: 'xlsx', app: 'computes' }), { status: 200 })
-    }) as typeof fetch)
-    expect((sent?.headers as Record<string, string>)['x-claudia-name']).toBe('Budget%202026.xlsx')
-    expect(answer).toMatchObject({ upload: 't', format: 'xlsx' })
+  it('sends the bytes with the name percent-encoded, tells how far it is, and answers what the server says', async () => {
+    const seen: number[] = []
+    const sending: Upload = sendFile('http://h', file, (fraction) => seen.push(fraction), makeXhr)
+    const xhr = FakeXhr.last!
+    expect([xhr.method, xhr.url, xhr.headers['x-claudia-name']]).toEqual(['POST', 'http://h/api/uploads', 'Budget%202026.xlsx'])
+    expect(xhr.body).toBe(file)
+    xhr.progress(1, 4)
+    xhr.progress(4, 4)
+    xhr.answer(200, { upload: 't', format: 'xlsx', app: 'computes' })
+    expect(await sending.done).toMatchObject({ upload: 't', format: 'xlsx' })
+    expect(seen).toEqual([0.25, 1])
   })
-  it('says why a file is refused', async () => {
-    const refuse = (status: number) => (async () => new Response('{}', { status })) as unknown as typeof fetch
-    expect(await uploadFile('http://h', file, refuse(415))).toEqual({ error: 'This is not a file Claudia can open.' })
-    expect(await uploadFile('http://h', file, refuse(413))).toEqual({ error: 'The file is too large for this server.' })
+  it('says why a file is refused, or that the server is not there', async () => {
+    const refusal = async (status: number, body: unknown = {}) => {
+      const sending = sendFile('http://h', file, () => {}, makeXhr)
+      FakeXhr.last!.answer(status, body)
+      return sending.done
+    }
+    expect(await refusal(415)).toEqual({ error: 'This is not a file Claudia can open.' })
+    expect(await refusal(413)).toEqual({ error: 'The file is too large for this server.' })
+    expect(await refusal(400, { detail: 'too many files at once' })).toEqual({ error: 'too many files at once' })
+    const lost = sendFile('http://h', file, () => {}, makeXhr)
+    FakeXhr.last!.onerror?.()
+    expect(await lost.done).toEqual({ error: 'The server cannot be reached.' })
     const conflict = (async () => new Response(JSON.stringify({ detail: 'plan is here already' }), { status: 409 })) as unknown as typeof fetch
     expect(await placeUpload('http://h', 't', conflict)).toEqual({ error: 'plan is here already' })
+  })
+  it('stops when asked, and then answers nothing to show', async () => {
+    const sending = sendFile('http://h', file, () => {}, makeXhr)
+    sending.abort()
+    expect(FakeXhr.last!.aborted).toBe(true)
+    expect(await sending.done).toEqual({ cancelled: true })
   })
 })
 

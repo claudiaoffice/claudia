@@ -57,6 +57,19 @@ def test_a_hello_is_answered_with_a_welcome_that_says_the_shell_has_native_menus
     assert recorder.ready == 1
 
 
+def test_the_bridge_remembers_whether_the_page_is_the_front_page_or_a_document(rig) -> None:
+    """Sheet 11: the window shows the short menu for ``start``; a page that does not say gets the whole menu."""
+    bridge, recorder = rig
+    bridge.receive(hello(view="start"))
+    assert bridge.view == "start"
+    bridge.receive(hello(view="document"))
+    assert bridge.view == "document"
+    bridge.receive(hello(view="start"))
+    bridge.receive(hello())
+    assert bridge.view == "document"
+    assert recorder.ready == 4
+
+
 def test_a_page_that_speaks_a_newer_contract_is_told_what_the_shell_speaks(rig) -> None:
     bridge, recorder = rig
     bridge.receive(hello(contract=9))

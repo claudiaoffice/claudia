@@ -103,17 +103,17 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     pump(lambda: view.get_uri() is not None, timeout=15, what="the page to start loading")
     assert view.get_uri().startswith("http://127.0.0.1:")
 
-    # Before a document is open the page has no menus, so the page actions are disabled. The page itself has
-    # nothing to say "hello" with yet either: the shell bridge is made by a workspace component (Workspace.vue /
-    # TextWorkspace.vue / SlideWorkspace.vue), and nothing of that sort is on screen while the Open dialog is
-    # (`app.vue` shows it exactly when no document is open) -- so `bridge.ready` only turns true once one is.
-    pump(lambda: not window.lookup_action("file.save").get_enabled(), what="no menu yet, so nothing to do")
-    assert not bridge.ready
+    # The front page says hello as the front page (sheet 11): the short menu, and nothing of a document's to do.
+    pump(lambda: bridge.ready and bridge.view == "start", timeout=30, what="the front page to say hello")
+    pump(lambda: window.lookup_action("file.open-file").get_enabled(), what="the front page's own entries")
+    assert not window.lookup_action("file.save").get_enabled()
+    assert not window.menu_edit.get_visible()
 
     # Create a document through the page's own Open dialog.
     pump(lambda: evaluate(view, FILL_AND_CREATE) == "clicked", timeout=30, what="the create-document form to render")
     pump(lambda: evaluate(view, CONFIRM_RECOVERY_KEY) == "confirmed", timeout=30, what="the recovery key dialog")
-    pump(lambda: bridge.ready, timeout=30, what="the now-open document's workspace to say hello")
+    pump(lambda: bridge.view == "document", timeout=30, what="the now-open document's workspace to say hello")
+    assert window.menu_edit.get_visible()
     pump(lambda: window.lookup_action("file.save").get_enabled(), timeout=30, what="the document to open")
     pump(lambda: window.lookup_action("view.page").get_state() is not None)
 

@@ -36,7 +36,7 @@ from __future__ import annotations
 import enum
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .identity import UnknownApp
@@ -53,7 +53,9 @@ __all__ = [
     "computes",
     "creates",
     "for_app",
+    "for_start",
     "menu_button_id",
+    "on_start",
     "menu_elements",
     "menu_xml",
     "about_links",
@@ -222,6 +224,7 @@ class Manifest:
                 "accelerators": list(action.accelerators),
                 "key_owner": action.key_owner.value,
                 "role": action.role,
+                "start": on_start(action.id),
             }
 
         def entry(e: MenuEntry) -> dict[str, Any]:
@@ -237,6 +240,40 @@ class Manifest:
             ],
             "header_toggles": [one(a) for a in self.header_toggles],
         }
+
+
+_START_ACTIONS = frozenset({"file.new", "file.open", "file.open-file", "file.quit", "view.dark", "help.about"})
+
+
+def on_start(action_id: str) -> bool:
+    """Does the action belong in the menu of the front page, where no document is open (sheet 11)? New, Open…,
+    Open a File… and Quit; Dark Mode; App Language; About. Everything else needs a document."""
+    return action_id in _START_ACTIONS or action_id.startswith("config.language.")
+
+
+def for_start(manifest: Manifest) -> Manifest:
+    """The short menu of the front page (sheet 11): only the actions :func:`on_start` keeps, and no empty section,
+    flyout or menu — Edit, Format and Tools disappear rather than show greyed-out entries. The shells show it while
+    the page has said ``hello`` with ``view: "start"``, and the whole manifest for a document."""
+
+    def keep(entry: MenuEntry) -> MenuEntry | None:
+        if isinstance(entry, Submenu):
+            items = tuple(a for a in entry.items if on_start(a.id))
+            return replace(entry, items=items) if items else None
+        return entry if on_start(entry.id) else None
+
+    menus = []
+    for menu in manifest.menus:
+        sections = tuple(
+            kept
+            for kept in (
+                tuple(e for e in (keep(entry) for entry in section) if e is not None) for section in menu.sections
+            )
+            if kept
+        )
+        if sections:
+            menus.append(replace(menu, sections=sections))
+    return replace(manifest, menus=tuple(menus), header_toggles=())
 
 
 def _page(

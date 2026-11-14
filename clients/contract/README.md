@@ -12,8 +12,8 @@ All messages are JSON objects with a `type`. A message is at most 64 KiB. A rece
 
 | type | from | meaning |
 | --- | --- | --- |
-| `hello` | page | The page is there: `contract` (the highest version it speaks, a whole number), `app` (`composes`, `computes`, `creates`; left out by a page that does not know yet which app its server runs, in which case the shell takes it to be its own). May also list the versions it speaks (`supported`). |
-| `welcome` | shell | Answer to `hello`: the `contract` version both will use, the shell's version and its `capabilities` (`native-menu`, `actions`; `connect` and `servers` when the shell can connect the window to another server and keeps the list of servers). |
+| `hello` | page | The page is there: `contract` (the highest version it speaks, a whole number), `app` (`composes`, `computes`, `creates`; left out by a page that does not know yet which app its server runs, in which case the shell takes it to be its own), and `view` (`start` for the front page, which gets the shell's short menu, or `document`; left out by an older page, which gets the whole menu, D447). May also list the versions it speaks (`supported`). |
+| `welcome` | shell | Answer to `hello`: the `contract` version both will use, the shell's version and its `capabilities` (`native-menu`, `actions`; `connect` and `servers` when the shell can connect the window to another server and keeps the list of servers), and `app`, the window's own app (D444). |
 | `action` | shell | Carry out the menu action `action` (an id such as `file.save`). `target` (`on` or `off`) is given for choices that are ticked or not: asking for the state that is there already does nothing. |
 | `action_state` | page | Which actions are `enabled`, `checked` or relabelled now. Only the actions named change. |
 | `connect` | page | Show the server at `address` (as a person typed it, or an origin from the list) in this window. The shell checks it and either loads that server's page or answers `connect_failed`. Only sent when the shell offers `connect`. |

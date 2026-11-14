@@ -14,6 +14,9 @@ import { isBookmark, type Bookmark } from './server-bookmarks'
 
 export const SHELL_CONTRACT_VERSION = 1
 export type App = 'composes' | 'computes' | 'creates'
+/** What a page tells its shell it is (sheet 11): the front page, or a document. */
+export type ShellView = 'start' | 'document'
+
 /** Is `value` one of the three apps? (`app` is a plain string wherever a server told it.) */
 export function isApp(value: unknown): value is App {
   return value === 'composes' || value === 'computes' || value === 'creates'
@@ -117,10 +120,11 @@ export class ShellBridge {
   private failureHandlers = new Set<ConnectFailedHandler>()
   private lastReported: Record<string, string> = {}
 
-  constructor(app: App | undefined, sink: MessageSink = NULL_SINK) {
+  /** `view` (sheet 11): the front page gets the shell's short menu, a document the whole one. */
+  constructor(app: App | undefined, sink: MessageSink = NULL_SINK, view?: ShellView) {
     this.app = app
     this.sink = sink
-    this.sink.post(app ? { type: 'hello', contract: SHELL_CONTRACT_VERSION, app } : { type: 'hello', contract: SHELL_CONTRACT_VERSION })
+    this.sink.post({ type: 'hello', contract: SHELL_CONTRACT_VERSION, ...(app ? { app } : {}), ...(view ? { view } : {}) })
   }
 
   /** Does the shell draw the menus itself? While true, a workspace should not render its own `MenuBar`. */
@@ -227,8 +231,9 @@ export function createShellBridge(
   // mismatch at the one spot that knows it is safe (the fields are still there at runtime; only the structural
   // check can't see them), rather than this module importing `reactive` itself just to make the types line up.
   wrap: (bridge: ShellBridge) => ShellBridge = (bridge) => bridge,
+  view?: ShellView,
 ): ShellBridge & { detach: () => void } {
-  const bridge = wrap(new ShellBridge(app, handler ?? NULL_SINK)) as ShellBridge & { detach: () => void }
+  const bridge = wrap(new ShellBridge(app, handler ?? NULL_SINK, view)) as ShellBridge & { detach: () => void }
   if (handler) {
     const receive = (raw: string) => bridge.receive(raw)
     const root = globalThis as ShellRoot

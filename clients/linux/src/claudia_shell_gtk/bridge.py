@@ -51,6 +51,9 @@ class Bridge:
         self._on_servers = on_servers
         self._server_list = server_list
         self._ready = False
+        self.view = "document"
+        """What the page said it is in its last ``hello`` (sheet 11): ``start``, the front page, or ``document`` — also
+        for a page that does not say, which then gets the whole menu as before."""
         self.page_errors: list[str] = []
         """What the page reported as wrong with the shell's messages, for the log and the diagnostics."""
 
@@ -99,6 +102,7 @@ class Bridge:
             self._reply(contract.error_for(problem))
             return
         self._ready = True
+        self.view = message.get("view", "document")
         self._reply(
             contract.welcome(
                 shell_version=self._shell_version,

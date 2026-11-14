@@ -42,6 +42,8 @@ VALID = [
     HELLO,
     {"type": "hello", "contract": 1, "app": "computes"},
     {"type": "hello", "contract": 1},  # a page that does not know its server's app yet
+    {"type": "hello", "contract": 1, "view": "start"},  # (sheet 11) the front page: the short menu
+    {"type": "hello", "contract": 1, "app": "composes", "view": "document"},
     {**HELLO, "something_new": [1, 2, 3]},  # (additive evolution: unknown fields are ignored)
     ACTION,
     {**ACTION, "target": "page"},
@@ -83,6 +85,7 @@ INVALID = [
     {**WELCOME, "locale": 7},  # (E5.7) not a string
     {**WELCOME, "locale": "not a locale!"},
     {**WELCOME, "app": "Composes!"},  # (D444) an app is a lower-case word
+    {"type": "hello", "contract": 1, "view": "settings"},  # (sheet 11) only the front page or a document
     {"type": "connect"},  # (E5.8) to what?
     {"type": "connect", "address": 7},
     {"type": "connect", "address": ""},

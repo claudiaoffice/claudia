@@ -31,6 +31,8 @@ export interface ManifestAction {
   checkable: boolean
   accelerators: string[]
   role: string | null
+  /** Does it belong in the short menu of the front page (sheet 11, `manifest.on_start`)? Absent in an older listing. */
+  start?: boolean
 }
 
 export interface ManifestSubmenu {
@@ -140,4 +142,29 @@ function buildMenu(menu: ManifestMenu): WindowMenuItem {
  */
 export function buildMainMenu(listing: ManifestListing, _appTitle: string): WindowMenuItem[] {
   return listing.menus.map(buildMenu)
+}
+
+/**
+ * The short menu of the front page (sheet 11): only what works without a document — the actions the manifest marks
+ * `start` — with empty sections, flyouts and menus left out rather than greyed. Windows needs nothing else: the keys of the text fields work without a menu.
+ */
+export function startListing(listing: ManifestListing, alsoKeep: (action: ManifestAction) => boolean = () => false): ManifestListing {
+  const kept = (action: ManifestAction) => action.start === true || alsoKeep(action)
+  const menus = listing.menus
+    .map((menu) => ({
+      ...menu,
+      sections: menu.sections
+        .map((section) =>
+          section
+            .map((entry): ManifestEntry | null => {
+              if (!isSubmenu(entry)) return kept(entry) ? entry : null
+              const items = entry.items.filter(kept)
+              return items.length ? { ...entry, items } : null
+            })
+            .filter((entry): entry is ManifestEntry => entry !== null),
+        )
+        .filter((section) => section.length > 0),
+    }))
+    .filter((menu) => menu.sections.length > 0)
+  return { ...listing, menus }
 }

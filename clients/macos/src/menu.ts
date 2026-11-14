@@ -20,6 +20,8 @@ export interface ManifestAction {
   checkable: boolean
   accelerators: string[]
   role: string | null
+  /** Does it belong in the short menu of the front page (sheet 11, `manifest.on_start`)? Absent in an older listing. */
+  start?: boolean
 }
 
 export interface ManifestSubmenu {
@@ -130,7 +132,9 @@ export function buildMainMenu(listing: ManifestListing, appTitle: string): Windo
     menuItems: [about, quit].filter((a): a is ManifestAction => a !== undefined).map(buildItem),
   }
 
-  return [appMenu, ...listing.menus.map((menu) => buildMenu(menu, relocated))]
+  // A menu that had nothing but About or Quit (Help on the front page, sheet 11) is left out, not shown empty.
+  const menus = listing.menus.map((menu) => buildMenu(menu, relocated)).filter((menu) => (menu.menuItems ?? []).length > 0)
+  return [appMenu, ...menus]
 }
 
 function findAction(listing: ManifestListing, id: string): ManifestAction | undefined {
@@ -142,4 +146,30 @@ function findAction(listing: ManifestListing, id: string): ManifestAction | unde
     }
   }
   return undefined
+}
+
+/**
+ * The short menu of the front page (sheet 11): only what works without a document — the actions the manifest marks
+ * `start` — with empty sections, flyouts and menus left out rather than greyed. On a Mac the clipboard items stay: their Cocoa roles are what makes ⌘X, ⌘C and ⌘V work in the page's text
+ * fields at all.
+ */
+export function startListing(listing: ManifestListing, alsoKeep: (action: ManifestAction) => boolean = (action) => action.role === 'cut:' || action.role === 'copy:' || action.role === 'paste:'): ManifestListing {
+  const kept = (action: ManifestAction) => action.start === true || alsoKeep(action)
+  const menus = listing.menus
+    .map((menu) => ({
+      ...menu,
+      sections: menu.sections
+        .map((section) =>
+          section
+            .map((entry): ManifestEntry | null => {
+              if (!isSubmenu(entry)) return kept(entry) ? entry : null
+              const items = entry.items.filter(kept)
+              return items.length ? { ...entry, items } : null
+            })
+            .filter((entry): entry is ManifestEntry => entry !== null),
+        )
+        .filter((section) => section.length > 0),
+    }))
+    .filter((menu) => menu.sections.length > 0)
+  return { ...listing, menus }
 }

@@ -1,15 +1,16 @@
 // The shell page's logic with a fake Neutralino, a fake frame and a fake core: the menu, the frame messages (origin
 // and source checked), the core's messages, and the order in which things start.
 import { describe, expect, it } from 'vitest'
-import { buildMainMenu, type ManifestListing } from '../src/menu.js'
+import { buildMainMenu, startListing, type ManifestListing } from '../src/menu.js'
 import { ShellPage, knownActions, type PageEnv } from '../src/shell-page.js'
 import { CORE_ID, FROM_CORE, TO_CORE } from '../src/core-protocol.js'
 import listing from '../src/generated/menu.creates.json' with { type: 'json' }
 
 const MENU = buildMainMenu(listing as ManifestListing, 'Claudia Creates')
+const START = buildMainMenu(startListing(listing as ManifestListing), 'Claudia Creates')
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-function setup(overrides: { dispatchFails?: number; setMenuFails?: boolean; stats?: unknown } = {}) {
+function setup(overrides: { dispatchFails?: number; setMenuFails?: boolean; stats?: unknown; startMenu?: boolean } = {}) {
   const timers: Array<() => void> = []
   const listeners: Record<string, (event: { detail: unknown }) => void> = {}
   const dispatched: Array<{ id: string; event: string; data: any }> = []
@@ -54,6 +55,7 @@ function setup(overrides: { dispatchFails?: number; setMenuFails?: boolean; stat
     app: 'creates',
     version: '0.1.0',
     menu: MENU,
+    ...(overrides.startMenu ? { startMenu: START } : {}),
     neutralino: neutralino as never,
     frame: frame as never,
     status,
@@ -418,5 +420,35 @@ describe('knownActions', () => {
     expect(ids).toContain('file.quit')
     expect(ids).toContain('help.about')
     expect(ids).toContain('file.new')
+  })
+})
+
+describe('the front page and a document (sheet 11)', () => {
+  const tops = (menu: unknown) => (menu as Array<{ text: string }>).map((m) => m.text)
+  it('shows the short menu first, the whole one when a document says hello, and the short one again on the front page', async () => {
+    const t = setup({ startMenu: true })
+    await t.page.start()
+    expect(t.menus.at(-1)).toEqual(START)
+    t.core({ kind: 'show', origin: 'https://demo.example.org' })
+    t.fromFrame({ type: 'hello', contract: 1, view: 'start' })
+    await tick()
+    expect(t.menus.at(-1)).toEqual(START)
+    t.fromFrame({ type: 'hello', contract: 1, app: 'creates', view: 'document' })
+    await tick()
+    expect(t.menus.at(-1)).toEqual(MENU)
+    t.fromFrame({ type: 'hello', contract: 1, view: 'start' })
+    await tick()
+    expect(tops(t.menus.at(-1))).toEqual(tops(START))
+  })
+  it('gives a page that does not say what it is the whole menu', async () => {
+    const t = setup({ startMenu: true })
+    await t.page.start()
+    t.core({ kind: 'show', origin: 'https://demo.example.org' })
+    t.hello()
+    await tick()
+    expect(t.menus.at(-1)).toEqual(MENU)
+  })
+  it('has no Edit, Format or Tools on the front page', () => {
+    expect(tops(START)).toEqual(['Claudia Creates', 'File', 'Edit', 'View', 'Config'])
   })
 })

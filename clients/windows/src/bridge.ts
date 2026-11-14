@@ -30,6 +30,7 @@ export interface BridgeOptions {
 
 export class Bridge {
   private isReady = false
+  private shownView: 'start' | 'document' = 'document'
   /** What the page reported as wrong with the shell's messages, for the log and the diagnostics. */
   readonly pageErrors: string[] = []
 
@@ -37,6 +38,12 @@ export class Bridge {
 
   get ready(): boolean {
     return this.isReady
+  }
+
+  /** What the page said it is in its last hello (sheet 11): the front page gets the short menu; a document, and a
+   * page that does not say, the whole one. */
+  get view(): 'start' | 'document' {
+    return this.shownView
   }
 
   /** Forget the page (the frame is loading another one). */
@@ -86,6 +93,7 @@ export class Bridge {
       throw problem
     }
     this.isReady = true
+    this.shownView = message.view === 'start' ? 'start' : 'document'
     this.reply(
       contract.welcome({
         shell: this.options.shell,

@@ -15,7 +15,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "New",
-            "role": null
+            "role": null,
+            "start": true
           },
           {
             "accelerators": [
@@ -26,7 +27,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Open\u2026",
-            "role": null
+            "role": null,
+            "start": true
           },
           {
             "accelerators": [
@@ -37,7 +39,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Open a File\u2026",
-            "role": null
+            "role": null,
+            "start": true
           }
         ],
         [
@@ -50,7 +53,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Save",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -61,7 +65,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Save New Checkpoint\u2026",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -72,7 +77,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Download",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -83,7 +89,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Print\u2026",
-            "role": null
+            "role": null,
+            "start": false
           }
         ],
         [
@@ -98,7 +105,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Share\u2026",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -109,7 +117,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Assign New Owner\u2026",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -120,7 +129,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Accept Ownership\u2026",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -131,7 +141,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Leave Document\u2026",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -142,7 +153,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Export\u2026",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -153,7 +165,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Delete From Server\u2026",
-                "role": null
+                "role": null,
+                "start": false
               }
             ],
             "label": "Manage"
@@ -169,7 +182,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Close Document",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -180,7 +194,8 @@
             "key_owner": "shell",
             "kind": "shell",
             "label": "Quit",
-            "role": null
+            "role": null,
+            "start": true
           }
         ]
       ]
@@ -198,7 +213,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Undo",
-            "role": "undo:"
+            "role": "undo:",
+            "start": false
           },
           {
             "accelerators": [
@@ -209,7 +225,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Redo",
-            "role": "redo:"
+            "role": "redo:",
+            "start": false
           }
         ],
         [
@@ -222,7 +239,8 @@
             "key_owner": "view",
             "kind": "page",
             "label": "Copy",
-            "role": "copy:"
+            "role": "copy:",
+            "start": false
           },
           {
             "accelerators": [
@@ -233,7 +251,8 @@
             "key_owner": "view",
             "kind": "page",
             "label": "Cut",
-            "role": "cut:"
+            "role": "cut:",
+            "start": false
           },
           {
             "accelerators": [
@@ -244,7 +263,8 @@
             "key_owner": "view",
             "kind": "page",
             "label": "Paste",
-            "role": "paste:"
+            "role": "paste:",
+            "start": false
           },
           {
             "items": [
@@ -257,7 +277,8 @@
                 "key_owner": "view",
                 "kind": "page",
                 "label": "Plain Text",
-                "role": null
+                "role": null,
+                "start": false
               }
             ],
             "label": "Paste As"
@@ -273,7 +294,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "New Slide",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -284,7 +306,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Plan the Time of This Slide\u2026",
-            "role": null
+            "role": null,
+            "start": false
           }
         ],
         [
@@ -297,7 +320,8 @@
             "key_owner": "view",
             "kind": "page",
             "label": "Edit Text",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -308,7 +332,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Text Box",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -319,7 +344,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Image\u2026",
-            "role": null
+            "role": null,
+            "start": false
           }
         ],
         [
@@ -332,7 +358,8 @@
             "key_owner": "view",
             "kind": "page",
             "label": "Delete",
-            "role": null
+            "role": null,
+            "start": false
           }
         ]
       ]
@@ -350,7 +377,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Apply Style\u2026",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -361,7 +389,8 @@
             "key_owner": "shell",
             "kind": "page",
             "label": "Edit This Style\u2026",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -372,7 +401,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "All Styles\u2026",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "items": [
@@ -385,7 +415,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Bulleted List",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -396,7 +427,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Numbered List",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -407,7 +439,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Continue Previous List",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -418,7 +451,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Start At\u2026",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -429,7 +463,8 @@
                 "key_owner": "view",
                 "kind": "page",
                 "label": "Indent",
-                "role": null
+                "role": null,
+                "start": false
               },
               {
                 "accelerators": [
@@ -440,7 +475,8 @@
                 "key_owner": "view",
                 "kind": "page",
                 "label": "Outdent",
-                "role": null
+                "role": null,
+                "start": false
               }
             ],
             "label": "List"
@@ -456,7 +492,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Colours\u2026",
-            "role": null
+            "role": null,
+            "start": false
           }
         ],
         [
@@ -469,7 +506,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Describe Object\u2026",
-            "role": null
+            "role": null,
+            "start": false
           }
         ]
       ]
@@ -487,7 +525,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Show Who Wrote What",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -498,7 +537,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "History and Chat",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -509,7 +549,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Dark Mode",
-            "role": null
+            "role": null,
+            "start": true
           }
         ],
         [
@@ -522,7 +563,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Show Grid",
-            "role": null
+            "role": null,
+            "start": false
           }
         ],
         [
@@ -536,7 +578,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Present from the First Slide",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -548,7 +591,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Present from This Slide",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -559,7 +603,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Speaker Notes",
-            "role": null
+            "role": null,
+            "start": false
           }
         ]
       ]
@@ -577,7 +622,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Ask the Assistant\u2026",
-            "role": null
+            "role": null,
+            "start": false
           }
         ]
       ]
@@ -595,7 +641,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Shortcuts",
-            "role": null
+            "role": null,
+            "start": false
           }
         ],
         [
@@ -608,7 +655,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "English",
-                "role": null
+                "role": null,
+                "start": true
               },
               {
                 "accelerators": [],
@@ -617,7 +665,8 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Deutsch",
-                "role": null
+                "role": null,
+                "start": true
               }
             ],
             "label": "App Language"
@@ -638,7 +687,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Ask ai",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -649,7 +699,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "How Do I\u2026?",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -660,7 +711,8 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Documentation",
-            "role": null
+            "role": null,
+            "start": false
           },
           {
             "accelerators": [
@@ -671,7 +723,8 @@
             "key_owner": "shell",
             "kind": "shell",
             "label": "About Claudia Creates",
-            "role": null
+            "role": null,
+            "start": true
           }
         ]
       ]

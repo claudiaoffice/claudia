@@ -116,7 +116,7 @@ defineExpose({
 // into the reactive bridge itself, or `welcome`'s capabilities land outside Vue's dependency tracking. The cast is
 // `reactive()`'s own return type (`Reactive<ShellBridge>`) structurally losing `ShellBridge`'s private fields --
 // still there at runtime, just invisible to this particular structural check.
-const shell = createShellBridge(props.app, undefined, (bridge) => reactive(bridge) as typeof bridge)
+const shell = createShellBridge(props.app, undefined, (bridge) => reactive(bridge) as typeof bridge, 'document')
 shell.onAction((id, target) => applyAction(props.menus, id, target))
 onBeforeUnmount(() => shell.detach())
 watch(() => props.menus, (m) => shell.reportStates(collectStates(m)), { immediate: true })

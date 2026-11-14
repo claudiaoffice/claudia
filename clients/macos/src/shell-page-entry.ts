@@ -3,7 +3,7 @@
 // apps/<app>/shell/shell.js, which apps/<app>/index.html loads after `js/neutralino.js`.
 
 import { getIdentity, type App } from './identity.js'
-import { buildMainMenu, type ManifestListing } from './menu.js'
+import { buildMainMenu, startListing, type ManifestListing } from './menu.js'
 import { ShellPage, type FrameLike, type NeutralinoLike, type StatusView } from './shell-page.js'
 
 function element<T extends HTMLElement>(id: string): T {
@@ -44,6 +44,7 @@ export function run(app: App, listing: ManifestListing, version: string): void {
     app,
     version,
     menu: buildMainMenu(listing, identity.title),
+    startMenu: buildMainMenu(startListing(listing), identity.title),
     neutralino,
     frame: element<HTMLIFrameElement>('frame') as unknown as FrameLike,
     status,

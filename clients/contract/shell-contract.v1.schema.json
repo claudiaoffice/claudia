@@ -35,7 +35,11 @@
         "type": { "const": "hello" },
         "contract": { "type": "integer", "minimum": 1 },
         "app": { "$ref": "#/$defs/token" },
-        "frontend": { "description": "Version of the frontend, for diagnostics.", "type": "string", "maxLength": 64 }
+        "frontend": { "description": "Version of the frontend, for diagnostics.", "type": "string", "maxLength": 64 },
+        "view": {
+          "description": "What the page is (sheet 11): 'start', the front page with no document open, for which a shell shows only the menu entries that work there; 'document', a document, for which it shows the whole menu. Left out by an older page, which gets the whole menu.",
+          "enum": ["start", "document"]
+        }
       }
     },
     "welcome": {
