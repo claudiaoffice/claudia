@@ -9,11 +9,11 @@ Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 →
 the number formats). Search on claudia-search (SEC-18, CODE-18).
 
 ### Added
-- Excel functions, up to rank 300 of the catalog (D450, D451): trigonometry and number theory, rounding, number systems,
+- Excel functions, up to rank 300 of the catalog (D480, D481): trigonometry and number theory, rounding, number systems,
   matrices (MMULT, MINVERSE, MDETERM, LINEST ...), dynamic arrays (SEQUENCE, SORT, SORTBY, FILTER, UNIQUE, VSTACK, HSTACK,
   TRANSPOSE, RANDARRAY, TEXTSPLIT), text, statistics and distributions, SUBTOTAL, AGGREGATE, dates and times, finance (RATE,
   NPER, IPMT, PPMT, XNPV, XIRR), information (TYPE, N, T, CELL, INFO, SHEET ...), LET, LOOKUP, ADDRESS. Each with a test.
-- A formula can give a matrix (`claudia_computes.spill.Matrix`); the operators work cell by cell on ranges (D450).
+- A formula can give a matrix (`claudia_computes.spill.Matrix`); the operators work cell by cell on ranges (D480).
 - **Printing a workbook** (E6.19, D1001–D1009; state schema 11 → 12): `SheetPrintSetup` (orientation, scale — fit to
   width by default, fit to one page, or 10–400 %; page order; repeated rows and columns; gridlines, headings, purpose
   tints, the sheet's name in the footer, objects, skipping empty pages) and `DEFAULT_SHEET_PRINT`, stored per sheet or
@@ -38,7 +38,7 @@ the number formats). Search on claudia-search (SEC-18, CODE-18).
   `=COLUMNS($B$3:B3)` in B3 counted itself as a circle (`#CIRC!`), where Excel counts columns (D377).
 
 ### Changed
-- `=A1:A3*2` and the other operators on ranges spill cell by cell instead of `#VALUE!` (D450).
+- `=A1:A3*2` and the other operators on ranges spill cell by cell instead of `#VALUE!` (D480).
 - Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
   rebuilt from the log.
 

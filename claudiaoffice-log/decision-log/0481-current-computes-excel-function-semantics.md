@@ -1,5 +1,5 @@
 ---
-id: D451
+id: D481
 title: "Where Excel's functions have a choice, claudia's choices"
 status: current
 applies-to: computes
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D451 · Where Excel's functions have a choice, claudia's choices
+# D481 · Where Excel's functions have a choice, claudia's choices
 
 * **No `#CALC!`**: FILTER with no match gives `#N/A`.
 * **Clock**: `TODAY` and `NOW` read `Scope.clock`; they are calculated when their cell is, not by a timer. Backlog: a

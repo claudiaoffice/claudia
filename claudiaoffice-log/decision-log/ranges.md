@@ -35,10 +35,10 @@ Unused numbers in a closed block stay unused.
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D318 used) | 2026-11-10 | open |
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
 | D430–D449 | one server for all three apps: app modules, addresses, limits, idle exit, folder lock, isolation (branch `one-server`; D430–D448 used) | 2026-11-14 | open |
-| D450–D469 | Excel function coverage: matrix results, cell-by-cell operators, the first 300 functions (branch `excel-functions`; D450–D451 used) | 2026-11-14 | open |
+| D480–D499 | Excel function coverage: matrix results, cell-by-cell operators, the first 300 functions (branch `excel-functions`; D480–D481 used) | 2026-11-14 | open |
 | D450–D469 | import and export wiring: every function of the three apps reaches the OpenDocument and Office formats, and what does not is said (branch `import-export-wiring`; D450–D455 used) | 2026-11-14 | open |
 | D1001–D1020 | printing sheets: the computes print preview, scale, print area, page cuts, footer, charts (E6.19; branch `computes-print`; D1001–D1010 used) | 2026-11-14 | open |
-| D450–D459 | search & replace in composes and creates: what is searched, shortcuts in a text, locks (E9.28, E10.19; branch `search`; D450–D452 used) | 2026-11-14 | open |
+| D470–D479 | search & replace in composes and creates: what is searched, shortcuts in a text, locks (E9.28, E10.19; branch `search`; D470–D472 used) | 2026-11-14 | open |
 
 ## Never to be used
 

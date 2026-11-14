@@ -1,5 +1,5 @@
 ---
-id: D450
+id: D470
 title: "Search in composes and creates looks in everything that has words, switched by kind"
 status: current
 applies-to: all
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D450 · Search in composes and creates looks in everything that has words, switched by kind
+# D470 · Search in composes and creates looks in everything that has words, switched by kind
 
 **What is searched.** The owner's answer (2026-11-14) to the proposal for E9.28 and E10.19: *search all objects and texts, including speaker notes*. So the panel of D282 is the same in the three apps and the app says what it can look in, as switches (the host's `switches`, all on by default):
 

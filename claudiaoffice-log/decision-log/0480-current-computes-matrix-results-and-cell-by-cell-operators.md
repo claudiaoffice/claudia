@@ -1,5 +1,5 @@
 ---
-id: D450
+id: D480
 title: "A formula can give a matrix, and the operators work cell by cell on ranges"
 status: current
 applies-to: computes
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D450 · A formula can give a matrix, and the operators work cell by cell on ranges
+# D480 · A formula can give a matrix, and the operators work cell by cell on ranges
 
 SORT, FILTER, UNIQUE, SEQUENCE, TRANSPOSE, MMULT, LINEST and the like give a `Matrix` (`claudia_computes.spill`): a
 rectangular, non-empty grid of values. It spills like the result of `SQL()` and is `#SPILL!` when something is in the

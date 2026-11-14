@@ -130,7 +130,7 @@ Core 0.17.0, computes 0.3.1, server changelog Unreleased (version unchanged: `__
   cell labels, `cellOf`, and the grid marks (`marksFor`, `SearchMarks`) moved to `lib/sheet-search-host.ts`.
 * **Not changed:** the panel's words still say "cell" and the kinds are computes'; they become the host's with E9.28.
 
-## 2026-11-14: composes and creates (E9.28, E10.19; D450–D452)
+## 2026-11-14: composes and creates (E9.28, E10.19; D470–D472)
 
 Built on branch `search` on the three layers above, with the app-neutral parts pulled out so a fourth host would be
 small.
@@ -149,7 +149,7 @@ small.
   `computes_search`, `composes_search` and `creates_search` are now thin adapters with their own docstrings, places,
   scopes and limits (`MAX_REPLACED_CELLS` / `MAX_REPLACED_TEXTS`). `leave` entries may carry `said`, the text the match
   had when it was shown; a mismatch skips the text as `changed`. Locks: composes asks `presence.conflicts` per edit
-  span and skips the paragraph if any match is in a held zone (paragraph-level, D452); creates skips an object another
+  span and skips the paragraph if any match is in a held zone (paragraph-level, D472); creates skips an object another
   person has selected.
 * **Web.** `SearchHost` gained `unit`, `switches`, `scopes`, `extraParts`; the panel's switches, kind labels and
   sentences are static `t()` calls (the catalogue extractor reads only those) and the panel says "cell" or "text" by
@@ -164,6 +164,6 @@ small.
 creates coverage floor 95. Web: 1188 tests.
 
 **Not built.** The assistant's `search_replace` model method for composes and creates (replace is people-only in
-composes, D452); marks inside the notes field; an e2e script per app (`web/e2e/search.cjs` covers computes only);
+composes, D472); marks inside the notes field; an e2e script per app (`web/e2e/search.cjs` covers computes only);
 a heading shown with each result in composes; per-match (instead of per-paragraph) lock skipping; the Windows and macOS
 npm tests were not run here (no `node_modules`), only their menu generator's checks.
