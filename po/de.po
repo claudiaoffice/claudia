@@ -5,6 +5,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "\"address\" ($A$1), \"row\", \"col\", \"contents\", \"type\" (b blank, l text, v other), \"sheet\", and the plain defaults \"format\" (G), \"prefix\", \"protect\", \"parentheses\", \"color\" and \"filename\". Others (\"width\") are #N/A: claudia has no column widths a formula can see."
+msgstr "\"address\" ($A$1), \"row\", \"col\", \"contents\", \"type\" (b leer, l Text, v anderes), \"sheet\" sowie die einfachen Vorgaben \"format\" (G), \"prefix\", \"protect\", \"parentheses\", \"color\" und \"filename\". Anderes (\"width\") ergibt #N/A: Spaltenbreiten sind für eine Formel nicht sichtbar."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "\"recalc\" (Automatic), \"numfile\" (the number of sheets), \"origin\" ($A:$A$1), \"system\" (claudia) and \"release\" (the version of the formula language). Others are #N/A."
+msgstr "\"recalc\" (Automatic), \"numfile\" (Anzahl der Tabellenblätter), \"origin\" ($A:$A$1), \"system\" (claudia) und \"release\" (Version der Formelsprache). Anderes ergibt #N/A."
+
 #: web/app/components/ResultNote.vue:23
 msgid "#SPILL! — the result does not fit"
 msgstr "#SPILL! – das Ergebnis passt nicht hinein"
@@ -46,8 +54,16 @@ msgid "--- What the server printed ({log}) ---"
 msgstr "--- Was der Server ausgegeben hat ({log}) ---"
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 #NULL!, 2 #DIV/0!, 3 #VALUE!, 4 #REF!, 5 #NAME?, 6 #NUM!, 7 #N/A; #N/A if there is no error."
+msgstr "1 #NULL!, 2 #DIV/0!, 3 #VALUE!, 4 #REF!, 5 #NAME?, 6 #NUM!, 7 #N/A; #N/A, wenn kein Fehler vorliegt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "1 Jan 2025 to 13 Nov 2026"
 msgstr "1. Jan. 2025 bis 13. Nov. 2026"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 Jan to 30 Jul 2012, 30/360"
+msgstr "1. Jan bis 30. Jul 2012, 30/360"
 
 #: web/app/lib/noun-phrases.ts:111
 msgid "1 cell"
@@ -56,6 +72,10 @@ msgstr "1 Zelle"
 #: web/app/components/SqlEditor.vue:142
 msgid "1 column"
 msgstr "1 Spalte"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 for a number (and an empty cell), 2 for text, 4 for TRUE/FALSE, 16 for an error, 64 for several values."
+msgstr "1 für eine Zahl (und eine leere Zelle), 2 für Text, 4 für TRUE/FALSE, 16 für einen Fehler, 64 für mehrere Werte."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "1 for a positive number, -1 for a negative one, 0 for 0."
@@ -102,12 +122,32 @@ msgid "3 per page, with lines"
 msgstr "3 pro Seite, mit Linien"
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "30 Dec 2008 to 31 Jan 2009"
+msgstr "30. Dez 2008 bis 31. Jan 2009"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "31 Dec 2026: 2026 has 53 ISO weeks"
+msgstr "31. Dez 2026: 2026 hat 53 ISO-Wochen"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "31 Jan to 28 Feb 2025"
+msgstr "31. Jan bis 28. Feb 2025"
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "31 Oct 2026 + 1 month = 30 Nov 2026"
 msgstr "31. Okt. 2026 + 1 Monat = 30. Nov. 2026"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "4 Jan 2027, a Monday"
+msgstr "4. Jan 2027, ein Montag"
 
 #: web/app/lib/print/setup.ts:48
 msgid "4 per page"
 msgstr "4 pro Seite"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "6 Nov to 13 Nov 2026"
+msgstr "6. Nov bis 13. Nov 2026"
 
 #: web/app/lib/print/setup.ts:49
 msgid "6 per page"
@@ -116,6 +156,10 @@ msgstr "6 pro Seite"
 #: web/app/components/RandomDialog.vue:202
 msgid "68 % of the values fall between {low} and {high}"
 msgstr "68 % der Werte liegen zwischen {low} und {high}"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "8,000 paid back in 48 payments of 200"
+msgstr "8.000 in 48 Raten zu je 200 zurückgezahlt"
 
 #: web/app/lib/print/setup.ts:50
 msgid "9 per page"
@@ -128,6 +172,10 @@ msgstr "@ai diesen Text prüfen"
 #: web/app/components/ImportDialog.vue:82
 msgid "A Claudia document goes into a place as it is, still sealed, and is opened with a name and password it already knows."
 msgstr "Ein Claudia-Dokument kommt so, wie es ist, an einen Ort, weiter versiegelt, und wird mit einem Namen und Passwort geöffnet, die es schon kennt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A Roman numeral as a number (capitals or not; a leading minus sign is kept)."
+msgstr "Eine römische Zahl als Zahl (Groß- oder Kleinschreibung; ein führendes Minuszeichen bleibt erhalten)."
 
 #: web/app/lib/search.ts:460
 msgid "A bracket is never closed."
@@ -153,9 +201,17 @@ msgstr "Ein frei schwebendes Objekt auf dem Blatt"
 msgid "A full path, the folder it lives in, or a bare program name to look up on the PATH. Blank looks for the usual name."
 msgstr "Ein vollständiger Pfad, der Ordner, in dem das Programm liegt, oder ein einfacher Programmname, der im PATH gesucht wird. Leer sucht den üblichen Namen."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A grid of numbers that count up from a start by a step: rows, columns, start (1), step (1)."
+msgstr "Ein Raster aus Zahlen, die von einem Start aus in einer Schrittweite hochzählen: Zeilen, Spalten, Start (1), Schritt (1)."
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "A hyphen the line is never broken at"
 msgstr "Ein Bindestrich, an dem die Zeile nie umbricht"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A link: gives the friendly text if there is one, otherwise the address. The cell shows the text; claudia does not follow the link from a formula."
+msgstr "Ein Link: ergibt den Anzeigetext, falls vorhanden, sonst die Adresse. Die Zelle zeigt den Text; claudia folgt dem Link nicht aus einer Formel heraus."
 
 #: web/app/components/NameDefinePopover.vue:55
 msgid "A name like this exists already and will point here."
@@ -166,8 +222,20 @@ msgid "A new document belongs to whoever creates it first. The password protects
 msgstr "Ein neues Dokument gehört demjenigen, der es zuerst erstellt. Das Passwort schützt nur dieses Dokument (mindestens 8 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben und einer Ziffer)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number as text rounded to a number of decimals (2 unless given), with thousands separators unless no_commas is TRUE."
+msgstr "Eine Zahl als Text, auf eine Anzahl Dezimalstellen gerundet (2, wenn nichts angegeben), mit Tausendertrennzeichen, außer no_commas ist TRUE."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number as text with a dollar sign, rounded to a number of decimals (2 unless given)."
+msgstr "Eine Zahl als Text mit Dollarzeichen, auf eine Anzahl Dezimalstellen gerundet (2, wenn nichts angegeben)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "A number as text, shown through a number format code (\"#,##0.00\", \"dd.mm.yyyy\", \"0%\")."
 msgstr "Eine Zahl als Text, gezeigt durch einen Zahlenformat-Code (\"#,##0.00\", \"dd.mm.yyyy\", \"0%\")."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number from 0 to 3999 as a Roman numeral; the form 0 to 4 makes it more concise the higher it is."
+msgstr "Eine Zahl von 0 bis 3999 als römische Zahl; die Form 0 bis 4 macht sie umso knapper, je höher sie ist."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A number raised to a power (the same as the operator ^)."
@@ -176,6 +244,18 @@ msgstr "Eine Zahl hoch einer Potenz (dasselbe wie der Operator ^)."
 #: web/app/components/PrintPreview.vue:239
 msgid "A picture is printed without some of it: {reason}."
 msgstr "Ein Bild wird ohne einen Teil davon gedruckt: {reason}."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A quartile of the numbers (the old name of QUARTILE.INC)."
+msgstr "Ein Quartil der Zahlen (der alte Name von QUARTILE.INC)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A quartile of the numbers, leaving out the smallest and the largest: 1, 2 (the median) or 3."
+msgstr "Ein Quartil der Zahlen ohne die kleinste und die größte: 1, 2 (der Median) oder 3."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A quartile of the numbers: 0 the smallest, 1, 2 (the median), 3, 4 the largest."
+msgstr "Ein Quartil der Zahlen: 0 die kleinste, 1, 2 (der Median), 3, 4 die größte."
 
 #: web/app/components/AdminAccessDocuments.vue:245
 msgid "A recovery key, not needed day to day — administrators sign in with their own name and password instead. Rotating it doesn't sign anyone out."
@@ -197,9 +277,17 @@ msgstr "Ein Reiter"
 msgid "A table always has its header row."
 msgstr "Eine Tabelle hat immer ihre Kopfzeile."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A text as a number with the decimal and group separators you name (. and , unless given); spaces are ignored and each % divides by 100."
+msgstr "Ein Text als Zahl, mit den angegebenen Dezimal- und Gruppentrennzeichen (. und , wenn nichts angegeben); Leerzeichen werden ignoriert und jedes % teilt durch 100."
+
 #: web/app/components/SearchPanel.vue:504
 msgid "A value follows from its formula: it can be found, not replaced."
 msgstr "Ein Wert ergibt sich aus seiner Formel: Er lässt sich finden, aber nicht ersetzen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A whole number as text in another base (2 to 36), padded with zeros to a minimum length."
+msgstr "Eine ganze Zahl als Text in einer anderen Basis (2 bis 36), mit Nullen auf eine Mindestlänge aufgefüllt."
 
 #: web/app/components/OpenDialog.vue:748
 msgid "ABCD-EFGH-…"
@@ -1309,6 +1397,10 @@ msgstr "Suchen – Muster"
 msgid "Finds the cells that {conditions}."
 msgstr "Findet die Zellen, die {conditions}."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Finds the last value in an ascending list that is not above the value looked up, and gives the value at the same place in the result list (or, with one table, in its last column or row)."
+msgstr "Findet den letzten Wert in einer aufsteigenden Liste, der nicht über dem gesuchten Wert liegt, und gibt den Wert an derselben Stelle der Ergebnisliste zurück (oder, bei einer Tabelle, in deren letzter Spalte oder Zeile)."
+
 #: web/app/lib/search.ts:280
 msgid "Finds {parts} in cells that {conditions}."
 msgstr "Findet {parts} in Zellen, die {conditions}."
@@ -1409,6 +1501,10 @@ msgstr "Formel"
 msgid "Formulas"
 msgstr "Formeln"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Friday 13 Nov 2026 + 1 = Monday 16 Nov"
+msgstr "Freitag, 13. Nov 2026 + 1 = Montag, 16. Nov"
+
 #: web/app/components/StyleCssEditor.vue:89
 msgid "From the styles it is based on"
 msgstr "Aus den Formaten, auf denen es beruht"
@@ -1488,6 +1584,18 @@ msgstr "Gruppe"
 #: web/app/components/NameDefinePopover.vue:58
 msgid "Grows with its last row"
 msgstr "Wächst mit seiner letzten Zeile"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Half the width of the confidence interval for a mean (known standard deviation, normal distribution); alpha is 1 minus the confidence level."
+msgstr "Die halbe Breite des Konfidenzintervalls für einen Mittelwert (bekannte Standardabweichung, Normalverteilung); alpha ist 1 minus das Konfidenzniveau."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Half the width of the confidence interval for a mean (the old name of CONFIDENCE.NORM)."
+msgstr "Die halbe Breite des Konfidenzintervalls für einen Mittelwert (der alte Name von CONFIDENCE.NORM)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Half the width of the confidence interval for a mean from a sample (Student t distribution)."
+msgstr "Die halbe Breite des Konfidenzintervalls für einen Mittelwert aus einer Stichprobe (Student-t-Verteilung)."
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Hand this document over to somebody else"
@@ -1574,12 +1682,20 @@ msgid "How many numbers the ranges hold (text, TRUE/FALSE, errors and empty cell
 msgstr "Wie viele Zahlen die Bereiche enthalten (Text, TRUE/FALSE, Fehler und leere Zellen werden nicht gezählt)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "How many of the data fall into each bin: up to the first limit, above it up to the next ... and above the last."
+msgstr "Wie viele der Daten in jede Klasse fallen: bis zur ersten Grenze, darüber bis zur nächsten ... und über der letzten."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "How many positions meet all the criteria: pairs of a range and its criterion, all of the same shape."
 msgstr "Wie viele Positionen alle Kriterien erfüllen: Paare aus einem Bereich und seinem Kriterium, alle von derselben Form."
 
 #: web/app/components/PrintPreview.vue:255
 msgid "How many slides go on a page"
 msgstr "Wie viele Folien auf eine Seite kommen"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "How many standard deviations a value is from the mean."
+msgstr "Wie viele Standardabweichungen ein Wert vom Mittelwert entfernt ist."
 
 #: web/app/components/SearchPanel.vue:425
 msgid "How many times"
@@ -1776,6 +1892,10 @@ msgstr "Es wird nicht ausgeführt, daher wird nichts gefunden oder ersetzt."
 #: web/app/components/StyleSpec.vue:166
 msgid "Italic"
 msgstr "Kursiv"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Joins texts, numbers and TRUE/FALSE into one text (one value each: CONCAT takes ranges)."
+msgstr "Fügt Texte, Zahlen und TRUE/FALSE zu einem Text zusammen (je ein Wert: CONCATENATE nimmt Bereiche)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Joins the text of all values and ranges (ranges row by row, empty cells skipped)."
@@ -2721,6 +2841,14 @@ msgstr "Ablegen in"
 msgid "Put the result of a query on the selected cell"
 msgstr "Das Ergebnis einer Abfrage in die ausgewählte Zelle setzen"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Puts ranges one below the other; the narrower ones are filled up with #N/A."
+msgstr "Stellt Bereiche untereinander; die schmaleren werden mit #N/A aufgefüllt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Puts ranges side by side; the shorter ones are filled up with #N/A."
+msgstr "Stellt Bereiche nebeneinander; die kürzeren werden mit #N/A aufgefüllt."
+
 #: web/app/components/SqlEditor.vue:108
 msgid "Query in {target}"
 msgstr "Abfrage in {target}"
@@ -2817,6 +2945,10 @@ msgstr "Sich selbst aus diesem Dokument entfernen"
 msgid "Removes spaces at both ends and reduces the ones between words to one."
 msgstr "Entfernt Leerzeichen an beiden Enden und reduziert die zwischen Wörtern auf eines."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
+msgstr "Entfernt die nicht druckbaren Zeichen (Codes 0 bis 31) aus einem Text."
+
 #: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:572 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
 msgid "Rename"
 msgstr "Umbenennen"
@@ -2860,6 +2992,10 @@ msgstr "In einer Zelle ersetzt. Mit „Rückgängig“ ist es wieder da."
 #: web/app/components/SearchPanel.vue:304
 msgid "Replaced in {count} cells. Undo brings them back."
 msgstr "In {count} Zellen ersetzt. Mit „Rückgängig“ ist alles wieder da."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Replaces a number of characters of a text, from a position, with other text."
+msgstr "Ersetzt eine Anzahl Zeichen eines Textes ab einer Position durch anderen Text."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Replaces old text by new text (all of it, or only the n-th occurrence)."
@@ -2914,6 +3050,22 @@ msgid "Rounds away from zero to a number of decimals."
 msgstr "Rundet von null weg auf eine Anzahl von Dezimalstellen."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds away from zero to the next even whole number."
+msgstr "Rundet von null weg auf die nächste gerade ganze Zahl."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds away from zero to the next odd whole number."
+msgstr "Rundet von null weg auf die nächste ungerade ganze Zahl."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds down (towards minus infinity) to a multiple of the significance; its sign is ignored."
+msgstr "Rundet ab (Richtung minus unendlich) auf ein Vielfaches der Schrittweite; ihr Vorzeichen wird ignoriert."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds down to a multiple of the significance (1 unless given). For a negative number the mode decides: 0 rounds away from zero, anything else towards it."
+msgstr "Rundet ab auf ein Vielfaches der Schrittweite (1, wenn nichts angegeben). Bei einer negativen Zahl entscheidet der Modus: 0 rundet von null weg, alles andere zu null hin."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "Rounds down to a multiple of the significance (1 unless given; its sign is ignored)."
 msgstr "Rundet ab auf ein Vielfaches der Schrittweite (1, wenn nicht angegeben; ihr Vorzeichen wird ignoriert)."
 
@@ -2926,8 +3078,20 @@ msgid "Rounds to a number of decimals (negative: to tens, hundreds ...); halves 
 msgstr "Rundet auf eine Anzahl von Dezimalstellen (negativ: auf Zehner, Hunderter ...); Hälften gehen von null weg."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds to the nearest multiple of another number; halves go away from zero."
+msgstr "Rundet auf das nächste Vielfache einer anderen Zahl; Hälften gehen von null weg."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "Rounds towards zero to a number of decimals."
 msgstr "Rundet zu null hin auf eine Anzahl von Dezimalstellen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds up (towards plus infinity) to a multiple of the significance; its sign is ignored."
+msgstr "Rundet auf (Richtung plus unendlich) auf ein Vielfaches der Schrittweite; ihr Vorzeichen wird ignoriert."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds up to a multiple of the significance (1 unless given). For a negative number the mode decides: 0 rounds towards zero, anything else away from it."
+msgstr "Rundet auf ein Vielfaches der Schrittweite auf (1, wenn nichts angegeben). Bei einer negativen Zahl entscheidet der Modus: 0 rundet zu null hin, alles andere von null weg."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Rounds up to a multiple of the significance (1 unless given; its sign is ignored)."
@@ -3265,6 +3429,14 @@ msgstr "Es wird etwas wiederholt, das nicht da ist."
 msgid "Something went wrong."
 msgstr "Etwas ist schiefgegangen."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Sorts a range by the values of other ranges of the same height: by_array, order, by_array, order ..."
+msgstr "Sortiert einen Bereich nach den Werten anderer Bereiche gleicher Höhe: by_array, order, by_array, order ..."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Sorts the rows of a range by a column (the first unless given), up or down; with by_col TRUE it sorts the columns by a row."
+msgstr "Sortiert die Zeilen eines Bereichs nach einer Spalte (der ersten, wenn nichts angegeben), auf- oder absteigend; mit by_col TRUE werden die Spalten nach einer Zeile sortiert."
+
 #: web/app/components/ImagePropertiesDialog.vue:83
 msgid "Source"
 msgstr "Quelle"
@@ -3276,6 +3448,10 @@ msgstr "Referentennotizen"
 #: web/app/components/PresentShow.vue:207 web/app/components/SlideNotes.vue:88 web/app/components/SlideNotes.vue:90
 msgid "Speaker notes"
 msgstr "Referentennotizen"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Splits a text into columns at the column delimiters and into rows at the row delimiters (each may be several in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with pad_with (#N/A)."
+msgstr "Teilt einen Text an den Spaltentrennzeichen in Spalten und an den Zeilentrennzeichen in Zeilen (jeweils auch mehrere in einem Bereich). ignore_empty TRUE lässt leere Stücke weg, match_mode 1 ignoriert die Groß-/Kleinschreibung; kürzere Zeilen werden mit pad_with (#N/A) aufgefüllt."
 
 #: web/app/components/TextWorkspace.vue:350
 msgid "Start"
@@ -3353,6 +3529,10 @@ msgstr "Vorschlag"
 msgid "Sum {value}"
 msgstr "Summe {value}"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Swaps the rows and columns of a range."
+msgstr "Vertauscht die Zeilen und Spalten eines Bereichs."
+
 #: web/app/components/ConnectionIndicator.vue:75
 msgid "TLS verified"
 msgstr "TLS geprüft"
@@ -3374,12 +3554,28 @@ msgid "TRUE if every value is TRUE (numbers: not 0); text and empty cells are sk
 msgstr "TRUE, wenn jeder Wert TRUE ist (Zahlen: nicht 0); Text und leere Zellen werden übersprungen."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE if the cell holds a formula."
+msgstr "TRUE, wenn die Zelle eine Formel enthält."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE if the value is a reference to cells (A1, A1:B2, or what OFFSET or INDIRECT give)."
+msgstr "TRUE, wenn der Wert ein Bezug auf Zellen ist (A1, A1:B2 oder das, was OFFSET oder INDIRECT liefern)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "TRUE if two texts are the same, capitals included."
 msgstr "TRUE, wenn zwei Texte gleich sind, Groß- und Kleinschreibung eingeschlossen."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "TRUE or FALSE; an error in the value is an answer, not a failure."
 msgstr "TRUE oder FALSE; ein Fehler im Wert ist eine Antwort, kein Misserfolg."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE when the whole part of the number is even."
+msgstr "TRUE, wenn der ganzzahlige Teil der Zahl gerade ist."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE when the whole part of the number is odd."
+msgstr "TRUE, wenn der ganzzahlige Teil der Zahl ungerade ist."
 
 #: web/app/components/TextWorkspace.vue:311
 msgid "Tab / Shift + Tab"
@@ -3449,6 +3645,10 @@ msgstr "Textfelder enthalten noch keine Listen"
 msgid "Text documents: the AI suggests either way."
 msgstr "Textdokumente: Die KI schlägt in beiden Fällen nur vor."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Text in a base (2 to 36) as a number."
+msgstr "Ein Text in einer Basis (2 bis 36) als Zahl."
+
 #: web/app/components/SearchPanel.vue:532 web/app/components/SearchPanel.vue:534
 msgid "Text of the replacement"
 msgstr "Text des Ersatzes"
@@ -3485,9 +3685,53 @@ msgstr "Dieser Wiederherstellungsschlüssel passt nicht zu diesem Dokument."
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr "Dieser Server betreibt {other}. Dieses Fenster ist {this} – öffnen Sie ihn dort."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The ISO week number of a date: weeks start on Monday and week 1 is the one with the first Thursday."
+msgstr "Die ISO-Kalenderwoche eines Datums: Wochen beginnen am Montag, und Woche 1 ist die mit dem ersten Donnerstag."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The Pearson correlation of two ranges (the same as CORREL)."
+msgstr "Die Pearson-Korrelation zweier Bereiche (dasselbe wie CORREL)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The Student t distribution at x: the share below x (cumulative TRUE) or the density (FALSE)."
+msgstr "Die Student-t-Verteilung an der Stelle x: der Anteil unterhalb von x (kumuliert TRUE) oder die Dichte (FALSE)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The Unicode code point of the first character of a text."
+msgstr "Der Unicode-Codepunkt des ersten Zeichens eines Textes."
+
 #: web/app/components/FirstAdminSetup.vue:56
 msgid "The access secret you set earlier stays as a recovery key — only needed if every administrator is ever locked out."
 msgstr "Der Zugangsschlüssel, den Sie früher festgelegt haben, bleibt als Wiederherstellungsschlüssel bestehen – nur nötig, falls jemals alle Administratoren ausgesperrt sind."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The address of a cell as text, from its row and column number. The third argument is 1 (default) for $A$1, 2 for A$1, 3 for $A1, 4 for A1; the fourth FALSE for R1C1 style; the fifth names a sheet."
+msgstr "Die Adresse einer Zelle als Text, aus Zeilen- und Spaltennummer. Das dritte Argument ist 1 (Standard) für $A$1, 2 für A$1, 3 für $A1, 4 für A1; das vierte FALSE für den R1C1-Stil; das fünfte nennt ein Tabellenblatt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians (from -pi/2 to pi/2) whose sine is the number, which must be from -1 to 1."
+msgstr "Der Winkel im Bogenmaß (von -pi/2 bis pi/2), dessen Sinus die Zahl ist; sie muss von -1 bis 1 liegen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians (from -pi/2 to pi/2) whose tangent is the number."
+msgstr "Der Winkel im Bogenmaß (von -pi/2 bis pi/2), dessen Tangens die Zahl ist."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians (from 0 to pi) whose cosine is the number, which must be from -1 to 1."
+msgstr "Der Winkel im Bogenmaß (von 0 bis pi), dessen Kosinus die Zahl ist; sie muss von -1 bis 1 liegen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians from the x axis to the point (x, y): x comes first, as in Excel."
+msgstr "Der Winkel im Bogenmaß von der x-Achse zum Punkt (x, y): x kommt zuerst, wie in Excel."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians, from 0 to pi, whose cotangent is the number."
+msgstr "Der Winkel im Bogenmaß, von 0 bis pi, dessen Kotangens die Zahl ist."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The average of the distances of the numbers from their mean."
+msgstr "Der Durchschnitt der Abstände der Zahlen von ihrem Mittelwert."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The base 10 logarithm of a positive number."
@@ -3517,9 +3761,21 @@ msgstr "Das Zertifikat von {host} ist nicht gültig."
 msgid "The chance must be between 0 and 1."
 msgstr "Die Wahrscheinlichkeit muss zwischen 0 und 1 liegen."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The character with a Unicode code point."
+msgstr "Das Zeichen zu einem Unicode-Codepunkt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The character with a code from 1 to 255 (the Windows-1252 set: 65 is A, 128 the euro sign)."
+msgstr "Das Zeichen zu einem Code von 1 bis 255 (der Windows-1252-Zeichensatz: 65 ist A, 128 das Eurozeichen)."
+
 #: web/app/components/SearchPanel.vue:419 web/app/components/SearchPanel.vue:450
 msgid "The characters"
 msgstr "Die Zeichen"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The code of the first character of a text (the Windows-1252 set; 63 for one it does not have)."
+msgstr "Der Code des ersten Zeichens eines Textes (Windows-1252-Zeichensatz; 63 für eines, das er nicht kennt)."
 
 #: web/app/components/PaletteDialog.vue:142
 msgid "The colours it started with"
@@ -3542,12 +3798,48 @@ msgid "The connection was lost. Trying to get back… what you do now is not sav
 msgstr "Die Verbindung wurde unterbrochen. Es wird versucht, sie wiederherzustellen … was Sie jetzt tun, wird nicht gespeichert."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The correlation of two ranges: -1 to 1, 0 when they are not related."
+msgstr "Die Korrelation zweier Bereiche: -1 bis 1, 0 wenn sie nicht zusammenhängen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The cosecant of an angle in radians (1 / SIN)."
+msgstr "Der Kosekans eines Winkels im Bogenmaß (1 / SIN)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The cosine of an angle in radians."
 msgstr "Der Kosinus eines Winkels im Bogenmaß."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The cotangent of an angle in radians (1 / TAN)."
+msgstr "Der Kotangens eines Winkels im Bogenmaß (1 / TAN)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The covariance of two ranges for a sample."
+msgstr "Die Kovarianz zweier Bereiche für eine Stichprobe."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The covariance of two ranges for a whole population (the old name of COVARIANCE.P)."
+msgstr "Die Kovarianz zweier Bereiche für eine Grundgesamtheit (der alte Name von COVARIANCE.P)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The covariance of two ranges for a whole population."
+msgstr "Die Kovarianz zweier Bereiche für eine Grundgesamtheit."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The date a number of months before or after a date, on the same day of the month where it has one."
 msgstr "Das Datum eine Anzahl Monate vor oder nach einem Datum, am selben Tag des Monats, wo es ihn gibt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a number of working days (not Saturday or Sunday, not a holiday) after, or before if negative, a date."
+msgstr "Das Datum nach einer Anzahl Arbeitstagen (nicht Samstag oder Sonntag, kein Feiertag), bei negativer Zahl davor."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a number of working days after, or before if negative, a date, with a choice of weekend (see NETWORKDAYS.INTL)."
+msgstr "Das Datum nach einer Anzahl Arbeitstagen, bei negativer Zahl davor, mit frei wählbarem Wochenende (siehe NETWORKDAYS.INTL)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a text names, as a day number. Read: 2026-11-13, 2026/11/13, 13 Nov 2026, 13-Nov-2026 and Nov 13, 2026 (a time after the date is ignored)."
+msgstr "Das Datum, das ein Text nennt, als Tageszahl. Gelesen werden: 2026-11-13, 2026/11/13, 13 Nov 2026, 13-Nov-2026 und Nov 13, 2026 (eine Uhrzeit nach dem Datum wird ignoriert)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The date of a year, month and day. Months and days beyond their end carry over."
@@ -3560,6 +3852,14 @@ msgstr "Der Tag des Monats eines Datums, 1 bis 31."
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The day of the week of a date: 1 (Sunday) to 7, or as the second argument counts (2: Monday is 1)."
 msgstr "Der Wochentag eines Datums: 1 (Sonntag) bis 7, oder wie das zweite Argument zählt (2: Montag ist 1)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The determinant of a square matrix of numbers."
+msgstr "Die Determinante einer quadratischen Matrix aus Zahlen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
+msgstr "Die verschiedenen Zeilen eines Bereichs in der Reihenfolge ihres ersten Auftretens (Spalten mit by_col TRUE); mit exactly_once TRUE nur die, die einmal vorkommen."
 
 #: web/app/lib/base-session.ts:381
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
@@ -3577,13 +3877,29 @@ msgstr "Das Dokument wartet darauf, dass ein Eigentümer oder Bearbeiter es öff
 msgid "The documents you put into this collection, on any place."
 msgstr "Die Dokumente, die Sie in diese Sammlung gelegt haben, an jedem Ort."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The double factorial of a whole number: n * (n-2) * (n-4) ... down to 1 or 2."
+msgstr "Die doppelte Fakultät einer ganzen Zahl: n * (n-2) * (n-4) ... bis 1 oder 2."
+
 #: clients/linux/src/claudia_shell_gtk/webpage.py:240
 msgid "The download failed"
 msgstr "Der Download ist fehlgeschlagen"
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The error #N/A (not available): a way to say a value is missing, which charts leave out."
+msgstr "Der Fehler #N/A (nicht verfügbar): eine Möglichkeit zu sagen, dass ein Wert fehlt; Diagramme lassen ihn aus."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The exponential curve y = b * m1^x1 * ... through known y and x values, as a row (as LINEST gives them)."
+msgstr "Die Exponentialkurve y = b * m1^x1 * ... durch bekannte y- und x-Werte, als Zeile (wie LINEST sie liefert)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The factorial of a whole number (1 * 2 * ... * n)."
 msgstr "Die Fakultät einer ganzen Zahl (1 * 2 * ... * n)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The factorial of the sum of the numbers divided by the product of their factorials."
+msgstr "Die Fakultät der Summe der Zahlen geteilt durch das Produkt ihrer Fakultäten."
 
 #: web/app/lib/open.ts:150
 msgid "The file is too large for this server."
@@ -3610,8 +3926,92 @@ msgid "The first rows show here as you type."
 msgstr "Die ersten Zeilen erscheinen hier beim Tippen."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The geometric mean of positive numbers."
+msgstr "Das geometrische Mittel positiver Zahlen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The greatest common divisor of whole numbers (the decimals are cut off)."
+msgstr "Der größte gemeinsame Teiler ganzer Zahlen (Dezimalstellen werden abgeschnitten)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The harmonic mean of positive numbers."
+msgstr "Das harmonische Mittel positiver Zahlen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hour, 0 to 23, of a time (or of a date with a time)."
+msgstr "Die Stunde, 0 bis 23, einer Uhrzeit (oder eines Datums mit Uhrzeit)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic cosecant of a number (1 / SINH)."
+msgstr "Der hyperbolische Kosekans einer Zahl (1 / SINH)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic cosine of a number."
+msgstr "Der hyperbolische Kosinus einer Zahl."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic cotangent of a number (1 / TANH)."
+msgstr "Der hyperbolische Kotangens einer Zahl (1 / TANH)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic secant of a number (1 / COSH)."
+msgstr "Der hyperbolische Sekans einer Zahl (1 / COSH)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic sine of a number."
+msgstr "Der hyperbolische Sinus einer Zahl."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic tangent of a number."
+msgstr "Der hyperbolische Tangens einer Zahl."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The identity matrix of a size: 1 on the diagonal, 0 elsewhere."
+msgstr "Die Einheitsmatrix einer Größe: 1 in der Diagonale, sonst 0."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The interest part of the payment in one period of a loan at a fixed rate."
+msgstr "Der Zinsanteil der Zahlung in einer Periode eines Darlehens mit festem Zinssatz."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The interest rate per period of a loan or saving plan, found by trying rates from a guess (10% if none is given)."
+msgstr "Der Zinssatz je Periode eines Darlehens oder Sparplans, gefunden durch Probieren ab einem Schätzwert (10 %, wenn keiner angegeben ist)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic cosine of a number that is 1 or more."
+msgstr "Der Areakosinus hyperbolicus einer Zahl, die 1 oder größer ist."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic cotangent of a number whose size is more than 1."
+msgstr "Der Areakotangens hyperbolicus einer Zahl, deren Betrag größer als 1 ist."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic sine of a number."
+msgstr "Der Areasinus hyperbolicus einer Zahl."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic tangent of a number between -1 and 1 (not including them)."
+msgstr "Der Areatangens hyperbolicus einer Zahl zwischen -1 und 1 (diese ausgenommen)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse of a square matrix of numbers (#NUM! when it has none)."
+msgstr "Die Inverse einer quadratischen Matrix aus Zahlen (#NUM!, wenn sie keine hat)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The k-th largest number in the range (1 is the largest)."
 msgstr "Die k-größte Zahl im Bereich (1 ist die größte)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The k-th percentile (k from 0 to 1) of the numbers, 0 being the smallest and 1 the largest."
+msgstr "Das k-te Perzentil (k von 0 bis 1) der Zahlen; 0 ist die kleinste, 1 die größte."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The k-th percentile of the numbers (the old name of PERCENTILE.INC)."
+msgstr "Das k-te Perzentil der Zahlen (der alte Name von PERCENTILE.INC)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The k-th percentile of the numbers, leaving out 0 and 1: k must lie between 1/(n+1) and n/(n+1)."
+msgstr "Das k-te Perzentil der Zahlen ohne 0 und 1: k muss zwischen 1/(n+1) und n/(n+1) liegen."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The k-th smallest number in the range (1 is the smallest)."
@@ -3624,6 +4024,10 @@ msgstr "Der Schlüssel, den Sie vorher hatten, funktioniert nicht mehr."
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "The keyboard shortcuts this app uses"
 msgstr "Die Tastenkürzel dieser App"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The kurtosis of a sample (0 for a normal distribution): how heavy the tails are."
+msgstr "Die Kurtosis (Wölbung) einer Stichprobe (0 für eine Normalverteilung): wie schwer die Ränder sind."
 
 #: web/app/components/PrintPreview.vue:284
 msgid "The language of the document: its words are hyphenated by it"
@@ -3638,12 +4042,20 @@ msgid "The largest number of the range wherever all criteria are met, 0 if none 
 msgstr "Die größte Zahl des Bereichs überall dort, wo alle Kriterien erfüllt sind, 0, wenn es keine gibt."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The largest of the cells with text counted as 0 and TRUE as 1; 0 if there are none."
+msgstr "Der größte Wert der Zellen, Text als 0 und TRUE als 1 gezählt; 0, wenn es keine gibt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The last characters of the text (one unless a number is given)."
 msgstr "Die letzten Zeichen des Textes (eines, wenn keine Zahl angegeben ist)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The last day of the month a number of months before or after a date."
 msgstr "Der letzte Tag des Monats eine Anzahl Monate vor oder nach einem Datum."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The least common multiple of whole numbers (the decimals are cut off)."
+msgstr "Das kleinste gemeinsame Vielfache ganzer Zahlen (Dezimalstellen werden abgeschnitten)."
 
 #: web/app/components/StyleSpec.vue:53
 msgid "The left side"
@@ -3666,6 +4078,10 @@ msgid "The lower limit must be below the upper limit."
 msgstr "Die untere Grenze muss unter der oberen liegen."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The mean of the cells with text counted as 0 and TRUE as 1 (empty cells are skipped)."
+msgstr "Der Mittelwert der Zellen, Text als 0 und TRUE als 1 gezählt (leere Zellen werden übersprungen)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The mean of the numbers in the ranges. Text and empty cells are skipped."
 msgstr "Der Mittelwert der Zahlen in den Bereichen. Text und leere Zellen werden übersprungen."
 
@@ -3678,8 +4094,16 @@ msgid "The mean of the numbers of the cells that meet the criterion (of the aver
 msgstr "Der Mittelwert der Zahlen der Zellen, die das Kriterium erfüllen (des Mittelwertbereichs, wenn einer angegeben ist)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The mean of the numbers without the share (0 up to, not including, 1) of the smallest and largest, half cut from each end."
+msgstr "Der Mittelwert der Zahlen ohne den Anteil (von 0 bis ausschließlich 1) der kleinsten und größten, je zur Hälfte von beiden Enden abgeschnitten."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The middle number of the numbers in the ranges (the mean of the two middle ones if their count is even)."
 msgstr "Die mittlere Zahl der Zahlen in den Bereichen (der Mittelwert der beiden mittleren, wenn ihre Anzahl gerade ist)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The minute, 0 to 59, of a time."
+msgstr "Die Minute, 0 bis 59, einer Uhrzeit."
 
 #: web/app/components/AdminAiModel.vue:72
 msgid "The model that answers @ai in every document on this server."
@@ -3710,20 +4134,72 @@ msgid "The natural logarithm of a positive number."
 msgstr "Der natürliche Logarithmus einer positiven Zahl."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The normal distribution at x (the old name of NORM.DIST)."
+msgstr "Die Normalverteilung an der Stelle x (der alte Name von NORM.DIST)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The normal distribution at x: the share below x (cumulative TRUE) or the density (FALSE)."
+msgstr "Die Normalverteilung an der Stelle x: der Anteil unterhalb von x (kumuliert TRUE) oder die Dichte (FALSE)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number of characters of the text."
 msgstr "Die Anzahl der Zeichen des Textes."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of days between two dates in a year of twelve 30-day months; the third argument TRUE counts European style."
+msgstr "Die Anzahl der Tage zwischen zwei Datumsangaben in einem Jahr aus zwölf Monaten zu 30 Tagen; das dritte Argument TRUE rechnet europäisch."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number of days from the start date to the end date."
 msgstr "Die Anzahl der Tage vom Anfangs- bis zum Enddatum."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of periods it takes regular payments at a fixed rate to pay off a loan or save up a sum."
+msgstr "Die Anzahl der Perioden, die regelmäßige Zahlungen zu festem Zinssatz brauchen, um ein Darlehen zu tilgen oder eine Summe anzusparen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of the week of the year a date is in; the week with 1 January is week 1. The second argument says which day a week starts on (1 Sunday, 2 Monday, 11 to 17 Monday to Sunday, 21 ISO weeks)."
+msgstr "Die Nummer der Woche des Jahres, in der ein Datum liegt; die Woche mit dem 1. Januar ist Woche 1. Das zweite Argument bestimmt, an welchem Tag eine Woche beginnt (1 Sonntag, 2 Montag, 11 bis 17 Montag bis Sonntag, 21 ISO-Wochen)."
 
 #: web/app/components/RandomDialog.vue:69
 msgid "The number of trials must be a whole number, 1 or more."
 msgstr "Die Zahl der Versuche muss eine ganze Zahl ab 1 sein."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to arrange k of n items when the order matters and items can repeat (n to the k)."
+msgstr "Die Anzahl der Möglichkeiten, k von n Elementen anzuordnen, wenn die Reihenfolge zählt und Elemente sich wiederholen dürfen (n hoch k)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to arrange k of n items when the order matters."
+msgstr "Die Anzahl der Möglichkeiten, k von n Elementen anzuordnen, wenn die Reihenfolge zählt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to choose k of n items when the order does not matter and items can repeat."
+msgstr "Die Anzahl der Möglichkeiten, k von n Elementen auszuwählen, wenn die Reihenfolge nicht zählt und Elemente sich wiederholen dürfen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to choose k of n items when the order does not matter."
+msgstr "Die Anzahl der Möglichkeiten, k von n Elementen auszuwählen, wenn die Reihenfolge nicht zählt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of working days (not Saturday or Sunday, not a holiday) from the start date to the end date, both included."
+msgstr "Die Anzahl der Arbeitstage (nicht Samstag oder Sonntag, kein Feiertag) vom Startdatum bis zum Enddatum, beide eingeschlossen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of working days between two dates, both included, with a choice of weekend: a code (1 Saturday and Sunday, 2 Sunday and Monday ... 7 Friday and Saturday, 11 to 17 one day) or seven 0 and 1 for Monday to Sunday."
+msgstr "Die Anzahl der Arbeitstage zwischen zwei Datumsangaben, beide eingeschlossen, mit frei wählbarem Wochenende: ein Code (1 Samstag und Sonntag, 2 Sonntag und Montag ... 7 Freitag und Samstag, 11 bis 17 ein Tag) oder sieben 0 und 1 für Montag bis Sonntag."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number pi."
 msgstr "Die Zahl Pi."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number that occurs most often (the first of them if there is a tie); #N/A if none occurs twice."
+msgstr "Die Zahl, die am häufigsten vorkommt (die erste davon bei Gleichstand); #N/A, wenn keine zweimal vorkommt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number that occurs most often (the old name of MODE.SNGL)."
+msgstr "Die Zahl, die am häufigsten vorkommt (der alte Name von MODE.SNGL)."
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "The number this list starts at"
@@ -3732,6 +4208,10 @@ msgstr "Die Zahl, bei der diese Liste beginnt"
 #: web/app/components/RandomDialog.vue:65
 msgid "The numbers must run from low to high."
 msgstr "Die Zahlen müssen von klein nach groß aufsteigen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The numbers that occur most often, in order of first appearance, as a column (#N/A if none repeats)."
+msgstr "Die Zahlen, die am häufigsten vorkommen, in der Reihenfolge ihres ersten Auftretens, als Spalte (#N/A, wenn keine sich wiederholt)."
 
 #: web/app/components/OutcomePopover.vue:131 web/app/components/OutcomePopover.vue:132
 msgid "The outcomes"
@@ -3744,6 +4224,14 @@ msgstr "Die Seite konnte nicht geladen werden"
 #: clients/linux/src/claudia_shell_gtk/webpage.py:222
 msgid "The page stopped working"
 msgstr "Die Seite funktioniert nicht mehr"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The part of a year between two dates. Basis: 0 (default) US 30/360, 1 actual days over actual year, 2 actual/360, 3 actual/365, 4 European 30/360."
+msgstr "Der Teil eines Jahres zwischen zwei Datumsangaben. Basis: 0 (Standard) US 30/360, 1 tatsächliche Tage durch tatsächliche Jahreslänge, 2 tatsächlich/360, 3 tatsächlich/365, 4 europäisch 30/360."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The part of the payment in one period that pays off the loan itself (the payment without the interest)."
+msgstr "Der Teil der Zahlung in einer Periode, der das Darlehen selbst tilgt (die Zahlung ohne die Zinsen)."
 
 #: web/app/components/FirstAdminSetup.vue:25
 msgid "The passwords do not match."
@@ -3758,8 +4246,52 @@ msgid "The planned times of the slides, added up"
 msgstr "Die geplanten Zeiten der Folien, zusammengezählt"
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that a value lies between two limits (or equals the lower one if there is no upper): values and their probabilities, which must add up to 1."
+msgstr "Die Wahrscheinlichkeit, dass ein Wert zwischen zwei Grenzen liegt (oder gleich der unteren ist, wenn es keine obere gibt): Werte und ihre Wahrscheinlichkeiten, die sich zu 1 addieren müssen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that the observed counts come from the expected ones (chi-squared test of independence or fit)."
+msgstr "Die Wahrscheinlichkeit, dass die beobachteten Häufigkeiten aus den erwarteten stammen (Chi-Quadrat-Test auf Unabhängigkeit oder Anpassung)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that two samples have the same mean (the old name of T.TEST)."
+msgstr "Die Wahrscheinlichkeit, dass zwei Stichproben denselben Mittelwert haben (der alte Name von T.TEST)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that two samples have the same mean: type 1 paired, 2 same variance, 3 different variances; tails 1 or 2."
+msgstr "Die Wahrscheinlichkeit, dass zwei Stichproben denselben Mittelwert haben: Typ 1 gepaart, 2 gleiche Varianz, 3 verschiedene Varianzen; Seiten 1 oder 2."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The product of the numbers in the ranges."
 msgstr "Das Produkt der Zahlen in den Bereichen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The product of two matrices: the first must have as many columns as the second has rows."
+msgstr "Das Produkt zweier Matrizen: die erste muss so viele Spalten haben, wie die zweite Zeilen hat."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a number in a range (the old name of RANK.EQ)."
+msgstr "Der Rang einer Zahl in einem Bereich (der alte Name von RANK.EQ)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers get the average of their ranks."
+msgstr "Der Rang einer Zahl in einem Bereich, größte zuerst (kleinste zuerst, wenn order nicht 0 ist); gleiche Zahlen erhalten den Durchschnitt ihrer Ränge."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers share the top rank."
+msgstr "Der Rang einer Zahl in einem Bereich, größte zuerst (kleinste zuerst, wenn order nicht 0 ist); gleiche Zahlen teilen sich den höchsten Rang."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a value among the numbers as a share between 0 and 1 (not including them), cut to the significance in digits (3)."
+msgstr "Der Rang eines Wertes unter den Zahlen als Anteil zwischen 0 und 1 (diese ausgenommen), auf die angegebene Anzahl Stellen (3) abgeschnitten."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a value among the numbers as a share from 0 to 1 (the old name of PERCENTRANK.INC)."
+msgstr "Der Rang eines Wertes unter den Zahlen als Anteil von 0 bis 1 (der alte Name von PERCENTRANK.INC)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a value among the numbers as a share from 0 to 1, cut (not rounded) to the significance in digits (3)."
+msgstr "Der Rang eines Wertes unter den Zahlen als Anteil von 0 bis 1, auf die angegebene Anzahl Stellen (3) abgeschnitten (nicht gerundet)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
@@ -3785,9 +4317,25 @@ msgstr "Der Ersatz verwendet einen behaltenen Teil, den das Muster nicht hat."
 msgid "The right side"
 msgstr "Die rechte Seite"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rows of a range for which the condition range holds (a column of TRUE/FALSE or numbers; a row filters the columns). If nothing matches, the third argument, else #N/A."
+msgstr "Die Zeilen eines Bereichs, für die die Bedingung gilt (eine Spalte aus TRUE/FALSE oder Zahlen; eine Zeile filtert die Spalten). Wenn nichts passt, das dritte Argument, sonst #N/A."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The same as CEILING.PRECISE: rounds up to a multiple of the significance; its sign is ignored."
+msgstr "Dasselbe wie CEILING.PRECISE: rundet auf ein Vielfaches der Schrittweite auf; ihr Vorzeichen wird ignoriert."
+
 #: web/app/components/SearchPanel.vue:552
 msgid "The search was stopped after a while, so this may not be everything."
 msgstr "Die Suche wurde nach einer Weile abgebrochen, daher ist dies möglicherweise nicht alles."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The secant of an angle in radians (1 / COS)."
+msgstr "Der Sekans eines Winkels im Bogenmaß (1 / COS)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The second, 0 to 59, of a time."
+msgstr "Die Sekunde, 0 bis 59, einer Uhrzeit."
 
 #: web/app/lib/open.ts:175 web/app/lib/open.ts:61
 msgid "The server answered with an error ({status})."
@@ -3826,12 +4374,40 @@ msgid "The server stopped at start-up (exit code {code})."
 msgstr "Der Server wurde beim Start beendet (Exit-Code {code})."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the Student t distribution above x."
+msgstr "Der Anteil der Student-t-Verteilung oberhalb von x."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the Student t distribution beyond x in one tail (1) or both (2); x is not negative."
+msgstr "Der Anteil der Student-t-Verteilung jenseits von x in einer Seite (1) oder beiden (2); x ist nicht negativ."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the Student t distribution beyond x or -x (x is not negative)."
+msgstr "Der Anteil der Student-t-Verteilung jenseits von x oder -x (x ist nicht negativ)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the standard normal distribution below z (the old name of NORM.S.DIST)."
+msgstr "Der Anteil der Standardnormalverteilung unterhalb von z (der alte Name von NORM.S.DIST)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The sine of an angle in radians."
 msgstr "Der Sinus eines Winkels im Bogenmaß."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The size of a number without its sign."
 msgstr "Die Größe einer Zahl ohne ihr Vorzeichen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The skewness of a sample: how lopsided the numbers are around their mean."
+msgstr "Die Schiefe einer Stichprobe: wie asymmetrisch die Zahlen um ihren Mittelwert liegen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The skewness of a whole population."
+msgstr "Die Schiefe einer Grundgesamtheit."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The slope of the straight line that fits the known y and x values best."
+msgstr "Die Steigung der Geraden, die am besten zu den bekannten y- und x-Werten passt."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The smallest number in the ranges, 0 if there is none."
@@ -3842,16 +4418,56 @@ msgid "The smallest number of the range wherever all criteria are met, 0 if none
 msgstr "Die kleinste Zahl des Bereichs überall dort, wo alle Kriterien erfüllt sind, 0, wenn es keine gibt."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The smallest of the cells with text counted as 0 and TRUE as 1; 0 if there are none."
+msgstr "Der kleinste Wert der Zellen, Text als 0 und TRUE als 1 gezählt; 0, wenn es keine gibt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The square of the correlation: how much of the variation of y the straight line explains (0 to 1)."
+msgstr "Das Quadrat der Korrelation: wie viel der Streuung von y die Gerade erklärt (0 bis 1)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The square root of a number that is not negative."
 msgstr "Die Quadratwurzel einer Zahl, die nicht negativ ist."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The square root of a number times pi."
+msgstr "Die Quadratwurzel einer Zahl mal pi."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a population, text counted as 0 and TRUE as 1."
+msgstr "Die Standardabweichung einer Grundgesamtheit, Text als 0 und TRUE als 1 gezählt."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The standard deviation of a sample (the numbers are a part of a larger whole)."
 msgstr "Die Standardabweichung einer Stichprobe (die Zahlen sind ein Teil eines größeren Ganzen)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a sample (the same as STDEV)."
+msgstr "Die Standardabweichung einer Stichprobe (dasselbe wie STDEV)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a sample, text counted as 0 and TRUE as 1."
+msgstr "Die Standardabweichung einer Stichprobe, Text als 0 und TRUE als 1 gezählt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The standard deviation of a whole population (the numbers are all there is)."
 msgstr "Die Standardabweichung einer ganzen Grundgesamtheit (die Zahlen sind alles, was es gibt)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a whole population (the old name of STDEV.P)."
+msgstr "Die Standardabweichung einer Grundgesamtheit (der alte Name von STDEV.P)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard error of the y values predicted by the straight line fitted to y and x."
+msgstr "Der Standardfehler der y-Werte, die die an y und x angepasste Gerade vorhersagt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard normal distribution (mean 0, deviation 1) at z: the share below z or the density."
+msgstr "Die Standardnormalverteilung (Mittelwert 0, Standardabweichung 1) an der Stelle z: der Anteil unterhalb von z oder die Dichte."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
+msgstr "Die Gerade y = m1*x1 + ... + b durch bekannte y- und x-Werte, als Zeile: die Koeffizienten in umgekehrter Reihenfolge, dann b; mit stats TRUE auch Standardfehler, Bestimmtheitsmaß, F, Freiheitsgrade und Quadratsummen."
 
 #: web/app/lib/base-session.ts:258
 msgid "The suggestion to go to {label} was declined."
@@ -3862,8 +4478,44 @@ msgid "The suggestion to go to {label} was withdrawn."
 msgstr "Der Vorschlag, zu {label} zu wechseln, wurde zurückgezogen."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of a power series: each coefficient times x to a power that starts at n and grows by m."
+msgstr "Die Summe einer Potenzreihe: jeder Koeffizient mal x hoch einer Potenz, die bei n beginnt und um m wächst."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The sum of the numbers in the ranges. Text and empty cells are skipped."
 msgstr "Die Summe der Zahlen in den Bereichen. Text und leere Zellen werden übersprungen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of the squared distances of the numbers from their mean."
+msgstr "Die Summe der quadrierten Abstände der Zahlen von ihrem Mittelwert."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of the squares of the numbers in the ranges. Text and empty cells are skipped."
+msgstr "Die Summe der Quadrate der Zahlen in den Bereichen. Text und leere Zellen werden übersprungen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of the squares of x minus y over pairs of two ranges of the same size."
+msgstr "Die Summe der Quadrate von x minus y über Paare zweier Bereiche gleicher Größe."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of x squared minus y squared over pairs of two ranges of the same size."
+msgstr "Die Summe von x zum Quadrat minus y zum Quadrat über Paare zweier Bereiche gleicher Größe."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of x squared plus y squared over pairs of two ranges of the same size."
+msgstr "Die Summe von x zum Quadrat plus y zum Quadrat über Paare zweier Bereiche gleicher Größe."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The t below which the share p of the Student t distribution lies."
+msgstr "Das t, unterhalb dessen der Anteil p der Student-t-Verteilung liegt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The t beyond which, in both directions together, the share p lies (the old name of T.INV.2T)."
+msgstr "Das t, jenseits dessen in beiden Richtungen zusammen der Anteil p liegt (der alte Name von T.INV.2T)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The t beyond which, in both directions together, the share p of the Student t distribution lies."
+msgstr "Das t, jenseits dessen in beiden Richtungen zusammen der Anteil p der Student-t-Verteilung liegt."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The tangent of an angle in radians."
@@ -3872,6 +4524,14 @@ msgstr "Der Tangens eines Winkels im Bogenmaß."
 #: web/app/components/SearchPanel.vue:418 web/app/components/SearchPanel.vue:450
 msgid "The text"
 msgstr "Der Text"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The text after a delimiter: after its nth occurrence (negative: counted from the end); match_mode 1 ignores case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there (else #N/A)."
+msgstr "Der Text nach einem Trennzeichen: nach dessen n-tem Vorkommen (negativ: vom Ende gezählt); match_mode 1 ignoriert die Groß-/Kleinschreibung, match_end 1 zählt das Textende als Trennzeichen; if_not_found wird zurückgegeben, wenn es nicht vorkommt (sonst #N/A)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The text before a delimiter: before its nth occurrence (negative: counted from the end); match_mode 1 ignores case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there (else #N/A)."
+msgstr "Der Text vor einem Trennzeichen: vor dessen n-tem Vorkommen (negativ: vom Ende gezählt); match_mode 1 ignoriert die Groß-/Kleinschreibung, match_end 1 zählt das Textende als Trennzeichen; if_not_found wird zurückgegeben, wenn es nicht vorkommt (sonst #N/A)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The text in capital letters."
@@ -3893,21 +4553,57 @@ msgstr "Der Text darunter hat sich geändert. Der Vorschlag kann nicht mehr ange
 msgid "The time between two dates in whole years (\"Y\"), months (\"M\") or days (\"D\"), or what is left over (\"MD\", \"YM\", \"YD\")."
 msgstr "Die Zeit zwischen zwei Daten in ganzen Jahren (\"Y\"), Monaten (\"M\") oder Tagen (\"D\"), oder was übrig bleibt (\"MD\", \"YM\", \"YD\")."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The time of day (a fraction of a day) of an hour, minute and second. More than 24 hours wrap around to the next day."
+msgstr "Die Uhrzeit (ein Bruchteil eines Tages) aus Stunde, Minute und Sekunde. Mehr als 24 Stunden laufen in den nächsten Tag über."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The time of day a text names, as a fraction of a day. Read: 14:30, 14:30:15, 2:30 PM; a date before the time is ignored."
+msgstr "Die Uhrzeit, die ein Text nennt, als Bruchteil eines Tages. Gelesen werden: 14:30, 14:30:15, 2:30 PM; ein Datum vor der Uhrzeit wird ignoriert."
+
 #: web/app/components/StyleSpec.vue:47
 msgid "The top side"
 msgstr "Die obere Seite"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value below which the share p of a normal distribution lies (the old name of NORM.INV)."
+msgstr "Der Wert, unterhalb dessen der Anteil p einer Normalverteilung liegt (der alte Name von NORM.INV)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value below which the share p of a normal distribution lies."
+msgstr "Der Wert, unterhalb dessen der Anteil p einer Normalverteilung liegt."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The value today of cash flows at the end of each coming period, discounted at a rate."
 msgstr "Der heutige Wert von Zahlungen am Ende jeder kommenden Periode, mit einem Zins abgezinst."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value today of cash flows on given dates (the first date is today), discounted at a yearly rate of 365 days."
+msgstr "Der heutige Wert von Zahlungsströmen zu bestimmten Daten (das erste Datum ist heute), abgezinst mit einem jährlichen Satz von 365 Tagen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a population, text counted as 0 and TRUE as 1."
+msgstr "Die Varianz einer Grundgesamtheit, Text als 0 und TRUE als 1 gezählt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The variance of a sample (the numbers are a part of a larger whole)."
 msgstr "Die Varianz einer Stichprobe (die Zahlen sind ein Teil eines größeren Ganzen)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a sample (the same as VAR)."
+msgstr "Die Varianz einer Stichprobe (dasselbe wie VAR)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a sample, text counted as 0 and TRUE as 1."
+msgstr "Die Varianz einer Stichprobe, Text als 0 und TRUE als 1 gezählt."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The variance of a whole population (the numbers are all there is)."
 msgstr "Die Varianz einer ganzen Grundgesamtheit (die Zahlen sind alles, was es gibt)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a whole population (the old name of VAR.P)."
+msgstr "Die Varianz einer Grundgesamtheit (der alte Name von VAR.P)."
 
 #: clients/linux/src/claudia_shell_gtk/launch.py:46
 msgid "The web frontend has not been built.\nBuild it ('npm run build' in the web folder) or set CLAUDIA_WEB_DIR to a folder that holds it."
@@ -3917,13 +4613,37 @@ msgstr "Das Web-Frontend wurde nicht gebaut.\nBauen Sie es ('npm run build' im O
 msgid "The web process ended ({reason}). Start Claudia again."
 msgstr "Der Webprozess wurde beendet ({reason}). Starten Sie Claudia neu."
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The whole part of a division, cut towards zero (the remainder is left out)."
+msgstr "Der ganzzahlige Teil einer Division, zu null hin abgeschnitten (der Rest bleibt weg)."
+
 #: web/app/components/StyleSpec.vue:86
 msgid "The words will be hard to read on this background."
 msgstr "Die Wörter sind auf diesem Hintergrund schwer lesbar."
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The y value the straight line fitted to the known y and x values gives at x (the same as FORECAST)."
+msgstr "Der y-Wert, den die an die bekannten y- und x-Werte angepasste Gerade bei x liefert (dasselbe wie FORECAST)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The y value the straight line fitted to the known y and x values gives at x."
+msgstr "Der y-Wert, den die an die bekannten y- und x-Werte angepasste Gerade bei x liefert."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The year of a date."
 msgstr "Das Jahr eines Datums."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The yearly rate at which cash flows on given dates are worth nothing today; needs a payment and a receipt."
+msgstr "Der jährliche Zinssatz, bei dem Zahlungsströme zu bestimmten Daten heute nichts wert sind; braucht eine Zahlung und einen Eingang."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The z for which the share p of the standard normal distribution lies below (the old name of NORM.S.INV)."
+msgstr "Das z, unterhalb dessen der Anteil p der Standardnormalverteilung liegt (der alte Name von NORM.S.INV)."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The z for which the share p of the standard normal distribution lies below."
+msgstr "Das z, unterhalb dessen der Anteil p der Standardnormalverteilung liegt."
 
 #: web/app/lib/search.ts:461
 msgid "The “(” at character {position} has no “)”. Nothing is replaced."
@@ -4217,6 +4937,14 @@ msgstr "Werte"
 msgid "Values and weights, one pair a line"
 msgstr "Werte und Gewichte, ein Paar pro Zeile"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Values on the exponential curve y = b * m^x that fits the known y and x values best, at the new x values."
+msgstr "Werte auf der Exponentialkurve y = b * m^x, die am besten zu den bekannten y- und x-Werten passt, an den neuen x-Werten."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Values on the straight line that fits the known y and x values best, at the new x values (the known ones if left out)."
+msgstr "Werte auf der Geraden, die am besten zu den bekannten y- und x-Werten passt, an den neuen x-Werten (den bekannten, wenn weggelassen)."
+
 #: web/app/lib/names.ts:13
 msgid "Values people type and change"
 msgstr "Werte, die Leute eintippen und ändern"
@@ -4304,6 +5032,10 @@ msgstr "Wenn ich die KI bitte, in diesem Dokument:"
 #: web/app/components/StyleSpec.vue:140
 msgid "Where a change goes"
 msgstr "Wohin eine Änderung geht"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Where the straight line that fits the known y and x values best crosses the y axis (x = 0)."
+msgstr "Wo die Gerade, die am besten zu den bekannten y- und x-Werten passt, die y-Achse schneidet (x = 0)."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Where the text is found in another text (from 1; capitals do not matter). #VALUE! if it is not."
@@ -4501,6 +5233,10 @@ msgstr "eine Ziffer"
 msgid "a file becomes a new document: hello needs create"
 msgstr "aus einer Datei wird ein neues Dokument: hello braucht create"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "a grid of random numbers (1 row, 1 column, from 0 to 1 and not whole numbers unless said otherwise). With whole TRUE the numbers are whole, from min to max."
+msgstr "ein Raster aus Zufallszahlen (1 Zeile, 1 Spalte, von 0 bis 1 und keine ganzen Zahlen, wenn nichts anderes gesagt ist). Mit whole TRUE sind die Zahlen ganz, von min bis max."
+
 #: web/app/components/SearchPanel.vue:182 web/app/lib/search.ts:211
 msgid "a letter"
 msgstr "ein Buchstabe"
@@ -4520,6 +5256,10 @@ msgstr "Ein Name beginnt mit einem Buchstaben und besteht nur aus Buchstaben, Zi
 #: web/app/components/SearchPanel.vue:186 web/app/lib/search.ts:223
 msgid "a number"
 msgstr "eine Zahl"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "a number as it is, TRUE as 1, FALSE as 0, a date as its number, anything else (text, empty) as 0."
+msgstr "eine Zahl, wie sie ist, TRUE als 1, FALSE als 0, ein Datum als seine Zahl, alles andere (Text, leer) als 0."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "a number from 0 up to, not including, 1. Fresh numbers come with Tools > Resample (F9)."
@@ -4556,6 +5296,10 @@ msgstr "ID, Name und Farbe einer Rolle sind Text"
 #: web/app/components/SearchPanel.vue:184 web/app/lib/search.ts:217
 msgid "a space"
 msgstr "ein Leerzeichen"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "a summary (1 AVERAGE, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 6 PRODUCT, 7 STDEV, 8 STDEV.P, 9 SUM, 10 VAR, 11 VAR.P; add 100 to skip hidden rows) that leaves out other SUBTOTAL cells."
+msgstr "eine Auswertung (1 AVERAGE, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 6 PRODUCT, 7 STDEV, 8 STDEV.P, 9 SUM, 10 VAR, 11 VAR.P; 100 dazu überspringt ausgeblendete Zeilen), die andere SUBTOTAL-Zellen auslässt."
 
 #: web/app/components/ImportDialog.vue:35
 msgid "a table"
@@ -4981,6 +5725,10 @@ msgstr "von"
 msgid "full screen"
 msgstr "Vollbild"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "give names to values (later ones may use earlier ones) and calculate with them."
+msgstr "Werten Namen geben (spätere dürfen frühere verwenden) und damit rechnen."
+
 #: packages/claudia-server/src/claudia_server/styles.py:72
 msgid "give the CSS as set properties or as text, not both"
 msgstr "Geben Sie das CSS als gesetzte Eigenschaften oder als Text an, nicht beides"
@@ -5006,12 +5754,20 @@ msgid "history and chat"
 msgstr "Verlauf und Chat"
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "how many areas the reference has. A reference is one area: claudia has no unions."
+msgstr "wie viele Bereiche der Bezug hat. Ein Bezug ist ein Bereich: claudia kennt keine Vereinigungen."
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "how many columns the range has."
 msgstr "wie viele Spalten der Bereich hat."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "how many rows the range has."
 msgstr "wie viele Zeilen der Bereich hat."
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "how many sheets the workbook has (1 for a reference)."
+msgstr "wie viele Tabellenblätter die Arbeitsmappe hat (1 bei einem Bezug)."
 
 #: packages/claudia-server/src/claudia_server/protocol.py:450
 msgid "id must be an integer or a short string"
@@ -5084,6 +5840,10 @@ msgstr "leave: match ist die Nummer eines Treffers in der Zelle, oder null für 
 #: packages/claudia-server/src/claudia_server/computes_search.py:219
 msgid "leave: that cell is outside any sheet"
 msgstr "leave: Diese Zelle liegt außerhalb jedes Blatts"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "like SUBTOTAL with more functions (1-13 as SUBTOTAL but with 12 MEDIAN and 13 MODE.SNGL; 14 LARGE, 15 SMALL, 16 PERCENTILE.INC, 17 QUARTILE.INC, 18 PERCENTILE.EXC, 19 QUARTILE.EXC take a range and k) and a choice what to skip: options 2, 3, 6 and 7 skip errors, 4 skips nothing but the other subtotals."
+msgstr "wie SUBTOTAL, mit mehr Funktionen (1-13 wie bei SUBTOTAL, aber mit 12 MEDIAN und 13 MODE.SNGL; 14 LARGE, 15 SMALL, 16 PERCENTILE.INC, 17 QUARTILE.INC, 18 PERCENTILE.EXC, 19 QUARTILE.EXC nehmen einen Bereich und k) und der Wahl, was übersprungen wird: die Optionen 2, 3, 6 und 7 überspringen Fehler, 4 nichts außer den anderen Zwischenergebnissen."
 
 #: web/app/components/FooterBar.vue:65 web/app/components/SlideWorkspace.vue:368 web/app/components/TextWorkspace.vue:343
 msgid "line {line}"
@@ -5256,6 +6016,14 @@ msgstr "einmal"
 #: web/app/components/SearchPanel.vue:194
 msgid "one or more"
 msgstr "einmal oder öfter"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "only Sunday is off"
+msgstr "nur der Sonntag ist frei"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "only Sunday is off: Saturday is a workday"
+msgstr "nur der Sonntag ist frei: der Samstag ist ein Arbeitstag"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:915
 msgid "only an owner of a document may delete it"
@@ -5541,6 +6309,10 @@ msgstr "Streuung des Logarithmus"
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr "sql_preview: limit muss eine ganze Zahl von 0 bis {limit} sein"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "start 1,000, save 100 a month at 12% a year, to reach 10,000"
+msgstr "Start 1.000, monatlich 100 sparen bei 12 % im Jahr, bis 10.000 erreicht sind"
+
 #: web/app/components/SearchPanel.vue:202
 msgid "start with"
 msgstr "beginnen mit"
@@ -5653,6 +6425,10 @@ msgstr "die Spaltennummer."
 msgid "the connection closed ({code})"
 msgstr "die Verbindung wurde geschlossen ({code})"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the date and time as a day number with the time of day as its fraction."
+msgstr "das Datum und die Uhrzeit als Tageszahl, mit der Uhrzeit als Bruchteil."
+
 #: web/app/components/PrintPreview.vue:281
 msgid "the document's own"
 msgstr "das eigene des Dokuments"
@@ -5669,9 +6445,21 @@ msgstr "die Datei ist nicht mehr da: bitte noch einmal auswählen"
 msgid "the first message must be hello with params"
 msgstr "Die erste Nachricht muss hello mit params sein"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the first month of 2,000 over 2 years"
+msgstr "der erste Monat von 2.000 über 2 Jahre"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the first month of 8,000 over 3 years"
+msgstr "der erste Monat von 8.000 über 3 Jahre"
+
 #: web/app/lib/print/assets.ts:77
 msgid "the font {family} {style} did not arrive intact"
 msgstr "die Schrift {family} {style} ist nicht vollständig angekommen"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the formula in the cell as text, or #N/A if the cell holds none."
+msgstr "die Formel in der Zelle als Text, oder #N/A, wenn die Zelle keine enthält."
 
 #: web/app/lib/names.ts:336
 msgid "the header row"
@@ -5684,6 +6472,10 @@ msgstr "die Trennmuster für {name} sind nicht vollständig angekommen"
 #: packages/claudia-server/src/claudia_server/composes.py:360 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
 msgid "the new style would look just like “{name}”"
 msgstr "Der neue Stil sähe genauso aus wie „{name}“"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the number of the sheet (counting from 1) the reference or the named sheet is on; of this sheet without an argument."
+msgstr "die Nummer des Tabellenblatts (ab 1 gezählt), auf dem der Bezug oder das genannte Blatt liegt; ohne Argument dieses Blatts."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the position (from 1) of the value in a row or column. Type 0 is an exact match (``*`` and ``?`` work in text); 1 (the default) finds the largest value that is not more than the given one in data sorted ascending; -1 the smallest that is not less, in data sorted descending. Not found is #N/A."
@@ -5744,6 +6536,10 @@ msgstr "der Zellenanfang"
 #: web/app/components/SearchPanel.vue:179 web/app/components/TextEditor.vue:388 web/app/lib/print/source.ts:95
 msgid "the text"
 msgstr "der Text"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the text if the value is text, otherwise empty text."
+msgstr "der Text, wenn der Wert Text ist, sonst leerer Text."
 
 #: web/app/lib/search.ts:202
 msgid "the text “{text}”"
@@ -5876,6 +6672,10 @@ msgstr "zu benennen"
 #: web/app/components/FirstAdminSetup.vue:48
 msgid "tobi"
 msgstr "tobi"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "today's date as a day number (the time of day is left out)."
+msgstr "das heutige Datum als Tageszahl (die Uhrzeit wird weggelassen)."
 
 #: packages/claudia-server/src/claudia_server/computes.py:388
 msgid "trace: reach must be one of {reaches}"

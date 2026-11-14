@@ -43,7 +43,7 @@ from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS
 from .outcomes import Outcomes
 from .refs import Position, SheetId, column_name
-from .spill import Table
+from .spill import Matrix, Table
 from .values import CIRC, SPILL, SYNTAX, ErrorValue, FormulaError, Value
 
 if TYPE_CHECKING:
@@ -320,11 +320,11 @@ class Round:
         value = calc._evaluate(compiled, scope)
         if scope.mentioned:
             calc._mention(key, compiled, scope.mentioned)
-        if value.__class__ is Table:
+        if value.__class__ is Table or value.__class__ is Matrix:
             value = self._spill(key, value, scope)
         elif key in calc.spills:
             self._unspill(key)
-        if compiled.dynamic or compiled.records:
+        if compiled.dynamic or compiled.records or scope.reads or compiled.reads:  # (a result that is blocked reads the cells in its way)
             reads = tuple(dict.fromkeys(scope.reads or ()))
             scope.reads = None
             if reads != compiled.reads:
@@ -346,7 +346,7 @@ class Round:
         self._store(key, value)
         return None
 
-    def _spill(self, key: Key, table: Table, scope: Scope) -> Value:
+    def _spill(self, key: Key, table: Table | Matrix, scope: Scope) -> Value:
         """Put ``table`` into the cells below and beside ``key``, which owns them from now on. Returns what the formula
         cell itself shows: the first cell of the table, or ``#SPILL!`` when the table does not fit there."""
         calc = self.calc
@@ -766,6 +766,8 @@ class Calculator:
             value = compiled.evaluate(scope)
             if value.__class__ is Range:
                 value = single(value)
+            elif value.__class__ is Matrix and value.height * value.width == 1:
+                value = value.value_at(0, 0)  # (one cell is a value, not a result that fills cells)
         except FormulaError as problem:
             return problem.value()
         except RecursionError:

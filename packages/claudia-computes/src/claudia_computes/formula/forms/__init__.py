@@ -60,11 +60,13 @@ def truth(value: Value | object) -> bool:
 from . import (  # noqa: E402, F401  (they register their forms)
     alternatives,
     conditional,
+    environment,
     information,
     lookup,
     random,
     reference,
     sql,
+    subtotal,
 )
 
 CORE_NAMES = frozenset(FORMS)

@@ -9,6 +9,11 @@ Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 →
 the number formats). Search on claudia-search (SEC-18, CODE-18).
 
 ### Added
+- Excel functions, up to rank 300 of the catalog (D450, D451): trigonometry and number theory, rounding, number systems,
+  matrices (MMULT, MINVERSE, MDETERM, LINEST ...), dynamic arrays (SEQUENCE, SORT, SORTBY, FILTER, UNIQUE, VSTACK, HSTACK,
+  TRANSPOSE, RANDARRAY, TEXTSPLIT), text, statistics and distributions, SUBTOTAL, AGGREGATE, dates and times, finance (RATE,
+  NPER, IPMT, PPMT, XNPV, XIRR), information (TYPE, N, T, CELL, INFO, SHEET ...), LET, LOOKUP, ADDRESS. Each with a test.
+- A formula can give a matrix (`claudia_computes.spill.Matrix`); the operators work cell by cell on ranges (D450).
 - `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`).
 - Date functions on Excel's day count, its 29 February 1900 included (D377): `DATE`, `YEAR`, `MONTH`, `DAY`, `EDATE`,
   `EOMONTH`, `DAYS`, `WEEKDAY`, `DATEDIF`. Money functions with Excel's signs: `PMT`, `PV`, `FV`, `NPV`, `IRR` (Newton's
@@ -24,6 +29,7 @@ the number formats). Search on claudia-search (SEC-18, CODE-18).
   `=COLUMNS($B$3:B3)` in B3 counted itself as a circle (`#CIRC!`), where Excel counts columns (D377).
 
 ### Changed
+- `=A1:A3*2` and the other operators on ranges spill cell by cell instead of `#VALUE!` (D450).
 - Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
   rebuilt from the log.
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from datetime import datetime
 from typing import Protocol
 
 from ..draws import uniform
@@ -42,6 +43,8 @@ class Scope:
         self.draw = 0
         self.choice: dict[tuple[SheetId, int, int], int] = {}  # which alternative a cell with alternatives gives (D294)
         self._calls = 0  # how many random numbers the cell being evaluated has taken so far
+        self.variables: dict[str, object] = {}  # the names of the LET being evaluated and their values
+        self.clock: Callable[[], datetime] = datetime.now  # what time it is (TODAY, NOW); tests set it
 
     def enter(self, sheet: SheetId, row: int, col: int) -> None:
         """Evaluate next on ``sheet`` at (``row``, ``col``)."""
@@ -53,6 +56,14 @@ class Scope:
         """The next number in [0, 1) of the stream for the cell being evaluated (``RAND`` and its relatives)."""
         index, self._calls = self._calls, self._calls + 1
         return uniform(self.seed, self.home, self.row, self.col, self.draw, index)
+
+    def formula_of(self, sheet: SheetId | None, position: Position) -> str | None:
+        """The text of the formula in a cell (with its ``=``), or ``None`` if the cell holds a constant or nothing."""
+        cells = getattr(self.sheets.get(sheet or self.home), "cells", None)
+        content = cells.get(position) if cells else None
+        if content and content.get("t") == "formula":
+            return str(content["v"])
+        return None
 
     def read(self, sheet: SheetId, position: Position) -> Value:
         """The value of one cell of another sheet."""

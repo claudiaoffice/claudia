@@ -13,7 +13,8 @@ import math
 from collections.abc import Callable
 
 from ..functions.range import Range
-from ..values import DIV0, NUM, VALUE, ErrorValue, FormulaError, Value, finite, fits_int, format_value
+from ..spill import Matrix
+from ..values import DIV0, NA, NUM, VALUE, ErrorValue, FormulaError, Value, finite, fits_int, format_value
 
 Number = int | float
 
@@ -24,6 +25,13 @@ def single(value: object) -> Value:
         if len(value) != 1:
             raise FormulaError(VALUE, "a range was used where one value is needed")
         found = value.at(0, 0)
+        if found.__class__ is ErrorValue:
+            raise found.raised()
+        return found
+    if value.__class__ is Matrix:
+        if value.height * value.width != 1:  # type: ignore[attr-defined]
+            raise FormulaError(VALUE, "several cells were used where one value is needed")
+        found = value.value_at(0, 0)  # type: ignore[attr-defined]
         if found.__class__ is ErrorValue:
             raise found.raised()
         return found
@@ -39,7 +47,7 @@ def to_number(value: object) -> Number:
         return value  # type: ignore[return-value]
     if cls is bool:
         return int(value)  # type: ignore[call-overload]
-    if isinstance(value, Range):
+    if isinstance(value, Range | Matrix):
         return to_number(single(value))
     raise FormulaError(VALUE, "this is not a number")
 
@@ -159,12 +167,85 @@ COMPARISONS: dict[str, Callable[[Value, Value], bool]] = {
     ">=": lambda a, b: compare(a, b) >= 0,
 }
 
+# -------------------------------------------------------------------------------- cell by cell
+def _grid(operand: object) -> list[list[Value]] | None:
+    """The cells of a range or matrix as rows when it has more than one cell, else ``None`` (it is a single value)."""
+    if operand.__class__ is Range:
+        if len(operand) <= 1:  # type: ignore[arg-type]
+            return None
+        return [list(row) for row in operand.dense()]  # type: ignore[attr-defined]
+    if operand.__class__ is Matrix:
+        if operand.height * operand.width <= 1:  # type: ignore[attr-defined]
+            return None
+        return [list(row) for row in operand.rows]  # type: ignore[attr-defined]
+    return None
+
+
+def _cell(function: Callable[..., Value], *operands: Value) -> Value:
+    for operand in operands:
+        if operand.__class__ is ErrorValue:
+            return operand
+    try:
+        return function(*operands)
+    except FormulaError as problem:
+        return problem.value()
+
+
+def _at(grid: list[list[Value]], row: int, col: int) -> Value:
+    """The cell of ``grid`` for a position of the result: a single row or column is repeated, beyond the end of a
+    longer one there is nothing (``#N/A``), as in Excel."""
+    rows, cols = len(grid), len(grid[0])
+    if (rows > 1 and row >= rows) or (cols > 1 and col >= cols):
+        return ErrorValue(NA)
+    return grid[0 if rows == 1 else row][0 if cols == 1 else col]
+
+
+def elementwise(function: Callable[..., Value], arity: int) -> Callable[..., Value]:
+    """``function`` for operands that may be ranges or matrices of several cells: it is applied to each cell (a single
+    row or column is repeated against the other operand), and gives a ``Matrix``. With single values only, it is
+    ``function`` itself, as fast as it was."""
+    if arity == 1:
+
+        def unary(a: Value) -> Value:
+            if a.__class__ is not Range and a.__class__ is not Matrix:
+                return function(a)
+            grid = _grid(a)
+            if grid is None:
+                return function(a)
+            return Matrix(tuple(tuple(_cell(function, cell) for cell in row) for row in grid))
+
+        return unary
+
+    def binary(a: Value, b: Value) -> Value:
+        ca, cb = a.__class__, b.__class__
+        if ca is not Range and ca is not Matrix and cb is not Range and cb is not Matrix:
+            return function(a, b)
+        grid_a, grid_b = _grid(a), _grid(b)
+        if grid_a is None and grid_b is None:
+            return function(a, b)
+        left = grid_a if grid_a is not None else [[single(a)]]
+        right = grid_b if grid_b is not None else [[single(b)]]
+        height, width = max(len(left), len(right)), max(len(left[0]), len(right[0]))
+        return Matrix(
+            tuple(
+                tuple(_cell(function, _at(left, i, j), _at(right, i, j)) for j in range(width)) for i in range(height)
+            )
+        )
+
+    return binary
+
+
 BINARY: dict[str, Callable[[Value, Value], Value]] = {
-    "+": add,
-    "-": subtract,
-    "*": multiply,
-    "/": divide,
-    "^": power,
-    "&": join,
-    **COMPARISONS,
+    op: elementwise(function, 2)
+    for op, function in {
+        "+": add,
+        "-": subtract,
+        "*": multiply,
+        "/": divide,
+        "^": power,
+        "&": join,
+        **COMPARISONS,
+    }.items()
 }
+NEGATE = elementwise(negate, 1)
+PERCENT = elementwise(percent, 1)

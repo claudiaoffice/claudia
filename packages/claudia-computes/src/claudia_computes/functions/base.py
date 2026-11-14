@@ -28,7 +28,7 @@ and a cell can then say ``=SQUARE(A1)``. The contract:
 
                  A function that takes a ``Range`` reads only the cells that hold something (``range.numbers()``,
                  ``range.present()``), so ``SUM(A:A)`` costs what the column holds, not a million rows.
-return           an int, float, bool, text or a ``Range``. Anything else (``None`` too) is ``#VALUE!``.
+return           an int, float, bool, text, a ``Range`` or a ``Matrix`` (several cells that spill). Anything else (``None`` too) is ``#VALUE!``.
 errors           ``raise FunctionError("#NUM!", "why")`` for an Excel-style code with a reason; ``ZeroDivisionError`` is
                  ``#DIV/0!``, ``ValueError`` and ``OverflowError`` are ``#NUM!``, ``TypeError`` is ``#VALUE!``, any
                  other exception is ``#ERROR!`` (the traceback goes to the log).
@@ -54,6 +54,7 @@ import typing
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 
+from ..spill import Matrix
 from ..values import NUM, SYNTAX, VALUE, ErrorValue, FormulaError, Value, fits_int, format_value
 from .range import Range
 
@@ -141,6 +142,8 @@ def _params_of(call: typing.Callable) -> list[_Param]:
 
 def _convert(param: _Param, value: Value | Range):
     """One argument of the formula -> what ``call`` should get (``FormulaError`` when it cannot be)."""
+    if value.__class__ is Matrix:  # (the result of SORT, SEQUENCE ...: its values are cells to the function)
+        value = value.as_range()
     if param.kind == "any":
         return value
     if param.kind == "range":
@@ -181,9 +184,9 @@ def _as_bool(param: _Param, value: Value) -> bool:
     raise FormulaError(VALUE, f"{param.name} must be TRUE or FALSE")
 
 
-def _result(value: object) -> Value | Range:
+def _result(value: object) -> Value | Range | Matrix:
     """What ``call`` returned -> a cell value (``FunctionError`` if it is not one)."""
-    if isinstance(value, bool | str | Range):
+    if isinstance(value, bool | str | Range | Matrix):
         return value
     if isinstance(value, numbers.Integral):
         whole = int(value)

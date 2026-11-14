@@ -5,6 +5,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "\"address\" ($A$1), \"row\", \"col\", \"contents\", \"type\" (b blank, l text, v other), \"sheet\", and the plain defaults \"format\" (G), \"prefix\", \"protect\", \"parentheses\", \"color\" and \"filename\". Others (\"width\") are #N/A: claudia has no column widths a formula can see."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "\"recalc\" (Automatic), \"numfile\" (the number of sheets), \"origin\" ($A:$A$1), \"system\" (claudia) and \"release\" (the version of the formula language). Others are #N/A."
+msgstr ""
+
 #: web/app/components/ResultNote.vue:23
 msgid "#SPILL! — the result does not fit"
 msgstr ""
@@ -46,7 +54,15 @@ msgid "--- What the server printed ({log}) ---"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 #NULL!, 2 #DIV/0!, 3 #VALUE!, 4 #REF!, 5 #NAME?, 6 #NUM!, 7 #N/A; #N/A if there is no error."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "1 Jan 2025 to 13 Nov 2026"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 Jan to 30 Jul 2012, 30/360"
 msgstr ""
 
 #: web/app/lib/noun-phrases.ts:111
@@ -55,6 +71,10 @@ msgstr ""
 
 #: web/app/components/SqlEditor.vue:142
 msgid "1 column"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 for a number (and an empty cell), 2 for text, 4 for TRUE/FALSE, 16 for an error, 64 for several values."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -102,11 +122,31 @@ msgid "3 per page, with lines"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "30 Dec 2008 to 31 Jan 2009"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "31 Dec 2026: 2026 has 53 ISO weeks"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "31 Jan to 28 Feb 2025"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "31 Oct 2026 + 1 month = 30 Nov 2026"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "4 Jan 2027, a Monday"
 msgstr ""
 
 #: web/app/lib/print/setup.ts:48
 msgid "4 per page"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "6 Nov to 13 Nov 2026"
 msgstr ""
 
 #: web/app/lib/print/setup.ts:49
@@ -115,6 +155,10 @@ msgstr ""
 
 #: web/app/components/RandomDialog.vue:202
 msgid "68 % of the values fall between {low} and {high}"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "8,000 paid back in 48 payments of 200"
 msgstr ""
 
 #: web/app/lib/print/setup.ts:50
@@ -127,6 +171,10 @@ msgstr ""
 
 #: web/app/components/ImportDialog.vue:82
 msgid "A Claudia document goes into a place as it is, still sealed, and is opened with a name and password it already knows."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A Roman numeral as a number (capitals or not; a leading minus sign is kept)."
 msgstr ""
 
 #: web/app/lib/search.ts:460
@@ -153,8 +201,16 @@ msgstr ""
 msgid "A full path, the folder it lives in, or a bare program name to look up on the PATH. Blank looks for the usual name."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A grid of numbers that count up from a start by a step: rows, columns, start (1), step (1)."
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "A hyphen the line is never broken at"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A link: gives the friendly text if there is one, otherwise the address. The cell shows the text; claudia does not follow the link from a formula."
 msgstr ""
 
 #: web/app/components/NameDefinePopover.vue:55
@@ -166,7 +222,19 @@ msgid "A new document belongs to whoever creates it first. The password protects
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number as text rounded to a number of decimals (2 unless given), with thousands separators unless no_commas is TRUE."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number as text with a dollar sign, rounded to a number of decimals (2 unless given)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "A number as text, shown through a number format code (\"#,##0.00\", \"dd.mm.yyyy\", \"0%\")."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number from 0 to 3999 as a Roman numeral; the form 0 to 4 makes it more concise the higher it is."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -175,6 +243,18 @@ msgstr ""
 
 #: web/app/components/PrintPreview.vue:239
 msgid "A picture is printed without some of it: {reason}."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A quartile of the numbers (the old name of QUARTILE.INC)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A quartile of the numbers, leaving out the smallest and the largest: 1, 2 (the median) or 3."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A quartile of the numbers: 0 the smallest, 1, 2 (the median), 3, 4 the largest."
 msgstr ""
 
 #: web/app/components/AdminAccessDocuments.vue:245
@@ -197,8 +277,16 @@ msgstr ""
 msgid "A table always has its header row."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A text as a number with the decimal and group separators you name (. and , unless given); spaces are ignored and each % divides by 100."
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:504
 msgid "A value follows from its formula: it can be found, not replaced."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A whole number as text in another base (2 to 36), padded with zeros to a minimum length."
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:748
@@ -1309,6 +1397,10 @@ msgstr ""
 msgid "Finds the cells that {conditions}."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Finds the last value in an ascending list that is not above the value looked up, and gives the value at the same place in the result list (or, with one table, in its last column or row)."
+msgstr ""
+
 #: web/app/lib/search.ts:280
 msgid "Finds {parts} in cells that {conditions}."
 msgstr ""
@@ -1409,6 +1501,10 @@ msgstr ""
 msgid "Formulas"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Friday 13 Nov 2026 + 1 = Monday 16 Nov"
+msgstr ""
+
 #: web/app/components/StyleCssEditor.vue:89
 msgid "From the styles it is based on"
 msgstr ""
@@ -1487,6 +1583,18 @@ msgstr ""
 
 #: web/app/components/NameDefinePopover.vue:58
 msgid "Grows with its last row"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Half the width of the confidence interval for a mean (known standard deviation, normal distribution); alpha is 1 minus the confidence level."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Half the width of the confidence interval for a mean (the old name of CONFIDENCE.NORM)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Half the width of the confidence interval for a mean from a sample (Student t distribution)."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -1574,11 +1682,19 @@ msgid "How many numbers the ranges hold (text, TRUE/FALSE, errors and empty cell
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "How many of the data fall into each bin: up to the first limit, above it up to the next ... and above the last."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "How many positions meet all the criteria: pairs of a range and its criterion, all of the same shape."
 msgstr ""
 
 #: web/app/components/PrintPreview.vue:255
 msgid "How many slides go on a page"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "How many standard deviations a value is from the mean."
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:425
@@ -1775,6 +1891,10 @@ msgstr ""
 
 #: web/app/components/StyleSpec.vue:166
 msgid "Italic"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Joins texts, numbers and TRUE/FALSE into one text (one value each: CONCAT takes ranges)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -2721,6 +2841,14 @@ msgstr ""
 msgid "Put the result of a query on the selected cell"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Puts ranges one below the other; the narrower ones are filled up with #N/A."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Puts ranges side by side; the shorter ones are filled up with #N/A."
+msgstr ""
+
 #: web/app/components/SqlEditor.vue:108
 msgid "Query in {target}"
 msgstr ""
@@ -2817,6 +2945,10 @@ msgstr ""
 msgid "Removes spaces at both ends and reduces the ones between words to one."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
+msgstr ""
+
 #: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:572 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
 msgid "Rename"
 msgstr ""
@@ -2859,6 +2991,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:304
 msgid "Replaced in {count} cells. Undo brings them back."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Replaces a number of characters of a text, from a position, with other text."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -2914,6 +3050,22 @@ msgid "Rounds away from zero to a number of decimals."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds away from zero to the next even whole number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds away from zero to the next odd whole number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds down (towards minus infinity) to a multiple of the significance; its sign is ignored."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds down to a multiple of the significance (1 unless given). For a negative number the mode decides: 0 rounds away from zero, anything else towards it."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "Rounds down to a multiple of the significance (1 unless given; its sign is ignored)."
 msgstr ""
 
@@ -2926,7 +3078,19 @@ msgid "Rounds to a number of decimals (negative: to tens, hundreds ...); halves 
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds to the nearest multiple of another number; halves go away from zero."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "Rounds towards zero to a number of decimals."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds up (towards plus infinity) to a multiple of the significance; its sign is ignored."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Rounds up to a multiple of the significance (1 unless given). For a negative number the mode decides: 0 rounds towards zero, anything else away from it."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3265,6 +3429,14 @@ msgstr ""
 msgid "Something went wrong."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Sorts a range by the values of other ranges of the same height: by_array, order, by_array, order ..."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Sorts the rows of a range by a column (the first unless given), up or down; with by_col TRUE it sorts the columns by a row."
+msgstr ""
+
 #: web/app/components/ImagePropertiesDialog.vue:83
 msgid "Source"
 msgstr ""
@@ -3275,6 +3447,10 @@ msgstr ""
 
 #: web/app/components/PresentShow.vue:207 web/app/components/SlideNotes.vue:88 web/app/components/SlideNotes.vue:90
 msgid "Speaker notes"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Splits a text into columns at the column delimiters and into rows at the row delimiters (each may be several in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with pad_with (#N/A)."
 msgstr ""
 
 #: web/app/components/TextWorkspace.vue:350
@@ -3353,6 +3529,10 @@ msgstr ""
 msgid "Sum {value}"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Swaps the rows and columns of a range."
+msgstr ""
+
 #: web/app/components/ConnectionIndicator.vue:75
 msgid "TLS verified"
 msgstr ""
@@ -3374,11 +3554,27 @@ msgid "TRUE if every value is TRUE (numbers: not 0); text and empty cells are sk
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE if the cell holds a formula."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE if the value is a reference to cells (A1, A1:B2, or what OFFSET or INDIRECT give)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "TRUE if two texts are the same, capitals included."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "TRUE or FALSE; an error in the value is an answer, not a failure."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE when the whole part of the number is even."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "TRUE when the whole part of the number is odd."
 msgstr ""
 
 #: web/app/components/TextWorkspace.vue:311
@@ -3449,6 +3645,10 @@ msgstr ""
 msgid "Text documents: the AI suggests either way."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Text in a base (2 to 36) as a number."
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:532 web/app/components/SearchPanel.vue:534
 msgid "Text of the replacement"
 msgstr ""
@@ -3485,8 +3685,52 @@ msgstr ""
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The ISO week number of a date: weeks start on Monday and week 1 is the one with the first Thursday."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The Pearson correlation of two ranges (the same as CORREL)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The Student t distribution at x: the share below x (cumulative TRUE) or the density (FALSE)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The Unicode code point of the first character of a text."
+msgstr ""
+
 #: web/app/components/FirstAdminSetup.vue:56
 msgid "The access secret you set earlier stays as a recovery key — only needed if every administrator is ever locked out."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The address of a cell as text, from its row and column number. The third argument is 1 (default) for $A$1, 2 for A$1, 3 for $A1, 4 for A1; the fourth FALSE for R1C1 style; the fifth names a sheet."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians (from -pi/2 to pi/2) whose sine is the number, which must be from -1 to 1."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians (from -pi/2 to pi/2) whose tangent is the number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians (from 0 to pi) whose cosine is the number, which must be from -1 to 1."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians from the x axis to the point (x, y): x comes first, as in Excel."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The angle in radians, from 0 to pi, whose cotangent is the number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The average of the distances of the numbers from their mean."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3517,8 +3761,20 @@ msgstr ""
 msgid "The chance must be between 0 and 1."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The character with a Unicode code point."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The character with a code from 1 to 255 (the Windows-1252 set: 65 is A, 128 the euro sign)."
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:419 web/app/components/SearchPanel.vue:450
 msgid "The characters"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The code of the first character of a text (the Windows-1252 set; 63 for one it does not have)."
 msgstr ""
 
 #: web/app/components/PaletteDialog.vue:142
@@ -3542,11 +3798,47 @@ msgid "The connection was lost. Trying to get back… what you do now is not sav
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The correlation of two ranges: -1 to 1, 0 when they are not related."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The cosecant of an angle in radians (1 / SIN)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The cosine of an angle in radians."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The cotangent of an angle in radians (1 / TAN)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The covariance of two ranges for a sample."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The covariance of two ranges for a whole population (the old name of COVARIANCE.P)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The covariance of two ranges for a whole population."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The date a number of months before or after a date, on the same day of the month where it has one."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a number of working days (not Saturday or Sunday, not a holiday) after, or before if negative, a date."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a number of working days after, or before if negative, a date, with a choice of weekend (see NETWORKDAYS.INTL)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a text names, as a day number. Read: 2026-11-13, 2026/11/13, 13 Nov 2026, 13-Nov-2026 and Nov 13, 2026 (a time after the date is ignored)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3559,6 +3851,14 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The day of the week of a date: 1 (Sunday) to 7, or as the second argument counts (2: Monday is 1)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The determinant of a square matrix of numbers."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
 msgstr ""
 
 #: web/app/lib/base-session.ts:381
@@ -3577,12 +3877,28 @@ msgstr ""
 msgid "The documents you put into this collection, on any place."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The double factorial of a whole number: n * (n-2) * (n-4) ... down to 1 or 2."
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/webpage.py:240
 msgid "The download failed"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The error #N/A (not available): a way to say a value is missing, which charts leave out."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The exponential curve y = b * m1^x1 * ... through known y and x values, as a row (as LINEST gives them)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The factorial of a whole number (1 * 2 * ... * n)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The factorial of the sum of the numbers divided by the product of their factorials."
 msgstr ""
 
 #: web/app/lib/open.ts:150
@@ -3610,7 +3926,91 @@ msgid "The first rows show here as you type."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The geometric mean of positive numbers."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The greatest common divisor of whole numbers (the decimals are cut off)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The harmonic mean of positive numbers."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hour, 0 to 23, of a time (or of a date with a time)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic cosecant of a number (1 / SINH)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic cosine of a number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic cotangent of a number (1 / TANH)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic secant of a number (1 / COSH)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic sine of a number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The hyperbolic tangent of a number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The identity matrix of a size: 1 on the diagonal, 0 elsewhere."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The interest part of the payment in one period of a loan at a fixed rate."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The interest rate per period of a loan or saving plan, found by trying rates from a guess (10% if none is given)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic cosine of a number that is 1 or more."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic cotangent of a number whose size is more than 1."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic sine of a number."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse hyperbolic tangent of a number between -1 and 1 (not including them)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The inverse of a square matrix of numbers (#NUM! when it has none)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The k-th largest number in the range (1 is the largest)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The k-th percentile (k from 0 to 1) of the numbers, 0 being the smallest and 1 the largest."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The k-th percentile of the numbers (the old name of PERCENTILE.INC)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The k-th percentile of the numbers, leaving out 0 and 1: k must lie between 1/(n+1) and n/(n+1)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3623,6 +4023,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "The keyboard shortcuts this app uses"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The kurtosis of a sample (0 for a normal distribution): how heavy the tails are."
 msgstr ""
 
 #: web/app/components/PrintPreview.vue:284
@@ -3638,11 +4042,19 @@ msgid "The largest number of the range wherever all criteria are met, 0 if none 
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The largest of the cells with text counted as 0 and TRUE as 1; 0 if there are none."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The last characters of the text (one unless a number is given)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The last day of the month a number of months before or after a date."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The least common multiple of whole numbers (the decimals are cut off)."
 msgstr ""
 
 #: web/app/components/StyleSpec.vue:53
@@ -3666,6 +4078,10 @@ msgid "The lower limit must be below the upper limit."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The mean of the cells with text counted as 0 and TRUE as 1 (empty cells are skipped)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The mean of the numbers in the ranges. Text and empty cells are skipped."
 msgstr ""
 
@@ -3678,7 +4094,15 @@ msgid "The mean of the numbers of the cells that meet the criterion (of the aver
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The mean of the numbers without the share (0 up to, not including, 1) of the smallest and largest, half cut from each end."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The middle number of the numbers in the ranges (the mean of the two middle ones if their count is even)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The minute, 0 to 59, of a time."
 msgstr ""
 
 #: web/app/components/AdminAiModel.vue:72
@@ -3710,11 +4134,31 @@ msgid "The natural logarithm of a positive number."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The normal distribution at x (the old name of NORM.DIST)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The normal distribution at x: the share below x (cumulative TRUE) or the density (FALSE)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number of characters of the text."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of days between two dates in a year of twelve 30-day months; the third argument TRUE counts European style."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number of days from the start date to the end date."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of periods it takes regular payments at a fixed rate to pay off a loan or save up a sum."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of the week of the year a date is in; the week with 1 January is week 1. The second argument says which day a week starts on (1 Sunday, 2 Monday, 11 to 17 Monday to Sunday, 21 ISO weeks)."
 msgstr ""
 
 #: web/app/components/RandomDialog.vue:69
@@ -3722,7 +4166,39 @@ msgid "The number of trials must be a whole number, 1 or more."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to arrange k of n items when the order matters and items can repeat (n to the k)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to arrange k of n items when the order matters."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to choose k of n items when the order does not matter and items can repeat."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of ways to choose k of n items when the order does not matter."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of working days (not Saturday or Sunday, not a holiday) from the start date to the end date, both included."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of working days between two dates, both included, with a choice of weekend: a code (1 Saturday and Sunday, 2 Sunday and Monday ... 7 Friday and Saturday, 11 to 17 one day) or seven 0 and 1 for Monday to Sunday."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number pi."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number that occurs most often (the first of them if there is a tie); #N/A if none occurs twice."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number that occurs most often (the old name of MODE.SNGL)."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -3731,6 +4207,10 @@ msgstr ""
 
 #: web/app/components/RandomDialog.vue:65
 msgid "The numbers must run from low to high."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The numbers that occur most often, in order of first appearance, as a column (#N/A if none repeats)."
 msgstr ""
 
 #: web/app/components/OutcomePopover.vue:131 web/app/components/OutcomePopover.vue:132
@@ -3743,6 +4223,14 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/webpage.py:222
 msgid "The page stopped working"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The part of a year between two dates. Basis: 0 (default) US 30/360, 1 actual days over actual year, 2 actual/360, 3 actual/365, 4 European 30/360."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The part of the payment in one period that pays off the loan itself (the payment without the interest)."
 msgstr ""
 
 #: web/app/components/FirstAdminSetup.vue:25
@@ -3758,7 +4246,51 @@ msgid "The planned times of the slides, added up"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that a value lies between two limits (or equals the lower one if there is no upper): values and their probabilities, which must add up to 1."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that the observed counts come from the expected ones (chi-squared test of independence or fit)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that two samples have the same mean (the old name of T.TEST)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The probability that two samples have the same mean: type 1 paired, 2 same variance, 3 different variances; tails 1 or 2."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The product of the numbers in the ranges."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The product of two matrices: the first must have as many columns as the second has rows."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a number in a range (the old name of RANK.EQ)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers get the average of their ranks."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers share the top rank."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a value among the numbers as a share between 0 and 1 (not including them), cut to the significance in digits (3)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a value among the numbers as a share from 0 to 1 (the old name of PERCENTRANK.INC)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rank of a value among the numbers as a share from 0 to 1, cut (not rounded) to the significance in digits (3)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3785,8 +4317,24 @@ msgstr ""
 msgid "The right side"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rows of a range for which the condition range holds (a column of TRUE/FALSE or numbers; a row filters the columns). If nothing matches, the third argument, else #N/A."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The same as CEILING.PRECISE: rounds up to a multiple of the significance; its sign is ignored."
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:552
 msgid "The search was stopped after a while, so this may not be everything."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The secant of an angle in radians (1 / COS)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The second, 0 to 59, of a time."
 msgstr ""
 
 #: web/app/lib/open.ts:175 web/app/lib/open.ts:61
@@ -3826,11 +4374,39 @@ msgid "The server stopped at start-up (exit code {code})."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the Student t distribution above x."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the Student t distribution beyond x in one tail (1) or both (2); x is not negative."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the Student t distribution beyond x or -x (x is not negative)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The share of the standard normal distribution below z (the old name of NORM.S.DIST)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The sine of an angle in radians."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The size of a number without its sign."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The skewness of a sample: how lopsided the numbers are around their mean."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The skewness of a whole population."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The slope of the straight line that fits the known y and x values best."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3842,7 +4418,23 @@ msgid "The smallest number of the range wherever all criteria are met, 0 if none
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The smallest of the cells with text counted as 0 and TRUE as 1; 0 if there are none."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The square of the correlation: how much of the variation of y the straight line explains (0 to 1)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The square root of a number that is not negative."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The square root of a number times pi."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a population, text counted as 0 and TRUE as 1."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3850,7 +4442,31 @@ msgid "The standard deviation of a sample (the numbers are a part of a larger wh
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a sample (the same as STDEV)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a sample, text counted as 0 and TRUE as 1."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The standard deviation of a whole population (the numbers are all there is)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard deviation of a whole population (the old name of STDEV.P)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard error of the y values predicted by the straight line fitted to y and x."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The standard normal distribution (mean 0, deviation 1) at z: the share below z or the density."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr ""
 
 #: web/app/lib/base-session.ts:258
@@ -3862,7 +4478,43 @@ msgid "The suggestion to go to {label} was withdrawn."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of a power series: each coefficient times x to a power that starts at n and grows by m."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The sum of the numbers in the ranges. Text and empty cells are skipped."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of the squared distances of the numbers from their mean."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of the squares of the numbers in the ranges. Text and empty cells are skipped."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of the squares of x minus y over pairs of two ranges of the same size."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of x squared minus y squared over pairs of two ranges of the same size."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The sum of x squared plus y squared over pairs of two ranges of the same size."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The t below which the share p of the Student t distribution lies."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The t beyond which, in both directions together, the share p lies (the old name of T.INV.2T)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The t beyond which, in both directions together, the share p of the Student t distribution lies."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3871,6 +4523,14 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:418 web/app/components/SearchPanel.vue:450
 msgid "The text"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The text after a delimiter: after its nth occurrence (negative: counted from the end); match_mode 1 ignores case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there (else #N/A)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The text before a delimiter: before its nth occurrence (negative: counted from the end); match_mode 1 ignores case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there (else #N/A)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3893,8 +4553,24 @@ msgstr ""
 msgid "The time between two dates in whole years (\"Y\"), months (\"M\") or days (\"D\"), or what is left over (\"MD\", \"YM\", \"YD\")."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The time of day (a fraction of a day) of an hour, minute and second. More than 24 hours wrap around to the next day."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The time of day a text names, as a fraction of a day. Read: 14:30, 14:30:15, 2:30 PM; a date before the time is ignored."
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:47
 msgid "The top side"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value below which the share p of a normal distribution lies (the old name of NORM.INV)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value below which the share p of a normal distribution lies."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3902,11 +4578,31 @@ msgid "The value today of cash flows at the end of each coming period, discounte
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value today of cash flows on given dates (the first date is today), discounted at a yearly rate of 365 days."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a population, text counted as 0 and TRUE as 1."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The variance of a sample (the numbers are a part of a larger whole)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a sample (the same as VAR)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a sample, text counted as 0 and TRUE as 1."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The variance of a whole population (the numbers are all there is)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The variance of a whole population (the old name of VAR.P)."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/launch.py:46
@@ -3917,12 +4613,36 @@ msgstr ""
 msgid "The web process ended ({reason}). Start Claudia again."
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The whole part of a division, cut towards zero (the remainder is left out)."
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:86
 msgid "The words will be hard to read on this background."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "The y value the straight line fitted to the known y and x values gives at x (the same as FORECAST)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The y value the straight line fitted to the known y and x values gives at x."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "The year of a date."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The yearly rate at which cash flows on given dates are worth nothing today; needs a payment and a receipt."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The z for which the share p of the standard normal distribution lies below (the old name of NORM.S.INV)."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The z for which the share p of the standard normal distribution lies below."
 msgstr ""
 
 #: web/app/lib/search.ts:461
@@ -4217,6 +4937,14 @@ msgstr ""
 msgid "Values and weights, one pair a line"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Values on the exponential curve y = b * m^x that fits the known y and x values best, at the new x values."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Values on the straight line that fits the known y and x values best, at the new x values (the known ones if left out)."
+msgstr ""
+
 #: web/app/lib/names.ts:13
 msgid "Values people type and change"
 msgstr ""
@@ -4303,6 +5031,10 @@ msgstr ""
 
 #: web/app/components/StyleSpec.vue:140
 msgid "Where a change goes"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "Where the straight line that fits the known y and x values best crosses the y axis (x = 0)."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -4501,6 +5233,10 @@ msgstr ""
 msgid "a file becomes a new document: hello needs create"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "a grid of random numbers (1 row, 1 column, from 0 to 1 and not whole numbers unless said otherwise). With whole TRUE the numbers are whole, from min to max."
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:182 web/app/lib/search.ts:211
 msgid "a letter"
 msgstr ""
@@ -4519,6 +5255,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:186 web/app/lib/search.ts:223
 msgid "a number"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "a number as it is, TRUE as 1, FALSE as 0, a date as its number, anything else (text, empty) as 0."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -4555,6 +5295,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:184 web/app/lib/search.ts:217
 msgid "a space"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "a summary (1 AVERAGE, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 6 PRODUCT, 7 STDEV, 8 STDEV.P, 9 SUM, 10 VAR, 11 VAR.P; add 100 to skip hidden rows) that leaves out other SUBTOTAL cells."
 msgstr ""
 
 #: web/app/components/ImportDialog.vue:35
@@ -4981,6 +5725,10 @@ msgstr ""
 msgid "full screen"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "give names to values (later ones may use earlier ones) and calculate with them."
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/styles.py:72
 msgid "give the CSS as set properties or as text, not both"
 msgstr ""
@@ -5006,11 +5754,19 @@ msgid "history and chat"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
+msgid "how many areas the reference has. A reference is one area: claudia has no unions."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
 msgid "how many columns the range has."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "how many rows the range has."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "how many sheets the workbook has (1 for a reference)."
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:450
@@ -5083,6 +5839,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes_search.py:219
 msgid "leave: that cell is outside any sheet"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "like SUBTOTAL with more functions (1-13 as SUBTOTAL but with 12 MEDIAN and 13 MODE.SNGL; 14 LARGE, 15 SMALL, 16 PERCENTILE.INC, 17 QUARTILE.INC, 18 PERCENTILE.EXC, 19 QUARTILE.EXC take a range and k) and a choice what to skip: options 2, 3, 6 and 7 skip errors, 4 skips nothing but the other subtotals."
 msgstr ""
 
 #: web/app/components/FooterBar.vue:65 web/app/components/SlideWorkspace.vue:368 web/app/components/TextWorkspace.vue:343
@@ -5255,6 +6015,14 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:194
 msgid "one or more"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "only Sunday is off"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "only Sunday is off: Saturday is a workday"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:915
@@ -5541,6 +6309,10 @@ msgstr ""
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "start 1,000, save 100 a month at 12% a year, to reach 10,000"
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:202
 msgid "start with"
 msgstr ""
@@ -5653,6 +6425,10 @@ msgstr ""
 msgid "the connection closed ({code})"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the date and time as a day number with the time of day as its fraction."
+msgstr ""
+
 #: web/app/components/PrintPreview.vue:281
 msgid "the document's own"
 msgstr ""
@@ -5669,8 +6445,20 @@ msgstr ""
 msgid "the first message must be hello with params"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the first month of 2,000 over 2 years"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the first month of 8,000 over 3 years"
+msgstr ""
+
 #: web/app/lib/print/assets.ts:77
 msgid "the font {family} {style} did not arrive intact"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the formula in the cell as text, or #N/A if the cell holds none."
 msgstr ""
 
 #: web/app/lib/names.ts:336
@@ -5683,6 +6471,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py:360 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
 msgid "the new style would look just like “{name}”"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the number of the sheet (counting from 1) the reference or the named sheet is on; of this sheet without an argument."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -5743,6 +6535,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:179 web/app/components/TextEditor.vue:388 web/app/lib/print/source.ts:95
 msgid "the text"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "the text if the value is text, otherwise empty text."
 msgstr ""
 
 #: web/app/lib/search.ts:202
@@ -5875,6 +6671,10 @@ msgstr ""
 
 #: web/app/components/FirstAdminSetup.vue:48
 msgid "tobi"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "today's date as a day number (the time of day is left out)."
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py:388
