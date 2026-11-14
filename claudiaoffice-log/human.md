@@ -19,13 +19,14 @@ Work plan for Nov 14/15th 2026
 		      "RANDOM" command anywhere, same goes for the "draw 0" count at the right most edge above the history&chat dock. Could we make it a principle that stuff that is not meaningful in the respective context is invisible? So the tools menu would expand with new entries IF there is a random function somewhere.
 		- [ ] the app icon is gone for the linux client when starting from shell - normal?
 		- [ ] rotation UI in all three apps
+		- [ ] macos client still picks random port and the button "open document" as well as native menu entries dont do anything.
 	- [x] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] performance
 		- [ ] scaleway: replace not new image
 		- [ ] every internal feature should be connected to the Importer/Exporter
 			- [ ] e.g. ordered/unordered lists in composes not imported/exported
-		- [ ] extend regex search from computes to creates and composes
+		- [ ] **ongoing on branch "search"** extend regex search from computes to creates and composes
 		- [ ] deployability server, to QNAP and elsewhere
 		- [ ] CI on github, get it green!!
 		- [ ] desktop client tests (visual deviations)
@@ -38,7 +39,7 @@ Work plan for Nov 14/15th 2026
 		- [ ] lists in composes
 		- [ ] styles
 		- [ ] anything else we have as entities?
-	- [ ] printing in computes
+	- [ ] **computes-printing** printing in computes
 	- [ ] finish text rendering containers
 		- [ ] typst
 		- [ ] mermaid
