@@ -66,8 +66,8 @@ class ResolvedTool:
 
     @property
     def identity(self) -> str:
-        """What goes into a cache key and into a document's note of what made a picture: the name, the version and
-        a short digest of the options, because the same program with other options may draw something else."""
+        """The name, the version and a short digest of the options, which go into a cache key and into a document's
+        note of what made a picture (the same program with other options may draw something else)."""
         digest = hashlib.sha256(json.dumps(dict(self.options), sort_keys=True).encode()).hexdigest()[:8]
         return f"{self.name} {self.version} {digest}"
 

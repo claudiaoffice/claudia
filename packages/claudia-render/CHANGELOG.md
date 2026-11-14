@@ -3,6 +3,14 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Fixed
+- The API reference builds again with warnings as errors (`sphinx-build -W`): `ResolvedTool.identity`'s docstring
+  no longer starts like a type, the server's `RenderDesk` and `RenderSettings` and the kernel's rendering classes are
+  documented, and a built-in such as `type[...]` in a signature is no longer linked to a field that happens to share
+  its name (`Manifest.type`, `ParamSpec.type`; `docs/conf.py`). No API change.
+
 ## [0.1.0] - 2026-11-13
 
 First release: rendered text containers (D390-D396). LaTeX, Mermaid and Typst are the first three types.

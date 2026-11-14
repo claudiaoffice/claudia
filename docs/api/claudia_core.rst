@@ -134,6 +134,23 @@ The object commands, the same in all three apps:
 .. autoclass:: claudia_core.UpdateDiagram
 .. autoclass:: claudia_core.ForgetDiagram
 
+Rendered text containers
+------------------------
+
+.. automodule:: claudia_core.renderings
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A rendered text container keeps a text and shows a picture something outside the document made from it (D390); the
+kernel keeps the definition and the picture, and never runs anything (D391).
+
+.. autoclass:: claudia_core.RenderedDefinition
+.. autoclass:: claudia_core.RenderingsChanged
+.. autoclass:: claudia_core.DefineRendering
+.. autoclass:: claudia_core.UpdateRendering
+.. autoclass:: claudia_core.ForgetRendering
+
 Shape outlines
 --------------
 

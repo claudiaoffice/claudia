@@ -123,6 +123,15 @@ Hyphenation patterns for the clients' layout, the same way (D913): ``GET /api/hy
 .. autoexception:: claudia_server.hyphenation.FetchError
 .. autodata:: claudia_server.hyphenation.HYPHENATION_FORMAT
 
+Rendered text containers
+------------------------
+
+What makes the picture of a rendered text container (D395; not in ``__all__``, documented so the signatures that name
+it resolve): the methods that put one in a document, and the job that renders it as an ordinary edit.
+
+.. autoclass:: claudia_server.rendered.RenderDesk
+   :members:
+
 Users
 -----
 
@@ -149,6 +158,7 @@ configured it to do.
 .. autoclass:: claudia_server.ServerSettings
 .. autoclass:: claudia_server.AiSettings
 .. autoclass:: claudia_server.TypesetSettings
+.. autoclass:: claudia_server.server_settings.RenderSettings
 .. autoclass:: claudia_server.Changed
 .. autofunction:: claudia_server.load_settings
 .. autofunction:: claudia_server.save_settings
