@@ -39,4 +39,8 @@ case "${1:-}" in
     *) app=composes ;;
 esac
 
+# The app's own icon in the dock: GNOME on Wayland takes it from the desktop entry named after the window's app id,
+# which a checkout does not have installed (scripts/install-linux-desktop-entry.sh says more). Never a reason not to start.
+scripts/install-linux-desktop-entry.sh "$app" || echo "Could not install the desktop entry; the dock will show a generic icon." >&2
+
 PYTHONPATH="$PWD/clients/linux/src" exec /usr/bin/python3 -m claudia_shell_gtk "$app" "$@"

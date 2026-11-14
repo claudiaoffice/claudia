@@ -55,7 +55,13 @@ def run(app: str, argv: Sequence[str] | None = None) -> int:
     except (ImportError, ValueError) as problem:
         print(f"{problem}\n\n{install_hint()}", file=sys.stderr)
         return 1
-    application = ClaudiaApp(identity.get(app), server=options.server, locale=locale)
+    who = identity.get(app)
+    # The program name is what X11 sessions match the desktop entry by (its StartupWMClass); on Wayland the app id
+    # does it. Run as `python3 -m claudia_shell_gtk` it would be "python3", and the dock would show a generic icon.
+    from ._gi import GLib
+
+    GLib.set_prgname(who.application_id)
+    application = ClaudiaApp(who, server=options.server, locale=locale)
     return int(application.run([sys.argv[0], *options.rest]))
 
 

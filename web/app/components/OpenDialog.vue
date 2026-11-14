@@ -980,7 +980,7 @@ header {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 14px 28px;
+  padding: 6px 28px; /* the front page is long: the card starts close under the wordmark (owner, 2026-11-14) */
 }
 .tag {
   display: inline-flex;
@@ -992,7 +992,7 @@ header {
   align-self: start;
   justify-self: center;
   width: min(1000px, calc(100% - 32px));
-  margin-top: 4vh;
+  margin-top: 0;
   display: flex;
   align-items: stretch;
   background: var(--surface);
