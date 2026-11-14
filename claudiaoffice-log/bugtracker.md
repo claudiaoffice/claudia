@@ -140,6 +140,7 @@ statement in the docs or on the website).
 | CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |
 | CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13 |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |
+| CODE-22 | P2 | Code / Import | An xlsx with an array formula failed to import; one edit dropped a sheet's lists, icon sets and spill marks | **fixed** 2026-11-13 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
@@ -308,7 +309,8 @@ linked from the landing page and public on every server.
 ### SEC-15 · Office import reads every part whole and parses some XML with defaults · P2 · new, open
 **Evidence (read).** `claudia_opc_io.read_parts` and the odf readers `zf.read()` every member with no limit on
 uncompressed size or member count: a few-MB zip bomb exhausts the server's memory. Most ODF parsing uses
-`XMLParser(resolve_entities=False, no_network=True)`, but `odt.py:235` (styles), `xlsx.py` and
+`XMLParser(resolve_entities=False, no_network=True)`, but `odt.py:235` (styles), `xlsx.py` (since 2026-11-13 the
+xlsx reader uses a hardened parser, D370; its zip is still read whole) and
 `odf_io/package.py:70` use lxml's defaults (lxml 6 resolves internal entities). Import is not on the wire yet (only
 export is), which is why this is P2; it becomes P1 the day the import UI (E2.9, E6.9, E9.5, E10.3) sends a file.
 **Fix.** One `safe_parts(data, max_members, max_total, max_ratio)` in `claudia-opc-io` that checks `ZipInfo.file_size`
@@ -1339,6 +1341,17 @@ composes already split its lists out (`composes_lists.py`). **Fix:** one module 
 ### DOC-02 · Stale launcher name · P3 · fixed 2026-11-13
 `start-client.sh` became `start-linux-client.sh` (148610e); `clients/linux/README.md`, the script's own usage text and
 the macOS and Windows launchers' comments still named the old file. Changelogs and dated notes keep the old name.
+
+### CODE-22 · xlsx from today's Excel: the import failed, an edit dropped what openpyxl does not know · P2 · fixed 2026-11-13
+**Evidence (measured)** on two real workbooks the owner supplied (kept out of the repository): `xlsx_to_workbook`
+failed on a planning model with `'ArrayFormula' object has no attribute 'strip'` (openpyxl hands an array formula
+over as an object); on a classroom game, editing one cell and saving removed the sheet's list of choices from another
+sheet (`x14:dataValidation`), and on the planning model the same save path drops the spill marks (`cm`), icon sets
+(`x14:cfRule`) and a picture in a cell (`vm`) of the edited sheet. Formulas with functions Excel added after 2007 were
+written without `_xlfn.`, so Excel showed `#NAME?`.
+**Fix.** D370 (read from the XML, never fail, a formula the model cannot calculate comes in as Excel's value) and D371
+(write the edited cells into the original sheet's XML). Tests first: `packages/claudia-computes-io/tests/test_xlsx_real_world.py`
+and `test-documents/xlsx/beyond-claudia/excel-today`.
 
 ## Website
 

@@ -22,8 +22,9 @@ numbers; a formula that cannot be translated is written as its value alone and c
 is read and cannot be translated comes in as its last value (also a loss): a cell is never wrong, only less live.
 
 Dates and times are numbers in the model, as in Excel: they come in as the serial number (a date and a time of day as
-a fraction of a day) and the file keeps its date format for as long as the cell is not edited. That is a loss
-(``date``), as is every look of a cell: the model has no per-cell style.
+a fraction of a day) and show as a date through the number format of their style. The cell styles come in as the
+workbook's styles and named number formats (:mod:`.ods_looks`, :mod:`.cell_looks`, D379); a date without a date
+format, and whatever a look has that no style holds, are counted as losses (``date``, ``look``).
 """
 
 from __future__ import annotations
@@ -34,13 +35,14 @@ import math
 import re
 from bisect import bisect_right
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import cache
 from zipfile import BadZipFile
 
 from lxml import etree
 
 from claudia_computes import Content, Sheet, SheetId, WorkbookModel, function_catalog
+from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.formula import Call, parse_formula
 from claudia_computes.formula.nodes import walk
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
@@ -63,7 +65,10 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
+from .ods_looks import OdsLooks, column_styles, read_looks
+from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
 from .xlsx import UnsupportedEdit
 
@@ -190,6 +195,11 @@ class _Table:
     cells: dict[tuple[int, int], dict] = field(default_factory=dict)
     #: What is in the sheet and not in the model, as ``(kind, detail, count)``.
     left_out: list[tuple[str, str, int]] = field(default_factory=list)
+    #: The cell style of runs of cells that name one, of rows and of columns: ``(area, name)``, ``(first, last,
+    #: name)``.
+    cell_looks: list[tuple[tuple[int, int, int, int], str]] = field(default_factory=list)
+    row_looks: list[tuple[int, int, str]] = field(default_factory=list)
+    column_looks: list[tuple[int, int, str]] = field(default_factory=list)
 
 
 def _top(element: etree._Element, table: etree._Element) -> etree._Element:
@@ -261,7 +271,7 @@ def _cached(cell: etree._Element) -> tuple[Content, str | None]:
             if kind == "date"
             else _fraction(cell.get(_q("office", "time-value")))
         )
-        return (None if value is None else _constant(value)), "date"
+        return (None if value is None else _constant(value)), "date" if value is not None else None
     if kind == "boolean":
         return {"t": "bool", "v": cell.get(_q("office", "boolean-value")) == "true"}, None
     if kind == "string":
@@ -271,10 +281,13 @@ def _cached(cell: etree._Element) -> tuple[Content, str | None]:
     return None, None
 
 
-def _read_cell(cell: etree._Element) -> tuple[Content, list[tuple[str, str]]]:
-    """The content of a cell and what is lost of it (``(kind, detail)`` for each, before the cell is counted)."""
+def _read_cell(cell: etree._Element, *, dated: bool = False) -> tuple[Content, list[tuple[str, str]]]:
+    """The content of a cell and what is lost of it (``(kind, detail)`` for each, before the cell is counted); a date
+    is lost only where the cell's style does not show it as one (``dated``)."""
     lost: list[tuple[str, str]] = []
     constant, kind = _cached(cell)
+    if kind == "date" and dated:
+        kind = None
     if kind and constant is not None:
         lost.append((kind, ""))
     attribute = cell.get(_q("table", "formula"))
@@ -339,8 +352,6 @@ def _set_note(cell: etree._Element, note: str | None) -> None:
 def _cell_losses(cell: etree._Element, content: Content) -> list[tuple[str, str]]:
     """What a cell has that the model does not show: its look, being merged, a comment, a link or a format."""
     lost: list[tuple[str, str]] = []
-    if content is not None and cell.get(_q("table", "style-name")):
-        lost.append(("look", ""))
     if any(int(cell.get(_q("table", name)) or 1) > 1 for name in ("number-columns-spanned", "number-rows-spanned")):
         lost.append(("merge", ""))
     annotation = cell.find("office:annotation", NS)
@@ -354,9 +365,12 @@ def _cell_losses(cell: etree._Element, content: Content) -> list[tuple[str, str]
     return lost
 
 
-def _scan_table(element: etree._Element, number: int, cells_so_far: int) -> _Table:
+def _scan_table(element: etree._Element, number: int, cells_so_far: int, looks: OdsLooks) -> _Table:
     """One sheet: where its rows and cells are in the file, what the model has of them, and what it does not."""
     table = _Table(f"s{number}", element.get(_q("table", "name")) or f"Sheet{number}", element)
+    table.column_looks = [(first, min(last, MAX_COLS - 1), name) for first, last, name in column_styles(element)
+                          if first < MAX_COLS]  # fmt: skip
+    columns = Lines(table.column_looks)
     losses: dict[tuple[str, str], int] = {}
 
     def lose(kind: str, detail: str, count: int) -> None:
@@ -375,13 +389,24 @@ def _scan_table(element: etree._Element, number: int, cells_so_far: int) -> _Tab
         table.rows.append(run)
         if row.get(_q("table", "visibility")) in ("collapse", "filter"):
             lose("hidden-row", "", repeat)
+        row_style = row.get(_q("table", "default-cell-style-name"))
+        if row_style and position < MAX_ROWS:
+            table.row_looks.append((position, min(position + repeat, MAX_ROWS) - 1, row_style))
         column = 0
         for cell in row:
             if not isinstance(cell.tag, str) or local_name(cell.tag) not in _CELL_TAGS:
                 continue
             across = _repeated(cell, "number-columns-repeated")
             run.cells.append(_Run(cell, column, across))
-            content, lost = _read_cell(cell)
+            name = cell.get(_q("table", "style-name"))
+            if name and position < MAX_ROWS and column < MAX_COLS:
+                area = (position, column, min(position + repeat, MAX_ROWS) - 1, min(column + across, MAX_COLS) - 1)
+                table.cell_looks.append((area, name))
+            dated = False
+            if cell.get(_q("office", "value-type")) in ("date", "time"):
+                shown = name or row_style or columns.at(column)
+                dated = shown is not None and looks.look(shown)[1].shows_dates
+            content, lost = _read_cell(cell, dated=dated)
             lost += _cell_losses(cell, content)
             if content is not None or lost:
                 populated = _place(table, (position, repeat), (column, across), content, lost, lose, populated)
@@ -454,23 +479,54 @@ def _table_losses(table: _Table, element: etree._Element, lose) -> None:  # noqa
         lose("layout", "", 1)
 
 
-def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, list[_Table]]:
+def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, list[_Table], OdsLooks]:
     parts = _read(data)
     try:
         content = etree.fromstring(parts["content.xml"], etree.XMLParser(resolve_entities=False, no_network=True))
+        looks = read_looks(parts, content)
     except etree.XMLSyntaxError as problem:
         raise OdfError(f"this OpenDocument file is not well-formed XML: {problem}") from problem
-    return parts, content, _tables(content)
+    return parts, content, _tables(content, looks), looks
 
 
-def _tables(content: etree._Element) -> list[_Table]:
+def _tables(content: etree._Element, looks: OdsLooks) -> list[_Table]:
     tables: list[_Table] = []
     populated = 0
     for number, element in enumerate(_spreadsheet(content).findall("table:table", NS), start=1):
-        table = _scan_table(element, number, populated)
+        table = _scan_table(element, number, populated, looks)
         populated += len(table.cells)
         tables.append(table)
     return tables
+
+
+#: A run of cells of one style up to this size is taken cell by cell, so that it joins its neighbours into one range.
+_SMALL_RUN = 64
+
+
+def _dress(dressing: Dressing, sheet: Sheet, table: _Table) -> None:
+    """Give ``sheet`` the styles of its cells, rows and columns: a run of cells needs a range of its own only where
+    its style is not its row's (or, in a row without one, its column's)."""
+    columns = [(first, last, dressing.style(name)) for first, last, name in table.column_looks]
+    rows = [(first, last, dressing.style(name)) for first, last, name in table.row_looks]
+    by_row, by_column = Lines(rows), Lines(columns)
+    cells: dict[tuple[int, int], str] = {}
+    blocks = []
+    for area, name in table.cell_looks:
+        r0, c0, r1, c1 = area
+        size = (r1 - r0 + 1) * (c1 - c0 + 1)
+        dressing.count(name, size)
+        style = dressing.style(name)
+        if c0 == 0 and c1 == MAX_COLS - 1:
+            rows.append((r0, r1, style))
+        elif size > _SMALL_RUN:
+            if style != (by_row.at(r0) or by_column.at(c0) or DEFAULT_CELL_STYLE):
+                blocks.append((area, style))
+        else:
+            for r in range(r0, r1 + 1):
+                for c in range(c0, c1 + 1):
+                    if style != (by_row.at(r) or by_column.at(c) or DEFAULT_CELL_STYLE):
+                        cells[(r, c)] = style
+    dressing.dress(sheet, SheetLooks(cells, rows, columns, blocks))
 
 
 def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
@@ -479,11 +535,13 @@ def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
     them. The formulas are translated from OpenFormula; one that cannot be comes in as its last value. What the
     model does not hold is in :func:`ods_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is
     not an ods."""
-    _, _, tables = _document(ods_bytes)
+    _, _, tables, looks = _document(ods_bytes)
     model = WorkbookModel()
+    dressing = Dressing(model, looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
         sheet = Sheet(SheetId(table.id), table.name)
         sheet.cells = dict(table.cells)
+        _dress(dressing, sheet, table)
         model.sheets[sheet.id] = sheet
         model.open_container(str(sheet.id))
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see xlsx_to_workbook)
@@ -495,11 +553,15 @@ def ods_import_losses(ods_bytes: bytes) -> tuple[Loss, ...]:
     not read as one, ``"date"``, ``"look"``, ``"merge"``, ``"comment"``, ``"chart"``, ``"picture"``, ``"pivot-table"``,
     ``"named-range"``...) with how many there are. None of it is lost from the *file*: an edit exported with
     :func:`apply_edits_to_ods` keeps all of it."""
-    _, content, tables = _document(ods_bytes)
+    _, content, tables, looks = _document(ods_bytes)
     losses = LossLog()
+    dressing = Dressing(WorkbookModel(), looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
         for kind, detail, count in table.left_out:
             losses.add(kind, detail, count)
+        _dress(dressing, Sheet(SheetId(table.id), table.name), table)
+    for what, count in dressing.lost.items():
+        losses.add("look", what, count)
     ranges = sum(1 for _ in content.iter(_q("table", "named-range"), _q("table", "named-expression")))
     if ranges:
         losses.add("named-range", count=ranges)
@@ -594,49 +656,106 @@ def _gap(count: int, *, row: bool = False) -> etree._Element:
     return element
 
 
-def _cells_of(cells: Mapping[int, tuple[Content, Value]], lost: LossLog | None) -> list[etree._Element]:
-    """The cells of one row, with the empty stretches between them written as one each."""
+def _cells_of(
+    cells: Mapping[int, tuple[Content, Value]], lost: LossLog | None, looks: Mapping[int, str] | None = None
+) -> list[etree._Element]:
+    """The cells of one row, with the empty stretches between them written as one each; ``looks`` names the cell
+    style of a column of the row, for a cell with or without content."""
+    looks = looks or {}
     out: list[etree._Element] = []
     cursor = 0
-    for column in sorted(cells):
+    for column in sorted({*cells, *looks}):
         if column > cursor:
             out.append(_gap(column - cursor))
-        out.append(_new_cell(*cells[column], lost))
+        cell = _new_cell(*cells[column], lost) if column in cells else _el("table", "table-cell")
+        if column in looks:
+            cell.set(_q("table", "style-name"), looks[column])
+        out.append(cell)
         cursor = column + 1
     return out
 
 
-def _rows_of(sheet: Sheet, lost: LossLog | None) -> list[etree._Element]:
-    """The rows of ``sheet``, as the file writes them."""
+@dataclass
+class _Looks:
+    """The cell styles of one sheet as an ods file names them: of cells, of runs of rows and of runs of columns."""
+
+    cells: dict[int, dict[int, str]] = field(default_factory=dict)
+    rows: list[tuple[int, int, str]] = field(default_factory=list)
+    columns: list[tuple[int, int, str]] = field(default_factory=list)
+
+
+def _looks_of(sheet: Sheet, writer: OdsLookWriter | None) -> _Looks:
+    looks = _Looks()
+    if writer is None:
+        return looks
+    styling = sheet_styling(sheet)
+    for (row, column), pair in styling.cells.items():
+        looks.cells.setdefault(row, {})[column] = writer.cell_style(*pair)
+    looks.rows = [(first, last, writer.cell_style(*pair)) for first, last, pair in styling.rows]
+    looks.columns = [(first, last, writer.cell_style(*pair)) for first, last, pair in styling.columns]
+    return looks
+
+
+def _rows_of(sheet: Sheet, lost: LossLog | None, looks: _Looks | None = None) -> list[etree._Element]:
+    """The rows of ``sheet``, as the file writes them: a row with something in it on its own, a stretch of rows with
+    nothing in them once (with its default cell style, if it has one)."""
+    looks = looks or _Looks()
     by_row: dict[int, dict[int, tuple[Content, Value]]] = {}
     for (row, column), content in sheet.cells.items():
         by_row.setdefault(row, {})[column] = (content, sheet.grid.get((row, column)))
+    filled = sorted({*by_row, *looks.cells})
+    edges = {edge for row in filled for edge in (row, row + 1)}
+    edges |= {edge for first, last, _ in looks.rows for edge in (first, last + 1)}
+    edges.add(0)
+    runs = Lines(looks.rows)
     out: list[etree._Element] = []
-    cursor = 0
-    for row in sorted(by_row):
-        if row > cursor:
-            out.append(_gap(row - cursor, row=True))
-        element = _el("table", "table-row")
-        element.extend(_cells_of(by_row[row], lost))
+    ordered = sorted(edges)
+    for first, after in zip(ordered, ordered[1:], strict=False):
+        style = runs.at(first)
+        if first in by_row or first in looks.cells:
+            element = _el("table", "table-row")
+            element.extend(_cells_of(by_row.get(first, {}), lost, looks.cells.get(first)))
+        else:
+            element = _gap(after - first, row=True)
+        if style is not None:
+            element.set(_q("table", "default-cell-style-name"), style)
         out.append(element)
-        cursor = row + 1
     return out
 
 
-def _new_table(sheet: Sheet, lost: LossLog | None) -> etree._Element:
+def _columns_of(width: int, looks: _Looks) -> list[etree._Element]:
+    edges = {0, width} | {edge for first, last, _ in looks.columns for edge in (first, last + 1)}
+    runs = Lines(looks.columns)
+    out = []
+    ordered = sorted(edges)
+    for first, after in zip(ordered, ordered[1:], strict=False):
+        count = after - first
+        element = _el("table", "table-column", {"table:number-columns-repeated": str(count)} if count > 1 else None)
+        style = runs.at(first)
+        if style is not None:
+            element.set(_q("table", "default-cell-style-name"), style)
+        out.append(element)
+    return out
+
+
+def _new_table(sheet: Sheet, lost: LossLog | None, writer: OdsLookWriter | None = None) -> etree._Element:
     table = _el("table", "table", {"table:name": xml_safe(sheet.name)})
-    width = max((column for _, column in sheet.cells), default=0) + 1
-    table.append(_el("table", "table-column", {"table:number-columns-repeated": str(width)} if width > 1 else None))
-    table.extend(_rows_of(sheet, lost) or [_gap(1, row=True)])
+    looks = _looks_of(sheet, writer)
+    used = [column for _, column in sheet.cells] + [column for row in looks.cells.values() for column in row]
+    width = max(used, default=0) + 1
+    table.extend(_columns_of(width, looks))
+    table.extend(_rows_of(sheet, lost, looks) or [_gap(1, row=True)])
     return table
 
 
-def _styles_part() -> bytes:
+def _styles_part(writer: OdsLookWriter | None = None) -> bytes:
     declared = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in _NS_DECLS.items())
-    return (
-        f'{_DECLARATION}<office:document-styles {declared} office:version="1.3"><office:styles/>'
-        "</office:document-styles>"
-    ).encode()
+    root = etree.fromstring(
+        f'<office:document-styles {declared} office:version="1.3"><office:styles/></office:document-styles>'
+    )
+    if writer is not None:
+        root[0].extend(writer.office_styles())
+    return (_DECLARATION + etree.tostring(root, encoding="unicode")).encode()
 
 
 def workbook_to_ods(model: WorkbookModel, *, info: DocumentInfo | None = None) -> bytes:
@@ -647,20 +766,28 @@ def workbook_to_ods(model: WorkbookModel, *, info: DocumentInfo | None = None) -
     for name in ("scripts", "font-face-decls", "automatic-styles"):
         etree.SubElement(root, _q("office", name))
     spreadsheet = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "spreadsheet"))
+    writer = OdsLookWriter(model)
     for sheet in model.sheets.values():
-        spreadsheet.append(_new_table(sheet, None))
+        spreadsheet.append(_new_table(sheet, None, writer))
     if not model.sheets:
         spreadsheet.append(_new_table(Sheet(SheetId("s1"), "Sheet1"), None))
+    root.find("office:automatic-styles", NS).extend(writer.automatic_styles())  # type: ignore[union-attr]
+    etree.cleanup_namespaces(root, keep_ns_prefixes=list(_NS_DECLS))  # (formulas name "of:" in their text)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
-    return new_package("spreadsheet", content.encode(), _styles_part(), meta=new_meta(info or DocumentInfo()))
+    styles = _styles_part(writer)
+    return new_package("spreadsheet", content.encode(), styles, meta=new_meta(info or DocumentInfo()))
 
 
 def ods_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     """What :func:`workbook_to_ods` cannot put into the file for ``model``, each as a code with how many:
     ``"formula"`` (with the reason: the cell is written as its value), ``"chart"`` and ``"object"`` (charts and the
-    text, shape and image objects floating on a sheet are not written yet) and ``"layout"`` (a sheet with its own column
-    widths or row heights)."""
+    text, shape and image objects floating on a sheet are not written yet), ``"layout"`` (a sheet with its own column
+    widths or row heights) and ``"look"`` (``too-many-cells``: cells of style ranges too large to write one by
+    one)."""
     losses = LossLog()
+    dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
+    if dropped:
+        losses.add("look", "too-many-cells", dropped)
     for sheet in model.sheets.values():
         for content in sheet.cells.values():
             written = with_note(content)
@@ -687,6 +814,14 @@ class _Change:
     content: Content
     value: Value
     refresh: bool = False
+    #: The cell style it is to have, when its look changed; ``keep``: only its look changed.
+    style: str | None = None
+    keep: bool = False
+
+    @property
+    def writes(self) -> bool:
+        """Is there anything to write for a cell the file does not have yet?"""
+        return self.content is not None or self.style is not None
 
 
 def _segments(first: int, count: int, edited: list[int]) -> list[tuple[int, int, bool]]:
@@ -746,10 +881,15 @@ class _Patch:
         self.parts = _read(original)
         self.part = XmlPart(self.parts["content.xml"])
         self.spreadsheet = _spreadsheet(self.part.root)
-        self.tables = _tables(self.part.root)
+        self.tables = _tables(self.part.root, OdsLooks())  # (no looks: only where the cells are)
         self.by_id = {table.id: table for table in self.tables}
         self.changed = False
         self._check_baseline()
+        styles = self.parts.get("styles.xml")
+        self.styles_root = None if styles is None else etree.fromstring(styles, etree.XMLParser(resolve_entities=False))
+        self.restyler = OdsRestyler(current, self.styles_root)
+        self.old_looks = LookExport(baseline)
+        self.restyled = changed_styles(self.old_looks, self.restyler.looks)
 
     def _check_baseline(self) -> None:
         if [(sheet.id, sheet.name) for sheet in self.baseline.sheets.values()] != [
@@ -775,10 +915,33 @@ class _Patch:
         self._add_tables()
         if not self.changed:
             return self.original
+        self._add_styles()
         self.parts["content.xml"] = self.part.result()
         if self.info is not None:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
+
+    def _add_styles(self) -> None:
+        """The cell styles the changed looks need: automatic ones into ``content.xml``, named ones the file does not
+        have into ``styles.xml``."""
+        automatic = self.restyler.automatic_styles()
+        if automatic:
+            holder = self.part.root.find("office:automatic-styles", NS)
+            if holder is None:
+                body = self.part.root.find("office:body", NS)
+                assert body is not None  # (a spreadsheet has one, _spreadsheet made sure)
+                wrapper = _el("office", "automatic-styles")
+                wrapper.extend(automatic)
+                self.part.insert_before(body, wrapper)
+            else:
+                self.part.insert_into(holder, *automatic)
+        named = self.restyler.new_named_styles()
+        if named and self.styles_root is not None:
+            styles = XmlPart(self.parts["styles.xml"])
+            office = styles.root.find("office:styles", NS)
+            if office is not None:
+                styles.insert_into(office, *named)
+                self.parts["styles.xml"] = styles.result()
 
     # -- sheets ----------------------------------------------------------------------------------------------------
     def _remove(self, table: _Table) -> None:
@@ -844,9 +1007,11 @@ class _Patch:
             else:
                 continue
             changes.setdefault(position[0], {})[position[1]] = change
-        if not changes:
+        bands, columns = self._restyled(before, after, changes)
+        if not changes and not bands and not columns:
             return
         self.changed = True
+        self._restyle_columns(table, columns)
         lead = self._columns(table, changes)
         starts = [row.first for row in table.rows]
         by_run: dict[int, dict[int, dict[int, _Change]]] = {}
@@ -857,17 +1022,38 @@ class _Patch:
                 by_run.setdefault(index, {})[row] = cells
             else:
                 beyond[row] = cells
-        for index, rows in by_run.items():
-            self._patch_rows(table.rows[index], rows)
+        for index, run in enumerate(table.rows):
+            rows = by_run.get(index, {})
+            marks = [(r0, r1, name) for r0, r1, name in bands if r1 >= run.first and r0 < run.first + run.count]
+            if rows or marks:
+                self._patch_rows(run, rows, marks)
         self._append_rows(table, beyond, lead)
+
+    def _restyled(
+        self, before: Sheet, after: Sheet, changes: dict[int, dict[int, _Change]]
+    ) -> tuple[list[tuple[int, int, str]], list[tuple[int, int, str]]]:
+        """Add the cells whose look changed to ``changes`` (with their content as it is, when only the look did);
+        return the runs of rows and of columns that take another default cell style."""
+        looks = restyling((self.old_looks, before), (self.restyler.looks, after), self.restyled)
+        for (row, col), look in looks.cells.items():
+            name = self.restyler.name_for(look)
+            known = changes.get(row, {}).get(col)
+            if known is not None:
+                changes[row][col] = replace(known, style=name)
+            else:
+                content = after.cells.get((row, col))
+                changes.setdefault(row, {})[col] = _Change(content, after.grid.get((row, col)), style=name, keep=True)
+        default = self.restyler.default_name()
+        bands = [(r0, r1, default if look is None else self.restyler.name_for(look)) for r0, r1, look in looks.rows]
+        columns = [
+            (c0, c1, default if look is None else self.restyler.name_for(look)) for c0, c1, look in looks.columns
+        ]
+        return bands, columns
 
     def _columns(self, table: _Table, changes: dict[int, dict[int, _Change]]) -> list[etree._Element]:
         """Declare the columns a new cell needs, when the table does not. A table with no columns and no rows is
         given them together with its first rows: the column is returned to go in with those."""
-        wanted = max(
-            (c + 1 for cells in changes.values() for c, change in cells.items() if change.content is not None),
-            default=0,
-        )
+        wanted = max((c + 1 for cells in changes.values() for c, change in cells.items() if change.writes), default=0)
         if wanted <= table.columns:
             return []
         column = _el("table", "table-column", {"table:number-columns-repeated": str(wanted - table.columns)})
@@ -880,25 +1066,67 @@ class _Patch:
         return []
 
     # -- rows ------------------------------------------------------------------------------------------------------
-    def _patch_rows(self, run: _Row, rows: dict[int, dict[int, _Change]]) -> None:
-        """The changed rows inside one row of the file, which may stand for many equal ones."""
+    def _patch_rows(
+        self,
+        run: _Row,
+        rows: dict[int, dict[int, _Change]],
+        marks: list[tuple[int, int, str]] = (),  # type: ignore[assignment]
+    ) -> None:
+        """The changed rows inside one row of the file, which may stand for many equal ones; ``marks`` are runs of
+        rows that take another default cell style."""
         if run.count == 1:
-            self._patch_cells(run.element, rows[run.first], tree=False)
+            if run.first in rows:
+                self._patch_cells(run.element, rows[run.first], tree=False)
+            if marks:
+                self.part.set_attributes(run.element, {"table:default-cell-style-name": marks[-1][2]})
             return
+        last = run.first + run.count
+        edges = {run.first, last} | {edge for row in rows for edge in (row, row + 1)}
+        edges |= {edge for r0, r1, _ in marks for edge in (max(r0, run.first), min(r1 + 1, last))}
+        by_mark = Lines(marks)
+        ordered = sorted(edges)
         pieces: list[etree._Element] = []
-        for start, length, hit in _segments(run.first, run.count, list(rows)):
-            piece = _repeats(run.element, "number-rows-repeated", length)
-            if hit:
+        for start, after in zip(ordered, ordered[1:], strict=False):
+            piece = _repeats(run.element, "number-rows-repeated", after - start)
+            if start in rows:
                 self._patch_cells(piece, rows[start], tree=True)
+            mark = by_mark.at(start)
+            if mark is not None:
+                piece.set(_q("table", "default-cell-style-name"), mark)
             pieces.append(piece)
         self.part.replace(run.element, *pieces)
+
+    def _restyle_columns(self, table: _Table, bands: list[tuple[int, int, str]]) -> None:
+        """Give runs of the table's declared columns another default cell style, a repeated column cut where a run
+        begins or ends."""
+        if not bands:
+            return
+        by_band = Lines(bands)
+        column = 0
+        for declared in table.element.iter(_q("table", "table-column")):
+            width = _repeated(declared, "number-columns-repeated")
+            end = column + width
+            hits = [(c0, c1, name) for c0, c1, name in bands if c1 >= column and c0 < end]
+            if hits and width == 1:
+                self.part.set_attributes(declared, {"table:default-cell-style-name": hits[-1][2]})
+            elif hits:
+                edges = {column, end} | {e for c0, c1, _ in hits for e in (max(c0, column), min(c1 + 1, end))}
+                ordered = sorted(edges)
+                pieces = []
+                for start, after in zip(ordered, ordered[1:], strict=False):
+                    piece = _repeats(declared, "number-columns-repeated", after - start)
+                    if (name := by_band.at(start)) is not None:
+                        piece.set(_q("table", "default-cell-style-name"), name)
+                    pieces.append(piece)
+                self.part.replace(declared, *pieces)
+            column = end
 
     def _append_rows(self, table: _Table, rows: dict[int, dict[int, _Change]], lead: list[etree._Element]) -> None:
         """The rows after the last one of the file (``lead`` goes in before them, in a table that has no rows)."""
         cursor = table.rows[-1].first + table.rows[-1].count if table.rows else 0
         pieces: list[etree._Element] = []
         for row in sorted(rows):
-            cells = {c: ch for c, ch in rows[row].items() if ch.content is not None}
+            cells = {c: ch for c, ch in rows[row].items() if ch.writes}
             if not cells:
                 continue
             if row > cursor:
@@ -935,7 +1163,7 @@ class _Patch:
                 for start, length, hit in _segments(run.first, run.count, inside)
             ]
             self._swap(run.element, pieces, tree=tree)
-        tail = self._new_cells({c: ch for c, ch in cells.items() if c >= column and ch.content is not None}, column)
+        tail = self._new_cells({c: ch for c, ch in cells.items() if c >= column and ch.writes}, column)
         if tail:
             if tree:
                 row.extend(tail)
@@ -967,6 +1195,11 @@ class _Patch:
         """The cell as it is to be: ``old`` (or a new cell) with another value and, unless only the value changed,
         another formula. Its look, comment, merge and everything else of it stay."""
         cell = _like(old) if old is not None else _el("table", "table-cell")
+        if change.style is not None:
+            cell.set(_q("table", "style-name"), change.style)
+        if change.keep:
+            _unset(cell, _q("table", "number-columns-repeated"))
+            return cell
         if any(cell.get(_q(*name)) is not None for name in _MATRIX):
             raise UnsupportedEdit("a cell of an array formula cannot be changed in the file")
         for paragraph in _paragraphs_of(cell):
@@ -1018,7 +1251,8 @@ def apply_edits_to_ods(
 
     What it patches: a cell whose content changed (a run of equal cells or rows is split so that only that cell
     changes, and the cell keeps its look, its comment and its merge), a formula whose result changed because a cell it
-    reads did (the value written beside it), and sheets that were added, removed or renamed (``losses`` gets a
+    reads did (the value written beside it), a cell, row or column whose look changed (an automatic style of its own,
+    D380), and sheets that were added, removed or renamed (``losses`` gets a
     ``removed-...`` entry for what went with a removed sheet, and a ``stale-reference`` when the file has something that
     may still name a sheet that is gone or has another name). ``info`` brings ``meta.xml`` up to date for a file that
     was changed (D411).

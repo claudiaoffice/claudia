@@ -5,7 +5,7 @@ import struct
 
 import pytest
 
-from claudia_computes import AddSheet, CellRegion, WorkbookModel
+from claudia_computes import AddSheet, CellRegion, NumberFormat, WorkbookModel
 from claudia_computes.model import MAX_ROWS
 from claudia_core import Document, MemoryStore
 from claudia_server.auth import Account
@@ -1312,3 +1312,9 @@ def test_a_preview_checks_what_it_is_given(book):
     ):
         with pytest.raises(RequestError):
             call(book, "random_preview", params)
+
+
+def test_the_number_formats_of_a_workbook_are_sent_with_their_codes(book):
+    assert call(book, "number_formats") == []
+    book.model.number_formats.add(NumberFormat("mwh", "MWh", '#,##0 "MWh"', to_name=True))
+    assert call(book, "number_formats") == [{"id": "mwh", "name": "MWh", "code": '#,##0 "MWh"', "to_name": True}]

@@ -5,7 +5,15 @@ a value. Functions that choose what to evaluate or need to know where a referenc
 from __future__ import annotations
 
 from ..base import UserFunction
-from . import aggregate, criteria, logic, numeric, text  # noqa: F401  (importing the modules fills the catalog)
+from . import (  # noqa: F401  (importing the modules fills the catalog)
+    aggregate,
+    criteria,
+    dates,
+    finance,
+    logic,
+    numeric,
+    text,
+)
 from .catalog import CLASSES
 
 

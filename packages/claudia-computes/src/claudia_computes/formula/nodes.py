@@ -139,3 +139,41 @@ def walk(node: Node):
         current = pending.pop()
         yield current
         pending.extend(reversed(children(current)))
+
+
+#: Functions that ask only *where* a reference is, never what its cells hold. A reference passed straight to one of
+#: them is no dependency: ``=COLUMNS($B$3:B3)`` in B3 counts columns and is not circular, as in Excel (D377).
+SHAPE_ONLY = frozenset({"ROW", "COLUMN", "ROWS", "COLUMNS"})
+
+
+def _unwrapped(node: Node) -> Node:
+    while isinstance(node, Paren):
+        node = node.inner
+    return node
+
+
+def _as_range(node: Ref | Area) -> RangeRef:
+    return RangeRef(node.ref, node.ref) if isinstance(node, Ref) else node.ref
+
+
+def shape_only_refs(node: Node) -> set[RangeRef]:
+    """The references in the tree that are only ever passed straight to a function of :data:`SHAPE_ONLY`.
+
+    A reference that also appears anywhere else (``ROWS(A1:A3)+SUM(A1:A3)``) is read, and is not in the set."""
+    shape: set[RangeRef] = set()
+    read: set[RangeRef] = set()
+    pending = [node]
+    while pending:
+        current = pending.pop()
+        if isinstance(current, Call) and current.name in SHAPE_ONLY:
+            for arg in current.args:
+                inner = _unwrapped(arg)
+                if isinstance(inner, Ref | Area):
+                    shape.add(_as_range(inner))
+                else:
+                    pending.append(arg)
+            continue
+        if isinstance(current, Ref | Area):
+            read.add(_as_range(current))
+        pending.extend(children(current))
+    return shape - read

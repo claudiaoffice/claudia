@@ -41,6 +41,10 @@ msgstr "[+ Cônnéct tô à sérvér…~~~~~~~~~]"
 msgid "--- What the server printed ({log}) ---"
 msgstr "[--- Whàt thé sérvér prîntéd ({log}) ---~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1 Jan 2025 to 13 Nov 2026"
+msgstr "[1 Jàn 2025 tô 13 Nôv 2026~~~~~~~~~~]"
+
 #: web/app/lib/noun-phrases.ts:111
 msgid "1 cell"
 msgstr "[1 céll~~]"
@@ -69,6 +73,22 @@ msgstr "[1 pàràgràph~~~~]"
 msgid "1 slide on {pages}"
 msgstr "[1 slîdé ôn {pages}~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1,000 a year for 10 years"
+msgstr "[1,000 à yéàr fôr 10 yéàrs~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "1,000 saved at the end of each of 10 years"
+msgstr "[1,000 sàvéd àt thé énd ôf éàch ôf 10 yéàrs~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "10,000 over 10 years at 5% a year"
+msgstr "[10,000 ôvér 10 yéàrs àt 5% à yéàr~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "13 Nov 2026 is a Friday"
+msgstr "[13 Nôv 2026 îs à Frîdày~~~~~~~~~]"
+
 #: web/app/lib/print/setup.ts:46
 msgid "2 per page"
 msgstr "[2 pér pàgé~~~~]"
@@ -76,6 +96,10 @@ msgstr "[2 pér pàgé~~~~]"
 #: web/app/lib/print/setup.ts:47
 msgid "3 per page, with lines"
 msgstr "[3 pér pàgé, wîth lînés~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "31 Oct 2026 + 1 month = 30 Nov 2026"
+msgstr "[31 Ôct 2026 + 1 mônth = 30 Nôv 2026~~~~~~~~~~~~~~]"
 
 #: web/app/lib/print/setup.ts:48
 msgid "4 per page"
@@ -132,6 +156,10 @@ msgstr "[À nàmé lîké thîs éxîsts àlréàdy ànd wîll pôînt héré.~~
 #: web/app/components/OpenDialog.vue:400
 msgid "A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit)."
 msgstr "[À néw dôcûmént bélôngs tô whôévér créàtés ît fîrst. Thé pàsswôrd prôtécts thîs dôcûmént ônly (àt léàst 8 chàràctérs, wîth à càpîtàl léttér, à smàll léttér ànd à dîgît).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "A number as text, shown through a number format code (\"#,##0.00\", \"dd.mm.yyyy\", \"0%\")."
+msgstr "[À nûmbér às téxt, shôwn thrôûgh à nûmbér fôrmàt côdé (\"#,##0.00\", \"dd.mm.yyyy\", \"0%\").~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A number raised to a power (the same as the operator ^)."
@@ -537,7 +565,7 @@ msgstr "[CSS ôf thé stylé~~~~~~]"
 msgid "Calculation"
 msgstr "[Càlcûlàtîôn~~~~]"
 
-#: web/app/components/SheetGrid.vue:260
+#: web/app/components/SheetGrid.vue:272
 msgid "Calculation step"
 msgstr "[Càlcûlàtîôn stép~~~~~~]"
 
@@ -1617,7 +1645,7 @@ msgstr "[Înk~]"
 msgid "Input"
 msgstr "[Înpût~~]"
 
-#: web/app/components/SheetGrid.vue:259
+#: web/app/components/SheetGrid.vue:271
 msgid "Input of the computation"
 msgstr "[Înpût ôf thé cômpûtàtîôn~~~~~~~~~~]"
 
@@ -2745,7 +2773,7 @@ msgstr "[Résûlt~~]"
 msgid "Result name"
 msgstr "[Résûlt nàmé~~~~]"
 
-#: web/app/components/SheetGrid.vue:260
+#: web/app/components/SheetGrid.vue:272
 msgid "Result of the computation"
 msgstr "[Résûlt ôf thé cômpûtàtîôn~~~~~~~~~~]"
 
@@ -2989,7 +3017,7 @@ msgstr "[Shàré…~~]"
 msgid "Sheet"
 msgstr "[Shéét~~]"
 
-#: web/app/components/SheetGrid.vue:936
+#: web/app/components/SheetGrid.vue:952
 msgid "Sheet {name}"
 msgstr "[Shéét {name}~~~~~]"
 
@@ -3113,7 +3141,7 @@ msgstr "[Sôft Hyphén~~~~]"
 msgid "Something is repeated that is not there."
 msgstr "[Sôméthîng îs répéàtéd thàt îs nôt théré.~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:426 web/app/lib/session.ts:560
+#: web/app/lib/base-session.ts:426 web/app/lib/session.ts:568
 msgid "Something went wrong."
 msgstr "[Sôméthîng wént wrông.~~~~~~~~]"
 
@@ -3381,6 +3409,22 @@ msgstr "[Thé cônnéctîôn wàs lôst. Tryîng tô gét bàck… whàt yôû d
 msgid "The cosine of an angle in radians."
 msgstr "[Thé côsîné ôf àn ànglé în ràdîàns.~~~~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date a number of months before or after a date, on the same day of the month where it has one."
+msgstr "[Thé dàté à nûmbér ôf mônths béfôré ôr àftér à dàté, ôn thé sàmé dày ôf thé mônth whéré ît hàs ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The date of a year, month and day. Months and days beyond their end carry over."
+msgstr "[Thé dàté ôf à yéàr, mônth ànd dày. Mônths ànd dàys béyônd théîr énd càrry ôvér.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The day of the month of a date, 1 to 31."
+msgstr "[Thé dày ôf thé mônth ôf à dàté, 1 tô 31.~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The day of the week of a date: 1 (Sunday) to 7, or as the second argument counts (2: Monday is 1)."
+msgstr "[Thé dày ôf thé wéék ôf à dàté: 1 (Sûndày) tô 7, ôr às thé sécônd àrgûmént côûnts (2: Môndày îs 1).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/lib/base-session.ts:379
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr "[Thé dôcûmént chàngéd ûndér yôû (ît wént bàck tô à chéckpôînt ôr wàs rébûîlt). Ît wàs rélôàdéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -3453,6 +3497,10 @@ msgstr "[Thé làrgést nûmbér ôf thé ràngé whérévér àll crîtérîà 
 msgid "The last characters of the text (one unless a number is given)."
 msgstr "[Thé làst chàràctérs ôf thé téxt (ôné ûnléss à nûmbér îs gîvén).~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The last day of the month a number of months before or after a date."
+msgstr "[Thé làst dày ôf thé mônth à nûmbér ôf mônths béfôré ôr àftér à dàté.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/StyleSpec.vue:53
 msgid "The left side"
 msgstr "[Thé léft sîdé~~~~~]"
@@ -3493,6 +3541,10 @@ msgstr "[Thé mîddlé nûmbér ôf thé nûmbérs în thé ràngés (thé méà
 msgid "The model that answers @ai in every document on this server."
 msgstr "[Thé môdél thàt ànswérs @àî în évéry dôcûmént ôn thîs sérvér.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The month of a date, 1 to 12."
+msgstr "[Thé mônth ôf à dàté, 1 tô 12.~~~~~~~~~~~~]"
+
 #: web/app/components/OpenDialog.vue:290
 msgid "The name or password is not right (or there is no such document)."
 msgstr "[Thé nàmé ôr pàsswôrd îs nôt rîght (ôr théré îs nô sûch dôcûmént).~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -3516,6 +3568,10 @@ msgstr "[Thé nàtûràl lôgàrîthm ôf à pôsîtîvé nûmbér.~~~~~~~~~~~~~
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The number of characters of the text."
 msgstr "[Thé nûmbér ôf chàràctérs ôf thé téxt.~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The number of days from the start date to the end date."
+msgstr "[Thé nûmbér ôf dàys frôm thé stàrt dàté tô thé énd dàté.~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/RandomDialog.vue:69
 msgid "The number of trials must be a whole number, 1 or more."
@@ -3549,6 +3605,10 @@ msgstr "[Thé pàgé stôppéd wôrkîng~~~~~~~~~~]"
 msgid "The passwords do not match."
 msgstr "[Thé pàsswôrds dô nôt màtch.~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The payment per period that pays off a loan (or saves up a sum) at a fixed rate."
+msgstr "[Thé pàymént pér pérîôd thàt pàys ôff à lôàn (ôr sàvés ûp à sûm) àt à fîxéd ràté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/SlideWorkspace.vue:365
 msgid "The planned times of the slides, added up"
 msgstr "[Thé plànnéd tîmés ôf thé slîdés, àddéd ûp~~~~~~~~~~~~~~~~]"
@@ -3556,6 +3616,10 @@ msgstr "[Thé plànnéd tîmés ôf thé slîdés, àddéd ûp~~~~~~~~~~~~~~~~]"
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The product of the numbers in the ranges."
 msgstr "[Thé prôdûct ôf thé nûmbérs în thé ràngés.~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
+msgstr "[Thé ràté àt whîch càsh flôws (thé fîrst ôné nôw, ôné pér pérîôd àftér ît) àré wôrth nôthîng tôdày.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/OpenDialog.vue:397
 msgid "The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do."
@@ -3681,9 +3745,17 @@ msgstr "[Thé téxt répéàtéd à nûmbér ôf tîmés.~~~~~~~~~~~~~~]"
 msgid "The text under it changed. It cannot be accepted any more."
 msgstr "[Thé téxt ûndér ît chàngéd. Ît cànnôt bé àccéptéd àny môré.~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The time between two dates in whole years (\"Y\"), months (\"M\") or days (\"D\"), or what is left over (\"MD\", \"YM\", \"YD\")."
+msgstr "[Thé tîmé bétwéén twô dàtés în whôlé yéàrs (\"Y\"), mônths (\"M\") ôr dàys (\"D\"), ôr whàt îs léft ôvér (\"MD\", \"YM\", \"YD\").~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/StyleSpec.vue:47
 msgid "The top side"
 msgstr "[Thé tôp sîdé~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The value today of cash flows at the end of each coming period, discounted at a rate."
+msgstr "[Thé vàlûé tôdày ôf càsh flôws àt thé énd ôf éàch cômîng pérîôd, dîscôûntéd àt à ràté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The variance of a sample (the numbers are a part of a larger whole)."
@@ -3704,6 +3776,10 @@ msgstr "[Thé wéb prôcéss éndéd ({reason}). Stàrt Clàûdîà àgàîn.~~~
 #: web/app/components/StyleSpec.vue:86
 msgid "The words will be hard to read on this background."
 msgstr "[Thé wôrds wîll bé hàrd tô réàd ôn thîs bàckgrôûnd.~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "The year of a date."
+msgstr "[Thé yéàr ôf à dàté.~~~~~~~~]"
 
 #: web/app/lib/search.ts:461
 msgid "The “(” at character {position} has no “)”. Nothing is replaced."
@@ -4033,6 +4109,10 @@ msgstr "[Wéîbûll~~~]"
 msgid "What a query gave"
 msgstr "[Whàt à qûéry gàvé~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "What a sum and regular payments are worth after a number of periods at a fixed rate."
+msgstr "[Whàt à sûm ànd régûlàr pàyménts àré wôrth àftér à nûmbér ôf pérîôds àt à fîxéd ràté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/PaletteDialog.vue:129
 msgid "What changes with it"
 msgstr "[Whàt chàngés wîth ît~~~~~~~~]"
@@ -4040,6 +4120,10 @@ msgstr "[Whàt chàngés wîth ît~~~~~~~~]"
 #: web/app/components/OutcomePopover.vue:117 web/app/components/OutcomePopover.vue:118
 msgid "What moves the result most"
 msgstr "[Whàt môvés thé résûlt môst~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/functions
+msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
+msgstr "[Whàt régûlàr pàyménts (ànd à sûm àt thé énd) àré wôrth tôdày àt à fîxéd ràté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SidePanel.vue:203
 msgid "What silence at a suggestion's deadline means"
@@ -4565,11 +4649,11 @@ msgstr "[côpy, cût ànd pàsté, àlsô frôm ànd tô ôthér prôgràms~~~~~
 msgid "define_diagram: id and format are assigned by the server"
 msgstr "[défîné_dîàgràm: îd ànd fôrmàt àré àssîgnéd by thé sérvér~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/computes.py:981
+#: packages/claudia-server/src/claudia_server/computes.py:989
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr "[défîné_sql: qûéry mûst bé téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/computes.py:995
+#: packages/claudia-server/src/claudia_server/computes.py:1003
 msgid "define_sql: {problem}"
 msgstr "[défîné_sql: {problem}~~~~~~~~]"
 
@@ -4629,7 +4713,7 @@ msgstr "[édît~~]"
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr "[édît à céll (ôthérs àré képt ôût ôf ît whîlé yôû dô)~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1075
+#: web/app/components/SheetGrid.vue:1091
 msgid "editing cell"
 msgstr "[édîtîng céll~~~~~]"
 
@@ -5097,7 +5181,7 @@ msgstr "[prîntîng nééds à sécûré cônnéctîôn (https, ôr thîs cômp�
 msgid "purpose of {name}"
 msgstr "[pûrpôsé ôf {name}~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1024
+#: web/app/components/SheetGrid.vue:1040
 msgid "purpose of {name} column {n}"
 msgstr "[pûrpôsé ôf {name} côlûmn {n}~~~~~~~~~~~]"
 
@@ -5269,7 +5353,7 @@ msgstr "[spréàd (stàndàrd dévîàtîôn)~~~~~~~~~~~]"
 msgid "spread of the logarithm"
 msgstr "[spréàd ôf thé lôgàrîthm~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/computes.py:950
+#: packages/claudia-server/src/claudia_server/computes.py:958
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr "[sql_prévîéw: lîmît mûst bé à whôlé nûmbér frôm 0 tô {limit}~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5609,7 +5693,7 @@ msgstr "[tràcé: wîndôw tôô làrgé (àt môst {limit} pôsîtîôns)~~~~~~
 msgid "trials"
 msgstr "[trîàls~~]"
 
-#: web/app/components/SheetGrid.vue:961
+#: web/app/components/SheetGrid.vue:977
 msgid "type here to add a row"
 msgstr "[typé héré tô àdd à rôw~~~~~~~~~]"
 
@@ -5621,7 +5705,7 @@ msgstr "[ûndô~~]"
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "[ûnknôwn pàràmétér {pàràmétér!r} fôr {name}~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/computes.py:572 packages/claudia-server/src/claudia_server/computes.py:658 packages/claudia-server/src/claudia_server/computes.py:707 packages/claudia-server/src/claudia_server/computes.py:946 packages/claudia-server/src/claudia_server/computes.py:976
+#: packages/claudia-server/src/claudia_server/computes.py:572 packages/claudia-server/src/claudia_server/computes.py:658 packages/claudia-server/src/claudia_server/computes.py:707 packages/claudia-server/src/claudia_server/computes.py:954 packages/claudia-server/src/claudia_server/computes.py:984
 msgid "unknown sheet {sheet!r}"
 msgstr "[ûnknôwn shéét {shéét!r}~~~~~~~~~]"
 
@@ -5973,7 +6057,7 @@ msgstr "[{name} îs nôt ôné ôf thé méthôds thîs àccôûnt mày càll~~~
 msgid "{name} needs the editor role"
 msgstr "[{name} nééds thé édîtôr rôlé~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1023
+#: web/app/components/SheetGrid.vue:1039
 msgid "{name} · {purpose} — change what this column is for"
 msgstr "[{name} · {purpose} — chàngé whàt thîs côlûmn îs fôr~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6197,7 +6281,7 @@ msgstr "[{who} sûggésts gôîng tô {line}.~~~~~~~~~~~~]"
 msgid "{width} × {height} px"
 msgstr "[{width} × {height} px~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1060
+#: web/app/components/SheetGrid.vue:1076
 msgid "· editing"
 msgstr "[· édîtîng~~~~]"
 

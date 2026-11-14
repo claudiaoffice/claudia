@@ -25,6 +25,9 @@ What an object says to someone who cannot see it (BITV 1.1.1); the search engine
   standard library only (CONTRIBUTING, rule 6), and Python's `re` cannot be stopped (SEC-18).
 
 ### Added
+- `StyleDef.number_format`: a style may name one of the app's number formats (computes, D378), inherited like its CSS
+  and written into a style's data only when set. `StyleBook.number_format(id)` finds it along the parents;
+  `StyleBook.set_number_format(id, format_id)` sets or clears it.
 - `ObjectBody.description` (at most `MAX_ALT_CHARS` characters) and `ObjectBody.decorative`, the same in every app. A
   decorative object has no description. A picture that has no description of its own is described by the words it was
   imported with, so documents written before the fields existed keep what they said (`ObjectBody.from_data` still reads

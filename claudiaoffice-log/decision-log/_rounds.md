@@ -341,3 +341,12 @@ in the file name (`README.md`). Done in one pass with the backlog, which became 
   (D156–D158, D161, D216, and D130) were put to the owner, who confirmed them all as current, since the code follows
   them. Of the former open questions, the owner marked D228, D229, D230 and D231 as blocking; the rest are
   undecided.
+
+## Real-world documents (branch `real-world-docs`, 2026-11-13)
+
+The owner supplied five real documents (two Excel workbooks, a PowerPoint deck, an old Word form, an OpenDocument
+letter) and asked what Claudia needs to open, edit and save them. They stay out of the repository. The first patch makes
+xlsx files as today's Excel writes them open and survive an edit; the second draws the screens for templates and
+layouts in creates (E10.4); the third brings cell formats and number formats (E6.14, E6.18).
+
+Decisions: D370, D371, D372 (xlsx); D373, D374, D375, D376 (templates in creates: proposals awaiting the owner); D377 (dates and money); D378, D379 (number formats; cell formats as styles); D380 (changed looks in an edited file)

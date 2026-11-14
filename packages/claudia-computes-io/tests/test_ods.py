@@ -297,7 +297,6 @@ def test_what_the_model_does_not_show_is_counted_and_the_cells_still_come_in():
         "shape": 1,
         "comment": 1,
         "merge": 1,
-        "look": 1,
         "formatting": 1,
         "link": 1,
         "conditional-format": 1,
@@ -542,7 +541,7 @@ def test_a_cell_keeps_its_look_and_its_comment_when_it_is_given_another_value():
     assert 'table:style-name="ce1"' in after and "<office:annotation><text:p>note</text:p></office:annotation>" in after
     assert 'office:value-type="string"' in after and "<text:p>words</text:p>" in after
     assert kinds(losses.result()) == {"removed-formatting": 1}
-    assert kinds(ods_import_losses(out)) == {"comment": 1, "look": 1}
+    assert kinds(ods_import_losses(out)) == {"comment": 1}  # its look is a style now (ce1 is not defined: Body text)
 
 
 def test_a_cell_that_is_emptied_keeps_its_look_and_a_link_is_counted_when_its_words_go():

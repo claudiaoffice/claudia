@@ -1,5 +1,6 @@
 // Cells as people see and type them: A1 labels, how a stored value is shown, and what typing it again would need.
 import type { Alt, Summary } from './outcomes'
+import { render, type NumberSymbols, type Rendered } from './number-format'
 
 /** What a cell holds as the server sends it. A formula comes as the value it gave, with its text under `f`; an error
  * (`t: 'error'`) has its code in `v` and may say why under `d`. */
@@ -51,6 +52,15 @@ export function parseCell(text: string): [number, number] | null {
   const row = Number(m[2]) - 1
   const col = columnIndex(m[1]!)
   return row >= 0 && row < MAX_ROWS && col < MAX_COLS ? [row, col] : null
+}
+
+/** The text a cell shows through a number format (`code`, Excel's; `null`: General) in the reader's way of writing
+ * numbers (D378). Errors and TRUE/FALSE are never formatted; text only by a code with a text section. */
+export function showFormatted(content: Content, code: string | null, symbols: NumberSymbols): Rendered {
+  if (content === null) return { text: '', colour: null }
+  if (code === null || content.t === 'error' || content.t === 'bool') return { text: show(content), colour: null }
+  const value = content.t === 'text' ? String(content.v) : Number(content.v)
+  return render(value, code, symbols)
 }
 
 /** The text a cell shows. */

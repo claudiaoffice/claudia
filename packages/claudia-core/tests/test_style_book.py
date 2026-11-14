@@ -351,3 +351,24 @@ def test_a_kind_survives_the_log(paper):
     replayed = CreateStyle.from_data(CreateStyle(FRAME).to_data(), new_registry())
     assert replayed.style.kind == "box"
     assert StyleBook.from_data(paper.model.styles.to_data()).get("frame").kind == "box"
+
+
+def test_a_number_format_is_inherited_like_css_and_written_only_when_set():
+    parent = StyleDef("amount", "Amount", "money", None, {}, number_format="eur")
+    child = StyleDef("total", "Total", "the sum", "amount", {"font-weight": "600"})
+    plain = StyleDef("note", "Note", "a remark", None, {})
+    book = StyleBook([parent, child, plain])
+    assert book.number_format("total") == "eur"
+    assert book.number_format("note") is None
+    assert "number_format" not in plain.to_data()
+    assert StyleDef.from_data(parent.to_data()) == parent
+    assert StyleDef.from_data(plain.to_data()) == plain
+
+
+def test_a_style_can_be_given_a_number_format_and_have_it_taken_away():
+    book = StyleBook([StyleDef("amount", "Amount", "money", None, {"color": "red"})])
+    book.set_number_format("amount", "eur")
+    assert book.number_format("amount") == "eur"
+    assert book.get("amount").css == {"color": "red"}
+    book.set_number_format("amount", None)
+    assert book.number_format("amount") is None

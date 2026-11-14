@@ -25,6 +25,7 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Emu
 
 from claudia_odf_io import NS, new_package
+from claudia_opc_io import write_parts
 
 ROOT = Path(__file__).resolve().parent
 #: EMU per claudia slide unit on a 16:9 deck (``12_192_000 / 1600`` == ``6_858_000 / 900``, both exact) -- the
@@ -179,6 +180,81 @@ def build_xlsx_beyond_claudia_image() -> bytes:
     pics = wb.create_sheet("Pics")
     pics.add_image(XLImage(_red_square_png()), "A1")
     return _xlsx_bytes(wb)
+
+
+_X = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+_XR = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+_PR = "http://schemas.openxmlformats.org/package/2006/relationships"
+_SHEET_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml."
+_EXCEL_TODAY_PLAN = (
+    "<sheetData>"
+    '<row r="1"><c r="A1"><v>1</v></c><c r="B1"><f t="shared" ref="B1:B3" si="0">A1*2</f><v>2</v></c>'
+    '<c r="C1" cm="1"><f t="array" ref="C1:C3">_xlfn.SEQUENCE(3)</f><v>1</v></c>'
+    '<c r="D1" t="inlineStr"><is><t>Apple</t></is></c></row>'
+    '<row r="2"><c r="A2"><v>2</v></c><c r="B2"><f t="shared" si="0"/><v>4</v></c><c r="C2"><v>2</v></c></row>'
+    '<row r="3"><c r="A3"><v>3</v></c><c r="B3"><f t="shared" si="0"/><v>6</v></c><c r="C3"><v>3</v></c></row>'
+    "</sheetData>"
+    '<extLst><ext uri="{78C0D931-6437-407d-A8EE-F0AAD7539E65}" '
+    'xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"><x14:conditionalFormattings>'
+    '<x14:conditionalFormatting xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">'
+    '<x14:cfRule type="iconSet" priority="1" id="{6F1C2A3B-0000-4000-8000-000000000001}">'
+    '<x14:iconSet iconSet="3Triangles"><x14:cfvo type="percent"><xm:f>0</xm:f></x14:cfvo>'
+    '<x14:cfvo type="percent"><xm:f>33</xm:f></x14:cfvo><x14:cfvo type="percent"><xm:f>67</xm:f></x14:cfvo>'
+    "</x14:iconSet></x14:cfRule><xm:sqref>A1:A3</xm:sqref></x14:conditionalFormatting></x14:conditionalFormattings>"
+    '</ext><ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" '
+    'xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">'
+    '<x14:dataValidations count="1" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">'
+    '<x14:dataValidation type="list" allowBlank="1"><x14:formula1><xm:f>Lists!$A$1:$A$3</xm:f></x14:formula1>'
+    "<xm:sqref>D1</xm:sqref></x14:dataValidation></x14:dataValidations></ext></extLst>"
+)
+_EXCEL_TODAY_METADATA = (
+    f'<metadata xmlns="{_X}" xmlns:xda="http://schemas.microsoft.com/office/spreadsheetml/2017/dynamicarray">'
+    '<metadataTypes count="1"><metadataType name="XLDAPR" minSupportedVersion="120000" copy="1" pasteAll="1" '
+    'pasteValues="1" merge="1" splitFirst="1" rowColShift="1" clearFormats="1" clearComments="1" assign="1" '
+    'coerce="1" cellMeta="1"/></metadataTypes><futureMetadata name="XLDAPR" count="1"><bk><extLst>'
+    '<ext uri="{bdbb8cdc-fa1e-496e-a857-3c3f30c029c3}"><xda:dynamicArrayProperties fDynamic="1" fCollapsed="0"/>'
+    '</ext></extLst></bk></futureMetadata><cellMetadata count="1"><bk><rc t="1" v="0"/></bk></cellMetadata></metadata>'
+)
+
+
+def build_xlsx_beyond_claudia_excel_today() -> bytes:
+    """What Excel writes today and openpyxl leaves out when it saves (D371): a spilled formula with its mark and the
+    workbook's metadata part, a list in a cell that takes its choices from another sheet, an icon set, a shared
+    formula. Written part by part, since no library writes them."""
+    lists = "".join(
+        f'<row r="{n}"><c r="A{n}" t="inlineStr"><is><t>{fruit}</t></is></c></row>'
+        for n, fruit in enumerate(("Apple", "Pear", "Plum"), start=1)
+    )
+    sheets = {"Plan": _EXCEL_TODAY_PLAN, "Lists": f"<sheetData>{lists}</sheetData>"}
+    parts: dict[str, bytes] = {}
+    entries, rels, overrides = [], [], []
+    for n, (name, inside) in enumerate(sheets.items(), start=1):
+        entries.append(f'<sheet name="{name}" sheetId="{n}" r:id="rId{n}"/>')
+        rels.append(f'<Relationship Id="rId{n}" Type="{_XR}/worksheet" Target="worksheets/sheet{n}.xml"/>')
+        overrides.append(f'<Override PartName="/xl/worksheets/sheet{n}.xml" ContentType="{_SHEET_TYPE}worksheet+xml"/>')
+        parts[f"xl/worksheets/sheet{n}.xml"] = (
+            f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="{_X}" xmlns:r="{_XR}">'
+            f"{inside}</worksheet>"
+        ).encode()
+    rels.append(f'<Relationship Id="rId9" Type="{_XR}/sheetMetadata" Target="metadata.xml"/>')
+    overrides.append(f'<Override PartName="/xl/metadata.xml" ContentType="{_SHEET_TYPE}sheetMetadata+xml"/>')
+    overrides.append(f'<Override PartName="/xl/workbook.xml" ContentType="{_SHEET_TYPE}sheet.main+xml"/>')
+    parts["xl/metadata.xml"] = _EXCEL_TODAY_METADATA.encode()
+    parts["xl/workbook.xml"] = (
+        f'<workbook xmlns="{_X}" xmlns:r="{_XR}"><sheets>{"".join(entries)}</sheets>'
+        '<calcPr calcId="191029"/></workbook>'
+    ).encode()
+    parts["xl/_rels/workbook.xml.rels"] = f'<Relationships xmlns="{_PR}">{"".join(rels)}</Relationships>'.encode()
+    parts["_rels/.rels"] = (
+        f'<Relationships xmlns="{_PR}"><Relationship Id="rId1" Type="{_XR}/officeDocument" Target="xl/workbook.xml"/>'
+        "</Relationships>"
+    ).encode()
+    parts["[Content_Types].xml"] = (
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        f'<Default Extension="xml" ContentType="application/xml"/>{"".join(overrides)}</Types>'
+    ).encode()
+    return write_parts({"[Content_Types].xml": parts.pop("[Content_Types].xml"), **parts})
 
 
 def _xlsx_bytes(wb: openpyxl.Workbook) -> bytes:
@@ -395,6 +471,7 @@ FIXTURES = {
     "xlsx/cells-and-formulas/source.xlsx": build_cells_and_formulas,
     "xlsx/beyond-claudia/chart/source.xlsx": build_xlsx_beyond_claudia_chart,
     "xlsx/beyond-claudia/image/source.xlsx": build_xlsx_beyond_claudia_image,
+    "xlsx/beyond-claudia/excel-today/source.xlsx": build_xlsx_beyond_claudia_excel_today,
 }
 
 

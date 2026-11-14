@@ -35,7 +35,7 @@ from .events import CellsChanged
 from .formula import Formula, parse_formula, print_formula
 from .formula.compiler import Binding, Compiler, Evaluator
 from .formula.forms.alternatives import labels_of
-from .formula.nodes import Call, walk
+from .formula.nodes import Call, shape_only_refs, walk
 from .formula.operators import single
 from .formula.scope import Scope
 from .functions.range import Range
@@ -60,6 +60,11 @@ BLOCK_BITS = 8  # ranges are filed by blocks of 256 rows, so that a change only 
 LONG_BLOCKS = 16  # a range longer than this many blocks is kept in a list of its own
 MAX_BLOCKS = 8  # how often a formula that reads where it likes may be put off, waiting for what it found
 MAX_SPILL_ROUNDS = 20  # how often what read a result is calculated again after the result changed, before giving up
+
+
+def _positions_only(formula) -> set:  # noqa: ANN001 (a ``Formula``; calc reads it by duck type throughout)
+    """The references a formula only asks *where* they are (``COLUMNS($B$3:B3)``): no cells it reads."""
+    return shape_only_refs(formula.ast) if formula.ast is not None else set()
 
 
 class Compiled:
@@ -104,8 +109,11 @@ class Compiled:
         )
         cells: list[Key] = []
         ranges: list[Rect] = []
+        positions_only = _positions_only(formula)
         rects = [
-            (area.sheet or home, area.first.row, area.first.col, area.last.row, area.last.col) for area in formula.refs
+            (area.sheet or home, area.first.row, area.first.col, area.last.row, area.last.col)
+            for area in formula.refs
+            if area not in positions_only
         ]
         if binding is not None:
             rects.extend(binding.rects)

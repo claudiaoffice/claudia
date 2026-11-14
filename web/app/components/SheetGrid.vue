@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
-import { cellLabel, columnName, inputOf, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
+import { cellLabel, columnName, inputOf, showFormatted, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
 import { cellLook, styleAt, within, type CellLook } from '~/lib/cell-styles'
 import { cycleObject, objectName } from '~/lib/descriptions'
 import { ariaColCount, ariaRowCount, cellDomId, cellName, colIndexOf, rowIndexOf } from '~/lib/grid-a11y'
@@ -24,6 +24,8 @@ import { NO_MARKS, type SearchMarks } from '~/lib/sheet-search-host'
 import { purposeVar, tableBoxes, type NameInfo, type TableBox } from '~/lib/names'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { useI18n } from '~/lib/i18n'
+import { currentLocale } from '~/lib/locale'
+import { formatCodeOf, inkOf, symbolsFor } from '~/lib/number-format'
 import { chipsOf, dotFractions, outcomeCaption, type Alt, type Summary } from '~/lib/outcomes'
 import { colorOf, inkOn } from '~/lib/people'
 import { ROLE_SHAPE, roleAt, type Role } from '~/lib/follow'
@@ -175,6 +177,12 @@ const painted = computed(() => {
   const styles = state.styles
   const facets = state.styleModel?.facets
   const looks = new Map<string, CellLook>() // a screen has a handful of combinations; work each out once
+  const codes = new Map<string, string | null>() // the number format of each words style on screen (D378)
+  const codeOf = (words: string) => {
+    if (!codes.has(words)) codes.set(words, formatCodeOf(styles, state.numberFormats, words))
+    return codes.get(words)!
+  }
+  const symbols = symbolsFor(currentLocale())
   const lookOf = (box: string, words: string, kind?: string) => {
     const id = `${box}|${words}|${kind ?? ''}`
     let look = looks.get(id)
@@ -185,6 +193,8 @@ const painted = computed(() => {
   const boxes: (Drawn & { css: Record<string, string> })[] = []
   const texts: (Drawn & {
     text: string
+    /** The colour the cell's number format asks for (`[Red]`), if any (D378). */
+    ink: string | null
     kind: string
     look: CellLook
     spill: boolean
@@ -210,9 +220,11 @@ const painted = computed(() => {
       if (!look.plain) boxes.push({ ...at, css: look.box })
       if (content === null || (editHere.value && props.edit!.row === r && props.edit!.col === c)) continue
       const role = followed ? roleAt(trace, r, c) : null
+      const shown = showFormatted(content, codeOf(words), symbols)
       texts.push({
         ...at,
-        text: props.marks?.after.get(at.key) ?? show(content),
+        text: props.marks?.after.get(at.key) ?? shown.text,
+        ink: inkOf(shown.colour),
         kind: content.t,
         look,
         spill: content.spill === true,
@@ -264,8 +276,9 @@ const PADDING = ['padding-top', 'padding-right', 'padding-bottom', 'padding-left
 
 /** A drawn cell's own CSS: where it is, its words, and the padding its box gives them. An error keeps the grid's
  * own colour for it. */
-function textStyle(cell: { left: number; top: number; width: number; height: number; kind: string; look: CellLook }) {
+function textStyle(cell: { left: number; top: number; width: number; height: number; kind: string; look: CellLook; ink?: string | null }) {
   const words: Record<string, string> = cell.kind === 'error' ? { ...cell.look.words, color: '' } : { ...cell.look.words }
+  if (cell.ink) words.color = cell.ink
   for (const side of PADDING) if (cell.look.box[side]) words[side] = cell.look.box[side]!
   return { ...words, left: `${cell.left}px`, top: `${cell.top}px`, width: `${cell.width}px`, height: `${cell.height}px` }
 }
@@ -287,9 +300,12 @@ const activeName = computed(() => {
   if (content === null) return cellName(null, ref)
   const trace = state.trace
   const role = trace !== null && trace.sheet === props.sheet ? roleAt(trace, row, col) : null
+  const ranges = props.session.cellStyles(props.sheet)
+  const words = ranges.length ? styleAt(ranges, row, col, 'words').style : 'body-text'
+  const code = formatCodeOf(state.styles, state.numberFormats, words)
   return cellName({
     ref,
-    text: props.marks?.after.get(row * 100_000 + col) ?? show(content),
+    text: props.marks?.after.get(row * 100_000 + col) ?? showFormatted(content, code, symbolsFor(currentLocale())).text,
     kind: content.t,
     formula: content.f !== undefined && content.spill !== true,
     spill: content.spill === true,

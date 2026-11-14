@@ -16,3 +16,5 @@ superseded-by: []
 **Inline marks are the one deliberate, later exception.** A *mark* is a purpose-named style (Emphasis, Strong, Code) that sets only weight, italics, decoration, font family and palette-role colours (D200) — never a size or a literal colour. Marks are created on purpose in "All styles", never through "this word only", and are opt-in per slot: composes paragraphs may offer them (later); text boxes, shape labels and cells do not. Importing a document maps bold, italic and monospace runs to marks where the slot has them and lists everything else as unmapped (D75, E9.8).
 
 **Notes.** Written in answer to the owner's observation that direct formatting of single words is what makes documents look bad, and that LaTeX keeps content and look apart by making `\emph` the only easy exception. Supersedes the "character styles" item of E9.7, which is replaced by the purpose-named marks; marks are not part of the first implementation.
+
+**Partly superseded** by D379 (2026-11-13): importing a spreadsheet makes provisional styles of its cells' direct formats instead of listing them as unmapped. The rule of no direct formatting stands.

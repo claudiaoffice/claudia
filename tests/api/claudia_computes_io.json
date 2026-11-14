@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.5.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -13,6 +13,14 @@
    "Exception"
   ],
   "init": "(reason: 'str', detail: 'str' = '')",
+  "methods": {},
+  "properties": []
+ },
+ "XlsxError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
   "methods": {},
   "properties": []
  },
@@ -48,6 +56,9 @@
  },
  "xlsx_export_losses": {
   "function": "(model: 'WorkbookModel') -> 'tuple[Loss, ...]'"
+ },
+ "xlsx_import_losses": {
+  "function": "(xlsx_bytes: 'bytes') -> 'tuple[Loss, ...]'"
  },
  "xlsx_to_workbook": {
   "function": "(xlsx_bytes: 'bytes') -> 'WorkbookModel'"

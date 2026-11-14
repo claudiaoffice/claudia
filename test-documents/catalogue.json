@@ -275,6 +275,23 @@
       }
     },
     {
+      "id": "xlsx-beyond-claudia-excel-today",
+      "format": "xlsx",
+      "feature": "beyond-claudia/excel-today",
+      "source": "xlsx/beyond-claudia/excel-today/source.xlsx",
+      "spec": "xlsx/beyond-claudia/excel-today/spec.py",
+      "summary": "What Excel writes today and openpyxl drops on save -- a spilled SEQUENCE with its cm mark and metadata.xml, a list in a cell reading another sheet and an icon set (both in the worksheet's extLst), a shared formula -- imports as values and per-cell formulas, and an edit on the same sheet leaves all of it exactly as it was.",
+      "backlog": "E6.9",
+      "tags": [
+        "tier1",
+        "tier2",
+        "beyond-claudia",
+        "element-level"
+      ],
+      "enabled": true,
+      "last_run": null
+    },
+    {
       "id": "odt-heading-styles",
       "format": "odt",
       "feature": "heading-styles",

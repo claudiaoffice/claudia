@@ -97,6 +97,7 @@ from .model import (
 )
 from .name_commands import DefineName, RemoveName, RenameName, RestoreNames
 from .names import PURPOSES, NamedRange, Names
+from .numformats import NumberFormat, NumberFormatBook
 from .outcomes import AltInput, OutcomeRow, OutcomeTable, Swing
 from .refs import (
     CellRef,
@@ -115,6 +116,8 @@ from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 from .trace import Trace
 
 __all__ = [
+    "NumberFormat",
+    "NumberFormatBook",
     "Trace",
     "Swing",
     "OutcomeTable",
