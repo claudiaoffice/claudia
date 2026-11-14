@@ -52,7 +52,20 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._odt_lists import LIST, ListFlow, ListNames, can_rebuild, read_lists
+from ._odt_setup import (
+    FOOTER_STYLE,
+    FOOTER_STYLE_XML,
+    default_style_xml,
+    master_page_xml,
+    page_layout_xml,
+    patch_language,
+    patch_page,
+    read_setup,
+)
+from ._odt_styles import StyleNames, style_xml
 from ._suggestions import WhenMade, open_replacements, when_made
+from ._unwritten import ODT_WRITTEN, text_unwritten_changes
 from .docx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -70,9 +83,6 @@ def _q(prefix: str, local: str) -> str:
 _P, _H = _q("text", "p"), _q("text", "h")
 _STYLE_NAME, _OUTLINE = _q("text", "style-name"), _q("text", "outline-level")
 
-#: The built-in styles (``model.py``'s ``BUILTIN_STYLES``) by the name of the OpenDocument style they are written as;
-#: body text, and every style not in this table, is written as "Standard".
-_ODF_NAME = {"title": "Title", "heading-1": "Heading_20_1", "heading-2": "Heading_20_2", "quote": "Quotations"}
 _LEVEL = {"heading-1": 1, "heading-2": 2}
 _STANDARD = "Standard"
 #: Names of styles of body text, which become body text without a word about it.
@@ -99,28 +109,8 @@ _INDEXES = {
 }
 #: What holds paragraphs and is part of the flow of the text, not a thing of its own.
 _FLOW = {_q("text", name) for name in ("section", "list", "list-item", "list-header", "numbered-paragraph")}
-_LIST_PARTS = {_q("text", name) for name in ("list", "list-item", "list-header", "numbered-paragraph")}
 _TABLE = _q("table", "table")
 
-#: The definition of each style the app writes, for a new file and for one that has no style of the name.
-_STYLE_XML = {
-    "Standard": '<style:style style:name="Standard" style:family="paragraph" style:class="text">'
-    '<style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0.25cm"/></style:style>',
-    "Title": '<style:style style:name="Title" style:family="paragraph" style:next-style-name="Standard" '
-    'style:class="chapter"><style:paragraph-properties fo:margin-top="0.423cm" fo:margin-bottom="0.212cm" '
-    'fo:text-align="center"/><style:text-properties fo:font-size="28pt" fo:font-weight="bold"/></style:style>',
-    "Heading_20_1": '<style:style style:name="Heading_20_1" style:display-name="Heading 1" style:family="paragraph" '
-    'style:next-style-name="Standard" style:default-outline-level="1" style:class="text">'
-    '<style:paragraph-properties fo:margin-top="0.423cm" fo:margin-bottom="0.212cm" fo:keep-with-next="always"/>'
-    '<style:text-properties fo:font-size="18pt" fo:font-weight="bold"/></style:style>',
-    "Heading_20_2": '<style:style style:name="Heading_20_2" style:display-name="Heading 2" style:family="paragraph" '
-    'style:next-style-name="Standard" style:default-outline-level="2" style:class="text">'
-    '<style:paragraph-properties fo:margin-top="0.353cm" fo:margin-bottom="0.212cm" fo:keep-with-next="always"/>'
-    '<style:text-properties fo:font-size="14pt" fo:font-weight="bold"/></style:style>',
-    "Quotations": '<style:style style:name="Quotations" style:family="paragraph" style:class="html">'
-    '<style:paragraph-properties fo:margin-left="1cm" fo:margin-right="1cm" fo:margin-top="0cm" '
-    'fo:margin-bottom="0.25cm"/><style:text-properties fo:font-style="italic"/></style:style>',
-}
 _NS_DECLS = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in NS.items() if prefix != "xml")
 
 
@@ -154,7 +144,6 @@ class _Scan:
 
     paragraphs: list[etree._Element]
     tables: int = 0
-    lists: int = 0
     indexes: int = 0
     frames: int = 0
 
@@ -170,8 +159,6 @@ def _scan(body: etree._Element) -> _Scan:
             if tag in (_P, _H):
                 found.paragraphs.append(child)
             elif tag in _FLOW:
-                if tag == _q("text", "list") and parent.tag not in _LIST_PARTS:
-                    found.lists += 1
                 visit(child)
             elif tag == _TABLE:
                 found.tables += 1
@@ -204,6 +191,17 @@ def _resolved(name: str | None, parents: dict[str, str | None]) -> str | None:
         seen.add(name)
         name = parents.get(name)
     return None
+
+
+def _names_in(root: etree._Element) -> list[str]:
+    """Every name a style or an ``xml:id`` of a part has taken."""
+    found = [
+        name
+        for element in root.iter(_q("style", "style"), _q("text", "list-style"))
+        if (name := element.get(_q("style", "name")))
+    ]
+    ids = root.xpath("//@xml:id")
+    return found + [value for value in ids if isinstance(value, str)] if isinstance(ids, list) else found
 
 
 def _level(paragraph: etree._Element) -> int:
@@ -246,26 +244,39 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, _Scan, dic
     return parts, body, _scan(body), _open_styles(parts, content)
 
 
+def _lists_of(parts: dict[str, bytes], body: etree._Element, scan: _Scan):  # noqa: ANN202
+    """The lists of a file and the items among its paragraphs (:func:`claudia_composes_io._odt_lists.read_lists`)."""
+    content = body.getroottree().getroot()
+    styles = etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else content
+    return read_lists(scan.paragraphs, (content, styles))
+
+
 def odt_to_text(odt_bytes: bytes) -> TextModel:
     """``odt_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph of the flow, in order,
     called ``b1``, ``b2``... by its place. Title, Heading 1, Heading 2 and Quotations (or a style based on one) map to
-    the styles of the text app and anything else is body text; what the model does not show is in
+    the styles of the text app and anything else is body text. The first paragraph of every item of a list is an item
+    of that list (the scheme, start and name of the list from its list style, :mod:`._odt_lists`), at the level of its
+    place in the nest. What the model does not show is in
     :func:`odt_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is not an odt."""
-    _, _, scan, parents = _document(odt_bytes)
+    parts, body, scan, parents = _document(odt_bytes)
+    lists = _lists_of(parts, body, scan)
+    setup = read_setup(etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
     blocks = []
     for number, paragraph in enumerate(scan.paragraphs, start=1):
         text = read_text(paragraph)
-        blocks.append(
-            Block(f"b{number}", _style_of(paragraph, parents, None), text, (Run(len(text), None),) if text else ())
-        )
-    return TextModel(blocks) if blocks else TextModel()
+        runs = (Run(len(text), None),) if text else ()
+        blocks.append(Block(f"b{number}", _style_of(paragraph, parents, None), text, runs, lists.items.get(paragraph)))
+    return TextModel(blocks or None, page=setup.page, language=setup.language, lists=lists.book if blocks else None)
 
 
 def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
     """What :func:`odt_to_text` does not show of the file, each as a code (``"table"``, ``"footnote"``,
-    ``"formatting"``...) with how many there are, in the order they come. None of it is lost from the *file*: an
+    ``"formatting"``, ``"list-look"`` for lists drawn otherwise than the model draws them, ``"page"`` for a page the
+    model cannot hold...) with how many there are, in the order they come. None of it is lost from the *file*: an
     edit that is exported with :func:`apply_edits_to_odt` keeps all of it."""
     parts, body, scan, parents = _document(odt_bytes)
+    reading = _lists_of(parts, body, scan)
+    setup = read_setup(etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
     losses = LossLog()
     hidden: dict[str, int] = {}
     formatting = links = 0
@@ -277,7 +288,9 @@ def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
         links += sum(1 for _ in paragraph.iter(_q("text", "a")))
     for code, number in (
         ("table", scan.tables),
-        ("list", scan.lists),
+        ("list-look", reading.odd_looks),
+        ("list-depth", reading.too_deep),
+        ("page", int(setup.odd_page)),
         ("index", scan.indexes),
         ("frame", scan.frames),
         ("formatting", formatting),
@@ -376,10 +389,10 @@ def _ids(used: set[str]) -> Iterator[str]:
 
 # -- writing a paragraph ---------------------------------------------------------------------------------------------
 def _new_paragraph(
-    style_id: str, text: str, suggestions: list[Suggestion], ids: Iterator[str], when: WhenMade
+    style_id: str, text: str, suggestions: list[Suggestion], ids: Iterator[str], when: WhenMade, names: StyleNames
 ) -> tuple[etree._Element, list[etree._Element]]:
     """A paragraph element for a block, and the tracked-change regions of its suggestions."""
-    name = _ODF_NAME.get(style_id, _STANDARD)
+    name = names.of(style_id)
     level = _LEVEL.get(style_id)
     paragraph = etree.Element(_H if level else _P, nsmap={"text": NS["text"]})
     paragraph.set(_STYLE_NAME, name)
@@ -391,18 +404,31 @@ def _new_paragraph(
 
 
 # -- export ----------------------------------------------------------------------------------------------------------
-def _styles_part() -> bytes:
-    styles = "".join(_STYLE_XML[name] for name in ("Standard", "Title", "Heading_20_1", "Heading_20_2", "Quotations"))
+def _style_definitions(model: TextModel, names: StyleNames) -> tuple[list[bytes], list[tuple[str, str]]]:
+    """The styles of the model as odt styles (the built-in ones first, so that every file has them), and what of them a
+    file cannot say, as ``(style id, property)``."""
+    colours = model.palette.colours()
+    found: list[bytes] = []
+    unsaid: list[tuple[str, str]] = []
+    for style in model.styles:
+        if style.kind != "paragraph":
+            continue
+        xml, lost = style_xml(model.styles, style, names, colours)
+        found.append(xml)
+        unsaid += [(style.id, prop) for prop in lost]
+    return found, unsaid
+
+
+def _styles_part(model: TextModel, names: StyleNames) -> bytes:
+    """``styles.xml`` of a new file: the styles of the text, the language of the text and its page."""
+    definitions = b"".join(_style_definitions(model, names)[0]).decode()
+    footer = FOOTER_STYLE_XML if model.page.page_numbers else ""
+    styles = default_style_xml(model.language) + definitions + footer
     return (
         f'{_DECLARATION}<office:document-styles {_NS_DECLS} office:version="{VERSION}">'
         f"<office:styles>{styles}</office:styles>"
-        '<office:automatic-styles><style:page-layout style:name="pm1"><style:page-layout-properties '
-        'fo:page-width="21cm" fo:page-height="29.7cm" style:print-orientation="portrait" fo:margin-top="2cm" '
-        'fo:margin-bottom="2cm" fo:margin-left="2cm" fo:margin-right="2cm"/></style:page-layout>'
-        "</office:automatic-styles>"
-        "<office:master-styles>"
-        '<style:master-page style:name="Standard" style:page-layout-name="pm1"/>'
-        "</office:master-styles>"
+        f"<office:automatic-styles>{page_layout_xml(model.page)}</office:automatic-styles>"
+        f"<office:master-styles>{master_page_xml(model.page)}</office:master-styles>"
         "</office:document-styles>"
     ).encode()
 
@@ -415,9 +441,11 @@ def text_to_odt(
     change_times: Mapping[str, str] | None = None,
 ) -> bytes:
     """``model`` as odt bytes: one paragraph (or heading) per block, the built-in styles written as the styles of the
-    same name. When ``track_suggestions`` (the default), every open suggestion that proposes a replacement is written
-    as a tracked change a reviewer can accept or reject in any OpenDocument program; a remark has no text to track and
-    is left out, as is one that is resolved or withdrawn. Anything else not in the file is in
+    same name, and an item of a list as the item of a ``text:list`` (nested for its level) with a list style that has
+    the scheme, start and name of its list; a list that goes on after a paragraph is written as a list that continues
+    the one before. When ``track_suggestions`` (the default), every open suggestion that proposes a replacement is
+    written as a tracked change a reviewer can accept or reject in any OpenDocument program; a remark has no text to
+    track and is left out, as is one that is resolved or withdrawn. Anything else not in the file is in
     :func:`odt_export_losses`.
 
     ``info`` is what the file says about the document in ``meta.xml`` (title, who made it and when, who saved it last
@@ -434,28 +462,38 @@ def text_to_odt(
     for name in ("scripts", "font-face-decls", "automatic-styles"):
         etree.SubElement(root, _q("office", name))
     text = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "text"))
+    styles = StyleNames(model.styles)
+    names = ListNames(model.lists)
+    flow = ListFlow(text, lambda list_id, element: names.start(list_id, element))
     regions: list[etree._Element] = []
     for block in model.blocks:
-        paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when)
-        text.append(paragraph)
+        paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when, styles)
+        flow.add(paragraph, block.item)
         regions += found
+    automatic = root.find("office:automatic-styles", NS)
+    if automatic is not None:
+        automatic.extend(etree.fromstring(style) for style in names.new_styles)
     if regions:
         tracked = _element("text", "tracked-changes", track_changes="false")
         tracked.extend(regions)
         text.insert(0, tracked)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
-    return new_package("text", content.encode(), _styles_part(), meta=new_meta(info or DocumentInfo()))
+    return new_package("text", content.encode(), _styles_part(model, styles), meta=new_meta(info or DocumentInfo()))
 
 
 def odt_export_losses(model: TextModel, *, track_suggestions: bool = True) -> tuple[Loss, ...]:
     """What :func:`text_to_odt` cannot put into the file for ``model``, each as a code with how many: a ``"style"``
     (named by its id) that is written as body text, ``"authorship"`` (who wrote which run of a block: an odt does not
     keep it), a ``"remark"`` (nothing to track), a ``"suggestion"`` that is not written because tracking is off and
-    a ``"suggestion-anchor"`` that no longer matches its text."""
+    a ``"suggestion-anchor"`` that no longer matches its text, and what :func:`odt_unwritten_changes` says of a fresh
+    file."""
     losses = LossLog()
+    names = StyleNames(model.styles)
     for block in model.blocks:
-        if block.style not in (*_ODF_NAME, DEFAULT_STYLE):
+        if block.style not in names:
             losses.add("style", block.style)
+    for style_id, prop in _style_definitions(model, names)[1]:
+        losses.add("style-property", f"{style_id}: {prop}")
     authored = sum(1 for block in model.blocks if any(run.author is not None for run in block.runs))
     if authored:
         losses.add("authorship", count=authored)
@@ -466,7 +504,7 @@ def odt_export_losses(model: TextModel, *, track_suggestions: bool = True) -> tu
     if not track_suggestions:
         if len(open_ones) > remarks:
             losses.add("suggestion", count=len(open_ones) - remarks)
-        return losses.result()
+        return (*losses.result(), *odt_unwritten_changes(model))
     blocks = {block.id: block for block in model.blocks}
     skipped = 0
     for block_id, suggestions in open_replacements(model).items():
@@ -474,7 +512,14 @@ def odt_export_losses(model: TextModel, *, track_suggestions: bool = True) -> tu
         skipped += _plan(owner.text, suggestions)[2] if owner else len(suggestions)
     if skipped:
         losses.add("suggestion-anchor", count=skipped)
-    return losses.result()
+    return (*losses.result(), *odt_unwritten_changes(model))
+
+
+def odt_unwritten_changes(model: TextModel, baseline: TextModel | None = None) -> tuple[Loss, ...]:
+    """What changed in ``model`` that the odt converters do not write: each a ``"not-written"`` code with the facet
+    (``"page"``, ``"language"``, ``"lists"``...) and how many entries of it differ from ``baseline`` -- the model the
+    original file was read as, for an edit-and-reexport -- or from an empty text, for a fresh file (``None``)."""
+    return text_unwritten_changes(model, baseline, written=ODT_WRITTEN)
 
 
 # -- edit and re-export ----------------------------------------------------------------------------------------------
@@ -499,13 +544,15 @@ class _Patch:
         self.part = XmlPart(self.parts["content.xml"])
         self.body = _text_body(self.part.root)
         self.styles = XmlPart(self.parts["styles.xml"]) if "styles.xml" in self.parts else None
+        self.baseline = baseline
         self.current = current
         self.losses = losses
         self.by_block = open_replacements(current, track=track)
         self.ids = _ids({r.get(_q("text", "id")) or "" for r in self.part.root.iter(_q("text", "changed-region"))})
         roots = [self.part.root, *([self.styles.root] if self.styles else [])]
         self.defined = set(_paragraph_styles(*roots))
-        self.missing: list[str] = []  # styles the file lacks, that the edits need
+        self.style_names = StyleNames(current.styles, self.defined)
+        self.missing: dict[str, bytes] = {}  # styles the file lacks, that the edits need, by name
         self.regions: list[etree._Element] = []  # tracked changes to add
         self.appended: list[etree._Element] = []  # paragraphs that go at the end of the text
         self.changed = False
@@ -521,30 +568,52 @@ class _Patch:
         self.paragraphs = paragraphs
         self.element_of = {block.id: element for block, element in zip(held, paragraphs, strict=True)}
         self.before = {block.id: block for block in held}
+        self.reading = read_lists(paragraphs, [self.part.root, self.styles.root if self.styles else self.part.root])
+        self.top = {block.id: self.reading.container[self.element_of[block.id]] for block in held}
+        changed = [
+            list_id
+            for list_id in self.reading.book.ids()
+            if list_id in current.lists and current.lists.get(list_id) != self.reading.book.get(list_id)
+        ]
+        taken = {name for root in roots for name in _names_in(root)}
+        self.names = ListNames(current.lists, taken, self.reading.style_of, changed)
+        self.changed_lists = set(changed)
+        self.passed: set[etree._Element] = set()
         kept = [block.id for block in current.blocks if block.id in self.before]
         if kept != [block.id for block in held if block.id in set(kept)]:
             raise UnsupportedEdit("blocks cannot be moved relative to each other in the file")
 
     def run(self) -> bytes:
+        self.plan = self._plan()
         self._remove_dropped()
         self._patch_current()
         self._put_in_new_markup()
-        if not self.changed:
+        self._finish_lists()
+        setup_changed = self._patch_setup()
+        setup_changed = self._patch_style_definitions() or setup_changed
+        if not self.changed and not setup_changed:
             return self.original
-        self.parts["content.xml"] = self.part.result()
-        self._add_missing_styles()
+        if self.changed:
+            self.parts["content.xml"] = self.part.result()
+        self._add_missing_styles(setup_changed)
         if self.info is not None:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
 
     def _style_name(self, style_id: str) -> str:
         """The name a block of ``style_id`` is written with, noting a style the file must be given."""
-        name = _ODF_NAME.get(style_id, _STANDARD)
-        if style_id != DEFAULT_STYLE and style_id not in _ODF_NAME and self.losses is not None:
+        name = self.style_names.of(style_id)
+        if style_id not in self.style_names and self.losses is not None:
             self.losses.add("style", style_id)
         if name not in self.defined and name not in self.missing:
-            self.missing.append(name)
+            self.missing[name] = self._definition_of(style_id)
         return name
+
+    def _definition_of(self, style_id: str) -> bytes:
+        """The style ``style_id`` of the text as an odt style; the style of body text for one the text does not have."""
+        book = self.current.styles
+        found = style_id if style_id in self.style_names else DEFAULT_STYLE
+        return style_xml(book, book.get(found), self.style_names, self.current.palette.colours())[0]
 
     def _remove_dropped(self) -> None:
         kept = {block.id for block in self.current.blocks}
@@ -555,39 +624,168 @@ class _Patch:
             if self.losses is not None:
                 for kind in hidden_content(element):
                     self.losses.add(f"removed-{kind}")
-            self.part.remove(element)
-            self.changed = True
+            if self.top[block.id] not in self.dirty:
+                self.part.remove(element)
+            self.changed = True  # (else the list it was in is written again, without it)
+        in_use = {top for kind, top in self.plan if kind == "region"}
+        for top in self.dirty - in_use:  # a list none of whose blocks is left
+            self.part.remove(top)
 
-    def _patch_current(self) -> None:
-        anchor: etree._Element | None = None  # the paragraph of the file that the block before this one is
-        for block in self.current.blocks:
-            suggestions = self.by_block.get(block.id, [])
-            if block.id in self.blank and not block.text and block.style == DEFAULT_STYLE and not suggestions:
-                continue
+    # -- what goes where: the structure of lists --------------------------------------------------------------------
+    def _dirty_containers(self) -> set[etree._Element]:
+        """The lists of the file that are written again: one with an item that is no longer one, or is one of another
+        list, with a block removed from it, with a new block among its blocks or right after its last item."""
+        blocks = self.current.blocks
+        kept = {block.id for block in blocks}
+        dirty: set[etree._Element] = set()
+        where: dict[etree._Element, list[int]] = {}
+        for number, block in enumerate(blocks):
             if block.id in self.before:
-                anchor = self.element_of[block.id]
-                self._edit(block, anchor, suggestions)
-            else:
-                self._add(block, anchor, suggestions)
+                where.setdefault(self.top[block.id], []).append(number)
+                if self.before[block.id].item != block.item:
+                    dirty.add(self.top[block.id])
+        dirty |= {self.top[b.id] for b in self.held if b.id not in kept and self.top[b.id].tag not in (_P, _H)}
+        for top, numbers in where.items():
+            if top.tag in (_P, _H):
+                continue
+            first, last = numbers[0], numbers[-1]
+            new_inside = any(blocks[n].id not in self.before for n in range(first, last + 1))
+            after = blocks[last + 1] if last + 1 < len(blocks) else None
+            if new_inside or (after is not None and after.id not in self.before and after.item):
+                dirty.add(top)
+        for top in dirty:
+            if not can_rebuild(top):
+                raise UnsupportedEdit("a list with more in it than items and paragraphs cannot be changed in structure")
+        return dirty
 
-    def _add(self, block: Block, anchor: etree._Element | None, suggestions: list[Suggestion]) -> None:
-        """A new block goes next to the paragraph before it, in whatever holds that (a list item, a section), or before
-        the first paragraph, or at the end of a text that has none."""
-        paragraph, found = _new_paragraph(block.style, block.text, suggestions, self.ids, self.when)
-        self._style_name(block.style)
-        self.regions += found
-        if anchor is not None:
-            self.part.insert_after(anchor, paragraph)
-        elif self.paragraphs:
-            self.part.insert_before(self.paragraphs[0], paragraph)
+    def _plan(self) -> list[tuple[str, etree._Element | int | None]]:
+        """What each current block is: ``"keep"`` (a paragraph of the file whose place in its list did not change; with
+        its top-level element), ``"region"`` (one of the blocks of a list, or paragraph, that is written again, with
+        that element), ``"run"`` (a new item, with the number of its run of items) or ``"plain"`` (a new paragraph)."""
+        blocks = self.current.blocks
+        dirty = self._dirty_containers()
+        self.dirty = dirty
+        plan: list[tuple[str, etree._Element | int | None]] = []
+        region: etree._Element | None = None
+        runs = 0
+        for block in blocks:
+            if block.id in self.before:
+                top = self.top[block.id]
+                region = top if top in dirty else None
+                plan.append(("region" if region is not None else "keep", top))
+            elif region is not None:
+                plan.append(("region", region))
+            elif block.item is not None:
+                if not plan or plan[-1][0] != "run":
+                    runs += 1
+                plan.append(("run", runs))
+            else:
+                plan.append(("plain", None))
+        return plan
+
+    def _paragraph_of(self, block: Block, suggestions: list[Suggestion]) -> etree._Element:
+        """The paragraph of a block that is written again: its element in the file (edited, in a copy) or a new one."""
+        if block.id in self.before:
+            element = self.element_of[block.id]
+            edited = self._edited(block, element, suggestions)
+            found = copy.deepcopy(element) if edited is None else edited
         else:
-            self.appended.append(paragraph)
+            found, regions = _new_paragraph(block.style, block.text, suggestions, self.ids, self.when, self.style_names)
+            self._style_name(block.style)
+            self.regions += regions
+        found.tail = None
+        return found
+
+    def _written(self, blocks: list[Block], inherit: etree._Element | None = None) -> list[etree._Element]:
+        """The top-level elements that hold ``blocks`` as the text says: lists for the items, the rest as paragraphs."""
+        holder = etree.Element("holder")
+        inheriting = [inherit]
+
+        def start(list_id: str, element: etree._Element) -> None:
+            same = inheriting[0] is not None and self.reading.list_of.get(inheriting[0]) == list_id
+            self.names.start(list_id, element, inheriting[0] if same else None)
+            if same:
+                inheriting[0] = None
+
+        flow = ListFlow(holder, start)
+        for block in blocks:
+            flow.add(self._paragraph_of(block, self.by_block.get(block.id, [])), block.item)
+        return list(holder)
+
+    def _place(self, elements: list[etree._Element], after: etree._Element | None) -> None:
+        """New top-level elements, next to the one before them, or before the first of the text, or in an empty one."""
+        for element in elements:
+            if after is not None:
+                self.part.insert_after(after, element)
+            elif self.paragraphs:
+                assert self.first_top is not None  # a text with paragraphs has a first one (set in _patch_current)
+                self.part.insert_before(self.first_top, element)
+            else:
+                self.appended.append(element)
         self.changed = True
 
-    def _edit(self, block: Block, element: etree._Element, suggestions: list[Suggestion]) -> None:
+    def _patch_current(self) -> None:
+        plan = self.plan
+        blocks = self.current.blocks
+        self.first_top = self.top[self.held[0].id] if self.held else None
+        anchor: etree._Element | None = None  # the top-level element that the block before this one is in
+        number = 0
+        while number < len(blocks):
+            block = blocks[number]
+            kind, payload = plan[number]
+            suggestions = self.by_block.get(block.id, [])
+            if block.id in self.blank and not block.text and block.style == DEFAULT_STYLE and not suggestions:
+                number += 1
+                continue
+            end = number + 1
+            while kind in ("region", "run") and end < len(blocks) and plan[end] == plan[number]:
+                end += 1
+            if kind == "keep":
+                assert isinstance(payload, etree._Element)
+                anchor = payload
+                self._keep(block, payload, suggestions)
+            elif kind == "region":
+                assert isinstance(payload, etree._Element)
+                elements = self._written(blocks[number:end], payload)
+                if elements:
+                    self.part.replace(payload, *elements)
+                else:
+                    self.part.remove(payload)
+                self.changed = True
+                anchor = payload
+            elif kind == "run":
+                self._place(self._written(blocks[number:end]), anchor)
+            else:
+                paragraph, found = _new_paragraph(
+                    block.style, block.text, suggestions, self.ids, self.when, self.style_names
+                )
+                self._style_name(block.style)
+                self.regions += found
+                self._place([paragraph], anchor)
+            number = end
+
+    def _keep(self, block: Block, top: etree._Element, suggestions: list[Suggestion]) -> None:
+        """A paragraph that stays where it is in its list: its words and style, and the style of its list."""
+        self._edit(block, self.element_of[block.id], suggestions)
+        if block.item is not None and top.tag == LIST and top not in self.passed:
+            self.passed.add(top)
+            list_id = block.item.list
+            follows = self.names.passed(list_id, top)
+            attributes = {}
+            if list_id in self.changed_lists:
+                attributes["text:style-name"] = self.names.style(list_id)
+            if follows is not None and top.get(_q("text", "continue-list")) != follows:
+                attributes["text:continue-list"] = follows
+            if attributes:
+                self.part.set_attributes(top, attributes)
+                self.changed = True
+
+    def _edited(self, block: Block, element: etree._Element, suggestions: list[Suggestion]) -> etree._Element | None:
+        """A copy of the paragraph ``element`` with the words and the style the block has now; ``None`` if it has
+        what the block has."""
         old = self.before[block.id]
         if old.text == block.text and old.style == block.style and not suggestions:
-            return
+            return None
         edited = copy.deepcopy(element)
         text, changes, _ = _plan(block.text, suggestions, self.when)
         set_text(edited, text)
@@ -595,8 +793,25 @@ class _Patch:
         if old.style != block.style:
             name = self._restyle(edited, block.style)
         self.regions += _write_changes(edited, changes, self.ids, name)
-        self.part.replace(element, edited)
-        self.changed = True
+        return edited
+
+    def _edit(self, block: Block, element: etree._Element, suggestions: list[Suggestion]) -> None:
+        edited = self._edited(block, element, suggestions)
+        if edited is not None:
+            self.part.replace(element, edited)
+            self.changed = True
+
+    def _finish_lists(self) -> None:
+        """The list styles the text needs and the ``xml:id`` that the lists after a list of the file continue."""
+        if self.names.new_styles:
+            automatic = self.part.root.find("office:automatic-styles", NS)
+            if automatic is None:
+                raise UnsupportedEdit("this file has no place for the style of a list")
+            self.part.insert_into(automatic, *self.names.new_styles)
+            self.changed = True
+        for element, xml_id in self.names.ids_to_add().items():
+            self.part.set_attributes(element, {"xml:id": xml_id})
+            self.changed = True
 
     def _restyle(self, paragraph: etree._Element, style_id: str) -> str:
         """Make ``paragraph`` (a copy) a paragraph or a heading of the style ``style_id``; its name."""
@@ -631,14 +846,64 @@ class _Patch:
         if self.appended:
             self.part.insert_into(self.body, *self.appended)
 
-    def _add_missing_styles(self) -> None:
-        if not self.missing:
-            return
-        styles = self.styles.root.find("office:styles", NS) if self.styles is not None else None
-        if self.styles is None or styles is None:
-            raise OdfError("this file has no styles to add the style of a block to")
-        self.styles.insert_into(styles, "".join(_STYLE_XML[name] for name in self.missing).encode())
-        self.parts["styles.xml"] = self.styles.result()
+    def _patch_setup(self) -> bool:
+        """The page and the language of the file, made what the text says where it changed; did it change them?"""
+        before, after = self.baseline, self.current
+        if before.page == after.page and before.language == after.language:
+            return False
+        if self.styles is None:
+            raise UnsupportedEdit("this file has no styles.xml to say the page or the language in")
+        changed = patch_page(self.styles, before.page, after.page)
+        changed = patch_language(self.styles, before.language, after.language) or changed
+        if after.page.page_numbers and not before.page.page_numbers and FOOTER_STYLE not in self.defined:
+            self.missing[FOOTER_STYLE] = FOOTER_STYLE_XML.encode()
+        return changed
+
+    def _patch_style_definitions(self) -> bool:
+        """The styles of the text whose definition changed since the baseline (a new style, another look, another
+        colour in the palette it names), written into the file: over the file's style of that name, or as a new one."""
+        before, after = self.baseline, self.current
+        if (
+            before.styles.ids() == after.styles.ids()
+            and before.palette == after.palette
+            and all(before.styles.get(i) == after.styles.get(i) for i in after.styles.ids())
+        ):
+            return False
+        if self.styles is None:
+            raise UnsupportedEdit("this file has no styles.xml to write the styles of the text in")
+        before_names = StyleNames(before.styles)
+        colours_before, colours_after = before.palette.colours(), after.palette.colours()
+        elements = {
+            e.get(_q("style", "name")): e
+            for e in self.styles.root.iterfind("office:styles/style:style", NS)
+            if e.get(_q("style", "family")) == "paragraph"
+        }
+        changed = False
+        for style in after.styles:
+            if style.kind != "paragraph":
+                continue
+            now = style_xml(after.styles, style, self.style_names, colours_after)[0]
+            if style.id in before.styles:
+                was = style_xml(before.styles, before.styles.get(style.id), before_names, colours_before)[0]
+                if was == now:
+                    continue
+            name = self.style_names.of(style.id)
+            if style.id in before.styles and name in elements:  # a style the text had, in another look
+                self.styles.replace(elements[name], now)
+                changed = True
+            elif name not in self.defined and name not in self.missing:
+                self.missing[name] = now
+        return changed
+
+    def _add_missing_styles(self, setup_changed: bool = False) -> None:
+        if self.missing:
+            styles = self.styles.root.find("office:styles", NS) if self.styles is not None else None
+            if self.styles is None or styles is None:
+                raise OdfError("this file has no styles to add the style of a block to")
+            self.styles.insert_into(styles, *self.missing.values())
+        if self.missing or setup_changed:
+            assert self.styles is not None  # a missing style or a changed setup needed it
+            self.parts["styles.xml"] = self.styles.result()
 
 
 def apply_edits_to_odt(

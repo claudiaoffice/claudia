@@ -29,8 +29,11 @@ from collections import Counter
 from claudia_composes_io import (
     apply_edits_to_docx,
     apply_edits_to_odt,
+    docx_export_losses,
+    docx_unwritten_changes,
     export_info,
     odt_export_losses,
+    odt_unwritten_changes,
     text_to_docx,
     text_to_odt,
 )
@@ -161,7 +164,7 @@ def _suggestions(ctx):
 @composes_methods.method("export_office", "format:str tracked_changes:bool=false")
 def _export_office(ctx, *, format, tracked_changes):
     """The document's current content as bytes of a Word file (`format` `"docx"`) or an OpenDocument text (`"odt"`),
-    wrapped for the wire as `{format, content_type, data}` (`data` base64); an odt's answer also has `losses`, what
+    wrapped for the wire as `{format, content_type, data}` (`data` base64); the answer also has `losses`, what
     the file could not hold, as `{kind, detail, count}` codes.
 
     With `tracked_changes` (default off, so a clean copy is the default, D212), every open suggestion that proposes a
@@ -177,23 +180,29 @@ def _export_office(ctx, *, format, tracked_changes):
             ctx,
             format,
             TextModel,
-            lambda original, baseline, current: apply_edits_to_docx(
+            lambda original, baseline, current, _: apply_edits_to_docx(
                 original, baseline, current, track_suggestions=tracked_changes, change_times=times
             ),
-            lambda: office_export(format, text_to_docx(model, track_suggestions=tracked_changes, change_times=times)),
+            lambda: office_export(
+                format,
+                text_to_docx(model, track_suggestions=tracked_changes, change_times=times),
+                docx_export_losses(model, track_suggestions=tracked_changes),
+            ),
+            docx_unwritten_changes,
         )
     return export_with_original(
         ctx,
         format,
         TextModel,
-        lambda original, baseline, current: apply_edits_to_odt(
-            original, baseline, current, track_suggestions=tracked_changes
+        lambda original, baseline, current, _: apply_edits_to_odt(
+            original, baseline, current, track_suggestions=tracked_changes, info=info, change_times=times
         ),
         lambda: office_export(
             format,
             text_to_odt(model, track_suggestions=tracked_changes, info=info, change_times=times),
             odt_export_losses(model, track_suggestions=tracked_changes),
         ),
+        odt_unwritten_changes,
     )
 
 

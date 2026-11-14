@@ -6,7 +6,7 @@ paragraph  read_text/set_text/insert_elements/hidden_content -- the text of one 
 putting change marks between its characters, and what it shows that is not its text
 meta       DocumentInfo, new_meta, update_meta, update_package_meta -- title, dates and people of a document
 package    new_package, problems -- a package from its parts, and a check that a file is one
-report     Loss, LossLog -- what could not be kept, as a list
+report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
 """
 
 from ._version import __version__
@@ -14,12 +14,13 @@ from .meta import GENERATOR, DocumentInfo, new_meta, odf_date, read_info, update
 from .names import NS, decode_style_name, encode_style_name, local_name, qname
 from .package import MIME, VERSION, new_package, problems, read_manifest
 from .paragraph import hidden_content, insert_elements, read_text, set_text, xml_safe
-from .report import Loss, LossLog
+from .report import NOT_WRITTEN, Loss, LossLog, unwritten_changes
 from .splice import OdfError, Span, XmlPart
 
 __all__ = [
     "GENERATOR",
     "MIME",
+    "NOT_WRITTEN",
     "NS",
     "VERSION",
     "DocumentInfo",
@@ -44,6 +45,7 @@ __all__ = [
     "read_text",
     "set_text",
     "update_meta",
+    "unwritten_changes",
     "update_package_meta",
     "xml_safe",
 ]

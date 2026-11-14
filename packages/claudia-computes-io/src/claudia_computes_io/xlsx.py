@@ -36,6 +36,7 @@ from claudia_computes.values import ErrorValue, Value
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import write_parts
 
+from ._unwritten import XLSX_WRITTEN, workbook_unwritten_changes
 from .cell_looks import (
     Dressing,
     Lines,
@@ -126,7 +127,8 @@ def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     """What :func:`workbook_to_xlsx` cannot say in Excel for ``model``, each as a code with how many:
     ``"formula"`` (with the reason, ``random`` for a draw Excel has no single formula for: written as its value),
     ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest) and ``"look"``
-    (``too-many-cells``: cells of style ranges too large to write one by one)."""
+    (``too-many-cells``: cells of style ranges too large to write one by one), and what :func:`xlsx_unwritten_changes`
+    says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``."""
     losses = LossLog()
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
@@ -138,7 +140,15 @@ def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
                 losses.add(lost.kind, lost.detail)
             if note is not None:
                 losses.add("alternatives")
-    return losses.result()
+    return (*losses.result(), *xlsx_unwritten_changes(model))
+
+
+def xlsx_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None = None) -> tuple[Loss, ...]:
+    """What changed in ``model`` that the xlsx converters do not write, each as a code with how many entries differ from
+    ``baseline`` -- the model the original file was read as, for an edit-and-reexport -- or from an empty workbook, for
+    a fresh file (``None``): ``"layout"`` (sheets with other column widths or row heights), ``"name"`` (named ranges
+    and tables), ``"chart"`` and ``"object"`` (with the pictures and shapes they use)."""
+    return workbook_unwritten_changes(model, baseline, written=XLSX_WRITTEN)
 
 
 def workbook_to_xlsx(model: WorkbookModel) -> bytes:

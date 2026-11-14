@@ -5,6 +5,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- The patch of a kept odt gets the document's `info` and the times of its suggestions, as a new file does (D411, D454).
+
+### Changed
+- `export_office` of a document imported in that format and kept answers `losses` also when it patched the file: what
+  the patch writer reported (`removed-...`, `stale-reference`) and the unwritten changes since the import
+  (`not-written`, `layout`, `chart`, `planned-time`...) (D450, D452). The docx answer has a loss list now too, and
+  opening a docx or pptx names what the model does not show of it (D451).
+
 ## [0.33.0] - 2026-11-14
 
 ### Added

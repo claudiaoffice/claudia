@@ -1,7 +1,7 @@
-"""Paragraphs inside a list and a section are blocks of the model (so they can be edited and styled), but the list
-and the section themselves are structure the model does not have. Adding a paragraph before the list and emptying
-the one in the section must leave the list -- its style, its items -- exactly as it was. (A block added *after* a
-list item goes into that item, as a paragraph of its own: the model has no bullets to give it.)"""
+"""Paragraphs inside a list and a section are blocks of the model (so they can be edited and styled); the section itself
+is structure the model does not have. Adding a paragraph before the list and emptying the one in the section must
+leave the list -- its style, its items -- exactly as it was, and the section as it was. (A paragraph added *after*
+the last item of a list is a paragraph after the list; lists are written by D453, see the `lists` case.)"""
 
 from __future__ import annotations
 

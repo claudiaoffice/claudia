@@ -65,6 +65,7 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._unwritten import ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .ods_looks import OdsLooks, column_styles, read_looks
@@ -795,14 +796,15 @@ def ods_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
                 losses.add("alternatives")
             if written.content is not None and written.content["t"] == "formula":
                 _formula_attribute(written.content, losses)
-        if sheet.row_heights or sheet.col_widths:
-            losses.add("layout")
-    if model.charts:
-        losses.add("chart", count=len(model.charts))
-    floating = len(model.objects)
-    if floating:
-        losses.add("object", count=floating)
-    return _in_order(losses.result())
+    return _in_order((*losses.result(), *ods_unwritten_changes(model)))
+
+
+def ods_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None = None) -> tuple[Loss, ...]:
+    """What changed in ``model`` that the ods converters do not write, each as a code with how many entries differ from
+    ``baseline`` -- the model the original file was read as, for an edit-and-reexport -- or from an empty workbook, for
+    a fresh file (``None``): ``"layout"`` (sheets with other column widths or row heights), ``"name"`` (named ranges
+    and tables), ``"chart"`` and ``"object"`` (with the pictures and shapes they use)."""
+    return workbook_unwritten_changes(model, baseline, written=ODS_WRITTEN)
 
 
 # -- edit and re-export ----------------------------------------------------------------------------------------------

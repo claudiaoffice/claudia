@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.4.0",
  "Rasterise": {
   "function": "(*args, **kwargs)"
  },
@@ -29,11 +29,20 @@
  "odp_to_slides": {
   "function": "(odp_bytes: 'bytes') -> 'SlideModel'"
  },
+ "odp_unwritten_changes": {
+  "function": "(model: 'SlideModel', baseline: 'SlideModel | None' = None) -> 'tuple[Loss, ...]'"
+ },
  "pptx_export_losses": {
   "function": "(model: 'SlideModel', *, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"
  },
+ "pptx_import_losses": {
+  "function": "(pptx_bytes: 'bytes') -> 'tuple[Loss, ...]'"
+ },
  "pptx_to_slides": {
   "function": "(pptx_bytes: 'bytes') -> 'SlideModel'"
+ },
+ "pptx_unwritten_changes": {
+  "function": "(model: 'SlideModel', baseline: 'SlideModel | None' = None) -> 'tuple[Loss, ...]'"
  },
  "slides_to_odp": {
   "function": "(model: 'SlideModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"

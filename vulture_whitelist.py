@@ -201,3 +201,7 @@ used.StartElementHandler  # expat calls the handlers assigned to these attribute
 used.EndElementHandler  # (same)
 used._objects_without_renderings  # registered as an upcaster by a decorator (claudia_core AddObject 2 -> 3, D390)
 used._quick  # autouse fixture of packages/claudia-server/tests/test_server_rendering_jobs.py
+used.val  # python-docx: assigning `.val` of an ilvl or numId writes its ``w:val`` (claudia_composes_io._docx_lists)
+used.left_indent  # python-docx: assigning it writes the ``w:ind`` of a style (claudia_composes_io._docx_styles)
+used.right_indent  # python-docx: the same, for the right side
+used.line_spacing_rule  # python-docx: assigning it writes the ``w:spacing`` rule of a style

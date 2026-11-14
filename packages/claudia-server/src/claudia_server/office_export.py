@@ -18,7 +18,7 @@ from collections.abc import Callable, Iterable
 from typing import cast
 
 from claudia_core import CommandLog, DocumentModel, Import
-from claudia_odf_io import DocumentInfo, Loss
+from claudia_odf_io import DocumentInfo, Loss, LossLog
 
 log = logging.getLogger("claudia_server")
 
@@ -66,13 +66,16 @@ def export_with_original[M: DocumentModel](
     ctx,  # noqa: ANN001 - protocol.Context (imported here it would be circular)
     fmt: str,
     model_cls: type[M],
-    patch: Callable[[bytes, M, M], bytes],
+    patch: Callable[[bytes, M, M, LossLog], bytes],
     fresh: Callable[[], dict],
+    unwritten: Callable[[M, M], Iterable[Loss]] | None = None,
 ) -> dict:
     """``export_office`` for a document that may have been imported (D441). When it was imported from a file of
     ``fmt`` and that file is kept, the answer is that file with the edits since the import patched in (``patch``:
-    the app's ``apply_edits_to_<fmt>(original, baseline, current)``), and says ``patched: true``: everything Claudia
-    does not show stays as the file had it. Otherwise, or when the edits cannot be patched in, the answer is
+    the app's ``apply_edits_to_<fmt>(original, baseline, current)``, which may add to the ``LossLog`` it is given what
+    the patch itself could not keep), and says ``patched: true``: everything Claudia does not show stays as the file
+    had it. Its ``losses`` are what the patch said and what ``unwritten(current, baseline)`` says of the edits the
+    patch has no place for (D299, D405). Otherwise, or when the edits cannot be patched in, the answer is
     ``fresh()``; in the second case its losses also say ``not-patched``, with the reason."""
     imported = import_of(ctx.document.log, ctx.document.branch)
     if imported is None or imported.fmt != fmt or not imported.kept:
@@ -82,11 +85,13 @@ def export_with_original[M: DocumentModel](
         log.warning("the kept original of %s is missing or not the imported file", ctx.doc_id)
         return _noted(fresh(), "the kept file is missing")
     try:
-        data = patch(original, model_cls.restore(imported.state), cast(M, ctx.document.model))
+        baseline, current, found = model_cls.restore(imported.state), cast(M, ctx.document.model), LossLog()
+        data = patch(original, baseline, current, found)
+        lost = (*found.result(), *(unwritten(current, baseline) if unwritten is not None else ()))
     except Exception as exc:  # noqa: BLE001 - every writer has its own UnsupportedEdit; any failure means "write anew"
         log.info("cannot patch the edits of %s into its original: %s", ctx.doc_id, exc)
         return _noted(fresh(), str(exc))
-    answer = office_export(fmt, data, ())
+    answer = office_export(fmt, data, lost)
     answer["patched"] = True
     return answer
 

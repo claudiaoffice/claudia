@@ -271,3 +271,17 @@ class TestSetAttributes:
         part = XmlPart(b'<root xmlns:a="x"><a:e/></root>')
         with pytest.raises(OdfError, match="namespace"):
             part.set_attributes(part.root[0], {"svg:x": "1cm"})
+
+    def test_the_xml_prefix_needs_no_declaration(self):
+        part = XmlPart(b'<root xmlns:a="x"><a:e/></root>')
+        part.set_attributes(part.root[0], {"xml:id": "e1"})
+        assert part.result() == b'<root xmlns:a="x"><a:e xml:id="e1"/></root>'
+
+
+class TestMarkupIsMadeWhenTheResultIs:
+    def test_what_is_done_to_an_inserted_element_before_the_result_is_in_the_result(self):
+        part = XmlPart(DOC)
+        new = part.make("t:p", text="new")
+        part.insert_after(paragraphs(part)[0], new)
+        new.set("late", "yes")
+        assert b'<t:p late="yes">new</t:p>' in part.result()

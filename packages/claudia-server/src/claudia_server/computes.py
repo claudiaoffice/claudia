@@ -50,9 +50,11 @@ from claudia_computes_io import (
     apply_edits_to_ods,
     apply_edits_to_xlsx,
     ods_export_losses,
+    ods_unwritten_changes,
     workbook_to_ods,
     workbook_to_xlsx,
     xlsx_export_losses,
+    xlsx_unwritten_changes,
 )
 from claudia_computes_io.extensions import to_excel
 
@@ -257,16 +259,20 @@ def _export_office(ctx, *, format):
             ctx,
             format,
             WorkbookModel,
-            apply_edits_to_xlsx,
+            lambda original, baseline, current, _: apply_edits_to_xlsx(original, baseline, current),
             lambda: office_export(format, workbook_to_xlsx(book), xlsx_export_losses(book)),
+            xlsx_unwritten_changes,
         )
     info = document_info(ctx.document.log, ctx.document.branch)
     return export_with_original(
         ctx,
         format,
         WorkbookModel,
-        lambda original, baseline, current: apply_edits_to_ods(original, baseline, current, info=info),
+        lambda original, baseline, current, found: apply_edits_to_ods(
+            original, baseline, current, losses=found, info=info
+        ),
         lambda: office_export(format, workbook_to_ods(book, info=info), ods_export_losses(book)),
+        ods_unwritten_changes,
     )
 
 

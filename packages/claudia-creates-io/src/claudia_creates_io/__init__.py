@@ -7,19 +7,30 @@ part's own XML directly with ``lxml`` -- transitions live inline in the slide, s
 elsewhere, unlike the other two extensions (D147). odp is the same three paths on the shared OpenDocument layer
 (``claudia-odf-io``, D401): see ``odp.py``.
 
-pptx   slides_to_pptx, pptx_to_slides, apply_edits_to_pptx, UnsupportedEdit, add_transition
-odp    slides_to_odp, odp_to_slides, apply_edits_to_odp, odp_import_losses, odp_export_losses (D412)
+pptx   slides_to_pptx, pptx_to_slides, apply_edits_to_pptx, pptx_import_losses, pptx_export_losses,
+       pptx_unwritten_changes, UnsupportedEdit, add_transition
+odp    slides_to_odp, odp_to_slides, apply_edits_to_odp, odp_import_losses, odp_export_losses (D412),
+       odp_unwritten_changes
 """
 
 from ._raster import Rasterise
 from ._version import __version__
-from .odp import apply_edits_to_odp, odp_export_losses, odp_import_losses, odp_to_slides, slides_to_odp
+from .odp import (
+    apply_edits_to_odp,
+    odp_export_losses,
+    odp_import_losses,
+    odp_to_slides,
+    odp_unwritten_changes,
+    slides_to_odp,
+)
 from .pptx import (
     UnsupportedEdit,
     add_transition,
     apply_edits_to_pptx,
     pptx_export_losses,
+    pptx_import_losses,
     pptx_to_slides,
+    pptx_unwritten_changes,
     slides_to_pptx,
 )
 
@@ -33,8 +44,11 @@ __all__ = [
     "odp_export_losses",
     "odp_import_losses",
     "odp_to_slides",
+    "odp_unwritten_changes",
     "pptx_export_losses",
+    "pptx_import_losses",
     "pptx_to_slides",
+    "pptx_unwritten_changes",
     "slides_to_odp",
     "slides_to_pptx",
 ]

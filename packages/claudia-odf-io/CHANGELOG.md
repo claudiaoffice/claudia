@@ -3,6 +3,21 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Changed
+- `XmlPart` makes the bytes of an inserted or replacing element when the result is made, so that what is done to the
+  element until then is in it; `set_attributes` takes the `xml:` prefix (`xml:id`) without a declaration.
+
+## [0.2.0] - 2026-11-14
+
+What a converter does not write is a loss (D450).
+
+### Added
+- `unwritten_changes(before, after, *, written, kinds=None)`: the losses for the facets of a model that differ between
+  `before` and `after` and that a converter does not write, each as `not-written` with the facet as its detail and how
+  many entries differ, or under the code `kinds` gives the facet. `NOT_WRITTEN` is that code.
+
 ## [0.1.0] - 2026-11-11
 
 The OpenDocument layer shared by the three apps' io packages (D401): odt, odp and ods (D70).

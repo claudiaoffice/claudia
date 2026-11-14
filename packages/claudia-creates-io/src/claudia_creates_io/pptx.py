@@ -57,6 +57,7 @@ from claudia_opc_io import owns, reconcile
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._raster import Rasterise, blank_png
 from ._styling import colour_of, look, page_colour, points_of
+from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 
 PNS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 RNS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -182,10 +183,17 @@ def _add_picture(slide, asset, box, body: ObjectBody, rasterise: Rasterise | Non
 
 
 def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
-    """What :func:`slides_to_pptx` cannot keep for ``model``: ``"svg-fallback"`` (a picture drawn as SVG, which only
-    PowerPoint 2016 and later show; other programs show an empty picture unless a rasteriser was given, ``rasterised``)
-    and ``"rendering-pending"`` (a rendered text container nothing has been drawn for yet: left out)."""
+    """What :func:`slides_to_pptx` cannot keep for ``model``, each as a code with how many: ``"authorship"`` (who wrote
+    which words of an object: a pptx does not keep it), ``"notes-link"``, ``"notes-image"``, ``"notes-code"`` and
+    ``"notes-quote"`` (slides whose notes use what the file shows only as plain words), ``"svg-fallback"`` (a picture
+    drawn as SVG, which only PowerPoint 2016 and later show; other programs show an empty picture unless a rasteriser
+    was given, ``rasterised``), ``"rendering-pending"`` (a rendered text container nothing has been drawn for yet:
+    left out) and what :func:`pptx_unwritten_changes` says of a fresh file (``"planned-time"``...)."""
     losses = LossLog()
+    if authored := authored_objects(model):
+        losses.add("authorship", count=authored)
+    for loss in notes_losses(model):
+        losses.add(loss.kind, loss.detail, loss.count)
     for obj in model.objects.values():
         picture = model.picture_of(obj.body)
         asset = model.images.get(picture) if picture else None
@@ -193,7 +201,43 @@ def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[
             losses.add("rendering-pending")
         elif asset is not None and asset.format == "svg" and not rasterised:
             losses.add("svg-fallback")
+    return (*losses.result(), *pptx_unwritten_changes(model))
+
+
+def pptx_unwritten_changes(model: SlideModel, baseline: SlideModel | None = None) -> tuple[Loss, ...]:
+    """What changed in ``model`` that the pptx converters do not write, each as a code with how many entries differ from
+    ``baseline`` -- the model the original file was read as, for an edit-and-reexport -- or from an empty presentation,
+    for a fresh file (``None``): ``"planned-time"`` (slides with a planned time: the only time a pptx holds advances
+    a slide by itself, D343), and the facets ``"print_setup"`` and ``"language"`` as ``"not-written"``."""
+    return slides_unwritten_changes(model, baseline, written=PPTX_WRITTEN)
+
+
+def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
+    """What :func:`pptx_to_slides` does not show of the file, each as a code (``"picture"``, ``"table"``, ``"chart"``,
+    ``"group"``, ``"object"`` for any other shape, ``"transition"``, ``"animation"``, ``"notes"`` too long for the
+    model) with how many there are, in the order they come. None of it is lost from the *file*: an edit exported with
+    :func:`apply_edits_to_pptx` keeps all of it."""
+    prs = Presentation(BytesIO(pptx_bytes))
+    losses = LossLog()
+    for pptx_slide in prs.slides:
+        for shape in pptx_slide.shapes:
+            if _classify(shape) is None:
+                losses.add(_UNMODELED.get(shape.shape_type, "object"))
+        for code, tag in (("transition", "transition"), ("animation", "timing")):
+            if pptx_slide._element.find(_qn(tag)) is not None:
+                losses.add(code)
+        if len(_notes_markdown(pptx_slide)) > MAX_NOTES_LENGTH:
+            losses.add("notes")
     return losses.result()
+
+
+#: The kinds of shape a pptx has that the model does not show, by the code they are reported under.
+_UNMODELED = {
+    MSO_SHAPE_TYPE.PICTURE: "picture",
+    MSO_SHAPE_TYPE.TABLE: "table",
+    MSO_SHAPE_TYPE.CHART: "chart",
+    MSO_SHAPE_TYPE.GROUP: "group",
+}
 
 
 def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> bytes:

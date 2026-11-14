@@ -19,7 +19,7 @@ no longer describe it. To change an element, build a changed copy and :meth:`~Xm
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from xml.parsers import expat
 
@@ -110,7 +110,7 @@ class XmlPart:
         if len(self._spans) != len(self._elements):  # pragma: no cover - the two parsers disagree: a bug here
             raise OdfError("the part could not be mapped to bytes")
         self._index = {element: number for number, element in enumerate(self._elements)}
-        self._edits: list[tuple[int, int, int, bytes]] = []  # start, end, order made, new bytes
+        self._edits: list[tuple[int, int, int, Callable[[], bytes] | bytes]] = []  # start, end, order made, new bytes
         self._declared: dict[str, str] = {p: uri for p, uri in self.root.nsmap.items() if p is not None}
 
     # -- reading -----------------------------------------------------------------
@@ -154,7 +154,9 @@ class XmlPart:
         return head + data[head_end:]
 
     # -- editing ---------------------------------------------------------------------
-    def _edit(self, start: int, end: int, new: bytes) -> None:
+    def _edit(self, start: int, end: int, new: Callable[[], bytes] | bytes) -> None:
+        """Record an edit; markup given as an element is turned into bytes only in :meth:`result`, so what is done
+        to the element until then (a later edit giving it an ``xml:id``) is in it."""
         self._edits.append((start, end, len(self._edits), new))
 
     def replace(self, element: etree._Element, new: etree._Element | bytes, *more: etree._Element | bytes) -> None:
@@ -162,7 +164,7 @@ class XmlPart:
         ``element``; with ``more``, those after it, as siblings in the order given (a run of repeated cells split
         in three is one replacement)."""
         span = self._span(element)
-        self._edit(span.start, span.end, b"".join(self._bytes_of(item) for item in (new, *more)))
+        self._edit(span.start, span.end, lambda: b"".join(self._bytes_of(item) for item in (new, *more)))
 
     def remove(self, element: etree._Element) -> None:
         """Take ``element`` out, with what is inside it."""
@@ -172,25 +174,28 @@ class XmlPart:
     def insert_before(self, element: etree._Element, new: etree._Element | bytes) -> None:
         """Put ``new`` right before ``element``, as its sibling."""
         start = self._span(element).start
-        self._edit(start, start, self._bytes_of(new))
+        self._edit(start, start, lambda: self._bytes_of(new))
 
     def insert_after(self, element: etree._Element, new: etree._Element | bytes) -> None:
         """Put ``new`` right after ``element``, as its sibling. Several inserts at one place come out in the order
         they were made."""
         end = self._span(element).end
-        self._edit(end, end, self._bytes_of(new))
+        self._edit(end, end, lambda: self._bytes_of(new))
 
     def insert_into(self, parent: etree._Element, *new: etree._Element | bytes, at_start: bool = False) -> None:
         """Put ``new`` in ``parent`` as its last children (its first, with ``at_start``), in the order given. A
         parent written as one empty tag is opened for them -- so give everything that goes into one in one call: two
         calls would both rewrite that one tag."""
         span = self._span(parent)
-        data = b"".join(self._bytes_of(item) for item in new)
+
+        def data() -> bytes:
+            return b"".join(self._bytes_of(item) for item in new)
+
         if span.close < 0:
             tag = self.raw[span.start : span.end].rstrip(b">").rstrip(b"/").rstrip()
             name = _NAME.match(tag)
             assert name is not None  # expat has parsed this tag
-            self._edit(span.start, span.end, tag + b">" + data + b"</" + name.group(1) + b">")
+            self._edit(span.start, span.end, lambda: tag + b">" + data() + b"</" + name.group(1) + b">")
         elif at_start:
             self._edit(span.open_end, span.open_end, data)
         else:
@@ -229,6 +234,8 @@ class XmlPart:
     @staticmethod
     def _written_name(element: etree._Element, prefixed: str) -> bytes:
         prefix, _, local = prefixed.partition(":")
+        if prefix == "xml":  # always bound, to a namespace that no element declares
+            return prefixed.encode()
         uri = NS[prefix]
         written = next((p for p, u in element.nsmap.items() if u == uri and p), None)
         if written is None:
@@ -241,11 +248,11 @@ class XmlPart:
         another reaches into it): nothing sensible can be made of that."""
         out = bytearray()
         position = 0
-        for start, end, _order, data in sorted(self._edits):
+        for start, end, _order, data in sorted(self._edits, key=lambda edit: edit[:3]):
             if start < position:
                 raise OdfError("two edits overlap: one reaches into an element that another replaces or removes")
             out += self.raw[position:start]
-            out += data
+            out += data() if callable(data) else data
             position = end
         out += self.raw[position:]
         return bytes(out)

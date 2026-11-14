@@ -528,16 +528,21 @@ def test_export_office_returns_an_odt_that_round_trips_and_says_what_it_lost(pap
     assert answer["losses"] == [{"kind": "authorship", "detail": "", "count": 1}]
 
 
-def test_export_office_to_odt_names_a_style_it_cannot_write(paper):
+def test_export_office_to_odt_names_a_style_property_it_cannot_write(paper):
     type_(paper, "Hello there")
-    call(paper, "set_style", {"block": "b1", "style": "remark"})
+    call(paper, "change_style", {"style": "remark", "set": {"word-spacing": "3pt"}})
     losses = call(paper, "export_office", {"format": "odt"})["losses"]
-    assert {"kind": "style", "detail": "remark", "count": 1} in losses
+    assert {"kind": "style-property", "detail": "remark: word-spacing", "count": 1} in losses
 
 
-def test_export_office_to_docx_has_no_loss_list(paper):
+def test_export_office_to_docx_says_what_it_cannot_hold(paper):
     type_(paper, "Hello there")
-    assert "losses" not in call(paper, "export_office", {"format": "docx"})
+    answer = call(paper, "export_office", {"format": "docx"})
+    assert answer["losses"] == [{"kind": "authorship", "detail": "", "count": 1}]
+    call(paper, "change_style", {"style": "remark", "set": {"word-spacing": "3pt"}})
+    assert {"kind": "style-property", "detail": "remark: word-spacing", "count": 1} in call(
+        paper, "export_office", {"format": "docx"}
+    )["losses"]
 
 
 def test_export_office_to_odt_drops_open_suggestions_rather_than_tracking_them(paper):

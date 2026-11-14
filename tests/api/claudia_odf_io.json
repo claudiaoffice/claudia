@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
  "DocumentInfo": {
   "class": [
    "object"
@@ -32,6 +32,9 @@
  },
  "MIME": {
   "value": "{'text': 'application/vnd.oasis.opendocument.text', 'spreadsheet': 'application/vnd.oasis.opendocument.spreadsheet', 'presentation': 'application/vnd.oasis.opendocument.presentation'}"
+ },
+ "NOT_WRITTEN": {
+  "value": "'not-written'"
  },
  "NS": {
   "value": "{'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0', 'style': 'urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'draw': 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'presentation': 'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0', 'fo': 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'svg': 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'number': 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0', 'meta': 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0', 'manifest': 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0', 'xlink': 'http://www.w3.org/1999/xlink', 'anim': 'urn:oasis:names:tc:opendocument:xmlns:animation:1.0', 'smil': 'urn:oasis:names:tc:opendocument:xmlns:smil-compatible:1.0', 'calcext': 'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0', 'of': 'urn:oasis:names:tc:opendocument:xmlns:of:1.2', 'dc': 'http://purl.org/dc/elements/1.1/', 'xml': 'http://www.w3.org/XML/1998/namespace'}"
@@ -115,6 +118,9 @@
  },
  "set_text": {
   "function": "(paragraph: 'etree._Element', text: 'str') -> 'None'"
+ },
+ "unwritten_changes": {
+  "function": "(before: 'Mapping[str, object]', after: 'Mapping[str, object]', *, written: 'Collection[str]', kinds: 'Mapping[str, str] | None' = None) -> 'tuple[Loss, ...]'"
  },
  "update_meta": {
   "function": "(meta_xml: 'bytes | None', info: 'DocumentInfo') -> 'bytes'"

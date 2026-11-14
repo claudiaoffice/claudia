@@ -8,7 +8,7 @@ import pytest
 from starlette.testclient import TestClient
 from test_server_formats import made
 
-from claudia_computes import SetCells, WorkbookModel, parse_input
+from claudia_computes import ResizeLines, SetCells, WorkbookModel, parse_input
 from claudia_server import Hub, MemoryProvider, create_app, methods_for
 from claudia_server.sealed import SealedDocuments
 from claudia_server.suite import Module, Suite
@@ -118,6 +118,37 @@ def test_an_imported_workbook_keeps_its_file_and_gives_it_back_with_only_the_edi
         book = xlsx_to_workbook(back)
         assert book.serialize()["sheets"][0]["cells"][0][2] is not None
         assert upload(client, original).status_code == 200  # the token was used up; a new upload is fine
+
+
+def test_a_patched_download_says_what_the_edits_it_could_not_write_were():
+    with workbook_server() as client:
+        token = upload(client, made("xlsx")).json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, "computes", "budget").document
+            doc.execute(SetCells("s1", ((0, 0, parse_input("7")),)), author="ann")
+            assert request(ws, "export_office", {"format": "xlsx"})["result"]["losses"] == []
+            doc.execute(ResizeLines("s1", "col", ((0, 120.0),)), author="ann")
+            answer = request(ws, "export_office", {"format": "xlsx"})["result"]
+        assert answer["patched"] is True
+        assert answer["losses"] == [{"kind": "layout", "detail": "", "count": 1}]
+
+
+def test_a_patched_ods_download_carries_what_the_patch_itself_lost(monkeypatch):
+    def patch(original, baseline, current, *, losses, info):
+        losses.add("stale-reference", "Sheet1")
+        return original
+
+    monkeypatch.setattr("claudia_server.computes.apply_edits_to_ods", patch)
+    with workbook_server() as client:
+        token = upload(client, made("ods")).json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            answer = request(ws, "export_office", {"format": "ods"})["result"]
+        assert answer["patched"] is True
+        assert answer["losses"] == [{"kind": "stale-reference", "detail": "Sheet1", "count": 1}]
 
 
 def test_the_file_is_not_kept_when_the_person_says_so_and_the_download_is_written_anew():

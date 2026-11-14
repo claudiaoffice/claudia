@@ -3,6 +3,18 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.6.0] - 2026-11-14
+
+What the converters do not write is said, for both formats (D450, D451).
+
+### Added
+- `ods_unwritten_changes` and `xlsx_unwritten_changes`: what changed in a workbook (against the baseline, or an empty
+  workbook) that the converter does not write: `layout` (widths and heights), `name`, `chart` and `object`.
+
+### Changed
+- `xlsx_export_losses` also says `layout`, `name`, `chart` and `object`, as `ods_export_losses` did for the first,
+  the second and third (the ods list now comes from the same comparison, and also says `name`).
+
 ## [0.5.0] - 2026-11-13
 
 The look of cells to and from xlsx and ods (D378, D379).

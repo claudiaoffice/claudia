@@ -61,6 +61,7 @@ from claudia_opc_io import read_parts, write_parts
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._raster import Rasterise
 from ._styling import colour_of, look, page_colour, points_of
+from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -918,21 +919,10 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
     only as plain words), and ``"planned-time"`` (how many slides have a planned time, which an odp has no place for,
     D343)."""
     losses = LossLog()
-    authored = sum(
-        1
-        for obj in model.objects.values()
-        if obj.body.paragraph is not None and any(run.author is not None for run in obj.body.paragraph.runs)
-    )
-    if authored:
+    if authored := authored_objects(model):
         losses.add("authorship", count=authored)
-    used: dict[str, int] = {}
-    for slide_id in model.slides:
-        for feature in markdown_to_lines(model.notes_of(slide_id))[1] - {"heading"}:  # a heading is a bold line
-            used[feature] = used.get(feature, 0) + 1
-    for feature in sorted(used):
-        losses.add(f"notes-{feature}", count=used[feature])
-    if timed := sum(1 for slide_id in model.slides if slide_id in model.times):
-        losses.add("planned-time", count=timed)
+    for loss in notes_losses(model):
+        losses.add(loss.kind, loss.detail, loss.count)
     decorative = sum(1 for obj in model.objects.values() if obj.body.decorative)
     if decorative:
         losses.add("decorative", count=decorative)
@@ -956,7 +946,15 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
         )
         if vector:
             losses.add("svg-picture", count=vector)
-    return losses.result()
+    return (*losses.result(), *odp_unwritten_changes(model))
+
+
+def odp_unwritten_changes(model: SlideModel, baseline: SlideModel | None = None) -> tuple[Loss, ...]:
+    """What changed in ``model`` that the odp converters do not write, each as a code with how many entries differ from
+    ``baseline`` -- the model the original file was read as, for an edit-and-reexport -- or from an empty presentation,
+    for a fresh file (``None``): ``"planned-time"`` (slides with a planned time, which an odp has no place for, D343),
+    and the facets ``"print_setup"`` and ``"language"`` as ``"not-written"``."""
+    return slides_unwritten_changes(model, baseline, written=ODP_WRITTEN)
 
 
 # -- edit and re-export ----------------------------------------------------------------------------------------------

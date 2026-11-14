@@ -17,7 +17,9 @@ from pathlib import Path
 import docx
 import openpyxl
 import pptx
-from docx.shared import Inches
+from docx.enum.section import WD_ORIENT
+from docx.enum.style import WD_STYLE_TYPE
+from docx.shared import Cm, Inches, Pt
 from openpyxl.chart import BarChart, Reference
 from openpyxl.drawing.image import Image as XLImage
 from PIL import Image
@@ -28,6 +30,7 @@ from claudia_odf_io import NS, new_package
 from claudia_opc_io import write_parts
 
 ROOT = Path(__file__).resolve().parent
+W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 #: EMU per claudia slide unit on a 16:9 deck (``12_192_000 / 1600`` == ``6_858_000 / 900``, both exact) -- the
 #: same scale ``claudia_creates_io.pptx`` itself uses, so a shape placed at claudia unit ``(x, y, w, h)`` here
 #: imports back through ``pptx_to_slides`` at that exact position, with no rounding drift to account for.
@@ -41,6 +44,36 @@ def build_heading_styles() -> bytes:
     document.add_paragraph("This is the introduction.")
     document.add_paragraph("Background", style="Heading 2")
     document.add_paragraph("More background text.")
+    return _bytes(document)
+
+
+def build_docx_lists() -> bytes:
+    """Word's own list styles: two bullets, a paragraph, and a numbered item (the styles carry the numbering)."""
+    document = docx.Document()
+    document.add_paragraph("Shopping", style="Heading 1")
+    document.add_paragraph("Bread", style="List Bullet")
+    document.add_paragraph("Milk", style="List Bullet")
+    document.add_paragraph("Then go home.")
+    document.add_paragraph("Lock the door", style="List Number")
+    return _bytes(document)
+
+
+def build_docx_page_and_styles() -> bytes:
+    """A Word file as Word writes the setup of a text: an A4 page lying on its side with narrow margins, the language
+    in the document defaults, Normal set in another face and size, and a style of its own that claudia does not know."""
+    document = docx.Document()
+    document.add_paragraph("Minutes of the meeting", style="Heading 1")
+    document.add_paragraph("We met on Tuesday.")
+    section = document.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    section.page_width, section.page_height = Cm(29.7), Cm(21.0)
+    section.left_margin = section.right_margin = Cm(2.0)
+    lang = document.styles.element.find(f"{W}docDefaults/{W}rPrDefault/{W}rPr/{W}lang")
+    assert lang is not None
+    lang.set(f"{W}val", "de-DE")
+    normal = document.styles["Normal"]
+    normal.font.name, normal.font.size = "Liberation Serif", Pt(11)
+    document.styles.add_style("Marker", WD_STYLE_TYPE.PARAGRAPH).font.bold = True
     return _bytes(document)
 
 
@@ -321,6 +354,55 @@ def build_odt_lists_and_sections() -> bytes:
     )
 
 
+def build_odt_page_and_styles() -> bytes:
+    """An odt written by hand as LibreOffice writes the setup of a text: an A4 page lying on its side, the language of
+    the default style, Standard set in another face and size, and a style of its own that claudia does not know."""
+    styles = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:styles>'
+        '<style:default-style style:family="paragraph"><style:text-properties fo:language="de" fo:country="DE"/>'
+        "</style:default-style>"
+        '<style:style style:name="Standard" style:family="paragraph" style:class="text">'
+        '<style:text-properties fo:font-family="Liberation Serif" fo:font-size="11pt"/></style:style>'
+        '<style:style style:name="Marker" style:family="paragraph" style:parent-style-name="Standard">'
+        '<style:text-properties fo:font-weight="bold"/></style:style>'
+        "</office:styles><office:automatic-styles>"
+        '<style:page-layout style:name="Mpm1"><style:page-layout-properties fo:page-width="29.7cm" '
+        'fo:page-height="21cm" style:print-orientation="landscape" fo:margin-top="2cm" fo:margin-bottom="2cm" '
+        'fo:margin-left="2cm" fo:margin-right="2cm"/></style:page-layout></office:automatic-styles>'
+        '<office:master-styles><style:master-page style:name="Standard" style:page-layout-name="Mpm1"/>'
+        "</office:master-styles></office:document-styles>"
+    ).encode()
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        "<office:automatic-styles/><office:body><office:text>"
+        '<text:p text:style-name="Standard">Minutes of the meeting</text:p>'
+        '<text:p text:style-name="Marker">We met on Tuesday.</text:p>'
+        "</office:text></office:body></office:document-content>"
+    ).encode()
+    return new_package("text", content, styles)
+
+
+def build_odt_lists() -> bytes:
+    """An odt written by hand as LibreOffice writes lists: a numbered list that goes on after a paragraph (named by
+    its ``xml:id``), and bullets nested in a numbered item."""
+    levels = "".join(
+        f'<text:list-level-style-number text:level="{n}" style:num-suffix="." style:num-format="{fmt}"/>'
+        for n, fmt in ((1, "1"), (2, "a"), (3, "i"))
+    )
+    return _odt(
+        '<text:list xml:id="list1" text:style-name="Steps"><text:list-item>'
+        '<text:p text:style-name="Standard">Open the box</text:p><text:list><text:list-item>'
+        '<text:p text:style-name="Standard">Cut the tape</text:p></text:list-item></text:list></text:list-item>'
+        '<text:list-item><text:p text:style-name="Standard">Take out the parts</text:p></text:list-item></text:list>'
+        '<text:p text:style-name="Standard">Mind the screws.</text:p>'
+        '<text:list text:style-name="Steps" text:continue-list="list1"><text:list-item>'
+        '<text:p text:style-name="Standard">Screw it together</text:p></text:list-item></text:list>',
+        automatic=f'<text:list-style style:name="Steps">{levels}</text:list-style>',
+    )
+
+
 _ODP_STYLES = (
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:automatic-styles>'
@@ -466,6 +548,10 @@ FIXTURES = {
     "odt/rich-paragraph/source.odt": build_odt_rich_paragraph,
     "odt/tracked-change-suggestion/source.odt": build_odt_tracked_change_suggestion,
     "odt/lists-and-sections/source.odt": build_odt_lists_and_sections,
+    "odt/lists/source.odt": build_odt_lists,
+    "docx/lists/source.docx": build_docx_lists,
+    "odt/page-and-styles/source.odt": build_odt_page_and_styles,
+    "docx/page-and-styles/source.docx": build_docx_page_and_styles,
     "odp/groups-notes-transitions/source.odp": build_odp_groups_notes_transitions,
     "ods/repeated-and-styled/source.ods": build_ods_repeated_and_styled,
     "xlsx/cells-and-formulas/source.xlsx": build_cells_and_formulas,

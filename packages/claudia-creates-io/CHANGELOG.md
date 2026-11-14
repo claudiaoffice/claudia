@@ -3,9 +3,15 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.4.0] - 2026-11-14
+
+Every format says what it cannot hold or show, and what a patch has no place for (D450, D451), and what the earlier
+rounds added.
 
 ### Added
+- `pptx_import_losses` (pictures, tables, charts, groups, other shapes, transitions, animations, notes too long for the
+  model) and `pptx_unwritten_changes` / `odp_unwritten_changes`: `planned-time` and the print setup and language, which
+  the converters do not write yet.
 - `slides_to_pptx` writes an object's description as the shape's alt text (`descr`) and marks a decorative object the way
   PowerPoint 2019 and later do (`adec:decorative` in the shape's extension list, with an empty `descr`: python-pptx would
   otherwise name a picture's alt text after its file).
@@ -22,6 +28,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   had a planned time, which neither format has a place for, D343).
 
 ### Changed
+- `pptx_export_losses` says `authorship` and `notes-link`, `notes-image`, `notes-code`, `notes-quote` too, as
+  `odp_export_losses` did; both include what is not written.
 - `pptx_to_slides` gives an imported text box's box the `plain-box` style; its words stay `body-text` (D310).
 - `pptx_to_slides` gives an imported autoshape's words the `shape-label` style; the shape itself keeps
   `plain-shape` (D310).

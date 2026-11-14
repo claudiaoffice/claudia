@@ -17,7 +17,8 @@ from claudia_computes_io import (
     workbook_to_ods,
 )
 
-from claudia_computes import Sheet, SheetId, WorkbookModel
+from claudia_computes import CellAnchor, Chart, ObjectBody, Sheet, SheetId, VisualObject, WorkbookModel
+from claudia_core import Paragraph
 from claudia_odf_io import NS, DocumentInfo, LossLog, OdfError, new_package, problems, read_info
 from claudia_opc_io import read_parts, write_parts
 
@@ -445,8 +446,9 @@ def test_what_the_file_cannot_hold_is_listed_as_losses():
     assert ods_export_losses(model) == ()
     model.sheets[SheetId("s1")].cells[(1, 1)] = {"t": "formula", "v": "=SUM((A1:A3,C1:C3))"}
     model.sheets[SheetId("s1")].col_widths[0] = 200.0
-    model.charts["c1"] = object()  # type: ignore[assignment]
-    model.objects["o1"] = object()  # type: ignore[assignment]
+    model.charts["c1"] = Chart("c1", "Chart", "spec")
+    box = ObjectBody("o1", "text", 100, 100, "plain-box", Paragraph("p1", "note"))
+    model.insert_object(VisualObject(box, CellAnchor(SheetId("s1"), 0, 0)))
     assert kinds(ods_export_losses(model)) == {"formula:operator": 1, "layout": 1, "chart": 1, "object": 1}
     data = workbook_to_ods(model)  # the cell is written as its value
     assert 'table:formula="of:=SUM(([.A1:.A3]~' not in content_of(data)

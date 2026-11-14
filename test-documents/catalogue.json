@@ -14,8 +14,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -23,7 +23,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.046,
+        "duration_s": 0.09,
         "detail": null
       }
     },
@@ -41,8 +41,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -50,7 +50,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.048,
+        "duration_s": 0.077,
         "detail": null
       }
     },
@@ -69,8 +69,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -78,7 +78,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.074,
+        "duration_s": 0.096,
         "detail": null
       }
     },
@@ -97,8 +97,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -106,7 +106,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.038,
+        "duration_s": 0.074,
         "detail": null
       }
     },
@@ -123,8 +123,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -132,7 +132,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.055,
+        "duration_s": 0.104,
         "detail": null
       }
     },
@@ -151,8 +151,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -160,7 +160,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.027,
+        "duration_s": 0.036,
         "detail": null
       }
     },
@@ -179,8 +179,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -188,7 +188,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.024,
+        "duration_s": 0.032,
         "detail": null
       }
     },
@@ -205,8 +205,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -214,7 +214,7 @@
           "preserve": "n/a",
           "visual": "not_run"
         },
-        "duration_s": 0.02,
+        "duration_s": 0.018,
         "detail": null
       }
     },
@@ -233,8 +233,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -242,7 +242,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.019,
+        "duration_s": 0.008,
         "detail": null
       }
     },
@@ -261,8 +261,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -270,7 +270,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.023,
+        "duration_s": 0.008,
         "detail": null
       }
     },
@@ -289,7 +289,19 @@
         "element-level"
       ],
       "enabled": true,
-      "last_run": null
+      "last_run": {
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.007,
+        "detail": null
+      }
     },
     {
       "id": "odt-heading-styles",
@@ -305,8 +317,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -314,7 +326,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.014,
+        "duration_s": 0.021,
         "detail": null
       }
     },
@@ -333,8 +345,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -342,7 +354,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.015,
+        "duration_s": 0.04,
         "detail": null
       }
     },
@@ -361,8 +373,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -370,7 +382,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.015,
+        "duration_s": 0.023,
         "detail": null
       }
     },
@@ -388,8 +400,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -397,7 +409,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.003,
+        "duration_s": 0.004,
         "detail": null
       }
     },
@@ -415,8 +427,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -442,8 +454,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -451,7 +463,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.003,
+        "duration_s": 0.005,
         "detail": null
       }
     },
@@ -469,8 +481,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -478,7 +490,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.034,
+        "duration_s": 0.041,
         "detail": null
       }
     },
@@ -497,8 +509,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -506,7 +518,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.03,
+        "duration_s": 0.039,
         "detail": null
       }
     },
@@ -526,8 +538,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -535,7 +547,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.03,
+        "duration_s": 0.038,
         "detail": null
       }
     },
@@ -553,8 +565,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -562,7 +574,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.005,
+        "duration_s": 0.007,
         "detail": null
       }
     },
@@ -580,8 +592,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -589,7 +601,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.012,
+        "duration_s": 0.023,
         "detail": null
       }
     },
@@ -609,8 +621,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -618,7 +630,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.007,
+        "duration_s": 0.017,
         "detail": null
       }
     },
@@ -638,8 +650,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -647,7 +659,7 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.005,
+        "duration_s": 0.013,
         "detail": null
       }
     },
@@ -665,8 +677,8 @@
       ],
       "enabled": true,
       "last_run": {
-        "at": "2026-11-11T19:49:56Z",
-        "commit": "37ccc29",
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
         "status": "pass",
         "stages": {
           "import": "pass",
@@ -674,7 +686,117 @@
           "preserve": "pass",
           "visual": "not_run"
         },
-        "duration_s": 0.012,
+        "duration_s": 0.014,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-lists",
+      "format": "odt",
+      "feature": "lists",
+      "source": "odt/lists/source.odt",
+      "spec": "odt/lists/spec.py",
+      "summary": "A numbered list that goes on after a paragraph is one list with a nested item; an item added after its last item is an item of the same list, written as a list that continues the first.",
+      "backlog": "E9.21",
+      "tags": [
+        "tier1",
+        "lists"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.005,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-lists",
+      "format": "docx",
+      "feature": "lists",
+      "source": "docx/lists/source.docx",
+      "spec": "docx/lists/spec.py",
+      "summary": "Word's List Bullet and List Number styles make their paragraphs items of lists; changing the words of one item leaves the numbering part as it was.",
+      "backlog": "E9.21",
+      "tags": [
+        "tier1",
+        "lists"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-14T18:12:14Z",
+        "commit": "1d0fe56",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.052,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-page-and-styles",
+      "format": "odt",
+      "feature": "page-and-styles",
+      "source": "odt/page-and-styles/source.odt",
+      "spec": "odt/page-and-styles/spec.py",
+      "summary": "The page, the language and the style sheet are read into the model; a new page, language and palette colour are written over them, and a style claudia does not know stays as it was.",
+      "backlog": "E9.21",
+      "tags": [
+        "tier1",
+        "page",
+        "styles"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-14T18:35:22Z",
+        "commit": "8a8433b",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.009,
+        "detail": null
+      }
+    },
+    {
+      "id": "docx-page-and-styles",
+      "format": "docx",
+      "feature": "page-and-styles",
+      "source": "docx/page-and-styles/source.docx",
+      "spec": "docx/page-and-styles/spec.py",
+      "summary": "The page, the language and the style sheet are read into the model; a new page, language and palette colour are written over them, and a style claudia does not know stays as it was.",
+      "backlog": "E9.21",
+      "tags": [
+        "tier1",
+        "page",
+        "styles"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-14T18:40:41Z",
+        "commit": "8a8433b",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.081,
         "detail": null
       }
     }

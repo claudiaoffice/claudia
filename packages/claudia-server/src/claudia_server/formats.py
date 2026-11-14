@@ -84,7 +84,7 @@ def sniff(data: bytes) -> Sniffed:
 
 
 def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
-    """The reader of ``fmt`` and its losses function (``None`` where the format has none yet)."""
+    """The reader of ``fmt`` and its losses function."""
     if fmt in ("xlsx", "ods"):
         import claudia_computes_io as computes_io
 
@@ -95,13 +95,13 @@ def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
         import claudia_composes_io as composes_io
 
         if fmt == "docx":
-            return composes_io.docx_to_text, None
+            return composes_io.docx_to_text, composes_io.docx_import_losses
         return composes_io.odt_to_text, composes_io.odt_import_losses
     if fmt in ("pptx", "odp"):
         import claudia_creates_io as creates_io
 
         if fmt == "pptx":
-            return creates_io.pptx_to_slides, None
+            return creates_io.pptx_to_slides, creates_io.pptx_import_losses
         return creates_io.odp_to_slides, creates_io.odp_import_losses
     raise UnknownFormat(f"{fmt} cannot be imported")
 

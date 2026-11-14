@@ -203,7 +203,8 @@ def test_two_suggestions_in_one_paragraph_keep_their_places():
 def test_the_losses_of_an_export_name_what_the_file_cannot_hold():
     model = model_of(("remark", "x"), ("body", "y"), ("my-style", "z"))
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", TextRange("b2", 0, 1), "y", None, "a remark")
-    assert odt_export_losses(model) == (Loss("style", "remark"), Loss("style", "my-style"), Loss("remark", "", 1))
+    # "remark" is a defined style (written with its look); only the id the model does not define is lost
+    assert odt_export_losses(model) == (Loss("style", "my-style"), Loss("remark", "", 1))
 
 
 def test_an_export_without_losses_reports_none():
@@ -287,7 +288,7 @@ def test_what_the_text_does_not_show_is_reported():
         "<text:list><text:list-item><text:p>x</text:p></text:list-item></text:list>"
     )
     losses = odt_import_losses(data)
-    assert {Loss("formatting"), Loss("link"), Loss("footnote"), Loss("frame"), Loss("list")} <= set(losses)
+    assert {Loss("formatting"), Loss("link"), Loss("footnote"), Loss("frame"), Loss("list-look")} <= set(losses)
 
 
 def test_existing_tracked_changes_are_reported():
@@ -452,16 +453,15 @@ def test_blocks_added_to_an_empty_text_are_all_there():
     assert problems(edited) == []
 
 
-def test_a_block_added_after_a_list_item_is_a_paragraph_of_that_item():
-    """The model has no bullets to give it, so it is the paragraph next to the one it was added after -- inside the
-    item, where it is valid and nothing about the list changes."""
+def test_a_paragraph_added_after_the_last_item_of_a_list_is_after_the_list():
+    """It is no item (the model says so), so it does not go into the list or its item: it follows the list."""
 
     def add(model: TextModel) -> None:
         model.blocks.insert(3, Block("n1", "body", "after the item"))
 
     edited, *_ = edit(an_odt(RICH), add)
-    item = body_of(edited).find("text:list/text:list-item", NS)
-    assert item is not None and [shown(p).count("item") for p in item] == [1, 1]
+    assert body_of(edited).find("text:list/text:list-item", NS) is not None
+    assert [shown(p).count("item") for p in body_of(edited).find("text:list/text:list-item", NS)] == [1]
     assert [b.text for b in odt_to_text(edited).blocks][3] == "after the item"
 
 

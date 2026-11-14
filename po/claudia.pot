@@ -5365,7 +5365,7 @@ msgstr ""
 msgid "a recovery key, a name and a new password are needed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:421
+#: packages/claudia-server/src/claudia_server/composes.py:430
 msgid "a remark suggests no change; dismiss it instead"
 msgstr ""
 
@@ -5417,27 +5417,27 @@ msgstr ""
 msgid "about this cell"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:690
+#: packages/claudia-server/src/claudia_server/computes.py:696
 msgid "add_chart: the name must have 1 to {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:376
+#: packages/claudia-server/src/claudia_server/creates.py:382
 msgid "add_object: a shape needs the id of its outline"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:373
+#: packages/claudia-server/src/claudia_server/creates.py:379
 msgid "add_object: kind must be one of {kinds}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:383
+#: packages/claudia-server/src/claudia_server/creates.py:389
 msgid "add_object: this server has no shape {shape!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:378
+#: packages/claudia-server/src/claudia_server/creates.py:384
 msgid "add_object: use add_image to put a picture on a slide"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:510
+#: packages/claudia-server/src/claudia_server/computes.py:516
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr ""
 
@@ -5549,7 +5549,7 @@ msgstr ""
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:344
+#: packages/claudia-server/src/claudia_server/composes.py:353
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr ""
 
@@ -5569,7 +5569,7 @@ msgstr ""
 msgid "cell content"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:460
+#: packages/claudia-server/src/claudia_server/computes.py:466
 msgid "cell_styles: the window must not end before it starts"
 msgstr ""
 
@@ -5577,11 +5577,11 @@ msgstr ""
 msgid "cells"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:417
+#: packages/claudia-server/src/claudia_server/computes.py:423
 msgid "cells: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:421
+#: packages/claudia-server/src/claudia_server/computes.py:427
 msgid "cells: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -5661,15 +5661,15 @@ msgstr ""
 msgid "copy, cut and paste, also from and to other programs"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:638
+#: packages/claudia-server/src/claudia_server/computes.py:644
 msgid "define_diagram: id and format are assigned by the server"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1004
+#: packages/claudia-server/src/claudia_server/computes.py:1010
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1018
+#: packages/claudia-server/src/claudia_server/computes.py:1024
 msgid "define_sql: {problem}"
 msgstr ""
 
@@ -5777,15 +5777,15 @@ msgstr ""
 msgid "example.com:8420"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:172
+#: packages/claudia-server/src/claudia_server/composes.py:175
 msgid "export_office: format must be \"docx\" or \"odt\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:330
+#: packages/claudia-server/src/claudia_server/creates.py:332
 msgid "export_office: format must be \"pptx\" or \"odp\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:253
+#: packages/claudia-server/src/claudia_server/computes.py:255
 msgid "export_office: format must be \"xlsx\" or \"ods\""
 msgstr ""
 
@@ -6053,7 +6053,7 @@ msgstr ""
 msgid "no document {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:817
+#: packages/claudia-server/src/claudia_server/computes.py:823
 msgid "no function named {name!r}"
 msgstr ""
 
@@ -6125,7 +6125,7 @@ msgstr ""
 msgid "only look"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:406
+#: packages/claudia-server/src/claudia_server/composes.py:415
 msgid "only the assistant makes suggestions"
 msgstr ""
 
@@ -6161,7 +6161,7 @@ msgstr ""
 msgid "optional"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:370
+#: packages/claudia-server/src/claudia_server/computes.py:376
 msgid "outcome_table: combine must be \"all\" or \"pair\""
 msgstr ""
 
@@ -6237,19 +6237,19 @@ msgstr ""
 msgid "query result"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:338
+#: packages/claudia-server/src/claudia_server/computes.py:344
 msgid "random_preview: params must be numbers"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:343
+#: packages/claudia-server/src/claudia_server/computes.py:349
 msgid "random_preview: there is no distribution {distribution!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:349
+#: packages/claudia-server/src/claudia_server/computes.py:355
 msgid "random_preview: {problem}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:324
+#: packages/claudia-server/src/claudia_server/computes.py:330
 msgid "random_preview: {what} must be a number or null"
 msgstr ""
 
@@ -6269,23 +6269,23 @@ msgstr ""
 msgid "request failed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:549
+#: packages/claudia-server/src/claudia_server/computes.py:555
 msgid "resize_lines: at most {limit} lines at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:573
+#: packages/claudia-server/src/claudia_server/computes.py:579
 msgid "resize_lines: axis must be \"row\" or \"col\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:556
+#: packages/claudia-server/src/claudia_server/computes.py:562
 msgid "resize_lines: each line is [index, size]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:561
+#: packages/claudia-server/src/claudia_server/computes.py:567
 msgid "resize_lines: size must be a number or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:563
+#: packages/claudia-server/src/claudia_server/computes.py:569
 msgid "resize_lines: size must be between {lo} and {hi}"
 msgstr ""
 
@@ -6333,15 +6333,15 @@ msgstr ""
 msgid "send"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:435
+#: packages/claudia-server/src/claudia_server/computes.py:441
 msgid "set_cells: at most {limit} cells at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:439
+#: packages/claudia-server/src/claudia_server/computes.py:445
 msgid "set_cells: each cell is an object with row, col and input"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:444
+#: packages/claudia-server/src/claudia_server/computes.py:450
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr ""
 
@@ -6393,7 +6393,7 @@ msgstr ""
 msgid "spread of the logarithm"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:973
+#: packages/claudia-server/src/claudia_server/computes.py:979
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr ""
 
@@ -6409,7 +6409,7 @@ msgstr ""
 msgid "start with “{text}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:527
+#: packages/claudia-server/src/claudia_server/computes.py:533
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr ""
 
@@ -6453,7 +6453,7 @@ msgstr ""
 msgid "that is not your current password"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:213
+#: packages/claudia-server/src/claudia_server/composes.py:222
 msgid "that would make too many paragraphs"
 msgstr ""
 
@@ -6461,7 +6461,7 @@ msgstr ""
 msgid "the assistant can only make suggestions; people set the document up"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:92
+#: packages/claudia-server/src/claudia_server/composes.py:95
 msgid "the assistant can only make suggestions; people write the text"
 msgstr ""
 
@@ -6557,7 +6557,7 @@ msgstr ""
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:360 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
+#: packages/claudia-server/src/claudia_server/composes.py:369 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -6573,7 +6573,7 @@ msgstr ""
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:208
+#: packages/claudia-server/src/claudia_server/composes.py:217
 msgid "the range ends before it starts"
 msgstr ""
 
@@ -6685,15 +6685,15 @@ msgstr ""
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:82
+#: packages/claudia-server/src/claudia_server/creates.py:84
 msgid "this document is not a presentation"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:85
+#: packages/claudia-server/src/claudia_server/composes.py:88
 msgid "this document is not a text"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:184
+#: packages/claudia-server/src/claudia_server/computes.py:186
 msgid "this document is not a workbook"
 msgstr ""
 
@@ -6749,7 +6749,7 @@ msgstr ""
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:434
+#: packages/claudia-server/src/claudia_server/composes.py:443
 msgid "this suggestion is not open any more"
 msgstr ""
 
@@ -6773,15 +6773,15 @@ msgstr ""
 msgid "trace: reach must be one of {reaches}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:396
+#: packages/claudia-server/src/claudia_server/computes.py:402
 msgid "trace: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:392
+#: packages/claudia-server/src/claudia_server/computes.py:398
 msgid "trace: window is [row0, col0, row1, col1]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:399
+#: packages/claudia-server/src/claudia_server/computes.py:405
 msgid "trace: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -6801,11 +6801,11 @@ msgstr ""
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1025 packages/claudia-server/src/claudia_server/computes.py:587 packages/claudia-server/src/claudia_server/computes.py:673 packages/claudia-server/src/claudia_server/computes.py:722 packages/claudia-server/src/claudia_server/computes.py:969 packages/claudia-server/src/claudia_server/computes.py:999
+#: packages/claudia-server/src/claudia_server/computes.py:1005 packages/claudia-server/src/claudia_server/computes.py:1031 packages/claudia-server/src/claudia_server/computes.py:593 packages/claudia-server/src/claudia_server/computes.py:679 packages/claudia-server/src/claudia_server/computes.py:728 packages/claudia-server/src/claudia_server/computes.py:975
 msgid "unknown sheet {sheet!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:293
+#: packages/claudia-server/src/claudia_server/creates.py:295
 msgid "unknown slide {slide!r}"
 msgstr ""
 
@@ -6845,7 +6845,7 @@ msgstr ""
 msgid "words"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:374
+#: packages/claudia-server/src/claudia_server/composes.py:383
 msgid "words must be from 0 to {limit}"
 msgstr ""
 
@@ -7329,15 +7329,15 @@ msgstr ""
 msgid "{what} (kept as “{name}”)"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:129
+#: packages/claudia-server/src/claudia_server/composes.py:132
 msgid "{what} is outside the paragraph"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:194
+#: packages/claudia-server/src/claudia_server/computes.py:196
 msgid "{what} must be a whole number from 0 to {last}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:280
+#: packages/claudia-server/src/claudia_server/computes.py:286
 msgid "{what} must be a whole number from {low} to {high}"
 msgstr ""
 
@@ -7369,39 +7369,39 @@ msgstr ""
 msgid "{what}, {n} to {m} times"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:851
+#: packages/claudia-server/src/claudia_server/computes.py:857
 msgid "{what}: anchor is {{sheet, row, col}} on a sheet of this document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:866
+#: packages/claudia-server/src/claudia_server/computes.py:872
 msgid "{what}: give a range or an anchor (the cell of a SQL() formula), not both"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:835
+#: packages/claudia-server/src/claudia_server/computes.py:841
 msgid "{what}: range is {{sheet, row0, col0, row1, col1}}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:829
+#: packages/claudia-server/src/claudia_server/computes.py:835
 msgid "{what}: scope must be a sheet id or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:861
+#: packages/claudia-server/src/claudia_server/computes.py:867
 msgid "{what}: the definition is an object with {allowed}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:844
+#: packages/claudia-server/src/claudia_server/computes.py:850
 msgid "{what}: the range must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:230
+#: packages/claudia-server/src/claudia_server/computes.py:232
 msgid "{what}: this document does not know the diagram {diagram_id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:839
+#: packages/claudia-server/src/claudia_server/computes.py:845
 msgid "{what}: this document does not know the sheet {sheet!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:880
+#: packages/claudia-server/src/claudia_server/computes.py:886
 msgid "{what}: {problem}"
 msgstr ""
 

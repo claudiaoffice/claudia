@@ -23,7 +23,9 @@ from claudia_creates_io import (
     apply_edits_to_odp,
     apply_edits_to_pptx,
     odp_export_losses,
+    odp_unwritten_changes,
     pptx_export_losses,
+    pptx_unwritten_changes,
     slides_to_odp,
     slides_to_pptx,
 )
@@ -335,22 +337,26 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 ctx,
                 format,
                 SlideModel,
-                apply_edits_to_pptx,
+                lambda original, baseline, current, _: apply_edits_to_pptx(original, baseline, current),
                 lambda: office_export(
                     format, slides_to_pptx(deck, rasterise=draw), pptx_export_losses(deck, rasterised=draw is not None)
                 ),
+                pptx_unwritten_changes,
             )
         info = document_info(ctx.document.log, ctx.document.branch)
         return export_with_original(
             ctx,
             format,
             SlideModel,
-            lambda original, baseline, current: apply_edits_to_odp(original, baseline, current, info=info),
+            lambda original, baseline, current, found: apply_edits_to_odp(
+                original, baseline, current, losses=found, info=info
+            ),
             lambda: office_export(
                 format,
                 slides_to_odp(deck, info=info, rasterise=draw),
                 odp_export_losses(deck, rasterised=draw is not None),
             ),
+            odp_unwritten_changes,
         )
 
     @table.method("add_slide", "base:revision?", write=True)

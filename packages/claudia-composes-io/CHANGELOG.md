@@ -3,6 +3,40 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+Lists, the page, the language, the styles and the palette reach odt and docx (D453–D455).
+
+### Added
+- Lists in odt and docx: items are written as list items (`text:list`, `w:numPr`) with the scheme, start and name of
+  their list; they are read back as the same items and lists, and `apply_edits_to_odt` / `apply_edits_to_docx` keep
+  and change the lists of a kept file. `"lists"` is no longer a `not-written` loss.
+
+- The page (paper, orientation, margins, page numbers) and the language of a text in odt and docx: written, read
+  back and changed in a kept file (D454). `"page"` and `"language"` are no longer `not-written` losses.
+- The paragraph styles of a text in odt and docx: every style is written with its look, its palette colours and its
+  parent; a kept file gets the styles that changed, and a style a paragraph now has (D455). `"styles"` and
+  `"palette"` are no longer `not-written` losses. A property a file cannot say is a `style-property` loss.
+
+### Changed
+- `odt_export_losses` and `docx_export_losses` no longer report a style of the model as `style`: only a style id the
+  model does not have.
+- `odt_import_losses` and `docx_import_losses` report `list-look` (a list drawn otherwise than the model draws it)
+  and `list-depth` instead of `list`.
+- `apply_edits_to_docx` keeps the Word style of a paragraph whose style did not change.
+
+## [0.3.0] - 2026-11-14
+
+Every format says what it cannot hold or show, and what a patch has no place for (D450, D451).
+
+### Added
+- `docx_import_losses` (tables, lists, frames, notes, comments, formatting, links, tracked changes, styles the model
+  does not have) and `docx_export_losses` (styles written as Normal, authorship, remarks, suggestions, and what is not
+  written yet).
+- `odt_unwritten_changes` and `docx_unwritten_changes`: what changed in a text (against the baseline of an
+  edit-and-reexport, or an empty text for a new file) that the converter does not write yet: page setup, language,
+  lists, palette, style definitions, floating objects. `odt_export_losses` includes them for a new file.
+
 ## [0.2.0] - 2026-11-11
 
 OpenDocument text, with maximum preservation from the start (D401, D402).

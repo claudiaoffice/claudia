@@ -9,26 +9,46 @@ Odt is the ODF-first story of E9.5 (D5, D70), with maximum preservation from the
 paths (``text_to_odt``, ``odt_to_text``, ``apply_edits_to_odt``) over ``claudia-odf-io``, with a list of what a
 file could not hold in each direction (``odt_export_losses``, ``odt_import_losses``).
 
-docx   text_to_docx, docx_to_text, apply_edits_to_docx, UnsupportedEdit
-odt    text_to_odt, odt_to_text, apply_edits_to_odt, odt_import_losses, odt_export_losses (D401)
+docx   text_to_docx, docx_to_text, apply_edits_to_docx, docx_import_losses, docx_export_losses,
+       docx_unwritten_changes, UnsupportedEdit
+odt    text_to_odt, odt_to_text, apply_edits_to_odt, odt_import_losses, odt_export_losses (D401), odt_unwritten_changes
 log    export_info -- the dates and people of a document, and when each suggestion was made, from its log (D411)
 """
 
 from ._history import export_info
 from ._version import __version__
-from .docx import UnsupportedEdit, apply_edits_to_docx, docx_to_text, text_to_docx
-from .odt import apply_edits_to_odt, odt_export_losses, odt_import_losses, odt_to_text, text_to_odt
+from .docx import (
+    UnsupportedEdit,
+    apply_edits_to_docx,
+    docx_export_losses,
+    docx_import_losses,
+    docx_to_text,
+    docx_unwritten_changes,
+    text_to_docx,
+)
+from .odt import (
+    apply_edits_to_odt,
+    odt_export_losses,
+    odt_import_losses,
+    odt_to_text,
+    odt_unwritten_changes,
+    text_to_odt,
+)
 
 __all__ = [
     "__version__",
     "UnsupportedEdit",
     "apply_edits_to_docx",
     "apply_edits_to_odt",
+    "docx_export_losses",
+    "docx_import_losses",
     "docx_to_text",
+    "docx_unwritten_changes",
     "export_info",
     "odt_export_losses",
     "odt_import_losses",
     "odt_to_text",
+    "odt_unwritten_changes",
     "text_to_docx",
     "text_to_odt",
 ]
