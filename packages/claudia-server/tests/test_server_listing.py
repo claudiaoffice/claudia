@@ -19,7 +19,7 @@ def serve(provider, **options):
 def test_an_empty_server_lists_nothing():
     with serve(MemoryProvider(ListModel)) as client:
         reply = client.get("/api/docs")
-        assert reply.status_code == 200 and reply.json() == {"app": "test-list", "documents": []}
+        assert reply.status_code == 200 and reply.json() == {"app": "test-list", "apps": ["test-list"], "documents": []}
 
 
 def test_documents_are_listed_with_app_time_and_people_online():

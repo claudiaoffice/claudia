@@ -153,12 +153,23 @@ jobs:
         run: |
           uv run playwright install --with-deps chromium
           (cd web && npx playwright install chromium)
-      - name: Three servers, each greeting with its own app
+      - name: Three one-app servers, each greeting with its own app
         run: uv run pytest tests/e2e
+      # Until the web client asks for an app by address (its own patch after D431), each script talks to a server of
+      # one app, started the old way (--model, D433) on the ports it expects.
       - name: Two people in each app, against running servers
         run: |
           mkdir -p "$SHOTS"
-          uv run python scripts/start.py all --dir "$RUNNER_TEMP/documents" --no-browser > "$RUNNER_TEMP/servers.log" 2>&1 &
+          uv run python -m claudia_fonts fetch "$RUNNER_TEMP/fonts"
+          uv run python -m claudia_server.hyphenation fetch "$RUNNER_TEMP/hyphenation"
+          port=8765
+          for model in claudia_computes.model:WorkbookModel claudia_composes:TextModel claudia_creates:SlideModel; do
+            uv run python -m claudia_server --no-tls --port "$port" --model "$model" --web web/.output/public \
+              --dir "$RUNNER_TEMP/documents-$port" --state-dir "$RUNNER_TEMP/state-$port" \
+              --fonts "$RUNNER_TEMP/fonts" --hyphenation "$RUNNER_TEMP/hyphenation" \
+              >> "$RUNNER_TEMP/servers.log" 2>&1 &
+            port=$((port + 1))
+          done
           for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8767/api/health > /dev/null && break; sleep 1; done
           cd web
           URL=http://127.0.0.1:8765/ npm run e2e

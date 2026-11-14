@@ -80,8 +80,10 @@ from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
 from .hyphenation import HyphenationService, hyphenation_router
 from .i18n import localized, msg
+from .idle import IdleMiddleware, IdleWatch
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, web_script_hashes
+from .suite import Module, Suite
 
 HELLO_TIMEOUT = 10.0
 OUTGOING_QUEUE = 1000  # frames waiting for a slow client before it is dropped
@@ -196,7 +198,8 @@ class _Waiting:
 
 
 class Gateway:
-    """What the WebSocket route needs: the hub, the users of each document, and the rule for making new documents.
+    """What the WebSocket routes need: the apps of the server (``Suite``: each app's hub and the users of each of its
+    documents), and the rule for making new documents.
 
     Checking a password and adding a person cost real work (the password hashing is meant to be slow), so they run in
     threads and never stop the event loop (SEC-03). At most ``max_hashing`` of them run at once, so a flood of logins
@@ -209,8 +212,7 @@ class Gateway:
 
     def __init__(
         self,
-        hub: Hub,
-        directory: UserDirectory,
+        suite: Suite,
         allowed: set[str],
         *,
         max_hashing: int = 2,
@@ -220,8 +222,7 @@ class Gateway:
     ):
         if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
             raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
-        self.hub = hub
-        self.directory = directory
+        self.suite = suite
         self.allowed = allowed
         self._secret = None if access_secret is None else access_secret.encode()
         self._creating = asyncio.Lock()  # one new document at a time: the first person to ask becomes its owner
@@ -244,37 +245,54 @@ class Gateway:
             raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
         self._secret = None if access_secret is None else access_secret.encode()
 
-    async def _verify(self, doc_id: str, credentials: Credentials) -> Account | None:
+    async def _verify(self, module: Module, doc_id: str, credentials: Credentials) -> Account | None:
         async with self._hashing:
-            return await asyncio.to_thread(self.directory.verify, doc_id, credentials)
+            return await asyncio.to_thread(module.directory.verify, doc_id, credentials)
 
-    async def admit(self, doc_id: str, credentials: Credentials, create: bool, access: object = None) -> Account | None:
+    def module_for(self, doc_id: str, app: str | None, asked_app: object = None) -> Module:
+        """The module a connection to ``doc_id`` is for (D431). With ``app`` (from the address) that app's, and
+        ``HubError('not_found')`` if the server does not host it. Without it (the old address): the first module that
+        has the document, else the one ``asked_app`` (``hello.app``) names, else the first."""
+        if app is not None:
+            module = self.suite.module(app)
+            if module is None:
+                raise HubError("not_found", msg("this server does not host {app}", app=app))
+            return module
+        found = self.suite.locate(doc_id)
+        if found is not None:
+            return found
+        return self.suite.for_new(asked_app if isinstance(asked_app, str) else None)
+
+    async def admit(
+        self, doc_id: str, credentials: Credentials, create: bool, access: object = None, *, app: str | None = None
+    ) -> Account | None:
         """The account of the person, or ``None``. A new document is made for whoever asks first (its owner), if the
-        server makes documents and the person knows its access secret (``access``), if it has one.
+        server makes documents and the person knows its access secret (``access``), if it has one. ``app`` is the
+        app of the document (default: as for the old address, see :meth:`module_for`).
 
         ``HubError('unavailable')`` if the server already holds as many documents as it may."""
-        return (await self._admit(doc_id, credentials, create, access))[0]
+        return (await self._admit(self.module_for(doc_id, app), doc_id, credentials, create, access))[0]
 
     async def _admit(
-        self, doc_id: str, credentials: Credentials, create: bool, access: object
+        self, module: Module, doc_id: str, credentials: Credentials, create: bool, access: object
     ) -> tuple[Account | None, bool]:
         """As :meth:`admit`, and whether the document was just made."""
-        hub, directory = self.hub, self.directory
+        hub, directory = module.hub, module.directory
         if hub.exists(doc_id):
-            return await self._verify(doc_id, credentials), False
+            return await self._verify(module, doc_id, credentials), False
         if not (create and hub.allow_create and self.accepts_secret(access)):
-            await self._verify(doc_id, credentials)  # the same work as for a document that exists (SEC-04) ...
+            await self._verify(module, doc_id, credentials)  # the same work as for a document that exists (SEC-04) ...
             return None, False  # ... and the same answer
         async with self._creating:
             if hub.exists(doc_id):  # somebody was faster
-                return await self._verify(doc_id, credentials), False
+                return await self._verify(module, doc_id, credentials), False
             if not (isinstance(credentials.user, str) and isinstance(credentials.password, str)):
                 return None, False
             await hub.ensure_room()  # before any hashing or disk: a refused document costs nothing
             # The same work as for a document that exists (SEC-04). It usually finds nobody, but not always: the user
             # directory is kept apart from the documents, so a creation that died between the two can leave this
             # person's account behind without a document. They then get that account back, not a second owner.
-            if (reserved := await self._verify(doc_id, credentials)) is not None:
+            if (reserved := await self._verify(module, doc_id, credentials)) is not None:
                 return reserved, False
             async with self._hashing:
                 account = await asyncio.to_thread(
@@ -287,19 +305,20 @@ class Gateway:
                 raise
             return account, True
 
-    async def _recover(self, doc_id: str, params: dict) -> Account | None:
+    async def _recover(self, module: Module, doc_id: str, params: dict) -> Account | None:
         """The account of a person who came in with a recovery key and chose a new password (they are logged in)."""
         key, user, password = params.get("recovery_key"), params.get("user"), params.get("password")
         if not (isinstance(key, str) and isinstance(user, str) and isinstance(password, str)):
             raise HubError("bad_request", msg("a recovery key, a name and a new password are needed"))
-        directory = self.directory
+        directory = module.directory
         if not isinstance(directory, RecoverableDirectory):
             raise HubError("unavailable", msg("this server does not keep recovery keys"))
         async with self._hashing:
             return await asyncio.to_thread(directory.recover, doc_id, key, user, password)
 
-    async def serve(self, websocket: WebSocket, doc_id: str) -> None:
-        """One connection from the handshake to its end."""
+    async def serve(self, websocket: WebSocket, doc_id: str, app: str | None = None) -> None:
+        """One connection from the handshake to its end; ``app`` is the app the address names (``None``: the old
+        address without one, D431)."""
         if not origin_allowed(websocket.headers.get("origin"), websocket.headers.get("host"), self.allowed):
             await websocket.close(code=4403)  # refused during the handshake (HTTP 403)
             return
@@ -310,14 +329,14 @@ class Gateway:
             return
         try:
             await websocket.accept()
-            admitted = await self._hello(websocket, doc_id)
+            admitted = await self._hello(websocket, doc_id, app)
         finally:
             self._waiting.leave(address)
         if admitted is not None:
             request_id, account, document, created, locale = admitted
             await _Live(websocket, document, account, request_id, created=created, locale=locale).run()
 
-    async def _hello(self, websocket: WebSocket, doc_id: str):
+    async def _hello(self, websocket: WebSocket, doc_id: str, app: str | None):
         """The first frame: ``(request id, account, document)`` if the person may come in, else the socket is closed."""
         try:
             raw = await asyncio.wait_for(websocket.receive_text(), HELLO_TIMEOUT)
@@ -327,7 +346,7 @@ class Gateway:
         except WebSocketDisconnect:
             return None
         try:
-            request_id, name, params = parse_request(raw, self.hub.limits)
+            request_id, name, params = parse_request(raw, self.suite.first.hub.limits)
         except RequestError as exc:
             await _refuse(websocket, None, exc.code, exc.message, 4400)
             return None
@@ -339,17 +358,18 @@ class Gateway:
         locale = normalize_locale(params.get("locale"))
         try:
             Hub.check_id(doc_id)
+            module = self.module_for(doc_id, app, params.get("app"))
             if params.get("recovery_key") is not None:
-                account, created = await self._recover(doc_id, params), False
+                account, created = await self._recover(module, doc_id, params), False
             else:
                 credentials = Credentials(params.get("user"), params.get("password"))
                 account, created = await self._admit(
-                    doc_id, credentials, params.get("create") is True, params.get("access")
+                    module, doc_id, credentials, params.get("create") is True, params.get("access")
                 )
             if account is None:
                 await _refuse(websocket, request_id, "unauthorized", msg("missing or wrong credentials"), 4401, locale)
                 return None
-            document = await self.hub.open(doc_id)
+            document = await module.hub.open(doc_id)
             if created:
                 _set_up(document.document, account.user, locale)
             return request_id, account, document, created, locale
@@ -360,6 +380,36 @@ class Gateway:
         except ValueError as exc:  # the name or password of a new document is not acceptable
             await _refuse(websocket, request_id, "bad_request", str(exc), 4400)
         return None
+
+
+class _Presence:
+    """``/api/presence``: a socket that a page with no document open keeps, so that the server knows it is in use
+    (D434). It carries nothing and needs no login, so it says nothing to anybody; the same origin rule as every other
+    socket applies, and at most ``most`` of them are open at once (SEC-02)."""
+
+    def __init__(self, gateway: Gateway, most: int):
+        self._gateway = gateway
+        self._most = most
+        self._open = 0
+
+    async def serve(self, websocket: WebSocket) -> None:
+        """Hold the socket until the page lets go of it; whatever the page sends is ignored."""
+        if not origin_allowed(websocket.headers.get("origin"), websocket.headers.get("host"), self._gateway.allowed):
+            await websocket.close(code=4403)
+            return
+        if self._open >= self._most:
+            await websocket.accept()
+            await websocket.close(code=1013)
+            return
+        self._open += 1
+        try:
+            await websocket.accept()
+            while (await websocket.receive())["type"] != "websocket.disconnect":
+                pass
+        except (WebSocketDisconnect, RuntimeError):
+            pass
+        finally:
+            self._open -= 1
 
 
 def _set_up(document, author: str, locale: str) -> None:
@@ -459,8 +509,8 @@ def _bearer_token(authorization: str | None) -> str | None:
 
 
 def create_app(
-    hub: Hub,
-    directory: UserDirectory,
+    hub: Hub | Suite,
+    directory: UserDirectory | None = None,
     *,
     allowed_origins: Iterable[str] = (),
     allowed_hosts: Iterable[str] = (),
@@ -472,8 +522,16 @@ def create_app(
     admin: AdminContext | None = None,
     fonts: FontService | None = None,
     hyphenation: HyphenationService | None = None,
+    idle: IdleWatch | None = None,
 ) -> FastAPI:
-    """The server for ``hub``, with the users of each document in ``directory``.
+    """The server for the apps of ``hub``: a ``Suite`` (one server, several apps, D430), or one ``Hub`` with the users
+    of each of its documents in ``directory`` (a server of one app, as every server was before).
+
+    Every app's documents are reached at ``/api/<app>/docs/<id>/ws`` and listed at ``/api/<app>/docs``;
+    ``/api/docs`` lists the documents of all apps, and ``/api/docs/<id>/ws`` is the old address without the app
+    (D431, see ``Gateway.module_for``). ``/api/presence`` is a socket that carries nothing: a page with no document
+    open keeps it, so that the server knows it is in use (D434). With ``idle``, every request and socket is reported
+    to that watch, which runs while the server does.
 
     The server answers only to ``localhost``, to IP addresses and to the host names in ``allowed_hosts`` (SEC-01, see
     ``claudia_server.hosts``); ``ValueError`` if one of them is not a host name. ``list_documents`` serves
@@ -487,24 +545,30 @@ def create_app(
     With ``admin`` (``admin_api.AdminContext``), the server also serves ``/api/admin/*``: the settings pages, signed
     in to separately from any document (``admin.py``). Without it — the default, and every use before this existed
     — none of those routes exist at all, which keeps every other caller of this function unaffected."""
+    suite = _as_suite(hub, directory)
     allowed = {o.rstrip("/") for o in allowed_origins}
     hosts = AllowedHosts(allowed_hosts)
     gateway = Gateway(
-        hub,
-        directory,
+        suite,
         allowed,
         access_secret=access_secret,
         max_waiting=max_waiting,
         max_waiting_per_address=max_waiting_per_address,
     )
 
+    presence = _Presence(gateway, max_waiting)
+
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
-        await hub.start()
+        await suite.start()
+        if idle is not None:
+            await idle.start()
         try:
             yield
         finally:
-            await hub.stop()
+            if idle is not None:
+                await idle.stop()
+            await suite.stop()
 
     app = FastAPI(title="Claudia server", docs_url="/api/swagger", openapi_url="/api/openapi.json", lifespan=lifespan)
     if allowed:
@@ -516,40 +580,106 @@ def create_app(
         )
     # SEC-13: CSP, nosniff, referrer and permissions on every answer; the start page's inline scripts by hash.
     app.add_middleware(SecurityHeaders, script_hashes=web_script_hashes(web_dir))
+    if idle is not None:
+        app.add_middleware(IdleMiddleware, watch=idle)
     app.add_middleware(HostGuard, hosts=hosts)  # added last, so it is the first to see a request (even a preflight)
-    if hub.directory is None:
-        hub.directory = directory  # owners add people to their documents through it
-    app.state.hub = hub
+    app.state.suite = suite
+    app.state.hub = suite.first.hub  # the first app's hub, for the callers that know one app
 
     @app.get("/api/health")
     async def health():
         return {"ok": True}
 
+    _fixed_routes(app, suite, gateway, presence, list_documents)
+    if admin is not None:
+        app.include_router(admin_router(suite, gateway.set_secret, admin))
+    if fonts is not None:
+        app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS))
+    if hyphenation is not None:
+        app.include_router(hyphenation_router(hyphenation))
+    # The addresses with the app (D431) come after every fixed /api/<word>/... route, so that none of those is read as
+    # the name of an app.
+    _app_routes(app, suite, gateway, list_documents)
+    _web_routes(app, web_dir)
+    return app
+
+
+def _as_suite(hub: Hub | Suite, directory: UserDirectory | None) -> Suite:
+    """``hub`` as a suite (a single hub is a suite of one), every hub knowing where its documents' people are kept."""
+    if isinstance(hub, Suite):
+        suite = hub
+    elif directory is None:
+        raise TypeError("a single Hub needs the UserDirectory of its documents")
+    else:
+        suite = Suite.single(hub, directory)
+    for module in suite:
+        if module.hub.directory is None:
+            module.hub.directory = module.directory  # owners add people to their documents through it
+    return suite
+
+
+def _may_list(gateway: Gateway, request: Request) -> None:
+    """HTTP 401 unless the request carries the access secret (when the server has one)."""
+    if not gateway.accepts_secret(_bearer_token(request.headers.get("authorization"))):
+        raise HTTPException(401, "this server needs its access secret", headers={"WWW-Authenticate": "Bearer"})
+
+
+def _fixed_routes(app: FastAPI, suite: Suite, gateway: Gateway, presence: _Presence, list_documents: bool) -> None:
+    """The routes without an app in the address: the first app's protocol, every app's list, the old live address
+    and the presence socket."""
+
     @app.get("/api/protocol")
     async def protocol():
-        return hub.methods.describe(hub.limits)
+        """The protocol of the first app (the address before D431; ``/api/<app>/protocol`` names the app)."""
+        return suite.first.hub.methods.describe(suite.first.hub.limits)
 
     if list_documents:
 
         @app.get("/api/docs")
         async def documents(request: Request):
-            if not gateway.accepts_secret(_bearer_token(request.headers.get("authorization"))):
-                raise HTTPException(401, "this server needs its access secret", headers={"WWW-Authenticate": "Bearer"})
-            return {"app": hub.app, "documents": hub.listing()}
+            """Every app's documents. ``app`` is the one app of a server that hosts one, else ``null``."""
+            _may_list(gateway, request)
+            only = suite.apps[0] if len(suite.apps) == 1 else None
+            return {"app": only, "apps": list(suite.apps), "documents": suite.listing()}
 
     @app.websocket("/api/docs/{doc_id}/ws")
     async def live(websocket: WebSocket, doc_id: str):
         await gateway.serve(websocket, doc_id)
 
-    if admin is not None:
-        app.include_router(admin_router(hub, gateway.set_secret, admin))
-    if fonts is not None:
-        app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS))
-    if hyphenation is not None:
-        app.include_router(hyphenation_router(hyphenation))
+    @app.websocket("/api/presence")
+    async def present(websocket: WebSocket):
+        await presence.serve(websocket)
 
-    # The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed origin
-    # is needed. Mounted last so /api/... wins.
+
+def _app_routes(app: FastAPI, suite: Suite, gateway: Gateway, list_documents: bool) -> None:
+    """The routes with the app in the address (D431): its protocol, its list and its documents' live address."""
+
+    def module_of(app_name: str) -> Module:
+        module = suite.module(app_name)
+        if module is None:
+            raise HTTPException(404, f"this server does not host {app_name}")
+        return module
+
+    @app.get("/api/{app_name}/protocol")
+    async def app_protocol(app_name: str):
+        return module_of(app_name).hub.methods.describe(suite.first.hub.limits)
+
+    if list_documents:
+
+        @app.get("/api/{app_name}/docs")
+        async def app_documents(app_name: str, request: Request):
+            _may_list(gateway, request)
+            module = module_of(app_name)
+            return {"app": module.app, "documents": module.hub.listing()}
+
+    @app.websocket("/api/{app_name}/docs/{doc_id}/ws")
+    async def app_live(websocket: WebSocket, app_name: str, doc_id: str):
+        await gateway.serve(websocket, doc_id, app_name)
+
+
+def _web_routes(app: FastAPI, web_dir: str | Path | None) -> None:
+    """The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed
+    origin is needed. Mounted last so /api/... wins. Without one, / says what this server is."""
     if web_dir is not None:
         directory_path = Path(web_dir)
         if not (directory_path / "index.html").is_file():
@@ -562,5 +692,3 @@ def create_app(
         @app.get("/", include_in_schema=False, response_class=HTMLResponse)
         async def landing():
             return HTMLResponse(_LANDING, headers={"Cache-Control": "no-store"})
-
-    return app

@@ -34,7 +34,7 @@ checks are:
              when Node and `npm install` in layout/ are there. Its tests fetch the starter fonts once (pinned by hash)
 * web lint   ESLint over web/ (``eslint.config.mjs``, CODE-01), when Node and `npm install` in web/ are there
 * web tests  the web app's unit tests (vitest) with their coverage thresholds, and its types (vue-tsc), likewise
-* e2e greeting  ``./start.sh all`` in a real browser: three servers, each greeting with its own app (UX-10). Needs
+* e2e greeting  three servers of one app each in a real browser, each greeting with its own app (UX-10). Needs
              the web app built and a Chromium for Playwright (``uv run playwright install chromium``, or point
              ``$CLAUDIA_CHROMIUM`` at one); it skips, saying which is missing, when they are not there
 * linux client  its types (for Python 3.12) and its tests on the distribution's Python (clients/linux/README.md);
@@ -219,7 +219,7 @@ def web_checks(web: Path = ROOT / "web") -> list[Check]:
 
 
 def e2e_checks() -> list[Check]:
-    """The one test that drives a real browser: ``./start.sh all``, and each server greeting with its own app.
+    """The tests that drive a real browser: a server of each app greeting with its own app, and a workbook's grid.
 
     It skips, saying which of the two is missing, when the web app is not built or there is no Chromium for
     Playwright. The test works that out itself, so the reason is written once; this asks it.

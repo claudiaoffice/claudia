@@ -374,3 +374,21 @@ def test_a_writer_for_the_wrong_keys_cannot_continue_somebody_elses_journal(tmp_
     assert sign_in(store, "Annabelle", ANN_PW) is not None
     with pytest.raises(ValueError):
         store.open("plan")
+
+
+# --- a store holds one app's documents (D431) ----------------------------------------------------------------------
+
+
+class _OtherList(ListModel):
+    app = "test-other"
+
+
+def test_a_store_lists_and_opens_only_the_documents_of_its_own_app(tmp_path):
+    release = store_in(tmp_path)
+    start(release)
+    release.release("plan")
+    other = SealedDocuments(tmp_path, _OtherList, kdf=CHEAP)
+    assert other.documents() == [], "a file of another app is not this store's document"
+    assert sign_in(other, "Annabelle", ANN_PW) is not None
+    with pytest.raises(ValueError, match="test-list"):
+        other.open("plan")

@@ -441,6 +441,8 @@ class SealedDocuments:
         pending = 0
         try:
             if not fresh:
+                if (app := read_manifest(path).app) != self.model_cls.app:  # one place per app (D431)
+                    raise ValueError(f"{doc_id} is a document of {app}, not of {self.model_cls.app}")
                 state = read_state(path, keys)
                 log_, chat = self._replayed(state.history, state.chat)
                 snapshot, pending = _snapshot_from(state.snapshot), state.pending
@@ -570,6 +572,8 @@ class SealedDocuments:
                     changed = max(changed, journal.stat().st_mtime)
             except (ContainerError, OSError, ValueError):
                 continue  # not a document of ours; never break the list for it
+            if manifest.app != self.model_cls.app:
+                continue  # another app's file in this app's place (D431): not listed, never opened
             stamp = datetime.fromtimestamp(changed, UTC).isoformat(timespec="milliseconds")
             found.append(StoredInfo(manifest.id, manifest.app, stamp.replace("+00:00", "Z")))
         return sorted(found, key=lambda info: (info.modified, info.id), reverse=True)

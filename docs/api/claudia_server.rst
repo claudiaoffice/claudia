@@ -11,6 +11,16 @@ Application
 
 .. autofunction:: claudia_server.create_app
 .. autoclass:: claudia_server.Gateway
+.. autoclass:: claudia_server.IdleWatch
+
+Apps on one server
+------------------
+
+.. autoclass:: claudia_server.Suite
+.. autoclass:: claudia_server.Module
+.. autodata:: claudia_server.suite.APP_MODELS
+.. autoclass:: claudia_server.FolderLock
+.. autoclass:: claudia_server.FolderLocked
 
 Hub
 ---
@@ -25,6 +35,7 @@ Hub
 .. autoclass:: claudia_server.FileDirectory
 .. autoclass:: claudia_server.SealedDocuments
 .. autoclass:: claudia_server.HubError
+.. autoclass:: claudia_server.Room
 
 Worker pool
 -----------

@@ -4361,7 +4361,7 @@ msgstr "Eine Palette enthält höchstens {limit} Farbrollen"
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "eine Zufallszahl aus der genannten Verteilung, zum Beispiel RANDOM(\"normal\", 1000, 150). Ohne Argumente ist es RAND(). ``low`` und ``high`` schneiden die Verteilung ab (nur stetige). Verteilungen: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 
-#: packages/claudia-server/src/claudia_server/app.py:294
+#: packages/claudia-server/src/claudia_server/app.py:312
 msgid "a recovery key, a name and a new password are needed"
 msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind nötig"
 
@@ -4689,7 +4689,7 @@ msgstr "nicht zum Muster für Zellen passen"
 msgid "do not start with “{text}”"
 msgstr "nicht mit „{text}“ beginnen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:573
+#: packages/claudia-server/src/claudia_server/hub.py:602
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "Dokument-IDs bestehen aus 1–64 Buchstaben, Ziffern, „-“ oder „_“"
 
@@ -4953,7 +4953,7 @@ msgstr "Nachricht zu groß"
 msgid "method must be a string"
 msgstr "method muss ein Text sein"
 
-#: packages/claudia-server/src/claudia_server/app.py:350
+#: packages/claudia-server/src/claudia_server/app.py:370
 msgid "missing or wrong credentials"
 msgstr "Anmeldedaten fehlen oder sind falsch"
 
@@ -5017,7 +5017,7 @@ msgstr "keine Zellen"
 msgid "no checkpoint number {checkpoint}"
 msgstr "Es gibt keinen Prüfpunkt mit der Nummer {checkpoint}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:641
+#: packages/claudia-server/src/claudia_server/hub.py:684
 msgid "no document {id!r}"
 msgstr "Kein Dokument {id!r}"
 
@@ -5477,7 +5477,7 @@ msgstr "das eigene des Dokuments"
 msgid "the end of the cell"
 msgstr "das Zellenende"
 
-#: packages/claudia-server/src/claudia_server/app.py:336
+#: packages/claudia-server/src/claudia_server/app.py:355
 msgid "the first message must be hello with params"
 msgstr "Die erste Nachricht muss hello mit params sein"
 
@@ -5633,7 +5633,11 @@ msgstr "Dieser Absatz ist kein Listeneintrag"
 msgid "this row"
 msgstr "diese Zeile"
 
-#: packages/claudia-server/src/claudia_server/app.py:297 packages/claudia-server/src/claudia_server/protocol.py:850
+#: packages/claudia-server/src/claudia_server/app.py:259 packages/claudia-server/src/claudia_server/suite.py:106
+msgid "this server does not host {app}"
+msgstr "dieser Server bietet {app} nicht an"
+
+#: packages/claudia-server/src/claudia_server/app.py:315 packages/claudia-server/src/claudia_server/protocol.py:850
 msgid "this server does not keep recovery keys"
 msgstr "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf"
 
@@ -5661,7 +5665,7 @@ msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/hub.py:614
+#: packages/claudia-server/src/claudia_server/hub.py:544
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 
@@ -5953,15 +5957,15 @@ msgstr "{host} ist über diesen Computer hinaus noch nicht erreichbar, daher ist
 msgid "{id} already has {limit} connections"
 msgstr "{id} hat schon {limit} Verbindungen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:629
+#: packages/claudia-server/src/claudia_server/hub.py:672
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "{id} lässt sich noch nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:632
+#: packages/claudia-server/src/claudia_server/hub.py:675
 msgid "{id} cannot be opened: {reason}"
 msgstr "{id} lässt sich nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:636
+#: packages/claudia-server/src/claudia_server/hub.py:679
 msgid "{id} cannot be read"
 msgstr "{id} lässt sich nicht lesen"
 

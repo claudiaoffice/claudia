@@ -13,13 +13,14 @@ sys.modules["start"] = start  # dataclasses look their module up
 SPEC.loader.exec_module(start)
 
 
-def test_defaults_run_a_plain_local_server_with_the_web_app():
+def test_defaults_run_a_plain_local_server_of_all_apps_with_the_web_app():
     args = start.parse_args([])
     command = start.server_command(args, python="py", built=Path("web/out"))
     assert command[:3] == ["py", "-m", "claudia_server"]
     assert command[command.index("--web") + 1] == "web/out"
     assert command[command.index("--port") + 1] == "8765"
     assert "--no-tls" in command
+    assert "--model" not in command and "--apps" not in command, "the server serves every app by default (D430)"
     assert start.page_url(args) == "http://127.0.0.1:8765/"
 
 
@@ -27,19 +28,8 @@ def test_tls_is_the_servers_own_default_when_asked_for():
     args = start.parse_args(["--tls", "--port", "9000", "--dir", "data"])
     command = start.server_command(args)
     assert "--no-tls" not in command
-    assert Path(command[command.index("--dir") + 1]) == Path("data", "computes", "documents")
+    assert Path(command[command.index("--dir") + 1]) == Path("data", "documents")
     assert start.page_url(args) == "https://127.0.0.1:9000/"
-
-
-def test_a_text_server_serves_the_text_model_with_documents_of_its_own():
-    args = start.parse_args(["--app", "composes"])
-    command = start.server_command(args)
-    assert command[command.index("--model") + 1] == "claudia_composes:TextModel"
-    assert Path(command[command.index("--dir") + 1]) == start.DATA / "composes" / "documents", "one app's documents"
-    assert "--model" not in start.server_command(start.parse_args([])), "workbooks are the server's default"
-    assert start.parse_args(["--app", "composes", "--dir", "mine"]).documents == str(
-        Path("mine", "composes", "documents")
-    )
 
 
 def test_the_web_app_is_built_when_missing_or_asked_for(tmp_path):
@@ -55,85 +45,55 @@ def test_waiting_gives_up_when_the_server_stops():
     assert start.wait_for_port("127.0.0.1", 1, dead, seconds=2) is False
 
 
-def test_presentations_run_on_their_own_model_in_their_own_folder():
-    command = start.server_command(start.parse_args(["--app", "creates"]))
-    assert command[command.index("--model") + 1] == "claudia_creates:SlideModel"
-    assert Path(command[command.index("--dir") + 1]).parent.name == "creates", "documents of two apps never mix"
-    own = start.server_command(start.parse_args(["--app", "creates", "--dir", "mine"]))
-    assert Path(own[own.index("--dir") + 1]) == Path("mine", "creates", "documents")
+def test_naming_an_app_starts_the_same_server_and_opens_that_apps_page():
+    """D433: ``./start.sh composes`` is read as "I want to work on texts"."""
+    composes = start.parse_args(["composes", "--port", "9100"])
+    assert composes.app == "composes"
+    assert start.server_command(composes) == start.server_command(start.parse_args(["--port", "9100"]))
+    assert start.page_url(composes) == "http://127.0.0.1:9100/?app=composes"
+    assert start.parse_args(["--app", "creates"]).app == "creates"
+
+
+def test_all_is_the_one_server_and_the_start_page():
+    args = start.parse_args(["all", "--port", "9000"])
+    assert args.app is None and start.page_url(args) == "http://127.0.0.1:9000/"
+    assert start.server_command(args) == start.server_command(start.parse_args(["--port", "9000"]))
 
 
 def test_shape_folders_are_handed_to_the_server():
-    command = start.server_command(start.parse_args(["--app", "creates", "--shapes", "a", "--shapes", "b"]))
+    command = start.server_command(start.parse_args(["creates", "--shapes", "a", "--shapes", "b"]))
     given = [command[i + 1] for i, part in enumerate(command) if part == "--shapes"]
     assert given == ["a", "b"]
 
 
-def test_the_app_can_be_named_without_an_option():
-    assert start.parse_args(["composes"]).app == "composes"
-    assert start.parse_args(["creates", "--port", "9"]).port == 9
-    assert start.parse_args(["--app", "creates"]).app == "creates"
-    assert start.parse_args([]).app == "computes"
+def test_documents_and_state_live_in_one_folder_per_checkout():
+    args = start.parse_args(["--dir", "mine"])
+    command = start.server_command(args)
+    assert Path(command[command.index("--dir") + 1]) == Path("mine", "documents")
+    assert Path(command[command.index("--state-dir") + 1]) == Path("mine", "state")
+    default = start.server_command(start.parse_args([]))
+    assert Path(default[default.index("--state-dir") + 1]) == start.DATA / "state", "inside the checkout"
 
 
-def test_all_apps_get_a_server_each_on_ports_next_to_each_other():
-    args = start.parse_args(["all", "--port", "9000"])
-    servers = start.app_servers(args)
-    assert [s.app for s in servers] == ["computes", "composes", "creates"]
-    assert [s.port for s in servers] == [9000, 9001, 9002]
-    assert len({s.dir for s in servers}) == 3, "documents of two apps never mix"
-    assert [s.url for s in servers][0] == "http://127.0.0.1:9000/"
+def test_folders_of_earlier_layouts_are_named_never_used_or_moved(tmp_path):
+    root, checkout = tmp_path / ".claudia", tmp_path
+    (root / "composes" / "documents").mkdir(parents=True)  # the three-server layout (D437)
+    (checkout / "demo-docs").mkdir()
+    (checkout / "demo-docs" / "budget.claudia").write_bytes(b"x")
+    (checkout / "docs-computes").mkdir()  # empty: nothing to say
+    assert start.old_folders(root, checkout) == [root / "composes", checkout / "demo-docs"]
+    assert (checkout / "demo-docs" / "budget.claudia").exists()
 
 
-def test_one_app_is_one_server_on_the_given_port():
-    (server,) = start.app_servers(start.parse_args(["composes", "--port", "9100"]))
-    assert (server.app, server.port) == ("composes", 9100)
-    command = start.server_command(server.args)
-    assert command[command.index("--port") + 1] == "9100"
-    assert command[command.index("--model") + 1] == "claudia_composes:TextModel"
-
-
-def test_a_custom_directory_gets_a_folder_for_each_app():
-    servers = start.app_servers(start.parse_args(["all", "--dir", "mine"]))
-    assert [Path(s.dir) for s in servers] == [Path("mine", app, "documents") for app in start.APPS]
-    assert [Path(s.state) for s in servers] == [Path("mine", app, "state") for app in start.APPS]
-
-
-def test_dir_means_the_same_for_one_app_and_for_all():
-    """It used to be the documents folder itself for one app and the parent of three for ``all`` (QA 2026-11-12)."""
-    (alone,) = start.app_servers(start.parse_args(["composes", "--dir", "mine"]))
-    together = {s.app: s for s in start.app_servers(start.parse_args(["all", "--dir", "mine"]))}
-    assert (alone.dir, alone.state) == (together["composes"].dir, together["composes"].state)
-
-
-def test_every_server_has_a_state_of_its_own_beside_its_documents():
-    """Without ``--state-dir`` all three servers shared one per-user folder (certificate, administrators, settings),
-    the same tree the Linux desktop app keeps its documents in."""
-    servers = start.app_servers(start.parse_args(["all"]))
-    commands = [start.server_command(s.args) for s in servers]
-    states = [Path(c[c.index("--state-dir") + 1]) for c in commands]
-    assert states == [start.DATA / app / "state" for app in start.APPS]
-    assert all(start.DATA in s.parents for s in states), "inside the checkout"
-
-
-def test_folders_of_an_earlier_version_are_reported_not_moved(tmp_path):
-    (tmp_path / "demo-docs").mkdir()
-    (tmp_path / "demo-docs" / "budget.claudia").write_bytes(b"x")
-    (tmp_path / "docs-computes").mkdir()  # empty: nothing to say
-    assert start.legacy_folders("computes", root=tmp_path) == [tmp_path / "demo-docs"]
-    assert start.legacy_folders("composes", root=tmp_path) == []
-    assert (tmp_path / "demo-docs" / "budget.claudia").exists()
-
-
-def test_the_guide_names_every_address_and_what_to_do_there():
-    guide = start.guide(start.app_servers(start.parse_args(["all", "--port", "9000"])))
-    for url in ("http://127.0.0.1:9000/", "http://127.0.0.1:9001/", "http://127.0.0.1:9002/"):
-        assert url in guide
-    for name in ("computes", "composes", "creates"):
-        assert name in guide
-    assert "Ctrl+C" in guide
-    one = start.guide(start.app_servers(start.parse_args(["creates"])))
-    assert "composes" not in one.split("Other apps")[0], "a single app is named alone first"
+def test_the_guide_names_every_app_at_the_one_address_and_what_to_do_there(tmp_path):
+    args = start.parse_args(["--port", "9000", "--dir", str(tmp_path)])
+    (tmp_path / "creates" / "documents").mkdir(parents=True)
+    (tmp_path / "creates" / "documents" / "x").write_text("")
+    guide = start.guide(args)
+    for app in ("computes", "composes", "creates"):
+        assert f"http://127.0.0.1:9000/?app={app}" in guide
+    assert "Ctrl+C" in guide and "9001" not in guide
+    assert str(tmp_path / "creates") in guide, "an old folder is named so that it can be deleted"
 
 
 def test_a_server_that_others_can_reach_must_be_encrypted(capsys):
@@ -160,17 +120,14 @@ def _model(folder: Path, name: str) -> Path:
     return folder / name
 
 
-def test_the_ai_model_goes_to_the_app_that_can_use_it(tmp_path):
-    """``all --ai``: computes and creates load the model (E7.9); composes has no lens yet and keeps the stand-in, and a
-    server that is handed one refuses to start (``--ai: the AI assistant does not know documents of this kind``)."""
+def test_the_ai_model_is_handed_to_the_one_server(tmp_path):
+    """One model for every app that can use it (computes, creates; D432): the server decides, not the launcher."""
     model = _model(tmp_path, "qwen-ov")
-    servers = start.app_servers(start.parse_args(["all", "--ai", str(model), "--ai-device", "CPU"]))
-    commands = {s.app: start.server_command(s.args) for s in servers}
-    assert commands["computes"][commands["computes"].index("--ai") + 1] == str(model)
-    assert commands["computes"][commands["computes"].index("--ai-device") + 1] == "CPU"
-    assert "--ai" not in commands["composes"]
-    assert commands["creates"][commands["creates"].index("--ai") + 1] == str(model)
-    assert "qwen-ov" in start.guide(servers)
+    args = start.parse_args(["composes", "--ai", str(model), "--ai-device", "CPU", "--dir", str(tmp_path)])
+    command = start.server_command(args)
+    assert command[command.index("--ai") + 1] == str(model)
+    assert command[command.index("--ai-device") + 1] == "CPU"
+    assert "qwen-ov" in start.guide(args)
     assert "--ai" not in start.server_command(start.parse_args([])), "no model unless asked for"
 
 
@@ -194,11 +151,10 @@ def test_ai_without_a_folder_says_what_to_do_when_it_cannot_choose(tmp_path, mon
     assert ("optimum-cli" in err) if not models else ("a-ov, b-ov" in err)
 
 
-def test_ai_is_refused_where_no_app_can_use_it(capsys):
-    for argv in (["composes", "--ai", "m"], ["--ai-device", "CPU"]):
-        with pytest.raises(SystemExit):
-            start.parse_args(argv)
-        assert "--ai" in capsys.readouterr().err, argv
+def test_a_device_without_a_model_is_refused(capsys):
+    with pytest.raises(SystemExit):
+        start.parse_args(["--ai-device", "CPU"])
+    assert "--ai" in capsys.readouterr().err
 
 
 def test_openvino_is_installed_into_the_environment_without_removing_anything(monkeypatch):
@@ -214,12 +170,12 @@ def test_openvino_is_installed_into_the_environment_without_removing_anything(mo
 
 
 def test_every_server_gets_the_checkouts_fonts_folder():
-    command = start.server_command(start.parse_args(["--app", "composes", "--dir", "mine"]))
+    command = start.server_command(start.parse_args(["composes", "--dir", "mine"]))
     assert Path(command[command.index("--fonts") + 1]) == Path("mine", "fonts")
 
 
 def test_every_server_gets_the_checkouts_hyphenation_folder():
-    command = start.server_command(start.parse_args(["--app", "composes", "--dir", "mine"]))
+    command = start.server_command(start.parse_args(["composes", "--dir", "mine"]))
     assert Path(command[command.index("--hyphenation") + 1]) == Path("mine", "hyphenation")
 
 

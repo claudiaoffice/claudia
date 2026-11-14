@@ -1,4 +1,4 @@
-"""``./start.sh all``, end to end: three servers side by side, each greeting a visitor with its own app (UX-10).
+"""Three servers of one app each, end to end: each greets a visitor with its own app (UX-10).
 
 This is the one test that drives a real browser. Everything else about the web app is checked by vitest against
 ``web/app/lib``, which is why UX-10 went unnoticed: the server said which app it served, the page threw that away
@@ -6,9 +6,12 @@ and worked the app out from the first document it listed instead, and on a fresh
 Three servers then greeted everybody as computes. Nothing below that line could see it — the launcher was right,
 the servers were right, ``/api/docs`` was right, and only the rendered page was wrong.
 
-So the test starts the launcher exactly as a person does, opens each port in Chromium, and reads what is on the
-screen. It is deliberately not in the main suite: it needs the web app built and a browser installed, and it starts
-three servers. ``scripts/check_debt.py`` runs it as its own step and skips it, saying why, when either is missing.
+So the test starts servers as a person can, opens each port in Chromium, and reads what is on the screen. Since D430
+one server hosts every app and ``./start.sh`` starts that one; a server of one app is still started the old way
+(``--model``, D433), and that is what this test does until the web client chooses the app by address (its own patch,
+after D431). It is deliberately not in the main suite: it needs the web app built and a browser installed, and it
+starts three servers. ``scripts/check_debt.py`` runs it as its own step and skips it, saying why, when either is
+missing.
 
 What it asserts, and what it does not: ``data-app`` on the document element, which is the page's own statement of
 which app it thinks it is, and that the three headlines differ from one another. It does **not** hardcode the
@@ -31,10 +34,14 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 BUILT = ROOT / "web" / ".output" / "public"
-LAUNCHER = ROOT / "scripts" / "start.py"
-
-#: The apps ``all`` starts, in the order it gives them consecutive ports.
-APPS = ("computes", "composes", "creates")
+LAUNCHER = ROOT / "scripts" / "start.py"  # what test_computes_grid.py starts: ./start.sh, the server of every app
+#: The apps, the document model of a server of each, in the order they get consecutive ports.
+MODELS = {
+    "computes": "claudia_computes.model:WorkbookModel",
+    "composes": "claudia_composes:TextModel",
+    "creates": "claudia_creates:SlideModel",
+}
+APPS = tuple(MODELS)
 START_SECONDS = 90.0
 
 
@@ -74,7 +81,7 @@ pytestmark = pytest.mark.skipif(bool(SKIP), reason=SKIP)
 
 
 def _free_port_block(count: int) -> int:
-    """The first of ``count`` consecutive free ports, which is what ``all`` wants."""
+    """The first of ``count`` consecutive free ports."""
     for _ in range(50):
         with closing(socket.socket()) as probe:
             probe.bind(("127.0.0.1", 0))
@@ -95,43 +102,57 @@ def _is_free(port: int) -> bool:
     return True
 
 
-def _wait_for(ports: list[int], process: subprocess.Popen) -> None:
-    """Wait until every port answers, or say what the launcher printed instead."""
+def _wait_for(ports: list[int], processes: list[subprocess.Popen]) -> None:
+    """Wait until every port answers, or say what a server printed instead."""
     deadline = time.monotonic() + START_SECONDS
     while time.monotonic() < deadline:
-        if process.poll() is not None:
-            raise AssertionError(f"the launcher stopped early:\n{process.communicate()[0]}")
+        for process in processes:
+            if process.poll() is not None:
+                raise AssertionError(f"a server stopped early:\n{process.communicate()[0]}")
         if all(not _is_free(port) for port in ports):
             return
         time.sleep(0.25)
-    process.kill()
-    raise AssertionError(f"the servers did not come up in {START_SECONDS:.0f}s:\n{process.communicate()[0]}")
+    for process in processes:
+        process.kill()
+    raise AssertionError(f"the servers did not come up in {START_SECONDS:.0f}s")
 
 
 @pytest.fixture(scope="module")
 def servers(tmp_path_factory: pytest.TempPathFactory) -> Iterator[dict[str, int]]:
-    """``./start.sh all`` with its own documents folder and its own ports: app name to port."""
+    """A server of each app with its own documents folder and its own port: app name to port."""
     first = _free_port_block(len(APPS))
     ports = [first + offset for offset in range(len(APPS))]
-    command = [
-        sys.executable,
-        str(LAUNCHER),
-        "all",
-        "--no-browser",
-        "--port",
-        str(first),
-        "--dir",
-        str(tmp_path_factory.mktemp("documents")),
-    ]
-    process = subprocess.Popen(
-        command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True
-    )
+    processes = []
+    for app, port in zip(APPS, ports, strict=True):
+        folder = tmp_path_factory.mktemp(app)
+        command = [
+            sys.executable,
+            "-m",
+            "claudia_server",
+            "--no-tls",
+            "--model",
+            MODELS[app],
+            "--port",
+            str(port),
+            "--web",
+            str(BUILT),
+            "--dir",
+            str(folder / "documents"),
+            "--state-dir",
+            str(folder / "state"),
+        ]
+        processes.append(
+            subprocess.Popen(
+                command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True
+            )
+        )
     try:
-        _wait_for(ports, process)
+        _wait_for(ports, processes)
         yield dict(zip(APPS, ports, strict=True))
     finally:
-        process.kill()
-        process.wait(timeout=30)
+        for process in processes:
+            process.kill()
+            process.wait(timeout=30)
 
 
 @pytest.fixture(scope="module")
@@ -171,10 +192,3 @@ def test_each_greeting_is_that_app_s_own(greetings: dict[str, dict[str, str]]) -
     assert len(set(headlines.values())) == len(APPS), (
         f"two apps greet a visitor with the same words, so one of them is wearing the other's face: {headlines}"
     )
-
-
-def test_the_launcher_gives_the_apps_consecutive_ports(servers: dict[str, int]) -> None:
-    # The order matters to the test above: `all` hands out ports in the order of `APPS`, and a visitor on the second
-    # port is promised composes by what the launcher printed.
-    ports = list(servers.values())
-    assert ports == [ports[0] + offset for offset in range(len(APPS))]

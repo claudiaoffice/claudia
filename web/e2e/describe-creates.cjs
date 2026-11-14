@@ -1,6 +1,6 @@
 // Alt text and the decorative mark on a slide's picture (BITV 1.1.1): inserted decorative, then described from the
 // object's context menu, then back to decorative with Ctrl+Alt+D.
-//   uv run python scripts/start.py --app creates --port 8767 --no-browser --dir /tmp/claudia-axe2
+//   uv run python -m claudia_server --no-tls --model claudia_creates:SlideModel --port 8767 --web web/.output/public --dir /tmp/claudia-axe2
 //   node e2e/describe-creates.cjs        (CHROME=/path/to/chrome when playwright's own chromium is not installed)
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')

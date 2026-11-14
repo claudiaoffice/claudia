@@ -23,35 +23,35 @@ uv run pytest
 ## Try the apps
 
 ```
-./start.sh all          # Windows: start.cmd all
+./start.sh              # Windows: start.cmd
 ```
 
-starts one server per app and prints how to find each in the browser:
+starts one server for all three apps (D430) and prints how to find each in the browser:
 
-| app | address (with `all`) | start one alone |
+| app | address | start and open it |
 | --- | --- | --- |
-| computes (tables) | http://127.0.0.1:8765/ | `./start.sh computes` (or `./start.sh`) |
-| composes (text) | http://127.0.0.1:8766/ | `./start.sh composes` |
-| creates (presentations) | http://127.0.0.1:8767/ | `./start.sh creates` |
+| computes (tables) | http://127.0.0.1:8765/?app=computes | `./start.sh computes` |
+| composes (text) | http://127.0.0.1:8765/?app=composes | `./start.sh composes` |
+| creates (presentations) | http://127.0.0.1:8765/?app=creates | `./start.sh creates` |
 
-Alone, every app uses port 8765 (`--port` changes it). Each app keeps its sealed documents in
-`.claudia/<app>/documents` and its server's certificate and settings in `.claudia/<app>/state` (`--dir DIR` puts both
-under `DIR/<app>/` instead); `./start.sh --help` lists all options. The first start builds the web app (needs Node.js
-22 or newer).
+Naming an app only chooses the page the browser opens; `./start.sh all` is the same as `./start.sh`. The sealed
+documents are kept in `.claudia/documents/<app>` and the server's certificate and settings in `.claudia/state`
+(`--dir DIR` puts both under `DIR/` instead); `./start.sh --help` lists all options. The first start builds the web
+app (needs Node.js 22 or newer).
 
-**With the AI model.** `./start.sh all --ai` lets the AI user of computes and creates answer with the language model
-in `ai-models/` (one folder, converted for OpenVINO; `--ai MODEL_DIR` names another, `--ai-device CPU` runs it without
-a GPU). The first time, OpenVINO GenAI is added to the environment. Each of the two servers loads its own copy of the
-model, so this needs its memory twice (`./start.sh creates --ai` alone needs it once). composes keeps the scripted
-stand-in until it has a lens for the model (E7.5). Without a model, `@ai` in creates says that there is none.
+**With the AI model.** `./start.sh --ai` lets the AI user of computes and creates answer with the language model in
+`ai-models/` (one folder, converted for OpenVINO; `--ai MODEL_DIR` names another, `--ai-device CPU` runs it without a
+GPU). The first time, OpenVINO GenAI is added to the environment. The server loads the model once for both apps.
+composes keeps the scripted stand-in until it has a lens for the model (E7.5). Without a model, `@ai` in creates says
+that there is none.
 
 Requires Python 3.14 exactly: `.python-version` makes `uv` use it even where a newer Python is installed (OpenVINO
 GenAI publishes no wheels for 3.15 yet). Design notes: `docs/core-kernel.md`.
 
 ## Run with Docker
 
-One image holds the server of all three apps and the web app. As with `./start.sh`, a container serves one app, chosen
-with `CLAUDIA_APP` (`computes`, the default, `composes` or `creates`).
+One image holds the server of all three apps and the web app. As with `./start.sh`, a container serves all three;
+`CLAUDIA_APP` (`computes`, `composes` or `creates`) limits it to one.
 
 ```
 docker build -t claudia-server .      # needs Docker 23 or newer (BuildKit)
@@ -60,16 +60,14 @@ docker build -t claudia-server .      # needs Docker 23 or newer (BuildKit)
 Builds of `main` are also published by CI as `ghcr.io/claudiaoffice/claudia-server`, so `docker pull` can replace the build.
 
 ```
-docker run -d --name claudia-computes -p 8765:8765 -v claudia-computes:/data claudia-server
-docker run -d --name claudia-composes -p 8766:8765 -v claudia-composes:/data -e CLAUDIA_APP=composes claudia-server
-docker run -d --name claudia-creates  -p 8767:8765 -v claudia-creates:/data  -e CLAUDIA_APP=creates  claudia-server
+docker run -d --name claudia -p 8765:8765 -v claudia:/data claudia-server
 ```
 
-These are the ports of `./start.sh all`: open https://localhost:8765/ (computes), :8766 (composes) or :8767 (creates).
-The server makes its own certificate on first start, so the browser warns once.
+Open https://localhost:8765/. The server makes its own certificate on first start, so the browser warns once.
 
-* **Data.** `/data` holds the documents (`documents/`, each one sealed by its people's passwords) and the server's
-  certificate (`state/`). Use one volume per app; the documents survive `docker rm` as long as the volume does. A
+* **Data.** `/data` holds the documents (`documents/<app>/`, each one sealed by its people's passwords) and the
+  server's certificate (`state/`). The documents survive `docker rm` as long as the volume does; a volume is used by
+  one container at a time (D435). A
   folder mounted instead of a volume must be writable by user id 10001 (`chown 10001:10001 DIR`).
 * **Options.** Everything after the image name goes to the server, and `--help` lists it all: `--tls-name
   claudia.example.org` (the name people type), `--allow-host NAME` (another name the server answers to: without it
@@ -83,7 +81,7 @@ The server makes its own certificate on first start, so the browser warns once.
 
   ```
   docker build --build-arg WITH_OPENVINO=true -t claudia-server:ai .
-  docker run -d -p 8765:8765 -v claudia-computes:/data -v ~/models:/models:ro claudia-server:ai \
+  docker run -d -p 8765:8765 -v claudia:/data -v ~/models:/models:ro claudia-server:ai \
       --ai /models/qwen2.5-7b-instruct-int4-ov --ai-device CPU
   ```
 
@@ -97,13 +95,12 @@ The server makes its own certificate on first start, so the browser warns once.
 For a demo that needs no storage, the same image runs on a serverless container platform with `CLAUDIA_DEMO=1`:
 documents live in memory (at most 100, and gone whenever the container stops or scales to zero), nothing is written to
 disk, and the server speaks plain HTTP because the platform encrypts in front of it (`--no-tls --behind-proxy`). The
-server listens on the port in `PORT`, which the platform sets (Scaleway: 8080). One container serves one app; make one
-per app.
+server listens on the port in `PORT`, which the platform sets (Scaleway: 8080). One container serves all three apps.
 
 | Environment variable | |
 | --- | --- |
 | `CLAUDIA_DEMO` | `1` |
-| `CLAUDIA_APP` | `computes` (default), `composes` or `creates` |
+| `CLAUDIA_APP` | optional: `computes`, `composes` or `creates` serves that app only |
 | `CLAUDIA_ALLOW_HOST` | the name people type in the address bar, without `https://`, e.g. `abc123.functions.fnc.fr-par.scw.cloud` or your own domain; several separated by commas |
 
 Scaleway Serverless Containers, step by step:

@@ -3,8 +3,8 @@
 The web client lives in `web/` (Nuxt 4, single-page, no server-side rendering). It talks to the server only through
 the versioned protocol described in {doc}`server`: there is no other back door.
 
-One server serves one app (`--model`; the default is the workbook), and the web app shows whatever the server says the
-document is (`welcome.app`): **computes** (a table, below) or **composes** (a text, see [Writing in composes](#writing-in-composes)).
+One server serves all three apps (D430), and the web app shows whatever the server says the document is
+(`welcome.app`): **computes** (a table, below) or **composes** (a text, see [Writing in composes](#writing-in-composes)).
 The header, menus, side panel, open dialog and colours are shared; each app has its own colour (`data-app` on the
 page, `tokens.css`).
 
@@ -71,19 +71,18 @@ word is one undo step (the kernel has no grouping yet).
 ## Build and run
 
 The quick way (Linux, macOS: `./start.sh`, Windows: `start.cmd`) builds the web app when it is missing, starts the
-server and opens the browser. Each app's documents are kept in `./.claudia/<app>/documents`, each one sealed
-(encrypted), and its server's certificate and settings in `./.claudia/<app>/state`; `--dir DIR` uses `DIR/<app>/`
-instead, for one app as for all three. Folders of earlier versions of the script (`docs-<app>`, `demo-docs*`) are
-named at start, never moved; a folder of plain files from the early demos needs `--plain-dir`.
+server of all three apps and opens the browser. Each app's documents are kept in `./.claudia/documents/<app>`, each one
+sealed (encrypted), and the server's certificate and settings in `./.claudia/state`; `--dir DIR` uses `DIR/` instead.
+Folders of earlier layouts (`.claudia/<app>/`, `docs-<app>`, `demo-docs*`) are named at start so that they can be
+deleted, never used (D437); a folder of plain files from the early demos needs `--plain-dir`.
 
-One server serves one app. Name the app to choose it (`computes` is the default), or start all three at once:
+Naming an app only chooses the page the browser opens (D433):
 
 ```bash
-./start.sh                       # computes (tables) at http://127.0.0.1:8765/; or: uv run python scripts/start.py
-./start.sh composes              # texts, port 8765 (documents in .claudia/composes/documents)
-./start.sh creates               # presentations, port 8765 (documents in .claudia/creates/documents)
-./start.sh all                   # computes 8765, composes 8766, creates 8767
-./start.sh all --ai              # computes' AI user answers with the model in ai-models/ (OpenVINO)
+./start.sh                       # all three apps at http://127.0.0.1:8765/; or: uv run python scripts/start.py
+./start.sh composes              # the same server; the browser opens ?app=composes
+./start.sh creates               # the same server; the browser opens ?app=creates
+./start.sh --ai                  # the AI user of computes and creates answers with the model in ai-models/ (OpenVINO)
 ./start.sh --dir ~/claudia-data --port 9000 --no-browser
 ./start.sh --rebuild             # build the web app again first
 ./start.sh --tls                 # encrypted; the browser warns once about the server's own certificate
@@ -93,8 +92,8 @@ By hand (needs Node.js 22 or newer for the build):
 
 ```bash
 cd web && npm ci && npm run build             # writes web/.output/public (npm ci also installs ../layout's dependencies)
-cd .. && uv run python -m claudia_server --no-tls --dir .claudia/computes/documents \
-    --state-dir .claudia/computes/state --web web/.output/public
+cd .. && uv run python -m claudia_server --no-tls --dir .claudia/documents \
+    --state-dir .claudia/state --web web/.output/public
 ```
 
 Open <http://localhost:8765>, create a document (the creator is its owner), then share it and join from a second
@@ -110,8 +109,20 @@ npm run lint                 # ESLint
 ```
 
 The browser scripts in `web/e2e/` drive real Chromium windows through Playwright (a dev dependency; fetch the
-browser once with `npx playwright install chromium`). Build the app (`npm run build`), start the three servers with
-`./start.sh all --no-browser` (computes 8765, composes 8766, creates 8767), then:
+browser once with `npx playwright install chromium`). Build the app (`npm run build`). Until the web app chooses the app
+by address (D431), each script talks to a server of one app: start one per app the old way (D433), on the ports the
+scripts expect, as CI does:
+
+```bash
+port=8765
+for model in claudia_computes.model:WorkbookModel claudia_composes:TextModel claudia_creates:SlideModel; do
+  uv run python -m claudia_server --no-tls --port $port --model $model --web web/.output/public \
+    --dir /tmp/claudia-e2e-$port --state-dir /tmp/claudia-e2e-state-$port &
+  port=$((port + 1))
+done
+```
+
+then:
 
 ```bash
 URL=http://127.0.0.1:8765/ npm run e2e            # two people and the assistant in one table
@@ -126,7 +137,7 @@ npm run e2e:macos-shell      # the macOS client's window: its shell page and cor
 npm run e2e:windows-shell    # the same for the Windows client
 ```
 
-The last two need ports 8766 and 8767 free, so stop `./start.sh all` first. `e2e:macos-shell` needs the macOS client built
+The scripts that start a server of their own need ports 8766, 8767 and 8768 free, so stop the three servers first. `e2e:macos-shell` needs the macOS client built
 (`cd clients/macos && npm ci && npm run build`) as well as the web app (`e2e:windows-shell` the same in `clients/windows`), starts a server of its own for each app and one on 8791
 for `--server`, and fakes only Neutralino's client library; `CHROMIUM=/path/to/chrome` picks a browser binary other than Playwright's. CI runs all of them in its `e2e` job,
 together with `tests/e2e` (the Python test that checks each server greets with its own app).

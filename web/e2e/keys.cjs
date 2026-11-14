@@ -1,7 +1,6 @@
 // One key table for every app and client, and a new document with nothing to undo (UX-33, UX-35, UX-36; D360-D362),
-// in a real browser against the three servers of `scripts/start.py all`:
-//   uv run python scripts/start.py all --no-browser
-//   node e2e/keys.cjs        (COMPUTES, COMPOSES, CREATES are the three addresses; the defaults are those of `all`)
+// in a real browser against a server of one app each on 8765, 8766 and 8767 (`--model`, D433; see docs/web.md, Tests):
+//   node e2e/keys.cjs        (COMPUTES, COMPOSES, CREATES are the three addresses)
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 

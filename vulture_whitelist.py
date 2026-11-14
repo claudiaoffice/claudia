@@ -16,6 +16,10 @@ used.Bad  # registered with a CommandRegistry by a decorator (tests/test_command
 # claudia-server: routes and protocol methods are registered by decorators and called by name
 used.protocol  # FastAPI route /api/protocol in create_app
 used.live  # FastAPI WebSocket route in create_app
+used.app_protocol  # FastAPI route /api/{app}/protocol (D431)
+used.app_documents  # FastAPI route /api/{app}/docs (D431)
+used.app_live  # FastAPI WebSocket route /api/{app}/docs/{id}/ws (D431)
+used.present  # FastAPI WebSocket route /api/presence (D434)
 used.landing  # FastAPI route / in create_app
 used.font_file  # FastAPI route /api/fonts/{name} in font_router (fonts.py)
 used.hyphenation_listing  # FastAPI route /api/hyphenation (hyphenation.py)

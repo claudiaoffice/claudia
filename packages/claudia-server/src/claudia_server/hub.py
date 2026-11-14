@@ -517,13 +517,41 @@ class HostedDocument:
             )
 
 
+class Room:
+    """How many documents a server may hold, counted over all of its hubs (one per app, D432).
+
+    One :class:`Hub` on its own has a room of its own. A server with several apps lets them share one
+    (:meth:`Hub.share_room`), so that ``max_documents`` bounds the server's disk, not each app's share of it (SEC-02).
+    """
+
+    def __init__(self, max_documents: int = DEFAULT_MAX_DOCUMENTS):
+        self.max_documents = max_documents
+        self._hubs: list[Hub] = []
+
+    def join(self, hub: Hub) -> None:
+        """Count ``hub``'s documents here too."""
+        if hub not in self._hubs:
+            self._hubs.append(hub)
+
+    async def ensure(self) -> None:
+        """``HubError('unavailable')`` if the hubs of this room already hold ``max_documents`` documents together."""
+        held = 0
+        for hub in self._hubs:
+            held += await hub.count_known()
+        if held >= self.max_documents:
+            raise HubError(
+                "unavailable",
+                msg("this server holds {limit} documents, the most it may hold", limit=self.max_documents),
+            )
+
+
 class Hub:
-    """The documents of one server.
+    """The documents of one app on a server.
 
     ``max_documents`` is the most documents the server holds: past it nobody can make another (``ensure_room``), so that
-    whoever can reach the server cannot fill its disk. ``workers`` is the pool slow or CPU-bound request handling can
-    offload to, off the one thread every document here is otherwise served from (D134); it starts no process until
-    something is first submitted to it."""
+    whoever can reach the server cannot fill its disk; on a server with several apps it counts them all (``Room``).
+    ``workers`` is the pool slow or CPU-bound request handling can offload to, off the one thread every document here
+    is otherwise served from (D134); it starts no process until something is first submitted to it."""
 
     def __init__(
         self,
@@ -548,12 +576,13 @@ class Hub:
         self.methods = methods
         self.limits = limits or Limits()
         self.allow_create = allow_create
-        self.max_documents = max_documents
         self.workers = WorkerPool(max_workers=max_workers)
         self._known: set[str] = (
             set()
         )  # the ids of the stored documents: found when first asked, and every one opened since
         self._counted = False
+        self.room = Room(max_documents)
+        self.room.join(self)
         self.idle_unload = idle_unload
         self.edit_timeout = edit_timeout
         self.max_connections = max_connections
@@ -598,8 +627,22 @@ class Hub:
         """Is the document open in memory now?"""
         return doc_id in self._documents
 
-    async def ensure_room(self) -> None:
-        """``HubError('unavailable')`` if the server already holds as many documents as it may.
+    @property
+    def max_documents(self) -> int:
+        """The most documents the server holds, all of its apps together (D432), as its :class:`Room` counts them."""
+        return self.room.max_documents
+
+    @max_documents.setter
+    def max_documents(self, value: int) -> None:
+        self.room.max_documents = value
+
+    def share_room(self, room: Room) -> None:
+        """Count this hub's documents in ``room`` from now on, together with the other hubs of the same server."""
+        self.room = room
+        room.join(self)
+
+    async def count_known(self) -> int:
+        """How many documents this hub holds, stored or open.
 
         Reading every document of the store is slow, so the store is read once, in a thread; after that every document
         the hub opens is added to what is known. Ids, not a number: a store may make a document's file before the hub
@@ -608,11 +651,11 @@ class Hub:
         if not self._counted:
             self._known.update(info.id for info in await asyncio.to_thread(self.provider.documents))
             self._counted = True
-        if len(self._known) >= self.max_documents:
-            raise HubError(
-                "unavailable",
-                msg("this server holds {limit} documents, the most it may hold", limit=self.max_documents),
-            )
+        return len(self._known)
+
+    async def ensure_room(self) -> None:
+        """``HubError('unavailable')`` if the server already holds as many documents as it may (see :class:`Room`)."""
+        await self.room.ensure()
 
     async def open(self, doc_id: str, create: bool = False) -> HostedDocument:
         """The open document, loaded from storage (or created, if allowed) first."""

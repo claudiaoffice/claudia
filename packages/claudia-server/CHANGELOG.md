@@ -5,6 +5,36 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-11-14
+
+One server for all three apps (D430-D437). The rest of this section is the work that was unreleased before it.
+
+### Added
+- `Suite` and `Module` (`claudia_server.suite`): one server hosts several apps, each with its own `Hub` and
+  `UserDirectory`. `APP_MODELS` names the apps and their document models. `create_app` takes a `Suite` (a single
+  `Hub` with its directory still works and is a suite of one).
+- Addresses with the app (D431): `/api/<app>/docs/<id>/ws`, `/api/<app>/docs`, `/api/<app>/protocol`. `/api/docs`
+  answers `apps` as well and lists the documents of every app; its `app` is `null` on a server with several.
+- `/api/presence`: a socket that carries nothing and keeps a server in use while a page without a document is open.
+- `--exit-when-idle SECONDS` and `IdleWatch`: the server stops by itself, gracefully, once nothing has used it for
+  that long (D434). `main` runs uvicorn through `uvicorn.Server` so that it can be asked to stop.
+- `--apps computes,composes,creates` (all by default). `--model` still starts a server of one app with its documents
+  directly in `--dir` (D433); the two cannot be given together.
+- `FolderLock`/`FolderLocked` (`claudia_server.folder_lock`): a server refuses to start on a document folder another
+  process uses (D435).
+- `Room`: the document cap shared by the hubs of one server (`Hub.share_room`, `Hub.count_known`).
+
+### Changed
+- **Breaking** (storage): with `--apps` (the default) each app keeps its documents in `DIR/<app>/` (D431). Nothing
+  is migrated (D437).
+- **Breaking**: `Gateway(suite, allowed, ...)` replaces `Gateway(hub, directory, allowed, ...)`; `admin_router` and
+  `AiRuntime.apply` take the `Suite`; `AiRuntime(models=...)` replaces `AiRuntime(model=...)`. One language model
+  serves every app that has a lens; the others keep their stand-in (D432).
+- `max_documents` counts the documents of every app together (D432); the hubs of a suite share one worker pool.
+- A sealed store lists and opens only its own app's files.
+- The old address `/api/docs/<id>/ws` opens the first app that has the id, and makes a new document in the app
+  `hello.app` names, else in the first app (D431).
+
 Describing objects (BITV 1.1.1), in creates and computes (composes has no object methods yet).
 
 ### Added

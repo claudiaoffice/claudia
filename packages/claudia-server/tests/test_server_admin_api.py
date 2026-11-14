@@ -27,7 +27,7 @@ def serve(*, exposed=True, ai_enabled=True, admins=None, settings=None, state_di
         sessions=AdminSessions(),
         settings=settings if settings is not None else ServerSettings(max_documents=hub.max_documents),
         state_dir=state_dir,
-        ai=AiRuntime(model=ListModel, enabled=ai_enabled),
+        ai=AiRuntime(models=(ListModel,), enabled=ai_enabled),
         exposed=exposed,
     )
     app = create_app(hub, ScryptDirectory(), admin=admin)

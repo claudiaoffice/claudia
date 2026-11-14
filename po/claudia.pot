@@ -4361,7 +4361,7 @@ msgstr ""
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:294
+#: packages/claudia-server/src/claudia_server/app.py:312
 msgid "a recovery key, a name and a new password are needed"
 msgstr ""
 
@@ -4689,7 +4689,7 @@ msgstr ""
 msgid "do not start with “{text}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:573
+#: packages/claudia-server/src/claudia_server/hub.py:602
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr ""
 
@@ -4953,7 +4953,7 @@ msgstr ""
 msgid "method must be a string"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:350
+#: packages/claudia-server/src/claudia_server/app.py:370
 msgid "missing or wrong credentials"
 msgstr ""
 
@@ -5017,7 +5017,7 @@ msgstr ""
 msgid "no checkpoint number {checkpoint}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:641
+#: packages/claudia-server/src/claudia_server/hub.py:684
 msgid "no document {id!r}"
 msgstr ""
 
@@ -5477,7 +5477,7 @@ msgstr ""
 msgid "the end of the cell"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:336
+#: packages/claudia-server/src/claudia_server/app.py:355
 msgid "the first message must be hello with params"
 msgstr ""
 
@@ -5633,7 +5633,11 @@ msgstr ""
 msgid "this row"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:297 packages/claudia-server/src/claudia_server/protocol.py:850
+#: packages/claudia-server/src/claudia_server/app.py:259 packages/claudia-server/src/claudia_server/suite.py:106
+msgid "this server does not host {app}"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/app.py:315 packages/claudia-server/src/claudia_server/protocol.py:850
 msgid "this server does not keep recovery keys"
 msgstr ""
 
@@ -5661,7 +5665,7 @@ msgstr ""
 msgid "this server does not support leaving a document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:614
+#: packages/claudia-server/src/claudia_server/hub.py:544
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr ""
 
@@ -5953,15 +5957,15 @@ msgstr ""
 msgid "{id} already has {limit} connections"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:629
+#: packages/claudia-server/src/claudia_server/hub.py:672
 msgid "{id} cannot be opened yet: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:632
+#: packages/claudia-server/src/claudia_server/hub.py:675
 msgid "{id} cannot be opened: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:636
+#: packages/claudia-server/src/claudia_server/hub.py:679
 msgid "{id} cannot be read"
 msgstr ""
 

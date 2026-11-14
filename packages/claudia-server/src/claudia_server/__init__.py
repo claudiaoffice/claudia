@@ -18,8 +18,10 @@ from .composes import composes_methods
 from .computes import computes_methods
 from .creates import creates_methods, creates_methods_with
 from .filestore import FileDirectory, FileProvider
+from .folder_lock import FolderLock, FolderLocked
 from .help import HelpContentError, HelpLibrary, Topic, default_library, parse_topic
-from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, StoredInfo
+from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, Room, StoredInfo
+from .idle import IdleWatch
 from .model_engine import ModelEngine
 from .protocol import (
     ERROR_CODES,
@@ -46,10 +48,12 @@ from .server_settings import (
 )
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
+from .suite import APP_MODELS, Module, Suite
 from .workers import DEFAULT_WORKERS, WorkerPool
 
 __all__ = [
     "AI_USER",
+    "APP_MODELS",
     "DEFAULT_WORKERS",
     "ERROR_CODES",
     "EVENTS",
@@ -75,22 +79,27 @@ __all__ = [
     "Engine",
     "FileDirectory",
     "FileProvider",
+    "FolderLock",
+    "FolderLocked",
     "Gateway",
     "HelpContentError",
     "HelpLibrary",
     "HostedDocument",
     "Hub",
     "HubError",
+    "IdleWatch",
     "Limits",
     "MemoryProvider",
     "Method",
     "MethodTable",
     "ModelEngine",
+    "Module",
     "Proposal",
     "RequestError",
     "Resolution",
     "RestoreCoordinator",
     "RestoreError",
+    "Room",
     "Say",
     "ScriptedEngine",
     "SealedDocuments",
@@ -98,6 +107,7 @@ __all__ = [
     "Step",
     "ScryptDirectory",
     "StoredInfo",
+    "Suite",
     "Task",
     "TextEngine",
     "Topic",

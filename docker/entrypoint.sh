@@ -1,7 +1,8 @@
 #!/bin/sh
-# Starts one Claudia app server.
+# Starts the Claudia server: all three apps (D430), each app's documents in /data/documents/<app>.
 #
-#   CLAUDIA_APP         computes (default), composes or creates
+#   CLAUDIA_APP         optional: computes, composes or creates serves that one app only, with its documents
+#                       directly in /data/documents (the old one-app container, D433)
 #   PORT                the port to listen on (default 8765); serverless platforms set it
 #   CLAUDIA_ALLOW_HOST  the name people type in the address bar, more than one separated by commas; needed behind a
 #                       proxy or on a platform that gives the container its own address, because the server answers
@@ -16,14 +17,14 @@
 # `--shapes /data/shapes`). The server answers only to localhost, IP addresses and the names it is told about.
 set -eu
 
-app="${CLAUDIA_APP:-computes}"
-
-case "$app" in
+model=""
+case "${CLAUDIA_APP:-}" in
+    "") ;;
     computes) model="claudia_computes.model:WorkbookModel" ;;
     composes) model="claudia_composes:TextModel" ;;
     creates) model="claudia_creates:SlideModel" ;;
     *)
-        echo "error: CLAUDIA_APP must be computes, composes or creates, not '$app'" >&2
+        echo "error: CLAUDIA_APP must be computes, composes or creates (or not set: all three), not '$CLAUDIA_APP'" >&2
         exit 2
         ;;
 esac
@@ -46,5 +47,9 @@ if [ -n "${CLAUDIA_ALLOW_HOST:-}" ]; then
     set +f
 fi
 
-# One web app is the client of all three servers.
-exec python -m claudia_server --model "$model" --host 0.0.0.0 --port "${PORT:-8765}" --web /app/web --fonts /app/fonts --hyphenation /app/hyphenation "$@"
+if [ -n "$model" ]; then
+    set -- --model "$model" "$@"
+fi
+
+# The web app is the client of every app.
+exec python -m claudia_server --host 0.0.0.0 --port "${PORT:-8765}" --web /app/web --fonts /app/fonts --hyphenation /app/hyphenation "$@"

@@ -50,16 +50,25 @@ def test_the_model_is_loaded_by_name():
     assert load_model("claudia_core.testing:ListModel") is ListModel
 
 
-def test_a_folder_makes_the_store_persistent_and_sealed(tmp_path):
+def test_a_folder_makes_the_store_persistent_and_sealed_with_one_place_per_app(tmp_path):
     result = plan("--no-tls", "--dir", str(tmp_path / "data"), tmp_path=tmp_path)
     assert any("encrypted" in line and "NOT" not in line for line in result.banner)
-    assert (tmp_path / "data" / "docs").is_dir()
+    assert all((tmp_path / "data" / app / "docs").is_dir() for app in ("computes", "composes", "creates"))
+    result.close()
+
+
+def test_a_server_of_one_model_keeps_its_documents_where_it_always_did(tmp_path):
+    result = plan("--no-tls", "--model", "claudia_composes:TextModel", "--dir", str(tmp_path / "d"), tmp_path=tmp_path)
+    assert (tmp_path / "d" / "docs").is_dir() and not (tmp_path / "d" / "composes").exists()
+    assert result.app.state.suite.apps == ("composes",)
+    result.close()
 
 
 def test_the_old_plain_store_must_be_asked_for_by_name_and_says_what_it_is(tmp_path):
     result = plan("--no-tls", "--plain-dir", str(tmp_path / "data"), tmp_path=tmp_path)
     assert any("NOT encrypted" in line for line in result.banner)
-    assert (tmp_path / "data" / "docs").is_dir()
+    assert (tmp_path / "data" / "computes" / "docs").is_dir()
+    result.close()
 
 
 def test_a_sealed_and_a_plain_folder_cannot_both_be_asked_for(tmp_path):
@@ -71,13 +80,16 @@ def test_the_server_really_seals_what_a_folder_receives(tmp_path):
     from starlette.testclient import TestClient
 
     folder = tmp_path / "data"
-    client = TestClient(plan("--no-tls", "--dir", str(folder), tmp_path=tmp_path).app)
-    with client.websocket_connect("/api/docs/plan/ws") as ws:
+    result = plan("--no-tls", "--dir", str(folder), tmp_path=tmp_path)
+    client = TestClient(result.app)
+    with client.websocket_connect("/api/composes/docs/plan/ws") as ws:
         ws.send_text(
             '{"id":1,"method":"hello","params":{"user":"Annabelle","password":"Correct-Horse-9","create":true}}'
         )
         assert ws.receive_json()["ok"]
-    assert sorted(p.name for p in (folder / "docs").iterdir()) == ["plan.claudia", "plan.claudia.journal"]
+    files = sorted(p.name for p in (folder / "composes" / "docs").iterdir())
+    assert files == ["plan.claudia", "plan.claudia.journal"]
+    result.close()
 
 
 def test_listing_can_be_switched_off_from_the_command_line(tmp_path):
@@ -231,7 +243,9 @@ def test_the_shape_folder_must_exist_and_belongs_to_presentations(tmp_path):
     with pytest.raises(UsageError, match="not a folder"):
         plan(*CREATES, "--shapes", str(tmp_path / "missing"), tmp_path=tmp_path)
     with pytest.raises(UsageError, match="presentations"):
-        plan("--shapes", str(tmp_path), tmp_path=tmp_path)
+        plan("--apps", "computes,composes", "--shapes", str(tmp_path), tmp_path=tmp_path)
+    with pytest.raises(UsageError, match="presentations"):
+        plan("--model", "claudia_composes:TextModel", "--shapes", str(tmp_path), tmp_path=tmp_path)
 
 
 # ------------------------------------------------------------------------ SEC-01: the names a server answers to
@@ -463,3 +477,68 @@ def test_a_manifest_in_the_plugins_folder_is_offered_and_a_bad_one_is_named_in_t
     prepared = plan(tmp_path=tmp_path)
     banner = "\n".join(prepared.banner)
     assert "pikchr" in banner and "not used, plugins/broken.json" in banner
+
+
+# ------------------------------------------------------------------------ one server, app modules (D430, D433-D435)
+def test_a_server_serves_every_app_by_default_and_fewer_when_asked(tmp_path):
+    from starlette.testclient import TestClient
+
+    assert plan("--no-tls", tmp_path=tmp_path).app.state.suite.apps == ("computes", "composes", "creates")
+    fewer = plan("--no-tls", "--apps", "creates, composes", tmp_path=tmp_path)
+    assert fewer.app.state.suite.apps == ("creates", "composes")
+    assert any(line.startswith("serving creates, composes on ws://") for line in fewer.banner)
+    assert TestClient(fewer.app).get("/api/docs").json()["apps"] == ["creates", "composes"]
+
+
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [
+        (["--apps", "computes,spreadsheets"], "choose from"),
+        (["--apps", ","], "choose from"),
+        (["--apps", "composes,composes"], "each app once"),
+        (["--exit-when-idle", "0"], "positive"),
+    ],
+)
+def test_impossible_app_choices_are_refused(tmp_path, args, message):
+    with pytest.raises(UsageError, match=message):
+        plan("--no-tls", *args, tmp_path=tmp_path)
+
+
+def test_apps_and_model_cannot_both_be_given(tmp_path, capsys):
+    with pytest.raises(SystemExit):
+        plan("--apps", "computes", "--model", "claudia_composes:TextModel", tmp_path=tmp_path)
+    assert "not allowed with" in capsys.readouterr().err
+
+
+def test_a_second_server_on_the_same_folder_is_refused_until_the_first_has_stopped(tmp_path):
+    folder = str(tmp_path / "docs")
+    first = plan("--no-tls", "--dir", folder, tmp_path=tmp_path)
+    with pytest.raises(UsageError, match="another Claudia server uses"):
+        plan("--no-tls", "--dir", folder, tmp_path=tmp_path / "s2")
+    first.close()
+    plan("--no-tls", "--dir", folder, tmp_path=tmp_path / "s3").close()
+
+
+def test_exit_when_idle_gives_the_server_a_watch_and_says_so(tmp_path):
+    result = plan("--no-tls", "--exit-when-idle", "300", tmp_path=tmp_path)
+    assert result.idle is not None and result.idle.seconds == 300
+    assert any("--exit-when-idle" in line for line in result.banner)
+    assert plan("--no-tls", tmp_path=tmp_path / "other").idle is None
+
+
+def test_one_language_model_answers_in_every_app_that_has_a_lens(tmp_path, model_folder, fake_model):
+    import asyncio
+
+    result = plan("--no-tls", "--ai", str(model_folder), tmp_path=tmp_path)
+    assert len(fake_model) == 1, "loaded once for all apps"
+    suite = result.app.state.suite
+
+    async def engines():
+        found = {}
+        for module in suite:
+            hosted = await module.hub.open("x", create=True)
+            found[module.app] = type(hosted.assistant.engine).__name__
+        return found
+
+    assert asyncio.run(engines()) == {"computes": "ModelEngine", "composes": "TextEngine", "creates": "ModelEngine"}
+    result.close()

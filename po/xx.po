@@ -4361,7 +4361,7 @@ msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "[à ràndôm nûmbér frôm thé nàméd dîstrîbûtîôn, fôr éxàmplé RÀNDÔM(\"nôrmàl\", 1000, 150). Wîthôût àrgûménts ît îs RÀND(). ``lôw`` ànd ``hîgh`` cût thé dîstrîbûtîôn (côntînûôûs ônés ônly). Dîstrîbûtîôns: ûnîfôrm, nôrmàl, lôgnôrmàl, trîàngûlàr, pért, éxpônéntîàl, wéîbûll, bétà, gàmmà, bînômîàl, pôîssôn, dîscrété.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:294
+#: packages/claudia-server/src/claudia_server/app.py:312
 msgid "a recovery key, a name and a new password are needed"
 msgstr "[à récôvéry kéy, à nàmé ànd à néw pàsswôrd àré néédéd~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4689,7 +4689,7 @@ msgstr "[dô nôt màtch thé pàttérn fôr célls~~~~~~~~~~~~~~]"
 msgid "do not start with “{text}”"
 msgstr "[dô nôt stàrt wîth “{text}”~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:573
+#: packages/claudia-server/src/claudia_server/hub.py:602
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "[dôcûmént îds àré 1-64 léttérs, dîgîts, '-' ôr '_'~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4953,7 +4953,7 @@ msgstr "[méssàgé tôô làrgé~~~~~~~]"
 msgid "method must be a string"
 msgstr "[méthôd mûst bé à strîng~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:350
+#: packages/claudia-server/src/claudia_server/app.py:370
 msgid "missing or wrong credentials"
 msgstr "[mîssîng ôr wrông crédéntîàls~~~~~~~~~~~]"
 
@@ -5017,7 +5017,7 @@ msgstr "[nô célls~~~]"
 msgid "no checkpoint number {checkpoint}"
 msgstr "[nô chéckpôînt nûmbér {checkpoint}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:641
+#: packages/claudia-server/src/claudia_server/hub.py:684
 msgid "no document {id!r}"
 msgstr "[nô dôcûmént {îd!r}~~~~~~~]"
 
@@ -5477,7 +5477,7 @@ msgstr "[thé dôcûmént's ôwn~~~~~~~]"
 msgid "the end of the cell"
 msgstr "[thé énd ôf thé céll~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:336
+#: packages/claudia-server/src/claudia_server/app.py:355
 msgid "the first message must be hello with params"
 msgstr "[thé fîrst méssàgé mûst bé héllô wîth pàràms~~~~~~~~~~~~~~~~~]"
 
@@ -5633,7 +5633,11 @@ msgstr "[thîs pàràgràph îs nôt à lîst îtém~~~~~~~~~~~~~]"
 msgid "this row"
 msgstr "[thîs rôw~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:297 packages/claudia-server/src/claudia_server/protocol.py:850
+#: packages/claudia-server/src/claudia_server/app.py:259 packages/claudia-server/src/claudia_server/suite.py:106
+msgid "this server does not host {app}"
+msgstr "[thîs sérvér dôés nôt hôst {app}~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/app.py:315 packages/claudia-server/src/claudia_server/protocol.py:850
 msgid "this server does not keep recovery keys"
 msgstr "[thîs sérvér dôés nôt kéép récôvéry kéys~~~~~~~~~~~~~~~~]"
 
@@ -5661,7 +5665,7 @@ msgstr "[thîs sérvér dôés nôt sûppôrt hàndîng ôvér ôwnérshîp~~~~~
 msgid "this server does not support leaving a document"
 msgstr "[thîs sérvér dôés nôt sûppôrt léàvîng à dôcûmént~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:614
+#: packages/claudia-server/src/claudia_server/hub.py:544
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "[thîs sérvér hôlds {limit} dôcûménts, thé môst ît mày hôld~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5953,15 +5957,15 @@ msgstr "[{host} îsn't réàchàblé béyônd thîs cômpûtér yét, sô thîs 
 msgid "{id} already has {limit} connections"
 msgstr "[{id} àlréàdy hàs {limit} cônnéctîôns~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:629
+#: packages/claudia-server/src/claudia_server/hub.py:672
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd yét: {reason}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:632
+#: packages/claudia-server/src/claudia_server/hub.py:675
 msgid "{id} cannot be opened: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd: {reason}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:636
+#: packages/claudia-server/src/claudia_server/hub.py:679
 msgid "{id} cannot be read"
 msgstr "[{id} cànnôt bé réàd~~~~~~~~]"
 

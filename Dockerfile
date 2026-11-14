@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
 #
-# One image for all Claudia app servers (computes, composes, creates).
-# Which app a container runs is chosen at start-up with CLAUDIA_APP; see docker/entrypoint.sh.
+# One image, one server for all three Claudia apps (computes, composes, creates; D430).
+# CLAUDIA_APP limits a container to one app (see docker/entrypoint.sh).
 #
 #   docker build -t claudia-server .
-#   docker run -p 8765:8765 -v claudia-computes:/data claudia-server                          # computes
-#   docker run -p 8766:8765 -v claudia-composes:/data -e CLAUDIA_APP=composes claudia-server
+#   docker run -p 8765:8765 -v claudia:/data claudia-server                                    # all three apps
+#   docker run -p 8765:8765 -v claudia-composes:/data -e CLAUDIA_APP=composes claudia-server   # composes only
 #   docker build --build-arg WITH_OPENVINO=true -t claudia-server:ai .                        # with --ai support
 
 # ---- web: the Nuxt single-page app, built to static files --------------------------------------

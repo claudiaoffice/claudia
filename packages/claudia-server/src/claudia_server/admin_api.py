@@ -5,17 +5,17 @@ document; a document's own protocol (``app.py``) does not call into this module 
 it. Every route but ``status``, ``setup`` and ``login`` needs a current administrator session
 (``Authorization: Bearer <token>``, issued by ``login`` or ``setup``); :func:`admin_router` is the one way in.
 
-``AdminContext`` is everything the routes need that is not already on ``Hub``: the administrators themselves, their
-sessions, the server's settings, where to persist both, whether this server is exposed beyond this computer (decided
-once, at bind time, from the already-existing ``is_loopback`` signal: see ``cli.py``), and ``AiRuntime`` for the one
-setting that is more than a value to remember — changing the AI model restarts the model itself (see
+``AdminContext`` is everything the routes need that is not already on the ``Suite``: the administrators themselves,
+their sessions, the server's settings, where to persist both, whether this server is exposed beyond this computer
+(decided once, at bind time, from the already-existing ``is_loopback`` signal: see ``cli.py``), and ``AiRuntime`` for
+the one setting that is more than a value to remember — changing the AI model restarts the model itself (see
 :meth:`AiRuntime.apply`). The one thing it does *not* carry is a way to change the access secret: that belongs to the
 ``Gateway`` that ``create_app`` builds, so ``admin_router`` takes it as a plain function instead (there is no other
 reason for this module to know what a ``Gateway`` is)."""
 
 import asyncio
 import secrets
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
@@ -31,10 +31,28 @@ from .admin import AdminAccount, AdminDirectory, needs_administrator
 from .admin_sessions import AdminSessions
 from .apps import model_assistant_for, stand_in_assistant_for
 from .assistant import Assistant
-from .hub import Hub
 from .server_settings import AiSettings, ServerSettings, TypesetSettings, save_admins, save_settings
+from .suite import Suite
 
 JsonBody = Annotated[dict, Body()]
+
+
+def assistants_for(
+    models: Iterable[type[DocumentModel]], runner: ModelRunner | None
+) -> dict[str, Callable[[], Assistant] | None]:
+    """Who answers ``@ai`` in each app, by app: with a ``runner``, the language model in every app that has a lens for
+    it (one model for all of them, D432) and the scripted stand-in in the others; without one, the stand-in
+    everywhere (``None`` for an app that has none)."""
+    found: dict[str, Callable[[], Assistant] | None] = {}
+    for model in models:
+        factory = model_assistant_for(model, runner) if runner is not None else None
+        found[model.app] = factory if factory is not None else stand_in_assistant_for(model)
+    return found
+
+
+def any_lens(models: Iterable[type[DocumentModel]], runner: ModelRunner) -> bool:
+    """Can the language model of ``runner`` work in at least one of these apps?"""
+    return any(model_assistant_for(model, runner) is not None for model in models)
 
 
 @dataclass
@@ -42,33 +60,35 @@ class AiRuntime:
     """Where the admin API finds, and changes, the AI user's language model while the server runs.
 
     ``enabled`` is ``False`` for a server started with ``--no-assistant``: an operator's own decision that the
-    settings pages must not be able to undo. ``model`` is the document model this server was started with — the
-    model-driven assistant is described to the language model in its terms (``apps.model_assistant_for``)."""
+    settings pages must not be able to undo. ``models`` are the document models of the server's apps — the
+    model-driven assistant is described to the language model in their terms (``apps.model_assistant_for``); one
+    model serves all of them (D432)."""
 
-    model: type[DocumentModel]
+    models: tuple[type[DocumentModel], ...]
     enabled: bool
     runner: ModelRunner | None = None
 
-    async def apply(self, hub: Hub, settings: AiSettings) -> None:
-        """Make ``settings`` the AI user's configuration, from now on: later-opened documents get it; documents
-        already open keep whichever assistant they were opened with (the same way a changed ``max_documents`` only
-        ever bounds documents opened after it changed). Closes the model this replaces, if there was one.
+    async def apply(self, suite: Suite, settings: AiSettings) -> None:
+        """Make ``settings`` the AI user's configuration in every app of ``suite``, from now on: later-opened
+        documents get it; documents already open keep whichever assistant they were opened with (the same way a
+        changed ``max_documents`` only ever bounds documents opened after it changed). Closes the model this replaces,
+        if there was one.
 
-        ``ValueError`` if the AI is disabled for this server, the model cannot be loaded, or this server's document
-        model has no assistant for it."""
+        ``ValueError`` if the AI is disabled for this server, the model cannot be loaded, or none of this server's apps
+        has an assistant for it."""
         if not self.enabled:
             raise ValueError("the AI assistant is disabled for this server (it was started with --no-assistant)")
         old_runner = self.runner
-        if settings.model_dir is None:
-            hub.assistant = stand_in_assistant_for(self.model)
-            self.runner = None
-        else:
-            factory, runner = await self._load(settings.model_dir, settings)
-            hub.assistant, self.runner = factory, runner
+        runner = None if settings.model_dir is None else await self._load(settings.model_dir, settings)
+        for app, factory in assistants_for(self.models, runner).items():
+            module = suite.module(app)
+            if module is not None:
+                module.hub.assistant = factory
+        self.runner = runner
         if old_runner is not None:
             old_runner.close()
 
-    async def _load(self, model_dir: str, settings: AiSettings) -> tuple[Callable[[], Assistant], ModelRunner]:
+    async def _load(self, model_dir: str, settings: AiSettings) -> ModelRunner:
         try:
             runner = await asyncio.to_thread(
                 lambda: ModelRunner(
@@ -79,16 +99,15 @@ class AiRuntime:
             )
         except ModelError as exc:
             raise ValueError(str(exc)) from exc
-        factory = model_assistant_for(self.model, runner)
-        if factory is None:
+        if not any_lens(self.models, runner):
             runner.close()
             raise ValueError("this server's document model has no AI assistant yet")
-        return factory, runner
+        return runner
 
 
 @dataclass
 class AdminContext:
-    """Everything the admin API needs besides ``Hub`` itself."""
+    """Everything the admin API needs besides the ``Suite`` itself."""
 
     admins: AdminDirectory
     sessions: AdminSessions
@@ -227,7 +246,7 @@ def _admin_routes(router: APIRouter, context: AdminContext, require_admin: Calla
 
 def _settings_routes(
     router: APIRouter,
-    hub: Hub,
+    suite: Suite,
     set_access_secret: Callable[[str | None], None],
     context: AdminContext,
     require_admin: Callable,
@@ -251,7 +270,7 @@ def _settings_routes(
         value = body.get("max_documents")
         if not (isinstance(value, int) and not isinstance(value, bool) and value >= 1):
             raise HTTPException(400, "max_documents must be a whole number of at least 1")
-        hub.max_documents = value
+        suite.max_documents = value
         context.settings.max_documents = value
         context.settings.note_changed("max_documents", admin)
         _save()
@@ -295,7 +314,7 @@ def _settings_routes(
             timeout=body.get("timeout", context.settings.ai.timeout),
         )
         try:
-            await context.ai.apply(hub, settings)
+            await context.ai.apply(suite, settings)
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         context.settings.ai = settings
@@ -311,8 +330,8 @@ def _settings_routes(
         return _dict()
 
 
-def admin_router(hub: Hub, set_access_secret: Callable[[str | None], None], context: AdminContext) -> APIRouter:
-    """The ``/api/admin`` routes, closed over ``hub``, ``context`` (there is one of each per server) and
+def admin_router(suite: Suite, set_access_secret: Callable[[str | None], None], context: AdminContext) -> APIRouter:
+    """The ``/api/admin`` routes, closed over ``suite`` (the server's apps), ``context`` (one per server) and
     ``set_access_secret`` (``Gateway.set_secret``, passed in rather than imported: see the module docstring)."""
     router = APIRouter(prefix="/api/admin")
 
@@ -324,5 +343,5 @@ def admin_router(hub: Hub, set_access_secret: Callable[[str | None], None], cont
 
     _identity_routes(router, context, require_admin)
     _admin_routes(router, context, require_admin)
-    _settings_routes(router, hub, set_access_secret, context, require_admin)
+    _settings_routes(router, suite, set_access_secret, context, require_admin)
     return router

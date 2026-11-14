@@ -1,7 +1,10 @@
 {
- "version": "0.29.0",
+ "version": "0.30.0",
  "AI_USER": {
   "value": "'ai'"
+ },
+ "APP_MODELS": {
+  "value": "{'computes': 'claudia_computes.model:WorkbookModel', 'composes': 'claudia_composes:TextModel', 'creates': 'claudia_creates:SlideModel'}"
  },
  "Account": {
   "class": [
@@ -73,9 +76,9 @@
   "class": [
    "object"
   ],
-  "init": "(model: type[claudia_core.model.DocumentModel], enabled: bool, runner: claudia_ai.runner.ModelRunner | None = None) -> None",
+  "init": "(models: tuple[type[claudia_core.model.DocumentModel], ...], enabled: bool, runner: claudia_ai.runner.ModelRunner | None = None) -> None",
   "methods": {
-   "apply": "(self, hub: claudia_server.hub.Hub, settings: claudia_server.server_settings.AiSettings) -> None"
+   "apply": "(self, suite: claudia_server.suite.Suite, settings: claudia_server.server_settings.AiSettings) -> None"
   },
   "properties": []
  },
@@ -234,15 +237,35 @@
    "app"
   ]
  },
+ "FolderLock": {
+  "class": [
+   "object"
+  ],
+  "init": "(folder: 'str | Path')",
+  "methods": {
+   "acquire": "(self) -> 'None'",
+   "release": "(self) -> 'None'"
+  },
+  "properties": []
+ },
+ "FolderLocked": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
  "Gateway": {
   "class": [
    "object"
   ],
-  "init": "(hub: 'Hub', directory: 'UserDirectory', allowed: 'set[str]', *, max_hashing: 'int' = 2, access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64)",
+  "init": "(suite: 'Suite', allowed: 'set[str]', *, max_hashing: 'int' = 2, access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64)",
   "methods": {
    "accepts_secret": "(self, candidate: 'object') -> 'bool'",
-   "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool', access: 'object' = None) -> 'Account | None'",
-   "serve": "(self, websocket: 'WebSocket', doc_id: 'str') -> 'None'",
+   "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool', access: 'object' = None, *, app: 'str | None' = None) -> 'Account | None'",
+   "module_for": "(self, doc_id: 'str', app: 'str | None', asked_app: 'object' = None) -> 'Module'",
+   "serve": "(self, websocket: 'WebSocket', doc_id: 'str', app: 'str | None' = None) -> 'None'",
    "set_secret": "(self, access_secret: 'str | None') -> 'None'"
   },
   "properties": []
@@ -299,18 +322,21 @@
   "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4, renderings: 'RenderDesk | None' = None)",
   "methods": {
    "check_id": "(doc_id: 'object') -> 'str'",
+   "count_known": "(self) -> 'int'",
    "ensure_room": "(self) -> 'None'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
    "housekeeping": "(self) -> 'None'",
    "is_loaded": "(self, doc_id: 'str') -> 'bool'",
    "listing": "(self) -> 'list[dict]'",
    "open": "(self, doc_id: 'str', create: 'bool' = False) -> 'HostedDocument'",
+   "share_room": "(self, room: 'Room') -> 'None'",
    "start": "(self) -> 'None'",
    "stop": "(self) -> 'None'",
    "sweep": "(self) -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "max_documents"
   ]
  },
  "HubError": {
@@ -320,6 +346,24 @@
   "init": "(code: 'str', message: 'str')",
   "methods": {},
   "properties": []
+ },
+ "IdleWatch": {
+  "class": [
+   "object"
+  ],
+  "init": "(seconds: 'float', *, on_idle: 'Callable[[], None] | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, interval: 'float' = 1.0)",
+  "methods": {
+   "check": "(self) -> 'bool'",
+   "closed": "(self) -> 'None'",
+   "idle_for": "(self) -> 'float'",
+   "opened": "(self) -> 'None'",
+   "start": "(self) -> 'None'",
+   "stop": "(self) -> 'None'",
+   "touched": "(self) -> 'None'"
+  },
+  "properties": [
+   "open_sockets"
+  ]
  },
  "Limits": {
   "class": [
@@ -381,6 +425,16 @@
   },
   "properties": []
  },
+ "Module": {
+  "class": [
+   "object"
+  ],
+  "init": "(hub: 'Hub', directory: 'UserDirectory') -> None",
+  "methods": {},
+  "properties": [
+   "app"
+  ]
+ },
  "PROTOCOL_VERSION": {
   "value": "2"
  },
@@ -439,6 +493,17 @@
   ],
   "init": "(...)",
   "methods": {},
+  "properties": []
+ },
+ "Room": {
+  "class": [
+   "object"
+  ],
+  "init": "(max_documents: 'int' = 1000)",
+  "methods": {
+   "ensure": "(self) -> 'None'",
+   "join": "(self, hub: 'Hub') -> 'None'"
+  },
   "properties": []
  },
  "Say": {
@@ -523,6 +588,26 @@
   "methods": {},
   "properties": []
  },
+ "Suite": {
+  "class": [
+   "object"
+  ],
+  "init": "(modules: 'Iterable[Module]', *, max_documents: 'int | None' = None)",
+  "methods": {
+   "for_new": "(self, app: 'str | None') -> 'Module'",
+   "listing": "(self) -> 'list[dict]'",
+   "locate": "(self, doc_id: 'str') -> 'Module | None'",
+   "module": "(self, app: 'str') -> 'Module | None'",
+   "single": "(hub: 'Hub', directory: 'UserDirectory') -> 'Suite'",
+   "start": "(self) -> 'None'",
+   "stop": "(self) -> 'None'"
+  },
+  "properties": [
+   "apps",
+   "first",
+   "max_documents"
+  ]
+ },
  "Task": {
   "class": [
    "object"
@@ -584,7 +669,7 @@
   "properties": []
  },
  "admin_router": {
-  "function": "(hub: claudia_server.hub.Hub, set_access_secret: collections.abc.Callable[[str | None], None], context: claudia_server.admin_api.AdminContext) -> fastapi.routing.APIRouter"
+  "function": "(suite: claudia_server.suite.Suite, set_access_secret: collections.abc.Callable[[str | None], None], context: claudia_server.admin_api.AdminContext) -> fastapi.routing.APIRouter"
  },
  "composes_methods": {
   "value": "<MethodTable>"
@@ -596,7 +681,7 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub', directory: 'UserDirectory', *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None) -> 'FastAPI'"
+  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"

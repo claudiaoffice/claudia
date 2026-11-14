@@ -65,26 +65,27 @@ from claudia_render import RenderService, ToolRegistry, builtin_registry
 
 from . import __version__, redirect
 from .admin import AdminDirectory, needs_administrator
-from .admin_api import AdminContext, AiRuntime
+from .admin_api import AdminContext, AiRuntime, any_lens, assistants_for
 from .admin_sessions import AdminSessions
 from .app import DEFAULT_MAX_WAITING, DEFAULT_MAX_WAITING_PER_ADDRESS, MIN_ACCESS_SECRET, create_app
-from .apps import methods_for, model_assistant_for, stand_in_assistant_for
+from .apps import methods_for
 from .assistant import Assistant
 from .auth import ScryptDirectory, UserDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
 from .filestore import FileDirectory, FileProvider
+from .folder_lock import FolderLock, FolderLocked
 from .fonts import FontService
 from .hosts import AllowedHosts, is_loopback, machine_names
 from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
 from .hyphenation import HyphenationService
+from .idle import IdleWatch
 from .protocol import Limits
 from .rasterise import svg_rasteriser
 from .rendered import RenderDesk
 from .sealed import SealedDocuments
 from .server_settings import ServerSettings, load_admins, load_settings
 from .state import default_state_dir
-
-DEFAULT_MODEL = "claudia_computes.model:WorkbookModel"
+from .suite import APP_MODELS, Module, Suite
 
 
 class UsageError(Exception):
@@ -100,9 +101,10 @@ class Plan:
     banner: list[str] = field(default_factory=list)
     redirect_from: int | None = None
     closers: list[Callable[[], None]] = field(default_factory=list)  # what to stop when the server has stopped
+    idle: IdleWatch | None = None  # with --exit-when-idle: told how to stop the server once it runs (main)
 
     def close(self) -> None:
-        """Stop what the server started besides itself (the language model's worker)."""
+        """Stop what the server started besides itself (the language model's worker, the lock on its folder)."""
         for close in self.closers:
             close()
 
@@ -113,16 +115,33 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"claudia-server {__version__}")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
-    parser.add_argument("--model", default=DEFAULT_MODEL, help="the document model, as module:Class")
+    apps = parser.add_mutually_exclusive_group()
+    apps.add_argument(
+        "--apps",
+        metavar="APPS",
+        help=f"the apps to serve, separated by commas (default: all of them, {','.join(APP_MODELS)})",
+    )
+    apps.add_argument(
+        "--model",
+        help="serve one app only, by its document model (module:Class), with its documents directly in --dir",
+    )
     parser.add_argument(
         "--dir",
         metavar="DIR",
-        help="keep documents in DIR as sealed (encrypted) files (default: in memory, lost on exit)",
+        help="keep documents in DIR as sealed (encrypted) files, each app's in DIR/APP (default: in memory, lost on "
+        "exit)",
     )
     parser.add_argument(
         "--plain-dir",
         metavar="DIR",
         help="keep documents and users in DIR as plain files, NOT encrypted (the store of the early demos)",
+    )
+    parser.add_argument(
+        "--exit-when-idle",
+        type=float,
+        metavar="SECONDS",
+        help="stop once nothing has used the server for SECONDS: no open socket, no request (the desktop apps' "
+        "local server)",
     )
     parser.add_argument("--web", metavar="DIR", help="serve the built web app from DIR")
     parser.add_argument(
@@ -270,6 +289,8 @@ def _check_caps(args: argparse.Namespace) -> None:
         value = getattr(args, name)
         if value is not None and value < 1:  # --max-documents may be None: left to the server's own settings
             raise UsageError(f"{option} must be at least 1")
+    if args.exit_when_idle is not None and args.exit_when_idle <= 0:
+        raise UsageError("--exit-when-idle must be a positive number of seconds")
 
 
 def _hosts(args: argparse.Namespace) -> AllowedHosts:
@@ -315,9 +336,24 @@ def _state_dir(args: argparse.Namespace) -> Path:
     return Path(args.state_dir).expanduser() if args.state_dir else default_state_dir()
 
 
-def _shapes(args: argparse.Namespace, model: type[DocumentModel]) -> ShapeLibrary | None:
-    """The shape library of a presentation server (``None`` for the other apps, which have no shapes)."""
-    if model.app != "creates":
+def _models(args: argparse.Namespace) -> tuple[list[type[DocumentModel]], bool]:
+    """The document models of the apps to serve, in order, and whether the server is the old kind with one app
+    whose documents sit directly in ``--dir`` (``--model``, D433)."""
+    if args.model:
+        return [load_model(args.model)], True
+    names = [name.strip() for name in (args.apps or ",".join(APP_MODELS)).split(",") if name.strip()]
+    unknown = [name for name in names if name not in APP_MODELS]
+    if unknown or not names:
+        raise UsageError(f"--apps: choose from {', '.join(APP_MODELS)}, not {', '.join(unknown) or 'nothing'}")
+    if len(set(names)) != len(names):
+        raise UsageError("--apps: each app once")
+    return [load_model(APP_MODELS[name]) for name in names], False
+
+
+def _shapes(args: argparse.Namespace, models: list[type[DocumentModel]]) -> ShapeLibrary | None:
+    """The shape library of the presentations (``None`` on a server without creates: the other apps have no
+    shapes)."""
+    if all(model.app != "creates" for model in models):
         if args.shapes:
             raise UsageError("--shapes: only servers of presentations use shapes")
         return None
@@ -393,9 +429,10 @@ def _load_runner(model_dir: str, device: str, max_tokens: int, timeout: float) -
 
 
 def _build_assistant(
-    args: argparse.Namespace, model: type[DocumentModel], settings: ServerSettings
-) -> tuple[Callable[[], Assistant] | None, AiRuntime]:
-    """The assistant factory to start with, and the ``AiRuntime`` the admin API changes it through afterwards.
+    args: argparse.Namespace, models: list[type[DocumentModel]], settings: ServerSettings
+) -> tuple[dict[str, Callable[[], Assistant] | None], AiRuntime]:
+    """The assistant factory of each app to start with, by app, and the ``AiRuntime`` the admin API changes them
+    through afterwards. One language model serves every app that has a lens for it (D432).
 
     ``--ai`` is an operator override (see the module docstring on precedence): given, it is used exactly as before
     this existed, and the saved AI settings are not even consulted. Without it, the settings last saved through the
@@ -409,11 +446,10 @@ def _build_assistant(
         if args.ai_max_tokens < 1 or args.ai_timeout <= 0:
             raise UsageError("--ai-max-tokens and --ai-timeout must be positive")
         runner = _load_runner(args.ai, args.ai_device, args.ai_max_tokens, args.ai_timeout)
-        factory = model_assistant_for(model, runner)
-        if factory is None:
+        if not any_lens(models, runner):
             runner.close()
             raise UsageError("--ai: the AI assistant does not know documents of this kind yet")
-        return factory, AiRuntime(model=model, enabled=enabled, runner=runner)
+        return assistants_for(models, runner), AiRuntime(models=tuple(models), enabled=enabled, runner=runner)
     model_dir = settings.ai.model_dir
     if enabled and model_dir:
         ai = settings.ai
@@ -423,21 +459,41 @@ def _build_assistant(
             print(f"warning: the AI model saved in the server settings could not be loaded: {exc}", file=sys.stderr)
             print("starting without it; open the server settings to fix or change it", file=sys.stderr)
         else:
-            factory = model_assistant_for(model, runner)
-            if factory is not None:
-                return factory, AiRuntime(model=model, enabled=enabled, runner=runner)
-            runner.close()  # the saved model_dir does not match this server's document model any more
-    return (stand_in_assistant_for(model) if enabled else None), AiRuntime(model=model, enabled=enabled)
+            if any_lens(models, runner):
+                return assistants_for(models, runner), AiRuntime(models=tuple(models), enabled=enabled, runner=runner)
+            runner.close()  # the saved model_dir does not match this server's document models any more
+    stand_ins: dict[str, Callable[[], Assistant] | None] = (
+        assistants_for(models, None) if enabled else dict.fromkeys((model.app for model in models), None)
+    )
+    return stand_ins, AiRuntime(models=tuple(models), enabled=enabled)
 
 
-def _storage(args: argparse.Namespace, model: type[DocumentModel]) -> tuple[DocumentProvider, UserDirectory]:
-    """Where documents (and, for ``--plain-dir``, their own users) live: sealed files, plain files, or memory."""
+def _storage(
+    args: argparse.Namespace, model: type[DocumentModel], one_app: bool
+) -> tuple[DocumentProvider, UserDirectory]:
+    """Where an app's documents (and, for ``--plain-dir``, their own users) live: sealed files, plain files, or
+    memory. Each app has its own place, ``DIR/<app>`` (D431); a server of the old kind (``--model``) keeps them
+    directly in ``DIR`` (D433)."""
     if args.dir:
-        sealed = SealedDocuments(args.dir, model)
+        sealed = SealedDocuments(Path(args.dir) if one_app else Path(args.dir) / model.app, model)
         return sealed, sealed
     if args.plain_dir:
-        return FileProvider(args.plain_dir, model), FileDirectory(args.plain_dir)
+        folder = Path(args.plain_dir) if one_app else Path(args.plain_dir) / model.app
+        return FileProvider(folder, model), FileDirectory(folder)
     return MemoryProvider(model), ScryptDirectory()
+
+
+def _lock_folder(args: argparse.Namespace) -> FolderLock | None:
+    """The lock on the document folder (D435), taken; ``None`` for documents in memory."""
+    folder = args.dir or args.plain_dir
+    if not folder:
+        return None
+    lock = FolderLock(folder)
+    try:
+        lock.acquire()
+    except FolderLocked as exc:
+        raise UsageError(str(exc)) from exc
+    return lock
 
 
 def _server_state(args: argparse.Namespace) -> tuple[Path, ServerSettings, AdminDirectory]:
@@ -483,13 +539,42 @@ def _check_places(args: argparse.Namespace) -> None:
         raise UsageError("--dir (sealed documents) and --plain-dir (plain files) cannot be used together")
 
 
+def _suite(
+    args: argparse.Namespace,
+    models: list[type[DocumentModel]],
+    one_app: bool,
+    *,
+    library: ShapeLibrary | None,
+    assistants: dict[str, Callable[[], Assistant] | None],
+    hub_options: dict[str, Any],
+) -> Suite:
+    """The server's apps (D430): for each document model its store, its methods, its assistant and its hub."""
+    modules = []
+    for model in models:
+        provider, directory = _storage(args, model, one_app)
+        methods = methods_for(model, shapes=library)
+        hub = Hub(provider, methods=methods, assistant=assistants[model.app], **hub_options)
+        modules.append(Module(hub, directory))
+    return Suite(modules, max_documents=hub_options["max_documents"])
+
+
+def _storage_banner_line(args: argparse.Namespace, one_app: bool) -> str:
+    """What the start-up banner says about where the documents are kept."""
+    if args.dir:
+        where = args.dir if one_app else f"{args.dir}, one folder per app,"
+        return f"documents are kept in {where} each sealed (encrypted) by its people's passwords"
+    if args.plain_dir:
+        return f"documents and users are kept in {args.plain_dir} (NOT encrypted: use --dir for sealed documents)"
+    return "documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)"
+
+
 def make_plan(argv: list[str] | None = None) -> Plan:
     """Read the command line and prepare the server; ``UsageError`` if it cannot be started as asked."""
     args = build_parser().parse_args(argv)
     if not 0 < args.port < 65536 or args.max_connections < 1:
         raise UsageError("--port must be 1-65535 and --max-connections at least 1")
     _check_caps(args)
-    model = load_model(args.model)
+    models, one_app = _models(args)
     certificate, tls_options = _tls(args)
     hosts = _hosts(args)
     state_dir, settings, admins = _server_state(args)
@@ -497,29 +582,27 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     max_documents = args.max_documents if args.max_documents is not None else settings.max_documents
     _check_places(args)
     limits = Limits()
-    provider, directory = _storage(args, model)
-    assistant, ai = _build_assistant(args, model, settings)
-    library = _shapes(args, model)
+    library = _shapes(args, models)
     fonts = _fonts(args, state_dir)
     hyphenation = _hyphenation(args, state_dir)
+    assistants, ai = _build_assistant(args, models, settings)
     renderings, rendering_lines = _renderings(settings, state_dir, fonts)
-    hub = Hub(
-        provider,
-        methods=methods_for(model, shapes=library),
-        assistant=assistant,
-        limits=limits,
-        allow_create=not args.no_create,
-        max_documents=max_documents,
-        max_connections=args.max_connections,
-        renderings=renderings,
-    )
+    lock = _lock_folder(args)  # before any store touches the folder
+    hub_options = {
+        "limits": limits,
+        "allow_create": not args.no_create,
+        "max_documents": max_documents,
+        "max_connections": args.max_connections,
+        "renderings": renderings,
+    }
+    suite = _suite(args, models, one_app, library=library, assistants=assistants, hub_options=hub_options)
+    idle = IdleWatch(args.exit_when_idle) if args.exit_when_idle else None
     exposed = not is_loopback(args.host)
     admin = AdminContext(
         admins=admins, sessions=AdminSessions(), settings=settings, state_dir=state_dir, ai=ai, exposed=exposed
     )
     app = create_app(
-        hub,
-        directory,
+        suite,
         allowed_origins=args.allow_origin,
         allowed_hosts=hosts.names,
         access_secret=secret,
@@ -530,10 +613,13 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         admin=admin,
         fonts=fonts,
         hyphenation=hyphenation,
+        idle=idle,
     )
     scheme = "http" if certificate is None else "https"
     ws_scheme = "ws" if certificate is None else "wss"
-    banner = [f"serving on {ws_scheme}://{args.host}:{args.port}/api/docs/<id>/ws"]
+    banner = [
+        f"serving {', '.join(suite.apps)} on {ws_scheme}://{args.host}:{args.port}/api/<app>/docs/<id>/ws",
+    ]
     banner += _tls_banner_lines(certificate, behind_proxy=args.behind_proxy)
     banner.append(f"answers to {', '.join(hosts.names)} and IP addresses; more names with --allow-host NAME")
     if secret:
@@ -545,20 +631,15 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         if args.web
         else f"no web app: {scheme}://{args.host}:{args.port}/ explains how to build and serve it"
     )
-    if args.dir:
-        banner.append(f"documents are kept in {args.dir}, each sealed (encrypted) by its people's passwords")
-    elif args.plain_dir:
-        banner.append(
-            f"documents and users are kept in {args.plain_dir} (NOT encrypted: use --dir for sealed documents)"
-        )
-    else:
-        banner.append("documents are kept in memory and are gone when the server stops (use --dir DIR to keep them)")
+    banner.append(_storage_banner_line(args, one_app))
     banner.append(fonts.summary())
     banner += [f"  not used, {problem.path}: {problem.reason}" for problem in fonts.catalogue.problems]
     banner += rendering_lines
     banner.append(hyphenation.summary())
     banner += [f"  not used, {problem}" for problem in hyphenation.problems if hyphenation.languages]
     banner += _what_is_loaded(library, ai.runner)
+    if idle is not None:
+        banner.append(f"stops once nothing has used it for {args.exit_when_idle:g} seconds (--exit-when-idle)")
     options = {
         "host": args.host,
         "port": args.port,
@@ -574,7 +655,8 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         if ai.runner is not None:
             ai.runner.close()
 
-    return Plan(app, options, banner, args.redirect_port, [_close_ai])
+    closers = [_close_ai] if lock is None else [_close_ai, lock.release]
+    return Plan(app, options, banner, args.redirect_port, closers, idle)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -593,8 +675,11 @@ def main(argv: list[str] | None = None) -> int:
 
     for line in plan.banner:
         print(line, flush=True)
+    server = uvicorn.Server(uvicorn.Config(plan.app, **plan.uvicorn_options))
+    if plan.idle is not None:
+        plan.idle.on_idle = lambda: setattr(server, "should_exit", True)  # as Ctrl+C does: documents are packed
     try:
-        uvicorn.run(plan.app, **plan.uvicorn_options)
+        server.run()
     finally:
         plan.close()
     return 0

@@ -1406,6 +1406,7 @@
   "this document is not a workbook": "Dieses Dokument ist keine Arbeitsmappe",
   "this paragraph is not a list item": "Dieser Absatz ist kein Listeneintrag",
   "this row": "diese Zeile",
+  "this server does not host {app}": "dieser Server bietet {app} nicht an",
   "this server does not keep recovery keys": "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf",
   "this server does not list a document's people this way": "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise auf",
   "this server does not make rendered containers": "Dieser Server erzeugt keine gerenderten Container",

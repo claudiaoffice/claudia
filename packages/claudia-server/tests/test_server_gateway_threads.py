@@ -8,6 +8,7 @@ from claudia_core.testing import ListModel
 from claudia_server.app import Gateway
 from claudia_server.auth import Account, Credentials
 from claudia_server.hub import Hub, MemoryProvider
+from claudia_server.suite import Suite
 
 PASSWORD = "Correct-Horse-9"
 
@@ -56,7 +57,7 @@ async def worst_pause_while(task):
 
 def gateway_with(directory, **options):
     hub = Hub(MemoryProvider(ListModel))
-    return hub, Gateway(hub, directory, set(), **options)
+    return hub, Gateway(Suite.single(hub, directory), set(), **options)
 
 
 def test_checking_a_password_does_not_block_the_event_loop():

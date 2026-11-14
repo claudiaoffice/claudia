@@ -350,3 +350,15 @@ xlsx files as today's Excel writes them open and survive an edit; the second dra
 layouts in creates (E10.4); the third brings cell formats and number formats (E6.14, E6.18).
 
 Decisions: D370, D371, D372 (xlsx); D373, D374, D375, D376 (templates in creates: proposals awaiting the owner); D377 (dates and money); D378, D379 (number formats; cell formats as styles); D380 (changed looks in an edited file)
+
+## One server, app modules (branch `one-server`, 2026-11-14)
+
+The file-management discussion of 2026-11-13 ended at a technical wall: one list of all of a person's documents
+needs one server, and there were three (one process per app, three origins). The owner decided to move to one server
+that hosts the apps as modules, with the isolation that three processes gave to come back later through worker
+processes. There is no release yet, so nothing is migrated. The work comes as a series of patches: the server first,
+then the web client (after its screens are agreed), then one patch per desktop shell, then the offloading.
+
+Decisions: D430 (one server, app modules); D431 (one place per app, addresses with the app); D432 (limits and
+administration per server); D433 (old commands keep working); D434 (stop when idle); D435 (folder lock); D436
+(isolation in two steps); D437 (no migration)

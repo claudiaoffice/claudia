@@ -121,8 +121,9 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
     await ann.close()
     await stop(server)
     const bytes = []
-    for (const file of fs.readdirSync(path.join(DATA, 'docs'), { recursive: true })) {
-      const full = path.join(DATA, 'docs', file)
+    // a workbook made at the address without an app lands in the first app's place (D431)
+    for (const file of fs.readdirSync(path.join(DATA, 'computes', 'docs'), { recursive: true })) {
+      const full = path.join(DATA, 'computes', 'docs', file)
       if (fs.statSync(full).isFile()) bytes.push(fs.readFileSync(full))
     }
     const all = Buffer.concat(bytes)
