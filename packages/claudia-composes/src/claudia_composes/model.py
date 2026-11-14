@@ -14,6 +14,7 @@ from typing import ClassVar, Self
 
 from claudia_core import (
     SLOTS,
+    Command,
     CommandRegistry,
     Context,
     DocumentModel,
@@ -27,6 +28,7 @@ from claudia_core import (
     Paragraph,
     Region,
     Run,
+    SetLanguage,
     StyleBook,
     StyleDef,
     VisualObject,
@@ -303,6 +305,12 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def empty(cls) -> Self:
         """A document with one empty body paragraph."""
         return cls()
+
+    @classmethod
+    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
+        """A new text starts in the language of its maker's interface (D915), set by the server when it creates
+        the document rather than by her client as her own first step (UX-33)."""
+        return () if language is None else (SetLanguage(language),)
 
     def serialize(self) -> dict:
         """The state as plain data (a snapshot is a cache of it)."""

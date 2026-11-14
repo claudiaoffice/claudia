@@ -192,7 +192,7 @@ the bar below adds them up, with how many slides have none yet. View ▸ Speaker
 setting, `lib/show-prefs.ts`).
 
 **Present** (the apricot button, View ▸ Present from the first slide / from this slide) opens the show over the
-workspace: **F5** from the first slide, **Shift+F5** from this one, and **Ctrl+Alt+P** / **Ctrl+Alt+Shift+P** where F5 is a
+workspace: **F5** from the first slide, **Shift+F5** from this one, and **Ctrl+Alt+P** / **Ctrl+Alt+Shift+H** where F5 is a
 system key (a Mac, D344). It is read-only and local (D340) and runs on a frozen copy of the presentation (D341,
 `lib/frozen.ts`): a colleague's edit changes nothing on the screen, and the presenter view says "Changes since you
 started: N" with an **Update now** button. In the show: ← → Space PageUp PageDown Backspace go through the slides,

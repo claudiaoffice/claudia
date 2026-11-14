@@ -236,6 +236,27 @@ class Batch(Command):
 
 @core_commands.register
 @dataclass(frozen=True)
+class Setup(Batch):
+    """What a new document starts with, made by the server when it creates the document (UX-33): the commands of
+    ``DocumentModel.setup_commands`` as one entry. It is in the history, under its maker's name, but it is nobody's undo
+    step: a person's first Ctrl+Z must not take away the first sheet of a workbook or the language of a text."""
+
+    kind: ClassVar[str] = "core.Setup"
+
+    @property
+    def label(self) -> str:
+        return self.name or "Set up the document"
+
+    @property
+    def undoable(self) -> bool:  # type: ignore[override]
+        return False
+
+    def redacted(self) -> Command:
+        return Setup(tuple(c.redacted() for c in self.commands), self.name)
+
+
+@core_commands.register
+@dataclass(frozen=True)
 class Redacted(Command):
     """What a command becomes when it is redacted: kind and ids stay, the content is gone. Applies as a no-op."""
 

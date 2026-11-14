@@ -19,13 +19,13 @@ import {
   undoRedoItems,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
-import { chordLabel, type ShortcutDef } from '~/lib/shortcuts'
+import { chordLabel, chordOf, type ShortcutDef } from '~/lib/shortcuts'
 import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import PrintPreview from './PrintPreview.vue'
 import { textSource } from '~/lib/print/source'
-import { useCreatorLanguage, usePrint } from '~/lib/print/use-print'
+import { usePrint } from '~/lib/print/use-print'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
@@ -67,9 +67,8 @@ const authors = ref(remembered('claudia.composes.authors', ['on', 'off'], 'off')
 watch(view, (v) => remember('claudia.composes.view', v))
 watch(authors, (on) => remember('claudia.composes.authors', on ? 'on' : 'off'))
 
-// A new text starts in the language of its maker's interface (D915); File ▸ Print… shows the pages in place of the
-// text (D906, D918). Both as in every app that prints (`lib/print/use-print.ts`).
-useCreatorLanguage(session, () => locale.value)
+// File ▸ Print… shows the pages in place of the text (D906, D918), as in every app that prints (`lib/print/use-print.ts`).
+// (A new text's language, D915, is set by the server when it creates the document: UX-33.)
 const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => editor.value?.focus())
 const printSource = textSource(session)
 
@@ -149,15 +148,15 @@ async function pasteFromClipboard() {
 
 // ------------------------------------------------------------------------------ menus and shortcuts
 // D122: composes' one shortcut of its own, on top of the window's Undo, Redo and Save.
-const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: { key: 'F10', shift: true }, run: () => openStyleMenu() }
+const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: chordOf('format.look'), run: () => openStyleMenu() }
 // D912: a soft hyphen says where a word may be broken, a non-breaking hyphen where it may not (as in Word and
 // LibreOffice). Both are invisible in the text unless the pages break there.
 const typing = () => !printing.value && !session.readOnly
-const SOFT_HYPHEN: ShortcutDef = { id: 'edit.soft-hyphen', get label() { return t('Soft hyphen') }, chord: { key: '-', ctrl: true }, run: () => session.type('\u00ad'), enabled: typing }
-const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', get label() { return t('Non-breaking hyphen') }, chord: { key: '_', ctrl: true, shift: true }, run: () => session.type('\u2011'), enabled: typing }
+const SOFT_HYPHEN: ShortcutDef = { id: 'edit.soft-hyphen', get label() { return t('Soft Hyphen') }, chord: chordOf('edit.soft-hyphen'), run: () => session.type('\u00ad'), enabled: typing }
+const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', get label() { return t('Non-breaking Hyphen') }, chord: chordOf('edit.nonbreaking-hyphen'), run: () => session.type('\u2011'), enabled: typing }
 // E9.21: bullets and numbers, on the keys of the digits (Google Docs' Ctrl+Shift+8 and 7), whatever they type.
-const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return t('Bulleted list') }, chord: { key: '8', code: 'Digit8', ctrl: true, shift: true }, run: () => makeList('bullets'), enabled: () => !readonly.value }
-const NUMBERS: ShortcutDef = { id: 'format.numbered-list', get label() { return t('Numbered list') }, chord: { key: '7', code: 'Digit7', ctrl: true, shift: true }, run: () => makeList('numbers'), enabled: () => !readonly.value }
+const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return t('Bulleted List') }, chord: chordOf('format.bulleted-list'), run: () => makeList('bullets'), enabled: () => !readonly.value }
+const NUMBERS: ShortcutDef = { id: 'format.numbered-list', get label() { return t('Numbered List') }, chord: chordOf('format.numbered-list'), run: () => makeList('numbers'), enabled: () => !readonly.value }
 const extraShortcuts = [LOOK, PRINT, SOFT_HYPHEN, HARD_HYPHEN, BULLETS, NUMBERS]
 
 function makeList(scheme: 'bullets' | 'numbers') {
@@ -209,6 +208,16 @@ const menus = computed<Menu[]>(() => {
         }),
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
+        { label: '', separator: true },
+        // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
+        {
+          label: t('Insert'),
+          disabled: !typing(),
+          items: [
+            { id: 'edit.soft-hyphen', label: t('Soft Hyphen'), disabled: !typing(), action: () => SOFT_HYPHEN.run() },
+            { id: 'edit.nonbreaking-hyphen', label: t('Non-breaking Hyphen'), disabled: !typing(), action: () => HARD_HYPHEN.run() },
+          ],
+        },
       ],
     },
     {
@@ -303,8 +312,6 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
   [t('Backspace / Delete'), t('delete; at the edge of a paragraph it joins the one next to it')],
   [t('Ctrl + Backspace / Delete'), t('delete a word')],
   [t('Ctrl + C / X / V'), t('copy, cut and paste, also from and to other programs')],
-  [t('Ctrl + -'), t('a soft hyphen: where a word may be broken at the end of a line in the pages')],
-  [t('Ctrl + Shift + -'), t('a non-breaking hyphen: a hyphen the line is never broken after')],
   [t('@ai review this text'), t('the assistant suggests changes; you accept or reject each')],
 ])
 </script>

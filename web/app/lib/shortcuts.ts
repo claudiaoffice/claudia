@@ -8,13 +8,16 @@
 
 import { onBeforeUnmount, onMounted } from 'vue'
 
+import type { Menu, MenuItem } from '../components/MenuBar.vue'
 import { translate as t } from './i18n'
+import { KEYS } from './keys.generated'
 
 export interface KeyChord {
-  /** What the chord is called, and — without `code` — the character the key types. */
+  /** The character the key types (or its name: `F9`, `ArrowUp`), and what the chord is called. */
   key: string
-  /** The physical key (`KeyboardEvent.code`, "Digit8"): for a chord that is defined by where the key is, because the
-   * character it types depends on the keyboard layout (Shift+8 is `*` on a US and `(` on a German keyboard). */
+  /** The physical key (`KeyboardEvent.code`, "Digit8"), looked at only when the key typed something other than a letter
+   * or a digit: Shift+8 is `*` on a US and `(` on a German keyboard, Option+R is `®` on a Mac. Never first, because the
+   * places differ between layouts (Z and Y swap on a German one). */
   code?: string
   ctrl?: boolean
   shift?: boolean
@@ -43,13 +46,48 @@ export interface KeyLike {
   altKey: boolean
 }
 
-/** The GNOMEish defaults every workspace starts from: Undo, Redo, Save. Each app appends its own (Shift+F10, …). */
+/** The key of a menu action, from the one table of every client (`keys.generated.ts`, made from the shared menu manifest,
+ * UX-35). Throws for an id the table does not have: a key written here by hand is how the clients drifted apart. */
+export function chordOf(id: string): KeyChord {
+  const found = KEYS[id]
+  if (!found) throw new Error(`no key for ${id}: add it to the menu manifest and run scripts/generate_keys.py`)
+  return found.chord
+}
+
+/** What a menu shows beside an entry: its key from the table, or nothing for an entry that has none. */
+export function hintOf(id: string | undefined): string | undefined {
+  const found = id === undefined ? undefined : KEYS[id]
+  return found ? chordLabel(found.chord) : undefined
+}
+
+/** Undo, Redo, Save, the same in every app. Each app adds its own (Shift+F10, …); `menuShortcuts` adds the rest. */
 export function sharedShortcuts(actions: { undo: () => void; redo: () => void; save: () => void }): ShortcutDef[] {
   return [
-    { id: 'edit.undo', get label() { return t('Undo') }, chord: { key: 'z', ctrl: true }, run: actions.undo },
-    { id: 'edit.redo', get label() { return t('Redo') }, chord: { key: 'z', ctrl: true, shift: true }, run: actions.redo },
-    { id: 'file.save', get label() { return t('Save') }, chord: { key: 's', ctrl: true }, run: actions.save },
+    { id: 'edit.undo', get label() { return t('Undo') }, chord: chordOf('edit.undo'), run: actions.undo },
+    { id: 'edit.redo', get label() { return t('Redo') }, chord: chordOf('edit.redo'), run: actions.redo },
+    { id: 'file.save', get label() { return t('Save') }, chord: chordOf('file.save'), run: actions.save },
   ]
+}
+
+/** Every other menu entry's key (UX-35): whatever entry has a key in the table, and is not one the document view or the
+ * browser handles itself, runs as if it were clicked, when it is enabled. `taken` are the ids a hand-made shortcut
+ * already has (with a rule of its own: only while typing, say), which keep it. */
+export function menuShortcuts(menus: Menu[], taken: ReadonlySet<string>): ShortcutDef[] {
+  const defs: ShortcutDef[] = []
+  const add = (item: MenuItem) => {
+    const key = item.id === undefined ? undefined : KEYS[item.id]
+    if (!item.id || !key || key.owner === 'view' || !item.action || taken.has(item.id)) return
+    const run = item.action
+    defs.push({ id: item.id, label: item.label, chord: key.chord, run: () => run(), enabled: () => !item.disabled })
+  }
+  for (const menu of menus) {
+    for (const item of menu.items) {
+      if (item.separator) continue
+      add(item)
+      for (const sub of item.items ?? []) add(sub)
+    }
+  }
+  return defs
 }
 
 /** F6 and Shift+F6, which move between the parts of the window (`regions.ts`): how a keyboard user gets out of the grid,
@@ -66,25 +104,34 @@ export function regionShortcuts(actions: { next: () => void; previous: () => voi
  * two in every app, so the table lives here. */
 export function searchShortcuts(actions: { find: () => void; replace: () => void; canReplace: () => boolean }): ShortcutDef[] {
   return [
-    { id: 'edit.search-replace', get label() { return t('Search & Replace') }, chord: { key: 'f', ctrl: true }, run: actions.find },
+    { id: 'edit.search-replace', get label() { return t('Search & Replace') }, chord: chordOf('edit.search-replace'), run: actions.find },
+    // Ctrl+H has no menu entry of its own (D281), so it is not in the table of menu keys
     { id: 'edit.replace', get label() { return t('Replace') }, chord: { key: 'h', ctrl: true }, run: actions.replace, enabled: actions.canReplace },
   ]
 }
 
-/** `Ctrl+Shift+Z` for the Config ▸ Shortcuts list and the menu's `hint`. */
+const KEY_NAMES: Readonly<Record<string, string>> = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Delete: 'Del' }
+
+/** `Ctrl+Shift+Z` for the Config ▸ Shortcuts list and the menu's `hint`. A symbol that is typed with Shift (`?`, `_`)
+ * is shown as the symbol, without the Shift. */
 export function chordLabel(chord: KeyChord): string {
   const parts: string[] = []
+  const symbol = chord.key.length === 1 && !/[a-z0-9]/i.test(chord.key)
   if (chord.ctrl) parts.push(t('Ctrl'))
-  if (chord.shift) parts.push(t('Shift'))
+  if (chord.shift && !(symbol && '?_'.includes(chord.key))) parts.push(t('Shift'))
   if (chord.alt) parts.push(t('Alt'))
-  parts.push(chord.key.length === 1 ? chord.key.toUpperCase() : chord.key)
+  parts.push(KEY_NAMES[chord.key] ?? (chord.key.length === 1 ? chord.key.toUpperCase() : chord.key))
   return parts.join('+')
 }
 
 export function matches(chord: KeyChord, event: KeyLike): boolean {
   const ctrl = event.ctrlKey || event.metaKey // metaKey: a Mac keyboard reaching a GNOMEish shell through the browser
-  const same = chord.code ? event.code === chord.code : event.key.toLowerCase() === chord.key.toLowerCase()
-  return same && ctrl === !!chord.ctrl && event.shiftKey === !!chord.shift && event.altKey === !!chord.alt
+  const typed = event.key.toLowerCase() === chord.key.toLowerCase()
+  // The physical key only when the key typed no letter or digit: the layout or Option made it something else
+  const placed = !typed && chord.code !== undefined && event.code === chord.code && !/^[a-z0-9]$/i.test(event.key)
+  // A symbol (`?`, `_`) is the character, whatever it took to type it: Shift on one layout, none on another
+  const shift = event.shiftKey === !!chord.shift || (typed && chord.key.length === 1 && !/[a-z0-9]/i.test(chord.key))
+  return (typed || placed) && ctrl === !!chord.ctrl && shift && event.altKey === !!chord.alt
 }
 
 /** The field the event started in: shortcuts do not fire while someone is typing in it. */

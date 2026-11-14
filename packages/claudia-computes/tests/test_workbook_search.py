@@ -7,14 +7,15 @@ from claudia_computes import AddSheet, CellRegion, SetCells, WorkbookModel, pars
 from claudia_computes.search import (
     EXTRA_PARTS,
     KINDS,
-    MAX_LISTED,
-    Scan,
+    cell_at,
+    cell_of,
     plan_replacement,
     replace_command,
-    scan,
+    scan_workbook,
 )
-from claudia_core import Document, MemoryStore, Query, SearchError
+from claudia_core import Document, MemoryStore
 from claudia_core.commands import encode
+from claudia_search import MAX_LISTED, Query, Scan, SearchError
 
 
 def typed(doc, cells, sheet=S1):
@@ -52,7 +53,7 @@ def find(text, **more):
 
 
 def places(result: Scan):
-    return [(m.row, m.col, m.kind) for m in result.matches]
+    return [(m.at["row"], m.at["col"], m.kind) for m in result.matches]
 
 
 # --- what is looked at
@@ -61,60 +62,60 @@ def test_the_kinds_a_search_can_look_in():
 
 
 def test_text_is_the_text_constants_only(budget):
-    result = scan(budget, find("tra"), kinds=("text",))
+    result = scan_workbook(budget, find("tra"), kinds=("text",))
     assert places(result) == [(0, 0, "text")]
 
 
 def test_formulas_are_looked_at_as_typed(budget):
-    result = scan(budget, find("SUBSTITUTE"), kinds=("formulas",))
+    result = scan_workbook(budget, find("SUBSTITUTE"), kinds=("formulas",))
     assert places(result) == [(3, 1, "formula"), (6, 1, "formula")]
     assert result.matches[0].start == 7  # a span in the formula's own text, `=VALUE(` first
 
 
 def test_a_formula_shows_its_text_with_the_equals_sign(budget):
-    hit = scan(budget, find("=B5"), kinds=("formulas",)).matches[0]
+    hit = scan_workbook(budget, find("=B5"), kinds=("formulas",)).matches[0]
     assert (hit.start, hit.end) == (0, 3)
 
 
 def test_values_are_what_the_cells_show(budget):
-    result = scan(budget, find("85"), kinds=("values",))
+    result = scan_workbook(budget, find("85"), kinds=("values",))
     assert places(result) == []  # nothing shows 85
-    result = scan(budget, find("84"), kinds=("values",))
+    result = scan_workbook(budget, find("84"), kinds=("values",))
     assert places(result) == [(5, 1, "value")]  # B6 = B5 * 2 shows 84
 
 
 def test_a_number_is_a_value_not_text(budget):
-    assert places(scan(budget, find("42"), kinds=("text",))) == []
-    assert places(scan(budget, find("42"), kinds=("values",))) == [(4, 1, "value")]
+    assert places(scan_workbook(budget, find("42"), kinds=("text",))) == []
+    assert places(scan_workbook(budget, find("42"), kinds=("values",))) == [(4, 1, "value")]
 
 
 def test_text_in_values_is_not_reported_twice(budget):
     # "Travel" is text; with all three kinds it is found once, as text
-    result = scan(budget, find("travel"), kinds=KINDS)
+    result = scan_workbook(budget, find("travel"), kinds=KINDS)
     assert places(result) == [(0, 0, "text")]
 
 
 def test_values_include_formula_text_results(doc):
     typed(doc, [(0, 0, '="Hello "&"World"')])
-    result = scan(doc.model, find("world"), kinds=("values",))
+    result = scan_workbook(doc.model, find("world"), kinds=("values",))
     assert places(result) == [(0, 0, "value")]
     assert result.matches[0].text == "Hello World"
 
 
 def test_an_error_value_can_be_found_by_its_code(doc):
     typed(doc, [(0, 0, "=1/0")])
-    assert places(scan(doc.model, find("#DIV/0!"), kinds=("values",))) == [(0, 0, "value")]
+    assert places(scan_workbook(doc.model, find("#DIV/0!"), kinds=("values",))) == [(0, 0, "value")]
 
 
 def test_counts_say_how_many_cells_hold_a_match_per_kind(budget):
-    result = scan(budget, find("€"), kinds=KINDS)
+    result = scan_workbook(budget, find("€"), kinds=KINDS)
     assert result.counts == {"text": 2, "formulas": 1, "values": 0}
     assert result.total == 3
 
 
 def test_counts_are_of_all_matches_even_when_the_list_is_cut(doc):
     typed(doc, [(r, 0, "x") for r in range(MAX_LISTED + 5)])
-    result = scan(doc.model, find("x"), kinds=("text",))
+    result = scan_workbook(doc.model, find("x"), kinds=("text",))
     assert len(result.matches) == MAX_LISTED
     assert result.total == MAX_LISTED + 5
     assert result.truncated
@@ -122,7 +123,7 @@ def test_counts_are_of_all_matches_even_when_the_list_is_cut(doc):
 
 def test_more_matches_in_one_cell_are_listed_in_order(doc):
     typed(doc, [(0, 0, "a-b-c")])
-    result = scan(doc.model, find("-"), kinds=("text",))
+    result = scan_workbook(doc.model, find("-"), kinds=("text",))
     assert [(m.start, m.end, m.number) for m in result.matches] == [(1, 2, 0), (3, 4, 1)]
 
 
@@ -132,14 +133,14 @@ def test_a_match_carries_what_its_kept_parts_matched_and_what_it_would_become(bu
         parts=[{"what": "any_of", "chars": "€$£"}, {"what": "number", "keep": "amount"}],
         replace=[{"keep": "amount"}, {"text": " EUR"}],
     )
-    first = scan(budget, q, kinds=("text",)).matches[0]
+    first = scan_workbook(budget, q, kinds=("text",)).matches[0]
     assert first.kept == ("12,50",)
     assert first.after == "12,50 EUR"
 
 
 def test_the_excerpt_is_bounded_and_the_span_inside_it(doc):
     typed(doc, [(0, 0, "a" * 500 + "NEEDLE" + "b" * 500)])
-    hit = scan(doc.model, find("needle"), kinds=("text",)).matches[0]
+    hit = scan_workbook(doc.model, find("needle"), kinds=("text",)).matches[0]
     assert (hit.start, hit.end) == (500, 506)
     assert len(hit.text) <= 130
     assert hit.text[hit.excerpt_start : hit.excerpt_end] == "NEEDLE"
@@ -151,34 +152,41 @@ def test_one_sheet_and_all_sheets(doc):
     doc.execute(AddSheet("s2", "Other"), author="ana")
     typed(doc, [(0, 0, "needle")])
     typed(doc, [(4, 4, "needle")], sheet="s2")
-    assert [(m.sheet, m.row) for m in scan(doc.model, find("needle"), kinds=("text",)).matches] == [
+    assert [
+        (m.at["sheet"], m.at["row"]) for m in scan_workbook(doc.model, find("needle"), kinds=("text",)).matches
+    ] == [
         ("s1", 0),
         ("s2", 4),
     ]
-    only = scan(doc.model, find("needle"), kinds=("text",), sheets=["s2"])
-    assert [(m.sheet, m.row) for m in only.matches] == [("s2", 4)]
+    only = scan_workbook(doc.model, find("needle"), kinds=("text",), sheets=["s2"])
+    assert [(m.at["sheet"], m.at["row"]) for m in only.matches] == [("s2", 4)]
 
 
 def test_a_selection_limits_the_search_to_its_cells(budget):
-    result = scan(budget, find("€"), kinds=("text",), sheets=[S1], area=(1, 1, 2, 1))
+    result = scan_workbook(budget, find("€"), kinds=("text",), sheets=[S1], area=(1, 1, 2, 1))
     assert places(result) == [(1, 1, "text")]
 
 
 def test_an_unknown_sheet_is_an_error(doc):
     with pytest.raises(ValueError, match="unknown sheet"):
-        scan(doc.model, find("x"), kinds=("text",), sheets=["nope"])
+        scan_workbook(doc.model, find("x"), kinds=("text",), sheets=["nope"])
 
 
 def test_the_order_is_by_sheet_then_row_then_column(doc):
     typed(doc, [(2, 0, "x"), (0, 3, "x"), (0, 1, "x")])
-    assert [(m.row, m.col) for m in scan(doc.model, find("x"), kinds=("text",)).matches] == [(0, 1), (0, 3), (2, 0)]
+    assert [(m.at["row"], m.at["col"]) for m in scan_workbook(doc.model, find("x"), kinds=("text",)).matches] == [
+        (0, 1),
+        (0, 3),
+        (2, 0),
+    ]
 
 
 # --- the extra parts
 def test_a_cell_reference_is_a_part_of_computes(budget):
     q = query(mode="builder", parts=[{"what": "cellref"}])
     found = [
-        (m.row, m.col, m.text[m.excerpt_start : m.excerpt_end]) for m in scan(budget, q, kinds=("formulas",)).matches
+        (m.at["row"], m.at["col"], m.text[m.excerpt_start : m.excerpt_end])
+        for m in scan_workbook(budget, q, kinds=("formulas",)).matches
     ]
     assert found == [(3, 1, "B1"), (5, 1, "B5"), (6, 1, "A1")]
 
@@ -186,13 +194,15 @@ def test_a_cell_reference_is_a_part_of_computes(budget):
 def test_a_cell_reference_does_not_match_inside_a_name_or_a_function(doc):
     typed(doc, [(0, 0, "=LOG10(5)+X1Y")])
     q = query(mode="builder", parts=[{"what": "cellref"}])
-    assert scan(doc.model, q, kinds=("formulas",)).matches == []
+    assert scan_workbook(doc.model, q, kinds=("formulas",)).matches == []
 
 
 def test_a_cell_reference_can_be_absolute(doc):
     typed(doc, [(0, 0, "=$A$2+B$3")])
     q = query(mode="builder", parts=[{"what": "cellref"}])
-    assert [m.text[m.excerpt_start : m.excerpt_end] for m in scan(doc.model, q, kinds=("formulas",)).matches] == [
+    assert [
+        m.text[m.excerpt_start : m.excerpt_end] for m in scan_workbook(doc.model, q, kinds=("formulas",)).matches
+    ] == [
         "$A$2",
         "B$3",
     ]
@@ -205,9 +215,9 @@ def test_a_cell_that_looks_like_a_match_is_left_out_with_the_reason(budget):
         parts=[{"what": "any_of", "chars": "€$£"}, {"what": "number"}],
         conditions=[{"kind": "not_contains", "text": "EUR"}],
     )
-    result = scan(budget, q, kinds=("text",))
+    result = scan_workbook(budget, q, kinds=("text",))
     assert places(result) == [(0, 1, "text"), (1, 1, "text")]
-    assert [(o.row, o.col, o.kind, o.why) for o in result.left_out] == [
+    assert [(o.at["row"], o.at["col"], o.kind, o.why) for o in result.left_out] == [
         (2, 1, "text", {"kind": "not_contains", "text": "EUR"})
     ]
 
@@ -218,28 +228,40 @@ def test_left_out_counts_do_not_change_the_counts_of_matches(budget):
         parts=[{"what": "any_of", "chars": "€$£"}],
         conditions=[{"kind": "not_contains", "text": "EUR"}],
     )
-    assert scan(budget, q, kinds=("text",)).counts["text"] == 2
+    assert scan_workbook(budget, q, kinds=("text",)).counts["text"] == 2
 
 
 # --- the time budget
 def test_a_search_that_runs_out_of_time_says_so(doc):
-    typed(doc, [(r, 0, "x") for r in range(50)])
-    calls = []
+    import time
 
-    def time_up():
-        calls.append(1)
-        return len(calls) > 10
+    typed(doc, [(0, 0, "a!"), (1, 0, "a" * 80), (2, 0, "a!")])
+    slow = Query.from_data({"mode": "pattern", "find": "(?:a|aa)+!"}).compile()
+    started = time.monotonic()
+    result = scan_workbook(doc.model, slow, kinds=("text",), deadline=started + 0.2)
+    assert result.timed_out and time.monotonic() - started < 0.6
+    assert [m.at for m in result.matches] == [cell_at(S1, 0, 0)]
 
-    result = scan(doc.model, find("x"), kinds=("text",), time_up=time_up)
-    assert result.timed_out
-    assert 0 < len(result.matches) < 50
+
+def test_a_place_is_a_cell_and_only_a_cell_comes_back():
+    assert cell_of(cell_at(S1, 3, 4)) == (S1, 3, 4)
+    for bad in (
+        {"sheet": S1, "row": 1},
+        {"sheet": S1, "row": -1, "col": 0},
+        {"sheet": 1, "row": 0, "col": 0},
+        {"sheet": S1, "row": True, "col": 0},
+        {"sheet": S1, "row": 0, "col": 0, "x": 1},
+        "A1",
+    ):
+        with pytest.raises(ValueError):
+            cell_of(bad)
 
 
 # --- replace
 def test_replace_in_text_makes_one_change_per_cell(budget):
     q = query(mode="text", text="€", replace=[{"text": "EUR "}])
     plan = plan_replacement(budget, q, kinds=("text",))
-    assert [(c.row, c.col, c.before, c.after) for c in plan.changes] == [
+    assert [(c.at["row"], c.at["col"], c.before, c.after) for c in plan.changes] == [
         (0, 1, "€12,50", "EUR 12,50"),
         (1, 1, "€80", "EUR 80"),
     ]
@@ -248,9 +270,12 @@ def test_replace_in_text_makes_one_change_per_cell(budget):
 
 def test_a_replacement_never_touches_formulas_unless_asked(budget):
     q = query(mode="text", text="€", replace=[{"text": ""}])
-    assert {(c.row, c.col) for c in plan_replacement(budget, q, kinds=("text",)).changes} == {(0, 1), (1, 1)}
+    assert {(c.at["row"], c.at["col"]) for c in plan_replacement(budget, q, kinds=("text",)).changes} == {
+        (0, 1),
+        (1, 1),
+    }
     both = plan_replacement(budget, q, kinds=("text", "formulas"))
-    assert {(c.row, c.col) for c in both.changes} == {(0, 1), (1, 1), (3, 1)}
+    assert {(c.at["row"], c.at["col"]) for c in both.changes} == {(0, 1), (1, 1), (3, 1)}
 
 
 def test_values_are_found_but_never_replaced(budget):
@@ -270,7 +295,7 @@ def test_replace_with_kept_parts(budget):
         conditions=[{"kind": "not_contains", "text": "EUR"}],
         replace=[{"keep": "amount"}, {"text": " EUR"}],
     )
-    assert [(c.row, c.after) for c in plan_replacement(budget, q, kinds=("text",)).changes] == [
+    assert [(c.at["row"], c.after) for c in plan_replacement(budget, q, kinds=("text",)).changes] == [
         (0, "12,50 EUR"),
         (1, "80 EUR"),
     ]
@@ -279,14 +304,14 @@ def test_replace_with_kept_parts(budget):
 def test_a_match_can_be_left_alone(doc):
     typed(doc, [(0, 0, "a-b-c")])
     q = query(mode="text", text="-", replace=[{"text": "+"}])
-    plan = plan_replacement(doc.model, q, kinds=("text",), leave={(S1, 0, 0): {0}})
+    plan = plan_replacement(doc.model, q, kinds=("text",), leave=[(cell_at(S1, 0, 0), 0)])
     assert plan.changes[0].after == "a-b+c"
 
 
 def test_a_whole_cell_can_be_left_alone(budget):
     q = query(mode="text", text="€", replace=[{"text": ""}])
-    plan = plan_replacement(budget, q, kinds=("text",), leave={(S1, 0, 1): None})
-    assert [(c.row, c.col) for c in plan.changes] == [(1, 1)]
+    plan = plan_replacement(budget, q, kinds=("text",), leave=[(cell_at(S1, 0, 1), None)])
+    assert [(c.at["row"], c.at["col"]) for c in plan.changes] == [(1, 1)]
 
 
 def test_a_replacement_that_changes_nothing_is_no_change(doc):
@@ -314,14 +339,14 @@ def test_a_formula_that_would_no_longer_read_is_skipped_and_named(budget):
     q = query(mode="text", text="SUBSTITUTE(", replace=[{"text": "SUBSTITUTE"}])
     plan = plan_replacement(budget, q, kinds=("formulas",))
     assert plan.changes == []
-    assert [(s.row, s.col, s.reason) for s in plan.skipped] == [(3, 1, "formula"), (6, 1, "formula")]
+    assert [(s.at["row"], s.at["col"], s.reason) for s in plan.skipped] == [(3, 1, "formula"), (6, 1, "formula")]
 
 
 def test_a_formula_that_stops_being_one_is_skipped(doc):
     typed(doc, [(0, 0, "=A2")])
     q = query(mode="text", text="=", replace=[{"text": ""}])
     plan = plan_replacement(doc.model, q, kinds=("formulas",))
-    assert [(s.row, s.reason) for s in plan.skipped] == [(0, "formula")]
+    assert [(s.at["row"], s.reason) for s in plan.skipped] == [(0, "formula")]
 
 
 def test_a_formula_replacement_is_stored_as_a_formula(doc):
@@ -335,8 +360,8 @@ def test_a_cell_held_by_somebody_else_is_skipped_and_named(budget, doc):
     q = query(mode="text", text="€", replace=[{"text": ""}])
     held = {(S1, 1, 1): "anna"}
     plan = plan_replacement(budget, q, kinds=("text",), held=lambda sheet, r, c: held.get((sheet, r, c)))
-    assert [(c.row, c.col) for c in plan.changes] == [(0, 1)]
-    assert [(s.row, s.col, s.reason, s.by) for s in plan.skipped] == [(1, 1, "locked", "anna")]
+    assert [(c.at["row"], c.at["col"]) for c in plan.changes] == [(0, 1)]
+    assert [(s.at["row"], s.at["col"], s.reason, s.by) for s in plan.skipped] == [(1, 1, "locked", "anna")]
 
 
 def test_a_search_without_a_replacement_cannot_be_planned(budget):
@@ -398,16 +423,16 @@ def test_a_part_of_a_query_result_is_a_value_that_is_found_but_not_stored(doc):
     sheet = doc.model.sheet(S1)
     assert any(sheet.spilled), "the query should fill cells below its formula"
     (position,) = [p for p in sheet.spilled if "4242" in str(sheet.grid.get(p))]
-    found = scan(doc.model, find("4242"), kinds=("values",))
-    assert [(m.row, m.col, m.kind) for m in found.matches] == [(*position, "value")]
-    assert scan(doc.model, find("4242"), kinds=("text", "formulas")).matches == []
+    found = scan_workbook(doc.model, find("4242"), kinds=("values",))
+    assert [(m.at["row"], m.at["col"], m.kind) for m in found.matches] == [(*position, "value")]
+    assert scan_workbook(doc.model, find("4242"), kinds=("text", "formulas")).matches == []
     q = query(mode="text", text="4242", replace=[{"text": "1"}])
     assert plan_replacement(doc.model, q, kinds=KINDS).changes == []
 
 
 def test_a_kind_nobody_knows_is_an_error(doc):
     with pytest.raises(ValueError, match="cannot look in 'words'"):
-        scan(doc.model, find("x"), kinds=("words",))
+        scan_workbook(doc.model, find("x"), kinds=("words",))
     with pytest.raises(ValueError, match="cannot look in"):
         plan_replacement(doc.model, query(mode="text", text="x", replace=[{"text": "y"}]), kinds=("everything",))
 
@@ -416,5 +441,5 @@ def test_a_text_that_would_get_too_long_is_skipped_and_named(doc):
     typed(doc, [(0, 0, "ab"), (1, 0, "a")])
     q = query(mode="text", text="a", replace=[{"text": "xxxx"}])
     plan = plan_replacement(doc.model, q, kinds=("text",), max_length=4)
-    assert [(c.row, c.after) for c in plan.changes] == [(1, "xxxx")]
-    assert [(s.row, s.reason) for s in plan.skipped] == [(0, "too_long")]
+    assert [(c.at["row"], c.after) for c in plan.changes] == [(1, "xxxx")]
+    assert [(s.at["row"], s.reason) for s in plan.skipped] == [(0, "too_long")]

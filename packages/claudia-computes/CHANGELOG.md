@@ -5,7 +5,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
-Describing objects (BITV 1.1.1). State schema 8 → 9.
+Describing objects (BITV 1.1.1). State schema 8 → 9. Search on claudia-search (SEC-18, CODE-18).
 
 ### Added
 - `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`).
@@ -13,6 +13,16 @@ Describing objects (BITV 1.1.1). State schema 8 → 9.
 ### Changed
 - Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
   rebuilt from the log.
+
+### Changed
+- `claudia_computes.search` (not part of `__all__`) is computes' side of `claudia_search`: `workbook_texts` offers a
+  workbook's texts with their cell as `at` (`cell_at`, `cell_of`), `scan_workbook` and `plan_replacement` run until a
+  `deadline`, `leave` is a list of `(at, number)`, and `Hit`, `LeftOut`, `Change`, `Skip`, `Plan`, `Scan` and
+  `MAX_LISTED` are claudia-search's. A plan no longer carries the cell content; `replace_command` makes it. The package
+  depends on claudia-search.
+
+### Added (UX-33)
+- `WorkbookModel.setup_commands`: a new workbook starts with its first sheet, `s1` "Sheet1", made by the server as nobody's undo step (UX-33). The web client no longer adds it.
 
 ## [0.5.0] - 2026-11-13
 

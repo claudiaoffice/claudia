@@ -34,7 +34,7 @@ import PrintPreview from './PrintPreview.vue'
 import PresentShow from './PresentShow.vue'
 import SlideNotes from './SlideNotes.vue'
 import { slideSource } from '~/lib/print/source'
-import { useCreatorLanguage, usePrint } from '~/lib/print/use-print'
+import { usePrint } from '~/lib/print/use-print'
 import type { Menu } from './MenuBar.vue'
 
 const props = defineProps<{ session: SlideSession }>()
@@ -82,9 +82,8 @@ async function planTime() {
   void notes.value?.openTime()
 }
 
-// A new presentation starts in the language of its maker's interface (D915, D917); File ▸ Print… shows the pages in
-// place of the slide (D906, D918). Both as in every app that prints (`lib/print/use-print.ts`).
-useCreatorLanguage(session, () => locale.value)
+// File ▸ Print… shows the pages in place of the slide (D906, D918), as in every app that prints (`lib/print/use-print.ts`).
+// (A new presentation's language, D915, D917, is set by the server when it creates the document: UX-33.)
 const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => canvas.value?.focus())
 const printSource = slideSource(session)
 const describeSelected = describeShortcut(
@@ -252,16 +251,18 @@ const menus = computed<Menu[]>(() => {
       label: t('View'),
       items: [
         authorsItemUnavailable(c), // creates tracks no per-object authorship yet
+        panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
+        darkItem(c, { on: dark, toggle: toggleDark }),
+        // After the shared block, as composes' Page is (the same order in every app and every client)
+        { label: '', separator: true },
         {
           id: 'view.grid',
-          label: t('Show grid'),
+          label: t('Show Grid'),
           checked: gridShown.value,
           action: (x) => {
             if (x === undefined || (x === 'on') !== gridShown.value) toggleGrid()
           },
         },
-        panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
-        darkItem(c, { on: dark, toggle: toggleDark }),
         { label: '', separator: true },
         { id: 'view.present-start', label: t('Present from the First Slide'), hint: presentHint('start', mac), action: () => present('start'), disabled: !state.slides.length },
         { id: 'view.present-here', label: t('Present from This Slide'), hint: presentHint('here', mac), action: () => present('here'), disabled: !state.slides.length },

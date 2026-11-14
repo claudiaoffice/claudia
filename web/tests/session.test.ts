@@ -1110,12 +1110,12 @@ describe('searching', () => {
   it('asks what a replacement would change, without a base: it changes nothing', async () => {
     const { session, link } = await opened()
     link.handlers.search_preview = () => ({ revision: 'main:3', changes: [], skipped: [], total: 0 })
-    await session.searchPreview({ ...QUERY, replace: [{ text: 'EUR ' }] }, ['text'], {}, [{ sheet: 's1', row: 0, col: 0, match: null }])
+    await session.searchPreview({ ...QUERY, replace: [{ text: 'EUR ' }] }, ['text'], {}, [{ at: { sheet: 's1', row: 0, col: 0 }, match: null }])
     expect(link.last('search_preview')).toEqual({
       query: { ...QUERY, replace: [{ text: 'EUR ' }] },
       kinds: ['text'],
       scope: {},
-      leave: [{ sheet: 's1', row: 0, col: 0, match: null }],
+      leave: [{ at: { sheet: 's1', row: 0, col: 0 }, match: null }],
     })
   })
 

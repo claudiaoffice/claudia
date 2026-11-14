@@ -875,7 +875,7 @@ def text(value, **more):
 def test_a_quick_search_lists_matches_with_where_and_what_kind(book):
     budget_sheet(book)
     found = search(book, text("€"), kinds=["text", "formulas"])
-    assert [(m["row"], m["col"], m["kind"], m["start"], m["end"]) for m in found["matches"]] == [
+    assert [(m["at"]["row"], m["at"]["col"], m["kind"], m["start"], m["end"]) for m in found["matches"]] == [
         (0, 1, "text", 0, 1),
         (1, 1, "text", 0, 1),
         (3, 1, "formula", 22, 23),
@@ -888,15 +888,15 @@ def test_a_quick_search_lists_matches_with_where_and_what_kind(book):
 def test_a_match_says_what_it_is_in_and_how_it_reads_there(book):
     budget_sheet(book)
     match = search(book, text("12,5"))["matches"][0]
-    assert match["sheet"] == "s1" and match["text"] == "€12,50" and match["excerpt"] == [1, 5]
+    assert match["at"]["sheet"] == "s1" and match["text"] == "€12,50" and match["excerpt"] == [1, 5]
     assert match["clipped"] == [False, False]
     assert match["number"] == 0 and match["parts"] == [] and match["after"] is None
 
 
 def test_search_looks_in_text_unless_told_otherwise(book):
     budget_sheet(book)
-    assert [(m["row"]) for m in search(book, text("42"))["matches"]] == []
-    assert [(m["row"]) for m in search(book, text("42"), kinds=["values"])["matches"]] == [4]
+    assert [(m["at"]["row"]) for m in search(book, text("42"))["matches"]] == []
+    assert [(m["at"]["row"]) for m in search(book, text("42"), kinds=["values"])["matches"]] == [4]
 
 
 def test_a_long_cell_is_cut_around_the_match_and_says_so(book):
@@ -914,7 +914,7 @@ def test_the_scope_is_a_sheet_or_a_selection(book):
     assert len(search(book, text("€"))["matches"]) == 3  # all sheets
     assert len(search(book, text("€"), scope={"sheet": "s2"})["matches"]) == 1
     selected = search(book, text("€"), scope={"sheet": "s1", "range": [1, 0, 2, 1]})
-    assert [(m["row"], m["col"]) for m in selected["matches"]] == [(1, 1)]
+    assert [(m["at"]["row"], m["at"]["col"]) for m in selected["matches"]] == [(1, 1)]
 
 
 def test_a_selection_needs_its_sheet_and_four_numbers(book):
@@ -937,20 +937,20 @@ def test_a_search_in_the_builders_words(book):
         "replace": [{"keep": "amount"}, {"text": " EUR"}],
     }
     found = search(book, query)
-    assert [(m["row"], m["parts"], m["after"]) for m in found["matches"]] == [
+    assert [(m["at"]["row"], m["parts"], m["after"]) for m in found["matches"]] == [
         (0, ["12,50"], "12,50 EUR"),
         (1, ["80"], "80 EUR"),
     ]
-    assert [(o["row"], o["why"]) for o in found["left_out"]] == [(2, {"kind": "not_contains", "text": "EUR"})]
+    assert [(o["at"]["row"], o["why"]) for o in found["left_out"]] == [(2, {"kind": "not_contains", "text": "EUR"})]
     assert found["pattern"] == {"find": r"[€$£](\d+(?:[.,]\d+)*)", "filter": "^(?!.*EUR)", "replace": r"\g<1> EUR"}
 
 
 def test_a_typed_pattern_is_searched_as_it_is_and_a_cell_reference_is_a_part(book):
     budget_sheet(book)
     found = search(book, {"mode": "pattern", "find": r"\d+,\d+"})
-    assert [m["row"] for m in found["matches"]] == [0]
+    assert [m["at"]["row"] for m in found["matches"]] == [0]
     refs = search(book, {"mode": "builder", "parts": [{"what": "cellref"}]}, kinds=["formulas"])
-    assert [(m["row"], m["text"][m["excerpt"][0] : m["excerpt"][1]]) for m in refs["matches"]] == [(3, "B1")]
+    assert [(m["at"]["row"], m["text"][m["excerpt"][0] : m["excerpt"][1]]) for m in refs["matches"]] == [(3, "B1")]
 
 
 def test_a_mistake_in_the_pattern_comes_back_as_a_result_not_an_error(book):
@@ -960,10 +960,32 @@ def test_a_mistake_in_the_pattern_comes_back_as_a_result_not_an_error(book):
     assert found["matches"] == [] and found["counts"] == {"text": 0, "formulas": 0, "values": 0}
 
 
-def test_a_pattern_that_could_run_forever_is_refused_in_the_same_way(book):
+def test_a_pattern_that_could_run_forever_stops_at_the_deadline_and_says_so(book, monkeypatch):
+    """SEC-18: `(a|a?)+!` took 12.5 s on 24 characters at cfa2d91, on the event loop, and passed the shape guard. Now
+    the request stops at its deadline, keeps what it found before, and the server is free again."""
+    import time
+
+    monkeypatch.setattr("claudia_server.computes_search.SEARCH_SECONDS", 0.3)
     budget_sheet(book)
-    found = search(book, {"mode": "pattern", "find": "(a+)+$"})
-    assert found["error"]["field"] == "find" and "repeat" in found["error"]["message"]
+    typed(book, "s1", [(9, 0, "a" * 200)])
+    started = time.monotonic()
+    found = search(book, {"mode": "pattern", "find": "(?:a|aa)+!|€"})
+    assert time.monotonic() - started < 1.0
+    assert found["timed_out"] and "error" not in found
+    assert [(m["at"]["row"], m["at"]["col"]) for m in found["matches"]] == [(0, 1), (1, 1)]
+
+
+def test_a_preview_that_ran_out_of_time_says_so_and_a_replace_refuses(book, monkeypatch):
+    monkeypatch.setattr("claudia_server.computes_search.SEARCH_SECONDS", 0.3)
+    budget_sheet(book)
+    typed(book, "s1", [(9, 0, "a" * 200)])
+    query = {"mode": "pattern", "find": "(?:a|aa)+!|€", "replace": ""}
+    assert call(book, "search_preview", {"query": query})["timed_out"]
+    before = book.revision
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_replace", {"query": query})
+    assert caught.value.code == "command_error" and "nothing was replaced" in caught.value.message
+    assert book.revision == before
 
 
 def test_a_query_that_is_not_a_query_is_a_bad_request(book):
@@ -982,7 +1004,7 @@ def test_unknown_kinds_are_a_bad_request(book):
 
 def test_a_search_that_runs_out_of_time_says_so(book, monkeypatch):
     budget_sheet(book)
-    monkeypatch.setattr("claudia_server.computes.SEARCH_SECONDS", 0.0)
+    monkeypatch.setattr("claudia_server.computes_search.SEARCH_SECONDS", 0.0)
     found = search(book, text("€"))
     assert found["timed_out"] and found["matches"] == []
 
@@ -996,7 +1018,7 @@ def test_the_preview_says_what_would_change_and_changes_nothing(book):
     budget_sheet(book)
     before = book.revision
     shown = call(book, "search_preview", {"query": text("€", replace=[{"text": "EUR "}])}, account=VERA)
-    assert [(c["row"], c["before"], c["after"]) for c in shown["changes"]] == [
+    assert [(c["at"]["row"], c["before"], c["after"]) for c in shown["changes"]] == [
         (0, "€12,50", "EUR 12,50"),
         (1, "€80", "EUR 80"),
     ]
@@ -1030,23 +1052,58 @@ def test_replace_can_leave_a_match_or_a_cell_alone(book):
         "search_replace",
         {
             "query": text("-", replace=[{"text": "+"}]),
-            "leave": [{"sheet": "s1", "row": 6, "col": 0, "match": 0}],
+            "leave": [{"at": {"sheet": "s1", "row": 6, "col": 0}, "match": 0}],
         },
     )
     assert book.model.get("s1", 6, 0)["v"] == "a-b+c"
     call(
         book,
         "search_replace",
-        {"query": text("€", replace=[{"text": ""}]), "leave": [{"sheet": "s1", "row": 0, "col": 1, "match": None}]},
+        {
+            "query": text("€", replace=[{"text": ""}]),
+            "leave": [{"at": {"sheet": "s1", "row": 0, "col": 1}, "match": None}],
+        },
     )
     assert book.model.get("s1", 0, 1)["v"] == "€12,50" and book.model.get("s1", 1, 1)["v"] == "80"
+
+
+def test_every_answer_names_a_cell_by_its_at(book):
+    """CODE-18: the place is one object, the app's own, in matches, left-out cells, changes and skipped cells alike."""
+    budget_sheet(book)
+    book.lock("ben", [CellRegion.of("s1", 1, 1, 1, 1)], 30)
+    found = search(book, text("€"))
+    assert found["matches"][0]["at"] == {"sheet": "s1", "row": 0, "col": 1}
+    assert not {"sheet", "row", "col"} & set(found["matches"][0])
+    shown = call(book, "search_preview", {"query": text("€", replace=[{"text": ""}])})
+    assert shown["changes"][0]["at"] == {"sheet": "s1", "row": 0, "col": 1}
+    assert shown["skipped"] == [
+        {"at": {"sheet": "s1", "row": 1, "col": 1}, "kind": "text", "reason": "locked", "by": "ben"}
+    ]
+
+
+@pytest.mark.parametrize(
+    "leave",
+    [
+        [{"sheet": "s1", "row": 0, "col": 1, "match": 0}],  # the shape before CODE-18
+        [{"at": {"sheet": "s1", "row": 0}, "match": 0}],
+        [{"at": {"sheet": "s1", "row": 0, "col": 1}, "match": -1}],
+        [{"at": {"sheet": "s1", "row": 0, "col": 1}, "match": True}],
+        [{"at": {"sheet": "s1", "row": 10**9, "col": 1}, "match": 0}],
+        ["s1!B1"],
+    ],
+)
+def test_leave_takes_only_cells_it_can_read(book, leave):
+    budget_sheet(book)
+    with pytest.raises(RequestError) as caught:
+        call(book, "search_preview", {"query": text("€", replace=[{"text": ""}]), "leave": leave})
+    assert caught.value.code == "bad_request"
 
 
 def test_a_cell_somebody_else_holds_is_skipped_and_named(book):
     budget_sheet(book)
     book.lock("ben", [CellRegion.of("s1", 1, 1, 1, 1)], 30)
     shown = call(book, "search_preview", {"query": text("€", replace=[{"text": ""}])})
-    assert [(s["row"], s["reason"], s["by"]) for s in shown["skipped"]] == [(1, "locked", "ben")]
+    assert [(s["at"]["row"], s["reason"], s["by"]) for s in shown["skipped"]] == [(1, "locked", "ben")]
     done = call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
     assert done["replaced"] == 1 and done["skipped"] == shown["skipped"]
     assert book.model.get("s1", 0, 1)["v"] == "12,50" and book.model.get("s1", 1, 1)["v"] == "€80"
@@ -1082,7 +1139,7 @@ def test_replace_that_changes_nothing_makes_no_history(book):
 
 def test_replace_refuses_more_cells_than_one_step_may_change(book, monkeypatch):
     budget_sheet(book)
-    monkeypatch.setattr("claudia_server.computes.MAX_REPLACED_CELLS", 1)
+    monkeypatch.setattr("claudia_server.computes_search.MAX_REPLACED_CELLS", 1)
     with pytest.raises(RequestError) as caught:
         call(book, "search_replace", {"query": text("€", replace=[{"text": ""}])})
     assert caught.value.code == "bad_request" and "narrow" in caught.value.message

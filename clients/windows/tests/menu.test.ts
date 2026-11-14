@@ -29,10 +29,20 @@ describe('gtkAccelToWindowsShortcut', () => {
     expect(gtkAccelToWindowsShortcut('<Primary><Shift>n')).toBe('Ctrl+Shift+N')
   })
 
-  it('returns null for anything outside those confirmed shapes rather than guessing -- cosmetic here, so a wider confirmed set than macOS is fine, but still not unbounded', () => {
-    expect(gtkAccelToWindowsShortcut('<Alt>F4')).toBeNull()
+  it('translates every shape the one key table uses (UX-35), in the words of the web menus', () => {
+    expect(gtkAccelToWindowsShortcut('<Primary><Alt><Shift>s')).toBe('Ctrl+Shift+Alt+S')
+    expect(gtkAccelToWindowsShortcut('<Alt><Shift>Up')).toBe('Shift+Alt+Up')
+    expect(gtkAccelToWindowsShortcut('<Primary><Shift>8')).toBe('Ctrl+Shift+8')
+    expect(gtkAccelToWindowsShortcut('<Primary>question')).toBe('Ctrl+?')
+    expect(gtkAccelToWindowsShortcut('<Primary><Alt>underscore')).toBe('Ctrl+Alt+_')
+    expect(gtkAccelToWindowsShortcut('Delete')).toBe('Del')
+    expect(gtkAccelToWindowsShortcut('<Shift>Tab')).toBe('Shift+Tab')
+    expect(gtkAccelToWindowsShortcut('<Alt>F4')).toBe('Alt+F4')
+  })
+
+  it('returns null for a key name it does not know rather than guessing', () => {
     expect(gtkAccelToWindowsShortcut('')).toBeNull()
-    expect(gtkAccelToWindowsShortcut('n')).toBeNull()
+    expect(gtkAccelToWindowsShortcut('<Primary>KP_Add')).toBeNull()
   })
 })
 

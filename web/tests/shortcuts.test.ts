@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { chordLabel, dispatch, isTypingTarget, matches, regionShortcuts, searchShortcuts, sharedShortcuts } from '~/lib/shortcuts'
+import type { Menu } from '~/components/MenuBar.vue'
+import { chordLabel, chordOf, dispatch, hintOf, isTypingTarget, matches, menuShortcuts, regionShortcuts, searchShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 
 function key(partial: Partial<{ key: string; code: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }>) {
   return { key: '', code: '', ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...partial }
@@ -26,8 +27,13 @@ describe('a chord on a physical key (`code`)', () => {
     expect(matches(bullets, key({ key: '*', code: 'Digit8', ctrlKey: true, shiftKey: true }))).toBe(true)
     expect(matches(bullets, key({ key: '(', code: 'Digit8', ctrlKey: true, shiftKey: true }))).toBe(true)
   })
-  it('does not match another key that happens to type the same character', () => {
-    expect(matches(bullets, key({ key: '8', code: 'Numpad9', ctrlKey: true, shiftKey: true }))).toBe(false)
+  it('goes by the character first, and by the place only when the key typed no letter or digit (UX-35)', () => {
+    // a German keyboard has Z where a US one has Y: Ctrl+Alt+Y is the key that types y, wherever it is
+    const sql = { key: 'y', code: 'KeyY', ctrl: true, alt: true }
+    expect(matches(sql, key({ key: 'y', code: 'KeyZ', ctrlKey: true, altKey: true }))).toBe(true)
+    expect(matches(sql, key({ key: 'z', code: 'KeyY', ctrlKey: true, altKey: true }))).toBe(false)
+    // Option+Y types ¥ on a Mac: then the place decides
+    expect(matches(sql, key({ key: '¥', code: 'KeyY', metaKey: true, altKey: true }))).toBe(true)
   })
   it('still wants the modifiers exactly', () => {
     expect(matches(bullets, key({ key: '*', code: 'Digit8', ctrlKey: true }))).toBe(false)
@@ -152,5 +158,51 @@ describe('searchShortcuts', () => {
     const defs = searchShortcuts({ find: () => {}, replace, canReplace: () => false })
     expect(dispatch(defs, key({ key: 'h', ctrlKey: true }))).toBeNull()
     expect(replace).not.toHaveBeenCalled()
+  })
+})
+
+describe('one key table for every client (UX-35)', () => {
+  it('gives a menu action its key from the table, and refuses one the table does not have', () => {
+    expect(chordOf('file.print')).toEqual({ key: 'p', code: 'KeyP', ctrl: true })
+    expect(() => chordOf('file.nothing')).toThrow('no key for file.nothing')
+  })
+
+  it('shows a key the way people read it', () => {
+    expect(hintOf('edit.row-insert-above')).toBe('Shift+Alt+↑')
+    expect(hintOf('config.shortcuts')).toBe('Ctrl+?') // the symbol, without the Shift that types it
+    expect(hintOf('edit.clear')).toBe('Del')
+    expect(hintOf('format.look')).toBe('Shift+F10')
+    expect(hintOf(undefined)).toBeUndefined()
+    expect(hintOf('config.language.de')).toBeUndefined()
+  })
+
+  it('makes every keyed menu entry a shortcut, enabled as the entry is, except the keys of the view and those taken', () => {
+    const ran: string[] = []
+    const menus: Menu[] = [
+      {
+        label: 'File',
+        items: [
+          { id: 'file.print', label: 'Print…', action: () => ran.push('print') },
+          { label: '', separator: true },
+          { id: 'file.manage', label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', action: () => ran.push('share'), disabled: true }] },
+          { id: 'file.save', label: 'Save', action: () => ran.push('save') },
+        ],
+      },
+      { label: 'Edit', items: [{ id: 'edit.copy', label: 'Copy', action: () => ran.push('copy') }, { label: 'No id', action: () => ran.push('none') }] },
+    ]
+    const defs = menuShortcuts(menus, new Set(['file.save']))
+    expect(defs.map((d) => d.id)).toEqual(['file.print', 'file.manage.share'])
+    expect(dispatch(defs, key({ key: 'p', ctrlKey: true }))?.id).toBe('file.print')
+    expect(dispatch(defs, key({ key: 'S', code: 'KeyS', ctrlKey: true, altKey: true, shiftKey: true }))).toBeNull() // disabled
+    expect(ran).toEqual(['print'])
+  })
+})
+
+describe('a symbol', () => {
+  it('is the character, with or without the Shift that typed it', () => {
+    const shortcuts = { key: '?', ctrl: true, shift: true }
+    expect(matches(shortcuts, key({ key: '?', ctrlKey: true, shiftKey: true }))).toBe(true)
+    expect(matches(shortcuts, key({ key: '?', ctrlKey: true }))).toBe(true)
+    expect(matches(shortcuts, key({ key: '/', ctrlKey: true }))).toBe(false)
   })
 })

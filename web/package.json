@@ -31,7 +31,8 @@
     "e2e:print-creates": "node e2e/print-creates.cjs",
     "e2e:grid-a11y": "node e2e/grid-a11y.cjs",
     "e2e:describe": "node e2e/describe.cjs",
-    "e2e:describe-creates": "node e2e/describe-creates.cjs"
+    "e2e:describe-creates": "node e2e/describe-creates.cjs",
+    "e2e:keys": "node e2e/keys.cjs"
   },
   "dependencies": {
     "@claudia/layout": "file:../layout",

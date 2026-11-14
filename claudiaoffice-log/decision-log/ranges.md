@@ -22,11 +22,11 @@ Unused numbers in a closed block stay unused.
 | D251–D260 | E5.11 macOS client: three apps, command line, server flow (branch `macos-client-complete`) | 2026-11-10 | open |
 | D261–D270 | the AI agent: rights, modes, proposals, Claude as a provider (E7; branch `ai_server`) | 2026-11-11 | open |
 | D271–D280 | E5.11 Windows client: three apps, command line, server flow (branch `win-client-complete`) | 2026-11-12 | open |
-| D281–D290 | search & replace in all three apps: the dialog, the pattern builder, the engine, replace in computes (branch `regex-builder`; D281–D287 used) | 2026-11-13 | open |
+| D281–D290 | search & replace in all three apps: the dialog, the pattern builder, the engine, replace in computes (branch `regex-builder`; D281–D289 used) | 2026-11-13 | open |
 | D291–D299 | random numbers, alternatives and following a computation in computes (E6.21–E6.23; branch `random-in-computes`; D291–D299 used) | 2026-11-13 | open |
 | D320–D339 | complete interface internationalization: web UI, Linux shell, server messages, help (branch `i18n`; D320–D323 used; first given D320–D299, which `random-in-computes` had too, renumbered at the merge) | 2026-11-13 | open |
 | D340–D349 | presenter mode in creates: rights, frozen show, Markdown notes, planned times, keys, and the open points (E10.2; branch `presenter`; D340–D348 used) | 2026-11-13 | open |
-
+| D360–D369 | QA follow-up: UX consistency across clients: one key table, every menu entry everywhere, setup of a new document (branch `qa`; D360–D362 used; first given D340–D359, which `presenter` had too, renumbered at the merge) | 2026-11-13 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D315 used) | 2026-11-10 | open |
 | D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D918 used) | 2026-11-12 | open |
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |

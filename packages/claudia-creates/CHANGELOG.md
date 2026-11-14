@@ -24,6 +24,9 @@ Describing objects (BITV 1.1.1), speaker notes and planned times (E10.2, D342, D
 - State schema 9: `notes` and `times` per slide. An older document opens with none.
 - Removing a slide removes its notes and time, and undoing the removal brings them back.
 
+### Added (UX-33)
+- `SlideModel.setup_commands`: a new presentation starts in the language of its maker's interface (D915, D917), set by the server as nobody's undo step (UX-33).
+
 ## [0.8.0] - 2026-11-13
 
 How a presentation prints, and its language (D917).

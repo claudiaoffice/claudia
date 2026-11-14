@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
 import { appOfServer, fetchDocsListing, openSession, type AnySession, type Listed } from '~/lib/open'
-import { Session } from '~/lib/session'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
@@ -230,11 +229,9 @@ function goToTyped() {
   location.href = `${target}/`
 }
 
-/** Show the session at last (a table starts with its first sheet). */
+/** Show the session at last. (What a new document starts with — a table's first sheet, a text's language — the server
+ * made when it created it, as nobody's undo step: UX-33.) */
 async function enter(session: AnySession) {
-  if (session instanceof Session && session.state.sheets.length === 0 && session.state.me.role !== 'viewer') {
-    await session.addSheet('Sheet1')
-  }
   remember('claudia.user', user.value.trim())
   remember('claudia.doc', doc.value.trim())
   emit('opened', session)

@@ -4,6 +4,21 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Changed (one key table, every menu entry everywhere: UX-35, UX-36)
+- Every menu entry has a key, the same in every app and every client (`manifest.py`, D360); only the language
+  picker's entries have none. The keys stay clear of what browsers keep (Ctrl+N, Ctrl+W, Ctrl+T), of AltGr on Windows
+  and of the desktop's own. New: Ctrl+Alt+N New, Ctrl+Alt+W Close Document, Ctrl+? Shortcuts (was F1), F1 How Do I…?,
+  and keys for File ▸ Manage ▸, the View toggles, Format and Tools.
+- `Action.key_owner` says who listens for a key (`KeyOwner`): the page in every client, the shell (Quit, About,
+  Shift+F10), or the document view (Enter, Delete, Tab, the clipboard). GTK binds only the shell's own keys; the menus
+  show every key through the GMenu `accel` attribute. Before, Ctrl+N, Ctrl+O, F1, Ctrl+F, F9 and the Ctrl+Alt keys
+  were bound here and taken from the page; on Windows nobody listened for them.
+- The menus have what the web menus have (UX-36): File ▸ Print… (composes, creates), Format ▸ List ▸ (every app, as on
+  the web), Edit ▸ Insert ▸ Soft Hyphen / Non-breaking Hyphen (composes), Edit ▸ Image… and Chart…, Format ▸ Clear Cell
+  Style, Tools ▸ Names… and SQL Query… (computes), Edit ▸ Image… and View ▸ Show Grid (creates). New page actions: the
+  contract version is unchanged.
+
+
 First slice of the native Linux client (epic 5).
 
 ### Added (alt text and decorative objects, BITV 1.1.1)
@@ -18,8 +33,8 @@ First slice of the native Linux client (epic 5).
 
 ### Added (presenter mode, E10.2)
 - Creates' menu manifest: View ▸ Present from the First Slide (`F5`, `Ctrl+Alt+P`), Present from This Slide
-  (`Shift+F5`, `Ctrl+Alt+Shift+P`), Speaker Notes (`Ctrl+Alt+N`, checkable); Edit ▸ Plan the Time of This Slide…
-  (`Ctrl+Alt+M`). Page actions, no contract change; the German texts are in the catalog. The two-window show and
+  (`Shift+F5`, `Ctrl+Alt+Shift+H`), Speaker Notes (`Ctrl+Alt+V`, checkable); Edit ▸ Plan the Time of This Slide…
+  (`Ctrl+Alt+Shift+T`). Page actions, no contract change; the German texts are in the catalog. The two-window show and
   fullscreen from the shell (a `create` handler for new windows) wait for the spike's runs (D345).
 
 ### Added (all three apps, other servers, HTTPS)

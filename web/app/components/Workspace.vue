@@ -46,9 +46,9 @@ import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
 import { describeShortcut, objectName, pictureAlt } from '~/lib/descriptions'
 import { selectionAnnouncement } from '~/lib/grid-a11y'
-import { chordLabel, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
-import { marksFor, NO_MARKS, type PreviewAnswer, type SearchMatch } from '~/lib/search'
-import { sheetSearchHost } from '~/lib/sheet-search-host'
+import { chordLabel, chordOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import type { PreviewAnswer, SearchMatch } from '~/lib/search'
+import { marksFor, NO_MARKS, sheetSearchHost } from '~/lib/sheet-search-host'
 import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~/lib/follow'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
@@ -579,7 +579,7 @@ const objectSelected = ref(false)
 const activeHost = computed(() => (objectSelected.value ? styleHost : cellHost))
 
 /** Edit this style… at the active cell, or beside the selected object (D300, D302). */
-const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: { key: 'F10', shift: true }, run: () => grid.value?.openStyleMenu() }
+const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: chordOf('format.look'), run: () => grid.value?.openStyleMenu() }
 
 // ------------------------------------------------------------------------------ Search & replace (E5.15)
 // The panel is one component for the three apps; this is the sheet's side of it: where it can look, how a match is
@@ -592,6 +592,7 @@ const searchHost = sheetSearchHost({
   session,
   selection: () => sel.value,
   goTo: (sheet, row, col) => void goToCell(sheet, row, col),
+  t,
 })
 /** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */
 async function goToCell(sheet: string, row: number, col: number) {
@@ -617,10 +618,10 @@ const searchMarks = computed(() =>
 
 // ------------------------------------------------------------------------------ random numbers, alternatives, following (E6.21–E6.23)
 // Chords are by physical key (`code`): with Alt held, the character a key types differs by layout and platform.
-const RESAMPLE: ShortcutDef = { id: 'tools.resample', get label() { return t('Resample Random Numbers') }, chord: { key: 'F9' }, run: () => void resample() }
-const RANDOM_GENERATOR: ShortcutDef = { id: 'tools.random', get label() { return t('Random Generator…') }, chord: { key: 'r', code: 'KeyR', ctrl: true, alt: true }, run: () => openRandom() }
-const OUTCOMES: ShortcutDef = { id: 'tools.outcomes', get label() { return t('Outcomes of This Cell…') }, chord: { key: 'o', code: 'KeyO', ctrl: true, alt: true }, run: () => openOutcomes() }
-const FOLLOW: ShortcutDef = { id: 'tools.follow', get label() { return t('Follow Computation') }, chord: { key: 'f', code: 'KeyF', ctrl: true, alt: true }, run: () => toggleFollow() }
+const RESAMPLE: ShortcutDef = { id: 'tools.resample', get label() { return t('Resample Random Numbers') }, chord: chordOf('tools.resample'), run: () => void resample() }
+const RANDOM_GENERATOR: ShortcutDef = { id: 'tools.random', get label() { return t('Random Generator…') }, chord: chordOf('tools.random'), run: () => openRandom() }
+const OUTCOMES: ShortcutDef = { id: 'tools.outcomes', get label() { return t('Outcomes of This Cell…') }, chord: chordOf('tools.outcomes'), run: () => openOutcomes() }
+const FOLLOW: ShortcutDef = { id: 'tools.follow', get label() { return t('Follow Computation') }, chord: chordOf('tools.follow'), run: () => toggleFollow() }
 
 // ------------------------------------------------------------------------------ what a screen reader is told of the selection (UX-02)
 // The active cell speaks for itself (`aria-activedescendant` on the grid); a block of cells, a whole row or column and
@@ -785,7 +786,7 @@ function styleItems() {
     canApply: !readonly.value && some,
     apply: (id) => void cellHost.apply(id),
     look: { ...look, disabled: !some },
-    more: some ? [{ id: 'format.clear-cell-style', label: t('Clear cell style'), disabled: readonly.value, action: () => void cellHost.clear?.() }] : [],
+    more: some ? [{ id: 'format.clear-cell-style', label: t('Clear Cell Style'), disabled: readonly.value, action: () => void cellHost.clear?.() }] : [],
   })
 }
 
@@ -957,7 +958,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'tools.follow', label: t('Follow Computation'), hint: chordLabel(FOLLOW.chord), checked: following.value, action: () => toggleFollow() },
         { label: '', separator: true },
         { id: 'tools.names', label: t('Names…'), action: () => (dialog.value = 'names') },
-        { id: 'tools.sql', label: t('SQL query…'), action: () => openSql(), disabled: readonly.value },
+        { id: 'tools.sql', label: t('SQL Query…'), action: () => openSql(), disabled: readonly.value },
       ],
     },
     configMenu(c, { current: locale.value, choose }),

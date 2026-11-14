@@ -15,9 +15,9 @@ const FUNCTION_KEY: Partial<Record<PresentAction, KeyChord>> = {
 }
 const LETTER_KEY: Record<PresentAction, KeyChord> = {
   start: { key: 'p', code: 'KeyP', ctrl: true, alt: true },
-  here: { key: 'p', code: 'KeyP', ctrl: true, alt: true, shift: true },
-  notes: { key: 'n', code: 'KeyN', ctrl: true, alt: true },
-  time: { key: 'm', code: 'KeyM', ctrl: true, alt: true },
+  here: { key: 'h', code: 'KeyH', ctrl: true, alt: true, shift: true },
+  notes: { key: 'v', code: 'KeyV', ctrl: true, alt: true },
+  time: { key: 't', code: 'KeyT', ctrl: true, alt: true, shift: true },
 }
 
 /** Whether this is a Mac, where F5 is not ours. */

@@ -1,0 +1,177 @@
+{
+ "version": "0.1.0",
+ "COMBINE": {
+  "value": "('all', 'any')"
+ },
+ "CONDITIONS": {
+  "value": "('contains', 'not_contains', 'starts_with', 'ends_with', 'is', 'contains_any_of', 'not_contains_any_of')"
+ },
+ "COUNTS": {
+  "value": "('once', 'optional', 'one_or_more', 'any', 'exactly', 'between')"
+ },
+ "Change": {
+  "class": [
+   "object"
+  ],
+  "init": "(at: 'Location', kind: 'str', before: 'str', after: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "CompiledSearch": {
+  "class": [
+   "object"
+  ],
+  "init": "(find: 'regex.Pattern | None', filtered: 'regex.Pattern | None', template: 'str | None', sources: 'tuple[str, str, str]', reasons: 'tuple[Condition, ...]')",
+  "methods": {
+   "admits": "(self, text: 'str', deadline: 'float | None' = None) -> 'bool'",
+   "left_out": "(self, text: 'str', deadline: 'float | None' = None) -> 'dict | None'",
+   "matches": "(self, text: 'str', deadline: 'float | None' = None) -> 'list[Match]'",
+   "pattern_text": "(self) -> 'dict[str, str]'",
+   "replaced": "(self, text: 'str', leave: 'set[int] | frozenset[int]' = frozenset(), deadline: 'float | None' = None) -> 'str'"
+  },
+  "properties": []
+ },
+ "Condition": {
+  "class": [
+   "object"
+  ],
+  "init": "(kind: 'str', text: 'str | None' = None, chars: 'str | None' = None) -> None",
+  "methods": {
+   "body": "(self) -> 'tuple[bool, str]'",
+   "from_data": "(data: 'Any') -> 'Condition'",
+   "source": "(self) -> 'str'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Hit": {
+  "class": [
+   "object"
+  ],
+  "init": "(at: 'Location', kind: 'str', number: 'int', start: 'int', end: 'int', kept: 'tuple[str, ...]', after: 'str | None', text: 'str', excerpt_start: 'int', excerpt_end: 'int', clipped_before: 'bool', clipped_after: 'bool') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "LeftOut": {
+  "class": [
+   "object"
+  ],
+  "init": "(at: 'Location', kind: 'str', why: 'dict') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Location": {
+  "function": "(*args, **kwargs)"
+ },
+ "MAX_LISTED": {
+  "value": "2000"
+ },
+ "MAX_SECONDS": {
+  "value": "1.0"
+ },
+ "MODES": {
+  "value": "('text', 'builder', 'pattern')"
+ },
+ "Match": {
+  "class": [
+   "object"
+  ],
+  "init": "(start: 'int', end: 'int', kept: 'tuple[str, ...]' = (), after: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Part": {
+  "class": [
+   "object"
+  ],
+  "init": "(what: 'str', value: 'str | None' = None, chars: 'str | None' = None, count: 'str | None' = None, n: 'int | None' = None, m: 'int | None' = None, keep: 'str | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'Any') -> 'Part'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Plan": {
+  "class": [
+   "object"
+  ],
+  "init": "(changes: 'list[Change]' = <factory>, skipped: 'list[Skip]' = <factory>, timed_out: 'bool' = False) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Query": {
+  "class": [
+   "object"
+  ],
+  "init": "(mode: 'str', text: 'str' = '', parts: 'tuple[Part, ...]' = (), conditions: 'tuple[Condition, ...]' = (), combine: 'str' = 'all', find: 'str' = '', filter: 'str' = '', replace: 'tuple[tuple[str, str], ...] | str | None' = None, match_case: 'bool' = False, whole: 'str' = 'none') -> None",
+  "methods": {
+   "compile": "(self, extra_parts: 'Mapping[str, str] | None' = None) -> 'CompiledSearch'",
+   "from_data": "(data: 'Any') -> 'Query'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Refusal": {
+  "function": "(*args, **kwargs)"
+ },
+ "Scan": {
+  "class": [
+   "object"
+  ],
+  "init": "(matches: 'list[Hit]' = <factory>, left_out: 'list[LeftOut]' = <factory>, counts: 'dict[str, int]' = <factory>, total: 'int' = 0, truncated: 'bool' = False, timed_out: 'bool' = False) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "SearchError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(message: 'str', field: 'str' = 'query', position: 'int | None' = None)",
+  "methods": {},
+  "properties": []
+ },
+ "SearchTimeout": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "Skip": {
+  "class": [
+   "object"
+  ],
+  "init": "(at: 'Location', kind: 'str', reason: 'str', by: 'str | None' = None) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Text": {
+  "class": [
+   "object"
+  ],
+  "init": "(at: 'Location', kind: 'str', text: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "WHOLE": {
+  "value": "('none', 'entire', 'word')"
+ },
+ "location_key": {
+  "function": "(at: 'Location') -> 'str'"
+ },
+ "plan": {
+  "function": "(texts: 'Iterable[Text]', search: 'CompiledSearch', *, leave: 'Iterable[tuple[Location, int | None]]' = (), refuse: 'Refusal | None' = None, deadline: 'float | None' = None) -> 'Plan'"
+ },
+ "scan": {
+  "function": "(texts: 'Iterable[Text]', search: 'CompiledSearch', *, deadline: 'float | None' = None, replaceable: 'Collection[str] | None' = None, max_listed: 'int' = 2000) -> 'Scan'"
+ }
+}

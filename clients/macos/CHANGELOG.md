@@ -4,14 +4,19 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.1] - unreleased
 
+### Changed (UX-35, UX-36)
+- The menus are regenerated from the manifest: every entry has its key from the one table of all clients (D360), and the
+  menus have what the web's have (File ▸ Print…, Format ▸ List ▸, Edit ▸ Image… and Chart…, Tools ▸ Names… and SQL
+  Query…, View ▸ Show Grid, Edit ▸ Insert ▸). The page listens for the keys. Keys of the shape Cmd+letter are claimed by the menu (Cmd+O, S, P, F, M, Q); the others are shown by the page's own menus only. Cmd+M is macOS's Minimize and Cmd+Option+H its Hide Others: a Mac-specific variant of the table is still to come (D360).
+
 ### Added
 - Format ▸ Describe Object… (Cmd+Option+D) in claudia computes and claudia creates, by regenerating the menus from the
   Linux manifest. The page owns the dialog.
 
 ### Changed
 - `src/generated/menu.creates.json` regenerated (E10.2, D344): View has **Present from the First Slide** (`F5`,
-  `Ctrl+Alt+P`), **Present from This Slide** (`Shift+F5`, `Ctrl+Alt+Shift+P`) and **Speaker Notes** (checkable,
-  `Ctrl+Alt+N`); Edit has **Plan the Time of This Slide…** (`Ctrl+Alt+M`). All are page actions: the page does the work,
+  `Ctrl+Alt+P`), **Present from This Slide** (`Shift+F5`, `Ctrl+Alt+Shift+H`) and **Speaker Notes** (checkable,
+  `Ctrl+Alt+V`); Edit has **Plan the Time of This Slide…** (`Ctrl+Alt+Shift+T`). All are page actions: the page does the work,
   the shell needs nothing new. F5 alone is not enough on a Mac (a system key there), hence the second chord.
 
 ### Fixed

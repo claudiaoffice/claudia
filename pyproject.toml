@@ -3,7 +3,7 @@ name = "claudia-monorepo"
 version = "0.0.0"
 description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents", "claudia-search"]
 
 [tool.uv]
 package = false
@@ -28,6 +28,7 @@ claudia-creates-io = { workspace = true }
 claudia-opc-io = { workspace = true }
 claudia-odf-io = { workspace = true }
 claudia-test-documents = { workspace = true }
+claudia-search = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -39,6 +40,7 @@ dev = [
     "myst-parser>=3",
     "httpx>=0.27",
     "types-openpyxl>=3.1",
+    "types-regex>=2024.11",
     "lxml-stubs>=0.5",
     # The one browser-driven test (tests/e2e): the browser itself is a separate
     # `playwright install chromium`, and the test skips, saying so, where it is missing.
@@ -71,14 +73,14 @@ ignore = [
 "vulture_whitelist.py" = ["B018"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents"]
+known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents", "claudia_search"]
 
 [tool.mypy]
 python_version = "3.14"
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src", "packages/claudia-test-documents/src"]
+mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src", "packages/claudia-test-documents/src", "packages/claudia-search/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
@@ -127,17 +129,18 @@ release accepts minimatch 11."""
 # only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.
 "claudia-ai" = 99
 "claudia-client" = 88
-"claudia-composes" = 90
+"claudia-composes" = 96
 "claudia-composes-io" = 95
 "claudia-computes" = 92
 "claudia-computes-io" = 95
 "claudia-container" = 91
 "claudia-core" = 94
-"claudia-creates" = 93
+"claudia-creates" = 94
 "claudia-creates-io" = 91
 "claudia-fonts" = 97
 "claudia-odf-io" = 96
 "claudia-opc-io" = 100
+"claudia-search" = 99
 "claudia-server" = 94
 "claudia-test-documents" = 89
 "claudia-typeset" = 87

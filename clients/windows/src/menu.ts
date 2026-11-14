@@ -67,30 +67,43 @@ function isSubmenu(entry: ManifestEntry): entry is ManifestSubmenu {
   return 'items' in entry
 }
 
-const LETTER = /^<Primary>([A-Za-z])$/
-const SHIFT_LETTER = /^<Primary><Shift>([A-Za-z])$/
-const SHIFT_FUNCTION = /^<Shift>(F[1-9][0-2]?)$/
-const BARE_FUNCTION = /^(F[1-9][0-2]?)$/
+const MODIFIER = /<(Primary|Shift|Alt)>/g
+const KEY_NAMES: Readonly<Record<string, string>> = {
+  Up: 'Up',
+  Down: 'Down',
+  Left: 'Left',
+  Right: 'Right',
+  Return: 'Enter',
+  Delete: 'Del',
+  Tab: 'Tab',
+  minus: '-',
+  underscore: '_',
+  question: '?',
+}
+/** Symbols typed with Shift: shown as the symbol, without the Shift (as the web menus show them). */
+const SHIFTED = new Set(['underscore', 'question'])
 
 /**
- * The shared manifest's GTK accelerator syntax, turned into the "Ctrl+Shift+N" style Windows menus display --
- * limited to the exact shapes `grep accelerators= clients/linux/src/claudia_shell_gtk/manifest.py` turns up today
- * (`<Primary>n`, `<Primary>o`, `<Primary>q`, `<Shift>F10`, `F1`), each confirmed by its own regular expression
- * rather than a general parser. `null` for anything else -- a blank shortcut column is the safe default for a
- * shape this function has not been told about yet, the same "do not guess" discipline
- * `gtkAccelToMacShortcut` uses, just with a wider confirmed set because a wrong guess here only costs that one
- * cosmetic column (this module's own top comment).
+ * The shared manifest's GTK accelerator syntax, turned into the "Ctrl+Shift+N" style Windows menus display. Every key
+ * of every menu entry has one since UX-35, so every shape the manifest uses is covered (modifiers, letters, digits,
+ * F-keys, arrows and the named keys below), shown in the same order and words as the web app's menus
+ * (`web/app/lib/shortcuts.ts`'s `chordLabel`). `null` for a key name this does not know -- a blank shortcut column
+ * is the safe default for a shape nobody has used yet, and getting one wrong is cosmetic here (this module's own top
+ * comment).
  */
 export function gtkAccelToWindowsShortcut(accelerator: string): string | null {
-  const letter = LETTER.exec(accelerator)
-  if (letter) return `Ctrl+${(letter[1] as string).toUpperCase()}`
-  const shiftLetter = SHIFT_LETTER.exec(accelerator)
-  if (shiftLetter) return `Ctrl+Shift+${(shiftLetter[1] as string).toUpperCase()}`
-  const shiftFunction = SHIFT_FUNCTION.exec(accelerator)
-  if (shiftFunction) return `Shift+${shiftFunction[1]}`
-  const bareFunction = BARE_FUNCTION.exec(accelerator)
-  if (bareFunction) return bareFunction[1] as string
-  return null
+  const modifiers = [...accelerator.matchAll(MODIFIER)].map((m) => m[1])
+  const name = accelerator.replace(MODIFIER, '')
+  let key: string | undefined
+  if (/^[A-Za-z0-9]$/.test(name)) key = name.toUpperCase()
+  else if (/^F([1-9]|1[0-2])$/.test(name)) key = name
+  else key = KEY_NAMES[name]
+  if (key === undefined) return null
+  const parts: string[] = []
+  if (modifiers.includes('Primary')) parts.push('Ctrl')
+  if (modifiers.includes('Shift') && !SHIFTED.has(name)) parts.push('Shift')
+  if (modifiers.includes('Alt')) parts.push('Alt')
+  return [...parts, key].join('+')
 }
 
 function buildItem(action: ManifestAction): WindowMenuItem {

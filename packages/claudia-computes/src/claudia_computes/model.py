@@ -22,6 +22,7 @@ from heapq import heappop, heappush
 from typing import ClassVar, Self, TypeIs, cast
 
 from claudia_core import (
+    Command,
     CommandRegistry,
     DocumentModel,
     ObjectBody,
@@ -458,6 +459,14 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     @classmethod
     def empty(cls) -> Self:
         return cls()
+
+    @classmethod
+    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
+        """A new workbook starts with its first sheet, ``s1`` called "Sheet1" (UX-33: before, the client added it as
+        the person's own first step, which her first Ctrl+Z took away again)."""
+        from .commands import AddSheet
+
+        return (AddSheet(SheetId("s1"), "Sheet1"),)
 
     def serialize(self) -> dict:
         return {

@@ -1030,6 +1030,7 @@
    "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
    "serialize": "(self) -> 'dict'",
    "settle": "(self, ctx) -> 'None'",
+   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
    "sheet": "(self, sheet_id: 'SheetId') -> 'Sheet'",
    "sheet_id_of": "(self, name: 'str') -> 'SheetId | None'",
    "sheet_name_of": "(self, sheet_id: 'SheetId') -> 'str | None'",

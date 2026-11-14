@@ -2,12 +2,14 @@
 
 The builder's vocabulary is a table in ``claudiaoffice-log/notes/search-and-replace.md``; each row of it is a test here
 that states the pattern it compiles to. The quick field is plain text, a typed pattern is checked with the position of
-its first mistake, and a pattern that could backtrack without end is refused (Python's ``re`` cannot be interrupted).
+its first mistake, and a pattern that backtracks without end is stopped by its deadline (SEC-18), not refused.
 """
+
+import contextlib
 
 import pytest
 
-from claudia_core import Query, SearchError
+from claudia_search import Query, SearchError, SearchTimeout
 
 
 def builder(parts=(), conditions=(), *, combine="all", match_case=False, whole="none", replace=None):
@@ -313,7 +315,14 @@ def test_a_mistake_in_a_typed_pattern_is_reported_with_its_position():
     assert caught.value.message == "multiple repeat"
     with pytest.raises(SearchError) as open_group:
         pattern_query("a(bc").compile()
+    # read by `re`, which names the "(" that is never closed (`regex` would name the end of the pattern)
     assert open_group.value.position == 1 and "missing )" in open_group.value.message
+
+
+@pytest.mark.parametrize("pattern", [r"\p{L}+", "(?<=a+)b", "(?P<x>a)(?P<x>b)"])
+def test_the_syntax_is_pythons_even_where_regex_would_take_more(pattern):
+    with pytest.raises(SearchError):
+        pattern_query(pattern).compile()
 
 
 def test_a_mistake_in_the_cell_pattern_or_the_replacement_names_its_field():
@@ -343,41 +352,69 @@ def test_what_the_builder_made_can_be_read_back_as_the_three_fields():
     assert again.replaced("€ 1.240") == made.replaced("€ 1.240") == "1.240 EUR"
 
 
-# --- patterns that could freeze the server --------------------------------------------------------------------------
+# --- patterns that could freeze the server (SEC-18) -----------------------------------------------------------------
+# What `re` could not stop: shapes that backtrack exponentially. The shape guard of claudia-core refused the first
+# six and let the last two through (12.5 s and 1.2 s on 24 characters at cfa2d91). With `regex` none is refused:
+# each either finishes quickly or is stopped by its deadline.
+FREEZERS = [
+    "(a+)+$",
+    "(a*)*b",
+    "(a|aa)+$",
+    r"(\w+\s?)*$",
+    "((ab)*)+$",
+    "(?:a{2,})+$",
+    "(a|a?)+!",
+    r"(x\w*)*!",
+    "(?:a|aa)+!",
+    r"^(([a-z])+.)+[A-Z]([a-z])+$",
+]
 
 
-@pytest.mark.parametrize("pattern", ["(a+)+$", "(a*)*b", "(a|aa)+$", r"(\w+\s?)*$", "((ab)*)+", "(?:a{2,})+"])
-def test_a_pattern_that_backtracks_without_end_is_refused(pattern):
-    with pytest.raises(SearchError, match="(?i)backtrack|repeat"):
-        pattern_query(pattern).compile()
-
-
-# SEC-18: the static guard is a heuristic, and these shapes pass it. Measured at cfa2d91 on 24 characters:
-# `(a|a?)+!` 12.5 s, `(x\w*)*!` 1.2 s, both doubling with every further character, on the event loop. The fix is a
-# search that can be stopped (D284's worker budget, or the `regex` package's timeout, D287), not a longer guard.
-@pytest.mark.xfail(strict=True, reason="SEC-18: exponential patterns pass the guard")
-@pytest.mark.parametrize(("pattern", "text"), [("(a|a?)+!", "a" * 19), (r"(x\w*)*!", "x" * 21)])
-def test_a_pattern_the_guard_lets_through_still_cannot_hold_the_server(pattern, text):
+@pytest.mark.parametrize("pattern", FREEZERS)
+def test_a_pattern_that_backtracks_without_end_costs_at_most_its_deadline(pattern):
     import time
 
-    try:
-        compiled = pattern_query(pattern).compile()
-    except SearchError:
-        return
-    started = time.perf_counter()
-    compiled.matches(text)
-    assert time.perf_counter() - started < 0.02  # an ordinary pattern takes microseconds here; these take 0.15-0.35 s
+    compiled = pattern_query(pattern).compile()
+    for text in ("a" * 5_000, "x" * 5_000, "ab" * 2_500, "a " * 2_500):
+        started = time.monotonic()
+        with contextlib.suppress(SearchTimeout):
+            compiled.matches(text, started + 0.2)
+        assert time.monotonic() - started < 0.6
+
+
+def test_a_search_that_runs_out_of_time_says_so():
+    import time
+
+    slow = pattern_query("(?:a|aa)+!").compile()
+    with pytest.raises(SearchTimeout):
+        slow.matches("a" * 60, time.monotonic() + 0.1)
+    with pytest.raises(SearchTimeout):
+        slow.matches("a", time.monotonic() - 1)  # a deadline already gone: nothing is run
+    assert not issubclass(SearchTimeout, SearchError)  # (a search that ran out of time is not a mistake in it)
+
+
+def test_without_a_deadline_one_call_still_has_a_limit(monkeypatch):
+    import time
+
+    monkeypatch.setattr("claudia_search.engine.MAX_SECONDS", 0.1)
+    started = time.monotonic()
+    with pytest.raises(SearchTimeout):
+        pattern_query("(?:a|aa)+!").compile().matches("a" * 60)
+    assert time.monotonic() - started < 0.5
+
+
+@pytest.mark.parametrize("method", ["admits", "left_out", "replaced"])
+def test_every_way_of_running_a_pattern_keeps_the_deadline(method):
+    import time
+
+    slow = pattern_query("(?:a|aa)+!", "(?:a|aa)+!", replace="b").compile()
+    with pytest.raises(SearchTimeout):
+        getattr(slow, method)("a" * 60, **({"deadline": time.monotonic() + 0.1}))
 
 
 @pytest.mark.parametrize("pattern", ["a+b*", r"(\d+)(?:,\d+)?", "(ab)?c", "(?:a{2})+", r"\d+(?:[.,]\d+)*", ".*x.*"])
 def test_ordinary_repeats_are_allowed(pattern):
     pattern_query(pattern).compile()
-
-
-def test_the_refusal_covers_the_cell_pattern_too():
-    with pytest.raises(SearchError) as caught:
-        pattern_query("a", "(a+)+$").compile()
-    assert caught.value.field == "filter"
 
 
 def test_a_pattern_that_is_too_long_or_too_deep_is_refused():
@@ -433,16 +470,7 @@ def test_a_query_gives_back_the_data_it_was_made_from():
     assert Query.from_data(data).to_data() == data
 
 
-# --- more shapes that are refused, and more mistakes in what a client sends ------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "pattern",
-    ["((a+)+)?", "(x(a+)+)", "x|(a+)+", "(?=(a+)+b)", "(?:a+|b)+$", "((a|a)|c)+"],
-)
-def test_a_repeat_hidden_in_a_group_a_branch_or_a_look_ahead_is_found_too(pattern):
-    with pytest.raises(SearchError, match="backtrack"):
-        pattern_query(pattern).compile()
+# --- more mistakes in what a client sends ------------------------------------------
 
 
 def test_a_repeat_of_nothing_is_harmless():
@@ -484,3 +512,16 @@ def test_a_client_that_sends_something_else_is_told_what_is_wrong(data, message)
 def test_what_a_query_says_about_itself_makes_the_same_query(data):
     query = Query.from_data(data)
     assert Query.from_data(query.to_data()) == query
+
+
+def test_a_pattern_regex_cannot_read_is_a_mistake_in_words_too(monkeypatch):
+    """`re` reads a pattern first; should `regex` still refuse one, that is a search error, not a crash."""
+    import regex
+
+    def refuse(*args, **kwargs):
+        raise regex.error("something regex does not take")
+
+    monkeypatch.setattr("claudia_search.engine.regex.compile", refuse)
+    with pytest.raises(SearchError, match="something regex does not take") as caught:
+        pattern_query("a").compile()
+    assert caught.value.field == "find"

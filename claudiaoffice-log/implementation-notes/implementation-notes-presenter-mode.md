@@ -29,7 +29,9 @@ D340–D348. This file keeps what the code does not say.
 
 See D344. The F5 chords are the habit; the Ctrl+Alt letters are the ones that reach a page on every system. A chord that
 is a letter is matched by `code`, not by `key`: Option+P types a different character on a Mac. Ctrl+Alt+T would have been
-natural for the time and is a terminal on GNOME; Ctrl+Alt+D is Describe Object (main, BITV 1.1.1), hence Ctrl+Alt+M.
+natural for the time and is a terminal on GNOME; Ctrl+Alt+D is Describe Object (main, BITV 1.1.1), hence Ctrl+Alt+M at first. At the merge with `qa` (2026-11-14) the
+chords moved to fit the one key table (D360): Speaker Notes Ctrl+Alt+V, the time Ctrl+Alt+Shift+T, from this slide
+Ctrl+Alt+Shift+H (see the note in D344).
 
 ## Known limits
 

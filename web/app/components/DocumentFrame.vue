@@ -9,7 +9,7 @@ import type { BaseSession } from '~/lib/base-session'
 import type { FrameDialog } from '~/lib/document-menus'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { cycleRegions, windowRegions } from '~/lib/regions'
-import { chordLabel, installWindowShortcuts, regionShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { chordLabel, installWindowShortcuts, menuShortcuts, regionShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
 import type { ExportFormatOption } from './ExportFormatDialog.vue'
 import type { Menu } from './MenuBar.vue'
@@ -72,18 +72,22 @@ function openHelp(mode?: 'how-to' | 'docs') {
 }
 
 // D122: the shared shortcut map and the app's own, in one list that both the window's key handler and
-// Config ▸ Shortcuts read, so the dialog shows exactly what is wired.
-const shortcuts = computed<ShortcutDef[]>(() => [
-  ...sharedShortcuts({
-    undo: () => props.session.undo(),
-    redo: () => props.session.redo(),
-    save: () => {
-      if (!readonly.value) void checkpoint(null)
-    },
-  }),
-  ...regionShortcuts({ next: () => moveBetweenRegions(false), previous: () => moveBetweenRegions(true) }),
-  ...props.extraShortcuts,
-])
+// Config ▸ Shortcuts read, so the dialog shows exactly what is wired. Then every other menu entry's key from the one
+// table of all clients (UX-35): an entry with a key runs as if it were clicked.
+const shortcuts = computed<ShortcutDef[]>(() => {
+  const own = [
+    ...sharedShortcuts({
+      undo: () => props.session.undo(),
+      redo: () => props.session.redo(),
+      save: () => {
+        if (!readonly.value) void checkpoint(null)
+      },
+    }),
+    ...regionShortcuts({ next: () => moveBetweenRegions(false), previous: () => moveBetweenRegions(true) }),
+    ...props.extraShortcuts,
+  ]
+  return [...own, ...menuShortcuts(props.menus, new Set(own.map((d) => d.id)))]
+})
 installWindowShortcuts(() => shortcuts.value)
 
 defineExpose({

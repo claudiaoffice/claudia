@@ -12,20 +12,24 @@ The engine knows no app and no language: it works on plain texts and returns spa
 (computes: a cell reference) by handing their sources to :meth:`Query.compile`. How a search is phrased to a person
 (the sentence that restates it) is the client's, because it needs the person's language.
 
-Python's ``re`` cannot be interrupted, so a pattern that could backtrack without end is refused before it is run: a
-repeat of something that itself starts with an unbounded repeat (``(a+)+``), or of alternatives that begin alike
-(``(a|aa)+``). That is conservative on purpose. The two fields of a typed pattern and the builder's own output are
-checked the same way. A dot matches line breaks too, because a cell or a paragraph may hold them.
+Patterns are read by Python's ``re`` (its syntax is what a person is told, and its messages are what clients explain)
+and run on the ``regex`` package (D287), in its version 0 syntax, which reads them the same way. Unlike ``re`` it can be
+stopped: every call that runs a pattern takes a *deadline* (a :func:`time.monotonic` time) and raises
+:class:`SearchTimeout` when it passes, so a pattern that backtracks without end costs its caller a bounded time and
+never the server (SEC-18). Without a deadline a call may take :data:`MAX_SECONDS` at most. An earlier version refused
+such patterns by their shape instead; that guess missed some and refused good ones. A dot matches line breaks too,
+because a cell or a paragraph may hold them.
 """
 
 from __future__ import annotations
 
 import re
+import time
 from collections.abc import Mapping
 from dataclasses import dataclass
-from re import _constants as _c  # type: ignore[attr-defined]  # noqa: PLC2701  (the parser's own opcodes)
-from re import _parser  # type: ignore[attr-defined]  # noqa: PLC2701  (the one way to look inside a pattern)
 from typing import Any, cast
+
+import regex
 
 MAX_PATTERN_CHARS = 2000  # a typed pattern, or the one the builder made
 MAX_PARTS = 30
@@ -34,6 +38,7 @@ MAX_REPLACEMENT_ITEMS = 50
 MAX_TEXT_CHARS = 1000  # a text to find, a part's text, a replacement's literal
 MAX_SET_CHARS = 200  # the characters of "any one of"
 MAX_COUNT = 1000  # "exactly n" and "n to m"
+MAX_SECONDS = 1.0  # what one call may take when its caller gives no deadline
 
 MODES = ("text", "builder", "pattern")
 WHOLE = ("none", "entire", "word")
@@ -85,6 +90,11 @@ class SearchError(ValueError):
         self.position = position
 
 
+class SearchTimeout(Exception):
+    """The deadline passed while a pattern was running. Not a mistake in the search: on another text, or with more
+    time, it may finish. A caller reports how far it got."""
+
+
 def _fail(message: str) -> SearchError:
     return SearchError(message)
 
@@ -125,6 +135,7 @@ class Part:
 
     @classmethod
     def from_data(cls, data: Any) -> Part:
+        """The part ``data`` describes (``{what, value?, chars?, count?, n?, m?, keep?}``), or :class:`SearchError`."""
         if not isinstance(data, dict) or not isinstance(data.get("what"), str) or not data["what"]:
             raise _fail("a part says what it is: {what: ...}")
         _only(data, {"what", "value", "chars", "count", "n", "m", "keep"}, "a part")
@@ -166,6 +177,7 @@ class Part:
         return count, n, m
 
     def to_data(self) -> dict:
+        """The part as a client sends it."""
         data: dict = {"what": self.what}
         for name in ("value", "chars", "count", "n", "m", "keep"):
             if getattr(self, name) is not None:
@@ -184,6 +196,7 @@ class Condition:
 
     @classmethod
     def from_data(cls, data: Any) -> Condition:
+        """The condition ``data`` describes (``{kind, text}`` or ``{kind, chars}``), or :class:`SearchError`."""
         if not isinstance(data, dict) or data.get("kind") not in CONDITIONS:
             raise _fail(f"a condition is one of {', '.join(CONDITIONS)}")
         _only(data, {"kind", "text", "chars"}, "a condition")
@@ -197,6 +210,7 @@ class Condition:
         return cls(kind, chars=_text(data.get("chars"), "the characters of a condition", MAX_SET_CHARS))
 
     def to_data(self) -> dict:
+        """The condition as a client sends it."""
         return {"kind": self.kind, **({"text": self.text} if self.text is not None else {"chars": self.chars})}
 
     def body(self) -> tuple[bool, str]:
@@ -213,6 +227,7 @@ class Condition:
         }[self.kind]
 
     def source(self) -> str:
+        """The condition as a look-ahead at the start of a text: what the filter of a builder search is made of."""
         must, body = self.body()
         return f"(?{'=' if must else '!'}{body})"
 
@@ -340,8 +355,8 @@ class Query:
     def compile(self, extra_parts: Mapping[str, str] | None = None) -> CompiledSearch:
         """The search ready to run. ``extra_parts`` maps the names of parts an app adds to their pattern source.
 
-        Raises :class:`SearchError` for a part nobody knows, a pattern that does not read, a replacement that names a
-        group the pattern does not have, or a pattern that could backtrack without end."""
+        Raises :class:`SearchError` for a part nobody knows, a pattern that does not read, or a replacement that names
+        a group the pattern does not have."""
         find, filtered, template = self._sources(extra_parts or {})
         return CompiledSearch._make(self.match_case, find, filtered, template, self._reasons(), self.mode == "builder")
 
@@ -427,8 +442,8 @@ class CompiledSearch:
 
     def __init__(
         self,
-        find: re.Pattern | None,
-        filtered: re.Pattern | None,
+        find: regex.Pattern | None,
+        filtered: regex.Pattern | None,
         template: str | None,
         sources: tuple[str, str, str],
         reasons: tuple[Condition, ...],
@@ -449,7 +464,7 @@ class CompiledSearch:
         reasons: tuple[Condition, ...],
         from_builder: bool,
     ) -> CompiledSearch:
-        flags = re.DOTALL | (0 if match_case else re.IGNORECASE)
+        flags = regex.VERSION0 | regex.DOTALL | (0 if match_case else regex.IGNORECASE)
         found = _compile(find, "find", flags) if find else None
         filtered = _compile(filter_source, "filter", flags) if filter_source else None
         if template is not None and found is not None:
@@ -462,36 +477,46 @@ class CompiledSearch:
         find, filter_source, replace = self._sources
         return {"find": find, "filter": filter_source, "replace": replace}
 
-    def admits(self, text: str) -> bool:
-        """Whether the filter lets this text through (always, when there is none)."""
-        return self._filter is None or self._filter.search(text) is not None
+    def admits(self, text: str, deadline: float | None = None) -> bool:
+        """Whether the filter lets this text through (always, when there is none). :class:`SearchTimeout` once
+        ``deadline`` (a :func:`time.monotonic` time) has passed; see the module's docstring."""
+        found = self._filter
+        if found is None:
+            return True
+        return _run(lambda timeout: found.search(text, timeout=timeout), deadline) is not None
 
-    def matches(self, text: str) -> list[Match]:
+    def matches(self, text: str, deadline: float | None = None) -> list[Match]:
         """Where in ``text`` the search finds something, in order. Nothing in a text the filter rejects, and no
-        empty match."""
-        return [self._match(m) for m in self._raw(text)]
+        empty match. :class:`SearchTimeout` once ``deadline`` has passed."""
+        return [self._match(m) for m in self._raw(text, deadline)]
 
-    def left_out(self, text: str) -> dict | None:
+    def left_out(self, text: str, deadline: float | None = None) -> dict | None:
         """Why a text that looks like a match was left out: the condition that failed (as its data),
         ``{"kind": "filter"}`` when it is the filter pattern or an "any of" that did not let it through, or ``None``
-        when it was not left out (it matches, or the find finds nothing in it)."""
-        if self.admits(text) or self._find is None:
+        when it was not left out (it matches, or the find finds nothing in it). :class:`SearchTimeout` once
+        ``deadline`` has passed."""
+        if self.admits(text, deadline) or self._find is None:
             return None
-        if not any(m.end() > m.start() for m in self._find.finditer(text)):
+        find = self._find
+        if not any(
+            m.end() > m.start() for m in _run(lambda timeout: list(find.finditer(text, timeout=timeout)), deadline)
+        ):
             return None
         for condition in self._reasons:
-            if re.compile(condition.source(), self._flags()).match(text) is None:
+            test = regex.compile(condition.source(), self._flags())
+            if _run(lambda timeout, test=test: test.match(text, timeout=timeout), deadline) is None:
                 return condition.to_data()
         return {"kind": "filter"}
 
-    def replaced(self, text: str, leave: set[int] | frozenset[int] = frozenset()) -> str:
+    def replaced(self, text: str, leave: set[int] | frozenset[int] = frozenset(), deadline: float | None = None) -> str:
         """``text`` with every match but those numbered in ``leave`` (counting from 0) replaced.
 
-        Raises :class:`SearchError` if the search has no replacement."""
+        Raises :class:`SearchError` if the search has no replacement, :class:`SearchTimeout` once ``deadline`` has
+        passed."""
         if self._template is None:
             raise SearchError("there is nothing to replace with")
         out, at = [], 0
-        for number, m in enumerate(self._raw(text)):
+        for number, m in enumerate(self._raw(text, deadline)):
             out.append(text[at : m.start()])
             out.append(m.group() if number in leave else self._expand(m))
             at = m.end()
@@ -502,93 +527,63 @@ class CompiledSearch:
     def _flags(self) -> int:
         return (self._find or self._filter).flags if (self._find or self._filter) else 0  # type: ignore[union-attr]
 
-    def _raw(self, text: str) -> list[re.Match]:
-        if self._find is None or not text or not self.admits(text):
+    def _raw(self, text: str, deadline: float | None) -> list[Any]:
+        if self._find is None or not text or not self.admits(text, deadline):
             return []
-        return [m for m in self._find.finditer(text) if m.end() > m.start()]
+        find = self._find
+        found = _run(lambda timeout: list(find.finditer(text, timeout=timeout)), deadline)
+        return [m for m in found if m.end() > m.start()]
 
-    def _expand(self, m: re.Match) -> str:
+    def _expand(self, m: Any) -> str:
         return m.expand(self._template or "")
 
-    def _match(self, m: re.Match) -> Match:
+    def _match(self, m: Any) -> Match:
         kept = tuple(g or "" for g in m.groups())
         return Match(m.start(), m.end(), kept, None if self._template is None else self._expand(m))
 
 
-def _compile(source: str, field: str, flags: int) -> re.Pattern:
+def _run(call, deadline: float | None):
+    """``call(timeout)``, with what is left until ``deadline`` (or :data:`MAX_SECONDS`) as the timeout."""
+    timeout = MAX_SECONDS if deadline is None else deadline - time.monotonic()
+    if timeout <= 0:
+        raise SearchTimeout
+    try:
+        return call(timeout)
+    except TimeoutError:
+        raise SearchTimeout from None
+
+
+def _compile(source: str, field: str, flags: int) -> regex.Pattern:
+    """The pattern, read by ``re`` and run by ``regex``.
+
+    ``re`` reads it first: the syntax a person is told is Python's, and ``re`` names a mistake where it is (the
+    ``(`` that is never closed, not the end of the pattern) in the words the clients explain (``explainError``). A
+    pattern ``re`` reads, ``regex`` reads the same way in its version 0."""
     if len(source) > MAX_PATTERN_CHARS:
         raise SearchError(f"a pattern has at most {MAX_PATTERN_CHARS} characters", field)
     try:
-        compiled = re.compile(source, flags)
+        re.compile(source, re.DOTALL | (flags & regex.IGNORECASE and re.IGNORECASE))
+        return regex.compile(source, flags)
     except re.error as problem:
         raise SearchError(problem.msg, field, problem.pos) from None
+    except regex.error as problem:  # (a pattern `re` reads, `regex` reads too; this is the guard for when it does not)
+        raise SearchError(str(problem), field, getattr(problem, "pos", None)) from None
     except RecursionError:
         raise SearchError("this pattern is nested too deeply", field) from None
-    if _backtracks(_parser.parse(source, flags)):
-        raise SearchError(
-            "this pattern could backtrack without end on some texts: it repeats something that itself starts with an "
-            "unbounded repeat, or alternatives that begin alike",
-            field,
-        )
-    return compiled
 
 
-def _check_template(find: re.Pattern, template: str) -> None:
+def _check_template(find: regex.Pattern, template: str) -> None:
+    """Whether ``template`` reads and names only groups ``find`` has. ``regex`` reads a replacement only when it is
+    used; this reads it now, on an empty match of a stand-in with the same groups, so that a mistake is shown while
+    the person types and not halfway through replacing."""
+    names = {index: name for name, index in find.groupindex.items()}
     try:
-        find.sub(template, "")
+        stand_in = re.compile("".join(f"(?P<{names[i]}>)" if i in names else "()" for i in range(1, find.groups + 1)))
+    except re.error:  # a group name `re` would not take: `regex` reads the replacement when it is used
+        return
+    empty = stand_in.match("")
+    assert empty is not None  # (every group of the stand-in matches the empty text)
+    try:
+        empty.expand(template)
     except (re.error, IndexError) as problem:
         raise SearchError(str(problem), "replace", getattr(problem, "pos", None)) from None
-
-
-_REPEATS = (_c.MAX_REPEAT, _c.MIN_REPEAT, _c.POSSESSIVE_REPEAT)
-
-
-def _backtracks(tree) -> bool:
-    """Whether the parsed pattern repeats (more than once) something that can start with an unbounded repeat or with
-    alternatives that begin alike: the shapes in which a failing match takes exponential time."""
-    for op, av in tree:
-        if op in _REPEATS:
-            low, high, body = av
-            if high > 1 and (_starts_open(body) or _has_ambiguous_branch(body)):
-                return True
-            if _backtracks(body):
-                return True
-        elif op == _c.SUBPATTERN:
-            if _backtracks(av[3]):
-                return True
-        elif op == _c.BRANCH:
-            if any(_backtracks(branch) for branch in av[1]):
-                return True
-        elif op in (_c.ASSERT, _c.ASSERT_NOT) and _backtracks(av[1]):
-            return True
-    return False
-
-
-def _starts_open(tree) -> bool:
-    """Whether the pattern can begin with an unbounded repeat (or a group, or alternatives, that can)."""
-    items = list(tree)
-    if not items:
-        return False
-    op, av = items[0]
-    if op in _REPEATS:
-        return av[1] == _c.MAXREPEAT or _starts_open(av[2])
-    if op == _c.SUBPATTERN:
-        return _starts_open(av[3])
-    if op == _c.BRANCH:
-        return any(_starts_open(branch) for branch in av[1])
-    return False
-
-
-def _has_ambiguous_branch(tree) -> bool:
-    """Whether alternatives somewhere in the pattern can match the same text in two ways: one is empty (the parser makes
-    ``a|aa`` into ``a(?:|a)``) or two begin with the same step."""
-    for op, av in tree:
-        if op == _c.BRANCH:
-            firsts = [repr(list(branch)[0]) for branch in av[1] if len(branch)]
-            if len(firsts) < len(av[1]) or len(set(firsts)) < len(firsts):
-                return True
-            if any(_has_ambiguous_branch(branch) for branch in av[1]):
-                return True
-        elif op == _c.SUBPATTERN and _has_ambiguous_branch(av[3]) or op in _REPEATS and _has_ambiguous_branch(av[2]):
-            return True
-    return False

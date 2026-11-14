@@ -543,6 +543,7 @@
    "serialize": "(self) -> 'dict'",
    "set_notes": "(self, slide: 'str', text: 'str') -> 'str'",
    "set_time": "(self, slide: 'str', seconds: 'int | None') -> 'int | None'",
+   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
    "time_of": "(self, slide: 'str') -> 'int | None'",
    "total_time": "(self) -> 'int'"
   },

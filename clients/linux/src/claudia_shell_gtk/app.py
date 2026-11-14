@@ -23,7 +23,7 @@ from .i18n import detect_system_locale
 from .i18n import translate as _
 from .identity import AppIdentity
 from .launch import SetupProblem, prepare_server
-from .manifest import Manifest, for_app
+from .manifest import KeyOwner, Manifest, for_app
 from .server import ServerStartError
 from .servers import Address
 from .window import ClaudiaWindow, PageFactory
@@ -101,8 +101,10 @@ class ClaudiaApp(Adw.Application):
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
+        # Only the keys the shell itself listens for are bound natively; every other key belongs to the page (and to
+        # the browser or the document view), and the menu only shows it (``manifest.menu_xml``'s ``accel``, UX-35).
         for action in self._manifest.actions:
-            if action.accelerators:
+            if action.accelerators and action.key_owner is KeyOwner.SHELL:
                 self.set_accels_for_action(f"win.{action.id}", list(action.accelerators))
 
     def do_activate(self) -> None:

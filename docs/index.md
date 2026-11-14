@@ -21,6 +21,7 @@ api/claudia_ai
 api/claudia_container
 api/claudia_creates
 api/claudia_fonts
+api/claudia_search
 api/claudia_typeset
 api/claudia_shell_gtk
 api/apps
@@ -33,6 +34,7 @@ changelog-computes
 changelog-composes
 changelog-creates
 changelog-fonts
+changelog-search
 changelog-typeset
 changelog-ai
 changelog-opc-io

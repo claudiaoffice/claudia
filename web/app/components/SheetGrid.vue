@@ -20,7 +20,7 @@ import {
   type Axis,
   type SizeTable,
 } from '~/lib/line-sizes'
-import { NO_MARKS, type SearchMarks } from '~/lib/search'
+import { NO_MARKS, type SearchMarks } from '~/lib/sheet-search-host'
 import { purposeVar, tableBoxes, type NameInfo, type TableBox } from '~/lib/names'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { useI18n } from '~/lib/i18n'

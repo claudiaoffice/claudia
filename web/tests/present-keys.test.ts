@@ -11,11 +11,11 @@ describe('the keys that start the show', () => {
   })
   it('names the letter chords on a Mac, where F5 is a system key', () => {
     expect(presentHint('start', true)).toBe('Ctrl+Option+P')
-    expect(presentHint('here', true)).toBe('Ctrl+Option+Shift+P')
+    expect(presentHint('here', true)).toBe('Ctrl+Option+Shift+H')
   })
   it('has no function key for the notes and the time, on any system', () => {
     expect(presentChord('notes', false)).toEqual(presentChord('notes', true))
-    expect(presentHint('time', false)).toBe('Ctrl+Alt+M')
+    expect(presentHint('time', false)).toBe('Ctrl+Alt+Shift+T')
   })
   it('knows a Mac by its platform', () => {
     expect(onMac({ platform: 'MacIntel' })).toBe(true)
@@ -42,7 +42,7 @@ describe('what the window listens for', () => {
   it('starts from this slide with Shift', () => {
     calls.length = 0
     dispatch(defs, key({ key: 'F5', shiftKey: true }))
-    dispatch(defs, key({ key: 'P', code: 'KeyP', ctrlKey: true, altKey: true, shiftKey: true }))
+    dispatch(defs, key({ key: 'H', code: 'KeyH', ctrlKey: true, altKey: true, shiftKey: true }))
     expect(calls).toEqual(['here', 'here'])
   })
   it('keeps a plain P for the text', () => {

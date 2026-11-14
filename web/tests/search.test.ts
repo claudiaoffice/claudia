@@ -7,7 +7,6 @@ import {
   excerptOf,
   keptNames,
   latest,
-  marksFor,
   newCondition,
   newPart,
   normalizeReplacement,
@@ -15,7 +14,6 @@ import {
   shownMatches,
   toPattern,
   toQuery,
-  whereLabel,
   whyLeftOut,
   type SearchMatch,
   type SearchModel,
@@ -232,10 +230,9 @@ describe('errors in a typed pattern, in words', () => {
     expect(explainError({ message: 'bad escape \\q', field: 'find', position: 1 }, t).headline).toBe('This backslash does not mean anything here.')
   })
 
-  it('says why a pattern that could take forever is not run', () => {
-    const e = explainError({ message: 'this pattern could backtrack without end on some texts: it repeats something', field: 'find', position: null }, t)
-    expect(e.headline).toBe('This pattern could take far too long on some texts.')
-    expect(e.detail).toBe('It is not run, so nothing is found or replaced. Try making the repeated part more specific.')
+  it('has no sentence of its own for a refusal the server no longer makes (SEC-18: patterns run until a deadline)', () => {
+    const e = explainError({ message: 'this pattern could backtrack without end on some texts', field: 'find', position: null }, t)
+    expect(e.headline).toBe('this pattern could backtrack without end on some texts')
   })
 
   it('names the field the mistake is in', () => {
@@ -249,11 +246,9 @@ describe('errors in a typed pattern, in words', () => {
   })
 })
 
-describe('where a match is and how it reads', () => {
+describe('how a match reads', () => {
   const match: SearchMatch = {
-    sheet: 's1',
-    row: 1,
-    col: 1,
+    at: { paragraph: 'p1' }, // the panel's own code never reads a place (CODE-18): any app's will do
     kind: 'text',
     number: 0,
     start: 2,
@@ -264,10 +259,6 @@ describe('where a match is and how it reads', () => {
     excerpt: [2, 5],
     clipped: [false, false],
   }
-
-  it('names the cell with its sheet', () => {
-    expect(whereLabel(match, (id) => (id === 's1' ? 'Costs' : id))).toBe('Costs!B2')
-  })
 
   it('cuts the excerpt into before, match and after', () => {
     expect(excerptOf(match)).toEqual({ before: '€ ', hit: '980', after: ' (EUR)' })
@@ -281,9 +272,7 @@ describe('where a match is and how it reads', () => {
 
 describe('the matches a person asked to see', () => {
   const at = (row: number, kind: SearchMatch['kind'], number = 0): SearchMatch => ({
-    sheet: 's1',
-    row,
-    col: 0,
+    at: { row },
     kind,
     number,
     start: 0,
@@ -297,32 +286,8 @@ describe('the matches a person asked to see', () => {
   const all = [at(0, 'text'), at(1, 'formula'), at(2, 'value'), at(3, 'text')]
 
   it('shows only the kinds that are switched on', () => {
-    expect(shownMatches(all, { text: true, formulas: false, values: false }).map((m) => m.row)).toEqual([0, 3])
-    expect(shownMatches(all, { text: true, formulas: true, values: true }).map((m) => m.row)).toEqual([0, 1, 2, 3])
-  })
-
-  it('marks cells on one sheet: every match, the current one apart, formulas known', () => {
-    const marks = marksFor([at(0, 'text'), at(1, 'formula'), { ...at(2, 'text'), sheet: 's2' }], 's1', 1)
-    expect([...marks.cells.entries()].map(([k, v]) => [k, v.current, v.formula])).toEqual([
-      [0, false, false],
-      [100_000, true, true],
-    ])
-  })
-
-  it('shows one mark per cell, the current one winning', () => {
-    const marks = marksFor([at(0, 'text', 0), at(0, 'text', 1)], 's1', 1)
-    expect(marks.cells.size).toBe(1)
-    expect(marks.cells.get(0)?.current).toBe(true)
-  })
-
-  it('shows what a replacement would make of a cell, and which cells it skips', () => {
-    const marks = marksFor([at(0, 'text')], 's1', null, {
-      changes: [{ sheet: 's1', row: 0, col: 0, kind: 'text', before: 'x', after: 'y' }, { sheet: 's2', row: 0, col: 0, kind: 'text', before: 'a', after: 'b' }],
-      skipped: [{ sheet: 's1', row: 3, col: 0, kind: 'text', reason: 'locked', by: 'anna' }],
-    })
-    expect(marks.after.get(0)).toBe('y')
-    expect(marks.after.size).toBe(1)
-    expect(marks.blocked.get(300_000)).toBe('anna')
+    expect(shownMatches(all, { text: true, formulas: false, values: false }).map((m) => m.at.row)).toEqual([0, 3])
+    expect(shownMatches(all, { text: true, formulas: true, values: true }).map((m) => m.at.row)).toEqual([0, 1, 2, 3])
   })
 })
 

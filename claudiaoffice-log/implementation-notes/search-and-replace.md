@@ -107,3 +107,25 @@ else changes in them.
 
 Core 0.17.0, computes 0.3.1, server changelog Unreleased (version unchanged: `__all__` did not change),
 `PROTOCOL_VERSION` 2. Web: 736 tests. Coverage floors ratcheted with `scripts/check_coverage.py --ratchet`.
+
+## 2026-11-13, after QA: `regex`, a package of its own, places as `at` (SEC-18, CODE-18, PERF-11; D288, D289)
+
+* **Engine.** `claudia_core.search` moved to the new package `claudia-search` (`claudia_search.engine`), because the
+  kernel imports the standard library only. Patterns are read by `re` (syntax and error messages unchanged; the
+  client's `explainError` keeps working) and run by `regex` with a timeout: every `CompiledSearch` method takes a
+  `deadline` (`time.monotonic()`), raises `SearchTimeout` when it passes, and without one a call may take
+  `MAX_SECONDS` (1 s). The shape guard (`_backtracks` and friends) is gone, and with it the client's sentence for it.
+  `_check_template` reads a replacement against a stand-in `re` pattern with the same groups, because `regex` reads a
+  replacement only when it is used.
+* **App-neutral search.** `claudia_search.scan` and `plan` run over `Text(at, kind, text)` and answer `Hit`, `LeftOut`,
+  `Change`, `Skip`, all with `at` and a `to_data()` that is the wire shape; `plan` takes `leave` as `(at, number)` and
+  a `refuse(text, after)` callback for the app's own rules. `location_key` keys a place whatever its field order.
+* **Computes.** `claudia_computes.search` offers `workbook_texts`, `scan_workbook` (counts by `text`/`formulas`/`values`
+  as before), `plan_replacement` and `replace_command` (which makes the cell contents; a plan no longer carries them),
+  with `cell_at`/`cell_of` for the place.
+* **Server.** The three methods moved to `claudia_server/computes_search.py` (CODE-21 in part), registered by
+  `add_search_methods(computes_methods, workbook=_workbook)`. One deadline per request (`SEARCH_SECONDS`, 2 s) for
+  find, preview and replace: preview answers `timed_out`, replace refuses. `leave` is `{at, match}`, at most 10000.
+* **Web.** `SearchHost` lives in `lib/search.ts` and has `keyOf`, `where`, `jump` taking `at`, and `scopeLabel`; the
+  cell labels, `cellOf`, and the grid marks (`marksFor`, `SearchMarks`) moved to `lib/sheet-search-host.ts`.
+* **Not changed:** the panel's words still say "cell" and the kinds are computes'; they become the host's with E9.28.

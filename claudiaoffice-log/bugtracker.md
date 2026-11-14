@@ -120,14 +120,14 @@ statement in the docs or on the website).
 | CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | open; 14 identical files at `cfa2d91` (11 before) |
 | CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
 | CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |
-| SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **new, open** |
+| SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |
 | PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |
-| PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **new, open** |
-| UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **new, open** |
-| UX-34 | **P1** | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | **new, needs decision** |
-| UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **new, open** |
-| UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **new, open** |
+| PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |
+| UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **fixed** 2026-11-13 (D362) |
+| UX-34 | P3 | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | deferred (owner, 2026-11-13: the AI is not fully built yet) |
+| UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **fixed** 2026-11-13 (D360) |
+| UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **fixed** 2026-11-13 (D361) |
 | UX-37 | P3 | UX / composes | composes shows an act/suggest switch that changes nothing | **new, open** |
 | PROC-18 | **P1** | Process / CI | The gate fails on every fresh clone: a note names `web/public/wasm`, a build output | **fixed** 2026-11-13 |
 | PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |
@@ -135,10 +135,10 @@ statement in the docs or on the website).
 | PROC-21 | P2 | Process / CD | The demo deployment checks `demo.claudiaoffice.de`, a domain that is not ours | **fixed** 2026-11-13 |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |
 | CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **new, open** |
-| CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **new, open** |
+| CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **fixed** 2026-11-13 (D289) |
 | CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |
 | CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |
-| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | **new, open** |
+| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13 |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
@@ -1179,7 +1179,7 @@ changes, and the `windows-client` job now runs the same `--check` for `clients/m
 
 ## Round of 2026-11-13 at `cfa2d91`
 
-### SEC-18 · A search pattern the static guard lets through freezes the whole server · P1 · new, open
+### SEC-18 · A search pattern the static guard lets through freezes the whole server · P1 · fixed 2026-11-13
 **Evidence (measured).** `claudia_core.search` refuses patterns that "could backtrack without end" by looking at their
 shape (`_backtracks`), because Python's `re` cannot be interrupted. Two shapes pass it and are exponential: `(a|a?)+!`
 takes 12.5 s on 24 characters, `(x\w*)*!` 1.2 s, each doubling with every further character (`(\w|\d)+!` and
@@ -1193,6 +1193,12 @@ the `regex` package with its `timeout=` (also gives `\p{L}`; D287 is still open 
 **Test:** `packages/claudia-core/tests/test_search.py::test_a_pattern_the_guard_lets_through_still_cannot_hold_the_server`
 (strict `xfail` until fixed; remove the mark with the fix). Add a server test that `/api/health` answers while a search
 runs.
+**Fixed (D288).** The engine moved to the new package claudia-search and runs patterns on `regex` with a deadline inside
+the pattern (`re` still reads them, so syntax and messages are unchanged); the shape guard is gone. One deadline per
+request, 2 s. Measured: `(a|a?)+!` and `(x\w*)*!` now finish at once on 10,000 characters; `(?:a|aa)+!`, which `regex`
+cannot shortcut, stops at its deadline. **Tests:** `claudia-search/tests/test_engine.py` (every former freezer within
+its deadline, every method keeps it, the default limit), `test_scan.py`, and in the server
+`test_a_pattern_that_could_run_forever_stops_at_the_deadline_and_says_so`.
 
 ### PERF-09 · Making a webfont blocked every request of every document for seconds · P2 · fixed 2026-11-13
 **Evidence (measured).** `GET /api/fonts/{sha256}.woff2` made the WOFF2 file on first use inside an `async` handler:
@@ -1210,11 +1216,13 @@ pool (CODE-13) and send them as their own event (`outcomes` with the revision th
 older run). Then lower `MAX_WORK` for the synchronous path to what fits in ~50 ms, or drop it. **Test:** a server test
 with the model above that an edit is answered in < 200 ms and the outcomes event follows.
 
-### PERF-11 · Search preview and replace have no time budget · P3 · new, open
+### PERF-11 · Search preview and replace have no time budget · P3 · fixed 2026-11-13
 `_plan` (`search_preview`, `search_replace`) scans the whole scope with no deadline; only `search_find` has one. With
 SEC-18 fixed this is linear, but a large workbook still holds the loop. **Fix:** the same budget, or the same worker.
+**Fixed.** The same deadline: `search_preview` answers `timed_out`, `search_replace` refuses (`command_error`) rather
+than replace part of it. **Test:** `test_a_preview_that_ran_out_of_time_says_so_and_a_replace_refuses`.
 
-### UX-33 · A new document starts with an undoable step · P2 · new, open
+### UX-33 · A new document starts with an undoable step · P2 · fixed 2026-11-13
 **Evidence (measured, screenshots).** In a new workbook Edit's first item is "Undo Add sheet"; Ctrl+Z leaves "This
 document has no sheet yet." In a new text or deck it is "Undo Language" (D915: the maker's client sets the language right
 after creating). A person's first Ctrl+Z undoes something she never did. It also broke the Linux client's end-to-end
@@ -1222,8 +1230,13 @@ test (PROC-20).
 **Fix.** Make the first sheet and the starting language part of creating the document (a `create` parameter, or a
 setup step the log marks as not undoable), not a command in the person's undo stack. **Test:** per app, a new document
 has nothing to undo; a browser script presses Ctrl+Z in a new workbook and still sees Sheet1.
+**Fixed (D362).** The server runs the app's `setup_commands` once when it creates a document, as one `core.Setup` entry
+by its maker that is never an undo step (claudia-core 0.20.0): computes adds Sheet1, composes and creates set the
+language from the `locale` of `hello`. The web client no longer does either. **Tests:**
+`claudia-server/tests/test_server_setup.py`, the Linux client's end-to-end test (Undo off in a new text again),
+`web/e2e/keys.cjs` (Ctrl+Z in a new workbook keeps Sheet1; Undo disabled in a new text).
 
-### UX-34 · In computes and creates the AI refuses every change by default · P1 · new, needs decision
+### UX-34 · In computes and creates the AI refuses every change by default · P3 · deferred
 **Evidence (read and measured).** D262 makes *suggest* the default in all three apps and says proposals (D263) must come
 before the AI writes anything in computes or creates. Proposals exist only in composes (`SUGGEST_METHODS`:
 `computes: ()`, `creates: ()`), so with the default switch every request that would change something is answered "I
@@ -1233,8 +1246,9 @@ symptom again, now by design.
 shows: the switch disabled with one line, here "This app's AI acts; it cannot suggest yet", and send *act*. (c) Per-app
 default. Recommendation: (b) now, (a) as planned. **Test:** `demo.cjs` asks `@ai` without touching the switch and sees
 a change.
+**Owner (2026-11-13):** not a P1: the AI is not fully built yet, and this is addressed with it. Deferred.
 
-### UX-35 · Menu entries without a shortcut · P2 · new, open
+### UX-35 · Menu entries without a shortcut · P2 · fixed 2026-11-13
 **Evidence (measured).** The project rule is that every menu entry has a key shortcut. In the shared manifest 30
 (composes), 37 (computes) and 33 (creates) entries have none. Part of that is display only: Save, Undo, Redo, Copy, Cut,
 Paste are handled by the page and therefore not bound natively (`test_keys_the_page_handles_itself_are_not_bound_a_second_time`),
@@ -1245,8 +1259,15 @@ computes' New Sheet, Row ▸, Column ▸, Clear Cells, Image, Chart, Names, SQL;
 with an explicit, short list of exemptions (the language picker). Shell: show the page's keys in the native menu with
 GMenu's `accel` attribute (display only, no binding). **Test:** a manifest test "every action has an accelerator or is
 on the exemption list", and the same over the web menus.
+**Fixed (D360).** One key table for every app and client in the manifest; `scripts/generate_keys.py` writes the web's
+copy and the table for people (`notes/keyboard-shortcuts.md`). The page listens for every key in every client (its menu
+entries run as if clicked); GTK binds only the shell's own (Quit, About, Shift+F10) and shows the rest with `accel`; the
+Windows menu shows every key. **Tests:** `test_every_menu_entry_has_a_key_but_the_language_names`,
+`test_one_action_has_one_key_in_every_app`, `test_only_the_shells_own_keys_are_bound_natively`,
+`test_no_key_is_one_a_browser_keeps_or_alt_gr_types`, `tests/test_keys_generated.py`, `web/tests/shortcuts.test.ts`,
+`web/e2e/keys.cjs`. **Left:** a Mac variant (Cmd+M is Minimize, Cmd+Option+H Hide Others), D122's per-OS sets.
 
-### UX-36 · Features of this round are missing from the native desktop menus · P2 · new, open
+### UX-36 · Features of this round are missing from the native desktop menus · P2 · fixed 2026-11-13
 **Evidence (measured: web menu ids against `manifest.for_app`).** The desktop shells hide the web menu bar and show the
 manifest's menu instead, so these are not in the desktop menus: File ▸ Print… (composes, creates), Format ▸ Bulleted /
 Numbered List, Edit ▸ Soft Hyphen, Non-breaking Hyphen (composes); Edit ▸ Image…, Chart…, Format ▸ Clear Cell Style,
@@ -1255,6 +1276,8 @@ Ctrl+P. The project rule "check whether the desktop clients need adapting" was n
 existing test checks only the other direction (native ids exist in the web source).
 **Fix.** Add the actions to `manifest.py`, regenerate the Windows and macOS menus, translate. **Test:** the reverse
 check: every web menu `id` of an app is in its manifest, or on a named list of web-only items with the reason.
+**Fixed (D361).** All added, regenerated and translated; also Format ▸ List ▸ (every app) and composes' Edit ▸ Insert ▸
+for the two hyphens, which had keys and no entry. **Test:** `test_every_web_menu_entry_is_in_the_desktop_menus_too`.
 
 ### UX-37 · composes shows an act/suggest switch that changes nothing · P3 · new, open
 The switch is live in composes and says beneath it "Text documents: the AI suggests either way." A control that does
@@ -1289,11 +1312,16 @@ PROC-11. **Fix:** make it blocking; pin the LibreOffice version in the log line 
 `tests/e2e` reads `CLAUDIA_CHROMIUM`, five `web/e2e` scripts `CHROME`, five `CHROMIUM`, the rest nothing. **Fix:** one
 `web/e2e/browser.cjs` (`launch()` reading `CLAUDIA_CHROMIUM`, with `--no-sandbox` where needed) used by every script.
 
-### CODE-18 · The search "for all three apps" speaks only in sheets · P2 · new, open
+### CODE-18 · The search "for all three apps" speaks only in sheets · P2 · fixed 2026-11-13
 `SearchPanel.vue` says it is one panel for all apps (D284), but matches, `leave`, `skipped` and `left_out` are
 `{sheet, row, col}` in the panel, in `session.ts` and in the protocol. Composes (paragraph, offset) and creates (slide,
 object) will not fit. **Fix before search reaches composes:** an opaque `where` (a key and a label from the host) in the
 panel and the protocol; computes maps it to its cells. Discuss first: it changes the method signatures (API version).
+**Fixed (D289).** Every answer names its place as `at` (`{sheet, row, col}` in a workbook), `leave` is `{at, match}`; the
+search over a document's texts is app-neutral (`claudia_search.scan`, `plan`); the web panel reads places only through
+its host (`keyOf`, `where`, `jump`, `scopeLabel`). Left: the panel's words ("Whole cell") and kinds are computes'.
+**Tests:** `claudia-search/tests/test_scan.py` (places that are not cells), the server's
+`test_every_answer_names_a_cell_by_its_at` and `test_leave_takes_only_cells_it_can_read`, `web/tests/sheet-search-host.test.ts`.
 
 ### CODE-19 · Debugging code left in the journal · P3 · new, open
 `claudia_container/journal.py` keeps `_open_in_this_process` (scans every object of the garbage collector) from the

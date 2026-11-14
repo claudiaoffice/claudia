@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.0] - unreleased
 
+### Changed (UX-35, UX-36)
+- The menus are regenerated from the manifest: every entry has its key from the one table of all clients (D360), and the
+  menus have what the web's have (File ▸ Print…, Format ▸ List ▸, Edit ▸ Image… and Chart…, Tools ▸ Names… and SQL
+  Query…, View ▸ Show Grid, Edit ▸ Insert ▸). The page listens for the keys. The menu shows every key of the one table: `gtkAccelToWindowsShortcut` covers every shape it uses.
+
 ### Added
 - Format ▸ Describe Object… (Ctrl+Alt+D) in claudia computes and claudia creates, by regenerating the menus from the
   Linux manifest. The page owns the dialog.
@@ -14,8 +19,8 @@ D241-D248. Branch `win-client-complete`. Everything here ran on Linux only; see 
 
 ### Changed
 - `src/generated/menu.creates.json` regenerated (E10.2, D344): View has **Present from the First Slide** (`F5`,
-  `Ctrl+Alt+P`), **Present from This Slide** (`Shift+F5`, `Ctrl+Alt+Shift+P`) and **Speaker Notes** (checkable,
-  `Ctrl+Alt+N`); Edit has **Plan the Time of This Slide…** (`Ctrl+Alt+M`). All are page actions: the page does the work,
+  `Ctrl+Alt+P`), **Present from This Slide** (`Shift+F5`, `Ctrl+Alt+Shift+H`) and **Speaker Notes** (checkable,
+  `Ctrl+Alt+V`); Edit has **Plan the Time of This Slide…** (`Ctrl+Alt+Shift+T`). All are page actions: the page does the work,
   the shell needs nothing new. F5 alone is not enough on a Mac (a system key there), hence the second chord.
 
 ### Changed

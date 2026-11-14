@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { sheetSearchHost } from '~/lib/sheet-search-host'
+import { cellOf, marksFor, sheetSearchHost, whereLabel } from '~/lib/sheet-search-host'
+import type { SearchMatch } from '~/lib/search'
+import { createTranslator } from '~/lib/i18n'
 import { single } from '~/lib/selection'
 
 function setup(role: 'owner' | 'editor' | 'viewer' = 'editor') {
@@ -11,7 +13,7 @@ function setup(role: 'owner' | 'editor' | 'viewer' = 'editor') {
   }
   let sel = single(2, 3)
   const goTo = vi.fn()
-  const host = sheetSearchHost({ session: session as never, selection: () => sel, goTo })
+  const host = sheetSearchHost({ session: session as never, selection: () => sel, goTo, t: createTranslator({}) })
   return { host, session, goTo, select: (s: typeof sel) => (sel = s) }
 }
 
@@ -47,19 +49,82 @@ describe('the search host of a workbook', () => {
     const query = { mode: 'text', text: 'x', match_case: false, replace: [{ text: 'y' }] } as const
     await host.preview(query, { text: true, formulas: false, values: true }, {}, [])
     expect(session.searchPreview).toHaveBeenCalledWith(query, ['text', 'values'], {}, [])
-    await host.replace(query, { text: true, formulas: true, values: false }, { sheet: 's1' }, [{ sheet: 's1', row: 0, col: 0, match: null }])
-    expect(session.searchReplace).toHaveBeenCalledWith(query, ['text', 'formulas'], { sheet: 's1' }, [{ sheet: 's1', row: 0, col: 0, match: null }])
+    await host.replace(query, { text: true, formulas: true, values: false }, { sheet: 's1' }, [{ at: { sheet: 's1', row: 0, col: 0 }, match: null }])
+    expect(session.searchReplace).toHaveBeenCalledWith(query, ['text', 'formulas'], { sheet: 's1' }, [{ at: { sheet: 's1', row: 0, col: 0 }, match: null }])
   })
 
   it('names a cell with its sheet and goes to it', () => {
     const { host, goTo } = setup()
-    const match = { sheet: 's1', row: 1, col: 1 }
-    expect(host.where(match)).toBe('Costs!B2')
-    host.jump(match)
+    const at = { sheet: 's1', row: 1, col: 1 }
+    expect(host.where(at)).toBe('Costs!B2')
+    host.jump(at)
     expect(goTo).toHaveBeenCalledWith('s1', 1, 1)
+  })
+
+  it('names the scopes in the person’s words', () => {
+    const { host } = setup()
+    expect(host.scopes.map((s) => host.scopeLabel(s))).toEqual(['This sheet', 'All sheets', 'Selection'])
+  })
+
+  it('keys a cell the same however its place is written, and tells cells apart', () => {
+    const { host } = setup()
+    expect(host.keyOf({ sheet: 's1', row: 1, col: 2 })).toBe(host.keyOf({ col: 2, row: 1, sheet: 's1' }))
+    expect(host.keyOf({ sheet: 's1', row: 1, col: 2 })).not.toBe(host.keyOf({ sheet: 's1', row: 12, col: 0 }))
+  })
+
+  it('refuses a place that is not a cell, loudly: it is a bug, not a person’s mistake', () => {
+    expect(() => cellOf({ paragraph: 'p1' })).toThrow('not a cell')
+    expect(cellOf({ sheet: 's1', row: 0, col: 3 })).toEqual({ sheet: 's1', row: 0, col: 3 })
   })
 
   it('says which revision the answers are for, so that a change by somebody else is noticed', () => {
     expect(setup().host.revision()).toBe('main:7')
+  })
+})
+
+describe('a cell and its marks on the grid', () => {
+  const at = (row: number, kind: SearchMatch['kind'], number = 0, sheet = 's1'): SearchMatch => ({
+    at: { sheet, row, col: 0 },
+    kind,
+    number,
+    start: 0,
+    end: 1,
+    parts: [],
+    after: null,
+    text: 'x',
+    excerpt: [0, 1],
+    clipped: [false, false],
+  })
+
+  it('names the cell with its sheet', () => {
+    expect(whereLabel({ sheet: 's1', row: 1, col: 1 }, (id) => (id === 's1' ? 'Costs' : id))).toBe('Costs!B2')
+    expect(whereLabel({ sheet: 's1', row: 0, col: 27 }, (id) => id)).toBe('s1!AB1')
+  })
+
+  it('marks cells on one sheet: every match, the current one apart, formulas known', () => {
+    const marks = marksFor([at(0, 'text'), at(1, 'formula'), at(2, 'text', 0, 's2')], 's1', 1)
+    expect([...marks.cells.entries()].map(([k, v]) => [k, v.current, v.formula])).toEqual([
+      [0, false, false],
+      [100_000, true, true],
+    ])
+  })
+
+  it('shows one mark per cell, the current one winning', () => {
+    const marks = marksFor([at(0, 'text', 0), at(0, 'text', 1)], 's1', 1)
+    expect(marks.cells.size).toBe(1)
+    expect(marks.cells.get(0)?.current).toBe(true)
+  })
+
+  it('shows what a replacement would make of a cell, and which cells it skips', () => {
+    const marks = marksFor([at(0, 'text')], 's1', null, {
+      changes: [
+        { at: { sheet: 's1', row: 0, col: 0 }, kind: 'text', before: 'x', after: 'y' },
+        { at: { sheet: 's2', row: 0, col: 0 }, kind: 'text', before: 'a', after: 'b' },
+      ],
+      skipped: [{ at: { sheet: 's1', row: 3, col: 0 }, kind: 'text', reason: 'locked', by: 'anna' }],
+    })
+    expect(marks.after.get(0)).toBe('y')
+    expect(marks.after.size).toBe(1)
+    expect(marks.blocked.get(300_000)).toBe('anna')
   })
 })
