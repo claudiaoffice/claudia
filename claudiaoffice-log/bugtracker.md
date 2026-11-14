@@ -129,6 +129,7 @@ statement in the docs or on the website).
 | UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **fixed** 2026-11-13 (D360) |
 | UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **fixed** 2026-11-13 (D361) |
 | UX-37 | P3 | UX / composes | composes shows an act/suggest switch that changes nothing | **new, open** |
+| UX-38 | P2 | UX / Linux client | Dialogs are stretched to the window's height in WebKitGTK: huge gaps, a button in a row of its own turns into a circle | **fixed** 2026-11-14 (`web/tests/modal-layout.test.ts`) |
 | PROC-18 | **P1** | Process / CI | The gate fails on every fresh clone: a note names `web/public/wasm`, a build output | **fixed** 2026-11-13 |
 | PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |
 | PROC-20 | **P1** | Process / CI | Two end-to-end tests on `main` fail: `demo.cjs` (the grid's blank active cell) and the Linux client (D915) | **fixed** 2026-11-13 |
@@ -1285,6 +1286,17 @@ for the two hyphens, which had keys and no entry. **Test:** `test_every_web_menu
 The switch is live in composes and says beneath it "Text documents: the AI suggests either way." A control that does
 nothing should not be offered. **Fix:** show the line in place of the switch (or disable it), the same component as
 UX-34 (b).
+
+### UX-38 · Dialogs are stretched to the window's height in the Linux client · P2 · fixed 2026-11-14
+Reported by the owner on the recovery-key dialog (2026-11-14): oversized round buttons, big gaps, a dialog as tall as the
+window. **Measured** in the web inspector of the Linux client (WebKitGTK 2.52.3): the `<dialog>` was exactly its
+`max-height` (742 px) with 456 px of content, every auto row of its grid stretched (`lead` 148 px for 80, `buttons`
+82 px for 35). `max-height: none`, `height: fit-content` and `height: max-content` changed nothing; `align-content: start`
+brought it to 456 px, and so did docking the inspector (a shorter window), which is why it "snapped into position".
+Firefox does not do it. **Fix:** `Modal.vue` says `height: fit-content`, `align-content: start`,
+`grid-auto-rows: max-content`; the dialogs' own `.buttons` rows need no change. **Test:** `web/tests/modal-layout.test.ts`
+reads the stylesheet (the stretching only happens in WebKitGTK, which no test here runs); a measuring check in WebKitGTK
+itself would need the Linux client under Xvfb in CI.
 
 ### PROC-18 · The gate fails on every fresh clone · P1 · fixed 2026-11-13
 `tests/test_notes_claim_built_files.py` read `web/public/wasm` in `notes/e9-print-and-layout.md` as a claim about the

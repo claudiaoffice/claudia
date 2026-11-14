@@ -57,6 +57,12 @@ defineExpose({ reopen: () => dialog.value?.showModal() })
   display: grid;
   /* minmax(0, 1fr): a long unbreakable word (a file name) wraps instead of widening the dialog past the screen */
   grid-template-columns: minmax(0, 1fr);
+  /* As tall as the content, and the rows never stretch: WebKitGTK sized the auto rows while `max-height` was the only
+   * limit and kept them stretched in a window taller than the content (huge gaps, a pill button turned into a
+   * circle). The gaps between rows come from `gap` alone. */
+  height: fit-content;
+  align-content: start;
+  grid-auto-rows: max-content;
   max-height: calc(100vh - 32px);
   overflow: auto;
   gap: 14px;
