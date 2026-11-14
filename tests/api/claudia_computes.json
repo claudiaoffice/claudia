@@ -196,6 +196,9 @@
  "DEFAULT_CELL_STYLE": {
   "value": "'body-text'"
  },
+ "DEFAULT_SHEET_PRINT": {
+  "value": "<SheetPrintSetup>"
+ },
  "DEFAULT_STYLE": {
   "value": "'body-text'"
  },
@@ -417,11 +420,17 @@
  "MAX_OBJECTS_PER_SHEET": {
   "value": "500"
  },
+ "MAX_PERCENT": {
+  "value": "400"
+ },
  "MAX_STYLE_RANGES": {
   "value": "20000"
  },
  "MIN_OBJECT_SIZE": {
   "value": "20"
+ },
+ "MIN_PERCENT": {
+  "value": "10"
  },
  "MoveObject": {
   "class": [
@@ -586,6 +595,24 @@
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
   },
+  "properties": []
+ },
+ "PrintSetupChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(page: 'dict | None' = None, sheet: 'str | None' = None, setup: 'dict | None' = None) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PrintSetupError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
   "properties": []
  },
  "RandomChanged": {
@@ -857,6 +884,21 @@
    "summary"
   ]
  },
+ "SetPrintPage": {
+  "class": [
+   "Command"
+  ],
+  "init": "(page: 'PageSetup') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetPrintPage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetRandomSeed": {
   "class": [
    "Command"
@@ -865,6 +907,21 @@
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'SetRandomSeed'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetSheetPrint": {
+  "class": [
+   "Command"
+  ],
+  "init": "(sheet: 'str', setup: 'SheetPrintSetup') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetSheetPrint'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -946,6 +1003,18 @@
  },
  "SheetObject": {
   "value": "<TypeAliasType>"
+ },
+ "SheetPrintSetup": {
+  "class": [
+   "object"
+  ],
+  "init": "(orientation: 'str' = 'portrait', scale: 'str' = 'fit-width', percent: 'int' = 100, order: 'str' = 'down-then-across', repeat_rows: 'tuple[int, int] | None' = None, repeat_cols: 'tuple[int, int] | None' = None, gridlines: 'bool' = False, headings: 'bool' = False, purposes: 'bool' = False, footer_name: 'bool' = True, objects: 'bool' = True, skip_empty: 'bool' = True) -> None",
+  "methods": {
+   "describe": "(self) -> 'str'",
+   "from_data": "(data: 'object') -> 'Self'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "Structure": {
   "class": [
@@ -1061,6 +1130,7 @@
    "sheet": "(self, sheet_id: 'SheetId') -> 'Sheet'",
    "sheet_id_of": "(self, name: 'str') -> 'SheetId | None'",
    "sheet_name_of": "(self, sheet_id: 'SheetId') -> 'str | None'",
+   "sheet_print_of": "(self, target: 'str') -> 'SheetPrintSetup'",
    "store": "(self, sheet: 'Sheet', row: 'int', col: 'int', content: 'Content') -> 'Content'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "trace": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, reach: 'str' = 'group', window: 'Window | None' = None) -> 'Trace'",

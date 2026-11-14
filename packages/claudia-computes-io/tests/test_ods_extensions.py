@@ -120,7 +120,7 @@ def test_a_file_from_another_program_with_inverse_functions_reads_as_random():
             row(
                 ods_formula("of:=NORMINV(RAND();[.B1];[.B2])", "3"),
                 ods_formula("of:=COM.MICROSOFT.BINOM.INV(10;0.5;RAND())", "4"),
-                ods_formula("of:=NORMINV(0.5;1;2)", "1"),  # (an inverse that is not of a draw: the model lacks it)
+                ods_formula("of:=BAHTTEXT(1)", "1"),  # (a function the model lacks)
             ),
         )
     )
