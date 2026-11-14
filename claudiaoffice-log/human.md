@@ -13,6 +13,8 @@ Work plan for Nov 14/15th 2026
 		- [ ] progress bar when importing
 		- [x] size of import dialog may be too small => needs to adapt to filename
 		- [ ] in desktop apps: while on frontpage, show only relevant menu items (open file), not stuff that is not possible (Edit > Insert)
+		- [ ] in web app front page: move usable area up on the screen, otherwise we waste screen space
+		- [ ] hide/unhide in password field, also in "share" dialog
 	- [x] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] performance
