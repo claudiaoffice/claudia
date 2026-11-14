@@ -2,7 +2,8 @@
 rounding to multiples, number systems (ROMAN, BASE) and sums of squares.
 
 They follow Excel where it differs from the textbook: ``ATAN2`` takes x first, ``ACOT`` runs from 0 to pi, and the
-rounding functions work in decimals (``numeric.multiple``) so that ``MROUND(1.3, 0.2)`` is 1.4 and not 1.4000000000000001.
+rounding functions work in decimals (``numeric.multiple``) so that ``MROUND(1.3, 0.2)`` is 1.4 and not
+1.4000000000000001.
 """
 
 from __future__ import annotations
@@ -10,14 +11,12 @@ from __future__ import annotations
 import math
 from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP
 
-from ...values import DIV0, NA, NUM, VALUE, fits_int
+from ...values import DIV0, NUM, VALUE, fits_int
 from ..base import Example, FunctionError, UserFunction
 from ..range import Range
 from .aggregate import number_pairs, numbers_of
 from .catalog import builtin
 from .numeric import multiple
-
-MAX_WHOLE = 2**63  # whole-number functions (GCD, COMBIN ...) answer in floats beyond what Python ints show exactly
 
 
 def whole(number: float) -> int:
@@ -296,7 +295,7 @@ class LCM(UserFunction):
         return exact(math.lcm(*_whole_numbers(numbers)))
 
 
-# -- counting -----------------------------------------------------------------------------------------------------------
+# -- counting ----------------------------------------------------------------------------------------------------------
 def _counts(n: float, k: float) -> tuple[int, int]:
     n, k = whole(n), whole(k)
     if n < 0 or k < 0:

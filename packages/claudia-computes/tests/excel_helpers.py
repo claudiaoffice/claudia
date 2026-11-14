@@ -50,7 +50,9 @@ def _col(index: int) -> str:
 def raw(formula: str, cells: dict | None = None, *, at: str = "Z99", sheets: dict | None = None, now=NOW):
     """What the formula evaluates to, untouched: a value, a ``Range`` or a ``Matrix`` (errors come back as values)."""
     sheet = ScratchSheet(dict(cells or {}))
-    scope = Scope({SheetId("s1"): sheet, **(sheets or {})}, lambda name: SheetId("s1") if name.casefold() == "sheet1" else None)
+    scope = Scope(
+        {SheetId("s1"): sheet, **(sheets or {})}, lambda name: SheetId("s1") if name.casefold() == "sheet1" else None
+    )
     scope.clock = lambda: now
     ref = parse_cell_ref(at)
     scope.enter(SheetId("s1"), ref.row, ref.col)
@@ -97,7 +99,11 @@ def same(actual, expected, *, tol: float = 1e-9) -> bool:
     if isinstance(expected, float) or isinstance(actual, float):
         return isinstance(actual, (int, float)) and math.isclose(actual, expected, rel_tol=tol, abs_tol=tol)
     if isinstance(expected, list):
-        return isinstance(actual, list) and len(actual) == len(expected) and all(same(a, e, tol=tol) for a, e in zip(actual, expected, strict=True))
+        return (
+            isinstance(actual, list)
+            and len(actual) == len(expected)
+            and all(same(a, e, tol=tol) for a, e in zip(actual, expected, strict=True))
+        )
     return actual == expected
 
 

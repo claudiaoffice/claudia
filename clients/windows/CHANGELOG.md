@@ -4,6 +4,13 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.0] - unreleased
 
+### Fixed (CI on Windows)
+- The launcher's rewrite of `neutralino.config.json` (the core's command, the inspector) keeps the line ends the file
+  has: a checkout with CRLF came back with LF, which Git shows as a change of every line.
+- The core's log says `stdin is a pipe, as far as Windows says`: Windows' `fstat` shows the pipe of a child's stdin
+  as neither a FIFO nor a socket, so the log used to say "something else".
+- `src/generated/menu.computes.json` is regenerated: File ▸ Print… (Ctrl+P) is in the menus of Claudia Computes.
+
 ### Changed (D445, D444, D434): the three apps share one local server
 - **One server for all three windows.** The core no longer starts one server per app on a random port with
   `--model`. The first window to start launches `python -m claudia_server --apps all` (the default) with

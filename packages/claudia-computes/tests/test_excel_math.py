@@ -227,7 +227,7 @@ def test_roman_arabic_base_decimal(formula, expected, cells):
 def test_base_and_decimal_are_inverse():
     for number in (0, 1, 35, 36, 1295, 123456):
         for radix in (2, 8, 16, 36):
-            check(f'=DECIMAL(BASE({number}, {radix}), {radix})', number)
+            check(f"=DECIMAL(BASE({number}, {radix}), {radix})", number)
 
 
 def test_roman_and_arabic_are_inverse():
@@ -265,5 +265,9 @@ def test_series_sum():
     check("=SERIESSUM(2, 0, 2, A1:A3)", 1 + 4 + 16, coefficients)
     x = PI / 4
     taylor = column("A1", [1, -0.5, 1 / 24, -1 / 720])
-    check("=SERIESSUM(PI()/4, 0, 2, A1:A4)", sum(c * x ** (2 * k) for k, c in enumerate([1, -0.5, 1 / 24, -1 / 720])), taylor)
+    check(
+        "=SERIESSUM(PI()/4, 0, 2, A1:A4)",
+        sum(c * x ** (2 * k) for k, c in enumerate([1, -0.5, 1 / 24, -1 / 720])),
+        taylor,
+    )
     check('=SERIESSUM(2, 0, 1, "x")', "#VALUE!")

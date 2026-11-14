@@ -54,6 +54,18 @@ describe('setCoreCommand', () => {
     expect(readFileSync(copy, 'utf8')).toBe(readFileSync(original, 'utf8'))
   })
 
+  it.each(['\n', '\r\n'])('keeps the line ends of the file (%j), as a checkout on Windows may have CRLF', (eol) => {
+    dir = mkdtempSync(join(tmpdir(), 'claudia-config-'))
+    const file = join(dir, 'neutralino.config.json')
+    const config = { modes: { window: { enableInspector: false } }, extensions: [{ id: 'de.claudiaoffice.core', commandWindows: 'x' }] }
+    const original = JSON.stringify(config, null, 2).replace(/\n/g, eol) + eol
+    writeFileSync(file, original)
+    setCoreCommand(file, 'y')
+    expect(readFileSync(file, 'utf8')).toBe(original.replace('"x"', '"y"'))
+    setInspector(file, true)
+    expect(readFileSync(file, 'utf8')).toBe(original.replace('"x"', '"y"').replace('false', 'true'))
+  })
+
   it('refuses a config without the core extension', () => {
     dir = mkdtempSync(join(tmpdir(), 'claudia-config-'))
     const file = join(dir, 'neutralino.config.json')

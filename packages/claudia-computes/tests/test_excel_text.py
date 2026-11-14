@@ -67,7 +67,11 @@ TEXT = (
 
 @cases(*TEXT)
 def test_text_functions(formula, expected, cells):
-    check(formula, expected, cells, )
+    check(
+        formula,
+        expected,
+        cells,
+    )
 
 
 def test_concatenate_reads_cells():

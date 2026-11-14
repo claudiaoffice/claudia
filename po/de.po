@@ -5429,7 +5429,7 @@ msgstr "Ihr Wiederherstellungsschlüssel"
 msgid "Zoom"
 msgstr "Zoom"
 
-#: packages/claudia-server/src/claudia_server/app.py:375
+#: packages/claudia-server/src/claudia_server/app.py:376
 msgid "a Claudia file goes in as it is, not as a new document"
 msgstr "eine Claudia-Datei kommt so hinein, wie sie ist, nicht als neues Dokument"
 
@@ -5441,7 +5441,7 @@ msgstr "ein Zellbezug"
 msgid "a digit"
 msgstr "eine Ziffer"
 
-#: packages/claudia-server/src/claudia_server/app.py:377
+#: packages/claudia-server/src/claudia_server/app.py:378
 msgid "a file becomes a new document: hello needs create"
 msgstr "aus einer Datei wird ein neues Dokument: hello braucht create"
 
@@ -5485,7 +5485,7 @@ msgstr "Eine Palette enthält höchstens {limit} Farbrollen"
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "eine Zufallszahl aus der genannten Verteilung, zum Beispiel RANDOM(\"normal\", 1000, 150). Ohne Argumente ist es RAND(). ``low`` und ``high`` schneiden die Verteilung ab (nur stetige). Verteilungen: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 
-#: packages/claudia-server/src/claudia_server/app.py:336
+#: packages/claudia-server/src/claudia_server/app.py:337
 msgid "a recovery key, a name and a new password are needed"
 msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind nötig"
 
@@ -6137,7 +6137,7 @@ msgstr "Nachricht zu groß"
 msgid "method must be a string"
 msgstr "method muss ein Text sein"
 
-#: packages/claudia-server/src/claudia_server/app.py:442
+#: packages/claudia-server/src/claudia_server/app.py:443
 msgid "missing or wrong credentials"
 msgstr "Anmeldedaten fehlen oder sind falsch"
 
@@ -6693,11 +6693,11 @@ msgstr "das Zellenende"
 msgid "the end of the text"
 msgstr "das Textende"
 
-#: packages/claudia-server/src/claudia_server/app.py:373
+#: packages/claudia-server/src/claudia_server/app.py:374
 msgid "the file is no longer here: choose it again"
 msgstr "die Datei ist nicht mehr da: bitte noch einmal auswählen"
 
-#: packages/claudia-server/src/claudia_server/app.py:425
+#: packages/claudia-server/src/claudia_server/app.py:426
 msgid "the first message must be hello with params"
 msgstr "Die erste Nachricht muss hello mit params sein"
 
@@ -6881,11 +6881,11 @@ msgstr "Dieser Absatz ist kein Listeneintrag"
 msgid "this row"
 msgstr "diese Zeile"
 
-#: packages/claudia-server/src/claudia_server/app.py:283 packages/claudia-server/src/claudia_server/suite.py:106
+#: packages/claudia-server/src/claudia_server/app.py:284 packages/claudia-server/src/claudia_server/suite.py:106
 msgid "this server does not host {app}"
 msgstr "dieser Server bietet {app} nicht an"
 
-#: packages/claudia-server/src/claudia_server/app.py:339 packages/claudia-server/src/claudia_server/protocol.py:852
+#: packages/claudia-server/src/claudia_server/app.py:340 packages/claudia-server/src/claudia_server/protocol.py:852
 msgid "this server does not keep recovery keys"
 msgstr "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf"
 
@@ -7249,7 +7249,7 @@ msgstr "{id} kann nicht aufgenommen werden: {reason}"
 msgid "{id} is here already"
 msgstr "{id} ist schon hier"
 
-#: packages/claudia-server/src/claudia_server/app.py:388
+#: packages/claudia-server/src/claudia_server/app.py:389
 msgid "{id} is here already: give the new document another name"
 msgstr "{id} ist schon hier: bitte dem neuen Dokument einen anderen Namen geben"
 
@@ -7349,11 +7349,11 @@ msgstr "{method}: {why}"
 msgid "{name} as hex"
 msgstr "{name} als Hex"
 
-#: packages/claudia-server/src/claudia_server/app.py:393
+#: packages/claudia-server/src/claudia_server/app.py:394
 msgid "{name} cannot be read"
 msgstr "{name} kann nicht gelesen werden"
 
-#: packages/claudia-server/src/claudia_server/app.py:385
+#: packages/claudia-server/src/claudia_server/app.py:386
 msgid "{name} cannot become a document of {app}"
 msgstr "aus {name} kann kein Dokument von {app} werden"
 

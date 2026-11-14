@@ -59,22 +59,31 @@ export function parseCoreArgs(argv: readonly string[]): CoreArgs {
   return found
 }
 
+/** Writes the config the way the file was: two spaces, a final newline, and the line ends it had (a checkout on Windows
+ * may have CRLF, and a rewrite that turned them into LF would show as a change of every line). */
+function writeConfig(configFile: string, original: string, config: unknown): void {
+  const eol = original.includes('\r\n') ? '\r\n' : '\n'
+  writeFileSync(configFile, JSON.stringify(config, null, 2).replace(/\n/g, eol) + eol)
+}
+
 /** Switches the web inspector of the window on or off in the config file. Neutralino opens the inspector (the
  * DevTools window) by itself at start when it is on, so the checked-in config has it off and only `--debug` turns it
  * on, for that run. */
 export function setInspector(configFile: string, enabled: boolean): void {
-  const config = JSON.parse(readFileSync(configFile, 'utf8')) as { modes?: { window?: { enableInspector?: boolean } } }
+  const text = readFileSync(configFile, 'utf8')
+  const config = JSON.parse(text) as { modes?: { window?: { enableInspector?: boolean } } }
   const window = config.modes?.window
   if (window === undefined) throw new Error(`${configFile} has no modes.window`)
   window.enableInspector = enabled
-  writeFileSync(configFile, JSON.stringify(config, null, 2) + '\n')
+  writeConfig(configFile, text, config)
 }
 
-/** Sets the core's command in the config file, in the file's own format (two spaces, final newline). */
+/** Sets the core's command in the config file, in the file's own format (two spaces, final newline, its line ends). */
 export function setCoreCommand(configFile: string, command: string): void {
-  const config = JSON.parse(readFileSync(configFile, 'utf8')) as { extensions?: Array<{ id: string; commandWindows?: string }> }
+  const text = readFileSync(configFile, 'utf8')
+  const config = JSON.parse(text) as { extensions?: Array<{ id: string; commandWindows?: string }> }
   const entry = config.extensions?.find((extension) => extension.id === CORE_ID)
   if (entry === undefined) throw new Error(`${configFile} has no extension '${CORE_ID}'`)
   entry.commandWindows = command
-  writeFileSync(configFile, JSON.stringify(config, null, 2) + '\n')
+  writeConfig(configFile, text, config)
 }

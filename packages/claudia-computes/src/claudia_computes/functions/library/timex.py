@@ -26,14 +26,21 @@ def _monday_based(serial: int) -> int:
     return (serial + 5) % 7
 
 
-# -- weeks --------------------------------------------------------------------------------------------------------------
+# -- weeks -------------------------------------------------------------------------------------------------------------
 _WEEK_STARTS = {1: 6, 2: 0, 11: 0, 12: 1, 13: 2, 14: 3, 15: 4, 16: 5, 17: 6}
 
 
 @builtin
 class WEEKNUM(UserFunction):
-    description = "The number of the week of the year a date is in; the week with 1 January is week 1. The second argument says which day a week starts on (1 Sunday, 2 Monday, 11 to 17 Monday to Sunday, 21 ISO weeks)."
-    examples = (Example("=WEEKNUM(46339)", 46), Example("=WEEKNUM(46339,2)", 46), Example("=WEEKNUM(46391,21)", 1, note="4 Jan 2027, a Monday"))
+    description = (
+        "The number of the week of the year a date is in; the week with 1 January is week 1. The second argument says "
+        "which day a week starts on (1 Sunday, 2 Monday, 11 to 17 Monday to Sunday, 21 ISO weeks)."
+    )
+    examples = (
+        Example("=WEEKNUM(46339)", 46),
+        Example("=WEEKNUM(46339,2)", 46),
+        Example("=WEEKNUM(46391,21)", 1, note="4 Jan 2027, a Monday"),
+    )
 
     def call(self, date: float, starting: int = 1):
         if starting == 21:
@@ -51,13 +58,16 @@ class WEEKNUM(UserFunction):
 @builtin
 class ISOWEEKNUM(UserFunction):
     description = "The ISO week number of a date: weeks start on Monday and week 1 is the one with the first Thursday."
-    examples = (Example("=ISOWEEKNUM(46339)", 46), Example("=ISOWEEKNUM(46387)", 53, note="31 Dec 2026: 2026 has 53 ISO weeks"))
+    examples = (
+        Example("=ISOWEEKNUM(46339)", 46),
+        Example("=ISOWEEKNUM(46387)", 53, note="31 Dec 2026: 2026 has 53 ISO weeks"),
+    )
 
     def call(self, date: float):
         return date_of(date).isocalendar()[1]
 
 
-# -- working days --------------------------------------------------------------------------------------------------------
+# -- working days ------------------------------------------------------------------------------------------------------
 _WEEKEND_CODES = {1: (5, 6), 2: (6, 0), 3: (0, 1), 4: (1, 2), 5: (2, 3), 6: (3, 4), 7: (4, 5)}
 
 
@@ -118,8 +128,14 @@ def _workday(start: float, days: float, off: frozenset[int], holidays: frozenset
 
 @builtin
 class NETWORKDAYS(UserFunction):
-    description = "The number of working days (not Saturday or Sunday, not a holiday) from the start date to the end date, both included."
-    examples = (Example("=NETWORKDAYS(46332,46339)", 6, note="6 Nov to 13 Nov 2026"), Example("=NETWORKDAYS(46339,46332)", -6))
+    description = (
+        "The number of working days (not Saturday or Sunday, not a holiday) from the start date to the end date, both "
+        "included."
+    )
+    examples = (
+        Example("=NETWORKDAYS(46332,46339)", 6, note="6 Nov to 13 Nov 2026"),
+        Example("=NETWORKDAYS(46339,46332)", -6),
+    )
 
     def call(self, start_date: float, end_date: float, holidays: Range | None = None):
         return _networkdays(start_date, end_date, frozenset({5, 6}), _holidays(holidays))
@@ -128,8 +144,15 @@ class NETWORKDAYS(UserFunction):
 @builtin
 class NETWORKDAYS_INTL(UserFunction):
     name = "NETWORKDAYS.INTL"
-    description = "The number of working days between two dates, both included, with a choice of weekend: a code (1 Saturday and Sunday, 2 Sunday and Monday ... 7 Friday and Saturday, 11 to 17 one day) or seven 0 and 1 for Monday to Sunday."
-    examples = (Example("=NETWORKDAYS.INTL(46332,46339,11)", 7, note="only Sunday is off"), Example('=NETWORKDAYS.INTL(46332,46339,"0000011")', 6))
+    description = (
+        "The number of working days between two dates, both included, with a choice of weekend: a code (1 Saturday and "
+        "Sunday, 2 Sunday and Monday ... 7 Friday and Saturday, 11 to 17 one day) or seven 0 and 1 for Monday to "
+        "Sunday."
+    )
+    examples = (
+        Example("=NETWORKDAYS.INTL(46332,46339,11)", 7, note="only Sunday is off"),
+        Example('=NETWORKDAYS.INTL(46332,46339,"0000011")', 6),
+    )
 
     def call(self, start_date: float, end_date: float, weekend: Range | None = None, holidays: Range | None = None):
         return _networkdays(start_date, end_date, _weekend(weekend), _holidays(holidays))
@@ -137,8 +160,14 @@ class NETWORKDAYS_INTL(UserFunction):
 
 @builtin
 class WORKDAY(UserFunction):
-    description = "The date a number of working days (not Saturday or Sunday, not a holiday) after, or before if negative, a date."
-    examples = (Example("=WORKDAY(46339,1)", 46342, note="Friday 13 Nov 2026 + 1 = Monday 16 Nov"), Example("=WORKDAY(46339,-5)", 46332))
+    description = (
+        "The date a number of working days (not Saturday or Sunday, not a holiday) after, or before if negative, a "
+        "date."
+    )
+    examples = (
+        Example("=WORKDAY(46339,1)", 46342, note="Friday 13 Nov 2026 + 1 = Monday 16 Nov"),
+        Example("=WORKDAY(46339,-5)", 46332),
+    )
 
     def call(self, start_date: float, days: float, holidays: Range | None = None):
         return _workday(start_date, days, frozenset({5, 6}), _holidays(holidays))
@@ -147,14 +176,17 @@ class WORKDAY(UserFunction):
 @builtin
 class WORKDAY_INTL(UserFunction):
     name = "WORKDAY.INTL"
-    description = "The date a number of working days after, or before if negative, a date, with a choice of weekend (see NETWORKDAYS.INTL)."
+    description = (
+        "The date a number of working days after, or before if negative, a date, with a choice of weekend (see "
+        "NETWORKDAYS.INTL)."
+    )
     examples = (Example("=WORKDAY.INTL(46339,1,11)", 46340, note="only Sunday is off: Saturday is a workday"),)
 
     def call(self, start_date: float, days: float, weekend: Range | None = None, holidays: Range | None = None):
         return _workday(start_date, days, _weekend(weekend), _holidays(holidays))
 
 
-# -- times of day ---------------------------------------------------------------------------------------------------------
+# -- times of day ------------------------------------------------------------------------------------------------------
 def _seconds_of(serial: float) -> int:
     if serial < 0:
         raise FunctionError(NUM, "a time cannot be negative")
@@ -190,7 +222,10 @@ class SECOND(UserFunction):
 
 @builtin
 class TIME(UserFunction):
-    description = "The time of day (a fraction of a day) of an hour, minute and second. More than 24 hours wrap around to the next day."
+    description = (
+        "The time of day (a fraction of a day) of an hour, minute and second. More than 24 hours wrap around to the "
+        "next day."
+    )
     examples = (Example("=TIME(12,0,0)", 0.5), Example("=TIME(18,0,0)", 0.75), Example("=TIME(25,0,0)", 1 / 24))
 
     def call(self, hour: int, minute: int, second: int):
@@ -199,7 +234,7 @@ class TIME(UserFunction):
         return ((hour * 3600 + minute * 60 + second) % _SECONDS) / _SECONDS
 
 
-# -- reading dates and times from text ---------------------------------------------------------------------------------------
+# -- reading dates and times from text ---------------------------------------------------------------------------------
 _ISO = re.compile(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})")
 _DAY_MONTH = re.compile(r"(\d{1,2})[ \-]([A-Za-z]+)\.?,?[ \-](\d{4})")
 _MONTH_DAY = re.compile(r"([A-Za-z]+)\.? (\d{1,2}),? (\d{4})")
@@ -221,8 +256,15 @@ def _read_date(text: str) -> dt.date:
 
 @builtin
 class DATEVALUE(UserFunction):
-    description = "The date a text names, as a day number. Read: 2026-11-13, 2026/11/13, 13 Nov 2026, 13-Nov-2026 and Nov 13, 2026 (a time after the date is ignored)."
-    examples = (Example('=DATEVALUE("2026-11-13")', 46339), Example('=DATEVALUE("13 Nov 2026")', 46339), Example('=DATEVALUE("November 13, 2026")', 46339))
+    description = (
+        "The date a text names, as a day number. Read: 2026-11-13, 2026/11/13, 13 Nov 2026, 13-Nov-2026 and Nov 13, "
+        "2026 (a time after the date is ignored)."
+    )
+    examples = (
+        Example('=DATEVALUE("2026-11-13")', 46339),
+        Example('=DATEVALUE("13 Nov 2026")', 46339),
+        Example('=DATEVALUE("November 13, 2026")', 46339),
+    )
 
     def call(self, date_text: str):
         text = date_text.strip()
@@ -236,7 +278,10 @@ _TIME = re.compile(r"(\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?\s*([AaPp][Mm])?")
 
 @builtin
 class TIMEVALUE(UserFunction):
-    description = "The time of day a text names, as a fraction of a day. Read: 14:30, 14:30:15, 2:30 PM; a date before the time is ignored."
+    description = (
+        "The time of day a text names, as a fraction of a day. Read: 14:30, 14:30:15, 2:30 PM; a date before the time "
+        "is ignored."
+    )
     examples = (Example('=TIMEVALUE("12:00")', 0.5), Example('=TIMEVALUE("6:00 PM")', 0.75))
 
     def call(self, time_text: str):
@@ -253,7 +298,7 @@ class TIMEVALUE(UserFunction):
         return (hour * 3600 + minute * 60 + second) / _SECONDS
 
 
-# -- year fractions ---------------------------------------------------------------------------------------------------------------
+# -- year fractions ----------------------------------------------------------------------------------------------------
 def _is_last_of_february(day: dt.date) -> bool:
     return day.month == 2 and day.day == calendar.monthrange(day.year, 2)[1]
 
@@ -302,8 +347,14 @@ def _actual_year_length(first: dt.date, last: dt.date) -> float:
 
 @builtin
 class YEARFRAC(UserFunction):
-    description = "The part of a year between two dates. Basis: 0 (default) US 30/360, 1 actual days over actual year, 2 actual/360, 3 actual/365, 4 European 30/360."
-    examples = (Example("=ROUND(YEARFRAC(40909,41120),4)", 0.5806, note="1 Jan to 30 Jul 2012, 30/360"), Example("=ROUND(YEARFRAC(40909,41120,1),4)", 0.5765))
+    description = (
+        "The part of a year between two dates. Basis: 0 (default) US 30/360, 1 actual days over actual year, 2 "
+        "actual/360, 3 actual/365, 4 European 30/360."
+    )
+    examples = (
+        Example("=ROUND(YEARFRAC(40909,41120),4)", 0.5806, note="1 Jan to 30 Jul 2012, 30/360"),
+        Example("=ROUND(YEARFRAC(40909,41120,1),4)", 0.5765),
+    )
 
     def call(self, start_date: float, end_date: float, basis: int = 0):
         first, last = sorted((math.floor(start_date), math.floor(end_date)))
@@ -323,8 +374,14 @@ class YEARFRAC(UserFunction):
 
 @builtin
 class DAYS360(UserFunction):
-    description = "The number of days between two dates in a year of twelve 30-day months; the third argument TRUE counts European style."
-    examples = (Example("=DAYS360(39812,39844)", 30, note="30 Dec 2008 to 31 Jan 2009"), Example("=DAYS360(45688,45716)", 28, note="31 Jan to 28 Feb 2025"))
+    description = (
+        "The number of days between two dates in a year of twelve 30-day months; the third argument TRUE counts "
+        "European style."
+    )
+    examples = (
+        Example("=DAYS360(39812,39844)", 30, note="30 Dec 2008 to 31 Jan 2009"),
+        Example("=DAYS360(45688,45716)", 28, note="31 Jan to 28 Feb 2025"),
+    )
 
     def call(self, start_date: float, end_date: float, method: bool = False):
         parts_of(start_date), parts_of(end_date)

@@ -13,7 +13,7 @@ import inspect
 import json
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePath
 
 ROOT = Path(__file__).resolve().parent.parent
 # the packages whose API is a promise
@@ -85,7 +85,7 @@ def surface(module) -> dict:
             out[name] = {
                 "value": portable(repr(obj))
                 if isinstance(obj, int | float | str | tuple | dict)
-                else f"<{type(obj).__name__}>"
+                else f"<{'Path' if isinstance(obj, PurePath) else type(obj).__name__}>"  # (not Posix/WindowsPath)
             }
     return out
 

@@ -1,4 +1,5 @@
-"""The special functions the beta, gamma, t and chi-squared distributions need: the regularised incomplete beta and gamma.
+"""The special functions the beta, gamma, t and chi-squared distributions need: the regularised incomplete beta and
+gamma.
 
 Standard series and continued-fraction expansions (Numerical Recipes, chapter 6), accurate to about 1e-14 over the
 range a spreadsheet uses. They are tested against the closed forms that exist for whole parameters."""

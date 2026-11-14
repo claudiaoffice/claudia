@@ -995,7 +995,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             owner = sheet.spilled.get((row, col))
             if owner is not None:
                 raise ValueError(
-                    f"{column_name(col)}{row + 1} shows the result of the formula in {column_name(owner[2])}{owner[1] + 1} "
+                    f"{column_name(col)}{row + 1} shows the result of the formula in "
+                    f"{column_name(owner[2])}{owner[1] + 1} "
                     "(SQL(), SORT() ...): change that formula, not its result"
                 )
 

@@ -78,7 +78,11 @@ def test_rate_undoes_pmt_and_nper_undoes_both():
 
 
 def test_xnpv_of_a_single_year_and_xirr_agree():
-    cells = {**column("A1", [-1000, 1100]), **column("B1", [46023, 46388]), **column("C1", [46388, 46023])}  # a year (365 days) later
+    cells = {
+        **column("A1", [-1000, 1100]),
+        **column("B1", [46023, 46388]),
+        **column("C1", [46388, 46023]),
+    }  # a year (365 days) later
     check("=XIRR(A1:A2,B1:B2)", 0.1, cells, tol=1e-8)
     check("=XNPV(0.1,A1:A2,B1:B2)", 0, cells, tol=1e-8)
     check("=XNPV(0,A1:A2,B1:B2)", 100, cells)

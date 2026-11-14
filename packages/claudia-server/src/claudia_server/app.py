@@ -120,6 +120,7 @@ class SinglePageApp(StaticFiles):
 
     async def get_response(self, path, scope):
         """The file, or the start page for an address of the app."""
+        path = path.replace("\\", "/")  # Starlette hands Windows the path with backslashes
         response = await self._found_or_start_page(path, scope)
         response.headers["Cache-Control"] = _FOR_GOOD if path.startswith(_HASHED_ASSETS) else _REVALIDATE
         return response

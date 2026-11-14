@@ -83,9 +83,10 @@ def test_every_app_has_the_same_seven_menus_in_the_same_order(app: manifest.Mani
 def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Manifest) -> None:
     """D123/D124: separators kept, grouped as New/Open · Save-group · Manage · Close/Quit. D141: the Manage
     item replaces the plain "Share…" item it grew out of, and is itself a submenu. The apps that lay out pages print
-    (D906): File ▸ Print… was on the web only (UX-36). D443: Open a File… next to Open…."""
+    (D906): File ▸ Print… was on the web only (UX-36), computes
+    prints its sheets too (E6.19). D443: Open a File… next to Open…."""
     file_menu = app.menu("File")
-    keep = ["Save", "Save New Checkpoint…", "Download"] + (["Print…"] if app.app in ("composes", "creates") else [])
+    keep = ["Save", "Save New Checkpoint…", "Download", "Print…"]
     assert [[e.label for e in section] for section in file_menu.sections] == [
         ["New", "Open…", "Open a File…"],
         keep,
@@ -730,6 +731,6 @@ def test_the_gmenu_xml_shows_every_key_whoever_listens_for_it(app: manifest.Mani
     for item in root.iter("item"):
         attributes = {a.get("name"): a.text for a in item.findall("attribute")}
         shown[str(attributes["action"]).removeprefix("win.")] = attributes.get("accel")
-    assert shown["file.print" if app.app != "computes" else "edit.new-sheet"] is not None
+    assert shown["file.print"] is not None
     for action in app.actions:
         assert shown[action.id] == (action.accelerators[0] if action.accelerators else None), action.id

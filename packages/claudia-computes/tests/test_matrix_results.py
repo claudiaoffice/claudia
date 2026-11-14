@@ -14,7 +14,7 @@ from names_helpers import at, code, fill, shown
 from claudia_computes.formula.operators import single
 from claudia_computes.functions import Range
 from claudia_computes.spill import Matrix
-from claudia_computes.values import ErrorValue, FormulaError
+from claudia_computes.values import FormulaError
 
 
 def block(doc, first, last):

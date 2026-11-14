@@ -1,5 +1,5 @@
-"""More text functions: CONCATENATE, character codes, CLEAN, NUMBERVALUE, DOLLAR and FIXED, REPLACE, TEXTBEFORE, TEXTAFTER and
-TEXTSPLIT.
+"""More text functions: CONCATENATE, character codes, CLEAN, NUMBERVALUE, DOLLAR and FIXED, REPLACE, TEXTBEFORE,
+TEXTAFTER and TEXTSPLIT.
 
 ``CHAR`` and ``CODE`` use the Windows-1252 character set Excel uses (``CHAR(128)`` is the euro sign); ``UNICHAR`` and
 ``UNICODE`` use code points. ``DOLLAR`` writes a dollar sign and the separators of English: it does not follow the
@@ -11,7 +11,6 @@ from __future__ import annotations
 import re
 from decimal import ROUND_HALF_UP, Decimal
 
-from ...spill import Matrix
 from ...values import NA, VALUE, ErrorValue, format_value
 from ..base import Example, FunctionError, UserFunction
 from ..range import Range
@@ -136,7 +135,10 @@ def _fixed(number: float, decimals: int, commas: bool) -> str:
 
 @builtin
 class FIXED(UserFunction):
-    description = "A number as text rounded to a number of decimals (2 unless given), with thousands separators unless no_commas is TRUE."
+    description = (
+        "A number as text rounded to a number of decimals (2 unless given), with thousands separators unless no_commas "
+        "is TRUE."
+    )
     examples = (Example("=FIXED(1234.567, 1)", "1,234.6"),)
 
     def call(self, number: float, decimals: int = 2, no_commas: bool = False):
@@ -198,24 +200,46 @@ def _cut(text, delimiter, instance, ignore_case, match_end, if_not_found, *, bef
 class TEXTBEFORE(UserFunction):
     description = (
         "The text before a delimiter: before its nth occurrence (negative: counted from the end); match_mode 1 ignores "
-        "case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there (else #N/A)."
+        "case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there "
+        "(else #N/A)."
     )
     examples = (Example('=TEXTBEFORE("a-b-c", "-", -1)', "a-b"),)
 
-    def call(self, text: str, delimiter: str, instance: int | None = None, match_mode: int = 0, match_end: int = 0, if_not_found=None):
-        return _cut(text, delimiter, 1 if instance is None else instance, match_mode, match_end, if_not_found, before=True)
+    def call(
+        self,
+        text: str,
+        delimiter: str,
+        instance: int | None = None,
+        match_mode: int = 0,
+        match_end: int = 0,
+        if_not_found=None,
+    ):
+        return _cut(
+            text, delimiter, 1 if instance is None else instance, match_mode, match_end, if_not_found, before=True
+        )
 
 
 @builtin
 class TEXTAFTER(UserFunction):
     description = (
         "The text after a delimiter: after its nth occurrence (negative: counted from the end); match_mode 1 ignores "
-        "case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there (else #N/A)."
+        "case, match_end 1 counts the end of the text as a delimiter; if_not_found is given when it is not there "
+        "(else #N/A)."
     )
     examples = (Example('=TEXTAFTER("a-b-c", "-", -1)', "c"),)
 
-    def call(self, text: str, delimiter: str, instance: int | None = None, match_mode: int = 0, match_end: int = 0, if_not_found=None):
-        return _cut(text, delimiter, 1 if instance is None else instance, match_mode, match_end, if_not_found, before=False)
+    def call(
+        self,
+        text: str,
+        delimiter: str,
+        instance: int | None = None,
+        match_mode: int = 0,
+        match_end: int = 0,
+        if_not_found=None,
+    ):
+        return _cut(
+            text, delimiter, 1 if instance is None else instance, match_mode, match_end, if_not_found, before=False
+        )
 
 
 # -- splitting ------------------------------------------------------------------------------------------------------
@@ -237,7 +261,8 @@ def _splitter(delimiters: list[str], ignore_case: bool) -> re.Pattern[str]:
 class TEXTSPLIT(UserFunction):
     description = (
         "Splits a text into columns at the column delimiters and into rows at the row delimiters (each may be several "
-        "in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with pad_with (#N/A)."
+        "in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with "
+        "pad_with (#N/A)."
     )
     examples = (Example('=INDEX(TEXTSPLIT("a,b;c,d", ",", ";"), 2, 2)', "d"),)
 

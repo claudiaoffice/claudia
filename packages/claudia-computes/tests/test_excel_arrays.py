@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 
 import pytest
-from excel_helpers import array, cases, check, code, column, put, row, value
+from excel_helpers import array, cases, check, code, column, put, row
 
 from claudia_computes.values import ErrorValue
 
@@ -126,7 +126,7 @@ def test_sortby_needs_keys_of_the_same_length():
     assert code("=SORTBY(A1:A3, B1:B2)", cells) == "#VALUE!"
 
 
-# -- UNIQUE -------------------------------------------------------------------------------------------------------------
+# -- UNIQUE ------------------------------------------------------------------------------------------------------------
 def test_unique_keeps_the_first_of_each_value_in_order():
     check("=UNIQUE(A1:A6)", [[1], [2], [3]], column("A1", [1, 2, 2, 3, 1, 3]))
 
@@ -148,7 +148,7 @@ def test_unique_with_nothing_once_has_no_result():
     assert code("=UNIQUE(A1:A2, FALSE, TRUE)", column("A1", [1, 1])) == NA
 
 
-# -- FILTER -------------------------------------------------------------------------------------------------------------
+# -- FILTER ------------------------------------------------------------------------------------------------------------
 PEOPLE = put("A1", [["ann", 30], ["bob", 25], ["cy", 41]])
 
 
@@ -171,7 +171,7 @@ def test_filter_says_what_to_give_when_nothing_matches():
 
 def test_filter_needs_a_condition_that_fits():
     assert code("=FILTER(A1:B3, B1:B2>0)", PEOPLE) == "#VALUE!"
-    assert code('=FILTER(A1:B3, A1:A3)', PEOPLE) == "#VALUE!"  # (text is not a condition)
+    assert code("=FILTER(A1:B3, A1:A3)", PEOPLE) == "#VALUE!"  # (text is not a condition)
 
 
 # -- TEXTSPLIT --------------------------------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ def test_textsplit_needs_a_delimiter():
     assert code('=TEXTSPLIT("abc", "")') == "#VALUE!"
 
 
-# -- matrices -----------------------------------------------------------------------------------------------------------
+# -- matrices ----------------------------------------------------------------------------------------------------------
 A = put("A1", [[1, 2], [3, 4]])
 B = put("D1", [[5, 6], [7, 8]])
 
@@ -272,7 +272,7 @@ def test_mode_mult_gives_every_mode_in_order_of_first_appearance():
     assert code("=MODE.MULT(A1:A3)", column("A1", [1, 2, 3])) == NA
 
 
-# -- regression: TREND, GROWTH, LINEST, LOGEST ---------------------------------------------------------------------------
+# -- regression: TREND, GROWTH, LINEST, LOGEST -------------------------------------------------------------------------
 Y = [2, 4, 5, 4, 5]
 X = [1, 2, 3, 4, 5]
 FIT = {**column("A1", Y), **column("B1", X)}  # y = 2.2 + 0.6 x
@@ -314,7 +314,7 @@ def test_linest_with_two_variables_gives_the_coefficients_in_reverse_order():
 
 def test_linest_needs_matching_data():
     assert code("=LINEST(A1:A5, B1:B4)", FIT) == "#REF!"
-    assert code('=LINEST(A1:A2, B1:B2)', {"A1": "x", "A2": 1, "B1": 1, "B2": 2}) == "#VALUE!"
+    assert code("=LINEST(A1:A2, B1:B2)", {"A1": "x", "A2": 1, "B1": 1, "B2": 2}) == "#VALUE!"
     assert code("=LINEST(A1:A1, B1:B1)", {"A1": 1, "B1": 1}) == "#DIV/0!"
 
 

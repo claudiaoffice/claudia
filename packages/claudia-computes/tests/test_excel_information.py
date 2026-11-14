@@ -3,9 +3,10 @@ SHEETS, CELL, INFO, ADDRESS, LOOKUP, HYPERLINK, LET, RANDARRAY, and subtotals th
 
 from __future__ import annotations
 
+from excel_helpers import cases, check, code, column, raw, value
+
 from claudia_computes.functions.builtin import ScratchSheet
 from claudia_computes.refs import SheetId
-from excel_helpers import array, cases, check, code, column, raw, value
 
 LIST = {**column("A1", [10, 20, 30]), "B1": "a", "B2": "b", "B3": "c", "C1": True}
 

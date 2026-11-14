@@ -1341,7 +1341,9 @@ def test_a_workbook_prints_each_sheet_the_default_way_until_someone_sets_it_up(p
 
 
 def test_setting_a_sheet_up_is_one_step_for_everybody_and_a_part_left_out_keeps_its_default(printed):
-    done = call(printed, "set_sheet_print", {"sheet": "s1", "setup": {"orientation": "landscape", "gridlines": True}}, BEN)
+    done = call(
+        printed, "set_sheet_print", {"sheet": "s1", "setup": {"orientation": "landscape", "gridlines": True}}, BEN
+    )
     assert "revision" in done
     mine = call(printed, "print_setup", account=VERA)["sheets"]["s1"]
     assert mine["orientation"] == "landscape" and mine["gridlines"] is True and mine["footer_name"] is True

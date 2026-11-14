@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 
-from ...values import DIV0, NUM
+from ...values import NUM
 from ..base import Example, FunctionError, UserFunction
 from ..range import Range
 from .catalog import builtin
@@ -28,7 +28,13 @@ def _value(rate: float, periods: float, payment: float, present: float, future: 
 @builtin
 class NPER(UserFunction):
     description = "The number of periods it takes regular payments at a fixed rate to pay off a loan or save up a sum."
-    examples = (Example("=ROUND(NPER(0.12/12,-100,-1000,10000,1),2)", 59.67, note="start 1,000, save 100 a month at 12% a year, to reach 10,000"),)
+    examples = (
+        Example(
+            "=ROUND(NPER(0.12/12,-100,-1000,10000,1),2)",
+            59.67,
+            note="start 1,000, save 100 a month at 12% a year, to reach 10,000",
+        ),
+    )
 
     def call(self, rate: float, payment: float, present: float, future: float = 0.0, kind: float = 0.0):
         when = _when(kind)
@@ -45,10 +51,15 @@ class NPER(UserFunction):
 
 @builtin
 class RATE(UserFunction):
-    description = "The interest rate per period of a loan or saving plan, found by trying rates from a guess (10% if none is given)."
+    description = (
+        "The interest rate per period of a loan or saving plan, found by trying rates from a guess (10% if none is "
+        "given)."
+    )
     examples = (Example("=ROUND(RATE(48,-200,8000)*12,4)", 0.0924, note="8,000 paid back in 48 payments of 200"),)
 
-    def call(self, periods: float, payment: float, present: float, future: float = 0.0, kind: float = 0.0, guess: float = 0.1):
+    def call(
+        self, periods: float, payment: float, present: float, future: float = 0.0, kind: float = 0.0, guess: float = 0.1
+    ):
         when = _when(kind)
         if periods <= 0:
             raise FunctionError(NUM, "the number of periods must be above 0")
@@ -112,14 +123,18 @@ class IPMT(UserFunction):
 
 @builtin
 class PPMT(UserFunction):
-    description = "The part of the payment in one period that pays off the loan itself (the payment without the interest)."
+    description = (
+        "The part of the payment in one period that pays off the loan itself (the payment without the interest)."
+    )
     examples = (Example("=ROUND(PPMT(0.1/12,1,24,2000),2)", -75.62, note="the first month of 2,000 over 2 years"),)
 
     def call(self, rate: float, period: float, periods: float, present: float, future: float = 0.0, kind: float = 0.0):
-        return PMT().call(rate, periods, present, future, kind) - _interest(rate, period, periods, present, future, kind)
+        return PMT().call(rate, periods, present, future, kind) - _interest(
+            rate, period, periods, present, future, kind
+        )
 
 
-# -- cash flows on dates -----------------------------------------------------------------------------------------------------------
+# -- cash flows on dates -----------------------------------------------------------------------------------------------
 def _dated(values: Range, dates: Range) -> list[tuple[float, float]]:
     flows = [float(v) for v in values.numbers()]
     days = [math.floor(d) for d in dates.numbers()]
@@ -136,8 +151,17 @@ def _xnpv(rate: float, dated: list[tuple[float, float]]) -> float:
 
 @builtin
 class XNPV(UserFunction):
-    description = "The value today of cash flows on given dates (the first date is today), discounted at a yearly rate of 365 days."
-    examples = (Example("=ROUND(XNPV(0.1,A1:A3,B1:B3),2)", 2.24, {"A1": -100, "A2": 50, "A3": 60, "B1": 46023, "B2": 46204, "B3": 46388}),)
+    description = (
+        "The value today of cash flows on given dates (the first date is today), discounted at a yearly rate of 365 "
+        "days."
+    )
+    examples = (
+        Example(
+            "=ROUND(XNPV(0.1,A1:A3,B1:B3),2)",
+            2.24,
+            {"A1": -100, "A2": 50, "A3": 60, "B1": 46023, "B2": 46204, "B3": 46388},
+        ),
+    )
 
     def call(self, rate: float, values: Range, dates: Range):
         if rate <= -1:
@@ -147,8 +171,16 @@ class XNPV(UserFunction):
 
 @builtin
 class XIRR(UserFunction):
-    description = "The yearly rate at which cash flows on given dates are worth nothing today; needs a payment and a receipt."
-    examples = (Example("=ROUND(XIRR(A1:A3,B1:B3),4)", 0.1323, {"A1": -100, "A2": 50, "A3": 60, "B1": 46023, "B2": 46204, "B3": 46388}),)
+    description = (
+        "The yearly rate at which cash flows on given dates are worth nothing today; needs a payment and a receipt."
+    )
+    examples = (
+        Example(
+            "=ROUND(XIRR(A1:A3,B1:B3),4)",
+            0.1323,
+            {"A1": -100, "A2": 50, "A3": 60, "B1": 46023, "B2": 46204, "B3": 46388},
+        ),
+    )
 
     def call(self, values: Range, dates: Range, guess: float = 0.1):
         dated = _dated(values, dates)

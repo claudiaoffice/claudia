@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 
-from excel_helpers import cases, check, code, column, put, row
+from excel_helpers import cases, check, code, column
 
 D = column("A1", [3, 7, 8, 5, 12, 14, 21, 13, 18])  # mean 11.2222, sample variance 35.9444
 S = column("A1", [3, 4, 5, 2, 3, 4, 5, 6, 4, 7])
@@ -82,7 +82,7 @@ def test_rank(formula, expected, cells):
     check(formula, expected, cells)
 
 
-# -- percentiles, quartiles, percent rank -------------------------------------------------------------------------------
+# -- percentiles, quartiles, percent rank ------------------------------------------------------------------------------
 PERCENTILES = (
     ("=PERCENTILE.INC(A1:A9, 0.25)", 7.0),
     ("=PERCENTILE(A1:A9, 0.9)", 18.6),
@@ -176,7 +176,9 @@ def test_trimmean_cuts_the_same_number_off_both_ends():
     data = column("A1", [4, 5, 6, 7, 2, 3, 4, 5, 1, 2, 3])
     check("=TRIMMEAN(A1:A11, 0.2)", 3.7777777777777777, data)
     check("=TRIMMEAN(A1:A11, 0)", sum([4, 5, 6, 7, 2, 3, 4, 5, 1, 2, 3]) / 11, data)
-    check("=TRIMMEAN(A1:A11, 0.1)", sum([4, 5, 6, 7, 2, 3, 4, 5, 1, 2, 3]) / 11, data)  # (1.1 points: none, an even number only)
+    check(
+        "=TRIMMEAN(A1:A11, 0.1)", sum([4, 5, 6, 7, 2, 3, 4, 5, 1, 2, 3]) / 11, data
+    )  # (1.1 points: none, an even number only)
     assert code("=TRIMMEAN(A1:A11, 1)", data) == "#NUM!"
     assert code("=TRIMMEAN(A1:A11, -0.1)", data) == "#NUM!"
 
@@ -205,7 +207,7 @@ def test_prob():
     assert code("=PROB(A1:A4, B1:B3, 1)", cells) == "#N/A"
 
 
-# -- regression and correlation --------------------------------------------------------------------------------------------
+# -- regression and correlation ----------------------------------------------------------------------------------------
 REGRESSION = (
     ("=SLOPE(A1:A7, B1:B7)", 0.3055555555555555),
     ("=INTERCEPT(A1:A7, B1:B7)", 3.166666666666667),

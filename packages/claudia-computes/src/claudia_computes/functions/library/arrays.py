@@ -18,7 +18,7 @@ from ..base import Example, FunctionError, UserFunction
 from ..range import Range
 from .aggregate import ordered_numbers
 from .catalog import builtin
-from .ordering import group, identity, order_key
+from .ordering import identity, order_key
 
 Rows = list[list[Value]]
 N_A = ErrorValue(NA)
@@ -38,7 +38,8 @@ def matrix(rows: Sequence[Sequence[Value]]) -> Matrix:
     return Matrix(tuple(tuple(0 if value is None else value for value in row) for row in rows))
 
 
-def transposed(rows: Rows) -> Rows:
+def transposed[T](rows: Sequence[Sequence[T]]) -> list[list[T]]:
+    """The rows turned into columns."""
     return [list(column) for column in zip(*rows, strict=True)]
 
 
@@ -120,7 +121,7 @@ class HSTACK(UserFunction):
 
 
 # -- sorting, filtering, unique values -------------------------------------------------------------------------------
-def _order(order: int | None, what: str = "the sort order") -> bool:
+def _order(order: Value, what: str = "the sort order") -> bool:
     """True for descending. ``order`` is 1 (up) or -1 (down); left out it is up."""
     if order is None:
         return False
@@ -160,7 +161,9 @@ class SORT(UserFunction):
 @builtin
 class SORTBY(UserFunction):
     description = "Sorts a range by the values of other ranges of the same height: by_array, order, by_array, order ..."
-    examples = (Example("=INDEX(SORTBY(A1:A3, B1:B3), 1)", "y", {"A1": "x", "A2": "y", "A3": "z", "B1": 3, "B2": 1, "B3": 2}),)
+    examples = (
+        Example("=INDEX(SORTBY(A1:A3, B1:B3), 1)", "y", {"A1": "x", "A2": "y", "A3": "z", "B1": 3, "B2": 1, "B3": 2}),
+    )
 
     def call(self, array: Range, by_array: Range, *more: Range):
         rows = rows_of(array)
@@ -245,6 +248,11 @@ def _exact(rows: list[list[float]]) -> bool:
     return all(v.__class__ is int for line in rows for v in line)
 
 
+def _size(value: Fraction | float) -> Fraction | float:
+    """The absolute value, of either kind of number (exact or not)."""
+    return -value if value < 0 else value
+
+
 def _square(rows: list[list[float]]) -> int:
     if len(rows) != len(rows[0]):
         raise FunctionError(VALUE, "this needs a square matrix")
@@ -254,10 +262,10 @@ def _square(rows: list[list[float]]) -> int:
 def _determinant(rows: list[list[float]]) -> float:
     n = _square(rows)
     exact = _exact(rows)
-    work = [[Fraction(v) if exact else float(v) for v in line] for line in rows]
+    work: list[list[Fraction | float]] = [[Fraction(v) if exact else float(v) for v in line] for line in rows]
     det = Fraction(1) if exact else 1.0
     for col in range(n):
-        pivot = max(range(col, n), key=lambda r: abs(work[r][col]))
+        pivot = max(range(col, n), key=lambda r: _size(work[r][col]))
         if work[pivot][col] == 0:
             return 0
         if pivot != col:
@@ -268,18 +276,23 @@ def _determinant(rows: list[list[float]]) -> float:
             factor = work[r][col] / work[col][col]
             for c in range(col, n):
                 work[r][c] -= factor * work[col][c]
-    return int(det) if exact and det.denominator == 1 else float(det)
+    if isinstance(det, Fraction):
+        return int(det) if det.denominator == 1 else float(det)
+    return det
 
 
 def _inverse(rows: list[list[float]]) -> list[list[float]]:
     n = _square(rows)
     exact = _exact(rows)
     one, zero = (Fraction(1), Fraction(0)) if exact else (1.0, 0.0)
-    work = [[(Fraction(v) if exact else float(v)) for v in line] + [one if i == j else zero for j in range(n)] for i, line in enumerate(rows)]
+    work: list[list[Fraction | float]] = [
+        [(Fraction(v) if exact else float(v)) for v in line] + [one if i == j else zero for j in range(n)]
+        for i, line in enumerate(rows)
+    ]
     scale = max(abs(v) for line in rows for v in line) or 1
     for col in range(n):
-        pivot = max(range(col, n), key=lambda r: abs(work[r][col]))
-        if abs(work[pivot][col]) <= 1e-13 * scale:
+        pivot = max(range(col, n), key=lambda r: _size(work[r][col]))
+        if _size(work[pivot][col]) <= 1e-13 * scale:
             raise FunctionError(NUM, "the matrix is singular: it has no inverse")
         work[col], work[pivot] = work[pivot], work[col]
         head = work[col][col]
@@ -312,7 +325,9 @@ class MINVERSE(UserFunction):
 @builtin
 class MMULT(UserFunction):
     description = "The product of two matrices: the first must have as many columns as the second has rows."
-    examples = (Example("=INDEX(MMULT(A1:B1, A2:B3), 1, 1)", 13, {"A1": 1, "B1": 2, "A2": 3, "B2": 4, "A3": 5, "B3": 6}),)
+    examples = (
+        Example("=INDEX(MMULT(A1:B1, A2:B3), 1, 1)", 13, {"A1": 1, "B1": 2, "A2": 3, "B2": 4, "A3": 5, "B3": 6}),
+    )
 
     def call(self, first: Range, second: Range):
         a, b = numbers_matrix(first), numbers_matrix(second)
@@ -321,7 +336,15 @@ class MMULT(UserFunction):
         columns = transposed(b)
         exact = _exact(a) and _exact(b)
         return matrix(
-            [[sum(x * y for x, y in zip(line, col, strict=True)) if exact else math.fsum(x * y for x, y in zip(line, col, strict=True)) for col in columns] for line in a]
+            [
+                [
+                    sum(x * y for x, y in zip(line, col, strict=True))
+                    if exact
+                    else math.fsum(x * y for x, y in zip(line, col, strict=True))
+                    for col in columns
+                ]
+                for line in a
+            ]
         )
 
 
@@ -339,8 +362,13 @@ class MUNIT(UserFunction):
 # -- counting into bins, modes --------------------------------------------------------------------------------------
 @builtin
 class FREQUENCY(UserFunction):
-    description = "How many of the data fall into each bin: up to the first limit, above it up to the next ... and above the last."
-    examples = (Example("=INDEX(FREQUENCY(A1:A4, B1:B2), 1)", 2, {"A1": 1, "A2": 2, "A3": 5, "A4": 9, "B1": 3, "B2": 6}),)
+    description = (
+        "How many of the data fall into each bin: up to the first limit, above it up to the next ... and above the "
+        "last."
+    )
+    examples = (
+        Example("=INDEX(FREQUENCY(A1:A4, B1:B2), 1)", 2, {"A1": 1, "A2": 2, "A3": 5, "A4": 9, "B1": 3, "B2": 6}),
+    )
 
     def call(self, data: Range, bins: Range):
         values = data.numbers(strict=False)
@@ -403,7 +431,15 @@ class Fit:
     def intercept(self) -> float:
         return self.beta[0] if self.constant else 0.0
 
-    def statistics(self) -> tuple[list[float | ErrorValue], list[float | ErrorValue], list[float | ErrorValue], list[float | ErrorValue], list[float | ErrorValue]]:
+    def statistics(
+        self,
+    ) -> tuple[
+        list[float | ErrorValue],
+        list[float | ErrorValue],
+        list[float | ErrorValue],
+        list[float | ErrorValue],
+        list[float | ErrorValue],
+    ]:
         """The rows LINEST shows (coefficients, standard errors, r2 and standard error of y, F and df, sums of
         squares), each as long as the coefficients, in LINEST's reverse order."""
         sey = math.sqrt(self.ss_resid / self.df) if self.df > 0 else 0.0
@@ -414,8 +450,8 @@ class Fit:
         f_value: float | ErrorValue = (
             (self.ss_reg / self.k) / (self.ss_resid / self.df) if self.df > 0 and self.ss_resid > 0 else ErrorValue(NUM)
         )
-        coefficients = [*reversed(self.slopes), self.intercept]
-        standard = [*reversed(ses), se_b]
+        coefficients: list[float | ErrorValue] = [*reversed(self.slopes), self.intercept]
+        standard: list[float | ErrorValue] = [*reversed(ses), se_b]
         width = len(coefficients)
         pad = [ErrorValue(NA)] * (width - 2)
         return (
@@ -521,7 +557,10 @@ def _trend(known_y, known_x, new_x, constant, *, logs):
 
 @builtin
 class TREND(UserFunction):
-    description = "Values on the straight line that fits the known y and x values best, at the new x values (the known ones if left out)."
+    description = (
+        "Values on the straight line that fits the known y and x values best, at the new x values (the known ones if "
+        "left out)."
+    )
     examples = (Example("=TREND(A1:A3, B1:B3, 4)", 8, {"A1": 2, "A2": 4, "A3": 6, "B1": 1, "B2": 2, "B3": 3}),)
 
     def call(self, known_y: Range, known_x: Range | None = None, new_x: Range | None = None, const: bool = True):
@@ -530,8 +569,12 @@ class TREND(UserFunction):
 
 @builtin
 class GROWTH(UserFunction):
-    description = "Values on the exponential curve y = b * m^x that fits the known y and x values best, at the new x values."
-    examples = (Example("=ROUND(GROWTH(A1:A3, B1:B3, 4), 6)", 162, {"A1": 6, "A2": 18, "A3": 54, "B1": 1, "B2": 2, "B3": 3}),)
+    description = (
+        "Values on the exponential curve y = b * m^x that fits the known y and x values best, at the new x values."
+    )
+    examples = (
+        Example("=ROUND(GROWTH(A1:A3, B1:B3, 4), 6)", 162, {"A1": 6, "A2": 18, "A3": 54, "B1": 1, "B2": 2, "B3": 3}),
+    )
 
     def call(self, known_y: Range, known_x: Range | None = None, new_x: Range | None = None, const: bool = True):
         return _trend(known_y, known_x, new_x, const, logs=True)
@@ -542,7 +585,7 @@ def _linest(known_y, known_x, const, stats, *, logs):
     fit = Fit(ys, points, const)
     rows = fit.statistics()
     if logs:
-        rows = ([math.exp(c) for c in rows[0]], *rows[1:])
+        rows = ([c if isinstance(c, ErrorValue) else math.exp(c) for c in rows[0]], *rows[1:])
     return matrix(list(rows) if stats else [rows[0]])
 
 
@@ -552,7 +595,9 @@ class LINEST(UserFunction):
         "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse "
         "order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
     )
-    examples = (Example("=INDEX(LINEST(A1:A3, B1:B3), 1, 1)", 2, {"A1": 2, "A2": 4, "A3": 6, "B1": 1, "B2": 2, "B3": 3}),)
+    examples = (
+        Example("=INDEX(LINEST(A1:A3, B1:B3), 1, 1)", 2, {"A1": 2, "A2": 4, "A3": 6, "B1": 1, "B2": 2, "B3": 3}),
+    )
 
     def call(self, known_y: Range, known_x: Range | None = None, const: bool = True, stats: bool = False):
         return _linest(known_y, known_x, const, stats, logs=False)
@@ -560,8 +605,14 @@ class LINEST(UserFunction):
 
 @builtin
 class LOGEST(UserFunction):
-    description = "The exponential curve y = b * m1^x1 * ... through known y and x values, as a row (as LINEST gives them)."
-    examples = (Example("=ROUND(INDEX(LOGEST(A1:A3, B1:B3), 1, 1), 6)", 3, {"A1": 6, "A2": 18, "A3": 54, "B1": 1, "B2": 2, "B3": 3}),)
+    description = (
+        "The exponential curve y = b * m1^x1 * ... through known y and x values, as a row (as LINEST gives them)."
+    )
+    examples = (
+        Example(
+            "=ROUND(INDEX(LOGEST(A1:A3, B1:B3), 1, 1), 6)", 3, {"A1": 6, "A2": 18, "A3": 54, "B1": 1, "B2": 2, "B3": 3}
+        ),
+    )
 
     def call(self, known_y: Range, known_x: Range | None = None, const: bool = True, stats: bool = False):
         return _linest(known_y, known_x, const, stats, logs=True)

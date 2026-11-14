@@ -26,7 +26,7 @@ def group(value: Value) -> int:
 
 
 def order_key(value: Value, descending: bool):
-    """A key for ``sorted(..., reverse=descending)`` that puts empty cells and errors after everything else both ways."""
+    """A key for ``sorted(..., reverse=descending)`` that puts empty cells and errors last, whichever way it sorts."""
     g = group(value)
     if g:
         return (-g if descending else g, 0, 0)

@@ -221,7 +221,8 @@ _ERROR_NUMBERS = {"#NULL!": 1, "#DIV/0!": 2, "#VALUE!": 3, "#REF!": 4, "#NAME?":
 
 @form("ERROR.TYPE")
 def error_type(compiler: Compiler, args: tuple[Node, ...]) -> Evaluator:
-    """ERROR.TYPE(value): 1 #NULL!, 2 #DIV/0!, 3 #VALUE!, 4 #REF!, 5 #NAME?, 6 #NUM!, 7 #N/A; #N/A if there is no error."""
+    """ERROR.TYPE(value): 1 #NULL!, 2 #DIV/0!, 3 #VALUE!, 4 #REF!, 5 #NAME?, 6 #NUM!, 7 #N/A;
+    #N/A if there is no error."""
     if len(args) != 1:
         return wrong_count("ERROR.TYPE", len(args), 1, 1)
     inner = compiler.compile(args[0])
@@ -258,7 +259,11 @@ def cell(compiler: Compiler, args: tuple[Node, ...]) -> Evaluator:
         if not isinstance(kind, str):
             raise FormulaError(VALUE, "the first argument names the information, in quotes")
         kind = kind.strip().lower()
-        area = target(scope) if target else Range(scope.sheets[scope.home], scope.row, scope.col, scope.row, scope.col, sheet_id=scope.home)
+        area = (
+            target(scope)
+            if target
+            else Range(scope.sheets[scope.home], scope.row, scope.col, scope.row, scope.col, sheet_id=scope.home)
+        )
         row, col = area.row0, area.col0
         if kind == "address":
             return f"${column_name(col)}${row + 1}"

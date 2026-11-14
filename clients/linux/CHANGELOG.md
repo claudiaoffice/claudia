@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Fixed (print on the desktop: E6.19)
+- Claudia Computes had File ▸ Print… (Ctrl+P) on the web only: the desktop shells hide the web menu bar, so on the
+  desktop the sheets could not be printed. It is in the menus of the Linux client and in the listing for macOS and
+  Windows now, like in the other two apps.
+
 ### Added (passwords: D448)
 - File ▸ Manage ▸ Change Password… (Ctrl+Alt+Shift+W), a page action in every app; in the macOS and Windows menus
   through the generated listings.

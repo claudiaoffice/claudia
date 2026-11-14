@@ -910,7 +910,7 @@ def computes() -> Manifest:
         ),
         view=Menu("View", (_shared_view_block(authors=False),)),
         tools=tools_menu,
-        prints=False,
+        prints=True,
     )
 
 

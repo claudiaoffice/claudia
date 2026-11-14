@@ -13,10 +13,9 @@ preview and PDF are the same.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Self
-
-from .refs import SheetId
 
 ORIENTATIONS: tuple[str, ...] = ("portrait", "landscape")
 SCALE_KINDS: tuple[str, ...] = ("fit-width", "fit-page", "percent")
@@ -130,6 +129,6 @@ class SheetPrintSetup:
 DEFAULT_SHEET_PRINT = SheetPrintSetup()
 
 
-def sheet_print_to_data(setups: dict[SheetId, SheetPrintSetup]) -> dict[str, dict]:
-    """The sheets that differ from the default, as plain data (the workbook stores nothing for the others)."""
+def sheet_print_to_data(setups: Mapping[str, SheetPrintSetup]) -> dict[str, dict]:
+    """The sheets and chart tabs (by id) that differ from the default, as plain data (none is stored for the others)."""
     return {str(key): setup.to_data() for key, setup in setups.items() if setup != DEFAULT_SHEET_PRINT}

@@ -105,7 +105,7 @@ def extract_python(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
         if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in MARKERS):
             continue
         msgid = _call_arg_string(node, keywords=node.func.id == "msg")
-        occurrence = f"{path.relative_to(ROOT)}:{node.lineno}"
+        occurrence = f"{path.relative_to(ROOT).as_posix()}:{node.lineno}"
         if msgid is None:
             problems.append(Problem(path, node.lineno, f"{node.func.id}(...) is not a single plain string literal"))
         else:
@@ -150,7 +150,7 @@ def extract_web(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
             problems.append(Problem(path, line, "t(...) is not a single plain string literal"))
             continue
         msgid = ast.literal_eval(literal_match.group(1))
-        found.setdefault(msgid, []).append(f"{path.relative_to(ROOT)}:{line}")
+        found.setdefault(msgid, []).append(f"{path.relative_to(ROOT).as_posix()}:{line}")
     return found, problems
 
 
@@ -170,7 +170,7 @@ def extract_manifest() -> dict[str, list[str]]:
     # here by construction, not a mistake to fix.
     from claudia_shell_gtk import manifest as manifest_module  # type: ignore[import-not-found]
 
-    occurrence = str(MANIFEST_PATH.relative_to(ROOT))
+    occurrence = MANIFEST_PATH.relative_to(ROOT).as_posix()
     texts: set[str] = set()
     for build in (manifest_module.composes, manifest_module.computes, manifest_module.creates):
         built = build()

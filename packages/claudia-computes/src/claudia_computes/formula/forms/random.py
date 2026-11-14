@@ -88,8 +88,8 @@ def _random(compiler: Compiler, args: tuple[Node, ...]) -> Evaluator:
 def _randarray(compiler: Compiler, args: tuple[Node, ...]) -> Evaluator:
     """RANDARRAY([rows], [columns], [min], [max], [whole]): a grid of random numbers (1 row, 1 column, from 0 to 1 and
     not whole numbers unless said otherwise). With whole TRUE the numbers are whole, from min to max."""
-    from ...spill import Matrix
     from ...limits import MAX_COLS, MAX_ROWS
+    from ...spill import Matrix
     from . import truth
 
     if len(args) > 5:

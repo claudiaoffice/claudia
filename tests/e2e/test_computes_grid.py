@@ -43,9 +43,10 @@ def port(tmp_path_factory: pytest.TempPathFactory) -> Iterator[int]:
 
 def _open_new_document(page, port: int) -> None:
     page.goto(f"http://127.0.0.1:{port}/", wait_until="networkidle")
-    page.get_by_label("Document").fill("grid")
+    page.get_by_label("Document", exact=True).fill("grid")
     page.get_by_label("Your name").fill("tester")
-    page.get_by_label("Password").fill("Probe12345")
+    page.get_by_label("Password", exact=True).fill("Probe12345")
+    page.get_by_role("radio", name="Table").click()  # one server for all three apps (D444): a new document has a kind
     page.get_by_role("button", name="Create document").click()
     page.get_by_label("I have stored the recovery key somewhere safe.").check()
     page.get_by_role("button", name="Continue").click()

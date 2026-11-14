@@ -310,6 +310,7 @@ def test_a_document_with_content_is_never_deleted_by_removing_its_last_user(tmp_
 def test_a_half_written_last_change_is_ignored_and_the_journal_is_repaired(tmp_path):
     doc = start(store_in(tmp_path))
     fill(doc)
+    doc.store.close()  # the process died: nothing of it holds the journal any more (Windows needs that to replace it)
     journal = journal_path(tmp_path / "docs" / "plan.claudia")
     journal.write_bytes(journal.read_bytes()[:-6])  # the power went out while the last change was written
     _, back = reopen(tmp_path)

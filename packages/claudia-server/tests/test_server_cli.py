@@ -566,7 +566,7 @@ def test_a_redirect_port_that_cannot_be_opened_is_reported_as_such(monkeypatch, 
     plan = SimpleNamespace(redirect_from=80, uvicorn_options={"host": "0.0.0.0", "port": 8765})
     monkeypatch.setattr(cli, "make_plan", lambda argv=None: plan)
 
-    def refuse(host, port, to_port):
+    def refuse(host, port, _to_port):
         raise PermissionError(13, "Permission denied")
 
     monkeypatch.setattr(cli.redirect, "start", refuse)

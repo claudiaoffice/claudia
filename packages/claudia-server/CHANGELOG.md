@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- On Windows the built web app's `_nuxt/` files were revalidated on every load instead of kept for good: Starlette
+  hands the path over with backslashes there, and the rule looked for a slash.
 - The hyphenation patterns fetched into the Docker image were readable by root only (`mkstemp` makes 0600 files), so
   the container, which runs as another user, stopped at start with "Permission denied"; fetched files are 0644 now.
   A start-up error from reading a file or folder is no longer worded as a problem with the redirect port.

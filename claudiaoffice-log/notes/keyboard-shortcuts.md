@@ -68,6 +68,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Save | Ctrl+S |  |
 | File | Save New Checkpoint… | Ctrl+Shift+S |  |
 | File | Download | Ctrl+Alt+S |  |
+| File | Print… | Ctrl+P |  |
 | File | Manage ▸ Share… | Ctrl+Shift+Alt+S |  |
 | File | Manage ▸ Change Password… | Ctrl+Shift+Alt+W |  |
 | File | Manage ▸ Assign New Owner… | Ctrl+Shift+Alt+O |  |

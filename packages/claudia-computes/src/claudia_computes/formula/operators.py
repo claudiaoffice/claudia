@@ -29,9 +29,9 @@ def single(value: object) -> Value:
             raise found.raised()
         return found
     if value.__class__ is Matrix:
-        if value.height * value.width != 1:  # type: ignore[attr-defined]
+        if value.height * value.width != 1:
             raise FormulaError(VALUE, "several cells were used where one value is needed")
-        found = value.value_at(0, 0)  # type: ignore[attr-defined]
+        found = value.value_at(0, 0)
         if found.__class__ is ErrorValue:
             raise found.raised()
         return found
@@ -167,17 +167,18 @@ COMPARISONS: dict[str, Callable[[Value, Value], bool]] = {
     ">=": lambda a, b: compare(a, b) >= 0,
 }
 
+
 # -------------------------------------------------------------------------------- cell by cell
 def _grid(operand: object) -> list[list[Value]] | None:
     """The cells of a range or matrix as rows when it has more than one cell, else ``None`` (it is a single value)."""
     if operand.__class__ is Range:
-        if len(operand) <= 1:  # type: ignore[arg-type]
+        if len(operand) <= 1:
             return None
-        return [list(row) for row in operand.dense()]  # type: ignore[attr-defined]
+        return [list(row) for row in operand.dense()]
     if operand.__class__ is Matrix:
-        if operand.height * operand.width <= 1:  # type: ignore[attr-defined]
+        if operand.height * operand.width <= 1:
             return None
-        return [list(row) for row in operand.rows]  # type: ignore[attr-defined]
+        return [list(row) for row in operand.rows]
     return None
 
 
@@ -200,13 +201,13 @@ def _at(grid: list[list[Value]], row: int, col: int) -> Value:
     return grid[0 if rows == 1 else row][0 if cols == 1 else col]
 
 
-def elementwise(function: Callable[..., Value], arity: int) -> Callable[..., Value]:
+def elementwise(function: Callable[..., Value], arity: int) -> Callable[..., Value | Matrix]:
     """``function`` for operands that may be ranges or matrices of several cells: it is applied to each cell (a single
     row or column is repeated against the other operand), and gives a ``Matrix``. With single values only, it is
     ``function`` itself, as fast as it was."""
     if arity == 1:
 
-        def unary(a: Value) -> Value:
+        def unary(a: Value) -> Value | Matrix:
             if a.__class__ is not Range and a.__class__ is not Matrix:
                 return function(a)
             grid = _grid(a)
@@ -216,7 +217,7 @@ def elementwise(function: Callable[..., Value], arity: int) -> Callable[..., Val
 
         return unary
 
-    def binary(a: Value, b: Value) -> Value:
+    def binary(a: Value, b: Value) -> Value | Matrix:
         ca, cb = a.__class__, b.__class__
         if ca is not Range and ca is not Matrix and cb is not Range and cb is not Matrix:
             return function(a, b)
@@ -235,7 +236,7 @@ def elementwise(function: Callable[..., Value], arity: int) -> Callable[..., Val
     return binary
 
 
-BINARY: dict[str, Callable[[Value, Value], Value]] = {
+BINARY: dict[str, Callable[[Value, Value], Value | Matrix]] = {
     op: elementwise(function, 2)
     for op, function in {
         "+": add,

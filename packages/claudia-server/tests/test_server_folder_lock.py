@@ -1,5 +1,6 @@
 """A document folder is used by one server at a time (D435)."""
 
+import re
 import subprocess
 import sys
 
@@ -11,7 +12,7 @@ from claudia_server.folder_lock import FolderLock, FolderLocked
 def test_a_second_lock_on_the_same_folder_is_refused_until_the_first_is_let_go(tmp_path):
     first = FolderLock(tmp_path)
     first.acquire()
-    with pytest.raises(FolderLocked, match=str(tmp_path)):
+    with pytest.raises(FolderLocked, match=re.escape(str(tmp_path))):
         FolderLock(tmp_path).acquire()
     first.release()
     second = FolderLock(tmp_path)

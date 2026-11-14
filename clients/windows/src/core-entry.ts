@@ -45,7 +45,9 @@ function describeStdin(): string {
     if (stat.isFIFO()) return 'a pipe'
     if (stat.isSocket()) return 'a socket'
     if (stat.isCharacterDevice()) return 'a character device (terminal or /dev/null)'
-    return stat.isFile() ? 'a file' : 'something else'
+    if (stat.isFile()) return 'a file'
+    // Windows' fstat shows the pipe of a child's stdin as neither a FIFO nor a socket (seen in CI: 'something else').
+    return process.platform === 'win32' ? 'a pipe, as far as Windows says' : 'something else'
   } catch (problem) {
     return `not readable (${(problem as Error).message})`
   }

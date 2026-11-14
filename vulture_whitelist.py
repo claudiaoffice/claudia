@@ -38,6 +38,8 @@ used.rotate_access_secret  # POST /api/admin/settings/access-secret/rotate
 used.set_ai  # PUT /api/admin/settings/ai
 used.set_typeset  # PUT /api/admin/settings/typeset
 used._ping  # core_methods.method("ping")
+used._set_print_page  # computes_methods.method("set_print_page")
+used._set_sheet_print  # computes_methods.method("set_sheet_print")
 used._set_locale  # core_methods.method("set_locale") (D323)
 used._snapshot  # core_methods.method("snapshot")
 used._changes_since  # core_methods.method("changes_since")

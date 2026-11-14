@@ -70,10 +70,14 @@ def values_a(ranges: tuple[Range, ...]) -> list[float]:
     found: list[float] = []
     for area in ranges:
         for value in area.present():
-            cls = value.__class__
-            if cls is ErrorValue:
+            if isinstance(value, ErrorValue):
                 raise value.raised()
-            found.append(0 if cls is str else int(value) if cls is bool else value)
+            if isinstance(value, bool):  # (before the numbers: a bool is an int)
+                found.append(int(value))
+            elif isinstance(value, (int, float)):
+                found.append(value)
+            elif isinstance(value, str):
+                found.append(0)
     return found
 
 
@@ -140,7 +144,7 @@ class VARPA(UserFunction):
         return _sample(False, values_a(values))
 
 
-# -- rank ---------------------------------------------------------------------------------------------------------------
+# -- rank --------------------------------------------------------------------------------------------------------------
 def _rank(number: float, ref: Range, order: float, *, average: bool) -> float:
     found = ref.numbers()
     if number not in found:
@@ -154,7 +158,10 @@ def _rank(number: float, ref: Range, order: float, *, average: bool) -> float:
 @builtin
 class RANK_EQ(UserFunction):
     name = "RANK.EQ"
-    description = "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers share the top rank."
+    description = (
+        "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers share the "
+        "top rank."
+    )
     examples = (Example("=RANK.EQ(3, A1:A3)", 2, {"A1": 1, "A2": 3, "A3": 5}),)
 
     def call(self, number: float, ref: Range, order: float = 0.0):
@@ -173,14 +180,17 @@ class RANK(UserFunction):
 @builtin
 class RANK_AVG(UserFunction):
     name = "RANK.AVG"
-    description = "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers get the average of their ranks."
+    description = (
+        "The rank of a number in a range, largest first (smallest first if order is not 0); equal numbers get the "
+        "average of their ranks."
+    )
     examples = (Example("=RANK.AVG(3, A1:A4)", 1.5, {"A1": 3, "A2": 3, "A3": 1, "A4": 0}),)
 
     def call(self, number: float, ref: Range, order: float = 0.0):
         return _rank(number, ref, order, average=True)
 
 
-# -- percentiles and quartiles -------------------------------------------------------------------------------------------
+# -- percentiles and quartiles -----------------------------------------------------------------------------------------
 def _interpolated(ordered: list[int | float], position: float) -> float:
     low = math.floor(position)
     if low >= len(ordered) - 1:
@@ -278,12 +288,16 @@ def percent_rank(numbers: list[int | float], x: float, significance: int, *, exc
         raise FunctionError(NA, "the value is outside the numbers")
     below = max(i for i, v in enumerate(ordered) if v <= x)  # the last number not above x
     first = ordered.index(ordered[below])  # (its first occurrence: equal numbers share a rank)
-    base = Fraction(first + (1 if exclusive else 0), n + (1 if exclusive else -1)) if n > 1 or exclusive else Fraction(1)
+    base = (
+        Fraction(first + (1 if exclusive else 0), n + (1 if exclusive else -1)) if n > 1 or exclusive else Fraction(1)
+    )
     if ordered[below] == x or below == n - 1:
         rank = base
     else:
         step = Fraction(1, n + (1 if exclusive else -1))
-        rank = base + step * (Fraction(x) - Fraction(ordered[below])) / (Fraction(ordered[below + 1]) - Fraction(ordered[below])) * (below + 1 - first)
+        rank = base + step * (Fraction(x) - Fraction(ordered[below])) / (
+            Fraction(ordered[below + 1]) - Fraction(ordered[below])
+        ) * (below + 1 - first)
         # (between two different numbers that sit next to each other, the rank moves in proportion to the distance)
     scale = 10**significance
     return float(Fraction(math.floor(rank * scale), scale))
@@ -292,7 +306,10 @@ def percent_rank(numbers: list[int | float], x: float, significance: int, *, exc
 @builtin
 class PERCENTRANK_INC(UserFunction):
     name = "PERCENTRANK.INC"
-    description = "The rank of a value among the numbers as a share from 0 to 1, cut (not rounded) to the significance in digits (3)."
+    description = (
+        "The rank of a value among the numbers as a share from 0 to 1, cut (not rounded) to the significance in digits "
+        "(3)."
+    )
     examples = (Example("=PERCENTRANK.INC(A1:A4, 2)", 0.333, {"A1": 1, "A2": 2, "A3": 3, "A4": 4}),)
 
     def call(self, array: Range, x: float, significance: int = 3):
@@ -311,14 +328,17 @@ class PERCENTRANK(UserFunction):
 @builtin
 class PERCENTRANK_EXC(UserFunction):
     name = "PERCENTRANK.EXC"
-    description = "The rank of a value among the numbers as a share between 0 and 1 (not including them), cut to the significance in digits (3)."
+    description = (
+        "The rank of a value among the numbers as a share between 0 and 1 (not including them), cut to the "
+        "significance in digits (3)."
+    )
     examples = (Example("=PERCENTRANK.EXC(A1:A4, 2)", 0.4, {"A1": 1, "A2": 2, "A3": 3, "A4": 4}),)
 
     def call(self, array: Range, x: float, significance: int = 3):
         return percent_rank(array.numbers(), x, significance, exclusive=True)
 
 
-# -- modes ---------------------------------------------------------------------------------------------------------------
+# -- modes -------------------------------------------------------------------------------------------------------------
 def _mode(ranges: tuple[Range, ...]) -> float:
     counts: dict[float, int] = {}
     for area in ranges:
@@ -401,7 +421,10 @@ class HARMEAN(UserFunction):
 
 @builtin
 class TRIMMEAN(UserFunction):
-    description = "The mean of the numbers without the share (0 up to, not including, 1) of the smallest and largest, half cut from each end."
+    description = (
+        "The mean of the numbers without the share (0 up to, not including, 1) of the smallest and largest, half cut "
+        "from each end."
+    )
     examples = (Example("=TRIMMEAN(A1:A5, 0.4)", 3, {"A1": 1, "A2": 3, "A3": 3, "A4": 3, "A5": 100}),)
 
     def call(self, array: Range, percent: float):
@@ -475,14 +498,21 @@ class STANDARDIZE(UserFunction):
 
 @builtin
 class PROB(UserFunction):
-    description = "The probability that a value lies between two limits (or equals the lower one if there is no upper): values and their probabilities, which must add up to 1."
+    description = (
+        "The probability that a value lies between two limits (or equals the lower one if there is no upper): values "
+        "and their probabilities, which must add up to 1."
+    )
     examples = (Example("=PROB(A1:A3, B1:B3, 2)", 0.5, {"A1": 1, "A2": 2, "A3": 3, "B1": 0.25, "B2": 0.5, "B3": 0.25}),)
 
     def call(self, x_range: Range, prob_range: Range, lower: float, upper: float | None = None):
         if (x_range.n_rows, x_range.n_cols) != (prob_range.n_rows, prob_range.n_cols):
             raise FunctionError(NA, "the values and their probabilities must have the same size")
         pairs = number_pairs(x_range, prob_range)
-        if not pairs or any(p <= 0 or p > 1 for _, p in pairs) or not math.isclose(math.fsum(p for _, p in pairs), 1, abs_tol=1e-9):
+        if (
+            not pairs
+            or any(p <= 0 or p > 1 for _, p in pairs)
+            or not math.isclose(math.fsum(p for _, p in pairs), 1, abs_tol=1e-9)
+        ):
             raise FunctionError(NUM, "the probabilities must be from 0 up to 1 and add up to 1")
         high = lower if upper is None else upper
         return math.fsum(p for x, p in pairs if lower <= x <= high)

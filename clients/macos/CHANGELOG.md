@@ -4,6 +4,10 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.1] - unreleased
 
+### Fixed
+- `src/generated/menu.computes.json` is regenerated: File ▸ Print… (Cmd+P) is in the menus of Claudia Computes, as in
+  the other two apps.
+
 ### Changed (UX-35, UX-36)
 - The menus are regenerated from the manifest: every entry has its key from the one table of all clients (D360), and the
   menus have what the web's have (File ▸ Print…, Format ▸ List ▸, Edit ▸ Image… and Chart…, Tools ▸ Names… and SQL

@@ -255,7 +255,7 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     """``odt_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph of the flow, in order,
     called ``b1``, ``b2``... by its place. Title, Heading 1, Heading 2 and Quotations (or a style based on one) map to
     the styles of the text app and anything else is body text. The first paragraph of every item of a list is an item
-    of that list (the scheme, start and name of the list from its list style, :mod:`._odt_lists`), at the level of its
+    of that list (the scheme, start and name of the list from its list style, ``_odt_lists``), at the level of its
     place in the nest. What the model does not show is in
     :func:`odt_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is not an odt."""
     parts, body, scan, parents = _document(odt_bytes)

@@ -79,6 +79,18 @@
             "label": "Download",
             "role": null,
             "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary>p"
+            ],
+            "checkable": false,
+            "id": "file.print",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Print\u2026",
+            "role": null,
+            "start": false
           }
         ],
         [

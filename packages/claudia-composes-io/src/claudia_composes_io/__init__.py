@@ -9,10 +9,13 @@ Odt is the ODF-first story of E9.5 (D5, D70), with maximum preservation from the
 paths (``text_to_odt``, ``odt_to_text``, ``apply_edits_to_odt``) over ``claudia-odf-io``, with a list of what a
 file could not hold in each direction (``odt_export_losses``, ``odt_import_losses``).
 
-docx   text_to_docx, docx_to_text, apply_edits_to_docx, docx_import_losses, docx_export_losses,
-       docx_unwritten_changes, UnsupportedEdit
-odt    text_to_odt, odt_to_text, apply_edits_to_odt, odt_import_losses, odt_export_losses (D401), odt_unwritten_changes
-log    export_info -- the dates and people of a document, and when each suggestion was made, from its log (D411)
+The names, by kind::
+
+   docx   text_to_docx, docx_to_text, apply_edits_to_docx, docx_import_losses, docx_export_losses,
+          docx_unwritten_changes, UnsupportedEdit
+   odt    text_to_odt, odt_to_text, apply_edits_to_odt, odt_import_losses, odt_export_losses (D401),
+          odt_unwritten_changes
+   log    export_info -- the dates and people of a document, and when each suggestion was made, from its log (D411)
 """
 
 from ._history import export_info

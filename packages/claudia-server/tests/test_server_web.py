@@ -5,11 +5,15 @@ while by its own guess, so after a server update a client could keep showing the
 demo server: the old frontend, with the old menus and no way to talk to the desktop shell).
 """
 
+import asyncio
+
 import pytest
+from starlette.responses import PlainTextResponse
+from starlette.staticfiles import StaticFiles
 from starlette.testclient import TestClient
 
 from claudia_core.testing import ListModel
-from claudia_server.app import create_app
+from claudia_server.app import SinglePageApp, create_app
 from claudia_server.auth import ScryptDirectory
 from claudia_server.hub import Hub, MemoryProvider
 
@@ -51,6 +55,17 @@ def test_a_file_that_is_not_named_by_its_content_is_revalidated_too(client):
 def test_assets_named_by_their_content_may_be_kept_for_good(client):
     response = client.get("/_nuxt/entry.Dk3x9.js")
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
+
+
+def test_hashed_assets_are_recognised_by_the_path_windows_gives_too(web, monkeypatch):
+    """Starlette joins the path of a request with the separator of the system: ``_nuxt\\entry.js`` on Windows."""
+
+    async def found(self, path, scope):
+        return PlainTextResponse("found")
+
+    monkeypatch.setattr(StaticFiles, "get_response", found)
+    response = asyncio.run(SinglePageApp(directory=web).get_response("_nuxt\\entry.Dk3x9.js", {}))
     assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
 
 

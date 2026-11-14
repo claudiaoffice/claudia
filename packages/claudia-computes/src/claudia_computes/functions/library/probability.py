@@ -30,7 +30,7 @@ def _probability(p: float) -> float:
     return p
 
 
-# -- the normal distribution --------------------------------------------------------------------------------------------
+# -- the normal distribution -------------------------------------------------------------------------------------------
 def _cdf(x: float, mu: float, sigma: float) -> float:
     return 0.5 * math.erfc(-(x - mu) / (sigma * math.sqrt(2)))
 
@@ -113,14 +113,16 @@ class NORM_S_INV(UserFunction):
 
 @builtin
 class NORMSINV(UserFunction):
-    description = "The z for which the share p of the standard normal distribution lies below (the old name of NORM.S.INV)."
+    description = (
+        "The z for which the share p of the standard normal distribution lies below (the old name of NORM.S.INV)."
+    )
     examples = (Example("=NORMSINV(0.5)", 0),)
 
     def call(self, probability: float):
         return _norm_inv(probability, 0, 1)
 
 
-# -- the t distribution --------------------------------------------------------------------------------------------------
+# -- the t distribution ------------------------------------------------------------------------------------------------
 def _degrees(df: float) -> int:
     if df < 1:
         raise FunctionError(NUM, "the degrees of freedom must be 1 or more")
@@ -139,7 +141,9 @@ def right_tail(t: float, df: float) -> float:
 
 
 def _t_density(x: float, df: int) -> float:
-    return math.exp(math.lgamma((df + 1) / 2) - math.lgamma(df / 2) - 0.5 * math.log(df * math.pi)) * (1 + x * x / df) ** (-(df + 1) / 2)
+    return math.exp(math.lgamma((df + 1) / 2) - math.lgamma(df / 2) - 0.5 * math.log(df * math.pi)) * (
+        1 + x * x / df
+    ) ** (-(df + 1) / 2)
 
 
 def _t_inverse(tail: float, df: int) -> float:
@@ -240,7 +244,7 @@ class TINV(UserFunction):
         return _inverse_two_tails(probability, deg_freedom)
 
 
-# -- the t test ------------------------------------------------------------------------------------------------------------
+# -- the t test --------------------------------------------------------------------------------------------------------
 def t_test(first: Range, second: Range, tails: float, kind: float) -> float:
     if tails not in (1, 2) or kind not in (1, 2, 3):
         raise FunctionError(NUM, "tails is 1 or 2 and type is 1, 2 or 3")
@@ -255,7 +259,7 @@ def t_test(first: Range, second: Range, tails: float, kind: float) -> float:
         variance = spread(differences, sample=True)
         if variance == 0:
             raise FunctionError(DIV0, "the differences do not vary")
-        t, df = mean(differences) / math.sqrt(variance / n), n - 1
+        t, df = mean(differences) / math.sqrt(variance / n), float(n - 1)
     else:
         a, b = first.numbers(), second.numbers()
         if len(a) < 2 or len(b) < 2:
@@ -263,12 +267,12 @@ def t_test(first: Range, second: Range, tails: float, kind: float) -> float:
         va, vb = spread(a, sample=True), spread(b, sample=True)
         na, nb = len(a), len(b)
         if kind == 2:
-            df = na + nb - 2
+            df = float(na + nb - 2)
             pooled = ((na - 1) * va + (nb - 1) * vb) / df
             error = math.sqrt(pooled * (1 / na + 1 / nb))
         else:
             error = math.sqrt(va / na + vb / nb)
-            df = error**4 / ((va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1)) if error else 1
+            df = error**4 / ((va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1)) if error else 1.0
         if error == 0:
             raise FunctionError(DIV0, "the samples do not vary")
         t = (mean(a) - mean(b)) / error
@@ -278,8 +282,15 @@ def t_test(first: Range, second: Range, tails: float, kind: float) -> float:
 @builtin
 class T_TEST(UserFunction):
     name = "T.TEST"
-    description = "The probability that two samples have the same mean: type 1 paired, 2 same variance, 3 different variances; tails 1 or 2."
-    examples = (Example("=ROUND(T.TEST(A1:A3, B1:B3, 2, 1), 4)", 0.0351, {"A1": 3, "A2": 4, "A3": 5, "B1": 6, "B2": 8, "B3": 7}),)
+    description = (
+        "The probability that two samples have the same mean: type 1 paired, 2 same variance, 3 different variances; "
+        "tails 1 or 2."
+    )
+    examples = (
+        Example(
+            "=ROUND(T.TEST(A1:A3, B1:B3, 2, 1), 4)", 0.0351, {"A1": 3, "A2": 4, "A3": 5, "B1": 6, "B2": 8, "B3": 7}
+        ),
+    )
 
     def call(self, array1: Range, array2: Range, tails: float, type: float):
         return t_test(array1, array2, tails, type)
@@ -288,13 +299,15 @@ class T_TEST(UserFunction):
 @builtin
 class TTEST(UserFunction):
     description = "The probability that two samples have the same mean (the old name of T.TEST)."
-    examples = (Example("=ROUND(TTEST(A1:A3, B1:B3, 2, 1), 4)", 0.0351, {"A1": 3, "A2": 4, "A3": 5, "B1": 6, "B2": 8, "B3": 7}),)
+    examples = (
+        Example("=ROUND(TTEST(A1:A3, B1:B3, 2, 1), 4)", 0.0351, {"A1": 3, "A2": 4, "A3": 5, "B1": 6, "B2": 8, "B3": 7}),
+    )
 
     def call(self, array1: Range, array2: Range, tails: float, type: float):
         return t_test(array1, array2, tails, type)
 
 
-# -- confidence intervals -----------------------------------------------------------------------------------------------
+# -- confidence intervals ----------------------------------------------------------------------------------------------
 def _confidence(alpha: float, standard_dev: float, size: float) -> tuple[float, int]:
     _probability(alpha)
     _positive(standard_dev, "the standard deviation")
@@ -311,7 +324,10 @@ def _confidence_norm(alpha: float, standard_dev: float, size: float) -> float:
 @builtin
 class CONFIDENCE_NORM(UserFunction):
     name = "CONFIDENCE.NORM"
-    description = "Half the width of the confidence interval for a mean (known standard deviation, normal distribution); alpha is 1 minus the confidence level."
+    description = (
+        "Half the width of the confidence interval for a mean (known standard deviation, normal distribution); alpha "
+        "is 1 minus the confidence level."
+    )
     examples = (Example("=ROUND(CONFIDENCE.NORM(0.05, 2.5, 50), 4)", 0.693),)
 
     def call(self, alpha: float, standard_dev: float, size: float):
@@ -340,24 +356,32 @@ class CONFIDENCE_T(UserFunction):
         return _inverse_two_tails(alpha, n - 1) * standard_dev / math.sqrt(n)
 
 
-# -- the chi-squared test --------------------------------------------------------------------------------------------------
+# -- the chi-squared test ----------------------------------------------------------------------------------------------
 @builtin
 class CHISQ_TEST(UserFunction):
     name = "CHISQ.TEST"
-    description = "The probability that the observed counts come from the expected ones (chi-squared test of independence or fit)."
-    examples = (Example("=ROUND(CHISQ.TEST(A1:A4, B1:B4), 4)", 0.0064, {"A1": 18, "A2": 22, "A3": 20, "A4": 40, "B1": 25, "B2": 25, "B3": 25, "B4": 25}),)
+    description = (
+        "The probability that the observed counts come from the expected ones (chi-squared test of independence or "
+        "fit)."
+    )
+    examples = (
+        Example(
+            "=ROUND(CHISQ.TEST(A1:A4, B1:B4), 4)",
+            0.0064,
+            {"A1": 18, "A2": 22, "A3": 20, "A4": 40, "B1": 25, "B2": 25, "B3": 25, "B4": 25},
+        ),
+    )
 
     def call(self, actual_range: Range, expected_range: Range):
         rows, cols = actual_range.n_rows, actual_range.n_cols
         if (rows, cols) != (expected_range.n_rows, expected_range.n_cols):
             raise FunctionError(NA, "the observed and expected counts must have the same size")
-        pairs = []
+        pairs: list[tuple[float, float]] = []
         for r in range(rows):
             for c in range(cols):
                 a, e = actual_range.at(r, c), expected_range.at(r, c)
-                if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in (a, e)):
-                    continue
-                pairs.append((a, e))
+                if a.__class__ in (int, float) and e.__class__ in (int, float):
+                    pairs.append((float(a), float(e)))
         df = (rows - 1) * (cols - 1) if rows > 1 and cols > 1 else max(rows, cols) - 1
         if df < 1 or not pairs:
             raise FunctionError(DIV0, "there are too few counts")

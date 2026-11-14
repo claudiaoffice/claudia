@@ -29,6 +29,9 @@ computes
 .. autoclass:: claudia_computes.RemoveName
 .. autoclass:: claudia_computes.RestoreNames
 .. autoclass:: claudia_computes.spill.Table
+.. autoclass:: claudia_computes.SheetPrintSetup
+.. autoclass:: claudia_computes.PrintSetupError
+.. autodata:: claudia_computes.DEFAULT_SHEET_PRINT
 
 Random numbers, alternatives and following a computation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

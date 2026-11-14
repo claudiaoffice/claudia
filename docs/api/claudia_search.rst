@@ -32,6 +32,8 @@ Running it
    :members:
 .. autoclass:: claudia_search.Match
    :members:
+.. autoclass:: claudia_search.Edit
+   :members:
 .. autoexception:: claudia_search.SearchTimeout
 .. autodata:: claudia_search.MAX_SECONDS
 

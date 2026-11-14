@@ -299,7 +299,8 @@ describe('LocalServer', () => {
 
   it('stop() resolves as soon as the real process reports exit, without waiting out the grace period', async () => {
     const child = new FakeChildProcess()
-    const server = new LocalServer(['python'], { url: 'http://127.0.0.1:1', spawnFn: () => child as never })
+    // no tree kill (taskkill is Windows' own, and would be asked to end a process 4242 that is not ours)
+    const server = new LocalServer(['python'], { url: 'http://127.0.0.1:1', spawnFn: () => child as never, killTree: async () => false })
     server.spawn()
     const stopping = server.stop(5000)
     queueMicrotask(() => child.exit(0))
@@ -315,7 +316,7 @@ describe('stop() on Windows: one kill() call, no softer SIGTERM step', () => {
   // argument there, so a second, "harder" kill() is not a fallback, it is the same call again.
   it('calls kill() exactly once even when the process never reports exit before the grace period elapses', async () => {
     const child = new FakeChildProcess()
-    const server = new LocalServer(['python'], { url: 'http://127.0.0.1:1', spawnFn: () => child as never })
+    const server = new LocalServer(['python'], { url: 'http://127.0.0.1:1', spawnFn: () => child as never, killTree: async () => false })
     server.spawn()
     await server.stop(5) // the fake never emits 'exit'; this waits out the grace period and resolves anyway
     expect(child.kill).toHaveBeenCalledTimes(1)

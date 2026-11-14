@@ -28,7 +28,8 @@ and a cell can then say ``=SQUARE(A1)``. The contract:
 
                  A function that takes a ``Range`` reads only the cells that hold something (``range.numbers()``,
                  ``range.present()``), so ``SUM(A:A)`` costs what the column holds, not a million rows.
-return           an int, float, bool, text, a ``Range`` or a ``Matrix`` (several cells that spill). Anything else (``None`` too) is ``#VALUE!``.
+return           an int, float, bool, text, a ``Range`` or a ``Matrix`` (several cells that spill). Anything else
+                 (``None`` too) is ``#VALUE!``.
 errors           ``raise FunctionError("#NUM!", "why")`` for an Excel-style code with a reason; ``ZeroDivisionError`` is
                  ``#DIV/0!``, ``ValueError`` and ``OverflowError`` are ``#NUM!``, ``TypeError`` is ``#VALUE!``, any
                  other exception is ``#ERROR!`` (the traceback goes to the log).

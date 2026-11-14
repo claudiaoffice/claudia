@@ -324,7 +324,9 @@ class Round:
             value = self._spill(key, value, scope)
         elif key in calc.spills:
             self._unspill(key)
-        if compiled.dynamic or compiled.records or scope.reads or compiled.reads:  # (a result that is blocked reads the cells in its way)
+        if (
+            compiled.dynamic or compiled.records or scope.reads or compiled.reads
+        ):  # (a result that is blocked reads the cells in its way)
             reads = tuple(dict.fromkeys(scope.reads or ()))
             scope.reads = None
             if reads != compiled.reads:

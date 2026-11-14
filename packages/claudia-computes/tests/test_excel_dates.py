@@ -9,8 +9,6 @@ from datetime import datetime
 
 from excel_helpers import NOW, cases, check, code, column, value
 
-FRIDAY = 46339
-
 WEEKS = (
     ("=WEEKNUM(40977)", 10),  # 9 March 2012 (Microsoft's example)
     ("=WEEKNUM(40977,2)", 11),  # (1 Jan 2012 is a Sunday: a Monday-starting week 2 begins on the 2nd)

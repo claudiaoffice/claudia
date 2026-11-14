@@ -2,6 +2,7 @@
 
 import shutil
 import struct
+import sys
 
 import pytest
 
@@ -41,6 +42,7 @@ def test_a_picture_that_is_not_an_svg_is_refused_with_a_sentence_and_does_not_ha
         svg_rasteriser()(b"not a picture", 100, 100)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="the fake program is a shell script")
 def test_a_program_that_fails_is_reported(tmp_path):
     fake = tmp_path / "rsvg-convert"
     fake.write_text("#!/bin/sh\necho broken >&2\nexit 3\n")

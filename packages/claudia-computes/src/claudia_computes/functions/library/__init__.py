@@ -18,9 +18,9 @@ from . import (  # noqa: F401  (importing the modules fills the catalog)
     probability,
     referencex,
     statistics_more,
-    timex,
     text,
     textx,
+    timex,
 )
 from .catalog import CLASSES
 

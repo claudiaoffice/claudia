@@ -22,12 +22,12 @@ from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagra
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
 from .events import (
-    PrintSetupChanged,
     CellsChanged,
     CellStylesChanged,
     ChartsChanged,
     LinesResized,
     NamesChanged,
+    PrintSetupChanged,
     RandomChanged,
     SheetsChanged,
     StructureChanged,
@@ -46,6 +46,7 @@ from .model import (
     Sheet,
     WorkbookModel,
 )
+from .printing import DEFAULT_SHEET_PRINT, SheetPrintSetup
 from .refs import (
     DeleteCols,
     DeleteRows,
@@ -55,7 +56,6 @@ from .refs import (
     StructuralEdit,
     column_name,
 )
-from .printing import DEFAULT_SHEET_PRINT, SheetPrintSetup
 from .region import CellRegion
 
 register = WorkbookModel.registry.register
