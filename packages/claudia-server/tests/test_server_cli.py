@@ -542,3 +542,33 @@ def test_one_language_model_answers_in_every_app_that_has_a_lens(tmp_path, model
 
     assert asyncio.run(engines()) == {"computes": "ModelEngine", "composes": "TextEngine", "creates": "ModelEngine"}
     result.close()
+
+
+def test_a_file_the_server_cannot_read_is_not_reported_as_a_redirect_problem(monkeypatch, capsys):
+    """An OSError while the server is made (a folder it may not read) must name itself, not the redirect port."""
+    from claudia_server import cli
+
+    def refuse(argv=None):
+        raise PermissionError(13, "Permission denied", "/app/hyphenation/hyph-de-1996.pat.txt")
+
+    monkeypatch.setattr(cli, "make_plan", refuse)
+    assert cli.main([]) == 2
+    error = capsys.readouterr().err
+    assert "Permission denied" in error and "hyph-de-1996.pat.txt" in error
+    assert "redirect" not in error
+
+
+def test_a_redirect_port_that_cannot_be_opened_is_reported_as_such(monkeypatch, capsys):
+    from types import SimpleNamespace
+
+    from claudia_server import cli
+
+    plan = SimpleNamespace(redirect_from=80, uvicorn_options={"host": "0.0.0.0", "port": 8765})
+    monkeypatch.setattr(cli, "make_plan", lambda argv=None: plan)
+
+    def refuse(host, port, to_port):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(cli.redirect, "start", refuse)
+    assert cli.main([]) == 2
+    assert "cannot listen for the redirect" in capsys.readouterr().err

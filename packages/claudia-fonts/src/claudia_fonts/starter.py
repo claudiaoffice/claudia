@@ -99,6 +99,9 @@ def _write(target: Path, data: bytes) -> None:
     try:
         with os.fdopen(handle, "wb") as out:
             out.write(data)
+        # mkstemp makes a 0600 file; these are public files, and the Docker image fetches them as root for a server
+        # that runs as another user, so they must stay readable by everyone.
+        os.chmod(temporary, 0o644)
         os.replace(temporary, target)
     except BaseException:
         Path(temporary).unlink(missing_ok=True)

@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Fixed
+- Fetched font files are 0644, not `mkstemp`'s 0600, so a server running as another user than the one that fetched
+  them (the Docker image) can read them.
+
 ## [0.2.0] - 2026-11-12
 
 The starter set and what clients need to lay out with a font (D905).

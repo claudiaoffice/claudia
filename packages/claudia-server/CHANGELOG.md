@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- The hyphenation patterns fetched into the Docker image were readable by root only (`mkstemp` makes 0600 files), so
+  the container, which runs as another user, stopped at start with "Permission denied"; fetched files are 0644 now.
+  A start-up error from reading a file or folder is no longer worded as a problem with the redirect port.
 - The patch of a kept odt gets the document's `info` and the times of its suggestions, as a new file does (D411, D454).
 
 ### Changed

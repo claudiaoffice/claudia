@@ -178,3 +178,11 @@ def test_the_command_line_fetches_and_reports(tmp_path, monkeypatch, capsys):
     (tmp_path / "fonts" / "testsans" / "OFL.txt").unlink()
     assert main(["fetch", str(tmp_path / "fonts")]) == 1
     assert "SHA-256" in capsys.readouterr().err
+
+
+def test_a_fetched_file_can_be_read_by_other_users(tmp_path):
+    """The Docker image fetches as root and the server runs as another user: the file must not be 0600 (mkstemp's)."""
+    from claudia_fonts import starter
+
+    starter._write(tmp_path / "a.ttf", b"data")
+    assert (tmp_path / "a.ttf").stat().st_mode & 0o777 == 0o644

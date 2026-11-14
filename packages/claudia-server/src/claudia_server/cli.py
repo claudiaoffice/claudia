@@ -663,14 +663,18 @@ def main(argv: list[str] | None = None) -> int:
     """Start the server; the exit status of the process."""
     try:
         plan = make_plan(argv)
-        if plan.redirect_from is not None:
-            redirect.start(plan.uvicorn_options["host"], plan.redirect_from, plan.uvicorn_options["port"])
     except UsageError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    except OSError as exc:
-        print(f"error: cannot listen for the redirect: {exc}", file=sys.stderr)
+    except OSError as exc:  # a folder or file the server may not read, a state folder it may not write
+        print(f"error: {exc}", file=sys.stderr)
         return 2
+    if plan.redirect_from is not None:
+        try:
+            redirect.start(plan.uvicorn_options["host"], plan.redirect_from, plan.uvicorn_options["port"])
+        except OSError as exc:
+            print(f"error: cannot listen for the redirect: {exc}", file=sys.stderr)
+            return 2
     import uvicorn
 
     for line in plan.banner:

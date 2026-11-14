@@ -175,3 +175,9 @@ def test_a_write_that_fails_leaves_no_temporary_file(tmp_path, monkeypatch):
     with pytest.raises(OSError, match="disk full"):
         hyphenation._write(tmp_path / "a.txt", b"data")
     assert list(tmp_path.iterdir()) == []
+
+
+def test_a_fetched_file_can_be_read_by_other_users(tmp_path):
+    """The Docker image fetches as root and the server runs as another user: the file must not be 0600 (mkstemp's)."""
+    hyphenation._write(tmp_path / "a.txt", b"data")
+    assert (tmp_path / "a.txt").stat().st_mode & 0o777 == 0o644
