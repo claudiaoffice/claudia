@@ -17,13 +17,14 @@ import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
+import { piecesOf, type SlideMark } from '~/lib/slide-search-host'
 
 const { t } = useI18n()
 
 // `showGrid` is the View menu's own preference (`lib/grid.ts`'s `useGrid`, held by SlideWorkspace.vue so the
 // menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
 // object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
-const props = defineProps<{ session: SlideSession; showGrid: boolean }>()
+const props = defineProps<{ session: SlideSession; showGrid: boolean; marks?: SlideMark[] }>()
 /** `styles` asks the workspace to open the all-styles dialog, which owns the modal layer. */
 const emit = defineEmits<{ styles: [] }>()
 const session = props.session
@@ -40,6 +41,8 @@ const scale = computed(() => fitScale(size.value, MARGIN))
 const readonly = computed(() => state.me.role === 'viewer')
 
 const objects = computed(() => session.objectsOn(state.activeSlide))
+/** What a search found in the words of an object (E10.19), to draw there. */
+const marksOf = (id: string) => (props.marks ?? []).filter((m) => m.object === id)
 const others = computed(() => session.selectedByOthers(state.activeSlide))
 
 // ------------------------------------------------------------------------------ the screen scale
@@ -436,7 +439,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
           </svg>
           <div class="words" :style="textStyle(o)">
             <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
-            <span v-else-if="editing?.id !== o.id" class="text">{{ wordsOf(o) }}</span>
+            <span v-else-if="editing?.id !== o.id" class="text"><template v-for="(piece, i) in piecesOf(wordsOf(o), marksOf(o.id))" :key="i"><span v-if="piece.found" class="found" :class="{ now: piece.found === 'current' }" :data-found="piece.found">{{ piece.text }}</span><template v-else>{{ piece.text }}</template></template></span>
           </div>
           <textarea
             v-if="editing?.id === o.id"
@@ -514,6 +517,16 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
 }
 .obj.selected {
   cursor: move;
+}
+/* what a search found (E10.19): a band and an underline, never colour alone; the one being looked at has an outline too */
+.found {
+  background: color-mix(in srgb, var(--purpose-input) 55%, transparent);
+  border-bottom: 3px solid var(--app);
+}
+.found.now {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+  background: color-mix(in srgb, var(--purpose-input) 80%, transparent);
 }
 .obj.text.empty:not(.selected) {
   outline: 1px dashed var(--line);

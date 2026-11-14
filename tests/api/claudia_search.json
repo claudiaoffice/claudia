@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
  "COMBINE": {
   "value": "('all', 'any')"
  },
@@ -13,7 +13,7 @@
   "class": [
    "object"
   ],
-  "init": "(at: 'Location', kind: 'str', before: 'str', after: 'str') -> None",
+  "init": "(at: 'Location', kind: 'str', before: 'str', after: 'str', edits: 'tuple[Edit, ...]' = ()) -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -26,6 +26,7 @@
   "init": "(find: 'regex.Pattern | None', filtered: 'regex.Pattern | None', template: 'str | None', sources: 'tuple[str, str, str]', reasons: 'tuple[Condition, ...]')",
   "methods": {
    "admits": "(self, text: 'str', deadline: 'float | None' = None) -> 'bool'",
+   "edits": "(self, text: 'str', leave: 'set[int] | frozenset[int]' = frozenset(), deadline: 'float | None' = None) -> 'list[Edit]'",
    "left_out": "(self, text: 'str', deadline: 'float | None' = None) -> 'dict | None'",
    "matches": "(self, text: 'str', deadline: 'float | None' = None) -> 'list[Match]'",
    "pattern_text": "(self) -> 'dict[str, str]'",
@@ -44,6 +45,14 @@
    "source": "(self) -> 'str'",
    "to_data": "(self) -> 'dict'"
   },
+  "properties": []
+ },
+ "Edit": {
+  "class": [
+   "object"
+  ],
+  "init": "(number: 'int', start: 'int', end: 'int', before: 'str', after: 'str') -> None",
+  "methods": {},
   "properties": []
  },
  "Hit": {
@@ -165,11 +174,14 @@
  "WHOLE": {
   "value": "('none', 'entire', 'word')"
  },
+ "apply_edits": {
+  "function": "(text: 'str', edits: 'Iterable[Edit]') -> 'str'"
+ },
  "location_key": {
   "function": "(at: 'Location') -> 'str'"
  },
  "plan": {
-  "function": "(texts: 'Iterable[Text]', search: 'CompiledSearch', *, leave: 'Iterable[tuple[Location, int | None]]' = (), refuse: 'Refusal | None' = None, deadline: 'float | None' = None) -> 'Plan'"
+  "function": "(texts: 'Iterable[Text]', search: 'CompiledSearch', *, leave: 'Iterable[tuple[Location, int | None] | tuple[Location, int | None, str | None]]' = (), refuse: 'Refusal | None' = None, deadline: 'float | None' = None) -> 'Plan'"
  },
  "scan": {
   "function": "(texts: 'Iterable[Text]', search: 'CompiledSearch', *, deadline: 'float | None' = None, replaceable: 'Collection[str] | None' = None, max_listed: 'int' = 2000) -> 'Scan'"

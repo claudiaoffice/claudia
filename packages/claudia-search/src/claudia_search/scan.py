@@ -17,7 +17,7 @@ from collections.abc import Callable, Collection, Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from .engine import CompiledSearch, Match, SearchTimeout
+from .engine import CompiledSearch, Edit, Match, SearchTimeout, apply_edits
 
 Location = Mapping[str, Any]  # where a text is, in the app's own terms: plain values only (it goes over the wire)
 
@@ -100,12 +100,14 @@ class Scan:
 
 @dataclass(frozen=True)
 class Change:
-    """A text a replacement changes, from ``before`` to ``after``."""
+    """A text a replacement changes, from ``before`` to ``after``. ``edits`` are the stretches that change, for an app
+    that must keep the rest as it is (who wrote which part of a paragraph); they are not on the wire."""
 
     at: Location
     kind: str
     before: str
     after: str
+    edits: tuple[Edit, ...] = ()
 
     def to_data(self) -> dict:
         """As a client receives it."""
@@ -198,44 +200,70 @@ def plan(
     texts: Iterable[Text],
     search: CompiledSearch,
     *,
-    leave: Iterable[tuple[Location, int | None]] = (),
+    leave: Iterable[tuple[Location, int | None] | tuple[Location, int | None, str | None]] = (),
     refuse: Refusal | None = None,
     deadline: float | None = None,
 ) -> Plan:
     """What replacing would do in ``texts``, without doing it. ``leave`` names matches a person wants to keep, as
-    ``(at, number)``; ``number`` ``None`` keeps every match at that place. ``refuse`` is the app's say on a change
-    (``(reason, by)`` to skip it). Stops when ``deadline`` passes (``timed_out``).
+    ``(at, number)`` or ``(at, number, said)``; ``number`` ``None`` keeps every match at that place. ``said`` is what
+    that match said when the person saw it: if the text has been typed into since and the match under that number says
+    something else, the whole text is skipped (``changed``) rather than replaced on stale numbers. ``refuse`` is the
+    app's say on a change (``(reason, by)`` to skip it). Stops when ``deadline`` passes (``timed_out``).
 
     ``SearchError`` when the search has no replacement."""
-    kept = _leave(leave)
+    kept, seen = _leave(leave)
     result = Plan()
     try:
         for item in texts:
-            skip = kept.get(location_key(item.at), set())
+            key = location_key(item.at)
+            skip = kept.get(key, set())
             if skip is None:
                 continue
-            after = search.replaced(item.text, skip, deadline)
+            edits = search.edits(item.text, skip, deadline)
+            if seen.get(key) and not _as_seen(item.text, search, seen[key], deadline):
+                result.skipped.append(Skip(item.at, item.kind, "changed"))
+                continue
+            after = apply_edits(item.text, edits)
             if after == item.text:
                 continue
             refusal = refuse(item, after) if refuse is not None else None
             if refusal is not None:
                 result.skipped.append(Skip(item.at, item.kind, *refusal))
             else:
-                result.changes.append(Change(item.at, item.kind, item.text, after))
+                result.changes.append(Change(item.at, item.kind, item.text, after, tuple(edits)))
     except SearchTimeout:
         result.timed_out = True
     return result
 
 
-def _leave(items: Iterable[tuple[Location, int | None]]) -> dict[str, set[int] | None]:
+def _as_seen(text: str, search: CompiledSearch, seen: dict[int, str], deadline: float | None) -> bool:
+    """Is every match a person saw and left alone still the same one? ``seen`` is what each said, by number. A text
+    that was typed into meanwhile has other matches under those numbers; replacing the rest on their strength would
+    change what she did not mean to."""
+    found = search.matches(text, deadline)
+    return all(
+        number < len(found) and text[found[number].start : found[number].end] == said for number, said in seen.items()
+    )
+
+
+def _leave(
+    items: Iterable[tuple[Location, int | None] | tuple[Location, int | None, str | None]],
+) -> tuple[dict[str, set[int] | None], dict[str, dict[int, str]]]:
+    """``(what to leave, what the left matches said)``, both by place: the second only for the matches whose text the
+    client sent along."""
     leave: dict[str, set[int] | None] = {}
-    for at, number in items:
+    seen: dict[str, dict[int, str]] = {}
+    for item in items:
+        at, number = item[0], item[1]
+        said = item[2] if len(item) == 3 else None
         key = location_key(at)
         if number is None:
             leave[key] = None
         elif (already := leave.get(key, set())) is not None:
             leave[key] = {*already, number}
-    return leave
+            if said is not None:
+                seen.setdefault(key, {})[number] = said
+    return leave, seen
 
 
 __all__ = [

@@ -296,19 +296,25 @@ def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_th
     ]
 
 
-def test_computes_search_and_replace_is_a_page_action_with_ctrl_f(computes: manifest.Manifest) -> None:
-    """E5.15, D281: the web page owns the panel, so the entry is a page action with the shortcut the menu shows."""
-    (search,) = [a for a in computes.menu("Edit").all_actions() if a.id == "edit.search-replace"]
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_search_and_replace_is_a_page_action_with_ctrl_f_in_every_app(
+    app_name: str, request: pytest.FixtureRequest
+) -> None:
+    """E5.15, E9.28, E10.19, D281: the web page owns the panel, so the entry is a page action with the shortcut the menu
+    shows, the same in the three apps."""
+    app = request.getfixturevalue(app_name)
+    (search,) = [a for a in app.menu("Edit").all_actions() if a.id == "edit.search-replace"]
     assert search.kind is Kind.PAGE
     assert search.accelerators == ("<Primary>f",)
 
 
-def test_creates_edit_has_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:
+def test_creates_edit_has_search_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:
     """D123. The shape library itself is dynamic (one entry per document) and, like composes' style names, is
     deliberately not a static manifest entry — see this module's own docstring and ``manifest.py``'s."""
     edit = creates.menu("Edit")
     tail = [e.label for e in entries(edit)[6:]]
     assert tail == [
+        "Search & Replace…",  # E10.19, as in composes and computes
         "New Slide",
         "Plan the Time of This Slide…",
         "Edit Text",
@@ -711,8 +717,6 @@ def test_every_web_menu_entry_is_in_the_desktop_menus_too(app_name: str) -> None
     ids |= {"file.manage", "edit.paste-as"} & set(re.findall(r"id: '([a-z.-]+)',\n", shared_menus))
     if "print: " not in app_source:  # File ▸ Print… is only in the apps that hand the shared File menu a `print`
         ids.discard("file.print")
-    if "searchItem(" not in app_source:  # Edit ▸ Search & Replace… is shared, and only computes searches so far
-        ids.discard("edit.search-replace")
     native = {a.id for a in BUILDERS[app_name]().actions}
     missing = sorted(ids - native - set(WEB_ONLY_PARENTS))
     assert not missing, f"{app_name}: on the web menus but not on the desktop's: {missing}"

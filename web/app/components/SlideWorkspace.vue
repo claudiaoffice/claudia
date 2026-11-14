@@ -13,6 +13,7 @@ import {
   fileMenu,
   helpMenu,
   panelItem,
+  searchItem,
   undoRedoItems,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
@@ -20,9 +21,11 @@ import { useI18n } from '~/lib/i18n'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { galleryFor } from '~/lib/style-host'
 import { describeShortcut } from '~/lib/descriptions'
-import { chordLabel } from '~/lib/shortcuts'
+import { chordLabel, searchShortcuts } from '~/lib/shortcuts'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useGrid } from '~/lib/grid'
+import { marksFor, slideSearchHost } from '~/lib/slide-search-host'
+import { useSearch } from '~/lib/use-search'
 import { useTheme } from '~/lib/theme'
 import { onMac, presentHint, presentShortcuts } from '~/lib/present-keys'
 import { useNotesShown } from '~/lib/show-prefs'
@@ -33,6 +36,7 @@ import ImageImportDialog from './ImageImportDialog.vue'
 import PrintPreview from './PrintPreview.vue'
 import PresentShow from './PresentShow.vue'
 import SlideNotes from './SlideNotes.vue'
+import SearchPanel from './SearchPanel.vue'
 import { slideSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
 import type { Menu } from './MenuBar.vue'
@@ -90,9 +94,19 @@ const describeSelected = describeShortcut(
   () => canvas.value?.openDescribe(),
   () => state.selected !== null && !readonly.value,
 )
+// ------------------------------------------------------------------------------ Search & replace (E10.19)
+// The panel is one component for the three apps; this is the presentation's side of it: where it can look (all slides,
+// this slide), how a match is named and gone to, and the marks the slide draws for what it found in the words of its
+// objects. Ctrl+F and Ctrl+H work anywhere in the window except in a text field of its own, which keeps the browser's find.
+const search = useSearch(() => !readonly.value, () => canvas.value?.focus())
+const searchHost = slideSearchHost({ session, showNotes: () => (notesShown.value = true), t })
+const searchMarks = computed(() => (search.open.value ? marksFor(search.view.value.matches, search.view.value.current, state.activeSlide) : []))
+const openSearch = (replace = false) => search.openSearch(replace)
+
 const extraShortcuts = [
   PRINT,
   describeSelected,
+  ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value && !printing.value }),
   ...presentShortcuts(
     t,
     { start: () => present('start'), here: () => present('here'), notes: toggleNotes, time: () => void planTime() },
@@ -221,6 +235,8 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
+        searchItem(c, { open: () => openSearch() }),
+        { label: '', separator: true },
         { id: 'edit.new-slide', label: t('New Slide'), action: () => session.addSlide(), disabled: readonly.value },
         {
           id: 'edit.slide-time',
@@ -334,11 +350,20 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
     <div v-else-if="state.activeSlide" class="stage">
-      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="gridShown" @styles="dialog = 'styles'" />
+      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="gridShown" :marks="searchMarks" @styles="dialog = 'styles'" />
       <SlideNotes v-if="notesShown" ref="notes" :session="session" :hint="presentHint('time', mac)" :t="t" @present="present" />
     </div>
     <div v-else class="noslide">{{ t('This presentation has no slide.') }}</div>
     <template #overlay>
+      <SearchPanel
+        v-if="search.open.value"
+        :ref="(panel) => (search.panel.value = panel as never)"
+        :host="searchHost"
+        :replace="search.replace.value"
+        @close="search.closeSearch()"
+        @view="search.view.value = $event"
+        @help="frame?.openHelp('how-to')"
+      />
       <PresentShow v-if="presenting" :session="session" :from="presenting.from" view="audience" :t="t" @close="endShow" />
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />

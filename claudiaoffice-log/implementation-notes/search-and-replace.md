@@ -96,7 +96,7 @@ else changes in them.
 
 ## Not built yet
 
-* Hosts for composes (E9.28) and creates (E10.19): the Edit entry is only in computes for now; `searchItem` is shared.
+* ~~Hosts for composes (E9.28) and creates (E10.19)~~: built 2026-11-14, see the last section.
 * “Select the cells” of the mock-up: a selection is one rectangle, scattered matches cannot be selected.
 * The sample text for a typed pattern (D283).
 * Virtualised list: the first 200 rows and “Show more”.
@@ -129,3 +129,41 @@ Core 0.17.0, computes 0.3.1, server changelog Unreleased (version unchanged: `__
 * **Web.** `SearchHost` lives in `lib/search.ts` and has `keyOf`, `where`, `jump` taking `at`, and `scopeLabel`; the
   cell labels, `cellOf`, and the grid marks (`marksFor`, `SearchMarks`) moved to `lib/sheet-search-host.ts`.
 * **Not changed:** the panel's words still say "cell" and the kinds are computes'; they become the host's with E9.28.
+
+## 2026-11-14: composes and creates (E9.28, E10.19; D450–D452)
+
+Built on branch `search` on the three layers above, with the app-neutral parts pulled out so a fourth host would be
+small.
+
+* **Kernel.** `claudia_core.object_texts` (`object_texts`, `edit_object_text`, `ObjectText`) reads the words, shape
+  label and description of an object and turns an edit of one into the command that makes it (`SetParagraph`,
+  `DescribeObject`); `replace_spans` applies spans to a paragraph. Both apps use them, so an object's words are one
+  thing in composes and creates.
+* **Per app.** `claudia_composes.search` and `claudia_creates.search` offer their texts with places (`block_at`,
+  `object_at`, `notes_at`), `plan_replacement` and `replace_command`. Composes derives the kind of a paragraph from
+  its style chain (heading, remark, text), has the scopes section (from a heading of level 1 or 2) and range, and
+  replaces by `DeleteText` + `InsertText` per edit from the end of the paragraph, so authorship runs outside the match
+  stay and the replacer authors the new words. Creates replaces object words through `edit_object_text` and notes
+  through `SetSlideNotes` (limit `MAX_NOTES_LENGTH`, 20 000).
+* **Server.** `claudia_server.search_methods` is the generic `SearchApp` adapter and `add_search_methods`;
+  `computes_search`, `composes_search` and `creates_search` are now thin adapters with their own docstrings, places,
+  scopes and limits (`MAX_REPLACED_CELLS` / `MAX_REPLACED_TEXTS`). `leave` entries may carry `said`, the text the match
+  had when it was shown; a mismatch skips the text as `changed`. Locks: composes asks `presence.conflicts` per edit
+  span and skips the paragraph if any match is in a held zone (paragraph-level, D452); creates skips an object another
+  person has selected.
+* **Web.** `SearchHost` gained `unit`, `switches`, `scopes`, `extraParts`; the panel's switches, kind labels and
+  sentences are static `t()` calls (the catalogue extractor reads only those) and the panel says "cell" or "text" by
+  `unit`. `lib/text-search-host.ts` and `lib/slide-search-host.ts` are the hosts; `lib/use-search.ts` is the open/close
+  state the two workspaces share; `searchFind`/`searchPreview`/`searchReplace` moved from the sheet session to
+  `base-session.ts`. The editor draws `TextMark`s (band, underline, outline for the current match, `data-found`), the
+  slide draws `SlideMark`s in the words of an object by cutting them with `piecesOf`.
+* **Menus.** `searchItem` and `searchShortcuts` in the web; `_search_block(describe)` in the GTK manifest for all
+  three apps, Windows and macOS regenerated.
+
+**Numbers.** Core 0.23.0, composes 0.8.0, creates 0.11.0, search 0.2.0, server 0.34.0 (API snapshots regenerated);
+creates coverage floor 95. Web: 1188 tests.
+
+**Not built.** The assistant's `search_replace` model method for composes and creates (replace is people-only in
+composes, D452); marks inside the notes field; an e2e script per app (`web/e2e/search.cjs` covers computes only);
+a heading shown with each result in composes; per-match (instead of per-paragraph) lock skipping; the Windows and macOS
+npm tests were not run here (no `node_modules`), only their menu generator's checks.

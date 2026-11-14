@@ -2,6 +2,7 @@
 
 ``creates_methods`` is ``core_methods`` plus ``slides``, ``slide``, ``shapes``, ``styles``, ``add_slide``,
 ``set_slide_notes``, ``set_slide_time`` (speaker notes and planned times, D342, D343),
+``search_find``, ``search_preview`` and ``search_replace`` (:mod:`claudia_server.creates_search`, E10.19),
 ``add_object``, ``add_image``, ``move_object``, ``resize_object``, ``set_text``, ``set_snap`` and
 ``remove_object``. Positions and sizes are whole units of the slide space (1600 by 900). A shape is chosen by its
 id from the server's shape library;
@@ -62,6 +63,7 @@ from claudia_creates import (
     SlideModel,
 )
 
+from .creates_search import add_search_methods
 from .i18n import msg
 from .images import image_bytes, picture_words
 from .office_export import document_info, export_with_original, office_export
@@ -252,11 +254,12 @@ def _add_plan_methods(table: MethodTable) -> None:
 def _add_shared_methods(table: MethodTable) -> None:
     """What presentations answer the way the other apps do: ``styles``, ``palette``, ``change_style``,
     ``rename_style``, ``check_css`` and ``set_object_style`` (E1.10, D200), the objects (E10.16), the notes and
-    planned times (D342, D343), and printing and the language (D917)."""
+    planned times (D342, D343), search and replace (E10.19), and printing and the language (D917)."""
     add_style_methods(table)
     _add_object_methods(table)
     _add_print_methods(table)
     _add_plan_methods(table)
+    add_search_methods(table)
 
 
 def creates_methods_with(library: ShapeLibrary) -> MethodTable:

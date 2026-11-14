@@ -165,7 +165,7 @@ msgstr "8.000 in 48 Raten zu je 200 zurückgezahlt"
 msgid "9 per page"
 msgstr "9 pro Seite"
 
-#: web/app/components/TextWorkspace.vue:315
+#: web/app/components/TextWorkspace.vue:338
 msgid "@ai review this text"
 msgstr "@ai diesen Text prüfen"
 
@@ -185,7 +185,7 @@ msgstr "Eine Klammer wird nie geschlossen."
 msgid "A change here changes every use of “{name}”"
 msgstr "Eine Änderung hier ändert jede Verwendung von „{name}“"
 
-#: web/app/lib/search.ts:463
+#: web/app/lib/search.ts:496
 msgid "A closing bracket has no opening one."
 msgstr "Eine schließende Klammer hat keine öffnende."
 
@@ -265,7 +265,7 @@ msgstr "Ein Wiederherstellungsschlüssel, im Alltag nicht nötig – Administrat
 msgid "A request beyond this number is refused before anything is written."
 msgstr "Eine Anfrage über dieser Zahl wird abgelehnt, bevor etwas geschrieben wird."
 
-#: web/app/lib/search.ts:469
+#: web/app/lib/search.ts:502
 msgid "A square bracket is never closed."
 msgstr "Eine eckige Klammer wird nie geschlossen."
 
@@ -313,7 +313,7 @@ msgstr "Über Claudia Creates"
 msgid "About claudia"
 msgstr "Über Claudia"
 
-#: web/app/components/SearchPanel.vue:385
+#: web/app/components/SearchPanel.vue:451
 msgid "About searching and patterns"
 msgstr "Über das Suchen und Muster"
 
@@ -357,7 +357,7 @@ msgstr "Blatt hinzufügen"
 msgid "Add a chart of the selected cells"
 msgstr "Ein Diagramm der ausgewählten Zellen einfügen"
 
-#: web/app/components/SearchPanel.vue:463 web/app/components/SearchPanel.vue:464
+#: web/app/components/SearchPanel.vue:529 web/app/components/SearchPanel.vue:530
 msgid "Add a condition"
 msgstr "Bedingung hinzufügen"
 
@@ -369,7 +369,7 @@ msgstr "Dem Dokument ein neues Blatt hinzufügen"
 msgid "Add a new slide to the presentation"
 msgstr "Der Präsentation eine neue Folie hinzufügen"
 
-#: web/app/components/SearchPanel.vue:437 web/app/components/SearchPanel.vue:438
+#: web/app/components/SearchPanel.vue:503 web/app/components/SearchPanel.vue:504
 msgid "Add a part"
 msgstr "Teil hinzufügen"
 
@@ -425,11 +425,11 @@ msgstr "Alle Kombinationen"
 msgid "All four sides"
 msgstr "Alle vier Seiten"
 
-#: web/app/lib/sheet-search-host.ts:45
+#: web/app/lib/sheet-search-host.ts:51
 msgid "All sheets"
 msgstr "Alle Tabellenblätter"
 
-#: web/app/components/PresentShow.vue:225 web/app/components/PresentShow.vue:227
+#: web/app/components/PresentShow.vue:225 web/app/components/PresentShow.vue:227 web/app/lib/slide-search-host.ts:67
 msgid "All slides"
 msgstr "Alle Folien"
 
@@ -485,7 +485,7 @@ msgstr "Format anwenden"
 msgid "Apricot"
 msgstr "Aprikose"
 
-#: web/app/components/SlideWorkspace.vue:291
+#: web/app/components/SlideWorkspace.vue:307
 msgid "Arrows"
 msgstr "Pfeiltasten"
 
@@ -513,7 +513,7 @@ msgstr "Neuen Eigentümer zuweisen…"
 msgid "Assign a new owner"
 msgstr "Neuen Eigentümer zuweisen"
 
-#: web/app/components/SearchPanel.vue:425
+#: web/app/components/SearchPanel.vue:491
 msgid "At least"
 msgstr "Mindestens"
 
@@ -521,7 +521,7 @@ msgstr "Mindestens"
 msgid "At least 8 characters, with a capital letter, a small letter and a digit."
 msgstr "Mindestens 8 Zeichen, mit einem Groß- und einem Kleinbuchstaben und einer Ziffer."
 
-#: web/app/components/SearchPanel.vue:426
+#: web/app/components/SearchPanel.vue:492
 msgid "At most"
 msgstr "Höchstens"
 
@@ -549,7 +549,7 @@ msgstr "Zurück"
 msgid "Back to results"
 msgstr "Zurück zu den Ergebnissen"
 
-#: web/app/components/SearchPanel.vue:489
+#: web/app/components/SearchPanel.vue:555
 msgid "Back to the builder"
 msgstr "Zurück zum Baukasten"
 
@@ -561,7 +561,7 @@ msgstr "Zurück zu den Dokumenten"
 msgid "Back to the list of documents"
 msgstr "Zurück zur Dokumentliste"
 
-#: web/app/components/SearchPanel.vue:489
+#: web/app/components/SearchPanel.vue:555
 msgid "Back to the simple field"
 msgstr "Zurück zum einfachen Feld"
 
@@ -573,7 +573,7 @@ msgstr "Zurück zu {place} (Esc)"
 msgid "Background"
 msgstr "Hintergrund"
 
-#: web/app/components/TextWorkspace.vue:312
+#: web/app/components/TextWorkspace.vue:335
 msgid "Backspace / Delete"
 msgstr "Rücktaste / Entf"
 
@@ -625,11 +625,11 @@ msgstr "Box {box} · Text {words} – die beiden Bereiche unterscheiden sich jet
 msgid "Break long words at the end of a line where the text's language allows (in the pages and the PDF)"
 msgstr "Lange Wörter am Zeilenende trennen, wo die Sprache des Textes es erlaubt (in den Seiten und im PDF)"
 
-#: web/app/components/SearchPanel.vue:518
+#: web/app/components/SearchPanel.vue:582
 msgid "Build a pattern…"
 msgstr "Muster bauen…"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:158 web/app/lib/format-menu.ts:72
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:171 web/app/lib/format-menu.ts:72
 msgid "Bulleted List"
 msgstr "Aufzählung"
 
@@ -825,11 +825,11 @@ msgstr "Zellformat zurücksetzen"
 msgid "Clear the selected cells"
 msgstr "Die ausgewählten Zellen leeren"
 
-#: web/app/components/SlideWorkspace.vue:288
+#: web/app/components/SlideWorkspace.vue:304
 msgid "Click"
 msgstr "Klick"
 
-#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:23 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/OutcomePopover.vue:156 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:377 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
+#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:23 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/OutcomePopover.vue:156 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:443 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
 msgid "Close"
 msgstr "Schließen"
 
@@ -849,7 +849,7 @@ msgstr "Claudia Creates schließen"
 msgid "Close Document"
 msgstr "Dokument schließen"
 
-#: web/app/components/SearchPanel.vue:541
+#: web/app/components/SearchPanel.vue:605
 msgid "Close Replace"
 msgstr "Ersetzen schließen"
 
@@ -909,7 +909,7 @@ msgstr "Spalten"
 msgid "Common times"
 msgstr "Übliche Zeiten"
 
-#: web/app/components/SearchPanel.vue:447
+#: web/app/components/SearchPanel.vue:513
 msgid "Condition"
 msgstr "Bedingung"
 
@@ -1025,7 +1025,7 @@ msgstr "Dokument erstellen"
 msgid "Ctrl"
 msgstr "Strg"
 
-#: web/app/components/TextWorkspace.vue:313
+#: web/app/components/TextWorkspace.vue:336
 msgid "Ctrl + Backspace / Delete"
 msgstr "Strg + Rücktaste / Entf"
 
@@ -1165,6 +1165,18 @@ msgstr "Beschreiben…"
 msgid "Description (read aloud to someone who cannot see it)"
 msgstr "Beschreibung (wird jemandem vorgelesen, der das Bild nicht sehen kann)"
 
+#: web/app/lib/text-search-host.ts:94
+msgid "Description of an object in paragraph {n}"
+msgstr "Beschreibung eines Objekts in Absatz {n}"
+
+#: web/app/lib/slide-search-host.ts:76
+msgid "Description of an object on slide {n}"
+msgstr "Beschreibung eines Objekts auf Folie {n}"
+
+#: web/app/components/SearchPanel.vue:321
+msgid "Descriptions"
+msgstr "Beschreibungen"
+
 #: web/app/components/AdminTypesetting.vue:61
 msgid "Detected on this machine"
 msgstr "Auf diesem Rechner erkannt"
@@ -1193,7 +1205,7 @@ msgstr "Verwerfen"
 msgid "Distribution"
 msgstr "Verteilung"
 
-#: web/app/components/SearchPanel.vue:430
+#: web/app/components/SearchPanel.vue:496
 msgid "Do not keep this part"
 msgstr "Diesen Teil nicht behalten"
 
@@ -1221,11 +1233,11 @@ msgstr "Fertig"
 msgid "Dot plot of {n} outcomes, from {low} to {high}, median {median}"
 msgstr "Punktdiagramm von {n} Ergebnissen, von {low} bis {high}, Median {median}"
 
-#: web/app/components/SlideCanvas.vue:438
+#: web/app/components/SlideCanvas.vue:441
 msgid "Double-click to type"
 msgstr "Doppelklick zum Schreiben"
 
-#: web/app/components/SlideWorkspace.vue:290
+#: web/app/components/SlideWorkspace.vue:306
 msgid "Double-click, Enter"
 msgstr "Doppelklick, Eingabe"
 
@@ -1241,7 +1253,7 @@ msgstr "PDF herunterladen"
 msgid "Download the document to this computer"
 msgstr "Das Dokument auf diesen Computer herunterladen"
 
-#: web/app/components/SlideWorkspace.vue:289
+#: web/app/components/SlideWorkspace.vue:305
 msgid "Drag"
 msgstr "Ziehen"
 
@@ -1277,7 +1289,7 @@ msgstr "Gut erkennbar"
 msgid "Edit"
 msgstr "Bearbeiten"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:233 web/app/lib/object-menu.ts:44
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:249 web/app/lib/object-menu.ts:44
 msgid "Edit Text"
 msgstr "Text bearbeiten"
 
@@ -1309,7 +1321,7 @@ msgstr "Präsentation beenden"
 msgid "End the show (Esc)"
 msgstr "Präsentation beenden (Esc)"
 
-#: web/app/components/TextWorkspace.vue:310 web/app/lib/object-menu.ts:44
+#: web/app/components/TextWorkspace.vue:333 web/app/lib/object-menu.ts:44
 msgid "Enter"
 msgstr "Eingabe"
 
@@ -1317,7 +1329,7 @@ msgstr "Eingabe"
 msgid "Enter / Tab / Esc"
 msgstr "Eingabe / Tab / Esc"
 
-#: web/app/components/SearchPanel.vue:591
+#: web/app/components/SearchPanel.vue:655
 msgid "Enter: next match · Shift+Enter: previous · Esc: close"
 msgstr "Eingabe: nächster Treffer · Umschalt+Eingabe: vorheriger · Esc: schließen"
 
@@ -1337,7 +1349,7 @@ msgstr "Jedes Ergebnis der Alternativen, von denen diese Zelle abhängt"
 msgid "Every use of “{name}”"
 msgstr "Jede Verwendung von „{name}“"
 
-#: web/app/lib/base-session.ts:257
+#: web/app/lib/base-session.ts:258
 msgid "Everybody agreed: now at {label}."
 msgstr "Alle waren einverstanden: jetzt bei {label}."
 
@@ -1409,7 +1421,7 @@ msgstr "Geben Sie Ihren Namen und Ihr Passwort an."
 msgid "Finance"
 msgstr "Finanzen"
 
-#: web/app/components/SearchPanel.vue:398 web/app/components/SearchPanel.vue:399 web/app/components/SearchPanel.vue:413 web/app/lib/search.ts:453
+#: web/app/components/SearchPanel.vue:464 web/app/components/SearchPanel.vue:465 web/app/components/SearchPanel.vue:479 web/app/lib/search.ts:486
 msgid "Find"
 msgstr "Suchen"
 
@@ -1421,13 +1433,25 @@ msgstr "Einen Namen oder Zellen suchen"
 msgid "Find text, formulas and values, and replace them"
 msgstr "Texte, Formeln und Werte suchen und ersetzen"
 
-#: web/app/components/SearchPanel.vue:476
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Find words, headings, remarks and what is said in objects, and replace them"
+msgstr "Wörter, Überschriften, Bemerkungen und Text in Objekten finden und ersetzen"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Find words, labels, speaker notes and descriptions, and replace them"
+msgstr "Wörter, Beschriftungen, Referentennotizen und Beschreibungen finden und ersetzen"
+
+#: web/app/components/SearchPanel.vue:542
 msgid "Find — pattern"
 msgstr "Suchen – Muster"
 
-#: web/app/lib/search.ts:282
+#: web/app/lib/search.ts:290
 msgid "Finds the cells that {conditions}."
 msgstr "Findet die Zellen, die {conditions}."
+
+#: web/app/lib/search.ts:290
+msgid "Finds the texts that {conditions}."
+msgstr "Findet die Texte, die {conditions}."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Finds the last value in an ascending list that is not above the value looked up, and gives the value at the same place in the result list (or, with one table, in its last column or row)."
@@ -1437,11 +1461,15 @@ msgstr "Findet den letzten Wert in einer aufsteigenden Liste, der nicht über de
 msgid "Finds {parts} in cells that {conditions}."
 msgstr "Findet {parts} in Zellen, die {conditions}."
 
-#: web/app/lib/search.ts:281
+#: web/app/lib/search.ts:288
+msgid "Finds {parts} in texts that {conditions}."
+msgstr "Findet {parts} in Texten, die {conditions}."
+
+#: web/app/lib/search.ts:289
 msgid "Finds {parts}."
 msgstr "Findet {parts}."
 
-#: web/app/components/TextWorkspace.vue:350
+#: web/app/components/TextWorkspace.vue:382
 msgid "First number"
 msgstr "Erste Zahl"
 
@@ -1465,7 +1493,7 @@ msgstr "Auf Seitenbreite"
 msgid "Fit width"
 msgstr "Breite einpassen"
 
-#: web/app/components/StyleBar.vue:112 web/app/components/TextWorkspace.vue:264
+#: web/app/components/StyleBar.vue:112 web/app/components/TextWorkspace.vue:287
 msgid "Flow"
 msgstr "Fließtext"
 
@@ -1541,7 +1569,7 @@ msgstr "Format"
 msgid "Formula"
 msgstr "Formel"
 
-#: web/app/components/SearchPanel.vue:503
+#: web/app/components/SearchPanel.vue:311
 msgid "Formulas"
 msgstr "Formeln"
 
@@ -1573,7 +1601,7 @@ msgstr "Geben Sie einer Kollegin oder einem Kollegen einen Namen und ein Passwor
 msgid "Go"
 msgstr "Los"
 
-#: web/app/components/SearchPanel.vue:492
+#: web/app/components/SearchPanel.vue:558
 msgid "Go back"
 msgstr "Zurückgehen"
 
@@ -1657,6 +1685,10 @@ msgstr "Handzettel"
 msgid "Hard to read"
 msgstr "Schwer lesbar"
 
+#: web/app/components/SearchPanel.vue:315
+msgid "Headings"
+msgstr "Überschriften"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:163 web/app/lib/document-menus.ts:205
 msgid "Help"
 msgstr "Hilfe"
@@ -1709,7 +1741,7 @@ msgstr "Wie Formeln, Hilfeseiten und Exporte mit LaTeX gesetzt werden, für jede
 msgid "How long you want to spend on this slide; the bar below the slides adds the times up"
 msgstr "Wie lange Sie bei dieser Folie bleiben möchten; die Leiste unter den Folien zählt die Zeiten zusammen"
 
-#: web/app/components/SearchPanel.vue:422
+#: web/app/components/SearchPanel.vue:488
 msgid "How many"
 msgstr "Wie oft"
 
@@ -1757,7 +1789,7 @@ msgstr "Wie viele Male"
 msgid "How strong"
 msgstr "Wie stark"
 
-#: web/app/components/SearchPanel.vue:455
+#: web/app/components/SearchPanel.vue:521
 msgid "How the conditions go together"
 msgstr "Wie die Bedingungen zusammenhängen"
 
@@ -1853,7 +1885,7 @@ msgstr "Eingabe der Berechnung"
 msgid "Input {n}"
 msgstr "Eingabe {n}"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:101 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/SheetImageImportDialog.vue:98 web/app/components/TextWorkspace.vue:214
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:101 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/SheetImageImportDialog.vue:98 web/app/components/TextWorkspace.vue:237
 msgid "Insert"
 msgstr "Einfügen"
 
@@ -1937,7 +1969,7 @@ msgstr "Installation"
 msgid "Iris"
 msgstr "Iris"
 
-#: web/app/lib/search.ts:476
+#: web/app/lib/search.ts:509
 msgid "It is not run, so nothing is found or replaced."
 msgstr "Es wird nicht ausgeführt, daher wird nichts gefunden oder ersetzt."
 
@@ -1961,11 +1993,11 @@ msgstr "Verbindet Werte und Bereiche mit einem Trennzeichen dazwischen; leere we
 msgid "Justify"
 msgstr "Blocksatz"
 
-#: web/app/components/NamesDialog.vue:85 web/app/components/SearchPanel.vue:432
+#: web/app/components/NamesDialog.vue:85 web/app/components/SearchPanel.vue:498
 msgid "Keep"
 msgstr "Behalten"
 
-#: web/app/components/SearchPanel.vue:493
+#: web/app/components/SearchPanel.vue:559
 msgid "Keep the pattern"
 msgstr "Muster beibehalten"
 
@@ -1973,7 +2005,7 @@ msgstr "Muster beibehalten"
 msgid "Keep the {format} file inside the document: Download then gives back this file with only your changes."
 msgstr "Die {format}-Datei im Dokument behalten: Herunterladen gibt dann genau diese Datei zurück, nur mit Ihren Änderungen."
 
-#: web/app/components/SearchPanel.vue:432
+#: web/app/components/SearchPanel.vue:498
 msgid "Keep this part, to use it in the replacement"
 msgstr "Diesen Teil behalten, um ihn im Ersatztext zu verwenden"
 
@@ -1981,11 +2013,11 @@ msgstr "Diesen Teil behalten, um ihn im Ersatztext zu verwenden"
 msgid "Keep this server local for now"
 msgstr "Diesen Server vorerst lokal halten"
 
-#: web/app/components/SearchPanel.vue:429
+#: web/app/components/SearchPanel.vue:495
 msgid "Kept as"
 msgstr "Behalten als"
 
-#: web/app/components/SearchPanel.vue:537
+#: web/app/components/SearchPanel.vue:601
 msgid "Kept parts, click to insert:"
 msgstr "Behaltene Teile, zum Einfügen anklicken:"
 
@@ -1993,7 +2025,7 @@ msgstr "Behaltene Teile, zum Einfügen anklicken:"
 msgid "Kind of the new document"
 msgstr "Art des neuen Dokuments"
 
-#: web/app/components/SlideWorkspace.vue:332 web/app/lib/object-style-host.ts:48
+#: web/app/components/SlideWorkspace.vue:348 web/app/lib/object-style-host.ts:48
 msgid "Label"
 msgstr "Beschriftung"
 
@@ -2041,7 +2073,7 @@ msgstr "Dieses Dokument verlassen"
 msgid "Left"
 msgstr "Links"
 
-#: web/app/components/SearchPanel.vue:577
+#: web/app/components/SearchPanel.vue:641
 msgid "Left out ({count})"
 msgstr "Ausgelassen ({count})"
 
@@ -2097,11 +2129,11 @@ msgstr "Lognormal"
 msgid "Look"
 msgstr "Aussehen"
 
-#: web/app/lib/search.ts:473
+#: web/app/lib/search.ts:506
 msgid "Look at the backslash at character {position}. Nothing is replaced."
 msgstr "Sehen Sie sich den Rückwärtsschrägstrich bei Zeichen {position} an. Es wird nichts ersetzt."
 
-#: web/app/components/SearchPanel.vue:500 web/app/components/SearchPanel.vue:501
+#: web/app/components/SearchPanel.vue:566 web/app/components/SearchPanel.vue:567
 msgid "Look in"
 msgstr "Suchen in"
 
@@ -2109,11 +2141,11 @@ msgstr "Suchen in"
 msgid "Look…"
 msgstr "Aussehen…"
 
-#: web/app/components/SearchPanel.vue:488
+#: web/app/components/SearchPanel.vue:554
 msgid "Made by the builder. If you edit it here, the builder can no longer show it."
 msgstr "Vom Baukasten erstellt. Wenn Sie es hier ändern, kann der Baukasten es nicht mehr anzeigen."
 
-#: web/app/components/SearchPanel.vue:488
+#: web/app/components/SearchPanel.vue:554
 msgid "Made from what you typed. Your own pattern replaces it."
 msgstr "Aus Ihrer Eingabe erstellt. Ihr eigenes Muster ersetzt sie."
 
@@ -2157,7 +2189,7 @@ msgstr "{server} verwalten…"
 msgid "Margins"
 msgstr "Ränder"
 
-#: web/app/components/TextWorkspace.vue:112
+#: web/app/components/TextWorkspace.vue:116
 msgid "Markdown (.md)"
 msgstr "Markdown (.md)"
 
@@ -2165,11 +2197,11 @@ msgstr "Markdown (.md)"
 msgid "Markdown: **bold**, *italic*, - lists. Shown in the presenter view, never on the slide."
 msgstr "Markdown: **fett**, *kursiv*, - Listen. Nur in der Referentenansicht zu sehen, nie auf der Folie."
 
-#: web/app/components/SearchPanel.vue:513
+#: web/app/components/SearchPanel.vue:577
 msgid "Match case"
 msgstr "Groß-/Kleinschreibung beachten"
 
-#: web/app/components/SearchPanel.vue:547
+#: web/app/components/SearchPanel.vue:611
 msgid "Matches"
 msgstr "Treffer"
 
@@ -2205,7 +2237,7 @@ msgstr "Dunst"
 msgid "Model folder"
 msgstr "Modellordner"
 
-#: web/app/components/SearchPanel.vue:376 web/app/components/SearchPanel.vue:380
+#: web/app/components/SearchPanel.vue:442 web/app/components/SearchPanel.vue:446
 msgid "More"
 msgstr "Mehr"
 
@@ -2301,7 +2333,7 @@ msgstr "Neu"
 msgid "New Sheet…"
 msgstr "Neues Blatt…"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:224 web/app/components/SlideWorkspace.vue:361
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:240 web/app/components/SlideWorkspace.vue:386
 msgid "New Slide"
 msgstr "Neue Folie"
 
@@ -2345,7 +2377,7 @@ msgstr "Nächstes Objekt"
 msgid "Next Part of the Window"
 msgstr "Nächster Teil des Fensters"
 
-#: web/app/components/SearchPanel.vue:407
+#: web/app/components/SearchPanel.vue:473
 msgid "Next match"
 msgstr "Nächster Treffer"
 
@@ -2361,7 +2393,7 @@ msgstr "Keine Funktion passt zu „{query}“."
 msgid "No guide matches \"{query}\"."
 msgstr "Keine Anleitung passt zu „{query}“."
 
-#: web/app/components/SearchPanel.vue:94
+#: web/app/components/SearchPanel.vue:100
 msgid "No matches"
 msgstr "Keine Treffer"
 
@@ -2397,7 +2429,7 @@ msgstr "Keine Zeit geplant"
 msgid "Nobody edits this document yet. Make somebody an editor first (File ▸ Manage ▸ Share…)."
 msgstr "Noch niemand bearbeitet dieses Dokument. Machen Sie zuerst jemanden zum Bearbeiter (Datei ▸ Verwalten ▸ Teilen…)."
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:156 web/app/components/TextWorkspace.vue:218
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:169 web/app/components/TextWorkspace.vue:241
 msgid "Non-breaking Hyphen"
 msgstr "Geschützter Bindestrich"
 
@@ -2413,7 +2445,7 @@ msgstr "Normal"
 msgid "Not available yet"
 msgstr "Noch nicht verfügbar"
 
-#: web/app/lib/base-session.ts:439
+#: web/app/lib/base-session.ts:440
 msgid "Not connected to the server."
 msgstr "Nicht mit dem Server verbunden."
 
@@ -2445,7 +2477,7 @@ msgstr "Nicht festgelegt"
 msgid "Notes"
 msgstr "Notizen"
 
-#: web/app/lib/base-session.ts:462
+#: web/app/lib/base-session.ts:490
 msgid "Nothing has changed since the last checkpoint."
 msgstr "Seit dem letzten Prüfpunkt hat sich nichts geändert."
 
@@ -2457,7 +2489,7 @@ msgstr "Noch nichts in dieser Sammlung. Fügen Sie ein Dokument mit dem Lesezeic
 msgid "Nothing is called like that."
 msgstr "So heißt nichts."
 
-#: web/app/lib/search.ts:461 web/app/lib/search.ts:464 web/app/lib/search.ts:467 web/app/lib/search.ts:470 web/app/lib/search.ts:473 web/app/lib/search.ts:479
+#: web/app/lib/search.ts:494 web/app/lib/search.ts:497 web/app/lib/search.ts:500 web/app/lib/search.ts:503 web/app/lib/search.ts:506 web/app/lib/search.ts:512
 msgid "Nothing is replaced."
 msgstr "Es wird nichts ersetzt."
 
@@ -2473,7 +2505,7 @@ msgstr "Nichts zu wiederholen"
 msgid "Nothing to undo"
 msgstr "Nichts rückgängig zu machen"
 
-#: web/app/components/SearchPanel.vue:304
+#: web/app/components/SearchPanel.vue:362
 msgid "Nothing was replaced."
 msgstr "Es wurde nichts ersetzt."
 
@@ -2493,7 +2525,7 @@ msgstr "Noch nichts. Fangen Sie an zu schreiben."
 msgid "Nothing yet. Type into a cell."
 msgstr "Noch nichts. Tippen Sie etwas in eine Zelle."
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:159 web/app/lib/format-menu.ts:73
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:172 web/app/lib/format-menu.ts:73
 msgid "Numbered List"
 msgstr "Nummerierung"
 
@@ -2505,9 +2537,21 @@ msgstr "Nummerierung"
 msgid "Numbered list (Ctrl+Shift+7)"
 msgstr "Nummerierung (Strg+Umschalt+7)"
 
-#: web/app/components/ContextMenu.vue:22 web/app/components/ContextMenu.vue:23 web/app/components/SlideCanvas.vue:480
+#: web/app/lib/text-search-host.ts:94
+msgid "Object in paragraph {n}"
+msgstr "Objekt in Absatz {n}"
+
+#: web/app/components/ContextMenu.vue:22 web/app/components/ContextMenu.vue:23 web/app/components/SlideCanvas.vue:483
 msgid "Object menu"
 msgstr "Objektmenü"
+
+#: web/app/lib/slide-search-host.ts:76
+msgid "Object on slide {n}"
+msgstr "Objekt auf Folie {n}"
+
+#: web/app/components/SearchPanel.vue:319
+msgid "Objects"
+msgstr "Objekte"
 
 #: web/app/components/SheetChartInsertDialog.vue:174
 msgid "Off reads every row as data — no row is skipped. On fills the axis titles below, for a field still blank."
@@ -2529,25 +2573,33 @@ msgstr "Auf diesem Server"
 msgid "On {place} · {count}"
 msgstr "Auf {place} · {count}"
 
-#: web/app/components/SearchPanel.vue:95
+#: web/app/components/SearchPanel.vue:101
 msgid "One match"
 msgstr "Ein Treffer"
 
-#: web/app/components/SearchPanel.vue:588
+#: web/app/components/SearchPanel.vue:652
 msgid "One step in the history. Undo brings it back."
 msgstr "Ein Schritt im Verlauf. Mit „Rückgängig“ ist alles wieder da."
 
-#: web/app/lib/search.ts:453
+#: web/app/lib/search.ts:486
 msgid "Only in cells matching"
 msgstr "Nur in Zellen, die passen zu"
 
-#: web/app/components/SearchPanel.vue:478
+#: web/app/components/SearchPanel.vue:544
 msgid "Only in cells matching (optional)"
 msgstr "Nur in Zellen, die passen zu (optional)"
 
-#: web/app/components/SearchPanel.vue:445
+#: web/app/components/SearchPanel.vue:511
 msgid "Only in cells that…"
 msgstr "Nur in Zellen, die…"
+
+#: web/app/components/SearchPanel.vue:544
+msgid "Only in texts matching (optional)"
+msgstr "Nur in Texten, die passen zu (optional)"
+
+#: web/app/components/SearchPanel.vue:511
+msgid "Only in texts that…"
+msgstr "Nur in Texten, die…"
 
 #: web/app/components/NameDefinePopover.vue:65
 msgid "Only on {sheet}"
@@ -2561,7 +2613,7 @@ msgstr "Nur eine Spalte – dort ist kein Platz für eine Kopfzeile; eine Beschr
 msgid "Only one row — no room for a header there either."
 msgstr "Nur eine Zeile – auch dort ist kein Platz für eine Kopfzeile."
 
-#: web/app/components/SearchPanel.vue:352
+#: web/app/components/SearchPanel.vue:413
 msgid "Only the first {count} matches are listed."
 msgstr "Nur die ersten {count} Treffer sind aufgelistet."
 
@@ -2569,11 +2621,15 @@ msgstr "Nur die ersten {count} Treffer sind aufgelistet."
 msgid "Only the {unnamed} waiting for a name"
 msgstr "Nur die {unnamed}, die auf einen Namen warten"
 
-#: web/app/lib/search.ts:283
+#: web/app/lib/search.ts:291
 msgid "Only when it is the whole cell."
 msgstr "Nur, wenn es die ganze Zelle ist."
 
-#: web/app/lib/search.ts:284
+#: web/app/lib/search.ts:291
+msgid "Only when it is the whole text."
+msgstr "Nur, wenn es der ganze Text ist."
+
+#: web/app/lib/search.ts:292
 msgid "Only whole words."
 msgstr "Nur ganze Wörter."
 
@@ -2613,7 +2669,7 @@ msgstr "Öffnen Sie einen Text oder beginnen Sie einen neuen. Alle, die Sie einl
 msgid "Open the chat with an empty prompt"
 msgstr "Den Chat mit einer leeren Eingabe öffnen"
 
-#: web/app/components/TextWorkspace.vue:341
+#: web/app/components/TextWorkspace.vue:364
 msgid "Open the first suggestion"
 msgstr "Ersten Vorschlag öffnen"
 
@@ -2621,7 +2677,7 @@ msgstr "Ersten Vorschlag öffnen"
 msgid "Open the one here"
 msgstr "Das hiesige öffnen"
 
-#: web/app/components/SlideWorkspace.vue:57
+#: web/app/components/SlideWorkspace.vue:61
 msgid "OpenDocument presentation (.odp)"
 msgstr "OpenDocument-Präsentation (.odp)"
 
@@ -2629,7 +2685,7 @@ msgstr "OpenDocument-Präsentation (.odp)"
 msgid "OpenDocument spreadsheet (.ods)"
 msgstr "OpenDocument-Tabelle (.ods)"
 
-#: web/app/components/TextWorkspace.vue:114
+#: web/app/components/TextWorkspace.vue:118
 msgid "OpenDocument text (.odt)"
 msgstr "OpenDocument-Text (.odt)"
 
@@ -2705,7 +2761,7 @@ msgstr "Tempo"
 msgid "Padding"
 msgstr "Innenabstand"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:113 web/app/components/TextWorkspace.vue:266
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:113 web/app/components/TextWorkspace.vue:289
 msgid "Page"
 msgstr "Seite"
 
@@ -2728,6 +2784,10 @@ msgstr "Papier"
 #: web/app/components/StyleSpec.vue:174 web/app/components/StyleSpec.vue:175 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
 msgid "Paragraph"
 msgstr "Absatz"
+
+#: web/app/lib/text-search-host.ts:93
+msgid "Paragraph {n}"
+msgstr "Absatz {n}"
 
 #: web/app/components/ResultNote.vue:21
 msgid "Part of the result of the query in {cell}"
@@ -2753,7 +2813,7 @@ msgstr "Einfügen"
 msgid "Paste As"
 msgstr "Einfügen als"
 
-#: web/app/components/SearchPanel.vue:484
+#: web/app/components/SearchPanel.vue:550
 msgid "Pattern syntax: Python re"
 msgstr "Muster-Syntax: Python „re“"
 
@@ -2781,7 +2841,7 @@ msgstr "Einfache Daten, nichts zu sagen"
 msgid "Plan a time for this slide"
 msgstr "Zeit für diese Folie planen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:227 web/app/lib/present-keys.ts:53
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:243 web/app/lib/present-keys.ts:53
 msgid "Plan the Time of This Slide…"
 msgstr "Zeit dieser Folie planen…"
 
@@ -2801,7 +2861,7 @@ msgstr "Geplante Zeit für diese Folie: {time}"
 msgid "Planned time, for example 2, 2:30 or 90s"
 msgstr "Geplante Zeit, zum Beispiel 2, 2:30 oder 90s"
 
-#: web/app/components/SlideWorkspace.vue:366
+#: web/app/components/SlideWorkspace.vue:391
 msgid "Planned {time}"
 msgstr "Geplant {time}"
 
@@ -2817,7 +2877,7 @@ msgstr "Poisson"
 msgid "Portrait"
 msgstr "Hochformat"
 
-#: web/app/components/SlideWorkspace.vue:56
+#: web/app/components/SlideWorkspace.vue:60
 msgid "PowerPoint presentation (.pptx)"
 msgstr "PowerPoint-Präsentation (.pptx)"
 
@@ -2825,15 +2885,15 @@ msgstr "PowerPoint-Präsentation (.pptx)"
 msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
 msgstr "PowerPoint-, OpenDocument- oder Claudia-Folien, oder eine Datei irgendwo auf diese Seite ziehen."
 
-#: web/app/components/SlideWorkspace.vue:320
+#: web/app/components/SlideWorkspace.vue:336
 msgid "Present"
 msgstr "Präsentieren"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:268 web/app/lib/present-keys.ts:51
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:284 web/app/lib/present-keys.ts:51
 msgid "Present from This Slide"
 msgstr "Ab dieser Folie präsentieren"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:267 web/app/lib/present-keys.ts:50
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:283 web/app/lib/present-keys.ts:50
 msgid "Present from the First Slide"
 msgstr "Ab der ersten Folie präsentieren"
 
@@ -2861,7 +2921,7 @@ msgstr "Vorheriges Objekt"
 msgid "Previous Part of the Window"
 msgstr "Vorheriger Teil des Fensters"
 
-#: web/app/components/SearchPanel.vue:406
+#: web/app/components/SearchPanel.vue:472
 msgid "Previous match"
 msgstr "Vorheriger Treffer"
 
@@ -2985,7 +3045,11 @@ msgstr "Ablehnen"
 msgid "Release from grid"
 msgstr "Aus Raster lösen"
 
-#: web/app/components/AdminAccessDocuments.vue:211 web/app/components/SearchPanel.vue:531
+#: web/app/components/SearchPanel.vue:317
+msgid "Remarks"
+msgstr "Bemerkungen"
+
+#: web/app/components/AdminAccessDocuments.vue:211 web/app/components/SearchPanel.vue:595
 msgid "Remove"
 msgstr "Entfernen"
 
@@ -2993,7 +3057,7 @@ msgstr "Entfernen"
 msgid "Remove collection {name}"
 msgstr "Sammlung {name} entfernen"
 
-#: web/app/components/SearchPanel.vue:451
+#: web/app/components/SearchPanel.vue:517
 msgid "Remove this condition"
 msgstr "Diese Bedingung entfernen"
 
@@ -3001,7 +3065,7 @@ msgstr "Diese Bedingung entfernen"
 msgid "Remove this document from the server for good"
 msgstr "Dieses Dokument endgültig vom Server entfernen"
 
-#: web/app/components/SearchPanel.vue:433
+#: web/app/components/SearchPanel.vue:499
 msgid "Remove this part"
 msgstr "Diesen Teil entfernen"
 
@@ -3029,7 +3093,7 @@ msgstr "{server} umbenennen"
 msgid "Replace"
 msgstr "Ersetzen"
 
-#: web/app/components/SearchPanel.vue:587
+#: web/app/components/SearchPanel.vue:651
 msgid "Replace all {count}"
 msgstr "Alle {count} ersetzen"
 
@@ -3037,29 +3101,37 @@ msgstr "Alle {count} ersetzen"
 msgid "Replace the access secret? Anyone using the old one will need the new one — this never signs an administrator out."
 msgstr "Zugangsschlüssel ersetzen? Wer den alten benutzt, braucht den neuen – ein Administrator wird dadurch nie abgemeldet."
 
-#: web/app/components/SearchPanel.vue:586
+#: web/app/components/SearchPanel.vue:650
 msgid "Replace this one"
 msgstr "Diesen ersetzen"
 
-#: web/app/components/SearchPanel.vue:481 web/app/components/SearchPanel.vue:527 web/app/components/SearchPanel.vue:528 web/app/components/SearchPanel.vue:529 web/app/lib/search.ts:453
+#: web/app/components/SearchPanel.vue:547 web/app/components/SearchPanel.vue:591 web/app/components/SearchPanel.vue:592 web/app/components/SearchPanel.vue:593 web/app/lib/search.ts:486
 msgid "Replace with"
 msgstr "Ersetzen durch"
 
-#: web/app/components/SearchPanel.vue:517 web/app/components/SearchPanel.vue:521
+#: web/app/components/SearchPanel.vue:581 web/app/components/SearchPanel.vue:585
 msgid "Replace with…"
 msgstr "Ersetzen durch…"
 
-#: web/app/components/SearchPanel.vue:561
+#: web/app/components/SearchPanel.vue:625
 msgid "Replace {where}"
 msgstr "{where} ersetzen"
 
-#: web/app/components/SearchPanel.vue:304
+#: web/app/components/SearchPanel.vue:363
 msgid "Replaced in one cell. Undo brings it back."
 msgstr "In einer Zelle ersetzt. Mit „Rückgängig“ ist es wieder da."
 
-#: web/app/components/SearchPanel.vue:304
+#: web/app/components/SearchPanel.vue:364
+msgid "Replaced in one text. Undo brings it back."
+msgstr "In einem Text ersetzt. Mit „Rückgängig“ ist es wieder da."
+
+#: web/app/components/SearchPanel.vue:363
 msgid "Replaced in {count} cells. Undo brings them back."
 msgstr "In {count} Zellen ersetzt. Mit „Rückgängig“ ist alles wieder da."
+
+#: web/app/components/SearchPanel.vue:364
+msgid "Replaced in {count} texts. Undo brings them back."
+msgstr "In {count} Texten ersetzt. Mit „Rückgängig“ ist alles wieder da."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Replaces a number of characters of a text, from a position, with other text."
@@ -3285,7 +3357,7 @@ msgstr "Suchen & Ersetzen"
 msgid "Search & Replace…"
 msgstr "Suchen & Ersetzen…"
 
-#: web/app/components/SearchPanel.vue:373 web/app/components/SearchPanel.vue:375
+#: web/app/components/SearchPanel.vue:439 web/app/components/SearchPanel.vue:441
 msgid "Search & replace"
 msgstr "Suchen & Ersetzen"
 
@@ -3297,7 +3369,7 @@ msgstr "Meine und {place} durchsuchen"
 msgid "Search help…"
 msgstr "Hilfe durchsuchen…"
 
-#: web/app/components/SearchPanel.vue:92
+#: web/app/components/SearchPanel.vue:98
 msgid "Searching…"
 msgstr "Suche läuft…"
 
@@ -3309,7 +3381,7 @@ msgstr "Die Seiten ansehen und drucken"
 msgid "Seed of the random numbers"
 msgstr "Startwert der Zufallszahlen"
 
-#: web/app/components/SlideWorkspace.vue:149
+#: web/app/components/SlideWorkspace.vue:163
 msgid "Select an object to style it"
 msgstr "Wählen Sie ein Objekt aus, um es zu formatieren"
 
@@ -3373,6 +3445,10 @@ msgstr "Breite festlegen"
 msgid "Shape"
 msgstr "Form"
 
+#: web/app/components/SearchPanel.vue:323
+msgid "Shape labels"
+msgstr "Beschriftungen von Formen"
+
 #: web/app/components/ShareDialog.vue:39
 msgid "Share this document"
 msgstr "Dieses Dokument teilen"
@@ -3409,11 +3485,11 @@ msgstr "Umschalt + Pfeiltasten oder Ziehen"
 msgid "Shortcuts"
 msgstr "Tastenkürzel"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:260
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:276
 msgid "Show Grid"
 msgstr "Raster zeigen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:260 web/app/lib/document-menus.ts:169
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:283 web/app/lib/document-menus.ts:169
 msgid "Show Who Wrote What"
 msgstr "Anzeigen, wer was geschrieben hat"
 
@@ -3421,7 +3497,7 @@ msgstr "Anzeigen, wer was geschrieben hat"
 msgid "Show as"
 msgstr "Anzeigen als"
 
-#: web/app/components/SearchPanel.vue:574
+#: web/app/components/SearchPanel.vue:638
 msgid "Show more"
 msgstr "Mehr anzeigen"
 
@@ -3477,11 +3553,11 @@ msgstr "Größe"
 msgid "Skip for now"
 msgstr "Vorerst überspringen"
 
-#: web/app/components/SearchPanel.vue:571
+#: web/app/components/SearchPanel.vue:635
 msgid "Skipped {where}"
 msgstr "{where} übersprungen"
 
-#: web/app/components/PresentShow.vue:236 web/app/components/SlideWorkspace.vue:359
+#: web/app/components/PresentShow.vue:236 web/app/components/SlideWorkspace.vue:384
 msgid "Slide {n}"
 msgstr "Folie {n}"
 
@@ -3509,11 +3585,11 @@ msgstr "Kleinere Notizen"
 msgid "Snap to grid"
 msgstr "Am Raster ausrichten"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:155 web/app/components/TextWorkspace.vue:217
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:168 web/app/components/TextWorkspace.vue:240
 msgid "Soft Hyphen"
 msgstr "Bedingter Trennstrich"
 
-#: web/app/lib/search.ts:466
+#: web/app/lib/search.ts:499
 msgid "Something is repeated that is not there."
 msgstr "Es wird etwas wiederholt, das nicht da ist."
 
@@ -3533,13 +3609,17 @@ msgstr "Sortiert die Zeilen eines Bereichs nach einer Spalte (der ersten, wenn n
 msgid "Source"
 msgstr "Quelle"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:271 web/app/lib/present-keys.ts:52
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:287 web/app/lib/present-keys.ts:52
 msgid "Speaker Notes"
 msgstr "Referentennotizen"
 
-#: web/app/components/PresentShow.vue:207 web/app/components/SlideNotes.vue:88 web/app/components/SlideNotes.vue:90
+#: web/app/components/PresentShow.vue:207 web/app/components/SearchPanel.vue:325 web/app/components/SlideNotes.vue:88 web/app/components/SlideNotes.vue:90
 msgid "Speaker notes"
 msgstr "Referentennotizen"
+
+#: web/app/lib/slide-search-host.ts:75
+msgid "Speaker notes of slide {n}"
+msgstr "Referentennotizen von Folie {n}"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Splits a text into columns at the column delimiters and into rows at the row delimiters (each may be several in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with pad_with (#N/A)."
@@ -3557,11 +3637,11 @@ msgstr "Beginnen bei…"
 msgid "Start a new document"
 msgstr "Ein neues Dokument beginnen"
 
-#: web/app/components/TextWorkspace.vue:350
+#: web/app/components/TextWorkspace.vue:382
 msgid "Start numbering at"
 msgstr "Nummerierung beginnen bei"
 
-#: web/app/components/SearchPanel.vue:383
+#: web/app/components/SearchPanel.vue:449
 msgid "Start over"
 msgstr "Neu beginnen"
 
@@ -3717,11 +3797,11 @@ msgstr "{name} entfernen?"
 msgid "Teal"
 msgstr "Petrol"
 
-#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:100 web/app/components/SearchPanel.vue:502 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
+#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:100 web/app/components/SearchPanel.vue:327 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
 msgid "Text"
 msgstr "Text"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/InsertBar.vue:26 web/app/components/SlideWorkspace.vue:234
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/InsertBar.vue:26 web/app/components/SlideWorkspace.vue:250
 msgid "Text Box"
 msgstr "Textfeld"
 
@@ -3729,7 +3809,7 @@ msgstr "Textfeld"
 msgid "Text box"
 msgstr "Textfeld"
 
-#: web/app/components/SlideWorkspace.vue:157
+#: web/app/components/SlideWorkspace.vue:171
 msgid "Text boxes hold no lists yet"
 msgstr "Textfelder enthalten noch keine Listen"
 
@@ -4333,7 +4413,7 @@ msgstr "Die Passwörter stimmen nicht überein."
 msgid "The payment per period that pays off a loan (or saves up a sum) at a fixed rate."
 msgstr "Die Zahlung je Periode, die einen Kredit bei festem Zins tilgt (oder eine Summe anspart)."
 
-#: web/app/components/SlideWorkspace.vue:365
+#: web/app/components/SlideWorkspace.vue:390
 msgid "The planned times of the slides, added up"
 msgstr "Die geplanten Zeiten der Folien, zusammengezählt"
 
@@ -4397,11 +4477,11 @@ msgstr "Der Wiederherstellungsschlüssel wurde dem Eigentümer beim Erstellen de
 msgid "The remainder of a division; it has the sign of the divisor."
 msgstr "Der Rest einer Division; er hat das Vorzeichen des Divisors."
 
-#: web/app/lib/search.ts:467
+#: web/app/lib/search.ts:500
 msgid "The repeat at character {position} has nothing before it. Nothing is replaced."
 msgstr "Vor der Wiederholung bei Zeichen {position} steht nichts. Es wird nichts ersetzt."
 
-#: web/app/lib/search.ts:478
+#: web/app/lib/search.ts:511
 msgid "The replacement uses a kept part that the pattern does not have."
 msgstr "Der Ersatz verwendet einen behaltenen Teil, den das Muster nicht hat."
 
@@ -4565,7 +4645,7 @@ msgstr "Die Gerade y = m1*x1 + ... + b durch bekannte y- und x-Werte, als Zeile:
 msgid "The suggestion to go to {label} was declined."
 msgstr "Der Vorschlag, zu {label} zu wechseln, wurde abgelehnt."
 
-#: web/app/lib/base-session.ts:259
+#: web/app/lib/base-session.ts:260
 msgid "The suggestion to go to {label} was withdrawn."
 msgstr "Der Vorschlag, zu {label} zu wechseln, wurde zurückgezogen."
 
@@ -4613,7 +4693,7 @@ msgstr "Das t, jenseits dessen in beiden Richtungen zusammen der Anteil p der St
 msgid "The tangent of an angle in radians."
 msgstr "Der Tangens eines Winkels im Bogenmaß."
 
-#: web/app/components/SearchPanel.vue:418 web/app/components/SearchPanel.vue:450
+#: web/app/components/SearchPanel.vue:484 web/app/components/SearchPanel.vue:516
 msgid "The text"
 msgstr "Der Text"
 
@@ -4705,6 +4785,8 @@ msgstr "Das Web-Frontend wurde nicht gebaut.\nBauen Sie es ('npm run build' im O
 msgid "The web process ended ({reason}). Start Claudia again."
 msgstr "Der Webprozess wurde beendet ({reason}). Starten Sie Claudia neu."
 
+#: web/app/lib/text-search-host.ts:78
+msgid "The whole text"
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The whole part of a division, cut towards zero (the remainder is left out)."
 msgstr "Der ganzzahlige Teil einer Division, zu null hin abgeschnitten (der Rest bleibt weg)."
@@ -4741,11 +4823,11 @@ msgstr "Das z, unterhalb dessen der Anteil p der Standardnormalverteilung liegt.
 msgid "The “(” at character {position} has no “)”. Nothing is replaced."
 msgstr "Zur „(“ bei Zeichen {position} fehlt die „)“. Es wird nichts ersetzt."
 
-#: web/app/lib/search.ts:464
+#: web/app/lib/search.ts:497
 msgid "The “)” at character {position} has no “(”. Nothing is replaced."
 msgstr "Zur „)“ bei Zeichen {position} fehlt die „(“. Es wird nichts ersetzt."
 
-#: web/app/lib/search.ts:470
+#: web/app/lib/search.ts:503
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "Zur „[“ bei Zeichen {position} fehlt die „]“. Es wird nichts ersetzt."
 
@@ -4793,11 +4875,11 @@ msgstr "Dünner"
 msgid "Thinner border"
 msgstr "Dünnerer Rahmen"
 
-#: web/app/components/SearchPanel.vue:540 web/app/components/SearchPanel.vue:543
+#: web/app/components/SearchPanel.vue:604 web/app/components/SearchPanel.vue:607
 msgid "This also appears in {count} formulas, which are left alone."
 msgstr "Dies kommt auch in {count} Formeln vor, die unverändert bleiben."
 
-#: web/app/lib/search.ts:472
+#: web/app/lib/search.ts:505
 msgid "This backslash does not mean anything here."
 msgstr "Dieser Rückwärtsschrägstrich hat hier keine Bedeutung."
 
@@ -4833,7 +4915,7 @@ msgstr "Dieser Computer"
 msgid "This document has no sheet yet."
 msgstr "Dieses Dokument hat noch kein Blatt."
 
-#: web/app/lib/base-session.ts:402
+#: web/app/lib/base-session.ts:403
 msgid "This document was deleted by its owner."
 msgstr "Dieses Dokument wurde von seinem Eigentümer gelöscht."
 
@@ -4877,7 +4959,7 @@ msgstr "Diese Seite darf diesen Server nicht verwenden."
 msgid "This paragraph only"
 msgstr "Nur dieser Absatz"
 
-#: web/app/lib/search.ts:475
+#: web/app/lib/search.ts:508
 msgid "This pattern has too many brackets inside each other."
 msgstr "Dieses Muster hat zu viele ineinander verschachtelte Klammern."
 
@@ -4889,7 +4971,7 @@ msgstr "Nur dieses Bild"
 msgid "This place does not keep documents of this kind."
 msgstr "Dieser Ort bewahrt keine Dokumente dieser Art auf."
 
-#: web/app/components/SlideWorkspace.vue:340
+#: web/app/components/SlideWorkspace.vue:356
 msgid "This presentation has no slide."
 msgstr "Diese Präsentation hat keine Folie."
 
@@ -4909,6 +4991,10 @@ msgstr "Dadurch wird der aktuelle Inhalt von {doc} auf diesem Computer in Claudi
 msgid "This saves the current content of {doc} to this computer, in the format you pick below. It does not include the document's history or chat, and no tracked changes are kept — just the content as it stands now."
 msgstr "Dadurch wird der aktuelle Inhalt von {doc} auf diesem Computer in dem Format gespeichert, das Sie unten wählen. Verlauf und Chat des Dokuments sind nicht enthalten, und es werden keine Änderungsnachverfolgungen mitgeführt – nur der Inhalt, wie er jetzt ist."
 
+#: web/app/lib/text-search-host.ts:78
+msgid "This section"
+msgstr "Dieser Abschnitt"
+
 #: web/app/lib/open.ts:52
 msgid "This server does not list its documents. Type the name of yours."
 msgstr "Dieser Server listet seine Dokumente nicht auf. Geben Sie den Namen Ihres Dokuments ein."
@@ -4921,7 +5007,7 @@ msgstr "Nur diese Form"
 msgid "This sheet"
 msgstr "Dieses Tabellenblatt"
 
-#: web/app/components/PresentShow.vue:176
+#: web/app/components/PresentShow.vue:176 web/app/lib/slide-search-host.ts:67
 msgid "This slide"
 msgstr "Diese Folie"
 
@@ -4969,7 +5055,7 @@ msgstr "Zwei Seiten"
 msgid "Two pages side by side"
 msgstr "Zwei Seiten nebeneinander"
 
-#: web/app/components/TextWorkspace.vue:309
+#: web/app/components/TextWorkspace.vue:332
 msgid "Type"
 msgstr "Typ"
 
@@ -5029,11 +5115,11 @@ msgstr "Stattdessen {name} verwenden"
 msgid "Use {right}"
 msgstr "{right} verwenden"
 
-#: web/app/components/SearchPanel.vue:486
+#: web/app/components/SearchPanel.vue:552
 msgid "Valid."
 msgstr "Gültig."
 
-#: web/app/components/SearchPanel.vue:505
+#: web/app/components/SearchPanel.vue:313
 msgid "Values"
 msgstr "Werte"
 
@@ -5117,7 +5203,7 @@ msgstr "Was regelmäßige Zahlungen (und eine Summe am Ende) heute bei festem Zi
 msgid "What silence at a suggestion's deadline means"
 msgstr "Was Schweigen bei Ablauf der Frist eines Vorschlags bedeutet"
 
-#: web/app/components/SearchPanel.vue:415
+#: web/app/components/SearchPanel.vue:481
 msgid "What to find"
 msgstr "Was gefunden werden soll"
 
@@ -5157,7 +5243,7 @@ msgstr "Wo der Text in einem anderen Text gefunden wird (ab 1; Groß- und Kleins
 msgid "Where the word may be broken at the end of a line"
 msgstr "Wo das Wort am Zeilenende getrennt werden darf"
 
-#: web/app/components/SearchPanel.vue:510
+#: web/app/components/SearchPanel.vue:574
 msgid "Where to look"
 msgstr "Wo gesucht wird"
 
@@ -5173,11 +5259,11 @@ msgstr "Welcher Teil formatiert wird"
 msgid "Which side the border is on"
 msgstr "Auf welcher Seite der Rahmen liegt"
 
-#: web/app/lib/base-session.ts:251
+#: web/app/lib/base-session.ts:252
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
 msgstr "Während Ihrer Abwesenheit hat {by} auf {label} zurückgestellt (einverstanden: {agreed})."
 
-#: web/app/lib/base-session.ts:252
+#: web/app/lib/base-session.ts:253
 msgid "While you were away, {by} switched to {label} (agreed: {agreed})."
 msgstr "Während Ihrer Abwesenheit hat {by} zu {label} gewechselt (einverstanden: {agreed})."
 
@@ -5189,7 +5275,7 @@ msgstr "Weiß"
 msgid "Who may change these settings, who may create or list documents, and how many this server holds."
 msgstr "Wer diese Einstellungen ändern, Dokumente erstellen oder auflisten darf und wie viele dieser Server aufnimmt."
 
-#: web/app/components/SearchPanel.vue:514
+#: web/app/components/SearchPanel.vue:578
 msgid "Whole cell"
 msgstr "Ganze Zelle"
 
@@ -5201,6 +5287,8 @@ msgstr "Ganze Formate, die auch „{slot}“ festlegen – ihr Teil „{slot}“
 msgid "Whole table"
 msgstr "Ganze Tabelle"
 
+#: web/app/components/SearchPanel.vue:578
+msgid "Whole text"
 #: web/app/lib/print/sheet.ts:66
 msgid "Whole workbook"
 msgstr "Ganze Arbeitsmappe"
@@ -5217,7 +5305,7 @@ msgstr "Zurückziehen"
 msgid "Without one, only this machine may create documents."
 msgstr "Ohne Schlüssel darf nur dieser Rechner Dokumente erstellen."
 
-#: web/app/components/TextWorkspace.vue:113
+#: web/app/components/TextWorkspace.vue:117
 msgid "Word document (.docx)"
 msgstr "Word-Dokument (.docx)"
 
@@ -5253,7 +5341,7 @@ msgstr "Langen Text umbrechen"
 msgid "Write in the selected text box"
 msgstr "In das ausgewählte Textfeld schreiben"
 
-#: web/app/components/SearchPanel.vue:382
+#: web/app/components/SearchPanel.vue:448
 msgid "Write the pattern yourself…"
 msgstr "Muster selbst schreiben…"
 
@@ -5305,11 +5393,11 @@ msgstr "Sie können {doc} nicht mehr öffnen, es sei denn, jemand fügt Sie wied
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr "Ihr Browser wollte ihn nicht kopieren: Markieren Sie den Schlüssel und kopieren Sie ihn selbst."
 
-#: web/app/lib/base-session.ts:434
+#: web/app/lib/base-session.ts:435
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr "Ihre Änderung wurde nicht übernommen: Das Dokument hat sich unter Ihnen geändert. Es wurde neu geladen."
 
-#: web/app/components/SearchPanel.vue:491
+#: web/app/components/SearchPanel.vue:557
 msgid "Your changes to the pattern are dropped."
 msgstr "Ihre Änderungen am Muster gehen verloren."
 
@@ -5341,11 +5429,11 @@ msgstr "Zoom"
 msgid "a Claudia file goes in as it is, not as a new document"
 msgstr "eine Claudia-Datei kommt so hinein, wie sie ist, nicht als neues Dokument"
 
-#: web/app/components/SearchPanel.vue:190 web/app/lib/search.ts:232
+#: web/app/components/SearchPanel.vue:199 web/app/lib/search.ts:236
 msgid "a cell reference"
 msgstr "ein Zellbezug"
 
-#: web/app/components/SearchPanel.vue:183 web/app/lib/search.ts:214
+#: web/app/components/SearchPanel.vue:190 web/app/lib/search.ts:218
 msgid "a digit"
 msgstr "eine Ziffer"
 
@@ -5373,7 +5461,7 @@ msgstr "Ein Name braucht etwas Text"
 msgid "a name starts with a letter and has only letters, digits, _ and ."
 msgstr "Ein Name beginnt mit einem Buchstaben und besteht nur aus Buchstaben, Ziffern, _ und ."
 
-#: web/app/components/SearchPanel.vue:186 web/app/lib/search.ts:223
+#: web/app/components/SearchPanel.vue:193 web/app/lib/search.ts:227
 msgid "a number"
 msgstr "eine Zahl"
 
@@ -5413,7 +5501,7 @@ msgstr "Einer Rolle fehlt {key!r}"
 msgid "a role's id, name and colour are text"
 msgstr "ID, Name und Farbe einer Rolle sind Text"
 
-#: web/app/components/SearchPanel.vue:184 web/app/lib/search.ts:217
+#: web/app/components/SearchPanel.vue:191 web/app/lib/search.ts:221
 msgid "a space"
 msgstr "ein Leerzeichen"
 
@@ -5441,6 +5529,10 @@ msgstr "einen Text"
 msgid "a whole number from bottom to top, both included."
 msgstr "eine ganze Zahl von bottom bis top, beide eingeschlossen."
 
+#: web/app/components/SearchPanel.vue:200 web/app/lib/search.ts:239
+msgid "a word"
+msgstr "ein Wort"
+
 #: packages/claudia-server/src/claudia_server/style_targets.py:145
 msgid "a {thing} has no slot “{slot}”; it has {slots}"
 msgstr "Ein {thing} hat keinen Platz „{slot}“; es gibt {slots}"
@@ -5452,6 +5544,18 @@ msgstr "zu dieser Zelle"
 #: packages/claudia-server/src/claudia_server/computes.py:696
 msgid "add_chart: the name must have 1 to {limit} characters"
 msgstr "add_chart: Der Name muss 1 bis {limit} Zeichen haben"
+
+#: packages/claudia-server/src/claudia_server/creates.py:379
+msgid "add_object: a shape needs the id of its outline"
+msgstr "add_object: Eine Form braucht die ID ihrer Kontur"
+
+#: packages/claudia-server/src/claudia_server/creates.py:376
+msgid "add_object: kind must be one of {kinds}"
+msgstr "add_object: kind muss eines von {kinds} sein"
+
+#: packages/claudia-server/src/claudia_server/creates.py:386
+msgid "add_object: this server has no shape {shape!r}"
+msgstr "add_object: Dieser Server kennt die Form {shape!r} nicht"
 
 #: packages/claudia-server/src/claudia_server/creates.py:382
 msgid "add_object: a shape needs the id of its outline"
@@ -5481,7 +5585,7 @@ msgstr "add_user: role muss editor oder viewer sein"
 msgid "all apps"
 msgstr "alle Apps"
 
-#: web/app/components/SearchPanel.vue:456
+#: web/app/components/SearchPanel.vue:522
 msgid "all of these must hold"
 msgstr "alle müssen zutreffen"
 
@@ -5513,43 +5617,43 @@ msgstr "und {n} weitere"
 msgid "ann"
 msgstr "anna"
 
-#: web/app/components/SearchPanel.vue:185 web/app/lib/search.ts:220
+#: web/app/components/SearchPanel.vue:192 web/app/lib/search.ts:224
 msgid "any character"
 msgstr "ein beliebiges Zeichen"
 
-#: web/app/components/SearchPanel.vue:181
+#: web/app/components/SearchPanel.vue:188
 msgid "any character except"
 msgstr "ein beliebiges Zeichen außer"
 
-#: web/app/lib/search.ts:208
+#: web/app/lib/search.ts:212
 msgid "any character except {chars}"
 msgstr "ein beliebiges Zeichen außer {chars}"
 
-#: web/app/components/SearchPanel.vue:195
+#: web/app/components/SearchPanel.vue:206
 msgid "any number"
 msgstr "beliebig oft"
 
-#: web/app/components/SearchPanel.vue:180
+#: web/app/components/SearchPanel.vue:187
 msgid "any one of"
 msgstr "eines von"
 
-#: web/app/components/SearchPanel.vue:457
+#: web/app/components/SearchPanel.vue:523
 msgid "any one of these may hold"
 msgstr "eine davon genügt"
 
-#: web/app/lib/search.ts:205
+#: web/app/lib/search.ts:209
 msgid "any one of {chars}"
 msgstr "eines der Zeichen {chars}"
 
-#: web/app/components/SearchPanel.vue:204
+#: web/app/components/SearchPanel.vue:215
 msgid "are exactly"
 msgstr "lauten genau"
 
-#: web/app/lib/search.ts:262
+#: web/app/lib/search.ts:269
 msgid "are exactly “{text}”"
 msgstr "genau „{text}“ lauten"
 
-#: web/app/lib/search.ts:431
+#: web/app/lib/search.ts:464
 msgid "are not exactly “{text}”"
 msgstr "nicht genau „{text}“ lauten"
 
@@ -5569,7 +5673,7 @@ msgstr "vor der Durchsicht"
 msgid "beta"
 msgstr "Beta"
 
-#: web/app/components/SearchPanel.vue:197
+#: web/app/components/SearchPanel.vue:208
 msgid "between"
 msgstr "zwischen"
 
@@ -5665,27 +5769,27 @@ msgstr "Vervollständigungen"
 msgid "connect to this server instead of starting one on this computer (https://host[:port]; plain http is only accepted for this computer)"
 msgstr "mit diesem Server verbinden, statt auf diesem Computer einen zu starten (https://host[:port]; einfaches http wird nur für diesen Computer akzeptiert)"
 
-#: web/app/components/SearchPanel.vue:200
+#: web/app/components/SearchPanel.vue:211
 msgid "contain"
 msgstr "enthalten"
 
-#: web/app/components/SearchPanel.vue:206
+#: web/app/components/SearchPanel.vue:217
 msgid "contain none of"
 msgstr "enthalten keines von"
 
-#: web/app/lib/search.ts:266 web/app/lib/search.ts:433
+#: web/app/lib/search.ts:273 web/app/lib/search.ts:466
 msgid "contain none of {chars}"
 msgstr "keines der Zeichen {chars} enthalten"
 
-#: web/app/components/SearchPanel.vue:205
+#: web/app/components/SearchPanel.vue:216
 msgid "contain one of"
 msgstr "enthalten eines von"
 
-#: web/app/lib/search.ts:264 web/app/lib/search.ts:435
+#: web/app/lib/search.ts:271 web/app/lib/search.ts:468
 msgid "contain one of {chars}"
 msgstr "mindestens eines der Zeichen {chars} enthalten"
 
-#: web/app/lib/search.ts:254 web/app/lib/search.ts:423
+#: web/app/lib/search.ts:261 web/app/lib/search.ts:456
 msgid "contain “{text}”"
 msgstr "„{text}“ enthalten"
 
@@ -5709,31 +5813,39 @@ msgstr "define_sql: {problem}"
 msgid "delete"
 msgstr "löschen"
 
-#: web/app/components/TextWorkspace.vue:313
+#: web/app/components/TextWorkspace.vue:336
 msgid "delete a word"
 msgstr "ein Wort löschen"
 
-#: web/app/components/TextWorkspace.vue:312
+#: web/app/components/TextWorkspace.vue:335
 msgid "delete; at the edge of a paragraph it joins the one next to it"
 msgstr "löschen; am Rand eines Absatzes verbindet es ihn mit dem benachbarten"
 
-#: web/app/components/SearchPanel.vue:201
+#: web/app/components/SearchPanel.vue:344
+msgid "description"
+msgstr "Beschreibung"
+
+#: web/app/components/SearchPanel.vue:212
 msgid "do not contain"
 msgstr "enthalten nicht"
 
-#: web/app/lib/search.ts:256 web/app/lib/search.ts:425
+#: web/app/lib/search.ts:263 web/app/lib/search.ts:458
 msgid "do not contain “{text}”"
 msgstr "„{text}“ nicht enthalten"
 
-#: web/app/lib/search.ts:429
+#: web/app/lib/search.ts:462
 msgid "do not end with “{text}”"
 msgstr "nicht auf „{text}“ enden"
 
-#: web/app/lib/search.ts:437
+#: web/app/lib/search.ts:470
 msgid "do not match the pattern for cells"
 msgstr "nicht zum Muster für Zellen passen"
 
-#: web/app/lib/search.ts:427
+#: web/app/lib/search.ts:470
+msgid "do not match the pattern for texts"
+msgstr "nicht zum Muster für Texte passen"
+
+#: web/app/lib/search.ts:460
 msgid "do not start with “{text}”"
 msgstr "nicht mit „{text}“ beginnen"
 
@@ -5765,7 +5877,7 @@ msgstr "eine Zelle bearbeiten (andere bleiben währenddessen ausgeschlossen)"
 msgid "editing cell"
 msgstr "Zelle wird bearbeitet"
 
-#: web/app/components/FooterBar.vue:65 web/app/components/SlideWorkspace.vue:368 web/app/components/TextWorkspace.vue:343 web/app/lib/grid-a11y.ts:49
+#: web/app/components/FooterBar.vue:65 web/app/components/SlideWorkspace.vue:393 web/app/components/TextWorkspace.vue:366 web/app/lib/grid-a11y.ts:49
 msgid "empty"
 msgstr "leer"
 
@@ -5773,15 +5885,15 @@ msgstr "leer"
 msgid "end"
 msgstr "beenden"
 
-#: web/app/components/TextWorkspace.vue:310
+#: web/app/components/TextWorkspace.vue:333
 msgid "end the paragraph (after a heading the next one is body text); in a list, the next item; on an empty item, out of the list"
 msgstr "den Absatz beenden (nach einer Überschrift ist der nächste Fließtext); in einer Liste der nächste Eintrag; bei einem leeren Eintrag aus der Liste heraus"
 
-#: web/app/components/SearchPanel.vue:203
+#: web/app/components/SearchPanel.vue:214
 msgid "end with"
 msgstr "enden mit"
 
-#: web/app/lib/search.ts:260
+#: web/app/lib/search.ts:267
 msgid "end with “{text}”"
 msgstr "auf „{text}“ enden"
 
@@ -5801,13 +5913,17 @@ msgstr "Jede Rolle ist ein Objekt mit id, name, purpose und colour"
 msgid "everything that was done to this document"
 msgstr "alles, was mit diesem Dokument gemacht wurde"
 
-#: web/app/components/SearchPanel.vue:196
+#: web/app/components/SearchPanel.vue:207
 msgid "exactly"
 msgstr "genau"
 
 #: web/app/components/OpenDialog.vue:744
 msgid "example.com:8420"
 msgstr "example.com:8420"
+
+#: packages/claudia-server/src/claudia_server/composes.py:176
+msgid "export_office: format must be \"docx\" or \"odt\""
+msgstr "export_office: format muss „docx“ oder „odt“ sein"
 
 #: packages/claudia-server/src/claudia_server/composes.py:175
 msgid "export_office: format must be \"docx\" or \"odt\""
@@ -5833,7 +5949,7 @@ msgstr "die ersten {length} angezeigt"
 msgid "font {hash}… is not in the server's catalogue"
 msgstr "Schrift {hash}… ist nicht im Katalog des Servers"
 
-#: web/app/components/SearchPanel.vue:567 web/app/lib/grid-a11y.ts:50
+#: web/app/components/SearchPanel.vue:334 web/app/lib/grid-a11y.ts:50
 msgid "formula"
 msgstr "Formel"
 
@@ -5856,6 +5972,10 @@ msgstr "Geben Sie das CSS als gesetzte Eigenschaften oder als Text an, nicht bei
 #: web/app/components/OutcomePopover.vue:107
 msgid "greatest"
 msgstr "größter"
+
+#: web/app/components/SearchPanel.vue:338
+msgid "heading"
+msgstr "Überschrift"
 
 #: web/app/components/PrintPreview.vue:305
 msgid "height in millimetres"
@@ -5897,7 +6017,7 @@ msgstr "id muss eine ganze Zahl oder ein kurzer Text sein"
 msgid "image"
 msgstr "Bild"
 
-#: web/app/components/TextWorkspace.vue:311
+#: web/app/components/TextWorkspace.vue:334
 msgid "in a list, one level in or out"
 msgstr "in einer Liste eine Ebene hinein oder heraus"
 
@@ -5933,6 +6053,10 @@ msgstr "gerade eben"
 msgid "keep and go down / keep and go right / cancel"
 msgstr "behalten und nach unten / behalten und nach rechts / abbrechen"
 
+#: web/app/components/SearchPanel.vue:346
+msgid "label"
+msgstr "Beschriftung"
+
 #: web/app/lib/print/setup.ts:107 web/app/lib/print/sheet.ts:101
 msgid "landscape"
 msgstr "quer"
@@ -5945,21 +6069,29 @@ msgstr "kleinster"
 msgid "leave the table: on to the next / back to the previous part of the window"
 msgstr "die Tabelle verlassen: weiter zum nächsten / zurück zum vorherigen Teil des Fensters"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:206
+#: packages/claudia-server/src/claudia_server/search_methods.py:173
 msgid "leave: at most {limit} at a time"
 msgstr "leave: höchstens {limit} auf einmal"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:216
+#: packages/claudia-server/src/claudia_server/computes_search.py:106
 msgid "leave: each is {at, match}, at being a cell {sheet, row, col} and match a number or null"
 msgstr "leave: jeder Eintrag ist {at, match}, at eine Zelle {sheet, row, col} und match eine Zahl oder null"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:222
-msgid "leave: match is the number of a match in the cell, or null for all"
-msgstr "leave: match ist die Nummer eines Treffers in der Zelle, oder null für alle"
+#: packages/claudia-server/src/claudia_server/composes_search.py:143
+msgid "leave: each is {at, match}, at being a place the search listed ({block} or {block, object, source}) and match a number or null"
+msgstr "leave: jeder Eintrag ist {at, match}, at ein Ort, den die Suche aufgelistet hat ({block} oder {block, object, source}), und match eine Zahl oder null"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:219
-msgid "leave: that cell is outside any sheet"
-msgstr "leave: Diese Zelle liegt außerhalb jedes Blatts"
+#: packages/claudia-server/src/claudia_server/creates_search.py:117
+msgid "leave: each is {at, match}, at being a place the search listed ({slide, object, source} or {slide, source}) and match a number or null"
+msgstr "leave: jeder Eintrag ist {at, match}, at ein Ort, den die Suche aufgelistet hat ({slide, object, source} oder {slide, source}), und match eine Zahl oder null"
+
+#: packages/claudia-server/src/claudia_server/search_methods.py:185
+msgid "leave: match is the number of a match at that place, or null for all"
+msgstr "leave: match ist die Nummer eines Treffers an diesem Ort, oder null für alle"
+
+#: packages/claudia-server/src/claudia_server/search_methods.py:188
+msgid "leave: said is the text the match had when it was shown"
+msgstr "leave: said ist der Text, den der Treffer hatte, als er angezeigt wurde"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "like SUBTOTAL with more functions (1-13 as SUBTOTAL but with 12 MEDIAN and 13 MODE.SNGL; 14 LARGE, 15 SMALL, 16 PERCENTILE.INC, 17 QUARTILE.INC, 18 PERCENTILE.EXC, 19 QUARTILE.EXC take a range and k) and a choice what to skip: options 2, 3, 6 and 7 skip errors, 4 skips nothing but the other subtotals."
@@ -5969,7 +6101,7 @@ msgstr "wie SUBTOTAL, mit mehr Funktionen (1-13 wie bei SUBTOTAL, aber mit 12 ME
 msgid "line {line}"
 msgstr "Linie {line}"
 
-#: web/app/components/SearchPanel.vue:348
+#: web/app/components/SearchPanel.vue:408
 msgid "locked by {name}"
 msgstr "gesperrt von {name}"
 
@@ -6029,11 +6161,11 @@ msgstr "mm"
 msgid "most likely"
 msgstr "wahrscheinlichster Wert"
 
-#: web/app/components/SlideWorkspace.vue:291
+#: web/app/components/SlideWorkspace.vue:307
 msgid "move it by 10 units; with Shift by 1"
 msgstr "um 10 Einheiten verschieben; mit Umschalt um 1"
 
-#: web/app/components/SlideWorkspace.vue:289
+#: web/app/components/SlideWorkspace.vue:305
 msgid "move it; the handles resize it"
 msgstr "verschieben; die Griffe ändern die Größe"
 
@@ -6069,7 +6201,7 @@ msgstr "neuer Name"
 msgid "new sheet"
 msgstr "neues Blatt"
 
-#: web/app/components/SlideWorkspace.vue:361
+#: web/app/components/SlideWorkspace.vue:386
 msgid "new slide"
 msgstr "neue Folie"
 
@@ -6117,7 +6249,11 @@ msgstr "nicht verbunden"
 msgid "not valid JSON"
 msgstr "Kein gültiges JSON"
 
-#: web/app/lib/noun-phrases.ts:27
+#: web/app/components/SearchPanel.vue:348
+msgid "notes"
+msgstr "Notizen"
+
+#: web/app/components/SearchPanel.vue:342 web/app/lib/noun-phrases.ts:27
 msgid "object"
 msgstr "Objekt"
 
@@ -6129,11 +6265,11 @@ msgstr "objects muss eine Liste von höchstens {limit} Objekt-IDs sein"
 msgid "on time"
 msgstr "im Plan"
 
-#: web/app/components/SearchPanel.vue:192
+#: web/app/components/SearchPanel.vue:203
 msgid "once"
 msgstr "einmal"
 
-#: web/app/components/SearchPanel.vue:194
+#: web/app/components/SearchPanel.vue:205
 msgid "one or more"
 msgstr "einmal oder öfter"
 
@@ -6189,7 +6325,7 @@ msgstr "Nur der Eigentümer eines Dokuments legt dies fest"
 msgid "only their box"
 msgstr "nur ihre Box"
 
-#: web/app/components/SearchPanel.vue:193
+#: web/app/components/SearchPanel.vue:204
 msgid "optional"
 msgstr "optional"
 
@@ -6205,11 +6341,11 @@ msgstr "Übersicht"
 msgid "page {n}"
 msgstr "Seite {n}"
 
-#: web/app/components/TextWorkspace.vue:340 web/app/lib/noun-phrases.ts:15
+#: web/app/components/TextWorkspace.vue:363 web/app/lib/noun-phrases.ts:15
 msgid "paragraph"
 msgstr "Absatz"
 
-#: web/app/components/TextWorkspace.vue:340
+#: web/app/components/TextWorkspace.vue:363
 msgid "paragraphs"
 msgstr "Absätze"
 
@@ -6297,6 +6433,10 @@ msgstr "Wiederherstellungsschlüssel"
 msgid "redo"
 msgstr "wiederholen"
 
+#: web/app/components/SearchPanel.vue:340
+msgid "remark"
+msgstr "Bemerkung"
+
 #: web/app/lib/protocol.ts:222
 msgid "request failed"
 msgstr "Anfrage fehlgeschlagen"
@@ -6345,11 +6485,15 @@ msgstr "Skala"
 msgid "search help"
 msgstr "Hilfe durchsuchen"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:125
+#: packages/claudia-server/src/claudia_server/computes_search.py:101
 msgid "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search"
 msgstr "search_replace: Das würde {count} Zellen ändern, höchstens {limit} auf einmal: Grenzen Sie die Suche ein"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:117
+#: packages/claudia-server/src/claudia_server/composes_search.py:138 packages/claudia-server/src/claudia_server/creates_search.py:112
+msgid "search_replace: that would change {count} texts, at most {limit} at a time: narrow the search"
+msgstr "search_replace: Das würde {count} Texte ändern, höchstens {limit} auf einmal: Grenzen Sie die Suche ein"
+
+#: packages/claudia-server/src/claudia_server/search_methods.py:103
 msgid "search_replace: the search took longer than {seconds} seconds, so nothing was replaced: narrow it"
 msgstr "search_replace: die Suche hat länger als {seconds} Sekunden gedauert, darum wurde nichts ersetzt: Grenzen Sie sie ein"
 
@@ -6357,7 +6501,7 @@ msgstr "search_replace: die Suche hat länger als {seconds} Sekunden gedauert, d
 msgid "select a block"
 msgstr "einen Block auswählen"
 
-#: web/app/components/SlideWorkspace.vue:288
+#: web/app/components/SlideWorkspace.vue:304
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr "ein Objekt auswählen (Kolleginnen und Kollegen können es nicht ändern, solange Sie es halten)"
 
@@ -6401,19 +6545,19 @@ msgstr "Schweigen = Zustimmung"
 msgid "silence = decline"
 msgstr "Schweigen = Ablehnung"
 
-#: web/app/components/SearchPanel.vue:572
+#: web/app/components/SearchPanel.vue:636
 msgid "skipped"
 msgstr "übersprungen"
 
-#: web/app/components/SlideCanvas.vue:404
+#: web/app/components/SlideCanvas.vue:407
 msgid "slide"
 msgstr "Folie"
 
-#: web/app/components/ImportDialog.vue:52 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:349
+#: web/app/components/ImportDialog.vue:52 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:374
 msgid "slides"
 msgstr "Folien"
 
-#: web/app/components/TextEditor.vue:127
+#: web/app/components/TextEditor.vue:137
 msgid "someone"
 msgstr "jemand"
 
@@ -6437,7 +6581,7 @@ msgstr "Start 1.000, monatlich 100 sparen bei 12 % im Jahr, bis 10.000 erreicht 
 msgid "start with"
 msgstr "beginnen mit"
 
-#: web/app/lib/search.ts:258
+#: web/app/lib/search.ts:265
 msgid "start with “{text}”"
 msgstr "mit „{text}“ beginnen"
 
@@ -6449,11 +6593,11 @@ msgstr "structure: axis muss „row“ oder „col“ sein"
 msgid "suggest switching here"
 msgstr "Wechsel hierher vorschlagen"
 
-#: web/app/components/TextWorkspace.vue:341
+#: web/app/components/TextWorkspace.vue:364
 msgid "suggestion"
 msgstr "Vorschlag"
 
-#: web/app/components/TextWorkspace.vue:341
+#: web/app/components/TextWorkspace.vue:364
 msgid "suggestions"
 msgstr "Vorschläge"
 
@@ -6469,7 +6613,7 @@ msgstr "Tabellen"
 msgid "targets is a list of 1 to {limit} targets"
 msgstr "targets ist eine Liste von 1 bis {limit} Zielen"
 
-#: web/app/components/SearchPanel.vue:567
+#: web/app/components/SearchPanel.vue:350
 msgid "text"
 msgstr "Text"
 
@@ -6477,7 +6621,7 @@ msgstr "Text"
 msgid "text box"
 msgstr "Textfeld"
 
-#: web/app/components/SlideCanvas.vue:446
+#: web/app/components/SlideCanvas.vue:449
 msgid "text of the object"
 msgstr "Text des Objekts"
 
@@ -6517,7 +6661,7 @@ msgstr "Der Assistent stimmt nicht ab"
 msgid "the assistant does not withdraw suggestions"
 msgstr "Der Assistent zieht keine Vorschläge zurück"
 
-#: web/app/components/TextWorkspace.vue:315
+#: web/app/components/TextWorkspace.vue:338
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr "der Assistent schlägt Änderungen vor; Sie nehmen jede an oder lehnen sie ab"
 
@@ -6553,9 +6697,13 @@ msgstr "das Datum und die Uhrzeit als Tageszahl, mit der Uhrzeit als Bruchteil."
 msgid "the document's own"
 msgstr "das eigene des Dokuments"
 
-#: web/app/components/SearchPanel.vue:188 web/app/lib/search.ts:229
+#: web/app/components/SearchPanel.vue:195 web/app/lib/search.ts:233
 msgid "the end of the cell"
 msgstr "das Zellenende"
+
+#: web/app/components/SearchPanel.vue:195 web/app/lib/search.ts:233
+msgid "the end of the text"
+msgstr "das Textende"
 
 #: packages/claudia-server/src/claudia_server/app.py:373
 msgid "the file is no longer here: choose it again"
@@ -6653,9 +6801,17 @@ msgstr "das Format des Blatts"
 msgid "the slides"
 msgstr "die Folien"
 
-#: web/app/components/SearchPanel.vue:187 web/app/lib/search.ts:226
+#: web/app/components/SearchPanel.vue:194 web/app/lib/search.ts:230
 msgid "the start of the cell"
 msgstr "der Zellenanfang"
+
+#: web/app/components/SearchPanel.vue:194 web/app/lib/search.ts:230
+msgid "the start of the text"
+msgstr "der Textanfang"
+
+#: web/app/components/SearchPanel.vue:186 web/app/components/TextEditor.vue:413 web/app/lib/print/source.ts:95
+msgid "the text"
+msgstr "der Text"
 
 #: web/app/components/SearchPanel.vue:179 web/app/components/TextEditor.vue:388 web/app/lib/print/source.ts:121
 msgid "the text"
@@ -6720,6 +6876,10 @@ msgstr "Dieses Dokument hat keine Stile"
 #: packages/claudia-server/src/claudia_server/rendered.py:167
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr "Dieses Dokument enthält nichts Gerendertes mit der Kennung {id!r}"
+
+#: packages/claudia-server/src/claudia_server/creates.py:84 packages/claudia-server/src/claudia_server/creates_search.py:72
+msgid "this document is not a presentation"
+msgstr "Dieses Dokument ist keine Präsentation"
 
 #: packages/claudia-server/src/claudia_server/creates.py:84
 msgid "this document is not a presentation"
@@ -6857,9 +7017,13 @@ msgstr "von 1 Format verwendet"
 msgid "used by {count} styles"
 msgstr "von {count} Formaten verwendet"
 
-#: web/app/components/SearchPanel.vue:567
+#: web/app/components/SearchPanel.vue:336
 msgid "value"
 msgstr "Wert"
+
+#: web/app/components/SearchPanel.vue:410
+msgid "was typed into since you looked"
+msgstr "wurde verändert, seit Sie hingesehen haben"
 
 #: web/app/components/LineSizeDialog.vue:57
 msgid "was {size} px tall"
@@ -6873,11 +7037,11 @@ msgstr "war {size} px breit"
 msgid "width in millimetres"
 msgstr "Breite in Millimetern"
 
-#: web/app/components/TextWorkspace.vue:339
+#: web/app/components/TextWorkspace.vue:362
 msgid "word"
 msgstr "Wort"
 
-#: web/app/components/TextWorkspace.vue:339
+#: web/app/components/TextWorkspace.vue:362
 msgid "words"
 msgstr "Wörter"
 
@@ -6885,23 +7049,23 @@ msgstr "Wörter"
 msgid "words must be from 0 to {limit}"
 msgstr "words muss von 0 bis {limit} gehen"
 
-#: web/app/components/SearchPanel.vue:350
+#: web/app/components/SearchPanel.vue:411
 msgid "would be too long"
 msgstr "wäre zu lang"
 
-#: web/app/components/SearchPanel.vue:349
+#: web/app/components/SearchPanel.vue:409
 msgid "would no longer be a formula"
 msgstr "wäre keine Formel mehr"
 
-#: web/app/components/SlideWorkspace.vue:290
+#: web/app/components/SlideWorkspace.vue:306
 msgid "write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it"
 msgstr "darin schreiben; Eingabe behält den Text, Umschalt+Eingabe beginnt eine Zeile, Esc verwirft ihn"
 
-#: web/app/components/TextWorkspace.vue:309
+#: web/app/components/TextWorkspace.vue:332
 msgid "write; a word is sent when it ends, and the others see where you are"
 msgstr "schreiben; ein Wort wird gesendet, wenn es endet, und die anderen sehen, wo Sie sind"
 
-#: web/app/components/TextEditor.vue:128
+#: web/app/components/TextEditor.vue:138
 msgid "written by {author}"
 msgstr "geschrieben von {author}"
 
@@ -6929,7 +7093,7 @@ msgstr "{app} konnte seinen Server nicht starten"
 msgid "{app} for the Linux desktop"
 msgstr "{app} für den Linux-Desktop"
 
-#: web/app/components/TextEditor.vue:129
+#: web/app/components/TextEditor.vue:139
 msgid "{author} is writing here"
 msgstr "{author} schreibt hier"
 
@@ -6937,7 +7101,7 @@ msgstr "{author} schreibt hier"
 msgid "{author} suggests"
 msgstr "{author} schlägt vor"
 
-#: web/app/components/TextEditor.vue:127
+#: web/app/components/TextEditor.vue:137
 msgid "{author}, from a suggestion of {via}"
 msgstr "{author}, aus einem Vorschlag von {via}"
 
@@ -6977,7 +7141,7 @@ msgstr "{caption}: das Textfeld nach seinem Zweck auszeichnen"
 msgid "{cell} (no table right now)"
 msgstr "{cell} (gerade keine Tabelle)"
 
-#: web/app/components/SearchPanel.vue:550
+#: web/app/components/SearchPanel.vue:614
 msgid "{changing} will change, {skipping} skipped"
 msgstr "{changing} werden geändert, {skipping} übersprungen"
 
@@ -6993,13 +7157,17 @@ msgstr "{count} Spalten"
 msgid "{count} columns selected — {line} to column {last} — with different sizes."
 msgstr "{count} Spalten ausgewählt – {line} bis Spalte {last} – mit unterschiedlichen Größen."
 
-#: web/app/components/SearchPanel.vue:96
+#: web/app/components/SearchPanel.vue:102
 msgid "{count} matches"
 msgstr "{count} Treffer"
 
-#: web/app/components/SearchPanel.vue:96
+#: web/app/components/SearchPanel.vue:103
 msgid "{count} matches in {cells} cells"
 msgstr "{count} Treffer in {cells} Zellen"
+
+#: web/app/components/SearchPanel.vue:103
+msgid "{count} matches in {texts} texts"
+msgstr "{count} Treffer in {texts} Texten"
 
 #: web/app/lib/noun-phrases.ts:113 web/app/lib/noun-phrases.ts:115
 msgid "{count} objects"
@@ -7037,15 +7205,15 @@ msgstr "{count} Tabellen"
 msgid "{count} slides on {pages}"
 msgstr "{count} Folien auf {pages}"
 
-#: web/app/lib/search.ts:276
+#: web/app/lib/search.ts:283
 msgid "{first} and {next}"
 msgstr "{first} und {next}"
 
-#: web/app/lib/search.ts:276
+#: web/app/lib/search.ts:283
 msgid "{first} or {next}"
 msgstr "{first} oder {next}"
 
-#: web/app/lib/search.ts:275
+#: web/app/lib/search.ts:282
 msgid "{first}, then {next}"
 msgstr "{first}, dann {next}"
 
@@ -7165,23 +7333,23 @@ msgstr "Höhe von {line}, in Pixeln"
 msgid "{line}'s width, in pixels"
 msgstr "Breite von {line}, in Pixeln"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:184
+#: packages/claudia-server/src/claudia_server/computes_search.py:145
 msgid "{method}: a range is [first row, first column, last row, last column]"
 msgstr "{method}: Ein Bereich ist [erste Zeile, erste Spalte, letzte Zeile, letzte Spalte]"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:173
+#: packages/claudia-server/src/claudia_server/computes_search.py:134
 msgid "{method}: a range is on a sheet: say which"
 msgstr "{method}: Ein Bereich liegt auf einem Tabellenblatt: Geben Sie an, auf welchem"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:170
+#: packages/claudia-server/src/claudia_server/computes_search.py:131
 msgid "{method}: a scope has a sheet and, on it, a range"
 msgstr "{method}: Ein Suchbereich hat ein Tabellenblatt und darauf einen Bereich"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:177
+#: packages/claudia-server/src/claudia_server/computes_search.py:138
 msgid "{method}: a sheet is named by its id"
 msgstr "{method}: Ein Tabellenblatt wird mit seiner ID angegeben"
 
-#: packages/claudia-server/src/claudia_server/computes_search.py:158
+#: packages/claudia-server/src/claudia_server/search_methods.py:150
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "{method}: kinds ist eine Liste aus {kinds}"
 
@@ -7192,6 +7360,10 @@ msgstr "{method}: Parameter {parameter!r} fehlt"
 #: packages/claudia-server/src/claudia_server/protocol.py:385
 msgid "{method}: {parameter} {reason}"
 msgstr "{method}: {parameter} {reason}"
+
+#: packages/claudia-server/src/claudia_server/composes_search.py:91 packages/claudia-server/src/claudia_server/creates_search.py:80
+msgid "{method}: {why}"
+msgstr "{method}: {why}"
 
 #: web/app/components/PaletteDialog.vue:105
 msgid "{name} as hex"
@@ -7265,7 +7437,7 @@ msgstr "{n} Min."
 msgid "{n} min ago"
 msgstr "vor {n} Min."
 
-#: web/app/components/SearchPanel.vue:98
+#: web/app/components/SearchPanel.vue:105
 msgid "{n} of {count}"
 msgstr "{n} von {count}"
 
@@ -7297,11 +7469,11 @@ msgstr "{n} Stichproben"
 msgid "{n} samples were drawn, there are too many combinations to run all."
 msgstr "Es wurden {n} Stichproben gezogen, denn es gibt zu viele Kombinationen, um alle durchzurechnen."
 
-#: web/app/components/SlideWorkspace.vue:366
+#: web/app/components/SlideWorkspace.vue:391
 msgid "{n} without a time"
 msgstr "{n} ohne Zeit"
 
-#: web/app/lib/base-session.ts:399
+#: web/app/lib/base-session.ts:400
 msgid "{owner} is now the owner of this document."
 msgstr "{owner} ist jetzt Eigentümer dieses Dokuments."
 
@@ -7353,19 +7525,19 @@ msgstr "{time} Rückstand"
 msgid "{user} (you)"
 msgstr "{user} (Sie)"
 
-#: web/app/components/SlideCanvas.vue:461
+#: web/app/components/SlideCanvas.vue:464
 msgid "{user} is working on this"
 msgstr "{user} arbeitet daran"
 
-#: web/app/lib/base-session.ts:397
+#: web/app/lib/base-session.ts:398
 msgid "{user} left this document."
 msgstr "{user} hat dieses Dokument verlassen."
 
-#: web/app/components/SlideCanvas.vue:461
+#: web/app/components/SlideCanvas.vue:464
 msgid "{user} selected this"
 msgstr "{user} hat dies ausgewählt"
 
-#: web/app/lib/search.ts:247
+#: web/app/lib/search.ts:254
 msgid "{what} (kept as “{name}”)"
 msgstr "{what} (behalten als „{name}“)"
 
@@ -7381,19 +7553,19 @@ msgstr "{what} muss eine ganze Zahl von 0 bis {last} sein"
 msgid "{what} must be a whole number from {low} to {high}"
 msgstr "{what} muss eine ganze Zahl von {low} bis {high} sein"
 
-#: web/app/lib/search.ts:239
+#: web/app/lib/search.ts:246
 msgid "{what}, any number of times"
 msgstr "{what}, beliebig oft"
 
-#: web/app/lib/search.ts:240
+#: web/app/lib/search.ts:247
 msgid "{what}, exactly {n} times"
 msgstr "{what}, genau {n}-mal"
 
-#: web/app/lib/search.ts:238
+#: web/app/lib/search.ts:245
 msgid "{what}, one or more times"
 msgstr "{what}, ein- oder mehrmals"
 
-#: web/app/lib/search.ts:237
+#: web/app/lib/search.ts:244
 msgid "{what}, optionally"
 msgstr "{what}, optional"
 
@@ -7405,7 +7577,7 @@ msgstr "{what}, {n} Fehler"
 msgid "{what}, {n} errors"
 msgstr "{what}, {n} Fehler"
 
-#: web/app/lib/search.ts:243
+#: web/app/lib/search.ts:250
 msgid "{what}, {n} to {m} times"
 msgstr "{what}, {n}- bis {m}-mal"
 

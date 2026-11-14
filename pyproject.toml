@@ -136,7 +136,7 @@ release accepts minimatch 11."""
 "claudia-computes-io" = 95
 "claudia-container" = 91
 "claudia-core" = 94
-"claudia-creates" = 94
+"claudia-creates" = 95
 "claudia-creates-io" = 91
 "claudia-fonts" = 97
 "claudia-odf-io" = 96

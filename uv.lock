@@ -366,10 +366,14 @@ name = "claudia-composes"
 source = { editable = "packages/claudia-composes" }
 dependencies = [
     { name = "claudia-core" },
+    { name = "claudia-search" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "claudia-core", editable = "packages/claudia-core" }]
+requires-dist = [
+    { name = "claudia-core", editable = "packages/claudia-core" },
+    { name = "claudia-search", editable = "packages/claudia-search" },
+]
 
 [[package]]
 name = "claudia-composes-io"
@@ -444,10 +448,14 @@ name = "claudia-creates"
 source = { editable = "packages/claudia-creates" }
 dependencies = [
     { name = "claudia-core" },
+    { name = "claudia-search" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "claudia-core", editable = "packages/claudia-core" }]
+requires-dist = [
+    { name = "claudia-core", editable = "packages/claudia-core" },
+    { name = "claudia-search", editable = "packages/claudia-search" },
+]
 
 [[package]]
 name = "claudia-creates-io"

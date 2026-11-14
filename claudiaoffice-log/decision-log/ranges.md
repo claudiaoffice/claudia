@@ -38,6 +38,7 @@ Unused numbers in a closed block stay unused.
 | D450–D469 | Excel function coverage: matrix results, cell-by-cell operators, the first 300 functions (branch `excel-functions`; D450–D451 used) | 2026-11-14 | open |
 | D450–D469 | import and export wiring: every function of the three apps reaches the OpenDocument and Office formats, and what does not is said (branch `import-export-wiring`; D450–D455 used) | 2026-11-14 | open |
 | D1001–D1020 | printing sheets: the computes print preview, scale, print area, page cuts, footer, charts (E6.19; branch `computes-print`; D1001–D1010 used) | 2026-11-14 | open |
+| D450–D459 | search & replace in composes and creates: what is searched, shortcuts in a text, locks (E9.28, E10.19; branch `search`; D450–D452 used) | 2026-11-14 | open |
 
 ## Never to be used
 

@@ -299,6 +299,20 @@
         [
           {
             "accelerators": [
+              "<Primary>f"
+            ],
+            "checkable": false,
+            "id": "edit.search-replace",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Search & Replace\u2026",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
+            "accelerators": [
               "<Primary>m"
             ],
             "checkable": false,

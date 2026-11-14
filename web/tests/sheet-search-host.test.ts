@@ -20,7 +20,12 @@ function setup(role: 'owner' | 'editor' | 'viewer' = 'editor') {
 describe('the search host of a workbook', () => {
   it('says what a workbook can be searched for and where', () => {
     const { host } = setup()
-    expect(host.kinds).toEqual(['text', 'formulas', 'values'])
+    expect(host.unit).toBe('cell')
+    expect(host.switches.map((s) => [s.key, s.matchKind, s.replaceable, s.whileReplacing])).toEqual([
+      ['text', 'text', true, true],
+      ['formulas', 'formula', true, false],
+      ['values', 'value', false, false],
+    ])
     expect(host.scopes).toEqual(['sheet', 'all', 'selection'])
     expect(host.extraParts).toEqual(['cellref'])
   })

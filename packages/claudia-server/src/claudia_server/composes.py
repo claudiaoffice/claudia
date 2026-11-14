@@ -15,6 +15,8 @@
 * ``styles``, ``change_style``, ``deviate_style``, ``rename_style`` and ``check_css``: the styles are CSS in the
   document (E1.10, D73). Changing a style changes every paragraph that has it; deviating makes a new style, with a
   provisional name, from an old one and applies it, in one step (D75); naming ends the invitation to name it;
+* ``search_find``, ``search_preview`` and ``search_replace``: search and replace in the text, its headings, remarks
+  and the objects floating over it (:mod:`claudia_server.composes_search`, E9.28);
 * ``look`` and ``hold``: where my cursor is. ``hold`` also locks the ± n words around it for everybody else (D11);
 * ``suggest`` (the assistant only), ``accept_suggestion`` and ``reject_suggestion`` (D63).
 
@@ -65,6 +67,7 @@ from claudia_core import (
 )
 
 from .composes_lists import add_list_methods
+from .composes_search import add_search_methods
 from .i18n import msg
 from .office_export import export_with_original, office_export
 from .printing import add_language_methods
@@ -80,6 +83,7 @@ MAX_BLOCKS = 50_000  # paragraphs in a document
 MAX_STYLED_BLOCKS = 2_000  # paragraphs one deviation may apply its new style to
 
 composes_methods = core_methods.extended()
+add_search_methods(composes_methods)
 
 
 def _text(ctx: Context) -> TextModel:

@@ -3,6 +3,7 @@
 // All changes go to the server as requests; nothing is believed until the server's events say it happened.
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
+import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
@@ -440,6 +441,33 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       default:
         return this.notice(error.message, 'error')
     }
+  }
+
+  // ------------------------------------------------------------------------------ search and replace (E5.15)
+  /** What a search finds on `scope` (the app's own: computes `{}`, `{sheet}`, `{sheet, range}`; composes `{}`, `{section}`,
+   *  `{range}`; creates `{}`, `{slide}`), in the kinds of text asked for.
+   *  `null` when it could not be asked: a search runs while she types, so a failure makes no noise. */
+  async searchFind(query: SearchQuery, kinds: string[], scope: object): Promise<SearchAnswer | null> {
+    try {
+      return await this.need().request<SearchAnswer>('search_find', { query, kinds, scope })
+    } catch {
+      return null
+    }
+  }
+
+  /** What a replacement would change and what it would skip (and why); nothing is changed. */
+  async searchPreview(query: SearchQuery, kinds: string[], scope: object, leave: SearchLeave[]): Promise<PreviewAnswer | null> {
+    try {
+      return await this.need().request<PreviewAnswer>('search_preview', { query, kinds, scope, leave })
+    } catch {
+      return null
+    }
+  }
+
+  /** Replaces, in one step of the history; `false` after telling the person why it did not work. */
+  async searchReplace(query: SearchQuery, kinds: string[], scope: object, leave: SearchLeave[]): Promise<ReplaceAnswer | false> {
+    const done = await this.attempt('search_replace', { query, kinds, scope, leave, base: this.state.revision })
+    return done === false ? false : (done as unknown as ReplaceAnswer)
   }
 
   async undo(): Promise<boolean> {
