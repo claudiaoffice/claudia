@@ -20,6 +20,8 @@ Work plan for Nov 14/15th 2026
 		- [ ] the app icon is gone for the linux client when starting from shell - normal?
 		- [ ] rotation UI in all three apps
 		- [ ] macos client still picks random port and the button "open document" as well as native menu entries dont do anything.
+		- [ ] print on desktop clients "has no fonts"
+		- [ ] export to office format in desktop client => where do the files go? In web app theyre downloaded in the browser, perfect!
 	- [x] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] performance

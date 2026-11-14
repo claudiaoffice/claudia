@@ -16,6 +16,7 @@ from ..functions.range import Range
 from ..functions.registry import FunctionRegistry
 from ..names import Anchor, NamedRange, Names, Rect, select
 from ..refs import SheetId
+from ..spill import Matrix
 from ..values import NAME, REF, ErrorValue, FormulaError
 from . import operators
 from .nodes import (
@@ -103,20 +104,21 @@ class Compiler:
         self.registry = registry
         self.binding: Binding | None = None  # set by the calculator while it compiles a formula
         self.top_args: tuple[Node, ...] | None = None  # the arguments of the call that is the whole formula, if one
+        self.local_names: set[str] = set()  # the names LET is binding while its arguments are compiled (casefolded)
         self._handlers: dict[type, Callable[[Any], Evaluator]] = {
             Num: self._literal,
             Str: self._literal,
             Bool: self._literal,
             ErrorLit: lambda node: failing(node.code),
             BadRef: lambda node: failing(REF, "a cell this formula used was deleted"),
-            Name: lambda node: self.reference(node.text, (), None, None, as_range=False),
+            Name: self._name,
             TableRef: lambda node: self.reference(node.table, node.items, node.first, node.last, as_range=False),
             Missing: lambda node: constant(MISSING),
             Ref: lambda node: self.cell(node.ref.sheet, node.ref.row, node.ref.col),
             Area: self._area,
             Paren: lambda node: self.compile(node.inner),
             Unary: self._unary,
-            Percent: lambda node: self.map(self.compile(node.operand), operators.percent),
+            Percent: lambda node: self.map(self.compile(node.operand), operators.PERCENT),
             Binary: self.chain,
             Call: lambda node: self.call(node.name, node.args),
         }
@@ -135,13 +137,28 @@ class Compiler:
     def _literal(node: Any) -> Evaluator:
         return constant(node.value)
 
+    def _name(self, node: Name) -> Evaluator:
+        key = node.text.casefold()
+        if key in self.local_names:
+            return self.variable(key)
+        return self.reference(node.text, (), None, None, as_range=False)
+
+    @staticmethod
+    def variable(key: str) -> Evaluator:
+        """A name that ``LET`` gave a value: what it holds while the ``LET`` is being evaluated."""
+
+        def evaluate(scope: Scope) -> object:
+            return scope.variables[key]
+
+        return evaluate
+
     def _area(self, node: Area) -> Evaluator:
         ref = node.ref
         return self.area(ref.sheet, ref.first.row, ref.first.col, ref.last.row, ref.last.col)
 
     def _unary(self, node: Unary) -> Evaluator:
         inner = self.compile(node.operand)
-        return inner if node.op == "+" else self.map(inner, operators.negate)
+        return inner if node.op == "+" else self.map(inner, operators.NEGATE)
 
     def compile_range(self, node: Node) -> Evaluator:
         """An evaluator that gives a ``Range`` without reading the cells: for functions that need to know *where*
@@ -151,7 +168,7 @@ class Compiler:
                 return self.area(ref.sheet, ref.row, ref.col, ref.row, ref.col)
             case Paren(inner=inside):
                 return self.compile_range(inside)
-            case Name(text=text):
+            case Name(text=text) if text.casefold() not in self.local_names:
                 return self.reference(text, (), None, None, as_range=True)
             case TableRef(table=table, items=items, first=first, last=last):
                 return self.reference(table, items, first, last, as_range=True)
@@ -159,6 +176,8 @@ class Compiler:
 
         def evaluate(scope: Scope) -> Range:
             value = inner(scope)
+            if value.__class__ is Matrix:
+                return value.as_range()
             if value.__class__ is not Range:
                 return Range.of_value(value)
             return value

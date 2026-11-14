@@ -1,4 +1,4 @@
-"""The two special functions the beta and gamma distributions need: the regularised incomplete beta and gamma.
+"""The special functions the beta, gamma, t and chi-squared distributions need: the regularised incomplete beta and gamma.
 
 Standard series and continued-fraction expansions (Numerical Recipes, chapter 6), accurate to about 1e-14 over the
 range a spreadsheet uses. They are tested against the closed forms that exist for whole parameters."""
@@ -19,6 +19,15 @@ def regularized_gamma_p(a: float, x: float) -> float:
     if x < a + 1:
         return _gamma_series(a, x)
     return 1.0 - _gamma_fraction(a, x)
+
+
+def regularized_gamma_q(a: float, x: float) -> float:
+    """Q(a, x) = 1 - P(a, x): the share of a Gamma(a, 1) variable above ``x``, without losing digits in the tail."""
+    if x <= 0:
+        return 1.0
+    if x < a + 1:
+        return 1.0 - _gamma_series(a, x)
+    return _gamma_fraction(a, x)
 
 
 def _gamma_series(a: float, x: float) -> float:

@@ -11,7 +11,7 @@ import math
 import statistics
 from typing import Any
 
-from ...values import DIV0, NUM, VALUE, ErrorValue, Value
+from ...values import DIV0, NA, NUM, VALUE, ErrorValue, Value
 from ..base import Example, FunctionError, UserFunction
 from ..range import Range
 from .catalog import builtin
@@ -25,6 +25,35 @@ def numbers_of(ranges: tuple[Range, ...]) -> list[int | float]:
     for area in ranges:
         found.extend(area.numbers())
     return found
+
+
+def ordered_numbers(area: Range) -> list[int | float]:
+    """The numbers of a range row by row, as they stand (``numbers`` visits them in no particular order). An error in
+    the range is raised."""
+    found: list[int | float] = []
+    for _, _, value in area.cells():
+        if value.__class__ in (int, float):
+            found.append(value)
+        elif value.__class__ is ErrorValue:
+            raise value.raised()
+    return found
+
+
+def number_pairs(first: Range, second: Range) -> list[tuple[int | float, int | float]]:
+    """The numbers of two ranges side by side. The ranges must have the same size (else ``#N/A``); a position where
+    one of the two is not a number is left out, as the statistics functions do."""
+    if (first.n_rows, first.n_cols) != (second.n_rows, second.n_cols):
+        raise FunctionError(NA, "the two ranges must have the same size")
+    pairs = []
+    for a_row, b_row in zip(first.dense(), second.dense(), strict=True):
+        for a, b in zip(a_row, b_row, strict=True):
+            if a.__class__ is ErrorValue:
+                raise a.raised()
+            if b.__class__ is ErrorValue:
+                raise b.raised()
+            if a.__class__ in (int, float) and b.__class__ in (int, float):
+                pairs.append((a, b))
+    return pairs
 
 
 def total(numbers: list[int | float]) -> int | float:

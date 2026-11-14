@@ -7,12 +7,20 @@ from __future__ import annotations
 from ..base import UserFunction
 from . import (  # noqa: F401  (importing the modules fills the catalog)
     aggregate,
+    arrays,
     criteria,
     dates,
     finance,
+    financex,
     logic,
+    mathx,
     numeric,
+    probability,
+    referencex,
+    statistics_more,
+    timex,
     text,
+    textx,
 )
 from .catalog import CLASSES
 
