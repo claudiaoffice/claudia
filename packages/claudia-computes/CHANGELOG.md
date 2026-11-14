@@ -37,6 +37,11 @@ the number formats). Search on claudia-search (SEC-18, CODE-18).
 ### Added (UX-33)
 - `WorkbookModel.setup_commands`: a new workbook starts with its first sheet, `s1` "Sheet1", made by the server as nobody's undo step (UX-33). The web client no longer adds it.
 
+## [0.7.0] - 2026-11-14
+
+### Added
+- `WorkbookModel.load_state`: after `core.Import` (D438) the calculator works for the workbook it is in.
+
 ## [0.6.0] - 2026-11-13
 
 ### Added

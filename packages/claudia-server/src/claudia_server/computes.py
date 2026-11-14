@@ -47,6 +47,8 @@ from functools import lru_cache
 
 from claudia_computes_io import (
     Untranslatable,
+    apply_edits_to_ods,
+    apply_edits_to_xlsx,
     ods_export_losses,
     workbook_to_ods,
     workbook_to_xlsx,
@@ -118,7 +120,7 @@ from claudia_core.clock import utc_now
 from .computes_search import add_search_methods
 from .i18n import msg, translate
 from .images import image_bytes, picture_words
-from .office_export import document_info, office_export
+from .office_export import document_info, export_with_original, office_export
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
 from .style_targets import OBJECTS
@@ -251,9 +253,21 @@ def _export_office(ctx, *, format):
         raise RequestError("bad_request", msg('export_office: format must be "xlsx" or "ods"'))
     book = _workbook(ctx)
     if format == "xlsx":
-        return office_export(format, workbook_to_xlsx(book), xlsx_export_losses(book))
+        return export_with_original(
+            ctx,
+            format,
+            WorkbookModel,
+            apply_edits_to_xlsx,
+            lambda: office_export(format, workbook_to_xlsx(book), xlsx_export_losses(book)),
+        )
     info = document_info(ctx.document.log, ctx.document.branch)
-    return office_export(format, workbook_to_ods(book, info=info), ods_export_losses(book))
+    return export_with_original(
+        ctx,
+        format,
+        WorkbookModel,
+        lambda original, baseline, current: apply_edits_to_ods(original, baseline, current, info=info),
+        lambda: office_export(format, workbook_to_ods(book, info=info), ods_export_losses(book)),
+    )
 
 
 MAX_RESAMPLE = 1_000  # draws one ``resample`` may skip

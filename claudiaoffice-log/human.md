@@ -13,6 +13,7 @@ Work plan for Nov 14/15th 2026
 	- [ ] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] performance
+		- [ ] scaleway: replace not new image
 		- [ ] deployability server
 		- [ ] CI on github, get it green!!
 		- [ ] desktop client tests (visual deviations)

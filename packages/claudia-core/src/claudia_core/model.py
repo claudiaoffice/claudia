@@ -60,6 +60,14 @@ class DocumentModel(ABC):
     def restore(cls, state: dict) -> Self:
         """Build a model from ``serialize()``'s output (a snapshot)."""
 
+    def load_state(self, state: dict) -> None:
+        """Become, in place, what :meth:`restore` builds from ``state`` (``core.Import``, D438). The default takes over
+        the attributes of a restored model; a model whose parts point back at the model itself (a calculator, say)
+        overrides this and points them at ``self`` again."""
+        fresh = type(self).restore(state)
+        vars(self).clear()
+        vars(self).update(vars(fresh))
+
     # -- the three verbs ---------------------------------------------------------
     def apply(self, command: Command, ctx: Context) -> Command:
         """Apply ``command`` and return its inverse. Models may wrap this; the default delegates."""

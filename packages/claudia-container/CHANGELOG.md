@@ -3,6 +3,13 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.5.0] - 2026-11-14
+
+### Added
+- `write_original(path, keys, data)` and `read_original(path, keys)`: the file an imported document was made from,
+  sealed with the content key as the entry `content/original.bin` and bound to the document's id (D439). Every later
+  write of the file carries it along; `read_original` raises `TamperedDocument` for an entry that does not belong.
+
 ## [0.4.0] - 2026-11-06
 
 Leaving a document and handing over ownership (E2.3).

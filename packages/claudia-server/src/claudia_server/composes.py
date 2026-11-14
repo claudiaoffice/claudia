@@ -26,7 +26,14 @@ from __future__ import annotations
 
 from collections import Counter
 
-from claudia_composes_io import export_info, odt_export_losses, text_to_docx, text_to_odt
+from claudia_composes_io import (
+    apply_edits_to_docx,
+    apply_edits_to_odt,
+    export_info,
+    odt_export_losses,
+    text_to_docx,
+    text_to_odt,
+)
 
 from claudia_composes import (
     AcceptSuggestion,
@@ -56,7 +63,7 @@ from claudia_core import (
 
 from .composes_lists import add_list_methods
 from .i18n import msg
-from .office_export import office_export
+from .office_export import export_with_original, office_export
 from .printing import add_language_methods
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
@@ -166,9 +173,28 @@ def _export_office(ctx, *, format, tracked_changes):
     model = _text(ctx)
     info, times = export_info(ctx.document.log, ctx.document.branch)
     if format == "docx":
-        return office_export(format, text_to_docx(model, track_suggestions=tracked_changes, change_times=times))
-    data = text_to_odt(model, track_suggestions=tracked_changes, info=info, change_times=times)
-    return office_export(format, data, odt_export_losses(model, track_suggestions=tracked_changes))
+        return export_with_original(
+            ctx,
+            format,
+            TextModel,
+            lambda original, baseline, current: apply_edits_to_docx(
+                original, baseline, current, track_suggestions=tracked_changes, change_times=times
+            ),
+            lambda: office_export(format, text_to_docx(model, track_suggestions=tracked_changes, change_times=times)),
+        )
+    return export_with_original(
+        ctx,
+        format,
+        TextModel,
+        lambda original, baseline, current: apply_edits_to_odt(
+            original, baseline, current, track_suggestions=tracked_changes
+        ),
+        lambda: office_export(
+            format,
+            text_to_odt(model, track_suggestions=tracked_changes, info=info, change_times=times),
+            odt_export_losses(model, track_suggestions=tracked_changes),
+        ),
+    )
 
 
 # ------------------------------------------------------------------------------ writing

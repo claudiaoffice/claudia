@@ -1,5 +1,5 @@
 {
- "version": "0.6.0",
+ "version": "0.7.0",
  "AddChart": {
   "class": [
    "Command"
@@ -1045,6 +1045,7 @@
    "grow_names": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'NameRestores'",
    "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
+   "load_state": "(self, state: 'dict') -> 'None'",
    "outcome_table": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, combine: 'str' = 'all') -> 'OutcomeTable | None'",
    "put_names": "(self, entries: 'Sequence[tuple[NameKey, NamedRange | None]]') -> 'NameRestores'",
    "query": "(self, text: 'str', home: 'SheetId', parameters: 'Sequence[object]' = ()) -> 'Table'",

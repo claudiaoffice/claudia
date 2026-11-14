@@ -34,6 +34,7 @@ from __future__ import annotations
 import contextlib
 import json
 import logging
+import os
 import re
 import threading
 import time
@@ -62,6 +63,7 @@ from claudia_container import (
     pack_journal,
     parse_recovery_key,
     read_manifest,
+    read_original,
     read_people,
     read_state,
     recover_access,
@@ -70,6 +72,7 @@ from claudia_container import (
     transfer_owner,
     unlock,
     unlock_with_recovery,
+    write_original,
 )
 from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Snapshot
 
@@ -517,6 +520,47 @@ class SealedDocuments:
                 held.store.close()
 
     # -- the recovery key (D105) ---------------------------------------------------------------
+    # -- the original of an import, and a file taken in as it is (D439, D442) ------------------------------------
+    def keep_original(self, doc_id: str, data: bytes) -> None:
+        """Seal the file the open document was imported from into its document file."""
+        with self._lock:
+            held = self._open.get(doc_id)
+            if held is None:
+                raise DocumentSealed(_SEALED)
+            write_original(self._file(doc_id), held.keys, data)
+
+    def original(self, doc_id: str) -> bytes | None:
+        """The file the open document was imported from, if it is kept; ``None`` when not, or not open."""
+        with self._lock:
+            held = self._open.get(doc_id)
+            keys = None if held is None else dict(held.keys)
+        if keys is None:
+            return None
+        try:
+            return read_original(self._file(doc_id), keys)
+        except ContainerError:
+            log.exception("the kept original of %s does not open", doc_id)
+            return None
+
+    def place(self, doc_id: str, data: bytes) -> None:
+        """Take in a Claudia document file as it is, still sealed, as ``doc_id`` (which its manifest must name).
+        ``FileExistsError`` if a document of that id is here; ``ValueError`` if the file is not a document of this
+        app or is damaged. Never overwrites, and nothing is left behind when it fails."""
+        target = self._file(doc_id)
+        temp = target.with_name(f".{target.name}.{threading.get_ident()}.incoming")
+        temp.write_bytes(data)
+        try:
+            manifest = read_manifest(temp)
+            if manifest.id != doc_id:
+                raise ValueError(f"the file is {manifest.id}, not {doc_id}")
+            if manifest.app != self.model_cls.app:
+                raise ValueError(f"it is a document of {manifest.app}, not of {self.model_cls.app}")
+            os.link(temp, target)  # fails if the target exists: never overwrites
+        except ContainerError as error:
+            raise ValueError(str(error)) from error
+        finally:
+            temp.unlink(missing_ok=True)
+
     def new_recovery_key(self, doc_id: str) -> str:
         """Make a new recovery key for an open document, written as people write it down. A key the document had
         before stops working. The server keeps nothing of it: whoever asks must show it to the owner now.

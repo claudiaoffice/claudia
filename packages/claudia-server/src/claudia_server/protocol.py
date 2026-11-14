@@ -295,6 +295,7 @@ class Context:
     note_ai_mode: Callable[[str, str | None], None] = field(default=lambda user, mode: None)
     set_locale: Callable[[str], None] = field(default=lambda locale: None)  # change this window's language (D323)
     renderings: RenderDesk | None = None  # what makes rendered containers (D395); ``None``: this server makes none
+    original: Callable[[], bytes | None] = field(default=lambda: None)  # the imported file, if it is kept (D439)
 
     @property
     def user(self) -> str:

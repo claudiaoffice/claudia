@@ -135,6 +135,7 @@ class MemoryProvider:
         self._options = options  # clock, lock_clock
         self._stored: dict[str, tuple[CommandLog, MemoryStore]] = {}
         self._created: dict[str, str] = {}
+        self._originals: dict[str, bytes] = {}
 
     @property
     def app(self) -> str:
@@ -159,6 +160,14 @@ class MemoryProvider:
 
     def release(self, doc_id: str) -> None:
         """Nothing is held for an open document."""
+
+    def keep_original(self, doc_id: str, data: bytes) -> None:
+        """Keep the file the document was imported from (D439)."""
+        self._originals[doc_id] = data
+
+    def original(self, doc_id: str) -> bytes | None:
+        """The file the document was imported from, if it is kept."""
+        return self._originals.get(doc_id)
 
     def documents(self) -> list[StoredInfo]:
         """Every stored document, the most recently changed first."""
@@ -251,6 +260,7 @@ class Connection:
                 hosted.note_ai_mode,
                 self.set_locale,
                 hosted.renderings,
+                hosted.original,
             )
             hosted.acting_user = self.account.user
             result = hosted.methods.dispatch(context, name, params)
@@ -304,10 +314,12 @@ class HostedDocument:
         clock: Callable[[], float],
         directory: UserDirectory | None = None,
         renderings: RenderDesk | None = None,
+        original: Callable[[], bytes | None] = lambda: None,
     ):
         self.id = doc_id
         self.document = document
         self.renderings = renderings
+        self.original = original  # the file the document was imported from, if it is kept (D439)
         self.acting_user: str | None = None  # whose request is being handled right now (see `_schedule_render`)
         self._render_jobs: dict[str, asyncio.Task] = {}
         self._rendered: dict[str, tuple[str, tuple]] = {}  # what a finished job made a picture of, by container
@@ -623,6 +635,38 @@ class Hub:
             found.append({"id": info.id, "app": info.app, "modified": info.modified, "online": online})
         return found
 
+    def original(self, doc_id: str) -> bytes | None:
+        """The file the document was imported from, if its store keeps one (D439)."""
+        read = getattr(self.provider, "original", None)
+        return read(doc_id) if read is not None else None
+
+    def keep_original(self, doc_id: str, data: bytes) -> bool:
+        """Keep the file the document was imported from, if the store can; ``False`` if it cannot."""
+        keep = getattr(self.provider, "keep_original", None)
+        if keep is None:
+            return False
+        keep(doc_id, data)
+        return True
+
+    async def place(self, doc_id: str, data: bytes) -> None:
+        """Take a Claudia document file in as it is (D442): ``HubError('not_found')`` if this store cannot hold
+        files, ``HubError('bad_request')`` if one of that name is here already or the file is not one of this app's,
+        ``HubError('unavailable')`` if the server is full."""
+        place = getattr(self.provider, "place", None)
+        if place is None:
+            raise HubError("not_found", msg("this server keeps its documents in memory and cannot take in a file"))
+        async with self._open_lock:
+            if self.exists(doc_id):
+                raise HubError("bad_request", msg("{id} is here already", id=doc_id))
+            await self.ensure_room()
+            try:
+                await asyncio.to_thread(place, doc_id, data)
+            except FileExistsError as exc:
+                raise HubError("bad_request", msg("{id} is here already", id=doc_id)) from exc
+            except ValueError as exc:
+                raise HubError("bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=exc)) from exc
+            self._known.add(doc_id)
+
     def is_loaded(self, doc_id: str) -> bool:
         """Is the document open in memory now?"""
         return doc_id in self._documents
@@ -692,6 +736,7 @@ class Hub:
                 clock=self._clock,
                 directory=self.directory,
                 renderings=self.renderings,
+                original=lambda: self.original(doc_id),
             )
             if self.assistant is not None:
                 self.assistant().attach(hosted)

@@ -362,3 +362,14 @@ then the web client (after its screens are agreed), then one patch per desktop s
 Decisions: D430 (one server, app modules); D431 (one place per app, addresses with the app); D432 (limits and
 administration per server); D433 (old commands keep working); D434 (stop when idle); D435 (folder lock); D436
 (isolation in two steps); D437 (no migration)
+
+## Opening files from the computer (branch `one-server`, 2026-11-14)
+
+The front page and File ▸ Open of sheet 10 need a way to open Word, Excel, PowerPoint, OpenDocument and Claudia files
+that lie on the person's computer. The readers and the patching writers existed (D217 onward); nothing made a document
+of a file or kept the file for the round trip. The owner confirmed the design of D217: the imported file becomes part
+of the document, and the person may switch that off.
+
+Decisions: D438 (one core.Import entry); D439 (the file kept, sealed, in the document); D440 (upload, then hello);
+D441 (download patched into the kept file); D442 (a Claudia file goes in as it is)
+

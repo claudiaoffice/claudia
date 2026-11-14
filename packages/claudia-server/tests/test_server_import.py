@@ -1,0 +1,266 @@
+"""Opening a file from the person's computer (D438-D442): upload it, make a document of it, download it again."""
+
+import base64
+import io
+import zipfile
+
+import pytest
+from starlette.testclient import TestClient
+from test_server_formats import made
+
+from claudia_computes import SetCells, WorkbookModel, parse_input
+from claudia_server import Hub, MemoryProvider, create_app, methods_for
+from claudia_server.sealed import SealedDocuments
+from claudia_server.suite import Module, Suite
+
+PASSWORD = "Correct-Horse-9"
+EXTRA = "customXml/claudia-test.xml"  # a part Claudia does not know: it must survive the round trip
+
+
+def with_extra_part(data: bytes) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(data)) as source, zipfile.ZipFile(buffer, "w") as target:
+        for info in source.infolist():
+            target.writestr(info, source.read(info))
+        target.writestr(EXTRA, "<kept/>")
+    return buffer.getvalue()
+
+
+def workbook_server(**options):
+    suite = Suite([Module(app_hub(MemoryProvider(WorkbookModel), WorkbookModel), _directory())])
+    return TestClient(create_app(suite, **options))
+
+
+def app_hub(provider, model=None):
+    """A hub with the methods of its app, as the command line makes it."""
+    model = model or provider.model_cls
+    return Hub(provider, methods=methods_for(model))
+
+
+def _directory():
+    from claudia_server import ScryptDirectory
+
+    return ScryptDirectory(cost=2**4)
+
+
+def upload(client, data, name="Budget 2026.xlsx", **headers):
+    return client.post("/api/uploads", content=data, headers={"x-claudia-name": name, **headers})
+
+
+def hello(user="ann", password=PASSWORD, **extra):
+    return {"id": 1, "method": "hello", "params": {"user": user, "password": password, **extra}}
+
+
+def request(ws, method, params, request_id=2):
+    ws.send_json({"id": request_id, "method": method, "params": params})
+    while True:
+        frame = ws.receive_json()
+        if frame.get("id") == request_id:
+            return frame
+
+
+def hosted(client, app, doc_id):
+    return client.app.state.suite.module(app).hub._documents[doc_id]
+
+
+# ------------------------------------------------------------------------------------------------ the upload
+def test_an_upload_says_what_the_file_is_and_changes_nothing():
+    with workbook_server() as client:
+        answer = upload(client, made("xlsx")).json()
+        assert answer["format"] == "xlsx" and answer["app"] == "computes" and answer["hosted"]
+        assert answer["suggested_id"] == "Budget-2026" and answer["kind"] == "Excel workbook"
+        assert answer["name"] == "Budget 2026.xlsx" and len(answer["upload"]) > 20
+        assert client.get("/api/docs").json()["documents"] == []
+
+
+@pytest.mark.parametrize(("data", "status"), [(b"%PDF-1.7", 415), (b"PK\x03\x04garbage", 415), (b"x" * 2048, 413)])
+def test_files_that_cannot_be_opened_or_are_too_large_are_refused(data, status):
+    with workbook_server() as client:
+        client.app.state.gateway.uploads.max_bytes = 1024
+        assert upload(client, data).status_code == status
+
+
+def test_with_an_access_secret_only_those_who_know_it_may_upload():
+    secret = "s" * 20
+    with workbook_server(access_secret=secret) as client:
+        assert upload(client, made("xlsx")).status_code == 401
+        ok = upload(client, made("xlsx"), authorization=f"Bearer {secret}")
+        assert ok.status_code == 200
+
+
+def test_only_so_many_uploads_wait_from_one_address():
+    with workbook_server() as client:
+        statuses = [upload(client, made("xlsx")).status_code for _ in range(6)]
+    assert statuses[:4] == [200] * 4 and statuses[4:] == [503, 503]
+
+
+# ------------------------------------------------------------------------------------------- import and round trip
+def test_an_imported_workbook_keeps_its_file_and_gives_it_back_with_only_the_edits():
+    original = with_extra_part(made("xlsx"))
+    with workbook_server() as client:
+        token = upload(client, original).json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            welcome = ws.receive_json()
+            assert welcome["ok"], welcome
+            imported = welcome["result"]["imported"]
+            assert imported["format"] == "xlsx" and imported["kept"] and imported["name"] == "Budget 2026.xlsx"
+            doc = hosted(client, "computes", "budget").document
+            assert [e.command.kind for e in doc.log.path(doc.revision)] == ["core.Import"]
+            doc.execute(SetCells("s1", ((0, 0, parse_input("99")),)), author="ann")
+            answer = request(ws, "export_office", {"format": "xlsx"})["result"]
+        assert answer["patched"] is True
+        back = base64.b64decode(answer["data"])
+        with zipfile.ZipFile(io.BytesIO(back)) as archive:
+            assert archive.read(EXTRA) == b"<kept/>", "what Claudia does not know is still there"
+        from claudia_computes_io import xlsx_to_workbook
+
+        book = xlsx_to_workbook(back)
+        assert book.serialize()["sheets"][0]["cells"][0][2] is not None
+        assert upload(client, original).status_code == 200  # the token was used up; a new upload is fine
+
+
+def test_the_file_is_not_kept_when_the_person_says_so_and_the_download_is_written_anew():
+    with workbook_server() as client:
+        token = upload(client, with_extra_part(made("xlsx"))).json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token, keep_original=False))
+            assert ws.receive_json()["result"]["imported"]["kept"] is False
+            answer = request(ws, "export_office", {"format": "xlsx"})["result"]
+        assert "patched" not in answer
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(answer["data"]))) as archive:
+            assert EXTRA not in archive.namelist()
+
+
+def test_another_format_is_written_anew():
+    with workbook_server() as client:
+        token = upload(client, made("xlsx")).json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            ws.receive_json()
+            answer = request(ws, "export_office", {"format": "ods"})["result"]
+        assert "patched" not in answer and answer["format"] == "ods"
+
+
+@pytest.mark.parametrize(
+    ("address", "extra", "words"),
+    [
+        ("/api/computes/docs/budget/ws", {"upload": "no-such-token", "create": True}, "no longer here"),
+        ("/api/computes/docs/budget/ws", {"upload": "TOKEN"}, "needs create"),
+    ],
+)
+def test_a_wrong_token_or_a_missing_create_is_refused(address, extra, words):
+    with workbook_server() as client:
+        token = upload(client, made("xlsx")).json()["upload"]
+        extra = {k: (token if v == "TOKEN" else v) for k, v in extra.items()}
+        with client.websocket_connect(address) as ws:
+            ws.send_json(hello(**extra))
+            answer = ws.receive_json()
+    assert not answer["ok"] and words in answer["error"]["message"]
+
+
+def test_a_file_cannot_become_a_document_of_another_app_or_replace_one():
+    suite = Suite(
+        [Module(app_hub(MemoryProvider(WorkbookModel), WorkbookModel), _directory())]
+        + [Module(app_hub(MemoryProvider(_text_model()), _text_model()), _directory())]
+    )
+    with TestClient(create_app(suite)) as client:
+        token = upload(client, made("xlsx")).json()["upload"]
+        with client.websocket_connect("/api/composes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert "cannot become a document of composes" in ws.receive_json()["error"]["message"]
+        with client.websocket_connect("/api/computes/docs/taken/ws") as ws:
+            ws.send_json(hello(create=True))
+            assert ws.receive_json()["ok"]
+        with client.websocket_connect("/api/docs/taken/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert "here already" in ws.receive_json()["error"]["message"]
+
+
+def _text_model():
+    from claudia_composes import TextModel
+
+    return TextModel
+
+
+@pytest.mark.parametrize("fmt", ["docx", "odt", "ods", "pptx", "odp"])
+def test_every_format_becomes_a_document_of_its_app_and_comes_back_patched(fmt):
+    from claudia_composes import TextModel
+    from claudia_creates import SlideModel
+    from claudia_server.formats import FORMATS
+
+    app = FORMATS[fmt][0]
+    model = {"computes": WorkbookModel, "composes": TextModel, "creates": SlideModel}[app]
+    suite = Suite([Module(app_hub(MemoryProvider(model), model), _directory())])
+    with TestClient(create_app(suite)) as client:
+        token = upload(client, made(fmt), name=f"file.{fmt}").json()["upload"]
+        with client.websocket_connect(f"/api/{app}/docs/file/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["result"]["imported"]["format"] == fmt
+            answer = request(ws, "export_office", {"format": fmt})["result"]
+    assert answer.get("patched") is True, answer.get("losses")
+
+
+# --------------------------------------------------------------------------------- sealed: kept across a restart
+def test_the_kept_file_survives_packing_and_a_restart(tmp_path):
+    def server():
+        store = SealedDocuments(tmp_path, WorkbookModel)
+        return TestClient(create_app(Suite([Module(app_hub(store), store)])))
+
+    original = with_extra_part(made("xlsx"))
+    with server() as client:
+        token = upload(client, original).json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["result"]["imported"]["kept"]
+    assert b"<kept/>" not in (tmp_path / "docs" / "budget.claudia").read_bytes(), "sealed in the file"
+    with server() as client, client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+        ws.send_json(hello())
+        assert ws.receive_json()["ok"]
+        answer = request(ws, "export_office", {"format": "xlsx"})["result"]
+    assert answer["patched"] is True
+
+
+# -------------------------------------------------------------------------------------------- a Claudia file
+def test_a_claudia_file_goes_in_as_it_is_and_opens_with_its_own_people(tmp_path):
+    home, away = tmp_path / "home", tmp_path / "away"
+
+    def server(folder):
+        store = SealedDocuments(folder, WorkbookModel)
+        return TestClient(create_app(Suite([Module(app_hub(store), store)])))
+
+    with server(home) as client, client.websocket_connect("/api/computes/docs/plan/ws") as ws:
+        ws.send_json(hello(create=True))
+        assert ws.receive_json()["ok"]
+    data = (home / "docs" / "plan.claudia").read_bytes()
+    with server(away) as client:
+        answer = upload(client, data, name="plan.claudia").json()
+        assert (answer["format"], answer["app"], answer["id"], answer["exists"]) == (
+            "claudia",
+            "computes",
+            "plan",
+            False,
+        )
+        placed = client.post(f"/api/uploads/{answer['upload']}/place")
+        assert placed.json() == {"app": "computes", "id": "plan"}
+        with client.websocket_connect("/api/computes/docs/plan/ws") as ws:
+            ws.send_json(hello())
+            assert ws.receive_json()["ok"]
+        again = upload(client, data, name="plan.claudia").json()
+        assert again["exists"] is True
+        assert client.post(f"/api/uploads/{again['upload']}/place").status_code == 409
+        assert client.post("/api/uploads/no-such-token/place").status_code == 404
+
+
+def test_a_server_that_keeps_documents_in_memory_cannot_take_a_file_in(tmp_path):
+    store = SealedDocuments(tmp_path, WorkbookModel)
+    with (
+        TestClient(create_app(Suite([Module(app_hub(store), store)]))) as client,
+        client.websocket_connect("/api/computes/docs/plan/ws") as ws,
+    ):
+        ws.send_json(hello(create=True))
+        ws.receive_json()
+    data = (tmp_path / "docs" / "plan.claudia").read_bytes()
+    with workbook_server() as client:
+        token = upload(client, data, name="plan.claudia").json()["upload"]
+        assert client.post(f"/api/uploads/{token}/place").status_code == 422

@@ -5,6 +5,23 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-14
+
+Opening files from the computer (D438-D442).
+
+### Added
+- `POST /api/uploads` (body: the file; `X-Claudia-Name`: its name, percent-encoded) answers `{upload, name, format,
+  app, size, hosted}` and `suggested_id`/`kind`, or for a Claudia file `id`, `title`, `exists`. `UploadDesk`,
+  `formats.sniff`, `formats.import_state`.
+- `hello` takes `upload` (with `create: true`) and `keep_original` (default true): the new document is the file's
+  content as one `core.Import` entry, read in the worker pool, and the file is kept in it. The welcome then has
+  `imported: {name, format, kept, losses}`.
+- `POST /api/uploads/{token}/place`: a Claudia file goes into its app's folder as it is (`Hub.place`,
+  `SealedDocuments.place`); 409 when that id is there, 422 on a server that keeps documents in memory.
+- `export_office` in the imported format patches the edits into the kept file and says `patched: true`; when that
+  cannot be done the new file's losses say `not-patched`. `Context.original`, `Hub.original`, `Hub.keep_original`,
+  `keep_original`/`original` on `MemoryProvider` and `SealedDocuments`.
+
 ## [0.30.0] - 2026-11-14
 
 One server for all three apps (D430-D437). The rest of this section is the work that was unreleased before it.

@@ -28,6 +28,7 @@ from .container import (
     leave_document,
     pack_journal,
     read_manifest,
+    read_original,
     read_people,
     read_snapshot,
     read_state,
@@ -37,6 +38,7 @@ from .container import (
     transfer_owner,
     unlock,
     unlock_with_recovery,
+    write_original,
 )
 from .crypto import (
     DecryptionError,
@@ -113,6 +115,7 @@ __all__ = [
     "read_journal",
     "read_manifest",
     "read_people",
+    "read_original",
     "read_snapshot",
     "read_state",
     "recover_access",
@@ -123,4 +126,5 @@ __all__ = [
     "transfer_owner",
     "unlock",
     "unlock_with_recovery",
+    "write_original",
 ]

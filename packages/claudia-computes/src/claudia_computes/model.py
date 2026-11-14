@@ -510,6 +510,11 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         model._calculate_loaded()
         return model
 
+    def load_state(self, state: dict) -> None:
+        """As :meth:`~claudia_core.DocumentModel.load_state`, and the calculator then works for this workbook."""
+        super().load_state(state)
+        self.calc.model = self
+
     # -- the object seam -------------------------------------------------------
     def style_in_use(self, style_id: str) -> bool:
         """Does an object, its words, or a style range of any sheet name this style? (Asked by the core style

@@ -481,3 +481,20 @@ def test_a_formula_with_sheet_names_is_not_rewritten_by_a_colleagues_structure_e
     doc.execute(Structure(InsertRows(S1, 0, 1)), author="ben")  # (another sheet's cells did not move)
     doc.undo("ana")
     assert stored(doc, "B2") == "=Data!A1" and shown(doc, "B2") == 4
+
+
+def test_an_imported_workbook_calculates_on_after_the_import(doc):
+    """``core.Import`` (D438) makes the workbook what an import read; the calculator then belongs to it, so an edit
+    after the import is followed by every formula that depends on it."""
+    from claudia_core import Document, Import, MemoryStore
+
+    source = Document(WorkbookModel(), store=MemoryStore())
+    source.execute(AddSheet(S1, "Sheet1"), author="ana")
+    fill(source, {"A1": "2", "A2": "=A1*10"})
+    fresh = Document(WorkbookModel(), store=MemoryStore())
+    fresh.execute(Import("book.xlsx", "xlsx", source.model.serialize()), author="ana")
+    assert shown(fresh, "A2") == shown(source, "A2")
+    assert fresh.model.calc.model is fresh.model
+    type_in(fresh, "A1", "5")
+    assert shown(fresh, "A2") == 50
+    assert_consistent(fresh)

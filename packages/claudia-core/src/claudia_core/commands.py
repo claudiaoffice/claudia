@@ -257,6 +257,44 @@ class Setup(Batch):
 
 @core_commands.register
 @dataclass(frozen=True)
+class Import(Command):
+    """First entry of an imported document (D438): the state an import made of a file (a docx, an xlsx, ...), as the
+    model's own ``serialize()`` form, and what the file was. The file itself is not in the log; when it is kept, it
+    sits sealed in the document file and ``sha256`` says which bytes it is (D439).
+
+    It is in the history, under the name of who imported it, but nobody's undo step. It cannot be redacted: every
+    later entry is a change of the state it carries, so blanking it would leave the rest of the log meaningless."""
+
+    kind: ClassVar[str] = "core.Import"
+    undoable = False
+    name: str  # the file's name, as the person's computer called it
+    fmt: str  # "docx", "odt", "xlsx", "ods", "pptx" or "odp"
+    state: dict = field(repr=False)
+    sha256: str | None = None  # of the original file's bytes
+    kept: bool = False  # is the original file kept in the document?
+
+    @property
+    def label(self) -> str:
+        return f"Imported {self.name}"
+
+    def apply(self, ctx: Context) -> Command:
+        before = ctx.model.serialize()
+        ctx.model.load_state(self.state)
+        return Import(self.name, self.fmt, before)
+
+    def to_data(self) -> dict:
+        return {"name": self.name, "fmt": self.fmt, "state": self.state, "sha256": self.sha256, "kept": self.kept}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> Import:
+        return cls(data["name"], data["fmt"], data["state"], data.get("sha256"), bool(data.get("kept", False)))
+
+    def redacted(self) -> Command:
+        return self
+
+
+@core_commands.register
+@dataclass(frozen=True)
 class Redacted(Command):
     """What a command becomes when it is redacted: kind and ids stay, the content is gone. Applies as a no-op."""
 

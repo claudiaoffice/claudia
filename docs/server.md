@@ -73,6 +73,28 @@ waiting to be let in, a full server or a client that is too slow.
 On a server with an access secret, `"access": "<secret>"` goes into `hello` when a document is to be made, and
 `Authorization: Bearer <secret>` into `GET /api/docs`; see *Who can reach the server* below.
 
+## Opening a file from the computer
+
+A Word, Excel, PowerPoint or OpenDocument file becomes a new document in two steps (D440):
+
+1. `POST /api/uploads` with the file as the body and its name in `X-Claudia-Name` (percent-encoded). The server looks
+   at the bytes, holds them for five minutes and answers what the file is:
+   `{upload, name, format, app, size, hosted, suggested_id, kind}`. Formats: docx and odt (composes), xlsx and ods
+   (computes), pptx and odp (creates). At most 64 MB; 16 uploads wait at once, 4 from one address; with an access
+   secret only `Authorization: Bearer <secret>` may upload. 415 for anything else, 413 for too large.
+2. `hello` at `/api/<app>/docs/<id>/ws` with `"create": true, "upload": "<token>"` and the new owner's name and
+   password. The document starts with one `core.Import` entry holding what the file shows (D438); the file itself is
+   kept, sealed, in the document unless `"keep_original": false` (D439). The welcome says
+   `imported: {name, format, kept, losses}`.
+
+`export_office` in the same format then gives back the kept file with only the edits patched in (`patched: true`);
+everything Claudia does not show stays as it was (D441). Other formats are written anew.
+
+A Claudia file is uploaded the same way; the answer has its `id`, `title` and whether this server already holds a
+document of that id (`exists`). `POST /api/uploads/<token>/place` puts it into its app's folder as it is, and the
+person opens it with a name and password it knows (D442). It never overwrites (409), and a server that keeps documents
+in memory cannot take one in (422).
+
 ## After the handshake
 
 * Requests are `{"id", "method", "params"}`; responses `{"id", "ok", "result" | "error"}`; pushed events

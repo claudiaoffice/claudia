@@ -476,3 +476,41 @@ def test_the_journal_lives_next_to_the_file(path):
 
 def test_nothing_is_left_over_after_all_this(path, team):
     assert sorted(os.listdir(path.parent)) == ["plan.claudia"]
+
+
+# --- the original of an imported document (D439) -------------------------------------------------------------------
+def test_the_original_of_an_import_is_kept_sealed_and_read_back_with_the_content_key(path, team):
+    from claudia_container.container import read_original, write_original
+
+    keys = unlock(path, "Annabelle", OWNER_PW).keys
+    assert read_original(path, keys) is None
+    secret = b"PK\x03\x04 a spreadsheet with the word Geheimnis in it"
+    write_original(path, keys, secret)
+    raw = path.read_bytes()
+    assert b"Geheimnis" not in raw, "sealed, not stored in the clear"
+    assert read_original(path, keys) == secret
+    viewer = unlock(path, "Cornelia", VIEW_PW).keys
+    assert read_original(path, viewer) == secret, "whoever may read the content may read the original"
+    add_user(path, keys, "Ben", "Battery-Staple-8", Role.EDITOR)
+    assert read_original(path, keys) == secret, "a change of the people carries it along"
+
+
+def test_an_original_sealed_for_another_document_does_not_open(tmp_path, path, owner):
+    from claudia_container.container import read_original, write_original
+
+    other_path = tmp_path / "other.claudia"
+    other = create_document(
+        other_path, doc_id="other", app="computes", title="x", owner="Annabelle", password=OWNER_PW, kdf=CHEAP
+    )
+    write_original(other_path, other.keys, b"the other one")
+    with zipfile.ZipFile(other_path) as archive:
+        stolen = archive.read("content/original.bin")
+    keys = unlock(path, "Annabelle", OWNER_PW).keys
+    write_original(path, keys, b"mine")
+    entries = container._read_entries(path)
+    entries["content/original.bin"] = stolen
+    with zipfile.ZipFile(path, "w") as archive:
+        for name, data in entries.items():
+            archive.writestr(name, data)
+    with pytest.raises(container.TamperedDocument):
+        read_original(path, keys)

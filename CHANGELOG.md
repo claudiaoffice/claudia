@@ -4,6 +4,16 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.22.0] - 2026-11-14
+
+Imported documents (D438).
+
+### Added
+- `Import` (`core.Import`): the first entry of a document made from a file, carrying the state the import made, the
+  file's name, format and SHA-256 and whether the file is kept. Nobody's undo step; `redacted()` is the entry itself.
+- `DocumentModel.load_state(state)`: become, in place, what `restore(state)` builds. The default takes over the
+  attributes of a restored model; a model whose parts point back at it overrides it.
+
 ## [0.21.0] - 2026-11-14
 
 Rendered text containers (D390-D395), the same in every app.

@@ -56,8 +56,10 @@ behind the password hashing without end and anybody can fill the disk with docum
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import hmac
 import json
+import logging
 from collections.abc import Iterable
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -70,12 +72,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
-from claudia_core import LanguageError, Setup, normalize_language
+from claudia_core import Import, LanguageError, Setup, normalize_language
 from claudia_fonts import DEFAULT_SUBSTITUTIONS
 
 from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
 from .fonts import FontService, font_router
+from .formats import CLAUDIA, import_state
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError
 from .hyphenation import HyphenationService, hyphenation_router
@@ -84,7 +87,9 @@ from .idle import IdleMiddleware, IdleWatch
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, web_script_hashes
 from .suite import Module, Suite
+from .uploads import Upload, UploadDesk, UploadRefused, file_name
 
+log = logging.getLogger("claudia_server")
 HELLO_TIMEOUT = 10.0
 OUTGOING_QUEUE = 1000  # frames waiting for a slow client before it is dropped
 DEFAULT_MAX_WAITING = 256  # connections that have not been let in yet, all together ...
@@ -224,6 +229,7 @@ class Gateway:
             raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
         self.suite = suite
         self.allowed = allowed
+        self.uploads = UploadDesk()  # files brought to become documents (D440)
         self._secret = None if access_secret is None else access_secret.encode()
         self._creating = asyncio.Lock()  # one new document at a time: the first person to ask becomes its owner
         self._hashing = asyncio.Semaphore(max_hashing)
@@ -333,8 +339,54 @@ class Gateway:
         finally:
             self._waiting.leave(address)
         if admitted is not None:
-            request_id, account, document, created, locale = admitted
-            await _Live(websocket, document, account, request_id, created=created, locale=locale).run()
+            request_id, account, document, created, locale, imported = admitted
+            await _Live(
+                websocket, document, account, request_id, created=created, locale=locale, imported=imported
+            ).run()
+
+    # -- a document made from a file (D438, D440) ------------------------------------------------------------------
+    def _upload_for(self, params: dict) -> Upload | None:
+        """The upload ``hello`` names, still held (it is taken only once the document exists)."""
+        token = params.get("upload")
+        if token is None:
+            return None
+        upload = self.uploads.peek(token)
+        if upload is None:
+            raise HubError("bad_request", msg("the file is no longer here: choose it again"))
+        if upload.fmt == CLAUDIA:
+            raise HubError("bad_request", msg("a Claudia file goes in as it is, not as a new document"))
+        if params.get("create") is not True:
+            raise HubError("bad_request", msg("a file becomes a new document: hello needs create"))
+        return upload
+
+    async def _read_upload(self, module: Module, doc_id: str, upload: Upload) -> tuple[Upload, dict, list[dict]]:
+        """The state the import makes, read in the worker pool before anything is created (D436): a file that cannot
+        be read costs nobody a half-made document."""
+        if module.app != upload.app:
+            raise HubError(
+                "bad_request", msg("{name} cannot become a document of {app}", name=upload.name, app=module.app)
+            )
+        if module.hub.exists(doc_id):
+            raise HubError("bad_request", msg("{id} is here already: give the new document another name", id=doc_id))
+        try:
+            state, losses = await module.hub.workers.submit(import_state, upload.fmt, upload.data)
+        except Exception as exc:  # noqa: BLE001 - whatever a reader raises, the file is not one it can read
+            log.info("cannot import %s: %s", upload.name, exc)
+            raise HubError("bad_request", msg("{name} cannot be read", name=upload.name)) from exc
+        return upload, state, losses
+
+    async def _import(
+        self, module: Module, doc_id: str, hosted, author: str, imported: tuple[Upload, dict, list[dict]], params: dict
+    ) -> dict:
+        """Make the new document what the file holds: one ``core.Import`` entry, and the file itself kept in the
+        document unless the person said not to (D439). Answers what the welcome says about it."""
+        upload, state, losses = imported
+        self.uploads.take(upload.token)
+        keep = params.get("keep_original") is not False
+        digest = hashlib.sha256(upload.data).hexdigest()
+        kept = keep and await asyncio.to_thread(module.hub.keep_original, doc_id, upload.data)
+        hosted.document.execute(Import(upload.name, upload.fmt, state, sha256=digest, kept=kept), author=author)
+        return {"name": upload.name, "format": upload.fmt, "kept": kept, "losses": losses}
 
     async def _hello(self, websocket: WebSocket, doc_id: str, app: str | None):
         """The first frame: ``(request id, account, document)`` if the person may come in, else the socket is closed."""
@@ -358,7 +410,9 @@ class Gateway:
         locale = normalize_locale(params.get("locale"))
         try:
             Hub.check_id(doc_id)
-            module = self.module_for(doc_id, app, params.get("app"))
+            upload = self._upload_for(params)
+            module = self.module_for(doc_id, app, params.get("app") or (upload.app if upload else None))
+            imported = None if upload is None else await self._read_upload(module, doc_id, upload)
             if params.get("recovery_key") is not None:
                 account, created = await self._recover(module, doc_id, params), False
             else:
@@ -370,9 +424,12 @@ class Gateway:
                 await _refuse(websocket, request_id, "unauthorized", msg("missing or wrong credentials"), 4401, locale)
                 return None
             document = await module.hub.open(doc_id)
+            if created and imported is not None:
+                answer = await self._import(module, doc_id, document, account.user, imported, params)
+                return request_id, account, document, created, locale, answer
             if created:
                 _set_up(document.document, account.user, locale)
-            return request_id, account, document, created, locale
+            return request_id, account, document, created, locale, None
         except HubError as exc:
             await _refuse(websocket, request_id, exc.code, exc.message, _CLOSE.get(exc.code, 4400), locale)
         except AuthRefused as exc:
@@ -447,8 +504,10 @@ class _Live:
         *,
         created: bool = False,
         locale: str = DEFAULT_LOCALE,
+        imported: dict | None = None,
     ):
         self.created = created
+        self.imported = imported
         self.websocket = websocket
         self.document = document
         self.account = account
@@ -483,7 +542,10 @@ class _Live:
                 self.websocket, self.request_id, exc.code, exc.message, _CLOSE.get(exc.code, 1013), self.locale
             )
             return
-        welcome = {"id": self.request_id, "ok": True, "result": {**connection.welcome(), "created": self.created}}
+        result = {**connection.welcome(), "created": self.created}
+        if self.imported is not None:
+            result["imported"] = self.imported
+        welcome = {"id": self.request_id, "ok": True, "result": result}
         self.send(json.dumps(welcome, separators=(",", ":")))
         pump = asyncio.create_task(self._pump())
         try:
@@ -584,6 +646,7 @@ def create_app(
         app.add_middleware(IdleMiddleware, watch=idle)
     app.add_middleware(HostGuard, hosts=hosts)  # added last, so it is the first to see a request (even a preflight)
     app.state.suite = suite
+    app.state.gateway = gateway
     app.state.hub = suite.first.hub  # the first app's hub, for the callers that know one app
 
     @app.get("/api/health")
@@ -649,6 +712,66 @@ def _fixed_routes(app: FastAPI, suite: Suite, gateway: Gateway, presence: _Prese
     @app.websocket("/api/presence")
     async def present(websocket: WebSocket):
         await presence.serve(websocket)
+
+    _upload_routes(app, suite, gateway)
+
+
+async def _body(request: Request, most: int) -> bytes:
+    """The request's body, refused with 413 past ``most`` bytes (before reading it, when it says how long it is)."""
+    declared = request.headers.get("content-length")
+    if declared is not None and declared.isdigit() and int(declared) > most:
+        raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
+    chunks, size = [], 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > most:
+            raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _upload_routes(app: FastAPI, suite: Suite, gateway: Gateway) -> None:
+    """``POST /api/uploads`` holds a file a person brings, and ``POST /api/uploads/{token}/place`` takes a Claudia
+    file in as it is (D440, D442). Whoever may make documents may upload: with an access secret, only those who know
+    it."""
+
+    def may_make(request: Request) -> None:
+        if not gateway.accepts_secret(_bearer_token(request.headers.get("authorization"))):
+            raise HTTPException(401, "this server needs its access secret", headers={"WWW-Authenticate": "Bearer"})
+
+    @app.post("/api/uploads")
+    async def upload(request: Request):
+        may_make(request)
+        address = request.client.host if request.client else ""
+        try:
+            gateway.uploads.room_for(address)
+            data = await _body(request, gateway.uploads.max_bytes)
+            held = gateway.uploads.put(address, file_name(request.headers.get("x-claudia-name")), data)
+        except UploadRefused as exc:
+            raise HTTPException(exc.status, exc.message) from exc
+        answer = held.describe()
+        module = suite.module(held.app)
+        answer["hosted"] = module is not None
+        if held.fmt == CLAUDIA:
+            answer["exists"] = module is not None and module.hub.exists(held.doc_id)
+        return answer
+
+    @app.post("/api/uploads/{token}/place")
+    async def place(token: str, request: Request):
+        may_make(request)
+        held = gateway.uploads.peek(token)
+        if held is None or held.fmt != CLAUDIA:
+            raise HTTPException(404, "the file is no longer here: choose it again")
+        module = suite.module(held.app)
+        if module is None:
+            raise HTTPException(422, f"this server does not host {held.app}")
+        try:
+            await module.hub.place(held.doc_id, held.data)
+        except HubError as exc:
+            status = {"bad_request": 409, "unavailable": 503}.get(exc.code, 422)
+            raise HTTPException(status, str(exc.message)) from exc
+        gateway.uploads.take(token)
+        return {"app": held.app, "id": held.doc_id}
 
 
 def _app_routes(app: FastAPI, suite: Suite, gateway: Gateway, list_documents: bool) -> None:

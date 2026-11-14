@@ -53,6 +53,7 @@ _CORE_ENTRIES = frozenset({"format", "manifest.json", "slots.json", "people.bin"
 _BLOCK_NAME = re.compile(r"(history|chat)/(\d{6})\.blk")
 _HEAD = "head.bin"
 _SNAPSHOT = "content/snapshot.bin"
+_ORIGINAL = "content/original.bin"  # the file an imported document was made from, if it is kept (D439)
 _RECOVERY_NAME = "(recovery)"
 _WRITE_LOCK = threading.RLock()  # changes are rare; one at a time keeps read-modify-write simple and safe
 
@@ -723,6 +724,40 @@ def read_snapshot(path: Path, keys: Mapping[Domain, bytes]) -> bytes | None:
     """The snapshot, if the file has one that opens with the content key (a viewer holds it). ``None`` otherwise."""
     entries = _read_entries(path)
     return _snapshot_of(entries, _manifest_of(entries, path), keys)
+
+
+# --- the original of an imported document (D439) ----------------------------------------------------------------------
+def _original_aad(doc_id: str) -> bytes:
+    return b"claudia/original/1" + doc_id.encode()
+
+
+def write_original(path: Path, keys: Mapping[Domain, bytes], data: bytes) -> None:
+    """Keep ``data``, the file this document was imported from, sealed with the content key in the document file
+    (``content/original.bin``), replacing one kept before. Every later change of the file carries it along. Needs all
+    three keys, as every write of the file does."""
+    _require_all_keys(keys)
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        others = {**_carried(entries), _ORIGINAL: seal(keys[Domain.CONTENT], data, _original_aad(manifest.id))}
+        _write_zip(path, _changed(manifest), _slots_of(entries, path), entries["people.bin"], others, exclusive=False)
+
+
+def read_original(path: Path, keys: Mapping[Domain, bytes]) -> bytes | None:
+    """The file this document was imported from, if it is kept; ``None`` if not. Whoever holds the content key may
+    read it (a viewer too). :class:`TamperedDocument` if the entry does not open: it was changed, or it belongs to
+    another document."""
+    key = keys.get(Domain.CONTENT)
+    if key is None:
+        raise ValueError("reading the original needs the content key")
+    entries = _read_entries(path)
+    stored = entries.get(_ORIGINAL)
+    if stored is None:
+        return None
+    try:
+        return open_sealed(key, stored, _original_aad(_manifest_of(entries, path).id))
+    except DecryptionError as error:
+        raise TamperedDocument("the kept original does not belong to this document or was changed") from error
 
 
 def _journal_records(

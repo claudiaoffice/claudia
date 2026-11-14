@@ -19,7 +19,14 @@ from __future__ import annotations
 
 import secrets
 
-from claudia_creates_io import odp_export_losses, pptx_export_losses, slides_to_odp, slides_to_pptx
+from claudia_creates_io import (
+    apply_edits_to_odp,
+    apply_edits_to_pptx,
+    odp_export_losses,
+    pptx_export_losses,
+    slides_to_odp,
+    slides_to_pptx,
+)
 
 from claudia_core import (
     OBJECT_KINDS,
@@ -55,7 +62,7 @@ from claudia_creates import (
 
 from .i18n import msg
 from .images import image_bytes, picture_words
-from .office_export import document_info, office_export
+from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
@@ -324,12 +331,26 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         deck = _deck(ctx)
         draw = None if ctx.renderings is None else ctx.renderings.rasteriser
         if format == "pptx":
-            return office_export(
-                format, slides_to_pptx(deck, rasterise=draw), pptx_export_losses(deck, rasterised=draw is not None)
+            return export_with_original(
+                ctx,
+                format,
+                SlideModel,
+                apply_edits_to_pptx,
+                lambda: office_export(
+                    format, slides_to_pptx(deck, rasterise=draw), pptx_export_losses(deck, rasterised=draw is not None)
+                ),
             )
         info = document_info(ctx.document.log, ctx.document.branch)
-        return office_export(
-            format, slides_to_odp(deck, info=info, rasterise=draw), odp_export_losses(deck, rasterised=draw is not None)
+        return export_with_original(
+            ctx,
+            format,
+            SlideModel,
+            lambda original, baseline, current: apply_edits_to_odp(original, baseline, current, info=info),
+            lambda: office_export(
+                format,
+                slides_to_odp(deck, info=info, rasterise=draw),
+                odp_export_losses(deck, rasterised=draw is not None),
+            ),
         )
 
     @table.method("add_slide", "base:revision?", write=True)

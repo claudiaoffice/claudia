@@ -1,5 +1,5 @@
 {
- "version": "0.30.0",
+ "version": "0.31.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -297,7 +297,7 @@
   "class": [
    "object"
   ],
-  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None)",
+  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None, original: 'Callable[[], bytes | None]' = <function HostedDocument.<lambda>>)",
   "methods": {
    "ai_mode_of": "(self, user: 'str') -> 'str | None'",
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
@@ -327,8 +327,11 @@
    "exists": "(self, doc_id: 'str') -> 'bool'",
    "housekeeping": "(self) -> 'None'",
    "is_loaded": "(self, doc_id: 'str') -> 'bool'",
+   "keep_original": "(self, doc_id: 'str', data: 'bytes') -> 'bool'",
    "listing": "(self) -> 'list[dict]'",
    "open": "(self, doc_id: 'str', create: 'bool' = False) -> 'HostedDocument'",
+   "original": "(self, doc_id: 'str') -> 'bytes | None'",
+   "place": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "share_room": "(self, room: 'Room') -> 'None'",
    "start": "(self) -> 'None'",
    "stop": "(self) -> 'None'",
@@ -384,7 +387,9 @@
    "create": "(self, doc_id: 'str') -> 'Document'",
    "documents": "(self) -> 'list[StoredInfo]'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
+   "keep_original": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "open": "(self, doc_id: 'str') -> 'Document'",
+   "original": "(self, doc_id: 'str') -> 'bytes | None'",
    "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": [
@@ -550,10 +555,13 @@
    "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
    "documents": "(self) -> 'list[StoredInfo]'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
+   "keep_original": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "leave": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'bool'",
    "list_people": "(self, doc_id: 'str') -> 'list[Account]'",
    "new_recovery_key": "(self, doc_id: 'str') -> 'str'",
    "open": "(self, doc_id: 'str') -> 'Document'",
+   "original": "(self, doc_id: 'str') -> 'bytes | None'",
+   "place": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "propose_owner_transfer": "(self, doc_id: 'str', old_owner: 'str', old_owner_password: 'str', new_owner: 'str') -> 'bool'",
    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
    "release": "(self, doc_id: 'str') -> 'None'",

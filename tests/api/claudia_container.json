@@ -1,5 +1,5 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
  "ContainerError": {
   "class": [
    "Exception"
@@ -253,6 +253,9 @@
  "read_manifest": {
   "function": "(path: pathlib.Path) -> claudia_container.container.Manifest"
  },
+ "read_original": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> bytes | None"
+ },
  "read_people": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> list[claudia_container.container.Person]"
  },
@@ -285,5 +288,8 @@
  },
  "unlock_with_recovery": {
   "function": "(path: pathlib.Path, recovery_key: bytes) -> claudia_container.slots.Unlocked | None"
+ },
+ "write_original": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], data: bytes) -> None"
  }
 }
