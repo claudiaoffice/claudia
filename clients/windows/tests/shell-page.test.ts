@@ -138,7 +138,7 @@ describe('start', () => {
     expect(t.statuses.at(-1)).toMatchObject({ title: 'Claudia could not start', error: true })
     const details = (t.statuses.at(-1) as { details: string }).details
     expect(details).toContain('shell.log')
-    expect(details).toContain('Inspect')
+    expect(details).toContain('--debug')
     expect(details).toContain('creates')
     expect(t.timers).toHaveLength(0) // it does not go on for ever
   })

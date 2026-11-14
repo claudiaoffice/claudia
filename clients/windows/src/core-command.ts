@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { CORE_ID } from './core-protocol.js'
 
 /** What the checked-in config holds: runs when someone starts Neutralino without the launcher (the core then knows its
- * app from its folder and starts its own server). */
+ * app from its folder and uses the local server of the suite). */
 export const DEFAULT_COMMAND = 'node ${NL_PATH}/ext/core.mjs'
 
 export interface CoreCommandOptions {
@@ -57,6 +57,17 @@ export function parseCoreArgs(argv: readonly string[]): CoreArgs {
     else if (argument === '--debug') found.debug = true
   }
   return found
+}
+
+/** Switches the web inspector of the window on or off in the config file. Neutralino opens the inspector (the
+ * DevTools window) by itself at start when it is on, so the checked-in config has it off and only `--debug` turns it
+ * on, for that run. */
+export function setInspector(configFile: string, enabled: boolean): void {
+  const config = JSON.parse(readFileSync(configFile, 'utf8')) as { modes?: { window?: { enableInspector?: boolean } } }
+  const window = config.modes?.window
+  if (window === undefined) throw new Error(`${configFile} has no modes.window`)
+  window.enableInspector = enabled
+  writeFileSync(configFile, JSON.stringify(config, null, 2) + '\n')
 }
 
 /** Sets the core's command in the config file, in the file's own format (two spaces, final newline). */

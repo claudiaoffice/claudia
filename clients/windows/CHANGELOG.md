@@ -4,6 +4,33 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.0] - unreleased
 
+### Changed (D445, D444, D434): the three apps share one local server
+- **One server for all three windows.** The core no longer starts one server per app on a random port with
+  `--model`. The first window to start launches `python -m claudia_server --apps all` (the default) with
+  `--exit-when-idle 600`, one documents folder (`%LOCALAPPDATA%\Claudia\documents`, one subfolder per app) and one
+  state folder (`%LOCALAPPDATA%\Claudia\state`: `server.log`, `desktop-server.json`). The port is chosen once and
+  remembered in `desktop-server.json`; every later window finds the server by `/api/health` and starts nothing.
+  Windows opened together settle it with the folder lock (D435): the one that loses waits for the winner. A server
+  that is not Claudia's (or serves other apps, or another version) is reported, never taken over; a remembered port
+  that something else has taken is replaced. New: `src/desktop-server.ts`; `local-server.ts` and `core.ts` use it.
+- **Closing a window no longer stops the server, and no server is left behind.** Each window keeps a socket on
+  `/api/presence` open (D434); the server leaves by itself ten minutes after the last window is gone. If the server
+  is gone while a window is open (idle exit, someone ended it), the shell starts it again on the same port.
+- **The window shows its own app only (D444).** The `welcome` message carries `app`; the contract's field is optional.
+- `server.ts`: the server is started detached and `unref`'d so it can outlive the window that began it. A start
+  that fails quotes only what the server wrote since *this* start (`server.log` is shared and appended to), not the
+  tail of an earlier run. `ServerStartError.exited` tells a lost race from a server that never answered.
+
+### Fixed
+- **The web inspector (DevTools) opened with every window.** `enableInspector` was `true` in the three Neutralino
+  configs, and Neutralino opens the DevTools window by itself when it is on. It is now `false`; `--debug` turns it on
+  for that run only (`setInspector`, restored when the launcher ends, like the core's command). The shell page's
+  time-out message points to `--debug` instead of "right-click, Inspect".
+- A second start no longer shows the start-up notes of an earlier run in the window (see the log quoting above).
+  The empty start page after a restart was most likely a leftover per-app server holding the folder lock (D435); a
+  server from an older build may still run on a machine that used it: end the `python.exe` processes of Claudia once
+  in the Task Manager. **Not run on Windows**, see the README's "Not verified".
+
 ### Changed (UX-35, UX-36)
 - The menus are regenerated from the manifest: every entry has its key from the one table of all clients (D360), and the
   menus have what the web's have (File ▸ Print…, Format ▸ List ▸, Edit ▸ Image… and Chart…, Tools ▸ Names… and SQL

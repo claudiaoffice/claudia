@@ -118,6 +118,7 @@ const CHECKS: Record<string, Check> = {
     if (locale !== undefined && locale !== null && !(typeof locale === 'string' && locale.length <= 35 && LOCALE.test(locale))) {
       throw bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
     }
+    if ('app' in message) token(message.app, "'app'")
   },
   action(message) {
     actionId(message.action)
@@ -224,6 +225,8 @@ export function welcome(options: {
   capabilities: readonly string[]
   contract?: number
   locale?: string
+  /** The app of this window (D444): the page then shows that app's documents only. */
+  app?: string
 }): Message {
   const built: Message = {
     type: 'welcome',
@@ -232,6 +235,7 @@ export function welcome(options: {
     capabilities: [...options.capabilities],
   }
   if (options.locale !== undefined) built.locale = options.locale
+  if (options.app !== undefined) built.app = options.app
   return built
 }
 

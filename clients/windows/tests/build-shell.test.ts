@@ -77,6 +77,7 @@ describe('buildApp', () => {
     expect(config.url).toBe('/')
     expect(config.modes.window.injectScript).toBeUndefined() // injection into a page Neutralino did not serve never worked
     expect(config.modes.window.injectGlobals).toBeUndefined()
+    expect(config.modes.window.enableInspector).toBe(false) // on, Neutralino opens the DevTools by itself; only --debug turns it on
     expect(config.enableExtensions).toBe(true)
     expect(config.extensions).toEqual([{ id: 'de.claudiaoffice.core', commandWindows: DEFAULT_COMMAND }])
     // the page may only do what the shell needs: no files, no processes

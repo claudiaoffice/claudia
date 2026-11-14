@@ -5,7 +5,7 @@
 //
 // Every command is the same program for another app:
 //
-//     claudia-computes                       starts this app's own server on this computer, shows its start page
+//     claudia-computes                       uses the local server of this computer (starts it if none runs), shows the start page
 //     claudia-computes --server HOST[:PORT]  no local server: connects to that one (https; http only for this computer)
 //     node dist/launch.js computes           the same, for a checkout that has not been installed
 //
@@ -39,7 +39,7 @@ export function usage(app: App): string {
     'options:',
     '  --server URL  connect to this server instead of starting one on this computer',
     '                (https://host[:port]; plain http is only accepted for this computer)',
-    '  --debug       print where the logs are',
+    '  --debug       print where the logs are, and open the web inspector',
     '  --version     show the version and exit',
     '  --help        show this help and exit',
   ].join('\n')

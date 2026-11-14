@@ -195,6 +195,7 @@ function harness(overrides: Partial<RunDeps> = {}) {
   const out: string[] = []
   const err: string[] = []
   const commands: { appDir: string; command: string }[] = []
+  const inspectors: { appDir: string; enabled: boolean }[] = []
   const deps: RunDeps = {
     spawn: ((command: string, args: string[], options: never) => {
       spawned.push({ command, args, options })
@@ -208,11 +209,12 @@ function harness(overrides: Partial<RunDeps> = {}) {
     exists: () => true,
     findBinary: () => 'C:\\neutralino-win_x64.exe',
     setCommand: (appDir, command) => void commands.push({ appDir, command }),
+    setInspector: (appDir, enabled) => void inspectors.push({ appDir, enabled }),
     out: (line) => out.push(line),
     err: (line) => err.push(line),
     ...overrides,
   }
-  return { deps, spawned, child, out, err, commands }
+  return { deps, spawned, child, out, err, commands, inspectors }
 }
 
 const creates = { app: 'creates', server: null, debug: false } as const
@@ -310,6 +312,33 @@ describe('run', () => {
     await run({ ...creates, debug: true }, deps)
     expect(out.join('\n')).toContain('shell.log')
     expect(out.join('\n')).toContain('server.log')
+  })
+
+  it('does not open the web inspector (the DevTools window) unless --debug asks for it, and puts it off again after', async () => {
+    const quiet = harness()
+    await run(creates, quiet.deps)
+    expect(quiet.inspectors).toEqual([
+      { appDir: join(APPS, 'creates'), enabled: false },
+      { appDir: join(APPS, 'creates'), enabled: false },
+    ])
+    const debugging = harness()
+    await run({ ...creates, debug: true }, debugging.deps)
+    expect(debugging.inspectors).toEqual([
+      { appDir: join(APPS, 'creates'), enabled: true },
+      { appDir: join(APPS, 'creates'), enabled: false },
+    ])
+  })
+
+  it('puts the inspector off again also when the window cannot be started', async () => {
+    const { deps, inspectors } = harness({
+      spawn: (() => {
+        const c = new FakeChild()
+        queueMicrotask(() => c.emit('error', new Error('EACCES')))
+        return c
+      }) as never,
+    })
+    await run({ ...creates, debug: true }, deps)
+    expect(inspectors.at(-1)).toEqual({ appDir: join(APPS, 'creates'), enabled: false })
   })
 })
 

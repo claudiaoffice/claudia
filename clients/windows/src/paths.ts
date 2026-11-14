@@ -39,12 +39,19 @@ function appData(localAppData: string): string {
   return join(localAppData, 'Claudia')
 }
 
-/** Where the sealed documents of `app` are kept (the server's `--dir`). */
-export function documentsDir(app: string, localAppData: string = defaultLocalAppData()): string {
-  return join(appData(localAppData), app, 'documents')
+/** Where the sealed documents of all three apps are kept (the server's `--dir`; the server puts each app's into a
+ * folder of its own, D431). One folder for the suite, because the three desktop apps share one local server (D445). */
+export function serverDocumentsDir(localAppData: string = defaultLocalAppData()): string {
+  return join(appData(localAppData), 'documents')
 }
 
-/** Where the server of `app` keeps its own state (the server's `--state-dir`). */
+/** Where the local server keeps its own state (the server's `--state-dir`), together with `desktop-server.json`, which
+ * remembers its port, and its `server.log`. One folder for the suite (D445). */
+export function serverStateDir(localAppData: string = defaultLocalAppData()): string {
+  return join(appData(localAppData), 'state')
+}
+
+/** Where the shell of `app` keeps its own log (`shell.log`): not the server's, which the three apps share. */
 export function stateDir(app: string, localAppData: string = defaultLocalAppData()): string {
   return join(appData(localAppData), app, 'state')
 }
