@@ -51,6 +51,7 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
     expect(ids(file.items)).toEqual(['file.new', 'file.open', 'file.open-file', 'file.save', 'file.save-as', 'file.download', 'file.manage', 'file.close'])
     expect(ids(byId(file.items, 'file.manage').items!)).toEqual([
       'file.manage.share',
+      'file.manage.change-password',
       'file.manage.assign-owner',
       'file.manage.accept-owner',
       'file.manage.leave',
@@ -62,10 +63,10 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
   it('opens the document window’s own dialogs, and leaves through the workspace', () => {
     const { c, calls } = context()
     const file = fileMenu(c)
-    for (const id of ['file.new', 'file.open', 'file.open-file', 'file.save', 'file.save-as', 'file.download', 'file.manage.export', 'file.close']) {
+    for (const id of ['file.new', 'file.open', 'file.open-file', 'file.save', 'file.save-as', 'file.download', 'file.manage.change-password', 'file.manage.export', 'file.close']) {
       byId(file.items, id).action!()
     }
-    expect(calls).toEqual(['leave:fresh', 'open:open', 'open:open-file', 'save', 'open:checkpoint', 'open:export', 'open:export-format', 'leave'])
+    expect(calls).toEqual(['leave:fresh', 'open:open', 'open:open-file', 'save', 'open:checkpoint', 'open:export', 'open:change-password', 'open:export-format', 'leave'])
   })
 
   it('has Print… after Download only in an app that can print (composes, D906), with its shortcut', () => {

@@ -221,7 +221,7 @@ msgstr "Über Claudia Computes"
 msgid "About Claudia Creates"
 msgstr "Über Claudia Creates"
 
-#: web/app/components/AboutDialog.vue:33 web/app/lib/document-menus.ts:208
+#: web/app/components/AboutDialog.vue:33 web/app/lib/document-menus.ts:210
 msgid "About claudia"
 msgstr "Über Claudia"
 
@@ -233,7 +233,7 @@ msgstr "Über das Suchen und Muster"
 msgid "Accept"
 msgstr "Annehmen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:89
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:91
 msgid "Accept Ownership…"
 msgstr "Eigentümerschaft annehmen…"
 
@@ -373,7 +373,7 @@ msgstr "Andere Schrift…"
 msgid "Answers to what people often want to do"
 msgstr "Antworten auf das, was man oft tun möchte"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:184
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:186
 msgid "App Language"
 msgstr "App-Sprache"
 
@@ -405,11 +405,11 @@ msgstr "Pfeiltasten"
 msgid "Arrows, Tab, Enter"
 msgstr "Pfeiltasten, Tab, Eingabe"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:205
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:207
 msgid "Ask ai"
 msgstr "KI fragen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:173
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:175
 msgid "Ask the Assistant…"
 msgstr "Assistenten fragen…"
 
@@ -417,7 +417,7 @@ msgstr "Assistenten fragen…"
 msgid "Ask them to take over"
 msgstr "Bitten, zu übernehmen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:88
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:90
 msgid "Assign New Owner…"
 msgstr "Neuen Eigentümer zuweisen…"
 
@@ -428,6 +428,10 @@ msgstr "Neuen Eigentümer zuweisen"
 #: web/app/components/SearchPanel.vue:425
 msgid "At least"
 msgstr "Mindestens"
+
+#: web/app/components/ChangePasswordDialog.vue:39
+msgid "At least 8 characters, with a capital letter, a small letter and a digit."
+msgstr "Mindestens 8 Zeichen, mit einem Groß- und einem Kleinbuchstaben und einer Ziffer."
 
 #: web/app/components/SearchPanel.vue:426
 msgid "At most"
@@ -461,7 +465,7 @@ msgstr "Zurück zu den Ergebnissen"
 msgid "Back to the builder"
 msgstr "Zurück zum Baukasten"
 
-#: web/app/components/DocumentFrame.vue:189
+#: web/app/components/DocumentFrame.vue:195
 msgid "Back to the documents"
 msgstr "Zurück zu den Dokumenten"
 
@@ -577,7 +581,7 @@ msgstr "Berechnung"
 msgid "Calculation step"
 msgstr "Rechenschritt"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/ExportDialog.vue:39 web/app/components/ExportFormatDialog.vue:60 web/app/components/ImageImportDialog.vue:102 web/app/components/ImportDialog.vue:129 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:747 web/app/components/OpenDialog.vue:777 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:99 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/ExportDialog.vue:39 web/app/components/ExportFormatDialog.vue:60 web/app/components/ImageImportDialog.vue:102 web/app/components/ImportDialog.vue:129 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:747 web/app/components/OpenDialog.vue:777 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:99 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -621,6 +625,10 @@ msgstr "Zentriert"
 msgid "Chain"
 msgstr "Kette"
 
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:89
+msgid "Change Password…"
+msgstr "Passwort ändern…"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Change how the object you have selected looks"
 msgstr "Das Aussehen des ausgewählten Objekts ändern"
@@ -633,9 +641,13 @@ msgstr "Das Aussehen dieser Absatzart ändern"
 msgid "Change it"
 msgstr "Ändern"
 
-#: web/app/components/AdminAccessDocuments.vue:210
+#: web/app/components/AdminAccessDocuments.vue:210 web/app/components/ChangePasswordDialog.vue:43
 msgid "Change password"
 msgstr "Passwort ändern"
+
+#: web/app/components/ChangePasswordDialog.vue:30
+msgid "Change your password"
+msgstr "Ihr Passwort ändern"
 
 #: web/app/components/PresentShow.vue:190
 msgid "Changes since you started: {n}"
@@ -676,6 +688,10 @@ msgstr "Andere Datei wählen…"
 #: web/app/components/ImageImportDialog.vue:91 web/app/components/SheetImageImportDialog.vue:88
 msgid "Choose a file…"
 msgstr "Datei wählen…"
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py
+msgid "Choose a new password of your own for this document"
+msgstr "Ein neues eigenes Passwort für dieses Dokument wählen"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Choose a style for the selection, each drawn in its own look"
@@ -741,7 +757,7 @@ msgstr "Claudia Computes schließen"
 msgid "Close Claudia Creates"
 msgstr "Claudia Creates schließen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:96
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:98
 msgid "Close Document"
 msgstr "Dokument schließen"
 
@@ -809,7 +825,7 @@ msgstr "Übliche Zeiten"
 msgid "Condition"
 msgstr "Bedingung"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:180
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:182
 msgid "Config"
 msgstr "Konfiguration"
 
@@ -861,7 +877,7 @@ msgstr "Das Ergebnis als Werte kopiert."
 msgid "Copied."
 msgstr "Kopiert."
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:130 web/app/lib/object-menu.ts:37
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:132 web/app/lib/object-menu.ts:37
 msgid "Copy"
 msgstr "Kopieren"
 
@@ -945,6 +961,10 @@ msgstr "Strg+Eingabe"
 msgid "Ctrl+X"
 msgstr "Strg+X"
 
+#: web/app/components/ChangePasswordDialog.vue:36
+msgid "Current password"
+msgstr "Aktuelles Passwort"
+
 #: web/app/components/PresentShow.vue:194
 msgid "Current slide"
 msgstr "Aktuelle Folie"
@@ -953,7 +973,7 @@ msgstr "Aktuelle Folie"
 msgid "Custom…"
 msgstr "Benutzerdefiniert…"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:131 web/app/lib/object-menu.ts:36
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:133 web/app/lib/object-menu.ts:36
 msgid "Cut"
 msgstr "Ausschneiden"
 
@@ -965,7 +985,7 @@ msgstr "An Grenzen abschneiden"
 msgid "Cuts a number off after a number of decimals."
 msgstr "Schneidet eine Zahl nach einer Anzahl von Dezimalstellen ab."
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:161
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:163
 msgid "Dark Mode"
 msgstr "Dunkler Modus"
 
@@ -1005,7 +1025,7 @@ msgstr "Löschen"
 msgid "Delete Columns"
 msgstr "Spalten löschen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:92
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:94
 msgid "Delete From Server…"
 msgstr "Vom Server löschen…"
 
@@ -1093,7 +1113,7 @@ msgstr "Den zuletzt rückgängig gemachten Schritt wiederherstellen"
 msgid "Document"
 msgstr "Dokument"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:93 web/app/lib/document-menus.ts:207
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:93 web/app/lib/document-menus.ts:209
 msgid "Documentation"
 msgstr "Dokumentation"
 
@@ -1117,7 +1137,7 @@ msgstr "Doppelklick zum Schreiben"
 msgid "Double-click, Enter"
 msgstr "Doppelklick, Eingabe"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:80
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:81
 msgid "Download"
 msgstr "Herunterladen"
 
@@ -1257,7 +1277,7 @@ msgstr "Dieses Dokument exportieren"
 msgid "Exported."
 msgstr "Exportiert."
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:91
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:93
 msgid "Export…"
 msgstr "Exportieren…"
 
@@ -1265,7 +1285,7 @@ msgstr "Exportieren…"
 msgid "F6 / Shift + F6"
 msgstr "F6 / Umschalt + F6"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:72
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:73
 msgid "File"
 msgstr "Datei"
 
@@ -1397,6 +1417,10 @@ msgstr "Für die Zelle"
 msgid "For the {count} selected cells"
 msgstr "Für die {count} ausgewählten Zellen"
 
+#: web/app/components/ChangePasswordDialog.vue:31
+msgid "For {doc}, as {user}. Everybody else keeps their own password."
+msgstr "Für {doc}, als {user}. Alle anderen behalten ihr eigenes Passwort."
+
 #: web/app/components/Workspace.vue:1108
 msgid "Forecast"
 msgstr "Prognose"
@@ -1513,7 +1537,7 @@ msgstr "Handzettel"
 msgid "Hard to read"
 msgstr "Schwer lesbar"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:163 web/app/lib/document-menus.ts:203
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:163 web/app/lib/document-menus.ts:205
 msgid "Help"
 msgstr "Hilfe"
 
@@ -1524,6 +1548,10 @@ msgstr "Hex"
 #: web/app/components/AdminAccessDocuments.vue:239
 msgid "Hide"
 msgstr "Ausblenden"
+
+#: web/app/components/PasswordInput.vue:24
+msgid "Hide password"
+msgstr "Passwort verbergen"
 
 #: web/app/components/SidePanel.vue:180
 msgid "History"
@@ -1537,11 +1565,11 @@ msgstr "Verlauf & Chat"
 msgid "History & chat"
 msgstr "Verlauf & Chat"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:155
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:157
 msgid "History and Chat"
 msgstr "Verlauf und Chat"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:106 web/app/lib/document-menus.ts:206
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:106 web/app/lib/document-menus.ts:208
 msgid "How Do I…?"
 msgstr "Wie mache ich…?"
 
@@ -1861,7 +1889,7 @@ msgstr "Seiten werden umbrochen…"
 msgid "Layout"
 msgstr "Layout"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:90
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:92
 msgid "Leave Document…"
 msgstr "Dokument verlassen…"
 
@@ -1977,7 +2005,7 @@ msgstr "Die Absätze zu einer Aufzählung machen, oder wieder zu normalen"
 msgid "Make the paragraphs a numbered list, or plain again"
 msgstr "Die Absätze zu einer nummerierten Liste machen, oder wieder zu normalen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:85
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:86
 msgid "Manage"
 msgstr "Verwalten"
 
@@ -2129,7 +2157,7 @@ msgstr "Namen"
 msgid "Names…"
 msgstr "Namen…"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:74
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:75
 msgid "New"
 msgstr "Neu"
 
@@ -2157,7 +2185,7 @@ msgstr "Neuer Name für {name}"
 msgid "New owner"
 msgstr "Neuer Eigentümer"
 
-#: web/app/components/OpenDialog.vue:906
+#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:906
 msgid "New password"
 msgstr "Neues Passwort"
 
@@ -2417,7 +2445,7 @@ msgstr "Nur ganze Wörter."
 msgid "Open"
 msgstr "Öffnen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:795 web/app/lib/document-menus.ts:76
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:795 web/app/lib/document-menus.ts:77
 msgid "Open a File…"
 msgstr "Datei öffnen…"
 
@@ -2477,7 +2505,7 @@ msgstr "Öffnen"
 msgid "Opening {name}"
 msgstr "{name} wird geöffnet"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:75
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:76
 msgid "Open…"
 msgstr "Öffnen…"
 
@@ -2581,11 +2609,11 @@ msgstr "Passwort (mindestens 8 Zeichen)"
 msgid "Password (at least 8 characters, with a capital letter, a small letter and a digit)"
 msgstr "Passwort (mindestens 8 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben und einer Ziffer)"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:132
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:134
 msgid "Paste"
 msgstr "Einfügen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:135
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:137
 msgid "Paste As"
 msgstr "Einfügen als"
 
@@ -2605,7 +2633,7 @@ msgstr "Stattdessen Zellen wählen…"
 msgid "Picture"
 msgstr "Bild"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:140
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:142
 msgid "Plain Text"
 msgstr "Reiner Text"
 
@@ -2713,7 +2741,7 @@ msgstr "Drucken"
 msgid "Print preview"
 msgstr "Druckvorschau"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:293 web/app/lib/document-menus.ts:81 web/app/lib/print/use-print.ts:33
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:293 web/app/lib/document-menus.ts:82 web/app/lib/print/use-print.ts:33
 msgid "Print…"
 msgstr "Drucken…"
 
@@ -2789,11 +2817,11 @@ msgstr "Wiederherstellungsschlüssel"
 msgid "Red"
 msgstr "Rot"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:117 web/app/lib/shortcuts.ts:67
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:119 web/app/lib/shortcuts.ts:67
 msgid "Redo"
 msgstr "Wiederholen"
 
-#: web/app/components/FormulaBar.vue:98 web/app/components/InsertBar.vue:50 web/app/lib/document-menus.ts:117
+#: web/app/components/FormulaBar.vue:98 web/app/components/InsertBar.vue:50 web/app/lib/document-menus.ts:119
 msgid "Redo {label}"
 msgstr "Wiederholen: {label}"
 
@@ -3021,11 +3049,11 @@ msgstr "Sandbox"
 msgid "Sandboxed execution"
 msgstr "Ausführung in der Sandbox"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:154 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:66 web/app/lib/document-menus.ts:78 web/app/lib/shortcuts.ts:68
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:154 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:66 web/app/lib/document-menus.ts:79 web/app/lib/shortcuts.ts:68
 msgid "Save"
 msgstr "Speichern"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:79
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:80
 msgid "Save New Checkpoint…"
 msgstr "Neuen Prüfpunkt speichern…"
 
@@ -3069,7 +3097,7 @@ msgstr "Suchen"
 msgid "Search & Replace"
 msgstr "Suchen & Ersetzen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:149
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:151
 msgid "Search & Replace…"
 msgstr "Suchen & Ersetzen…"
 
@@ -3165,7 +3193,7 @@ msgstr "Form"
 msgid "Share this document"
 msgstr "Dieses Dokument teilen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:87
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:88
 msgid "Share…"
 msgstr "Teilen…"
 
@@ -3189,7 +3217,7 @@ msgstr "Umschalt"
 msgid "Shift + arrows or drag"
 msgstr "Umschalt + Pfeiltasten oder Ziehen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ShortcutsDialog.vue:24 web/app/lib/document-menus.ts:182
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ShortcutsDialog.vue:24 web/app/lib/document-menus.ts:184
 msgid "Shortcuts"
 msgstr "Tastenkürzel"
 
@@ -3197,7 +3225,7 @@ msgstr "Tastenkürzel"
 msgid "Show Grid"
 msgstr "Raster zeigen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:260 web/app/lib/document-menus.ts:167
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:260 web/app/lib/document-menus.ts:169
 msgid "Show Who Wrote What"
 msgstr "Anzeigen, wer was geschrieben hat"
 
@@ -3216,6 +3244,10 @@ msgstr "Den Verlauf und den Chat anzeigen oder ausblenden"
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Show or hide the notes under the slide"
 msgstr "Die Notizen unter der Folie ein- oder ausblenden"
+
+#: web/app/components/PasswordInput.vue:23 web/app/components/PasswordInput.vue:24
+msgid "Show password"
+msgstr "Passwort anzeigen"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Show the grid that objects snap to"
@@ -3297,7 +3329,7 @@ msgstr "Bedingter Trennstrich"
 msgid "Something is repeated that is not there."
 msgstr "Es wird etwas wiederholt, das nicht da ist."
 
-#: web/app/lib/base-session.ts:428 web/app/lib/session.ts:568
+#: web/app/lib/base-session.ts:428 web/app/lib/base-session.ts:504 web/app/lib/session.ts:568
 msgid "Something went wrong."
 msgstr "Etwas ist schiefgegangen."
 
@@ -3569,7 +3601,7 @@ msgstr "Die Farben dieses Dokuments, nach ihrer Bedeutung"
 msgid "The connection to the server was lost."
 msgstr "Die Verbindung zum Server wurde unterbrochen."
 
-#: web/app/components/DocumentFrame.vue:188
+#: web/app/components/DocumentFrame.vue:194
 msgid "The connection was closed."
 msgstr "Die Verbindung wurde geschlossen."
 
@@ -3733,7 +3765,7 @@ msgstr "Name oder Passwort stimmen nicht (oder es gibt kein solches Dokument)."
 msgid "The name or password is not right."
 msgstr "Name oder Passwort stimmen nicht."
 
-#: packages/claudia-server/src/claudia_server/auth.py:253 packages/claudia-server/src/claudia_server/sealed.py:259
+#: packages/claudia-server/src/claudia_server/auth.py:277 packages/claudia-server/src/claudia_server/sealed.py:260
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr "Der Name „{name}“ gehört dem KI-Assistenten. Wählen Sie einen anderen Namen."
 
@@ -4221,11 +4253,11 @@ msgstr "Darunter: {list}"
 msgid "Underline"
 msgstr "Unterstrichen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:110 web/app/lib/shortcuts.ts:66
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:112 web/app/lib/shortcuts.ts:66
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: web/app/components/FormulaBar.vue:95 web/app/components/InsertBar.vue:47 web/app/lib/document-menus.ts:110
+#: web/app/components/FormulaBar.vue:95 web/app/components/InsertBar.vue:47 web/app/lib/document-menus.ts:112
 msgid "Undo {label}"
 msgstr "Rückgängig: {label}"
 
@@ -4485,7 +4517,7 @@ msgstr "Y-Achse (optional)"
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
 msgstr "Sie sind der Eigentümer. Was das Dokument nicht zeigt, bleibt in der aufbewahrten Datei und wird nach dem Öffnen aufgeführt."
 
-#: web/app/components/DocumentFrame.vue:187
+#: web/app/components/DocumentFrame.vue:193
 msgid "You are not connected any more"
 msgstr "Sie sind nicht mehr verbunden"
 
@@ -4524,6 +4556,10 @@ msgstr "Ihr Name"
 #: web/app/components/AcceptOwnershipDialog.vue:31 web/app/components/AssignOwnerDialog.vue:54 web/app/components/LeaveDocumentDialog.vue:29
 msgid "Your password"
 msgstr "Ihr Passwort"
+
+#: web/app/components/DocumentFrame.vue:166
+msgid "Your password for {doc} is changed."
+msgstr "Ihr Passwort für {doc} ist geändert."
 
 #: web/app/components/DeleteDocumentDialog.vue:29
 msgid "Your password, to confirm"
@@ -4593,7 +4629,7 @@ msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind n
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "Eine Bemerkung schlägt keine Änderung vor; weisen Sie sie stattdessen ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:447
+#: packages/claudia-server/src/claudia_server/protocol.py:448
 msgid "a request must be a JSON object"
 msgstr "Eine Anfrage muss ein JSON-Objekt sein"
 
@@ -4661,7 +4697,7 @@ msgstr "add_object: Mit add_image kommt ein Bild auf eine Folie"
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr "add_sheet: Der Name muss 1 bis {limit} Zeichen haben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:837
+#: packages/claudia-server/src/claudia_server/protocol.py:838
 msgid "add_user: role must be editor or viewer"
 msgstr "add_user: role muss editor oder viewer sein"
 
@@ -4821,11 +4857,11 @@ msgstr "Diagrammtyp"
 msgid "chat message"
 msgstr "Chatnachricht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:950
+#: packages/claudia-server/src/claudia_server/protocol.py:967
 msgid "chat: {reason}"
 msgstr "chat: {reason}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:727
+#: packages/claudia-server/src/claudia_server/protocol.py:728
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr "chat_log: limit muss von 1 bis {limit} gehen"
 
@@ -5065,7 +5101,7 @@ msgstr "wie viele Spalten der Bereich hat."
 msgid "how many rows the range has."
 msgstr "wie viele Zeilen der Bereich hat."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:450
+#: packages/claudia-server/src/claudia_server/protocol.py:451
 msgid "id must be an integer or a short string"
 msgstr "id muss eine ganze Zahl oder ein kurzer Text sein"
 
@@ -5089,7 +5125,7 @@ msgstr "einfügen"
 msgid "internal server error"
 msgstr "Interner Serverfehler"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:771
+#: packages/claudia-server/src/claudia_server/protocol.py:772
 msgid "invalid command: {reason!r}"
 msgstr "Ungültiger Befehl: {reason!r}"
 
@@ -5149,7 +5185,7 @@ msgstr "gesperrt von {name}"
 msgid "log more and enable the web inspector"
 msgstr "mehr protokollieren und den Web-Inspektor aktivieren"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:706
+#: packages/claudia-server/src/claudia_server/protocol.py:707
 msgid "log: limit must be from 1 to {limit}"
 msgstr "log: limit muss von 1 bis {limit} gehen"
 
@@ -5181,11 +5217,11 @@ msgstr "Median"
 msgid "menu"
 msgstr "Menü"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:441
+#: packages/claudia-server/src/claudia_server/protocol.py:442
 msgid "message too large"
 msgstr "Nachricht zu groß"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:391
+#: packages/claudia-server/src/claudia_server/protocol.py:392
 msgid "method must be a string"
 msgstr "method muss ein Text sein"
 
@@ -5249,7 +5285,7 @@ msgstr "neue Folie"
 msgid "no cells"
 msgstr "keine Zellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:609
+#: packages/claudia-server/src/claudia_server/protocol.py:610
 msgid "no checkpoint number {checkpoint}"
 msgstr "Es gibt keinen Prüfpunkt mit der Nummer {checkpoint}"
 
@@ -5261,15 +5297,15 @@ msgstr "Kein Dokument {id!r}"
 msgid "no function named {name!r}"
 msgstr "Keine Funktion namens {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:511
+#: packages/claudia-server/src/claudia_server/protocol.py:512
 msgid "no help topic {id!r}"
 msgstr "Kein Hilfethema {id!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:394
+#: packages/claudia-server/src/claudia_server/protocol.py:395
 msgid "no method {name!r}"
 msgstr "Keine Methode {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:903
+#: packages/claudia-server/src/claudia_server/protocol.py:920
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 
@@ -5277,7 +5313,7 @@ msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 msgid "no style of their own"
 msgstr "kein eigenes Format"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:475
+#: packages/claudia-server/src/claudia_server/protocol.py:476
 msgid "not a region this document understands: {reason!r}"
 msgstr "Keine Region, die dieses Dokument versteht: {reason!r}"
 
@@ -5285,7 +5321,7 @@ msgstr "Keine Region, die dieses Dokument versteht: {reason!r}"
 msgid "not connected"
 msgstr "nicht verbunden"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:445
+#: packages/claudia-server/src/claudia_server/protocol.py:446
 msgid "not valid JSON"
 msgstr "Kein gültiges JSON"
 
@@ -5309,7 +5345,7 @@ msgstr "einmal"
 msgid "one or more"
 msgstr "einmal oder öfter"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:915
+#: packages/claudia-server/src/claudia_server/protocol.py:932
 msgid "only an owner of a document may delete it"
 msgstr "Nur ein Eigentümer eines Dokuments darf es löschen"
 
@@ -5329,23 +5365,23 @@ msgstr "Nur der Assistent macht Vorschläge"
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr "nur der gewählte Zweig wird ausgewertet, sodass IF(B1=0, 0, A1/B1) nie durch null teilt."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:833
+#: packages/claudia-server/src/claudia_server/protocol.py:834
 msgid "only the owner of a document adds people to it"
 msgstr "Nur der Eigentümer eines Dokuments fügt Personen hinzu"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:885
+#: packages/claudia-server/src/claudia_server/protocol.py:902
 msgid "only the owner of a document can hand it over"
 msgstr "Nur der Eigentümer eines Dokuments kann es übergeben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:669
+#: packages/claudia-server/src/claudia_server/protocol.py:670
 msgid "only the owner of a document discards its hidden lines"
 msgstr "Nur der Eigentümer eines Dokuments verwirft dessen verborgene Linien"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:849
+#: packages/claudia-server/src/claudia_server/protocol.py:850
 msgid "only the owner of a document makes a recovery key"
 msgstr "Nur der Eigentümer eines Dokuments erstellt einen Wiederherstellungsschlüssel"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:590
+#: packages/claudia-server/src/claudia_server/protocol.py:591
 msgid "only the owner of a document sets this"
 msgstr "Nur der Eigentümer eines Dokuments legt dies fest"
 
@@ -5377,7 +5413,7 @@ msgstr "Absatz"
 msgid "paragraphs"
 msgstr "Absätze"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:363
+#: packages/claudia-server/src/claudia_server/protocol.py:364
 msgid "params must be an object"
 msgstr "params muss ein Objekt sein"
 
@@ -5541,7 +5577,7 @@ msgstr "set_cells: Jede Zelle ist ein Objekt mit row, col und input"
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr "set_cells: input muss Text mit höchstens {limit} Zeichen sein"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:593
+#: packages/claudia-server/src/claudia_server/protocol.py:594
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr "set_restore_policy: policy muss eines von {policies} sein"
 
@@ -5641,7 +5677,7 @@ msgstr "Textfeld"
 msgid "text of the object"
 msgstr "Text des Objekts"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:873 packages/claudia-server/src/claudia_server/protocol.py:889 packages/claudia-server/src/claudia_server/protocol.py:919
+#: packages/claudia-server/src/claudia_server/protocol.py:874 packages/claudia-server/src/claudia_server/protocol.py:891 packages/claudia-server/src/claudia_server/protocol.py:906 packages/claudia-server/src/claudia_server/protocol.py:936
 msgid "that is not your current password"
 msgstr "Das ist nicht Ihr aktuelles Passwort"
 
@@ -5657,23 +5693,23 @@ msgstr "Der Assistent kann nur Vorschläge machen; das Dokument richten Menschen
 msgid "the assistant can only make suggestions; people write the text"
 msgstr "Der Assistent kann nur Vorschläge machen; den Text schreiben Menschen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:765
+#: packages/claudia-server/src/claudia_server/protocol.py:766
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr "Der Assistent kann keinen rohen Befehl ausführen; nutzen Sie die Methoden der App"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:606
+#: packages/claudia-server/src/claudia_server/protocol.py:607
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr "Der Assistent schlägt nicht vor, einen Prüfpunkt wiederherzustellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:632
+#: packages/claudia-server/src/claudia_server/protocol.py:633
 msgid "the assistant does not suggest switching lines"
 msgstr "Der Assistent schlägt nicht vor, die Linie zu wechseln"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:651
+#: packages/claudia-server/src/claudia_server/protocol.py:652
 msgid "the assistant does not vote"
 msgstr "Der Assistent stimmt nicht ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:679
+#: packages/claudia-server/src/claudia_server/protocol.py:680
 msgid "the assistant does not withdraw suggestions"
 msgstr "Der Assistent zieht keine Vorschläge zurück"
 
@@ -5821,7 +5857,7 @@ msgstr "der Wert oder die Alternative, wenn der Wert ein Fehler irgendeiner Art 
 msgid "the whole table, header included"
 msgstr "die ganze Tabelle, einschließlich Kopfzeile"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:671
+#: packages/claudia-server/src/claudia_server/protocol.py:672
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr "Es gibt einen offenen Vorschlag; beantworten oder ziehen Sie ihn zuerst zurück"
 
@@ -5829,7 +5865,7 @@ msgstr "Es gibt einen offenen Vorschlag; beantworten oder ziehen Sie ihn zuerst 
 msgid "there is no earlier list of this kind to continue"
 msgstr "Es gibt keine frühere Liste dieser Art, die sich fortsetzen ließe"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:634
+#: packages/claudia-server/src/claudia_server/protocol.py:635
 msgid "there is no line called {line!r}"
 msgstr "Es gibt keine Linie namens {line!r}"
 
@@ -5877,11 +5913,11 @@ msgstr "diese Zeile"
 msgid "this server does not host {app}"
 msgstr "dieser Server bietet {app} nicht an"
 
-#: packages/claudia-server/src/claudia_server/app.py:339 packages/claudia-server/src/claudia_server/protocol.py:851
+#: packages/claudia-server/src/claudia_server/app.py:339 packages/claudia-server/src/claudia_server/protocol.py:852
 msgid "this server does not keep recovery keys"
 msgstr "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:861
+#: packages/claudia-server/src/claudia_server/protocol.py:862
 msgid "this server does not list a document's people this way"
 msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise auf"
 
@@ -5889,19 +5925,23 @@ msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise 
 msgid "this server does not make rendered containers"
 msgstr "Dieser Server erzeugt keine gerenderten Container"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:835
+#: packages/claudia-server/src/claudia_server/protocol.py:836
 msgid "this server does not manage people"
 msgstr "Dieser Server verwaltet keine Personen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:917
+#: packages/claudia-server/src/claudia_server/protocol.py:885
+msgid "this server does not support changing a password"
+msgstr "dieser Server unterstützt kein Ändern des Passworts"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:934
 msgid "this server does not support deleting a document"
 msgstr "Dieser Server unterstützt das Löschen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:887 packages/claudia-server/src/claudia_server/protocol.py:900
+#: packages/claudia-server/src/claudia_server/protocol.py:904 packages/claudia-server/src/claudia_server/protocol.py:917
 msgid "this server does not support handing over ownership"
 msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:871
+#: packages/claudia-server/src/claudia_server/protocol.py:872
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
@@ -5957,7 +5997,7 @@ msgstr "hier tippen, um eine Zeile hinzuzufügen"
 msgid "undo"
 msgstr "rückgängig"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:367
+#: packages/claudia-server/src/claudia_server/protocol.py:368
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "Unbekannter Parameter {parameter!r} für {name}"
 
@@ -6305,11 +6345,11 @@ msgstr "{method}: Ein Tabellenblatt wird mit seiner ID angegeben"
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "{method}: kinds ist eine Liste aus {kinds}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:375
+#: packages/claudia-server/src/claudia_server/protocol.py:376
 msgid "{method}: missing parameter {parameter!r}"
 msgstr "{method}: Parameter {parameter!r} fehlt"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:384
+#: packages/claudia-server/src/claudia_server/protocol.py:385
 msgid "{method}: {parameter} {reason}"
 msgstr "{method}: {parameter} {reason}"
 
@@ -6341,11 +6381,11 @@ msgstr "{name} ist da. Die Datei wurde nicht aufbewahrt: Herunterladen schreibt 
 msgid "{name} is here. {count} things it holds are not shown, and stay in the kept file."
 msgstr "{name} ist da. {count} Dinge darin werden nicht gezeigt und bleiben in der aufbewahrten Datei."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:400
+#: packages/claudia-server/src/claudia_server/protocol.py:401
 msgid "{name} is not one of the methods this account may call"
 msgstr "{name} gehört nicht zu den Methoden, die dieses Konto aufrufen darf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:396
+#: packages/claudia-server/src/claudia_server/protocol.py:397
 msgid "{name} needs the editor role"
 msgstr "{name} braucht die Rolle „editor“"
 
@@ -6441,7 +6481,7 @@ msgstr "{range} · {rows} Zeilen · {purpose}"
 msgid "{ref}, empty"
 msgstr "{ref}, leer"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:696
+#: packages/claudia-server/src/claudia_server/protocol.py:697
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr "{revision} gehört nicht zur aktuellen Linie des Dokuments; laden Sie es neu"
 

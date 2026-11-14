@@ -904,7 +904,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
           </label>
           <label class="field">
             {{ recovering ? t('New password') : t('Password') }}
-            <input v-model="password" name="password" type="password" :autocomplete="recovering ? 'new-password' : 'current-password'" >
+            <PasswordInput v-model="password" name="password" :autocomplete="recovering ? 'new-password' : 'current-password'" />
           </label>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
           <div class="buttons">

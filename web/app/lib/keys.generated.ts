@@ -43,6 +43,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'file.download': { chord: { key: 's', code: 'KeyS', ctrl: true, alt: true }, owner: 'page' },
   'file.manage.accept-owner': { chord: { key: 'c', code: 'KeyC', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.assign-owner': { chord: { key: 'o', code: 'KeyO', ctrl: true, shift: true, alt: true }, owner: 'page' },
+  'file.manage.change-password': { chord: { key: 'w', code: 'KeyW', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.delete': { chord: { key: 'r', code: 'KeyR', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.export': { chord: { key: 'x', code: 'KeyX', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.leave': { chord: { key: 'l', code: 'KeyL', ctrl: true, shift: true, alt: true }, owner: 'page' },

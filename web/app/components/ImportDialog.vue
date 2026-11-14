@@ -108,7 +108,7 @@ function submit() {
         <label class="field">{{ t('Name') }}<input v-model="id" name="import-name" autocomplete="off" required :readonly="working" ></label>
         <div class="two">
           <label class="field">{{ t('Your name') }}<input v-model="user" name="import-user" autocomplete="username" required :readonly="working" ></label>
-          <label class="field">{{ t('Password') }}<input v-model="password" name="import-password" type="password" autocomplete="new-password" required :readonly="working" ></label>
+          <label class="field">{{ t('Password') }}<PasswordInput v-model="password" name="import-password" autocomplete="new-password" required :readonly="working" /></label>
         </div>
         <label class="check">
           <input v-model="keep" type="checkbox" name="keep-original" :disabled="working" >

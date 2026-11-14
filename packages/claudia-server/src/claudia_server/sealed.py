@@ -54,6 +54,7 @@ from claudia_container import (
     WeakPassword,
     add_user,
     begin,
+    change_password,
     create_document,
     derive_login_material,
     format_recovery_key,
@@ -351,6 +352,19 @@ class SealedDocuments:
         ``False`` for a wrong password (the same refusal as everywhere else, D50). ``ValueError`` with a sentence
         if ``name`` is the document's only owner."""
         return leave_document(self._file(doc_id), name, password)
+
+    def change_password(self, doc_id: str, name: str, old_password: str, new_password: str) -> bool:
+        """``name`` gets ``new_password`` for this document (D448): the document's keys are sealed for them again under
+        the new one, nothing else changes and the old password stops working at once. Needs no other key, so a
+        viewer can do it too. ``False`` for a wrong current password; ``ValueError`` with a sentence for a weak new
+        one."""
+        try:
+            return change_password(self._file(doc_id), _clean_name(name), old_password, new_password)
+        except WeakPassword as problem:
+            raise ValueError(explain(problem)) from problem
+        except (ContainerError, OSError) as error:
+            log.warning("cannot change a password in %s: %s", doc_id, error)
+            return False
 
     def propose_owner_transfer(self, doc_id: str, old_owner: str, old_owner_password: str, new_owner: str) -> bool:
         """``old_owner`` asks ``new_owner`` (who must already be an editor) to become the owner instead. Waits

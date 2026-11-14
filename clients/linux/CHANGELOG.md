@@ -4,6 +4,10 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (passwords: D448)
+- File ▸ Manage ▸ Change Password… (Ctrl+Alt+Shift+W), a page action in every app; in the macOS and Windows menus
+  through the generated listings.
+
 ### Added (one server for all three apps: D444)
 - Shell contract v1, additive: `welcome` may carry `app`, the app this window is. On a server of several apps the
   page then lists only that app's documents and refuses files of another kind. A shell that leaves it out gets the

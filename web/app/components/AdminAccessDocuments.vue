@@ -200,7 +200,7 @@ async function applyDocs() {
           <div class="since">{{ a.you ? t('Administrator since {when}', { when: ago(a.added) }) : t('Added {when}', { when: ago(a.added) }) }}</div>
           <template v-if="changingPasswordFor === a.name">
             <form class="inline-form" @submit.prevent="confirmPasswordChange">
-              <input v-model="newOwnPassword" type="password" :placeholder="t('New password (at least 8 characters)')" autocomplete="new-password" autofocus >
+              <PasswordInput v-model="newOwnPassword" :placeholder="t('New password (at least 8 characters)')" autocomplete="new-password" autofocus />
               <button class="btn primary small" type="submit" :disabled="passwordBusy">{{ t('Save') }}</button>
               <button class="btn small" type="button" :disabled="passwordBusy" @click="changingPasswordFor = null">{{ t('Cancel') }}</button>
             </form>
@@ -216,7 +216,7 @@ async function applyDocs() {
     <template v-if="adding">
       <form class="inline-form add-form" @submit.prevent="confirmAdd">
         <input v-model="newName" :placeholder="t('Name')" autocomplete="off" autofocus >
-        <input v-model="newPassword" type="password" :placeholder="t('Password (at least 8 characters)')" autocomplete="new-password" >
+        <PasswordInput v-model="newPassword" :placeholder="t('Password (at least 8 characters)')" autocomplete="new-password" />
         <button class="btn primary small" type="submit" :disabled="addBusy">{{ t('Add') }}</button>
         <button class="btn small" type="button" :disabled="addBusy" @click="adding = false">{{ t('Cancel') }}</button>
       </form>
@@ -331,7 +331,8 @@ h2 {
   gap: 6px;
   margin-top: 8px;
 }
-.inline-form input {
+.inline-form input,
+.inline-form :deep(input) {
   flex: 1;
   min-width: 0;
   padding: 6px 9px;

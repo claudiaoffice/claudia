@@ -493,6 +493,18 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Remove yourself, confirming it with your own current password. `false` after telling the person why not
    * (a wrong password, or being the document's only owner). */
+  /** Choose a new password for this document, confirming it with the current one (D448). Only your own: everybody
+   * else keeps theirs. `true`, or what went wrong in words fit for the dialog that asked (it says it there, not in a
+   * notice behind it). */
+  async changePassword(oldPassword: string, newPassword: string): Promise<true | string> {
+    try {
+      await this.need().request('change_password', { old_password: oldPassword, new_password: newPassword })
+      return true
+    } catch (error) {
+      return error instanceof ProtocolError ? error.message : t('Something went wrong.')
+    }
+  }
+
   async leave(password: string): Promise<boolean> {
     return (await this.attempt('leave', { password })) !== false
   }

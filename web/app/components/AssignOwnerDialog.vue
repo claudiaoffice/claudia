@@ -51,7 +51,7 @@ async function propose() {
           </select>
         </label>
         <p v-else class="lead">{{ t('Nobody edits this document yet. Make somebody an editor first (File ▸ Manage ▸ Share…).') }}</p>
-        <label v-if="editors.length" class="field">{{ t('Your password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
+        <label v-if="editors.length" class="field">{{ t('Your password') }}<PasswordInput v-model="password" autocomplete="current-password" /></label>
         <div class="buttons">
           <button v-if="editors.length" class="btn primary" type="submit" :disabled="busy || !chosen || !password">{{ t('Ask them to take over') }}</button>
           <button class="btn" type="button" @click="emit('close')">{{ editors.length ? t('Cancel') : t('Close') }}</button>

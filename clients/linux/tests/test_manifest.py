@@ -103,6 +103,7 @@ def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: mani
     assert isinstance(manage, Submenu) and manage.label == "Manage"
     assert [a.id for a in manage.items] == [
         "file.manage.share",
+        "file.manage.change-password",
         "file.manage.assign-owner",
         "file.manage.accept-owner",
         "file.manage.leave",
@@ -111,6 +112,7 @@ def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: mani
     ]
     assert [a.label for a in manage.items] == [
         "Share…",
+        "Change Password…",
         "Assign New Owner…",
         "Accept Ownership…",
         "Leave Document…",

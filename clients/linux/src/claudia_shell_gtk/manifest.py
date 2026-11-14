@@ -349,6 +349,12 @@ def _file_menu(*, title: str, prints: bool) -> Menu:
                             accelerators=("<Primary><Alt><Shift>s",),
                         ),
                         _page(
+                            "file.manage.change-password",
+                            "Change Password…",
+                            "Choose a new password of your own for this document",
+                            accelerators=("<Primary><Alt><Shift>w",),
+                        ),
+                        _page(
                             "file.manage.assign-owner",
                             "Assign New Owner…",
                             "Hand this document over to somebody else",

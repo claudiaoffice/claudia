@@ -26,7 +26,7 @@ async function leave() {
       <template #doc><b>{{ session.state.doc }}</b></template>
     </TransText>
     <form class="form" @submit.prevent="leave">
-      <label class="field">{{ t('Your password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
+      <label class="field">{{ t('Your password') }}<PasswordInput v-model="password" autocomplete="current-password" /></label>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="busy || !password">{{ t('Leave document') }}</button>
         <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>

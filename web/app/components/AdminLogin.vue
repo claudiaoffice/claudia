@@ -45,7 +45,7 @@ async function signIn() {
       <p class="lead">{{ t('These settings are for administrators only. Sign in with your name and password to continue.') }}</p>
 
       <label class="field">{{ t('Your name') }}<input v-model="name" type="text" autocomplete="username" autofocus ></label>
-      <label class="field">{{ t('Password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
+      <label class="field">{{ t('Password') }}<PasswordInput v-model="password" autocomplete="current-password" /></label>
 
       <p v-if="formError" class="error" role="alert">{{ formError }}</p>
 
@@ -123,6 +123,19 @@ h1 {
   display: block;
   width: 100%;
   margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line-field);
+  background: var(--surface);
+  color: var(--text);
+  font: 14px var(--font-ui);
+}
+/* the password field (PasswordInput): the box is the wrapper, so the eye sits at the end of the input */
+.field .password {
+  margin-top: 6px;
+}
+.field .password :deep(input) {
+  display: block;
   padding: 10px 12px;
   border-radius: 9px;
   border: 1px solid var(--line-field);

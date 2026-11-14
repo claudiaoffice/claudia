@@ -23,6 +23,7 @@ export type FrameDialog =
   | 'assign-owner'
   | 'accept-owner'
   | 'leave'
+  | 'change-password'
   | 'export'
   | 'export-format'
   | 'delete'
@@ -85,6 +86,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
         label: t('Manage'),
         items: [
           { id: 'file.manage.share', label: t('Share…'), action: () => c.open('share'), disabled: !owner },
+          { id: 'file.manage.change-password', label: t('Change Password…'), action: () => c.open('change-password') },
           { id: 'file.manage.assign-owner', label: t('Assign New Owner…'), action: () => c.open('assign-owner'), disabled: !owner },
           { id: 'file.manage.accept-owner', label: t('Accept Ownership…'), action: () => c.open('accept-owner'), disabled: viewer },
           { id: 'file.manage.leave', label: t('Leave Document…'), action: () => c.open('leave') },

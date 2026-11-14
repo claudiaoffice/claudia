@@ -160,6 +160,18 @@ class LeavableDirectory(Protocol):
 
 
 @runtime_checkable
+class PasswordDirectory(Protocol):
+    """A directory where a person can choose a new password for a document, with their current one (D448). Only
+    their own: nobody can set another person's password (the recovery key is the way back for somebody who forgot
+    theirs)."""
+
+    def change_password(self, doc_id: str, name: str, old_password: str, new_password: str) -> bool:
+        """``name`` gets ``new_password`` instead of ``old_password``; the old one stops working at once. ``False`` if
+        ``old_password`` is wrong (or there is nobody of that name: the same refusal, D50). ``ValueError`` with a
+        sentence if the new password is not acceptable."""
+
+
+@runtime_checkable
 class TransferableDirectory(Protocol):
     """A directory whose documents can change who owns them (E2.3). A role is sealed inside its own slot (D102), so
     handing one over needs both people's current passwords, one at each step: the owner proposes with their own now,
@@ -220,6 +232,18 @@ class ScryptDirectory:
     def remove_user(self, doc_id: str, name: str) -> None:
         """Remove a user; ``KeyError`` if there is none of that name."""
         del self._users[(doc_id, normalized(name))]
+
+    def change_password(self, doc_id: str, name: str, old_password: str, new_password: str) -> bool:
+        """``name`` gets ``new_password``; ``False`` if ``old_password`` is not theirs, ``ValueError`` if the new one
+        is too short (D448)."""
+        account = self.verify(doc_id, Credentials(name, old_password))
+        if account is None:
+            return False
+        if len(new_password) < MIN_PASSWORD:
+            raise ValueError(f"the password needs at least {MIN_PASSWORD} characters")
+        salt = os.urandom(16)
+        self._users[(doc_id, normalized(name))] = _Record(account, salt, self._hash(new_password, salt))
+        return True
 
     def dump(self) -> dict:
         """The users as plain data (salts and hashes, never passwords), for a directory that keeps them on disk."""

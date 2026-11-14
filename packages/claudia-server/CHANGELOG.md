@@ -5,6 +5,14 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-11-14
+
+### Added
+- `change_password` (`old_password`, `new_password`): a person chooses a new password for the document, their own
+  only, whatever their role (D448). `{changed: true}`; `unauthorized` for a wrong current password; `command_error`
+  with a sentence for a weak new one. `PasswordDirectory`; `ScryptDirectory.change_password`,
+  `SealedDocuments.change_password` (the container's `change_password`: the keys sealed again under the new one).
+
 ## [0.32.0] - 2026-11-14
 
 The desktop apps on the one server (D444, D445).

@@ -159,6 +159,12 @@ onBeforeUnmount(() => clearTimeout(timer))
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
     <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
     <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
+    <ChangePasswordDialog
+      v-if="dialog === 'change-password'"
+      :session="session"
+      @close="dialog = null"
+      @changed="((dialog = null), session.notice(t('Your password for {doc} is changed.', { doc: session.state.doc }), 'info'))"
+    />
     <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
     <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
     <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="exportFormats" @close="dialog = null" />

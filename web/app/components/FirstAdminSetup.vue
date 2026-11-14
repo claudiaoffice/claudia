@@ -46,8 +46,8 @@ function keepLocal() {
       <p v-else class="lead">{{ t('{host} isn\'t reachable beyond this computer yet, so this isn\'t required — but set a name and password now if you\'d like to manage its settings, or before you open it up to others later.', { host }) }}</p>
 
       <label class="field">{{ t('Your name') }}<input v-model="name" type="text" autocomplete="username" :placeholder="t('tobi')" ></label>
-      <label class="field">{{ t('Password') }}<input v-model="password" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
-      <label class="field">{{ t('Confirm password') }}<input v-model="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••••" ></label>
+      <label class="field">{{ t('Password') }}<PasswordInput v-model="password" autocomplete="new-password" placeholder="••••••••••" /></label>
+      <label class="field">{{ t('Confirm password') }}<PasswordInput v-model="confirmPassword" autocomplete="new-password" placeholder="••••••••••" /></label>
 
       <div class="note">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -119,6 +119,20 @@ h1 {
   width: 100%;
   max-width: 340px;
   margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line-field);
+  background: var(--surface);
+  color: var(--text);
+  font: 14px var(--font-ui);
+}
+/* the password field (PasswordInput): the box is the wrapper, so the eye sits at the end of the input */
+.field .password {
+  margin-top: 6px;
+  max-width: 340px;
+}
+.field .password :deep(input) {
+  display: block;
   padding: 10px 12px;
   border-radius: 9px;
   border: 1px solid var(--line-field);

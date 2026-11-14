@@ -1,5 +1,5 @@
 {
- "version": "0.32.0",
+ "version": "0.33.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -536,6 +536,7 @@
   "init": "(cost: 'int' = 16384)",
   "methods": {
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "change_password": "(self, doc_id: 'str', name: 'str', old_password: 'str', new_password: 'str') -> 'bool'",
    "dump": "(self) -> 'dict'",
    "load": "(self, data: 'dict') -> 'None'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
@@ -551,6 +552,7 @@
   "methods": {
    "accept_owner_transfer": "(self, doc_id: 'str', new_owner: 'str', new_owner_password: 'str') -> 'Account | None'",
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "change_password": "(self, doc_id: 'str', name: 'str', old_password: 'str', new_password: 'str') -> 'bool'",
    "create": "(self, doc_id: 'str') -> 'Document'",
    "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
    "documents": "(self) -> 'list[StoredInfo]'",

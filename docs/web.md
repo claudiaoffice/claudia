@@ -35,6 +35,10 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
 * **The front page says it is the front page** (`hello` `view: "start"`, D447), so a desktop app shows its short menu,
   and answers File ▸ New, Open…, Open a File…, View ▸ Dark Mode and Config ▸ App Language, reporting the ticks. A
   document says `view: "document"`.
+* **Passwords** (D448): every password field is `PasswordInput.vue`, with an eye that shows and hides what was typed
+  (starts hidden; attributes go to the input). File ▸ Manage ▸ Change Password… (`ChangePasswordDialog.vue`,
+  `BaseSession.changePassword`, the protocol's `change_password`) changes the person's own password; a refusal is said
+  in the dialog. `npm run e2e:passwords` checks both in a browser against a real sealed server.
 * The front page holds the presence socket (`lib/presence.ts`, `/api/presence`, D434, D445) while it is shown, so a
   server started with `--exit-when-idle` knows it is in use; a dropped socket comes back after 1, 2, 4… s (30 s at most).
 * Long names do not stretch anything: a row shows the name on up to two lines (the whole name as its tooltip), the

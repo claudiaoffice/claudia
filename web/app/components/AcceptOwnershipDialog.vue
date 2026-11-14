@@ -28,7 +28,7 @@ async function accept() {
     <template v-else>
       <TransText tag="p" class="lead" :text="t('If somebody asked you to take over {doc}, confirm it is you with your own current password.')"><template #doc><b>{{ session.state.doc }}</b></template></TransText>
       <form class="form" @submit.prevent="accept">
-        <label class="field">{{ t('Your password') }}<input v-model="password" type="password" autocomplete="current-password" ></label>
+        <label class="field">{{ t('Your password') }}<PasswordInput v-model="password" autocomplete="current-password" /></label>
         <div class="buttons">
           <button class="btn primary" type="submit" :disabled="busy || !password">{{ t('Accept') }}</button>
           <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>

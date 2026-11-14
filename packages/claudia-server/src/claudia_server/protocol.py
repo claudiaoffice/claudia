@@ -54,6 +54,7 @@ from .auth import (
     Account,
     DeletableDirectory,
     LeavableDirectory,
+    PasswordDirectory,
     RecoverableDirectory,
     RosterDirectory,
     TransferableDirectory,
@@ -873,6 +874,22 @@ def _leave(ctx, password):
         raise RequestError("unauthorized", msg("that is not your current password"))
     ctx.document.publish("person_left", ctx.user, {"user": ctx.user})
     return {"left": True}
+
+
+@core_methods.method("change_password", "old_password:str new_password:str")
+def _change_password(ctx, old_password, new_password):
+    """Choose a new password for this document, confirming it is really you with your current one (D448). Only your
+    own, whatever your role; everybody else keeps theirs. Returns `{changed: true}`; `unauthorized` if the current
+    password is wrong; `command_error` with a sentence for the person if the new one is not acceptable."""
+    if not isinstance(ctx.directory, PasswordDirectory):
+        raise RequestError("unavailable", msg("this server does not support changing a password"))
+    try:
+        changed = ctx.directory.change_password(ctx.doc_id, ctx.user, old_password, new_password)
+    except ValueError as error:
+        raise RequestError("command_error", str(error)) from error
+    if not changed:
+        raise RequestError("unauthorized", msg("that is not your current password"))
+    return {"changed": True}
 
 
 @core_methods.method("propose_owner", "name:str password:str")

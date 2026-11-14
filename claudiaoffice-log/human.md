@@ -10,11 +10,14 @@ Work plan for Nov 14/15th 2026
 - [ ] focus topics
 	- [x] file management => to do this, introduce the one-server approach
 		- [ ] use worker pool for real!
-		- [ ] progress bar when importing
+		- [x] progress bar when importing
 		- [x] size of import dialog may be too small => needs to adapt to filename
-		- [ ] in desktop apps: while on frontpage, show only relevant menu items (open file), not stuff that is not possible (Edit > Insert)
+		- [x] in desktop apps: while on frontpage, show only relevant menu items (open file), not stuff that is not possible (Edit > Insert)
 		- [ ] in web app front page: move usable area up on the screen, otherwise we waste screen space
 		- [ ] hide/unhide in password field, also in "share" dialog
+		- [ ] in the menu of computes > tools e.g. "resample" only makes sense if there is any
+		      "RANDOM" command anywhere, same goes for the "draw 0" count at the right most edge above the history&chat dock. Could we make it a principle that stuff that is not meaningful in the respective context is invisible? So the tools menu would expand with new entries IF there is a random function somewhere.
+		- [ ] the app icon is gone for the linux client when starting from shell - normal?
 	- [x] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] performance

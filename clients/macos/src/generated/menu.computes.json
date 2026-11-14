@@ -98,6 +98,18 @@
               },
               {
                 "accelerators": [
+                  "<Primary><Alt><Shift>w"
+                ],
+                "checkable": false,
+                "id": "file.manage.change-password",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Change Password\u2026",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
                   "<Primary><Alt><Shift>o"
                 ],
                 "checkable": false,

@@ -800,6 +800,25 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(session.state.notice?.text).toBe('that is not your current password')
   })
 
+  it('changes our own password, and says why it did not in the words of the server (D448)', async () => {
+    const link = new FakeLink()
+    server(link)
+    const asked: unknown[] = []
+    link.handlers.change_password = (params: unknown) => {
+      asked.push(params)
+      if ((params as { old_password: string }).old_password !== 'Correct-Horse-9') {
+        throw new ProtocolError('unauthorized', 'that is not your current password')
+      }
+      return { changed: true }
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.changePassword('Correct-Horse-9', 'Blue-Kettle-77')).toBe(true)
+    expect(asked[0]).toEqual({ old_password: 'Correct-Horse-9', new_password: 'Blue-Kettle-77' })
+    expect(await session.changePassword('wrong', 'Blue-Kettle-77')).toBe('that is not your current password')
+    expect(session.state.notice).toBeNull() // the dialog says it, not a toast behind it
+  })
+
   it('proposes a new owner with our own password', async () => {
     const link = new FakeLink()
     server(link)

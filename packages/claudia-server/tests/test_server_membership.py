@@ -278,3 +278,62 @@ def test_a_server_without_sealed_documents_has_none_of_these(tmp_path):
         )
         assert ann.request("delete_document", {"password": "Correct-Horse-9"})["error"]["code"] == "unavailable"
         ann.close()
+
+
+# --- changing one's own password (D448) ------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(("name", "old"), [(ANN, ANN_PW), (BEN, BEN_PW), (VERA, VERA_PW)])
+def test_everybody_can_change_their_own_password_and_the_old_one_stops_working(tmp_path, name, old):
+    store = make_document(tmp_path)
+    assert store.change_password("plan", name, old, "Blue-Kettle-77") is True
+    assert store.verify("plan", Credentials(name, old)) is None
+    assert store.verify("plan", Credentials(name, "Blue-Kettle-77")) is not None
+    others = [(n, p) for n, p in ((ANN, ANN_PW), (BEN, BEN_PW), (VERA, VERA_PW)) if n != name]
+    assert all(store.verify("plan", Credentials(n, p)) is not None for n, p in others)
+
+
+def test_a_wrong_current_password_changes_nothing(tmp_path):
+    store = make_document(tmp_path)
+    assert store.change_password("plan", BEN, "wrong-Pass-1", "Blue-Kettle-77") is False
+    assert store.verify("plan", Credentials(BEN, BEN_PW)) is not None
+
+
+def test_a_weak_new_password_is_refused_with_a_sentence(tmp_path):
+    store = make_document(tmp_path)
+    with pytest.raises(ValueError, match="characters"):
+        store.change_password("plan", BEN, BEN_PW, "short")
+    assert store.verify("plan", Credentials(BEN, BEN_PW)) is not None
+
+
+def test_the_document_stays_readable_with_the_new_password_after_a_restart(tmp_path):
+    store = make_document(tmp_path)
+    store.change_password("plan", ANN, ANN_PW, "Blue-Kettle-77")
+    again = store_in(tmp_path)
+    assert again.verify("plan", Credentials(ANN, "Blue-Kettle-77")) is not None
+
+
+def test_changing_the_password_over_the_wire(tmp_path):
+    client, ann = setup_wire(tmp_path)
+    vera = Peer(client, user=VERA, password=VERA_PW)
+    answer = vera.request("change_password", {"old_password": VERA_PW, "new_password": "Blue-Kettle-77"})
+    assert answer["ok"] and answer["result"] == {"changed": True}
+    assert (
+        vera.request("change_password", {"old_password": VERA_PW, "new_password": "Green-Lamp-55"})["error"]["code"]
+        == "unauthorized"
+    )
+    weak = vera.request("change_password", {"old_password": "Blue-Kettle-77", "new_password": "short"})
+    assert weak["error"]["code"] == "command_error" and "characters" in weak["error"]["message"]
+    vera.close()
+    ann.close()
+    client.__exit__(None, None, None)
+
+
+def test_a_server_that_keeps_documents_in_memory_changes_passwords_too(tmp_path):
+    hub = Hub(MemoryProvider(ListModel))
+    with TestClient(create_app(hub, ScryptDirectory(cost=2**4))) as client:
+        ann = Peer(client, user="ann", password="Correct-Horse-9", create=True)
+        answer = ann.request("change_password", {"old_password": "Correct-Horse-9", "new_password": "Blue-Kettle-77"})
+        assert answer["result"] == {"changed": True}
+        ann.close()
+        Peer(client, user="ann", password="Blue-Kettle-77").close()

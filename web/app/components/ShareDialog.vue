@@ -42,7 +42,7 @@ async function add() {
     </TransText>
     <form class="form" @submit.prevent="add">
       <label class="field">{{ t('Name') }}<input v-model="name" autocomplete="off" ></label>
-      <label class="field">{{ t('Password (at least 8 characters, with a capital letter, a small letter and a digit)') }}<input v-model="password" type="text" autocomplete="off" ></label>
+      <label class="field">{{ t('Password (at least 8 characters, with a capital letter, a small letter and a digit)') }}<PasswordInput v-model="password" name="share-password" autocomplete="off" /></label>
       <label class="field">
         {{ t('May') }}<select v-model="role"><option value="editor">{{ t('edit') }}</option><option value="viewer">{{ t('only look') }}</option></select>
       </label>
