@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, shallowRef, watchEffect } from 'vue'
+import { ref, shallowRef, watch, watchEffect } from 'vue'
+import { openedFromDocument } from '~/lib/switch-session'
 import { isSlides, isText, type AnySession } from '~/lib/open'
 import { setPageLanguage } from '~/lib/i18n'
 import { tabTitle } from '~/lib/shell-bridge'
@@ -21,6 +22,14 @@ function leave(opts?: { startFresh?: boolean }) {
   session.value = null
   startFresh.value = !!opts?.startFresh
 }
+
+// File ▸ Open… inside a document opened another one: this window shows it now, and the one before is closed.
+watch(openedFromDocument, (next) => {
+  if (!next) return
+  session.value?.close()
+  session.value = next
+  openedFromDocument.value = null
+})
 
 // Each app has its colour (tokens.css); the open dialog sets it for the app of the documents it lists. The tab
 // title follows the same switch and names the document too, so a person with several documents open in different

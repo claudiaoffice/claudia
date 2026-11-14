@@ -1,20 +1,26 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { appOfServer, fetchDocsListing, openSession, type AnySession, type Listed } from '~/lib/open'
+import { OPENABLE, appOfServer, fetchDocsListing, filterListed, openSession, placeUpload, uploadFile, type AnySession, type Listed, type Uploaded } from '~/lib/open'
+import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, rememberOpened, setInCollection, type MineEntry } from '~/lib/mine'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
 import { createShellBridge, detectHandler, isApp, type ShellBridge } from '~/lib/shell-bridge'
 import { useI18n } from '~/lib/i18n'
+import Modal from './Modal.vue'
 
 const { t } = useI18n()
 
 const props = defineProps<{
   /** File ▸ New (D123): land with the document field blank and focused, instead of the one just closed. */
   startFresh?: boolean
+  /** File ▸ Open… (sheet 10, B1): shown in a dialog over a document, which it replaces once another is open. */
+  modal?: boolean
+  /** File ▸ Open a File…: ask for a file at once. */
+  pickFile?: boolean
 }>()
-const emit = defineEmits<{ opened: [session: AnySession] }>()
+const emit = defineEmits<{ opened: [session: AnySession]; close: [] }>()
 
 // `server` is a bare host (`host` or `host:port`, as `location.host` gives it); it starts from `?server=` (a dev-only
 // escape hatch for pointing this page at a different backend) and otherwise this page's own host. Switching to a
@@ -56,8 +62,41 @@ const recovering = ref(false)
 const recoveryKey = ref('')
 /** What `/api/docs` said this server serves, before any document has been opened or even made. */
 const serverApp = ref('')
+/** The apps this server hosts (D430): one for a server of one app, three for the one server of the suite. */
+const apps = ref<string[]>([])
+const isSuite = computed(() => apps.value.length > 1)
+/** The app of the document chosen from a list (its address names the app, D431); '' for a name typed by hand. */
+const docApp = ref('')
+/** The kind of a new document: asked every time on a server of several apps (sheet 10). */
+const newApp = ref('')
+const query = ref('')
+const appFilter = ref(new URLSearchParams(location.search).get('app') ?? '')
+const searchField = ref<HTMLInputElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+/** Mine and the collections (D443): kept in this browser, never on a server. */
+const mine = ref<MineEntry[]>(listMine())
+const collections = ref(listCollections())
+const shownCollection = ref<string | null>(null)
+const newCollection = ref<string | null>(null)
+/** A file from the computer, held by the server until it becomes a document (D440). */
+const incoming = shallowRef<Uploaded | null>(null)
+const importError = ref('')
+const notice = ref('')
+const dragging = ref(false)
+const APP_WORDS: Record<string, () => string> = { computes: () => t('Table'), composes: () => t('Text'), creates: () => t('Slides') }
 /** The server serves one app and says so; a listed document is the fallback (see `appOfServer`). */
-const app = computed(() => appOfServer({ app: serverApp.value, documents: documents.value }))
+const app = computed(() =>
+  isSuite.value ? docApp.value || appFilter.value || 'claudia' : appOfServer({ app: serverApp.value, documents: documents.value }),
+)
+/** The place shown, in the sidebar's words. */
+const placeLabel = computed(() => bookmarks.value.find((b) => b.origin === origin.value)?.label ?? hostOf(origin.value))
+const placeDocs = computed(() => filterListed(documents.value, query.value, appFilter.value))
+const mineHere = computed(() => {
+  const shown = shownCollection.value === null ? mine.value : entriesOf(collections.value.find((c) => c.name === shownCollection.value) ?? { name: '', entries: [] }, mine.value)
+  return filterListed(shown, query.value, appFilter.value)
+})
+const chosenKey = computed(() => keyOf({ origin: origin.value, app: docApp.value, id: doc.value.trim() }))
+const chosenIsMine = computed(() => mine.value.some((e) => keyOf(e) === chosenKey.value))
 const words = computed(
   () =>
     ({
@@ -105,6 +144,8 @@ async function loadServer() {
   if ('error' in listing) listError.value = listing.error
   else {
     documents.value = listing.documents
+    apps.value = listing.apps
+    if (apps.value.length === 1) newApp.value = apps.value[0] ?? ''
     // The server says which app it serves, and has done all along; this page used to read only the documents and
     // guess the app from the first of them, so a server with none looked like computes whatever it was serving.
     serverApp.value = listing.app
@@ -152,7 +193,23 @@ function attachShell() {
 watch(() => [shell.value?.ready, shell.value?.hasServerList, shell.value?.servers], settle)
 onBeforeUnmount(() => shell.value?.detach())
 
+/** Ctrl+F searches, Ctrl+Shift+O opens a file (sheet 10, D). */
+function onKey(event: KeyboardEvent) {
+  const mod = event.ctrlKey || event.metaKey
+  if (!mod || event.altKey) return
+  if (event.shiftKey && event.key.toLowerCase() === 'o') {
+    event.preventDefault()
+    chooseFile()
+  } else if (!event.shiftKey && event.key.toLowerCase() === 'f') {
+    event.preventDefault()
+    searchField.value?.focus()
+  }
+}
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
 onMounted(async () => {
+  if (props.pickFile) chooseFile()
   user.value = remembered('claudia.user')
   if (!doc.value && !props.startFresh) doc.value = remembered('claudia.doc')
   if (props.startFresh) docField.value?.focus()
@@ -234,7 +291,126 @@ function goToTyped() {
 async function enter(session: AnySession) {
   remember('claudia.user', user.value.trim())
   remember('claudia.doc', doc.value.trim())
+  mine.value = rememberOpened({ origin: origin.value, app: session.state.app, id: session.state.doc || doc.value.trim() })
+  const imported = session.imported
+  if (imported) {
+    const hidden = imported.losses.reduce((sum, loss) => sum + loss.count, 0)
+    session.notice(
+      imported.kept
+        ? hidden
+          ? t('{name} is here. {count} things it holds are not shown, and stay in the kept file.', { name: imported.name, count: hidden })
+          : t('{name} is here, and kept inside the document for Download.', { name: imported.name })
+        : t('{name} is here. The file was not kept: Download writes a new one.', { name: imported.name }),
+    )
+  }
   emit('opened', session)
+}
+
+/** A document from a list: its name and its app (the address names it, D431). */
+function choose(id: string, docAppName: string) {
+  doc.value = id
+  docApp.value = docAppName
+}
+
+/** A document from Mine: here, it is chosen; on another place, that place's page opens with it chosen. */
+function chooseMine(entry: MineEntry) {
+  if (entry.origin === origin.value) return choose(entry.id, entry.app)
+  const target = `${entry.origin}/?app=${encodeURIComponent(entry.app)}&doc=${encodeURIComponent(entry.id)}`
+  if (shell.value?.canConnect) connectInShell(entry.origin)
+  else location.href = target
+}
+
+function forget(entry: MineEntry) {
+  mine.value = forgetMine(keyOf(entry))
+  collections.value = listCollections()
+}
+
+function makeCollection() {
+  const name = (newCollection.value ?? '').trim()
+  if (name) collections.value = createCollection(name)
+  newCollection.value = null
+}
+
+function dropCollection(name: string) {
+  collections.value = deleteCollection(name)
+  if (shownCollection.value === name) shownCollection.value = null
+}
+
+function toggleIn(name: string, inside: boolean) {
+  collections.value = setInCollection(name, chosenKey.value, inside)
+}
+
+function isIn(name: string): boolean {
+  return collections.value.find((c) => c.name === name)?.entries.includes(chosenKey.value) ?? false
+}
+
+// A name typed by hand belongs to whichever app has a document of that name here (the old address then decides).
+watch(doc, (id) => {
+  const listed = documents.value.filter((d) => d.id === id.trim())
+  if (!listed.some((d) => d.app === docApp.value)) docApp.value = listed.length === 1 ? (listed[0]?.app ?? '') : ''
+})
+
+/** Open a file… : the computer's own file dialog, every type Claudia opens already chosen (sheet 10, B2). */
+function chooseFile() {
+  fileInput.value?.click()
+}
+
+async function takeFile(file: File | undefined) {
+  if (!file) return
+  importError.value = ''
+  notice.value = ''
+  busy.value = true
+  const answer = await uploadFile(origin.value, file)
+  busy.value = false
+  if ('error' in answer) error.value = answer.error
+  else incoming.value = answer
+}
+
+function onPicked(event: Event) {
+  const input = event.target as HTMLInputElement
+  void takeFile(input.files?.[0])
+  input.value = ''
+}
+
+function onDrop(event: DragEvent) {
+  dragging.value = false
+  void takeFile(event.dataTransfer?.files?.[0])
+}
+
+/** An Office or OpenDocument file becomes a new document (D438): the usual create, with the upload. */
+async function importFile(values: { id: string; user: string; password: string; keep: boolean }) {
+  const file = incoming.value
+  if (!file) return
+  doc.value = values.id
+  user.value = values.user
+  password.value = values.password
+  newApp.value = file.app
+  await go('create', { upload: file.upload, keep: values.keep })
+  if (error.value) importError.value = error.value
+  else incoming.value = null
+}
+
+/** A Claudia file goes in as it is (D442), then is opened with its own name and password. */
+async function placeFile() {
+  const file = incoming.value
+  if (!file) return
+  busy.value = true
+  const answer = await placeUpload(origin.value, file.upload)
+  busy.value = false
+  if ('error' in answer) {
+    importError.value = answer.error
+    return
+  }
+  incoming.value = null
+  await loadServer()
+  choose(answer.id, answer.app)
+  notice.value = t('{id} is here now. Open it with your name and password in it.', { id: answer.id })
+}
+
+function openExisting() {
+  const file = incoming.value
+  incoming.value = null
+  if (file?.id) choose(file.id, file.app)
 }
 
 function proceed() {
@@ -248,8 +424,12 @@ function proceed() {
  * document, or comes in with the recovery key and the new password. Every later connection (the session's own, and its
  * reconnects) is an ordinary login with what the person typed, which by then is right.
  */
-async function go(how: 'open' | 'create' | 'recover') {
+async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean }) {
   error.value = ''
+  if (how === 'create' && !newApp.value) {
+    error.value = t('Choose Table, Text or Slides first.')
+    return
+  }
   const missing = !doc.value.trim() || !user.value.trim() || !password.value || (how === 'recover' && !recoveryKey.value.trim())
   if (missing) {
     error.value =
@@ -262,10 +442,12 @@ async function go(how: 'open' | 'create' | 'recover') {
   let first = true
   const factory = () => {
     const link = new Link({
-      url: socketUrl(doc.value.trim(), { protocol: location.protocol, host: server.value }),
+      url: socketUrl(doc.value.trim(), { protocol: location.protocol, host: server.value }, (how === 'create' ? newApp.value : docApp.value) || undefined),
       user: user.value.trim(),
       password: password.value,
       create: how === 'create' && first,
+      upload: how === 'create' && first ? from?.upload : undefined,
+      keepOriginal: from?.keep,
       recoveryKey: how === 'recover' && first ? recoveryKey.value.trim() : undefined,
       locale: currentLocale(),
     })
@@ -297,14 +479,22 @@ async function go(how: 'open' | 'create' | 'recover') {
 </script>
 
 <template>
-  <main class="open">
-    <header>
+  <component
+    :is="modal ? Modal : 'main'"
+    v-bind="modal ? { title: t('Open'), width: 1080 } : { class: 'open' }"
+    :class="{ dragging }"
+    @close="emit('close')"
+    @dragover.prevent="dragging = true"
+    @dragleave.self="dragging = false"
+    @drop.prevent="onDrop"
+  >
+    <header v-if="!modal">
       <Wordmark />
-      <span class="tag"><AppIcon :size="20" :app="app" /> {{ app }}</span>
+      <span v-if="!isSuite" class="tag"><AppIcon :size="20" :app="app" /> {{ app }}</span>
     </header>
-    <section class="card">
-      <nav class="servers" :aria-label="t('Server bookmarks')">
-        <div class="servers-title">{{ t('Servers') }}</div>
+    <section class="card" :class="{ inside: modal }">
+      <nav class="servers" :aria-label="t('My places and collections')">
+        <div class="servers-title">{{ t('My places') }}</div>
         <ul>
           <li v-for="b in bookmarks" :key="b.origin">
             <input
@@ -351,26 +541,83 @@ async function go(how: 'open' | 'create' | 'recover') {
         </form>
         <p v-if="connectPending" class="hint" role="status">{{ t('Connecting…') }}</p>
         <p v-if="connectError" class="error" role="alert">{{ connectError }}</p>
+        <div class="servers-title collections-title">{{ t('Collections') }}</div>
+        <ul class="collections">
+          <li v-for="c in collections" :key="c.name">
+            <button type="button" class="server" :aria-current="shownCollection === c.name ? 'true' : undefined" @click="shownCollection = shownCollection === c.name ? null : c.name">
+              <svg width="12" height="15" viewBox="0 0 12 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 1h10v13l-5-4-5 4z" /></svg>
+              <span class="server-text"><span class="server-name">{{ c.name }}</span></span>
+              <span class="count">{{ c.entries.length }}</span>
+            </button>
+            <button type="button" class="server-action" :title="t('Remove collection {name}', { name: c.name })" :aria-label="t('Remove collection {name}', { name: c.name })" @click="dropCollection(c.name)">×</button>
+          </li>
+        </ul>
+        <button v-if="newCollection === null" type="button" class="connect-start" @click="newCollection = ''">{{ t('+ New collection') }}</button>
+        <form v-else class="connect-form" @submit.prevent="makeCollection">
+          <input v-model="newCollection" :aria-label="t('Name of the collection')" :placeholder="t('Finance')" autofocus >
+          <div class="connect-buttons">
+            <button type="submit" class="btn primary small">{{ t('Make') }}</button>
+            <button type="button" class="btn small" @click="newCollection = null">{{ t('Cancel') }}</button>
+          </div>
+        </form>
+        <p class="hint kept">{{ t('Mine and the collections are kept in this browser.') }}</p>
       </nav>
 
       <div class="main">
-      <h1>{{ words.headline }}</h1>
-      <p class="sub">{{ words.sub }}</p>
+        <h1>{{ isSuite ? (shownCollection ?? placeLabel) : words.headline }}</h1>
+        <p class="sub">
+          {{ shownCollection !== null ? t('The documents you put into this collection, on any place.') : isSuite ? t('Tables, texts and slides on this place, and the documents you opened before.') : words.sub }}
+        </p>
 
-      <div class="cols">
-        <div class="list">
-          <h2>{{ t('On this server') }}</h2>
-          <p v-if="listError" class="hint">{{ listError }}</p>
-          <p v-else-if="!documents.length" class="hint">{{ t('Nothing yet. Create the first document.') }}</p>
-          <ul v-else>
-            <li v-for="d in documents" :key="d.id">
-              <button type="button" :class="{ chosen: d.id === doc }" @click="doc = d.id">
-                <span class="name">{{ d.id }}</span>
-                <span class="meta">{{ ago(d.modified) }}<template v-if="d.online"> {{ t('· {online} here now', { online: d.online }) }}</template></span>
-              </button>
-            </li>
-          </ul>
+        <div class="tools">
+          <label class="search">
+            <span class="sr-only">{{ t('Search') }}</span>
+            <input ref="searchField" v-model="query" type="search" name="search" :placeholder="t('Search Mine and {place}', { place: placeLabel })" >
+            <kbd>Ctrl+F</kbd>
+          </label>
+          <button class="btn" type="button" :disabled="busy" @click="chooseFile">{{ t('Open a File…') }}</button>
+          <input ref="fileInput" class="sr-only" type="file" :accept="OPENABLE" tabindex="-1" aria-hidden="true" @change="onPicked" >
         </div>
+        <p class="hint drop">{{ t('Word, Excel, PowerPoint, OpenDocument or Claudia, or drop one anywhere on this page.') }}</p>
+        <p v-if="notice" class="notice" role="status">{{ notice }}</p>
+
+        <div class="cols">
+          <div>
+            <div class="mine">
+              <h2>{{ shownCollection === null ? t('Mine · opened before') : t('In {name}', { name: shownCollection }) }}</h2>
+              <p v-if="!mineHere.length" class="hint">{{ shownCollection === null ? t('Nothing opened yet from this browser.') : t('Nothing in this collection yet.') }}</p>
+              <ul v-else>
+                <li v-for="e in mineHere" :key="keyOf(e)">
+                  <button type="button" :class="{ chosen: e.origin === origin && e.id === doc && e.app === docApp }" @click="chooseMine(e)">
+                    <AppIcon :size="22" :app="e.app" />
+                    <span class="name">{{ e.id }}</span>
+                    <span class="meta">{{ e.origin === origin ? placeLabel : hostOf(e.origin) }} · {{ ago(e.opened) }}</span>
+                  </button>
+                  <button type="button" class="server-action" :title="t('Take {id} off Mine', { id: e.id })" :aria-label="t('Take {id} off Mine', { id: e.id })" @click="forget(e)">×</button>
+                </li>
+              </ul>
+            </div>
+            <div v-if="shownCollection === null" class="list">
+              <div class="list-head">
+                <h2>{{ isSuite ? t('On {place} · {count}', { place: placeLabel, count: documents.length }) : t('On this server') }}</h2>
+                <select v-if="isSuite" v-model="appFilter" class="filter" :aria-label="t('Which apps')">
+                  <option value="">{{ t('all apps') }}</option>
+                  <option v-for="a in apps" :key="a" :value="a">{{ APP_WORDS[a]?.() ?? a }}</option>
+                </select>
+              </div>
+              <p v-if="listError" class="hint">{{ listError }}</p>
+              <p v-else-if="!documents.length" class="hint">{{ t('Nothing yet. Create the first document.') }}</p>
+              <ul v-else>
+                <li v-for="d in placeDocs" :key="d.app + ' ' + d.id">
+                  <button type="button" :class="{ chosen: d.id === doc && (!docApp || d.app === docApp) }" @click="choose(d.id, d.app)">
+                    <AppIcon v-if="isSuite" :size="22" :app="d.app" />
+                    <span class="name">{{ d.id }}</span>
+                    <span class="meta"><template v-if="isSuite">{{ APP_WORDS[d.app]?.() ?? d.app }} · </template>{{ ago(d.modified) }}<template v-if="d.online"> {{ t('· {online} here now', { online: d.online }) }}</template></span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
 
         <form @submit.prevent="go(recovering ? 'recover' : 'open')">
           <label class="field">{{ t('Document') }}<input ref="docField" v-model="doc" name="document" autocomplete="off" :placeholder="t('budget-2027')" ></label>
@@ -390,22 +637,56 @@ async function go(how: 'open' | 'create' | 'recover') {
             </template>
             <template v-else>
               <button class="btn primary" type="submit" :disabled="busy">{{ t('Open') }}</button>
-              <button class="btn" type="button" :disabled="busy" @click="go('create')">{{ t('Create document') }}</button>
             </template>
           </div>
           <p v-if="recovering" class="hint">
             {{ t('The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do.') }}
           </p>
           <template v-else>
-            <p class="hint">{{ t('A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).') }}</p>
             <p class="hint"><button class="link" type="button" @click="recovering = true">{{ t('I forgot my password') }}</button></p>
+            <fieldset v-if="chosenIsMine && collections.length" class="in-collections">
+              <legend>{{ t('In collections') }}</legend>
+              <label v-for="c in collections" :key="c.name" class="check">
+                <input type="checkbox" :checked="isIn(c.name)" @change="toggleIn(c.name, ($event.target as HTMLInputElement).checked)" > {{ c.name }}
+              </label>
+            </fieldset>
+            <div class="new">
+              <h3>{{ t('Or start a new one') }}</h3>
+              <div v-if="isSuite" class="kinds" role="radiogroup" :aria-label="t('Kind of the new document')">
+                <button
+                  v-for="a in apps"
+                  :key="a"
+                  type="button"
+                  role="radio"
+                  class="kind"
+                  :aria-checked="newApp === a"
+                  @click="newApp = a"
+                >
+                  <AppIcon :size="20" :app="a" /> {{ APP_WORDS[a]?.() ?? a }}
+                </button>
+              </div>
+              <button class="btn" type="button" :disabled="busy" @click="go('create')">{{ t('Create document') }}</button>
+              <p class="hint">{{ t('A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).') }}</p>
+            </div>
           </template>
         </form>
-      </div>
+        </div>
       </div>
     </section>
     <RecoveryKeyDialog v-if="fresh" :recovery-key="fresh.key" :doc="doc.trim()" @done="proceed" />
-  </main>
+    <ImportDialog
+      v-if="incoming"
+      :file="incoming"
+      :place="placeLabel"
+      :user="user"
+      :busy="busy"
+      :error="importError"
+      @close="incoming = null"
+      @import="importFile"
+      @place="placeFile"
+      @existing="openExisting"
+    />
+  </component>
 </template>
 
 <style scoped>
@@ -601,17 +882,6 @@ ul {
   max-height: 300px;
   overflow: auto;
 }
-.list button {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  text-align: left;
-  border: 1px solid var(--line-field); /* a control boundary, not a divider — the owner's 2026-11-06 report */
-  background: transparent;
-  border-radius: 10px;
-  padding: 10px 12px;
-}
 .list button:hover,
 .list button.chosen {
   border-color: var(--app);
@@ -652,6 +922,160 @@ form {
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
+}
+.card.inside {
+  width: 100%;
+  margin: 0;
+  box-shadow: none;
+  border: 1px solid var(--line);
+}
+.dragging .card {
+  outline: 2px dashed var(--app);
+  outline-offset: 4px;
+}
+.collections-title {
+  margin-top: 18px;
+}
+.collections svg {
+  flex: none;
+  color: var(--muted);
+}
+.count {
+  font: 11.5px var(--font-ui);
+  color: var(--muted);
+}
+.kept {
+  margin-top: auto;
+  padding: 16px 8px 4px;
+}
+.tools {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.search {
+  flex: 1;
+  position: relative;
+  display: flex;
+}
+.search input {
+  flex: 1;
+  padding: 9px 64px 9px 12px;
+  border: 1px solid var(--line-field);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: 13.5px var(--font-ui);
+}
+.search kbd {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font: 11px var(--font-mono);
+  color: var(--muted);
+}
+.drop {
+  margin: 6px 0 18px;
+  text-align: right;
+}
+.notice {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: var(--app-soft);
+}
+.mine {
+  margin-bottom: 18px;
+}
+.mine li,
+.list li {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.mine button:not(.server-action),
+.list button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 10px;
+  text-align: left;
+  border: 1px solid var(--line-field);
+  background: transparent;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.list button:not(:has(svg)) {
+  grid-template-columns: 1fr auto;
+}
+.mine button:not(.server-action):hover,
+.mine button.chosen {
+  border-color: var(--app);
+  background: var(--app-soft);
+}
+.list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.filter {
+  font: 12px var(--font-ui);
+  color: var(--app-text);
+  background: transparent;
+  border: none;
+}
+.new {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+h3 {
+  font: 600 13px var(--font-ui);
+  margin: 0;
+}
+.kinds {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.kind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line-field);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: 500 12.5px var(--font-ui);
+  cursor: pointer;
+}
+.kind[aria-checked='true'] {
+  border-width: 2px;
+  border-color: var(--text);
+  font-weight: 600;
+}
+.in-collections {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.in-collections legend {
+  font: 500 12px var(--font-ui);
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
 }
 @media (max-width: 736px) {
   .cols {

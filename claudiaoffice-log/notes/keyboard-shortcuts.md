@@ -12,6 +12,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 |---|---|---|---|
 | File | New | Ctrl+Alt+N |  |
 | File | Open… | Ctrl+O |  |
+| File | Open a File… | Ctrl+Shift+O |  |
 | File | Save | Ctrl+S |  |
 | File | Save New Checkpoint… | Ctrl+Shift+S |  |
 | File | Download | Ctrl+Alt+S |  |
@@ -61,6 +62,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 |---|---|---|---|
 | File | New | Ctrl+Alt+N |  |
 | File | Open… | Ctrl+O |  |
+| File | Open a File… | Ctrl+Shift+O |  |
 | File | Save | Ctrl+S |  |
 | File | Save New Checkpoint… | Ctrl+Shift+S |  |
 | File | Download | Ctrl+Alt+S |  |
@@ -125,6 +127,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 |---|---|---|---|
 | File | New | Ctrl+Alt+N |  |
 | File | Open… | Ctrl+O |  |
+| File | Open a File… | Ctrl+Shift+O |  |
 | File | Save | Ctrl+S |  |
 | File | Save New Checkpoint… | Ctrl+Shift+S |  |
 | File | Download | Ctrl+Alt+S |  |

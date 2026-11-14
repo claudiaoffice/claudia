@@ -48,7 +48,7 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
     const { c } = context()
     const file = fileMenu(c)
     expect(file.label).toBe('File')
-    expect(ids(file.items)).toEqual(['file.new', 'file.open', 'file.save', 'file.save-as', 'file.download', 'file.manage', 'file.close'])
+    expect(ids(file.items)).toEqual(['file.new', 'file.open', 'file.open-file', 'file.save', 'file.save-as', 'file.download', 'file.manage', 'file.close'])
     expect(ids(byId(file.items, 'file.manage').items!)).toEqual([
       'file.manage.share',
       'file.manage.assign-owner',
@@ -62,16 +62,16 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
   it('opens the document window’s own dialogs, and leaves through the workspace', () => {
     const { c, calls } = context()
     const file = fileMenu(c)
-    for (const id of ['file.new', 'file.open', 'file.save', 'file.save-as', 'file.download', 'file.manage.export', 'file.close']) {
+    for (const id of ['file.new', 'file.open', 'file.open-file', 'file.save', 'file.save-as', 'file.download', 'file.manage.export', 'file.close']) {
       byId(file.items, id).action!()
     }
-    expect(calls).toEqual(['leave:fresh', 'leave', 'save', 'open:checkpoint', 'open:export', 'open:export-format', 'leave'])
+    expect(calls).toEqual(['leave:fresh', 'open:open', 'open:open-file', 'save', 'open:checkpoint', 'open:export', 'open:export-format', 'leave'])
   })
 
   it('has Print… after Download only in an app that can print (composes, D906), with its shortcut', () => {
     const { c, calls } = context()
     const printing = fileMenu({ ...c, print: () => calls.push('print') })
-    expect(ids(printing.items)).toEqual(['file.new', 'file.open', 'file.save', 'file.save-as', 'file.download', 'file.print', 'file.manage', 'file.close'])
+    expect(ids(printing.items)).toEqual(['file.new', 'file.open', 'file.open-file', 'file.save', 'file.save-as', 'file.download', 'file.print', 'file.manage', 'file.close'])
     const print = byId(printing.items, 'file.print')
     expect([print.label, print.hint]).toEqual(['Print…', 'Ctrl+P'])
     print.action!()

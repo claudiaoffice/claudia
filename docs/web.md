@@ -8,6 +8,20 @@ One server serves all three apps (D430), and the web app shows whatever the serv
 The header, menus, side panel, open dialog and colours are shared; each app has its own colour (`data-app` on the
 page, `tokens.css`).
 
+## The front page and File ▸ Open (D443)
+
+The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, the same component in a dialog):
+
+* **My places** on the left: the servers of this browser (or of the desktop shell), "This computer" for a local one,
+  "+ Connect to a server…". **Collections** below: groups a person makes of documents from any place.
+* **Search** (Ctrl+F) over Mine and the place shown, by name; **Open a File…** (Ctrl+Shift+O, or drop a file on the
+  page) for Word, Excel, PowerPoint, OpenDocument and Claudia files (`ImportDialog.vue`, D438–D442).
+* **Mine** on top: the documents opened from this browser, on any place (`lib/mine.ts`); then every app's documents of
+  the place, each with its app's icon and name, and an app filter.
+* On the right, open a document with a name and password; **Create document** asks for Table, Text or Slides first on
+  a server of several apps.
+* A document opened from File ▸ Open… replaces the one in the window (`lib/switch-session.ts`).
+
 ## What it shows (computes)
 
 * An open/create dialog with the documents of the server (`GET /api/docs`; `--no-list` hides them).

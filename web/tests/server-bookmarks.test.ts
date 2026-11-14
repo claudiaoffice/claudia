@@ -11,7 +11,11 @@ describe('defaultLabel', () => {
     expect(defaultLabel('https://demo.claudiaoffice.de', 'tobi')).toBe("tobi's server")
   })
   it('falls back to the host when there is no administrator yet', () => {
-    expect(defaultLabel('http://127.0.0.1:8420', null)).toBe('127.0.0.1:8420')
+    expect(defaultLabel('https://docs.example.org:8420', null)).toBe('docs.example.org:8420')
+  })
+  it('calls a server on this computer "This computer" (D243, sheet 10)', () => {
+    expect(defaultLabel('http://127.0.0.1:8420', null)).toBe('This computer')
+    expect(defaultLabel('http://localhost:8765', null)).toBe('This computer')
   })
   it('falls back to the origin itself if it cannot be parsed as a URL', () => {
     expect(defaultLabel('not a url', null)).toBe('not a url')

@@ -150,6 +150,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   readonly state: S
   /** Was this document made by the very opening that led here? Then its owner is shown the recovery key. */
   justCreated = false
+  /** The file this document was just made from, as the welcome said (D438); only right after the import. */
+  imported: { name: string; format: string; kept: boolean; losses: { kind: string; count: number }[] } | null = null
 
   protected link: LinkLike | null = null
   private tasks = new Set<Promise<unknown>>()

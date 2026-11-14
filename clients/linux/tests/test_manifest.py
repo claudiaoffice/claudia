@@ -83,11 +83,11 @@ def test_every_app_has_the_same_seven_menus_in_the_same_order(app: manifest.Mani
 def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Manifest) -> None:
     """D123/D124: separators kept, grouped as New/Open · Save-group · Manage · Close/Quit. D141: the Manage
     item replaces the plain "Share…" item it grew out of, and is itself a submenu. The apps that lay out pages print
-    (D906): File ▸ Print… was on the web only (UX-36)."""
+    (D906): File ▸ Print… was on the web only (UX-36). D443: Open a File… next to Open…."""
     file_menu = app.menu("File")
     keep = ["Save", "Save New Checkpoint…", "Download"] + (["Print…"] if app.app in ("composes", "creates") else [])
     assert [[e.label for e in section] for section in file_menu.sections] == [
-        ["New", "Open…"],
+        ["New", "Open…", "Open a File…"],
         keep,
         ["Manage"],
         ["Close Document", "Quit"],

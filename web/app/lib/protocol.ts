@@ -39,6 +39,9 @@ export interface Welcome {
   limits: { max_text: number }
   /** True if this very hello made the document (so its owner should now be given a recovery key). */
   created?: boolean
+  /** The file this document was just made from (D438, D439): its name, format, whether it is kept inside, and what
+   *  the document does not show, as loss codes. Only in the welcome of the hello that imported it. */
+  imported?: { name: string; format: string; kept: boolean; losses: { kind: string; detail: string; count: number }[] }
   /** Every line of the document's history: the active one and the side lines a restore left behind (E3.8). */
   lines: LineInfo[]
   /** A restore/switch suggestion waiting for everybody's answer, if one is open right now (E3.7). */
@@ -121,6 +124,10 @@ export interface LinkOptions {
   create?: boolean
   /** Come in with the recovery key instead of the password: `password` is then the *new* one. */
   recoveryKey?: string
+  /** Make the new document from this upload (`POST /api/uploads`, D440); with `create`. */
+  upload?: string
+  /** With `upload`: keep the file inside the document (the default) for an exact round trip (D439). */
+  keepOriginal?: boolean
   /** The client's own locale (E5.7, D31) — always a client setting, never stored on the server. Omitted, it is not
    *  sent and the server assumes 'en'. */
   locale?: string
@@ -156,7 +163,7 @@ export class Link implements LinkLike {
   }
 
   connect(): Promise<Welcome> {
-    const { url, user, password, create = false, recoveryKey, locale } = this.options
+    const { url, user, password, create = false, recoveryKey, locale, upload, keepOriginal } = this.options
     const make = this.options.socket ?? ((u: string) => new WebSocket(u) as unknown as SocketLike)
     const socket = (this.socket = make(url))
     return new Promise<Welcome>((resolve, reject) => {
@@ -166,6 +173,10 @@ export class Link implements LinkLike {
         const params: Record<string, unknown> =
           recoveryKey === undefined ? { user, password, create } : { user, password, recovery_key: recoveryKey }
         if (locale !== undefined) params.locale = locale
+        if (upload !== undefined && create) {
+          params.upload = upload
+          params.keep_original = keepOriginal !== false
+        }
         socket.send(JSON.stringify({ id, method: 'hello', params }))
       }
       socket.onmessage = (event) => this.receive(String(event.data))
@@ -212,10 +223,12 @@ export class Link implements LinkLike {
   }
 }
 
-/** `ws(s)://host/api/docs/<id>/ws` for the page's own server (or for the server named by `?server=` in dev). */
-export function socketUrl(doc: string, page: { protocol: string; host: string }): string {
+/** `ws(s)://host/api/<app>/docs/<id>/ws` for the page's own server (or for the server named by `?server=` in dev).
+ *  Without `app`, the address without one (D431): the server opens the first app that has the document. */
+export function socketUrl(doc: string, page: { protocol: string; host: string }, app?: string): string {
   const scheme = page.protocol === 'https:' ? 'wss' : 'ws'
-  return `${scheme}://${page.host}/api/docs/${encodeURIComponent(doc)}/ws`
+  const where = app ? `/api/${encodeURIComponent(app)}/docs/` : '/api/docs/'
+  return `${scheme}://${page.host}${where}${encodeURIComponent(doc)}/ws`
 }
 
 /** What a close code of the handshake means for the person. */

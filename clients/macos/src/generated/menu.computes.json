@@ -27,6 +27,17 @@
             "kind": "page",
             "label": "Open\u2026",
             "role": null
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift>o"
+            ],
+            "checkable": false,
+            "id": "file.open-file",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Open a File\u2026",
+            "role": null
           }
         ],
         [

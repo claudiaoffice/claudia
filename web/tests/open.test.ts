@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { appOfServer, fetchDocsListing, isSlides, openSession } from '~/lib/open'
+import { appOfServer, fetchDocsListing, filterListed, isSlides, openSession, placeUpload, uploadFile } from '~/lib/open'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { SlideSession } from '~/lib/slide-session'
@@ -181,12 +181,12 @@ describe('fetchDocsListing', () => {
       'http://example.test',
       fakeFetch(200, { app: 'creates', documents: [{ id: 'd1', app: 'creates', modified: '2026-11-09T00:00:00Z', online: 1 }] }),
     )
-    expect(listing).toEqual({ app: 'creates', documents: [{ id: 'd1', app: 'creates', modified: '2026-11-09T00:00:00Z', online: 1 }] })
+    expect(listing).toEqual({ app: 'creates', apps: ['creates'], documents: [{ id: 'd1', app: 'creates', modified: '2026-11-09T00:00:00Z', online: 1 }] })
   })
 
   it('treats a missing app as blank, not a crash, same as appOfServer falls back for it', async () => {
     const listing = await fetchDocsListing('http://example.test', fakeFetch(200, { documents: [] }))
-    expect(listing).toEqual({ app: '', documents: [] })
+    expect(listing).toEqual({ app: '', apps: [], documents: [] })
   })
 
   // UX-12: this used to be the one status this function's caller special-cased; every other answer, including a
@@ -220,5 +220,41 @@ describe('fetchDocsListing', () => {
     }) as unknown as typeof fetch
     const listing = await fetchDocsListing('http://example.test', failing)
     expect(listing).toEqual({ error: 'The server cannot be reached.' })
+  })
+})
+
+describe('filterListed', () => {
+  const docs = [
+    { id: 'Budget-2027', app: 'computes' },
+    { id: 'Brief-an-Mütter', app: 'composes' },
+    { id: 'budget-notes', app: 'composes' },
+  ]
+  it('matches every word of the query in the id, case and accents ignored', () => {
+    expect(filterListed(docs, 'BUDGET').map((d) => d.id)).toEqual(['Budget-2027', 'budget-notes'])
+    expect(filterListed(docs, 'mutter brief').map((d) => d.id)).toEqual(['Brief-an-Mütter'])
+    expect(filterListed(docs, '').length).toBe(3)
+  })
+  it('narrows to one app when asked', () => {
+    expect(filterListed(docs, 'budget', 'composes').map((d) => d.id)).toEqual(['budget-notes'])
+  })
+})
+
+describe('uploadFile and placeUpload', () => {
+  const file = Object.assign(new Blob(['PK']), { name: 'Budget 2026.xlsx' })
+  it('sends the bytes with the name percent-encoded and answers what the server says', async () => {
+    let sent: RequestInit | undefined
+    const answer = await uploadFile('http://h', file, (async (_url: string, init?: RequestInit) => {
+      sent = init
+      return new Response(JSON.stringify({ upload: 't', format: 'xlsx', app: 'computes' }), { status: 200 })
+    }) as typeof fetch)
+    expect((sent?.headers as Record<string, string>)['x-claudia-name']).toBe('Budget%202026.xlsx')
+    expect(answer).toMatchObject({ upload: 't', format: 'xlsx' })
+  })
+  it('says why a file is refused', async () => {
+    const refuse = (status: number) => (async () => new Response('{}', { status })) as unknown as typeof fetch
+    expect(await uploadFile('http://h', file, refuse(415))).toEqual({ error: 'This is not a file Claudia can open.' })
+    expect(await uploadFile('http://h', file, refuse(413))).toEqual({ error: 'The file is too large for this server.' })
+    const conflict = (async () => new Response(JSON.stringify({ detail: 'plan is here already' }), { status: 409 })) as unknown as typeof fetch
+    expect(await placeUpload('http://h', 't', conflict)).toEqual({ error: 'plan is here already' })
   })
 })

@@ -20,7 +20,7 @@ function startServer() {
   const out = process.env.SERVER_LOG ? fs.openSync(process.env.SERVER_LOG, 'a') : 'ignore'
   return spawn(
     path.join(ROOT, '.venv/bin/python'),
-    ['-m', 'claudia_server', '--no-tls', '--port', String(PORT), '--dir', DATA, '--web', path.join(ROOT, 'web/.output/public')],
+    ['-m', 'claudia_server', '--no-tls', '--apps', 'computes', '--port', String(PORT), '--dir', DATA, '--web', path.join(ROOT, 'web/.output/public')],
     { cwd: ROOT, stdio: ['ignore', out, out] },
   )
 }

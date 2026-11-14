@@ -26,6 +26,8 @@ export type FrameDialog =
   | 'export'
   | 'export-format'
   | 'delete'
+  | 'open'
+  | 'open-file'
 
 /** What the shared items need from the window they are in. */
 export interface DocumentMenuContext {
@@ -70,7 +72,8 @@ export function fileMenu(c: DocumentMenuContext): Menu {
     label: t('File'),
     items: [
       { id: 'file.new', label: t('New'), action: () => c.leave({ startFresh: true }) },
-      { id: 'file.open', label: t('Open…'), action: () => c.leave() },
+      { id: 'file.open', label: t('Open…'), action: () => c.open('open') },
+      { id: 'file.open-file', label: t('Open a File…'), action: () => c.open('open-file') },
       separator,
       { id: 'file.save', label: t('Save'), hint: SHARED_HINTS['file.save'], action: () => c.save(), disabled: viewer },
       { id: 'file.save-as', label: t('Save New Checkpoint…'), action: () => c.open('checkpoint'), disabled: viewer },

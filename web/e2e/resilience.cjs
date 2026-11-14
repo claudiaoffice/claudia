@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 function startServer() {
   const child = spawn(
     path.join(ROOT, '.venv/bin/python'),
-    ['-m', 'claudia_server', '--no-tls', '--port', String(PORT), '--dir', DATA, '--web', path.join(ROOT, 'web/.output/public')],
+    ['-m', 'claudia_server', '--no-tls', '--apps', 'computes', '--port', String(PORT), '--dir', DATA, '--web', path.join(ROOT, 'web/.output/public')],
     { cwd: ROOT, stdio: process.env.SERVER_LOG ? ['ignore', fs.openSync(process.env.SERVER_LOG, 'a'), fs.openSync(process.env.SERVER_LOG, 'a')] : 'ignore' },
   )
   return child

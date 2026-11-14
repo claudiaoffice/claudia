@@ -371,5 +371,6 @@ of a file or kept the file for the round trip. The owner confirmed the design of
 of the document, and the person may switch that off.
 
 Decisions: D438 (one core.Import entry); D439 (the file kept, sealed, in the document); D440 (upload, then hello);
-D441 (download patched into the kept file); D442 (a Claudia file goes in as it is)
+D441 (download patched into the kept file); D442 (a Claudia file goes in as it is); D443 (the front page and File ▸
+Open of sheet 10)
 

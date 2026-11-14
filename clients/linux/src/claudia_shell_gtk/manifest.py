@@ -290,8 +290,14 @@ def _file_menu(*, title: str, prints: bool) -> Menu:
                 _page(
                     "file.open",
                     "Open…",
-                    "Create a document or open one from the server",
+                    "Open a document from one of your places, a collection or Mine",
                     accelerators=("<Primary>o",),
+                ),
+                _page(
+                    "file.open-file",
+                    "Open a File…",
+                    "Open a Word, Excel, PowerPoint, OpenDocument or Claudia file from this computer",
+                    accelerators=("<Primary><Shift>o",),
                 ),
             ),
             keep,

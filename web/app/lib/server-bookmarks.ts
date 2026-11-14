@@ -85,10 +85,13 @@ export function rename(origin: string, label: string, storage: Pick<Storage, 'ge
   return bookmarks
 }
 
-/** The label a fresh bookmark gets: the administrator's name if the server has one, else its own host. */
+/** The label a fresh bookmark gets: the administrator's name if the server has one; "This computer" for a server on
+ *  this computer (D243, sheet 10); else its own host. */
 export function defaultLabel(origin: string, administrator: string | null): string {
   if (administrator) return t('{administrator}\'s server', { administrator })
   try {
+    const host = new URL(origin).hostname
+    if (host === 'localhost' || host === '[::1]' || /^127\./.test(host)) return t('This computer')
     return new URL(origin).host
   } catch {
     return origin

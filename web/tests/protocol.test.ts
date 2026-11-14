@@ -157,3 +157,9 @@ describe('addresses and messages', () => {
     expect(closeMessage(1006)).toMatch(/lost/)
   })
 })
+
+describe('socketUrl with the app (D431)', () => {
+  it('names the app when it is known', () => {
+    expect(socketUrl('plan', { protocol: 'http:', host: 'h' }, 'composes')).toBe('ws://h/api/composes/docs/plan/ws')
+  })
+})

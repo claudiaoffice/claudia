@@ -11,6 +11,8 @@ import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { cycleRegions, windowRegions } from '~/lib/regions'
 import { chordLabel, installWindowShortcuts, menuShortcuts, regionShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import { createShellBridge } from '~/lib/shell-bridge'
+import type { AnySession } from '~/lib/open'
+import { openedFromDocument } from '~/lib/switch-session'
 import type { ExportFormatOption } from './ExportFormatDialog.vue'
 import type { Menu } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
@@ -57,6 +59,12 @@ async function checkpoint(label: string | null) {
 async function openDialog(name: FrameDialog) {
   if (name === 'export' || name === 'export-format') await props.session.flush()
   dialog.value = name
+}
+
+/** File ▸ Open… opened another document: the window shows it in place of this one (`app.vue`). */
+function showOpened(next: AnySession) {
+  dialog.value = null
+  openedFromDocument.value = next
 }
 
 /** Open the panel with the cursor in the chat box, ready to write to the assistant. */
@@ -162,6 +170,13 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <AboutDialog v-if="dialog === 'about'" :app="app" @close="dialog = null" />
+    <OpenDialog
+      v-if="dialog === 'open' || dialog === 'open-file'"
+      modal
+      :pick-file="dialog === 'open-file'"
+      @close="dialog = null"
+      @opened="showOpened"
+    />
     <slot name="overlay" />
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
