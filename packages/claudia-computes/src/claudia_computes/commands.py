@@ -18,10 +18,11 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagram, fits
+from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagram, PageSetup, fits
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
 from .events import (
+    PrintSetupChanged,
     CellsChanged,
     CellStylesChanged,
     ChartsChanged,
@@ -54,6 +55,7 @@ from .refs import (
     StructuralEdit,
     column_name,
 )
+from .printing import DEFAULT_SHEET_PRINT, SheetPrintSetup
 from .region import CellRegion
 
 register = WorkbookModel.registry.register
@@ -767,3 +769,74 @@ class SetRandomSeed(Command):
     @classmethod
     def from_data(cls, data, registry) -> SetRandomSeed:
         return cls(data["seed"])
+
+
+# ------------------------------------------------------------------------------ printing (E6.19)
+@register
+@dataclass(frozen=True)
+class SetPrintPage(Command):
+    """Say which page the workbook is printed on (D1004): paper, orientation of the paper, margins, page numbers. One
+    step for everybody; the page is the same for all sheets."""
+
+    kind: ClassVar[str] = "computes.SetPrintPage"
+    page: PageSetup
+
+    @property
+    def label(self) -> str:
+        return "Page setup"
+
+    @property
+    def summary(self) -> str:
+        return f"set the page to {self.page.describe()}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        old = ctx.model.print_page
+        ctx.model.print_page = self.page
+        ctx.emit(PrintSetupChanged(page=self.page.to_data()))
+        return SetPrintPage(old)
+
+    def to_data(self) -> dict:
+        return {"page": self.page.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetPrintPage:
+        return cls(PageSetup.from_data(data["page"]))
+
+
+@register
+@dataclass(frozen=True)
+class SetSheetPrint(Command):
+    """Say how one sheet, or one chart tab, is printed (D1004): orientation, scale, page order, repeated rows and
+    columns, gridlines and the rest. The sheet stores nothing while its setup is the default, so setting it back to
+    the default takes the entry away again."""
+
+    kind: ClassVar[str] = "computes.SetSheetPrint"
+    sheet: str
+    setup: SheetPrintSetup
+
+    @property
+    def label(self) -> str:
+        return "Print setup"
+
+    @property
+    def summary(self) -> str:
+        return f"set printing of a sheet to {self.setup.describe()}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        if SheetId(self.sheet) not in model.sheets and self.sheet not in model.charts:
+            raise KeyError(f"no sheet or chart {self.sheet!r}")
+        old = model.sheet_print_of(self.sheet)
+        if self.setup == DEFAULT_SHEET_PRINT:
+            model.sheet_print.pop(self.sheet, None)
+        else:
+            model.sheet_print[self.sheet] = self.setup
+        ctx.emit(PrintSetupChanged(sheet=self.sheet, setup=self.setup.to_data()))
+        return SetSheetPrint(self.sheet, old)
+
+    def to_data(self) -> dict:
+        return {"sheet": self.sheet, "setup": self.setup.to_data()}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetSheetPrint:
+        return cls(data["sheet"], SheetPrintSetup.from_data(data["setup"]))

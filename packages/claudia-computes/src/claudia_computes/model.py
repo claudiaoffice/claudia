@@ -27,6 +27,7 @@ from claudia_core import (
     DocumentModel,
     ObjectBody,
     ObjectModel,
+    PageSetup,
     Palette,
     Region,
     StyleBook,
@@ -44,6 +45,7 @@ from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here
 from .names import NamedRange, NameKey, Names, Rect, key_of, name_problem
 from .numformats import NumberFormatBook
 from .outcomes import InputCell, OutcomeTable, Summary
+from .printing import DEFAULT_SHEET_PRINT, SheetPrintSetup, sheet_print_to_data
 from .refs import CellRef, Position, RangeRef, SheetId, StructuralEdit, column_name
 from .spill import Table
 from .sql import column_names, column_type, run_query
@@ -427,7 +429,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
     # 9: object bodies carry a description
     # 10: the workbook carries its named number formats (D378)
-    state_schema: ClassVar[int] = 11  # 11: rendered text containers (D390)
+    # 11: rendered text containers (D390)
+    state_schema: ClassVar[int] = 12  # 12: how it is printed, and its language (E6.19, D1001)
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
@@ -460,6 +463,17 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.random_draw = 0
         #: The named number formats a cell style can point at, saying how numbers look and never what they are (D378).
         self.number_formats = NumberFormatBook()
+        #: The page the workbook prints on (paper, margins, page numbers), one for all sheets (D1004).
+        self.print_page: PageSetup = PageSetup()
+        #: How each sheet or chart tab prints, by id; only those that differ from :data:`DEFAULT_SHEET_PRINT` (D1004).
+        self.sheet_print: dict[str, SheetPrintSetup] = {}
+        #: The language of the workbook, a BCP 47 tag, or ``None`` when it is not known: the layout hyphenates by it
+        #: (D915).
+        self.language: str | None = None
+
+    def sheet_print_of(self, target: str) -> SheetPrintSetup:
+        """How a sheet or chart tab prints: its own setup, or the default."""
+        return self.sheet_print.get(target, DEFAULT_SHEET_PRINT)
 
     @classmethod
     def empty(cls) -> Self:
@@ -487,6 +501,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "names": self.names.to_data(),
             "random": {"seed": self.random_seed, "draw": self.random_draw},
             "number_formats": self.number_formats.to_data(),
+            "print_page": self.print_page.to_data(),
+            "sheet_print": sheet_print_to_data(self.sheet_print),
+            "language": self.language,
         }
 
     @classmethod
@@ -507,6 +524,11 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         model.names = Names.from_data(state["names"])
         model.random_seed, model.random_draw = state["random"]["seed"], state["random"]["draw"]
         model.number_formats = NumberFormatBook.from_data(state["number_formats"])
+        # schema 11 and earlier: A4 portrait, every sheet printed the default way, no language (E6.19)
+        if "print_page" in state:
+            model.print_page = PageSetup.from_data(state["print_page"])
+        model.sheet_print = {key: SheetPrintSetup.from_data(item) for key, item in state.get("sheet_print", {}).items()}
+        model.language = state.get("language")
         model._calculate_loaded()
         return model
 

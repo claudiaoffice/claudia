@@ -101,3 +101,19 @@ class RandomChanged:
     def to_data(self) -> dict:
         """The event as it goes to the clients."""
         return {"type": "random", "seed": self.seed, "draw": self.draw}
+
+
+@dataclass(frozen=True)
+class PrintSetupChanged:
+    """How the workbook is printed changed (E6.19): its ``page``, or the print ``setup`` of one ``sheet`` (a sheet or
+    a chart tab; the setup is the whole new one)."""
+
+    page: dict | None = None
+    sheet: str | None = None
+    setup: dict | None = None
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        if self.sheet is None:
+            return {"type": "print_setup", "page": self.page}
+        return {"type": "print_setup", "sheet": self.sheet, "setup": self.setup}

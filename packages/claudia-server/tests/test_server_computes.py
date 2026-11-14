@@ -1318,3 +1318,85 @@ def test_the_number_formats_of_a_workbook_are_sent_with_their_codes(book):
     assert call(book, "number_formats") == []
     book.model.number_formats.add(NumberFormat("mwh", "MWh", '#,##0 "MWh"', to_name=True))
     assert call(book, "number_formats") == [{"id": "mwh", "name": "MWh", "code": '#,##0 "MWh"', "to_name": True}]
+
+
+# ------------------------------------------------------------------------------ printing (E6.19)
+@pytest.fixture
+def printed(book):
+    """A workbook with two sheets: ``s1`` (Sheet1) and ``s2`` (Budget)."""
+    call(book, "add_sheet", {"name": "Sheet1"})
+    call(book, "add_sheet", {"name": "Budget"})
+    return book
+
+
+def test_a_workbook_prints_each_sheet_the_default_way_until_someone_sets_it_up(printed):
+    setup = call(printed, "print_setup")
+    assert setup["page"]["paper"] == "a4" and setup["page"]["orientation"] == "portrait"
+    assert setup["page"]["margins"] == [70866] * 4 and setup["page"]["page_numbers"] is False
+    assert set(setup["sheets"]) == {"s1", "s2"}
+    first = setup["sheets"]["s1"]
+    assert first["scale"] == {"kind": "fit-width"} and first["orientation"] == "portrait"
+    assert (first["gridlines"], first["headings"], first["purposes"]) == (False, False, False)
+    assert (first["footer_name"], first["objects"], first["skip_empty"]) == (True, True, True)
+
+
+def test_setting_a_sheet_up_is_one_step_for_everybody_and_a_part_left_out_keeps_its_default(printed):
+    done = call(printed, "set_sheet_print", {"sheet": "s1", "setup": {"orientation": "landscape", "gridlines": True}}, BEN)
+    assert "revision" in done
+    mine = call(printed, "print_setup", account=VERA)["sheets"]["s1"]
+    assert mine["orientation"] == "landscape" and mine["gridlines"] is True and mine["footer_name"] is True
+    assert list(printed.log)[-1].command.summary == "set printing of a sheet to landscape, fit to width, gridlines"
+    call(printed, "set_sheet_print", {"sheet": "s1", "setup": {"scale": {"kind": "percent", "percent": 80}}}, ANN)
+    assert call(printed, "print_setup")["sheets"]["s1"]["scale"] == {"kind": "percent", "percent": 80}
+    call(printed, "undo", {}, ANN)
+    assert call(printed, "print_setup")["sheets"]["s1"]["scale"] == {"kind": "fit-width"}
+
+
+def test_setting_the_page_is_one_step_and_a_page_that_cannot_be_used_is_refused(printed):
+    page = {**call(printed, "print_setup")["page"], "paper": "letter", "width": 612000, "height": 792000}
+    call(printed, "set_print_page", {"page": {**page, "page_numbers": True}}, BEN)
+    assert call(printed, "print_setup")["page"]["paper"] == "letter"
+    assert call(printed, "print_setup")["page"]["page_numbers"] is True
+    assert list(printed.log)[-1].command.summary == "set the page to Letter, portrait, page numbers"
+    with pytest.raises(RequestError) as caught:
+        call(printed, "set_print_page", {"page": {"paper": "a4", "width": 1, "height": 2}})
+    assert caught.value.code == "command_error"
+
+
+@pytest.mark.parametrize(
+    "sheet, setup",
+    [
+        ("s1", {"orientation": "sideways"}),
+        ("s1", {"scale": {"kind": "percent", "percent": 5}}),
+        ("s1", {"repeat_rows": [4, 2]}),
+        ("s1", {"colour": "red"}),
+        ("s1", "landscape"),
+        ("nope", {"orientation": "landscape"}),
+    ],
+)
+def test_a_print_setup_that_cannot_be_used_is_refused(printed, sheet, setup):
+    with pytest.raises(RequestError) as caught:
+        call(printed, "set_sheet_print", {"sheet": sheet, "setup": setup})
+    assert caught.value.code in ("command_error", "bad_request")
+    assert call(printed, "print_setup")["sheets"]["s1"]["orientation"] == "portrait"
+
+
+def test_viewers_and_the_assistant_do_not_change_how_a_workbook_prints_or_its_language(printed):
+    setup = call(printed, "print_setup")
+    for attempt in (
+        lambda who: call(printed, "set_sheet_print", {"sheet": "s1", "setup": setup["sheets"]["s1"]}, who),
+        lambda who: call(printed, "set_print_page", {"page": setup["page"]}, who),
+        lambda who: call(printed, "set_language", {"language": "de"}, who),
+    ):
+        with pytest.raises(RequestError) as caught:
+            attempt(VERA)
+        assert caught.value.code == "forbidden"
+        with pytest.raises(RequestError) as caught:
+            attempt(Account("assistant", "editor", system=True))
+        assert caught.value.code == "forbidden"
+
+
+def test_a_workbook_has_a_language_like_a_text(printed):
+    assert call(printed, "language") == {"language": None}
+    call(printed, "set_language", {"language": "DE-de"}, BEN)
+    assert call(printed, "language") == {"language": "de-DE"}

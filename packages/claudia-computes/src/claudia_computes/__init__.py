@@ -68,7 +68,9 @@ from .commands import (
     ResizeLines,
     SetCells,
     SetCellStyle,
+    SetPrintPage,
     SetRandomSeed,
+    SetSheetPrint,
     Structure,
 )
 from .entry import parse_input
@@ -79,6 +81,7 @@ from .events import (
     ImagesChanged,
     NamesChanged,
     ObjectsChanged,
+    PrintSetupChanged,
     RandomChanged,
     ShapesChanged,
 )
@@ -99,6 +102,7 @@ from .name_commands import DefineName, RemoveName, RenameName, RestoreNames
 from .names import PURPOSES, NamedRange, Names
 from .numformats import NumberFormat, NumberFormatBook
 from .outcomes import AltInput, OutcomeRow, OutcomeTable, Swing
+from .printing import DEFAULT_SHEET_PRINT, MAX_PERCENT, MIN_PERCENT, PrintSetupError, SheetPrintSetup
 from .refs import (
     CellRef,
     DeleteCols,
@@ -116,6 +120,14 @@ from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 from .trace import Trace
 
 __all__ = [
+    "DEFAULT_SHEET_PRINT",
+    "MAX_PERCENT",
+    "MIN_PERCENT",
+    "PrintSetupChanged",
+    "PrintSetupError",
+    "SetPrintPage",
+    "SetSheetPrint",
+    "SheetPrintSetup",
     "NumberFormat",
     "NumberFormatBook",
     "Trace",
