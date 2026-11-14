@@ -11,9 +11,10 @@ Work plan for Nov 14/15th 2026
 	- [x] file management => to do this, introduce the one-server approach
 		- [ ] use worker pool for real!
 		- [ ] progress bar when importing
-		- [ ] size of import dialog may be too small => needs to adapt to filename
-		- [ ] 
-	- [ ] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
+		- [x] size of import dialog may be too small => needs to adapt to filename
+		- [ ] print on desktop clients "has no fonts"
+		- [ ] export to office format in desktop client => where do the files go? In web app theyre downloaded in the browser, perfect!
+	- [x] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] performance
 		- [ ] scaleway: replace not new image
