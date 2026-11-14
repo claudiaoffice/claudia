@@ -101,7 +101,7 @@ const panelShown = (page) => page.evaluate(() => {
     await text.keyboard.press('Escape')
     log('composes: Ctrl+? opens the shortcuts')
 
-    // ---- creates: Ctrl+M is a new slide; Show Grid is after the shared View entries
+    // ---- creates: Ctrl+M is a new slide; Show Grid and the presenting entries are after the shared View entries
     const deck = await create(browser, CREATES)
     await deck.waitForSelector('[aria-label=slides] [role=tab]')
     await deck.click('.menus .title:text-is("Edit")') // (the canvas, not a text field, has the keys)
@@ -112,8 +112,11 @@ const panelShown = (page) => page.evaluate(() => {
     await deck.click('.menus .title:text-is("View")')
     const view = await deck.$$eval('.menus .drop [role=menuitem], .menus .drop [role=menuitemcheckbox]', (els) => els.map((e) => e.querySelector('.label')?.textContent?.trim()))
     await deck.keyboard.press('Escape')
-    assert.deepEqual(view, ['Show Who Wrote What', 'History and Chat', 'Dark Mode', 'Show Grid'])
-    log('creates: View ▸ Show Grid follows the shared entries')
+    assert.deepEqual(view, [
+      'Show Who Wrote What', 'History and Chat', 'Dark Mode', 'Show Grid',
+      'Present from the First Slide', 'Present from This Slide', 'Speaker Notes',
+    ])
+    log('creates: View ▸ Show Grid follows the shared entries, then the presenting entries')
     console.log('\nALL GOOD')
   } catch (error) {
     console.error('FAILED:', error.message)

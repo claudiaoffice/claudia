@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import sys
 
 import pytest
 from starlette.testclient import TestClient
@@ -177,6 +178,7 @@ def test_a_write_that_fails_leaves_no_temporary_file(tmp_path, monkeypatch):
     assert list(tmp_path.iterdir()) == []
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
 def test_a_fetched_file_can_be_read_by_other_users(tmp_path):
     """The Docker image fetches as root and the server runs as another user: the file must not be 0600 (mkstemp's)."""
     hyphenation._write(tmp_path / "a.txt", b"data")

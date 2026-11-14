@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import sys
 
 import pytest
 
@@ -180,6 +181,7 @@ def test_the_command_line_fetches_and_reports(tmp_path, monkeypatch, capsys):
     assert "SHA-256" in capsys.readouterr().err
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
 def test_a_fetched_file_can_be_read_by_other_users(tmp_path):
     """The Docker image fetches as root and the server runs as another user: the file must not be 0600 (mkstemp's)."""
     from claudia_fonts import starter
