@@ -637,7 +637,7 @@ msgstr "Änderungen seit dem Start: {n}"
 msgid "Characters from the middle of the text: where to start (from 1) and how many."
 msgstr "Zeichen aus der Mitte des Textes: wo es beginnt (ab 1) und wie viele."
 
-#: web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/lib/descriptions.ts:38
+#: web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/lib/descriptions.ts:40
 msgid "Chart"
 msgstr "Diagramm"
 
@@ -1009,7 +1009,7 @@ msgstr "Die ausgewählten Zeilen löschen"
 msgid "Delete this document"
 msgstr "Dieses Dokument löschen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:247 web/app/components/Workspace.vue:938 web/app/lib/descriptions.ts:60
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:247 web/app/components/Workspace.vue:938 web/app/lib/descriptions.ts:62
 msgid "Describe Object…"
 msgstr "Objekt beschreiben…"
 
@@ -2477,7 +2477,7 @@ msgstr "Eine Verteilung wählen und RANDOM in die Zelle setzen"
 msgid "Pick cells instead…"
 msgstr "Stattdessen Zellen wählen…"
 
-#: web/app/lib/descriptions.ts:38
+#: web/app/lib/descriptions.ts:40
 msgid "Picture"
 msgstr "Bild"
 
@@ -3001,7 +3001,7 @@ msgstr "Startwert setzen"
 msgid "Set width"
 msgstr "Breite festlegen"
 
-#: web/app/lib/descriptions.ts:38
+#: web/app/lib/descriptions.ts:40
 msgid "Shape"
 msgstr "Form"
 
@@ -3301,7 +3301,7 @@ msgstr "Text"
 msgid "Text Box"
 msgstr "Textfeld"
 
-#: web/app/lib/descriptions.ts:38
+#: web/app/lib/descriptions.ts:40
 msgid "Text box"
 msgstr "Textfeld"
 
@@ -4365,11 +4365,11 @@ msgstr "eine Zufallszahl aus der genannten Verteilung, zum Beispiel RANDOM(\"nor
 msgid "a recovery key, a name and a new password are needed"
 msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind nötig"
 
-#: packages/claudia-server/src/claudia_server/composes.py:394
+#: packages/claudia-server/src/claudia_server/composes.py:395
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "Eine Bemerkung schlägt keine Änderung vor; weisen Sie sie stattdessen ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:443
+#: packages/claudia-server/src/claudia_server/protocol.py:446
 msgid "a request must be a JSON object"
 msgstr "Eine Anfrage muss ein JSON-Objekt sein"
 
@@ -4405,31 +4405,31 @@ msgstr "Ein {thing} hat keinen Platz „{slot}“; es gibt {slots}"
 msgid "about this cell"
 msgstr "zu dieser Zelle"
 
-#: packages/claudia-server/src/claudia_server/computes.py:675
+#: packages/claudia-server/src/claudia_server/computes.py:676
 msgid "add_chart: the name must have 1 to {limit} characters"
 msgstr "add_chart: Der Name muss 1 bis {limit} Zeichen haben"
 
-#: packages/claudia-server/src/claudia_server/creates.py:340
+#: packages/claudia-server/src/claudia_server/creates.py:355
 msgid "add_object: a shape needs the id of its outline"
 msgstr "add_object: Eine Form braucht die ID ihrer Kontur"
 
-#: packages/claudia-server/src/claudia_server/creates.py:337
+#: packages/claudia-server/src/claudia_server/creates.py:352
 msgid "add_object: kind must be one of {kinds}"
 msgstr "add_object: kind muss eines von {kinds} sein"
 
-#: packages/claudia-server/src/claudia_server/creates.py:347
+#: packages/claudia-server/src/claudia_server/creates.py:362
 msgid "add_object: this server has no shape {shape!r}"
 msgstr "add_object: Dieser Server kennt die Form {shape!r} nicht"
 
-#: packages/claudia-server/src/claudia_server/creates.py:342
+#: packages/claudia-server/src/claudia_server/creates.py:357
 msgid "add_object: use add_image to put a picture on a slide"
 msgstr "add_object: Mit add_image kommt ein Bild auf eine Folie"
 
-#: packages/claudia-server/src/claudia_server/computes.py:495
+#: packages/claudia-server/src/claudia_server/computes.py:496
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr "add_sheet: Der Name muss 1 bis {limit} Zeichen haben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:833
+#: packages/claudia-server/src/claudia_server/protocol.py:836
 msgid "add_user: role must be editor or viewer"
 msgstr "add_user: role muss editor oder viewer sein"
 
@@ -4533,7 +4533,7 @@ msgstr "abdunkeln"
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr "blocks muss eine Liste von 1 bis {limit} Absatz-IDs sein"
 
-#: packages/claudia-server/src/claudia_server/composes.py:317
+#: packages/claudia-server/src/claudia_server/composes.py:318
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr "blocks muss eine Liste von höchstens {limit} Absatz-IDs sein"
 
@@ -4553,7 +4553,7 @@ msgstr "Zelle"
 msgid "cell content"
 msgstr "Zellinhalt"
 
-#: packages/claudia-server/src/claudia_server/computes.py:445
+#: packages/claudia-server/src/claudia_server/computes.py:446
 msgid "cell_styles: the window must not end before it starts"
 msgstr "cell_styles: Das Fenster darf nicht vor seinem Anfang enden"
 
@@ -4561,11 +4561,11 @@ msgstr "cell_styles: Das Fenster darf nicht vor seinem Anfang enden"
 msgid "cells"
 msgstr "Zellen"
 
-#: packages/claudia-server/src/claudia_server/computes.py:402
+#: packages/claudia-server/src/claudia_server/computes.py:403
 msgid "cells: the window must not end before it starts"
 msgstr "cells: Das Fenster darf nicht vor seinem Anfang enden"
 
-#: packages/claudia-server/src/claudia_server/computes.py:406
+#: packages/claudia-server/src/claudia_server/computes.py:407
 msgid "cells: window too large (at most {limit} positions)"
 msgstr "cells: Fenster zu groß (höchstens {limit} Positionen)"
 
@@ -4585,11 +4585,11 @@ msgstr "Diagrammtyp"
 msgid "chat message"
 msgstr "Chatnachricht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:946
+#: packages/claudia-server/src/claudia_server/protocol.py:949
 msgid "chat: {reason}"
 msgstr "chat: {reason}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:723
+#: packages/claudia-server/src/claudia_server/protocol.py:726
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr "chat_log: limit muss von 1 bis {limit} gehen"
 
@@ -4645,15 +4645,15 @@ msgstr "„{text}“ enthalten"
 msgid "copy, cut and paste, also from and to other programs"
 msgstr "kopieren, ausschneiden und einfügen, auch aus und in andere Programme"
 
-#: packages/claudia-server/src/claudia_server/computes.py:623
+#: packages/claudia-server/src/claudia_server/computes.py:624
 msgid "define_diagram: id and format are assigned by the server"
 msgstr "define_diagram: id und format vergibt der Server"
 
-#: packages/claudia-server/src/claudia_server/computes.py:989
+#: packages/claudia-server/src/claudia_server/computes.py:990
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr "define_sql: query muss Text mit höchstens {limit} Zeichen sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1003
+#: packages/claudia-server/src/claudia_server/computes.py:1004
 msgid "define_sql: {problem}"
 msgstr "define_sql: {problem}"
 
@@ -4689,7 +4689,7 @@ msgstr "nicht zum Muster für Zellen passen"
 msgid "do not start with “{text}”"
 msgstr "nicht mit „{text}“ beginnen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:489
+#: packages/claudia-server/src/claudia_server/hub.py:573
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "Dokument-IDs bestehen aus 1–64 Buchstaben, Ziffern, „-“ oder „_“"
 
@@ -4761,15 +4761,15 @@ msgstr "genau"
 msgid "example.com:8420"
 msgstr "example.com:8420"
 
-#: packages/claudia-server/src/claudia_server/composes.py:164
+#: packages/claudia-server/src/claudia_server/composes.py:165
 msgid "export_office: format must be \"docx\" or \"odt\""
 msgstr "export_office: format muss „docx“ oder „odt“ sein"
 
-#: packages/claudia-server/src/claudia_server/creates.py:313
+#: packages/claudia-server/src/claudia_server/creates.py:323
 msgid "export_office: format must be \"pptx\" or \"odp\""
 msgstr "export_office: format muss „pptx“ oder „odp“ sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:250
+#: packages/claudia-server/src/claudia_server/computes.py:251
 msgid "export_office: format must be \"xlsx\" or \"ods\""
 msgstr "export_office: format muss „xlsx“ oder „ods“ sein"
 
@@ -4829,7 +4829,7 @@ msgstr "wie viele Spalten der Bereich hat."
 msgid "how many rows the range has."
 msgstr "wie viele Zeilen der Bereich hat."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:446
+#: packages/claudia-server/src/claudia_server/protocol.py:449
 msgid "id must be an integer or a short string"
 msgstr "id muss eine ganze Zahl oder ein kurzer Text sein"
 
@@ -4849,11 +4849,11 @@ msgstr "in {name}"
 msgid "insert"
 msgstr "einfügen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:253
+#: packages/claudia-server/src/claudia_server/hub.py:263
 msgid "internal server error"
 msgstr "Interner Serverfehler"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:767
+#: packages/claudia-server/src/claudia_server/protocol.py:770
 msgid "invalid command: {reason!r}"
 msgstr "Ungültiger Befehl: {reason!r}"
 
@@ -4913,7 +4913,7 @@ msgstr "gesperrt von {name}"
 msgid "log more and enable the web inspector"
 msgstr "mehr protokollieren und den Web-Inspektor aktivieren"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:702
+#: packages/claudia-server/src/claudia_server/protocol.py:705
 msgid "log: limit must be from 1 to {limit}"
 msgstr "log: limit muss von 1 bis {limit} gehen"
 
@@ -4945,11 +4945,11 @@ msgstr "Median"
 msgid "menu"
 msgstr "Menü"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:437
+#: packages/claudia-server/src/claudia_server/protocol.py:440
 msgid "message too large"
 msgstr "Nachricht zu groß"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:387
+#: packages/claudia-server/src/claudia_server/protocol.py:390
 msgid "method must be a string"
 msgstr "method muss ein Text sein"
 
@@ -5013,27 +5013,27 @@ msgstr "neue Folie"
 msgid "no cells"
 msgstr "keine Zellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:605
+#: packages/claudia-server/src/claudia_server/protocol.py:608
 msgid "no checkpoint number {checkpoint}"
 msgstr "Es gibt keinen Prüfpunkt mit der Nummer {checkpoint}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:557
+#: packages/claudia-server/src/claudia_server/hub.py:641
 msgid "no document {id!r}"
 msgstr "Kein Dokument {id!r}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:802
+#: packages/claudia-server/src/claudia_server/computes.py:803
 msgid "no function named {name!r}"
 msgstr "Keine Funktion namens {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:507
+#: packages/claudia-server/src/claudia_server/protocol.py:510
 msgid "no help topic {id!r}"
 msgstr "Kein Hilfethema {id!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:390
+#: packages/claudia-server/src/claudia_server/protocol.py:393
 msgid "no method {name!r}"
 msgstr "Keine Methode {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:899
+#: packages/claudia-server/src/claudia_server/protocol.py:902
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 
@@ -5041,7 +5041,7 @@ msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 msgid "no style of their own"
 msgstr "kein eigenes Format"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:471
+#: packages/claudia-server/src/claudia_server/protocol.py:474
 msgid "not a region this document understands: {reason!r}"
 msgstr "Keine Region, die dieses Dokument versteht: {reason!r}"
 
@@ -5049,7 +5049,7 @@ msgstr "Keine Region, die dieses Dokument versteht: {reason!r}"
 msgid "not connected"
 msgstr "nicht verbunden"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:441
+#: packages/claudia-server/src/claudia_server/protocol.py:444
 msgid "not valid JSON"
 msgstr "Kein gültiges JSON"
 
@@ -5073,7 +5073,7 @@ msgstr "einmal"
 msgid "one or more"
 msgstr "einmal oder öfter"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:911
+#: packages/claudia-server/src/claudia_server/protocol.py:914
 msgid "only an owner of a document may delete it"
 msgstr "Nur ein Eigentümer eines Dokuments darf es löschen"
 
@@ -5085,7 +5085,7 @@ msgstr "nur seine Box"
 msgid "only look"
 msgstr "nur ansehen"
 
-#: packages/claudia-server/src/claudia_server/composes.py:379
+#: packages/claudia-server/src/claudia_server/composes.py:380
 msgid "only the assistant makes suggestions"
 msgstr "Nur der Assistent macht Vorschläge"
 
@@ -5093,23 +5093,23 @@ msgstr "Nur der Assistent macht Vorschläge"
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr "nur der gewählte Zweig wird ausgewertet, sodass IF(B1=0, 0, A1/B1) nie durch null teilt."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:829
+#: packages/claudia-server/src/claudia_server/protocol.py:832
 msgid "only the owner of a document adds people to it"
 msgstr "Nur der Eigentümer eines Dokuments fügt Personen hinzu"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:881
+#: packages/claudia-server/src/claudia_server/protocol.py:884
 msgid "only the owner of a document can hand it over"
 msgstr "Nur der Eigentümer eines Dokuments kann es übergeben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:665
+#: packages/claudia-server/src/claudia_server/protocol.py:668
 msgid "only the owner of a document discards its hidden lines"
 msgstr "Nur der Eigentümer eines Dokuments verwirft dessen verborgene Linien"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:845
+#: packages/claudia-server/src/claudia_server/protocol.py:848
 msgid "only the owner of a document makes a recovery key"
 msgstr "Nur der Eigentümer eines Dokuments erstellt einen Wiederherstellungsschlüssel"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:586
+#: packages/claudia-server/src/claudia_server/protocol.py:589
 msgid "only the owner of a document sets this"
 msgstr "Nur der Eigentümer eines Dokuments legt dies fest"
 
@@ -5121,7 +5121,7 @@ msgstr "nur ihre Box"
 msgid "optional"
 msgstr "optional"
 
-#: packages/claudia-server/src/claudia_server/computes.py:355
+#: packages/claudia-server/src/claudia_server/computes.py:356
 msgid "outcome_table: combine must be \"all\" or \"pair\""
 msgstr "outcome_table: combine muss „all“ oder „pair“ sein"
 
@@ -5141,7 +5141,7 @@ msgstr "Absatz"
 msgid "paragraphs"
 msgstr "Absätze"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:359
+#: packages/claudia-server/src/claudia_server/protocol.py:362
 msgid "params must be an object"
 msgstr "params muss ein Objekt sein"
 
@@ -5197,19 +5197,19 @@ msgstr "Abfrage"
 msgid "query result"
 msgstr "Abfrageergebnis"
 
-#: packages/claudia-server/src/claudia_server/computes.py:323
+#: packages/claudia-server/src/claudia_server/computes.py:324
 msgid "random_preview: params must be numbers"
 msgstr "random_preview: params müssen Zahlen sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:328
+#: packages/claudia-server/src/claudia_server/computes.py:329
 msgid "random_preview: there is no distribution {distribution!r}"
 msgstr "random_preview: Es gibt keine Verteilung {distribution!r}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:334
+#: packages/claudia-server/src/claudia_server/computes.py:335
 msgid "random_preview: {problem}"
 msgstr "random_preview: {problem}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:309
+#: packages/claudia-server/src/claudia_server/computes.py:310
 msgid "random_preview: {what} must be a number or null"
 msgstr "random_preview: {what} muss eine Zahl oder null sein"
 
@@ -5229,23 +5229,23 @@ msgstr "wiederholen"
 msgid "request failed"
 msgstr "Anfrage fehlgeschlagen"
 
-#: packages/claudia-server/src/claudia_server/computes.py:534
+#: packages/claudia-server/src/claudia_server/computes.py:535
 msgid "resize_lines: at most {limit} lines at a time"
 msgstr "resize_lines: Höchstens {limit} Zeilen oder Spalten auf einmal"
 
-#: packages/claudia-server/src/claudia_server/computes.py:558
+#: packages/claudia-server/src/claudia_server/computes.py:559
 msgid "resize_lines: axis must be \"row\" or \"col\""
 msgstr "resize_lines: axis muss „row“ oder „col“ sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:541
+#: packages/claudia-server/src/claudia_server/computes.py:542
 msgid "resize_lines: each line is [index, size]"
 msgstr "resize_lines: Jede Zeile oder Spalte ist [index, size]"
 
-#: packages/claudia-server/src/claudia_server/computes.py:546
+#: packages/claudia-server/src/claudia_server/computes.py:547
 msgid "resize_lines: size must be a number or null"
 msgstr "resize_lines: size muss eine Zahl oder null sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:548
+#: packages/claudia-server/src/claudia_server/computes.py:549
 msgid "resize_lines: size must be between {lo} and {hi}"
 msgstr "resize_lines: size muss zwischen {lo} und {hi} liegen"
 
@@ -5293,19 +5293,19 @@ msgstr "ein Objekt auswählen (Kolleginnen und Kollegen können es nicht ändern
 msgid "send"
 msgstr "senden"
 
-#: packages/claudia-server/src/claudia_server/computes.py:420
+#: packages/claudia-server/src/claudia_server/computes.py:421
 msgid "set_cells: at most {limit} cells at a time"
 msgstr "set_cells: Höchstens {limit} Zellen auf einmal"
 
-#: packages/claudia-server/src/claudia_server/computes.py:424
+#: packages/claudia-server/src/claudia_server/computes.py:425
 msgid "set_cells: each cell is an object with row, col and input"
 msgstr "set_cells: Jede Zelle ist ein Objekt mit row, col und input"
 
-#: packages/claudia-server/src/claudia_server/computes.py:429
+#: packages/claudia-server/src/claudia_server/computes.py:430
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr "set_cells: input muss Text mit höchstens {limit} Zeichen sein"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:589
+#: packages/claudia-server/src/claudia_server/protocol.py:592
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr "set_restore_policy: policy muss eines von {policies} sein"
 
@@ -5353,7 +5353,7 @@ msgstr "Streuung (Standardabweichung)"
 msgid "spread of the logarithm"
 msgstr "Streuung des Logarithmus"
 
-#: packages/claudia-server/src/claudia_server/computes.py:958
+#: packages/claudia-server/src/claudia_server/computes.py:959
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr "sql_preview: limit muss eine ganze Zahl von 0 bis {limit} sein"
 
@@ -5365,7 +5365,7 @@ msgstr "beginnen mit"
 msgid "start with “{text}”"
 msgstr "mit „{text}“ beginnen"
 
-#: packages/claudia-server/src/claudia_server/computes.py:512
+#: packages/claudia-server/src/claudia_server/computes.py:513
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr "structure: axis muss „row“ oder „col“ sein"
 
@@ -5405,11 +5405,11 @@ msgstr "Textfeld"
 msgid "text of the object"
 msgstr "Text des Objekts"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:869 packages/claudia-server/src/claudia_server/protocol.py:885 packages/claudia-server/src/claudia_server/protocol.py:915
+#: packages/claudia-server/src/claudia_server/protocol.py:872 packages/claudia-server/src/claudia_server/protocol.py:888 packages/claudia-server/src/claudia_server/protocol.py:918
 msgid "that is not your current password"
 msgstr "Das ist nicht Ihr aktuelles Passwort"
 
-#: packages/claudia-server/src/claudia_server/composes.py:186
+#: packages/claudia-server/src/claudia_server/composes.py:187
 msgid "that would make too many paragraphs"
 msgstr "Das ergäbe zu viele Absätze"
 
@@ -5417,27 +5417,27 @@ msgstr "Das ergäbe zu viele Absätze"
 msgid "the assistant can only make suggestions; people set the document up"
 msgstr "Der Assistent kann nur Vorschläge machen; das Dokument richten Menschen ein"
 
-#: packages/claudia-server/src/claudia_server/composes.py:84
+#: packages/claudia-server/src/claudia_server/composes.py:85
 msgid "the assistant can only make suggestions; people write the text"
 msgstr "Der Assistent kann nur Vorschläge machen; den Text schreiben Menschen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:761
+#: packages/claudia-server/src/claudia_server/protocol.py:764
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr "Der Assistent kann keinen rohen Befehl ausführen; nutzen Sie die Methoden der App"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:602
+#: packages/claudia-server/src/claudia_server/protocol.py:605
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr "Der Assistent schlägt nicht vor, einen Prüfpunkt wiederherzustellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:628
+#: packages/claudia-server/src/claudia_server/protocol.py:631
 msgid "the assistant does not suggest switching lines"
 msgstr "Der Assistent schlägt nicht vor, die Linie zu wechseln"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:647
+#: packages/claudia-server/src/claudia_server/protocol.py:650
 msgid "the assistant does not vote"
 msgstr "Der Assistent stimmt nicht ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:675
+#: packages/claudia-server/src/claudia_server/protocol.py:678
 msgid "the assistant does not withdraw suggestions"
 msgstr "Der Assistent zieht keine Vorschläge zurück"
 
@@ -5493,7 +5493,7 @@ msgstr "die Kopfzeile"
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr "die Trennmuster für {name} sind nicht vollständig angekommen"
 
-#: packages/claudia-server/src/claudia_server/composes.py:333 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
+#: packages/claudia-server/src/claudia_server/composes.py:334 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
 msgid "the new style would look just like “{name}”"
 msgstr "Der neue Stil sähe genauso aus wie „{name}“"
 
@@ -5505,7 +5505,7 @@ msgstr "die Position (ab 1) des Wertes in einer Zeile oder Spalte. Typ 0 ist ein
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr "die Position (ab 1) des Wertes. Vergleichsmodus 0 ist genau, -1 der genaue Wert oder sonst der nächstkleinere, 1 oder sonst der nächstgrößere, 2 genau mit Platzhaltern. Suchmodus 1 sucht vom ersten, -1 vom letzten. Nicht gefunden ergibt #N/A."
 
-#: packages/claudia-server/src/claudia_server/composes.py:181
+#: packages/claudia-server/src/claudia_server/composes.py:182
 msgid "the range ends before it starts"
 msgstr "Der Bereich endet vor seinem Anfang"
 
@@ -5545,7 +5545,7 @@ msgstr "das Blatt ist {style}"
 msgid "the sheet’s style"
 msgstr "das Format des Blatts"
 
-#: web/app/lib/print/source.ts:145
+#: web/app/lib/print/source.ts:152
 msgid "the slides"
 msgstr "die Folien"
 
@@ -5553,7 +5553,7 @@ msgstr "die Folien"
 msgid "the start of the cell"
 msgstr "der Zellenanfang"
 
-#: web/app/components/SearchPanel.vue:179 web/app/components/TextEditor.vue:388 web/app/lib/print/source.ts:94
+#: web/app/components/SearchPanel.vue:179 web/app/components/TextEditor.vue:388 web/app/lib/print/source.ts:95
 msgid "the text"
 msgstr "der Text"
 
@@ -5581,7 +5581,7 @@ msgstr "der Wert oder die Alternative, wenn der Wert ein Fehler irgendeiner Art 
 msgid "the whole table, header included"
 msgstr "die ganze Tabelle, einschließlich Kopfzeile"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:667
+#: packages/claudia-server/src/claudia_server/protocol.py:670
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr "Es gibt einen offenen Vorschlag; beantworten oder ziehen Sie ihn zuerst zurück"
 
@@ -5589,7 +5589,7 @@ msgstr "Es gibt einen offenen Vorschlag; beantworten oder ziehen Sie ihn zuerst 
 msgid "there is no earlier list of this kind to continue"
 msgstr "Es gibt keine frühere Liste dieser Art, die sich fortsetzen ließe"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:630
+#: packages/claudia-server/src/claudia_server/protocol.py:633
 msgid "there is no line called {line!r}"
 msgstr "Es gibt keine Linie namens {line!r}"
 
@@ -5609,15 +5609,19 @@ msgstr "Dieses Dokument hat keine Palette"
 msgid "this document has no styles"
 msgstr "Dieses Dokument hat keine Stile"
 
-#: packages/claudia-server/src/claudia_server/creates.py:74
+#: packages/claudia-server/src/claudia_server/rendered.py:167
+msgid "this document has nothing rendered with the id {id!r}"
+msgstr "Dieses Dokument enthält nichts Gerendertes mit der Kennung {id!r}"
+
+#: packages/claudia-server/src/claudia_server/creates.py:75
 msgid "this document is not a presentation"
 msgstr "Dieses Dokument ist keine Präsentation"
 
-#: packages/claudia-server/src/claudia_server/composes.py:77
+#: packages/claudia-server/src/claudia_server/composes.py:78
 msgid "this document is not a text"
 msgstr "Dieses Dokument ist kein Text"
 
-#: packages/claudia-server/src/claudia_server/computes.py:181
+#: packages/claudia-server/src/claudia_server/computes.py:182
 msgid "this document is not a workbook"
 msgstr "Dieses Dokument ist keine Arbeitsmappe"
 
@@ -5629,35 +5633,39 @@ msgstr "Dieser Absatz ist kein Listeneintrag"
 msgid "this row"
 msgstr "diese Zeile"
 
-#: packages/claudia-server/src/claudia_server/app.py:297 packages/claudia-server/src/claudia_server/protocol.py:847
+#: packages/claudia-server/src/claudia_server/app.py:297 packages/claudia-server/src/claudia_server/protocol.py:850
 msgid "this server does not keep recovery keys"
 msgstr "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:857
+#: packages/claudia-server/src/claudia_server/protocol.py:860
 msgid "this server does not list a document's people this way"
 msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise auf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:831
+#: packages/claudia-server/src/claudia_server/rendered.py:110
+msgid "this server does not make rendered containers"
+msgstr "Dieser Server erzeugt keine gerenderten Container"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:834
 msgid "this server does not manage people"
 msgstr "Dieser Server verwaltet keine Personen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:913
+#: packages/claudia-server/src/claudia_server/protocol.py:916
 msgid "this server does not support deleting a document"
 msgstr "Dieser Server unterstützt das Löschen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:883 packages/claudia-server/src/claudia_server/protocol.py:896
+#: packages/claudia-server/src/claudia_server/protocol.py:886 packages/claudia-server/src/claudia_server/protocol.py:899
 msgid "this server does not support handing over ownership"
 msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:867
+#: packages/claudia-server/src/claudia_server/protocol.py:870
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/hub.py:530
+#: packages/claudia-server/src/claudia_server/hub.py:614
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 
-#: packages/claudia-server/src/claudia_server/composes.py:407
+#: packages/claudia-server/src/claudia_server/composes.py:408
 msgid "this suggestion is not open any more"
 msgstr "Dieser Vorschlag ist nicht mehr offen"
 
@@ -5673,19 +5681,19 @@ msgstr "zu benennen"
 msgid "tobi"
 msgstr "tobi"
 
-#: packages/claudia-server/src/claudia_server/computes.py:373
+#: packages/claudia-server/src/claudia_server/computes.py:374
 msgid "trace: reach must be one of {reaches}"
 msgstr "trace: reach muss eines von {reaches} sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:381
+#: packages/claudia-server/src/claudia_server/computes.py:382
 msgid "trace: the window must not end before it starts"
 msgstr "trace: Das Fenster darf nicht vor seinem Anfang enden"
 
-#: packages/claudia-server/src/claudia_server/computes.py:377
+#: packages/claudia-server/src/claudia_server/computes.py:378
 msgid "trace: window is [row0, col0, row1, col1]"
 msgstr "trace: Das Fenster ist [row0, col0, row1, col1]"
 
-#: packages/claudia-server/src/claudia_server/computes.py:384
+#: packages/claudia-server/src/claudia_server/computes.py:385
 msgid "trace: window too large (at most {limit} positions)"
 msgstr "trace: Fenster zu groß (höchstens {limit} Positionen)"
 
@@ -5701,15 +5709,15 @@ msgstr "hier tippen, um eine Zeile hinzuzufügen"
 msgid "undo"
 msgstr "rückgängig"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:363
+#: packages/claudia-server/src/claudia_server/protocol.py:366
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "Unbekannter Parameter {parameter!r} für {name}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:572 packages/claudia-server/src/claudia_server/computes.py:658 packages/claudia-server/src/claudia_server/computes.py:707 packages/claudia-server/src/claudia_server/computes.py:954 packages/claudia-server/src/claudia_server/computes.py:984
+#: packages/claudia-server/src/claudia_server/computes.py:1011 packages/claudia-server/src/claudia_server/computes.py:573 packages/claudia-server/src/claudia_server/computes.py:659 packages/claudia-server/src/claudia_server/computes.py:708 packages/claudia-server/src/claudia_server/computes.py:955 packages/claudia-server/src/claudia_server/computes.py:985
 msgid "unknown sheet {sheet!r}"
 msgstr "Unbekanntes Blatt {sheet!r}"
 
-#: packages/claudia-server/src/claudia_server/creates.py:276
+#: packages/claudia-server/src/claudia_server/creates.py:286
 msgid "unknown slide {slide!r}"
 msgstr "Unbekannte Folie {slide!r}"
 
@@ -5749,7 +5757,7 @@ msgstr "Wort"
 msgid "words"
 msgstr "Wörter"
 
-#: packages/claudia-server/src/claudia_server/composes.py:347
+#: packages/claudia-server/src/claudia_server/composes.py:348
 msgid "words must be from 0 to {limit}"
 msgstr "words muss von 0 bis {limit} gehen"
 
@@ -5941,31 +5949,31 @@ msgstr "{host} ist jetzt von außerhalb dieses Computers erreichbar. Legen Sie e
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr "{host} ist über diesen Computer hinaus noch nicht erreichbar, daher ist das nicht erforderlich – legen Sie aber jetzt einen Namen und ein Passwort fest, wenn Sie die Einstellungen verwalten möchten oder bevor Sie ihn später für andere öffnen."
 
-#: packages/claudia-server/src/claudia_server/hub.py:362
+#: packages/claudia-server/src/claudia_server/hub.py:379
 msgid "{id} already has {limit} connections"
 msgstr "{id} hat schon {limit} Verbindungen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:545
+#: packages/claudia-server/src/claudia_server/hub.py:629
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "{id} lässt sich noch nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:548
+#: packages/claudia-server/src/claudia_server/hub.py:632
 msgid "{id} cannot be opened: {reason}"
 msgstr "{id} lässt sich nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:552
+#: packages/claudia-server/src/claudia_server/hub.py:636
 msgid "{id} cannot be read"
 msgstr "{id} lässt sich nicht lesen"
 
-#: web/app/lib/descriptions.ts:39
+#: web/app/lib/descriptions.ts:41
 msgid "{kind} (decorative)"
 msgstr "{kind} (dekorativ)"
 
-#: web/app/lib/descriptions.ts:42
+#: web/app/lib/descriptions.ts:44
 msgid "{kind} (no description)"
 msgstr "{kind} (ohne Beschreibung)"
 
-#: web/app/lib/descriptions.ts:41
+#: web/app/lib/descriptions.ts:43
 msgid "{kind}: {words}"
 msgstr "{kind}: {words}"
 
@@ -6033,11 +6041,11 @@ msgstr "{method}: Ein Tabellenblatt wird mit seiner ID angegeben"
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "{method}: kinds ist eine Liste aus {kinds}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:371
+#: packages/claudia-server/src/claudia_server/protocol.py:374
 msgid "{method}: missing parameter {parameter!r}"
 msgstr "{method}: Parameter {parameter!r} fehlt"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:380
+#: packages/claudia-server/src/claudia_server/protocol.py:383
 msgid "{method}: {parameter} {reason}"
 msgstr "{method}: {parameter} {reason}"
 
@@ -6049,11 +6057,11 @@ msgstr "{name} als Hex"
 msgid "{name} has no cells right now"
 msgstr "{name} hat gerade keine Zellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:396
+#: packages/claudia-server/src/claudia_server/protocol.py:399
 msgid "{name} is not one of the methods this account may call"
 msgstr "{name} gehört nicht zu den Methoden, die dieses Konto aufrufen darf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:392
+#: packages/claudia-server/src/claudia_server/protocol.py:395
 msgid "{name} needs the editor role"
 msgstr "{name} braucht die Rolle „editor“"
 
@@ -6145,7 +6153,7 @@ msgstr "{range} · {rows} Zeilen · {purpose}"
 msgid "{ref}, empty"
 msgstr "{ref}, leer"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:692
+#: packages/claudia-server/src/claudia_server/protocol.py:695
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr "{revision} gehört nicht zur aktuellen Linie des Dokuments; laden Sie es neu"
 
@@ -6193,15 +6201,15 @@ msgstr "{user} hat dies ausgewählt"
 msgid "{what} (kept as “{name}”)"
 msgstr "{what} (behalten als „{name}“)"
 
-#: packages/claudia-server/src/claudia_server/composes.py:121
+#: packages/claudia-server/src/claudia_server/composes.py:122
 msgid "{what} is outside the paragraph"
 msgstr "{what} liegt außerhalb des Absatzes"
 
-#: packages/claudia-server/src/claudia_server/computes.py:191
+#: packages/claudia-server/src/claudia_server/computes.py:192
 msgid "{what} must be a whole number from 0 to {last}"
 msgstr "{what} muss eine ganze Zahl von 0 bis {last} sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:265
+#: packages/claudia-server/src/claudia_server/computes.py:266
 msgid "{what} must be a whole number from {low} to {high}"
 msgstr "{what} muss eine ganze Zahl von {low} bis {high} sein"
 
@@ -6233,39 +6241,39 @@ msgstr "{what}, {n} Fehler"
 msgid "{what}, {n} to {m} times"
 msgstr "{what}, {n}- bis {m}-mal"
 
-#: packages/claudia-server/src/claudia_server/computes.py:836
+#: packages/claudia-server/src/claudia_server/computes.py:837
 msgid "{what}: anchor is {{sheet, row, col}} on a sheet of this document"
 msgstr "{what}: anchor ist {{sheet, row, col}} auf einem Blatt dieses Dokuments"
 
-#: packages/claudia-server/src/claudia_server/computes.py:851
+#: packages/claudia-server/src/claudia_server/computes.py:852
 msgid "{what}: give a range or an anchor (the cell of a SQL() formula), not both"
 msgstr "{what}: Geben Sie einen Bereich oder einen Anker an (die Zelle einer SQL()-Formel), nicht beides"
 
-#: packages/claudia-server/src/claudia_server/computes.py:820
+#: packages/claudia-server/src/claudia_server/computes.py:821
 msgid "{what}: range is {{sheet, row0, col0, row1, col1}}"
 msgstr "{what}: Der Bereich ist {{sheet, row0, col0, row1, col1}}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:814
+#: packages/claudia-server/src/claudia_server/computes.py:815
 msgid "{what}: scope must be a sheet id or null"
 msgstr "{what}: scope muss eine Blatt-ID oder null sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:846
+#: packages/claudia-server/src/claudia_server/computes.py:847
 msgid "{what}: the definition is an object with {allowed}"
 msgstr "{what}: Die Definition ist ein Objekt mit {allowed}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:829
+#: packages/claudia-server/src/claudia_server/computes.py:830
 msgid "{what}: the range must not end before it starts"
 msgstr "{what}: Der Bereich darf nicht vor seinem Anfang enden"
 
-#: packages/claudia-server/src/claudia_server/computes.py:227
+#: packages/claudia-server/src/claudia_server/computes.py:228
 msgid "{what}: this document does not know the diagram {diagram_id!r}"
 msgstr "{what}: Dieses Dokument kennt das Diagramm {diagram_id!r} nicht"
 
-#: packages/claudia-server/src/claudia_server/computes.py:824
+#: packages/claudia-server/src/claudia_server/computes.py:825
 msgid "{what}: this document does not know the sheet {sheet!r}"
 msgstr "{what}: Dieses Dokument kennt das Blatt {sheet!r} nicht"
 
-#: packages/claudia-server/src/claudia_server/computes.py:865
+#: packages/claudia-server/src/claudia_server/computes.py:866
 msgid "{what}: {problem}"
 msgstr "{what}: {problem}"
 

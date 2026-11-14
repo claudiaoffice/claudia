@@ -502,3 +502,41 @@ def test_a_decorative_picture_is_imported_with_no_alt_text_at_all():
     """Whether a picture needs a description is the object's business (``DescribeObject``); the record only says
     what was said when it came in, which for a flourish is nothing."""
     assert ImageImport.from_data(make_import(alt="").to_data()).alt == ""
+
+
+# ----------------------------------------------------------------------------- pictures made by a renderer (D394)
+GLYPHS = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30pt" height="10pt">'
+    b'<defs><symbol id="g1"><path d="M0 0L5 5"/></symbol></defs><use xlink:href="#g1" x="1" y="2"/></svg>'
+)
+
+
+def test_a_picture_somebody_imports_loses_its_use_elements():
+    assert b"<use" not in decode_image(GLYPHS).data
+
+
+def test_a_checked_drawing_keeps_its_use_elements_because_a_typeset_page_is_made_of_them():
+    kept = decode_image(GLYPHS, checked_drawing=True)
+    assert b"<use" in kept.data and b'href="#g1"' in kept.data
+
+
+def test_even_a_checked_drawing_loses_a_use_that_points_outside_and_everything_else_unsafe():
+    evil = (
+        b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3" height="3">'
+        b'<use xlink:href="http://x.invalid/a.svg#b"/><script>1</script>'
+        b'<rect onclick="x()" width="1" height="1"/></svg>'
+    )
+    data = decode_image(evil, checked_drawing=True).data
+    assert b"x.invalid" not in data and b"<script" not in data and b"onclick" not in data
+
+
+def test_a_percentage_is_no_size_so_the_view_box_gives_it():
+    asset = decode_image(b'<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 300 150"/>')
+    assert (asset.width, asset.height) == (300, 150)
+
+
+def test_a_sanitised_svg_keeps_the_xlink_prefix_because_other_programs_look_for_that_one():
+    """LibreOffice does not follow a reference whose prefix ElementTree invented (``ns1:href``): a typeset page,
+    which is made of ``<use xlink:href>``, came out of an office file empty."""
+    data = decode_image(GLYPHS, checked_drawing=True).data
+    assert b'xmlns:xlink="http://www.w3.org/1999/xlink"' in data and b'xlink:href="#g1"' in data and b"ns1:" not in data

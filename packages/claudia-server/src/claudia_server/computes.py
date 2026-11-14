@@ -120,6 +120,7 @@ from .i18n import msg, translate
 from .images import image_bytes, picture_words
 from .office_export import document_info, office_export
 from .protocol import Context, RequestError, core_methods
+from .rendered import add_rendering_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
 
@@ -1003,3 +1004,19 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
             raise RequestError("bad_request", msg("define_sql: {problem}", problem=problem)) from None
     applied = ctx.document.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
+
+
+def _place_on_sheet(workbook, *, sheet, **_cell) -> None:
+    if sheet not in workbook.sheets:
+        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
+
+
+add_rendering_methods(
+    computes_methods,
+    model_of=_workbook,
+    anchor=(
+        "sheet:str row:int col:int",
+        lambda sheet, row, col: CellAnchor(SheetId(sheet), row, col).to_data(),
+        _place_on_sheet,
+    ),
+)

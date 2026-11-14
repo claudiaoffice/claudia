@@ -100,3 +100,10 @@ def test_a_program_is_not_found_by_accident_in_the_working_folder(tmp_path, monk
     monkeypatch.setenv("PATH", str(tmp_path / "empty"))
     with pytest.raises(EngineUnavailable):
         resolve_program("xelatex", None, "xelatex")
+
+
+def test_a_caller_may_give_its_own_hint_so_that_another_tool_is_not_told_to_install_latex(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmp_path))
+    with pytest.raises(EngineUnavailable) as error:
+        resolve_program("typst", None, "typst", hint=" Install Typst from typst.app.")
+    assert "Install Typst from typst.app." in str(error.value) and "LaTeX" not in str(error.value)

@@ -3,6 +3,10 @@
 The converter is trusted, the document that went into it is not: a PDF can carry links and
 embedded content. The check is an allowlist of drawing elements, never a blacklist of bad ones,
 and it refuses anything that could run code or fetch something from outside.
+
+Some tools draw more than paths (a diagram has text, markers and a ``<style>``). A caller may widen the list of
+*elements* for its own tool (``extra_elements``), but never the rules about what an element may refer to, and never
+to an element that can run code or fetch (``NEVER_ALLOWED``).
 """
 
 import re
@@ -17,6 +21,11 @@ _ELEMENTS = frozenset(
         "svg", "g", "defs", "use", "symbol", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon",
         "clipPath", "mask", "pattern", "linearGradient", "radialGradient", "stop", "image", "title", "desc",
     }
+)  # fmt: skip
+#: Elements no profile can allow: they run code, embed another document or animate attributes.
+NEVER_ALLOWED = frozenset(
+    {"script", "foreignObject", "iframe", "object", "embed", "a", "animate", "animateMotion", "animateTransform", "set",
+     "video", "audio", "canvas"}
 )  # fmt: skip
 _HREFS = (f"{{{XLINK_NS}}}href", "href")
 _ALLOWED_NAMESPACED = frozenset({f"{{{XLINK_NS}}}href", f"{{{XML_NS}}}space"})
@@ -48,8 +57,30 @@ def _check_attribute(element: str, name: str, value: str) -> None:
         raise UnsafeOutput(f"<{element}> has active content in {name!r}")
 
 
-def check_svg(svg: str) -> str:
-    """Return ``svg`` unchanged when it is only drawing; raise `UnsafeOutput` otherwise."""
+def _check_style_text(element: ET.Element) -> None:
+    """The text of a ``<style>``: no other elements in it, no import, no reference to anything outside the picture."""
+    if len(element):
+        raise UnsafeOutput("<style> holds something other than text")
+    text = element.text or ""
+    if "\\" in text:
+        raise UnsafeOutput("<style> has an escape sequence, which could hide a reference")
+    if re.search(r"@import|javascript:|expression\(|behavior\s*:|-moz-binding", text, re.IGNORECASE):
+        raise UnsafeOutput("<style> has active content or an import")
+    for target in _URL_FUNCTION.findall(text):
+        if not _LOCAL_URL.fullmatch(target.strip()):
+            raise UnsafeOutput(f"<style> refers to something outside the picture: url({target[:40]})")
+
+
+def check_svg(svg: str, *, extra_elements: frozenset[str] = frozenset()) -> str:
+    """Return ``svg`` unchanged when it is only drawing; raise `UnsafeOutput` otherwise.
+
+    ``extra_elements`` are element names a tool's profile adds to the allowlist (for example ``text`` and ``style``
+    for a diagram); `ValueError` if one of them is in `NEVER_ALLOWED`.
+    """
+    forbidden = extra_elements & NEVER_ALLOWED
+    if forbidden:
+        raise ValueError(f"<{sorted(forbidden)[0]}> is never allowed in a picture, whatever the profile says")
+    allowed = _ELEMENTS | extra_elements
     if re.search(r"<!DOCTYPE|<!ENTITY", svg, re.IGNORECASE):
         raise UnsafeOutput("the picture has a DOCTYPE, which can expand entities without end")
     try:
@@ -62,8 +93,10 @@ def check_svg(svg: str) -> str:
         if not isinstance(element.tag, str) or not element.tag.startswith(f"{{{SVG_NS}}}"):
             raise UnsafeOutput(f"the element {element.tag!r} is not part of SVG")
         name = _local(element.tag)
-        if name not in _ELEMENTS:
+        if name not in allowed:
             raise UnsafeOutput(f"<{name}> is not allowed in a typeset picture")
+        if name == "style":
+            _check_style_text(element)
         for attribute, value in element.attrib.items():
             _check_attribute(name, attribute, value)
     return svg

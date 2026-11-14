@@ -53,15 +53,19 @@ def _hint(setting: str) -> str:
     )
 
 
-def resolve_program(setting: str, configured: str | os.PathLike[str] | None, default: str) -> Path:
+def resolve_program(
+    setting: str, configured: str | os.PathLike[str] | None, default: str, *, hint: str | None = None
+) -> Path:
     """The program for ``setting``: what was configured, or ``default`` found on the PATH.
 
-    Raises `EngineUnavailable` with a message that names the setting, the value and what to do.
+    Raises `EngineUnavailable` with a message that names the setting, the value and what to do. ``hint`` replaces the
+    sentence about installing LaTeX, for a caller that resolves another program (it should start with a space).
     """
+    advice = _hint(setting) if hint is None else hint
     if configured is None or str(configured) == "":
         found = _search_path(default)
         if found is None:
-            raise EngineUnavailable(f"{default} was not found on the PATH of this server." + _hint(setting))
+            raise EngineUnavailable(f"{default} was not found on the PATH of this server." + advice)
         return found
     text = str(configured)
     path = Path(configured)
@@ -69,14 +73,12 @@ def resolve_program(setting: str, configured: str | os.PathLike[str] | None, def
     if not names_a_place:  # a bare program name, never a folder or file of the working directory
         found = _search_path(text)
         if found is None:
-            raise EngineUnavailable(f"{text!r} (setting '{setting}') was not found on the PATH." + _hint(setting))
+            raise EngineUnavailable(f"{text!r} (setting '{setting}') was not found on the PATH." + advice)
         return found
     if path.is_dir():
         found = _find(path, default)
         if found is None:
-            raise EngineUnavailable(
-                f"The folder {text!r} (setting '{setting}') has no {default} in it." + _hint(setting)
-            )
+            raise EngineUnavailable(f"The folder {text!r} (setting '{setting}') has no {default} in it." + advice)
         return found
     # The given path itself, before trying any extension: on Windows, `_extensions()` is PATHEXT (never ""),
     # so a path that already names a runnable file (e.g. ending in its own ".cmd") would otherwise never be
@@ -86,4 +88,4 @@ def resolve_program(setting: str, configured: str | os.PathLike[str] | None, def
             if not _runnable(candidate):
                 raise EngineUnavailable(f"{str(candidate)!r} (setting '{setting}') cannot be run.")
             return Path(os.path.abspath(candidate))
-    raise EngineUnavailable(f"{text!r} (setting '{setting}') does not exist." + _hint(setting))
+    raise EngineUnavailable(f"{text!r} (setting '{setting}') does not exist." + advice)

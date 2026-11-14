@@ -27,7 +27,13 @@ MAX_LISTED_SLIDES = 40  # slides named to the model; a small model has little ro
 PREVIEW_SLIDES = 3  # slides whose objects are shown at the start
 MAX_OBJECTS = 30  # objects of one slide described
 MAX_TEXT = 80  # characters of one object's words shown
-KINDS = {"text": "text box", "shape": "shape", "image": "picture", "diagram": "chart"}
+KINDS = {
+    "text": "text box",
+    "shape": "shape",
+    "image": "picture",
+    "diagram": "chart",
+    "rendered": "rendered text (picture made from text)",  # D390
+}
 
 ORIENTATION = (
     "A slide is {w} units wide and {h} high; x and y are the top left corner of an object, from the top left of the "

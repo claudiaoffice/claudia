@@ -204,10 +204,15 @@ class ImageImport:
         return replace(self, source_path=None)
 
 
-def decode_image(data: bytes) -> ImageAsset:
+def decode_image(data: bytes, *, checked_drawing: bool = False) -> ImageAsset:
     """Decode ``data`` (the bytes of a file) into an :class:`ImageAsset`; raises :class:`ImageError` if the
     bytes are too large, or are not one of :data:`SUPPORTED_IMAGE_FORMATS`, or are not well-formed enough to
-    find a pixel size in."""
+    find a pixel size in.
+
+    ``checked_drawing`` is for an SVG that a renderer of the server made and the server has already checked against
+    an allowlist of drawing elements (``claudia_typeset.check_svg``): such a picture is made of ``<use>`` elements
+    (every glyph of a typeset page is one), which a picture somebody imports may not have. A ``<use>`` that points
+    anywhere but into the picture is still removed, and so is everything else unsafe (D394)."""
     if not isinstance(data, bytes) or not data:
         raise ImageError("no image data")
     if len(data) > MAX_IMAGE_BYTES:
@@ -229,7 +234,7 @@ def decode_image(data: bytes) -> ImageAsset:
         animated = frames > 1
         first_frame = _gif_first_frame_bytes(data) if animated else None
         return ImageAsset(image_id, fmt, width, height, animated, data, first_frame)
-    sanitized = _sanitize_svg(data)
+    sanitized = _sanitize_svg(data, keep=frozenset({"use"}) if checked_drawing else frozenset())
     width, height = _svg_dimensions(sanitized)
     return ImageAsset(image_id, "svg", width, height, False, sanitized)
 
@@ -409,7 +414,7 @@ def _gif_first_frame_bytes(data: bytes) -> bytes:
 
 
 # -- SVG: stdlib XML, sanitized rather than merely rejected ------------------------------------------------------
-def _sanitize_svg(data: bytes) -> bytes:
+def _sanitize_svg(data: bytes, keep: frozenset[str] = frozenset()) -> bytes:
     # The whole file, not just an early prefix: a DOCTYPE/ENTITY is still well-formed XML (and still reaches
     # the parser) if it is pushed past any fixed-size window by padding earlier in the prolog (e.g. a long
     # comment), so a bounded scan here would be a bypass, not a defense.
@@ -421,21 +426,22 @@ def _sanitize_svg(data: bytes) -> bytes:
         raise ImageError(f"not a well-formed SVG: {error}") from None
     if _qualify(root.tag) != "svg":
         raise ImageError("not an SVG: the root element must be <svg>")
-    _strip_unsafe(root)
+    _strip_unsafe(root, _SVG_DISALLOWED_LOCAL_NAMES - keep)
     if root.tag.startswith("{"):
         # Keep the familiar `xmlns="..."` form on the way out; without this, ElementTree invents an "ns0:"
         # prefix for the default namespace, which is needless noise on every element of the sanitized file.
         ElementTree.register_namespace("", root.tag[1:].rsplit("}", 1)[0])
+    ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")  # not an invented "ns1": see the tests
     return ElementTree.tostring(root, encoding="utf-8")
 
 
-def _strip_unsafe(element: ElementTree.Element) -> None:
+def _strip_unsafe(element: ElementTree.Element, disallowed: frozenset[str] | set[str]) -> None:
     """Remove script-capable elements, event-handler attributes, and attributes that reach outside the file."""
     for child in list(element):
-        if _qualify(child.tag) in _SVG_DISALLOWED_LOCAL_NAMES:
+        if _qualify(child.tag) in disallowed:
             element.remove(child)
         else:
-            _strip_unsafe(child)
+            _strip_unsafe(child, disallowed)
     for name in list(element.attrib):
         local = _qualify(name)
         unsafe_href = local in _SVG_HREF_LOCAL_NAMES and not element.attrib[name].startswith("#")
@@ -468,5 +474,7 @@ def _svg_dimensions(sanitized: bytes) -> tuple[int, int]:
 def _length_of(value: str | None) -> float | None:
     if not value:
         return None
+    if value.strip().endswith("%"):
+        return None  # a share of whatever it is put in is no size
     found = _LENGTH.match(value.strip())
     return float(found.group()) if found else None

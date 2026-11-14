@@ -18,6 +18,10 @@ describe('objectName: what a screen reader says for an object', () => {
     expect(objectName(body({ kind: 'diagram', description: 'sales by quarter' }))).toBe('Chart: sales by quarter')
     expect(objectName(body({ kind: 'diagram' }))).toBe('Chart (no description)')
   })
+  it('names a rendered text container (a formula, a diagram drawn from text) as the picture it is shown as', () => {
+    expect(objectName(body({ kind: 'rendered', description: 'the quadratic formula' }), { words: 'x = ...' })).toBe('Picture: the quadratic formula')
+    expect(objectName(body({ kind: 'rendered' }), { words: 'x = ...' })).toBe('Picture (no description)')
+  })
   it('names a text box by its words, or by its description when it has one', () => {
     expect(objectName(body(), { words: 'hello' })).toBe('Text box: hello')
     expect(objectName(body(), {})).toBe('Text box')

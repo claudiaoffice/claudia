@@ -42,6 +42,21 @@ Describing objects (BITV 1.1.1), in creates and computes (composes has no object
   file takes seconds (2.4 s for an ordinary 740 KB font), and every other request of every document waited for it the
   first time a page asked for a font.
 
+## [0.29.0] - 2026-11-13
+
+Rendered text containers on the wire (D390-D396).
+
+### Added
+- Methods `rendering_types` and `renderings` in every app; `add_rendering` and `set_rendering_source` in creates
+  and computes (composes cannot place objects yet).
+- The hub makes pictures in the background (`RENDER_DELAY`, `Hub(renderings=...)`, `HostedDocument.stop_rendering`)
+  and sends the event `render_result` `{id, ok, diagnostics, message, unavailable}`.
+- Settings `render.tools` and `render.plugins_dir`; the start-up lines say which container types are on offer and why
+  one is not.
+- `export_office` draws rendered pictures as PNG with `rsvg-convert` when it is installed, and returns losses for
+  pptx too.
+- The help library includes `claudia_render` (topic `render.configure-tools`, English and German).
+
 ## [0.28.0] - 2026-11-13
 
 Help and function documentation in German (E13.8, D323).

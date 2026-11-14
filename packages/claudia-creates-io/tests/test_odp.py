@@ -988,3 +988,56 @@ def test_the_export_report_says_odf_cannot_keep_the_decorative_mark():
     losses = odp_export_losses(a_deck_with_picture(decorative=True))
     assert [(loss.kind, loss.count) for loss in losses] == [("decorative", 1)]
     assert odp_export_losses(a_deck_with_picture()) == ()
+
+
+# -- a rendered text container is a picture to a file (D394) ---------------------------------------------------------
+GLYPHS = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="10">'
+    b'<defs><symbol id="g"><path d="M0 0L5 5"/></symbol></defs><use xlink:href="#g"/></svg>'
+)
+
+
+def a_deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
+    from claudia_core import RenderedDefinition
+
+    deck = SlideModel.empty()
+    asset = decode_image(GLYPHS, checked_drawing=True)
+    deck.define_image(asset)
+    deck.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
+    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", rendered="r1", **changes)
+    deck.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
+    return deck
+
+
+def test_a_rendered_container_is_written_as_the_picture_made_from_its_text(tmp_path):
+    data = slides_to_odp(a_deck_with_container(description="a heading that says Hi"))
+    frame = a_picture_frame(data)
+    href = frame.find("draw:image", NS).get(f"{{{NS['xlink']}}}href")
+    assert href.endswith(".svg") and b"<use" in read_parts(data)[href]
+    assert frame.find("svg:desc", NS).text == "a heading that says Hi"
+    assert problems(data) == []
+
+
+def test_a_container_nothing_was_made_for_yet_is_left_out_and_the_report_says_so():
+    deck = a_deck_with_container(pictured=False)
+    assert etree.fromstring(read_parts(slides_to_odp(deck))["content.xml"]).find(".//draw:frame", NS) is None
+    assert [(loss.kind, loss.count) for loss in odp_export_losses(deck)] == [("rendering-pending", 1)]
+
+
+def test_without_a_rasteriser_the_svg_goes_in_and_the_report_says_other_programs_may_draw_it_wrongly():
+    assert [(loss.kind, loss.count) for loss in odp_export_losses(a_deck_with_container())] == [("svg-picture", 1)]
+
+
+def test_with_a_rasteriser_the_picture_is_a_png_every_program_draws_and_nothing_is_lost():
+    png = b"\x89PNG\r\n\x1a\nstand-in"
+    seen = []
+
+    def rasterise(svg: bytes, width: int, height: int) -> bytes:
+        seen.append((svg[:4], width, height))
+        return png
+
+    deck = a_deck_with_container()
+    data = slides_to_odp(deck, rasterise=rasterise)
+    href = a_picture_frame(data).find("draw:image", NS).get(f"{{{NS['xlink']}}}href")
+    assert href.endswith(".png") and read_parts(data)[href] == png and seen == [(b"<svg", 300, 100)]
+    assert odp_export_losses(deck, rasterised=True) == () and problems(data) == []

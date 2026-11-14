@@ -144,12 +144,14 @@ from .objects import (
     Anchor,
     DefineDiagram,
     DefineImage,
+    DefineRendering,
     DefineShape,
     DescribeObject,
     DiagramDefinition,
     DiagramsChanged,
     ForgetDiagram,
     ForgetImage,
+    ForgetRendering,
     ForgetShape,
     ImagesChanged,
     MoveObject,
@@ -158,6 +160,7 @@ from .objects import (
     ObjectsChanged,
     ObjectSet,
     RemoveObject,
+    RenderingsChanged,
     ResizeObject,
     RotateObject,
     SetObjectStyle,
@@ -167,6 +170,7 @@ from .objects import (
     SetText,
     ShapesChanged,
     UpdateDiagram,
+    UpdateRendering,
     VisualObject,
     paragraph_for,
 )
@@ -203,6 +207,7 @@ from .paragraphs import (
 )
 from .presence import Hold, Presence
 from .region import Region, transform
+from .renderings import MAX_RENDERING_SOURCE, RenderedDefinition
 from .replay import replay
 from .revision import MAIN, Branch, Revision
 from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
@@ -257,6 +262,7 @@ __all__ = [
     "decode_image",
     "DefineDiagram",
     "DefineImage",
+    "DefineRendering",
     "DefineShape",
     "DescribeObject",
     "delete_runs",
@@ -280,6 +286,7 @@ __all__ = [
     "FontRequirement",
     "ForgetDiagram",
     "ForgetImage",
+    "ForgetRendering",
     "ForgetShape",
     "FORMAT",
     "format_css",
@@ -308,6 +315,7 @@ __all__ = [
     "PageSetupError",
     "PAPERS",
     "MAX_ROLES",
+    "MAX_RENDERING_SOURCE",
     "MAX_SELECTION",
     "MemoryStore",
     "MIN_OBJECT_SIZE",
@@ -341,6 +349,8 @@ __all__ = [
     "Region",
     "RegionHeld",
     "RemoveObject",
+    "RenderedDefinition",
+    "RenderingsChanged",
     "RemoveStyle",
     "RenameStyle",
     "ReplacePalette",
@@ -393,6 +403,7 @@ __all__ = [
     "UndoRefused",
     "UnknownCommand",
     "UpdateDiagram",
+    "UpdateRendering",
     "validate_css",
     "VisualObject",
 ]

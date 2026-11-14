@@ -33,7 +33,7 @@ export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
 /** What an object is and how it looks: the same fields in all three apps. */
 export interface ObjectBody {
   id: string
-  kind: 'text' | 'shape' | 'image' | 'diagram'
+  kind: 'text' | 'shape' | 'image' | 'diagram' | 'rendered'
   w: number
   h: number
   /** The id of a style in the document's style book: the object's own `fill`, `stroke` and `stroke-width`
@@ -48,6 +48,9 @@ export interface ObjectBody {
   /** The id of a chart definition this object shows (E6.6, `lib/charts.ts`'s `ChartSpec`), or `null` for every
    * other kind. A floating object keeps no fixed aspect for a diagram, unlike a shape or an image. */
   diagram: string | null
+  /** The id of the rendered text definition this object shows (D390, `renderings` on the wire), or `null` for every
+   * other kind. Its picture is the object's `image`, or the definition's own. */
+  rendered: string | null
   /** Whole degrees clockwise. Persisted and validated by the model; no client surface yet. */
   rotation: number
   /** Whether this object holds to the grid (E10.15, D214): the document's own state, set with `setSnap`. The

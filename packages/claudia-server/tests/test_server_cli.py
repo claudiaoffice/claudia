@@ -434,3 +434,32 @@ def test_an_operator_access_secret_overrides_the_saved_one_without_replacing_it(
 def _write(path, text):
     path.write_text(text)
     return str(path)
+
+
+# -- rendered containers (D395) ----------------------------------------------------------------------------------
+def test_the_server_offers_the_three_built_in_container_types_and_says_so_at_start_up(tmp_path):
+    prepared = plan(tmp_path=tmp_path)
+    assert any(line.startswith("rendered containers: latex, mermaid, typst") for line in prepared.banner)
+
+
+def test_a_manifest_in_the_plugins_folder_is_offered_and_a_bad_one_is_named_in_the_banner(tmp_path):
+    import json
+
+    folder = tmp_path / "plugins"
+    folder.mkdir()
+    (folder / "pikchr.json").write_text(
+        json.dumps(
+            {
+                "api": 1,
+                "type": "pikchr",
+                "version": "1.0",
+                "title": "Pikchr",
+                "requires": [{"tool": "pikchr"}],
+                "cli": {"argv": ["${tool.pikchr}", "${input}"], "output": "stdout"},
+            }
+        )
+    )
+    (folder / "broken.json").write_text("{nope")
+    prepared = plan(tmp_path=tmp_path)
+    banner = "\n".join(prepared.banner)
+    assert "pikchr" in banner and "not used, plugins/broken.json" in banner

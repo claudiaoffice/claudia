@@ -1,0 +1,267 @@
+{
+ "version": "0.1.0",
+ "API_VERSION": {
+  "value": "1"
+ },
+ "CliPlugin": {
+  "class": [
+   "Plugin"
+  ],
+  "init": "(manifest: 'Manifest', workdir: 'str | Path') -> 'None'",
+  "methods": {
+   "render": "(self, request: 'RenderRequest', tools: 'Mapping[str, ResolvedTool]', limits: 'Limits') -> 'RenderResult'"
+  },
+  "properties": []
+ },
+ "CliSpec": {
+  "class": [
+   "object"
+  ],
+  "init": "(argv: 'tuple[str, ...]', output: 'str', input: 'str' = 'input.txt', env: 'Mapping[str, str]' = <factory>, files: 'Mapping[str, Any]' = <factory>, diagnostics: 'str' = 'plain', prefix: 'str' = '', suffix: 'str' = '') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "DIAGNOSTIC_READERS": {
+  "value": "('plain', 'typst-short', 'mermaid-parse')"
+ },
+ "Diagnostic": {
+  "class": [
+   "object"
+  ],
+  "init": "(severity: 'str', message: 'str', line: 'int | None' = None, column: 'int | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Diagnostic'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "EditorHints": {
+  "class": [
+   "object"
+  ],
+  "init": "(syntax: 'str' = '', example: 'str' = '', ai_hint: 'str' = '') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Forbidden": {
+  "class": [
+   "object"
+  ],
+  "init": "(pattern: 'str', message: 'str') -> None",
+  "methods": {
+   "matches": "(self, text: 'str') -> 're.Match[str] | None'"
+  },
+  "properties": []
+ },
+ "HELP_TOPIC": {
+  "value": "'render.configure-tools'"
+ },
+ "LatexPlugin": {
+  "class": [
+   "Plugin"
+  ],
+  "init": "(manifest: 'Manifest', catalogue: 'Catalogue', directory: 'str | Path') -> 'None'",
+  "methods": {
+   "render": "(self, request: 'RenderRequest', tools: 'Mapping[str, ResolvedTool]', limits: 'Limits') -> 'RenderResult'"
+  },
+  "properties": []
+ },
+ "LimitSpec": {
+  "class": [
+   "object"
+  ],
+  "init": "(seconds: 'float' = 20.0, memory_mb: 'int' = 2048, output_mb: 'int' = 8, address_space: 'bool' = True) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "LoadReport": {
+  "class": [
+   "object"
+  ],
+  "init": "(file: 'str', error: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Manifest": {
+  "class": [
+   "object"
+  ],
+  "init": "(api: 'int', type: 'str', version: 'str', title: 'str', tier: 'str' = 'static', requires: 'tuple[ToolRequirement, ...]' = (), params: 'tuple[ParamSpec, ...]' = (), cli: 'CliSpec | None' = None, adapter: 'str | None' = None, svg_elements: 'frozenset[str]' = frozenset(), limits: 'LimitSpec' = <factory>, editor: 'EditorHints' = <factory>, max_source_chars: 'int' = 200000, forbid: 'tuple[Forbidden, ...]' = ()) -> None",
+  "methods": {
+   "check_params": "(self, given: 'Mapping[str, object]') -> 'dict[str, object]'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ManifestError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "ParamSpec": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', type: 'str', default: 'object', choices: 'tuple[object, ...] | None' = None, minimum: 'float | None' = None, maximum: 'float | None' = None) -> None",
+  "methods": {
+   "check": "(self, value: 'object') -> 'object'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Plugin": {
+  "class": [
+   "ABC"
+  ],
+  "init": "()",
+  "methods": {
+   "render": "(self, request: 'RenderRequest', tools: 'Mapping[str, ResolvedTool]', limits: 'Limits') -> 'RenderResult'"
+  },
+  "properties": []
+ },
+ "PluginRegistry": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "get": "(self, kind: 'str') -> 'Plugin'",
+   "load_directory": "(self, folder: 'str | Path', workdir: 'str | Path') -> 'tuple[LoadReport, ...]'",
+   "plugins": "(self) -> 'tuple[Plugin, ...]'",
+   "register": "(self, plugin: 'Plugin') -> 'None'"
+  },
+  "properties": []
+ },
+ "RenderFailed": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(message: 'str', diagnostics: 'tuple[Diagnostic, ...]' = ()) -> 'None'",
+  "methods": {},
+  "properties": []
+ },
+ "RenderPolicy": {
+  "class": [
+   "object"
+  ],
+  "init": "(max_seconds: 'float' = 60.0, max_memory_mb: 'int' = 4096, max_output_mb: 'int' = 32, concurrency: 'int' = 2) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "RenderRequest": {
+  "class": [
+   "object"
+  ],
+  "init": "(source: 'str', params: 'Mapping[str, object]') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "RenderResult": {
+  "class": [
+   "object"
+  ],
+  "init": "(svg: 'str', width: 'float', height: 'float', warnings: 'tuple[Diagnostic, ...]' = ()) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "RenderService": {
+  "class": [
+   "object"
+  ],
+  "init": "(plugins: 'PluginRegistry', tools: 'ToolRegistry', directory: 'str | Path', policy: 'RenderPolicy | None' = None) -> 'None'",
+  "methods": {
+   "describe_types": "(self) -> 'list[dict]'",
+   "render": "(self, kind: 'str', source: 'str', params: 'dict[str, object] | None' = None) -> 'Rendered'"
+  },
+  "properties": []
+ },
+ "Rendered": {
+  "class": [
+   "object"
+  ],
+  "init": "(svg: 'str', width: 'float', height: 'float', renderer: 'str', cached: 'bool' = False, warnings: 'tuple[Diagnostic, ...]' = ()) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ResolvedTool": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', program: 'Path', version: 'str', options: 'Mapping[str, Any]') -> None",
+  "methods": {},
+  "properties": [
+   "identity"
+  ]
+ },
+ "ToolEntry": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', path: 'str | None' = None, options: 'Mapping[str, Any]' = mappingproxy({})) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ToolRegistry": {
+  "class": [
+   "object"
+  ],
+  "init": "(settings: 'Mapping[str, object] | None' = None, *, version_args: 'Mapping[str, tuple[str, ...]]' = mappingproxy({'pdftocairo': ('-v',)})) -> 'None'",
+  "methods": {
+   "configured": "(self) -> 'tuple[ToolEntry, ...]'",
+   "forget": "(self) -> 'None'",
+   "resolve": "(self, requirement: 'ToolRequirement') -> 'ResolvedTool'",
+   "status": "(self, name: 'str') -> 'ToolStatus'"
+  },
+  "properties": []
+ },
+ "ToolRequirement": {
+  "class": [
+   "object"
+  ],
+  "init": "(tool: 'str', version_at_least: 'str | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ToolStatus": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', ok: 'bool', version: 'str', detail: 'str', hint: 'str' = '') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "ToolUnavailable": {
+  "class": [
+   "RuntimeError"
+  ],
+  "init": "(tool: 'str', message: 'str') -> 'None'",
+  "methods": {},
+  "properties": []
+ },
+ "UnknownType": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "builtin_registry": {
+  "function": "(catalogue: 'Catalogue', directory: 'str | Path') -> 'PluginRegistry'"
+ },
+ "default_alt": {
+  "function": "(kind: 'str', source: 'str', svg: 'str') -> 'str'"
+ },
+ "parse_manifest": {
+  "function": "(data: 'Mapping[str, Any]') -> 'Manifest'"
+ },
+ "read_diagnostics": {
+  "function": "(reader: 'str', output: 'str', *, line_offset: 'int' = 0) -> 'tuple[Diagnostic, ...]'"
+ },
+ "svg_size": {
+  "function": "(svg: 'str') -> 'tuple[float, float]'"
+ }
+}

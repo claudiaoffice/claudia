@@ -59,6 +59,7 @@ from claudia_odf_io import (
 from claudia_opc_io import read_parts, write_parts
 
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
+from ._raster import Rasterise
 from ._styling import colour_of, look, page_colour, points_of
 from .pptx import UnsupportedEdit
 
@@ -733,6 +734,8 @@ class _Writer:
     cm_per_unit: tuple[float, float]
     pt_per_unit: float
     pictures: dict[str, str] = field(default_factory=dict)  # asset id -> name in the package
+    rasterise: Rasterise | None = None  # draws an SVG as a PNG for the programs that cannot (see ``_raster``)
+    rasters: dict[str, bytes] = field(default_factory=dict)  # name in the package -> a PNG drawn by ``rasterise``
     losses: LossLog = field(default_factory=LossLog)
 
     def object(self, obj: VisualObject) -> etree._Element | None:
@@ -748,7 +751,7 @@ class _Writer:
         text = body.paragraph.text if body.paragraph is not None else ""
         words_css = look(self.model, body.paragraph.style) if body.paragraph is not None else {}
         words = self.looks.paragraph(words_css, over, self.pt_per_unit)
-        if body.kind == "image":
+        if body.kind in ("image", "rendered"):
             return self._picture(body, placing)
         if body.kind == "text":
             graphic = self.looks.graphic({}, over, self.pt_per_unit)
@@ -813,14 +816,20 @@ class _Writer:
         return paragraphs
 
     def _picture(self, body: ObjectBody, placing: dict[str, str]) -> etree._Element | None:
-        asset = self.model.images.get(body.image) if body.image else None
-        if asset is None:  # pragma: no cover - the model refuses an image object whose asset it does not hold
-            self.losses.add("image-missing")
+        picture = self.model.picture_of(body)
+        asset = self.model.images.get(picture) if picture else None
+        if asset is None:  # an image object's asset is always held (the model refuses otherwise)
+            self.losses.add("rendering-pending" if body.kind == "rendered" else "image-missing")
             return None
-        href = self.pictures.setdefault(
-            asset.id,
-            f"Pictures/{re.sub(r'[^A-Za-z0-9_-]', '_', asset.id)}.{_EXTENSION.get(asset.format, asset.format)}",
-        )
+        if asset.format == "svg" and self.rasterise is not None and body.kind == "rendered":
+            href = f"Pictures/{asset.id}-{round(body.w)}x{round(body.h)}.png"
+            if href not in self.rasters:
+                self.rasters[href] = self.rasterise(asset.data, round(body.w), round(body.h))
+        else:
+            href = self.pictures.setdefault(
+                asset.id,
+                f"Pictures/{re.sub(r'[^A-Za-z0-9_-]', '_', asset.id)}.{_EXTENSION.get(asset.format, asset.format)}",
+            )
         frame = _el("draw", "frame", placing)
         image = etree.SubElement(frame, _q("draw", "image"))
         for name, value in (("href", href), ("type", "simple"), ("show", "embed"), ("actuate", "onLoad")):
@@ -831,6 +840,7 @@ class _Writer:
 
 
 _EXTENSION = {"jpeg": "jpg"}
+_MEDIA_TYPE = {"svg": "image/svg+xml"}
 #: Where the notes of a slide are on its notes page, as LibreOffice puts them.
 _NOTES_FRAME = {
     "presentation:class": "notes",
@@ -856,15 +866,16 @@ def _styles_part() -> bytes:
     ).encode()
 
 
-def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None) -> bytes:
+def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, rasterise: Rasterise | None = None) -> bytes:
     """``model`` as odp bytes: a page per slide and, on it, an element per object from the bottom up, so that the last
     one is in front, as in the app. A text box is a frame with a text box, the three shapes are what they are, an image
     is a picture whose own bytes are in the package. What a style says (fill, line, size, colour) is written as an
-    automatic style in values the file can hold. ``info`` is the metadata (D411). Anything the file cannot hold is in
-    :func:`odp_export_losses`."""
+    automatic style in values the file can hold. A rendered text container is the picture last made from its text: with
+    ``rasterise`` (see ``_raster``) a PNG every program draws, without it the SVG itself. ``info`` is the metadata
+    (D411). Anything the file cannot hold is in :func:`odp_export_losses`."""
     cm_per_unit = (_SLIDE_CM[0] / SLIDE_WIDTH, _SLIDE_CM[1] / SLIDE_HEIGHT)
     pt_per_unit = _SLIDE_CM[1] / _CM_PER_INCH * 72 / SLIDE_HEIGHT
-    writer = _Writer(model, _Looks(set()), cm_per_unit, pt_per_unit)
+    writer = _Writer(model, _Looks(set()), cm_per_unit, pt_per_unit, rasterise=rasterise)
     root = _el("office", "document-content", {"office:version": "1.3"})
     for name in ("scripts", "font-face-decls"):
         etree.SubElement(root, _q("office", name))
@@ -883,18 +894,25 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None) -> byt
     automatic.extend(writer.looks.elements)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
     extra = {
-        name: (model.images[asset_id].data, f"image/{model.images[asset_id].format}")
+        name: (
+            model.images[asset_id].data,
+            _MEDIA_TYPE.get(model.images[asset_id].format, f"image/{model.images[asset_id].format}"),
+        )
         for asset_id, name in writer.pictures.items()
     }
+    extra.update({name: (png, "image/png") for name, png in writer.rasters.items()})
     return new_package(
         "presentation", content.encode(), _styles_part(), meta=new_meta(info or DocumentInfo()), extra=extra
     )
 
 
-def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
+def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
     """What :func:`slides_to_odp` cannot put into the file for ``model``, each as a code with how many: ``"authorship"``
     (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle), an
-    ``"image-missing"`` (an image the document has no picture for) and ``"decorative"`` (an object marked as
+    ``"image-missing"`` (an image the document has no picture for), ``"rendering-pending"`` (a rendered text container
+    nothing has been drawn for yet: it is left out, and says so here), ``"svg-picture"`` (a rendered container
+    written as the SVG itself, because nothing could draw it as a PNG: programs other than PowerPoint may leave out
+    colours or text of a diagram; none with ``rasterised``) and ``"decorative"`` (an object marked as
     decoration: ODF 1.3 has no attribute for it, so a reader of the file sees an object nobody described); for notes
     ``"notes-link"``, ``"notes-image"``, ``"notes-code"`` and ``"notes-quote"`` (how many slides use what the file shows
     only as plain words), and ``"planned-time"`` (how many slides have a planned time, which an odp has no place for,
@@ -923,6 +941,21 @@ def odp_export_losses(model: SlideModel) -> tuple[Loss, ...]:
             losses.add("diagram")
         elif obj.body.kind == "image" and obj.body.image not in model.images:
             losses.add("image-missing")
+    pending = sum(
+        1 for obj in model.objects.values() if obj.body.kind == "rendered" and model.picture_of(obj.body) is None
+    )
+    if pending:
+        losses.add("rendering-pending", count=pending)
+    if not rasterised:
+        vector = sum(
+            1
+            for obj in model.objects.values()
+            if obj.body.kind == "rendered"
+            and (a := model.images.get(model.picture_of(obj.body) or ""))
+            and a.format == "svg"
+        )
+        if vector:
+            losses.add("svg-picture", count=vector)
     return losses.result()
 
 

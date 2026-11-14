@@ -1,0 +1,40 @@
+{
+  "api": 1,
+  "type": "mermaid",
+  "version": "1.0.0",
+  "title": "Mermaid",
+  "tier": "static",
+  "requires": [{"tool": "mmdc", "version_at_least": "10.0"}],
+  "params": [
+    {"name": "theme", "type": "string", "default": "default", "choices": ["default", "neutral", "forest", "dark", "base"]}
+  ],
+  "cli": {
+    "argv": [
+      "${tool.mmdc}", "--input", "${input}", "--output", "${output}", "--configFile", "mermaid.json",
+      "--puppeteerConfigFile", "puppeteer.json", "--backgroundColor", "transparent", "--quiet"
+    ],
+    "input": "input.mmd",
+    "output": "output.svg",
+    "diagnostics": "mermaid-parse",
+    "files": {
+      "mermaid.json": {
+        "theme": "${param.theme}",
+        "securityLevel": "strict",
+        "htmlLabels": false,
+        "flowchart": {"htmlLabels": false}
+      },
+      "puppeteer.json": {
+        "executablePath": "${tool.mmdc.chrome?}",
+        "args": "${tool.mmdc.browser_args?}"
+      }
+    }
+  },
+  "forbid": [],
+  "svg_elements": ["text", "tspan", "marker", "style", "filter", "feDropShadow", "feGaussianBlur", "feOffset", "feMerge", "feMergeNode", "feFlood", "feComposite", "switch"],
+  "limits": {"seconds": 30, "memory_mb": 2048, "output_mb": 8, "address_space": false},
+  "editor": {
+    "syntax": "mermaid",
+    "example": "flowchart LR\n  Idea --> Draft --> Review --> Done\n",
+    "ai_hint": "Mermaid diagram text: start with the diagram type (flowchart LR, sequenceDiagram, gantt, classDiagram, stateDiagram-v2, erDiagram, pie, mindmap). Labels are plain text; no HTML and no click handlers."
+  }
+}

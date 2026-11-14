@@ -217,7 +217,7 @@ def _package_help_folders() -> list[Path]:
     from importlib import resources
 
     found = []
-    for name in ("claudia_typeset", "claudia_computes", "claudia_composes", "claudia_creates"):
+    for name in ("claudia_typeset", "claudia_render", "claudia_computes", "claudia_composes", "claudia_creates"):
         try:
             folder = resources.files(name) / "help"
         except ModuleNotFoundError:

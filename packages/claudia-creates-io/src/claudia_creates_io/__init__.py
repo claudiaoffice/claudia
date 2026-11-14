@@ -11,11 +11,20 @@ pptx   slides_to_pptx, pptx_to_slides, apply_edits_to_pptx, UnsupportedEdit, add
 odp    slides_to_odp, odp_to_slides, apply_edits_to_odp, odp_import_losses, odp_export_losses (D412)
 """
 
+from ._raster import Rasterise
 from ._version import __version__
 from .odp import apply_edits_to_odp, odp_export_losses, odp_import_losses, odp_to_slides, slides_to_odp
-from .pptx import UnsupportedEdit, add_transition, apply_edits_to_pptx, pptx_to_slides, slides_to_pptx
+from .pptx import (
+    UnsupportedEdit,
+    add_transition,
+    apply_edits_to_pptx,
+    pptx_export_losses,
+    pptx_to_slides,
+    slides_to_pptx,
+)
 
 __all__ = [
+    "Rasterise",
     "__version__",
     "UnsupportedEdit",
     "add_transition",
@@ -24,6 +33,7 @@ __all__ = [
     "odp_export_losses",
     "odp_import_losses",
     "odp_to_slides",
+    "pptx_export_losses",
     "pptx_to_slides",
     "slides_to_odp",
     "slides_to_pptx",

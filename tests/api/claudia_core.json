@@ -1,5 +1,5 @@
 {
- "version": "0.20.0",
+ "version": "0.21.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -360,6 +360,23 @@
    "summary"
   ]
  },
+ "DefineRendering": {
+  "class": [
+   "Command"
+  ],
+  "init": "(definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineRendering'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "DefineShape": {
   "class": [
    "Command"
@@ -610,6 +627,23 @@
    "summary"
   ]
  },
+ "ForgetRendering": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetRendering'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "ForgetShape": {
   "class": [
    "Command"
@@ -839,6 +873,9 @@
  "MAX_PARAGRAPH_TEXT": {
   "value": "20000"
  },
+ "MAX_RENDERING_SOURCE": {
+  "value": "200000"
+ },
  "MAX_ROLES": {
   "value": "64"
  },
@@ -902,7 +939,7 @@
   ]
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram')"
+  "value": "('text', 'shape', 'image', 'diagram', 'rendered')"
  },
  "OUTLINE_FACET": {
   "value": "<Facet>"
@@ -911,7 +948,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False) -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
@@ -932,12 +969,14 @@
    "containers": "(self) -> 'Iterable[str]'",
    "define_diagram": "(self, definition: 'DiagramDefinition') -> 'None'",
    "define_image": "(self, image: 'ImageAsset') -> 'None'",
+   "define_rendering": "(self, definition: 'RenderedDefinition') -> 'None'",
    "define_shape": "(self, shape: 'ShapeDefinition') -> 'None'",
    "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
    "diagram_from_data": "(self, data: 'dict') -> 'DiagramDefinition'",
    "diagrams_to_data": "(self) -> 'list[dict]'",
    "forget_diagram": "(self, diagram_id: 'str') -> 'DiagramDefinition'",
    "forget_image": "(self, image_id: 'str') -> 'ImageAsset'",
+   "forget_rendering": "(self, rendering_id: 'str') -> 'RenderedDefinition'",
    "forget_shape": "(self, shape_id: 'str') -> 'ShapeDefinition'",
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
    "images_to_data": "(self) -> 'list[dict]'",
@@ -946,15 +985,19 @@
    "objects_on": "(self, container: 'str') -> 'list[VisualObject[A]]'",
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
+   "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
+   "renderings_to_data": "(self) -> 'list[dict]'",
    "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
    "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
-   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = ()) -> 'None'",
+   "replace_rendering": "(self, definition: 'RenderedDefinition') -> 'RenderedDefinition'",
+   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = ()) -> 'None'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
    "shapes_to_data": "(self) -> 'list[dict]'",
    "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
+   "users_of_rendering": "(self, rendering_id: 'str') -> 'list[str]'",
    "users_of_shape": "(self, shape_id: 'str') -> 'list[str]'"
   },
   "properties": []
@@ -1234,6 +1277,29 @@
    "label",
    "summary"
   ]
+ },
+ "RenderedDefinition": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', type: 'str', source: 'str', params: 'Mapping[str, Scalar]' = <factory>, image: 'str | None' = None, renderer: 'str' = '') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'RenderedDefinition'",
+   "redacted": "(self) -> 'RenderedDefinition'",
+   "to_data": "(self) -> 'dict'",
+   "with_picture": "(self, image: 'str | None', renderer: 'str') -> 'RenderedDefinition'"
+  },
+  "properties": []
+ },
+ "RenderingsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(rendering_id: 'str', definition: 'RenderedDefinition | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "ReplacePalette": {
   "class": [
@@ -1729,6 +1795,23 @@
    "summary"
   ]
  },
+ "UpdateRendering": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateRendering'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "VisualObject": {
   "class": [
    "Generic"
@@ -1758,7 +1841,7 @@
   "function": "(one: 'str', other: 'str') -> 'float'"
  },
  "decode_image": {
-  "function": "(data: 'bytes') -> 'ImageAsset'"
+  "function": "(data: 'bytes', *, checked_drawing: 'bool' = False) -> 'ImageAsset'"
  },
  "delete_runs": {
   "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"

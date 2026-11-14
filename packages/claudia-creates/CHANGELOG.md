@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.10.0] - 2026-11-14
+
+### Added
+- Rendered text containers on slides (D390): `rendered` among the object kinds, definitions and their commands in
+  the model, `state_schema` 10 (9 on the `containers` branch; renumbered at the merge, after the speaker notes).
+
 ## [0.9.0] - 2026-11-13
 
 Describing objects (BITV 1.1.1), speaker notes and planned times (E10.2, D342, D343). State schema 7 → 8 → 9.

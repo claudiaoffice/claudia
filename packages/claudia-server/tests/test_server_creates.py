@@ -545,9 +545,9 @@ def test_export_office_returns_an_odp_that_round_trips_and_says_who_made_it_when
     assert {"kind": "authorship", "detail": "", "count": 1} in answer["losses"]
 
 
-def test_export_office_to_pptx_has_no_loss_list(deck):
+def test_export_office_to_pptx_says_what_it_could_not_keep_and_has_nothing_to_say_for_a_plain_deck(deck):
     add_text(deck, text="Hello there")
-    assert "losses" not in call(deck, "export_office", {"format": "pptx"})
+    assert call(deck, "export_office", {"format": "pptx"})["losses"] == []
 
 
 def test_export_office_rejects_an_unknown_format(deck):

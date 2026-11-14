@@ -22,6 +22,7 @@ members = [
     "claudia-monorepo",
     "claudia-odf-io",
     "claudia-opc-io",
+    "claudia-render",
     "claudia-search",
     "claudia-server",
     "claudia-test-documents",
@@ -500,6 +501,7 @@ dependencies = [
     { name = "claudia-fonts" },
     { name = "claudia-odf-io" },
     { name = "claudia-opc-io" },
+    { name = "claudia-render" },
     { name = "claudia-search" },
     { name = "claudia-server" },
     { name = "claudia-test-documents" },
@@ -537,6 +539,7 @@ requires-dist = [
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
     { name = "claudia-odf-io", editable = "packages/claudia-odf-io" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
+    { name = "claudia-render", editable = "packages/claudia-render" },
     { name = "claudia-search", editable = "packages/claudia-search" },
     { name = "claudia-server", editable = "packages/claudia-server" },
     { name = "claudia-test-documents", editable = "packages/claudia-test-documents" },
@@ -578,6 +581,20 @@ name = "claudia-opc-io"
 source = { editable = "packages/claudia-opc-io" }
 
 [[package]]
+name = "claudia-render"
+source = { editable = "packages/claudia-render" }
+dependencies = [
+    { name = "claudia-fonts" },
+    { name = "claudia-typeset" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "claudia-fonts", editable = "packages/claudia-fonts" },
+    { name = "claudia-typeset", editable = "packages/claudia-typeset" },
+]
+
+[[package]]
 name = "claudia-search"
 source = { editable = "packages/claudia-search" }
 dependencies = [
@@ -601,6 +618,7 @@ dependencies = [
     { name = "claudia-creates" },
     { name = "claudia-creates-io" },
     { name = "claudia-fonts" },
+    { name = "claudia-render" },
     { name = "claudia-search" },
     { name = "claudia-typeset" },
     { name = "cryptography" },
@@ -627,6 +645,7 @@ requires-dist = [
     { name = "claudia-creates", editable = "packages/claudia-creates" },
     { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
+    { name = "claudia-render", editable = "packages/claudia-render" },
     { name = "claudia-search", editable = "packages/claudia-search" },
     { name = "claudia-typeset", editable = "packages/claudia-typeset" },
     { name = "cryptography", specifier = ">=44" },

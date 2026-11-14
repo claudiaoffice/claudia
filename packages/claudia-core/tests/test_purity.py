@@ -83,6 +83,7 @@ def test_kernel_has_no_third_party_imports():
         "re",
         "struct",  # assets.py: reading JPEG/BMP/GIF binary headers
         "time",
+        "types",  # renderings.py: an immutable view of a rendering's settings
         "typing",
         "unicodedata",  # pure tables, used to turn a style name into an id
         "xml",  # assets.py: sanitizing an imported SVG with the standard library's own parser, no third party

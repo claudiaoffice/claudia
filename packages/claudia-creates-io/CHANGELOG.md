@@ -28,6 +28,18 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `odp_to_slides` likewise: an imported text box's box is `plain-box` and its words `body-text`, an imported shape's
   outline `plain-shape` and its words `shape-label` (D310).
 
+## [0.3.0] - 2026-11-13
+
+### Added
+- `Rasterise`: a function that draws an SVG as a PNG of a given size.
+- `slides_to_odp(..., rasterise=...)` and `slides_to_pptx(..., rasterise=...)`: a rendered text container is written
+  as a picture; with a rasteriser as a PNG every program draws (D394).
+- `pptx_export_losses`, and `odp_export_losses(..., rasterised=...)`: `rendering-pending`, `svg-picture` and
+  `svg-fallback`.
+
+### Changed
+- A pptx with an SVG picture no longer fails: it gets an svgBlip with a blank PNG as the fallback.
+
 ## [0.2.0] - 2026-11-11
 
 OpenDocument presentations, with maximum preservation from the start (D401, D412).

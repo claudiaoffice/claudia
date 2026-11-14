@@ -21,6 +21,7 @@ import contextlib
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Any
 
 from claudia_core.clock import utc_now
 
@@ -62,6 +63,18 @@ class TypesetSettings:
 
 
 @dataclass
+class RenderSettings:
+    """The tools behind rendered containers (D392): a logical name (``typst``, ``mmdc``) to a program, given as a path
+    or as a mapping with a ``path`` and the options of that tool (``mmdc`` takes the ``chrome`` to drive and
+    ``browser_args``). A tool not named here is looked for on the PATH. ``plugins_dir`` is a folder of manifests (data
+    only) that add container types; ``None`` means ``STATE_DIR/plugins``. The LaTeX programs are not here: they are
+    ``TypesetSettings``."""
+
+    tools: dict[str, Any] = field(default_factory=dict)
+    plugins_dir: str | None = None
+
+
+@dataclass
 class ServerSettings:
     """The mutable part of a server's configuration, plus who last changed each part of it. Nothing here is a
     document, and nothing here is kept per document."""
@@ -70,6 +83,7 @@ class ServerSettings:
     access_secret: str | None = None
     ai: AiSettings = field(default_factory=AiSettings)
     typeset: TypesetSettings = field(default_factory=TypesetSettings)
+    render: RenderSettings = field(default_factory=RenderSettings)
     changed: dict[str, Changed] = field(default_factory=dict)
 
     def note_changed(self, key: str, by: str) -> None:
@@ -83,6 +97,7 @@ class ServerSettings:
             "access_secret_set": self.access_secret is not None,
             "ai": asdict(self.ai),
             "typeset": asdict(self.typeset),
+            "render": asdict(self.render),
             "changed": {key: asdict(value) for key, value in self.changed.items()},
         }
 
@@ -94,6 +109,7 @@ class ServerSettings:
             "access_secret": self.access_secret,
             "ai": asdict(self.ai),
             "typeset": asdict(self.typeset),
+            "render": asdict(self.render),
             "changed": {key: asdict(value) for key, value in self.changed.items()},
         }
 
@@ -105,6 +121,7 @@ class ServerSettings:
             access_secret=data.get("access_secret"),
             ai=AiSettings(**data.get("ai", {})),
             typeset=TypesetSettings(**data.get("typeset", {})),
+            render=RenderSettings(**data.get("render", {})),
         )
         settings.changed = {key: Changed(**value) for key, value in data.get("changed", {}).items()}
         return settings

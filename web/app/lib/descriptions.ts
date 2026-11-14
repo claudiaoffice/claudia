@@ -11,7 +11,7 @@ export const MAX_DESCRIPTION = 300
 
 /** The part of an object these functions read (an object of any app has it). */
 export interface Describable {
-  kind: 'text' | 'shape' | 'image' | 'diagram'
+  kind: 'text' | 'shape' | 'image' | 'diagram' | 'rendered'
   description: string
   decorative: boolean
   imported: Pick<ImageImport, 'alt'> | null
@@ -35,11 +35,13 @@ export function isDescribed(o: Describable): boolean {
 /** What a screen reader says for an object: its kind, then its description, or its words if it has no description;
  * a decoration says so, and a picture or a chart that is not described says that, instead of an empty name. */
 export function objectName(o: Describable, parts: { shape?: string; words?: string } = {}): string {
-  const kind = o.kind === 'image' ? t('Picture') : o.kind === 'diagram' ? t('Chart') : o.kind === 'text' ? t('Text box') : (parts.shape ?? t('Shape'))
+  // A rendered text container (D390) is shown as the picture its renderer drew: its source text is no name for it.
+  const picture = o.kind === 'image' || o.kind === 'rendered'
+  const kind = picture ? t('Picture') : o.kind === 'diagram' ? t('Chart') : o.kind === 'text' ? t('Text box') : (parts.shape ?? t('Shape'))
   if (o.decorative) return t('{kind} (decorative)', { kind })
-  const said = pictureAlt(o).trim() || (o.kind === 'image' || o.kind === 'diagram' ? '' : (parts.words ?? '').trim())
+  const said = pictureAlt(o).trim() || (picture || o.kind === 'diagram' ? '' : (parts.words ?? '').trim())
   if (said) return t('{kind}: {words}', { kind, words: said })
-  return o.kind === 'image' || o.kind === 'diagram' ? t('{kind} (no description)', { kind }) : kind
+  return picture || o.kind === 'diagram' ? t('{kind} (no description)', { kind }) : kind
 }
 
 /** What is wrong with this description for an object of `kind`: a picture needs words or the decorative mark, any other

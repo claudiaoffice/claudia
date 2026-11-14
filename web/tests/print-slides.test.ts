@@ -218,6 +218,16 @@ describe('printing a presentation: its print source', () => {
     expect(doc).toMatchObject({ print: DEFAULT_PRINT, language: 'de' })
     session.close()
   })
+  it('prints a rendered text container as the picture it shows, and leaves out one nothing has drawn yet (D390)', async () => {
+    const rendered = (id: string, image: string | null) => ({ ...box(id, 's1'), kind: 'rendered', paragraph: null, rendered: 'r1', image })
+    const { session } = await opened({
+      ...PRINTING,
+      slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [rendered('drawn', PNG.id), rendered('pending', null)] : [] }),
+    })
+    const [first] = slideDocument(session).slides
+    expect(first!.objects.map((o) => [o.id, o.kind, o.image])).toEqual([['drawn', 'image', PNG.id]])
+    session.close()
+  })
   it('reads and changes the print setup through the session', async () => {
     const { link, session, state } = await opened(PRINTING)
     const source = slideSource(session)

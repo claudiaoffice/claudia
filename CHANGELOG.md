@@ -4,6 +4,23 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.21.0] - 2026-11-14
+
+Rendered text containers (D390-D395), the same in every app.
+
+### Added
+- The object kind `rendered` (in `OBJECT_KINDS`) and `ObjectBody.rendered`, the id of the definition it shows.
+- `RenderedDefinition` (text, type, settings, picture, renderer note) and `MAX_RENDERING_SOURCE`.
+- Commands `DefineRendering`, `UpdateRendering`, `ForgetRendering` and the event `RenderingsChanged`.
+- `ObjectModel` methods `define_rendering`, `replace_rendering`, `forget_rendering`, `users_of_rendering`,
+  `renderings_to_data` and `picture_of(body)`, which every drawing and export asks for the picture of an object.
+- `restore_objects(..., renderings=...)`.
+- `decode_image(data, *, checked_drawing=False)`: for a drawing a renderer made, `<use>` with local references is kept.
+
+### Changed
+- `AddObject` is schema 3; an upcaster gives older bodies `rendered: null`. The SVG sanitiser keeps the `xlink`
+  prefix, so that other programs follow the references of a typeset page.
+
 ## [0.20.0] - 2026-11-13
 
 What a new document starts with is nobody's undo step (UX-33).

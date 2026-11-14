@@ -28,6 +28,7 @@ Unused numbers in a closed block stay unused.
 | D340–D349 | presenter mode in creates: rights, frozen show, Markdown notes, planned times, keys, and the open points (E10.2; branch `presenter`; D340–D348 used) | 2026-11-13 | open |
 | D360–D369 | QA follow-up: UX consistency across clients: one key table, every menu entry everywhere, setup of a new document (branch `qa`; D360–D362 used; first given D340–D359, which `presenter` had too, renumbered at the merge) | 2026-11-13 | open |
 | D370–D389 | real-world documents: xlsx as Excel writes it today, slide templates, cell formats and number formats (branch `real-world-docs`; D370–D380 used; first given D340–D359, which `presenter` had too, renumbered at the merge) | 2026-11-13 | open |
+| D390–D399 | rendered text containers: object kind, plugin layer, tool registry, LaTeX, Mermaid, Typst (branch `containers`; D390–D396 used; first given D340–D359, which `presenter` had too, renumbered at the merge) | 2026-11-13 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D315 used) | 2026-11-10 | open |
 | D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D918 used) | 2026-11-12 | open |
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |

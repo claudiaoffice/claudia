@@ -37,6 +37,13 @@ the number formats). Search on claudia-search (SEC-18, CODE-18).
 ### Added (UX-33)
 - `WorkbookModel.setup_commands`: a new workbook starts with its first sheet, `s1` "Sheet1", made by the server as nobody's undo step (UX-33). The web client no longer adds it.
 
+## [0.6.0] - 2026-11-13
+
+### Added
+- Rendered text containers on sheets (D390): `rendered` among the object kinds (`OBJECT_KINDS`), definitions and
+  their commands in the model, `state_schema` 11 (10 on the `containers` branch; renumbered at the merge,
+  after the named number formats).
+
 ## [0.5.0] - 2026-11-13
 
 The function catalog can be said in another language (E13.8, D323); the package still carries no catalog. An outcome

@@ -264,7 +264,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 6: the text says which page it is printed on (D904)
     # 7: the text says which language it is written in (D915)
     # 8: paragraphs may be items of lists, which the text holds in a book of its own (E9.21)
-    state_schema: ClassVar[int] = 9  # 8: object bodies without a description
+    state_schema: ClassVar[int] = 10  # 8: object bodies without a description; 9: no rendered containers
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -325,6 +325,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
+            "renderings": self.renderings_to_data(),
             "last": dict(self._last),
         }
 
@@ -345,7 +346,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects
-            state.get("objects", ()), state.get("images", ()), state.get("shapes", ())
+            state.get("objects", ()), state.get("images", ()), state.get("shapes", ()), (), state.get("renderings", ())
         )
         model._last = dict(state.get("last", model._last))
         return model

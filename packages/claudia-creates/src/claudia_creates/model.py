@@ -119,7 +119,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 7: how it is printed, and its language (D917)
     # 8: object bodies carry a description (alternative text)
     # 9: speaker notes (Markdown, D342) and planned times (D343) of the slides
-    state_schema: ClassVar[int] = 9
+    # 10: rendered text containers (D390)
+    state_schema: ClassVar[int] = 10
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -167,6 +168,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
+            "renderings": self.renderings_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,
         }
@@ -184,7 +186,9 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         # schema 8 and earlier: no notes and no planned times
         model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.slides and v}
         model.times = {k: v for k, v in state.get("times", {}).items() if k in model.slides}
-        model.restore_objects(state["objects"], state["images"], state["shapes"])
+        model.restore_objects(
+            state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
+        )
         return model
 
     def region_from_data(self, data: dict) -> Region:

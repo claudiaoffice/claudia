@@ -16,12 +16,13 @@ import {
   type PaperSize,
   type SlideDocument,
   type SlideLayout,
+  type SlideObject as LayoutSlideObject,
 } from '@claudia/layout'
 import type { PrintAssets } from './assets'
 import { fromBase64, textDocument } from './document'
 import { DEFAULT_PAGE, DEFAULT_PRINT, describe, LAYOUTS, MARGINS, NO_MARGIN, SLIDE_PAPERS, TEXT_PAPERS, withLayout, withSlidePaper, type MarginChoice } from './setup'
 import type { PrintExtras, TextSession } from '../text-session'
-import type { SlideSession } from '../slide-session'
+import type { SlideObject, SlideSession } from '../slide-session'
 
 import { translate as t } from '../i18n'
 /** A picture the document holds, as the server sends it: `data` is base64. */
@@ -122,11 +123,17 @@ export function textSource(session: TextSession): PrintSource {
 }
 
 // ------------------------------------------------------------------------------ creates
+/** The objects of a slide as the layout library knows them. A rendered text container (D390) prints as the picture it
+ * shows; one nothing has drawn a picture for yet is left out, as the office exports leave it out. */
+function printable(objects: readonly SlideObject[]): LayoutSlideObject[] {
+  return objects.flatMap((o) => (o.kind !== 'rendered' ? [o as LayoutSlideObject] : o.image ? [{ ...o, kind: 'image' as const }] : []))
+}
+
 /** A presentation as the layout library reads it: the slides in order with their objects, and how it prints. */
 export function slideDocument(session: SlideSession): SlideDocument {
   const state = session.state
   return {
-    slides: state.slides.map((s) => ({ id: s.id, objects: session.objectsOn(s.id) })),
+    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id)) })),
     styles: Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })),
     shapes: Object.values(state.shapes),
     // an SVG picture is drawn from its text (D914); the others from their bytes

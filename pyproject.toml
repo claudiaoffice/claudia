@@ -3,7 +3,7 @@ name = "claudia-monorepo"
 version = "0.0.0"
 description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents", "claudia-search"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-render", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents", "claudia-search"]
 
 [tool.uv]
 package = false
@@ -22,6 +22,7 @@ claudia-client = { workspace = true }
 claudia-container = { workspace = true }
 claudia-fonts = { workspace = true }
 claudia-typeset = { workspace = true }
+claudia-render = { workspace = true }
 claudia-computes-io = { workspace = true }
 claudia-composes-io = { workspace = true }
 claudia-creates-io = { workspace = true }
@@ -73,14 +74,14 @@ ignore = [
 "vulture_whitelist.py" = ["B018"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents", "claudia_search"]
+known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_render", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents", "claudia_search"]
 
 [tool.mypy]
 python_version = "3.14"
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src", "packages/claudia-test-documents/src", "packages/claudia-search/src"]
+mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src", "packages/claudia-render/src", "packages/claudia-test-documents/src", "packages/claudia-search/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
@@ -143,4 +144,5 @@ release accepts minimatch 11."""
 "claudia-search" = 99
 "claudia-server" = 94
 "claudia-test-documents" = 89
+"claudia-render" = 90
 "claudia-typeset" = 87

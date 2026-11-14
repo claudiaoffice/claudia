@@ -3,6 +3,15 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-13
+
+### Added
+- `Limits.address_space` (default `True`): `False` leaves out the address-space limit, which Chromium-based tools
+  cannot run under (D396).
+- `NEVER_ALLOWED`, and `check_svg(svg, *, extra_elements=...)`: a plugin may name more elements of its drawings
+  (`<style>` rules are checked too); what can run code never is allowed (D393).
+- `resolve_program(..., hint=...)`: the hint at the end of the message when a program is not found.
+
 ## [0.2.0] - 2026-11-03
 
 Windows, and the person's own LaTeX (D90, E3.10): the typesetter works on the three systems, and it is told

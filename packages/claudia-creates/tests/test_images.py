@@ -87,8 +87,8 @@ def test_an_image_object_has_no_shape_and_a_shape_object_has_no_image(doc):
 
 
 def test_a_text_box_has_no_shape_or_image(doc):
-    # The message also names "diagram" now (E6.6): a text box carries none of the three (claudia_core.objects).
-    with pytest.raises(ValueError, match="no shape, image or diagram"):
+    # The message also names "diagram" (E6.6) and "rendering" (D390): a text box carries none of the four.
+    with pytest.raises(ValueError, match="no shape, image, diagram or rendering"):
         doc.execute(add(text_box(image="deadbeef" * 8)), author="ana")
 
 

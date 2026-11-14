@@ -26,6 +26,12 @@ Lists (E9.21). State schema 7 â†’ 8. Describing objects (BITV 1.1.1): schema 8 â
 ### Added (UX-33)
 - `TextModel.setup_commands`: a new text starts in the language of its maker's interface (D915), set by the server as nobody's undo step (UX-33). The web client no longer sets it.
 
+## [0.7.0] - 2026-11-13
+
+### Added
+- Rendered text containers in text documents (D390): definitions and their commands in the model, `state_schema`
+  10. There is no way to place one on the wire yet.
+
 ## [0.6.0] - 2026-11-13
 
 The page setup and the language are the kernel's (D917).

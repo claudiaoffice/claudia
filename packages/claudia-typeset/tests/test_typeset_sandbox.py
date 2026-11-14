@@ -222,3 +222,19 @@ async def test_directories_to_search_are_in_the_path_of_the_process(tmp_path):
 async def test_a_program_that_does_not_exist_is_reported_by_python_as_usual(tmp_path):
     with pytest.raises(FileNotFoundError):
         await run_sandboxed([str(tmp_path / "nowhere")], cwd=tmp_path, env={}, limits=Limits())
+
+
+@posix_only
+@runs_in_a_loop
+async def test_a_browser_based_tool_can_be_run_without_the_address_space_limit(tmp_path):
+    """V8 and Chromium reserve far more address space than they use: a limit of it stops them at once (D392)."""
+    reserve = "import mmap; m = mmap.mmap(-1, 1 << 30); print('reserved')"
+    limited = await run_sandboxed(python(reserve), cwd=tmp_path, env={}, limits=Limits(memory_mb=256, seconds=10))
+    assert limited.returncode != 0, "a gigabyte of address space is refused under a 256 MB limit"
+    free = Limits(memory_mb=256, seconds=10, address_space=False)
+    done = await run_sandboxed(python(reserve), cwd=tmp_path, env={}, limits=free)
+    assert done.returncode == 0 and "reserved" in done.output
+
+
+def test_the_address_space_limit_is_on_unless_asked_off():
+    assert Limits().address_space is True

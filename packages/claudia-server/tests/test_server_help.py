@@ -225,3 +225,12 @@ def test_the_shipped_topics_are_all_in_german():
     english = {topic.id for topic in library.search("")}
     assert english, "no topics shipped"
     assert {topic.id for topic in library.search("", language="de") if topic.language == "de"} == english
+
+
+def test_the_render_package_ships_its_tool_help_in_both_languages():
+    from claudia_render.tools import HELP_TOPIC
+
+    library = default_library()
+    assert library.get(HELP_TOPIC) is not None
+    assert library.get(HELP_TOPIC, "de") is not None
+    assert (HELP_TOPIC, "de") not in library.stale()
