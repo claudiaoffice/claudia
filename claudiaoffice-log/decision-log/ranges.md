@@ -35,6 +35,7 @@ Unused numbers in a closed block stay unused.
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D318 used) | 2026-11-10 | open |
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
 | D430–D449 | one server for all three apps: app modules, addresses, limits, idle exit, folder lock, isolation (branch `one-server`; D430–D448 used) | 2026-11-14 | open |
+| D450–D459 | search & replace in composes and creates: what is searched, shortcuts in a text, locks (E9.28, E10.19; branch `search`; D450–D452 used) | 2026-11-14 | open |
 
 ## Never to be used
 

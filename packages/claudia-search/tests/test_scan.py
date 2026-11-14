@@ -139,3 +139,51 @@ def test_a_plan_that_ran_out_of_time_says_so():
 def test_a_search_without_a_replacement_cannot_be_planned():
     with pytest.raises(SearchError):
         plan(texts(("body", "red")), search("red"))
+
+
+# ------------------------------------------------------------------------------------- what a change is made of
+def test_a_change_says_which_stretches_are_replaced_so_an_app_can_keep_the_rest_as_it_is():
+    made = plan(texts(("body", "red fox, red hen")), search("red", "blue"))
+    (change,) = made.changes
+    assert [(e.number, e.start, e.end, e.before, e.after) for e in change.edits] == [
+        (0, 0, 3, "red", "blue"),
+        (1, 9, 12, "red", "blue"),
+    ]
+    assert change.after == "blue fox, blue hen"
+
+
+def test_a_match_that_is_left_is_not_one_of_the_edits():
+    items = texts(("body", "red, red, red"))
+    made = plan(items, search("red", "blue"), leave=[(items[0].at, 1)])
+    assert [e.number for e in made.changes[0].edits] == [0, 2]
+    assert made.changes[0].after == "blue, red, blue"
+
+
+def test_the_edits_use_what_the_kept_parts_matched():
+    made = plan(
+        texts(("body", "€12")), Query.from_data({"mode": "pattern", "find": "€(\\d+)", "replace": "\\1 EUR"}).compile()
+    )
+    assert [(e.before, e.after) for e in made.changes[0].edits] == [("€12", "12 EUR")]
+
+
+# ------------------------------------------------------------------------- a match a person saw and that changed
+def test_a_match_left_alone_by_what_it_said_is_still_left_alone_when_the_text_is_as_it_was():
+    items = texts(("body", "red and red"))
+    made = plan(items, search("red", "blue"), leave=[(items[0].at, 1, "red")])
+    assert made.changes[0].after == "blue and red"
+    assert made.skipped == []
+
+
+def test_a_text_whose_matches_are_no_longer_what_a_person_saw_is_skipped_and_not_guessed_at():
+    """She left match 1 alone, which said "red". A colleague has typed since, so match 1 now says "hen": replacing
+    the others on the strength of numbers that moved would change what she did not mean to."""
+    items = texts(("body", "red, red hen"))
+    made = plan(items, search("red|hen", "x"), leave=[(items[0].at, 1, "red")])
+    assert made.changes == []
+    assert [(s.at, s.reason) for s in made.skipped] == [(items[0].at, "changed")]
+
+
+def test_a_match_that_is_not_there_any_more_counts_as_changed():
+    items = texts(("body", "red"))
+    made = plan(items, search("red", "blue"), leave=[(items[0].at, 3, "red")])
+    assert [s.reason for s in made.skipped] == ["changed"]

@@ -498,17 +498,11 @@ def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
     )
 
 
-def _search_block() -> tuple[Action, ...]:
-    """E5.15: the same entry, label and key in every app that searches (D281). Ctrl+H, which opens the panel with
-    Replace showing, is a second way in and has no menu entry of its own."""
-    return (
-        _page(
-            "edit.search-replace",
-            "Search & Replace…",
-            "Find text, formulas and values, and replace them",
-            accelerators=("<Primary>f",),
-        ),
-    )
+def _search_block(describe: str = "Find text, formulas and values, and replace them") -> tuple[Action, ...]:
+    """E5.15, E9.28, E10.19: the same entry, label and key in every app that searches (D281); only the tooltip says
+    what the app can look in. Ctrl+H, which opens the panel with Replace showing, is a second way in and has no menu
+    entry of its own."""
+    return (_page("edit.search-replace", "Search & Replace…", describe, accelerators=("<Primary>f",)),)
 
 
 def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = False) -> Menu:
@@ -735,6 +729,7 @@ def composes() -> Manifest:
         (
             _shared_edit_block(),
             _shared_clipboard_block(native=True),
+            _search_block("Find words, headings, remarks and what is said in objects, and replace them"),
             (
                 Submenu(
                     "Insert",
@@ -930,6 +925,7 @@ def creates() -> Manifest:
         (
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
+            _search_block("Find words, labels, speaker notes and descriptions, and replace them"),
             (
                 _page(
                     "edit.new-slide", "New Slide", "Add a new slide to the presentation", accelerators=("<Primary>m",)

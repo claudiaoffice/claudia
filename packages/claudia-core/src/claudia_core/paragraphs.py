@@ -184,3 +184,18 @@ class Paragraph:
             tuple(runs_from_data(data.get("runs", []))),
             None if item is None else ListItem.from_data(item),
         )
+
+
+def replace_spans(paragraph: Paragraph, edits: Iterable[tuple[int, int, str]], author: str | None) -> Paragraph:
+    """The paragraph with the stretches ``(start, end, text)`` replaced by their text, which ``author`` wrote.
+
+    Everything outside the stretches keeps its words, its runs and its style, so replacing a term does not make the
+    person who replaced it the author of the sentence around it. The stretches must not overlap; the order they are
+    given in does not matter."""
+    text, runs = paragraph.text, list(paragraph.runs)
+    for start, end, new in sorted(edits, reverse=True):  # from the back, so that the offsets before it still hold
+        runs = delete_runs(runs, start, end)
+        if new:
+            runs = insert_runs(runs, start, [Run(len(new), author)])
+        text = text[:start] + new + text[end:]
+    return paragraph.with_text(text, runs)

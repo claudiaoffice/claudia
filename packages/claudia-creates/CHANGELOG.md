@@ -3,6 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.11.0] - 2026-11-14
+
+Search and replace (E10.19).
+
+### Added
+- The Help topic `creates.searching-and-replacing`, in English and German (E10.19).
+- `claudia_creates.search` (not in `__all__`; the server's): the texts of a presentation for a search (`text` boxes,
+  shape `label`s, speaker `notes`, `description`s), the scope one slide or all, the part `word`, and
+  `plan_replacement` and `replace_command`: object texts keep the authors of what stays, notes are stored whole.
+  Depends on `claudia-search`.
+
 ## [0.10.0] - 2026-11-14
 
 ### Added

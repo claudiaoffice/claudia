@@ -965,7 +965,7 @@ def test_a_pattern_that_could_run_forever_stops_at_the_deadline_and_says_so(book
     the request stops at its deadline, keeps what it found before, and the server is free again."""
     import time
 
-    monkeypatch.setattr("claudia_server.computes_search.SEARCH_SECONDS", 0.3)
+    monkeypatch.setattr("claudia_server.search_methods.SEARCH_SECONDS", 0.3)
     budget_sheet(book)
     typed(book, "s1", [(9, 0, "a" * 200)])
     started = time.monotonic()
@@ -976,7 +976,7 @@ def test_a_pattern_that_could_run_forever_stops_at_the_deadline_and_says_so(book
 
 
 def test_a_preview_that_ran_out_of_time_says_so_and_a_replace_refuses(book, monkeypatch):
-    monkeypatch.setattr("claudia_server.computes_search.SEARCH_SECONDS", 0.3)
+    monkeypatch.setattr("claudia_server.search_methods.SEARCH_SECONDS", 0.3)
     budget_sheet(book)
     typed(book, "s1", [(9, 0, "a" * 200)])
     query = {"mode": "pattern", "find": "(?:a|aa)+!|€", "replace": ""}
@@ -1004,7 +1004,7 @@ def test_unknown_kinds_are_a_bad_request(book):
 
 def test_a_search_that_runs_out_of_time_says_so(book, monkeypatch):
     budget_sheet(book)
-    monkeypatch.setattr("claudia_server.computes_search.SEARCH_SECONDS", 0.0)
+    monkeypatch.setattr("claudia_server.search_methods.SEARCH_SECONDS", 0.0)
     found = search(book, text("€"))
     assert found["timed_out"] and found["matches"] == []
 

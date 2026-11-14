@@ -3,6 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.2.0] - 2026-11-14
+
+Search & replace in composes and creates (E9.28, E10.19): a replacement that keeps more than the characters.
+
+### Added
+- `CompiledSearch.edits` and `Edit`: what replacing changes in a text, one edit per match (its number, where it is,
+  what it says and what it becomes), and `apply_edits`. An app whose texts carry more than characters, such as who
+  wrote which part of a paragraph, makes these edits one by one instead of setting the whole text.
+- `Change.edits`: the edits that make the change (not part of the wire shape).
+- `plan(leave=...)` takes `(at, number, said)` as well: `said` is what the match said when the person saw it. A text
+  typed into since, whose match under that number now says something else, is skipped as `changed` instead of being
+  replaced on numbers that moved.
+
 ## [0.1.0] - 2026-11-13
 
 The search engine leaves the kernel and gets a clock (SEC-18, CODE-18, D287).

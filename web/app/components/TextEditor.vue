@@ -8,11 +8,12 @@ import type { Block, Pos } from '~/lib/blocks'
 import { itemLayout } from '~/lib/list-layout'
 import { paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
+import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
-const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null }>()
+const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null; marks?: TextMark[] }>()
 const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }] }>()
 
 const state = props.session.state
@@ -40,6 +41,8 @@ interface TextSeg {
   remark: boolean
   zone: string | null
   zoneOwner: string | null
+  /** What a search found here (E9.28): drawn with a band and an underline, and the one being looked at with an outline. */
+  found: 'match' | 'current' | null
 }
 interface OtherSeg {
   kind: 'overlay' | 'caret' | 'reply'
@@ -64,6 +67,11 @@ function segmentsOf(block: Block): Seg[] {
   for (const s of marks) {
     cuts.add(clamp(s.start, len))
     cuts.add(clamp(s.end, len))
+  }
+  const hits = (props.marks ?? []).filter((m) => m.block === block.id)
+  for (const h of hits) {
+    cuts.add(clamp(h.start, len))
+    cuts.add(clamp(h.end, len))
   }
   const zones: { user: string; start: number; end: number }[] = []
   const carets: { user: string; at: number }[] = []
@@ -105,6 +113,7 @@ function segmentsOf(block: Block): Seg[] {
     const origin = block.runs[run]
     const sug = marks.find((s) => s.start <= from && s.end >= to && s.end > s.start)
     const zone = zones.find((z) => z.start <= from && z.end >= to)
+    const hit = hits.find((h) => h.start <= from && h.end >= to && h.end > h.start)
     out.push({
       kind: 'text',
       key: `t${from}`,
@@ -116,6 +125,7 @@ function segmentsOf(block: Block): Seg[] {
       remark: sug ? sug.replacement === null : false,
       zone: zone ? colorOf(state, zone.user) : null,
       zoneOwner: zone?.user ?? null,
+      found: hit ? (hit.current ? 'current' : 'match') : null,
     })
   })
   return out
@@ -366,12 +376,27 @@ function caretPoint(): { x: number; y: number } {
   return { x: (box?.left ?? 0) + 60, y: (box?.top ?? 0) + 60 }
 }
 
+/** Show a paragraph (a search found something in an object that hangs from it) without moving the caret. */
+function scrollToBlock(id: string) {
+  blockEl(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+}
+
+// The match being looked at comes into view; the caret stays where it was, so that a person can go on typing.
+watch(
+  () => props.marks?.findIndex((m) => m.current) ?? -1,
+  async (index) => {
+    if (index < 0) return
+    await nextTick()
+    root.value?.querySelector<HTMLElement>('[data-found="current"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  },
+)
+
 function scrollToSuggestion(id: string) {
   const mark = root.value?.querySelector<HTMLElement>(`[data-sug="${CSS.escape(id)}"]`)
   mark?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
-defineExpose({ focus, scrollToSuggestion, caretPoint })
+defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
 </script>
 
 <template>
@@ -417,8 +442,9 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
               data-seg
               :data-off="seg.start"
               :data-sug="seg.sug ?? undefined"
+              :data-found="seg.found ?? undefined"
               class="seg"
-              :class="{ by: authors && seg.author, via: authors && seg.via, sug: seg.sug, remark: seg.remark, hot: seg.sug && seg.sug === active, zone: seg.zone }"
+              :class="{ by: authors && seg.author, via: authors && seg.via, sug: seg.sug, remark: seg.remark, hot: seg.sug && seg.sug === active, zone: seg.zone, found: seg.found, now: seg.found === 'current' }"
               :style="{ '--a': seg.author ? colorOf(state, seg.author) : undefined, '--c': seg.zone ?? undefined }"
               :title="title(seg)"
               >{{ seg.text }}</span
@@ -504,6 +530,17 @@ defineExpose({ focus, scrollToSuggestion, caretPoint })
 }
 .overlay {
   background: color-mix(in srgb, var(--a, var(--app)) 10%, transparent);
+}
+
+/* what a search found (E9.28): a band and an underline, never colour alone; the one being looked at has an outline too */
+.found {
+  background: color-mix(in srgb, var(--purpose-input) 55%, transparent);
+  border-bottom: 3px solid var(--app);
+}
+.found.now {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+  background: color-mix(in srgb, var(--purpose-input) 80%, transparent);
 }
 
 /* colleagues in the text */

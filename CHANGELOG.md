@@ -4,6 +4,17 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.23.0] - 2026-11-14
+
+Search and replace in composes and creates (E9.28, E10.19): the texts of objects, replaced without re-attributing them.
+
+### Added
+- `replace_spans(paragraph, edits, author)`: a paragraph with some stretches replaced. The words around an edit keep
+  their authors (and the style and alignment), whoever replaced is the author of what they put in.
+- `object_texts(model, containers, sources)` and `ObjectText`: the words (`box`, `label`) and the description of the
+  objects of some containers (slides, paragraphs), as a search sees them; `edit_object_text(model, id, source, edits,
+  author)`: the command that stores edits in one of them (`SetParagraph` or `DescribeObject`).
+
 ## [0.22.0] - 2026-11-14
 
 Imported documents (D438).

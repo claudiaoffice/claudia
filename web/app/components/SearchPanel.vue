@@ -13,6 +13,7 @@ import {
   explainError,
   keptNames,
   latest,
+  switchOf,
   newCondition,
   newPart,
   sentence,
@@ -51,7 +52,7 @@ const { t } = useI18n()
 // ------------------------------------------------------------------------------------------------------------- state
 const model = reactive<SearchModel>(emptyModel())
 const replaceOpen = ref(props.replace === true)
-const kinds = reactive<Kinds>({ text: true, formulas: true, values: true })
+const kinds = reactive<Kinds>(Object.fromEntries(props.host.switches.map((s) => [s.key, true])))
 const scope = ref<string>(props.host.scopes[0] ?? '')
 const answer = ref<SearchAnswer | null>(null)
 const preview = ref<PreviewAnswer | null>(null)
@@ -73,16 +74,21 @@ const replacing = computed(() => replaceOpen.value && !props.host.readonly)
 const query = computed(() => toQuery(model, { replace: replacing.value }))
 const shown = computed(() => (answer.value ? shownMatches(answer.value.matches, kinds) : []))
 const problem = computed(() => (answer.value?.error ? explainError(answer.value.error, t) : null))
-const said = computed(() => (model.mode === 'builder' ? sentence(model, t) : ''))
+const said = computed(() => (model.mode === 'builder' ? sentence(model, t, props.host.unit) : ''))
+const inCells = computed(() => props.host.unit === 'cell')
 const names = computed(() => keptNames(model))
-const cellCount = computed(() => new Set(shown.value.map((m) => props.host.keyOf(m.at))).size)
-const left = computed(() => (answer.value?.left_out ?? []).filter((o) => (kinds[o.kind === 'formula' ? 'formulas' : o.kind === 'value' ? 'values' : 'text'] ?? true)))
+const unitCount = computed(() => new Set(shown.value.map((m) => props.host.keyOf(m.at))).size)
+const left = computed(() => (answer.value?.left_out ?? []).filter((o) => kinds[switchOf(o.kind)] ?? true))
 
 const matchKey = (m: SearchMatch) => `${props.host.keyOf(m.at)}#${m.number}`
-const replaceable = (m: SearchMatch) => m.kind !== 'value'
-const leave = computed<SearchLeave[]>(() =>
-  shown.value.filter((m) => unchecked.has(matchKey(m))).map((m) => ({ at: m.at, match: m.number })),
-)
+const replaceable = (m: SearchMatch) => props.host.switches.find((s) => s.matchKind === m.kind)?.replaceable ?? true
+/** What a match says, for the server to check that the text is still as she saw it; not sent for a match too long to be shown whole. */
+const saidOf = (m: SearchMatch) => (m.excerpt[1] - m.excerpt[0] === m.end - m.start ? m.text.slice(m.excerpt[0], m.excerpt[1]) : undefined)
+const leaving = (m: SearchMatch): SearchLeave => {
+  const said = saidOf(m)
+  return said === undefined ? { at: m.at, match: m.number } : { at: m.at, match: m.number, said }
+}
+const leave = computed<SearchLeave[]>(() => shown.value.filter((m) => unchecked.has(matchKey(m))).map(leaving))
 
 /** A line the live region says: how many matches there are. */
 const summary = computed(() => {
@@ -93,7 +99,8 @@ const summary = computed(() => {
   const n = shown.value.length
   if (n === 0) return t('No matches')
   if (n === 1) return t('One match')
-  return cellCount.value === n ? t('{count} matches', { count: n }) : t('{count} matches in {cells} cells', { count: n, cells: cellCount.value })
+  if (unitCount.value === n) return t('{count} matches', { count: n })
+  return inCells.value ? t('{count} matches in {cells} cells', { count: n, cells: unitCount.value }) : t('{count} matches in {texts} texts', { count: n, texts: unitCount.value })
 })
 const position = computed(() => (current.value === null || shown.value.length === 0 ? '' : t('{n} of {count}', { n: current.value + 1, count: shown.value.length })))
 const changing = computed(() => preview.value?.total ?? 0)
@@ -184,10 +191,14 @@ const PARTS = computed<{ what: PartWhat; label: string }[]>(() => [
   { what: 'space', label: t('a space') },
   { what: 'any', label: t('any character') },
   { what: 'number', label: t('a number') },
-  { what: 'start', label: t('the start of the cell') },
-  { what: 'end', label: t('the end of the cell') },
+  { what: 'start', label: inCells.value ? t('the start of the cell') : t('the start of the text') },
+  { what: 'end', label: inCells.value ? t('the end of the cell') : t('the end of the text') },
 ])
-const partChoices = computed(() => [...PARTS.value, ...(props.host.extraParts.includes('cellref') ? [{ what: 'cellref' as PartWhat, label: t('a cell reference') }] : [])])
+const partChoices = computed(() => [
+  ...PARTS.value,
+  ...(props.host.extraParts.includes('cellref') ? [{ what: 'cellref' as PartWhat, label: t('a cell reference') }] : []),
+  ...(props.host.extraParts.includes('word') ? [{ what: 'word' as PartWhat, label: t('a word') }] : []),
+])
 const COUNTS = computed<{ count: Count; label: string }[]>(() => [
   { count: 'once', label: t('once') },
   { count: 'optional', label: t('optional') },
@@ -258,14 +269,13 @@ function removeCondition(id: number) {
 function openReplace() {
   if (props.host.readonly) return
   replaceOpen.value = true
-  kinds.text = true
-  kinds.formulas = false // opens with Text only: replacing inside a formula can change what it computes (D285)
-  kinds.values = false
+  // Opens with the safe kinds only: replacing inside a formula can change what it computes (D285)
+  for (const one of props.host.switches) kinds[one.key] = one.whileReplacing
   void nextTick(() => root.value?.querySelector<HTMLElement>('[data-replace-first]')?.focus())
 }
 function closeReplace() {
   replaceOpen.value = false
-  kinds.text = kinds.formulas = kinds.values = true
+  for (const one of props.host.switches) kinds[one.key] = true
 }
 /** The text box of a quick replacement: one plain text. */
 const quickReplace = computed({
@@ -289,19 +299,69 @@ function trailingText() {
 }
 
 /** A kind that is not looked in while replacing is said so when the pattern is in it: formulas change meaning. */
-const alsoIn = computed(() => (replacing.value && !kinds.formulas && (answer.value?.counts.formulas ?? 0) > 0 ? answer.value!.counts.formulas : 0))
+const alsoIn = computed(() => {
+  const one = props.host.switches.find((s) => s.replaceable && !s.whileReplacing && !kinds[s.key])
+  return replacing.value && one ? (answer.value?.counts[one.key] ?? 0) : 0
+})
+
+/** What a switch is called; every app's are here so that the catalogue sees them. */
+function switchLabel(key: string): string {
+  switch (key) {
+    case 'formulas':
+      return t('Formulas')
+    case 'values':
+      return t('Values')
+    case 'heading':
+      return t('Headings')
+    case 'remark':
+      return t('Remarks')
+    case 'object':
+      return t('Objects')
+    case 'description':
+      return t('Descriptions')
+    case 'label':
+      return t('Shape labels')
+    case 'notes':
+      return t('Speaker notes')
+    default:
+      return t('Text')
+  }
+}
+/** What a kind of match is called in the list. */
+function kindLabel(kind: string): string {
+  switch (kind) {
+    case 'formula':
+      return t('formula')
+    case 'value':
+      return t('value')
+    case 'heading':
+      return t('heading')
+    case 'remark':
+      return t('remark')
+    case 'object':
+      return t('object')
+    case 'description':
+      return t('description')
+    case 'label':
+      return t('label')
+    case 'notes':
+      return t('notes')
+    default:
+      return t('text')
+  }
+}
 
 async function doReplace(only?: SearchMatch) {
   const asked = query.value
   if (!asked || busy.value || problem.value) return
-  const leaving: SearchLeave[] = only
-    ? shown.value.filter((m) => m !== only && replaceable(m)).map((m) => ({ at: m.at, match: m.number }))
-    : leave.value
+  const leaving_: SearchLeave[] = only ? shown.value.filter((m) => m !== only && replaceable(m)).map(leaving) : leave.value
   busy.value = true
-  const done = await props.host.replace(asked, kinds, props.host.scopeOf(scope.value), leaving)
+  const done = await props.host.replace(asked, kinds, props.host.scopeOf(scope.value), leaving_)
   busy.value = false
   if (done === false) return
-  status.value = done.replaced === 0 ? t('Nothing was replaced.') : done.replaced === 1 ? t('Replaced in one cell. Undo brings it back.') : t('Replaced in {count} cells. Undo brings them back.', { count: done.replaced })
+  if (done.replaced === 0) status.value = t('Nothing was replaced.')
+  else if (inCells.value) status.value = done.replaced === 1 ? t('Replaced in one cell. Undo brings it back.') : t('Replaced in {count} cells. Undo brings them back.', { count: done.replaced })
+  else status.value = done.replaced === 1 ? t('Replaced in one text. Undo brings it back.') : t('Replaced in {count} texts. Undo brings them back.', { count: done.replaced })
   unchecked.clear()
   schedule(0)
 }
@@ -347,11 +407,12 @@ const skippedRows = computed(() => preview.value?.skipped ?? [])
 function why(reason: string, by: string | null) {
   if (reason === 'locked') return t('locked by {name}', { name: by ?? '' })
   if (reason === 'formula') return t('would no longer be a formula')
+  if (reason === 'changed') return t('was typed into since you looked')
   return t('would be too long')
 }
 const noMore = computed(() => (answer.value?.truncated ? t('Only the first {count} matches are listed.', { count: answer.value.matches.length }) : ''))
 const timedOut = computed(() => answer.value?.timed_out === true)
-const leftReasons = computed(() => [...new Set(left.value.map((o) => whyLeftOut(o.why, t)))].join(' · '))
+const leftReasons = computed(() => [...new Set(left.value.map((o) => whyLeftOut(o.why, t, props.host.unit)))].join(' · '))
 
 function focusQuick() {
   void nextTick(() => {
@@ -359,7 +420,12 @@ function focusQuick() {
     quickField.value?.select()
   })
 }
-defineExpose({ focus: focusQuick, openReplace })
+/** Start from what the person had selected in the document: one line of plain text, as a plain find. */
+function seed(text: string) {
+  if (!text || text.includes('\n') || text.length > 200 || model.mode !== 'quick') return
+  model.quick = text
+}
+defineExpose({ focus: focusQuick, openReplace, seed })
 
 onMounted(() => {
   if (props.replace) openReplace()
@@ -442,7 +508,7 @@ watch(() => props.replace, (on) => on && openReplace())
           </label>
         </div>
 
-        <h3 class="label">{{ t('Only in cells that…') }}</h3>
+        <h3 class="label">{{ inCells ? t('Only in cells that…') : t('Only in texts that…') }}</h3>
         <div v-for="condition in model.conditions" :key="condition.id" class="row condition">
           <select v-model="condition.kind" class="field" :aria-label="t('Condition')">
             <option v-for="choice in CONDITIONS" :key="choice.kind" :value="choice.kind">{{ choice.label }}</option>
@@ -475,7 +541,7 @@ watch(() => props.replace, (on) => on && openReplace())
       <section v-else class="typed">
         <label class="label" for="pattern-find">{{ t('Find — pattern') }}</label>
         <input id="pattern-find" v-model="model.pattern.find" class="field mono" :class="{ bad: problem?.field === 'find' }" autocomplete="off" spellcheck="false" data-pattern-find :aria-invalid="problem?.field === 'find'">
-        <label class="label" for="pattern-filter">{{ t('Only in cells matching (optional)') }}</label>
+        <label class="label" for="pattern-filter">{{ inCells ? t('Only in cells matching (optional)') : t('Only in texts matching (optional)') }}</label>
         <input id="pattern-filter" v-model="model.pattern.filter" class="field mono" :class="{ bad: problem?.field === 'filter' }" autocomplete="off" spellcheck="false" :aria-invalid="problem?.field === 'filter'">
         <template v-if="replacing">
           <label class="label" for="pattern-replace">{{ t('Replace with') }}</label>
@@ -499,11 +565,9 @@ watch(() => props.replace, (on) => on && openReplace())
       <section class="options">
         <h3 class="label">{{ t('Look in') }}</h3>
         <div class="chips" role="group" :aria-label="t('Look in')">
-          <label class="chip" :class="{ on: kinds.text }"><input v-model="kinds.text" type="checkbox"><span aria-hidden="true">{{ kinds.text ? '✓ ' : '' }}</span>{{ t('Text') }} <small>{{ answer?.counts.text ?? 0 }}</small></label>
-          <label class="chip" :class="{ on: kinds.formulas }"><input v-model="kinds.formulas" type="checkbox"><span aria-hidden="true">{{ kinds.formulas ? '✓ ' : '' }}</span>{{ t('Formulas') }} <small>{{ answer?.counts.formulas ?? 0 }}</small></label>
-          <label class="chip" :class="{ on: kinds.values && !replacing, locked: replacing }" :title="replacing ? t('A value follows from its formula: it can be found, not replaced.') : ''">
-            <input v-model="kinds.values" type="checkbox" :disabled="replacing"><span aria-hidden="true">{{ kinds.values && !replacing ? '✓ ' : '' }}</span>{{ t('Values') }}
-            <small v-if="replacing" aria-hidden="true">🔒</small><small v-else>{{ answer?.counts.values ?? 0 }}</small>
+          <label v-for="one in host.switches" :key="one.key" class="chip" :class="{ on: kinds[one.key] && (one.replaceable || !replacing), locked: !one.replaceable && replacing }" :title="!one.replaceable && replacing ? t('A value follows from its formula: it can be found, not replaced.') : ''">
+            <input v-model="kinds[one.key]" type="checkbox" :disabled="!one.replaceable && replacing"><span aria-hidden="true">{{ kinds[one.key] && (one.replaceable || !replacing) ? '✓ ' : '' }}</span>{{ switchLabel(one.key) }}
+            <small v-if="!one.replaceable && replacing" aria-hidden="true">🔒</small><small v-else>{{ answer?.counts[one.key] ?? 0 }}</small>
           </label>
         </div>
         <div class="row flags">
@@ -511,7 +575,7 @@ watch(() => props.replace, (on) => on && openReplace())
             <option v-for="id in host.scopes" :key="id" :value="id">{{ host.scopeLabel(id) }}</option>
           </select>
           <label class="toggle" :class="{ on: model.matchCase }"><input v-model="model.matchCase" type="checkbox">{{ t('Match case') }}</label>
-          <label v-if="model.mode !== 'pattern'" class="toggle" :class="{ on: model.whole === 'entire' }"><input type="checkbox" :checked="model.whole === 'entire'" @change="model.whole = ($event.target as HTMLInputElement).checked ? 'entire' : 'none'">{{ t('Whole cell') }}</label>
+          <label v-if="model.mode !== 'pattern'" class="toggle" :class="{ on: model.whole === 'entire' }"><input type="checkbox" :checked="model.whole === 'entire'" @change="model.whole = ($event.target as HTMLInputElement).checked ? 'entire' : 'none'">{{ inCells ? t('Whole cell') : t('Whole text') }}</label>
         </div>
         <div v-if="model.mode === 'quick'" class="row links">
           <button v-if="!replaceOpen && !host.readonly" type="button" class="link" @click="openReplace">{{ t('Replace with…') }} ›</button>
@@ -564,7 +628,7 @@ watch(() => props.replace, (on) => on && openReplace())
             <span class="excerpt" :class="{ code: m.kind === 'formula' }">
               {{ excerptOf(m).before }}<mark>{{ excerptOf(m).hit }}</mark><template v-if="replacing && replaceable(m) && m.after !== null"> → <span class="after">{{ m.after }}</span></template><template v-else>{{ excerptOf(m).after }}</template>
             </span>
-            <span class="kind">{{ m.kind === 'formula' ? t('formula') : m.kind === 'value' ? t('value') : t('text') }}</span>
+            <span class="kind">{{ kindLabel(m.kind) }}</span>
           </button>
         </li>
         <li v-for="s in skippedRows" :key="host.keyOf(s.at)" class="skipped">

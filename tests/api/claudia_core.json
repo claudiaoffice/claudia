@@ -1,5 +1,5 @@
 {
- "version": "0.22.0",
+ "version": "0.23.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -1031,6 +1031,14 @@
   },
   "properties": []
  },
+ "ObjectText": {
+  "class": [
+   "object"
+  ],
+  "init": "(object_id: 'str', container: 'str', source: 'str', text: 'str') -> None",
+  "methods": {},
+  "properties": []
+ },
  "ObjectsChanged": {
   "class": [
    "object"
@@ -1862,6 +1870,9 @@
  "delete_runs": {
   "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"
  },
+ "edit_object_text": {
+  "function": "(model: 'ObjectModel', object_id: 'str', source: 'str', edits: 'Iterable[tuple[int, int, str]]', author: 'str | None') -> 'Command'"
+ },
  "encode": {
   "function": "(command: 'Command') -> 'dict'"
  },
@@ -1895,6 +1906,9 @@
  "numbering_labels": {
   "function": "(entries: 'Iterable[tuple[str, ListItem | None]]', lists: 'ListBook') -> 'dict[str, Label]'"
  },
+ "object_texts": {
+  "function": "(model: 'ObjectModel', containers: 'Iterable[str]', sources: 'Iterable[str]' = ('box', 'label', 'description')) -> 'Iterator[ObjectText]'"
+ },
  "paragraph_for": {
   "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"
  },
@@ -1906,6 +1920,9 @@
  },
  "parse_shape": {
   "function": "(text: 'str') -> 'ShapeDefinition'"
+ },
+ "replace_spans": {
+  "function": "(paragraph: 'Paragraph', edits: 'Iterable[tuple[int, int, str]]', author: 'str | None') -> 'Paragraph'"
  },
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"

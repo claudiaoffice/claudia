@@ -11,11 +11,14 @@ import {
   newPart,
   normalizeReplacement,
   sentence,
+  matchKindOf,
   shownMatches,
+  switchOf,
   toPattern,
   toQuery,
   whyLeftOut,
   type SearchMatch,
+  type SearchLeave,
   type SearchModel,
 } from '~/lib/search'
 
@@ -335,5 +338,43 @@ describe('writing the pattern yourself', () => {
     const typed = toPattern(model, { find: '\\d', filter: '^x', replace: '' })
     expect(typed).toMatchObject({ mode: 'pattern', matchCase: true, pattern: { find: '\\d', filter: '^x', replace: '' } })
     expect(model.mode).toBe('builder') // (the builder's own state is left as it was, to go back to)
+  })
+})
+
+
+describe('a search in a text or a presentation says it in words for texts, not cells (E9.28, E10.19)', () => {
+  it('says "texts" where a workbook says "cells"', () => {
+    const model = builder({ parts: [part('word')], conditions: [{ ...newCondition('contains'), text: 'red' }], whole: 'entire' })
+    expect(sentence(model, t, 'text')).toBe('Finds a word in texts that contain “red”. Only when it is the whole text.')
+    expect(sentence(builder({ conditions: [{ ...newCondition('starts_with'), text: 'A' }] }), t, 'text')).toBe('Finds the texts that start with “A”.')
+    expect(sentence(builder({ parts: [part('start')] }), t, 'text')).toBe('Finds the start of the text.')
+    expect(sentence(builder({ parts: [part('end')] }), t)).toBe('Finds the end of the cell.')
+  })
+
+  it('has a word as a part of the builder, sent with nothing else about it', () => {
+    expect(toQuery(builder({ parts: [part('word')] }))?.parts).toEqual([{ what: 'word' }])
+  })
+
+  it('names the pattern a text left out failed in its own unit', () => {
+    expect(whyLeftOut({ kind: 'filter' }, t, 'text')).toBe('do not match the pattern for texts')
+    expect(whyLeftOut({ kind: 'filter' }, t)).toBe('do not match the pattern for cells')
+  })
+
+  it('pairs the switches of a workbook with the kinds of its matches and leaves the other apps\' alone', () => {
+    expect([matchKindOf('formulas'), matchKindOf('values'), matchKindOf('heading')]).toEqual(['formula', 'value', 'heading'])
+    expect([switchOf('formula'), switchOf('value'), switchOf('notes')]).toEqual(['formulas', 'values', 'notes'])
+  })
+
+  it('shows the kinds of a text that are switched on, and a kind it has no switch for as on', () => {
+    const at = (row: number, kind: string) => ({ at: { block: `b${row}` }, kind, number: 0, start: 0, end: 1, parts: [], after: null, text: 'x', excerpt: [0, 1] as [number, number], clipped: [false, false] as [boolean, boolean] })
+    const found = [at(1, 'heading'), at(2, 'text'), at(3, 'remark')]
+    expect(shownMatches(found, { text: true, heading: false, remark: true }).map((m) => m.at.block)).toEqual(['b2', 'b3'])
+    expect(shownMatches(found, { text: true }).map((m) => m.at.block)).toEqual(['b1', 'b2', 'b3'])
+  })
+
+  it('sends what a match said so that the server can tell a text typed into since', () => {
+    // (the panel builds `{ at, match, said }`; the shape is the wire's, see SearchLeave)
+    const leave: SearchLeave = { at: { block: 'b1' }, match: 0, said: 'red' }
+    expect(leave.said).toBe('red')
   })
 })

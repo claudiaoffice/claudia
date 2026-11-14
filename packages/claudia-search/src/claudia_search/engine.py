@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import re
 import time
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -437,6 +437,30 @@ class Match:
     after: str | None = None
 
 
+@dataclass(frozen=True)
+class Edit:
+    """One replacement in a text: the match ``number`` (counting from 0), characters ``start`` to ``end`` that say
+    ``before``, and what they become, ``after``. An app that keeps more than the characters (who wrote which part of
+    them) applies these one by one instead of setting the whole text."""
+
+    number: int
+    start: int
+    end: int
+    before: str
+    after: str
+
+
+def apply_edits(text: str, edits: Iterable[Edit]) -> str:
+    """``text`` with ``edits`` (in order, not overlapping) made."""
+    out, at = [], 0
+    for edit in edits:
+        out.append(text[at : edit.start])
+        out.append(edit.after)
+        at = edit.end
+    out.append(text[at:])
+    return "".join(out)
+
+
 class CompiledSearch:
     """A search that can be run on any number of texts. Make one with :meth:`Query.compile`."""
 
@@ -522,6 +546,21 @@ class CompiledSearch:
             at = m.end()
         out.append(text[at:])
         return "".join(out)
+
+    def edits(
+        self, text: str, leave: set[int] | frozenset[int] = frozenset(), deadline: float | None = None
+    ) -> list[Edit]:
+        """What replacing would change in ``text``, one :class:`Edit` per match but those numbered in ``leave``.
+
+        Raises :class:`SearchError` if the search has no replacement, :class:`SearchTimeout` once ``deadline`` has
+        passed."""
+        if self._template is None:
+            raise SearchError("there is nothing to replace with")
+        return [
+            Edit(number, m.start(), m.end(), m.group(), self._expand(m))
+            for number, m in enumerate(self._raw(text, deadline))
+            if number not in leave
+        ]
 
     # -- inside ----------------------------------------------------------------------------------------------------
     def _flags(self) -> int:

@@ -5,6 +5,24 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-11-14
+
+Search and replace in composes and creates (E9.28, E10.19).
+
+### Added
+- `search_find`, `search_preview` and `search_replace` in composes and in creates, with the same parameters and
+  answers as in computes; each app words its own kinds (`text`, `heading`, `remark`, `object`, `description` in a
+  text; `text`, `label`, `notes`, `description` in a presentation), scopes (a section or a selection; one slide) and
+  places (`{block}`, `{object, source}`; `{slide, object, source}`, `{slide, source: "notes"}`). In composes the
+  assistant may look but not replace.
+- `leave` items may carry `said`, what the match said when the person saw it: a text typed into since is skipped
+  with the reason `changed` instead of being replaced on stale numbers. Also in computes.
+- `claudia_server.search_methods` (`SearchApp`): the three methods once for every app; `computes_search`,
+  `composes_search` and `creates_search` are the apps' parts.
+
+### Changed
+- The deadline of a search is `claudia_server.search_methods.SEARCH_SECONDS` (it was in `computes_search`).
+
 ## [0.33.0] - 2026-11-14
 
 ### Added

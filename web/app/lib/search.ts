@@ -10,11 +10,15 @@
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 
 // ---------------------------------------------------------------------------------------------------------- the model
-export type PartWhat = 'text' | 'any_of' | 'none_of' | 'letter' | 'digit' | 'space' | 'any' | 'number' | 'start' | 'end' | 'cellref'
+export type PartWhat = 'text' | 'any_of' | 'none_of' | 'letter' | 'digit' | 'space' | 'any' | 'number' | 'start' | 'end' | 'cellref' | 'word'
 export type Count = 'once' | 'optional' | 'one_or_more' | 'any' | 'exactly' | 'between'
 export type ConditionKind = 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'is' | 'contains_any_of' | 'not_contains_any_of'
 export type Whole = 'none' | 'entire' | 'word'
-export type Kinds = { text: boolean; formulas: boolean; values: boolean }
+/** What a search may look in, by the key of a switch (computes: `text`, `formulas`, `values`; composes: `text`,
+ *  `heading`, `remark`, `object`, `description`; creates: `text`, `label`, `notes`, `description`). */
+export type Kinds = Record<string, boolean>
+/** What the app calls one thing that a search finds in: a cell, or a text (a paragraph, the words of an object, notes). */
+export type Unit = 'cell' | 'text'
 
 /** One thing to find: what, how many of it, and a name if the replacement wants it back. */
 export interface Part {
@@ -195,7 +199,7 @@ export function toQuery(model: SearchModel, options: { replace?: boolean } = {})
 // Every phrase is a whole translatable string with placeholders: word order differs between languages, so nothing is
 // built from loose words. The pieces are phrases that are themselves whole: a part's, a count's, a condition's.
 
-function partPhrase(part: Part, t: Translate): string {
+function partPhrase(part: Part, t: Translate, unit: Unit): string {
   let phrase: string
   switch (part.what) {
     case 'text':
@@ -223,13 +227,16 @@ function partPhrase(part: Part, t: Translate): string {
       phrase = t('a number')
       break
     case 'start':
-      phrase = t('the start of the cell')
+      phrase = unit === 'cell' ? t('the start of the cell') : t('the start of the text')
       break
     case 'end':
-      phrase = t('the end of the cell')
+      phrase = unit === 'cell' ? t('the end of the cell') : t('the end of the text')
       break
     case 'cellref':
       phrase = t('a cell reference')
+      break
+    case 'word':
+      phrase = t('a word')
       break
   }
   const what = phrase
@@ -268,8 +275,8 @@ function conditionPhrase(condition: Condition, t: Translate): string {
 }
 
 /** The builder, said back to the person in a sentence; empty while there is nothing to say. */
-export function sentence(model: SearchModel, t: Translate): string {
-  const parts = usableParts(model).map((p) => partPhrase(p, t))
+export function sentence(model: SearchModel, t: Translate, unit: Unit = 'cell'): string {
+  const parts = usableParts(model).map((p) => partPhrase(p, t, unit))
   const conditions = usableConditions(model).map((c) => conditionPhrase(c, t))
   if (parts.length === 0 && conditions.length === 0) return ''
   const then = (first: string, next: string) => t('{first}, then {next}', { first, next })
@@ -277,10 +284,11 @@ export function sentence(model: SearchModel, t: Translate): string {
   const partsText = parts.length ? parts.reduce(then) : ''
   const conditionsText = conditions.length ? conditions.reduce(join) : ''
   let said: string
-  if (parts.length && conditions.length) said = t('Finds {parts} in cells that {conditions}.', { parts: partsText, conditions: conditionsText })
-  else if (parts.length) said = t('Finds {parts}.', { parts: partsText })
-  else said = t('Finds the cells that {conditions}.', { conditions: conditionsText })
-  if (model.whole === 'entire') said += ' ' + t('Only when it is the whole cell.')
+  if (parts.length && conditions.length) {
+    said = unit === 'cell' ? t('Finds {parts} in cells that {conditions}.', { parts: partsText, conditions: conditionsText }) : t('Finds {parts} in texts that {conditions}.', { parts: partsText, conditions: conditionsText })
+  } else if (parts.length) said = t('Finds {parts}.', { parts: partsText })
+  else said = unit === 'cell' ? t('Finds the cells that {conditions}.', { conditions: conditionsText }) : t('Finds the texts that {conditions}.', { conditions: conditionsText })
+  if (model.whole === 'entire') said += ' ' + (unit === 'cell' ? t('Only when it is the whole cell.') : t('Only when it is the whole text.'))
   else if (model.whole === 'word') said += ' ' + t('Only whole words.')
   return said
 }
@@ -292,7 +300,8 @@ export type SearchPlace = Readonly<Record<string, string | number | boolean | nu
 
 export interface SearchMatch {
   at: SearchPlace
-  kind: 'text' | 'formula' | 'value'
+  /** The kind of text it is in: computes `text`, `formula`, `value`; the others as in `Kinds`. */
+  kind: string
   /** Its place among the matches of its text. */
   number: number
   start: number
@@ -325,7 +334,7 @@ export interface SearchAnswer {
   matches: SearchMatch[]
   left_out: LeftOut[]
   /** How many matches each kind has, whichever are switched on. */
-  counts: { text: number; formulas: number; values: number }
+  counts: Record<string, number>
   total: number
   truncated: boolean
   /** The search stopped at its time limit; what it had found by then is listed. */
@@ -344,7 +353,7 @@ export interface Change {
 export interface Skipped {
   at: SearchPlace
   kind: string
-  reason: 'locked' | 'formula' | 'too_long'
+  reason: 'locked' | 'formula' | 'too_long' | 'changed'
   by: string | null
 }
 
@@ -368,14 +377,30 @@ export interface ReplaceAnswer {
 export interface SearchLeave {
   at: SearchPlace
   match: number | null
+  /** What the match said when it was shown: if the text was typed into since, the server skips it instead of replacing on stale numbers. */
+  said?: string
+}
+
+/** One switch of the panel: a kind of text that can be looked in. */
+export interface SearchSwitch {
+  /** Its key in `Kinds`, and in the server's `counts`. */
+  readonly key: string
+  /** The kind of a match that it shows (computes: the switch `formulas` shows matches of kind `formula`). */
+  readonly matchKind: string
+  /** Can be replaced; if not (a value), it is found only, and the switch is locked while replacing. */
+  readonly replaceable: boolean
+  /** On when Replace is opened; the others are switched off, so that a replacement starts with the safe kinds. */
+  readonly whileReplacing: boolean
 }
 
 /** What the panel needs from an app (E5.15, D282): what can be searched, where, and how to name and show a place. */
 export interface SearchHost<Scope = unknown> {
   /** Can only look: Replace is off. */
   readonly readonly: boolean
+  /** What a search finds in: a cell or a text; it is what the panel's sentences count. */
+  readonly unit: Unit
   /** What can be looked in, and where. */
-  readonly kinds: (keyof Kinds)[]
+  readonly switches: SearchSwitch[]
   readonly scopes: string[]
   /** Parts of the builder that only this app has (a cell reference). */
   readonly extraParts: PartWhat[]
@@ -397,12 +422,20 @@ export interface SearchHost<Scope = unknown> {
   revision(): string | null
 }
 
-const KIND_OF: Record<keyof Kinds, SearchMatch['kind']> = { text: 'text', formulas: 'formula', values: 'value' }
+/** The kind of a match that a switch shows: in a workbook `formulas` shows `formula` and `values` shows `value`, in the
+ *  other apps a switch and its matches have the same name. */
+export function matchKindOf(key: string): string {
+  return key === 'formulas' ? 'formula' : key === 'values' ? 'value' : key
+}
+
+/** The switch that shows a kind of match: the opposite of `matchKindOf`. */
+export function switchOf(kind: string): string {
+  return kind === 'formula' ? 'formulas' : kind === 'value' ? 'values' : kind
+}
 
 /** The matches of the kinds that are switched on (the server counts all of them, so the switches can show numbers). */
 export function shownMatches(matches: SearchMatch[], kinds: Kinds): SearchMatch[] {
-  const wanted = new Set((Object.keys(KIND_OF) as (keyof Kinds)[]).filter((k) => kinds[k]).map((k) => KIND_OF[k]))
-  return matches.filter((m) => wanted.has(m.kind))
+  return matches.filter((m) => kinds[switchOf(m.kind)] ?? true)
 }
 
 export function excerptOf(match: SearchMatch): { before: string; hit: string; after: string } {
@@ -415,7 +448,7 @@ export function excerptOf(match: SearchMatch): { before: string; hit: string; af
 }
 
 /** What a cell left out does that a condition did not allow ("contain “EUR”"): the answer to "why is it not here". */
-export function whyLeftOut(why: LeftOut['why'], t: Translate): string {
+export function whyLeftOut(why: LeftOut['why'], t: Translate, unit: Unit = 'cell'): string {
   const text = why.text ?? ''
   const chars = why.chars ?? ''
   switch (why.kind) {
@@ -434,7 +467,7 @@ export function whyLeftOut(why: LeftOut['why'], t: Translate): string {
     case 'not_contains_any_of':
       return t('contain one of {chars}', { chars })
     default:
-      return t('do not match the pattern for cells')
+      return unit === 'cell' ? t('do not match the pattern for cells') : t('do not match the pattern for texts')
   }
 }
 

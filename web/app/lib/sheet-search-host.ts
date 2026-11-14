@@ -4,7 +4,7 @@
 // builder, the sentence, the lists — is shared (`lib/search.ts`, `SearchPanel.vue`).
 import { bounds, type Sel } from './selection'
 import type { Session, SearchScope } from './session'
-import type { Change, Kinds, SearchHost, SearchMatch, SearchPlace, Skipped } from './search'
+import type { Change, Kinds, SearchHost, SearchMatch, SearchPlace, SearchSwitch, Skipped } from './search'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 
@@ -24,7 +24,12 @@ export function cellOf(at: SearchPlace): CellPlace {
   return { sheet, row, col }
 }
 
-const ALL_KINDS: (keyof Kinds)[] = ['text', 'formulas', 'values']
+const SWITCHES: SearchSwitch[] = [
+  { key: 'text', matchKind: 'text', replaceable: true, whileReplacing: true },
+  { key: 'formulas', matchKind: 'formula', replaceable: true, whileReplacing: false },
+  { key: 'values', matchKind: 'value', replaceable: false, whileReplacing: false },
+]
+const ALL_KINDS = SWITCHES.map((s) => s.key)
 const chosen = (kinds: Kinds) => ALL_KINDS.filter((k) => kinds[k])
 
 export function sheetSearchHost(from: {
@@ -39,7 +44,8 @@ export function sheetSearchHost(from: {
     get readonly() {
       return state.me.role === 'viewer'
     },
-    kinds: ALL_KINDS,
+    unit: 'cell',
+    switches: SWITCHES,
     scopes: ['sheet', 'all', 'selection'] satisfies ScopeId[],
     extraParts: ['cellref'],
     scopeLabel: (scope) => (scope === 'sheet' ? t('This sheet') : scope === 'all' ? t('All sheets') : t('Selection')),

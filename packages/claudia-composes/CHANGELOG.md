@@ -3,7 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.8.0] - 2026-11-14
+
+Search and replace (E9.28).
+
+### Added
+- The Help topic `composes.searching-and-replacing`, in English and German (E9.28).
+- `claudia_composes.search` (not in `__all__`; the server's): the texts of a text for a search (`text`, `heading`
+  and `remark` by the style of a paragraph and the styles it is based on, the words and the descriptions of floating
+  objects), the scopes whole text, section and selection, the part `word`, and `plan_replacement` and
+  `replace_command`: a replacement is stored as typing and deleting, so the words around a match keep their authors
+  and the objects hanging in a paragraph keep their words. Depends on `claudia-search`.
+
+Lists (E9.21), earlier in this release.
 
 Lists (E9.21). State schema 7 → 8. Describing objects (BITV 1.1.1): schema 8 → 9.
 

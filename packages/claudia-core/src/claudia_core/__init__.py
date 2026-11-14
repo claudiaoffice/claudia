@@ -21,6 +21,7 @@
     styles       StyleBook and the commands that change it (E1.10)
     lists        ListDef, ListBook, the schemes and the counting of list items (E9.21)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
+    object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
@@ -135,6 +136,7 @@ from .manifest import (
 )
 from .messages import ChatRecord, Ephemeral, parse_chat
 from .model import DocumentModel, Snapshot
+from .object_texts import ObjectText, edit_object_text, object_texts
 from .objects import (
     ASPECT_TOLERANCE,
     MAX_OBJECTS_PER_CONTAINER,
@@ -201,6 +203,7 @@ from .paragraphs import (
     delete_runs,
     insert_runs,
     normalized,
+    replace_spans,
     runs_from_data,
     runs_to_data,
     slice_runs,
@@ -267,6 +270,7 @@ __all__ = [
     "DefineShape",
     "DescribeObject",
     "delete_runs",
+    "edit_object_text",
     "DiagramDefinition",
     "DiagramsChanged",
     "Document",
@@ -324,9 +328,12 @@ __all__ = [
     "MoveObject",
     "new_registry",
     "normalized",
+    "object_texts",
+    "replace_spans",
     "normalize_language",
     "OBJECT_KINDS",
     "ObjectBody",
+    "ObjectText",
     "ObjectModel",
     "ObjectsChanged",
     "ObjectSet",

@@ -16,13 +16,17 @@ import {
   fileMenu,
   helpMenu,
   panelItem,
+  searchItem,
   undoRedoItems,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
-import { chordLabel, chordOf, type ShortcutDef } from '~/lib/shortcuts'
+import { chordLabel, chordOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { marksFor, textSearchHost } from '~/lib/text-search-host'
+import { useSearch } from '~/lib/use-search'
 import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
+import SearchPanel from './SearchPanel.vue'
 import PrintPreview from './PrintPreview.vue'
 import { textSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
@@ -44,7 +48,7 @@ const dialog = ref<null | 'styles' | 'colours' | 'list-start'>(null)
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
-const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
+const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; scrollToBlock: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
 function remembered<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
@@ -146,6 +150,15 @@ async function pasteFromClipboard() {
   }
 }
 
+// ------------------------------------------------------------------------------ Search & replace (E9.28)
+// The panel is one component for the three apps; this is the text's side of it: where it can look, how a match is named
+// and gone to, and the marks the editor draws for what it found. Ctrl+F and Ctrl+H work anywhere in the window except in
+// a text field of its own, which keeps the browser's find; what is selected in the text becomes the first thing to find.
+const search = useSearch(() => !readonly.value, () => editor.value?.focus())
+const searchHost = textSearchHost({ session, goTo: (block) => editor.value?.scrollToBlock(block), t })
+const searchMarks = computed(() => (search.open.value ? marksFor(search.view.value.matches, search.view.value.current) : []))
+const openSearch = (replace = false) => search.openSearch(replace, session.selectedText())
+
 // ------------------------------------------------------------------------------ menus and shortcuts
 // D122: composes' one shortcut of its own, on top of the window's Undo, Redo and Save.
 const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: chordOf('format.look'), run: () => openStyleMenu() }
@@ -157,7 +170,15 @@ const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', get label() { 
 // E9.21: bullets and numbers, on the keys of the digits (Google Docs' Ctrl+Shift+8 and 7), whatever they type.
 const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return t('Bulleted List') }, chord: chordOf('format.bulleted-list'), run: () => makeList('bullets'), enabled: () => !readonly.value }
 const NUMBERS: ShortcutDef = { id: 'format.numbered-list', get label() { return t('Numbered List') }, chord: chordOf('format.numbered-list'), run: () => makeList('numbers'), enabled: () => !readonly.value }
-const extraShortcuts = [LOOK, PRINT, SOFT_HYPHEN, HARD_HYPHEN, BULLETS, NUMBERS]
+const extraShortcuts = [
+  LOOK,
+  PRINT,
+  SOFT_HYPHEN,
+  HARD_HYPHEN,
+  BULLETS,
+  NUMBERS,
+  ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value && !printing.value }),
+]
 
 function makeList(scheme: 'bullets' | 'numbers') {
   void session.makeList(scheme)
@@ -208,6 +229,8 @@ const menus = computed<Menu[]>(() => {
         }),
         { label: '', separator: true },
         ...clipboardItems(c, () => pasteFromClipboard()),
+        { label: '', separator: true },
+        searchItem(c, { open: () => openSearch() }),
         { label: '', separator: true },
         // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
         {
@@ -332,7 +355,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" @suggestion="pick" @style-menu="openStyleMenu" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" @suggestion="pick" @style-menu="openStyleMenu" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
@@ -344,6 +367,15 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       </footer>
     </template>
     <template #overlay>
+      <SearchPanel
+        v-if="search.open.value"
+        :ref="(panel) => (search.panel.value = panel as never)"
+        :host="searchHost"
+        :replace="search.replace.value"
+        @close="search.closeSearch()"
+        @view="search.view.value = $event"
+        @help="frame?.openHelp('how-to')"
+      />
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
