@@ -381,3 +381,16 @@ Decisions: D438 (one core.Import entry); D439 (the file kept, sealed, in the doc
 D441 (download patched into the kept file); D442 (a Claudia file goes in as it is); D443 (the front page and File ▸
 Open of sheet 10)
 
+## Printing sheets (branch `computes-print`, 2026-11-14)
+
+computes was the one app without File ▸ Print…. The owner asked for a suggestion first; the design came as mock-ups
+(`notes/mockups/print-preview-computes*.svg`) and a note (`notes/e6-19-print-sheets.md`), and he answered the open
+points on the same day: fit to width by default, the print area as a named range, orientation and scale per sheet and
+paper and margins per workbook, automatic page cuts only, View ▸ Page Breaks after the preview works, purpose tints
+optional, the sheet name and the page number in the footer, a chart tab as one page. From here on this branch numbers
+its decisions above 1000. The work comes in stories (E6.19.1 to E6.19.8); the first is the grid paginator in the layout
+library.
+
+Decisions: D1001 (the shared preview and its three added controls); D1002 (fit to width); D1003 (the print area is a
+named range); D1004 (what is kept per sheet and per workbook); D1005 (automatic cuts only); D1006 (the footer); D1007
+(purpose tints); D1008 (charts and chart tabs); D1009 (the paginator in the layout library)

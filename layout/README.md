@@ -4,7 +4,7 @@ The page layout of the Claudia office suite: one deterministic TypeScript librar
 and pages into a PDF, the same byte for byte on every machine, browser and operating system (D901, D910).
 
 It is written once and shared by the three apps. composes and creates use it for their print preview (File ▸ Print…,
-D906, D918); computes will reuse its parts with an adapter of its own (D902).
+D906, D918); computes prints through the same preview with an adapter of its own (D902, D1009).
 
 ## Parts
 
@@ -21,6 +21,7 @@ D906, D918); computes will reuse its parts with an adapter of its own (D902).
 | Apps | `apps/objects.ts` | What the apps share: a floating object (text box, shape with its label, picture) drawn into a rectangle, the style sheet, page numbers |
 | | `apps/composes.ts` | A composes text as the server sends it, to pages |
 | | `apps/creates.ts` | A presentation as the server sends it, to pages: one slide to a page or handouts of 2, 3 (with lines), 4, 6 or 9 (D917) |
+| | `apps/computes.ts` | A workbook to pages (D1009): every sheet cut by rows and columns at a chosen scale (fit to width, fit to one page, a percentage), rows and columns repeated on every page, gridlines, headings, purpose tints, pictures and charts cut with the page, a footer with the sheet's name and "n / N" (D1002–D1008); a chart tab as one page |
 
 ## Rules
 
