@@ -53,8 +53,11 @@ import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~
 import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
+import { usePrint } from '~/lib/print/use-print'
+import { sheetSource } from '~/lib/print/source'
 import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
+import PrintPreview from './PrintPreview.vue'
 import SearchPanel from './SearchPanel.vue'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
@@ -665,7 +668,19 @@ const DESCRIBE = describeShortcut(openDescribe, () => !!grid.value?.selectedObje
 const NEXT_OBJECT: ShortcutDef = { id: 'view.nextObject', get label() { return t('Next Object') }, chord: { key: 'PageDown', ctrl: true, alt: true }, run: () => grid.value?.stepObject(1) }
 const PREVIOUS_OBJECT: ShortcutDef = { id: 'view.previousObject', get label() { return t('Previous Object') }, chord: { key: 'PageUp', ctrl: true, alt: true }, run: () => grid.value?.stepObject(-1) }
 
+// File ▸ Print… (E6.19): the preview takes the place of the sheet. What is printed is the sheet or chart tab shown, the
+// selection of it, or the whole workbook (D1001–D1004); the bar's choices live in `lib/print/source.ts`.
+const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => grid.value?.focus())
+const printSource = sheetSource(session, {
+  shown: () => (activeChart.value ? { kind: 'chart', id: activeChart.value } : { kind: 'sheet', id: state.activeSheet }),
+  selection: () => {
+    const b = bounds(sel.value)
+    return [b.r0, b.c0, b.r1, b.c1]
+  },
+})
+
 const extraShortcuts = [
+  PRINT,
   LOOK,
   DESCRIBE,
   NEXT_OBJECT,
@@ -865,6 +880,7 @@ const shared = computed<DocumentMenuContext>(() => ({
   open: (name) => frame.value?.openDialog(name),
   leave: (opts) => emit('leave', opts),
   save: () => frame.value?.checkpoint(null),
+  print: openPrint,
 }))
 
 function ask(text: string) {
@@ -992,7 +1008,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     @saved="grid?.focus()"
   >
     <template #toolbar>
-      <div class="formulaRow" data-region="toolbar">
+      <div v-if="!printing" class="formulaRow" data-region="toolbar">
         <FormulaBar
           :label="label"
           :text="formulaText"
@@ -1046,7 +1062,8 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         </div>
       </div>
     </template>
-    <div v-if="activeChart" class="chart-tab">
+    <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
+    <div v-else-if="activeChart" class="chart-tab">
       <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" :label="t('Chart: {name}', { name: activeChartName })" />
       <div v-else class="nosheet">{{ t('This chart\'s definition is gone.') }}</div>
     </div>
@@ -1083,7 +1100,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     <div v-else class="nosheet">{{ t('This document has no sheet yet.') }}</div>
     <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
     <template #footer>
-      <FooterBar data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" />
+      <FooterBar v-if="!printing" data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" />
     </template>
     <template #overlay>
       <SearchPanel

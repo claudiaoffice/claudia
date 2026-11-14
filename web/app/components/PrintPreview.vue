@@ -161,18 +161,40 @@ function chooseMargins(id: string) {
 
 // ------------------------------------------------------------------------------ zoom
 const PX_PER_MPT = 96 / 72 / 1000
+/** The way the pages lie: the document's, or — where each sheet lies its own way (D1004) — that of the sheet shown. */
+const orientation = computed(() => source.orientation?.value() ?? page.value.orientation)
+function chooseOrientation(next: 'portrait' | 'landscape') {
+  if (!canChange.value) return
+  if (source.orientation) source.orientation.set(next)
+  else change({ ...page.value, orientation: next })
+}
+/** What is printed is a choice of the one who prints, not a step in the document's history: viewers make it too. */
+function chooseContents(value: string) {
+  const c = source.contents
+  if (c && c.enabled?.(value) !== false) c.set(value)
+}
+function chooseScale(value: string) {
+  const c = source.scale
+  if (c && canChange.value && c.enabled?.(value) !== false) c.set(value)
+}
 const scale = computed(() => {
-  const w = page.value.orientation === 'landscape' ? page.value.height : page.value.width
+  // the widest page decides how big the pages are drawn: a workbook's pages are not all of one size
+  const pages = result.value?.list.pages ?? []
+  const widest = pages.reduce((m, p) => Math.max(m, p.width), 0)
+  const w = widest || (orientation.value === 'landscape' ? page.value.height : page.value.width)
   if (zoom.value === 'two') return Math.max(0.2, (width.value - 120) / 2 / (w * PX_PER_MPT))
   if (zoom.value === 'width') return Math.max(0.2, (width.value - 80) / (w * PX_PER_MPT))
   return zoom.value
 })
 const zoomLabel = computed(() => (zoom.value === 'two' ? t('Two pages') : zoom.value === 'width' ? t('Fit width') : `${Math.round(scale.value * 100)} %`))
 const zoomBy = (f: number) => (zoom.value = Math.min(4, Math.max(0.25, Math.round(scale.value * f * 100) / 100)))
-const pageStyle = computed(() => {
+/** Every page has the size it was laid out on: the pages of a workbook may lie each their way. */
+function pageStyle(i: number) {
+  const p = result.value?.list.pages[i]
   const g = result.value?.geometry
-  return g ? { width: `${g.width * PX_PER_MPT * scale.value}px`, height: `${g.height * PX_PER_MPT * scale.value}px` } : {}
-})
+  const size = p ?? g
+  return size ? { width: `${size.width * PX_PER_MPT * scale.value}px`, height: `${size.height * PX_PER_MPT * scale.value}px` } : {}
+}
 
 // ------------------------------------------------------------------------------ out
 async function pdf(): Promise<Uint8Array | null> {
@@ -235,7 +257,9 @@ const noteText = computed(() => [
         ? t('“{requested}” is not on this server; the preview and the PDF use {used} for it.', { requested: n.requested ?? '', used: n.used ?? '' })
         : n.kind === 'hyphenation'
           ? t('Not hyphenated: {reason}.', { reason: n.reason?.replace(/, so words are not hyphenated$/, '') ?? '' })
-          : n.partial
+          : n.kind === 'sheet'
+            ? t('Sheet: {reason}.', { reason: n.reason ?? '' })
+            : n.partial
             ? t('A picture is printed without some of it: {reason}.', { reason: n.reason ?? '' })
             : t('An object cannot be printed: {reason}.', { reason: n.reason ?? '' }),
     ),
@@ -260,6 +284,16 @@ defineExpose({ print, download, status })
           </optgroup>
         </select>
       </label>
+      <label v-if="source.contents" class="lbl" :title="t('What is printed')">{{ t('Contents') }}
+        <select data-testid="print-contents" :value="source.contents.value()" @change="chooseContents(($event.target as HTMLSelectElement).value)">
+          <option v-for="o in source.contents.options" :key="o.value" :value="o.value" :disabled="source.contents.enabled?.(o.value) === false">{{ o.label }}</option>
+        </select>
+      </label>
+      <label v-if="source.scale" class="lbl" :title="t('How big the cells are printed')">{{ t('Scale') }}
+        <select data-testid="print-scale" :value="source.scale.value()" :disabled="!canChange" @change="chooseScale(($event.target as HTMLSelectElement).value)">
+          <option v-for="o in source.scale.options" :key="o.value" :value="o.value" :disabled="source.scale.enabled?.(o.value) === false">{{ o.label }}</option>
+        </select>
+      </label>
       <label class="lbl">{{ t('Paper') }}
         <select data-testid="print-paper" :value="paperListed ? page.paper : 'custom'" :disabled="!canChange" @change="choosePaper(($event.target as HTMLSelectElement).value)">
           <option v-for="p in source.papers" :key="p.id" :value="p.id">{{ p.name }} · {{ p.label }}</option>
@@ -272,8 +306,8 @@ defineExpose({ print, download, status })
         <button class="btn small" type="button" @click="applyCustom">{{ t('Use') }}</button>
       </span>
       <div class="segmented" role="group" :aria-label="t('Orientation')">
-        <button type="button" :aria-pressed="page.orientation === 'portrait'" :disabled="!canChange" data-testid="print-portrait" @click="change({ ...page, orientation: 'portrait' })">{{ t('Portrait') }}</button>
-        <button type="button" :aria-pressed="page.orientation === 'landscape'" :disabled="!canChange" data-testid="print-landscape" @click="change({ ...page, orientation: 'landscape' })">{{ t('Landscape') }}</button>
+        <button type="button" :aria-pressed="orientation === 'portrait'" :disabled="!canChange" data-testid="print-portrait" @click="chooseOrientation('portrait')">{{ t('Portrait') }}</button>
+        <button type="button" :aria-pressed="orientation === 'landscape'" :disabled="!canChange" data-testid="print-landscape" @click="chooseOrientation('landscape')">{{ t('Landscape') }}</button>
       </div>
       <label class="lbl">{{ t('Margins') }}
         <select data-testid="print-margins" :value="margin ?? 'own'" :disabled="!canChange" @change="chooseMargins(($event.target as HTMLSelectElement).value)">
@@ -307,7 +341,7 @@ defineExpose({ print, download, status })
       <p v-if="busy" class="busy">{{ t('Laying out the pages…') }}</p>
       <div class="pages" :class="{ two: zoom === 'two' }" data-testid="print-pages">
         <!-- eslint-disable-next-line vue/no-v-html -- markup made by lib/print/paint.ts from the display list, every text escaped -->
-        <div v-for="(svg, i) in svgs" :key="i" class="page" :style="pageStyle" :aria-label="t('page {n}', { n: i + 1 })" v-html="svg" />
+        <div v-for="(svg, i) in svgs" :key="i" class="page" :style="pageStyle(i)" :aria-label="t('page {n}', { n: i + 1 })" v-html="svg" />
       </div>
     </div>
     <footer class="foot mono" data-testid="print-status">{{ status }}</footer>

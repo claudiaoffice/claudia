@@ -9,6 +9,15 @@ Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 →
 the number formats). Search on claudia-search (SEC-18, CODE-18).
 
 ### Added
+- **Printing a workbook** (E6.19, D1001–D1009; state schema 11 → 12): `SheetPrintSetup` (orientation, scale — fit to
+  width by default, fit to one page, or 10–400 %; page order; repeated rows and columns; gridlines, headings, purpose
+  tints, the sheet's name in the footer, objects, skipping empty pages) and `DEFAULT_SHEET_PRINT`, stored per sheet or
+  chart tab in `WorkbookModel.sheet_print` (only what differs from the default), the workbook's page in
+  `WorkbookModel.print_page` (the kernel's `PageSetup`, as in composes and creates), and its `language` (the kernel's
+  `SetLanguage`). The commands `SetPrintPage` and `SetSheetPrint` have exact inverses; `PrintSetupChanged` is their
+  event (`{"type": "print_setup", ...}`). Older workbooks print A4 portrait, every sheet the default way. New public
+  names: `SheetPrintSetup`, `DEFAULT_SHEET_PRINT`, `PrintSetupError`, `MIN_PERCENT`, `MAX_PERCENT`, `SetPrintPage`,
+  `SetSheetPrint`, `PrintSetupChanged`. Repeated rows and columns do not follow `Structure` edits yet.
 - `DescribeObject` is exported (it is the kernel's, `claudia_core.DescribeObject`).
 - Date functions on Excel's day count, its 29 February 1900 included (D377): `DATE`, `YEAR`, `MONTH`, `DAY`, `EDATE`,
   `EOMONTH`, `DAYS`, `WEEKDAY`, `DATEDIF`. Money functions with Excel's signs: `PMT`, `PV`, `FV`, `NPV`, `IRR` (Newton's

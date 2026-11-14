@@ -61,3 +61,5 @@ claudiaoffice-log/.obsidian/workspace*.json
 .coverage.*
 
 ai-models/*
+
+Claude*

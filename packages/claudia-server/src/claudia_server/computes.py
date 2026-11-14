@@ -6,7 +6,8 @@
 ``define_diagram``, ``update_diagram``, ``forget_diagram``, ``add_diagram_object``, ``add_chart``,
 ``remove_chart``, for named ranges, tables and queries (E6.5), ``names``, ``define_name``, ``rename_name``,
 ``remove_name``, ``sql_preview`` and ``define_sql``, and for search and replace (E6.20) ``search_find``,
-``search_preview`` and ``search_replace`` (:mod:`claudia_server.computes_search`). Cells
+``search_preview`` and ``search_replace`` (:mod:`claudia_server.computes_search`), and for printing (E6.19)
+``print_setup``, ``set_print_page``, ``set_sheet_print``, ``language`` and ``set_language``. Cells
 travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
 "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
 with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
@@ -75,8 +76,12 @@ from claudia_computes import (
     ResizeLines,
     SetCells,
     SetCellStyle,
+    SetPrintPage,
     SetRandomSeed,
+    SetSheetPrint,
+    PrintSetupError,
     SheetId,
+    SheetPrintSetup,
     Structure,
     WorkbookModel,
     function_catalog,
@@ -109,6 +114,8 @@ from claudia_core import (
     ImageImport,
     MoveObject,
     ObjectBody,
+    PageSetup,
+    PageSetupError,
     RemoveObject,
     ResizeObject,
     RotateObject,
@@ -121,6 +128,7 @@ from .computes_search import add_search_methods
 from .i18n import msg, translate
 from .images import image_bytes, picture_words
 from .office_export import document_info, export_with_original, office_export
+from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
 from .style_targets import OBJECTS
@@ -186,6 +194,7 @@ def _workbook(ctx: Context) -> WorkbookModel:
 
 
 add_search_methods(computes_methods, workbook=_workbook)
+add_language_methods(computes_methods)  # ``language`` and ``set_language``: the layout hyphenates by it (D915)
 
 
 def _index(value, limit: int, what: str):
@@ -306,6 +315,50 @@ def _set_random_seed(ctx, *, seed, base):
     on every computer, so a model can be reproduced. One undo step."""
     seed = _whole(seed, 0, MAX_SEED, "set_random_seed: seed")
     applied = ctx.document.execute(SetRandomSeed(seed), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("print_setup")
+def _print_setup(ctx):
+    """How the workbook is printed (E6.19, D1004): `{revision, page, sheets}`. `page` is as composes' `page`
+    (paper, width, height, orientation, margins, page_numbers; lengths in mpt) and the same for all sheets; `sheets`
+    holds, for every sheet and chart tab by id, its own setup — `{orientation, scale, order, repeat_rows,
+    repeat_cols, gridlines, headings, purposes, footer_name, objects, skip_empty}` — with the defaults filled in
+    for one nobody has set up. `scale` is `{kind: "fit-width" | "fit-page"}` or `{kind: "percent", percent}`
+    (10 to 400); `repeat_rows` and `repeat_cols` are `[first, last]` (from 0) or `null`. The print area is a named
+    range (E6.19.5), not part of this."""
+    book = _workbook(ctx)
+    return {
+        "revision": _rev(ctx),
+        "page": book.print_page.to_data(),
+        "sheets": {str(key): book.sheet_print_of(str(key)).to_data() for key in (*book.sheets, *book.charts)},
+    }
+
+
+@computes_methods.method("set_print_page", "page:dict base:revision?", write=True)
+def _set_print_page(ctx, *, page, base):
+    """Print the workbook on another page (`page` as `print_setup` returns it). One step for everybody, in the
+    history. `command_error` names what is wrong with a page that cannot be used."""
+    people_only(ctx)
+    try:
+        command = SetPrintPage(PageSetup.from_data(page))
+    except PageSetupError as exc:
+        raise RequestError("command_error", str(exc)) from None
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("set_sheet_print", "sheet:str setup:dict base:revision?", write=True)
+def _set_sheet_print(ctx, *, sheet, setup, base):
+    """Print a sheet or chart tab another way (`sheet` its id, `setup` as `print_setup` returns it; a part that is
+    left out has its default). One step for everybody, in the history. `command_error` for an unknown sheet or a
+    setup that cannot be used."""
+    people_only(ctx)
+    try:
+        command = SetSheetPrint(sheet, SheetPrintSetup.from_data(setup))
+    except PrintSetupError as exc:
+        raise RequestError("command_error", str(exc)) from None
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
 

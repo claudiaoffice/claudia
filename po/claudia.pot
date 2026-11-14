@@ -65,7 +65,7 @@ msgstr ""
 msgid "1 object"
 msgstr ""
 
-#: web/app/lib/print/setup.ts:104
+#: web/app/lib/print/setup.ts:104 web/app/lib/print/sheet.ts:99
 msgid "1 page"
 msgstr ""
 
@@ -173,7 +173,7 @@ msgstr ""
 msgid "A number raised to a power (the same as the operator ^)."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:239
+#: web/app/components/PrintPreview.vue:263
 msgid "A picture is printed without some of it: {reason}."
 msgstr ""
 
@@ -261,7 +261,7 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1108
+#: web/app/components/Workspace.vue:1125
 msgid "Add Sheet"
 msgstr ""
 
@@ -357,7 +357,7 @@ msgstr ""
 msgid "An angle in radians as degrees."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:240
+#: web/app/components/PrintPreview.vue:264
 msgid "An object cannot be printed: {reason}."
 msgstr ""
 
@@ -401,7 +401,7 @@ msgstr ""
 msgid "Arrows"
 msgstr ""
 
-#: web/app/components/Workspace.vue:972
+#: web/app/components/Workspace.vue:988
 msgid "Arrows, Tab, Enter"
 msgstr ""
 
@@ -477,7 +477,7 @@ msgstr ""
 msgid "Back to the simple field"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:253
+#: web/app/components/PrintPreview.vue:277
 msgid "Back to {place} (Esc)"
 msgstr ""
 
@@ -589,7 +589,7 @@ msgstr ""
 msgid "Cell"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1107
+#: web/app/components/Workspace.vue:1124
 msgid "Cell menu"
 msgstr ""
 
@@ -605,7 +605,7 @@ msgstr ""
 msgid "Cells are"
 msgstr ""
 
-#: web/app/components/Workspace.vue:763
+#: web/app/components/Workspace.vue:778
 msgid "Cells hold no lists"
 msgstr ""
 
@@ -661,11 +661,11 @@ msgstr ""
 msgid "Chart"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1050
+#: web/app/components/Workspace.vue:1067
 msgid "Chart: {name}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:905
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:921
 msgid "Chart…"
 msgstr ""
 
@@ -721,11 +721,11 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:789
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:804
 msgid "Clear Cell Style"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:930
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:946
 msgid "Clear Cells"
 msgstr ""
 
@@ -789,7 +789,7 @@ msgstr ""
 msgid "Colours…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:921
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:937
 msgid "Column"
 msgstr ""
 
@@ -853,6 +853,10 @@ msgstr ""
 msgid "Connection to {label}: {word}. Show details."
 msgstr ""
 
+#: web/app/components/PrintPreview.vue:287
+msgid "Contents"
+msgstr ""
+
 #: web/app/components/RecoveryKeyDialog.vue:54
 msgid "Continue"
 msgstr ""
@@ -869,7 +873,7 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
-#: web/app/components/Workspace.vue:373
+#: web/app/components/Workspace.vue:376
 msgid "Copied the result as values."
 msgstr ""
 
@@ -937,11 +941,11 @@ msgstr ""
 msgid "Ctrl + Backspace / Delete"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:292 web/app/components/TextWorkspace.vue:314 web/app/components/Workspace.vue:978
+#: web/app/components/SlideWorkspace.vue:292 web/app/components/TextWorkspace.vue:314 web/app/components/Workspace.vue:994
 msgid "Ctrl + C / X / V"
 msgstr ""
 
-#: web/app/components/Workspace.vue:975
+#: web/app/components/Workspace.vue:991
 msgid "Ctrl + arrows"
 msgstr ""
 
@@ -969,7 +973,7 @@ msgstr ""
 msgid "Current slide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:266
+#: web/app/components/PrintPreview.vue:300
 msgid "Custom…"
 msgstr ""
 
@@ -1017,7 +1021,7 @@ msgstr ""
 msgid "Del"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/SlideWorkspace.vue:239 web/app/components/Workspace.vue:916 web/app/components/Workspace.vue:926 web/app/lib/object-menu.ts:52
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/SlideWorkspace.vue:239 web/app/components/Workspace.vue:932 web/app/components/Workspace.vue:942 web/app/lib/object-menu.ts:52
 msgid "Delete"
 msgstr ""
 
@@ -1053,7 +1057,7 @@ msgstr ""
 msgid "Delete this document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:247 web/app/components/Workspace.vue:938 web/app/lib/descriptions.ts:62
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:247 web/app/components/Workspace.vue:954 web/app/lib/descriptions.ts:62
 msgid "Describe Object…"
 msgstr ""
 
@@ -1141,7 +1145,7 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:292
+#: web/app/components/PrintPreview.vue:326
 msgid "Download PDF"
 msgstr ""
 
@@ -1153,7 +1157,7 @@ msgstr ""
 msgid "Drag"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1023
+#: web/app/components/Workspace.vue:1039
 msgid "Draw new random numbers ({key})"
 msgstr ""
 
@@ -1161,11 +1165,11 @@ msgstr ""
 msgid "Draw new random numbers for everybody"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1027
+#: web/app/components/Workspace.vue:1043
 msgid "Draw {n}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1024
+#: web/app/components/Workspace.vue:1040
 msgid "Draw {n}: draw new random numbers"
 msgstr ""
 
@@ -1181,7 +1185,7 @@ msgstr ""
 msgid "Easy to see"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:211 web/app/components/StylesDialog.vue:74 web/app/components/TextWorkspace.vue:199 web/app/components/Workspace.vue:888
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:211 web/app/components/StylesDialog.vue:74 web/app/components/TextWorkspace.vue:199 web/app/components/Workspace.vue:904
 msgid "Edit"
 msgstr ""
 
@@ -1189,7 +1193,7 @@ msgstr ""
 msgid "Edit Text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:151 web/app/components/Workspace.vue:582 web/app/lib/format-menu.ts:105
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:151 web/app/components/Workspace.vue:585 web/app/lib/format-menu.ts:105
 msgid "Edit This Style…"
 msgstr ""
 
@@ -1221,7 +1225,7 @@ msgstr ""
 msgid "Enter"
 msgstr ""
 
-#: web/app/components/Workspace.vue:977
+#: web/app/components/Workspace.vue:993
 msgid "Enter / Tab / Esc"
 msgstr ""
 
@@ -1253,7 +1257,7 @@ msgstr ""
 msgid "Excel has no formula for this: the file holds the current value."
 msgstr ""
 
-#: web/app/components/Workspace.vue:82
+#: web/app/components/Workspace.vue:85
 msgid "Excel workbook (.xlsx)"
 msgstr ""
 
@@ -1281,7 +1285,7 @@ msgstr ""
 msgid "Export…"
 msgstr ""
 
-#: web/app/components/Workspace.vue:973
+#: web/app/components/Workspace.vue:989
 msgid "F6 / Shift + F6"
 msgstr ""
 
@@ -1353,11 +1357,19 @@ msgstr ""
 msgid "First row is a header"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:304
+#: web/app/components/PrintPreview.vue:338
 msgid "Fit the width"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:170
+#: web/app/lib/print/sheet.ts:73
+msgid "Fit to one page"
+msgstr ""
+
+#: web/app/lib/print/sheet.ts:72
+msgid "Fit to width"
+msgstr ""
+
+#: web/app/components/PrintPreview.vue:189
 msgid "Fit width"
 msgstr ""
 
@@ -1369,7 +1381,7 @@ msgstr ""
 msgid "Flow: the text runs to the width of the window"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:624 web/app/components/Workspace.vue:879 web/app/components/Workspace.vue:958
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:627 web/app/components/Workspace.vue:895 web/app/components/Workspace.vue:974
 msgid "Follow Computation"
 msgstr ""
 
@@ -1405,7 +1417,7 @@ msgstr ""
 msgid "For"
 msgstr ""
 
-#: web/app/components/Workspace.vue:784
+#: web/app/components/Workspace.vue:799
 msgid "For cell {cell}"
 msgstr ""
 
@@ -1413,7 +1425,7 @@ msgstr ""
 msgid "For the cell"
 msgstr ""
 
-#: web/app/components/Workspace.vue:784
+#: web/app/components/Workspace.vue:799
 msgid "For the {count} selected cells"
 msgstr ""
 
@@ -1421,7 +1433,7 @@ msgstr ""
 msgid "For {doc}, as {user}. Everybody else keeps their own password."
 msgstr ""
 
-#: web/app/components/Workspace.vue:1108
+#: web/app/components/Workspace.vue:1125
 msgid "Forecast"
 msgstr ""
 
@@ -1429,7 +1441,7 @@ msgstr ""
 msgid "Forget every hidden line"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:55 web/app/components/SlideWorkspace.vue:243 web/app/components/TextWorkspace.vue:224 web/app/components/Workspace.vue:934
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:55 web/app/components/SlideWorkspace.vue:243 web/app/components/TextWorkspace.vue:224 web/app/components/Workspace.vue:950
 msgid "Format"
 msgstr ""
 
@@ -1529,7 +1541,7 @@ msgstr ""
 msgid "Hand {doc} over to somebody who already edits it. You will become an editor; they become the owner once they accept — confirm it is you with your own password."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:258
+#: web/app/components/PrintPreview.vue:282
 msgid "Handouts"
 msgstr ""
 
@@ -1573,6 +1585,10 @@ msgstr ""
 msgid "How Do I…?"
 msgstr ""
 
+#: web/app/components/PrintPreview.vue:292
+msgid "How big the cells are printed"
+msgstr ""
+
 #: web/app/components/FollowPill.vue:27
 msgid "How far the lights reach"
 msgstr ""
@@ -1613,7 +1629,7 @@ msgstr ""
 msgid "How many positions meet all the criteria: pairs of a range and its criterion, all of the same shape."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:255
+#: web/app/components/PrintPreview.vue:279
 msgid "How many slides go on a page"
 msgstr ""
 
@@ -1665,7 +1681,7 @@ msgstr ""
 msgid "Image properties"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:235 web/app/components/Workspace.vue:904
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:235 web/app/components/Workspace.vue:920
 msgid "Image…"
 msgstr ""
 
@@ -1725,11 +1741,11 @@ msgstr ""
 msgid "Insert"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:914
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:930
 msgid "Insert Above"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:915
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:931
 msgid "Insert Below"
 msgstr ""
 
@@ -1741,11 +1757,11 @@ msgstr ""
 msgid "Insert Column Right"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:924
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:940
 msgid "Insert Left"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:925
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:941
 msgid "Insert Right"
 msgstr ""
 
@@ -1861,15 +1877,15 @@ msgstr ""
 msgid "Label"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:276
+#: web/app/components/PrintPreview.vue:310
 msgid "Landscape"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:284
+#: web/app/components/PrintPreview.vue:318
 msgid "Language"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:303 web/app/components/StyleSizeField.vue:28 web/app/components/StyleSizeField.vue:28
+#: web/app/components/PrintPreview.vue:337 web/app/components/StyleSizeField.vue:28 web/app/components/StyleSizeField.vue:28
 msgid "Larger"
 msgstr ""
 
@@ -1881,11 +1897,11 @@ msgstr ""
 msgid "Last changed by {by} · {when}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:307
+#: web/app/components/PrintPreview.vue:341
 msgid "Laying out the pages…"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:255
+#: web/app/components/PrintPreview.vue:279
 msgid "Layout"
 msgstr ""
 
@@ -2017,7 +2033,7 @@ msgstr ""
 msgid "Manage {server}…"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:278
+#: web/app/components/PrintPreview.vue:312
 msgid "Margins"
 msgstr ""
 
@@ -2113,7 +2129,7 @@ msgstr ""
 msgid "My places and collections"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/ImportDialog.vue:108 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/ShareDialog.vue:44 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1108
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/ImportDialog.vue:108 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/ShareDialog.vue:44 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1125
 msgid "Name"
 msgstr ""
 
@@ -2153,7 +2169,7 @@ msgstr ""
 msgid "Names"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:960
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:976
 msgid "Names…"
 msgstr ""
 
@@ -2161,7 +2177,7 @@ msgstr ""
 msgid "New"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:903
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:919
 msgid "New Sheet…"
 msgstr ""
 
@@ -2193,7 +2209,7 @@ msgstr ""
 msgid "New password (at least 8 characters)"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:57 web/app/components/Workspace.vue:1108
+#: web/app/components/FooterBar.vue:57 web/app/components/Workspace.vue:1125
 msgid "New sheet"
 msgstr ""
 
@@ -2201,7 +2217,7 @@ msgstr ""
 msgid "Next ({others})"
 msgstr ""
 
-#: web/app/components/Workspace.vue:665
+#: web/app/components/Workspace.vue:668
 msgid "Next Object"
 msgstr ""
 
@@ -2249,7 +2265,7 @@ msgstr ""
 msgid "No styles fit what is selected"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:144 web/app/components/TextWorkspace.vue:227 web/app/components/Workspace.vue:755
+#: web/app/components/SlideWorkspace.vue:144 web/app/components/TextWorkspace.vue:227 web/app/components/Workspace.vue:770
 msgid "No styles yet"
 msgstr ""
 
@@ -2293,7 +2309,7 @@ msgstr ""
 msgid "Not finding it? Say {mention} in the chat."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:237
+#: web/app/components/PrintPreview.vue:259
 msgid "Not hyphenated: {reason}."
 msgstr ""
 
@@ -2301,7 +2317,7 @@ msgstr ""
 msgid "Not now"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:286
+#: web/app/components/PrintPreview.vue:320
 msgid "Not set"
 msgstr ""
 
@@ -2489,7 +2505,7 @@ msgstr ""
 msgid "OpenDocument presentation (.odp)"
 msgstr ""
 
-#: web/app/components/Workspace.vue:83
+#: web/app/components/Workspace.vue:86
 msgid "OpenDocument spreadsheet (.ods)"
 msgstr ""
 
@@ -2517,7 +2533,7 @@ msgstr ""
 msgid "Orange"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:274
+#: web/app/components/PrintPreview.vue:308
 msgid "Orientation"
 msgstr ""
 
@@ -2525,7 +2541,7 @@ msgstr ""
 msgid "Other arguments are handed to GTK."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:623 web/app/components/Workspace.vue:878 web/app/components/Workspace.vue:957
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:626 web/app/components/Workspace.vue:894 web/app/components/Workspace.vue:973
 msgid "Outcomes of This Cell…"
 msgstr ""
 
@@ -2573,7 +2589,7 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:290
+#: web/app/components/PrintPreview.vue:324
 msgid "Page numbers"
 msgstr ""
 
@@ -2585,7 +2601,7 @@ msgstr ""
 msgid "Pair by position"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:263 web/app/lib/palette.ts:17
+#: web/app/components/PrintPreview.vue:297 web/app/lib/palette.ts:17
 msgid "Paper"
 msgstr ""
 
@@ -2677,7 +2693,7 @@ msgstr ""
 msgid "Poisson"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:275
+#: web/app/components/PrintPreview.vue:309
 msgid "Portrait"
 msgstr ""
 
@@ -2717,7 +2733,7 @@ msgstr ""
 msgid "Presenter view (P)"
 msgstr ""
 
-#: web/app/components/Workspace.vue:666
+#: web/app/components/Workspace.vue:669
 msgid "Previous Object"
 msgstr ""
 
@@ -2733,15 +2749,15 @@ msgstr ""
 msgid "Previous slide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:252
+#: web/app/components/PrintPreview.vue:276
 msgid "Print"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:251 web/app/components/PrintPreview.vue:253
+#: web/app/components/PrintPreview.vue:275 web/app/components/PrintPreview.vue:277
 msgid "Print preview"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:293 web/app/lib/document-menus.ts:82 web/app/lib/print/use-print.ts:33
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:327 web/app/lib/document-menus.ts:82 web/app/lib/print/use-print.ts:33
 msgid "Print…"
 msgstr ""
 
@@ -2777,7 +2793,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:622 web/app/components/Workspace.vue:955
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:625 web/app/components/Workspace.vue:971
 msgid "Random Generator…"
 msgstr ""
 
@@ -2925,7 +2941,7 @@ msgstr ""
 msgid "Require a secret to create or list documents"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:621 web/app/components/Workspace.vue:880 web/app/components/Workspace.vue:956
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:624 web/app/components/Workspace.vue:896 web/app/components/Workspace.vue:972
 msgid "Resample Random Numbers"
 msgstr ""
 
@@ -2985,7 +3001,7 @@ msgstr ""
 msgid "Rounds up to a multiple of the significance (1 unless given; its sign is ignored)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:911
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:927
 msgid "Row"
 msgstr ""
 
@@ -3021,7 +3037,7 @@ msgstr ""
 msgid "SQL"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:961
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:977
 msgid "SQL Query…"
 msgstr ""
 
@@ -3081,6 +3097,10 @@ msgstr ""
 msgid "Say what the object you have selected shows to someone who cannot see it"
 msgstr ""
 
+#: web/app/components/PrintPreview.vue:292
+msgid "Scale"
+msgstr ""
+
 #: web/app/components/SheetChartInsertDialog.vue:127
 msgid "Scatter · soon"
 msgstr ""
@@ -3129,7 +3149,7 @@ msgstr ""
 msgid "Select an object to style it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:784
+#: web/app/components/Workspace.vue:799
 msgid "Select cells or an object to style them"
 msgstr ""
 
@@ -3137,11 +3157,11 @@ msgstr ""
 msgid "Select {blocker}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:635
+#: web/app/components/Workspace.vue:638
 msgid "Selected: {name}"
 msgstr ""
 
-#: web/app/lib/sheet-search-host.ts:45
+#: web/app/lib/print/sheet.ts:65 web/app/lib/sheet-search-host.ts:45
 msgid "Selection"
 msgstr ""
 
@@ -3197,12 +3217,16 @@ msgstr ""
 msgid "Share…"
 msgstr ""
 
-#: web/app/components/Workspace.vue:252
+#: web/app/components/Workspace.vue:255
 msgid "Sheet"
 msgstr ""
 
 #: web/app/components/SheetGrid.vue:952
 msgid "Sheet {name}"
+msgstr ""
+
+#: web/app/components/PrintPreview.vue:261
+msgid "Sheet: {reason}."
 msgstr ""
 
 #: web/app/components/AboutDialog.vue:37
@@ -3213,7 +3237,7 @@ msgstr ""
 msgid "Shift"
 msgstr ""
 
-#: web/app/components/Workspace.vue:974
+#: web/app/components/Workspace.vue:990
 msgid "Shift + arrows or drag"
 msgstr ""
 
@@ -3309,7 +3333,7 @@ msgstr ""
 msgid "Slides"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:301 web/app/components/StyleSizeField.vue:25 web/app/components/StyleSizeField.vue:25
+#: web/app/components/PrintPreview.vue:335 web/app/components/StyleSizeField.vue:25 web/app/components/StyleSizeField.vue:25
 msgid "Smaller"
 msgstr ""
 
@@ -3329,7 +3353,7 @@ msgstr ""
 msgid "Something is repeated that is not there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:428 web/app/lib/base-session.ts:504 web/app/lib/session.ts:568
+#: web/app/lib/base-session.ts:428 web/app/lib/base-session.ts:504 web/app/lib/session.ts:609
 msgid "Something went wrong."
 msgstr ""
 
@@ -3369,7 +3393,7 @@ msgstr ""
 msgid "Starting {app}…"
 msgstr ""
 
-#: web/app/components/Workspace.vue:879
+#: web/app/components/Workspace.vue:895
 msgid "Stop Following"
 msgstr ""
 
@@ -3525,7 +3549,7 @@ msgstr ""
 msgid "That document exists already — or the name or password is not acceptable. Try Open."
 msgstr ""
 
-#: web/app/components/Workspace.vue:452
+#: web/app/components/Workspace.vue:455
 msgid "That does not fit on the sheet."
 msgstr ""
 
@@ -3537,7 +3561,7 @@ msgstr ""
 msgid "That file is too big (at most {mb} MB)."
 msgstr ""
 
-#: web/app/components/Workspace.vue:451
+#: web/app/components/Workspace.vue:454
 msgid "That is too much to paste at once (at most 10,000 cells)."
 msgstr ""
 
@@ -3565,7 +3589,7 @@ msgstr ""
 msgid "The bottom side"
 msgstr ""
 
-#: web/app/components/Workspace.vue:375
+#: web/app/components/Workspace.vue:378
 msgid "The browser did not allow copying."
 msgstr ""
 
@@ -3693,7 +3717,7 @@ msgstr ""
 msgid "The keyboard shortcuts this app uses"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:284
+#: web/app/components/PrintPreview.vue:318
 msgid "The language of the document: its words are hyphenated by it"
 msgstr ""
 
@@ -4057,7 +4081,7 @@ msgstr ""
 msgid "This backslash does not mean anything here."
 msgstr ""
 
-#: web/app/components/Workspace.vue:704
+#: web/app/components/Workspace.vue:719
 msgid "This cell has no alternatives and does not depend on any."
 msgstr ""
 
@@ -4073,7 +4097,7 @@ msgstr ""
 msgid "This chart only"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1051
+#: web/app/components/Workspace.vue:1068
 msgid "This chart's definition is gone."
 msgstr ""
 
@@ -4085,7 +4109,7 @@ msgstr ""
 msgid "This computer"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1083
+#: web/app/components/Workspace.vue:1100
 msgid "This document has no sheet yet."
 msgstr ""
 
@@ -4153,7 +4177,7 @@ msgstr ""
 msgid "This removes {doc} from the server for good — its content, its history and its chat, and everybody's access to it. There is no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download)."
 msgstr ""
 
-#: web/app/components/Workspace.vue:364
+#: web/app/components/Workspace.vue:367
 msgid "This result has no name to take its cells from: select them and copy (Ctrl+C)."
 msgstr ""
 
@@ -4173,7 +4197,7 @@ msgstr ""
 msgid "This shape only"
 msgstr ""
 
-#: web/app/lib/sheet-search-host.ts:45
+#: web/app/lib/print/sheet.ts:64 web/app/lib/sheet-search-host.ts:45
 msgid "This sheet"
 msgstr ""
 
@@ -4205,7 +4229,7 @@ msgstr ""
 msgid "Too faint"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:280 web/app/components/TextWorkspace.vue:270 web/app/components/Workspace.vue:950
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:280 web/app/components/TextWorkspace.vue:270 web/app/components/Workspace.vue:966
 msgid "Tools"
 msgstr ""
 
@@ -4217,11 +4241,11 @@ msgstr ""
 msgid "Try 2 for two minutes, 2:30 or 90s."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:170
+#: web/app/components/PrintPreview.vue:189
 msgid "Two pages"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:302
+#: web/app/components/PrintPreview.vue:336
 msgid "Two pages side by side"
 msgstr ""
 
@@ -4237,7 +4261,7 @@ msgstr ""
 msgid "Type the address of a server, such as demo.example.org:8420."
 msgstr ""
 
-#: web/app/components/Workspace.vue:976
+#: web/app/components/Workspace.vue:992
 msgid "Type, F2 or double click"
 msgstr ""
 
@@ -4269,7 +4293,7 @@ msgstr ""
 msgid "Update now"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:272
+#: web/app/components/PrintPreview.vue:306
 msgid "Use"
 msgstr ""
 
@@ -4313,7 +4337,7 @@ msgstr ""
 msgid "Vertical alignment"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:251 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:258 web/app/components/Workspace.vue:942
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:251 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:258 web/app/components/Workspace.vue:958
 msgid "View"
 msgstr ""
 
@@ -4347,6 +4371,10 @@ msgstr ""
 
 #: web/app/components/PaletteDialog.vue:129
 msgid "What changes with it"
+msgstr ""
+
+#: web/app/components/PrintPreview.vue:287
+msgid "What is printed"
 msgstr ""
 
 #: web/app/components/OutcomePopover.vue:117 web/app/components/OutcomePopover.vue:118
@@ -4441,6 +4469,10 @@ msgstr ""
 msgid "Whole table"
 msgstr ""
 
+#: web/app/lib/print/sheet.ts:66
+msgid "Whole workbook"
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:242
 msgid "Width"
 msgstr ""
@@ -4469,7 +4501,7 @@ msgstr ""
 msgid "Words"
 msgstr ""
 
-#: web/app/components/Workspace.vue:252
+#: web/app/components/Workspace.vue:255
 msgid "Workbook"
 msgstr ""
 
@@ -4529,7 +4561,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:292 web/app/components/SlideCanvas.vue:329 web/app/components/Workspace.vue:255 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:382 web/app/components/Workspace.vue:442 web/app/components/Workspace.vue:448 web/app/components/Workspace.vue:498 web/app/components/Workspace.vue:650 web/app/components/Workspace.vue:697 web/app/components/Workspace.vue:817 web/app/lib/base-session.ts:437 web/app/lib/text-session.ts:382
+#: web/app/components/SlideCanvas.vue:292 web/app/components/SlideCanvas.vue:329 web/app/components/Workspace.vue:258 web/app/components/Workspace.vue:303 web/app/components/Workspace.vue:385 web/app/components/Workspace.vue:445 web/app/components/Workspace.vue:451 web/app/components/Workspace.vue:501 web/app/components/Workspace.vue:653 web/app/components/Workspace.vue:712 web/app/components/Workspace.vue:832 web/app/lib/base-session.ts:437 web/app/lib/text-session.ts:382
 msgid "You can only look at this document."
 msgstr ""
 
@@ -4569,7 +4601,7 @@ msgstr ""
 msgid "Your recovery key"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:300
+#: web/app/components/PrintPreview.vue:334
 msgid "Zoom"
 msgstr ""
 
@@ -4881,7 +4913,7 @@ msgstr ""
 msgid "column {n}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1031
+#: web/app/components/Workspace.vue:1047
 msgid "completions"
 msgstr ""
 
@@ -4913,7 +4945,7 @@ msgstr ""
 msgid "contain “{text}”"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:292 web/app/components/TextWorkspace.vue:314 web/app/components/Workspace.vue:978
+#: web/app/components/SlideWorkspace.vue:292 web/app/components/TextWorkspace.vue:314 web/app/components/Workspace.vue:994
 msgid "copy, cut and paste, also from and to other programs"
 msgstr ""
 
@@ -4981,7 +5013,7 @@ msgstr ""
 msgid "edit"
 msgstr ""
 
-#: web/app/components/Workspace.vue:976
+#: web/app/components/Workspace.vue:992
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr ""
 
@@ -5077,7 +5109,7 @@ msgstr ""
 msgid "greatest"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:271
+#: web/app/components/PrintPreview.vue:305
 msgid "height in millimetres"
 msgstr ""
 
@@ -5133,7 +5165,7 @@ msgstr ""
 msgid "is working"
 msgstr ""
 
-#: web/app/components/Workspace.vue:975
+#: web/app/components/Workspace.vue:991
 msgid "jump to the edge of a block of data"
 msgstr ""
 
@@ -5141,11 +5173,11 @@ msgstr ""
 msgid "just now"
 msgstr ""
 
-#: web/app/components/Workspace.vue:977
+#: web/app/components/Workspace.vue:993
 msgid "keep and go down / keep and go right / cancel"
 msgstr ""
 
-#: web/app/lib/print/setup.ts:107
+#: web/app/lib/print/setup.ts:107 web/app/lib/print/sheet.ts:101
 msgid "landscape"
 msgstr ""
 
@@ -5153,7 +5185,7 @@ msgstr ""
 msgid "least"
 msgstr ""
 
-#: web/app/components/Workspace.vue:973
+#: web/app/components/Workspace.vue:989
 msgid "leave the table: on to the next / back to the previous part of the window"
 msgstr ""
 
@@ -5229,7 +5261,7 @@ msgstr ""
 msgid "missing or wrong credentials"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:271
+#: web/app/components/PrintPreview.vue:305
 msgid "mm"
 msgstr ""
 
@@ -5245,7 +5277,7 @@ msgstr ""
 msgid "move it; the handles resize it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:972
+#: web/app/components/Workspace.vue:988
 msgid "move through the table"
 msgstr ""
 
@@ -5401,7 +5433,7 @@ msgstr ""
 msgid "overview"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:310
+#: web/app/components/PrintPreview.vue:344
 msgid "page {n}"
 msgstr ""
 
@@ -5441,7 +5473,7 @@ msgstr ""
 msgid "picture"
 msgstr ""
 
-#: web/app/lib/print/setup.ts:107
+#: web/app/lib/print/setup.ts:107 web/app/lib/print/sheet.ts:101
 msgid "portrait"
 msgstr ""
 
@@ -5553,7 +5585,7 @@ msgstr ""
 msgid "search_replace: the search took longer than {seconds} seconds, so nothing was replaced: narrow it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:974
+#: web/app/components/Workspace.vue:990
 msgid "select a block"
 msgstr ""
 
@@ -5741,7 +5773,7 @@ msgstr ""
 msgid "the connection closed ({code})"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:281
+#: web/app/components/PrintPreview.vue:315
 msgid "the document's own"
 msgstr ""
 
@@ -5817,11 +5849,15 @@ msgstr ""
 msgid "the sheet is {style}"
 msgstr ""
 
+#: web/app/lib/print/source.ts:230
+msgid "the sheets"
+msgstr ""
+
 #: web/app/lib/cell-styles.ts:81
 msgid "the sheet’s style"
 msgstr ""
 
-#: web/app/lib/print/source.ts:152
+#: web/app/lib/print/source.ts:178
 msgid "the slides"
 msgstr ""
 
@@ -5829,7 +5865,7 @@ msgstr ""
 msgid "the start of the cell"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:179 web/app/components/TextEditor.vue:388 web/app/lib/print/source.ts:95
+#: web/app/components/SearchPanel.vue:179 web/app/components/TextEditor.vue:388 web/app/lib/print/source.ts:121
 msgid "the text"
 msgstr ""
 
@@ -6033,7 +6069,7 @@ msgstr ""
 msgid "was {size} px wide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:270
+#: web/app/components/PrintPreview.vue:304
 msgid "width in millimetres"
 msgstr ""
 
@@ -6173,7 +6209,7 @@ msgstr ""
 msgid "{count} of {max} characters"
 msgstr ""
 
-#: web/app/lib/print/setup.ts:104
+#: web/app/lib/print/setup.ts:104 web/app/lib/print/sheet.ts:99
 msgid "{count} pages"
 msgstr ""
 
@@ -6191,6 +6227,10 @@ msgstr ""
 
 #: web/app/components/LineSizeDialog.vue:52
 msgid "{count} rows selected — {line} to row {last} — with different sizes."
+msgstr ""
+
+#: web/app/lib/print/sheet.ts:100
+msgid "{count} sheets"
 msgstr ""
 
 #: web/app/lib/print/setup.ts:105
@@ -6637,7 +6677,7 @@ msgstr ""
 msgid "“{name}” is a {kind} style and does not fit {where}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:235
+#: web/app/components/PrintPreview.vue:257
 msgid "“{requested}” is not on this server; the preview and the PDF use {used} for it."
 msgstr ""
 

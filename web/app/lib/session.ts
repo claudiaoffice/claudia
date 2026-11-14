@@ -17,6 +17,8 @@ import type { NameDraft, NameInfo } from './names'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
 import type { OutcomeTable } from './outcomes'
 import type { Reach, Trace, Window } from './follow'
+import type { PageSetupData } from '@claudia/layout'
+import type { SheetPrintData } from './print/sheet'
 
 export { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT } from './line-sizes'
 
@@ -105,6 +107,13 @@ export interface State extends BaseState {
   /** The cells that light up while a computation is followed (E6.23, D297), or `null`. A view of this person's own:
    * nobody else sees it. */
   trace: Trace | null
+  /** The page the workbook prints on (E6.19, D1004), the same for all sheets; `null` for a server from before printing. */
+  printPage: PageSetupData | null
+  /** How each sheet and chart tab prints, by id, with the defaults filled in; empty for an old server. */
+  sheetPrint: Record<string, SheetPrintData>
+  /** The language the workbook is written in (D915), a BCP 47 tag; `null` when it is not set, `undefined` for a server
+   * that does not know languages. */
+  language: string | null | undefined
 }
 
 /** What `random_preview` answers: what to type, what an Excel file would hold, and the distribution's own values. */
@@ -176,6 +185,9 @@ export class Session extends BaseSession<State> {
       random: { seed: 0, draw: 0 },
       numberFormats: {},
       trace: null,
+      printPage: null,
+      sheetPrint: {},
+      language: undefined,
     })
   }
 
@@ -185,7 +197,7 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random, formats] = await Promise.all([
+    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random, formats, printing, language] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
       link.request<ChartSpec[]>('diagrams'),
@@ -198,6 +210,9 @@ export class Session extends BaseSession<State> {
       link.request<{ seed: number; draw: number }>('random_state').catch(() => ({ seed: 0, draw: 0 })),
       // a server from before number formats has none: every number shows the General way
       link.request<NumberFormatDef[]>('number_formats').catch(() => [] as NumberFormatDef[]),
+      // a server from before printing has neither: the preview then starts from A4 and cannot store a change
+      link.request<{ page: PageSetupData; sheets: Record<string, SheetPrintData> }>('print_setup').catch(() => null),
+      link.request<{ language: string | null }>('language').then((a) => a.language, () => undefined),
     ])
     this.forgetCells()
     const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
@@ -219,6 +234,9 @@ export class Session extends BaseSession<State> {
     s.styleModel = styleModel
     s.random = { seed: random.seed, draw: random.draw }
     s.numberFormats = Object.fromEntries(formats.map((x) => [x.id, x]))
+    s.printPage = printing?.page ?? null
+    s.sheetPrint = printing?.sheets ?? {}
+    s.language = language
     this.track(this.refreshUses())
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
   }
@@ -544,6 +562,13 @@ export class Session extends BaseSession<State> {
       case 'random':
         s.random = { seed: data.seed, draw: data.draw }
         return true
+      case 'print_setup':
+        if (data.sheet === undefined) s.printPage = data.page as PageSetupData
+        else s.sheetPrint[data.sheet as string] = data.setup as SheetPrintData
+        return true
+      case 'language':
+        s.language = (data.language as string | null) ?? null
+        return true
     }
     return false
   }
@@ -552,6 +577,22 @@ export class Session extends BaseSession<State> {
   /** Draw fresh random numbers for everybody (Tools ▸ Resample, F9, E6.22): one undoable step in the history. */
   async resample(steps = 1): Promise<boolean> {
     return (await this.attempt('resample', { steps, base: this.state.revision })) !== false
+  }
+
+  // ------------------------------------------------------------------------------ printing (E6.19)
+  /** Print the workbook on another page (D1004): one step in the history, for everybody. */
+  async setPrintPage(page: PageSetupData): Promise<boolean> {
+    return (await this.attempt('set_print_page', { page, base: this.state.revision })) !== false
+  }
+
+  /** Print a sheet or chart tab another way (D1004): one step in the history, for everybody. */
+  async setSheetPrint(sheet: string, setup: SheetPrintData): Promise<boolean> {
+    return (await this.attempt('set_sheet_print', { sheet, setup, base: this.state.revision })) !== false
+  }
+
+  /** Say which language the workbook is written in (D915), or `null` for not known: one step, for everybody. */
+  async setLanguage(language: string | null): Promise<boolean> {
+    return (await this.attempt('set_language', { language, base: this.state.revision })) !== false
   }
 
   /** Give the workbook's random numbers a seed: the same seed and draw give the same numbers on every computer. */

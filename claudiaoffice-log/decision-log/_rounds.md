@@ -393,4 +393,4 @@ library.
 
 Decisions: D1001 (the shared preview and its three added controls); D1002 (fit to width); D1003 (the print area is a
 named range); D1004 (what is kept per sheet and per workbook); D1005 (automatic cuts only); D1006 (the footer); D1007
-(purpose tints); D1008 (charts and chart tabs); D1009 (the paginator in the layout library)
+(purpose tints); D1008 (charts and chart tabs); D1009 (the paginator in the layout library); D1010 (the print setup on the wire and the bar's choices)
