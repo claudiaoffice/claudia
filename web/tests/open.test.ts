@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { appOfServer, fetchDocsListing, filterListed, isSlides, openSession, placeUpload, uploadFile } from '~/lib/open'
+import { OPENABLE, appOfFileName, appOfServer, fetchDocsListing, filterListed, isSlides, openSession, openableFor, placeUpload, uploadFile } from '~/lib/open'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { SlideSession } from '~/lib/slide-session'
@@ -256,5 +256,22 @@ describe('uploadFile and placeUpload', () => {
     expect(await uploadFile('http://h', file, refuse(413))).toEqual({ error: 'The file is too large for this server.' })
     const conflict = (async () => new Response(JSON.stringify({ detail: 'plan is here already' }), { status: 409 })) as unknown as typeof fetch
     expect(await placeUpload('http://h', 't', conflict)).toEqual({ error: 'plan is here already' })
+  })
+})
+
+describe('the files a window opens (D444)', () => {
+  it('offers every kind in a browser tab and only its own app\'s in a desktop window', () => {
+    expect(openableFor(null)).toBe(OPENABLE)
+    expect(openableFor('composes')).toBe('.docx,.odt,.claudia')
+    expect(openableFor('computes')).toBe('.xlsx,.ods,.claudia')
+    expect(openableFor('creates')).toBe('.pptx,.odp,.claudia')
+  })
+
+  it('tells the app of a file by its name, and not for a Claudia file, which says it inside', () => {
+    expect(appOfFileName('Bericht.DOCX')).toBe('composes')
+    expect(appOfFileName('budget 2026.ods')).toBe('computes')
+    expect(appOfFileName('talk.pptx')).toBe('creates')
+    expect(appOfFileName('mine.claudia')).toBeNull()
+    expect(appOfFileName('notes.txt')).toBeNull()
   })
 })

@@ -26,7 +26,7 @@ Without `--dir` documents are kept in memory and are gone when the server stops.
 | `WebSocket /api/{app}/docs/{doc}/ws` | the live connection to a document of `app` |
 | `WebSocket /api/docs/{doc}/ws` | the live connection without the app (the address before D431) |
 | `WebSocket /api/presence` | carries nothing; a page without a document keeps it open so the server knows it is in use |
-| `GET /api/health` | liveness |
+| `GET /api/health` | liveness: `{ok, apps}`, and `version` to a request from this computer to `127.0.0.1`/`localhost` (D445) |
 | `GET /api/docs` | the documents of every app on this server |
 | `GET /api/{app}/docs` | the documents of one app |
 | `GET /api/{app}/protocol` | machine-readable description of every method, parameter and event of `app` |

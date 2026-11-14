@@ -363,6 +363,11 @@ Decisions: D430 (one server, app modules); D431 (one place per app, addresses wi
 administration per server); D433 (old commands keep working); D434 (stop when idle); D435 (folder lock); D436
 (isolation in two steps); D437 (no migration)
 
+Later in the round (2026-11-14), before the desktop shells were changed: the owner wants a desktop app to stay that
+app although its server hosts all three, and doubted that the server should stop by itself. D444 (a desktop window
+shows its own app only); D445 (the desktop apps share one local server on a fixed port, which stops ten minutes after
+nothing is connected; supersedes D119 and D161)
+
 ## Opening files from the computer (branch `one-server`, 2026-11-14)
 
 The front page and File ▸ Open of sheet 10 need a way to open Word, Excel, PowerPoint, OpenDocument and Claudia files

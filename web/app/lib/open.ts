@@ -135,6 +135,28 @@ export interface Uploaded {
 /** The file types the file picker offers: every one Claudia opens (sheet 10, B2). */
 export const OPENABLE = '.claudia,.docx,.odt,.xlsx,.ods,.pptx,.odp'
 
+/** The Office and OpenDocument formats of each app (the server's `formats.sniff` decides by the bytes; this is only
+ * the name, for the picker and for refusing early). */
+const FORMATS: Record<string, readonly string[]> = {
+  composes: ['.docx', '.odt'],
+  computes: ['.xlsx', '.ods'],
+  creates: ['.pptx', '.odp'],
+}
+
+/** What the file picker offers: everything in a browser tab, only the window's own app in a desktop window (D444). */
+export function openableFor(windowApp: string | null): string {
+  const own = windowApp ? FORMATS[windowApp] : undefined
+  return own ? [...own, '.claudia'].join(',') : OPENABLE
+}
+
+/** The app an Office or OpenDocument file belongs to, by its name; `null` for a Claudia file (which app it is, only
+ * its contents say) and anything else. */
+export function appOfFileName(name: string): string | null {
+  const dot = name.lastIndexOf('.')
+  const extension = dot < 0 ? '' : name.slice(dot).toLowerCase()
+  return Object.entries(FORMATS).find(([, formats]) => formats.includes(extension))?.[0] ?? null
+}
+
 /** Hand a file to the server (D440). The answer, or a message fit to show. */
 export async function uploadFile(origin: string, file: Blob & { name: string }, fetchImpl: typeof fetch = fetch): Promise<Uploaded | { error: string }> {
   let response: Response

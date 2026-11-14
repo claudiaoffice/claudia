@@ -102,6 +102,9 @@ export class ShellBridge {
   readonly app: App | undefined
   ready = false
   capabilities: string[] = []
+  /** The app the shell's window is (D444, `welcome.app`), or `null`: a browser tab, or a shell that does not say. On a
+   * server of several apps the front page then shows this app only. */
+  windowApp: App | null = null
   /** The servers this shell remembers for its app, or `null` until the shell has sent the list (the shell owns it:
    * the page's `localStorage` is per origin and so cannot hold a list that spans servers). */
   servers: Bookmark[] | null = null
@@ -146,6 +149,7 @@ export class ShellBridge {
     if (message.type === 'welcome') {
       this.ready = true
       this.capabilities = Array.isArray(message.capabilities) ? message.capabilities.map(String) : []
+      this.windowApp = typeof message.app === 'string' && isApp(message.app) ? message.app : null
     } else if (message.type === 'action' && typeof message.action === 'string') {
       for (const handler of this.handlers) handler(message.action, message.target)
     } else if (message.type === 'servers' && Array.isArray(message.servers)) {

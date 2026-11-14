@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { OPENABLE, appOfServer, fetchDocsListing, filterListed, openSession, placeUpload, uploadFile, type AnySession, type Listed, type Uploaded } from '~/lib/open'
-import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, rememberOpened, setInCollection, type MineEntry } from '~/lib/mine'
+import { appOfFileName, appOfServer, fetchDocsListing, filterListed, openSession, openableFor, placeUpload, uploadFile, type AnySession, type Listed, type Uploaded } from '~/lib/open'
+import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, parseKey, rememberOpened, setInCollection, type MineEntry } from '~/lib/mine'
+import { holdPresence } from '~/lib/presence'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
@@ -19,6 +20,9 @@ const props = defineProps<{
   modal?: boolean
   /** File ▸ Open a File…: ask for a file at once. */
   pickFile?: boolean
+  /** In the dialog: the document's own conversation with the shell. The dialog borrows it (the shell's server list,
+   * the window's app); a second bridge would take the shell's messages away from the document for good. */
+  shellBridge?: (ShellBridge & { detach: () => void }) | null
 }>()
 const emit = defineEmits<{ opened: [session: AnySession]; close: [] }>()
 
@@ -73,6 +77,8 @@ const query = ref('')
 const appFilter = ref(new URLSearchParams(location.search).get('app') ?? '')
 const searchField = ref<HTMLInputElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+/** The first control of "Or start a new one", for File ▸ New in the native menu. */
+const newStart = ref<HTMLButtonElement | null>(null)
 /** Mine and the collections (D443): kept in this browser, never on a server. */
 const mine = ref<MineEntry[]>(listMine())
 const collections = ref(listCollections())
@@ -84,17 +90,49 @@ const importError = ref('')
 const notice = ref('')
 const dragging = ref(false)
 const APP_WORDS: Record<string, () => string> = { computes: () => t('Table'), composes: () => t('Text'), creates: () => t('Slides') }
+/** A file of another app, refused by a desktop window (D444). */
+const refusal = ref('')
+/** The app of the desktop window this page is in (D444): its documents only, its files only. `null` in a browser tab. */
+const windowApp = computed(() => shell.value?.windowApp ?? null)
+/** Every app with the filter (a browser tab on a server of several apps), or one app. */
+const showsAll = computed(() => isSuite.value && !windowApp.value)
+/** The app the lists are narrowed to: the window's, else the filter's ('' for all). */
+const shownApp = computed(() => windowApp.value ?? appFilter.value)
 /** The server serves one app and says so; a listed document is the fallback (see `appOfServer`). */
 const app = computed(() =>
-  isSuite.value ? docApp.value || appFilter.value || 'claudia' : appOfServer({ app: serverApp.value, documents: documents.value }),
+  windowApp.value ??
+  (isSuite.value ? docApp.value || appFilter.value || 'claudia' : appOfServer({ app: serverApp.value, documents: documents.value })),
 )
 /** The place shown, in the sidebar's words. */
 const placeLabel = computed(() => bookmarks.value.find((b) => b.origin === origin.value)?.label ?? hostOf(origin.value))
-const placeDocs = computed(() => filterListed(documents.value, query.value, appFilter.value))
+const placeDocs = computed(() => filterListed(documents.value, query.value, shownApp.value))
+const placeCount = computed(() => filterListed(documents.value, '', shownApp.value).length)
 const mineHere = computed(() => {
   const shown = shownCollection.value === null ? mine.value : entriesOf(collections.value.find((c) => c.name === shownCollection.value) ?? { name: '', entries: [] }, mine.value)
-  return filterListed(shown, query.value, appFilter.value)
+  return filterListed(shown, query.value, shownApp.value)
 })
+/** How many documents of a collection this page shows (a desktop window: only its app's). */
+function shownIn(entries: string[]): number {
+  return windowApp.value ? entries.filter((key) => parseKey(key)?.app === windowApp.value).length : entries.length
+}
+/** What the line under Open a File… says the picker takes. */
+const takes = computed(() => {
+  const own: Record<string, string> = {
+    composes: t('Word, OpenDocument or Claudia texts, or drop one anywhere on this page.'),
+    computes: t('Excel, OpenDocument or Claudia tables, or drop one anywhere on this page.'),
+    creates: t('PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page.'),
+  }
+  return own[windowApp.value ?? ''] ?? t('Word, Excel, PowerPoint, OpenDocument or Claudia, or drop one anywhere on this page.')
+})
+/** Why a desktop window does not open a file of `fileApp` (D444): it names the app the file belongs to. */
+function refusalFor(fileApp: string): string {
+  const belongs: Record<string, string> = {
+    composes: t('This is a text. Open it with Claudia Composes.'),
+    computes: t('This is a table. Open it with Claudia Computes.'),
+    creates: t('These are slides. Open them with Claudia Creates.'),
+  }
+  return belongs[fileApp] ?? t('Claudia cannot open this file.')
+}
 const chosenKey = computed(() => keyOf({ origin: origin.value, app: docApp.value, id: doc.value.trim() }))
 const words = computed(
   () =>
@@ -179,9 +217,27 @@ function settle() {
 }
 
 /** Say hello to the shell, if there is one (not before this page knows which app its server runs, when it can). */
+const shellRemovers: Array<() => void> = []
 function attachShell() {
   if (!inShell) return
+  if (props.modal) {
+    const borrowed = props.shellBridge
+    if (!borrowed) return
+    shell.value = borrowed
+    shellRemovers.push(
+      borrowed.onConnectFailed((_code, message) => {
+        connectPending.value = false
+        connectError.value = message
+      }),
+    )
+    return
+  }
   const bridge = createShellBridge(isApp(app.value) ? app.value : undefined, undefined, (b) => reactive(b) as typeof b)
+  bridge.onAction((action) => {
+    if (action === 'file.open-file') chooseFile()
+    else if (action === 'file.open') searchField.value?.focus()
+    else if (action === 'file.new') newStart.value?.focus()
+  })
   bridge.onConnectFailed((_code, message) => {
     connectPending.value = false
     connectError.value = message
@@ -190,7 +246,13 @@ function attachShell() {
 }
 
 watch(() => [shell.value?.ready, shell.value?.hasServerList, shell.value?.servers], settle)
-onBeforeUnmount(() => shell.value?.detach())
+watch(windowApp, (own) => {
+  if (own) newApp.value = own
+})
+onBeforeUnmount(() => {
+  for (const remove of shellRemovers.splice(0)) remove()
+  if (!props.modal) shell.value?.detach() // a borrowed bridge stays the document's
+})
 
 /** Ctrl+F searches, Ctrl+Shift+O opens a file (sheet 10, D). */
 function onKey(event: KeyboardEvent) {
@@ -206,6 +268,14 @@ function onKey(event: KeyboardEvent) {
 }
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
+/** The front page holds the presence socket while it is shown (D434, D445): it has no document's connection, and a
+ * desktop server stops once nothing is connected. In File ▸ Open the document's own connection does that. */
+let releasePresence: (() => void) | null = null
+onMounted(() => {
+  if (!props.modal) releasePresence = holdPresence(origin.value)
+})
+onBeforeUnmount(() => releasePresence?.())
 
 onMounted(async () => {
   if (props.pickFile) chooseFile()
@@ -398,10 +468,12 @@ function onDragOver(event: DragEvent) {
   if (event.dataTransfer?.types.includes('Files')) dragging.value = true
 }
 
-// A name typed by hand belongs to whichever app has a document of that name here (the old address then decides).
+// A name typed by hand belongs to whichever app has a document of that name here (the old address then decides); in
+// a desktop window it is always a document of the window's app (D444).
 watch(doc, (id) => {
-  const listed = documents.value.filter((d) => d.id === id.trim())
-  if (!listed.some((d) => d.app === docApp.value)) docApp.value = listed.length === 1 ? (listed[0]?.app ?? '') : ''
+  const own = windowApp.value
+  const listed = documents.value.filter((d) => d.id === id.trim() && (!own || d.app === own))
+  if (!listed.some((d) => d.app === docApp.value)) docApp.value = listed.length === 1 ? (listed[0]?.app ?? '') : (own ?? '')
 })
 
 /** Open a file… : the computer's own file dialog, every type Claudia opens already chosen (sheet 10, B2). */
@@ -413,10 +485,18 @@ async function takeFile(file: File | undefined) {
   if (!file) return
   importError.value = ''
   notice.value = ''
+  refusal.value = ''
+  const own = windowApp.value
+  const named = appOfFileName(file.name)
+  if (own && named && named !== own) {
+    refusal.value = refusalFor(named)
+    return
+  }
   busy.value = true
   const answer = await uploadFile(origin.value, file)
   busy.value = false
   if ('error' in answer) error.value = answer.error
+  else if (own && answer.app !== own) refusal.value = refusalFor(answer.app)
   else incoming.value = answer
 }
 
@@ -610,7 +690,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             >
               <svg width="12" height="15" viewBox="0 0 12 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 1h10v13l-5-4-5 4z" /></svg>
               <span class="server-text"><span class="server-name">{{ c.name }}</span></span>
-              <span class="count">{{ c.entries.length }}</span>
+              <span class="count">{{ shownIn(c.entries) }}</span>
             </button>
             <button type="button" class="server-action" :title="t('Remove collection {name}', { name: c.name })" :aria-label="t('Remove collection {name}', { name: c.name })" @click="dropCollection(c.name)">×</button>
           </li>
@@ -627,9 +707,9 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       </nav>
 
       <div class="main">
-        <h1>{{ isSuite ? (shownCollection ?? placeLabel) : words.headline }}</h1>
+        <h1>{{ shownCollection ?? (showsAll ? placeLabel : words.headline) }}</h1>
         <p class="sub">
-          {{ shownCollection !== null ? t('The documents you put into this collection, on any place.') : isSuite ? t('Tables, texts and slides on this place, and the documents you opened before.') : words.sub }}
+          {{ shownCollection !== null ? t('The documents you put into this collection, on any place.') : showsAll ? t('Tables, texts and slides on this place, and the documents you opened before.') : words.sub }}
         </p>
 
         <div class="tools">
@@ -639,9 +719,10 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             <kbd>Ctrl+F</kbd>
           </label>
           <button class="btn" type="button" :disabled="busy" @click="chooseFile">{{ t('Open a File…') }}</button>
-          <input ref="fileInput" class="sr-only" type="file" :accept="OPENABLE" tabindex="-1" aria-hidden="true" @change="onPicked" >
+          <input ref="fileInput" class="sr-only" type="file" :accept="openableFor(windowApp)" tabindex="-1" aria-hidden="true" @change="onPicked" >
         </div>
-        <p class="hint drop">{{ t('Word, Excel, PowerPoint, OpenDocument or Claudia, or drop one anywhere on this page.') }}</p>
+        <p class="hint drop">{{ takes }}</p>
+        <p v-if="refusal" class="error refusal" role="alert">{{ refusal }}</p>
         <p v-if="notice" class="notice" role="status">{{ notice }}</p>
 
         <div class="cols">
@@ -700,20 +781,20 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             </div>
             <div v-if="shownCollection === null" class="list">
               <div class="list-head">
-                <h2>{{ isSuite ? t('On {place} · {count}', { place: placeLabel, count: documents.length }) : t('On this server') }}</h2>
-                <select v-if="isSuite" v-model="appFilter" class="filter" :aria-label="t('Which apps')">
+                <h2>{{ isSuite ? t('On {place} · {count}', { place: placeLabel, count: placeCount }) : t('On this server') }}</h2>
+                <select v-if="showsAll" v-model="appFilter" class="filter" :aria-label="t('Which apps')">
                   <option value="">{{ t('all apps') }}</option>
                   <option v-for="a in apps" :key="a" :value="a">{{ APP_WORDS[a]?.() ?? a }}</option>
                 </select>
               </div>
               <p v-if="listError" class="hint">{{ listError }}</p>
-              <p v-else-if="!documents.length" class="hint">{{ t('Nothing yet. Create the first document.') }}</p>
+              <p v-else-if="!placeCount" class="hint">{{ t('Nothing yet. Create the first document.') }}</p>
               <ul v-else>
                 <li v-for="d in placeDocs" :key="d.app + ' ' + d.id" draggable="true" @dragstart="dragDoc($event, placeKey(d))">
-                  <button type="button" class="doc" :title="d.id" :class="{ chosen: d.id === doc && (!docApp || d.app === docApp), plain: !isSuite }" @click="choose(d.id, d.app)">
-                    <AppIcon v-if="isSuite" :size="22" :app="d.app" />
+                  <button type="button" class="doc" :title="d.id" :class="{ chosen: d.id === doc && (!docApp || d.app === docApp), plain: !showsAll }" @click="choose(d.id, d.app)">
+                    <AppIcon v-if="showsAll" :size="22" :app="d.app" />
                     <span class="name">{{ d.id }}</span>
-                    <span class="meta"><template v-if="isSuite">{{ APP_WORDS[d.app]?.() ?? d.app }} · </template>{{ ago(d.modified) }}<template v-if="d.online"> {{ t('· {online} here now', { online: d.online }) }}</template></span>
+                    <span class="meta"><template v-if="showsAll">{{ APP_WORDS[d.app]?.() ?? d.app }} · </template>{{ ago(d.modified) }}<template v-if="d.online">&nbsp;{{ t('· {online} here now', { online: d.online }) }}</template></span>
                   </button>
                   <div class="row-actions">
                     <button
@@ -774,7 +855,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             </fieldset>
             <div class="new">
               <h3>{{ t('Or start a new one') }}</h3>
-              <div v-if="isSuite" class="kinds" role="radiogroup" :aria-label="t('Kind of the new document')">
+              <div v-if="showsAll" class="kinds" role="radiogroup" :aria-label="t('Kind of the new document')">
                 <button
                   v-for="a in apps"
                   :key="a"
@@ -787,7 +868,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                   <AppIcon :size="20" :app="a" /> {{ APP_WORDS[a]?.() ?? a }}
                 </button>
               </div>
-              <button class="btn" type="button" :disabled="busy" @click="go('create')">{{ t('Create document') }}</button>
+              <button ref="newStart" class="btn" type="button" :disabled="busy" @click="go('create')">{{ t('Create document') }}</button>
               <p class="hint">{{ t('A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).') }}</p>
             </div>
           </template>
@@ -1042,6 +1123,9 @@ form {
 .error {
   color: var(--rose);
   margin: 0;
+}
+.refusal {
+  margin: 0 0 14px;
 }
 .link {
   border: 0;

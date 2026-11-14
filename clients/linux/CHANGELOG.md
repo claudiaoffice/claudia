@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (one server for all three apps: D444)
+- Shell contract v1, additive: `welcome` may carry `app`, the app this window is. On a server of several apps the
+  page then lists only that app's documents and refuses files of another kind. A shell that leaves it out gets the
+  page of a browser tab.
+
 ### Changed (one key table, every menu entry everywhere: UX-35, UX-36)
 - Every menu entry has a key, the same in every app and every client (`manifest.py`, D360); only the language
   picker's entries have none. The keys stay clear of what browsers keep (Ctrl+N, Ctrl+W, Ctrl+T), of AltGr on Windows

@@ -23,6 +23,19 @@ describe('ShellBridge', () => {
     expect(bridge.nativeMenu).toBe(true)
   })
 
+  it("learns the window's own app from welcome (D444), and only one of the three apps", () => {
+    const { sink } = fakeSink()
+    const bridge = new ShellBridge(undefined, sink)
+    expect(bridge.windowApp).toBeNull()
+    const shell = { name: 'gtk', platform: 'linux', version: '1' }
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [], app: 'composes' }))
+    expect(bridge.windowApp).toBe('composes')
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [], app: 'paint' }))
+    expect(bridge.windowApp).toBeNull()
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [] }))
+    expect(bridge.windowApp).toBeNull()
+  })
+
   it('dispatches an action message to every registered handler, with its target', () => {
     const { sink } = fakeSink()
     const bridge = new ShellBridge('composes', sink)

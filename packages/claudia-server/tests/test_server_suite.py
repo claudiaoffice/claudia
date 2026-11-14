@@ -168,3 +168,28 @@ def test_the_protocol_is_described_per_app():
         assert client.get("/api/test-other/protocol").status_code == 200
         assert client.get("/api/protocol").json() == client.get("/api/test-list/protocol").json()
         assert client.get("/api/composes/protocol").status_code == 404
+
+
+# ------------------------------------------------------------------------------------------------------ /api/health
+def test_health_names_the_apps_of_the_server_to_anyone():
+    """A shell checks what a server runs even where the document list is behind a secret (D444)."""
+    with TestClient(create_app(two_apps())) as client:
+        body = client.get("/api/health").json()
+    assert body == {"ok": True, "apps": ["test-list", "test-other"]}
+
+
+def test_health_tells_its_version_only_to_this_computer():
+    """The desktop apps find a running server and must know whether it is theirs (D445); the version is nobody else's
+    business. It is told when the request comes from this computer to this computer's address: a reverse proxy on the
+    same machine forwards from the loopback, but with the public host name."""
+    from claudia_server import __version__
+
+    def answer(client, base_url):
+        app = create_app(two_apps(), allowed_hosts=["office.example"])
+        with TestClient(app, client=(client, 50000), base_url=base_url) as c:
+            return c.get("/api/health").json()
+
+    assert answer("127.0.0.1", "http://127.0.0.1:8760")["version"] == __version__
+    assert answer("::1", "http://localhost:8760")["version"] == __version__
+    assert "version" not in answer("192.0.2.7", "http://127.0.0.1:8760")
+    assert "version" not in answer("127.0.0.1", "https://office.example")

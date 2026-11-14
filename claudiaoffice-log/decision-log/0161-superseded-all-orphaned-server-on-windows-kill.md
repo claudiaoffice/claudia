@@ -1,12 +1,12 @@
 ---
 id: D161
 title: "Proposal: an orphaned `claudia_server` on a hard-killed Windows shell is a known open issue for this first version, not something E5.11 builds a fix for"
-status: current
+status: superseded
 applies-to: all
 date: 2026-11-08
 round: "Neutralino on Windows and macOS (twenty-eighth round)"
 supersedes: []
-superseded-by: []
+superseded-by: [D445]
 ---
 
 # D161 · Proposal: an orphaned `claudia_server` on a hard-killed Windows shell is a known open issue for this first version, not something E5.11 builds a fix for

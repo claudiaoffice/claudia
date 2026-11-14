@@ -171,6 +171,8 @@ def _check_welcome(message: Message) -> None:
     locale = message.get("locale")
     if locale is not None and not (isinstance(locale, str) and len(locale) <= 35 and _LOCALE.match(locale)):
         raise _bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
+    if "app" in message:  # the window's own app (D444)
+        _token(message["app"], "'app'")
 
 
 def _check_action(message: Message) -> None:
@@ -270,13 +272,20 @@ def negotiate(hello: Message, supported: Sequence[int] = SUPPORTED_VERSIONS) -> 
 
 
 def welcome(
-    *, shell_version: str, capabilities: Iterable[str], contract: int = CONTRACT_VERSION, locale: str | None = None
+    *,
+    shell_version: str,
+    capabilities: Iterable[str],
+    contract: int = CONTRACT_VERSION,
+    locale: str | None = None,
+    app: str | None = None,
 ) -> Message:
     """The shell's answer to a ``hello``: the agreed version, who the shell is, what it offers.
 
     ``locale`` (E5.7, D31) is the shell's own best guess at the person's locale — the OS locale by default, or
     whatever the person picked in the shell itself once that exists. The page is never required to use it: locale is
-    always the client's own setting, and the page may already have a stored override of its own."""
+    always the client's own setting, and the page may already have a stored override of its own.
+
+    ``app`` (D444) is the app this window is: on a server of several apps the page then shows that app only."""
     message: Message = {
         "type": "welcome",
         "contract": contract,
@@ -285,6 +294,8 @@ def welcome(
     }
     if locale is not None:
         message["locale"] = locale
+    if app is not None:
+        message["app"] = app
     return message
 
 

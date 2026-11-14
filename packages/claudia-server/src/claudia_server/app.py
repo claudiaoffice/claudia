@@ -1,7 +1,7 @@
 """The FastAPI application (E3.1).
 
     WebSocket  /api/docs/{doc}/ws    the live connection (see protocol.py)
-    GET        /api/health           liveness
+    GET        /api/health           liveness, the apps it serves (and its version, to this computer only)
     GET        /api/protocol         machine-readable description of the protocol
 
     GET        /api/docs             the documents on this server (see Hub.listing)
@@ -75,6 +75,7 @@ from starlette.websockets import WebSocketDisconnect
 from claudia_core import Import, LanguageError, Setup, normalize_language
 from claudia_fonts import DEFAULT_SUBSTITUTIONS
 
+from ._version import __version__
 from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
 from .fonts import FontService, font_router
@@ -160,6 +161,23 @@ your password.</p>
 <p><a href="/api/health">/api/health</a> &middot; <a href="/api/swagger">API description</a></p>
 </body></html>
 """
+
+
+LOOPBACK_CLIENTS = frozenset({"127.0.0.1", "::1"})
+LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
+
+
+def health_answer(suite: Suite, request: Request) -> dict[str, object]:
+    """``/api/health``: alive, and which apps this server serves (a shell checks that even when the document list is
+    behind a secret, D444). The version is added only for a request from this computer to this computer's address —
+    a desktop app that finds a running server must know whether it is its own (D445); nobody else needs it, and a
+    reverse proxy on the same machine forwards from the loopback but with its public host name."""
+    answer: dict[str, object] = {"ok": True, "apps": list(suite.apps)}
+    client = request.client.host if request.client else ""
+    host = urlsplit(f"//{request.headers.get('host', '')}").hostname or ""
+    if client in LOOPBACK_CLIENTS and (host in LOOPBACK_HOSTS or f"[{host}]" in LOOPBACK_HOSTS):
+        answer["version"] = __version__
+    return answer
 
 
 def origin_allowed(origin: str | None, host: str | None, allowed: set[str]) -> bool:
@@ -650,8 +668,8 @@ def create_app(
     app.state.hub = suite.first.hub  # the first app's hub, for the callers that know one app
 
     @app.get("/api/health")
-    async def health():
-        return {"ok": True}
+    async def health(request: Request):
+        return health_answer(suite, request)
 
     _fixed_routes(app, suite, gateway, presence, list_documents)
     if admin is not None:

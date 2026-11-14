@@ -50,6 +50,7 @@ VALID = [
     {"type": "error", "code": "unsupported_contract", "message": "no", "supported": [1]},
     {**WELCOME, "locale": "de"},  # (E5.7) shell -> page too, but the schema does not care which side sends what
     {**WELCOME, "locale": "de-DE"},
+    {**WELCOME, "app": "composes"},  # (D444) the window's own app
     # (E5.8) the page asks the shell to connect to another server, and the shell says why it could not
     {"type": "connect", "address": "https://demo.example.org:8420"},
     {"type": "connect_failed", "code": "insecure", "message": "Use https://"},
@@ -81,6 +82,7 @@ INVALID = [
     {"type": "error", "code": "internal"},
     {**WELCOME, "locale": 7},  # (E5.7) not a string
     {**WELCOME, "locale": "not a locale!"},
+    {**WELCOME, "app": "Composes!"},  # (D444) an app is a lower-case word
     {"type": "connect"},  # (E5.8) to what?
     {"type": "connect", "address": 7},
     {"type": "connect", "address": ""},
@@ -127,6 +129,7 @@ def test_invalid_messages_are_refused_by_schema_and_parser(schema: dict, message
 def test_what_the_shell_builds_is_valid_by_the_schema(schema: dict) -> None:
     jsonschema.validate(contract.welcome(shell_version="0.1.0", capabilities=["native-menu", "actions"]), schema)
     jsonschema.validate(contract.welcome(shell_version="0.1.0", capabilities=["native-menu"], locale="de-DE"), schema)
+    jsonschema.validate(contract.welcome(shell_version="0.1.0", capabilities=[], app="composes"), schema)
     jsonschema.validate(contract.action("file.save"), schema)
     jsonschema.validate(contract.error("bad_message", "what?"), schema)
     jsonschema.validate(contract.error("unsupported_contract", "too new", supported=[1]), schema)

@@ -33,11 +33,11 @@ msgstr "[(nôné)~~]"
 msgid "+ Add administrator…"
 msgstr "[+ Àdd àdmînîstràtôr…~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:588
+#: web/app/components/OpenDialog.vue:668
 msgid "+ Connect to a server…"
 msgstr "[+ Cônnéct tô à sérvér…~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:618
+#: web/app/components/OpenDialog.vue:698
 msgid "+ New collection"
 msgstr "[+ Néw côlléctîôn~~~~~~]"
 
@@ -161,7 +161,7 @@ msgstr "[À hyphén thé lîné îs névér brôkén àt~~~~~~~~~~~~~~]"
 msgid "A name like this exists already and will point here."
 msgstr "[À nàmé lîké thîs éxîsts àlréàdy ànd wîll pôînt héré.~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:791
+#: web/app/components/OpenDialog.vue:872
 msgid "A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit)."
 msgstr "[À néw dôcûmént bélôngs tô whôévér créàtés ît fîrst. Thé pàsswôrd prôtécts thîs dôcûmént ônly (àt léàst 8 chàràctérs, wîth à càpîtàl léttér, à smàll léttér ànd à dîgît).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -201,7 +201,7 @@ msgstr "[À tàblé àlwàys hàs îts héàdér rôw.~~~~~~~~~~~~~~]"
 msgid "A value follows from its formula: it can be found, not replaced."
 msgstr "[À vàlûé fôllôws frôm îts fôrmûlà: ît càn bé fôûnd, nôt réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:748
+#: web/app/components/OpenDialog.vue:829
 msgid "ABCD-EFGH-…"
 msgstr "[ÀBCD-ÉFGH-…~~~~]"
 
@@ -449,7 +449,7 @@ msgstr "[Àûtô~~]"
 msgid "Average {value}"
 msgstr "[Àvéràgé {value}~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:758
+#: web/app/components/OpenDialog.vue:839
 msgid "Back"
 msgstr "[Bàck~~]"
 
@@ -461,7 +461,7 @@ msgstr "[Bàck tô résûlts~~~~~~]"
 msgid "Back to the builder"
 msgstr "[Bàck tô thé bûîldér~~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:188
+#: web/app/components/DocumentFrame.vue:189
 msgid "Back to the documents"
 msgstr "[Bàck tô thé dôcûménts~~~~~~~~]"
 
@@ -577,7 +577,7 @@ msgstr "[Càlcûlàtîôn~~~~]"
 msgid "Calculation step"
 msgstr "[Càlcûlàtîôn stép~~~~~~]"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/ExportDialog.vue:39 web/app/components/ExportFormatDialog.vue:60 web/app/components/ImageImportDialog.vue:102 web/app/components/ImportDialog.vue:91 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:593 web/app/components/OpenDialog.vue:623 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:99 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/ExportDialog.vue:39 web/app/components/ExportFormatDialog.vue:60 web/app/components/ImageImportDialog.vue:102 web/app/components/ImportDialog.vue:91 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:673 web/app/components/OpenDialog.vue:703 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:99 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr "[Càncél~~]"
 
@@ -665,7 +665,7 @@ msgstr "[Chàt~~]"
 msgid "Checkpoint saved."
 msgstr "[Chéckpôînt sàvéd.~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:484
+#: web/app/components/OpenDialog.vue:564
 msgid "Choose Table, Text or Slides first."
 msgstr "[Chôôsé Tàblé, Téxt ôr Slîdés fîrst.~~~~~~~~~~~~~~]"
 
@@ -684,6 +684,10 @@ msgstr "[Chôôsé à stylé fôr thé séléctîôn, éàch dràwn în îts ôw
 #: web/app/components/AssignOwnerDialog.vue:49
 msgid "Choose somebody…"
 msgstr "[Chôôsé sômébôdy…~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:134
+msgid "Claudia cannot open this file."
+msgstr "[Clàûdîà cànnôt ôpén thîs fîlé.~~~~~~~~~~~~]"
 
 #: web/app/components/ImportDialog.vue:67
 msgid "Claudia makes {what} of it, and the file goes into the new document with it, sealed. The file on this computer stays as it is."
@@ -745,11 +749,11 @@ msgstr "[Clôsé Dôcûmént~~~~~~]"
 msgid "Close Replace"
 msgstr "[Clôsé Réplàcé~~~~~]"
 
-#: web/app/components/OpenDialog.vue:598
+#: web/app/components/OpenDialog.vue:678
 msgid "Collections"
 msgstr "[Côlléctîôns~~~~]"
 
-#: web/app/components/OpenDialog.vue:667 web/app/components/OpenDialog.vue:668 web/app/components/OpenDialog.vue:724 web/app/components/OpenDialog.vue:725
+#: web/app/components/OpenDialog.vue:748 web/app/components/OpenDialog.vue:749 web/app/components/OpenDialog.vue:805 web/app/components/OpenDialog.vue:806
 msgid "Collections of {id}…"
 msgstr "[Côlléctîôns ôf {id}…~~~~~~~~]"
 
@@ -821,7 +825,7 @@ msgstr "[Cônnéctéd~~~~]"
 msgid "Connecting to {address}…"
 msgstr "[Cônnéctîng tô {address}…~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:596 web/app/lib/connection.ts:32
+#: web/app/components/OpenDialog.vue:676 web/app/lib/connection.ts:32
 msgid "Connecting…"
 msgstr "[Cônnéctîng…~~~~]"
 
@@ -877,7 +881,7 @@ msgstr "[Côpy thé séléctîôn tô thé clîpbôàrd~~~~~~~~~~~~~~]"
 msgid "Could not connect"
 msgstr "[Côûld nôt cônnéct~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:527
+#: web/app/components/OpenDialog.vue:607
 msgid "Could not connect."
 msgstr "[Côûld nôt cônnéct.~~~~~~~]"
 
@@ -905,7 +909,7 @@ msgstr "[Côûnt {value}~~~~~]"
 msgid "Create administrator"
 msgstr "[Créàté àdmînîstràtôr~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:790
+#: web/app/components/OpenDialog.vue:871
 msgid "Create document"
 msgstr "[Créàté dôcûmént~~~~~~]"
 
@@ -1085,7 +1089,7 @@ msgstr "[Dô nôt kéép thîs pàrt~~~~~~~~]"
 msgid "Do your last undone step again"
 msgstr "[Dô yôûr làst ûndôné stép àgàîn~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:745
+#: web/app/components/OpenDialog.vue:826
 msgid "Document"
 msgstr "[Dôcûmént~~~]"
 
@@ -1233,6 +1237,10 @@ msgstr "[Éxcél hàs nô fôrmûlà fôr thîs: thé fîlé hôlds thé cûrré
 msgid "Excel workbook (.xlsx)"
 msgstr "[Éxcél wôrkbôôk (.xlsx)~~~~~~~~~]"
 
+#: web/app/components/OpenDialog.vue:122
+msgid "Excel, OpenDocument or Claudia tables, or drop one anywhere on this page."
+msgstr "[Éxcél, ÔpénDôcûmént ôr Clàûdîà tàblés, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/RandomDialog.vue:110
 msgid "Exponential"
 msgstr "[Éxpônéntîàl~~~~]"
@@ -1269,11 +1277,11 @@ msgstr "[Fîlé sîzé~~~~]"
 msgid "Fill"
 msgstr "[Fîll~~]"
 
-#: web/app/components/OpenDialog.vue:492
+#: web/app/components/OpenDialog.vue:572
 msgid "Fill in the document, your name and your password."
 msgstr "[Fîll în thé dôcûmént, yôûr nàmé ànd yôûr pàsswôrd.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:491
+#: web/app/components/OpenDialog.vue:571
 msgid "Fill in the document, your name, the recovery key and a new password."
 msgstr "[Fîll în thé dôcûmént, yôûr nàmé, thé récôvéry kéy ànd à néw pàsswôrd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -1285,7 +1293,7 @@ msgstr "[Fîll în yôûr nàmé ànd à pàsswôrd.~~~~~~~~~~~~~]"
 msgid "Fill in your name and password."
 msgstr "[Fîll în yôûr nàmé ànd pàsswôrd.~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:620
+#: web/app/components/OpenDialog.vue:700
 msgid "Finance"
 msgstr "[Fînàncé~~~]"
 
@@ -1421,7 +1429,7 @@ msgstr "[GÎF (ànîmàtéd)~~~~~~]"
 msgid "Gamma"
 msgstr "[Gàmmà~~]"
 
-#: web/app/components/OpenDialog.vue:757
+#: web/app/components/OpenDialog.vue:838
 msgid "Get back in"
 msgstr "[Gét bàck în~~~~]"
 
@@ -1429,7 +1437,7 @@ msgstr "[Gét bàck în~~~~]"
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr "[Gîvé à côlléàgûé à nàmé ànd à pàsswôrd fôr {doc}. Théy ôpén thé dôcûmént wîth thém, lîké yôû dîd. Téll thém thé pàsswôrd yôûrsélf: thé sérvér névér shôws ît àgàîn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:592
+#: web/app/components/OpenDialog.vue:672
 msgid "Go"
 msgstr "[Gô~]"
 
@@ -1605,7 +1613,7 @@ msgstr "[Hôw thîs stylé lôôks: fônt, sîzé, côlôûr, CSS (rîght-clîck
 msgid "Hyphenate"
 msgstr "[Hyphénàté~~~~]"
 
-#: web/app/components/OpenDialog.vue:768
+#: web/app/components/OpenDialog.vue:849
 msgid "I forgot my password"
 msgstr "[Î fôrgôt my pàsswôrd~~~~~~~~]"
 
@@ -1649,7 +1657,7 @@ msgstr "[Împôrtéd frôm dîsk~~~~~~~]"
 msgid "In an Excel file"
 msgstr "[În àn Éxcél fîlé~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:770
+#: web/app/components/OpenDialog.vue:851
 msgid "In collections"
 msgstr "[În côlléctîôns~~~~~~]"
 
@@ -1657,7 +1665,7 @@ msgstr "[În côlléctîôns~~~~~~]"
 msgid "In this document now:"
 msgstr "[În thîs dôcûmént nôw:~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:650
+#: web/app/components/OpenDialog.vue:731
 msgid "In {name}"
 msgstr "[În {name}~~~~]"
 
@@ -1817,7 +1825,7 @@ msgstr "[Képt às~~~]"
 msgid "Kept parts, click to insert:"
 msgstr "[Képt pàrts, clîck tô însért:~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:777
+#: web/app/components/OpenDialog.vue:858
 msgid "Kind of the new document"
 msgstr "[Kînd ôf thé néw dôcûmént~~~~~~~~~~]"
 
@@ -1945,7 +1953,7 @@ msgstr "[Màdé by thé bûîldér. Îf yôû édît ît héré, thé bûîldér
 msgid "Made from what you typed. Your own pattern replaces it."
 msgstr "[Màdé frôm whàt yôû typéd. Yôûr ôwn pàttérn réplàcés ît.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:622
+#: web/app/components/OpenDialog.vue:702
 msgid "Make"
 msgstr "[Màké~~]"
 
@@ -1977,7 +1985,7 @@ msgstr "[Mànàgé~~]"
 msgid "Manage this server…"
 msgstr "[Mànàgé thîs sérvér…~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:577 web/app/components/OpenDialog.vue:577
+#: web/app/components/OpenDialog.vue:657 web/app/components/OpenDialog.vue:657
 msgid "Manage {server}…"
 msgstr "[Mànàgé {server}…~~~~~~]"
 
@@ -2017,11 +2025,11 @@ msgstr "[Mày~]"
 msgid "Message everyone, or @ai …"
 msgstr "[Méssàgé évéryôné, ôr @àî …~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:626
+#: web/app/components/OpenDialog.vue:706
 msgid "Mine and the collections are kept in this browser."
 msgstr "[Mîné ànd thé côlléctîôns àré képt în thîs brôwsér.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:650
+#: web/app/components/OpenDialog.vue:731
 msgid "Mine · opened before"
 msgstr "[Mîné · ôpénéd béfôré~~~~~~~~]"
 
@@ -2069,11 +2077,11 @@ msgstr "[Môvé “{name}” héré~~~~~~~]"
 msgid "Multiplies the ranges cell by cell (they must have the same shape) and adds up the products."
 msgstr "[Mûltîplîés thé ràngés céll by céll (théy mûst hàvé thé sàmé shàpé) ànd àdds ûp thé prôdûcts.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:551
+#: web/app/components/OpenDialog.vue:631
 msgid "My places"
 msgstr "[My plàcés~~~~]"
 
-#: web/app/components/OpenDialog.vue:550
+#: web/app/components/OpenDialog.vue:630
 msgid "My places and collections"
 msgstr "[My plàcés ànd côlléctîôns~~~~~~~~~~]"
 
@@ -2089,7 +2097,7 @@ msgstr "[Nàmé (thé tàb ît ôpéns às)~~~~~~~~~~]"
 msgid "Name it"
 msgstr "[Nàmé ît~~~]"
 
-#: web/app/components/OpenDialog.vue:620
+#: web/app/components/OpenDialog.vue:700
 msgid "Name of the collection"
 msgstr "[Nàmé ôf thé côlléctîôn~~~~~~~~~]"
 
@@ -2133,11 +2141,11 @@ msgstr "[Néw Shéét…~~~~]"
 msgid "New Slide"
 msgstr "[Néw Slîdé~~~~]"
 
-#: web/app/components/OpenDialog.vue:695 web/app/components/OpenDialog.vue:736
+#: web/app/components/OpenDialog.vue:776 web/app/components/OpenDialog.vue:817
 msgid "New collection"
 msgstr "[Néw côlléctîôn~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:695 web/app/components/OpenDialog.vue:736
+#: web/app/components/OpenDialog.vue:776 web/app/components/OpenDialog.vue:817
 msgid "New collection…"
 msgstr "[Néw côlléctîôn…~~~~~~]"
 
@@ -2149,7 +2157,7 @@ msgstr "[Néw nàmé ôf {name}~~~~~~~]"
 msgid "New owner"
 msgstr "[Néw ôwnér~~~~]"
 
-#: web/app/components/OpenDialog.vue:751
+#: web/app/components/OpenDialog.vue:832
 msgid "New password"
 msgstr "[Néw pàsswôrd~~~~~]"
 
@@ -2277,7 +2285,7 @@ msgstr "[Nôtés~~]"
 msgid "Nothing has changed since the last checkpoint."
 msgstr "[Nôthîng hàs chàngéd sîncé thé làst chéckpôînt.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:652
+#: web/app/components/OpenDialog.vue:733
 msgid "Nothing in this collection yet. Add a document with the bookmark button next to it, or drag it onto the collection."
 msgstr "[Nôthîng în thîs côlléctîôn yét. Àdd à dôcûmént wîth thé bôôkmàrk bûttôn néxt tô ît, ôr dràg ît ôntô thé côlléctîôn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2289,7 +2297,7 @@ msgstr "[Nôthîng îs càlléd lîké thàt.~~~~~~~~~~~]"
 msgid "Nothing is replaced."
 msgstr "[Nôthîng îs réplàcéd.~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:652
+#: web/app/components/OpenDialog.vue:733
 msgid "Nothing opened yet from this browser."
 msgstr "[Nôthîng ôpénéd yét frôm thîs brôwsér.~~~~~~~~~~~~~~~]"
 
@@ -2305,7 +2313,7 @@ msgstr "[Nôthîng tô ûndô~~~~~~]"
 msgid "Nothing was replaced."
 msgstr "[Nôthîng wàs réplàcéd.~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:710
+#: web/app/components/OpenDialog.vue:791
 msgid "Nothing yet. Create the first document."
 msgstr "[Nôthîng yét. Créàté thé fîrst dôcûmént.~~~~~~~~~~~~~~~~]"
 
@@ -2349,11 +2357,11 @@ msgstr "[Ôff thé pàlétté…~~~~~~]"
 msgid "Offline"
 msgstr "[Ôfflîné~~~]"
 
-#: web/app/components/OpenDialog.vue:703
+#: web/app/components/OpenDialog.vue:784
 msgid "On this server"
 msgstr "[Ôn thîs sérvér~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:703
+#: web/app/components/OpenDialog.vue:784
 msgid "On {place} · {count}"
 msgstr "[Ôn {place} · {count}~~~~~~~~]"
 
@@ -2405,11 +2413,11 @@ msgstr "[Ônly whén ît îs thé whôlé céll.~~~~~~~~~~~~]"
 msgid "Only whole words."
 msgstr "[Ônly whôlé wôrds.~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:93 web/app/components/OpenDialog.vue:538 web/app/components/OpenDialog.vue:761
+#: web/app/components/ImportDialog.vue:93 web/app/components/OpenDialog.vue:618 web/app/components/OpenDialog.vue:842
 msgid "Open"
 msgstr "[Ôpén~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:641 web/app/lib/document-menus.ts:76
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:721 web/app/lib/document-menus.ts:76
 msgid "Open a File…"
 msgstr "[Ôpén à Fîlé…~~~~~]"
 
@@ -2425,15 +2433,15 @@ msgstr "[Ôpén à dôcûmént frôm ôné ôf yôûr plàcés, à côlléctîô
 msgid "Open a file"
 msgstr "[Ôpén à fîlé~~~~]"
 
-#: web/app/components/OpenDialog.vue:108
+#: web/app/components/OpenDialog.vue:146
 msgid "Open a presentation, or start a new one. Everybody you invite works on the same slides at the same time."
 msgstr "[Ôpén à préséntàtîôn, ôr stàrt à néw ôné. Évérybôdy yôû învîté wôrks ôn thé sàmé slîdés àt thé sàmé tîmé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:112
+#: web/app/components/OpenDialog.vue:150
 msgid "Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant."
 msgstr "[Ôpén à tàblé, ôr stàrt à néw ôné. Évérybôdy yôû învîté wôrks în thé sàmé tàblé, ànd sô dôés thé àssîstànt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:104
+#: web/app/components/OpenDialog.vue:142
 msgid "Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide."
 msgstr "[Ôpén à téxt, ôr stàrt à néw ôné. Évérybôdy yôû învîté wrîtés în thé sàmé téxt, ànd sô dôés thé àssîstànt: ît sûggésts, yôû décîdé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2465,7 +2473,7 @@ msgstr "[ÔpénDôcûmént téxt (.ôdt)~~~~~~~~~~]"
 msgid "Open…"
 msgstr "[Ôpén…~~]"
 
-#: web/app/components/OpenDialog.vue:776
+#: web/app/components/OpenDialog.vue:857
 msgid "Or start a new one"
 msgstr "[Ôr stàrt à néw ôné~~~~~~~]"
 
@@ -2553,7 +2561,7 @@ msgstr "[Pàràgràph~~~~]"
 msgid "Part of the result of the query in {cell}"
 msgstr "[Pàrt ôf thé résûlt ôf thé qûéry în {cell}~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminLogin.vue:48 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:73 web/app/components/OpenDialog.vue:751
+#: web/app/components/AdminLogin.vue:48 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:73 web/app/components/OpenDialog.vue:832
 msgid "Password"
 msgstr "[Pàsswôrd~~~]"
 
@@ -2640,6 +2648,10 @@ msgstr "[Pôrtràît~~~]"
 #: web/app/components/SlideWorkspace.vue:56
 msgid "PowerPoint presentation (.pptx)"
 msgstr "[PôwérPôînt préséntàtîôn (.pptx)~~~~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:123
+msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
+msgstr "[PôwérPôînt, ÔpénDôcûmént ôr Clàûdîà slîdés, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SlideWorkspace.vue:320
 msgid "Present"
@@ -2757,7 +2769,7 @@ msgstr "[Réàds téxt às à nûmbér (\"12.5\" gîvés 12.5); #VÀLÛÉ! îf �
 msgid "Reconnecting…"
 msgstr "[Récônnéctîng…~~~~~]"
 
-#: web/app/components/OpenDialog.vue:748 web/app/components/ShareDialog.vue:58
+#: web/app/components/OpenDialog.vue:829 web/app/components/ShareDialog.vue:58
 msgid "Recovery key"
 msgstr "[Récôvéry kéy~~~~~]"
 
@@ -2793,7 +2805,7 @@ msgstr "[Réléàsé frôm grîd~~~~~~~]"
 msgid "Remove"
 msgstr "[Rémôvé~~]"
 
-#: web/app/components/OpenDialog.vue:615 web/app/components/OpenDialog.vue:615
+#: web/app/components/OpenDialog.vue:695 web/app/components/OpenDialog.vue:695
 msgid "Remove collection {name}"
 msgstr "[Rémôvé côlléctîôn {name}~~~~~~~~~~]"
 
@@ -2817,11 +2829,11 @@ msgstr "[Rémôvé yôûrsélf frôm thîs dôcûmént~~~~~~~~~~~~~~]"
 msgid "Removes spaces at both ends and reduces the ones between words to one."
 msgstr "[Rémôvés spàcés àt bôth énds ànd rédûcés thé ônés bétwéén wôrds tô ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:572 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
+#: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:652 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
 msgid "Rename"
 msgstr "[Rénàmé~~]"
 
-#: web/app/components/OpenDialog.vue:558 web/app/components/OpenDialog.vue:572
+#: web/app/components/OpenDialog.vue:638 web/app/components/OpenDialog.vue:652
 msgid "Rename {server}"
 msgstr "[Rénàmé {server}~~~~~~]"
 
@@ -3021,7 +3033,7 @@ msgstr "[Sàvé thé dôcûmént's côntént în Clàûdîà's ôwn fôrmàt~~~~
 msgid "Saved {name} to {folder}"
 msgstr "[Sàvéd {name} tô {folder}~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:107
+#: web/app/components/OpenDialog.vue:145
 msgid "Say it on a slide."
 msgstr "[Sày ît ôn à slîdé.~~~~~~~]"
 
@@ -3037,7 +3049,7 @@ msgstr "[Scàttér · sôôn~~~~~~]"
 msgid "Sealed Claudia document"
 msgstr "[Séàléd Clàûdîà dôcûmént~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:637
+#: web/app/components/OpenDialog.vue:717
 msgid "Search"
 msgstr "[Séàrch~~]"
 
@@ -3053,7 +3065,7 @@ msgstr "[Séàrch & Réplàcé…~~~~~~~]"
 msgid "Search & replace"
 msgstr "[Séàrch & réplàcé~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:638
+#: web/app/components/OpenDialog.vue:718
 msgid "Search Mine and {place}"
 msgstr "[Séàrch Mîné ànd {place}~~~~~~~~~]"
 
@@ -3097,7 +3109,7 @@ msgstr "[Séléctîôn~~~~]"
 msgid "Series are in"
 msgstr "[Sérîés àré în~~~~~]"
 
-#: web/app/components/OpenDialog.vue:590
+#: web/app/components/OpenDialog.vue:670
 msgid "Server address"
 msgstr "[Sérvér àddréss~~~~~~]"
 
@@ -3237,7 +3249,7 @@ msgstr "[Slîdé {n} ôf {total}~~~~~~~~]"
 msgid "Slide {n} of {total}: {title}"
 msgstr "[Slîdé {n} ôf {total}: {title}~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:86 web/app/lib/print/setup.ts:45
+#: web/app/components/OpenDialog.vue:92 web/app/lib/print/setup.ts:45
 msgid "Slides"
 msgstr "[Slîdés~~]"
 
@@ -3385,7 +3397,7 @@ msgstr "[TRÛÉ ôr FÀLSÉ; àn érrôr în thé vàlûé îs àn ànswér, nô
 msgid "Tab / Shift + Tab"
 msgstr "[Tàb / Shîft + Tàb~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:86
+#: web/app/components/OpenDialog.vue:92
 msgid "Table"
 msgstr "[Tàblé~~]"
 
@@ -3393,7 +3405,7 @@ msgstr "[Tàblé~~]"
 msgid "Tables"
 msgstr "[Tàblés~~]"
 
-#: web/app/components/OpenDialog.vue:632
+#: web/app/components/OpenDialog.vue:712
 msgid "Tables, texts and slides on this place, and the documents you opened before."
 msgstr "[Tàblés, téxts ànd slîdés ôn thîs plàcé, ànd thé dôcûménts yôû ôpénéd béfôré.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3413,11 +3425,11 @@ msgstr "[Tàké thé séléctéd célls' ôwn stylé ôff, bàck tô thé tàbl�
 msgid "Take the selected object off the slide"
 msgstr "[Tàké thé séléctéd ôbjéct ôff thé slîdé~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:677 web/app/components/OpenDialog.vue:678
+#: web/app/components/OpenDialog.vue:758 web/app/components/OpenDialog.vue:759
 msgid "Take {id} off Mine"
 msgstr "[Tàké {id} ôff Mîné~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:685 web/app/components/OpenDialog.vue:686
+#: web/app/components/OpenDialog.vue:766 web/app/components/OpenDialog.vue:767
 msgid "Take {id} out of {name}"
 msgstr "[Tàké {id} ôût ôf {name}~~~~~~~~~]"
 
@@ -3429,7 +3441,7 @@ msgstr "[Tàké {name} àwày?~~~~~~~]"
 msgid "Teal"
 msgstr "[Téàl~~]"
 
-#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:86 web/app/components/SearchPanel.vue:502 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
+#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:92 web/app/components/SearchPanel.vue:502 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
 msgid "Text"
 msgstr "[Téxt~~]"
 
@@ -3453,7 +3465,7 @@ msgstr "[Téxt dôcûménts: thé ÀÎ sûggésts éîthér wày.~~~~~~~~~~~~~~~
 msgid "Text of the replacement"
 msgstr "[Téxt ôf thé réplàcémént~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:523
+#: web/app/components/OpenDialog.vue:603
 msgid "That document exists already — or the name or password is not acceptable. Try Open."
 msgstr "[Thàt dôcûmént éxîsts àlréàdy — ôr thé nàmé ôr pàsswôrd îs nôt àccéptàblé. Try Ôpén.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3477,7 +3489,7 @@ msgstr "[Thàt îs tôô mûch tô pàsté àt ôncé (àt môst 10,000 célls).
 msgid "That range will not make a chart."
 msgstr "[Thàt ràngé wîll nôt màké à chàrt.~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:525
+#: web/app/components/OpenDialog.vue:605
 msgid "That recovery key does not fit this document."
 msgstr "[Thàt récôvéry kéy dôés nôt fît thîs dôcûmént.~~~~~~~~~~~~~~~~~~]"
 
@@ -3533,7 +3545,7 @@ msgstr "[Thé côlôûrs ôf thîs dôcûmént, by whàt éàch ôné méàns~~~
 msgid "The connection to the server was lost."
 msgstr "[Thé cônnéctîôn tô thé sérvér wàs lôst.~~~~~~~~~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:187
+#: web/app/components/DocumentFrame.vue:188
 msgid "The connection was closed."
 msgstr "[Thé cônnéctîôn wàs clôséd.~~~~~~~~~~]"
 
@@ -3573,7 +3585,7 @@ msgstr "[Thé dôcûmént îs fûll, ôr thé cônnéctîôn wàs tôô slôw.~~
 msgid "The document is waiting for an owner or editor to open it."
 msgstr "[Thé dôcûmént îs wàîtîng fôr àn ôwnér ôr édîtôr tô ôpén ît.~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:632
+#: web/app/components/OpenDialog.vue:712
 msgid "The documents you put into this collection, on any place."
 msgstr "[Thé dôcûménts yôû pût întô thîs côlléctîôn, ôn àny plàcé.~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3585,7 +3597,7 @@ msgstr "[Thé dôwnlôàd fàîléd~~~~~~~~]"
 msgid "The factorial of a whole number (1 * 2 * ... * n)."
 msgstr "[Thé fàctôrîàl ôf à whôlé nûmbér (1 * 2 * ... * n).~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:150
+#: web/app/lib/open.ts:172
 msgid "The file is too large for this server."
 msgstr "[Thé fîlé îs tôô làrgé fôr thîs sérvér.~~~~~~~~~~~~~~~]"
 
@@ -3689,7 +3701,7 @@ msgstr "[Thé môdél thàt ànswérs @àî în évéry dôcûmént ôn thîs s�
 msgid "The month of a date, 1 to 12."
 msgstr "[Thé mônth ôf à dàté, 1 tô 12.~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:526
+#: web/app/components/OpenDialog.vue:606
 msgid "The name or password is not right (or there is no such document)."
 msgstr "[Thé nàmé ôr pàsswôrd îs nôt rîght (ôr théré îs nô sûch dôcûmént).~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3765,7 +3777,7 @@ msgstr "[Thé prôdûct ôf thé nûmbérs în thé ràngés.~~~~~~~~~~~~~~~~]"
 msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
 msgstr "[Thé ràté àt whîch càsh flôws (thé fîrst ôné nôw, ôné pér pérîôd àftér ît) àré wôrth nôthîng tôdày.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:765
+#: web/app/components/OpenDialog.vue:846
 msgid "The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do."
 msgstr "[Thé récôvéry kéy wàs shôwn tô thé ôwnér whén thé dôcûmént wàs màdé (ôr whén théy màdé à néw ôné). Wîth ît yôû chôôsé à néw pàsswôrd; yôû kéép whàt yôû wéré àllôwéd tô dô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3789,11 +3801,11 @@ msgstr "[Thé rîght sîdé~~~~~~]"
 msgid "The search was stopped after a while, so this may not be everything."
 msgstr "[Thé séàrch wàs stôppéd àftér à whîlé, sô thîs mày nôt bé évérythîng.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:175 web/app/lib/open.ts:61
+#: web/app/lib/open.ts:197 web/app/lib/open.ts:61
 msgid "The server answered with an error ({status})."
 msgstr "[Thé sérvér ànswéréd wîth àn érrôr ({status}).~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:148 web/app/lib/open.ts:162 web/app/lib/open.ts:50
+#: web/app/lib/open.ts:170 web/app/lib/open.ts:184 web/app/lib/open.ts:50
 msgid "The server cannot be reached."
 msgstr "[Thé sérvér cànnôt bé réàchéd.~~~~~~~~~~~~]"
 
@@ -3941,6 +3953,10 @@ msgstr "[Thé “[” àt chàràctér {position} hàs nô “]”. Nôthîng î
 msgid "There is no such document."
 msgstr "[Théré îs nô sûch dôcûmént.~~~~~~~~~~]"
 
+#: web/app/components/OpenDialog.vue:132
+msgid "These are slides. Open them with Claudia Creates."
+msgstr "[Thésé àré slîdés. Ôpén thém wîth Clàûdîà Créàtés.~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/ResultNote.vue:35
 msgid "These cells are filled by the query, so they are not typed into."
 msgstr "[Thésé célls àré fîlléd by thé qûéry, sô théy àré nôt typéd întô.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -3965,7 +3981,7 @@ msgstr "[Thîckér~~~]"
 msgid "Thicker border"
 msgstr "[Thîckér bôrdér~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:111
+#: web/app/components/OpenDialog.vue:149
 msgid "Think with your data."
 msgstr "[Thînk wîth yôûr dàtà.~~~~~~~~]"
 
@@ -4025,7 +4041,15 @@ msgstr "[Thîs dôcûmént wàs délétéd by îts ôwnér.~~~~~~~~~~~~~~~~]"
 msgid "This does not look like a picture the browser can show."
 msgstr "[Thîs dôés nôt lôôk lîké à pîctûré thé brôwsér càn shôw.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:151
+#: web/app/components/OpenDialog.vue:131
+msgid "This is a table. Open it with Claudia Computes."
+msgstr "[Thîs îs à tàblé. Ôpén ît wîth Clàûdîà Cômpûtés.~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:130
+msgid "This is a text. Open it with Claudia Composes."
+msgstr "[Thîs îs à téxt. Ôpén ît wîth Clàûdîà Cômpôsés.~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/open.ts:173
 msgid "This is not a file Claudia can open."
 msgstr "[Thîs îs nôt à fîlé Clàûdîà càn ôpén.~~~~~~~~~~~~~~]"
 
@@ -4149,7 +4173,7 @@ msgstr "[Twô pàgés sîdé by sîdé~~~~~~~~~]"
 msgid "Type"
 msgstr "[Typé~~]"
 
-#: web/app/components/OpenDialog.vue:277 web/app/components/OpenDialog.vue:282
+#: web/app/components/OpenDialog.vue:347 web/app/components/OpenDialog.vue:352
 msgid "Type a server address."
 msgstr "[Typé à sérvér àddréss.~~~~~~~~~]"
 
@@ -4321,7 +4345,7 @@ msgstr "[Whéré thé wôrd mày bé brôkén àt thé énd ôf à lîné~~~~~~~
 msgid "Where to look"
 msgstr "[Whéré tô lôôk~~~~~]"
 
-#: web/app/components/OpenDialog.vue:704
+#: web/app/components/OpenDialog.vue:785
 msgid "Which apps"
 msgstr "[Whîch àpps~~~~]"
 
@@ -4377,9 +4401,13 @@ msgstr "[Wîthôût ôné, ônly thîs màchîné mày créàté dôcûménts.~~
 msgid "Word document (.docx)"
 msgstr "[Wôrd dôcûmént (.dôcx)~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:644
+#: web/app/components/OpenDialog.vue:125
 msgid "Word, Excel, PowerPoint, OpenDocument or Claudia, or drop one anywhere on this page."
 msgstr "[Wôrd, Éxcél, PôwérPôînt, ÔpénDôcûmént ôr Clàûdîà, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:121
+msgid "Word, OpenDocument or Claudia texts, or drop one anywhere on this page."
+msgstr "[Wôrd, ÔpénDôcûmént ôr Clàûdîà téxts, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/object-style-host.ts:42
 msgid "Words"
@@ -4417,7 +4445,7 @@ msgstr "[Wrîté tô évérybôdy, ôr {ask} tô àsk thé àssîstànt. Sày {h
 msgid "Write to the assistant in the chat"
 msgstr "[Wrîté tô thé àssîstànt în thé chàt~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:103
+#: web/app/components/OpenDialog.vue:141
 msgid "Write together."
 msgstr "[Wrîté tôgéthér.~~~~~~]"
 
@@ -4433,7 +4461,7 @@ msgstr "[Y àxîs (ôptîônàl)~~~~~~~]"
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
 msgstr "[Yôû àré îts ôwnér. Whàt thé dôcûmént dôés nôt shôw stàys în thé képt fîlé ànd îs lîstéd àftér ît ôpéns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:186
+#: web/app/components/DocumentFrame.vue:187
 msgid "You are not connected any more"
 msgstr "[Yôû àré nôt cônnéctéd àny môré~~~~~~~~~~~~]"
 
@@ -4465,7 +4493,7 @@ msgstr "[Yôûr chàngé wàs nôt àpplîéd: thé dôcûmént chàngéd ûndé
 msgid "Your changes to the pattern are dropped."
 msgstr "[Yôûr chàngés tô thé pàttérn àré drôppéd.~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminLogin.vue:47 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:72 web/app/components/OpenDialog.vue:746
+#: web/app/components/AdminLogin.vue:47 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:72 web/app/components/OpenDialog.vue:827
 msgid "Your name"
 msgstr "[Yôûr nàmé~~~~]"
 
@@ -4485,7 +4513,7 @@ msgstr "[Yôûr récôvéry kéy~~~~~~~]"
 msgid "Zoom"
 msgstr "[Zôôm~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:357
+#: packages/claudia-server/src/claudia_server/app.py:375
 msgid "a Claudia file goes in as it is, not as a new document"
 msgstr "[à Clàûdîà fîlé gôés în às ît îs, nôt às à néw dôcûmént~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4497,7 +4525,7 @@ msgstr "[à céll référéncé~~~~~~]"
 msgid "a digit"
 msgstr "[à dîgît~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:359
+#: packages/claudia-server/src/claudia_server/app.py:377
 msgid "a file becomes a new document: hello needs create"
 msgstr "[à fîlé bécômés à néw dôcûmént: héllô nééds créàté~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4533,7 +4561,7 @@ msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "[à ràndôm nûmbér frôm thé nàméd dîstrîbûtîôn, fôr éxàmplé RÀNDÔM(\"nôrmàl\", 1000, 150). Wîthôût àrgûménts ît îs RÀND(). ``lôw`` ànd ``hîgh`` cût thé dîstrîbûtîôn (côntînûôûs ônés ônly). Dîstrîbûtîôns: ûnîfôrm, nôrmàl, lôgnôrmàl, trîàngûlàr, pért, éxpônéntîàl, wéîbûll, bétà, gàmmà, bînômîàl, pôîssôn, dîscrété.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:318
+#: packages/claudia-server/src/claudia_server/app.py:336
 msgid "a recovery key, a name and a new password are needed"
 msgstr "[à récôvéry kéy, à nàmé ànd à néw pàsswôrd àré néédéd~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4613,7 +4641,7 @@ msgstr "[àdd_shéét: thé nàmé mûst hàvé 1 tô {limit} chàràctérs~~~~~
 msgid "add_user: role must be editor or viewer"
 msgstr "[àdd_ûsér: rôlé mûst bé édîtôr ôr vîéwér~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:705
+#: web/app/components/OpenDialog.vue:786
 msgid "all apps"
 msgstr "[àll àpps~~~]"
 
@@ -4645,7 +4673,7 @@ msgstr "[ànd {moreCount} môré~~~~~~~~]"
 msgid "and {n} more"
 msgstr "[ànd {n} môré~~~~~]"
 
-#: web/app/components/OpenDialog.vue:746
+#: web/app/components/OpenDialog.vue:827
 msgid "ann"
 msgstr "[ànn~]"
 
@@ -4721,7 +4749,7 @@ msgstr "[blôcks mûst bé à lîst ôf 1 tô {limit} pàràgràph îds~~~~~~~~~
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr "[blôcks mûst bé à lîst ôf àt môst {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:745
+#: web/app/components/OpenDialog.vue:826
 msgid "budget-2027"
 msgstr "[bûdgét-2027~~~~]"
 
@@ -4941,7 +4969,7 @@ msgstr "[évérythîng thàt wàs dôné tô thîs dôcûmént~~~~~~~~~~~~~~~~]"
 msgid "exactly"
 msgstr "[éxàctly~~~]"
 
-#: web/app/components/OpenDialog.vue:590
+#: web/app/components/OpenDialog.vue:670
 msgid "example.com:8420"
 msgstr "[éxàmplé.côm:8420~~~~~~]"
 
@@ -5137,7 +5165,7 @@ msgstr "[méssàgé tôô làrgé~~~~~~~]"
 msgid "method must be a string"
 msgstr "[méthôd mûst bé à strîng~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:424
+#: packages/claudia-server/src/claudia_server/app.py:442
 msgid "missing or wrong credentials"
 msgstr "[mîssîng ôr wrông crédéntîàls~~~~~~~~~~~]"
 
@@ -5661,11 +5689,11 @@ msgstr "[thé dôcûmént's ôwn~~~~~~~]"
 msgid "the end of the cell"
 msgstr "[thé énd ôf thé céll~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:355
+#: packages/claudia-server/src/claudia_server/app.py:373
 msgid "the file is no longer here: choose it again"
 msgstr "[thé fîlé îs nô lôngér héré: chôôsé ît àgàîn~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:407
+#: packages/claudia-server/src/claudia_server/app.py:425
 msgid "the first message must be hello with params"
 msgstr "[thé fîrst méssàgé mûst bé héllô wîth pàràms~~~~~~~~~~~~~~~~~]"
 
@@ -5821,11 +5849,11 @@ msgstr "[thîs pàràgràph îs nôt à lîst îtém~~~~~~~~~~~~~]"
 msgid "this row"
 msgstr "[thîs rôw~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:265 packages/claudia-server/src/claudia_server/suite.py:106
+#: packages/claudia-server/src/claudia_server/app.py:283 packages/claudia-server/src/claudia_server/suite.py:106
 msgid "this server does not host {app}"
 msgstr "[thîs sérvér dôés nôt hôst {app}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:321 packages/claudia-server/src/claudia_server/protocol.py:851
+#: packages/claudia-server/src/claudia_server/app.py:339 packages/claudia-server/src/claudia_server/protocol.py:851
 msgid "this server does not keep recovery keys"
 msgstr "[thîs sérvér dôés nôt kéép récôvéry kéys~~~~~~~~~~~~~~~~]"
 
@@ -6169,11 +6197,11 @@ msgstr "[{id} cànnôt bé tàkén în: {reason}~~~~~~~~~~~~~]"
 msgid "{id} is here already"
 msgstr "[{id} îs héré àlréàdy~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:370
+#: packages/claudia-server/src/claudia_server/app.py:388
 msgid "{id} is here already: give the new document another name"
 msgstr "[{id} îs héré àlréàdy: gîvé thé néw dôcûmént ànôthér nàmé~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:461
+#: web/app/components/OpenDialog.vue:541
 msgid "{id} is here now. Open it with your name and password in it."
 msgstr "[{id} îs héré nôw. Ôpén ît wîth yôûr nàmé ànd pàsswôrd în ît.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6265,11 +6293,11 @@ msgstr "[{method}: {parameter} {reason}~~~~~~~~~~~~]"
 msgid "{name} as hex"
 msgstr "[{name} às héx~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:375
+#: packages/claudia-server/src/claudia_server/app.py:393
 msgid "{name} cannot be read"
 msgstr "[{name} cànnôt bé réàd~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:367
+#: packages/claudia-server/src/claudia_server/app.py:385
 msgid "{name} cannot become a document of {app}"
 msgstr "[{name} cànnôt bécômé à dôcûmént ôf {app}~~~~~~~~~~~~~~~~]"
 
@@ -6277,15 +6305,15 @@ msgstr "[{name} cànnôt bécômé à dôcûmént ôf {app}~~~~~~~~~~~~~~~~]"
 msgid "{name} has no cells right now"
 msgstr "[{name} hàs nô célls rîght nôw~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:301
+#: web/app/components/OpenDialog.vue:371
 msgid "{name} is here, and kept inside the document for Download."
 msgstr "[{name} îs héré, ànd képt însîdé thé dôcûmént fôr Dôwnlôàd.~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:302
+#: web/app/components/OpenDialog.vue:372
 msgid "{name} is here. The file was not kept: Download writes a new one."
 msgstr "[{name} îs héré. Thé fîlé wàs nôt képt: Dôwnlôàd wrîtés à néw ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:300
+#: web/app/components/OpenDialog.vue:370
 msgid "{name} is here. {count} things it holds are not shown, and stay in the kept file."
 msgstr "[{name} îs héré. {count} thîngs ît hôlds àré nôt shôwn, ànd stày în thé képt fîlé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6529,7 +6557,7 @@ msgstr "[{width} × {height} px~~~~~~~~]"
 msgid "· editing"
 msgstr "[· édîtîng~~~~]"
 
-#: web/app/components/OpenDialog.vue:716
+#: web/app/components/OpenDialog.vue:797
 msgid "· {online} here now"
 msgstr "[· {online} héré nôw~~~~~~~~]"
 

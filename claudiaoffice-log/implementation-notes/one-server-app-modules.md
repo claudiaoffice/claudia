@@ -57,6 +57,14 @@ Windows shell, then offloading heavy jobs to the worker pool (D436).
   collections as a checkbox menu (in the flow under the row: the lists scroll, a floating menu was cut off) and rows
   can be dragged onto a collection. `entriesOf` shows a document put in from the place's list even if it was never
   opened from this browser.
+* **The desktop apps, first patch (server 0.32.0, D444, D445).** `/api/health` names the apps, and the version to
+  this computer only (client on the loopback *and* a loopback host name, so a reverse proxy on the same machine does
+  not pass it on). The contract's `welcome` may carry `app` (additive, v1); `contract.welcome(app=…)` builds it, the
+  shells send it in their own patches. The front page narrows to that app (`windowApp`, `showsAll`, `shownApp` in
+  `OpenDialog.vue`; `openableFor`, `appOfFileName` in `lib/open.ts`), answers File ▸ New/Open…/Open a File… from the
+  native menu, and holds the presence socket. Found on the way: File ▸ Open… in a shell made a second bridge, which
+  took `window.__claudiaShell` from the document and deleted it on closing, so the native menu reached nothing after
+  the first File ▸ Open…; the dialog now borrows the document's bridge.
 * **Imports are not lazy yet.** `claudia_server` imports every app package, so a server of one app still loads all
   three. That matters once modules run in their own processes (D436) and is done there.
 

@@ -1,12 +1,12 @@
 ---
 id: D119
 title: "The server never outlives its shell"
-status: current
+status: superseded
 applies-to: all
 date: 2026-11-03
 round: "Native clients (eighteenth round)"
 supersedes: []
-superseded-by: []
+superseded-by: [D445]
 ---
 
 # D119 · The server never outlives its shell

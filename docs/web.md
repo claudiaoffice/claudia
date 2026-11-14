@@ -23,6 +23,14 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
 * On the right, open a document with a name and password; **Create document** asks for Table, Text or Slides first on
   a server of several apps.
 * A document opened from File ▸ Open… replaces the one in the window (`lib/switch-session.ts`).
+* **In a desktop window** (D444) the shell says which app the window is (`welcome.app`): the page lists that app's
+  documents only (place, Mine, collections), has no app filter and no choice of kind, offers only that app's formats
+  in Open a File…, and refuses a file of another app ("This is a table. Open it with Claudia Computes."), by its name
+  before uploading and by what the server read in it after. The native menu's File ▸ New, Open… and Open a File…
+  work on the front page too. File ▸ Open… in a document borrows the document's bridge (`shellBridge`) instead of
+  making a second one.
+* The front page holds the presence socket (`lib/presence.ts`, `/api/presence`, D434, D445) while it is shown, so a
+  server started with `--exit-when-idle` knows it is in use; a dropped socket comes back after 1, 2, 4… s (30 s at most).
 * Long names do not stretch anything: a row shows the name on up to two lines (the whole name as its tooltip), the
   columns and dialogs keep their width, and the page scrolls when the window is short.
 

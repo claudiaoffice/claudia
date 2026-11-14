@@ -174,6 +174,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       v-if="dialog === 'open' || dialog === 'open-file'"
       modal
       :pick-file="dialog === 'open-file'"
+      :shell-bridge="shell"
       @close="dialog = null"
       @opened="showOpened"
     />

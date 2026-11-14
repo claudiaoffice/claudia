@@ -5,6 +5,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-11-14
+
+The desktop apps on the one server (D444, D445).
+
+### Added
+- `/api/health` answers `apps` (the apps the server serves) to everyone, and `version` to a request from this
+  computer to this computer's address (`127.0.0.1`, `localhost`, `[::1]`), so a desktop app that finds a running
+  server can tell whether it is its own.
+
 ## [0.31.0] - 2026-11-14
 
 Opening files from the computer (D438-D442).

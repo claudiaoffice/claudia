@@ -65,6 +65,10 @@
           "type": "string",
           "pattern": "^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$",
           "maxLength": 35
+        },
+        "app": {
+          "description": "The app this window is ('composes', 'computes', 'creates'), D444. Optional. On a server of several apps the page then shows this app's documents only and refuses files of another kind; without it the page shows every app, as in a browser tab.",
+          "$ref": "#/$defs/token"
         }
       }
     },
