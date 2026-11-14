@@ -8,7 +8,7 @@ import { holdPresence } from '~/lib/presence'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
-import { createShellBridge, detectHandler, isApp, type ShellBridge } from '~/lib/shell-bridge'
+import { createShellBridge, detectHandler, detectParentSink, isApp, type ShellBridge } from '~/lib/shell-bridge'
 import { LANGUAGES, useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
 import Modal from './Modal.vue'
@@ -43,7 +43,8 @@ const origin = computed(() => `${location.protocol}//${server.value}`)
 // view leave the server it showed.)
 const stored = ref<Bookmark[]>(listBookmarks())
 const shell = ref<(ShellBridge & { detach: () => void }) | null>(null)
-const inShell = detectHandler() !== null
+// Hosted by a native shell: the macOS WebKit handler, or the parent window of a Neutralino iframe (Windows, Linux).
+const inShell = (detectHandler() ?? detectParentSink()) !== null
 const viaShell = computed(() => shell.value?.hasServerList === true)
 const bookmarks = computed<Bookmark[]>(() => (viaShell.value ? (shell.value?.servers ?? []) : stored.value))
 /** The label to give the server this page is on once it is clear where the list lives (see `settle`). */

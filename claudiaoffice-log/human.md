@@ -31,8 +31,11 @@ Work plan for Nov 14/15th 2026
 			- [ ] still shows non-useful menu entries at front page and seems to connect to random server port => state of the client?
 			- [ ] invalid menu entries like "review this text" still exist
 		- [ ] cant find fonts in a desktop client when printing
+		- [ ] in help system the Markdown isn't rendered but raw ("how do I..." sections)
+		- [ ] can't move the search&replace overlay in computes
 	- [x] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
+		- [ ] versioning announcement of server on start page
 		- [ ] performance
 		- [ ] scaleway: replace not new image
 		- [ ] **import-export-wiring** every internal feature should be connected to the Importer/Exporter
@@ -55,7 +58,8 @@ Work plan for Nov 14/15th 2026
 		- [ ] typst
 		- [ ] mermaid
 		- [ ] latex
-			- [ ] first usecase: formulas in composes
+			- [ ] first usecase: formulas in composes & creates
+		- [ ] excalidraw
 	- [ ] bibliography with bibtex support and zotero
 	- [ ] tables in composes
 	- [ ] cell formats beyond style in Excel (%, €)

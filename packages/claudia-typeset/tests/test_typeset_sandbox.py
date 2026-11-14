@@ -11,6 +11,10 @@ import pytest
 from claudia_typeset import Limits, OutputTooLarge, Timeout, run_sandboxed
 
 posix_only = pytest.mark.skipif(sys.platform == "win32", reason="resource limits and signals are POSIX")
+# macOS accepts RLIMIT_AS and then does not enforce it
+enforces_address_space = pytest.mark.skipif(
+    not sys.platform.startswith("linux"), reason="RLIMIT_AS is enforced on Linux"
+)
 
 
 def runs_in_a_loop(test):
@@ -224,7 +228,7 @@ async def test_a_program_that_does_not_exist_is_reported_by_python_as_usual(tmp_
         await run_sandboxed([str(tmp_path / "nowhere")], cwd=tmp_path, env={}, limits=Limits())
 
 
-@posix_only
+@enforces_address_space
 @runs_in_a_loop
 async def test_a_browser_based_tool_can_be_run_without_the_address_space_limit(tmp_path):
     """V8 and Chromium reserve far more address space than they use: a limit of it stops them at once (D392)."""

@@ -3,7 +3,7 @@
 // object (menu recorded, events, `extensions.dispatch` over a WebSocket to the core, broadcasts back) -- because that is
 // the one piece that needs a Windows machine. What this shows, per app: the shell page and the web app complete the handshake; the
 // web app's own menu bar gives way to the native one; a click in the native menu does what it says in the document;
-// the window's end stops the server it started. And once more with a server given on the command line (`--server`).
+// the window's end leaves the shared server (D445) running, to stop by itself once idle. And once more with a server given on the command line (`--server`).
 //
 //   (cd clients/windows && npm ci && npm run build) && cd web && npm run build && npm run e2e:windows-shell
 //
@@ -16,7 +16,7 @@
 // for in .venv\Scripts on Windows and is therefore handed explicitly here, so that the same script runs in Linux CI.
 const { chromium } = require('playwright')
 const { createRequire } = require('node:module')
-const { spawn } = require('node:child_process')
+const { execFileSync, spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const http = require('node:http')
@@ -110,6 +110,7 @@ async function openWindow(browser, app, server) {
 
   return {
     page,
+    home,
     fromCore,
     /** The page of the web app inside the shell's frame, once it is there. */
     async frame() {
@@ -124,7 +125,9 @@ async function openWindow(browser, app, server) {
       throw new Error('the window never showed a page; it says: ' + (await page.locator('#status').innerText()))
     },
     menuSets: () => page.evaluate(() => window.__menus.length),
-    menuJson: () => page.evaluate(() => JSON.stringify(window.__menus[0])),
+    /** The first menu the shell was given is the front page's short one; the latest is the document's (sheet 11). */
+    firstMenuJson: () => page.evaluate(() => JSON.stringify(window.__menus[0])),
+    latestMenuJson: () => page.evaluate(() => JSON.stringify(window.__menus[window.__menus.length - 1])),
     /** What a click on a native menu item sends to the page (Neutralino's `mainMenuItemClicked`). */
     click: (id, text) => page.evaluate(({ id, text }) => window.__handlers.mainMenuItemClicked({ detail: { id, text } }), { id, text }),
     async close() {
@@ -148,6 +151,14 @@ async function ready(url) {
     await sleep(200)
   }
   throw new Error('the server did not start: ' + url)
+}
+/** The shared server a window started outlives it (D445) and would idle for ten minutes: end it, by its own folder. */
+function stopSharedServer(home) {
+  try {
+    execFileSync('pkill', ['-f', `claudia_server.*${home}`], { stdio: 'ignore' })
+  } catch {
+    // none left, or no pkill on this machine: the server stops itself once idle
+  }
 }
 const down = async (url) => fetch(url + 'api/health', { signal: AbortSignal.timeout(2000) }).then(() => false, () => true)
 
@@ -186,13 +197,21 @@ async function checkWindow(window, app, label) {
   await frame.waitForSelector('input[name=document]')
   assert.ok((await frame.evaluate(() => document.body.innerText)).includes(new URL(origin).host), `${label}: the welcome page lists this server`)
 
+  // the front page already runs under the shell: it gets the short native menu, not the web app's own
+  await window.page.waitForFunction(() => window.__menus.length >= 1, null, { timeout: 15000 }).catch(() => {
+    throw new Error(`${label}: the front page never gave the shell a menu`)
+  })
+  const front = await window.firstMenuJson()
+  assert.ok(front.includes('Open…') && !front.includes('Save New Checkpoint'), `${label}: the front page has the short native menu`)
+
   await createDocument(frame, app, `e2e-${app}`)
   await frame.waitForFunction(() => document.querySelector('nav.menus')?.classList.contains('hidden'), null, { timeout: 15000 }).catch(() => {
     throw new Error(`${label}: the web app kept its own menu bar; the console says:\n${window.page.consoleLines.join('\n')}`)
   })
   assert.ok(await menuBarGone(frame), `${label}: the web menu bar takes no room`)
-  assert.ok((await window.menuSets()) >= 1, `${label}: a native menu was set`)
-  assert.ok((await window.menuJson()).includes('Save New Checkpoint'), `${label}: the native menu has the app's items`)
+  await window.page.waitForFunction(() => JSON.stringify(window.__menus[window.__menus.length - 1]).includes('Save New Checkpoint'), null, { timeout: 15000 }).catch(() => {})
+  assert.ok((await window.menuSets()) >= 2, `${label}: the document set its own native menu after the front page's`)
+  assert.ok((await window.latestMenuJson()).includes('Save New Checkpoint'), `${label}: the native menu has the app's items`)
 
   // a click in the native menu does what its label says, in the document
   await window.click('file.save-as', 'Save New Checkpoint…')
@@ -219,12 +238,15 @@ async function checkWindow(window, app, label) {
         assert.match(origin, /^http:\/\/127\.0\.0\.1:\d+$/, 'its own server is on this computer, plain http')
         const code = await window.close()
         assert.equal(code, 0, `${app}: the core ended cleanly with the window`)
-        assert.ok(await down(origin + '/'), `${app}: the server the window started is stopped with it`)
-        console.log(`${app}: handshake, native menu, checkpoint dialog, server stopped with the window`)
+        // D445: the window's server is shared by every window; it is let go of, and stops by itself once idle
+        assert.equal(await down(origin + '/'), false, `${app}: the shared server is left running when the window ends`)
+        console.log(`${app}: handshake, native menu, checkpoint dialog, shared server left to stop by itself`)
       } catch (problem) {
         await shot(window.page, `${app}-failed`)
         await window.close().catch(() => {})
         throw problem
+      } finally {
+        stopSharedServer(window.home)
       }
     }
 

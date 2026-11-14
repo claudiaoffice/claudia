@@ -8,6 +8,7 @@ own, a clean environment whose home is that folder, the limits of the service, a
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import tempfile
@@ -103,6 +104,18 @@ def _line(text: str) -> str:
     return " ".join(text.split())[:300]
 
 
+def _short_temp_dir() -> str | None:
+    """The system's temporary folder, or ``/tmp`` where that one is too long (macOS: ``/var/folders/…/T``), so that a
+    job folder stays short enough for a socket path in it. ``None`` leaves the choice to `tempfile`."""
+    system = tempfile.gettempdir()
+    if len(system) + 12 <= MAX_JOB_PATH:
+        return system
+    fallback = Path("/tmp")
+    if fallback.is_dir() and os.access(fallback, os.W_OK) and len(str(fallback.resolve())) + 12 <= MAX_JOB_PATH:
+        return str(fallback)
+    return None
+
+
 class CliPlugin(Plugin):
     """A plugin whose manifest has a ``cli``: see the module description."""
 
@@ -126,7 +139,7 @@ class CliPlugin(Plugin):
         self._workdir.mkdir(parents=True, exist_ok=True)
         if len(str(self._workdir.resolve())) + 12 <= MAX_JOB_PATH:
             return Path(tempfile.mkdtemp(prefix="j", dir=self._workdir)).resolve()
-        return Path(tempfile.mkdtemp(prefix="claudia-")).resolve()
+        return Path(tempfile.mkdtemp(prefix="claudia-", dir=_short_temp_dir())).resolve()
 
     async def _run(
         self, request: RenderRequest, tools: Mapping[str, ResolvedTool], limits: Limits, folder: Path

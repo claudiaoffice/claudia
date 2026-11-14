@@ -275,3 +275,13 @@ async def test_a_job_folder_has_a_short_path_however_deep_the_servers_work_folde
     )
     folder = result.svg.split("<desc>")[1].split("</desc>")[0]
     assert len(folder) <= 60 and not folder.startswith(str(deep))
+
+
+def test_a_long_system_temporary_folder_is_left_for_a_short_one(monkeypatch):
+    """macOS keeps its temporary files in a long path: a job folder there is too deep for Chromium."""
+    from claudia_render.cli import _short_temp_dir
+
+    monkeypatch.setattr("tempfile.gettempdir", lambda: "/private/var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T")
+    assert _short_temp_dir() in ("/tmp", None)  # None only where this machine has no usable /tmp
+    monkeypatch.setattr("tempfile.gettempdir", lambda: "/short")
+    assert _short_temp_dir() == "/short"

@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- On macOS a job folder is made in `/tmp` when the system's temporary folder is too long for it (`/var/folders/…/T`):
+  Chromium refuses a profile whose socket path passes about 104 characters.
 - The API reference builds again with warnings as errors (`sphinx-build -W`): `ResolvedTool.identity`'s docstring
   no longer starts like a type, the server's `RenderDesk` and `RenderSettings` and the kernel's rendering classes are
   documented, and a built-in such as `type[...]` in a signature is no longer linked to a field that happens to share

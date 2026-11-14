@@ -5,6 +5,12 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 ## [0.2.0] - unreleased
 
 ### Fixed (CI on Windows)
+- The web app's front page now takes part in the shell handshake when it runs in a Neutralino window (a frame of the
+  shell page), not only under the macOS WebKit handler. Before, the window's app was unknown there, so the front
+  page asked "which kind of document?" in a window of one app, and had no list of the shell's servers.
+- The end-to-end script `web/e2e/windows-shell.cjs` expects what D445 made of the window's end: the shared server is
+  left running to stop by itself, not stopped with the window; and the front page's short native menu comes before
+  the document's.
 - The launcher's rewrite of `neutralino.config.json` (the core's command, the inspector) keeps the line ends the file
   has: a checkout with CRLF came back with LF, which Git shows as a change of every line.
 - The core's log says `stdin is a pipe, as far as Windows says`: Windows' `fstat` shows the pipe of a child's stdin
