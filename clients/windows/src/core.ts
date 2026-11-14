@@ -4,20 +4,21 @@
 // (`send`), so the whole thing is tested with fakes.
 //
 // There are two ways to start (the same two as on Linux):
-//  - **its own server** (the default): the window shows a "starting" status at once; the server is started and
-//    the shell page is told to show it when it answers. When the core ends, the server is stopped;
+//  - **the local server** (the default): the window shows a "starting" status at once; the one local server of the
+//    three apps is found or started (desktop-server.ts, D445) and the shell page is told to show it when it answers.
+//    When the core ends, the server is only let go of: it is shared, and stops by itself when nothing is connected;
 //  - **a given server** (`--server URL`): no server is started. The core connects to it like it does when the
 //    person types the address into the page, with the same checks -- https, the right app, a certificate that this
 //    computer trusts -- and the address is remembered in the server list of this app.
 //
 // The core runs as a Neutralino *extension* (core-entry.ts): a Node process that Neutralino starts with the window
-// and that ends with it, which is what stops the local server even if the window is killed.
+// and that ends with it, which is what ends the connection that keeps the local server in use even if the window is
+// killed -- and so, ten minutes later, the server (D445).
 
 import { Connector, ServerBook } from './connector.js'
 import type { Outcome } from './connection.js'
 import type { AppIdentity } from './identity.js'
 import { prepareServer, SetupProblem } from './local-server.js'
-import type { LocalServer } from './server.js'
 import type { Address, Entry } from './servers.js'
 import type { Settings } from './settings.js'
 
@@ -36,8 +37,9 @@ export type CoreMessage =
   | { kind: 'connect_failed'; code: string; message: string }
 
 export interface ServerLike {
-  readonly url: string
+  /** Find or start the server; its address once it answers. */
   start(): Promise<string>
+  /** Let go of the server (the window is gone). The server is shared and ends by itself. */
   stop(): Promise<void>
 }
 
@@ -119,7 +121,7 @@ export class Core {
     }
     this.status(`Starting ${identity.title}…`)
     try {
-      const server = await (this.options.serverFactory ?? ((app) => prepareServer(app) as Promise<LocalServer>))(identity.name)
+      const server = await (this.options.serverFactory ?? ((app) => prepareServer(app, { log: this.options.log })))(identity.name)
       if (this.stopped) return // the window ended while the server was being set up: nothing was started
       this.server = server
       const url = await server.start()
@@ -135,7 +137,7 @@ export class Core {
     }
   }
 
-  /** Stop what this core started. Safe to repeat. */
+  /** Let go of what this core uses. Safe to repeat. */
   async stop(): Promise<void> {
     this.stopped = true
     const server = this.server

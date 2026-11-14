@@ -203,7 +203,7 @@ export class ShellPage {
           'Claudia could not start',
           `The helper process that runs Claudia's local parts has not answered in ${WATCH_SECONDS} seconds.\n` +
             `Its log: %LOCALAPPDATA%\\Claudia\\${this.env.app}\\state\\shell.log (or shell.log in %LOCALAPPDATA%\\Claudia).\n` +
-            'This window is a browser too: right-click and choose Inspect to see its console.',
+            'Start it again with --debug to open the window\'s web inspector and see its console.',
           true,
         )
         return

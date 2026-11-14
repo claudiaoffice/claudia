@@ -99,6 +99,7 @@ export class Bridge {
         shell: this.options.shell,
         capabilities: this.capabilities(),
         contract: version,
+        app, // D444: this window is one app, whatever the server behind it hosts
         ...(this.options.locale !== undefined ? { locale: this.options.locale } : {}),
       }),
     )

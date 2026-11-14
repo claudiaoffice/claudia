@@ -27,11 +27,11 @@ import { spawn as nodeSpawn, spawnSync } from 'node:child_process'
 import { delimiter, dirname, join } from 'node:path'
 import { argv as processArgv, env as processEnv, execPath, platform as hostPlatform } from 'node:process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand } from './core-command.js'
+import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand, setInspector } from './core-command.js'
 import { parseCommand, splitAppArgument, type Options } from './cli.js'
 import { getIdentity } from './identity.js'
 import { SetupProblem } from './local-server.js'
-import { defaultRepo, stateDir, type Env } from './paths.js'
+import { defaultRepo, serverStateDir, stateDir, type Env } from './paths.js'
 
 export { SetupProblem }
 
@@ -159,6 +159,8 @@ export interface RunDeps {
   shortName?: (path: string) => string | null
   /** Sets the core's command in the app's config (default: in neutralino.config.json). */
   setCommand?: (appDir: string, command: string) => void
+  /** Switches the window's web inspector on or off in the app's config (default: in neutralino.config.json). */
+  setInspector?: (appDir: string, enabled: boolean) => void
   out?: (line: string) => void
   err?: (line: string) => void
 }
@@ -204,18 +206,21 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     out(`Note: ${nodeBinary} has a space in it and no short name; the core will be started as a plain 'node' from PATH.`)
   }
   const setCommand = deps.setCommand ?? ((dir, command) => setCoreCommand(join(dir, 'neutralino.config.json'), command))
+  const inspector = deps.setInspector ?? ((dir, enabled) => setInspector(join(dir, 'neutralino.config.json'), enabled))
   try {
     setCommand(
       appDir,
       buildCoreCommand({ nodeBinary: nodeForCore, systemCa: supportsSystemCa, app: options.app, server: options.server?.origin ?? null, debug: options.debug }),
     )
+    // Neutralino opens the DevTools window by itself when the inspector is on: only --debug wants that.
+    inspector(appDir, options.debug)
   } catch (problem) {
     err(`Could not set up the core's command: ${(problem as Error).message}`)
     return 1
   }
   if (options.debug) {
     out(`app folder: ${appDir}`)
-    out(`logs: ${join(stateDir(options.app), 'shell.log')} and ${join(stateDir(options.app), 'server.log')}`)
+    out(`logs: ${join(stateDir(options.app), 'shell.log')} and ${join(serverStateDir(), 'server.log')}; the web inspector is open`)
   }
   const [shellBinary, ...shellArgs] = buildShellCommand(binary, appDir)
   try {
@@ -224,6 +229,7 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     // The checkout is left as it was found (the checked-in config holds the default command).
     try {
       setCommand(appDir, DEFAULT_COMMAND)
+      inspector(appDir, false)
     } catch (problem) {
       err(`Could not put the default core command back: ${(problem as Error).message}`)
     }

@@ -33,7 +33,7 @@ describe('hello', () => {
     const { sent, hello, calls, bridge } = make()
     hello()
     expect(sent).toEqual([
-      { type: 'welcome', contract: 1, shell: { name: 'neutralino', platform: 'windows', version: '0.1.0' }, capabilities: ['native-menu', 'actions', 'connect', 'servers'] },
+      { type: 'welcome', contract: 1, shell: { name: 'neutralino', platform: 'windows', version: '0.1.0' }, capabilities: ['native-menu', 'actions', 'connect', 'servers'], app: 'creates' },
     ])
     expect(bridge.ready).toBe(true)
     expect(calls.ready).toBe(1)

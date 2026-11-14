@@ -68,8 +68,12 @@ What is Windows' own, against macOS:
 * **The server is stopped with its whole process tree** (`server.ts`, `taskkill /pid N /T /F`): the interpreter that
   `uv sync` puts in `.venv\Scripts\python.exe` is a launcher that starts the real one as its child, and
   `ChildProcess.kill()` would end only the launcher. Windows has no gentler signal, so there is no grace period.
-* **Folders:** `%LOCALAPPDATA%\Claudia\<app>\documents` and `...\state` (with `server.log` and `shell.log`);
-  `%LOCALAPPDATA%\Claudia\shell.json` holds the server lists. `--debug` prints where these are.
+* **One local server for all three apps (D445).** The first window starts it, the others find it (the port is
+  remembered in `desktop-server.json`), it ends ten minutes after the last window is closed (`--exit-when-idle`, D434), and
+  a window whose server has gone starts it again on the same port. Closing a window does not stop it.
+* **Folders:** `%LOCALAPPDATA%\Claudia\documents\<app>` (all documents), `...\state` (`server.log`, `desktop-server.json`),
+  `...\<app>\state\shell.log` (the core of that window); `%LOCALAPPDATA%\Claudia\shell.json` holds the server lists.
+  `--debug` prints where these are and opens the window's web inspector (without it, no DevTools window).
 
 ```
 src/
@@ -119,8 +123,9 @@ command line that contains the folder; the launcher refuses a path with a space 
 | `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `apps\<app>\bin\neutralino-win_x64.exe`, where `neu update` puts it. |
 
 If the window stays on "Starting…" the core could not be reached: the page says so after 20 seconds and names the logs
-(`shell.log` of the core, `server.log` of the server, both in `%LOCALAPPDATA%\Claudia\<app>\state`); right-click in the
-window and choose Inspect for the shell page's console.
+(`shell.log` of the core in `%LOCALAPPDATA%\Claudia\<app>\state`, `server.log` of the server in
+`%LOCALAPPDATA%\Claudia\state`); start the app again with `--debug` to open the window's web inspector for the shell
+page's console. A `python.exe` left over from an older build may hold the documents folder: end it in the Task Manager.
 
 ## Tests
 
@@ -148,6 +153,10 @@ form ran four times on the owner's Windows VM and each run found a bug (`claudia
 the last of them, a server that did not answer within 30 seconds, never explained (a virus scanner on a fresh `.venv` is the
 suspicion; `server.log` will say).
 
+0. **The shared server** (D445): three windows started within a second of each other end up on one server and one port;
+   a window opened later finds it; the server leaves ten minutes after the last window; a window whose server was ended
+   in the Task Manager starts it again. Tested on Linux with a stand-in server and the real folder lock, not on Windows
+   (`msvcrt.locking`, detached start, `taskkill`).
 1. **The whole window**, built from these files: the shell page gets its token (the same mechanism that spike 5 proved on a
    Mac), the native menu appears, the frame shows the web app (local http, and a remote https server).
 2. **The core's command with Windows paths.** `${NL_PATH}` and the absolute path of node in a command that Neutralino splits at

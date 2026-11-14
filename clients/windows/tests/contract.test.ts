@@ -43,6 +43,7 @@ const INVALID: Array<[string, unknown]> = [
   ['welcome with another platform', { type: 'welcome', contract: 1, shell: { ...SHELL, platform: 'beos' }, capabilities: [] }],
   ['welcome with a doubled capability', { type: 'welcome', contract: 1, shell: SHELL, capabilities: ['connect', 'connect'] }],
   ['welcome with a capability that is not a word', { type: 'welcome', contract: 1, shell: SHELL, capabilities: ['Native Menu'] }],
+  ['welcome with an app that is not a word', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], app: 'Creates It' }],
   ['welcome with a bad locale', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], locale: 'de_DE' }],
   ['action without a name', { type: 'action' }],
   ['action that is not namespaced', { type: 'action', action: 'save' }],
@@ -124,6 +125,7 @@ describe('what the shell builds passes the schema', () => {
     const built = [
       contract.welcome({ shell: SHELL, capabilities: ['native-menu', 'actions'], locale: 'de' }),
       contract.welcome({ shell: SHELL, capabilities: [] }),
+      contract.welcome({ shell: SHELL, capabilities: [], app: 'creates' }), // D444
       contract.action('file.new'),
       contract.action('view.panel', 'on'),
       contract.error('bad_message', 'x'),

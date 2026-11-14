@@ -13,16 +13,16 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { configDir, defaultLocalAppData, defaultRepo, documentsDir, findFrontend, findRepo, findServerPython, stateDir } from '../src/paths.js'
+import { configDir, defaultLocalAppData, defaultRepo, findFrontend, findRepo, findServerPython, serverDocumentsDir, serverStateDir, stateDir } from '../src/paths.js'
 
-describe('documentsDir / stateDir', () => {
-  it("live under <LOCALAPPDATA>/Claudia/<app>, Windows's own convention", () => {
-    expect(documentsDir('composes', '/Users/x/AppData/Local')).toBe(
-      join('/Users/x/AppData/Local', 'Claudia', 'composes', 'documents'),
-    )
-    expect(stateDir('composes', '/Users/x/AppData/Local')).toBe(
-      join('/Users/x/AppData/Local', 'Claudia', 'composes', 'state'),
-    )
+describe('serverDocumentsDir / serverStateDir / stateDir', () => {
+  it("the local server's folders are the suite's, under <LOCALAPPDATA>/Claudia: the three apps share one server (D445)", () => {
+    expect(serverDocumentsDir('/Users/x/AppData/Local')).toBe(join('/Users/x/AppData/Local', 'Claudia', 'documents'))
+    expect(serverStateDir('/Users/x/AppData/Local')).toBe(join('/Users/x/AppData/Local', 'Claudia', 'state'))
+  })
+
+  it("a shell's own log is its app's: <LOCALAPPDATA>/Claudia/<app>/state", () => {
+    expect(stateDir('composes', '/Users/x/AppData/Local')).toBe(join('/Users/x/AppData/Local', 'Claudia', 'composes', 'state'))
   })
 })
 
@@ -39,7 +39,7 @@ describe('defaultLocalAppData', () => {
 describe('configDir', () => {
   it('is the folder of the whole suite, not of one app: the server lists of every app share one shell.json', () => {
     expect(configDir('C:\\Users\\me\\AppData\\Local')).toBe(join('C:\\Users\\me\\AppData\\Local', 'Claudia'))
-    expect(documentsDir('computes', 'L')).toBe(join(configDir('L'), 'computes', 'documents'))
+    expect(serverDocumentsDir('L')).toBe(join(configDir('L'), 'documents'))
   })
 })
 
