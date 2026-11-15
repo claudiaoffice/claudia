@@ -77,6 +77,8 @@ describe('buildApp', () => {
     expect(config.url).toBe('/')
     expect(config.modes.window.injectScript).toBeUndefined() // injection into a page Neutralino did not serve never worked
     expect(config.modes.window.injectGlobals).toBeUndefined()
+    // the page ends the app when the window is closed: Neutralino 6.8.0 crashes on macOS when it does that itself (D506)
+    expect(config.modes.window.exitProcessOnClose).toBe(false)
     expect(config.enableExtensions).toBe(true)
     expect(config.extensions).toEqual([{ id: 'de.claudiaoffice.core', commandDarwin: DEFAULT_COMMAND }])
     // the page may only do what the shell needs: no files, no processes

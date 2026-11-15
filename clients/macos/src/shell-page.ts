@@ -141,6 +141,9 @@ export class ShellPage {
   async start(): Promise<void> {
     const { neutralino, frame, status } = this.env
     neutralino.init()
+    // Closing the window ends the app only through this page (D506), so this listener comes first: a window that is
+    // still starting, or whose core never answers, can be closed all the same.
+    await neutralino.events.on('windowClose', () => this.quit())
     // The listeners come before anything that can make them fire.
     this.env.onWindowMessage((event) => this.onFrameMessage(event))
     frame.addEventListener('load', () => {
@@ -308,7 +311,7 @@ export class ShellPage {
     }
     const route = routeMenuClick(id, this.known, this.checked)
     if (route.kind === 'quit') {
-      void this.env.neutralino.app.exit().catch((problem: Error) => this.log(`could not quit: ${problem.message}`))
+      this.quit()
       return
     }
     // The page carries the action out where the person sees it (File ▸ Open… puts the cursor in its search field): the
@@ -317,6 +320,13 @@ export class ShellPage {
     if (!this.bridge.sendAction(route.action, route.target)) {
       this.log(`the menu item '${route.action}' was not sent: the page in the frame has not said hello (there is nobody to do it)`)
     }
+  }
+
+  /** End the application: Quit in the menu and the window's close button. The request goes through Neutralino's
+   * server, so the native side ends the app from its server thread and not from inside the window's own close
+   * handler, where Neutralino 6.8.0 crashes on macOS (CODE-26, D506). */
+  private quit(): void {
+    void this.env.neutralino.app.exit().catch((problem: Error) => this.log(`could not quit: ${problem.message}`))
   }
 
   /** The front page's short menu or a document's whole one (sheet 11), as the page said in its hello. The page reports

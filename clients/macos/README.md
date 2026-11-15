@@ -38,7 +38,8 @@ earlier demo was the web app's own). So the window is built the other way round:
 
 * **The shell page** (`shell-page.ts`, bundled to `shell/shell.js`) loads only `js/neutralino.js` (never
   `__neutralino_globals.js`, D157), sets the native menu, and answers the web app's contract messages (`bridge.ts`).
-  Menu → `action` messages; `action_state` → menu items; `file.quit` ends the application.
+  Menu → `action` messages; `action_state` → menu items; `file.quit` and the window's close button end the
+  application (`app.exit`; Neutralino's `exitProcessOnClose` is off, D506).
 * **The web app** needs one small thing: when it is framed (`web/app/lib/shell-bridge.ts`, `detectParentSink`) it posts to
   its parent window and hears only the parent, and only when that is a page on this computer's loopback.
 * **The native core** (`core.ts`, bundled to `ext/core.mjs`) is a Node process that Neutralino starts with the window

@@ -71,6 +71,7 @@ where Cocoa convention (and the spike, §4) put them.
 |---|---|---|
 | (App menu) About Claudia Creates | page | `Kind.SHELL` in the manifest (GTK shows a native dialog), forwarded here anyway — macOS has no native About (D158 point 4); `AboutDialog.vue` already exists. |
 | (App menu) Quit (Cmd+Q) | shell | `Neutralino.app.exit()` directly; the one click `routeMenuClick()` does not forward to the page. |
+| (Window) close button | shell | `windowClose` → `Neutralino.app.exit()`, the same call as Quit; `exitProcessOnClose` is `false` because Neutralino 6.8.0 crashes when it ends the app from the window's own close handler (CODE-26, D506). |
 | Edit ▸ Undo/Redo/Cut/Copy/Paste | page dispatch **and** Cocoa selector | Both fire on the same click (confirmed in the spike's own `shell.js`: `mainMenuItemClicked` is not short-circuited by also setting a Cocoa `action`) — resolves what looked, on paper, like a conflict between the generic action-dispatch path and the native clipboard commands. |
 | Everything else (File/Format/View/Tools/Config) | page | Forwarded as a contract `action` message, same as every other shell. |
 

@@ -39,7 +39,7 @@
       "enableInspector": false,
       "borderless": false,
       "resizable": true,
-      "exitProcessOnClose": true
+      "exitProcessOnClose": false
     }
   },
   "cli": {

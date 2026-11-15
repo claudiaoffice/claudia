@@ -10,7 +10,9 @@ const MENU = buildMainMenu(listing as ManifestListing, 'Claudia Creates')
 const START = buildMainMenu(startListing(listing as ManifestListing), 'Claudia Creates')
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-function setup(overrides: { dispatchFails?: number; setMenuFails?: boolean; stats?: unknown; startMenu?: boolean } = {}) {
+function setup(
+  overrides: { dispatchFails?: number; setMenuFails?: boolean; setMenuHangs?: boolean; exitFails?: boolean; stats?: unknown; startMenu?: boolean } = {},
+) {
   const timers: Array<() => void> = []
   const listeners: Record<string, (event: { detail: unknown }) => void> = {}
   const dispatched: Array<{ id: string; event: string; data: any }> = []
@@ -19,9 +21,15 @@ function setup(overrides: { dispatchFails?: number; setMenuFails?: boolean; stat
   let failures = overrides.dispatchFails ?? 0
   const neutralino = {
     init: () => calls.push('init'),
-    app: { exit: async () => void calls.push('exit') },
+    app: {
+      exit: async () => {
+        if (overrides.exitFails) throw new Error('NE_RT_NATRTER')
+        calls.push('exit')
+      },
+    },
     window: {
       setMainMenu: async (items: unknown[]) => {
+        if (overrides.setMenuHangs) await new Promise(() => {})
         if (overrides.setMenuFails) throw new Error('no menu')
         calls.push('menu')
         menus.push(items)
@@ -98,7 +106,7 @@ describe('start', () => {
     const t = setup()
     await t.page.start()
     expect(t.calls.slice(0, 2)).toEqual(['init', 'menu'])
-    expect(Object.keys(t.listeners).sort()).toEqual([FROM_CORE, 'mainMenuItemClicked'].sort())
+    expect(Object.keys(t.listeners).sort()).toEqual([FROM_CORE, 'mainMenuItemClicked', 'windowClose'].sort())
     expect(t.menus[0]).toEqual(MENU)
     expect(t.dispatched).toEqual([{ id: CORE_ID, event: TO_CORE, data: { kind: 'start' } }])
     expect(t.statuses[0]).toEqual({ title: 'Starting…', error: false })
@@ -161,6 +169,35 @@ describe('start', () => {
     await t.page.start()
     expect(t.dispatched).toHaveLength(1)
     expect(t.logged.join('')).toContain('native menu could not be set')
+  })
+})
+
+describe('closing the window (CODE-26, D506)', () => {
+  it('ends the application, as Quit does', async () => {
+    const t = setup()
+    await t.open()
+    t.listeners.windowClose!({ detail: null })
+    await tick()
+    expect(t.calls).toContain('exit')
+    expect(t.toFrame()).toEqual([])
+  })
+
+  it('works while the window is still starting: the listener comes before the menu and the core', async () => {
+    const t = setup({ setMenuHangs: true })
+    void t.page.start()
+    await tick()
+    expect(t.dispatched).toEqual([]) // still waiting for the menu, the core not asked yet
+    t.listeners.windowClose!({ detail: null })
+    await tick()
+    expect(t.calls).toContain('exit')
+  })
+
+  it('says in the log when the application could not be ended', async () => {
+    const t = setup({ exitFails: true })
+    await t.open()
+    t.listeners.windowClose!({ detail: null })
+    await tick()
+    expect(t.logged.join('')).toContain('could not quit: NE_RT_NATRTER')
   })
 })
 

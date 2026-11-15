@@ -153,6 +153,7 @@ statement in the docs or on the website).
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |
 | PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | partly fixed 2026-11-15; supersessions need a decision |
+| CODE-26 | **P1** | Code / macOS client | Closing a window with its close button crashes the macOS app every time (Neutralino 6.8.0) | **fixed** 2026-11-15 (D506) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1447,6 +1448,22 @@ listed D300–D319 twice. `_rounds.md` had no entry for the file-handling, dock 
 `ranges.md` row, the rounds, stale lines in two implementation notes and a stale comment in the Windows client.
 **Needs a decision:** whether to mark D2, D44, D84, D115 and D242 superseded (proposed: D84 by D430, D115 by D504, D44
 by D120; D2 and D242 partly, with a sentence each).
+
+## Reported 2026-11-15, after `078d19d`
+
+### CODE-26 · Closing a window crashes the macOS app · P1 · fixed 2026-11-15
+Reported by the owner with a crash report (macOS 27.2, MacBook Air M1): every click on a window's close button ends
+claudia-composes with `EXC_BREAKPOINT (SIGTRAP)`, "BUG IN CLIENT OF LIBDISPATCH: dispatch_sync called on queue already
+owned by current thread". **Read** (the crash's stack against Neutralino's v6.8.0 source): `windowShouldClose:` in
+`lib/webview/webview.h` → `windowStateChange(WEBVIEW_WINDOW_CLOSE)` → with `exitProcessOnClose: true`, `app::exit()` →
+`window::_close()`, which does `dispatch_sync` on the main queue while on the main thread. Neutralino's main of
+2026-10-29 is unchanged. Quit (Cmd+Q) is not affected: `app.exit` from the page arrives on Neutralino's server thread.
+**Fix (D506):** `exitProcessOnClose: false` in the three macOS configs; the shell page ends the app on `windowClose`
+with `app.exit`, like Quit, and registers that listener first. Tests first: `tests/shell-page.test.ts` ("closing the
+window"), and `tests/build-shell.test.ts` checks the flag in each config. **Not yet measured** on a Mac: the fix is
+checked by the unit tests only; the acceptance is closing each of the three windows with the close button, before and
+after a document is open, and the app ending without a crash report. Upstream: worth a Neutralino issue (run the block
+directly when already on the main thread).
 
 ## Website
 

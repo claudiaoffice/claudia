@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.1] - unreleased
 
+### Fixed (CODE-26, D506): closing a window no longer crashes the app
+- The close button ended every app with a crash (Neutralino 6.8.0 traps in `window::_close()` when the window closes
+  itself). `exitProcessOnClose` is `false` in the three `neutralino.config.json`; the shell page hears `windowClose` and
+  ends the app with `app.exit`, as Quit does.
+
 ### Added (D552, E6.24)
 - Edit ▸ Rename Sheet… in computes and Edit ▸ Rename Slide… in creates (Ctrl+Shift+F11), after New Sheet and New Slide.
 
