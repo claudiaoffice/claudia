@@ -809,6 +809,12 @@ def computes() -> Manifest:
             _reference_block(),
             (
                 _page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document", accelerators=("<Shift>F11",)),
+                _page(
+                    "edit.rename-sheet",
+                    "Rename Sheet…",
+                    "Give the sheet you are on another name; the formulas that read it follow",
+                    accelerators=("<Primary><Shift>F11",),
+                ),
                 _page("edit.image", "Image…", "Put a picture on the sheet", accelerators=("<Primary><Alt>i",)),
                 _page("edit.chart", "Chart…", "Add a chart of the selected cells", accelerators=("<Primary><Alt>c",)),
             ),
@@ -951,6 +957,12 @@ def creates() -> Manifest:
             (
                 _page(
                     "edit.new-slide", "New Slide", "Add a new slide to the presentation", accelerators=("<Primary>m",)
+                ),
+                _page(
+                    "edit.rename-slide",
+                    "Rename Slide…",
+                    "Give the slide you are on another name; a tag in the chat keeps pointing at it",
+                    accelerators=("<Primary><Shift>F11",),
                 ),
                 _page(
                     "edit.slide-time",

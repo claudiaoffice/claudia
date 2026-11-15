@@ -39,6 +39,7 @@ from claudia_core import (
     MemoryStore,
     ObjectModel,
     RenderingsChanged,
+    Revision,
 )
 from claudia_core.clock import utc_now
 from claudia_render import RenderFailed, ToolUnavailable
@@ -540,7 +541,9 @@ class HostedDocument:
         """Carry out an agreed suggestion (``RestoreCoordinator``'s ``apply``): call the kernel, and if the line
         actually moved, remember what happened to the one left behind, for whoever was away when it did."""
         old = self.document.branch
-        if record["kind"] == "restore":
+        if record["kind"] == "restore" and record["revision"] is not None:
+            moved = self.document.restore_revision(Revision.parse(record["revision"]), author=record["by"]) is not None
+        elif record["kind"] == "restore":
             moved = self.document.restore_checkpoint(record["checkpoint"], author=record["by"]) is not None
         else:
             moved = self.document.switch_to(record["line"], author=record["by"]) is not None

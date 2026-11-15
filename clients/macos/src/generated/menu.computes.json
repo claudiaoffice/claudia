@@ -339,6 +339,18 @@
           },
           {
             "accelerators": [
+              "<Primary><Shift>F11"
+            ],
+            "checkable": false,
+            "id": "edit.rename-sheet",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Rename Sheet\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
               "<Primary><Alt>i"
             ],
             "checkable": false,

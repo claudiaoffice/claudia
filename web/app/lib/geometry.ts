@@ -123,3 +123,13 @@ export function besideRect(rect: { left: number; top: number; right: number }, w
   const right = rect.right + gap
   return { x: right + width <= viewport ? right : Math.max(gap, rect.left - gap - width), y: rect.top }
 }
+
+/** Where to scroll one axis of a grid so that a line (a row or column) that is out of sight ends up in the middle of
+ * what is drawn, or `null` when it is in sight already and the view stays where it is (D553: a change a replay
+ * follows is not left at the edge, where it is easy to miss). `start` and `size` are the line's, `scroll` and `view`
+ * the viewport's, `header` the frozen strip at its start that covers part of it; the result is never negative. */
+export function centredScroll(start: number, size: number, scroll: number, view: number, header: number): number | null {
+  const shown = view - header
+  if (start >= scroll && start + size <= scroll + shown) return null
+  return Math.max(0, Math.round(start + size / 2 - shown / 2))
+}

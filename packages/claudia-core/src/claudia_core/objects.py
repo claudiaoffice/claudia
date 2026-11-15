@@ -32,7 +32,7 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime_checkable
 
 from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
-from .commands import Command, CommandRegistry, core_commands
+from .commands import Batch, Command, CommandRegistry, core_commands
 from .facets import SLOTS, fits
 from .names import clean_name, name_key, name_problem
 from .paragraphs import Paragraph
@@ -544,9 +544,18 @@ class ObjectModel[A: Anchor]:
         self.replace_object(old.with_body(name=name))
         return old.body.name
 
-    def check_thing_name(self, thing_id: str, name: str) -> None:
+    def rename_thing(self, ctx: Context, thing_id: str, name: str) -> tuple[str, tuple[Command, ...]]:
+        """Give the thing this (checked) name; returns the one it had and the commands that, done after the old name
+        is back, put back everything else the rename changed. An app whose rename changes more than the name (a
+        sheet's name is in the formulas that read it) overrides this and emits what its clients must hear."""
+        return self.set_thing_name(thing_id, name), ()
+
+    def check_thing_name(self, thing_id: str, name: str, *, shared: bool = True) -> None:
         """``ValueError`` with a sentence unless ``name`` may be the name of the thing ``thing_id`` (``""`` is no name
-        and always allowed): written tidily, a good name, and nobody else's, however capitals and spaces are written."""
+        and always allowed): written tidily, a good name, and nobody else's, however capitals and spaces are written.
+        A thing that keeps the name it has is not judged against the others again, so a clash that an older document
+        holds does not stop its thing from being changed for another reason. With ``shared`` false (what an old log
+        replays with, D550, D552) the others are not looked at at all."""
         if not name:
             return
         problem = name_problem(name)
@@ -554,21 +563,30 @@ class ObjectModel[A: Anchor]:
             raise ValueError(problem)
         if clean_name(name) != name:
             raise ValueError("a name is written without spaces around it or twice in a row")
-        self.check_name_free(thing_id, name)
+        if shared and not self._keeps_name(thing_id, name):
+            self.check_name_free(thing_id, name)
 
-    def name_holder(self, thing_id: str, name: str) -> tuple[str, str] | None:
-        """``(kind, name)`` of another thing that already has this name, however capitals and spaces are written."""
+    def _keeps_name(self, thing_id: str, name: str) -> bool:
+        """Is ``name`` (as far as capitals go) the name the thing ``thing_id`` has now? ``False`` for a new thing."""
+        try:
+            return name_key(self.thing_name(thing_id)) == name_key(name)
+        except ValueError:
+            return False
+
+    def name_holder(self, thing_id: str, name: str, ignoring: tuple[str, ...] = ()) -> tuple[str, str] | None:
+        """``(kind, name)`` of another thing that already has this name, however capitals and spaces are written.
+        Things of the kinds in ``ignoring`` do not count (a name of a range is checked against things only)."""
         key = name_key(name)
         for kind, other, other_name in self.named_things():
-            if other != thing_id and name_key(other_name) == key:
+            if other != thing_id and kind not in ignoring and name_key(other_name) == key:
                 return kind, other_name
         return None
 
-    def check_name_free(self, thing_id: str, name: str) -> None:
+    def check_name_free(self, thing_id: str, name: str, ignoring: tuple[str, ...] = ()) -> None:
         """``ValueError`` with a sentence unless nobody but ``thing_id`` has this name. Only this half of the check is
         for commands that may be in an old log (D550): what was written before names were shared is not tidied or
         judged again, it only never gets a new clash."""
-        holder = self.name_holder(thing_id, name)
+        holder = self.name_holder(thing_id, name, ignoring)
         if holder is not None:
             kind, other_name = holder
             article = "an" if kind[:1] in "aeiou" else "a"
@@ -705,8 +723,9 @@ class ObjectModel[A: Anchor]:
         if definition.image is not None and definition.image not in self.images:
             raise ValueError(f"this document does not know the image {definition.image!r}")
 
-    def check_object(self, obj: VisualObject[A]) -> None:
-        """``ValueError`` with a sentence if this object cannot exist in this document as it is now.
+    def check_object(self, obj: VisualObject[A], *, shared_names: bool = True) -> None:
+        """``ValueError`` with a sentence if this object cannot exist in this document as it is now. With
+        ``shared_names`` false its name is not compared with the others (an old log, D552).
 
         The shared checks are here; ``check_anchor`` adds the app's own."""
         body = obj.body
@@ -737,7 +756,7 @@ class ObjectModel[A: Anchor]:
         if type(body.snap) is not bool:
             raise ValueError("snap must be true or false")
         self._check_description(body)
-        self.check_thing_name(body.id, body.name)
+        self.check_thing_name(body.id, body.name, shared=shared_names)
         self.check_anchor(obj.anchor, body)
 
     @staticmethod
@@ -829,11 +848,11 @@ class ObjectModel[A: Anchor]:
             raise ValueError(f"this object keeps its proportions (width divided by height is {aspect:g})")
 
     # -- changing (used by the commands) -----------------------------------------
-    def insert_object(self, obj: VisualObject[A], at: int | None = None) -> None:
+    def insert_object(self, obj: VisualObject[A], at: int | None = None, *, shared_names: bool = True) -> None:
         """Add a checked object on top of its container, or at stacking place ``at``."""
         if obj.id in self.objects:
             raise ValueError(f"object {obj.id!r} exists already")
-        self.check_object(obj)
+        self.check_object(obj, shared_names=shared_names)
         stack = self._stack[obj.container]
         if len(stack) >= self.max_objects_per_container:
             raise ValueError(f"a container holds at most {self.max_objects_per_container} objects")
@@ -1374,11 +1393,13 @@ class AddObject(Command):
 
     kind: ClassVar[str] = "core.AddObject"
     schema: ClassVar[int] = (
-        4  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``; 3: without ``name``
+        5  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``; 3: without ``name``;
+        # 4: names were not yet shared with named ranges (D552)
     )
     body: ObjectBody
     anchor: dict
     at: int | None = None
+    legacy_names: bool = False  # written before ranges shared the names: its name is not compared again
 
     @property
     def object_id(self) -> str:
@@ -1415,16 +1436,21 @@ class AddObject(Command):
     def apply(self, ctx: Context) -> Command:
         model = _host(ctx)
         obj = VisualObject(self.body, _anchor_of(ctx, self.anchor))
-        model.insert_object(obj, self.at)
+        model.insert_object(obj, self.at, shared_names=not self.legacy_names)
         ctx.emit(model.objects_changed(obj.container, changed=(obj,)))
         return RemoveObject(obj.id)
 
     def to_data(self) -> dict:
-        return {"body": self.body.to_data(), "anchor": dict(self.anchor), "at": self.at}
+        data = {"body": self.body.to_data(), "anchor": dict(self.anchor), "at": self.at}
+        if self.legacy_names:
+            data["legacy_names"] = True
+        return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> AddObject:
-        return cls(ObjectBody.from_data(data["body"]), dict(data["anchor"]), data.get("at"))
+        return cls(
+            ObjectBody.from_data(data["body"]), dict(data["anchor"]), data.get("at"), data.get("legacy_names", False)
+        )
 
     def regions(self, model: object) -> tuple[ObjectSet, ...]:
         container = self.anchor.get("container")
@@ -1447,7 +1473,7 @@ class AddObject(Command):
         # The object stays, its words go — but a paragraph that exists must keep existing (an empty one), or the
         # body would no longer be a valid object of its kind.
         emptied = None if self.body.paragraph is None else self.body.paragraph.with_text("", ())
-        return AddObject(replace(self.body, paragraph=emptied), self.anchor, self.at)
+        return AddObject(replace(self.body, paragraph=emptied), self.anchor, self.at, self.legacy_names)
 
     def stub(self) -> dict:
         return {"id": self.object_id}
@@ -1902,8 +1928,10 @@ class RenameThing(Command):
     name already, whatever kind of thing they are."""
 
     kind: ClassVar[str] = "core.RenameThing"
+    schema: ClassVar[int] = 2  # 2: names are shared with named ranges (D552); see ``legacy_names``
     id: str
     name: str
+    legacy_names: bool = False  # written before ranges shared the names: the others are not looked at again
 
     @property
     def label(self) -> str:
@@ -1916,20 +1944,24 @@ class RenameThing(Command):
     def apply(self, ctx: Context) -> Command:
         model = _host(ctx)
         name = clean_name(self.name)
-        model.check_thing_name(self.id, name)
-        old = model.set_thing_name(self.id, name)
+        model.check_thing_name(self.id, name, shared=not self.legacy_names)
+        old, restores = model.rename_thing(ctx, self.id, name)
         ctx.emit(ThingRenamed(self.id, name))
         if self.id in model.objects:
             changed = model.objects[self.id]
             ctx.emit(model.objects_changed(changed.container, changed=(changed,)))
-        return RenameThing(self.id, old)
+        undo = RenameThing(self.id, old)
+        return Batch((undo, *restores)) if restores else undo
 
     def to_data(self) -> dict:
-        return {"id": self.id, "name": self.name}
+        data: dict = {"id": self.id, "name": self.name}
+        if self.legacy_names:
+            data["legacy_names"] = True
+        return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> RenameThing:
-        return cls(data["id"], data["name"])
+        return cls(data["id"], data["name"], data.get("legacy_names", False))
 
     def regions(self, model: object) -> tuple[ObjectSet, ...]:
         return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
@@ -1940,6 +1972,13 @@ class RenameThing(Command):
 
     def stub(self) -> dict:
         return {"id": self.id}
+
+
+@core_commands.upcaster("core.AddObject", 4)
+@core_commands.upcaster("core.RenameThing", 1)
+def _names_not_yet_shared_with_ranges(data: dict) -> dict:
+    """Schema 1 and 4 were written before named ranges shared the names (D552): replay them under the old rule."""
+    return {**data, "legacy_names": True}
 
 
 @core_commands.upcaster("core.AddObject", 3)

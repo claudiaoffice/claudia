@@ -252,6 +252,24 @@ describe('what the server tells', () => {
   })
 })
 
+describe('renaming a slide (D550)', () => {
+  it('asks the server to rename the thing, against the revision it is looking at', async () => {
+    const { link, session } = await opened()
+    link.handlers.rename_thing = () => ({ revision: 'main:1' })
+    expect(await session.renameThing('s1', 'Agenda')).toBe(true)
+    expect(link.last('rename_thing')).toEqual({ id: 's1', name: 'Agenda', base: 'main:0' })
+  })
+
+  it('labels a slide by its name, or by its place while it has none', async () => {
+    const { link, session } = await opened()
+    expect(session.slideLabel('s1', 0)).toBe('Slide 1')
+    link.handlers.slides = () => [{ id: 's1', objects: 0, name: 'Intro' }]
+    link.push('thing_renamed', { type: 'thing_renamed', id: 's1', name: 'Agenda' })
+    await session.settled()
+    expect(session.slideLabel('s1', 0)).toBe('Agenda')
+  })
+})
+
 describe('making changes', () => {
   it('adds a text box where it is told to and selects it', async () => {
     const { link, session, state } = await opened()

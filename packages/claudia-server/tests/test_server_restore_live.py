@@ -157,6 +157,38 @@ def test_an_unknown_checkpoint_is_a_command_error(worked):
     assert ana.request("propose_restore", {"checkpoint": 99})["error"]["code"] == "command_error"
 
 
+# ------------------------------------------------------------------------------------------ proposing a step (D553)
+def test_the_only_editor_goes_back_to_a_step_at_once(hosted):
+    ana = Client(hosted, Account("ana", "owner"))
+    for _ in range(3):
+        ana.request("apply", {"command": INSERT})
+    answer = ana.request("propose_restore_step", {"revision": "main:1"})["result"]
+    assert answer == {"applied": True, "proposal": None}
+    assert ana.request("snapshot")["result"]["revision"].startswith("restore-1:")
+
+
+def test_two_editors_vote_on_a_step_too(worked):
+    _, ana, ben = worked
+    answer = ana.request("propose_restore_step", {"revision": "main:1"})["result"]
+    assert answer["applied"] is False
+    proposal = answer["proposal"]
+    assert proposal["kind"] == "restore" and proposal["revision"] == "main:1" and proposal["checkpoint"] is None
+    assert ben.events("restore_proposed")[-1] == proposal
+    ben.request("answer_restore", {"agree": True})
+    assert ana.request("snapshot")["result"]["line"] == "restore-1"
+
+
+def test_a_step_the_line_does_not_have_is_a_command_error(worked):
+    _, ana, _ = worked
+    assert ana.request("propose_restore_step", {"revision": "main:99"})["error"]["code"] == "command_error"
+
+
+def test_a_viewer_or_the_assistant_cannot_propose_a_step(hosted):
+    vera, ai = Client(hosted, Account("vera", "viewer")), Client(hosted, Account.assistant())
+    assert vera.request("propose_restore_step", {"revision": "main:1"})["error"]["code"] == "forbidden"
+    assert ai.request("propose_restore_step", {"revision": "main:1"})["error"]["code"] == "forbidden"
+
+
 def test_propose_switch_suggests_a_line_instead(worked):
     hosted, ana, ben = worked
     ana.request("propose_restore", {"checkpoint": 1})

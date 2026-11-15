@@ -185,11 +185,24 @@ def test_a_picture_on_a_sheet_gets_a_default_name_that_the_sheets_names_do_not_t
     assert name_of(book, first) == "Picture 1"
 
 
-def test_a_sheet_cannot_be_renamed_yet(book):
+def test_a_sheet_is_renamed_and_the_formulas_that_read_it_follow(book):
+    on_book(book, "add_sheet", {"name": "Data"})
+    on_book(book, "set_cells", {"sheet": "s1", "cells": [{"row": 0, "col": 0, "input": "=Data!A1"}]})
+    on_book(book, "rename_thing", {"id": "s1", "name": "Takings"})
+    assert name_of(book, "s1") == "Takings"
+    on_book(book, "rename_thing", {"id": next(i for i in book.model.sheets if i != "s1"), "name": "Figures"})
+    cells = on_book(book, "cells", {"sheet": "s1", "row0": 0, "row1": 0, "col0": 0, "col1": 0})["cells"]
+    assert "Figures!A1" in str(cells)
+    assert [s["name"] for s in on_book(book, "sheets")] == ["Takings", "Figures"]
+
+
+def test_a_sheet_cannot_take_the_name_of_a_named_range(book):
+    on_book(book, "add_sheet", {"name": "Data"})
+    area = {"sheet": "s1", "row0": 0, "col0": 0, "row1": 1, "col1": 1}
+    on_book(book, "define_name", {"definition": {"name": "Revenue", "range": area}})
     with pytest.raises(RequestError) as caught:
-        on_book(book, "rename_thing", {"id": "s1", "name": "Takings"})
-    assert caught.value.code == "command_error"
-    assert "Sheets cannot be renamed yet" in str(caught.value.message)
+        on_book(book, "rename_thing", {"id": "s1", "name": "revenue"})
+    assert "There is already a range called “Revenue”" in str(caught.value.message)
 
 
 def test_a_new_sheet_may_not_take_the_name_of_a_picture(book):

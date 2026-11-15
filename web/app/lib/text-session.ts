@@ -160,6 +160,7 @@ export class TextSession extends BaseSession<TextState> {
     s.pending = null
     s.sending = null
     s.selection = this.clamped(s.selection)
+    void this.floating() // the names a tag in the chat shows
     if (!this.ready) {
       for (const hold of Object.values(s.presence)) hold.regions = hold.regions.map((r) => this.regionInUnits(r))
       this.ready = true
@@ -549,12 +550,20 @@ export class TextSession extends BaseSession<TextState> {
     return this.act(async () => (await this.attempt('set_language', { language, base: this.state.revision })) !== false)
   }
 
-  // -- tags (E5.20, D551). This replica keeps no objects: they are asked for when a tag needs them.
+  // -- tags (E5.20, D551). This replica keeps no objects: they are asked for when a tag needs them, and the names they
+  // had when last asked are remembered, so that a tag in the chat shows what the thing is called now.
+  private readonly objectNames = new Map<string, string>()
   private async floating(): Promise<(TextObject & { name?: string })[]> {
-    return this.need()
+    const found = await this.need()
       .request<{ objects: (TextObject & { name?: string })[] }>('objects')
       .then((a) => a.objects)
       .catch(() => [])
+    this.objectNames.clear()
+    for (const o of found) if (o.name) this.objectNames.set(o.id, o.name)
+    return found
+  }
+  override nameOf(id: string): string | undefined {
+    return this.state.renamed[id] ?? this.objectNames.get(id)
   }
   protected override async inView(): Promise<Thing[]> {
     const s = this.state

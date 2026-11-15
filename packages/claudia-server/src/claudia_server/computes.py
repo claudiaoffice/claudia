@@ -238,6 +238,16 @@ def _fresh_chart_id(taken) -> str:
             return candidate
 
 
+def _fresh_range_id(workbook: WorkbookModel) -> str:
+    """As :func:`_fresh_object_id`, for a named range (D552): the id a tag in the chat points at, which a rename of the
+    name leaves alone."""
+    taken = {thing for _kind, thing, _name in workbook.named_things()}
+    while True:
+        candidate = f"r{secrets.token_hex(4)}"
+        if candidate not in taken:
+            return candidate
+
+
 def _diagram_definition(workbook: WorkbookModel, diagram_id: str, what: str) -> None:
     if diagram_id not in workbook.diagrams:
         raise RequestError(
@@ -946,6 +956,7 @@ def _name_from(workbook: WorkbookModel, definition: dict, what: str) -> NamedRan
             definition.get("purpose", "data" if anchor is None else "result"),
             tuple((int(offset), purpose) for offset, purpose in definition.get("column_purposes", ())),
             None if anchor is None else _anchor_of(workbook, anchor, what),
+            _fresh_range_id(workbook),
         )
     except (ValueError, TypeError) as problem:
         raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
@@ -961,6 +972,7 @@ def _name_data(workbook: WorkbookModel, named: NamedRange) -> dict:
         shown = {"sheet": sheet_id, "row0": r0, "col0": c0, "row1": r1, "col1": c1}
         a1 = RangeRef(CellRef(r0, c0, sheet_id), CellRef(r1, c1, sheet_id)).to_a1(workbook.sheet_name_of)
     return {
+        "id": named.id,
         "name": named.name,
         "scope": named.scope,
         "kind": "result" if named.is_result else "range",
@@ -994,7 +1006,7 @@ def _number_formats(ctx):
 @computes_methods.method("names")
 def _names(ctx):
     """Every name of the workbook (named ranges, tables and query results), workbook-wide ones first, as
-    `{revision, names: [{name, scope, kind, header, grows, purpose, column_purposes, sheet, sheet_name, region, a1,
+    `{revision, names: [{id, name, scope, kind, header, grows, purpose, column_purposes, sheet, sheet_name, region, a1,
     anchor, columns, rows}]}`. `columns` are the columns as a query names them, with their type (`int`, `real`,
     `text` or `mixed`) and purpose; `rows` the data rows. Ask again after a `names` push event."""
     workbook = _workbook(ctx)
@@ -1084,7 +1096,9 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
     )
     if name is not None:
         try:
-            steps.append(DefineName(NamedRange(name, None, None, True, False, "result", (), anchor)))
+            steps.append(
+                DefineName(NamedRange(name, None, None, True, False, "result", (), anchor, _fresh_range_id(workbook)))
+            )
         except ValueError as problem:
             raise RequestError("bad_request", msg("define_sql: {problem}", problem=problem)) from None
     applied = ctx.document.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=ctx.user, base=base)

@@ -4,6 +4,7 @@ import {
   SLIDE_H,
   SLIDE_W,
   besideRect,
+  centredScroll,
   fitScale,
   insertFrame,
   moveFrame,
@@ -165,5 +166,19 @@ describe('besideRect: where the style popover opens for a selected object', () =
 
   it('goes to the left when the right would leave the window', () => {
     expect(besideRect({ left: 700, top: 300, right: 1000 }, 360, 1280)).toEqual({ x: 328, y: 300 })
+  })
+})
+
+describe('centredScroll', () => {
+  it('leaves a line that is in sight where it is', () => {
+    expect(centredScroll(100, 20, 50, 400, 30)).toBeNull()
+  })
+  it('puts a line below or above the view in the middle of what is drawn', () => {
+    expect(centredScroll(1000, 20, 0, 430, 30)).toBe(810) // 1010 - 400 / 2
+    expect(centredScroll(100, 20, 600, 430, 30)).toBe(0) // would be negative
+  })
+  it('counts a line half hidden under the header or the far edge as out of sight', () => {
+    expect(centredScroll(40, 20, 50, 430, 30)).toBe(0)
+    expect(centredScroll(440, 20, 50, 430, 30)).toBe(250)
   })
 })

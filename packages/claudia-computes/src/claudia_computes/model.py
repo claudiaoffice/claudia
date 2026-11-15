@@ -39,7 +39,7 @@ from claudia_core import (
 from .calc import Calculator
 from .cellstyles import CellStyles, Piece
 from .charts import ChartError, ChartSeries, ChartSpec, figure_of, in_bounds
-from .formula.rewrite import adjusted, renamed_name, without_sheet
+from .formula.rewrite import adjusted, renamed_name, reprinted, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
 from .names import NamedRange, NameKey, Names, Rect, key_of, name_problem
@@ -430,7 +430,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 9: object bodies carry a description
     # 10: the workbook carries its named number formats (D378)
     # 11: rendered text containers (D390)
-    state_schema: ClassVar[int] = 12  # 12: how it is printed, and its language (E6.19, D1001)
+    state_schema: ClassVar[int] = (
+        13  # 13: names have ids (D552); 12: how it is printed, and its language (E6.19, D1001)
+    )
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
@@ -620,26 +622,77 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     # -- names (D550) ------------------------------------------------------------
     def named_things(self):
-        """The objects with names, then the sheets and the chart tabs: one namespace for all of them."""
+        """The objects with names, then the sheets, the chart tabs and the named ranges: one namespace for all of them
+        (D550, D552). A table and the result of a ``SQL()`` cell are named ranges."""
         yield from super().named_things()
         for sheet in self.sheets.values():
             yield "sheet", sheet.id, sheet.name
         for chart in self.charts.values():
             yield "chart", chart.id, chart.name
+        for named in self.names.sorted():
+            yield "range", named.id, named.name
+
+    def name_with_id(self, thing_id: str) -> NamedRange | None:
+        """The named range whose id is ``thing_id``, or ``None``."""
+        return next((named for named in self.names if named.id == thing_id), None)
 
     def thing_name(self, thing_id: str) -> str:
-        """The name of a sheet, a chart tab or an object; ``ValueError`` if there is none of them."""
+        """The name of a sheet, a chart tab, a named range or an object; ``ValueError`` if there is none of them."""
+        named = self.name_with_id(thing_id)
+        if named is not None:
+            return named.name
         if thing_id in self.sheets:
             return self.sheets[SheetId(thing_id)].name
         if thing_id in self.charts:
             return self.charts[thing_id].name
         return super().thing_name(thing_id)
 
+    def rename_thing(self, ctx, thing_id: str, name: str):
+        """As :meth:`~claudia_core.ObjectModel.rename_thing`. A sheet's name is written in the formulas that read it
+        (``Sheet1!A1``), so they are written again with it, and undo gets them back as they were typed."""
+        if thing_id not in self.sheets:
+            return super().rename_thing(ctx, thing_id, name)
+        from .commands import SetCells
+        from .events import SheetsChanged
+
+        old, restores = self.rename_sheet(SheetId(thing_id), name)
+        ctx.emit(SheetsChanged())
+        return old, tuple(
+            SetCells(sheet, tuple(sorted(items, key=lambda t: t[:2]))) for sheet, items in restores.items()
+        )
+
+    def rename_sheet(self, sheet_id: SheetId, name: str) -> tuple[str, dict[SheetId, Cells]]:
+        """Call a sheet ``name`` (already checked); returns the name it had and, by sheet, the formulas that read the
+        sheet as they were typed. (A formula that names a sheet there is none of is ``=#REF!`` from the moment it is
+        typed, so none waits for a sheet of this name.)"""
+        sheet = self.sheet(sheet_id)
+        if not name:
+            raise ValueError("a sheet needs a name")
+        calc = self.calc
+        old = sheet.name
+        readers = sorted(calc.referring.get(sheet_id, ()))
+        sheet.name = name
+        self._ids = None
+        restores: dict[SheetId, Cells] = defaultdict(list)
+        for key in readers:
+            home, row, col = key
+            before = calc.formulas[key]
+            formula = reprinted(before.formula, self.sheet_name_of)
+            if formula == before.formula:
+                continue
+            self.sheets[home].cells[(row, col)] = {"t": "formula", "v": formula.source}
+            restores[home].append((row, col, {"t": "formula", "v": before.source}))
+            calc.define(key, calc.compile_formula(home, formula, (row, col)), forced=True)
+        calc.everything = True
+        return old, restores
+
     def set_thing_name(self, thing_id: str, name: str) -> str:
-        """Name a chart tab or an object; returns the name it had. A sheet is refused: formulas write the name of the
-        sheet they read (``Sheet1!A1``), so a new name needs the formulas rewritten with it, which is not built yet."""
-        if thing_id in self.sheets:
-            raise ValueError("Sheets cannot be renamed yet: formulas that read them would stop finding them")
+        """Name a chart tab or an object; returns the name it had. (A sheet is renamed by :meth:`rename_thing`, a
+        named range by its own command.)"""
+        if self.name_with_id(thing_id) is not None:
+            raise ValueError(
+                "A named range is renamed in the list of names, which also changes the formulas that use it"
+            )
         if thing_id not in self.charts:
             return super().set_thing_name(thing_id, name)
         if not name:
@@ -795,11 +848,18 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
                 texts.append(format_value(sheet.grid.get((row0, col)) if content["t"] == "formula" else content["v"]))
         return texts
 
-    def check_name(self, named: NamedRange) -> None:
-        """``ValueError`` unless ``named`` is a name this workbook can hold: a good word, on sheets it has."""
+    def check_name(self, named: NamedRange, *, shared: bool = True) -> None:
+        """``ValueError`` unless ``named`` is a name this workbook can hold: a good word, on sheets it has, and nobody
+        else's: no sheet, chart tab, object or slide has that name (D552; with ``shared`` false, as an old log has
+        it, that is not looked at). The names of two ranges are told apart by their scope, as ever."""
         problem = name_problem(named.name)
         if problem is not None:
             raise ValueError(problem)
+        holder = self.name_with_id(named.id)
+        if holder is not None and holder.key != named.key:
+            raise ValueError(f"the id {named.id!r} is used by another name")
+        if shared:
+            self.check_name_free(named.id, named.name, ignoring=("range",))
         if named.scope is not None and named.scope not in self.sheets:
             raise ValueError(f"this document does not know the sheet {named.scope!r}")
         if named.sheet not in self.sheets:
@@ -897,9 +957,10 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         if texts:
             self.calc.rebind(texts)
 
-    def rename_name(self, scope: SheetId | None, old: str, new: str) -> dict[SheetId, Cells]:
+    def rename_name(self, scope: SheetId | None, old: str, new: str, *, shared: bool = True) -> dict[SheetId, Cells]:
         """Call the name ``old`` by ``new``; the formulas that use it are rewritten (``ValueError`` when there is no
-        such name or ``new`` is not a good one). Returns those formulas as they were typed, by sheet, for an undo."""
+        such name, ``new`` is not a good one or a sheet, chart tab or object has it, unless ``shared`` is false).
+        Returns those formulas as they were typed, by sheet, for an undo."""
         named = self.names.get(key_of(scope, old))
         if named is None:
             raise ValueError(f"there is no name {old!r}")
@@ -909,6 +970,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         target = key_of(scope, new)
         if target != named.key and self.names.get(target) is not None:
             raise ValueError(f"{new} is already a name")
+        if shared and new.casefold() != old.casefold():
+            self.check_name_free(named.id, new, ignoring=("range",))
         calc = self.calc
         plan = []
         for key in calc.users_of(old):

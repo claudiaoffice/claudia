@@ -4,6 +4,9 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (D552, E6.24)
+- Edit ▸ Rename Sheet… in computes and Edit ▸ Rename Slide… in creates (Ctrl+Shift+F11), after New Sheet and New Slide.
+
 ### Changed (D504): the local server is on port 8765
 - The shared local server listens on 8765, the port of `./start.sh`; a Claudia server of the same version already there
   is used, whoever started it. Another port only when something else holds 8765 (logged), or with

@@ -79,7 +79,7 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 /** computes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'sheet' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours' | 'random'>(null)
+const dialog = ref<null | 'sheet' | 'rename' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours' | 'random'>(null)
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 
 const EXPORT_FORMATS = [
@@ -104,7 +104,7 @@ const grid = ref<{
   selectedObject: () => string | null
   stepObject: (step: 1 | -1) => void
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
-  show: (row: number, col: number) => void
+  centre: (row: number, col: number) => void
 } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
@@ -192,6 +192,15 @@ async function goto(text: string) {
       break
   }
   grid.value?.focus()
+}
+
+/** What Edit ▸ Reference in Chat points at: the object selected, else the chart tab, else the named range the selection is exactly,
+ * else the sheet. */
+function thingInFocus(): string | undefined {
+  const selected = grid.value?.selectedObject() ?? activeChart.value
+  if (selected) return selected
+  const named = nameAt(state.names, state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
+  return named?.id ?? (state.activeSheet || undefined)
 }
 
 /** Select the cells of a name, on the sheet they are on. */
@@ -499,8 +508,30 @@ watch(
   (pointed) => {
     if (!pointed) return
     activeChart.value = state.charts.some((c) => c.id === pointed.id) ? pointed.id : null
+    const named = state.names.find((n) => n.id === pointed.id)
+    if (named) void selectName(named) // a named range: its cells are selected, on the sheet they are on (D552)
   },
 )
+
+/** The tab shown (a sheet, or a chart's) and the name it has, for the rename dialog (E6.24, D550). */
+const shownTab = computed(() => {
+  const id = activeChart.value ?? state.activeSheet
+  const found = activeChart.value ? state.charts.find((c) => c.id === id) : state.sheets.find((x) => x.id === id)
+  return found ? { id, name: found.name } : null
+})
+const renaming = ref<{ id: string; name: string } | null>(null)
+function askRename(id?: string) {
+  const tab = id ? ([...state.sheets, ...state.charts].find((x) => x.id === id) ?? null) : shownTab.value
+  if (!tab || readonly.value) return
+  renaming.value = { id: tab.id, name: tab.name }
+  dialog.value = 'rename'
+}
+async function rename(name: string) {
+  const target = renaming.value
+  dialog.value = null
+  renaming.value = null
+  if (target && name !== target.name) await session.renameThing(target.id, name)
+}
 
 async function addSheet(name: string) {
   dialog.value = null
@@ -610,7 +641,7 @@ const searchHost = sheetSearchHost({
 })
 /** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */
 /** While replaying, a view that follows goes to what the step touched: the sheet (the session switched it) and the cell,
- * moving no further than needed (E5.19, D551). */
+ * moving only if it is out of sight, and then to the middle of the grid (E5.19, D551, D553). */
 watch(
   () => state.replay?.focus,
   async (focus) => {
@@ -618,7 +649,7 @@ watch(
     const first = focus.find((r) => r.kind === 'cells')
     if (first?.kind !== 'cells') return
     await nextTick()
-    grid.value?.show(first.range.first.row, first.range.first.col)
+    grid.value?.centre(first.range.first.row, first.range.first.col)
   },
 )
 async function goToCell(sheet: string, row: number, col: number) {
@@ -939,9 +970,10 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         searchItem(c, { open: () => openSearch() }),
         { label: '', separator: true },
-        referenceItem(c, { run: () => void frame.value?.referenceThing(grid.value?.selectedObject() ?? activeChart.value ?? state.activeSheet), possible: () => !!(grid.value?.selectedObject() ?? activeChart.value ?? state.activeSheet) }),
+        referenceItem(c, { run: () => void frame.value?.referenceThing(thingInFocus() ?? ""), possible: () => !!thingInFocus() }),
         { label: '', separator: true },
         { id: 'edit.new-sheet', label: t('New Sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
+        { id: 'edit.rename-sheet', label: t('Rename Sheet…'), action: () => askRename(), disabled: readonly.value || !shownTab.value },
         { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
         { id: 'edit.chart', label: t('Chart…'), action: () => (dialog.value = 'chart'), disabled: readonly.value },
         { label: '', separator: true },
@@ -1126,7 +1158,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     <div v-else class="nosheet">{{ t('This document has no sheet yet.') }}</div>
     <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
     <template #footer>
-      <FooterBar v-if="!printing" data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" />
+      <FooterBar v-if="!printing" data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" @rename="askRename" />
     </template>
     <template #overlay>
       <SearchPanel
@@ -1148,6 +1180,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       />
       <OutcomePopover v-if="outcomes" :session="session" :sheet="state.activeSheet" :row="outcomes.row" :col="outcomes.col" :x="outcomes.x" :y="outcomes.y" @close="outcomes = null" />
       <ContextMenu v-if="cellMenu" :x="cellMenu.x" :y="cellMenu.y" :items="cellMenuItems" :width="290" :label="t('Cell menu')" @close="cellMenu = null" />
+      <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename sheet')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
       <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
       <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />

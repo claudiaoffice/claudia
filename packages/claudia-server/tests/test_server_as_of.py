@@ -132,3 +132,25 @@ def test_the_last_look_is_one_of_the_reads_a_replay_may_ask_live(deck):
     from claudia_server.replay import VIEW_READS
 
     assert "thing_last_seen" not in VIEW_READS  # it looks at the whole history, so it is never "as of" a step
+
+
+# -- changes_since: where the document has moved on from a step (D553) -------------------------------------------
+def test_the_objects_changed_since_a_step_are_named(deck):
+    first = add_text(deck)  # main:1
+    second = add_shape(deck)  # main:2
+    call(deck, "remove_object", {"id": first})  # main:3
+    found = call(deck, "changes_since", {"revision": "main:1"})
+    assert found["truncated"] is False
+    named = {i for r in found["regions"] if r["kind"] == "objects" for i in r["ids"]}
+    assert second in named and first in named
+
+
+def test_nothing_changed_since_the_latest_step(deck):
+    add_text(deck)
+    assert call(deck, "changes_since", {"revision": "main:1"}) == {"regions": [], "truncated": False}
+
+
+def test_a_step_that_is_not_there_is_a_command_error(deck):
+    with pytest.raises(RequestError) as caught:
+        call(deck, "changes_since", {"revision": "main:9"})
+    assert caught.value.code == "command_error"

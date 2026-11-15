@@ -224,3 +224,45 @@ def test_a_chart_cannot_read_a_name_that_does_not_exist(book):
     with pytest.raises(RequestError) as caught:
         call(book, "define_diagram", {"definition": {"kind": "bar", "source": "Nope"}})
     assert caught.value.code == "command_error" and "Nope" in str(caught.value)
+
+
+# -- names are things (D552) ------------------------------------------------------------------------------------
+def test_a_name_is_sent_with_an_id_that_comes_from_the_server(book):
+    define(book)
+    (sales,) = call(book, "names")["names"]
+    assert sales["id"].startswith("r") and "sales" not in sales["id"].lower()
+
+
+def test_two_names_get_two_ids_and_the_id_stays_when_a_name_is_defined_again_or_renamed(book):
+    define(book)
+    define(book, name="Costs")
+    first, second = {n["name"]: n["id"] for n in call(book, "names")["names"]}.values()
+    assert first != second
+    define(book, range={**AREA, "row1": 1})
+    call(book, "rename_name", {"old": "Sales", "new": "Takings"})
+    ids = {n["name"]: n["id"] for n in call(book, "names")["names"]}
+    assert set(ids) == {"Costs", "Takings"} and set(ids.values()) == {first, second}
+
+
+def test_a_name_is_a_thing_the_chat_can_point_at(book):
+    define(book)
+    (sales,) = call(book, "names")["names"]
+    assert call(book, "thing_last_seen", {"id": sales["id"]})["present"] is True
+    call(book, "remove_name", {"name": "Sales"})
+    assert call(book, "thing_last_seen", {"id": sales["id"]})["present"] is False
+
+
+def test_a_name_cannot_be_called_like_a_sheet_and_a_sheet_not_like_a_name(book):
+    with pytest.raises(RequestError, match="There is already a sheet called “Data”"):
+        define(book, name="data")
+    define(book)
+    with pytest.raises(RequestError, match="There is already a range called “Sales”"):
+        call(book, "add_sheet", {"name": "SALES"})
+    with pytest.raises(RequestError, match="There is already a sheet called “Data”"):
+        call(book, "rename_name", {"old": "Sales", "new": "DATA"})
+
+
+def test_the_result_of_a_query_gets_an_id_too(book):
+    call(book, "define_sql", {"sheet": "s1", "row": 5, "col": 0, "query": "SELECT 1 AS x", "name": "Answer"})
+    (answer,) = call(book, "names")["names"]
+    assert answer["kind"] == "result" and answer["id"].startswith("r")

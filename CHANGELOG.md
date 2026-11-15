@@ -4,6 +4,27 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.25.0] - 2026-11-15
+
+Named ranges are things (D552); replaying the history shows differences, and a step can be restored (D553).
+
+### Added
+- `Document.changes_since(rev, limit)` and `Changes` (D553): every place that changed after a step of the active line,
+  each once, in the order it was first changed; the steps after `rev` are replayed once on a scratch model.
+- `Document.restore_revision(rev, author)` (D553): go back to the state after any one step of the active line, by
+  forking, as `restore_checkpoint` does. The first entry of the new line is the kernel's `Restore`, named by the step.
+- `ObjectModel.rename_thing(ctx, id, name)` (D552): an app that keeps names with more than a plain field (computes
+  rewrites the formulas that read a renamed sheet) overrides it; it returns the old name and the commands that undo the
+  rest. The default calls `set_thing_name`.
+- `check_thing_name(..., shared=)`, `name_holder(..., ignoring=)`, `check_name_free(..., ignoring=)`,
+  `check_object(..., shared_names=)` and `insert_object(..., shared_names=)`: a thing may keep its own name, a kind of
+  thing may be left out of a collision (a range is not a clash with its own sheet's id), and an old log keeps its rule.
+
+### Changed
+- `AddObject` is schema 5 and `RenameThing` schema 2: both carry `legacy_names`, set by the upcaster for what was
+  written before named ranges shared the namespace, so an old document replays unchanged.
+- `RenameThing.apply` returns a `Batch` when renaming a thing had to change more than its name (a sheet's formulas).
+
 ## [0.24.0] - 2026-11-15
 
 Names of things (D550): every object, slide, sheet and chart tab has one name, unique in the document.

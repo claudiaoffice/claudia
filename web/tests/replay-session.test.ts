@@ -53,6 +53,10 @@ class FakeLink implements LinkLike {
         return { revision: params.revision, entry: entry(Number(params.revision.slice(5))), focus: [slideRegion(`s${params.revision.slice(5)}`)], app: 'creates' }
       case 'as_of':
         return [`past ${params.revision}`]
+      case 'changes_since':
+        return { regions: [slideRegion(`later than ${params.revision}`)], truncated: params.revision === 'main:1' }
+      case 'propose_restore_step':
+        return { applied: false, proposal: null }
       case 'chat':
         return { number: 2 }
       case 'add_slide':
@@ -195,6 +199,39 @@ describe('looking at the past', () => {
     expect(state.replay!.revision).toBe('main:2')
     expect(session.replayItems().every((i) => i.kind === 'change')).toBe(true)
     expect(session.replayIndex()).toBe(1)
+  })
+  it('marks what changed after the step only when asked, and for the step that is on show', async () => {
+    const { link, session, state } = await opened()
+    await session.startReplay()
+    await session.replayStep(-1)
+    expect(state.replay).toMatchObject({ differences: false, changed: [] })
+    expect(link.calls.some((c) => c.method === 'changes_since')).toBe(false)
+    await session.setReplayDifferences(true)
+    expect(state.replay!.changed).toEqual([slideRegion('later than main:2')])
+    await session.replayStep(-1)
+    await session.replayStep(-1)
+    expect(state.replay!.revision).toBe('main:1')
+    expect(state.replay!.changed).toEqual([slideRegion('later than main:1')])
+    expect(state.replay!.changedMore).toBe(true)
+  })
+  it('stops marking the differences when turned off', async () => {
+    const { session, state } = await opened()
+    await session.startReplay()
+    await session.setReplayDifferences(true)
+    await session.setReplayDifferences(false)
+    expect(state.replay).toMatchObject({ differences: false, changed: [], changedMore: false })
+  })
+  it('suggests going back to the step on show, which the past may still ask', async () => {
+    const { link, session } = await opened()
+    await session.startReplay()
+    await session.replayStep(-1)
+    expect(await session.proposeRestoreStep()).toBe(true)
+    expect(link.calls.at(-1)).toEqual({ method: 'propose_restore_step', params: { revision: 'main:2' } })
+  })
+  it('has no step to go back to in the present', async () => {
+    const { link, session } = await opened()
+    expect(await session.proposeRestoreStep()).toBe(false)
+    expect(link.calls.some((c) => c.method === 'propose_restore_step')).toBe(false)
   })
   it('does not start without a history to look at', async () => {
     const link = new FakeLink()

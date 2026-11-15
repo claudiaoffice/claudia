@@ -41,10 +41,11 @@ def default_name(ctx: Context, kind: str) -> str:
 
 
 def _rename_thing(ctx: Context, *, id: str, name: str, base) -> dict:  # noqa: A002 - the wire name
-    """Give the object, slide or chart tab `id` the name `name` (spaces around it and doubled inside it are tidied
-    away). `bad_request` for a name without text or with more than 60 characters; `command_error` when somebody else has
-    the name (the sentence says who, however capitals and spaces are written), for an unknown id, and for a sheet,
-    which cannot be renamed yet. Undo gives the old name back."""
+    """Give the object, slide, sheet or chart tab `id` the name `name` (spaces around it and doubled inside it are
+    tidied away). The formulas that read a renamed sheet are written again with its name. `bad_request` for a name
+    without text or with more than 60 characters; `command_error` when somebody else has the name (a named range
+    counts: the sentence says who, however capitals and spaces are written), for an unknown id and for a named range,
+    which is renamed with `rename_name`. Undo gives the old name and the formulas back."""
     cleaned = clean_name(name)
     if not cleaned:
         raise RequestError("bad_request", msg("a name needs some text"))

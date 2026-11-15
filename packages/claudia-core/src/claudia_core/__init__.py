@@ -67,7 +67,7 @@ from .css import (
     roles_used,
     validate_css,
 )
-from .document import Applied, CheckpointInfo, Document, Line, Look, environment_of
+from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, environment_of
 from .errors import (
     KernelError,
     MissingUpcaster,
@@ -253,6 +253,7 @@ __all__ = [
     "check",
     "check_kind",
     "Checkpoint",
+    "Changes",
     "CheckpointInfo",
     "CheckpointSaved",
     "ColourRole",

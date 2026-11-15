@@ -89,6 +89,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Search & Replace… | Ctrl+F |  |
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | New Sheet… | Shift+F11 |  |
+| Edit | Rename Sheet… | Ctrl+Shift+F11 |  |
 | Edit | Image… | Ctrl+Alt+I |  |
 | Edit | Chart… | Ctrl+Alt+C |  |
 | Edit | Row ▸ Insert Above | Shift+Alt+↑ |  |
@@ -158,6 +159,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Search & Replace… | Ctrl+F |  |
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | New Slide | Ctrl+M |  |
+| Edit | Rename Slide… | Ctrl+Shift+F11 |  |
 | Edit | Plan the Time of This Slide… | Ctrl+Shift+Alt+T |  |
 | Edit | Edit Text | Enter | the document view or the browser |
 | Edit | Text Box | Ctrl+Alt+B |  |

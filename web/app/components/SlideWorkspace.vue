@@ -56,7 +56,7 @@ const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
-const dialog = ref<null | 'styles' | 'colours'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'rename'>(null)
 const EXPORT_FORMATS = [
   { value: 'pptx', get label() { return t('PowerPoint presentation (.pptx)') } },
   { value: 'odp', get label() { return t('OpenDocument presentation (.odp)') } },
@@ -78,6 +78,20 @@ function present(from: 'start' | 'here') {
 function endShow() {
   presenting.value = null
   canvas.value?.focus()
+}
+/** Rename the slide shown, or the tab that was double-clicked (D550): a tag in the chat keeps pointing at it. */
+const renaming = ref<{ id: string; name: string } | null>(null)
+function askRename(id: string = state.activeSlide) {
+  const index = state.slides.findIndex((x) => x.id === id)
+  if (readonly.value || index < 0) return
+  renaming.value = { id, name: session.slideLabel(id, index) }
+  dialog.value = 'rename'
+}
+async function rename(name: string) {
+  const target = renaming.value
+  dialog.value = null
+  renaming.value = null
+  if (target && name !== target.name) await session.renameThing(target.id, name)
 }
 /** The time chip wants the notes field in view: shown if it was hidden. */
 async function planTime() {
@@ -241,6 +255,7 @@ const menus = computed<Menu[]>(() => {
         referenceItem(c, { run: () => void frame.value?.referenceThing(state.selected ?? state.activeSlide), possible: () => !!(state.selected ?? state.activeSlide) }),
         { label: '', separator: true },
         { id: 'edit.new-slide', label: t('New Slide'), action: () => session.addSlide(), disabled: readonly.value },
+        { id: 'edit.rename-slide', label: t('Rename Slide…'), action: () => askRename(), disabled: readonly.value || !state.activeSlide },
         {
           id: 'edit.slide-time',
           label: t('Plan the Time of This Slide…'),
@@ -370,6 +385,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       />
       <PresentShow v-if="presenting" :session="session" :from="presenting.from" view="audience" :t="t" @close="endShow" />
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
+      <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename slide')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
@@ -381,11 +397,14 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
             :key="s.id"
             type="button"
             role="tab"
+            :data-thing="s.id"
             :aria-selected="s.id === state.activeSlide"
             :class="{ on: s.id === state.activeSlide }"
+            :title="readonly ? undefined : t('Double-click to rename')"
             @click="session.showSlide(s.id)"
+            @dblclick="askRename(s.id)"
           >
-            {{ t('Slide {n}', { n: i + 1 }) }}<span v-if="session.secondsOf(s.id) !== null" class="time mono">{{ formatTime(session.secondsOf(s.id)!) }}</span>
+            {{ session.slideLabel(s.id, i) }}<span v-if="session.secondsOf(s.id) !== null" class="time mono">{{ formatTime(session.secondsOf(s.id)!) }}</span>
           </button>
           <button v-if="!readonly" type="button" class="add" :title="t('New Slide')" :aria-label="t('new slide')" @click="session.addSlide()">+</button>
         </div>

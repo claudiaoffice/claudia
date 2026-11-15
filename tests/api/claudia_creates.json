@@ -7,7 +7,7 @@
   "class": [
    "Command"
   ],
-  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None) -> None",
+  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None, legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'AddObject'",

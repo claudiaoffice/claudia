@@ -63,8 +63,11 @@ register = WorkbookModel.registry.register
 
 @WorkbookModel.registry.upcaster("computes.AddSheet", 1)
 @WorkbookModel.registry.upcaster("computes.AddChart", 1)
+@WorkbookModel.registry.upcaster("computes.AddSheet", 2)
+@WorkbookModel.registry.upcaster("computes.AddChart", 2)
 def _names_not_yet_shared(data: dict) -> dict:
-    """Schema 1 wrote sheets and chart tabs before names were one namespace: replay them under the old rule."""
+    """Schema 1 wrote sheets and chart tabs before names were one namespace, schema 2 before named ranges joined it
+    (D552): replay them under the old rule."""
     return {**data, "legacy_names": True}
 
 
@@ -124,7 +127,7 @@ class AddSheet(Command):
     document replays, even one that has a sheet and a chart tab of one name."""
 
     kind: ClassVar[str] = "computes.AddSheet"
-    schema: ClassVar[int] = 2  # 2: names are shared with chart tabs and objects (D550)
+    schema: ClassVar[int] = 3  # 2: names are shared with chart tabs and objects (D550); 3: and named ranges (D552)
     id: SheetId
     name: str
     index: int | None = None  # where in the tab order; None: at the end
@@ -644,7 +647,7 @@ class AddChart(Command):
     here rather than in :mod:`claudia_core.objects`, even though the definition it shows does not."""
 
     kind: ClassVar[str] = "computes.AddChart"
-    schema: ClassVar[int] = 2  # 2: names are shared with sheets and objects (D550); see ``AddSheet.legacy_names``
+    schema: ClassVar[int] = 3  # 2: names are shared with sheets and objects (D550); 3: and named ranges (D552)
     id: str
     name: str
     spec_id: str

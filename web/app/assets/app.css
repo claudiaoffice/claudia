@@ -117,3 +117,36 @@ button {
   outline-offset: 3px;
   background-color: color-mix(in srgb, var(--apricot) 18%, transparent);
 }
+
+/* While the chat box has the caret, a click on a thing writes a tag for it (E5.20): the things say so under the pointer,
+ * with a dashed outline and another cursor, so it is not only a colour. */
+.picking [data-thing]:hover {
+  outline: 2px dashed var(--iris);
+  outline-offset: 2px;
+  cursor: copy;
+}
+
+/* A replay marks where the step on show changed the document (solid) and, if asked, where it changed after that
+ * (dashed with a hatch), so the two differ in more than colour (D553). Boxes are laid over cells; the classes go on
+ * objects and paragraphs themselves. */
+.replay-now {
+  outline: 3px solid var(--tint-now);
+  outline-offset: -1px;
+}
+.replay-since {
+  outline: 3px dashed var(--tint-since);
+  outline-offset: -1px;
+}
+.replay-box {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.replay-box.now {
+  border: 3px solid var(--tint-now);
+  background: color-mix(in srgb, var(--tint-now) 12%, transparent);
+}
+.replay-box.since {
+  border: 3px dashed var(--tint-since);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--tint-since) 16%, transparent) 0 4px, transparent 4px 8px);
+}

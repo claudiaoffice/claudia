@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { encodeTag, hashAt, matches, plainChat, splitTags, tagIds, withTag, type Thing } from '~/lib/tags'
+import { encodeTag, hashAt, insertTag, matches, plainChat, splitTags, tagIds, withCurrentNames, withTag, type Thing } from '~/lib/tags'
 
 const thing = (id: string, name: string, kind: Thing['kind'] = 'text'): Thing => ({ id, name, kind })
 
@@ -90,5 +90,26 @@ describe('picking a thing', () => {
     const typed = '#fig '
     const done = withTag(typed, hashAt(typed, 4)!, 4, thing('o7', 'Figure 1'))
     expect(done.text).toBe(`${encodeTag('o7', 'Figure 1')} `)
+  })
+})
+
+describe('writing a tag at the caret (click to tag, Reference in Chat)', () => {
+  const thing = { id: 'o7', name: 'Figure 1', kind: 'shape' as const }
+  const tag = encodeTag('o7', 'Figure 1')
+
+  it('puts a space before it unless there is one, and one after it unless there is one', () => {
+    expect(insertTag('', 0, thing)).toEqual({ text: `${tag} `, caret: tag.length + 1 })
+    expect(insertTag('look at', 7, thing).text).toBe(`look at ${tag} `)
+    expect(insertTag('look at ', 8, thing).text).toBe(`look at ${tag} `)
+    const middle = insertTag('see now', 3, thing)
+    expect(middle.text).toBe(`see ${tag} now`)
+    expect(middle.caret).toBe(`see ${tag} `.length)
+  })
+})
+
+describe('the names a message is sent with', () => {
+  it('are the names the things have now, and the written ones for what is not known', () => {
+    const text = `${encodeTag('a', 'Old')} and ${encodeTag('b', 'Kept')}`
+    expect(withCurrentNames(text, (id) => (id === 'a' ? 'New' : undefined))).toBe(`${encodeTag('a', 'New')} and ${encodeTag('b', 'Kept')}`)
   })
 })

@@ -1,5 +1,5 @@
 {
- "version": "0.24.0",
+ "version": "0.25.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -10,7 +10,7 @@
   "class": [
    "Command"
   ],
-  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None) -> None",
+  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None, legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'AddObject'",
@@ -130,6 +130,14 @@
    "label",
    "summary"
   ]
+ },
+ "Changes": {
+  "class": [
+   "object"
+  ],
+  "init": "(regions: 'tuple[Region, ...]', truncated: 'bool') -> None",
+  "methods": {},
+  "properties": []
  },
  "ChatPosted": {
   "class": [
@@ -444,6 +452,7 @@
    "apply_entry": "(self, entry: 'Entry', *, persist: 'bool' = True) -> 'Applied'",
    "apply_report": "(self, report: 'RequirementReport') -> 'None'",
    "cache_snapshot": "(self) -> 'Snapshot | None'",
+   "changes_since": "(self, rev: 'Revision', limit: 'int' = 500) -> 'Changes'",
    "check_free": "(self, author: 'str | None', command: 'Command') -> 'None'",
    "check_requirements": "(self, env: 'Environment') -> 'RequirementReport'",
    "discard_side_history": "(self) -> 'list[Revision]'",
@@ -465,6 +474,7 @@
    "redact": "(self, revisions: 'Iterable[Revision]', *, author: 'str | None' = None) -> 'Applied'",
    "redo": "(self, author: 'str | None') -> 'Applied | None'",
    "restore_checkpoint": "(self, number: 'int', author: 'str | None' = None) -> 'Applied | None'",
+   "restore_revision": "(self, rev: 'Revision', author: 'str | None' = None) -> 'Applied | None'",
    "save_checkpoint": "(self, author: 'str | None' = None, label: 'str | None' = None) -> 'CheckpointInfo | None'",
    "scratch": "(self, at: 'Revision | None' = None) -> 'Document'",
    "show_presence": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Ephemeral'",
@@ -993,9 +1003,9 @@
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'A'",
    "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
-   "check_name_free": "(self, thing_id: 'str', name: 'str') -> 'None'",
-   "check_object": "(self, obj: 'VisualObject[A]') -> 'None'",
-   "check_thing_name": "(self, thing_id: 'str', name: 'str') -> 'None'",
+   "check_name_free": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'None'",
+   "check_object": "(self, obj: 'VisualObject[A]', *, shared_names: 'bool' = True) -> 'None'",
+   "check_thing_name": "(self, thing_id: 'str', name: 'str', *, shared: 'bool' = True) -> 'None'",
    "close_container": "(self, container: 'str') -> 'None'",
    "containers": "(self) -> 'Iterable[str]'",
    "define_diagram": "(self, definition: 'DiagramDefinition') -> 'None'",
@@ -1012,8 +1022,8 @@
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
    "images_to_data": "(self) -> 'list[dict]'",
-   "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None) -> 'None'",
-   "name_holder": "(self, thing_id: 'str', name: 'str') -> 'tuple[str, str] | None'",
+   "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
+   "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
    "names_in_use": "(self) -> 'list[str]'",
    "objects_changed": "(self, container: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
@@ -1021,6 +1031,7 @@
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
+   "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",
    "renderings_to_data": "(self) -> 'list[dict]'",
    "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
    "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
@@ -1328,7 +1339,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', name: 'str') -> None",
+  "init": "(id: 'str', name: 'str', legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RenameThing'",

@@ -6,9 +6,18 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 → 10 (9: an object's description, 10:
-the number formats). Search on claudia-search (SEC-18, CODE-18).
+the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges are things (D552) and a sheet can be renamed (E6.24):
+state schema 12 → 13.
 
 ### Added
+- `NamedRange.id` (D552): a stable id, `r` + 8 hex digits from the scope and the name for ranges that were defined
+  before ids (they get the same one every replay), a fresh one for a new range. A rename keeps it, so a tag in the chat
+  to a range survives it. `WorkbookModel.named_things` also yields `("range", id, name)`; `thing_name` reads them.
+- A range, a table and an SQL result share the name space of objects, sheets, chart tabs and slides (D550): no thing is
+  named like a range and no range like a thing. Ranges among themselves keep their rule (scope and text). A range is
+  renamed only with `RenameName`, not `RenameThing`.
+- `WorkbookModel.rename_sheet` and `rename_thing` for sheets (E6.24): the formulas that read the sheet are printed again
+  with its new name (`formula.rewrite.reprinted`), in the same step; undo puts the old text back exactly.
 - Excel functions, up to rank 300 of the catalog (D480, D481): trigonometry and number theory, rounding, number systems,
   matrices (MMULT, MINVERSE, MDETERM, LINEST ...), dynamic arrays (SEQUENCE, SORT, SORTBY, FILTER, UNIQUE, VSTACK, HSTACK,
   TRANSPOSE, RANDARRAY, TEXTSPLIT), text, statistics and distributions, SUBTOTAL, AGGREGATE, dates and times, finance (RATE,
@@ -38,6 +47,8 @@ the number formats). Search on claudia-search (SEC-18, CODE-18).
   `=COLUMNS($B$3:B3)` in B3 counted itself as a circle (`#CIRC!`), where Excel counts columns (D377).
 
 ### Changed
+- `DefineName` and `RenameName` are schema 2, `AddSheet` and `AddChart` schema 3 (all carry `legacy_names`): what an
+  old log holds is read with the rule it was written under.
 - `=A1:A3*2` and the other operators on ranges spill cell by cell instead of `#VALUE!` (D480).
 - Object bodies carry `description` and `decorative`; see the core changelog. A snapshot written before is retired and
   rebuilt from the log.

@@ -125,6 +125,27 @@ def add_replay_methods(table: MethodTable) -> None:
         return table.dispatch(past, method, params)
 
     add_thing_history_method(table)
+    add_changes_since_method(table)
+
+
+#: The most places `changes_since` names; a document changed in more places than this is shown tinted up to here.
+MAX_CHANGES = 500
+
+
+def add_changes_since_method(table: MethodTable) -> None:
+    """Add ``changes_since`` to an app's method table."""
+
+    @table.method("changes_since", "revision:revision")
+    def changes_since(ctx: Context, *, revision: Revision) -> dict:
+        """Where the document has changed after the step `revision` (D553): `{regions, truncated}`, each place once, in
+        the order it was first changed, as the same `{kind: cells|text|objects ...}` regions presence uses. What the
+        view of an earlier step tints under "Show differences from now"; `truncated` is true if there were more places
+        than the first 500. `command_error` for a step that is not on the line the document is on."""
+        try:
+            found = ctx.document.changes_since(revision, MAX_CHANGES)
+        except KernelError as exc:
+            raise RequestError("command_error", str(exc)) from exc
+        return {"regions": [r.to_data() for r in found.regions], "truncated": found.truncated}
 
 
 def add_thing_history_method(table: MethodTable) -> None:

@@ -625,9 +625,10 @@ export class Session extends BaseSession<State> {
     for (const sheet of s.sheets) out.push({ id: sheet.id, name: s.renamed[sheet.id] ?? sheet.name, kind: 'sheet' })
     for (const chart of s.charts) out.push({ id: chart.id, name: s.renamed[chart.id] ?? chart.name, kind: 'chart' })
     for (const o of Object.values(s.objects)) if (o.name) out.push({ id: o.id, name: s.renamed[o.id] ?? o.name, kind: o.kind })
+    for (const n of s.names) out.push({ id: n.id, name: n.name, kind: 'range' }) // (a name is renamed with its own command, not as a thing)
     return out
   }
-  /** The sheet being looked at, the chart tabs beside it and what floats on the sheet. */
+  /** The sheet being looked at, the chart tabs beside it, the named ranges on it and what floats on it. */
   protected override async inView(): Promise<Thing[]> {
     const here = this.state.activeSheet
     return this.things().filter((t) => t.kind === 'chart' || this.containerOf(t.id) === here)
@@ -641,6 +642,8 @@ export class Session extends BaseSession<State> {
   protected override containerOf(id: string): string | null {
     const s = this.state
     if (s.sheets.some((x) => x.id === id)) return id
+    const named = s.names.find((n) => n.id === id)
+    if (named) return named.sheet
     return s.objects[id]?.anchor.container ?? null
   }
   protected override currentContainer(): string | null {

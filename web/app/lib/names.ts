@@ -35,6 +35,8 @@ export interface NameColumn {
 /** A name as `names` sends it. A `result` is the table a `SQL()` cell fills (`anchor` is that cell). `region` is
  * `null` for a result that has no table at the moment (the query failed or is gone). */
 export interface NameInfo {
+  /** What a tag in the chat points at: it stays when the name is changed (D552). */
+  id: string
   name: string
   scope: string | null
   kind: 'range' | 'result'

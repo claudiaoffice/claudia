@@ -81,7 +81,7 @@ Ink-dark, which the built screens will follow.
 
 ## Numbers
 
-Core 0.24.0, creates 0.12.0, computes 0.8.0, composes 0.9.0, server unreleased (API snapshots regenerated). New
+Core 0.25.0 (0.24.0 before D552/D553), creates 0.12.0, computes 0.8.0 (unreleased changes), composes 0.9.0, server unreleased (API snapshots regenerated). New
 tests: `test_core_thing_names.py`, `test_creates_thing_names.py`, `test_computes_thing_names.py`,
 `test_server_thing_names.py`. Decisions D550, D551; stories E1.13, E6.24, E5.19, E5.20.
 
@@ -91,3 +91,29 @@ The rename field in the clients (properties, F2 on a tab or slide); names read f
 xlsx files (take them from the file, suffix duplicates, write them back); names in the assistant's view of a document;
 renaming a sheet (E6.24); composes' own object list in the dock. Both dock interfaces (E5.19, E5.20) are next; the
 the rename field in the clients and file import/export of names are next.
+
+
+## Later on the dock branch (D552, D553)
+
+* **Named ranges are things** (D552): `NamedRange.id`, kind `range`, one name space with everything else; renamed only
+  via `RenameName`. `legacy_names` on `AddObject` 5, `RenameThing` 2, `DefineName` 2, `RenameName` 2, `AddSheet` 3 and
+  `AddChart` 3 keeps old logs replaying. A range that already clashes in an old log is only held to the rule when it
+  is redefined or renamed.
+* **Renaming sheets and slides**: Edit ▸ Rename Sheet… / Rename Slide… (Ctrl+Shift+F11), double-click on a tab; the
+  prompt is the existing `PromptDialog`, so there is no new mock-up. The Windows and macOS menus are regenerated.
+* **Chat chips and click-to-pick**: `ChatInput.vue` (a `contenteditable` combobox; `lib/chip-text.ts` maps between the
+  written `[#name](thing:id)` and the chips; Enter sends; paste is plain text; 2000 characters). While it has the caret
+  a click on a thing (`[data-thing]`) writes its tag (`lib/chat-pick.ts`, captured on the window so the document does not
+  hear the click).
+* **Replay** (D553): `Document.changes_since`, `Document.restore_revision`, server `changes_since` and
+  `propose_restore_step`, tints (`lib/replay-tint.ts`, class `replay-now` / `replay-since`, tokens `--tint-now`,
+  `--tint-since`), "Show differences from now" and "↺ restore this step" in the replay bar, `SheetGrid.centre`.
+
+Verified in a real Chrome: the chat box (caret, chips, a space after a chip). Only unit tests cover the click-to-pick
+wiring and the tint classes inside the full app.
+
+### Not built (after D553)
+
+Reference in Chat in composes (the editor cannot select a floating object); names of tags in the assistant's view;
+the rename field in the properties of the clients; names in pptx/odp/docx/xlsx files; tinting characters within a
+paragraph (a paragraph is tinted as a whole); tags and replay for the assistant (left out on purpose).

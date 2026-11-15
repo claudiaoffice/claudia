@@ -125,7 +125,8 @@ export function containerOf(region: Region | null): string | null {
   return region.block
 }
 
-/** What a replay may still ask the server live: the panel's own reading and the conversation, which go on in the present. */
+/** What a replay may still ask the server live: the panel's own reading, the conversation and the suggestions to go
+ * back, which go on in the present. */
 export const LIVE_REQUESTS: ReadonlySet<string> = new Set([
   'log',
   'chat_log',
@@ -138,6 +139,11 @@ export const LIVE_REQUESTS: ReadonlySet<string> = new Set([
   'ping',
   'peek_revision',
   'thing_last_seen',
+  'changes_since',
+  // a suggestion changes nothing until everybody has agreed: it may be made, answered and taken back from the past
+  'propose_restore_step',
+  'answer_restore',
+  'withdraw_restore',
 ])
 
 /** What a view reads the document with; asked "as of" a step while replaying. The same list the server answers (`VIEW_READS`). */

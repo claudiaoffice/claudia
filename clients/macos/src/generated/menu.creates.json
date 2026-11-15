@@ -339,6 +339,18 @@
           },
           {
             "accelerators": [
+              "<Primary><Shift>F11"
+            ],
+            "checkable": false,
+            "id": "edit.rename-slide",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Rename Slide\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
               "<Primary><Alt><Shift>t"
             ],
             "checkable": false,

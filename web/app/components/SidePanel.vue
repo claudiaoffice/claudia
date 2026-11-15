@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import ChatInput from './ChatInput.vue'
 import { clock, colorOf, inkOn } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 import type { BaseSession } from '~/lib/base-session'
 import type { AiMode } from '~/lib/ai-mode'
 import { rowKey } from '~/lib/base-session'
 import { keyStep, WheelStepper, wheelDelta, type Filter } from '~/lib/replay'
-import { encodeTag, hashAt, matches, splitTags, withTag, type Thing, type ThingKind } from '~/lib/tags'
+import { tintsOf } from '~/lib/replay-tint'
+import { ChatPick, POINTER_EVENTS, type PointerKind } from '~/lib/chat-pick'
+import { hashAt, insertTag, matches, splitTags, withCurrentNames, withTag, type Thing, type ThingKind } from '~/lib/tags'
 
 const props = defineProps<{ session: BaseSession }>()
 const state = props.session.state
@@ -17,7 +20,7 @@ const { t } = useI18n()
 
 const history = ref<HTMLElement | null>(null)
 const chatLog = ref<HTMLElement | null>(null)
-const input = ref<HTMLInputElement | null>(null)
+const input = ref<InstanceType<typeof ChatInput> | null>(null)
 const draft = ref('')
 
 /** The two ways the AI can treat a request (D262); text documents have no direct way yet, the AI suggests there. */
@@ -175,6 +178,7 @@ const kindLabels: Record<ThingKind, string> = {
   slide: t('Slide'),
   sheet: t('Sheet'),
   chart: t('Chart'),
+  range: t('Range'),
 }
 const optionId = (i: number) => `tag-option-${i}`
 
@@ -192,9 +196,6 @@ watch(
 )
 watch(() => hash.value?.query, () => (active.value = 0))
 
-function noteCaret(event: Event) {
-  caret.value = (event.target as HTMLInputElement).selectionStart ?? draft.value.length
-}
 function pickThing(thing: Thing) {
   const h = hash.value
   if (!h) return
@@ -203,7 +204,7 @@ function pickThing(thing: Thing) {
   caret.value = done.caret
   void nextTick(() => {
     input.value?.focus()
-    input.value?.setSelectionRange(done.caret, done.caret)
+    input.value?.setCaret(done.caret)
   })
 }
 async function nameThem() {
@@ -239,18 +240,44 @@ function tagName(id: string, written: string): string {
 function goTo(id: string) {
   void props.session.goToThing(id)
 }
-/** Edit ▸ Reference Selection in Chat: write a tag for the thing selected in the view. */
+/** Edit ▸ Reference in Chat, and a click on a thing while the box has the caret: a tag for the thing goes in at the caret. */
 function referenceThing(thing: Thing) {
   tab.value = 'history'
-  const tag = `${draft.value && !draft.value.endsWith(' ') ? ' ' : ''}${splitTagText(thing)} `
-  draft.value += tag
+  const at = caret.value > draft.value.length || !chatFocused.value ? draft.value.length : caret.value
+  const done = insertTag(draft.value, at, thing)
+  draft.value = done.text
+  caret.value = done.caret
   void nextTick(() => {
     input.value?.focus()
-    input.value?.setSelectionRange(draft.value.length, draft.value.length)
-    caret.value = draft.value.length
+    input.value?.setCaret(done.caret)
   })
 }
-const splitTagText = (thing: Thing) => encodeTag(thing.id, thing.name)
+
+// Click to tag: while the box has the caret, a click on a thing in the document writes its tag (`lib/chat-pick.ts`).
+const chatFocused = ref(false)
+const gate = new ChatPick(() => chatFocused.value)
+function onPointer(event: Event) {
+  const verdict = gate.handle(event.type as PointerKind, event.target)
+  if (verdict === 'pass') return
+  event.preventDefault() // (the caret stays in the box)
+  event.stopImmediatePropagation() // (and the document does not get the click)
+  if (verdict !== 'swallow') void pickFromDocument(verdict.pick)
+}
+async function pickFromDocument(id: string) {
+  const thing = await props.session.thingToReference(id)
+  if (thing) referenceThing(thing)
+}
+watch(chatFocused, (focused) => {
+  document.documentElement.classList.toggle('picking', focused)
+  if (!focused) gate.reset()
+})
+onMounted(() => {
+  for (const type of POINTER_EVENTS) window.addEventListener(type, onPointer, true)
+})
+onBeforeUnmount(() => {
+  for (const type of POINTER_EVENTS) window.removeEventListener(type, onPointer, true)
+  document.documentElement.classList.remove('picking')
+})
 
 const others = computed(() => state.typing.filter((u) => u !== state.me.user))
 
@@ -278,6 +305,17 @@ async function togglePeek(line: string) {
 function suggestRestore(checkpoint: number) {
   void props.session.proposeRestore(checkpoint)
 }
+function suggestRestoreStep() {
+  void props.session.proposeRestoreStep()
+}
+/** How many places differ from now, said in words (the tint itself is only for those who see it). */
+const differenceNote = computed(() => {
+  const r = state.replay
+  if (!r) return ''
+  const n = tintsOf([], r.changed).count
+  if (n === 0) return t('Nothing differs from now')
+  return r.changedMore ? t('More than {n} places differ from now', { n }) : t('Places that differ from now: {n}', { n })
+})
 function suggestSwitch(line: string) {
   void props.session.proposeSwitch(line)
 }
@@ -306,7 +344,7 @@ watch(() => state.chat.length, () => toBottom(chatLog.value))
 watch(() => state.typing.length, () => toBottom(chatLog.value))
 
 async function send() {
-  const text = draft.value.trim()
+  const text = withCurrentNames(draft.value, (id) => props.session.nameOf(id)).trim()
   if (!text) return
   if (await props.session.say(text)) draft.value = ''
 }
@@ -317,7 +355,7 @@ function ask(prefill = '@ai ') {
   draft.value = prefill
   nextTick(() => {
     input.value?.focus()
-    input.value?.setSelectionRange(draft.value.length, draft.value.length)
+    input.value?.setCaret(draft.value.length)
   })
 }
 
@@ -382,6 +420,9 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           >{{ f.label }}</button>
         </div>
         <label class="follow"><input type="checkbox" :checked="replay.follow" @change="session.setReplayFollow(($event.target as HTMLInputElement).checked)"> {{ t('Follow changes') }}</label>
+        <label class="follow" :title="t('Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later')"><input type="checkbox" :checked="replay.differences" @change="session.setReplayDifferences(($event.target as HTMLInputElement).checked)"> {{ t('Show differences from now') }}</label>
+        <span v-if="replay.differences" class="differs" role="status">{{ differenceNote }}</span>
+        <button v-if="canWrite && !myProposal" type="button" class="suggest" :title="t('Suggest going back to the document as it was after this step')" @click="suggestRestoreStep">{{ t('↺ restore this step') }}</button>
         <span class="where" aria-hidden="true">{{ position }}<template v-if="replay.loading"> …</template></span>
         <span v-if="replay.newer" class="newer">{{ t('{n} newer changes by others', { n: replay.newer }) }}</span>
         <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</p>
@@ -482,28 +523,31 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           >{{ t('Give names to {n} things without one', { n: unnamed }) }}</li>
         </ul>
         <p class="sr-only" role="status" aria-live="polite">{{ announceList }}</p>
-        <input
+        <ChatInput
           ref="input"
           v-model="draft"
-          role="combobox"
+          :name-of="(id) => session.nameOf(id)"
+          :is-gone="(id) => session.isGone(id)"
+          :placeholder="t('Message everyone, or @ai …')"
+          :aria-label="t('chat message')"
           aria-autocomplete="list"
           aria-haspopup="listbox"
           aria-controls="tag-list"
+          aria-describedby="pick-hint"
           :aria-expanded="listOpen"
           :aria-activedescendant="listOpen ? optionId(active) : undefined"
-          :aria-label="t('chat message')"
-          :placeholder="t('Message everyone, or @ai …')"
-          autocomplete="off"
-          maxlength="2000"
-          @keydown="onChatKey"
-          @input="noteCaret"
-          @keyup="noteCaret"
-          @click="noteCaret"
-        >
+          @caret="caret = $event"
+          @key="onChatKey"
+          @submit="send"
+          @focus="chatFocused = true"
+          @blur="chatFocused = false"
+        />
         <button class="send" type="submit" :aria-label="t('send')" :disabled="!draft.trim()">
           <svg viewBox="0 0 20 20" width="16" height="16"><path d="M4 10h11m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
       </form>
+      <p v-if="chatFocused" id="pick-hint" class="pick-hint">{{ t('Click something in the document to write a tag for it.') }}</p>
+      <p v-else id="pick-hint" class="sr-only">{{ t('Click something in the document to write a tag for it.') }}</p>
     </section>
     </div>
 
@@ -688,6 +732,9 @@ button.entryRow:focus-visible,
 }
 .newer {
   color: var(--apricot);
+}
+.differs {
+  color: rgb(230 224 245 / 85%);
 }
 .visit {
   margin-left: auto;
@@ -1080,17 +1127,10 @@ time {
   text-decoration: line-through;
   border-style: dashed;
 }
-.write input {
-  flex: 1;
-  min-width: 0;
-  border-radius: 999px;
-  border: 1px solid rgb(231 225 244 / 22%);
-  background: rgb(255 255 255 / 6%);
-  padding: 7px 14px;
-  color: #fff;
-}
-.write input::placeholder {
-  color: rgb(230 224 245 / 45%);
+.pick-hint {
+  margin: 4px 4px 0;
+  font-size: 12px;
+  color: rgb(230 224 245 / 70%);
 }
 .send {
   width: 34px;

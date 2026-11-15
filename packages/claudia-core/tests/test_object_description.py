@@ -89,8 +89,8 @@ def test_a_body_with_a_field_nobody_knows_is_refused():
         ObjectBody.from_data({**text_box().to_data(), "colour": "red"})
 
 
-def test_adding_an_object_is_schema_3_and_schema_1_data_is_brought_up_to_date():
-    assert AddObject.schema == 4
+def test_adding_an_object_is_schema_5_and_schema_1_data_is_brought_up_to_date():
+    assert AddObject.schema == 5
     old_body = picture().to_data()
     del old_body["description"], old_body["decorative"], old_body["rendered"], old_body["name"]
     envelope = {"k": "core.AddObject", "s": 1, "d": {"body": old_body, "anchor": {"container": "s1"}, "at": None}}

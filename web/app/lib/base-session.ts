@@ -91,6 +91,12 @@ export interface ReplayState {
   loading: boolean
   /** What the step touched, for the views to point at. */
   focus: Region[]
+  /** Does the view also mark what changed after this step ("Show differences from now", D553)? */
+  differences: boolean
+  /** Where the document changed after this step, while `differences` is on; empty otherwise. */
+  changed: Region[]
+  /** Were there more places than `changed` lists? */
+  changedMore: boolean
 }
 
 /** What a tag has just taken the view to (E5.20, D551): the thing, the slide, sheet or paragraph it is on, and where to
@@ -488,7 +494,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const items = timeline(s.entries, s.chat, 'all')
     const at = revision ? nearest(items, revision) : items.findLastIndex((i) => i.kind === 'change')
     const latest = s.entries.at(-1)!.revision
-    s.replay = { filter: 'all', row: rowKey(items[at]!), revision: latest, follow: true, newer: 0, loading: false, focus: [] }
+    s.replay = { filter: 'all', row: rowKey(items[at]!), revision: latest, follow: true, newer: 0, loading: false, focus: [], differences: false, changed: [], changedMore: false }
     this.replayLink = null
     this.replayShown = latest
     await this.replayGo(at)
@@ -530,6 +536,24 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     if (!r) return
     r.follow = follow
     if (follow) this.followReplay(r.focus)
+  }
+
+  /** Mark, besides what the step changed, every place that changed after it (D553), or stop doing so. */
+  async setReplayDifferences(on: boolean): Promise<void> {
+    const r = this.state.replay
+    if (!r) return
+    r.differences = on
+    r.changed = []
+    r.changedMore = false
+    if (on) await this.loadDifferences(r.revision)
+  }
+
+  /** Suggest going back to the document as it is at the step on show (D553): the same agreement as for a checkpoint,
+   * from everybody connected as an owner or editor; what came after stays on a side line. */
+  async proposeRestoreStep(): Promise<boolean> {
+    const r = this.state.replay
+    if (!r) return false
+    return (await this.attempt('propose_restore_step', { revision: r.revision })) !== false
   }
 
   /** Back to the present. */
@@ -595,6 +619,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Is this thing known to be gone from the document as shown (a tag to it then says so)? */
   isGone(id: string): boolean {
     return this.tracksThings() && this.nameOf(id) === undefined
+  }
+
+  /** Give a thing (a sheet, a slide, a chart tab, an object) another name, as one step of the history. The server
+   * refuses a name somebody else has, a named range included, with a sentence that is shown here. */
+  async renameThing(id: string, name: string): Promise<boolean> {
+    return (await this.attempt('rename_thing', { id, name, base: this.state.revision })) !== false
   }
 
   /** Name everything that has no name (a document from before names) in one step of the history; how many were named. */
@@ -675,12 +705,27 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         s.replay.revision = revision
         s.replay.focus = looked.focus
         if (s.replay.follow) this.followReplay(looked.focus)
+        if (s.replay.differences) await this.loadDifferences(revision)
       } catch (error) {
         if (s.replay) this.replayWanted = s.replay.revision // stay where the views are
         this.explain(error)
       }
     }
     if (s.replay) s.replay.loading = false
+  }
+
+  /** Ask where the document changed after `revision`, unless the playhead has moved on or the marking was turned off. */
+  private async loadDifferences(revision: string): Promise<void> {
+    const r = this.state.replay
+    if (!r) return
+    try {
+      const found = await this.need().request<{ regions: Region[]; truncated: boolean }>('changes_since', { revision })
+      if (this.state.replay !== r || !r.differences || r.revision !== revision) return
+      r.changed = found.regions
+      r.changedMore = found.truncated
+    } catch (error) {
+      if (this.state.replay === r) this.explain(error)
+    }
   }
 
   /** Run a request; `false` after telling the person why it did not work. */

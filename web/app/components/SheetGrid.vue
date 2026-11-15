@@ -6,7 +6,7 @@ import { cellLook, styleAt, within, type CellLook } from '~/lib/cell-styles'
 import { cycleObject, objectName } from '~/lib/descriptions'
 import { ariaColCount, ariaRowCount, cellDomId, cellName, colIndexOf, rowIndexOf } from '~/lib/grid-a11y'
 import { imageDataUrl } from '~/lib/images'
-import { besideRect } from '~/lib/geometry'
+import { besideRect, centredScroll } from '~/lib/geometry'
 import {
   buildSizeTable,
   DEFAULT_COL_WIDTH,
@@ -31,6 +31,7 @@ import { chipsOf, dotFractions, outcomeCaption, type Alt, type Summary } from '~
 import { colorOf, inkOn } from '~/lib/people'
 import { ROLE_SHAPE, roleAt, type Role } from '~/lib/follow'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
+import { replayTints } from '~/lib/replay-tint'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
 import type { Session, SheetObject } from '~/lib/session'
 import type { StyleHost } from '~/lib/style-host'
@@ -392,6 +393,16 @@ const outlines = computed(() => {
   return out
 })
 
+/** The places a replay marks on this sheet: what the step on show changed, and what changed after it (D553). */
+const tints = computed(() => replayTints(state.replay))
+const replayBoxes = computed(() =>
+  tints.value.cells(props.sheet).map((c, i) => ({ id: `${c.tint}:${i}`, tint: c.tint, style: box(c.r0, c.c0, c.r1, c.c1) })),
+)
+const replayClass = (id: string) => {
+  const tint = tints.value.object(id)
+  return tint && `replay-${tint}`
+}
+
 // ------------------------------------------------------------------------------ floating objects (images)
 /** Selecting an image is local to this view (not shared with colleagues, unlike cell presence): E6.17 only
  * asked that an image never resizes on a structural edit and takes click priority over the cells beneath it. */
@@ -548,6 +559,15 @@ function reveal(row: number, col: number, vertically: boolean, horizontally: boo
     if (top < el.scrollTop) el.scrollTop = top
     else if (top + rowH > el.scrollTop + el.clientHeight - HH) el.scrollTop = top + rowH - (el.clientHeight - HH)
   }
+}
+/** Take the view to a cell, in the middle of the grid when it is out of sight (what following a replay does). */
+function centre(row: number, col: number) {
+  const el = viewport.value
+  if (!el) return
+  const left = centredScroll(lineStart(colTable.value, W, col), colWidthAt(col), el.scrollLeft, el.clientWidth, HW)
+  const top = centredScroll(lineStart(rowTable.value, H, row), rowHeightAt(row), el.scrollTop, el.clientHeight, HH)
+  if (left !== null) el.scrollLeft = left
+  if (top !== null) el.scrollTop = top
 }
 watch(
   () => [props.sel.row, props.sel.col, props.sel.row2, props.sel.col2],
@@ -935,8 +955,8 @@ function anchorPoint(row: number, col: number): { x: number; y: number } | null 
 
 defineExpose({
   anchorPoint,
-  /** Bring a cell into sight, by moving no further than needed (a replay shows what a step touched, D551). */
-  show: (row: number, col: number) => reveal(row, col, true, true),
+  /** Bring a cell into sight, in the middle of the grid if it was out of it (a replay shows what a step touched, D551). */
+  centre,
   focus: () => viewport.value?.focus(),
   selectObject: (id: string) => (selectedObject.value = id),
   stepObject,
@@ -1063,8 +1083,9 @@ defineExpose({
           v-for="o in objects"
           :key="o.id"
           class="object"
-          :class="{ selected: o.id === selectedObject }"
+          :class="[{ selected: o.id === selectedObject }, replayClass(o.id)]"
           :data-object="o.id"
+          :data-thing="o.id"
           :style="objectStyle(o)"
           :role="o.decorative ? 'presentation' : 'img'"
           :aria-label="o.decorative ? undefined : nameOf(o)"
@@ -1076,6 +1097,7 @@ defineExpose({
           <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >
         </div>
 
+        <div v-for="b in replayBoxes" :key="b.id" class="replay-box" :class="b.tint" :style="b.style" data-testid="replay-tint" />
         <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
           <span class="tag">{{ o.name }}<template v-if="o.locked"> {{ t('· editing') }}</template></span>
         </div>

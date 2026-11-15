@@ -6,6 +6,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `changes_since` (D553), in the three apps: `{regions, truncated}`, every place that changed after a step of the line
+  (`replay.MAX_CHANGES` at most), for "show differences from now" in a replay.
+- `propose_restore_step` (D553): suggest going back to the state after one step of the history, with the same
+  agreement as `propose_restore`. A suggestion now carries `revision` (and `checkpoint: null`) in `restore_proposed`
+  and in the welcome; a checkpoint's carries `revision: null`. Not for the assistant.
+- `names` in computes returns each range's `id` (D552); `rename_thing` renames a sheet (E6.24) and refuses a name a
+  range has, as a range refuses the name of a thing.
 - Names of things (D550): `rename_thing` and `name_unnamed` in the three apps (the assistant may not in composes,
   D63); a new object, slide or diagram gets the first free "Text box 1", "Slide 2" ... in the maker's language; `slides`
   says each slide's `name`. `PROTOCOL_VERSION` stays 1: methods and a field were added.

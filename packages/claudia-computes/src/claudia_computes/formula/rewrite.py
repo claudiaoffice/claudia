@@ -161,6 +161,12 @@ def without_sheet(formula: Formula, sheet: SheetId, names: SheetNames | None = N
 
 
 # ------------------------------------------------------------------------------------ names and columns
+def reprinted(formula: Formula, names: SheetNames | None = None) -> Formula:
+    """The formula with its text printed again by ``names``: what a formula that reads a sheet needs after the sheet
+    was called something else (it points at the sheet by id, the text says its name)."""
+    return formula if formula.ast is None else _rebuilt(formula, formula.ast, names)
+
+
 def renamed_name(formula: Formula, old: str, new: str, names: SheetNames | None = None) -> Formula:
     """The formula after the name or table ``old`` (compared without regard to case) was called ``new``."""
     if formula.ast is None:

@@ -18,7 +18,7 @@ const props = defineProps<{
   /** How many cells of the computation being followed each sheet has (E6.23): a marker on the tab of the others. */
   marks?: Record<string, number>
 }>()
-defineEmits<{ pick: [id: string, kind: 'sheet' | 'chart']; add: [] }>()
+defineEmits<{ pick: [id: string, kind: 'sheet' | 'chart']; add: []; rename: [id: string] }>()
 
 const shownSum = computed(() => show({ t: 'float', v: props.summary.sum }))
 const shownAverage = computed(() => (props.summary.average === null ? '' : show({ t: 'float', v: props.summary.average })))
@@ -33,9 +33,12 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
           :key="s.id"
           type="button"
           role="tab"
+          :data-thing="s.id"
           :aria-selected="activeChart === null && s.id === state.activeSheet"
           :class="{ on: activeChart === null && s.id === state.activeSheet }"
+          :title="canAdd ? t('Double-click to rename') : undefined"
           @click="$emit('pick', s.id, 'sheet')"
+          @dblclick="canAdd && $emit('rename', s.id)"
         >
           {{ s.name }}
           <span v-if="marks?.[s.id]" class="mark" :title="`${marks[s.id]}`" :aria-label="`${marks[s.id]} connected cells on this sheet`">◆ {{ marks[s.id] }}</span>
@@ -46,9 +49,12 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
           :key="c.id"
           type="button"
           role="tab"
+          :data-thing="c.id"
           :aria-selected="activeChart === c.id"
           :class="{ on: activeChart === c.id, chart: true }"
+          :title="canAdd ? t('Double-click to rename') : undefined"
           @click="$emit('pick', c.id, 'chart')"
+          @dblclick="canAdd && $emit('rename', c.id)"
         >
           {{ c.name }}
         </button>

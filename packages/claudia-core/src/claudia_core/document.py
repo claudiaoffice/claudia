@@ -75,6 +75,15 @@ class Look:
 
 
 @dataclass(frozen=True)
+class Changes:
+    """What ``Document.changes_since`` found: the places changed after a step, each once, and whether more were
+    left out."""
+
+    regions: tuple[Region, ...]
+    truncated: bool
+
+
+@dataclass(frozen=True)
 class Line:
     """One line of the log (``main``, or ``restore-N`` after a restore)."""
 
@@ -435,12 +444,30 @@ class Document:
         info = self._checkpoints[number - 1]
         if info.marks == self._state_head:
             return None
-        if self.materialize(info.marks).serialize() == self.model.serialize():
+        return self._fork_back(info.label, info.marks, info.entry, author)
+
+    def restore_revision(self, rev: Revision, author: str | None = None) -> Applied | None:
+        """Go back to the state after any one step of the line the document is on (D553), the way
+        ``restore_checkpoint`` goes back to a labelled one: by forking, so what came after stays on a side line and
+        nothing is lost.
+
+        The step is named in the first entry of the new line by what it did. ``KernelError`` for a revision that is not
+        on the active line (a side line's steps are reached by switching to it). ``None`` if the document is in that
+        state already."""
+        if rev not in self.history_revisions():
+            raise KernelError(f"there is no step {rev} on this line")
+        if rev == self._state_head:
+            return None
+        label = f"{self.log.get(rev).command.label} ({rev.seq})"
+        return self._fork_back(label, rev, rev, author)
+
+    def _fork_back(self, label: str, marks: Revision, at: Revision, author: str | None) -> Applied | None:
+        if self.materialize(marks).serialize() == self.model.serialize():
             return None
         old = self.branch
-        # fork at the label itself, so the checkpoint stays in the visible history
-        self._enter(Branch(self._new_restore_name(), info.entry), new=True)
-        return self._commit(Restore(info.label, info.marks, old), author, None, "do", None)
+        # fork at the step itself, so it stays in the visible history
+        self._enter(Branch(self._new_restore_name(), at), new=True)
+        return self._commit(Restore(label, marks, old), author, None, "do", None)
 
     # ------------------------------------------------------------------ lines: the way back
     def lines(self) -> list[Line]:
@@ -487,6 +514,44 @@ class Document:
                     seen.add(key)
                     focus.append(region)
         return Look(rev, after, entry, tuple(focus))
+
+    def changes_since(self, rev: Revision, limit: int = 500) -> Changes:
+        """Every place that changed after the step ``rev``, on the line the document is on (D553): what "show the
+        differences from now" tints in the view of an earlier step.
+
+        The steps after ``rev`` are replayed once on a scratch model, starting from the state at ``rev``; each
+        step's own places are read against the state after it and its inverse's against the same state, so a thing that
+        was taken away is named where it was. A step that cannot say where it acts adds nothing. Each place is named
+        once, in order of first change; after ``limit`` places the rest are left out and ``truncated`` says so.
+        ``KernelError`` for a revision that is not on the active line."""
+        path = self.log.path(self.revision)
+        position = next((i for i, e in enumerate(path) if e.rev == rev), None)
+        if position is None:
+            raise KernelError(f"there is no step {rev} on this line")
+        found: list[Region] = []
+        seen: set[str] = set()
+        truncated = False
+        model = self.materialize(rev)
+
+        def look(entry: Entry, inverse: Command) -> None:
+            nonlocal truncated
+            for command in (entry.command, inverse):
+                try:
+                    places = command.regions(model)
+                except (KeyError, ValueError, IndexError):
+                    continue
+                for region in places:
+                    key = json.dumps(region.to_data(), sort_keys=True)
+                    if key in seen:
+                        continue
+                    if len(found) >= limit:
+                        truncated = True
+                        return
+                    seen.add(key)
+                    found.append(region)
+
+        replay(model, path[position + 1 :], look)
+        return Changes(tuple(found), truncated)
 
     def last_seen(self, present: Callable[[DocumentModel], bool]) -> Revision | None:
         """The last step of the line the document is on after which ``present(model)`` was true, or ``None`` if it never

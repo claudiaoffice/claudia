@@ -124,8 +124,8 @@ EVENTS = {
     "stale": "functions the document uses changed: {functions}; results computed by them are out of date",
     "joined": "somebody connected: {id, user, color}",
     "left": "somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection",
-    "restore_proposed": "a suggestion to restore a checkpoint or switch the line is open, or its answers changed "
-    "(see `propose_restore`): the proposal, as `answer_restore` returns it",
+    "restore_proposed": "a suggestion to restore a checkpoint or a step, or to switch the line is open, or its answers "
+    "changed (see `propose_restore`): the proposal, as `answer_restore` returns it",
     "restore_resolved": "the open suggestion closed: {outcome: agreed|declined|withdrawn}. `agreed` is followed by "
     "`branch` and `rebuilt`, same as any restore or switch",
 }
@@ -618,6 +618,34 @@ def _propose_restore(ctx, checkpoint):
             checkpoint=checkpoint,
             line=None,
             label=f"checkpoint “{info.label}”",
+            group=ctx.editors(),
+        )
+    except RestoreError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    if proposal is not None:
+        ctx.broadcast({"event": "restore_proposed", "data": proposal.to_data()})
+    return {"applied": applied, "proposal": None if proposal is None else proposal.to_data()}
+
+
+@core_methods.method("propose_restore_step", "revision:revision", write=True)
+def _propose_restore_step(ctx, revision):
+    """Suggest going back to the state after one step of the history (D553), the way `propose_restore` goes back to
+    a checkpoint, with the same agreement: everybody connected now as an owner or editor, or at once if you are the
+    only one. What came after stays on a side line. `command_error` for a step that is not on the line the document
+    is on, or if a suggestion is already open."""
+    if ctx.account.system:
+        raise RequestError("forbidden", msg("the assistant does not suggest restoring a step"))
+    if revision not in ctx.document.history_revisions():
+        raise RequestError("command_error", msg("there is no step {revision} on this line", revision=str(revision)))
+    label = ctx.document.log.get(revision).command.label
+    try:
+        proposal, applied = ctx.restore.propose(
+            kind="restore",
+            by=ctx.user,
+            checkpoint=None,
+            revision=revision.to_data(),
+            line=None,
+            label=f"step {revision.seq} “{label}”",
             group=ctx.editors(),
         )
     except RestoreError as exc:

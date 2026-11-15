@@ -83,4 +83,15 @@ def test_an_object_written_before_names_reads_as_unnamed():
 
     assert isinstance(command, AddObject)
     assert command.body.name == ""
-    assert AddObject.schema == 4
+    assert AddObject.schema == 5
+
+
+def test_an_object_written_before_ranges_shared_names_replays_under_the_old_rule():
+    from claudia_core import AddObject, new_registry
+
+    body = ObjectBody("t1", "text", 400, 100, "plain-box", paragraph_for("t1", "body-text", "hi", "ann")).to_data()
+    old = {"k": "core.AddObject", "s": 4, "d": {"body": body, "anchor": {"x": 1, "y": 2}, "at": None}}
+    command = new_registry().decode(old)
+    assert command.legacy_names
+    assert command.to_data()["legacy_names"] is True
+    assert "legacy_names" not in AddObject(command.body, command.anchor).to_data()

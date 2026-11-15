@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { usePointed } from '~/lib/pointed'
 import { lookOnly } from '~/lib/replay'
+import { replayTints } from '~/lib/replay-tint'
 // The slide on screen: its objects, and what people do to them. A click selects (and holds) an object, dragging moves
 // it, the handles resize it, a double click or Enter edits its text, Delete removes it, and a right click offers the
 // same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. Nothing is
@@ -31,6 +32,12 @@ const props = defineProps<{ session: SlideSession; showGrid: boolean; marks?: Sl
 const emit = defineEmits<{ styles: [] }>()
 const session = props.session
 const state = session.state
+/** What a replay marks on this slide (D553): by object, what the step changed or what changed after it. */
+const tints = computed(() => replayTints(state.replay))
+const replayClass = (id: string) => {
+  const tint = tints.value.object(id)
+  return tint && `replay-${tint}`
+}
 
 const MARGIN = 24
 const DRAG_START = 3 // screen pixels the pointer must travel before a click becomes a drag
@@ -426,9 +433,10 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         v-for="o in objects"
         :key="o.id"
         class="obj"
-        :class="[o.kind, { selected: o.id === state.selected, empty: wordsOf(o) === '' }]"
+        :class="[o.kind, { selected: o.id === state.selected, empty: wordsOf(o) === '' }, replayClass(o.id)]"
         :style="boxStyle(o)"
         :data-id="o.id"
+        :data-thing="o.id"
         :aria-label="label(o)"
         role="button"
         @pointerdown="onObjectDown($event, o)"

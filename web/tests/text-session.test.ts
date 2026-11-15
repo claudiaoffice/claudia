@@ -466,3 +466,18 @@ describe('the language of the text (D915)', () => {
     again.close()
   })
 })
+
+describe('tags to floating objects', () => {
+  it('show the name an object has now, which the chat message may no longer say', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.objects = () => ({ objects: [{ id: 'o1', name: 'Logo', kind: 'image', anchor: { container: 'b1' } }] })
+    const session = new TextSession(() => link, { retryDelays: [0] })
+    await session.open()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(session.nameOf('o1')).toBe('Logo')
+    expect(session.nameOf('nothing')).toBeUndefined()
+    link.push('thing_renamed', { id: 'o1', name: 'Badge' })
+    expect(session.nameOf('o1')).toBe('Badge')
+  })
+})

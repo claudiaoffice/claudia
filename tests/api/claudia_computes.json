@@ -22,7 +22,7 @@
   "class": [
    "Command"
   ],
-  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None) -> None",
+  "init": "(body: 'ObjectBody', anchor: 'dict', at: 'int | None' = None, legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'AddObject'",
@@ -240,7 +240,7 @@
   "class": [
    "Command"
   ],
-  "init": "(name: 'NamedRange') -> None",
+  "init": "(name: 'NamedRange', legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'DefineName'",
@@ -454,7 +454,7 @@
   "class": [
    "object"
   ],
-  "init": "(name: 'str', scope: 'SheetId | None', range: 'RangeRef | None' = None, header: 'bool' = False, grows: 'bool' = False, purpose: 'str' = 'data', column_purposes: 'tuple[tuple[int, str], ...]' = (), anchor: 'Anchor | None' = None) -> None",
+  "init": "(name: 'str', scope: 'SheetId | None', range: 'RangeRef | None' = None, header: 'bool' = False, grows: 'bool' = False, purpose: 'str' = 'data', column_purposes: 'tuple[tuple[int, str], ...]' = (), anchor: 'Anchor | None' = None, id: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'NamedRange'",
    "purpose_of": "(self, offset: 'int') -> 'str'",
@@ -723,7 +723,7 @@
   "class": [
    "Command"
   ],
-  "init": "(scope: 'SheetId | None', old: 'str', new: 'str') -> None",
+  "init": "(scope: 'SheetId | None', old: 'str', new: 'str', legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'RenameName'",
@@ -1103,7 +1103,7 @@
    "chart_figure": "(self, diagram_id: 'str') -> 'dict'",
    "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
    "check_anchor": "(self, anchor: 'CellAnchor', body: 'ObjectBody') -> 'None'",
-   "check_name": "(self, named: 'NamedRange') -> 'None'",
+   "check_name": "(self, named: 'NamedRange', *, shared: 'bool' = True) -> 'None'",
    "check_writable": "(self, sheet: 'Sheet', positions) -> 'None'",
    "columns_of": "(self, named: 'NamedRange', sample: 'int' = 2000) -> 'list[tuple[str, str]]'",
    "containers": "(self) -> 'list[str]'",
@@ -1115,6 +1115,7 @@
    "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
    "load_state": "(self, state: 'dict') -> 'None'",
+   "name_with_id": "(self, thing_id: 'str') -> 'NamedRange | None'",
    "named_things": "(self)",
    "outcome_table": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, combine: 'str' = 'all') -> 'OutcomeTable | None'",
    "put_names": "(self, entries: 'Sequence[tuple[NameKey, NamedRange | None]]') -> 'NameRestores'",
@@ -1122,7 +1123,9 @@
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "region_of": "(self, named: 'NamedRange') -> 'Rect | None'",
    "remove_chart": "(self, chart_id: 'str') -> 'None'",
-   "rename_name": "(self, scope: 'SheetId | None', old: 'str', new: 'str') -> 'dict[SheetId, Cells]'",
+   "rename_name": "(self, scope: 'SheetId | None', old: 'str', new: 'str', *, shared: 'bool' = True) -> 'dict[SheetId, Cells]'",
+   "rename_sheet": "(self, sheet_id: 'SheetId', name: 'str') -> 'tuple[str, dict[SheetId, Cells]]'",
+   "rename_thing": "(self, ctx, thing_id: 'str', name: 'str')",
    "restore": "(state: 'dict') -> 'Self'",
    "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
    "serialize": "(self) -> 'dict'",

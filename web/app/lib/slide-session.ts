@@ -5,6 +5,7 @@ import { containerOf, firstFocus, lookOnly } from './replay'
 import type { Thing } from './tags'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { describeParams } from './descriptions'
+import { translate as t } from './i18n'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
@@ -327,6 +328,11 @@ export class SlideSession extends BaseSession<SlideState> {
   async setTime(slide: string, seconds: number | null): Promise<boolean> {
     if (this.readOnly) return false
     return (await this.attempt('set_slide_time', { slide, seconds, base: this.state.revision })) !== false
+  }
+
+  /** What the tab of slide `id` (the `index`th, from 0) says: its name, or its place while it has none. */
+  slideLabel(id: string, index: number): string {
+    return this.nameOf(id) || t('Slide {n}', { n: index + 1 })
   }
 
   async addSlide(): Promise<string | null> {

@@ -30,12 +30,12 @@ class RestoreError(Exception):
 
 @dataclass
 class Proposal:
-    """One open suggestion to restore a checkpoint or switch to a line."""
+    """One open suggestion to restore a checkpoint or a step of the history, or switch to a line."""
 
     id: int
     kind: str  # "restore" | "switch"
     by: str
-    checkpoint: int | None  # set when kind == "restore"
+    checkpoint: int | None  # set when kind == "restore" to a checkpoint
     line: str | None  # set when kind == "switch"
     label: str  # a sentence for the banner, e.g. 'checkpoint "good"' or 'line "main"'
     opened_at: float
@@ -43,6 +43,7 @@ class Proposal:
     policy: str
     group: set[str]  # everybody who must be asked (grows and shrinks as people connect and disconnect)
     agreed: set[str]
+    revision: str | None = None  # set when kind == "restore" to one step of the history (D553)
 
     def to_data(self) -> dict:
         """As sent to clients in the ``restore_proposed`` event and in a reconnecting client's welcome."""
@@ -51,6 +52,7 @@ class Proposal:
             "kind": self.kind,
             "by": self.by,
             "checkpoint": self.checkpoint,
+            "revision": self.revision,
             "line": self.line,
             "label": self.label,
             "opened_at": self.opened_at,
@@ -83,15 +85,16 @@ class _Record:
     line: str | None
     label: str
     agreed: list[str] = field(default_factory=list)
+    revision: str | None = None
 
 
 class RestoreCoordinator:
     """One document's open restore/switch suggestion, if any, and the bookkeeping around it.
 
-    ``apply`` carries out an agreed suggestion: given ``{kind, by, checkpoint, line}`` it calls the kernel
-    (``Document.restore_checkpoint`` or ``switch_to``) and, if that line's head actually moved, records the
-    resolution (``record_resolution``) under the branch name that was active just before — the caller knows that
-    name and this module does not, since it is the kernel's, not a concept of its own."""
+    ``apply`` carries out an agreed suggestion: given ``{kind, by, checkpoint, revision, line}`` it calls the kernel
+    (``Document.restore_checkpoint``, ``restore_revision`` or ``switch_to``) and, if that line's head actually moved,
+    records the resolution (``record_resolution``) under the branch name that was active just before — the caller
+    knows that name and this module does not, since it is the kernel's, not a concept of its own."""
 
     def __init__(self, apply: Callable[[dict], None], *, clock: Callable[[], float], timeout: float = DEFAULT_TIMEOUT):
         self._apply = apply
@@ -110,7 +113,15 @@ class RestoreCoordinator:
 
     # ------------------------------------------------------------------ opening and answering
     def propose(
-        self, *, kind: str, by: str, checkpoint: int | None, line: str | None, label: str, group: Iterable[str]
+        self,
+        *,
+        kind: str,
+        by: str,
+        checkpoint: int | None,
+        line: str | None,
+        label: str,
+        group: Iterable[str],
+        revision: str | None = None,
     ) -> tuple[Proposal | None, bool]:
         """Open a suggestion, or carry it out at once if ``by`` is the only one who must agree.
 
@@ -122,12 +133,23 @@ class RestoreCoordinator:
         everybody = set(group)
         everybody.add(by)
         if len(everybody) <= 1:
-            self._carry_out(_Record(kind, by, checkpoint, line, label, [by]))
+            self._carry_out(_Record(kind, by, checkpoint, line, label, [by], revision))
             return None, True
         now = self._clock()
         self._next_id += 1
         self._proposal = Proposal(
-            self._next_id, kind, by, checkpoint, line, label, now, now + self.timeout, self.policy, everybody, {by}
+            self._next_id,
+            kind,
+            by,
+            checkpoint,
+            line,
+            label,
+            now,
+            now + self.timeout,
+            self.policy,
+            everybody,
+            {by},
+            revision,
         )
         return self._proposal, False
 
@@ -208,7 +230,7 @@ class RestoreCoordinator:
     def _resolve(self, p: Proposal, outcome: str) -> str:
         self._proposal = None
         if outcome == "agreed":
-            self._carry_out(_Record(p.kind, p.by, p.checkpoint, p.line, p.label, sorted(p.agreed)))
+            self._carry_out(_Record(p.kind, p.by, p.checkpoint, p.line, p.label, sorted(p.agreed), p.revision))
         return outcome
 
     def _carry_out(self, record: _Record) -> None:
@@ -217,6 +239,7 @@ class RestoreCoordinator:
                 "kind": record.kind,
                 "by": record.by,
                 "checkpoint": record.checkpoint,
+                "revision": record.revision,
                 "line": record.line,
                 "label": record.label,
                 "agreed": record.agreed,

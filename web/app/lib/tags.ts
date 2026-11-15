@@ -3,8 +3,8 @@
 // that knows tags shows the thing's current name and can take you to it; anything else (an older client, the AI, an
 // export) reads it as the plain words it is. Pure: no component, no connection, so every rule has a test.
 
-/** What can be named, by what it is: an object's own kind, or the slide, sheet or chart tab it is on. */
-export type ThingKind = 'text' | 'shape' | 'image' | 'diagram' | 'rendered' | 'slide' | 'sheet' | 'chart'
+/** What can be named, by what it is: an object's own kind, or the slide, sheet, chart tab or named range it is. */
+export type ThingKind = 'text' | 'shape' | 'image' | 'diagram' | 'rendered' | 'slide' | 'sheet' | 'chart' | 'range'
 
 /** A thing a tag can point at. */
 export interface Thing {
@@ -86,6 +86,25 @@ export function matches(things: readonly Thing[], query: string, limit = MAX_LIS
     else if (key.includes(wanted)) contains.push(thing)
   }
   return [...starts.sort(byName), ...contains.sort(byName)].slice(0, limit)
+}
+
+/** The text with a tag for `thing` written at `caret`, a space before it unless there is one (or the text starts there)
+ * and a space after it, the caret behind that. What clicking a thing and Edit ▸ Reference in Chat write. */
+export function insertTag(text: string, caret: number, thing: Thing): { text: string; caret: number } {
+  const before = text.slice(0, caret)
+  const after = text.slice(caret)
+  const lead = before && !/\s$/.test(before) ? ' ' : ''
+  const gap = after.startsWith(' ') ? '' : ' '
+  const head = `${before}${lead}${encodeTag(thing.id, thing.name)}${gap}`
+  return { text: `${head}${after}`, caret: head.length + (gap === '' ? 1 : 0) }
+}
+
+/** The message with every tag written with the name its thing has now (`nameOf`; the name it was written with where it
+ * does not know the thing): what is sent, so that a name changed while the message was being written is not sent old. */
+export function withCurrentNames(text: string, nameOf: (id: string) => string | undefined): string {
+  return splitTags(text)
+    .map((s) => (s.type === 'text' ? s.text : encodeTag(s.id, nameOf(s.id) ?? s.name)))
+    .join('')
 }
 
 /** The text with `thing` as a tag in place of the `#…` that was typed, the caret after it and a space (the one that

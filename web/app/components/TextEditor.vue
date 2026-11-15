@@ -2,7 +2,8 @@
 // The text, drawn from the session's replica. The browser never changes it: every input is caught (`beforeinput`), turned
 // into a request, and the text appears when the server's events arrive. What is typed but not yet sent is drawn at the
 // caret as an overlay. Selections are translated between the page and the model (paragraph, offset).
-import { nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
+import { replayTints } from '~/lib/replay-tint'
 import { colorOf } from '~/lib/people'
 import type { Block, Pos } from '~/lib/blocks'
 import { itemLayout } from '~/lib/list-layout'
@@ -17,6 +18,12 @@ const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors
 const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }] }>()
 
 const state = props.session.state
+/** What a replay marks (D553): a paragraph as a whole, whichever stretch of it changed. */
+const tints = computed(() => replayTints(state.replay))
+const replayClass = (id: string) => {
+  const tint = tints.value.block(id)
+  return tint && `replay-${tint}`
+}
 const root = ref<HTMLElement | null>(null)
 const scroller = ref<HTMLElement | null>(null)
 const renderKey = ref(0)
@@ -439,7 +446,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
           v-for="(block, at) in state.blocks"
           :key="`${block.id}:${tagOf(block.style)}`"
           class="para"
-          :class="[`st-${block.style}`, { item: block.item, tight: layoutOf(at)['--item-gap'] }]"
+          :class="[`st-${block.style}`, { item: block.item, tight: layoutOf(at)['--item-gap'] }, replayClass(block.id)]"
           :style="{ ...cssOf(block.style), ...layoutOf(at) }"
           :data-block="block.id"
           :data-marker="block.label?.marker"

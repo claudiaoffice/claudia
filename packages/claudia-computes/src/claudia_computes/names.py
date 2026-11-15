@@ -15,6 +15,7 @@ Purposes colour a table's cells by what they are for — *input* (typed by peopl
 
 from __future__ import annotations
 
+import hashlib
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
@@ -64,7 +65,11 @@ class NamedRange:
     """One name. ``range`` is the rectangle (always on a sheet) of a range; a result has none and is instead tied to
     the ``SQL()`` cell ``anchor``, whose spill is its rectangle. ``header`` says the first row names the columns,
     ``grows`` that the table takes in the row typed right below it, ``purpose`` is the table's and
-    ``column_purposes`` the ones of single columns, as (offset from the first column, purpose)."""
+    ``column_purposes`` the ones of single columns, as (offset from the first column, purpose).
+
+    ``id`` is what a tag in the chat points at (D552): it stays when the name is changed, and says nothing about the
+    text. A name a log wrote before ids has none; it gets one worked out from its scope and text, the same every time
+    the log is read."""
 
     kind: ClassVar[str] = "name"
     name: str
@@ -75,8 +80,12 @@ class NamedRange:
     purpose: str = DEFAULT_PURPOSE
     column_purposes: tuple[tuple[int, str], ...] = ()
     anchor: Anchor | None = None
+    id: str = ""
 
     def __post_init__(self) -> None:
+        if not self.id:
+            digest = hashlib.sha1(f"{self.scope}|{self.name.casefold()}".encode()).hexdigest()
+            object.__setattr__(self, "id", f"r{digest[:8]}")
         if (self.range is None) == (self.anchor is None):
             raise ValueError("a name is either a range or a result, not both and not neither")
         if self.range is not None and self.range.sheet is None:
@@ -115,6 +124,7 @@ class NamedRange:
     def to_data(self) -> dict:
         """The name as plain data: what the log stores and clients are sent."""
         data: dict = {
+            "id": self.id,
             "name": self.name,
             "scope": self.scope,
             "header": self.header,
@@ -143,6 +153,7 @@ class NamedRange:
                 data.get("purpose", DEFAULT_PURPOSE),
                 tuple((int(o), p) for o, p in data.get("column_purposes", ())),
                 None if anchor is None else (SheetId(anchor[0]), int(anchor[1]), int(anchor[2])),
+                str(data.get("id", "")),
             )
         except (KeyError, TypeError, IndexError) as problem:
             raise ValueError(f"this is not a name: {problem}") from None

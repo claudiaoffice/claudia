@@ -1035,8 +1035,35 @@ describe('lines, and restoring with consent', () => {
   })
 })
 
+describe('renaming a sheet (E6.24, D550)', () => {
+  it('asks the server to rename the thing, against the revision it is looking at', async () => {
+    const { session, link } = await opened()
+    link.handlers.rename_thing = () => ({ revision: 'main:4' })
+    expect(await session.renameThing('s1', 'Takings')).toBe(true)
+    expect(link.calls.find((c) => c.method === 'rename_thing')!.params).toEqual({ id: 's1', name: 'Takings', base: 'main:3' })
+  })
+
+  it('tells the person why a name was refused, and says it did not work', async () => {
+    const { session, link } = await opened()
+    link.handlers.rename_thing = () => {
+      throw new ProtocolError('command_error', 'There is already a range called “Revenue”')
+    }
+    expect(await session.renameThing('s1', 'Revenue')).toBe(false)
+    expect(session.state.notice).toMatchObject({ kind: 'error', text: 'There is already a range called “Revenue”' })
+  })
+
+  it('shows the new name on the sheet tab once the server says the sheets changed', async () => {
+    const { session, link } = await opened()
+    link.handlers.sheets = () => [{ id: 's1', name: 'Takings', rows: 2, cols: 2 }]
+    link.push('sheets', { type: 'sheets' })
+    await session.settled()
+    expect(session.state.sheets.map((x) => x.name)).toEqual(['Takings'])
+  })
+})
+
 describe('names, tables and queries (E6.5)', () => {
   const SALES = {
+    id: 'r1sales',
     name: 'Sales',
     scope: null,
     kind: 'range',
@@ -1350,5 +1377,58 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     await session.goToThing('s2-pic')
     expect(session.state.activeSheet).toBe('s2')
     expect(session.state.pointed).toMatchObject({ id: 's2-pic', container: 's2', from: 's1' })
+  })
+
+  it('offers the named ranges on the sheet in sight, and goes to one on another sheet (D552)', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.sheets = () => [
+      { id: 's1', name: 'Budget', rows: 2, cols: 2 },
+      { id: 's2', name: 'Plan', rows: 2, cols: 2 },
+    ]
+    const range = (id: string, name: string, sheet: string, kind = 'range') => ({
+      id,
+      name,
+      scope: null,
+      kind,
+      header: false,
+      grows: false,
+      purpose: 'data',
+      column_purposes: [],
+      sheet,
+      sheet_name: sheet,
+      region: { sheet, row0: 1, col0: 1, row1: 2, col1: 2 },
+      a1: 'B2:C3',
+      anchor: null,
+      columns: [],
+      rows: 2,
+    })
+    link.handlers.names = () => ({ revision: 'main:3', names: [range('r1', 'Revenue', 's1'), range('r2', 'Costs', 's2')] })
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    const offered = await session.taggableThings()
+    expect(offered.filter((t) => t.kind === 'range')).toEqual([{ id: 'r1', name: 'Revenue', kind: 'range' }])
+    await session.goToThing('r2')
+    expect(session.state.activeSheet).toBe('s2')
+    expect(session.state.pointed).toMatchObject({ id: 'r2', container: 's2', from: 's1' })
+  })
+
+  it('knows a range is gone once its name is, and keeps the name a tag was written with current', async () => {
+    const link = new FakeLink()
+    server(link)
+    const named = { id: 'r1', name: 'Revenue', scope: null, kind: 'range', header: false, grows: false, purpose: 'data', column_purposes: [], sheet: 's1', sheet_name: 'Sheet1', region: null, a1: null, anchor: null, columns: [], rows: 0 }
+    link.handlers.names = () => ({ revision: 'main:3', names: [named] })
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    expect(session.nameOf('r1')).toBe('Revenue')
+    expect(session.isGone('r1')).toBe(false)
+    link.handlers.names = () => ({ revision: 'main:4', names: [{ ...named, name: 'Takings' }] })
+    link.push('names', { type: 'names' })
+    await session.settled()
+    expect(session.nameOf('r1')).toBe('Takings')
+    link.handlers.names = () => ({ revision: 'main:5', names: [] })
+    link.push('names', { type: 'names' })
+    await session.settled()
+    expect(session.isGone('r1')).toBe(true)
   })
 })

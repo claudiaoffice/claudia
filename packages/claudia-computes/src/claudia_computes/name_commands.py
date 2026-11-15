@@ -5,7 +5,7 @@ Like every command they carry final values and return their exact inverse."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import ClassVar
 
 from claudia_core import Batch, Command, Context
@@ -22,13 +22,25 @@ def _data(key: NameKey, named: NamedRange | None) -> dict:
     return {"scope": key[0], "name": key[1], "was": None if named is None else named.to_data()}
 
 
+@WorkbookModel.registry.upcaster("computes.DefineName", 1)
+@WorkbookModel.registry.upcaster("computes.RenameName", 1)
+def _names_not_yet_shared(data: dict) -> dict:
+    """Schema 1 named ranges before they shared the namespace with sheets, charts and objects (D552): replay them under
+    the old rule, which let a range and a sheet have one text."""
+    return {**data, "legacy_names": True}
+
+
 @register
 @dataclass(frozen=True)
 class DefineName(Command):
-    """Give cells a name (or, with a name that exists in the same scope, point it somewhere else)."""
+    """Give cells a name (or, with a name that exists in the same scope, point it somewhere else, which keeps its
+    id). The name must be nobody else's in the document (D552); ``legacy_names`` is set for what a log wrote before
+    that, and keeps the old rule so that an old document replays."""
 
     kind: ClassVar[str] = "computes.DefineName"
+    schema: ClassVar[int] = 2  # 2: names are shared with sheets, chart tabs and objects, and have ids (D552)
     name: NamedRange
+    legacy_names: bool = False
 
     @property
     def label(self) -> str:
@@ -40,17 +52,24 @@ class DefineName(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         model = ctx.model
-        model.check_name(self.name)
-        before = model.put_names([(self.name.key, self.name)])
+        named = self.name
+        existing = model.names.get(named.key)
+        if existing is not None and existing.id != named.id:
+            named = replace(named, id=existing.id)  # (the same name pointed somewhere else is still the same thing)
+        model.check_name(named, shared=not self.legacy_names)
+        before = model.put_names([(named.key, named)])
         ctx.emit(NamesChanged())
         return RestoreNames(tuple(before))
 
     def to_data(self) -> dict:
-        return {"name": self.name.to_data()}
+        data: dict = {"name": self.name.to_data()}
+        if self.legacy_names:
+            data["legacy_names"] = True
+        return data
 
     @classmethod
     def from_data(cls, data, registry) -> DefineName:
-        return cls(NamedRange.from_data(data["name"]))
+        return cls(NamedRange.from_data(data["name"]), data.get("legacy_names", False))
 
     def regions(self, model) -> tuple[CellRegion, ...]:
         area = self.name.range
@@ -103,9 +122,11 @@ class RenameName(Command):
     """Call a name something else. The formulas that use it are rewritten, so they keep meaning the same cells."""
 
     kind: ClassVar[str] = "computes.RenameName"
+    schema: ClassVar[int] = 2  # 2: the new name must be nobody else's in the document (D552); see ``DefineName``
     scope: SheetId | None
     old: str
     new: str
+    legacy_names: bool = False
 
     @property
     def label(self) -> str:
@@ -116,7 +137,7 @@ class RenameName(Command):
         return f"rename {self.old} to {self.new}"
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        restores = ctx.model.rename_name(self.scope, self.old, self.new)
+        restores = ctx.model.rename_name(self.scope, self.old, self.new, shared=not self.legacy_names)
         ctx.emit(NamesChanged())
         undo: list[Command] = [RenameName(self.scope, self.new, self.old)]
         # (the formulas come back as they were typed: writing the old name back would print them by its own case)
@@ -124,11 +145,15 @@ class RenameName(Command):
         return undo[0] if len(undo) == 1 else Batch(tuple(undo))
 
     def to_data(self) -> dict:
-        return {"scope": self.scope, "old": self.old, "new": self.new}
+        data: dict = {"scope": self.scope, "old": self.old, "new": self.new}
+        if self.legacy_names:
+            data["legacy_names"] = True
+        return data
 
     @classmethod
     def from_data(cls, data, registry) -> RenameName:
-        return cls(None if data.get("scope") is None else SheetId(data["scope"]), data["old"], data["new"])
+        scope = None if data.get("scope") is None else SheetId(data["scope"])
+        return cls(scope, data["old"], data["new"], data.get("legacy_names", False))
 
     def shifted_by(self, other: Command) -> Command | None:
         old, new = key_of(self.scope, self.old), key_of(self.scope, self.new)

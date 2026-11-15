@@ -41,7 +41,15 @@ def propose_restore(coord, by="ana", group=(), checkpoint=1):
 
 def restore_record(by="ana", checkpoint=1, agreed=("ana",)):
     """What ``apply`` is called with once a restore proposal is carried out."""
-    return {"kind": "restore", "by": by, "checkpoint": checkpoint, "line": None, "label": LABEL, "agreed": list(agreed)}
+    return {
+        "kind": "restore",
+        "by": by,
+        "checkpoint": checkpoint,
+        "revision": None,
+        "line": None,
+        "label": LABEL,
+        "agreed": list(agreed),
+    }
 
 
 # ------------------------------------------------------------------ opening
@@ -69,7 +77,15 @@ def test_only_one_proposal_may_be_open_at_a_time(coord):
 def test_a_switch_proposal_carries_its_own_fields(coord, applied):
     coord.propose(kind="switch", by="ana", checkpoint=None, line="main", label='line "main"', group=())
     assert applied == [
-        {"kind": "switch", "by": "ana", "checkpoint": None, "line": "main", "label": 'line "main"', "agreed": ["ana"]}
+        {
+            "kind": "switch",
+            "by": "ana",
+            "checkpoint": None,
+            "revision": None,
+            "line": "main",
+            "label": 'line "main"',
+            "agreed": ["ana"],
+        }
     ]
 
 
@@ -231,3 +247,14 @@ def test_a_second_departure_can_get_a_notice_of_its_own(coord):
     coord.left("ana", "restore-1")
     coord.record_resolution("restore-1", Resolution(by="cara", kind="switch", label="y", agreed=["cara"]))
     assert coord.notice_for("ana", "main")["by"] == "cara"
+
+
+# ------------------------------------------------------------------ a step instead of a checkpoint (D553)
+def test_a_step_is_proposed_and_carried_out_like_a_checkpoint(coord, applied):
+    proposal, applied_now = coord.propose(
+        kind="restore", by="ana", checkpoint=None, revision="main:3", line=None, label="step 3", group=["ben"]
+    )
+    assert applied_now is False and proposal.revision == "main:3"
+    assert proposal.to_data()["revision"] == "main:3"
+    coord.answer(user="ben", agree=True)
+    assert applied[-1]["revision"] == "main:3" and applied[-1]["checkpoint"] is None

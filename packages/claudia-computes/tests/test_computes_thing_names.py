@@ -3,6 +3,7 @@ rename is refused until formulas can follow it."""
 
 import pytest
 from conftest import S1, chart_spec, put_chart_spec, put_image, reopen
+from names_helpers import at, code, define, fill, region_of, shown
 
 from claudia_computes import AddChart, AddSheet, RemoveChart, RemoveSheet, WorkbookModel
 from claudia_core import Document, MemoryStore, RenameThing
@@ -104,10 +105,84 @@ def test_a_chart_tab_may_be_renamed_to_its_own_name_written_differently(doc):
 
 
 # -- sheets ---------------------------------------------------------------------------------------------------
-def test_a_sheet_cannot_be_renamed_yet_and_the_refusal_says_why(doc):
-    with pytest.raises(ValueError, match="Sheets cannot be renamed yet"):
-        doc.execute(RenameThing(S1, "Takings"), author="ana")
-    assert doc.model.sheet(S1).name == "Sheet1"
+def source(doc, address, sheet=S1):
+    row, col = at(address)
+    return doc.model.sheet(sheet).cells[(row, col)]["v"]
+
+
+def two_sheets(doc):
+    doc.execute(AddSheet("s2", "Data"), author="ana")
+    fill(doc, {"A1": 5, "A2": 7}, sheet="s2")
+    fill(doc, {"A1": "=Data!A1+Data!A2", "B1": "=SUM(Data!A1:A2)", "C1": "=A2", "A2": 1})
+
+
+def test_a_sheet_is_renamed_and_the_formulas_that_read_it_follow(doc):
+    two_sheets(doc)
+    doc.execute(RenameThing("s2", "Takings"), author="ana")
+    assert doc.model.sheet("s2").name == "Takings"
+    assert source(doc, "A1") == "=Takings!A1+Takings!A2"
+    assert source(doc, "B1") == "=SUM(Takings!A1:A2)"
+    assert source(doc, "C1") == "=A2", "a formula that reads its own sheet is not touched"
+    assert (shown(doc, "A1"), shown(doc, "B1")) == (12, 12)
+
+
+def test_a_name_with_spaces_or_quotes_is_quoted_in_the_formulas(doc):
+    two_sheets(doc)
+    doc.execute(RenameThing("s2", "Q1 plan"), author="ana")
+    assert source(doc, "A1") == "='Q1 plan'!A1+'Q1 plan'!A2"
+    assert shown(doc, "A1") == 12
+    assert reopen(doc).model.sheet(S1).cells[at("A1")]["v"] == source(doc, "A1")
+
+
+def test_undoing_a_sheet_rename_gives_the_name_and_every_formula_back_as_it_was_typed(doc):
+    two_sheets(doc)
+    before = {a: source(doc, a) for a in ("A1", "B1", "C1")}
+    doc.execute(RenameThing("s2", "Takings"), author="ana")
+    doc.undo("ana")
+    assert doc.model.sheet("s2").name == "Data"
+    assert {a: source(doc, a) for a in ("A1", "B1", "C1")} == before
+    assert shown(doc, "A1") == 12
+    doc.redo("ana")
+    assert source(doc, "A1") == "=Takings!A1+Takings!A2" and shown(doc, "A1") == 12
+
+
+def test_it_is_one_step_in_the_history(doc):
+    two_sheets(doc)
+    steps = len(doc.log)
+    doc.execute(RenameThing("s2", "Takings"), author="ana")
+    assert len(doc.log) == steps + 1
+
+
+def test_a_formula_that_named_a_sheet_there_was_none_of_is_not_touched(doc):
+    two_sheets(doc)
+    fill(doc, {"D1": "=Takings!A1"})
+    assert source(doc, "D1") == "=#REF!", "it never kept the sheet's name"
+    doc.execute(RenameThing("s2", "Takings"), author="ana")
+    assert source(doc, "D1") == "=#REF!" and code(doc, "D1") == "#REF!"
+
+
+def test_the_name_of_a_sheet_is_free_in_the_whole_document(doc):
+    two_sheets(doc)
+    define(doc, "Revenue", "A1:B2")
+    for taken, match in (("Sheet1", "a sheet"), ("sheet1", "a sheet"), ("Revenue", "a range")):
+        with pytest.raises(ValueError, match=f"There is already {match} called"):
+            doc.execute(RenameThing("s2", taken), author="ana")
+    assert doc.model.sheet("s2").name == "Data"
+
+
+def test_a_sheet_may_change_the_capitals_of_its_own_name_and_cannot_lose_its_name(doc):
+    two_sheets(doc)
+    doc.execute(RenameThing("s2", "DATA"), author="ana")
+    assert source(doc, "A1") == "=DATA!A1+DATA!A2"
+    with pytest.raises(ValueError, match="needs some text|needs a name"):
+        doc.execute(RenameThing("s2", ""), author="ana")
+
+
+def test_names_that_point_at_a_sheet_follow_it_by_id(doc):
+    two_sheets(doc)
+    define(doc, "Revenue", "A1:A2", sheet="s2")
+    doc.execute(RenameThing("s2", "Takings"), author="ana")
+    assert region_of(doc, "Revenue") == "Takings!A1:A2"
 
 
 def test_a_removed_sheet_gives_its_name_back_for_somebody_else(doc):
