@@ -52,11 +52,11 @@ def test_a_planned_time_is_not_written(unwritten):
     assert unwritten(after, a_deck()) == (Loss("planned-time", "", 1),)
 
 
-@BOTH
-def test_a_language_is_not_written(unwritten):
+def test_the_language_of_a_kept_pptx_is_not_written_but_that_of_a_kept_odp_is():
     after = a_deck()
     after.language = "de"
-    assert unwritten(after, a_deck()) == (Loss(NOT_WRITTEN, "language", 1),)
+    assert pptx_unwritten_changes(after, a_deck()) == (Loss(NOT_WRITTEN, "language", 1),)
+    assert odp_unwritten_changes(after, a_deck()) == ()
 
 
 @BOTH
@@ -98,4 +98,48 @@ def test_what_the_model_does_not_show_of_a_pptx_is_listed():
 
 
 def test_a_pptx_claudia_made_has_nothing_the_model_does_not_show():
+    assert pptx_import_losses(slides_to_pptx(a_deck())) == ()
+
+
+# ---------------------------------------------------------------------------- pptx: look, formatting, links
+def a_pptx_made_by_another_program() -> bytes:
+    """A text box with a bold word and a link: what PowerPoint users do."""
+    document = Presentation(BytesIO(slides_to_pptx(SlideModel.empty())))
+    slide = document.slides[0]
+    box = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(4), Inches(1))
+    paragraph = box.text_frame.paragraphs[0]
+    plain = paragraph.add_run()
+    plain.text = "plain "
+    bold = paragraph.add_run()
+    bold.text = "bold"
+    bold.font.bold = True
+    linked = paragraph.add_run()
+    linked.text = " site"
+    linked.hyperlink.address = "https://example.org"
+    out = BytesIO()
+    document.save(out)
+    return out.getvalue()
+
+
+def test_bold_words_and_links_of_a_pptx_are_listed_as_what_the_model_does_not_show():
+    losses = {loss.kind: loss.count for loss in pptx_import_losses(a_pptx_made_by_another_program())}
+    assert losses["formatting"] == 1 and losses["link"] == 1
+    assert losses["look"] == 1  # the text box takes the look of its theme, which the model does not know
+
+
+def test_a_shape_with_a_look_of_its_own_is_listed_once_for_each_object():
+    from pptx.dml.color import RGBColor
+    from pptx.enum.shapes import MSO_SHAPE
+
+    document = Presentation(BytesIO(slides_to_pptx(SlideModel.empty())))
+    for index in range(2):
+        shape = document.slides[0].shapes.add_shape(MSO_SHAPE.OVAL, Inches(1), Inches(1 + index), Inches(1), Inches(1))
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = RGBColor(255, 0, 0)
+    out = BytesIO()
+    document.save(out)
+    assert pptx_import_losses(out.getvalue()) == (Loss("look", "", 2),)
+
+
+def test_a_pptx_written_by_claudia_with_the_default_looks_has_no_look_to_list():
     assert pptx_import_losses(slides_to_pptx(a_deck())) == ()

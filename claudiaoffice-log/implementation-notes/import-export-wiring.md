@@ -76,3 +76,24 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   which this slice would have read back as a width (IEW-10).
 * Checked against LibreOffice 24.2.7 (`soffice --convert-to`): sizes survive xlsx to ods, ods to xlsx and each format
   to itself; a LibreOffice file from a csv comes in with its narrow columns, patches, and opens again.
+
+## Slice 7 — creates: rotation, pictures, print setup, language, pptx loss lists (D459–D461)
+* `odp_transform.py` is the whole of ODF's turn (`transform_of`, `turned_box`, `angle_of`); `odp._placing` writes a
+  turned object's size and transform (pictures too), `_Patch._moved` decides what a patch sets and takes off.
+  `XmlPart.set_attributes(remove=…)` (claudia-odf-io 0.3.0) is the one splice that needed to be new.
+* Pictures: `pictures.py` (what is held, the import record), `pptx_pictures.py` and `odp_pictures.py` (reading a
+  `p:pic` / `draw:frame`). `_classify` of both converters returns `image`; the pptx patch moved into `_patch_shape`
+  (it also writes a changed alt text now, for every kind of object).
+* Language: `claudia_odf_io.language` is the odt code of composes-io moved down (composes-io imports it and wraps the
+  patch's `OdfError` into its own `UnsupportedEdit`). `pptx_setup.py` has the print layout / paper (`write_print_setup`,
+  `read_print_setup`) and the language of runs (`speak`, `spoken`). `_unwritten.facets(keeps_print_layout=True)`
+  reduces `print_setup` to what a pptx cannot hold (margins other than the paper's own, page numbers).
+* `pptx_import_losses` adds `look`/`formatting`/`link` by comparing a shape with what `slides_to_pptx` writes for the
+  default style (`_default_looks`, built once per call).
+* Found on the way: `slides_to_pptx` never wrote a rotation (IEW-12); the pptx patch never wrote a changed alt text
+  (IEW-13); LibreOffice writes `skewX (-5E-017)` before every rotation it writes.
+* Checked against LibreOffice 24.2.7: both files open (pdf export), a pptx with a turned picture becomes an odp that is
+  read back with the same box, turn and alt text, and the other way round; the language of a pptx run is written by
+  LibreOffice into run styles, not the default style, so it does not come back from there as a deck language.
+* Library cases: `pptx-picture-and-language` (built), `odp-rotated-picture` (LibreOffice's own file, checked in); the
+  two `beyond-claudia-image` cases now see the picture as an object.

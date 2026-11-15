@@ -6,10 +6,19 @@ paragraph  read_text/set_text/insert_elements/hidden_content -- the text of one 
 putting change marks between its characters, and what it shows that is not its text
 meta       DocumentInfo, new_meta, update_meta, update_package_meta -- title, dates and people of a document
 package    new_package, problems -- a package from its parts, and a check that a file is one
+language   default_style_xml, read_language, patch_language -- the language of a file, in its default style
 report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
 """
 
 from ._version import __version__
+from .language import (
+    NO_LANGUAGE,
+    default_style_xml,
+    language_from_parts,
+    parts_of_language,
+    patch_language,
+    read_language,
+)
 from .meta import GENERATOR, DocumentInfo, new_meta, odf_date, read_info, update_meta, update_package_meta
 from .names import NS, decode_style_name, encode_style_name, local_name, qname
 from .package import MIME, VERSION, new_package, problems, read_manifest
@@ -21,6 +30,7 @@ __all__ = [
     "GENERATOR",
     "MIME",
     "NOT_WRITTEN",
+    "NO_LANGUAGE",
     "NS",
     "VERSION",
     "DocumentInfo",
@@ -31,16 +41,21 @@ __all__ = [
     "XmlPart",
     "__version__",
     "decode_style_name",
+    "default_style_xml",
     "encode_style_name",
     "hidden_content",
     "insert_elements",
+    "language_from_parts",
     "local_name",
     "new_meta",
     "new_package",
     "odf_date",
+    "parts_of_language",
+    "patch_language",
     "problems",
     "qname",
     "read_info",
+    "read_language",
     "read_manifest",
     "read_text",
     "set_text",

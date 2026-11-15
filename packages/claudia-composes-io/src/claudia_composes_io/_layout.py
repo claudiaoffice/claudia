@@ -9,15 +9,13 @@ from __future__ import annotations
 
 import re
 
-from claudia_core import PAPERS, LanguageError, PageSetup, PageSetupError, normalize_language
+from claudia_core import PAPERS, PageSetup, PageSetupError
 from claudia_core.page import DEFAULT_MARGIN
 
 #: How far a size may be from a preset's and still be that paper: Word and LibreOffice round A4 differently.
 PAPER_TOLERANCE = 1500  # mpt, a little over half a millimetre
 _UNITS = {"mm": 72000 / 25.4, "cm": 720000 / 25.4, "in": 72000.0, "pt": 1000.0, "pc": 12000.0}
 _LENGTH = re.compile(r"\s*(-?\d+(?:\.\d+)?|-?\.\d+)\s*(mm|cm|in|pt|pc)\s*")
-#: What a file says when a text has no language: LibreOffice writes "zxx" ("no linguistic content") and "none".
-NO_LANGUAGE = ("zxx", "none")
 
 
 def length_to_mpt(text: str | None) -> int | None:
@@ -86,32 +84,3 @@ def page_from_sizes(
 def sides_of(page: PageSetup) -> tuple[int, int]:
     """The width and height of the page as a file says them: the long side first when it lies on its side."""
     return (page.height, page.width) if page.orientation == "landscape" else (page.width, page.height)
-
-
-def language_from_parts(language: str | None, script: str | None, country: str | None) -> str | None:
-    """The BCP 47 tag of a file's language, script and country (``"de"``, ``None``, ``"AT"`` -> ``"de-AT"``), or
-    ``None`` when it says none or something that is no tag."""
-    if not language or language.lower() in NO_LANGUAGE:
-        return None
-    tag = "-".join(
-        part for part in (language, script if script and script.lower() not in NO_LANGUAGE else None) if part
-    )
-    if country and country.lower() not in NO_LANGUAGE:
-        tag += f"-{country}"
-    try:
-        return normalize_language(tag)
-    except LanguageError:
-        return None
-
-
-def parts_of_language(tag: str | None) -> tuple[str, str | None, str | None]:
-    """A BCP 47 tag as the language, script and country a file says it with (``"zxx"`` for none); what follows the
-    region (variants) is not in the three, as in every office format."""
-    if tag is None:
-        return NO_LANGUAGE[0], None, None
-    language, *rest = tag.split("-")
-    script = next((part for part in rest if len(part) == 4 and part.isalpha()), None)
-    country = next(
-        (part for part in rest if (len(part) == 2 and part.isalpha()) or (len(part) == 3 and part.isdigit())), None
-    )
-    return language, script, country

@@ -3,6 +3,28 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.5.0] - 2026-11-15
+
+A turned object, a picture, the print setup and the language reach the files (D459, D460, D461).
+
+### Added
+- `slides_to_pptx` writes the turn of an object (it never did); `slides_to_odp` writes it as `draw:transform`, and
+  `odp_to_slides` reads a plain rotation (also after LibreOffice's `skewX` of nothing); `apply_edits_to_odp` patches
+  place, size and turn together. `odp_import_losses` no longer reports `rotated-object` for these.
+- Pictures come in from `pptx_to_slides` and `odp_to_slides` as image objects, with their alt text, their turn and
+  whether they are decorative (pptx); `apply_edits_to_pptx` and `apply_edits_to_odp` move, resize, turn and describe
+  them and leave the picture alone. `pptx_import_losses` / `odp_import_losses` still report a picture the model cannot
+  hold as `picture`. Text boxes and shapes of a pptx get their alt text read, and a changed one is patched.
+- `slides_to_pptx` writes the print layout and paper (`prnPr`, `notesSz`) and the language (`lang` of the runs);
+  `pptx_to_slides` reads both; `apply_edits_to_pptx` patches the print setup. `slides_to_odp` writes the language
+  (default style of `styles.xml`), `odp_to_slides` reads it and `apply_edits_to_odp` patches it.
+- `pptx_import_losses` reports `look`, `formatting` and `link` of the objects it models.
+
+### Changed
+- `pptx_unwritten_changes` reports `print_setup` only for what a pptx has no place for (margins other than the paper's
+  own, page numbers) and `language` only for a kept file; `odp_unwritten_changes` no longer reports `language`.
+- Objects are numbered over text boxes, shapes and pictures, so the ids of a deck with pictures differ from before.
+
 ## [0.4.0] - 2026-11-14
 
 Every format says what it cannot hold or show, and what a patch has no place for (D450, D451), and what the earlier

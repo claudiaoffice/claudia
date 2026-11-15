@@ -5,6 +5,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-15
+
+### Added
+- `claudia_odf_io.language` (D461, moved from claudia-composes-io): `default_style_xml`, `read_language`,
+  `patch_language`, `language_from_parts`, `parts_of_language`, `NO_LANGUAGE`: the language of an OpenDocument file in the
+  default paragraph style. The package depends on claudia-core for the tag check.
+- `XmlPart.set_attributes(element, values, remove=())` takes attributes off an element too (an object that is turned
+  has no `svg:x`/`svg:y`, one that is not has no `draw:transform`; D459).
+
 ### Changed
 - `XmlPart` makes the bytes of an inserted or replacing element when the result is made, so that what is done to the
   element until then is in it; `set_attributes` takes the `xml:` prefix (`xml:id`) without a declaration.

@@ -18,9 +18,10 @@ frame. A planned time (D343) is not written -- an odp has no such thing -- and `
 What the model sees of an odp: every ``draw:page`` is a slide (``s1``, ``s2``... by its place) and every text box
 (a ``draw:frame`` holding a ``draw:text-box``), ellipse, rectangle and triangle directly on it is an object (``o1``,
 ``o2``... by its place over the whole deck), in the order the file draws them. An object is *modeled* only if the app
-can hold it as it is: it needs a place and a size in lengths, none of it rotated, all of it on the slide, and it must
-pass the checks the model makes of every object (a size of at least a few units, a circle that is round...). The same
-function decides that on the way in and on the way back, so an id means the same thing both times.
+can hold it as it is: it needs a place and a size in lengths (turned only by a plain rotation, D459), all of it on
+the slide, and it must pass the checks the model makes of every object (a size of at least a few units, a circle that
+is round...). The same function decides that on the way in and on the way back, so an id means the same thing both
+times.
 
 What an object looks like is not mapped (D407, as for odt): every text box comes in as "plain-box" with "body-text"
 words and every shape as "plain-shape" with "shape-label" words (D310), and its look in the file is untouched until
@@ -37,7 +38,7 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_core import ObjectBody, VisualObject, paragraph_for
+from claudia_core import ImageAsset, ObjectBody, VisualObject, paragraph_for
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
@@ -47,10 +48,13 @@ from claudia_odf_io import (
     LossLog,
     OdfError,
     XmlPart,
+    default_style_xml,
     hidden_content,
     local_name,
     new_meta,
     new_package,
+    patch_language,
+    read_language,
     read_text,
     set_text,
     update_package_meta,
@@ -62,6 +66,9 @@ from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._raster import Rasterise
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
+from .odp_pictures import description_element, description_of, name_of, picture_of
+from .odp_transform import inches, transform_of, turned_box
+from .pictures import body_of
 from .pptx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -70,8 +77,6 @@ _NS_DECLS = {prefix: uri for prefix, uri in NS.items() if prefix != "xml"}
 #: The size of a new slide, 16:9 the way LibreOffice makes one: what a model's 1600 by 900 units are written as.
 _SLIDE_CM = (28.0, 15.75)
 _CM_PER_INCH = 2.54
-_INCHES = {"cm": 1 / 2.54, "mm": 1 / 25.4, "in": 1.0, "pt": 1 / 72, "pc": 1 / 6, "px": 1 / 96}
-_LENGTH = re.compile(r"\s*(-?(?:\d+\.?\d*|\.\d+))\s*(cm|mm|in|pt|pc|px)\s*")
 
 _DEFAULT_TEXT_STYLE, _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE = "body-text", "plain-shape", "shape-label"
 #: A text box's own box (D310): its words are Body text, its box this style without properties.
@@ -124,12 +129,6 @@ def _q(prefix: str, local: str) -> str:
     return f"{{{NS[prefix]}}}{local}"
 
 
-def _inches(value: str | None) -> float | None:
-    """A length of the format (``"2.5cm"``, ``"1in"``) in inches, or ``None`` if it is not one."""
-    match = _LENGTH.fullmatch(value) if value else None
-    return float(match.group(1)) * _INCHES[match.group(2)] if match else None
-
-
 # -- reading a file ------------------------------------------------------------------------------------------------
 def _read(data: bytes) -> dict[str, bytes]:
     """The parts of an odp file, or an ``OdfError`` saying why it is not one."""
@@ -168,6 +167,9 @@ class _Object:
     h: int
     text: str
     paragraphs: list[etree._Element]
+    rotation: int = 0  # whole degrees clockwise (D459)
+    asset: ImageAsset | None = None  # the picture of an "image"
+    description: str = ""  # what an "image" says to someone who cannot see it
 
 
 @dataclass
@@ -202,9 +204,18 @@ class _Probe:
                 raise ValueError(f"the built-in shape library has no shape {shape_id!r}")
             self.model.define_shape(definition)
 
-    def holds(self, kind: str, shape: str | None, box: tuple[int, int, int, int], text: str) -> bool:
-        style, words = _default_styles(kind)
-        body = ObjectBody("o0", kind, box[2], box[3], style, paragraph_for("o0", words, text), shape=shape)
+    def holds(
+        self, kind: str, shape: str | None, box: tuple[int, int, int, int], text: str, asset: ImageAsset | None = None
+    ) -> bool:
+        if kind == "image":
+            if asset is None:
+                return False
+            if asset.id not in self.model.images:
+                self.model.define_image(asset)
+            body = body_of("o0", asset, (box[2], box[3]))
+        else:
+            style, words = _default_styles(kind)
+            body = ObjectBody("o0", kind, box[2], box[3], style, paragraph_for("o0", words, text), shape=shape)
         try:
             self.model.check_object(VisualObject(body, SlideAnchor("probe", box[0], box[1])))
         except ValueError:
@@ -219,8 +230,8 @@ def _layouts(*roots: etree._Element | None) -> dict[str, tuple[float, float]]:
             continue
         for layout in root.iter(_q("style", "page-layout")):
             props = layout.find("style:page-layout-properties", NS)
-            width = _inches(props.get(_q("fo", "page-width"))) if props is not None else None
-            height = _inches(props.get(_q("fo", "page-height"))) if props is not None else None
+            width = inches(props.get(_q("fo", "page-width"))) if props is not None else None
+            height = inches(props.get(_q("fo", "page-height"))) if props is not None else None
             if width and height:
                 sizes[layout.get(_q("style", "name")) or ""] = (width, height)
     return sizes
@@ -287,17 +298,19 @@ def _has_transition(style: etree._Element | None) -> bool:
 
 
 def _classify(
-    element: etree._Element, graphics: dict[str, etree._Element]
+    element: etree._Element, graphics: dict[str, etree._Element], parts: Mapping[str, bytes]
 ) -> tuple[str, str | None] | tuple[None, tuple[str, str]]:
-    """``("text", None)`` or ``("shape", id)`` for what the model can be asked to hold; ``(None, (kind, detail))``
-    for what is left out, by what it is."""
+    """``("text", None)``, ``("shape", id)`` or ``("image", None)`` for what the model can be asked to hold;
+    ``(None, (kind, detail))`` for what is left out, by what it is."""
     tag = local_name(element.tag)
     if tag == "frame":
         inner = {local_name(child.tag) for child in element if isinstance(child.tag, str)}
         # a table or an object carries a preview picture of itself: what it is comes before the picture
-        for name, kind in (("table", "table"), ("object", "object"), ("object-ole", "object"), ("image", "picture")):
+        for name, kind in (("table", "table"), ("object", "object"), ("object-ole", "object")):
             if name in inner:
                 return None, (kind, "")
+        if "image" in inner:
+            return ("image", None) if picture_of(element, graphics, parts) is not None else (None, ("picture", ""))
         if "text-box" in inner:
             return "text", None
         return None, ("frame", "")
@@ -336,11 +349,21 @@ def _own_words(paragraph: etree._Element, owner: etree._Element) -> bool:
     return True
 
 
-def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, int, int] | str:
-    """Where an element is, in slide units, or why it has no place (``"rotated"``, ``"unplaced"``, ``"off-slide"``)."""
-    if element.get(_q("draw", "transform")) is not None:
-        return "rotated"
-    values = [_inches(element.get(_q("svg", name))) for name in ("x", "y", "width", "height")]
+def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, int, int, int] | str:
+    """Where an element is, in slide units, and how far it is turned (whole degrees clockwise), or why it has no
+    place (``"rotated"``: a transform that is more than a rotation, ``"unplaced"``, ``"off-slide"``)."""
+    transform = element.get(_q("draw", "transform"))
+    values = [inches(element.get(_q("svg", name))) for name in ("x", "y", "width", "height")]
+    turn = 0
+    if transform is not None:
+        if values[0] is not None or values[1] is not None or values[2] is None or values[3] is None:
+            return "rotated"
+        turned = turned_box(transform, values[2] * 2.54, values[3] * 2.54)
+        if turned is None:
+            return "rotated"
+        degrees, x_cm, y_cm = turned
+        turn = round(degrees) % 360
+        values[0], values[1] = x_cm / 2.54, y_cm / 2.54
     if any(value is None for value in values):
         return "unplaced"
     x, y, w, h = (value for value in values if value is not None)
@@ -348,7 +371,7 @@ def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, 
     box = (round(x / per_x), round(y / per_y), round(w / per_x), round(h / per_y))
     if box[0] < 0 or box[1] < 0 or box[0] + box[2] > SLIDE_WIDTH or box[1] + box[3] > SLIDE_HEIGHT:
         return "off-slide"
-    return box
+    return (*box, turn)
 
 
 class _TextLooks:
@@ -462,7 +485,7 @@ def _read_paragraph(paragraph: etree._Element, looks: _TextLooks, *, bold: bool)
     return lines
 
 
-def _scan(content: etree._Element, styles: etree._Element | None) -> list[_Slide]:
+def _scan(content: etree._Element, styles: etree._Element | None, parts: Mapping[str, bytes]) -> list[_Slide]:
     """Every slide of the deck, with the objects on it that the model holds, its notes and what else there is."""
     layouts = _layouts(styles, content)
     looks = _TextLooks(content, styles)
@@ -477,7 +500,7 @@ def _scan(content: etree._Element, styles: etree._Element | None) -> list[_Slide
             size = next(iter(layouts.values()), (_SLIDE_CM[0] / _CM_PER_INCH, _SLIDE_CM[1] / _CM_PER_INCH))
         slide = _Slide(f"s{index}", page, master, size)
         for child in page:
-            _scan_child(slide, child, probe, numbers, graphics)
+            _scan_child(slide, child, probe, numbers, (graphics, parts))
         _read_notes(slide, looks)
         if page.get(_q("draw", "style-name")) and _has_transition(
             page_styles.get(page.get(_q("draw", "style-name")) or "")
@@ -488,7 +511,11 @@ def _scan(content: etree._Element, styles: etree._Element | None) -> list[_Slide
 
 
 def _scan_child(
-    slide: _Slide, child: etree._Element, probe: _Probe, numbers: Iterator[int], graphics: dict[str, etree._Element]
+    slide: _Slide,
+    child: etree._Element,
+    probe: _Probe,
+    numbers: Iterator[int],
+    held: tuple[dict[str, etree._Element], Mapping[str, bytes]],
 ) -> None:
     tag = child.tag
     if not isinstance(tag, str):
@@ -504,7 +531,8 @@ def _scan_child(
         return
     if namespace != NS["draw"] or local_name(tag) not in _DRAWN:
         return
-    kind, what = _classify(child, graphics)
+    graphics, parts = held
+    kind, what = _classify(child, graphics, parts)
     if kind is None:
         assert isinstance(what, tuple)
         slide.left_out.append(what)
@@ -513,12 +541,16 @@ def _scan_child(
     box = _box(child, slide.size)
     paragraphs = _words(child, kind)
     text = "\n".join(read_text(p) for p in paragraphs)
+    asset = picture_of(child, graphics, parts) if kind == "image" else None
     if isinstance(box, str):
         slide.left_out.append((f"{box}-object", kind))
-    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box, text):
+    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box[:4], text, asset):
         slide.left_out.append(("unfit-object", kind))
     else:
-        slide.objects.append(_Object(f"o{next(numbers)}", child, kind, shape, *box, text, paragraphs))
+        description = description_of(child) if kind == "image" else ""
+        slide.objects.append(
+            _Object(f"o{next(numbers)}", child, kind, shape, *box[:4], text, paragraphs, box[4], asset, description)
+        )
 
 
 def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, etree._Element | None, list[_Slide]]:
@@ -532,7 +564,7 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, etree._Ele
         )
     except etree.XMLSyntaxError as problem:
         raise OdfError(f"this OpenDocument file is not well-formed XML: {problem}") from problem
-    return parts, content, styles, _scan(content, styles)
+    return parts, content, styles, _scan(content, styles, parts)
 
 
 def _slide_ids(slides: list[_Slide]) -> list[str]:
@@ -545,13 +577,30 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
     the order the file draws them, from bottom to top. Place and size are read through the slide's own size (not an
     assumed shape: a 4:3 deck comes in as 4:3). What the model does not hold is in :func:`odp_import_losses`. Raises
     :class:`~claudia_odf_io.OdfError` for a file that is not an odp."""
-    _, _, _, slides = _document(odp_bytes)
+    _, _, styles, slides = _document(odp_bytes)
     if not slides:
-        return SlideModel.empty()
+        empty = SlideModel.empty()
+        empty.language = read_language(styles)
+        return empty
     model, library, defined = SlideModel(), ShapeLibrary.load(), set()
+    model.language = read_language(styles)
     for slide in slides:
         model.insert_slide(slide.id, notes=slide.notes)
         for found in slide.objects:
+            if found.kind == "image":
+                assert found.asset is not None  # the scan keeps an image only with its asset
+                if found.asset.id not in model.images:
+                    model.define_image(found.asset)
+                body = body_of(
+                    found.id,
+                    found.asset,
+                    (found.w, found.h),
+                    name=name_of(found.element),
+                    description=found.description,
+                    rotation=found.rotation,
+                )
+                model.insert_object(VisualObject(body, SlideAnchor(slide.id, found.x, found.y)))
+                continue
             style, words = _default_styles(found.kind)
             if found.kind == "text":
                 shape = None
@@ -563,7 +612,14 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                     model.define_shape(definition)
                     defined.add(shape)
             body = ObjectBody(
-                found.id, found.kind, found.w, found.h, style, paragraph_for(found.id, words, found.text), shape=shape
+                found.id,
+                found.kind,
+                found.w,
+                found.h,
+                style,
+                paragraph_for(found.id, words, found.text),
+                shape=shape,
+                rotation=found.rotation,
             )
             model.insert_object(VisualObject(body, SlideAnchor(slide.id, found.x, found.y)))
     return model
@@ -581,6 +637,8 @@ def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
         for kind, detail in slide.left_out:
             losses.add(kind, detail)
         for found in slide.objects:
+            if found.kind == "image":
+                continue  # a picture has no look of its own that the model leaves out
             if found.element.get(_q("draw", "style-name")) or any(
                 p.get(_q("text", "style-name")) for p in found.paragraphs
             ):
@@ -726,6 +784,18 @@ def _paragraphs(text: str, style_name: str | None) -> list[etree._Element]:
     return paragraphs
 
 
+def _placing(anchor: SlideAnchor, body: ObjectBody, cm_per_unit: tuple[float, float]) -> dict[str, str]:
+    """The attributes that put an object on its slide: its place and size, or -- for an object that is turned -- its
+    size and the transform that turns it and puts it there (D459)."""
+    per_x, per_y = cm_per_unit
+    sizes = {"svg:width": _length(body.w, per_x), "svg:height": _length(body.h, per_y)}
+    box = (anchor.x * per_x, anchor.y * per_y, body.w * per_x, body.h * per_y)
+    transform = transform_of(body.rotation, box)
+    if transform is None:
+        return {"svg:x": _length(anchor.x, per_x), "svg:y": _length(anchor.y, per_y), **sizes}
+    return {**sizes, "draw:transform": transform}
+
+
 @dataclass
 class _Writer:
     """What writing an object needs: the model it is from, the styles collected so far, the size of the slide."""
@@ -743,12 +813,7 @@ class _Writer:
         """The element of an object, or ``None`` for an image whose picture the model does not have."""
         body, anchor = obj.body, obj.anchor
         over = page_colour(self.model)
-        placing = {
-            "svg:x": _length(anchor.x, self.cm_per_unit[0]),
-            "svg:y": _length(anchor.y, self.cm_per_unit[1]),
-            "svg:width": _length(body.w, self.cm_per_unit[0]),
-            "svg:height": _length(body.h, self.cm_per_unit[1]),
-        }
+        placing = _placing(anchor, body, self.cm_per_unit)
         text = body.paragraph.text if body.paragraph is not None else ""
         words_css = look(self.model, body.paragraph.style) if body.paragraph is not None else {}
         words = self.looks.paragraph(words_css, over, self.pt_per_unit)
@@ -853,12 +918,13 @@ _NOTES_FRAME = {
 }
 
 
-def _styles_part() -> bytes:
+def _styles_part(language: str | None) -> bytes:
     width, height = (f"{value:g}cm" for value in _SLIDE_CM)
     declared = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in _NS_DECLS.items())
     return (
         f"{_DECLARATION}<office:document-styles {declared} "
-        f'office:version="1.3"><office:styles/><office:automatic-styles><style:page-layout style:name="PM1">'
+        f'office:version="1.3"><office:styles>{default_style_xml(language)}</office:styles>'
+        '<office:automatic-styles><style:page-layout style:name="PM1">'
         f'<style:page-layout-properties fo:page-width="{width}" fo:page-height="{height}" '
         'style:print-orientation="landscape" fo:margin-top="0cm" fo:margin-bottom="0cm" fo:margin-left="0cm" '
         'fo:margin-right="0cm"/></style:page-layout></office:automatic-styles><office:master-styles>'
@@ -903,7 +969,11 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     }
     extra.update({name: (png, "image/png") for name, png in writer.rasters.items()})
     return new_package(
-        "presentation", content.encode(), _styles_part(), meta=new_meta(info or DocumentInfo()), extra=extra
+        "presentation",
+        content.encode(),
+        _styles_part(model.language),
+        meta=new_meta(info or DocumentInfo()),
+        extra=extra,
     )
 
 
@@ -979,7 +1049,7 @@ class _Patch:
             if "styles.xml" in self.parts
             else None
         )
-        self.slides = _scan(self.part.root, self.styles_root)
+        self.slides = _scan(self.part.root, self.styles_root, self.parts)
         self.presentation = _presentation(self.part.root)
         self.by_id = {slide.id: slide for slide in self.slides}
         self.found = {obj.id: obj for slide in self.slides for obj in slide.objects}
@@ -1026,6 +1096,7 @@ class _Patch:
                 self._remove_slide(slide)
         self._patch_slides()
         self._flush()
+        self._patch_language()
         if not self.changed:
             return self.original
         self._add_styles()
@@ -1033,6 +1104,21 @@ class _Patch:
         if self.info is not None:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
+
+    def _patch_language(self) -> None:
+        """Give the file the language of the presentation, in the default style of its ``styles.xml`` (D461)."""
+        if self.baseline.language == self.current.language:
+            return
+        if "styles.xml" not in self.parts:
+            raise UnsupportedEdit("this file has no styles.xml to say the language in")
+        styles = XmlPart(self.parts["styles.xml"])
+        try:
+            changed = patch_language(styles, self.baseline.language, self.current.language)
+        except OdfError as problem:
+            raise UnsupportedEdit(str(problem)) from problem
+        if changed:
+            self.parts["styles.xml"] = styles.result()
+            self.changed = True
 
     def _remove_slide(self, slide: _Slide) -> None:
         if self.losses is not None:
@@ -1209,16 +1295,7 @@ class _Patch:
             return
         if before.body.kind != after.body.kind or before.body.shape != after.body.shape:
             raise UnsupportedEdit("changing an object's kind or shape outline cannot be patched onto the file yet")
-        per_x, per_y = self._per_cm(slide.size)
-        attributes: dict[str, str] = {}
-        for name, then, now, per in (
-            ("svg:x", before.anchor.x, after.anchor.x, per_x),
-            ("svg:y", before.anchor.y, after.anchor.y, per_y),
-            ("svg:width", before.body.w, after.body.w, per_x),
-            ("svg:height", before.body.h, after.body.h, per_y),
-        ):
-            if then != now:
-                attributes[name] = _length(now, per)
+        attributes, taken = self._moved(before, after, self._per_cm(slide.size))
         over, pt_per_unit = page_colour(self.current), slide.size[1] * 72 / SLIDE_HEIGHT
         if after.body.kind == "shape":
             old_look = look(self.baseline, before.body.style)
@@ -1234,12 +1311,56 @@ class _Patch:
             if _words_of(old_words) != _words_of(new_words):
                 style_name = self.looks.paragraph(new_words, over, pt_per_unit)
         text = words_after.text if words_after is not None else ""
-        if attributes:
-            self.part.set_attributes(found.element, attributes)
+        if attributes or taken:
+            self.part.set_attributes(found.element, attributes, remove=taken)
+            self.changed = True
+        if after.body.kind == "image" and before.body.description != after.body.description:
+            self._redescribe(found.element, after.body.description)
             self.changed = True
         if text != found.text or style_name is not False:
             self._retext(found, text, style_name)
             self.changed = True
+
+    def _redescribe(self, frame: etree._Element, description: str) -> None:
+        """Say ``description`` as the ``svg:desc`` of a picture's frame (none for no description)."""
+        existing = description_element(frame)
+        if not description:
+            if existing is not None:
+                self.part.remove(existing)
+            return
+        new = _el("svg", "desc")
+        new.text = xml_safe(description)
+        if existing is not None:
+            self.part.replace(existing, new)
+        else:
+            self.part.insert_into(frame, new)
+
+    @staticmethod
+    def _moved(
+        before: VisualObject, after: VisualObject, per_cm: tuple[float, float]
+    ) -> tuple[dict[str, str], tuple[str, ...]]:
+        """The attributes to set and those to take off for the new place, size and turn of an object (D459)."""
+        if before.body.rotation or after.body.rotation:
+            # a turned object has its place in its transform: write all of it again when anything of it changed
+            if (before.anchor, before.body.w, before.body.h, before.body.rotation) == (
+                after.anchor,
+                after.body.w,
+                after.body.h,
+                after.body.rotation,
+            ):
+                return {}, ()
+            placing = _placing(after.anchor, after.body, per_cm)
+            return placing, tuple(name for name in ("svg:x", "svg:y", "draw:transform") if name not in placing)
+        attributes: dict[str, str] = {}
+        for name, then, now, per in (
+            ("svg:x", before.anchor.x, after.anchor.x, per_cm[0]),
+            ("svg:y", before.anchor.y, after.anchor.y, per_cm[1]),
+            ("svg:width", before.body.w, after.body.w, per_cm[0]),
+            ("svg:height", before.body.h, after.body.h, per_cm[1]),
+        ):
+            if then != now:
+                attributes[name] = _length(now, per)
+        return attributes, ()
 
     def _retext(self, found: _Object, text: str, style_name: str | None | bool) -> None:
         lines = text.split("\n")

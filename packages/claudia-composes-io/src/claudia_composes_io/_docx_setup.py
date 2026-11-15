@@ -19,8 +19,9 @@ from docx.shared import Twips
 from lxml import etree
 
 from claudia_core import LanguageError, PageSetup, normalize_language
+from claudia_odf_io import NO_LANGUAGE
 
-from ._layout import NO_LANGUAGE, page_from_sizes, sides_of
+from ._layout import page_from_sizes, sides_of
 
 _MPT_PER_TWIP = 50
 _PAGE = " PAGE "

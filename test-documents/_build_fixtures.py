@@ -180,6 +180,19 @@ def build_pptx_beyond_claudia_image() -> bytes:
     return _pptx_bytes(prs)
 
 
+def build_pptx_picture_and_language() -> bytes:
+    """A deck in German with a turned picture that has alt text, a text box and a print layout of handouts."""
+    prs = _new_presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    box = slide.shapes.add_textbox(*_box(100, 80, 600, 120))
+    box.text_frame.text = "Guten Tag"
+    box.text_frame.paragraphs[0].runs[0]._r.get_or_add_rPr().set("lang", "de-DE")
+    picture = slide.shapes.add_picture(_red_square_png(), *_box(100, 300, 300, 300))
+    picture.rotation = 30
+    picture._element.xpath("./*[1]/p:cNvPr")[0].set("descr", "Ein roter Kasten")
+    return _pptx_bytes(prs)
+
+
 def _pptx_bytes(prs: pptx.Presentation) -> bytes:
     out = BytesIO()
     prs.save(out)
@@ -690,6 +703,7 @@ FIXTURES = {
     "pptx/shapes-and-text/source.pptx": build_shapes_and_text,
     "pptx/beyond-claudia/table/source.pptx": build_pptx_beyond_claudia_table,
     "pptx/beyond-claudia/image/source.pptx": build_pptx_beyond_claudia_image,
+    "pptx/picture-and-language/source.pptx": build_pptx_picture_and_language,
     "odt/rich-paragraph/source.odt": build_odt_rich_paragraph,
     "odt/tracked-change-suggestion/source.odt": build_odt_tracked_change_suggestion,
     "odt/lists-and-sections/source.odt": build_odt_lists_and_sections,

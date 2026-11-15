@@ -257,6 +257,16 @@ class TestSetAttributes:
         assert (element.get(f"{{{NS['svg']}}}x"), element.get(f"{{{NS['svg']}}}y")) == ("4cm", "5cm")
         assert result.endswith(b"/></root>")
 
+    def test_takes_out_attributes_with_the_space_before_them_and_touches_nothing_else(self):
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[0], {"svg:width": "5cm"}, remove=["svg:x", "svg:y"])
+        assert b'<a:frame a:name="A &amp; B" s:width="5cm">text &apos;kept&apos;</a:frame>' in part.result()
+
+    def test_takes_an_attribute_out_of_an_empty_element_and_ignores_one_the_tag_does_not_have(self):
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[1], {}, remove=["svg:x", "svg:y"])
+        assert part.result().endswith(b"<a:frame/></root>")
+
     def test_escapes_the_value(self):
         result = self.edited(0, {"draw:name": 'A "quoted" <b> & c'})
         assert etree.fromstring(result)[0].get(f"{{{NS['draw']}}}name") == 'A "quoted" <b> & c'

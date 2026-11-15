@@ -3,7 +3,7 @@ name = "claudia-odf-io"
 dynamic = ["version"]
 description = "claudia-odf-io"
 requires-python = ">=3.14"
-dependencies = ["claudia-opc-io", "lxml>=5"]
+dependencies = ["claudia-core", "claudia-opc-io", "lxml>=5"]
 
 [build-system]
 requires = ["hatchling"]

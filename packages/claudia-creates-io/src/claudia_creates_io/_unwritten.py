@@ -10,34 +10,48 @@ from __future__ import annotations
 
 from collections.abc import Collection
 
-from claudia_creates import SlideModel
+from claudia_core.page import DEFAULT_MARGIN
+from claudia_creates import PrintSetup, SlideModel
 from claudia_odf_io import Loss, LossLog, unwritten_changes
 
 from ._notes import markdown_to_lines
 
 #: The facets a converter writes, by the name :func:`facets` gives them.
-ODP_WRITTEN: frozenset[str] = frozenset(
+PPTX_WRITTEN: frozenset[str] = frozenset(
     {"slides", "notes", "styles", "palette", "shapes", "images", "objects", "renderings"}
 )
-PPTX_WRITTEN: frozenset[str] = ODP_WRITTEN
+ODP_WRITTEN: frozenset[str] = PPTX_WRITTEN | {"language"}
 
 #: The code a facet is reported under, where an export reported it before the facets existed: a planned time (D343).
 KINDS: dict[str, str] = {"times": "planned-time"}
 
 
-def facets(model: SlideModel) -> dict[str, object]:
+def _beyond_the_layout(setup: PrintSetup) -> dict[str, object]:
+    """What of a print setup a format that keeps the layout, the paper and the orientation cannot: margins other than
+    the paper's own, and the page numbers."""
+    page = setup.page
+    own = 0 if page.paper == "slide" else DEFAULT_MARGIN
+    margins = [page.margin_top, page.margin_right, page.margin_bottom, page.margin_left]
+    return {"margins": None if margins == [own] * 4 else margins, "page_numbers": page.page_numbers}
+
+
+def facets(model: SlideModel, *, keeps_print_layout: bool = False) -> dict[str, object]:
     """A presentation as the facets a converter writes or leaves out, in the order losses are reported: its own
-    serialization (the planned times come one entry per slide that has one)."""
-    return dict(model.serialize())
+    serialization (the planned times come one entry per slide that has one). For a format that writes how the slides
+    are laid out and on which paper, ``"print_setup"`` is what of it the format cannot write."""
+    data = dict(model.serialize())
+    if keeps_print_layout:
+        data["print_setup"] = _beyond_the_layout(model.print_setup)
+    return data
 
 
 def slides_unwritten_changes(
-    model: SlideModel, baseline: SlideModel | None, *, written: Collection[str]
+    model: SlideModel, baseline: SlideModel | None, *, written: Collection[str], keeps_print_layout: bool = False
 ) -> tuple[Loss, ...]:
     """What differs between ``baseline`` (``None``: an empty presentation, the start of a fresh export) and ``model``
     in a facet outside ``written``."""
-    start = facets(baseline if baseline is not None else SlideModel())
-    return unwritten_changes(start, facets(model), written=written, kinds=KINDS)
+    start = facets(baseline if baseline is not None else SlideModel(), keeps_print_layout=keeps_print_layout)
+    return unwritten_changes(start, facets(model, keeps_print_layout=keeps_print_layout), written=written, kinds=KINDS)
 
 
 def authored_objects(model: SlideModel) -> int:

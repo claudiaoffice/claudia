@@ -1,7 +1,7 @@
 """A picture lives in its own package part (``ppt/media/image1.png``), on a slide the edit never touches at
 all -- the other Tier 2 mechanic from the table fixture: a whole part, untouched by the edit, must come back
-byte-for-byte identical. ``slides_to_pptx`` cannot export claudia's own "image" object kind yet (model.py's
-docstring), so a picture is never modeled -- `pptx_to_slides` leaves the slide it is on with no objects at all."""
+byte-for-byte identical. The picture is also an image object now (D460): ``pptx_to_slides`` holds it, with its alt
+text, and an edit of another slide's text leaves its bytes alone."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from claudia_test_documents.case import Case
 
 def import_checks(model: SlideModel) -> None:
     assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached.")]
-    assert model.objects_on("s2") == []
+    assert [(o.body.kind, o.body.description) for o in model.objects_on("s2")] == [("image", "image.png")]
 
 
 def modify(model: SlideModel) -> SlideModel:
@@ -23,7 +23,7 @@ def modify(model: SlideModel) -> SlideModel:
 
 def after_checks(model: SlideModel) -> None:
     assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached below.")]
-    assert model.objects_on("s2") == []
+    assert [(o.body.kind, o.body.description) for o in model.objects_on("s2")] == [("image", "image.png")]
 
 
 CASE = Case(

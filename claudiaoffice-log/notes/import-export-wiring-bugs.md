@@ -26,6 +26,10 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-10 | computes, xlsx export | A column that had only a look (a style on the whole column) was written 13 characters wide, not at the sheet's default: it looked wider in Excel and LibreOffice than in Claudia. | slice 5b | `test_xlsx_layout.py::test_a_look_only_column_does_not_get_a_width_of_its_own` |
 | IEW-11 | computes, ods/xlsx | A column width or row height set in Claudia was missing from every export (xlsx did not even list it as a loss) and was dropped by an edit-and-reexport of an imported file; the ods import counted any file with sized columns as `layout`. | slice 5b | `test_xlsx_layout.py`, `test_ods_layout.py`, `test_server_import.py::test_a_resized_column_is_in_the_patched_download_and_no_loss` |
 
+| IEW-12 | creates, pptx/odp export | A turned object came out of Claudia upright: pptx fresh export wrote no rotation (the patch did), odp wrote none and left an object that somebody turned in a file out of the model (`rotated-object`). | slice 7 | `test_creates_rotation.py` |
+| IEW-13 | creates, pptx patch | Giving a text box, shape or picture of an imported pptx another description (alt text) changed nothing in the file. | slice 7 | `test_creates_pictures.py::test_a_text_box_is_given_a_description_in_a_kept_pptx_too` |
+| IEW-14 | creates, pptx/odp import | Pictures never came in, so a deck with pictures lost them from the preview and their alt text was invisible (BITV); the print layout, paper and language of a deck were never in a pptx, the language never in an odp. | slice 7 | `test_creates_pictures.py`, `test_creates_setup.py` |
+
 ## Limits (by design, for now)
 
 | ID | Limit | Why |
@@ -45,6 +49,9 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-L14 | An xlsx width is in characters of the file's Normal font (7 px each is Calibri 11). Our own files have Body text as Normal, so Excel and LibreOffice show a width 10–25 % wider than Claudia (LibreOffice: 150 px as 184). | Font metrics are not known to the converter. |
 | IEW-L15 | Only the first 256 columns and 10,000 rows have their sizes read from a file; none of the rest is reported. A patch keeps them. | A file sizes every column, nobody sees past the used ones. |
 | IEW-L16 | A resized ods column or row gets a new style, so a page break set on its old style is lost. A size beyond Excel's limit (255 characters, 409.5 points) is written at the limit (`layout:beyond-excel-limits`). | ods styles are not merged; Excel has the limits. |
+| IEW-L17 | An odp object turned by anything but a plain rotation (a real skew, a scale) is still left out (`rotated-object`). The turn is whole degrees. | The model has no skew; 20.4° is 20°. |
+| IEW-L18 | A cropped, flipped or stretched picture, one that is not PNG/JPEG/GIF/BMP/SVG, or an odp picture whose bytes are not in the package, stays in the file and is listed as `picture`. A picture added or removed in a kept pptx still means a new file (`not-patched`). | An image object keeps the picture's own proportions. |
+| IEW-L19 | A pptx has no place for margins (other than the paper's own) or page numbers of the print setup, an odp none for the print layout (`not-written` / `print_setup`). The language of a kept pptx is not rewritten (`not-written` / `language`); a rendered text container comes back as a plain picture. | Files have no such thing; a deck can mix languages. |
 | IEW-L12 | The ods names of one sheet are written at the end of the `table:table`; the standard's schema was not checked for this place (LibreOffice reads it). | See D457. |
 
 ## What to try (QA)
@@ -61,3 +68,12 @@ File ▸ Download as .xlsx and as .ods: both open in LibreOffice (and Excel) wit
 `layout` loss is listed. Open an imported file with sized columns, widen one, download again: the other columns, the
 cells' looks and the rest of the file are as they were. Give a size up (reset it): the line is at the default size in
 the next download. A column over 255 characters wide (about 1,785 px) is written at 255 and listed.
+
+*Slice 7, creates.* Turn a box, a shape and a picture in a presentation (Format ▸ Rotate…), download as .pptx and .odp,
+open both in LibreOffice (and PowerPoint): the objects are turned like in Claudia and no loss is listed. Open an odp
+or pptx with turned pictures: the preview shows them (alt text in the object's description), move one and download again:
+the picture is the same file, its alt text and turn as you left them. Set File ▸ Print setup to 6 slides a page on A4
+landscape and download as .pptx: PowerPoint's print dialog says handouts, 6 per page, and the file's notes page is A4
+landscape; margins and page numbers are listed as not written. Set the language to German and download as .odp and
+.pptx: spell-checking in LibreOffice uses German. Open a PowerPoint deck with coloured shapes and bold words: the
+download dialog lists `look` and `formatting`.

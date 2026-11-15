@@ -937,6 +937,60 @@
         "duration_s": 0.009,
         "detail": null
       }
+    },
+    {
+      "id": "pptx-picture-and-language",
+      "format": "pptx",
+      "feature": "picture-and-language",
+      "source": "pptx/picture-and-language/source.pptx",
+      "spec": "pptx/picture-and-language/spec.py",
+      "summary": "A German deck with a text box and a picture turned by 30 degrees that has alt text: the picture and the language come in; moving and turning the picture and giving it new alt text are patched in and its bytes stay.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier2",
+        "pictures"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T12:29:39Z",
+        "commit": "6765c9d",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.033,
+        "detail": null
+      }
+    },
+    {
+      "id": "odp-rotated-picture",
+      "format": "odp",
+      "feature": "rotated-picture",
+      "source": "odp/rotated-picture/source.odp",
+      "spec": "odp/rotated-picture/spec.py",
+      "summary": "A picture turned by 20 degrees as LibreOffice writes it (skewX of nothing, rotate, translate): it comes in as an image object with its alt text and turn; moving and turning it patches the transform and leaves the picture alone.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier1",
+        "pictures"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T12:29:40Z",
+        "commit": "6765c9d",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.032,
+        "detail": null
+      }
     }
   ]
 }

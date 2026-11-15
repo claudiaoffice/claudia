@@ -574,12 +574,14 @@ dev = [
 name = "claudia-odf-io"
 source = { editable = "packages/claudia-odf-io" }
 dependencies = [
+    { name = "claudia-core" },
     { name = "claudia-opc-io" },
     { name = "lxml" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "lxml", specifier = ">=5" },
 ]

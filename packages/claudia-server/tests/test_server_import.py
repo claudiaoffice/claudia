@@ -370,3 +370,62 @@ def test_a_server_that_keeps_documents_in_memory_cannot_take_a_file_in(tmp_path)
     with workbook_server() as client:
         token = upload(client, data, name="plan.claudia").json()["upload"]
         assert client.post(f"/api/uploads/{token}/place").status_code == 422
+
+
+@pytest.mark.parametrize("fmt", ["pptx", "odp"])
+def test_a_deck_with_a_picture_comes_back_patched_with_the_picture_turned_and_described_and_no_loss(fmt):
+    import struct
+
+    from claudia_creates_io import odp_to_slides, pptx_to_slides, slides_to_odp, slides_to_pptx
+
+    from claudia_core import (
+        DescribeObject,
+        ImageImport,
+        MoveObject,
+        ObjectBody,
+        RotateObject,
+        SetLanguage,
+        VisualObject,
+        decode_image,
+    )
+    from claudia_creates import SlideAnchor, SlideModel
+    from claudia_server.formats import FORMATS
+
+    header = b"GIF89a" + struct.pack("<HHBBB", 40, 20, 0, 0, 0)
+    frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 40, 20) + b"\x00" + b"\x02\x01\x00\x00"
+    asset = decode_image(header + frame + b"\x3b")
+    deck = SlideModel.empty()
+    deck.define_image(asset)
+    record = ImageImport.from_data(
+        {
+            "asset": asset.id,
+            "alt": "a picture",
+            "imported_by": "ana",
+            "imported_at": "2026-11-07T10:00:00.000Z",
+            "source": "disk",
+            "source_name": "pic.gif",
+            "source_path": None,
+        }
+    )
+    body = ObjectBody("o1", "image", 400, 200, "plain-image", image=asset.id, imported=record, description="before")
+    deck.insert_object(VisualObject(body, SlideAnchor("s1", 100, 150)))
+    data = slides_to_pptx(deck) if fmt == "pptx" else slides_to_odp(deck)
+    app = FORMATS[fmt][0]
+    suite = Suite([Module(app_hub(MemoryProvider(SlideModel), SlideModel), _directory())])
+    with TestClient(create_app(suite)) as client:
+        token = upload(client, data, name=f"deck.{fmt}").json()["upload"]
+        with client.websocket_connect(f"/api/{app}/docs/deck/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, app, "deck").document
+            doc.execute(MoveObject("o1", SlideAnchor("s1", 20, 30).to_data()), author="ann")
+            doc.execute(RotateObject("o1", 15), author="ann")
+            doc.execute(DescribeObject("o1", "after"), author="ann")
+            if fmt == "odp":
+                doc.execute(SetLanguage("de"), author="ann")
+            answer = request(ws, "export_office", {"format": fmt})["result"]
+    assert answer["patched"] is True and answer["losses"] == []
+    back = (pptx_to_slides if fmt == "pptx" else odp_to_slides)(base64.b64decode(answer["data"]))
+    found = next(iter(back.objects.values()))
+    assert (found.anchor.x, found.anchor.y, found.body.rotation, found.body.description) == (20, 30, 15, "after")
+    assert back.images[found.body.image].data == asset.data

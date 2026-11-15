@@ -1,6 +1,6 @@
 """A picture lives in its own package part (``Pictures/...``) and is placed by a ``draw:frame`` on a slide; the
 edit rewrites the words of a text box next to it. The part must come back byte for byte, and so must the frame
-that places it (D412)."""
+that places it (D412). The picture is also an image object now (D460); the edit does not touch it."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ PICTURE = "Pictures/10000000000000100000001083524B19.png"
 
 def import_checks(model: SlideModel) -> None:
     assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached.")]
-    assert model.objects_on("s2") == []
+    assert [(o.body.kind, o.body.description) for o in model.objects_on("s2")] == [("image", "image.png")]
 
 
 def modify(model: SlideModel) -> SlideModel:
@@ -27,7 +27,7 @@ def modify(model: SlideModel) -> SlideModel:
 
 def after_checks(model: SlideModel) -> None:
     assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Photo attached below.")]
-    assert model.objects_on("s2") == []
+    assert [(o.body.kind, o.body.description) for o in model.objects_on("s2")] == [("image", "image.png")]
 
 
 def preserve_frame(original: bytes, edited: bytes) -> None:

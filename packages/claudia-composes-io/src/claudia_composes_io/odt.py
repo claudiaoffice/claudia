@@ -41,6 +41,7 @@ from claudia_odf_io import (
     OdfError,
     XmlPart,
     decode_style_name,
+    default_style_xml,
     hidden_content,
     insert_elements,
     new_meta,
@@ -56,7 +57,6 @@ from ._odt_lists import LIST, ListFlow, ListNames, can_rebuild, read_lists
 from ._odt_setup import (
     FOOTER_STYLE,
     FOOTER_STYLE_XML,
-    default_style_xml,
     master_page_xml,
     page_layout_xml,
     patch_language,

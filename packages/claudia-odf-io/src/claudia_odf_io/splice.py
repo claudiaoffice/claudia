@@ -19,7 +19,7 @@ no longer describe it. To change an element, build a changed copy and :meth:`~Xm
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterator, Mapping
 from dataclasses import dataclass
 from xml.parsers import expat
 
@@ -201,12 +201,13 @@ class XmlPart:
         else:
             self._edit(span.close, span.close, data)
 
-    def set_attributes(self, element: etree._Element, values: Mapping[str, str]) -> None:
+    def set_attributes(self, element: etree._Element, values: Mapping[str, str], remove: Collection[str] = ()) -> None:
         """Change (or add) attributes of ``element``, named with the prefixes this layer knows (``"svg:x"``), and
         touch nothing else: not the other attributes of the tag, not their order, spacing or quoting, not what is
         inside the element. The prefix written is the one the file binds to that namespace; the edit can be made
         together with edits inside the element. Moving a shape is this, and a person who opens the file in the
-        program it came from finds nothing else changed."""
+        program it came from finds nothing else changed. The attributes named in ``remove`` are taken out (with the
+        space before them) when the tag has them."""
         span = self._span(element)
         tag = self.raw[span.start : span.open_end]
         empty = tag.endswith(b"/>")
@@ -225,6 +226,10 @@ class XmlPart:
             quote = existing.group(2)[:1]
             start, end = existing.span(2)
             replacements.append((start, end, quote + _attribute_text(value, quote) + quote))
+        for name in remove:
+            gone = found.get(self._written_name(element, name))
+            if gone is not None:
+                replacements.append((*gone.span(0), b""))
         for start, end, text in sorted(replacements, reverse=True):
             body = body[:start] + text + body[end:]
         trailing = body[len(body.rstrip()) :]

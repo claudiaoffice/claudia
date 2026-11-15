@@ -14,9 +14,10 @@ from dataclasses import dataclass
 from lxml import etree
 
 from claudia_core import PageSetup
-from claudia_odf_io import NS, XmlPart
+from claudia_odf_io import NS, OdfError, XmlPart, language_from_parts
+from claudia_odf_io import patch_language as patch_default_language
 
-from ._layout import language_from_parts, length_to_mpt, mpt_to_points, page_from_sizes, parts_of_language, sides_of
+from ._layout import length_to_mpt, mpt_to_points, page_from_sizes, sides_of
 from .docx import UnsupportedEdit
 
 
@@ -75,19 +76,6 @@ def master_page_xml(page: PageSetup) -> str:
         f'<style:master-page style:name="{_MASTER_NAME}" style:page-layout-name="{_LAYOUT_NAME}">{footer}'
         "</style:master-page>"
     )
-
-
-def default_style_xml(language: str | None) -> str:
-    """The default paragraph style that says ``language``; nothing for a text that has none."""
-    if language is None:
-        return ""
-    name, script, country = parts_of_language(language)
-    said = (
-        f'fo:language="{name}"'
-        + (f' fo:script="{script}"' if script else "")
-        + (f' fo:country="{country}"' if country else "")
-    )
-    return f'<style:default-style style:family="paragraph"><style:text-properties {said}/></style:default-style>'
 
 
 # -- reading ---------------------------------------------------------------------------------------------------------
@@ -201,31 +189,7 @@ def _patch_page_numbers(part: XmlPart, master: etree._Element, wanted: bool) -> 
 
 def patch_language(part: XmlPart, before: str | None, after: str | None) -> bool:
     """Make the language of the file ``after``; did it change anything?"""
-    if before == after:
-        return False
-    styles = part.root.find("office:styles", NS)
-    if styles is None:
-        raise UnsupportedEdit("this file has no default style to give a language")
-    default = next(
-        (s for s in styles.iterfind("style:default-style", NS) if s.get(_q("style", "family")) == "paragraph"), None
-    )
-    if default is None:
-        if after is not None:
-            part.insert_into(styles, default_style_xml(after).encode(), at_start=True)
-        return after is not None
-    properties = default.find("style:text-properties", NS)
-    if properties is None:
-        if after is not None:
-            part.insert_into(
-                default, default_style_xml(after).split(">", 1)[1].rsplit("</style:default-style>", 1)[0].encode()
-            )
-        return after is not None
-    name, script, country = parts_of_language(after)
-    values = {"fo:language": name}
-    for attribute, value in (("fo:script", script), ("fo:country", country)):
-        if value is not None:
-            values[attribute] = value
-        elif properties.get(_q("fo", attribute.split(":")[1])) is not None:
-            values[attribute] = "none"
-    part.set_attributes(properties, values)
-    return True
+    try:
+        return patch_default_language(part, before, after)
+    except OdfError as error:
+        raise UnsupportedEdit(str(error)) from error
