@@ -6,11 +6,24 @@ each would only be noise. The name is kept by the paragraph's id, which a text n
 paragraph through every edit, and undo of a join gives the paragraph that came back its name back.
 """
 
+from dataclasses import replace
+
 import pytest
 from composes_helpers import SENTENCE
 
-from claudia_composes import InsertText, JoinBlocks, SetListItem, SetStyle, SplitBlock, TextModel
-from claudia_core import CreateList, Document, ListDef, ListItem, MemoryStore, RenameThing, ThingRenamed
+from claudia_composes import BlockAnchor, InsertText, JoinBlocks, SetListItem, SetStyle, SplitBlock, TextModel
+from claudia_core import (
+    CreateList,
+    Document,
+    ListDef,
+    ListItem,
+    MemoryStore,
+    ObjectBody,
+    RenameThing,
+    ThingRenamed,
+    VisualObject,
+    paragraph_for,
+)
 
 
 @pytest.fixture
@@ -102,3 +115,22 @@ def test_a_state_from_before_named_paragraphs_has_none():
 def test_an_unknown_paragraph_is_no_thing(three):
     with pytest.raises(ValueError):
         three.model.thing_name("b99")
+
+
+def test_a_paragraph_whose_style_the_text_lacks_is_judged_by_its_own_style_id(three):
+    """A paragraph of a file can name a style the text does not have; it is still a thing of some kind."""
+    block = next(b for b in three.model.blocks if b.id == "b3")
+    assert three.model.block_kind(replace(block, style="no-such-style")) == "paragraph"
+    assert three.model.block_kind(replace(block, style="heading-1")) == "heading"
+
+
+def test_an_object_is_named_in_the_same_namespace_as_the_paragraphs(three):
+    box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
+    three.model.insert_object(VisualObject(box, BlockAnchor("b3", 3)))
+    three.execute(RenameThing("b3", "Fox"), author="ann")
+    three.execute(RenameThing("o1", "Note"), author="ann")
+    assert three.model.thing_name("o1") == "Note"
+    with pytest.raises(ValueError):
+        three.execute(RenameThing("o1", "fox"), author="ann")
+    three.undo("ann")
+    assert three.model.thing_name("o1") == ""
