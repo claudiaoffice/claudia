@@ -117,7 +117,7 @@ statement in the docs or on the website).
 | CODE-11 | P3 | Code | Windows client: its generated menu is stale, and a test depends on the clone's folder name | **fixed** |
 | CODE-12 | P3 | Code | `.gitignore` ignores the tracked `docs/` sources; two test documents are committed | **fixed** |
 | CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | open (re-checked 2026-11-13; now also SEC-18, PERF-10) |
-| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | open; 14 identical files at `cfa2d91` (11 before) |
+| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | open; re-checked at `7994b00`: 11 identical source files (1,658 lines), 10 test files, 3 generated menus |
 | CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
 | CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |
 | SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |
@@ -140,7 +140,7 @@ statement in the docs or on the website).
 | CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **fixed** 2026-11-13 (D289) |
 | CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |
 | CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |
-| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13 |
+| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13; 1,121 lines at `7994b00` (see CODE-27, CODE-29) |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |
 | CODE-22 | P2 | Code / Import | An xlsx with an array formula failed to import; one edit dropped a sheet's lists, icon sets and spill marks | **fixed** 2026-11-13 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
@@ -154,6 +154,21 @@ statement in the docs or on the website).
 | PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | partly fixed 2026-11-15; supersessions need a decision |
 | CODE-26 | **P1** | Code / macOS client | Closing a window with its close button crashes the macOS app every time (Neutralino 6.8.0) | **fixed** 2026-11-15 (D506) |
+| CODE-27 | P2 | Code / Arch | The object methods are written once in the kernel and three times on the wire | **new, open** |
+| CODE-28 | P3 | Code / Arch | An app's server wiring is spread over five tables in `apps.py` | **new, open** |
+| CODE-29 | P3 | Code / Arch | `claudia_server` is flat: app glue next to infrastructure | **new, open** |
+| CODE-30 | P3 | Code / server | Parameters are validated twice, and a handler's bug answers `command_error` | **new, open** |
+| CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |
+| CODE-32 | P3 | Code / clients | The menu's one source lives inside the Linux shell, and the web menus are a second copy | **new, open** |
+| CODE-33 | P3 | Code | `claudia-client` is a package no client uses | **needs decision** |
+| CODE-34 | P3 | Code / Windows | Atomic writes are written seven times; five lack the Windows retry | **new, open** |
+| CODE-35 | P3 | Code / web | The web sessions repeat their write call 57 times and three shared methods | **new, open** |
+| CODE-36 | P3 | Code / web | `localStorage` is guarded six times over | **new, open** |
+| CODE-37 | P3 | Code / web | Two image dialogs that differ in one prop | **new, open** |
+| CODE-38 | P3 | Code / naming | computes kept the generic names (`Session`, `Workspace.vue`, `standin.py`) | **new, open** |
+| CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |
+| CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **new, open** |
+| CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1098,6 +1113,10 @@ servers, settings, shell-page-entry: about 1,550 lines) and the rest differing o
 **Recommendation:** move the identical files into one `clients/neutralino/` package (or `clients/shared/`) that both
 build from, keeping per-OS `paths`, `launch`, `server`, `menu`; until then, a test that the shared files stay
 byte-identical, so a fix in one copy fails the build until it is in the other.
+**Re-checked at `7994b00` (2026-11-15, measured):** 11 of 22 source files byte-identical (1,658 lines), 10 test files
+identical (1,233 lines), and the two `tools/generate_menu.py` copies write byte-identical `src/generated/menu.*.json`.
+Still nothing checks the copies stay equal. Merging them needs D113 ("one package per OS") amended: asked in
+`notes/code-review-2026-11-15.md`.
 
 ### CODE-15 · `./start.sh` folder layout · P2 · fixed 2026-11-12
 **Evidence.** Documents in `<repo>/docs-<app>` (before 2938f0a: `demo-docs`, `demo-docs-<app>` — the folders people
@@ -1464,6 +1483,145 @@ window"), and `tests/build-shell.test.ts` checks the flag in each config. **Not 
 checked by the unit tests only; the acceptance is closing each of the three windows with the close button, before and
 after a document is open, and the app ending without a crash report. Upstream: worth a Neutralino issue (run the block
 directly when already on the main thread).
+
+## Code review of 2026-11-15 at `7994b00`
+
+Owner's request: duplication, separation of concerns, naming, convoluted solutions. Overview, order of work and open
+questions: `notes/code-review-2026-11-15.md`. Evidence is **read** at `7994b00` unless it says **measured**.
+
+### CODE-27 · The object methods are written once in the kernel and three times on the wire · P2 · new, open
+`claudia_core.objects` says an app "does not bring its own copy of place-an-object, take-it-away, stack-it, size-it"
+(D177), and in the kernel that holds. One layer up it does not: `add_image`, `describe_object`, `move_object`,
+`resize_object`, `rotate_object` and `remove_object` are written per app in `claudia_server/computes.py` (786–870),
+`creates.py` (129–210) and partly `composes.py` (495–520). The bodies are the same; only the anchor
+(`CellAnchor`, `SlideAnchor`, `BlockAnchor`) and the container check differ. Around them: `_rev(ctx)` three times
+(computes 501, composes 137, creates 110); a fresh-id generator in `creates._fresh(prefix, taken)` (115), a copy of it
+in `rendered.py` (115), and four single-prefix copies in `computes.py` (214–248); "execute, then answer the revision"
+spelt out 25 times in `computes.py` where `creates.py` has `_done` (124). The apps also register methods two ways
+(decorators in computes and composes, `_add_*_methods(table)` in creates).
+**Recommendation:** one `claudia_server/object_methods.py` on the model of `search_methods.py`: an app supplies a
+small adapter (anchor from the request's parameters, which container it is in) and the shared handlers are registered
+once on its table. `fresh_id(prefix, taken)` and `done(ctx, command, base, **extra)` live there too. Test first: one
+parametrised test that runs the six methods against all three apps.
+
+### CODE-28 · An app's server wiring is spread over five tables · P3 · new, open
+`claudia_server/apps.py` keys five dicts by app name: `_METHODS` (23), `_ENGINES` (44), `MODEL_METHODS` (55),
+`SUGGEST_METHODS` (73), `_LENSES` (76), plus `if model_cls.app == "creates"` in `methods_for` (84) and a computes-only
+`workbook_context`. Changing what an app may let the AI do, or adding an app, means five edits in one file far from the
+app's own code, and nothing says an app is complete.
+**Recommendation:** one `AppSpec` per app (method table or factory, stand-in engine, model methods, suggest methods,
+lens), declared beside the app's methods; `apps.py` keeps a registry of specs. Fits the single-server move (D430).
+
+### CODE-29 · The server package is flat: app glue next to infrastructure · P3 · new, open
+`claudia_server` has 57 modules in one folder. App-specific ones (`computes.py`, `composes.py`, `creates.py`,
+`composes_lists.py`, `computes_search.py`, `composes_search.py`, `creates_search.py`, `workbook_lens.py`,
+`slide_lens.py`, `standin.py`, `standin_text.py`) sit beside the gateway, hub, auth, certificates, file store and
+workers. Extends CODE-21.
+**Recommendation:** `claudia_server/apps/<app>/` with `methods`, `search`, `lens`, `standin` (and feature modules
+for CODE-21); shared wire code (`object_methods`, `search_methods`, `rendered`, `styles`, `thing_names`) in one
+`shared/` folder or at the top.
+
+### CODE-30 · Parameters are validated twice, and a handler's bug answers `command_error` · P3 · new, open
+(a) A method's parameters are a string (`"id:str row:int col:int base:revision?"`, parsed by
+`protocol._parse_params`, 263) apart from the handler's keyword arguments; nothing checks that the two agree, so a
+mismatch shows only when the method is called. (b) Handlers check again what the type already did, or what a type
+could do: `computes._limit` (393) re-checks `number?`; `random_preview` checks `isinstance(distribution, str)` though
+the spec says `str`; `_index` (206) and `_whole` (306) are one range check twice, with different messages.
+(c) `MethodTable.dispatch` (416) turns every `ValueError` and `LookupError` into `command_error` with the exception's
+text, because commands refuse that way: a `KeyError` from a bug in a handler looks like a refusal and is not logged.
+**Recommendation:** a test that each method's parameter names equal its handler's keyword arguments
+(`inspect.signature`); ranges as parameter kinds or one helper; commands refuse with `KernelError` subclasses so that
+`dispatch` can log anything else as an internal error.
+
+### CODE-31 · The history speaks English to everybody · P2 · new, open
+Every command's `label` and `summary` is an English f-string (about 65 `summary` properties in core, computes,
+composes and creates, e.g. "The document lets go of the shape …", `claudia_core/objects.py` 1036). `_entry_view`
+(`protocol.py` 742) sends them as they are, and `SidePanel.vue` (449) shows `summary` and `origin` ("undo", "redo")
+untranslated. None of them is in `po/claudia.pot`. A German user sees German menus and an English history. It is
+also presentation text in the kernel.
+**Recommendation:** a command describes itself as a msgid plus parameters; the server translates in the connection's
+locale with `msg` (as it does for errors) or the client does. Test first: a German connection's `log` answer has no
+English summary for a cell edit, a moved object and an undo.
+
+### CODE-32 · The menu's one source lives inside the Linux shell, and the web menus are a second copy · P3 · new, open
+`clients/linux/src/claudia_shell_gtk/manifest.py` is the source for the GTK menus, both Neutralino shells' menus
+(`clients/{macos,windows}/tools/generate_menu.py`, two near-identical generators writing byte-identical JSON) and the
+web's keys (`scripts/generate_keys.py`). It also holds the GTK XML writer (`menu_xml`). The web's menu *structure* is
+written again by hand (`web/app/lib/document-menus.ts` and the three workspaces), and D361's test compares the two.
+`LANGUAGES` is kept by hand in `manifest.py` and `web/app/lib/i18n.ts` (D160).
+**Recommendation:** the manifest as data in a neutral place (`clients/contract/menus/` or a small package), the GTK
+XML writer staying in the Linux shell; the web's menu structure generated from it like `keys.generated.ts`, each
+client binding handlers by action id; one generator writing the Neutralino JSON once (with CODE-14).
+
+### CODE-33 · `claudia-client` is a package no client uses · P3 · needs decision
+"What every client of a Claudia server shares": `TlsPolicy`. Only its own tests import it. The Linux shell cannot
+(`clients/linux/README.md`, point 3: it needs Python 3.14 and `claudia-core`) and has its own `trust.py` and
+`x509.py`; the other clients are TypeScript. But `claudia_client/trust.py` imports only the standard library: the
+`claudia-core` dependency in its `pyproject.toml` is unused, and it is exactly what keeps the shell from using it.
+**Decision needed:** delete the package, or drop the dependency, target 3.12 and let the Linux shell use it instead of
+its own copy.
+
+### CODE-34 · Atomic writes are written seven times; five lack the Windows retry · P3 · new, open
+`state._replace` (`claudia_server/state.py` 65) and `journal._replace` (`claudia_container/journal.py` 171) retry
+`os.replace` on Windows, where antivirus and indexing hold just-written files. The plain `os.replace` in
+`claudia_fonts/starter.py` (107), `claudia_fonts/webfonts.py` (65), `claudia_server/hyphenation.py` (206) and
+`claudia_typeset/cache.py` (64) runs in the same server, which the Windows client starts, so those writes can fail
+the way the other two did. Separately, `starter.py` and `hyphenation.py` share `FetchError`, `read_lock`, `_download`,
+`_write` and `fetch` nearly verbatim (pinned downloads checked against a lock file).
+**Recommendation:** `write_atomically(path, data)` with the retry in one shared place (`claudia_core` or a small
+utility module) used by all seven; one pinned-download helper for fonts and hyphenation patterns.
+
+### CODE-35 · The web sessions repeat their write call 57 times and three shared methods · P3 · new, open
+`(await this.attempt('<method>', { …, base: this.state.revision })) !== false` appears 24 times in `lib/session.ts`,
+16 in `text-session.ts`, 15 in `slide-session.ts` and 2 in `base-session.ts`. `replacePalette` and `checkCss` exist
+in all three sessions (identical in computes and creates). composes' session checks `denied()` and wraps writes in
+`act()`; the other two do neither.
+**Recommendation:** `protected write(method, params)` in `BaseSession` that adds `base` and answers a boolean; palette
+and CSS checks moved into `BaseSession`; one write path for all three, or a comment saying why composes differs.
+
+### CODE-36 · `localStorage` is guarded six times over · P3 · new, open
+`safeStorage()` is defined in `lib/ai-mode.ts` (35), `server-bookmarks.ts` (21), `admin-session.ts` (37),
+`show-prefs.ts` (25), `grid.ts` (27) and `theme.ts` (39); `OpenDialog.vue`, `TextWorkspace.vue`, `StyleSpec.vue`,
+`locale.ts` and `mine.ts` have their own try/catch, and `remembered()` exists three times with different signatures (`OpenDialog.vue`, `TextWorkspace.vue`, `StyleSpec.vue`).
+**Recommendation:** `lib/storage.ts` with `safeStorage()` and `remembered(key, allowed, fallback)`.
+
+### CODE-37 · Two image dialogs that differ in one prop · P3 · new, open
+`ImageImportDialog.vue` (creates) and `SheetImageImportDialog.vue` (computes) are the same 160 lines, CSS included;
+they differ in the session type and in `frameFor` versus `anchorFor`. The first one's header comment still says
+"Insert ▸ Image"; the menu entry is Edit ▸ Image… (`manifest.py` 1020).
+**Recommendation:** one dialog with a `place(data) => Promise<string | null>` prop each app supplies.
+
+### CODE-38 · computes kept the generic names, and the code uses three vocabularies · P3 · new, open
+`web/app/lib/session.ts`'s `Session` and `components/Workspace.vue` are the workbook's, beside `TextSession`,
+`SlideSession`, `TextWorkspace` and `SlideWorkspace`. On the server, `standin.py`'s `ScriptedEngine` is computes'
+stand-in and `standin_text.py`'s `TextEngine` is composes' (it reads like a layout engine); creates' is
+`NoModelEngine` in `apps.py`. Names mix the brand (`computes.py`, `composes_search.py`), the document kind
+(`workbook_lens.py`, `slide_lens.py`, `SheetGrid.vue`) and the model (`WorkbookModel`, `TextModel`).
+**Recommendation:** `SheetSession` / `sheet-session.ts`, `SheetWorkspace.vue`, `WorkbookStandIn`, `TextStandIn`; and
+one rule written down (e.g. the brand names an app's package or folder, the document kind names the things in it).
+
+### CODE-39 · `OpenDialog.vue` does five jobs in 1,615 lines · P3 · new, open
+Server bookmarks (connect, switch, rename), the shell bridge, the document list with collections and drag and drop,
+file import, recovery and details editing, plus remembered settings, in one component. `SheetGrid.vue` (1,568) and
+`Workspace.vue` (1,389) are next. All 85 components sit in one flat folder.
+**Recommendation:** `ServerList`, `DocumentList` (with collections) and `FileImport` as components or composables
+that `OpenDialog` arranges; components grouped by app and purpose (`sheet/`, `text/`, `slide/`, `admin/`,
+`dialogs/`), which Nuxt resolves with path prefixes.
+
+### CODE-40 · An orphaned build file in the macOS creates app · P3 · new, open
+`clients/macos/apps/creates/inject/claudia-bridge.js` (16 KB) is an esbuild bundle of `src/menu.ts`, `src/page-bridge.ts`,
+`src/file-dialog.ts` and `src/inject-entry.ts`; the last three no longer exist, and no config, script, test or source
+names the file. composes and computes have no such folder. It is the leftover of the superseded D159 adapter.
+**Recommendation:** delete it once a build of the creates bundle confirms nothing picks it up.
+
+### CODE-41 · Import cycles in computes are worked around with function-level imports · P3 · new, open
+**Measured:** ruff's PLC0415 is off for the whole repository ("local imports break the kernel's import cycles on
+purpose"); there are 44 such imports, 29 in `claudia_computes`. Two directions of knowledge cause most of them:
+`CellRegion.transformed` (`region.py` 43) imports and switches on command classes, so every new structural command
+means editing the region; `WorkbookModel` imports its own commands (`model.py` 488, 655) to build its first sheet and
+to rename a sheet as commands.
+**Recommendation:** let a command say how it moves a region (a method, or a table keyed by command kind) and move
+command construction out of the model; then turn PLC0415 on per package with named exceptions.
 
 ## Website
 

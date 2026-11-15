@@ -30,6 +30,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `bitv-scorecard-2026-11-13.md` | An estimate of where the web app stands against BITV 2.0 / WCAG 2.1 AA, by principle (about 59 of 100 today, about 70 with an accessible grid), the user groups to weigh it by, the order of work, and what the quick fixes on branch `bitv` did and left | 2026-11-13 |
 | `bitv-grid-and-alt-text-2026-11-13.md` | The accessible grid (UX-02) and alt text with decorative objects (UX-31) built on `bitv`: structure, focus, the live region, what axe found, the model and export for descriptions, what was not verified; mock-up `mockups/describe-object-and-grid-structure.svg` (built before it was agreed) | 2026-11-13 |
 | `code-map.md` | The narrative map of the repository, **stale**: written at `842d739`, six packages | 2026-11-02 |
+| `code-review-2026-11-15.md` | Review for duplication, separation of concerns, naming and convoluted code at `7994b00`: the picture, measurements, order of work and open questions; items CODE-27 to CODE-41 in `bugtracker.md` | 2026-11-15 |
 
 ## Three documents were deliberately not copied
 
