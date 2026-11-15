@@ -857,7 +857,7 @@
           },
           {
             "accelerators": [
-              "<Primary><Alt>z"
+              "<Primary><Shift><Alt>u"
             ],
             "checkable": false,
             "id": "tools.pivot-value",
@@ -869,7 +869,7 @@
           },
           {
             "accelerators": [
-              "<Primary><Alt>x"
+              "<Primary><Shift><Alt>q"
             ],
             "checkable": false,
             "id": "tools.pivot-sql",

@@ -1,5 +1,5 @@
 {
- "version": "0.9.0",
+ "version": "0.10.0",
  "AddChart": {
   "class": [
    "Command"
@@ -53,6 +53,16 @@
   "properties": [
    "label",
    "summary"
+  ]
+ },
+ "Aggregation": {
+  "class": [
+   "StrEnum"
+  ],
+  "init": "(*values)",
+  "methods": {},
+  "properties": [
+   "sql_function"
   ]
  },
  "AltInput": {
@@ -597,6 +607,107 @@
   },
   "properties": []
  },
+ "PivotDefinition": {
+  "class": [
+   "object"
+  ],
+  "init": "(source: 'str', rows: 'tuple[str, ...]' = (), columns: 'tuple[str, ...]' = (), values: 'tuple[ValueField, ...]' = (), filters: 'tuple[PivotFilter, ...]' = (), total_row: 'bool' = True, total_column: 'bool' = True) -> None",
+  "methods": {
+   "from_data": "(data: 'object') -> 'PivotDefinition'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PivotEntry": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', definition: 'PivotDefinition', labels: 'PivotLabels' = PivotLabels(total='Total', blank='(blank)', row_header='Rows', sum_of='Sum of {field}', count_of='Count of {field}', average_of='Average of {field}', min_of='Min of {field}', max_of='Max of {field}')) -> None",
+  "methods": {
+   "from_data": "(data: 'object') -> 'PivotEntry'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "PivotError": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "PivotFilter": {
+  "class": [
+   "object"
+  ],
+  "init": "(field: 'str', keep: 'tuple[Value, ...] | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "PivotLabels": {
+  "class": [
+   "object"
+  ],
+  "init": "(total: 'str' = 'Total', blank: 'str' = '(blank)', row_header: 'str' = 'Rows', sum_of: 'str' = 'Sum of {field}', count_of: 'str' = 'Count of {field}', average_of: 'str' = 'Average of {field}', min_of: 'str' = 'Min of {field}', max_of: 'str' = 'Max of {field}') -> None",
+  "methods": {
+   "from_data": "(data: 'object') -> 'PivotLabels'",
+   "title": "(self, aggregation: 'Aggregation', field: 'str') -> 'str'",
+   "to_data": "(self) -> 'dict[str, str]'"
+  },
+  "properties": []
+ },
+ "PivotResult": {
+  "class": [
+   "object"
+  ],
+  "init": "(rows: 'tuple[tuple[Value, ...], ...]', roles: 'tuple[tuple[PivotRole, ...], ...]', header_rows: 'int', sql: 'str', total_column: 'bool' = False) -> None",
+  "methods": {
+   "as_matrix": "(self) -> 'Matrix'",
+   "role_at": "(self, row: 'int', col: 'int') -> 'PivotRole'",
+   "value_at": "(self, row: 'int', col: 'int') -> 'Value'"
+  },
+  "properties": [
+   "height",
+   "total_row",
+   "width"
+  ]
+ },
+ "PivotRole": {
+  "class": [
+   "StrEnum"
+  ],
+  "init": "(*values)",
+  "methods": {},
+  "properties": []
+ },
+ "Pivots": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "clear": "(self) -> 'None'",
+   "from_data": "(data: 'Sequence[dict] | Iterable[dict]') -> 'Pivots'",
+   "get": "(self, name: 'str') -> 'PivotEntry | None'",
+   "put": "(self, name: 'str', entry: 'PivotEntry | None') -> 'None'",
+   "record": "(self, name: 'str', result: 'PivotResult | None') -> 'None'",
+   "result": "(self, name: 'str') -> 'PivotResult | None'",
+   "sorted": "(self) -> 'list[PivotEntry]'",
+   "to_data": "(self) -> 'list[dict]'"
+  },
+  "properties": []
+ },
+ "PivotsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "PrintSetupChanged": {
   "class": [
    "object"
@@ -884,6 +995,22 @@
    "summary"
   ]
  },
+ "SetPivot": {
+  "class": [
+   "Command"
+  ],
+  "init": "(name: 'str', entry: 'PivotEntry | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetPivot'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetPrintPage": {
   "class": [
    "Command"
@@ -1073,6 +1200,14 @@
    "summary"
   ]
  },
+ "ValueField": {
+  "class": [
+   "object"
+  ],
+  "init": "(field: 'str', aggregation: 'Aggregation' = <Aggregation.SUM: 'sum'>, name: 'str' = '') -> None",
+  "methods": {},
+  "properties": []
+ },
  "VisualObject": {
   "class": [
    "Generic"
@@ -1120,6 +1255,7 @@
    "named_things": "(self)",
    "outcome_table": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, combine: 'str' = 'all') -> 'OutcomeTable | None'",
    "put_names": "(self, entries: 'Sequence[tuple[NameKey, NamedRange | None]]') -> 'NameRestores'",
+   "put_pivot": "(self, name: 'str', entry: 'PivotEntry | None') -> 'PivotEntry | None'",
    "query": "(self, text: 'str', home: 'SheetId', parameters: 'Sequence[object]' = ()) -> 'Table'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "region_of": "(self, named: 'NamedRange') -> 'Rect | None'",
@@ -1152,8 +1288,17 @@
  "column_name": {
   "function": "(index: 'int') -> 'str'"
  },
+ "compute_pivot": {
+  "function": "(definition: 'PivotDefinition', tables: 'engine.TableSource', labels: 'PivotLabels' = PivotLabels(total='Total', blank='(blank)', row_header='Rows', sum_of='Sum of {field}', count_of='Count of {field}', average_of='Average of {field}', min_of='Min of {field}', max_of='Max of {field}')) -> 'PivotResult'"
+ },
  "content_of": {
   "function": "(value) -> 'Content'"
+ },
+ "create_pivot": {
+  "function": "(model: 'WorkbookModel', name: 'str', anchor: 'tuple[SheetId, int, int]', definition: 'PivotDefinition', labels: 'PivotLabels | None' = None, new_sheet: 'str | None' = None) -> 'Command'"
+ },
+ "delete_pivot": {
+  "function": "(model: 'WorkbookModel', name: 'str') -> 'Command'"
  },
  "function_catalog": {
   "function": "(registry: 'FunctionRegistry | None' = None) -> 'list[FunctionHelp]'"
@@ -1173,10 +1318,16 @@
  "parse_range_ref": {
   "function": "(text: 'str', sheet_ids: 'SheetIds | None' = None) -> 'RangeRef'"
  },
+ "pivot_to_sql": {
+  "function": "(model: 'WorkbookModel', name: 'str') -> 'Command'"
+ },
  "search_functions": {
   "function": "(query: 'str', catalog: 'list[FunctionHelp] | None' = None) -> 'list[FunctionHelp]'"
  },
  "translatable_texts": {
   "function": "(catalog: 'list[FunctionHelp] | None' = None) -> 'list[str]'"
+ },
+ "update_pivot": {
+  "function": "(model: 'WorkbookModel', name: 'str', definition: 'PivotDefinition', labels: 'PivotLabels | None' = None) -> 'Command'"
  }
 }
