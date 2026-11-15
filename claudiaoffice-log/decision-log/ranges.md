@@ -29,7 +29,7 @@ Unused numbers in a closed block stay unused.
 | D360–D369 | QA follow-up: UX consistency across clients: one key table, every menu entry everywhere, setup of a new document (branch `qa`; D360–D362 used; first given D340–D359, which `presenter` had too, renumbered at the merge) | 2026-11-13 | open |
 | D370–D389 | real-world documents: xlsx as Excel writes it today, slide templates, cell formats and number formats (branch `real-world-docs`; D370–D380 used; first given D340–D359, which `presenter` had too, renumbered at the merge) | 2026-11-13 | open |
 | D390–D399 | rendered text containers: object kind, plugin layer, tool registry, LaTeX, Mermaid, Typst (branch `containers`; D390–D396 used; first given D340–D359, which `presenter` had too, renumbered at the merge) | 2026-11-13 | open |
-| D560–D569 | rendered text containers, the screens: Insert menu, editing in place, fences, composes floating (branch `containers`; D560–D564 used) | 2026-11-15 | open |
+| D560–D569 | rendered text containers, the screens: Insert menu, editing in place, fences, composes floating (branch `containers`; D560–D564 used; first given D520–D529, which `search-ui` and `file-handling` had too, renumbered at the merge) | 2026-11-15 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D315 used) | 2026-11-10 | open |
 | D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D918 used) | 2026-11-12 | open |
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |
@@ -41,7 +41,7 @@ Unused numbers in a closed block stay unused.
 | D1001–D1020 | printing sheets: the computes print preview, scale, print area, page cuts, footer, charts (E6.19; branch `computes-print`; D1001–D1010 used) | 2026-11-14 | open |
 | D500–D519 | the three desktop clients: the shared server on macOS and Linux, fonts every server has, files through the shells' dialogs, printing from a window, the front page's File menu, port 8765, drops on Linux (branch `clients`; D500–D505 used) | 2026-11-15 | open |
 | D520–D529 | the search panel and movable dialogs: moving, the one-button "Look in", "n matches", Markdown in help topics and the topic opened from the panel (branch `search-ui`; D520–D522 used) | 2026-11-15 | open |
-| D550–D559 | the dock: names of things, replaying the history by scrubbing, tags in the chat (branch `dock`; D550–D553 used; D500–D519 belong to `clients`) | 2026-11-15 | open |
+| D550–D559 | the dock: names of things, replaying the history by scrubbing, tags in the chat (branch `dock`; D550–D553 used; first given D520–D539, which `search-ui` and `file-handling` had too, renumbered at the merge) | 2026-11-15 | open |
 | D470–D479 | search & replace in composes and creates: what is searched, shortcuts in a text, locks (E9.28, E10.19; branch `search`; D470–D472 used) | 2026-11-14 | open |
 | D530–D549 | document description and tags, the front page's way back from a collection, moving and copying documents between places (branch `file-handling`; D530–D535 used) | 2026-11-15 | open |
 
