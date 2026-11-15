@@ -5,6 +5,8 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 ## [0.2.1] - unreleased
 
 ### Fixed
+- The end-to-end script of the macOS shell (`web/e2e/macos-shell.cjs`) reads the document's native menu (the latest one
+  the shell was given), not the front page's short one that comes first, and checks that the front page has the short one.
 - `src/generated/menu.computes.json` is regenerated: File ▸ Print… (Cmd+P) is in the menus of Claudia Computes, as in
   the other two apps.
 

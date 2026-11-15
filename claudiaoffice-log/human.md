@@ -6,7 +6,7 @@ Work plan for Nov 14/15th 2026
 	- [x] real world docs
 	- [x] text rendering containers groundwork
 	- [x] bitv, if necessary
-- [ ] clean up branches, delete remote ones too
+- [x] clean up branches, delete remote ones too
 - [ ] focus topics
 	- [x] file management => to do this, introduce the one-server approach
 		- [ ] use worker pool for real!

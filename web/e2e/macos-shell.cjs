@@ -108,7 +108,9 @@ async function openWindow(browser, app, server) {
       throw new Error('the window never showed a page; it says: ' + (await page.locator('#status').innerText()))
     },
     menuSets: () => page.evaluate(() => window.__menus.length),
-    menuJson: () => page.evaluate(() => JSON.stringify(window.__menus[0])),
+    /** The first menu the shell was given is the front page's short one; the latest is the document's (sheet 11). */
+    firstMenuJson: () => page.evaluate(() => JSON.stringify(window.__menus[0])),
+    latestMenuJson: () => page.evaluate(() => JSON.stringify(window.__menus[window.__menus.length - 1])),
     /** What a click on a native menu item sends to the page (Neutralino's `mainMenuItemClicked`). */
     click: (id, text) => page.evaluate(({ id, text }) => window.__handlers.mainMenuItemClicked({ detail: { id, text } }), { id, text }),
     async close() {
@@ -170,13 +172,21 @@ async function checkWindow(window, app, label) {
   await frame.waitForSelector('input[name=document]')
   assert.ok((await frame.evaluate(() => document.body.innerText)).includes(new URL(origin).host), `${label}: the welcome page lists this server`)
 
+  // the front page already runs under the shell: it gets the short native menu, not the web app's own
+  await window.page.waitForFunction(() => window.__menus.length >= 1, null, { timeout: 15000 }).catch(() => {
+    throw new Error(`${label}: the front page never gave the shell a menu`)
+  })
+  const front = await window.firstMenuJson()
+  assert.ok(front.includes('Open…') && !front.includes('Save New Checkpoint'), `${label}: the front page has the short native menu`)
+
   await createDocument(frame, app, `e2e-${app}`)
   await frame.waitForFunction(() => document.querySelector('nav.menus')?.classList.contains('hidden'), null, { timeout: 15000 }).catch(() => {
     throw new Error(`${label}: the web app kept its own menu bar; the console says:\n${window.page.consoleLines.join('\n')}`)
   })
   assert.ok(await menuBarGone(frame), `${label}: the web menu bar takes no room`)
-  assert.ok((await window.menuSets()) >= 1, `${label}: a native menu was set`)
-  assert.ok((await window.menuJson()).includes('Save New Checkpoint'), `${label}: the native menu has the app's items`)
+  await window.page.waitForFunction(() => JSON.stringify(window.__menus[window.__menus.length - 1]).includes('Save New Checkpoint'), null, { timeout: 15000 }).catch(() => {})
+  assert.ok((await window.menuSets()) >= 2, `${label}: the document set its own native menu after the front page's`)
+  assert.ok((await window.latestMenuJson()).includes('Save New Checkpoint'), `${label}: the native menu has the app's items`)
 
   // a click in the native menu does what its label says, in the document
   await window.click('file.save-as', 'Save New Checkpoint…')
