@@ -619,3 +619,54 @@ def test_a_docx_with_tracked_changes_dates_them_too(dated_paper):
 def test_tracked_changes_default_to_off(dated_paper):
     assert b"tracked-changes" not in read_parts(exported(dated_paper, "odt"))["content.xml"]
     assert "<w:ins " not in read_parts(exported(dated_paper, "docx"))["word/document.xml"].decode()
+
+
+# --------------------------------------------------------------------- floating and turning objects (rotation-ui)
+def text_with_a_note(paper):
+    from claudia_composes import BlockAnchor
+    from claudia_core import ObjectBody, VisualObject, paragraph_for
+
+    type_(paper, "a text with a note")
+    box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
+    paper.model.insert_object(VisualObject(box, BlockAnchor("b1", 2)))
+
+
+def anchor_of(paper):
+    (obj,) = [o for o in call(paper, "objects")["objects"] if o["id"] == "o1"]
+    return obj["anchor"]
+
+
+def test_an_object_floats_at_an_offset_from_the_character_it_hangs_from(paper):
+    text_with_a_note(paper)
+    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 260, "dy": -48})
+    assert anchor_of(paper) == {"kind": "block", "container": "b1", "offset": 7, "dx": 260, "dy": -48}
+
+
+def test_moving_to_another_character_without_an_offset_keeps_the_offset_the_object_has(paper):
+    text_with_a_note(paper)
+    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 260, "dy": -48})
+    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 9})
+    assert anchor_of(paper) == {"kind": "block", "container": "b1", "offset": 9, "dx": 260, "dy": -48}
+
+
+def test_an_offset_out_of_reach_is_refused(paper):
+    text_with_a_note(paper)
+    with pytest.raises(RequestError, match="offset") as caught:
+        call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 10001})
+    assert caught.value.code == "command_error"
+
+
+def test_an_object_in_a_text_turns_and_keeps_its_anchor(paper):
+    text_with_a_note(paper)
+    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 40, "dy": 10})
+    call(paper, "rotate_object", {"id": "o1", "rotation": -90})
+    (obj,) = call(paper, "objects")["objects"]
+    assert obj["rotation"] == 270
+    assert obj["anchor"]["dx"] == 40 and obj["anchor"]["offset"] == 7
+
+
+def test_the_assistant_does_not_turn_objects_in_a_text(paper):
+    text_with_a_note(paper)
+    with pytest.raises(RequestError) as caught:
+        call(paper, "rotate_object", {"id": "o1", "rotation": 10}, AI)
+    assert caught.value.code in {"forbidden", "command_error"}

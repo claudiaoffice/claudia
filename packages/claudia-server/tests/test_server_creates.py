@@ -665,3 +665,46 @@ def test_a_presentation_has_a_language_like_a_text(deck):
     with pytest.raises(RequestError) as caught:
         call(deck, "set_language", {"language": "english!"})
     assert caught.value.code == "command_error"
+
+
+# ----------------------------------------------------------------------------- turning an object (rotation-ui)
+def frame_of(doc, object_id):
+    (box,) = [o for o in objects(doc) if o["id"] == object_id]
+    return box["anchor"]["x"], box["anchor"]["y"], box["w"], box["h"], box["rotation"]
+
+
+def test_an_object_is_turned_about_its_centre_and_stays_where_it_is(deck):
+    box = add_text(deck, x=600, y=400, w=300, h=100)
+    call(deck, "rotate_object", {"id": box, "rotation": 37})
+    assert frame_of(deck, box) == (600, 400, 300, 100, 37)
+
+
+def test_any_whole_number_of_degrees_is_read_modulo_a_whole_turn(deck):
+    box = add_text(deck, x=600, y=400, w=300, h=100)
+    call(deck, "rotate_object", {"id": box, "rotation": -20})
+    assert frame_of(deck, box)[4] == 340
+    call(deck, "rotate_object", {"id": box, "rotation": 360})
+    assert frame_of(deck, box)[4] == 0
+
+
+def test_a_turn_that_would_push_the_outline_off_the_slide_moves_the_object_in_the_same_step(deck):
+    box = add_text(deck, x=0, y=0, w=300, h=100)
+    call(deck, "rotate_object", {"id": box, "rotation": 90})
+    assert frame_of(deck, box) == (0, 100, 300, 100, 90)
+    call(deck, "undo")
+    assert frame_of(deck, box) == (0, 0, 300, 100, 0), "one undo takes back the turn and the move"
+
+
+def test_an_object_that_cannot_be_turned_to_fit_the_slide_is_refused_and_stays_as_it_was(deck):
+    box = add_text(deck, x=0, y=0, w=1600, h=100)
+    with pytest.raises(RequestError, match="too large to turn") as caught:
+        call(deck, "rotate_object", {"id": box, "rotation": 90})
+    assert caught.value.code == "command_error"
+    assert frame_of(deck, box) == (0, 0, 1600, 100, 0)
+
+
+def test_a_viewer_cannot_turn_an_object(deck):
+    box = add_text(deck)
+    with pytest.raises(RequestError) as caught:
+        call(deck, "rotate_object", {"id": box, "rotation": 10}, account=VERA)
+    assert caught.value.code == "forbidden"

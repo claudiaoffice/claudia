@@ -120,7 +120,6 @@ from claudia_core import (
     PageSetupError,
     RemoveObject,
     ResizeObject,
-    RotateObject,
     UpdateDiagram,
     decode_image,
 )
@@ -856,8 +855,9 @@ def _resize_object(ctx, *, id, row, col, w, h, base):
 
 @computes_methods.method("rotate_object", "id:str rotation:int base:revision?", write=True)
 def _rotate_object(ctx, *, id, rotation, base):
-    """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
-    applied = ctx.document.execute(RotateObject(id, rotation), author=ctx.user, base=base)
+    """Turn an object about its centre to `rotation` whole degrees clockwise; any whole number does (-20 is 340). Its
+    anchor cell stays. A chart does not turn."""
+    applied = ctx.document.execute(_workbook(ctx).turn_command(id, rotation), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
 

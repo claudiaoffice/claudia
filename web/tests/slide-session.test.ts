@@ -133,6 +133,7 @@ function server(link: FakeLink, objects: any[] = []) {
     set_text: () => ({ revision: 'main:2' }),
     set_snap: () => ({ revision: 'main:2' }),
     describe_object: () => ({ revision: 'main:2' }),
+    rotate_object: () => ({ revision: 'main:2' }),
     remove_object: () => ({ revision: 'main:2' }),
     add_slide: () => ({ slide: 's2', revision: 'main:2' }),
     lock: () => ({}),
@@ -363,6 +364,16 @@ describe('making changes', () => {
     expect(link.last('set_snap')).toEqual({ id: 'a', snap: false, base: 'main:0' })
     await session.remove('a')
     expect(link.last('remove_object')).toEqual({ id: 'a', base: 'main:0' })
+  })
+  it('turns an object by sending the whole-degree turn, and is told when the server says no', async () => {
+    const { link, session, state } = await opened([text('a')])
+    expect(await session.rotate('a', 30)).toBe(true)
+    expect(link.last('rotate_object')).toEqual({ id: 'a', rotation: 30, base: 'main:0' })
+    link.handlers.rotate_object = () => {
+      throw new ProtocolError('command_error', 'this object is too large to turn that way')
+    }
+    expect(await session.rotate('a', 45)).toBe(false)
+    expect(state.notice).toMatchObject({ kind: 'error', text: 'this object is too large to turn that way' })
   })
   it('a colleague holding the object refuses the change and the person is told', async () => {
     const { link, session, state } = await opened([text('a')])

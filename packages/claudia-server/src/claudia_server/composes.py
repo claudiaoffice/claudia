@@ -18,6 +18,8 @@
 * ``search_find``, ``search_preview`` and ``search_replace``: search and replace in the text, its headings, remarks
   and the objects floating over it (:mod:`claudia_server.composes_search`, E9.28);
 * ``look`` and ``hold``: where my cursor is. ``hold`` also locks the ± n words around it for everybody else (D11);
+* ``move_object``, ``resize_object``, ``rotate_object`` and ``remove_object``: the floating objects. An object hangs
+  from a character, floats at an offset from it and turns about its centre (rotation-ui);
 * ``suggest`` (the assistant only), ``accept_suggestion`` and ``reject_suggestion`` (D63).
 
 The assistant has no direct write path into the text: ``replace_text`` and ``set_style`` refuse it, it can only
@@ -487,6 +489,11 @@ def _hang(block: str, offset: int) -> dict:
     return BlockAnchor(block, offset).to_data()
 
 
+def _float_from(block: str, offset: int, dx: int, dy: int) -> dict:
+    """An anchor with the object floating at `dx` to the right and `dy` down from the character it hangs from."""
+    return BlockAnchor(block, offset, dx, dy).to_data()
+
+
 def _paragraph_has(model: TextModel, *, block: str, offset: int) -> None:
     try:
         text = model.block(block).text
@@ -504,14 +511,17 @@ add_rendering_methods(
 )
 
 
-@composes_methods.method("move_object", "id:str block:str offset:int base:revision?", write=True)
-def _move_object(ctx, *, id, block, offset, base):
-    """Hang an object from another character: `offset` of the paragraph `block`. Its size stays."""
+@composes_methods.method("move_object", "id:str block:str offset:int dx:int? dy:int? base:revision?", write=True)
+def _move_object(ctx, *, id, block, offset, dx, dy, base):
+    """Hang an object from another character: `offset` of the paragraph `block`, and float it at `dx` to the right and
+    `dy` down from there (CSS pixels; negative goes left and up). Leave `dx` or `dy` out and the object keeps the
+    offset it has. Its size stays."""
     _people_only(ctx)
     model = _text(ctx)
-    model.get_object(id)
+    held = model.get_object(id).anchor
     _paragraph_has(model, block=block, offset=offset)
-    applied = ctx.document.execute(MoveObject(id, _hang(block, offset)), author=ctx.user, base=base)
+    placed = _float_from(block, offset, held.dx if dx is None else dx, held.dy if dy is None else dy)
+    applied = ctx.document.execute(MoveObject(id, placed), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
 
@@ -521,6 +531,15 @@ def _resize_object(ctx, *, id, w, h, base):
     _people_only(ctx)
     anchor = _text(ctx).get_object(id).anchor
     applied = ctx.document.execute(ResizeObject(id, anchor.to_data(), w, h), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@composes_methods.method("rotate_object", "id:str rotation:int base:revision?", write=True)
+def _rotate_object(ctx, *, id, rotation, base):
+    """Turn an object about its centre to `rotation` whole degrees clockwise; any whole number does (-20 is 340). The
+    character it hangs from and the offset from it stay. A chart does not turn."""
+    _people_only(ctx)
+    applied = ctx.document.execute(_text(ctx).turn_command(id, rotation), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
 

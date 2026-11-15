@@ -268,6 +268,7 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
     The two that have floating objects also say what an object shows to someone who cannot see it (BITV 1.1.1)."""
     m = request.getfixturevalue(app_name)
     styles = ["format.apply-style"] + (["format.clear-cell-style"] if app_name == "computes" else [])
+    turning = ["format.rotate-right", "format.rotate-left", "format.rotate-by"] if app_name == "creates" else []
     assert [
         a.id for a in m.menu("Format").all_actions() if not a.id.startswith(("format.list", "format.bul", "format.num"))
     ] == [
@@ -276,6 +277,7 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
         "format.all-styles",
         "format.colours",
         "format.describe",
+        *turning,
     ]
 
 
@@ -287,6 +289,28 @@ def test_describe_object_is_a_page_action_with_its_own_key(app_name: str, reques
     assert describe.kind is Kind.PAGE and describe.label == "Describe Object…"
     assert describe.accelerators == ("<Primary><Alt>d",)
     assert "format.describe" not in action_ids(request.getfixturevalue("composes").menu("Format"))
+
+
+def test_rotate_is_a_flyout_of_three_page_actions_with_keys_of_their_own(creates: manifest.Manifest) -> None:
+    """D1024: Format ▸ Rotate ▸ Rotate Right 90°, Rotate Left 90°, Rotate By… — Ctrl+Alt+. , Ctrl+Alt+, and
+    Ctrl+Alt+Shift+Z (Ctrl+Alt+Z is Replay History's). Only where objects turn: creates, until the other two apps
+    draw a turned object."""
+    (flyout,) = [e for e in entries(creates.menu("Format")) if isinstance(e, Submenu) and e.label == "Rotate"]
+    assert [(a.id, a.label, a.accelerators) for a in flyout.items] == [
+        ("format.rotate-right", "Rotate Right 90°", ("<Primary><Alt>period",)),
+        ("format.rotate-left", "Rotate Left 90°", ("<Primary><Alt>comma",)),
+        ("format.rotate-by", "Rotate By…", ("<Primary><Alt><Shift>z",)),
+    ]
+    assert all(a.kind is Kind.PAGE for a in flyout.items)
+    assert creates.action("view.replay").accelerators == ("<Primary><Alt>z",)
+
+
+@pytest.mark.parametrize("app_name", ["composes", "computes"])
+def test_the_apps_that_do_not_turn_objects_yet_have_no_rotate_entries(
+    app_name: str, request: pytest.FixtureRequest
+) -> None:
+    m = request.getfixturevalue(app_name)
+    assert not [a.id for a in m.actions if a.id.startswith("format.rotate")]
 
 
 @pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])

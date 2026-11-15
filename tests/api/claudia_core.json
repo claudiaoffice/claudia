@@ -1011,6 +1011,7 @@
   "init": "() -> 'None'",
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'A'",
+   "can_turn": "(self, body: 'ObjectBody') -> 'bool'",
    "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
    "check_name_free": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'None'",
    "check_object": "(self, obj: 'VisualObject[A]', *, shared_names: 'bool' = True) -> 'None'",
@@ -1052,6 +1053,8 @@
    "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
+   "turn_command": "(self, object_id: 'str', rotation: 'int') -> 'RotateObject'",
+   "turned_anchor": "(self, obj: 'VisualObject[A]', rotation: 'int') -> 'A'",
    "unnamed_things": "(self) -> 'Iterator[tuple[str, str]]'",
    "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
@@ -1501,7 +1504,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', rotation: 'int') -> None",
+  "init": "(id: 'str', rotation: 'int', anchor: 'dict | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RotateObject'",
@@ -1525,6 +1528,9 @@
  },
  "SCHEMES": {
   "value": "{'bullets': Scheme(id='bullets', name='Bullets', kind='bullet', indent=1.6, gap=0.25), 'numbers': Scheme(id='numbers', name='Numbers', kind='number', indent=1.6, gap=0.25)}"
+ },
+ "SINE_MILLIONTHS": {
+  "value": "(0, 17452, 34899, 52336, 69756, 87156, 104528, 121869, 139173, 156434, 173648, 190809, 207912, 224951, 241922, 258819, 275637, 292372, 309017, 325568, 342020, 358368, 374607, 390731, 406737, 422618, 438371, 453990, 469472, 484810, 500000, 515038, 529919, 544639, 559193, 573576, 587785, 601815, 615661, 629320, 642788, 656059, 669131, 681998, 694658, 707107, 719340, 731354, 743145, 754710, 766044, 777146, 788011, 798636, 809017, 819152, 829038, 838671, 848048, 857167, 866025, 874620, 882948, 891007, 898794, 906308, 913545, 920505, 927184, 933580, 939693, 945519, 951057, 956305, 961262, 965926, 970296, 974370, 978148, 981627, 984808, 987688, 990268, 992546, 994522, 996195, 997564, 998630, 999391, 999848, 1000000)"
  },
  "SLOTS": {
   "value": "<SlotTable>"
@@ -2000,6 +2006,9 @@
  "normalized": {
   "function": "(runs: 'Iterable[Run]') -> 'list[Run]'"
  },
+ "nudge_into": {
+  "function": "(x: 'int', y: 'int', w: 'int', h: 'int', rotation: 'int', width: 'int', height: 'int') -> 'tuple[int, int] | None'"
+ },
  "numbering_labels": {
   "function": "(entries: 'Iterable[tuple[str, ListItem | None]]', lists: 'ListBook') -> 'dict[str, Label]'"
  },
@@ -2050,6 +2059,9 @@
  },
  "transform": {
   "function": "(region: 'Region', command: 'Command') -> 'Region | None'"
+ },
+ "turned_extent": {
+  "function": "(w: 'int', h: 'int', rotation: 'int') -> 'tuple[int, int]'"
  },
  "validate_css": {
   "function": "(css: 'Mapping[str, object]') -> 'dict[str, str]'"

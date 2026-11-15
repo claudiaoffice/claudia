@@ -1,0 +1,397 @@
+<svg viewBox="0 0 1760 1210" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia — rotating an object: handle, Format menu, Rotate By popover</title>
+<desc id="d">Shared design for creates, computes and composes: the rotate handle with its states, the angle read-out while dragging, the Format menu with Rotate entries and keys, the Rotate By popover, and the object's context menu.</desc>
+<rect width="1760" height="1210" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — rotating an object, the same way in all three apps</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">For review before any code. One handle on the canvas, one submenu in Format, one popover, one context menu. Rotation is whole degrees clockwise, 0–359, about the object's centre (D177).</text>
+<rect x="40" y="96" width="540" height="490" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · The handle</text>
+<text x="62" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Appears with the other handles when you hold an object (D82): 30 px above the</text>
+<text x="62" y="160" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">top edge, whatever the angle. The circle you see is 19 px; its hit area is 32</text>
+<text x="62" y="176" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">px.</text>
+<rect x="62" y="202" width="240" height="330" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="76" y="224" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">selected</text>
+<g transform="rotate(0 182 388)">
+<rect x="123.0" y="355.0" width="118" height="66" rx="6" fill="#fdeedd" stroke="#f2a057" stroke-width="1.5"/>
+<text x="182" y="393" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="middle">Kick-off</text>
+</g>
+<g transform="rotate(0 182 388)">
+<rect x="123.0" y="355.0" width="118" height="66" rx="0" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="118.5" y="350.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="177.5" y="350.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="236.5" y="350.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="236.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="236.5" y="416.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="177.5" y="416.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="118.5" y="416.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="118.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<line x1="182" y1="355.0" x2="182" y2="325.0" stroke="#5b4bc4" stroke-width="1.4"/>
+<circle cx="182" cy="325.0" r="9.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.7"/>
+<path d="M179.1,322.1 A4.1,4.1 0 1 1 179.1,327.9" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M175.8,323.4 L179.8,319.7 L180.6,324.2 Z" fill="#5b4bc4"/>
+</g>
+<circle cx="231" cy="316" r="10" fill="#5b4bc4"/>
+<text x="231" y="320" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<circle cx="150" cy="348" r="10" fill="#5b4bc4"/>
+<text x="150" y="352" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<circle cx="258" cy="388" r="10" fill="#5b4bc4"/>
+<text x="258" y="392" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<rect x="318" y="202" width="242" height="330" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="332" y="224" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">pointer on it, or focused with Tab</text>
+<g transform="rotate(0 439 388)">
+<rect x="380.0" y="355.0" width="118" height="66" rx="6" fill="#fdeedd" stroke="#f2a057" stroke-width="1.5"/>
+<text x="439" y="393" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="middle">Kick-off</text>
+</g>
+<g transform="rotate(0 439 388)">
+<rect x="380.0" y="355.0" width="118" height="66" rx="0" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="375.5" y="350.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="434.5" y="350.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="493.5" y="350.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="493.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="493.5" y="416.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="434.5" y="416.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="375.5" y="416.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="375.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<line x1="439" y1="355.0" x2="439" y2="325.0" stroke="#5b4bc4" stroke-width="1.4"/>
+<circle cx="439" cy="325.0" r="14" fill="none" stroke="#1f1a33" stroke-width="2"/>
+<circle cx="439" cy="325.0" r="12" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+<circle cx="439" cy="325.0" r="9.5" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="1.7"/>
+<path d="M436.1,322.1 A4.1,4.1 0 1 1 436.1,327.9" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M432.8,323.4 L436.8,319.7 L437.6,324.2 Z" fill="#5b4bc4"/>
+</g>
+<rect x="462" y="282" width="88" height="36" rx="7" fill="#1f1a33"/>
+<text x="506" y="297" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">Rotate</text>
+<text x="506" y="310" font-size="9.5" font-weight="400" fill="#cfc9e6" text-anchor="middle">drag · ← → keys</text>
+<circle cx="372" cy="324" r="10" fill="#5b4bc4"/>
+<text x="372" y="328" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="332" y="516" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">Focus ring: ink with a white edge.</text>
+<rect x="600" y="96" width="560" height="490" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="622" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">B · While you drag</text>
+<text x="622" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">The object turns live on your screen only; others see the result when you let go</text>
+<text x="622" y="160" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">(D82). A chip beside the handle reads the angle. Shift snaps to 15°; near 0°,</text>
+<text x="622" y="176" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">90°, 180° and 270° it snaps to upright.</text>
+<rect x="620" y="202" width="166" height="330" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<g opacity="0.6">
+<rect x="658" y="362" width="90" height="52" rx="5" fill="none" stroke="#8d86a8" stroke-width="1.2" stroke-dasharray="4 3"/>
+</g>
+<g transform="rotate(37 703 388)">
+<rect x="658" y="362" width="90" height="52" rx="5" fill="#fdeedd" stroke="#f2a057" stroke-width="1.4"/>
+<text x="703" y="393" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">Kick-off</text>
+</g>
+<path d="M703,312 A76,76 0 0 1 748.7,327.3" fill="none" stroke="#5b4bc4" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="703" y1="306" x2="703" y2="318" stroke="#5b4bc4" stroke-width="1.2"/>
+<g transform="rotate(37 703 388)">
+<rect x="658.0" y="362.0" width="90" height="52" rx="0" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="653.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="698.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="743.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="743.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="743.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="698.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="653.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="653.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<line x1="703" y1="362.0" x2="703" y2="332.0" stroke="#5b4bc4" stroke-width="1.4"/>
+<circle cx="703" cy="332.0" r="9.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.7"/>
+<path d="M700.1,329.1 A4.1,4.1 0 1 1 700.1,334.9" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M696.8,330.4 L700.8,326.7 L701.6,331.2 Z" fill="#5b4bc4"/>
+</g>
+<circle cx="703" cy="388" r="3" fill="#5b4bc4"/>
+<rect x="739.2" y="302.2764114373516" width="40.8" height="22" rx="11" fill="#1f1a33"/>
+<text x="759.6" y="317.7764114373516" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12.5" font-weight="600" fill="#ffffff" text-anchor="middle">37°</text>
+<text x="703" y="520" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">free, whole degrees</text>
+<rect x="798" y="202" width="166" height="330" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<g opacity="0.6">
+<rect x="836" y="362" width="90" height="52" rx="5" fill="none" stroke="#8d86a8" stroke-width="1.2" stroke-dasharray="4 3"/>
+</g>
+<g transform="rotate(30 881 388)">
+<rect x="836" y="362" width="90" height="52" rx="5" fill="#fdeedd" stroke="#f2a057" stroke-width="1.4"/>
+<text x="881" y="393" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">Kick-off</text>
+</g>
+<path d="M881,312 A76,76 0 0 1 919.0,322.2" fill="none" stroke="#5b4bc4" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="881" y1="306" x2="881" y2="318" stroke="#5b4bc4" stroke-width="1.2"/>
+<line x1="881.0" y1="308.0" x2="881.0" y2="301.0" stroke="#8d86a8" stroke-width="1"/>
+<line x1="901.7055236082017" y1="310.72593389687455" x2="902.7407997886118" y2="306.86223059171823" stroke="#8d86a8" stroke-width="1"/>
+<line x1="921.0" y1="318.7179676972449" x2="923.0" y2="315.25386608210715" stroke="#8d86a8" stroke-width="1"/>
+<line x1="937.5685424949238" y1="331.4314575050762" x2="942.5182899632297" y2="326.4817100367704" stroke="#8d86a8" stroke-width="1"/>
+<line x1="950.282032302755" y1="348.0" x2="953.7461339178928" y2="346.0" stroke="#8d86a8" stroke-width="1"/>
+<line x1="958.2740661031255" y1="367.29447639179836" x2="962.1377694082818" y2="366.25920021138825" stroke="#8d86a8" stroke-width="1"/>
+<line x1="961.0" y1="388.0" x2="968.0" y2="388.0" stroke="#8d86a8" stroke-width="1"/>
+<line x1="958.2740661031255" y1="408.70552360820164" x2="962.1377694082818" y2="409.74079978861175" stroke="#8d86a8" stroke-width="1"/>
+<line x1="950.282032302755" y1="428.0" x2="953.7461339178928" y2="430.0" stroke="#8d86a8" stroke-width="1"/>
+<line x1="937.5685424949238" y1="444.5685424949238" x2="942.5182899632297" y2="449.5182899632296" stroke="#8d86a8" stroke-width="1"/>
+<line x1="921.0" y1="457.2820323027551" x2="923.0" y2="460.74613391789285" stroke="#8d86a8" stroke-width="1"/>
+<line x1="901.7055236082017" y1="465.27406610312545" x2="902.7407997886118" y2="469.1377694082817" stroke="#8d86a8" stroke-width="1"/>
+<line x1="881.0" y1="468.0" x2="881.0" y2="475.0" stroke="#8d86a8" stroke-width="1"/>
+<line x1="860.2944763917983" y1="465.27406610312545" x2="859.2592002113882" y2="469.13776940828177" stroke="#8d86a8" stroke-width="1"/>
+<line x1="841.0" y1="457.28203230275506" x2="839.0" y2="460.74613391789285" stroke="#8d86a8" stroke-width="1"/>
+<line x1="824.4314575050762" y1="444.5685424949238" x2="819.4817100367703" y2="449.5182899632297" stroke="#8d86a8" stroke-width="1"/>
+<line x1="811.717967697245" y1="428.00000000000006" x2="808.2538660821072" y2="430.00000000000006" stroke="#8d86a8" stroke-width="1"/>
+<line x1="803.7259338968745" y1="408.70552360820164" x2="799.8622305917182" y2="409.74079978861175" stroke="#8d86a8" stroke-width="1"/>
+<line x1="801.0" y1="388.0" x2="794.0" y2="388.0" stroke="#8d86a8" stroke-width="1"/>
+<line x1="803.7259338968745" y1="367.29447639179836" x2="799.8622305917182" y2="366.2592002113883" stroke="#8d86a8" stroke-width="1"/>
+<line x1="811.717967697245" y1="348.0" x2="808.2538660821072" y2="346.0" stroke="#8d86a8" stroke-width="1"/>
+<line x1="824.4314575050762" y1="331.4314575050762" x2="819.4817100367703" y2="326.4817100367704" stroke="#8d86a8" stroke-width="1"/>
+<line x1="841.0" y1="318.71796769724494" x2="839.0" y2="315.25386608210715" stroke="#8d86a8" stroke-width="1"/>
+<line x1="860.2944763917983" y1="310.72593389687455" x2="859.2592002113882" y2="306.86223059171823" stroke="#8d86a8" stroke-width="1"/>
+<g transform="rotate(30 881 388)">
+<rect x="836.0" y="362.0" width="90" height="52" rx="0" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="831.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="876.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="921.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="921.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="921.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="876.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="831.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="831.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<line x1="881" y1="362.0" x2="881" y2="332.0" stroke="#5b4bc4" stroke-width="1.4"/>
+<circle cx="881" cy="332.0" r="9.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.7"/>
+<path d="M878.1,329.1 A4.1,4.1 0 1 1 878.1,334.9" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M874.8,330.4 L878.8,326.7 L879.6,331.2 Z" fill="#5b4bc4"/>
+</g>
+<circle cx="881" cy="388" r="3" fill="#5b4bc4"/>
+<rect x="917.2" y="298.5025773880714" width="40.8" height="22" rx="11" fill="#1f1a33"/>
+<text x="937.6" y="314.0025773880714" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12.5" font-weight="600" fill="#ffffff" text-anchor="middle">30°</text>
+<text x="881" y="520" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">Shift: steps of 15°</text>
+<rect x="976" y="202" width="166" height="330" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<g opacity="0.6">
+<rect x="1014" y="362" width="90" height="52" rx="5" fill="none" stroke="#8d86a8" stroke-width="1.2" stroke-dasharray="4 3"/>
+</g>
+<g transform="rotate(90 1059 388)">
+<rect x="1014" y="362" width="90" height="52" rx="5" fill="#fdeedd" stroke="#f2a057" stroke-width="1.4"/>
+<text x="1059" y="393" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">Kick-off</text>
+</g>
+<line x1="1059" y1="283" x2="1059" y2="493" stroke="#5b4bc4" stroke-width="1" stroke-dasharray="2 4"/>
+<line x1="983" y1="388" x2="1135" y2="388" stroke="#5b4bc4" stroke-width="1" stroke-dasharray="2 4"/>
+<path d="M1059,312 A76,76 0 0 1 1135.0,388.0" fill="none" stroke="#5b4bc4" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="1059" y1="306" x2="1059" y2="318" stroke="#5b4bc4" stroke-width="1.2"/>
+<g transform="rotate(90 1059 388)">
+<rect x="1014.0" y="362.0" width="90" height="52" rx="0" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="1009.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="1054.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="1099.5" y="357.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="1099.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="1099.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="1054.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="1009.5" y="409.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="1009.5" y="383.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<line x1="1059" y1="362.0" x2="1059" y2="332.0" stroke="#5b4bc4" stroke-width="1.4"/>
+<circle cx="1059" cy="332.0" r="9.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.7"/>
+<path d="M1056.1,329.1 A4.1,4.1 0 1 1 1056.1,334.9" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1052.8,330.4 L1056.8,326.7 L1057.6,331.2 Z" fill="#5b4bc4"/>
+</g>
+<circle cx="1059" cy="388" r="3" fill="#5b4bc4"/>
+<rect x="1072.4" y="347.0" width="63.599999999999994" height="22" rx="11" fill="#1f1a33"/>
+<text x="1104.2" y="362.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12.5" font-weight="600" fill="#ffffff" text-anchor="middle">90°  ✓</text>
+<text x="1059" y="520" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">near upright: snaps</text>
+<circle cx="640" cy="238" r="10" fill="#5b4bc4"/>
+<text x="640" y="242" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<circle cx="818" cy="238" r="10" fill="#5b4bc4"/>
+<text x="818" y="242" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<circle cx="996" cy="238" r="10" fill="#5b4bc4"/>
+<text x="996" y="242" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">7</text>
+<rect x="1180" y="96" width="540" height="490" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1202" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · Format ▸ Rotate</text>
+<text x="1202" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Beside Describe Object…, the other thing you do to the object you hold. Greyed</text>
+<text x="1202" y="160" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">with nothing selected, and for a viewer.</text>
+<rect x="1202" y="188" width="300" height="32" rx="0" fill="#ffffff"/>
+<line x1="1202" y1="220" x2="1502" y2="220" stroke="#e3dfee" stroke-width="1"/>
+<text x="1230" y="209.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">File</text>
+<text x="1281.6" y="209.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Edit</text>
+<rect x="1303.9999999999998" y="192" width="58.400000000000006" height="24" rx="6" fill="#e7e1f4"/>
+<text x="1333.1999999999998" y="209.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Format</text>
+<text x="1399.6" y="209.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">View</text>
+<text x="1451.1999999999998" y="209.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Tools</text>
+<text x="1510.1999999999998" y="209.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Config</text>
+<text x="1576.6" y="209.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Help</text>
+<rect x="1202" y="222" width="250" height="228" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1220" y="246.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Apply Style…</text>
+<text x="1436" y="246.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+A</text>
+<text x="1220" y="274.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Edit This Style…</text>
+<text x="1436" y="274.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Shift+F10</text>
+<text x="1220" y="302.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">All Styles…</text>
+<text x="1436" y="302.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Shift+Alt+A</text>
+<text x="1220" y="330.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">List</text>
+<text x="1436" y="330.5" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">▸</text>
+<line x1="1212" y1="345" x2="1442" y2="345" stroke="#e3dfee" stroke-width="1"/>
+<text x="1220" y="368.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Colours…</text>
+<text x="1436" y="368.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+K</text>
+<line x1="1212" y1="383" x2="1442" y2="383" stroke="#e3dfee" stroke-width="1"/>
+<text x="1220" y="406.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Describe Object…</text>
+<text x="1436" y="406.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+D</text>
+<rect x="1207" y="416" width="240" height="28" rx="6" fill="#ece8f8"/>
+<text x="1220" y="434.5" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Rotate</text>
+<text x="1436" y="434.5" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">▸</text>
+<rect x="1446" y="410" width="236" height="106" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1464" y="434.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Rotate Right 90°</text>
+<text x="1666" y="434.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+.</text>
+<text x="1464" y="462.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Rotate Left 90°</text>
+<text x="1666" y="462.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+,</text>
+<line x1="1456" y1="477" x2="1672" y2="477" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1451" y="482" width="226" height="28" rx="6" fill="#ece8f8"/>
+<text x="1464" y="500.5" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Rotate By…</text>
+<text x="1666" y="500.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Shift+Alt+Z</text>
+<circle cx="1456" cy="402" r="10" fill="#5b4bc4"/>
+<text x="1456" y="406" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">8</text>
+<text x="1202" y="534.0" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Title Case, one label and one key in every client (D321, D361). On a Mac, Ctrl is</text>
+<text x="1202" y="549.66" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Cmd and Alt is Option. The keys are the ones the three menus leave free: the two</text>
+<text x="1202" y="565.32" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">next to M on a US keyboard turn left and right.</text>
+<rect x="40" y="606" width="560" height="570" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="636" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">D · Rotate By…</text>
+<text x="62" y="654" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Opens beside the object, like Apply Style…, so the object stays in view; movable</text>
+<text x="62" y="670" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">like the other overlays. Everything previews on the canvas. Enter or Done sends</text>
+<text x="62" y="686" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">one command; Esc puts it back.</text>
+<rect x="62" y="712" width="516" height="440" rx="12" fill="#ffffff" stroke="#8d86a8" stroke-width="1.5"/>
+<text x="86" y="746" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">Rotate</text>
+<text x="86" y="766" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Arrow 2 · a shape</text>
+<text x="554" y="746" font-size="15" font-weight="400" fill="#6e6880" text-anchor="end">✕</text>
+<circle cx="196" cy="912" r="88" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="196.0" y1="836.0" x2="196.0" y2="824.0" stroke="#8d86a8" stroke-width="1.4"/>
+<line x1="216.9643426533042" y1="833.7600080705855" x2="218.77607596902183" y2="826.998527286562" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="236.5" y1="841.8519422934605" x2="240.0" y2="835.7897644669694" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="253.27564927611036" y1="854.7243507238896" x2="258.2253967444162" y2="849.7746032555838" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="266.14805770653953" y1="871.5" x2="272.2102355330306" y2="868.0" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="274.23999192941454" y1="891.0356573466959" x2="281.00147271343803" y2="889.2239240309782" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="272.0" y1="912.0" x2="284.0" y2="912.0" stroke="#8d86a8" stroke-width="1.4"/>
+<line x1="274.23999192941454" y1="932.9643426533042" x2="281.00147271343803" y2="934.7760759690218" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="266.14805770653953" y1="952.5" x2="272.21023553303064" y2="956.0" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="253.27564927611036" y1="969.2756492761104" x2="258.2253967444162" y2="974.2253967444162" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="236.5" y1="982.1480577065395" x2="240.0" y2="988.2102355330306" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="216.96434265330421" y1="990.2399919294145" x2="218.77607596902186" y2="997.001472713438" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="196.0" y1="988.0" x2="196.0" y2="1000.0" stroke="#8d86a8" stroke-width="1.4"/>
+<line x1="175.0356573466958" y1="990.2399919294145" x2="173.22392403097817" y2="997.001472713438" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="155.5" y1="982.1480577065395" x2="152.0" y2="988.2102355330306" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="138.72435072388964" y1="969.2756492761104" x2="133.77460325558383" y2="974.2253967444162" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="125.8519422934605" y1="952.5" x2="119.78976446696942" y2="956.0" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="117.76000807058547" y1="932.9643426533041" x2="110.998527286562" y2="934.7760759690218" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="120.0" y1="912.0" x2="108.0" y2="912.0" stroke="#8d86a8" stroke-width="1.4"/>
+<line x1="117.76000807058546" y1="891.0356573466959" x2="110.99852728656198" y2="889.2239240309782" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="125.85194229346047" y1="871.5" x2="119.7897644669694" y2="868.0" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="138.72435072388964" y1="854.7243507238896" x2="133.7746032555838" y2="849.7746032555839" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="155.49999999999997" y1="841.8519422934605" x2="151.99999999999994" y2="835.7897644669695" stroke="#d8d2e6" stroke-width="1"/>
+<line x1="175.0356573466958" y1="833.7600080705855" x2="173.22392403097817" y2="826.998527286562" stroke="#d8d2e6" stroke-width="1"/>
+<text x="196" y="817" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">0</text>
+<text x="301" y="916" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">90</text>
+<text x="196" y="1017" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">180</text>
+<text x="90" y="916" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">270</text>
+<path d="M196,846 A66,66 0 0 1 235.7,859.3" fill="none" stroke="#5b4bc4" stroke-width="3"/>
+<line x1="196" y1="912" x2="242.94157180585978" y2="849.7064302163112" stroke="#5b4bc4" stroke-width="2"/>
+<circle cx="242.94157180585978" cy="849.7064302163112" r="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<circle cx="196" cy="912" r="3.5" fill="#5b4bc4"/>
+<circle cx="100" cy="828" r="10" fill="#5b4bc4"/>
+<text x="100" y="832" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">9</text>
+<text x="344" y="832" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Angle</text>
+<rect x="344" y="842" width="124" height="38" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<text x="360" y="867" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="16" font-weight="400" fill="#1f1a33" text-anchor="start">37</text>
+<text x="430" y="867" font-size="16" font-weight="400" fill="#6e6880" text-anchor="start">°</text>
+<text x="452" y="855" font-size="9" font-weight="400" fill="#6e6880" text-anchor="middle">▴</text>
+<text x="452" y="876" font-size="9" font-weight="400" fill="#6e6880" text-anchor="middle">▾</text>
+<text x="344" y="902.0" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Whole degrees, clockwise.</text>
+<text x="344" y="917.95" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">0 is upright; 359 is one</text>
+<text x="344" y="933.9" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">degree short of a full turn.</text>
+<circle cx="488" cy="836" r="10" fill="#5b4bc4"/>
+<text x="488" y="840" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">10</text>
+<text x="86" y="1046" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Quick</text>
+<rect x="86" y="1056" width="60" height="34" rx="17" fill="#ffffff" stroke="#8d86a8" stroke-width="1"/>
+<text x="116.0" y="1078" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">−15°</text>
+<rect x="154" y="1056" width="60" height="34" rx="17" fill="#ffffff" stroke="#8d86a8" stroke-width="1"/>
+<text x="184.0" y="1078" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">+15°</text>
+<rect x="222" y="1056" width="60" height="34" rx="17" fill="#ffffff" stroke="#8d86a8" stroke-width="1"/>
+<text x="252.0" y="1078" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">90°</text>
+<rect x="290" y="1056" width="60" height="34" rx="17" fill="#ffffff" stroke="#8d86a8" stroke-width="1"/>
+<text x="320.0" y="1078" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">180°</text>
+<rect x="358" y="1056" width="60" height="34" rx="17" fill="#ffffff" stroke="#8d86a8" stroke-width="1"/>
+<text x="388.0" y="1078" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">270°</text>
+<rect x="426" y="1056" width="82" height="34" rx="17" fill="#ffffff" stroke="#8d86a8" stroke-width="1"/>
+<text x="467.0" y="1078" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Upright</text>
+<circle cx="520" cy="1050" r="10" fill="#5b4bc4"/>
+<text x="520" y="1054" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">11</text>
+<rect x="86" y="1104" width="90" height="36" rx="18" fill="#4b3fb0"/>
+<text x="131" y="1127" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">Done</text>
+<rect x="188" y="1104" width="90" height="36" rx="18" fill="#ffffff" stroke="#8d86a8" stroke-width="1"/>
+<text x="233" y="1127" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<text x="300" y="1120" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Enter = Done · Esc = Cancel</text>
+<text x="300" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">In the field: ↑ ↓ ±1°, with Shift ±15°</text>
+<rect x="620" y="606" width="520" height="570" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="642" y="636" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">E · The object's menu</text>
+<text x="642" y="654" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Right-click, or Shift+F10 on the object. The same entries, the same keys;</text>
+<text x="642" y="670" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">the extra ones are the app's own.</text>
+<rect x="644" y="704" width="250" height="210" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="662" y="728.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Edit Text</text>
+<text x="878" y="728.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Enter</text>
+<line x1="654" y1="743" x2="884" y2="743" stroke="#e3dfee" stroke-width="1"/>
+<text x="662" y="766.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Apply Style…</text>
+<text x="878" y="766.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+A</text>
+<text x="662" y="794.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Describe Object…</text>
+<text x="878" y="794.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+D</text>
+<rect x="649" y="804" width="240" height="28" rx="6" fill="#ece8f8"/>
+<text x="662" y="822.5" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Rotate</text>
+<text x="878" y="822.5" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">▸</text>
+<line x1="654" y1="837" x2="884" y2="837" stroke="#e3dfee" stroke-width="1"/>
+<text x="662" y="860.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Release From Grid</text>
+<line x1="654" y1="875" x2="884" y2="875" stroke="#e3dfee" stroke-width="1"/>
+<text x="662" y="898.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Delete</text>
+<text x="878" y="898.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Del</text>
+<rect x="888" y="798" width="236" height="106" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="906" y="822.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Rotate Right 90°</text>
+<text x="1108" y="822.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+.</text>
+<text x="906" y="850.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Rotate Left 90°</text>
+<text x="1108" y="850.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+,</text>
+<line x1="898" y1="865" x2="1114" y2="865" stroke="#e3dfee" stroke-width="1"/>
+<text x="906" y="888.5" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Rotate By…</text>
+<text x="1108" y="888.5" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Shift+Alt+Z</text>
+<circle cx="898" cy="790" r="10" fill="#5b4bc4"/>
+<text x="898" y="794" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">12</text>
+<text x="644" y="942.0" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Edit Text and Release From Grid exist in creates only (an object in a sheet or</text>
+<text x="644" y="957.66" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">a text has no grid and no slot to snap to). Describe Object… is new in</text>
+<text x="644" y="973.32" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">composes, with the object layer.</text>
+<rect x="1160" y="606" width="560" height="570" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1182" y="636" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">What the numbers mean</text>
+<circle cx="1182" cy="672" r="10" fill="#5b4bc4"/>
+<text x="1182" y="676" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="1202" y="676" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Rotate handle: a circle with a turning arrow on a stem above the top edge. It</text>
+<text x="1202" y="691" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">is the only new thing on the canvas; resize handles and the outline turn with</text>
+<text x="1202" y="706" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">the object, so they stay on its own edges.</text>
+<circle cx="1182" cy="726" r="10" fill="#5b4bc4"/>
+<text x="1182" y="730" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="1202" y="730" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">The stem is for reach: the handle never hides under the top-middle resize</text>
+<text x="1202" y="745" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">handle of a small object.</text>
+<circle cx="1182" cy="765" r="10" fill="#5b4bc4"/>
+<text x="1182" y="769" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="1202" y="769" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">The centre is the pivot. It is not drawn while idle, so the picture stays</text>
+<text x="1202" y="784" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">quiet.</text>
+<circle cx="1182" cy="804" r="10" fill="#5b4bc4"/>
+<text x="1182" y="808" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="1202" y="808" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">The tooltip names the keys. Hover and focus look the same, so a keyboard user</text>
+<text x="1202" y="823" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">gets what a mouse user gets.</text>
+<circle cx="1182" cy="843" r="10" fill="#5b4bc4"/>
+<text x="1182" y="847" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="1202" y="847" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">The ghost is the angle before you grabbed it; the dashed arc is how far you</text>
+<text x="1202" y="862" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">have turned, clockwise from upright.</text>
+<circle cx="1182" cy="882" r="10" fill="#5b4bc4"/>
+<text x="1182" y="886" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<text x="1202" y="886" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">With Shift, ticks at every 15° appear around the object, the long ones at 45°.</text>
+<circle cx="1182" cy="906" r="10" fill="#5b4bc4"/>
+<text x="1182" y="910" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">7</text>
+<text x="1202" y="910" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Within 3° of upright it snaps by itself and the chip gains a tick. Hold Alt to</text>
+<text x="1202" y="925" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">turn the snap off.</text>
+<circle cx="1182" cy="945" r="10" fill="#5b4bc4"/>
+<text x="1182" y="949" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">8</text>
+<text x="1202" y="949" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Format ▸ Rotate ▸ Rotate Right 90°, Rotate Left 90°, Rotate By…. Every entry</text>
+<text x="1202" y="964" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">has a key, checked against all three menus.</text>
+<circle cx="1182" cy="984" r="10" fill="#5b4bc4"/>
+<text x="1182" y="988" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">9</text>
+<text x="1202" y="988" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">The dial is the same turn as the handle, for people who like a number and a</text>
+<text x="1202" y="1003" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">picture together.</text>
+<circle cx="1182" cy="1023" r="10" fill="#5b4bc4"/>
+<text x="1182" y="1027" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">10</text>
+<text x="1202" y="1027" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Whole degrees only, because the model stores 0–359 (D177). −10 is shown and</text>
+<text x="1202" y="1042" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">stored as 350.</text>
+<circle cx="1182" cy="1062" r="10" fill="#5b4bc4"/>
+<text x="1182" y="1066" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">11</text>
+<text x="1202" y="1066" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Upright sets 0°; without it, getting back to straight is a guess.</text>
+<circle cx="1182" cy="1086" r="10" fill="#5b4bc4"/>
+<text x="1182" y="1090" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">12</text>
+<text x="1202" y="1090" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">The object's menu names the same entries.</text>
+<text x="1182" y="1118" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">History reads “Rotate object · Arrow 2 · 0° → 37°”: one entry per drag, one undo.</text>
+<text x="1182" y="1133" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Rotating by key, the menu or the popover is one entry too.</text>
+</svg>

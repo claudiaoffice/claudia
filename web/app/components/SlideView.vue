@@ -34,7 +34,8 @@ const px = (units: number) => `${Math.round(units * scale.value * 100) / 100}px`
 
 function boxStyle(o: SlideObject) {
   const f = slideFrame(o)
-  return { left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h) }
+  // A turned object is drawn turned about the centre of its frame (D1021), as on the canvas
+  return { left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h), ...(o.rotation ? { transform: `rotate(${o.rotation}deg)` } : {}) }
 }
 const outline = (o: SlideObject) => (o.shape ? (props.deck.shapes[o.shape] ?? null) : null)
 function textBox(o: SlideObject) {

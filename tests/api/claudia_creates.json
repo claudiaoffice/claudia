@@ -1,5 +1,5 @@
 {
- "version": "0.12.0",
+ "version": "0.13.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -322,7 +322,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', rotation: 'int') -> None",
+  "init": "(id: 'str', rotation: 'int', anchor: 'dict | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RotateObject'",
@@ -549,6 +549,7 @@
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "time_of": "(self, slide: 'str') -> 'int | None'",
    "total_time": "(self) -> 'int'",
+   "turned_anchor": "(self, obj: 'SlideObject', rotation: 'int') -> 'SlideAnchor'",
    "unnamed_things": "(self)"
   },
   "properties": []

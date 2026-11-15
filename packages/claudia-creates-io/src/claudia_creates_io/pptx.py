@@ -40,7 +40,7 @@ from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.opc.package import Part
 from pptx.util import Emu, Pt
 
-from claudia_core import Rasterise, blank_png, picture_body
+from claudia_core import Rasterise, blank_png, nudge_into, picture_body
 from claudia_core.assets import MAX_ALT_CHARS
 from claudia_creates import (
     MAX_NOTES_LENGTH,
@@ -142,7 +142,9 @@ _DECORATIVE_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
 
 
 def _turn(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's own shape classes are not one type)
-    """Turn the shape to the rotation of the object, whole degrees clockwise, as PowerPoint counts them (D459)."""
+    """Write the turn of ``body``: whole degrees clockwise about the centre, which is what ``a:xfrm rot`` is too (D459).
+    The shape keeps the place and size of the *unturned* frame, as PowerPoint writes them. An upright object gets no
+    attribute at all, so a file of upright objects is the file it always was."""
     if body.rotation:
         shape.rotation = body.rotation
 
@@ -235,13 +237,13 @@ def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
     the *file*: an edit exported with :func:`apply_edits_to_pptx` keeps all of it."""
     prs = Presentation(BytesIO(pptx_bytes))
     losses = LossLog()
+    scale_x, scale_y = _slide_scale(prs)
     for pptx_slide in prs.slides:
         for shape in pptx_slide.shapes:
             if _classify(shape) is None:
                 losses.add(_UNMODELED.get(shape.shape_type, "object"))
-        for shape in pptx_slide.shapes:
-            if (kind := _classify(shape)) is not None:
-                _note_words_and_look(shape, kind, losses)
+            elif _cannot_turn(shape, scale_x, scale_y):
+                losses.add("turn")
         for code, tag in (("transition", "transition"), ("animation", "timing")):
             if pptx_slide._element.find(_qn(tag)) is not None:
                 losses.add(code)
@@ -308,6 +310,16 @@ def _note_words_and_look(shape, kind: str, losses: LossLog) -> None:  # noqa: AN
                 losses.add("formatting")
             if run.hyperlink.address is not None:
                 losses.add("link")
+
+
+def _cannot_turn(shape, scale_x: float, scale_y: float) -> bool:  # noqa: ANN001
+    """Is ``shape`` turned so far that its outline cannot lie on the slide, so that it is read upright (D1022)?"""
+    rotation = round(shape.rotation) % 360
+    if rotation == 0:
+        return False
+    x, y = round(shape.left / scale_x), round(shape.top / scale_y)
+    w, h = round(shape.width / scale_x), round(shape.height / scale_y)
+    return nudge_into(x, y, w, h, rotation, SLIDE_WIDTH, SLIDE_HEIGHT) is None
 
 
 #: The kinds of shape a pptx has that the model does not show, by the code they are reported under.
@@ -490,14 +502,25 @@ def _modeled_shape_indices(pptx_slide) -> list[int]:  # noqa: ANN001
     return [index for index, shape in enumerate(pptx_slide.shapes) if _classify(shape) is not None]
 
 
+def _turned_place(x: int, y: int, w: int, h: int, rotation: int) -> tuple[int, int, int]:
+    """Where an object read from a file goes and how it is turned, as ``(x, y, rotation)``. A turned object has to lie
+    on the slide by its outline (D1022), which PowerPoint does not ask: an outline that sticks out is moved the least
+    that brings it back, and one that cannot fit at all (it would be too large turned) is read upright."""
+    if rotation == 0:
+        return x, y, 0
+    place = nudge_into(x, y, w, h, rotation, SLIDE_WIDTH, SLIDE_HEIGHT)
+    return (*place, rotation) if place is not None else (x, y, 0)
+
+
 def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
     """``pptx_bytes`` as a :class:`~claudia_creates.SlideModel`: one slide per slide, in order, a text box or one
-    of the three built-in autoshapes on it becoming an object (bottom to top, same order ``pptx_bytes`` draws
-    them in). Anything else on a slide -- a table, a picture, a chart, a group, an autoshape outside the three
-    built-in ones -- is simply not added: claudia has no model for it, same as a table is invisible to
+    of the three built-in autoshapes on it becoming an object, and a picture an image (D460) (bottom to top, same
+    order ``pptx_bytes`` draws them in). Anything else on a slide -- a table, a chart, a group, an autoshape outside
+    the three built-in ones -- is simply not added: claudia has no model for it, same as a table is invisible to
     ``docx_to_text``. Position and size are read back through the presentation's own slide size (not a fixed
-    16:9 assumption), so a deck of any aspect ratio imports onto claudia's 1600x900 slide space. Rotation is read
-    back too (and written, D459).
+    16:9 assumption), so a deck of any aspect ratio imports onto claudia's 1600x900 slide space. A turn is read
+    back too (D1022: one whose outline would stick out of the slide moves the object back in, and one too large to
+    turn at all is read upright; ``pptx_import_losses`` says how many).
     Neither an object's own style nor its words' style can be recovered -- pptx carries no named-style concept
     the way Word does -- so every text box becomes ``"body-text"`` and every autoshape ``"plain-shape"``, for
     both, the same two styles ``slides_to_pptx`` itself falls back to."""
@@ -522,7 +545,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             x, y = round(shape.left / scale_x), round(shape.top / scale_y)
             w, h = round(shape.width / scale_x), round(shape.height / scale_y)
             text = shape.text_frame.text if shape.has_text_frame else ""
-            rotation = round(shape.rotation) % 360
+            x, y, rotation = _turned_place(x, y, w, h, round(shape.rotation) % 360)
             object_id = f"o{next(object_ids)}"
             if kind == "image":
                 asset = held_picture(shape)

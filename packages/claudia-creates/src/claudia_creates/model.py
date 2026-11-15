@@ -32,6 +32,8 @@ from claudia_core import (
     VisualObject,
     builtin_palette,
     new_registry,
+    nudge_into,
+    turned_extent,
 )
 
 from .printing import PrintSetup
@@ -210,11 +212,27 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return SlideAnchor.from_data(data)
 
     def check_anchor(self, anchor: SlideAnchor, body: ObjectBody) -> None:
-        """An object must stay on its slide, whole units only."""
+        """An object must stay on its slide, whole units only. What has to be on the slide is the object's outline: its
+        frame when it is upright, and what a turn makes of it otherwise, so the anchor of a turned object may lie
+        outside the slide while the object does not."""
         if not _is_whole(anchor.x) or not _is_whole(anchor.y):
             raise ValueError("x and y must be whole numbers")
-        if anchor.x < 0 or anchor.y < 0 or anchor.x + body.w > SLIDE_WIDTH or anchor.y + body.h > SLIDE_HEIGHT:
+        if (anchor.x, anchor.y) != nudge_into(
+            anchor.x, anchor.y, body.w, body.h, body.rotation, SLIDE_WIDTH, SLIDE_HEIGHT
+        ):
             raise ValueError(f"the object must stay on the slide ({SLIDE_WIDTH} by {SLIDE_HEIGHT} units)")
+
+    def turned_anchor(self, obj: SlideObject, rotation: int) -> SlideAnchor:
+        """The nearest place for ``obj`` at which turned to ``rotation`` its outline is on the slide."""
+        body = obj.body
+        place = nudge_into(obj.anchor.x, obj.anchor.y, body.w, body.h, rotation, SLIDE_WIDTH, SLIDE_HEIGHT)
+        if place is None:
+            out_w, out_h = turned_extent(body.w, body.h, rotation)
+            raise ValueError(
+                f"this object is too large to turn that way: it would be {out_w} by {out_h} units on a slide of "
+                f"{SLIDE_WIDTH} by {SLIDE_HEIGHT}"
+            )
+        return SlideAnchor(obj.anchor.slide, *place)
 
     # -- reading ---------------------------------------------------------------
     def get(self, object_id: str) -> SlideObject:

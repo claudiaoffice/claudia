@@ -31,6 +31,18 @@ A turned object, a picture, the print setup and the language reach the files (D4
 - `pptx_unwritten_changes` reports `print_setup` only for what a pptx has no place for (margins other than the paper's
   own, page numbers) and `language` only for a kept file; `odp_unwritten_changes` no longer reports `language`.
 - Objects are numbered over text boxes, shapes and pictures, so the ids of a deck with pictures differ from before.
+Turned objects in presentation files (rotation-ui, D1021, D1022).
+- `pptx_import_losses` reports `turn`: an object turned so far that its outline cannot lie on the slide.
+- `slides_to_pptx` writes the turn of every object (`a:xfrm rot`, clockwise, the unturned frame as PowerPoint keeps it);
+  it wrote none before, so a turned object came out upright.
+- `odp_to_slides` reads an object turned in LibreOffice or in claudia (`draw:transform="rotate (…) translate (…)"`,
+  counter-clockwise radians, no `svg:x`/`svg:y`) with its turn and its unturned frame; `slides_to_odp` writes one the
+  same way. A turned element with an `svg:x` or `svg:y` of its own, or any other transform, is still left out as before.
+- `apply_edits_to_odp` patches a turn, a move or a resize of a turned object: it puts `draw:transform` on and `svg:x`
+  and `svg:y` off (and back), and writes nothing else.
+- An object read from a file is kept on the slide by its outline (D1022): `pptx_to_slides` moves a turned object that
+  sticks out back in and reads one too large to turn upright; `odp_to_slides` leaves out (`off-slide-object`) a turned
+  object whose outline sticks out.
 
 ## [0.4.0] - 2026-11-14
 

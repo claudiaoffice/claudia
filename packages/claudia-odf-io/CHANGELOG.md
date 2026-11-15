@@ -36,6 +36,9 @@ Charts: embedded objects in a package (D462).
   default paragraph style. The package depends on claudia-core for the tag check.
 - `XmlPart.set_attributes(element, values, remove=())` takes attributes off an element too (an object that is turned
   has no `svg:x`/`svg:y`, one that is not has no `draw:transform`; D459).
+- `XmlPart.set_attributes(element, values, remove=…)` takes attributes off a start tag (with the space before each) as
+  it puts others on, in one edit; one the tag lacks is nothing to take off. A turned shape swaps `svg:x`/`svg:y` for
+  `draw:transform` (D1021).
 
 ### Changed
 - `XmlPart` makes the bytes of an inserted or replacing element when the result is made, so that what is done to the

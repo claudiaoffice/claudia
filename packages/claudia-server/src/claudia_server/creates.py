@@ -43,7 +43,6 @@ from claudia_core import (
     PageSetupError,
     RemoveObject,
     ResizeObject,
-    RotateObject,
     SetSnap,
     SetText,
     decode_image,
@@ -181,8 +180,10 @@ def _resize_object(ctx, *, id, x, y, w, h, base):
 
 
 def _rotate_object(ctx, *, id, rotation, base):
-    """Turn an object to `rotation` whole degrees clockwise (0 to 359); its frame stays."""
-    return _done(ctx, RotateObject(id, rotation), base)
+    """Turn an object about its centre to `rotation` whole degrees clockwise. Any whole number does (-20 is 340). A
+    slide keeps the turned outline of what is on it on the slide, so a turn that would push a corner off also moves
+    the object just far enough in, in the same step of the history; one that cannot fit at all is refused."""
+    return _done(ctx, _deck(ctx).turn_command(id, rotation), base)
 
 
 def _set_text(ctx, *, id, text, base):

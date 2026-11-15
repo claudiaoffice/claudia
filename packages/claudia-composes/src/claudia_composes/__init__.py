@@ -1,7 +1,7 @@
 """claudia-composes: the text app (E9.1).
 
 model      TextModel, TextObject: paragraphs, authorship, open suggestions, styles, and floating objects (E10.16)
-anchors    BlockAnchor: where an object hangs in a text, and why it follows the text where a sheet's is frozen
+anchors    BlockAnchor: where an object hangs in a text and how far it floats from there; why it follows the text
 commands   the text and structure commands (SetStyle, SetListItem, SetPageSetup, SetLanguage, …), suggestions (D63)
 page       PageSetup (the kernel's, D917): the paper, orientation, margins and page numbers a text prints on
 language   normalize_language, SetLanguage (the kernel's, D917): the language a text is written in (D915)
@@ -36,7 +36,7 @@ from claudia_core import (  # noqa: F401
 
 from . import commands  # noqa: F401  (registers the commands)
 from ._version import __version__
-from .anchors import BlockAnchor
+from .anchors import MAX_ANCHOR_OFFSET, BlockAnchor
 from .commands import (
     AcceptSuggestion,
     DeleteText,
@@ -86,6 +86,7 @@ __all__ = [
     "JoinBlocks",
     "LanguageError",
     "LabelsChanged",
+    "MAX_ANCHOR_OFFSET",
     "MoveObject",
     "next_style",
     "normalize_language",

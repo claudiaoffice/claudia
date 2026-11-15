@@ -38,7 +38,7 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_core import ImageAsset, ObjectBody, Rasterise, VisualObject, paragraph_for, picture_body
+from claudia_core import ImageAsset, ObjectBody, Rasterise, VisualObject, nudge_into, paragraph_for, picture_body
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
@@ -208,17 +208,26 @@ class _Probe:
             self.model.define_shape(definition)
 
     def holds(
-        self, kind: str, shape: str | None, box: tuple[int, int, int, int], text: str, asset: ImageAsset | None = None
+        self,
+        kind: str,
+        shape: str | None,
+        box: tuple[int, int, int, int, int],
+        text: str,
+        asset: ImageAsset | None = None,
     ) -> bool:
+        """Whether the model takes an object of this kind at ``box`` (``x, y, w, h, rotation``): a turned one is judged
+        by its outline (D1022)."""
         if kind == "image":
             if asset is None:
                 return False
             if asset.id not in self.model.images:
                 self.model.define_image(asset)
-            body = picture_body("o0", asset, (box[2], box[3]))
+            body = picture_body("o0", asset, (box[2], box[3]), rotation=box[4])
         else:
             style, words = _default_styles(kind)
-            body = ObjectBody("o0", kind, box[2], box[3], style, paragraph_for("o0", words, text), shape=shape)
+            body = ObjectBody(
+                "o0", kind, box[2], box[3], style, paragraph_for("o0", words, text), shape=shape, rotation=box[4]
+            )
         try:
             self.model.check_object(VisualObject(body, SlideAnchor("probe", box[0], box[1])))
         except ValueError:
@@ -354,7 +363,8 @@ def _own_words(paragraph: etree._Element, owner: etree._Element) -> bool:
 
 def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, int, int, int] | str:
     """Where an element is, in slide units, and how far it is turned (whole degrees clockwise), or why it has no
-    place (``"rotated"``: a transform that is more than a rotation, ``"unplaced"``, ``"off-slide"``)."""
+    place (``"rotated"``: a transform that is more than a rotation, ``"unplaced"``, ``"off-slide"``). A turned element
+    is placed by its outline, as the model asks (D1022): one whose outline sticks out of the slide is off it."""
     transform = element.get(_q("draw", "transform"))
     values = [inches(element.get(_q("svg", name))) for name in ("x", "y", "width", "height")]
     turn = 0
@@ -372,7 +382,7 @@ def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, 
     x, y, w, h = (value for value in values if value is not None)
     per_x, per_y = size[0] / SLIDE_WIDTH, size[1] / SLIDE_HEIGHT
     box = (round(x / per_x), round(y / per_y), round(w / per_x), round(h / per_y))
-    if box[0] < 0 or box[1] < 0 or box[0] + box[2] > SLIDE_WIDTH or box[1] + box[3] > SLIDE_HEIGHT:
+    if nudge_into(*box, turn, SLIDE_WIDTH, SLIDE_HEIGHT) != box[:2]:
         return "off-slide"
     return (*box, turn)
 
@@ -547,7 +557,7 @@ def _scan_child(
     asset = picture_of(child, graphics, parts) if kind == "image" else None
     if isinstance(box, str):
         slide.left_out.append((f"{box}-object", kind))
-    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box[:4], text, asset):
+    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box, text, asset):
         slide.left_out.append(("unfit-object", kind))
     else:
         description = description_of(child) if kind == "image" else ""

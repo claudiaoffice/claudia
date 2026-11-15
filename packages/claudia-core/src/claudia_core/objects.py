@@ -480,6 +480,29 @@ class ObjectModel[A: Anchor]:
         :class:`DefineDiagram`/:class:`UpdateDiagram` unless an app actually issues them)."""
         raise NotImplementedError
 
+    def turn_command(self, object_id: str, rotation: int) -> RotateObject:
+        """The command that turns an object to ``rotation`` degrees clockwise: any whole number, read modulo a whole
+        turn (−20 is 340), carrying the place the object must be moved to for its turned outline to be allowed (see
+        :meth:`turned_anchor`) when that is not where it is. A chart does not turn (``ValueError``)."""
+        if not _is_whole(rotation):
+            raise ValueError("the rotation must be whole degrees")
+        obj = self.get_object(object_id)
+        if not self.can_turn(obj.body):
+            raise ValueError("A chart does not turn")
+        turned = rotation % 360
+        anchor = self.turned_anchor(obj, turned)
+        return RotateObject(object_id, turned, None if anchor == obj.anchor else anchor.to_data())
+
+    def can_turn(self, body: ObjectBody) -> bool:
+        """Does an object like this turn? Text boxes, shapes, pictures and rendered text do; a chart does not."""
+        return body.kind != "diagram"
+
+    def turned_anchor(self, obj: VisualObject[A], rotation: int) -> A:
+        """Where ``obj`` has to sit for a turn to ``rotation`` to be allowed: its own anchor unless this app keeps what
+        is in a container inside it (a slide does), in which case the nearest place that keeps the turned outline in.
+        ``ValueError`` with a sentence when there is no such place."""
+        return obj.anchor
+
     # -- the stack ---------------------------------------------------------------
     def open_container(self, container: str) -> None:
         """Make room for a container's objects (called when a slide, sheet or paragraph appears)."""
@@ -1611,11 +1634,16 @@ class ResizeObject(Command):
 @core_commands.register
 @dataclass(frozen=True)
 class RotateObject(Command):
-    """Turn an object to ``rotation`` whole degrees clockwise; its frame stays."""
+    """Turn an object to ``rotation`` whole degrees clockwise about the centre of its frame.
+
+    ``anchor`` is where the object sits afterwards, as plain data, when the turn has to move it: a slide keeps the
+    turned outline of what is on it on the slide, so a turn that would push a corner off carries the place that keeps
+    it on (:meth:`ObjectModel.turned_anchor`), and one undo takes back both. ``None``: the object stays where it is."""
 
     kind: ClassVar[str] = "core.RotateObject"
     id: str
     rotation: int
+    anchor: dict | None = None
 
     @property
     def label(self) -> str:
@@ -1629,16 +1657,22 @@ class RotateObject(Command):
         model = _host(ctx)
         old = model.get_object(self.id)
         new = old.with_body(rotation=self.rotation)
+        if self.anchor is not None:
+            new = replace(new, anchor=_anchor_of(ctx, self.anchor))
         model.replace_object(new)
         ctx.emit(model.objects_changed(new.container, changed=(new,)))
-        return RotateObject(self.id, old.body.rotation)
+        return RotateObject(self.id, old.body.rotation, None if self.anchor is None else old.anchor.to_data())
 
     def to_data(self) -> dict:
-        return {"id": self.id, "rotation": self.rotation}
+        data: dict[str, Any] = {"id": self.id, "rotation": self.rotation}
+        if self.anchor is not None:
+            data["anchor"] = dict(self.anchor)
+        return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> RotateObject:
-        return cls(data["id"], data["rotation"])
+        anchor = data.get("anchor")
+        return cls(data["id"], data["rotation"], None if anchor is None else dict(anchor))
 
     def regions(self, model: object) -> tuple[ObjectSet, ...]:
         return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()

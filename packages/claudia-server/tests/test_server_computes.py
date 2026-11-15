@@ -1402,3 +1402,25 @@ def test_a_workbook_has_a_language_like_a_text(printed):
     assert call(printed, "language") == {"language": None}
     call(printed, "set_language", {"language": "DE-de"}, BEN)
     assert call(printed, "language") == {"language": "de-DE"}
+
+
+# ----------------------------------------------------------------------------- turning an object (rotation-ui)
+def test_an_object_on_a_sheet_turns_about_its_centre_and_keeps_its_anchor_cell(book):
+    call(book, "add_sheet", {"name": "S"})
+    obj = add_image(book)
+    call(book, "rotate_object", {"id": obj, "rotation": -20})
+    (turned,) = objects(book)
+    assert turned["rotation"] == 340
+    assert (turned["anchor"]["row"], turned["anchor"]["col"]) == (2, 2)
+
+
+def test_a_chart_does_not_turn(book):
+    call(book, "add_sheet", {"name": "S"})
+    diagram_id = define_diagram(book)
+    added = call(
+        book, "add_diagram_object", {"sheet": "s1", "row": 1, "col": 1, "w": 300, "h": 200, "diagram": diagram_id}
+    )
+    with pytest.raises(RequestError, match="chart does not turn") as caught:
+        call(book, "rotate_object", {"id": added["object"], "rotation": 90})
+    assert caught.value.code == "command_error"
+    assert objects(book)[0]["rotation"] == 0

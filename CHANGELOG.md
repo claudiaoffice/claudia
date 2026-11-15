@@ -13,6 +13,16 @@ Pictures of files, shared by the converters of all three apps (D464).
   `UNKNOWN_TIME`, `FALLBACK_SIDE`: how a picture of a docx, odt, pptx or odp file becomes the image object of the
   model (and a rendered text container the picture of a file), moved here from `claudia-creates-io` so that composes
   reads and writes pictures the same way creates does. The names `claudia_creates_io` exported stay there too.
+Turning objects (rotation-ui, D1021–D1024).
+- `claudia_core.turning` (`SINE_MILLIONTHS`, `turned_extent`, `nudge_into`): how far a turned frame reaches, in whole
+  units and from an integer table of sines (D910), and the nearest place at which a turned outline lies inside a space.
+- `ObjectModel.turn_command(id, rotation)`: the command that turns an object. Any whole number of degrees is read
+  modulo a whole turn (-20 is 340); a chart (kind `diagram`) does not turn (`ObjectModel.can_turn`); the command carries
+  the place the object has to be moved to for its outline to be allowed (`ObjectModel.turned_anchor`, which an app that
+  keeps objects inside a container overrides; the default leaves the anchor alone).
+- `RotateObject.anchor` (default `None`): the place the object has after the turn, as plain data. A turn that moves
+  the object is one command and one undo step; its inverse carries the old place. A command without one is stored as it
+  always was, so no schema change: a log written before this reads unchanged.
 
 ## [0.25.0] - 2026-11-15
 

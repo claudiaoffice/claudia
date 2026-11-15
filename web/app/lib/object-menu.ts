@@ -10,6 +10,8 @@ import type { MenuItem } from '../components/MenuBar.vue'
 import type { SlideObject } from './slide-session'
 
 import { translate as t } from './i18n'
+import { hintOf } from './shortcuts'
+import { canTurn } from './turning'
 export interface ObjectMenuActions {
   edit: () => void
   /** Open the style menu on this object: its fill, its border, and the style its words follow (E9.7, D203). */
@@ -21,6 +23,10 @@ export interface ObjectMenuActions {
   /** Say what the object shows to someone who cannot see it, or mark it as decoration (BITV 1.1.1). */
   describe: () => void
   setSnap: (snap: boolean) => void
+  /** A quarter turn clockwise, a quarter turn back, and the Rotate By… popover (D1024). */
+  rotateRight: () => void
+  rotateLeft: () => void
+  rotateBy: () => void
 }
 
 export function contextMenuItems(o: SlideObject, readonly: boolean, actions: ObjectMenuActions): MenuItem[] {
@@ -42,6 +48,13 @@ export function contextMenuItems(o: SlideObject, readonly: boolean, actions: Obj
     // A picture has no text to write — `SlideCanvas.vue`'s own `beginEdit` already refuses it for the same reason
     // (Enter/F2 does nothing on an image either), so the item is left off entirely rather than shown disabled.
     items.push({ label: t('Edit Text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
+    items.push({ label: '', separator: true })
+  }
+  // The same three turns as Format ▸ Rotate ▸ (D1024), for everything but a chart, which does not turn (D1021).
+  if (canTurn(o.kind)) {
+    items.push({ label: t('Rotate Right 90°'), hint: hintOf('format.rotate-right'), action: actions.rotateRight, disabled: readonly })
+    items.push({ label: t('Rotate Left 90°'), hint: hintOf('format.rotate-left'), action: actions.rotateLeft, disabled: readonly })
+    items.push({ label: t('Rotate By…'), hint: hintOf('format.rotate-by'), action: actions.rotateBy, disabled: readonly })
     items.push({ label: '', separator: true })
   }
   // The grid is only a helper the view draws; whether this object follows it is real document state (E10.15).

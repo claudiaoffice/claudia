@@ -518,9 +518,9 @@ def _search_block(describe: str = "Find text, formulas and values, and replace t
     return (_page("edit.search-replace", "Search & Replace…", describe, accelerators=("<Primary>f",)),)
 
 
-def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = False) -> Menu:
+def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = False, rotate: bool = False) -> Menu:
     """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
-    and where there are objects, Describe Object… (BITV 1.1.1). List ▸ is in every app as on the web; outside a text
+    and where there are objects, Describe Object… (BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024). List ▸ is in every app as on the web; outside a text
     the page reports its entries disabled. Computes adds Clear Cell Style, which the web has in Apply Style's flyout."""
     styles: tuple[MenuEntry, ...] = (
         _page(
@@ -625,7 +625,37 @@ def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = 
                 ),
             ),
         )
+    if rotate:
+        sections = (*sections, (_rotate_submenu(),))
     return Menu("Format", sections)
+
+
+def _rotate_submenu() -> Submenu:
+    """Format ▸ Rotate ▸ (D1024): a quarter turn each way, and any angle. One shape wherever an app turns objects.
+    Ctrl+Alt+Z is Replay History's, so Rotate By… takes it with Shift."""
+    return Submenu(
+        "Rotate",
+        (
+            _page(
+                "format.rotate-right",
+                "Rotate Right 90°",
+                "Turn the object you have selected a quarter turn clockwise",
+                accelerators=("<Primary><Alt>period",),
+            ),
+            _page(
+                "format.rotate-left",
+                "Rotate Left 90°",
+                "Turn the object you have selected a quarter turn counter-clockwise",
+                accelerators=("<Primary><Alt>comma",),
+            ),
+            _page(
+                "format.rotate-by",
+                "Rotate By…",
+                "Turn the object you have selected to an angle, in whole degrees",
+                accelerators=("<Primary><Alt><Shift>z",),
+            ),
+        ),
+    )
 
 
 def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
@@ -1072,7 +1102,7 @@ def creates() -> Manifest:
         "creates",
         "Claudia Creates",
         edit=edit_menu,
-        format_menu=_format_menu(look="Change how the object you have selected looks", describe=True),
+        format_menu=_format_menu(look="Change how the object you have selected looks", describe=True, rotate=True),
         view=view_menu,
         tools=Menu("Tools", ((_tools_ask(),),)),
         prints=True,

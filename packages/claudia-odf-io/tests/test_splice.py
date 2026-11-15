@@ -282,6 +282,37 @@ class TestSetAttributes:
         with pytest.raises(OdfError, match="namespace"):
             part.set_attributes(part.root[0], {"svg:x": "1cm"})
 
+    def test_takes_attributes_off_and_leaves_the_rest_of_the_tag_alone(self):
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[0], {}, remove=("svg:x", "svg:y"))
+        assert part.result().startswith(
+            f'<?xml version="1.0" encoding="UTF-8"?>\n<root xmlns:a="{NS["draw"]}" xmlns:s="{NS["svg"]}">'
+            '<a:frame a:name="A &amp; B">text &apos;kept&apos;</a:frame>'.encode()
+        )
+
+    def test_takes_off_and_puts_on_in_one_edit(self):
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[0], {"draw:transform": "rotate (0.5)"}, remove=("svg:x", "svg:y"))
+        element = etree.fromstring(part.result())[0]
+        assert element.get(f"{{{NS['draw']}}}transform") == "rotate (0.5)"
+        assert element.get(f"{{{NS['svg']}}}x") is None and element.get(f"{{{NS['svg']}}}y") is None
+        assert element.get(f"{{{NS['draw']}}}name") == "A & B"
+
+    def test_takes_off_from_an_empty_element(self):
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[1], {}, remove=("svg:x",))
+        assert part.result().endswith(b"<a:frame/></root>")
+
+    def test_an_attribute_the_tag_lacks_is_nothing_to_take_off(self):
+        part = XmlPart(self.SOURCE)
+        part.set_attributes(part.root[0], {}, remove=("svg:width",))
+        assert part.result() == self.SOURCE
+
+    def test_a_namespace_the_file_does_not_declare_has_nothing_to_take_off(self):
+        part = XmlPart(b'<root xmlns:a="x"><a:e/></root>')
+        part.set_attributes(part.root[0], {}, remove=("svg:x",))
+        assert part.result() == b'<root xmlns:a="x"><a:e/></root>'
+
     def test_the_xml_prefix_needs_no_declaration(self):
         part = XmlPart(b'<root xmlns:a="x"><a:e/></root>')
         part.set_attributes(part.root[0], {"xml:id": "e1"})

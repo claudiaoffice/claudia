@@ -29,6 +29,7 @@
     raster       Rasterise and the empty picture that stands in for an SVG nobody can draw (D394)
     page         PageSetup: the paper, orientation, margins and page numbers a document prints on (D904, D917)
     language     the language a document is written in, and SetLanguage (D915, D917)
+    turning      how far a turned object reaches, in whole units and from a table of sines (D910)
 
 The kernel contains no spreadbook, text or slide code and does no I/O.
 """
@@ -224,6 +225,7 @@ from .revision import MAIN, Branch, Revision
 from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
 from .store import DocumentStore, MemoryStore
 from .styles import ChangeStyle, CreateStyle, RemoveStyle, RenameStyle, StyleBook, StyleDef, StylesChanged
+from .turning import SINE_MILLIONTHS, nudge_into, turned_extent
 
 __all__ = [
     "FALLBACK_SIDE",
@@ -351,6 +353,7 @@ __all__ = [
     "MoveObject",
     "new_registry",
     "normalized",
+    "nudge_into",
     "object_texts",
     "replace_spans",
     "normalize_language",
@@ -418,6 +421,7 @@ __all__ = [
     "ThingRenamed",
     "slice_runs",
     "Slot",
+    "SINE_MILLIONTHS",
     "SLOTS",
     "SlotTable",
     "Snapshot",
@@ -432,6 +436,7 @@ __all__ = [
     "TEXT_FLOOR",
     "total",
     "transform",
+    "turned_extent",
     "UI_FLOOR",
     "UndoConflict",
     "UndoRefused",

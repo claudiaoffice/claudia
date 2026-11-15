@@ -11,6 +11,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   thing keeps its name and nothing is written. `blocks` in composes says a named paragraph's `name`.
 - A new document's things are named in its `Setup` entry, in the maker's language: a presentation's first slide was the
   one thing without a name (UX-40).
+- `rotate_object` turns an object about its centre in all three apps (rotation-ui): any whole number of degrees (-20 is
+  340); in creates a turn that would push the outline off the slide also moves the object just far enough in, in the same
+  step of the history, and one that cannot fit is refused; a chart (computes) does not turn; in composes the assistant may
+  not (D63). `move_object` in composes takes `dx` and `dy`, how far the object floats from the character it hangs from; left
+  out, it keeps the offset it has. `PROTOCOL_VERSION` stays 1: a method and optional parameters were added.
 - `changes_since` (D553), in the three apps: `{regions, truncated}`, every place that changed after a step of the line
   (`replay.MAX_CHANGES` at most), for "show differences from now" in a replay.
 - `propose_restore_step` (D553): suggest going back to the state after one step of the history, with the same

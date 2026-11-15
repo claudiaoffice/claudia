@@ -3,6 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.13.0] - 2026-11-15
+
+Turning objects (rotation-ui).
+
+### Changed
+- **Breaking** (what a slide accepts): an object must keep its *outline*, not its frame, on the slide. An upright object
+  is judged exactly as before; a turned one by the rectangle that the turn makes of its frame (`claudia_core.turned_extent`),
+  so the anchor of a turned object may lie outside the slide while the object does not. `SlideModel.check_anchor` says so.
+
+### Added
+- `SlideModel.turned_anchor(obj, rotation)`: the nearest place at which the turned outline is on the slide, or a
+  `ValueError` ("too large to turn") when there is none. `turn_command` (the kernel's) carries it in the turn.
+
 ## [0.12.0] - 2026-11-15
 
 Names of things (D550).

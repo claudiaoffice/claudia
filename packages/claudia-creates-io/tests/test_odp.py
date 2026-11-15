@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import random
 import re
+import shutil
 import struct
+import subprocess
 from dataclasses import replace
 
 import pytest
@@ -1041,3 +1043,149 @@ def test_with_a_rasteriser_the_picture_is_a_png_every_program_draws_and_nothing_
     href = a_picture_frame(data).find("draw:image", NS).get(f"{{{NS['xlink']}}}href")
     assert href.endswith(".png") and read_parts(data)[href] == png and seen == [(b"<svg", 300, 100)]
     assert odp_export_losses(deck, rasterised=True) == () and problems(data) == []
+
+
+# -- a turned object (D1021, D1022) ----------------------------------------------------------------------------------
+# ODF counts a turn the other way round from the model and from PowerPoint: counter-clockwise, in radians. A turned
+# element has no svg:x and svg:y; its draw:transform says where the turned shape's top left corner lands.
+WIDE = {"width": "25.4cm", "height": "14.2875cm"}  # 1600 by 900 units are 62.992 per cm here
+TURNED_BY_LIBREOFFICE = (
+    '<draw:custom-shape draw:style-name="gr1" svg:width="8.332cm" svg:height="2.777cm" '
+    'draw:transform="rotate (-0.523598775598299) translate (6.808cm 0.881cm)"><text:p/>'
+    '<draw:enhanced-geometry draw:type="rectangle"/></draw:custom-shape>'
+)
+
+
+def close(frame: tuple[int, ...], expected: tuple[int, ...]) -> bool:
+    """Whole units, but a file's lengths are rounded to a thousandth of a centimetre: one unit either way is the same
+    place."""
+    return all(abs(a - b) <= 1 for a, b in zip(frame, expected, strict=True))
+
+
+def frame_of(model: SlideModel, object_id: str) -> tuple[int, int, int, int, int]:
+    obj = model.objects[object_id]
+    return obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h, obj.body.rotation
+
+
+def a_turned_deck(x: int, y: int, w: int, h: int, rotation: int, kind: str = "text") -> SlideModel:
+    model = SlideModel.empty()
+    style, words = ("plain-box", "body-text") if kind == "text" else ("plain-shape", "shape-label")
+    shape = None
+    if kind == "shape":
+        shape = "rectangle"
+        model.define_shape(ShapeLibrary.load().get(shape))
+    body = ObjectBody("o1", kind, w, h, style, paragraph_for("o1", words, "turned"), shape=shape, rotation=rotation)
+    model.insert_object(VisualObject(body, SlideAnchor("s1", x, y)))
+    return model
+
+
+def test_a_shape_turned_in_libreoffice_is_read_with_its_turn_and_its_unturned_frame():
+    # This is what LibreOffice wrote for a rectangle at (350, 175) units, 525 by 175, turned 30 degrees clockwise.
+    model = odp_to_slides(an_odp(page(TURNED_BY_LIBREOFFICE), **WIDE))
+    assert close(frame_of(model, "o1"), (350, 175, 525, 175, 30))
+    assert frame_of(model, "o1")[4] == 30
+
+
+@pytest.mark.parametrize("rotation", [1, 30, 90, 180, 270, 359])
+@pytest.mark.parametrize("kind", ["text", "shape"])
+def test_a_turned_object_is_written_the_way_odf_counts_and_read_back_in_its_place(rotation, kind):
+    data = slides_to_odp(a_turned_deck(700, 300, 400, 200, rotation, kind))
+    element = pages_of(data)[0][0]
+    assert element.get(f"{{{NS['svg']}}}x") is None and element.get(f"{{{NS['svg']}}}y") is None
+    transform = element.get(f"{{{NS['draw']}}}transform")
+    match = re.fullmatch(r"rotate \((\S+)\) translate \(\S+cm \S+cm\)", transform)
+    assert match and float(match.group(1)) == pytest.approx(-rotation * 3.141592653589793 / 180, abs=1e-12)
+    assert close(frame_of(odp_to_slides(data), "o1"), (700, 300, 400, 200, rotation))
+    assert problems(data) == []
+
+
+def test_an_upright_object_has_no_transform_and_keeps_its_x_and_y():
+    element = pages_of(slides_to_odp(a_turned_deck(700, 300, 400, 200, 0)))[0][0]
+    assert element.get(f"{{{NS['draw']}}}transform") is None
+    assert element.get(f"{{{NS['svg']}}}x") is not None
+
+
+def test_a_turned_object_whose_outline_is_off_the_slide_is_left_out_and_reported():
+    # 300 by 100 at the top left, turned a quarter, reaches above the slide: there is no place to read it at
+    markup = (
+        '<draw:custom-shape svg:width="4.762cm" svg:height="1.587cm" draw:transform="rotate (-1.5707963267948966) '
+        'translate (3.175cm -1.587cm)"><text:p/><draw:enhanced-geometry draw:type="rectangle"/></draw:custom-shape>'
+    )
+    data = an_odp(page(markup), **WIDE)
+    assert odp_to_slides(data).objects == {}
+    assert {loss.kind for loss in odp_import_losses(data)} == {"off-slide-object"}
+
+
+def test_turning_an_object_of_an_imported_file_takes_its_x_and_y_off_and_leaves_the_rest_alone():
+    def turn(model):
+        old = model.objects["o1"]
+        model.replace_object(VisualObject(replace(old.body, rotation=30), old.anchor))
+
+    edited, _, current = edit(RICH, turn)
+    old, new = content(RICH), content(edited)
+    start = old.index("<draw:frame")
+    end = old.index(">", start)
+    tag = new[start : new.index(">", start) + 1]
+    assert "svg:x" not in tag and "svg:y" not in tag and 'draw:transform="rotate (-0.5235' in tag
+    assert 'svg:width="10cm"' in tag and 'draw:style-name="gr1"' in tag
+    assert new.endswith(old[end + 1 :])
+    assert close(frame_of(odp_to_slides(edited), "o1"), frame_of(current, "o1"))
+    assert problems(edited) == []
+
+
+def test_turning_it_back_upright_puts_x_and_y_back_and_takes_the_transform_off():
+    turned = slides_to_odp(a_turned_deck(700, 300, 400, 200, 30))
+
+    def upright(model):
+        old = model.objects["o1"]
+        model.replace_object(VisualObject(replace(old.body, rotation=0), old.anchor))
+
+    edited, _, current = edit(turned, upright)
+    element = pages_of(edited)[0][0]
+    assert element.get(f"{{{NS['draw']}}}transform") is None
+    assert frame_of(odp_to_slides(edited), "o1") == frame_of(current, "o1") == (700, 300, 400, 200, 0)
+
+
+def test_moving_a_turned_object_changes_only_its_transform():
+    turned = slides_to_odp(a_turned_deck(700, 300, 400, 200, 90))
+    edited, _, current = edit(turned, lambda model: move(model, "o1", 800, 350))
+    element = pages_of(edited)[0][0]
+    assert element.get(f"{{{NS['svg']}}}x") is None
+    assert close(frame_of(odp_to_slides(edited), "o1"), (800, 350, 400, 200, 90))
+    assert content(edited).count("draw:transform") == 1
+
+
+def test_an_edit_that_changes_nothing_about_a_turned_object_leaves_the_file_as_it_was():
+    turned = slides_to_odp(a_turned_deck(700, 300, 400, 200, 30))
+    assert apply_edits_to_odp(turned, odp_to_slides(turned), odp_to_slides(turned)) == turned
+
+
+def test_libreoffice_turns_what_is_written_the_way_the_model_does(tmp_path):
+    soffice = shutil.which("soffice")
+    if soffice is None:
+        pytest.skip("LibreOffice is not installed")
+    (tmp_path / "turned.odp").write_bytes(slides_to_odp(a_turned_deck(700, 300, 400, 200, 30, "shape")))
+    run = subprocess.run(
+        [
+            soffice,
+            "--headless",
+            f"-env:UserInstallation=file://{tmp_path}/profile",
+            "--convert-to",
+            "pptx",
+            "--outdir",
+            str(tmp_path),
+            str(tmp_path / "turned.odp"),
+        ],
+        capture_output=True,
+        timeout=180,
+        check=False,
+    )
+    assert run.returncode == 0, run.stderr
+    from pptx import Presentation
+
+    shape = Presentation(str(tmp_path / "turned.pptx")).slides[0].shapes[0]
+    assert shape.rotation == pytest.approx(30, abs=0.01)  # clockwise, as in PowerPoint
+    unit = Presentation(str(tmp_path / "turned.pptx")).slide_width / 1600
+    assert (shape.left / unit, shape.top / unit, shape.width / unit, shape.height / unit) == pytest.approx(
+        (700, 300, 400, 200), abs=1.5
+    )

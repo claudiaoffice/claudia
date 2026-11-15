@@ -381,6 +381,13 @@ export class SlideSession extends BaseSession<SlideState> {
     return (await this.attempt('set_text', { id, text, base: this.state.revision })) !== false
   }
 
+  /** Turn an object to `rotation` whole degrees clockwise about its centre (0–359): one step in the history (D1021).
+   * The server moves the object back onto the slide when the turn would take its outline off (D1022), so what the
+   * object ends up as is what the next `objects` event says, not what was asked; a turn that cannot fit is refused. */
+  async rotate(id: string, rotation: number): Promise<boolean> {
+    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
+  }
+
   /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
   async setSnap(id: string, snap: boolean): Promise<boolean> {
     return (await this.attempt('set_snap', { id, snap, base: this.state.revision })) !== false

@@ -16,3 +16,5 @@ superseded-by: []
 **Notes.** The composes web client does not show floating objects in the text yet (they arrive by import); the preview is the first place they are drawn in composes, so where an object goes on a page had to be decided here. Rotation is whole degrees, from a table of sines (D910).
 
 *2026-11-13:* the drawing of objects is shared with creates (`layout/src/apps/objects.ts`); a shape's label is inset and centred as on a slide (**D918**).
+
+*2026-11-15:* the top left is the anchor character's place plus the object's offset (`dx`, `dy`, **D1023**); a turned object keeps the margins by its turned outline.

@@ -185,6 +185,9 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Outdent | Shift+Tab | the document view or the browser |
 | Format | Colours… | Ctrl+Alt+K |  |
 | Format | Describe Object… | Ctrl+Alt+D |  |
+| Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |
+| Format | Rotate ▸ Rotate Left 90° | Ctrl+Alt+, |  |
+| Format | Rotate ▸ Rotate By… | Ctrl+Shift+Alt+Z |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
 | View | Replay History… | Ctrl+Alt+Z |  |

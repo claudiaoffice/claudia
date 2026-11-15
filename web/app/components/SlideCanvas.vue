@@ -4,12 +4,14 @@ import { lookOnly } from '~/lib/replay'
 import { replayTints } from '~/lib/replay-tint'
 // The slide on screen: its objects, and what people do to them. A click selects (and holds) an object, dragging moves
 // it, the handles resize it, a double click or Enter edits its text, Delete removes it, and a right click offers the
-// same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. Nothing is
+// same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. A handle above
+// the selection turns it (D1024); a turned object is drawn turned about the centre of its frame. Nothing is
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
 import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, besideRect, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { objectName, pictureAlt } from '~/lib/descriptions'
+import { canTurn, degreesText, moveTurned, quarterTurn, resizeTurned, stepTurn, turnFromPointer, SHIFT_STEP } from '~/lib/turning'
 import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
@@ -41,6 +43,8 @@ const replayClass = (id: string) => {
 }
 
 const MARGIN = 24
+/** Screen pixels from the top edge of an object to the middle of its turn handle (the stem is 22, the hit area 32). */
+const HANDLE_REACH = 38
 const DRAG_START = 3 // screen pixels the pointer must travel before a click becomes a drag
 
 const area = ref<HTMLElement | null>(null)
@@ -78,9 +82,14 @@ const gridStyle = computed(() => (props.showGrid ? { backgroundSize: `${px(GRID_
 function frameOf(o: SlideObject): Frame {
   return drag.value?.id === o.id ? drag.value.frame : slideFrame(o)
 }
+/** How far an object is turned on the screen: the turn being tried while the handle or Rotate By… is at work, else its own. */
+function rotationOf(o: SlideObject): number {
+  return turning.value?.id === o.id ? turning.value.turn : o.rotation
+}
+const turnCss = (degrees: number) => (degrees ? { transform: `rotate(${degrees}deg)` } : {})
 function boxStyle(o: SlideObject) {
   const f = frameOf(o)
-  return { left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h) }
+  return { left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h), ...turnCss(rotationOf(o)) }
 }
 function cssOf(o: SlideObject) {
   // withDisplayInk: a text object's default ink, genuinely black in the document (D28/2026-11-06), still needs to
@@ -153,6 +162,11 @@ const label = (o: SlideObject) => objectName(o, { shape: outline(o)?.name, words
 // ------------------------------------------------------------------------------ selection, dragging, resizing
 type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
 const drag = ref<Drag | null>(null)
+/** A turn being tried, not yet sent: from the handle (pointer down to up) or from Rotate By… (open to Done). */
+type Turn = { id: string; from: number; turn: number; centre: { x: number; y: number } }
+const turning = ref<Turn | null>(null)
+/** What a screen reader is told about a turn: the angle it has now. */
+const turnSaid = ref('')
 
 const selected = computed(() => (state.selected ? (state.objects[state.selected] ?? null) : null))
 const selectedFrame = computed(() => (selected.value ? frameOf(selected.value) : null))
@@ -165,6 +179,24 @@ function aspectOf(o: SlideObject): number | null {
   }
   return outline(o)?.aspect ?? null
 }
+/** The turn handle is for an object that turns (not a chart), when it can be changed and is not being written in. */
+const turnable = computed(() => {
+  const o = selected.value
+  return !!o && canTurn(o.kind) && !readonly.value && !editing.value && !containerEditing.value
+})
+const selectedTurn = computed(() => (selected.value ? rotationOf(selected.value) : 0))
+/** Where the handle would be is off the slide (an object at the top edge, say): it goes to the other side of the object
+ * instead, so it can always be reached. The stem and the chip go with it. */
+const handleBelow = computed(() => {
+  const f = selectedFrame.value
+  if (!f) return false
+  const radians = (selectedTurn.value * Math.PI) / 180
+  const reach = (f.h * scale.value) / 2 + HANDLE_REACH
+  const x = (f.x + f.w / 2) * scale.value + reach * Math.sin(radians)
+  const y = (f.y + f.h / 2) * scale.value - reach * Math.cos(radians)
+  const edge = 16
+  return x < edge || y < edge || x > SLIDE_W * scale.value - edge || y > SLIDE_H * scale.value - edge
+})
 const handles = computed<Handle[]>(() => {
   const o = selected.value
   if (!o || readonly.value || editing.value || containerEditing.value) return []
@@ -198,6 +230,11 @@ function onHandleDown(event: PointerEvent, handle: Handle) {
 }
 
 function onPointerMove(event: PointerEvent) {
+  const turn = turning.value
+  if (turn && pointerTurn && !readonly.value) {
+    turn.turn = turnFromPointer(turn.centre, point(event), { shift: event.shiftKey, alt: event.altKey })
+    return
+  }
   const d = drag.value
   if (!d || readonly.value) return
   const here = point(event)
@@ -207,10 +244,16 @@ function onPointerMove(event: PointerEvent) {
   const o = state.objects[d.id]
   if (!o) return
   const grid = o.snap ? GRID_SIZE : null
+  if (o.rotation) {
+    // A turned frame is kept where its *outline* stays on the slide, and a handle pulls along the object's own axes (D1022)
+    d.frame = d.handle === 'move' ? moveTurned(d.start, o.rotation, dx, dy, grid) : (resizeTurned(d.start, o.rotation, d.handle, dx, dy, aspectOf(o)) ?? d.frame)
+    return
+  }
   d.frame = d.handle === 'move' ? moveFrame(d.start, dx, dy, grid) : resizeFrame(d.start, d.handle, dx, dy, aspectOf(o), grid)
 }
 
 async function onPointerUp() {
+  if (pointerTurn) return void (await finishTurn())
   const d = drag.value
   if (!d) return
   const changed = d.moved && (d.frame.x !== d.start.x || d.frame.y !== d.start.y || d.frame.w !== d.start.w || d.frame.h !== d.start.h)
@@ -219,6 +262,93 @@ async function onPointerUp() {
     else await session.resize(d.id, d.frame)
   }
   if (drag.value === d) drag.value = null // the server's answer is in the state by now; a refusal snaps the object back
+}
+
+// ------------------------------------------------------------------------------ turning (D1021, D1024)
+/** True between the press on the handle and its release; Rotate By… also has a `turning`, but it is the popover that ends it. */
+let pointerTurn = false
+
+function startTurn(o: SlideObject): Turn {
+  const f = slideFrame(o)
+  return { id: o.id, from: o.rotation, turn: o.rotation, centre: { x: f.x + f.w / 2, y: f.y + f.h / 2 } }
+}
+function onTurnDown(event: PointerEvent) {
+  const o = selected.value
+  if (!o || !turnable.value || event.button !== 0) return
+  event.stopPropagation()
+  event.preventDefault() // the handle keeps no focus of its own from the mouse; the slide keeps it, so Esc reaches it
+  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+  pointerTurn = true
+  turning.value = startTurn(o)
+}
+/** The release of the handle: one turn, and the object is shown turned until the server's answer is in the state. */
+async function finishTurn() {
+  const t0 = turning.value
+  pointerTurn = false
+  if (!t0) return
+  if (t0.turn !== t0.from && !readonly.value) {
+    turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(t0.turn) })
+    await session.rotate(t0.id, t0.turn)
+  }
+  if (turning.value === t0) turning.value = null // a refusal, or a nudge, shows in what the server says next
+}
+/** Esc: drop the turn that is being tried, and the object is as it was. */
+function cancelTurn() {
+  pointerTurn = false
+  turning.value = null
+  rotating.value = null
+}
+
+/** The arrow keys on the handle: a degree, with Shift 15° (and the same keys turn it back). */
+async function onTurnKey(event: KeyboardEvent) {
+  const o = selected.value
+  if (!o || !turnable.value) return
+  const by: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }
+  let to: number | null = null
+  if (by[event.key] !== undefined) to = stepTurn(o.rotation, by[event.key]! * (event.shiftKey ? SHIFT_STEP : 1))
+  else if (event.key === 'Home') to = 0
+  if (to === null) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (to !== o.rotation && (await session.rotate(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
+}
+
+/** Format ▸ Rotate ▸ Rotate Right 90° / Rotate Left 90°, and the same two in the context menu. */
+async function quarter(direction: 1 | -1, id: string | null = state.selected) {
+  const o = id ? state.objects[id] : null
+  if (!o || !canTurn(o.kind)) return
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (await session.rotate(o.id, quarterTurn(o.rotation, direction))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? 0) })
+}
+
+/** Rotate By…: the popover, beside the object. Its angles are previews on the slide until Done. */
+const rotating = ref<{ id: string; x: number; y: number } | null>(null)
+function openRotateBy(id: string | null = state.selected, at?: { x: number; y: number }) {
+  const o = id ? state.objects[id] : null
+  if (!o || !canTurn(o.kind)) return
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  const el = area.value?.querySelector(`[data-id="${CSS.escape(o.id)}"]`)
+  const where = at ?? (el ? besideRect(el.getBoundingClientRect(), 264, window.innerWidth) : { x: 120, y: 160 })
+  session.select(o.id)
+  turning.value = startTurn(o)
+  rotating.value = { id: o.id, ...where }
+}
+function previewTurn(angle: number) {
+  if (turning.value && rotating.value) turning.value.turn = angle
+}
+async function doneRotateBy(angle: number) {
+  const t0 = turning.value
+  rotating.value = null
+  if (t0 && angle !== t0.from) {
+    turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(angle) })
+    await session.rotate(t0.id, angle)
+  }
+  turning.value = null
+  area.value?.focus({ preventScroll: true })
+}
+function cancelRotateBy() {
+  cancelTurn()
+  area.value?.focus({ preventScroll: true })
 }
 
 /** A press on the slide itself, not on an object: nothing is selected any more. */
@@ -250,6 +380,13 @@ const contextItems = computed<MenuItem[]>(() => {
           openDescribe(o.id)
         },
         setSnap: (snap) => session.setSnap(o.id, snap),
+        rotateRight: () => void quarter(1, o.id),
+        rotateLeft: () => void quarter(-1, o.id),
+        rotateBy: () => {
+          const at = contextMenu.value
+          contextMenu.value = null
+          openRotateBy(o.id, at ? { x: at.x, y: at.y } : undefined)
+        },
         style: () => {
           const at = contextMenu.value
           contextMenu.value = null
@@ -401,7 +538,10 @@ const STEP = 10
 async function onKey(event: KeyboardEvent) {
   const o = selected.value
   if (editing.value || containerEditing.value) return
-  if (event.key === 'Escape') return void session.select(null)
+  if (event.key === 'Escape') {
+    if (turning.value) return void cancelTurn()
+    return void session.select(null)
+  }
   if (!o) return
   if (event.key === 'Enter' || event.key === 'F2') {
     event.preventDefault()
@@ -417,12 +557,12 @@ async function onKey(event: KeyboardEvent) {
   if (arrow) {
     event.preventDefault()
     const step = event.shiftKey ? 1 : STEP
-    const f = moveFrame(slideFrame(o), arrow[0] * step, arrow[1] * step)
+    const f = o.rotation ? moveTurned(slideFrame(o), o.rotation, arrow[0] * step, arrow[1] * step, null) : moveFrame(slideFrame(o), arrow[0] * step, arrow[1] * step)
     if (f.x !== o.anchor.x || f.y !== o.anchor.y) await session.move(o.id, f.x, f.y)
   }
 }
 
-defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe })
+defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy })
 
 const HANDLE_CURSOR: Record<Handle, string> = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize', n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' }
 const HANDLE_AT: Record<Handle, [number, number]> = { nw: [0, 0], n: [0.5, 0], ne: [1, 0], e: [1, 0.5], se: [1, 1], s: [0.5, 1], sw: [0, 1], w: [0, 0.5] }
@@ -509,7 +649,26 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
       </template>
 
       <!-- my selection and its handles -->
-      <div v-if="selected && selectedFrame" class="mine" :style="{ left: px(selectedFrame.x), top: px(selectedFrame.y), width: px(selectedFrame.w), height: px(selectedFrame.h) }">
+      <div v-if="selected && selectedFrame" class="mine" :class="{ below: handleBelow }" :style="{ left: px(selectedFrame.x), top: px(selectedFrame.y), width: px(selectedFrame.w), height: px(selectedFrame.h), ...turnCss(selectedTurn) }">
+        <template v-if="turnable">
+          <span class="stem" aria-hidden="true" />
+          <span
+            class="turn"
+            role="slider"
+            tabindex="0"
+            data-handle="turn"
+            :aria-label="t('Rotate object')"
+            aria-orientation="horizontal"
+            aria-valuemin="0"
+            aria-valuemax="359"
+            :aria-valuenow="selectedTurn"
+            :aria-valuetext="degreesText(selectedTurn)"
+            :title="t('Turn: drag, or arrow keys (Shift for 15°)')"
+            @pointerdown="onTurnDown"
+            @keydown="onTurnKey"
+          />
+        </template>
+        <span v-if="turning && turning.id === selected.id" class="chip" :style="{ transform: `translateX(-50%) rotate(${-selectedTurn}deg)` }" aria-hidden="true">{{ degreesText(selectedTurn) }}</span>
         <span
           v-for="h in handles"
           :key="h"
@@ -521,6 +680,8 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
       </div>
     </div>
 
+    <p class="sr" role="status" aria-live="polite">{{ turnSaid }}</p>
+    <RotatePopover v-if="rotating && turning" :x="rotating.x" :y="rotating.y" :rotation="turning.from" @preview="previewTurn" @done="doneRotateBy" @cancel="cancelRotateBy" />
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" :label="t('Object menu')" @close="closeContextMenu" />
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
     <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
@@ -628,6 +789,76 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
   border: 2px solid var(--iris);
   border-radius: 3px;
   pointer-events: auto;
+}
+/* The turn handle (D1024): 19 px to see on a stem, in a 32 px square to hit; the stem and the angle chip turn with the object. */
+.stem {
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  width: 2px;
+  height: 22px;
+  margin-left: -1px;
+  background: var(--iris);
+}
+.turn {
+  position: absolute;
+  left: 50%;
+  top: -54px;
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  pointer-events: auto;
+  border-radius: 50%;
+}
+.turn::before {
+  content: '';
+  width: 19px;
+  height: 19px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--iris);
+}
+.below .stem {
+  top: auto;
+  bottom: -22px;
+}
+.below .turn {
+  top: auto;
+  bottom: -54px;
+}
+.below .chip {
+  top: auto;
+  bottom: -88px;
+}
+.turn:focus-visible {
+  outline: 3px solid var(--iris);
+  outline-offset: 1px;
+}
+.chip {
+  position: absolute;
+  left: 50%;
+  top: -88px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .other {
   position: absolute;

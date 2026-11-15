@@ -1,0 +1,212 @@
+<svg viewBox="0 0 1760 1140" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia creates — rotating objects on a slide</title>
+<desc id="d">A slide with a rotated picture, a rotated stamp and an arrow being turned with the handle; a text box held by another person; an object near the slide's edge; the history entries; open points.</desc>
+<rect width="1760" height="1140" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia creates — turning an object on the slide</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">For review before any code. Content is invented. Shared parts (handle, Format ▸ Rotate, Rotate By…) are mock-up 1; this is how they sit on a slide, next to the existing hold (D82), grid (D214) and history.</text>
+<defs><filter id="sh" x="-10%" y="-10%" width="125%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f1a33" flood-opacity="0.22"/></filter></defs>
+<rect x="40" y="96" width="1060" height="700" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · Turning an arrow on a slide</text>
+<text x="62" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">A picture and a stamp are already turned; you are dragging the arrow. Held objects show handles to you and your colour to others (D82).</text>
+<rect x="62" y="172" width="1016" height="600" rx="0" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="62" y="172" width="1016" height="34" rx="0" fill="#ffffff"/>
+<line x1="62" y1="206" x2="1078" y2="206" stroke="#e3dfee" stroke-width="1"/>
+<text x="90" y="194.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">File</text>
+<text x="141.6" y="194.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Edit</text>
+<text x="193.2" y="194.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Format</text>
+<text x="259.6" y="194.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">View</text>
+<text x="311.20000000000005" y="194.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Tools</text>
+<text x="370.20000000000005" y="194.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Config</text>
+<text x="436.6" y="194.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Help</text>
+<text x="1046" y="194.0" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">creates</text>
+<circle cx="1060" cy="190.0" r="5" fill="#f2a057"/>
+<rect x="62" y="207" width="1016" height="46" rx="0" fill="#faf8f4"/>
+<line x1="62" y1="253" x2="1078" y2="253" stroke="#e3dfee" stroke-width="1"/>
+<rect x="74" y="216" width="50.0" height="28" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="99.0" y="234.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Text</text>
+<rect x="132.0" y="216" width="57.5" height="28" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="160.75" y="234.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Shape</text>
+<rect x="197.5" y="216" width="72.5" height="28" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="233.75" y="234.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Picture</text>
+<rect x="288.0" y="216" width="50.0" height="28" rx="7" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="313.0" y="234.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Undo</text>
+<rect x="346.0" y="216" width="50.0" height="28" rx="7" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="371.0" y="234.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Redo</text>
+<text x="414.0" y="235" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Style</text>
+<rect x="454.0" y="216" width="116" height="28" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="512.0" y="234.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Body text  ▾</text>
+<text x="584.0" y="235" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Layout</text>
+<rect x="630.0" y="216" width="170" height="28" rx="7" fill="#fdeedd" stroke="#f2a057" stroke-width="1"/>
+<text x="715.0" y="234.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Content and picture  ▾</text>
+<rect x="828" y="254" width="250" height="518" rx="0" fill="#f6f3fb"/>
+<line x1="828" y1="254" x2="828" y2="772" stroke="#e3dfee" stroke-width="1"/>
+<rect x="102" y="294" width="672.0" height="378.0" rx="0" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<g transform="translate(102 294) scale(0.42)">
+<text x="100" y="150" font-family="Fraunces, Georgia, serif" font-size="78" font-weight="600" fill="#1f1a33" text-anchor="start">Why we meet</text>
+<circle cx="112" cy="280" r="7" fill="#f2a057"/>
+<text x="138" y="292" font-size="44" font-weight="400" fill="#1f1a33" text-anchor="start">Three questions we bring</text>
+<circle cx="112" cy="366" r="7" fill="#f2a057"/>
+<text x="138" y="378" font-size="44" font-weight="400" fill="#1f1a33" text-anchor="start">One hour, four rounds</text>
+<circle cx="112" cy="452" r="7" fill="#f2a057"/>
+<text x="138" y="464" font-size="44" font-weight="400" fill="#1f1a33" text-anchor="start">Everybody speaks once</text>
+<g transform="rotate(4 1180 500)">
+<rect x="920.0" y="320.0" width="520" height="360" rx="0" fill="#e9e4f6" stroke="#ffffff" stroke-width="10" filter="url(#sh)"/>
+<path d="M925.0,675.0 L1086.4,471.2 L1180,572.0 L1284.0,420.8 L1435.0,675.0 Z" fill="#b9aee6"/>
+<circle cx="1034.4" cy="420.8" r="36" fill="#f2a057"/>
+</g>
+<g transform="rotate(348 1370 130)">
+<rect x="1220.0" y="75.0" width="300" height="110" rx="10" fill="none" stroke="#f2a057" stroke-width="7"/>
+<text x="1370" y="150" font-family="Fraunces, Georgia, serif" font-size="64" font-weight="700" fill="#1f1a33" text-anchor="middle">Draft</text>
+</g>
+<g transform="rotate(340 820 650)">
+<path d="M690.0,619.2 L851.2,619.2 L851.2,595.0 L950.0,650 L851.2,705.0 L851.2,680.8 L690.0,680.8 Z" fill="#fdeedd" stroke="#f2a057" stroke-width="6"/>
+</g>
+</g>
+<g transform="rotate(340 446.4 567.0)">
+<rect x="391.79999999999995" y="543.9" width="109.2" height="46.199999999999996" rx="0" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="387.29999999999995" y="539.4" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="441.9" y="539.4" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="496.49999999999994" y="539.4" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="496.49999999999994" y="562.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="496.49999999999994" y="585.6" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="441.9" y="585.6" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="387.29999999999995" y="585.6" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<rect x="387.29999999999995" y="562.5" width="9" height="9" rx="1.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<line x1="446.4" y1="543.9" x2="446.4" y2="515.9" stroke="#5b4bc4" stroke-width="1.4"/>
+<circle cx="446.4" cy="515.9" r="9.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.7"/>
+<path d="M443.5,513.0 A4.1,4.1 0 1 1 443.5,518.8" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M440.2,514.3 L444.2,510.59999999999997 L445.0,515.1 Z" fill="#5b4bc4"/>
+</g>
+<rect x="444.9227706760583" y="499.98170707784004" width="52" height="22" rx="11" fill="#1f1a33"/>
+<text x="470.9227706760583" y="515.48170707784" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12.5" font-weight="600" fill="#ffffff" text-anchor="middle">340°</text>
+<circle cx="446.4" cy="567.0" r="2.5" fill="#5b4bc4"/>
+<text x="102" y="692.0" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Arrow 2 · a shape · held by you</text>
+<circle cx="518.9227706760582" cy="510.98170707784004" r="10" fill="#5b4bc4"/>
+<text x="518.9227706760582" y="514.98170707784" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<circle cx="782.4" cy="388.6" r="10" fill="#5b4bc4"/>
+<text x="782.4" y="392.6" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<circle cx="757.5999999999999" cy="614.0" r="10" fill="#5b4bc4"/>
+<text x="757.5999999999999" y="618.0" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<circle cx="351.4" cy="617.0" r="10" fill="#5b4bc4"/>
+<text x="351.4" y="621.0" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<rect x="62" y="742" width="766" height="30" rx="0" fill="#faf8f4"/>
+<line x1="62" y1="742" x2="828" y2="742" stroke="#e3dfee" stroke-width="1"/>
+<text x="101" y="761" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Slide 1</text>
+<text x="165" y="761" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Slide 2</text>
+<text x="229" y="761" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Slide 3</text>
+<rect x="264" y="746" width="58" height="22" rx="6" fill="#fdeedd" stroke="#f2a057" stroke-width="1"/>
+<text x="293" y="761" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Slide 4</text>
+<text x="357" y="761" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Slide 5</text>
+<rect x="838" y="264" width="100" height="24" rx="6" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="888" y="280" font-size="10.5" font-weight="500" fill="#1f1a33" text-anchor="middle">History &amp; Chat</text>
+<text x="988" y="280" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="middle">Help</text>
+<rect x="834" y="454" width="232" height="34" rx="6" fill="#ece8f8"/>
+<circle cx="846" cy="312" r="4" fill="#d6477a"/>
+<text x="858" y="316" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">anna · Add text box</text>
+<text x="858" y="330" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">Text box 3</text>
+<circle cx="846" cy="350" r="4" fill="#13917f"/>
+<text x="858" y="354" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">tobi · Insert picture</text>
+<text x="858" y="368" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">Picture 1</text>
+<circle cx="846" cy="388" r="4" fill="#13917f"/>
+<text x="858" y="392" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">tobi · Rotate object</text>
+<text x="858" y="406" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">Picture 1 · 0° → 4°</text>
+<circle cx="846" cy="426" r="4" fill="#d6477a"/>
+<text x="858" y="430" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">anna · Rotate object</text>
+<text x="858" y="444" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">Text box 3 · 0° → 348°</text>
+<circle cx="846" cy="464" r="4" fill="#13917f"/>
+<text x="858" y="468" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">tobi · Rotate object</text>
+<text x="858" y="482" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">Arrow 2 · 0° → 340°</text>
+<circle cx="1052" cy="466" r="10" fill="#5b4bc4"/>
+<text x="1052" y="470" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="848" y="526" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">A drag that is not finished is not</text>
+<text x="848" y="539" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">in the history: one entry on release.</text>
+<rect x="1120" y="96" width="600" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1142" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">B · Held by someone else</text>
+<text x="1142" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Anna holds the stamp. You see her colour on its turned outline and her name on a tag</text>
+<text x="1142" y="160" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">that stays upright. No handle for you; clicking it says why (D82).</text>
+<rect x="1142" y="190" width="400.0" height="225.0" rx="0" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<g transform="translate(1142 190) scale(0.25)">
+<g transform="rotate(348 1100 300)">
+<rect x="950.0" y="245.0" width="300" height="110" rx="10" fill="none" stroke="#f2a057" stroke-width="7"/>
+<text x="1100" y="320" font-family="Fraunces, Georgia, serif" font-size="64" font-weight="700" fill="#1f1a33" text-anchor="middle">Draft</text>
+</g>
+<text x="100" y="150" font-family="Fraunces, Georgia, serif" font-size="78" font-weight="600" fill="#1f1a33" text-anchor="start">Why we meet</text>
+</g>
+<g transform="rotate(348 1417.0 265.0)">
+<rect x="1375.5" y="247.25" width="83.0" height="35.5" rx="3" fill="none" stroke="#d6477a" stroke-width="2.2"/>
+</g>
+<rect x="1373.460679223738" y="221.7537820842442" width="50" height="18" rx="4" fill="#d6477a"/>
+<text x="1398.460679223738" y="234.7537820842442" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">anna</text>
+<circle cx="1517.0" cy="235.0" r="10" fill="#5b4bc4"/>
+<text x="1517.0" y="239.0" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<rect x="1162" y="359.0" width="300" height="36" rx="8" fill="#1f1a33"/>
+<text x="1312" y="382.0" font-size="12.5" font-weight="400" fill="#ffffff" text-anchor="middle">Text box 3 is held by anna.</text>
+<circle cx="1482" cy="377.0" r="10" fill="#5b4bc4"/>
+<text x="1482" y="381.0" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">7</text>
+<rect x="1120" y="456" width="600" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1142" y="486" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · Turning near the slide's edge</text>
+<text x="1142" y="504" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">The rule today keeps an object on the slide (geometry.ts). Proposed: the turned outline</text>
+<text x="1142" y="520" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">is what must stay on, so a turn that would push a corner off nudges the object inward,</text>
+<text x="1142" y="536" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">in the same step (open point 1).</text>
+<rect x="1142" y="582" width="272.0" height="153.0" rx="0" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="1414.0" y="582" width="26" height="153.0" rx="0" fill="#f3d5dd"/>
+<g transform="translate(1142 582) scale(0.17)">
+<g transform="rotate(32 1380 640)">
+<rect x="1150.0" y="480.0" width="460" height="320" rx="0" fill="#e9e4f6" stroke="#9a2f4a" stroke-width="8"/>
+</g></g>
+<text x="1427.0" y="622" font-size="9.5" font-weight="400" fill="#9a2f4a" text-anchor="middle">off</text>
+<text x="1427.0" y="634" font-size="9.5" font-weight="400" fill="#9a2f4a" text-anchor="middle">slide</text>
+<text x="1144" y="574" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">while you turn</text>
+<rect x="1442" y="582" width="272.0" height="153.0" rx="0" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<g transform="translate(1442 582) scale(0.17)">
+<g transform="rotate(32 1320 640)">
+<rect x="1090.0" y="480.0" width="460" height="320" rx="0" fill="#e9e4f6" stroke="#f2a057" stroke-width="8"/>
+</g></g>
+<text x="1578.0" y="753.0" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">←  nudged 60 units</text>
+<text x="1444" y="574" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">when you let go</text>
+<circle cx="1427.0" cy="672" r="10" fill="#5b4bc4"/>
+<text x="1427.0" y="676" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">8</text>
+<text x="1142" y="775.0" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">One undo puts back the turn and the nudge together.</text>
+<rect x="40" y="816" width="1060" height="300" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="846" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">What the numbers mean</text>
+<circle cx="62" cy="868" r="10" fill="#5b4bc4"/>
+<text x="62" y="872" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="82" y="872" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The handle and its chip, as in mock-up 1. The chip shows 340°, not −20°: the model keeps 0–359.</text>
+<circle cx="62" cy="892" r="10" fill="#5b4bc4"/>
+<text x="62" y="896" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="82" y="896" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A stamp turned to 348°: the text turns with the box, and so does the editor when you double-click to edit the words.</text>
+<circle cx="62" cy="916" r="10" fill="#5b4bc4"/>
+<text x="62" y="920" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="82" y="920" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A picture turned 4°, the way a photo lies on a table; it keeps its proportions and its description.</text>
+<circle cx="62" cy="940" r="10" fill="#5b4bc4"/>
+<text x="62" y="944" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="82" y="944" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The arrow's frame and handles turn with it. Resizing works along the object's own axes; the corner opposite the one you drag stays where it is on</text>
+<text x="82" y="960" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">screen.</text>
+<circle cx="62" cy="980" r="10" fill="#5b4bc4"/>
+<text x="62" y="984" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="82" y="984" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">History: “Rotate object” names the object by its own name (generated, renameable: Text box 3, Arrow 2). A turn by key, menu, popover or handle is one</text>
+<text x="82" y="1000" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">entry.</text>
+<circle cx="62" cy="1020" r="10" fill="#5b4bc4"/>
+<text x="62" y="1024" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<text x="82" y="1024" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Anna's outline turns with the object; only her name stays upright, at the corner of the object's turned bounding box.</text>
+<circle cx="62" cy="1044" r="10" fill="#5b4bc4"/>
+<text x="62" y="1048" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">7</text>
+<text x="82" y="1048" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The refusal is the one the hold already gives; nothing new to learn.</text>
+<circle cx="62" cy="1068" r="10" fill="#5b4bc4"/>
+<text x="62" y="1072" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">8</text>
+<text x="82" y="1072" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The pink strip is where the object would hang over the slide's edge.</text>
+<rect x="1120" y="816" width="600" height="300" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1142" y="846" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">Open points, with a recommendation each</text>
+<text x="1142" y="872" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">1  Must the turned outline stay on the slide?</text>
+<text x="1142" y="889" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">Recommended: yes, nudge in the same step. Otherwise: allow overhang, as most tools do,</text>
+<text x="1142" y="904" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">and clip in the show and print.</text>
+<text x="1142" y="931" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">2  Grid and snap on a turned object (D214)</text>
+<text x="1142" y="948" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">Recommended: moving snaps the turned outline's edges; resizing a tilted edge is free,</text>
+<text x="1142" y="963" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">since no grid line runs along it.</text>
+<text x="1142" y="990" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">3  Rotating several objects at once</text>
+<text x="1142" y="1007" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">Not in this round: there are no groups yet (E10.6). Each object turns about its own</text>
+<text x="1142" y="1022" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">centre.</text>
+<text x="1142" y="1049" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">4  Template slots</text>
+<text x="1142" y="1066" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">A slot's object turned by hand counts as “differs from its layout” (the dot on the tab,</text>
+<text x="1142" y="1081" font-size="11.2" font-weight="400" fill="#6e6880" text-anchor="start">E10.5), like a move does.</text>
+</svg>

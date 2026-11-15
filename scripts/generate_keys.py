@@ -32,7 +32,11 @@ _NAMED = {
     "Delete": "Delete",
     "Tab": "Tab",
     "minus": "-",
+    "period": ".",
+    "comma": ",",
 }
+# The physical key of a symbol that is not typed the same on every layout (Option+. types ≥ on a Mac)
+_CODES = {"period": "Period", "comma": "Comma"}
 # Symbols that are typed with Shift: the event says so, so the chord must too
 _SHIFTED = {"question": "?", "underscore": "_"}
 _MODIFIER = re.compile(r"<(Primary|Shift|Alt)>")
@@ -55,6 +59,8 @@ def chord_of(accelerator: str) -> dict:
         chord["key"] = name
     elif name in _NAMED:
         chord["key"] = _NAMED[name]
+        if name in _CODES:
+            chord["code"] = _CODES[name]
     elif name in _SHIFTED:
         chord["key"] = _SHIFTED[name]
         modifiers.append("Shift")
@@ -114,7 +120,7 @@ def render() -> str:
 
 _OWNER_WORDS = {"page": "", "shell": "the shell", "view": "the document view or the browser"}
 _SHOWN = {"Primary": "Ctrl", "Shift": "Shift", "Alt": "Alt"}
-_NAMES = {"Up": "↑", "Down": "↓", "Left": "←", "Right": "→", "Return": "Enter", "Delete": "Del", "minus": "-"}
+_NAMES = {"Up": "↑", "Down": "↓", "Left": "←", "Right": "→", "Return": "Enter", "Delete": "Del", "minus": "-", "period": ".", "comma": ","}
 _SYMBOLS = {"question": "?", "underscore": "_"}
 
 

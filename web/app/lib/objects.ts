@@ -53,7 +53,7 @@ export interface ObjectBody {
   /** The id of the rendered text definition this object shows (D390, `renderings` on the wire), or `null` for every
    * other kind. Its picture is the object's `image`, or the definition's own. */
   rendered: string | null
-  /** Whole degrees clockwise. Persisted and validated by the model; no client surface yet. */
+  /** Whole degrees clockwise about the centre of the frame, 0–359 (D1021). A chart never turns. */
   rotation: number
   /** Whether this object holds to the grid (E10.15, D214): the document's own state, set with `setSnap`. The
    * grid itself is only a helper the view draws (see `lib/grid.ts`'s `useGrid`); unaffected by whether it is

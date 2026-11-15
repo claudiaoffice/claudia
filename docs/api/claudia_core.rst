@@ -148,6 +148,21 @@ The object commands, the same in all three apps:
 .. autoclass:: claudia_core.UpdateDiagram
 .. autoclass:: claudia_core.ForgetDiagram
 
+Turning: how far a turned object reaches
+-----------------------------------------
+
+.. automodule:: claudia_core.turning
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+A turn is one :class:`~claudia_core.RotateObject` command (D1021), and what has to lie on a page is the turned
+outline, worked out in whole numbers from a table of sines (D910, D1022).
+
+.. autodata:: claudia_core.SINE_MILLIONTHS
+.. autofunction:: claudia_core.turned_extent
+.. autofunction:: claudia_core.nudge_into
+
 Rendered text containers
 ------------------------
 
