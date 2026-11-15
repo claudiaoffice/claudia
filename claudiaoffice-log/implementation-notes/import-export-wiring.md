@@ -42,3 +42,21 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
 * Found on the way: editing the words of a docx paragraph removed every run, pictures included (fixed: only runs of
   words go). Still open: a paragraph with a hyperlink gets the link's words twice when its text is edited, because
   `paragraph.text` counts them and the `w:hyperlink` stays; this needs the hyperlink to be edited in place.
+
+## Slice 5a — computes names and tables (D457)
+* `_named.py` is what every format holds of a name (`writable`, `is_table`, `unheld` with the three details `result`,
+  `purpose`, `table-scope`). `ods_names.py` reads (`scan`, `read_names`), writes (`global_elements`,
+  `local_expressions`) and patches (`NamesPatch`) the ods; `xlsx_names.py` writes through openpyxl (`write_names`) and
+  patches the package (`XlsxNamesPatch`: defined names in `workbook.xml`, table parts, `tableParts`, relationships,
+  content types). `xlsx_read.name_entries` is the one reader of names; it keeps each name's element for the patch.
+* The ods import reads the names *before* the cells (`_tables`), so that a formula with a name is a formula; the
+  names a sheet can use are the workbook's and its own (`from_openformula(..., names=...)`).
+* The server needed nothing: it already adds `*_unwritten_changes` to the patch's own losses, so the patches do not
+  report names twice.
+* Checked against LibreOffice 24.2.7: a name and a table written here are read by it (`Rate*10` calculates; the
+  names survive its own re-save); `Sales[Amount]` in an `of:` formula is `Err:508` there, which decided D457's note on
+  table columns. Excel was not available.
+* Found on the way: `localSheetId` was read against the worksheets only (IEW-06); a header edit in a kept xlsx left
+  Excel a table to repair (IEW-07).
+* Next in slice 5: widths and heights, then charts (ods, then xlsx).
+

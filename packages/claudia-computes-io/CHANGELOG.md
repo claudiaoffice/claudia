@@ -3,6 +3,33 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.7.0] - 2026-11-15
+
+Named ranges and tables go to and from ods and xlsx (D457).
+
+### Added
+- `workbook_to_ods` and `workbook_to_xlsx` write the names of a workbook: a range as `table:named-range` / a defined
+  name, a table as `table:database-range` / a table part (with its header cells as its columns), a name of one sheet
+  inside that sheet. `ods_to_workbook` reads them, so a formula that uses a name stays a formula.
+- `apply_edits_to_ods` and `apply_edits_to_xlsx` patch the names of a kept file: a name added, taken out or moved in
+  Claudia is written into the file (a table is resized in its own part, and a header cell that was edited renames its
+  column), and what the file names that the model cannot hold stays.
+- `ods_unwritten_changes` and `xlsx_unwritten_changes` say what a file cannot hold of a name, as `name` with the detail
+  `result` (a name a `SQL()` formula filled), `purpose` (a table's colours and how it grows), `table-scope` (a table of
+  one sheet) or, for xlsx, `table-header` (a table whose header is not text, written as a plain range).
+- `from_openformula` takes the names the model has read (`names`): a formula may use them.
+
+### Changed
+- `ods_import_losses` counts as `named-range` only the names the model cannot hold, and as `filter` only the database
+  ranges that are no table.
+- A formula that names a column of a table (`Sales[Amount]`) is written to ods as its value, with the loss
+  `formula` / `reference` (OpenFormula has no columns of tables); it was `formula` / `syntax`.
+- The ranges of names read from xlsx have no `$` marks, as those read from ods.
+
+### Fixed
+- A name of one sheet is the name of that sheet in an xlsx file that has a chart sheet before it (`localSheetId` counts
+  all the sheets, not only the worksheets).
+
 ## [0.6.0] - 2026-11-14
 
 What the converters do not write is said, for both formats (D450, D451).

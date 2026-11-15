@@ -8,7 +8,16 @@ import pytest
 from starlette.testclient import TestClient
 from test_server_formats import made
 
-from claudia_computes import ResizeLines, SetCells, WorkbookModel, parse_input
+from claudia_computes import (
+    CellRef,
+    DefineName,
+    NamedRange,
+    RangeRef,
+    ResizeLines,
+    SetCells,
+    WorkbookModel,
+    parse_input,
+)
 from claudia_server import Hub, MemoryProvider, create_app, methods_for
 from claudia_server.sealed import SealedDocuments
 from claudia_server.suite import Module, Suite
@@ -133,6 +142,24 @@ def test_a_patched_download_says_what_the_edits_it_could_not_write_were():
             answer = request(ws, "export_office", {"format": "xlsx"})["result"]
         assert answer["patched"] is True
         assert answer["losses"] == [{"kind": "layout", "detail": "", "count": 1}]
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+def test_a_name_defined_in_the_workbook_is_in_the_patched_download_and_no_loss(fmt):
+    sales = NamedRange("Sales", None, RangeRef(CellRef(0, 0, "s1"), CellRef(0, 1, "s1")))
+    with workbook_server() as client:
+        token = upload(client, made(fmt), name=f"Budget 2026.{fmt}").json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, "computes", "budget").document
+            doc.execute(DefineName(sales), author="ann")
+            answer = request(ws, "export_office", {"format": fmt})["result"]
+        assert answer["patched"] is True and answer["losses"] == []
+        from claudia_computes_io import ods_to_workbook, xlsx_to_workbook
+
+        back = (xlsx_to_workbook if fmt == "xlsx" else ods_to_workbook)(base64.b64decode(answer["data"]))
+        assert [named.name for named in back.names] == ["Sales"]
 
 
 def test_a_patched_ods_download_carries_what_the_patch_itself_lost(monkeypatch):

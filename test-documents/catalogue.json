@@ -827,6 +827,61 @@
         "duration_s": 0.086,
         "detail": null
       }
+    },
+    {
+      "id": "xlsx-names-and-tables",
+      "format": "xlsx",
+      "feature": "names-and-tables",
+      "source": "xlsx/names-and-tables/source.xlsx",
+      "spec": "xlsx/names-and-tables/spec.py",
+      "summary": "A styled table, a named cell a formula uses, a name that is a formula, a print area and a name of one sheet: the model holds the names it can; a new name and a new table row are patched in and the table style, the formula name and the print area stay.",
+      "backlog": "E6.5",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "names"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T10:31:10Z",
+        "commit": "4141518",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.019,
+        "detail": null
+      }
+    },
+    {
+      "id": "ods-names-and-tables",
+      "format": "ods",
+      "feature": "names-and-tables",
+      "source": "ods/names-and-tables/source.ods",
+      "spec": "ods/names-and-tables/spec.py",
+      "summary": "A named range, a name of one sheet, a database range that is a table, a name that is an expression and a formula using a name (LibreOffice's layout): the names come in, a new name is added to the file's own list and the expression name stays.",
+      "backlog": "E6.5",
+      "tags": [
+        "tier2",
+        "names"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T10:31:11Z",
+        "commit": "4141518",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.014,
+        "detail": null
+      }
     }
   ]
 }

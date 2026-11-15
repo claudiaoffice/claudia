@@ -22,6 +22,8 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.shared import Cm, Inches, Pt
 from openpyxl.chart import BarChart, Reference
 from openpyxl.drawing.image import Image as XLImage
+from openpyxl.workbook.defined_name import DefinedName
+from openpyxl.worksheet.table import Table, TableStyleInfo
 from PIL import Image
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Emu
@@ -551,6 +553,68 @@ def build_ods_repeated_and_styled() -> bytes:
     return new_package("spreadsheet", content.encode(), _ODS_STYLES)
 
 
+def build_xlsx_names_and_tables() -> bytes:
+    """An xlsx with what Excel keeps about names that the model does not show next to what it does: a table with a
+    style, a named cell that a formula uses, a name that is a formula, a print area, and a name of one sheet."""
+    wb = openpyxl.Workbook()
+    sales = wb.active
+    sales.title = "Sales"
+    for row in (("Region", "Amount"), ("North", 100), ("South", 200), ("East", 130)):
+        sales.append(row)
+    table = Table(displayName="Orders", ref="A1:B4")
+    table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
+    sales.add_table(table)
+    sales["D1"], sales["E1"] = "Rate", 0.2
+    sales["D2"], sales["E2"] = "Tax", "=Rate*SUM(Orders[Amount])"
+    wb.defined_names["Rate"] = DefinedName("Rate", attr_text="Sales!$E$1")
+    wb.defined_names["Twice"] = DefinedName("Twice", attr_text="Sales!$E$1*2")
+    sales.print_area = "A1:E10"
+    plan = wb.create_sheet("Plan")
+    plan["A1"] = 5
+    plan.defined_names["Local"] = DefinedName("Local", attr_text="Plan!$A$1")
+    return _xlsx_bytes(wb)
+
+
+def build_ods_names_and_tables() -> bytes:
+    """An ods the way LibreOffice lays names out: a named range of the workbook, a name of one sheet at the end of its
+    table, a database range that is a table, a name that is an expression, and a formula that uses a name."""
+
+    def number(value: float, formula: str | None = None) -> str:
+        attribute = f' table:formula="{formula}"' if formula else ""
+        return (
+            f'<table:table-cell{attribute} office:value-type="float" office:value="{value}">'
+            f"<text:p>{value}</text:p></table:table-cell>"
+        )
+
+    def words(text: str) -> str:
+        return f'<table:table-cell office:value-type="string"><text:p>{text}</text:p></table:table-cell>'
+
+    rows = (
+        f"<table:table-row>{words('Region')}{words('Amount')}{words('Rate')}{number(0.2)}</table:table-row>"
+        f"<table:table-row>{words('North')}{number(100)}{words('Tax')}{number(20, 'of:=[.D1]*[.B2]')}</table:table-row>"
+        f"<table:table-row>{words('South')}{number(200)}</table:table-row>"
+    )
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        "<office:automatic-styles/><office:body><office:spreadsheet>"
+        f'<table:table table:name="Sales"><table:table-column table:number-columns-repeated="4"/>{rows}'
+        '<table:named-expressions><table:named-range table:name="Mine" table:base-cell-address="$Sales.$B$2" '
+        'table:cell-range-address="$Sales.$B$2"/></table:named-expressions></table:table>'
+        '<table:named-expressions><table:named-range table:name="Rate" table:base-cell-address="$Sales.$D$1" '
+        'table:cell-range-address="$Sales.$D$1"/><table:named-expression table:name="Pi" table:expression="of:=3.14"/>'
+        "</table:named-expressions>"
+        '<table:database-ranges><table:database-range table:name="Orders" '
+        'table:target-range-address="Sales.A1:Sales.B3" table:contains-header="true"/></table:database-ranges>'
+        "</office:spreadsheet></office:body></office:document-content>"
+    )
+    styles = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:styles/></office:document-styles>'
+    )
+    return new_package("spreadsheet", content.encode(), styles.encode())
+
+
 FIXTURES = {
     "docx/heading-styles/source.docx": build_heading_styles,
     "docx/tracked-change-suggestion/source.docx": build_tracked_change_suggestion,
@@ -573,6 +637,8 @@ FIXTURES = {
     "xlsx/beyond-claudia/chart/source.xlsx": build_xlsx_beyond_claudia_chart,
     "xlsx/beyond-claudia/image/source.xlsx": build_xlsx_beyond_claudia_image,
     "xlsx/beyond-claudia/excel-today/source.xlsx": build_xlsx_beyond_claudia_excel_today,
+    "xlsx/names-and-tables/source.xlsx": build_xlsx_names_and_tables,
+    "ods/names-and-tables/source.ods": build_ods_names_and_tables,
 }
 
 

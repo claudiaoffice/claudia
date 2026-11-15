@@ -1,5 +1,5 @@
 {
- "version": "0.6.0",
+ "version": "0.7.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -34,7 +34,7 @@
   "function": "(original_bytes: 'bytes', baseline: 'WorkbookModel', current: 'WorkbookModel') -> 'bytes'"
  },
  "from_openformula": {
-  "function": "(attribute: 'str', functions: 'Container[str] | None' = None) -> 'str'"
+  "function": "(attribute: 'str', functions: 'Container[str] | None' = None, names: 'Container[str] | None' = None) -> 'str'"
  },
  "ods_export_losses": {
   "function": "(model: 'WorkbookModel') -> 'tuple[Loss, ...]'"

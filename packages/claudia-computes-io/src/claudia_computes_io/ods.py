@@ -69,6 +69,7 @@ from ._unwritten import ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .ods_looks import OdsLooks, column_styles, read_looks
+from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names
 from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
 from .xlsx import UnsupportedEdit
@@ -282,7 +283,9 @@ def _cached(cell: etree._Element) -> tuple[Content, str | None]:
     return None, None
 
 
-def _read_cell(cell: etree._Element, *, dated: bool = False) -> tuple[Content, list[tuple[str, str]]]:
+def _read_cell(
+    cell: etree._Element, *, dated: bool = False, names: frozenset[str] = frozenset()
+) -> tuple[Content, list[tuple[str, str]]]:
     """The content of a cell and what is lost of it (``(kind, detail)`` for each, before the cell is counted); a date
     is lost only where the cell's style does not show it as one (``dated``)."""
     lost: list[tuple[str, str]] = []
@@ -297,16 +300,17 @@ def _read_cell(cell: etree._Element, *, dated: bool = False) -> tuple[Content, l
         try:
             if any(cell.get(_q(*name)) is not None for name in _MATRIX):
                 raise Untranslatable("array")
-            content = {"t": "formula", "v": _model_formula(attribute)}
+            content = {"t": "formula", "v": _model_formula(attribute, names)}
         except Untranslatable as why:
             lost.append(("formula", why.reason))
     return restore_alternatives(content, _note_of(cell)), lost
 
 
-def _model_formula(attribute: str) -> str:
+def _model_formula(attribute: str, names: frozenset[str] = frozenset()) -> str:
     """The model's text of a ``table:formula``: the inverse functions of ``RAND()`` read as ``RANDOM`` (they are the
-    names the other programs have), and a function the model lacks is :class:`Untranslatable`."""
-    text = from_excel(from_openformula(attribute, _functions() | INVERSE_NAMES))
+    names the other programs have), a function the model lacks is :class:`Untranslatable`, and so is a name the
+    file defines that the model has not read (``names`` are the ones it has, in lower case)."""
+    text = from_excel(from_openformula(attribute, _functions() | INVERSE_NAMES, names))
     formula = parse_formula(text)
     for node in walk(formula.ast) if formula.ast is not None else ():
         if isinstance(node, Call) and node.name not in _functions():
@@ -366,7 +370,9 @@ def _cell_losses(cell: etree._Element, content: Content) -> list[tuple[str, str]
     return lost
 
 
-def _scan_table(element: etree._Element, number: int, cells_so_far: int, looks: OdsLooks) -> _Table:
+def _scan_table(
+    element: etree._Element, number: int, cells_so_far: int, looks: OdsLooks, names: frozenset[str] = frozenset()
+) -> _Table:
     """One sheet: where its rows and cells are in the file, what the model has of them, and what it does not."""
     table = _Table(f"s{number}", element.get(_q("table", "name")) or f"Sheet{number}", element)
     table.column_looks = [(first, min(last, MAX_COLS - 1), name) for first, last, name in column_styles(element)
@@ -407,7 +413,7 @@ def _scan_table(element: etree._Element, number: int, cells_so_far: int, looks: 
             if cell.get(_q("office", "value-type")) in ("date", "time"):
                 shown = name or row_style or columns.at(column)
                 dated = shown is not None and looks.look(shown)[1].shows_dates
-            content, lost = _read_cell(cell, dated=dated)
+            content, lost = _read_cell(cell, dated=dated, names=names)
             lost += _cell_losses(cell, content)
             if content is not None or lost:
                 populated = _place(table, (position, repeat), (column, across), content, lost, lose, populated)
@@ -493,8 +499,14 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, list[_Tabl
 def _tables(content: etree._Element, looks: OdsLooks) -> list[_Table]:
     tables: list[_Table] = []
     populated = 0
-    for number, element in enumerate(_spreadsheet(content).findall("table:table", NS), start=1):
-        table = _scan_table(element, number, populated, looks)
+    spreadsheet = _spreadsheet(content)
+    places = _places(spreadsheet)
+    found = read_names(spreadsheet, places).names
+    for number, (place, element) in enumerate(
+        zip(places, spreadsheet.findall("table:table", NS), strict=True), start=1
+    ):
+        known = frozenset(named.name.casefold() for named in found if named.scope in (None, place.id))
+        table = _scan_table(element, number, populated, looks, known)
         populated += len(table.cells)
         tables.append(table)
     return tables
@@ -502,6 +514,14 @@ def _tables(content: etree._Element, looks: OdsLooks) -> list[_Table]:
 
 #: A run of cells of one style up to this size is taken cell by cell, so that it joins its neighbours into one range.
 _SMALL_RUN = 64
+
+
+def _places(spreadsheet: etree._Element) -> list[SheetPlace]:
+    """The sheets of the file as the names find them: by their id (``s1``, ``s2``...), name and element."""
+    return [
+        SheetPlace(SheetId(f"s{number}"), element.get(_q("table", "name")) or f"Sheet{number}", element)
+        for number, element in enumerate(spreadsheet.findall("table:table", NS), start=1)
+    ]
 
 
 def _dress(dressing: Dressing, sheet: Sheet, table: _Table) -> None:
@@ -536,7 +556,7 @@ def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
     them. The formulas are translated from OpenFormula; one that cannot be comes in as its last value. What the
     model does not hold is in :func:`ods_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is
     not an ods."""
-    _, _, tables, looks = _document(ods_bytes)
+    _, content, tables, looks = _document(ods_bytes)
     model = WorkbookModel()
     dressing = Dressing(model, looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
@@ -545,6 +565,8 @@ def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
         _dress(dressing, sheet, table)
         model.sheets[sheet.id] = sheet
         model.open_container(str(sheet.id))
+    for named in read_names(_spreadsheet(content), _places(_spreadsheet(content))).names:
+        model.names.put(named)
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see xlsx_to_workbook)
     return model
 
@@ -563,12 +585,13 @@ def ods_import_losses(ods_bytes: bytes) -> tuple[Loss, ...]:
         _dress(dressing, Sheet(SheetId(table.id), table.name), table)
     for what, count in dressing.lost.items():
         losses.add("look", what, count)
-    ranges = sum(1 for _ in content.iter(_q("table", "named-range"), _q("table", "named-expression")))
-    if ranges:
-        losses.add("named-range", count=ranges)
+    named = read_names(_spreadsheet(content), _places(_spreadsheet(content)))
+    if named.unread_ranges:
+        losses.add("named-range", count=named.unread_ranges)
+    if named.unread_databases:
+        losses.add("filter", count=named.unread_databases)
     for name, kind in (
         ("content-validation", "validation"),
-        ("database-range", "filter"),
         ("data-pilot-table", "pivot-table"),
     ):
         found = sum(1 for _ in content.iter(_q("table", name)))
@@ -739,13 +762,21 @@ def _columns_of(width: int, looks: _Looks) -> list[etree._Element]:
     return out
 
 
-def _new_table(sheet: Sheet, lost: LossLog | None, writer: OdsLookWriter | None = None) -> etree._Element:
+def _new_table(
+    sheet: Sheet,
+    lost: LossLog | None,
+    writer: OdsLookWriter | None = None,
+    names: etree._Element | None = None,
+) -> etree._Element:
+    """A ``table:table`` of ``sheet``; ``names`` is the ``table:named-expressions`` of the sheet's own names (D457)."""
     table = _el("table", "table", {"table:name": xml_safe(sheet.name)})
     looks = _looks_of(sheet, writer)
     used = [column for _, column in sheet.cells] + [column for row in looks.cells.values() for column in row]
     width = max(used, default=0) + 1
     table.extend(_columns_of(width, looks))
     table.extend(_rows_of(sheet, lost, looks) or [_gap(1, row=True)])
+    if names is not None:
+        table.append(names)
     return table
 
 
@@ -769,9 +800,10 @@ def workbook_to_ods(model: WorkbookModel, *, info: DocumentInfo | None = None) -
     spreadsheet = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "spreadsheet"))
     writer = OdsLookWriter(model)
     for sheet in model.sheets.values():
-        spreadsheet.append(_new_table(sheet, None, writer))
+        spreadsheet.append(_new_table(sheet, None, writer, local_expressions(model, sheet.id)))
     if not model.sheets:
         spreadsheet.append(_new_table(Sheet(SheetId("s1"), "Sheet1"), None))
+    spreadsheet.extend(global_elements(model))
     root.find("office:automatic-styles", NS).extend(writer.automatic_styles())  # type: ignore[union-attr]
     etree.cleanup_namespaces(root, keep_ns_prefixes=list(_NS_DECLS))  # (formulas name "of:" in their text)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
@@ -802,8 +834,9 @@ def ods_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
 def ods_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None = None) -> tuple[Loss, ...]:
     """What changed in ``model`` that the ods converters do not write, each as a code with how many entries differ from
     ``baseline`` -- the model the original file was read as, for an edit-and-reexport -- or from an empty workbook, for
-    a fresh file (``None``): ``"layout"`` (sheets with other column widths or row heights), ``"name"`` (named ranges
-    and tables), ``"chart"`` and ``"object"`` (with the pictures and shapes they use)."""
+    a fresh file (``None``): ``"layout"`` (sheets with other column widths or row heights), ``"name"`` (what a file
+    cannot hold of a named range or table: ``result``, ``purpose``, ``table-scope``), ``"chart"`` and ``"object"``
+    (with the pictures and shapes they use)."""
     return workbook_unwritten_changes(model, baseline, written=ODS_WRITTEN)
 
 
@@ -915,6 +948,7 @@ class _Patch:
             else:
                 self._patch_table(table, sheet)
         self._add_tables()
+        self._patch_names()
         if not self.changed:
             return self.original
         self._add_styles()
@@ -922,6 +956,13 @@ class _Patch:
         if self.info is not None:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
+
+    def _patch_names(self) -> None:
+        """The names of the workbook and of its sheets (D457)."""
+        known = [SheetId(table.id) for table in self.tables]
+        names = NamesPatch(self.part, self.spreadsheet, _places(self.spreadsheet), self.baseline, self.current)
+        if names.run(known):
+            self.changed = True
 
     def _add_styles(self) -> None:
         """The cell styles the changed looks need: automatic ones into ``content.xml``, named ones the file does not
@@ -978,7 +1019,7 @@ class _Patch:
             if existing is not None:
                 anchor = existing.element
                 continue
-            element = _new_table(sheet, self.losses)
+            element = _new_table(sheet, self.losses, names=local_expressions(self.current, sheet_id))
             self.changed = True
             if anchor is not None:
                 self.part.insert_after(anchor, element)

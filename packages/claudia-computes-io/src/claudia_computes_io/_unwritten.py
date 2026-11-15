@@ -13,10 +13,12 @@ from collections.abc import Collection
 from claudia_computes import WorkbookModel
 from claudia_odf_io import Loss, unwritten_changes
 
+from ._named import unheld
+
 #: The facets a converter writes, by the name :func:`facets` gives them: the cells with their looks, and the look
 #: definitions they name.
-ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats"})
-XLSX_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats"})
+ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names"})
+XLSX_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names"})
 
 #: The code a facet is reported under, where an export reported it before the facets existed.
 KINDS: dict[str, str] = {"layout": "layout", "charts": "chart", "objects": "object", "names": "name"}
@@ -52,4 +54,13 @@ def workbook_unwritten_changes(
     """What differs between ``baseline`` (``None``: an empty workbook, the start of a fresh export) and ``model`` in a
     facet outside ``written``."""
     start = facets(baseline if baseline is not None else WorkbookModel())
-    return unwritten_changes(start, facets(model), written=written, kinds=KINDS)
+    found = unwritten_changes(start, facets(model), written=written, kinds=KINDS)
+    if "names" not in written:
+        return found
+    return in_order((*found, *unheld(model, baseline).result()))
+
+
+def in_order(losses: tuple[Loss, ...]) -> tuple[Loss, ...]:
+    """Losses by the facet they come from: the names a file cannot hold come where the facet of the names did."""
+    order = ("layout", "name", "chart", "object")
+    return tuple(sorted(losses, key=lambda loss: order.index(loss.kind) if loss.kind in order else len(order)))

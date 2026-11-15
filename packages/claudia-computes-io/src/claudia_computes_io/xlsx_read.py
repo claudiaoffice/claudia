@@ -159,6 +159,9 @@ class Package:
     sheets: list[WorksheetPart]
     workbook: etree._Element
     shared: list[str]
+    #: The sheet at each place of the workbook's ``sheets`` (what ``localSheetId`` counts by): ``None`` for a chart
+    #: sheet or a dialog sheet, which has no cells.
+    places: list[SheetId | None] = field(default_factory=list)
 
     def sheet_id(self, name: str) -> SheetId | None:
         """The id of the sheet called ``name``, if there is one."""
@@ -175,13 +178,17 @@ def open_package(data: bytes) -> Package:
     if "xl/workbook.xml" not in parts:
         raise XlsxError("this is not an xlsx file: it has no workbook part")
     workbook = parse_xml(parts["xl/workbook.xml"])
-    rels = {rid: target for rid, _, target in relationships(parts, "xl/workbook.xml")}
+    rels = {rid: (kind, target) for rid, kind, target in relationships(parts, "xl/workbook.xml")}
     sheets: list[WorksheetPart] = []
+    places: list[SheetId | None] = []
     for element in workbook.iterfind("x:sheets/x:sheet", NS):
-        target = rels.get(element.get(q("r", "id"), ""))
-        if target is not None and target in parts:  # a chart sheet or a dialog sheet has no cells to read
+        kind, target = rels.get(element.get(q("r", "id"), ""), ("", ""))
+        if target in parts and kind == _REL + "worksheet":
             sheets.append(WorksheetPart(element.get("name", ""), SheetId(f"s{len(sheets) + 1}"), target))
-    return Package(parts, sheets, workbook, _shared_strings(parts))
+            places.append(sheets[-1].sheet_id)
+        else:  # a chart sheet or a dialog sheet has no cells to read
+            places.append(None)
+    return Package(parts, sheets, workbook, _shared_strings(parts), places)
 
 
 def _shared_strings(parts: dict[str, bytes]) -> list[str]:
@@ -196,37 +203,60 @@ def model_functions() -> frozenset[str]:
     return frozenset(entry.name for entry in function_catalog()) | INVERSE_NAMES
 
 
-def names_and_tables(package: Package) -> tuple[list[NamedRange], LossLog]:
-    """The workbook's defined names that are a range of cells, and its tables, as the model's names; what else the
-    file names (a constant, a formula, a name of several areas or of a removed cell) is counted as ``named-range``."""
-    found: list[NamedRange] = []
-    lost = LossLog()
+@dataclass(frozen=True, slots=True)
+class NameEntry:
+    """One defined name or table of the file, with the element it is: the ``definedName``, or the root of the table's
+    part (``part``, on ``sheet``). ``named`` is what the model makes of it, ``None`` when it cannot."""
+
+    named: NamedRange | None
+    element: etree._Element
+    part: str | None = None
+    sheet: WorksheetPart | None = None
+
+
+def name_entries(package: Package) -> list[NameEntry]:
+    """The defined names that are no bookkeeping of Excel's (``_xlnm.``: print areas, filters; hidden ones) and the
+    tables of the file, in the order the file has them, each as what the model makes of it."""
+    found: list[NameEntry] = []
     for element in package.workbook.iterfind("x:definedNames/x:definedName", NS):
         name = element.get("name", "")
         if name.startswith("_xlnm.") or element.get("hidden") == "1":
             continue  # print areas, filters and Excel's own bookkeeping: no name a person gave
-        named = _defined_range(package, element, name)
-        if named is None:
-            lost.add("named-range")
-        else:
-            found.append(named)
+        found.append(NameEntry(_defined_range(package, element, name), element))
     for sheet in package.sheets:
         for table_part in related(package.parts, sheet.part, "table"):
             table = parse_xml(package.parts[table_part])
-            named = _table(table, sheet.sheet_id)
-            if named is None:
-                lost.add("table")
-            else:
-                found.append(named)
+            found.append(NameEntry(_table(table, sheet.sheet_id), table, table_part, sheet))
+    return found
+
+
+def names_and_tables(package: Package) -> tuple[list[NamedRange], LossLog]:
+    """The workbook's defined names that are a range of cells, and its tables, as the model's names; what else the
+    file names (a constant, a formula, a name of several areas or of a removed cell) is counted as ``named-range``,
+    and a table the model cannot hold as ``table``."""
+    found: list[NamedRange] = []
+    lost = LossLog()
+    for entry in name_entries(package):
+        if entry.named is not None:
+            found.append(entry.named)
+        else:
+            lost.add("table" if entry.part is not None else "named-range")
     return found, lost
+
+
+def plain(rng: RangeRef) -> RangeRef:
+    """``rng`` without the ``$`` marks of its corners: a name's range is where it is, however the file wrote it."""
+    return RangeRef(
+        CellRef(rng.first.row, rng.first.col, rng.first.sheet), CellRef(rng.last.row, rng.last.col, rng.last.sheet)
+    )
 
 
 def _defined_range(package: Package, element: etree._Element, name: str) -> NamedRange | None:
     scope = None
     local = element.get("localSheetId")
     if local is not None:
-        index = int(local)
-        scope = package.sheets[index].sheet_id if 0 <= index < len(package.sheets) else None
+        index = int(local) if local.isdigit() else -1
+        scope = package.places[index] if 0 <= index < len(package.places) else None
         if scope is None:
             return None
     try:
@@ -235,7 +265,7 @@ def _defined_range(package: Package, element: etree._Element, name: str) -> Name
         return None
     if rng.sheet is None or name_problem(name) is not None:
         return None
-    return NamedRange(name, scope, rng)
+    return NamedRange(name, scope, plain(rng))
 
 
 def _table(table: etree._Element, sheet: SheetId) -> NamedRange | None:

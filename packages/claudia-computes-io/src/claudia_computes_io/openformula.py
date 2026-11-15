@@ -189,6 +189,8 @@ def _excel_token(body: str, position: int, stack: list[str]) -> tuple[str, str, 
         name, end = found.group(), found.end()
         if body.startswith("(", end):
             return "name", name, _open_function(name), end
+        if body.startswith("[", end):
+            raise Untranslatable("reference", f"the table {name}: OpenFormula has no columns of tables")
         if name.upper() in ("TRUE", "FALSE"):
             if stack and stack[-1] == "array":
                 raise Untranslatable("syntax", "a logical value in an inline array")
@@ -254,11 +256,14 @@ _PLAIN_CELL = re.compile(r"\$?[A-Za-z]{1,3}\$?\d+")
 _COLUMN_ONLY = re.compile(r"\$?[A-Za-z]{1,3}")
 
 
-def from_openformula(attribute: str, functions: Container[str] | None = None) -> str:
+def from_openformula(
+    attribute: str, functions: Container[str] | None = None, names: Container[str] | None = None
+) -> str:
     """The model's text (with its ``=``) for the value of a ``table:formula`` attribute. ``functions`` holds the
     names of the functions the model implements (upper case): a formula that calls another is
     :class:`Untranslatable`, because the model would show ``#NAME?`` where the file has a number. With none given
-    every function is accepted."""
+    every function is accepted. ``names`` holds the names the model has read from the file (in lower case): a formula
+    may use them, and any other name the file defines is :class:`Untranslatable`."""
     prefix, _, body = attribute.strip().partition(":=")
     if not _ or prefix != "of":
         raise Untranslatable("dialect", prefix if _ else "no language named")
@@ -271,14 +276,16 @@ def from_openformula(attribute: str, functions: Container[str] | None = None) ->
             out.append(match.group())
             position = match.end()
             continue
-        written, position = _odf_token(body, position, stack, functions)
+        written, position = _odf_token(body, position, stack, functions, names)
         out.append(written)
     if stack:
         raise Untranslatable("syntax", "a bracket is not closed")
     return "=" + "".join(out)
 
 
-def _odf_token(body: str, position: int, stack: list[str], functions: Container[str] | None) -> tuple[str, int]:
+def _odf_token(
+    body: str, position: int, stack: list[str], functions: Container[str] | None, names: Container[str] | None
+) -> tuple[str, int]:
     for pattern in (_STRING, _ERROR):
         found = pattern.match(body, position)
         if found:
@@ -293,7 +300,7 @@ def _odf_token(body: str, position: int, stack: list[str], functions: Container[
         return found.group(), found.end()
     found = _NAME.match(body, position)
     if found:
-        return _excel_name(found.group(), body.startswith("(", found.end()), functions), found.end()
+        return _excel_name(found.group(), body.startswith("(", found.end()), functions, names), found.end()
     return _odf_operator(body, position, stack)
 
 
@@ -323,10 +330,12 @@ def _excel_sheet(written: str) -> str:
     return "'" + inner.replace("'", "''") + "'!"
 
 
-def _excel_name(name: str, is_function: bool, functions: Container[str] | None) -> str:
+def _excel_name(name: str, is_function: bool, functions: Container[str] | None, names: Container[str] | None) -> str:
     if not is_function:
         if name.upper() in ("TRUE", "FALSE"):
             return name.upper()
+        if names is not None and name.casefold() in names:
+            return name
         raise Untranslatable("reference", f"the name {name}, which the file defines")
     plain = name
     if plain.upper().startswith(_PREFIX):

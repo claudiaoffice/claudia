@@ -95,7 +95,7 @@ def written(content: Content, value: Value) -> Written:
     return Written(text[1:], value, with_alternatives.note)
 
 
-def _serialized(element: etree._Element) -> bytes:
+def serialized(element: etree._Element) -> bytes:
     """A part's XML as bytes, with the declaration Excel writes."""
     return etree.tostring(element, xml_declaration=True, encoding="UTF-8", standalone=True)
 
@@ -291,7 +291,7 @@ class SheetPatch:
 
     def to_bytes(self) -> bytes:
         """The sheet's XML as the file is to hold it."""
-        return _serialized(self.root)
+        return serialized(self.root)
 
 
 def _cut_columns(cols: etree._Element, lo: int, hi: int) -> None:
@@ -412,8 +412,16 @@ class PackagePatch:
         etree.SubElement(
             root, f"{{{_PR}}}Relationship", Id=rid, Type=_REL + kind, Target=_relative(source, target_part)
         )
-        self.parts[name] = _serialized(root)
+        self.parts[name] = serialized(root)
         return rid
+
+    def remove_relationship(self, source: str, rid: str) -> None:
+        """The relationship ``rid`` of ``source``, taken out."""
+        name = rels_part(source)
+        root = parse_xml(self.parts[name])
+        for rel in [r for r in root if r.get("Id") == rid]:
+            root.remove(rel)
+        self.parts[name] = serialized(root)
 
     def remove_relationships(self, source: str, kind: str) -> None:
         name = rels_part(source)
@@ -422,7 +430,7 @@ class PackagePatch:
         root = parse_xml(self.parts[name])
         for rel in [r for r in root if r.get("Type") == _REL + kind]:
             root.remove(rel)
-        self.parts[name] = _serialized(root)
+        self.parts[name] = serialized(root)
 
     def declare(self, part: str, content_type: str) -> None:
         """``part`` in ``[Content_Types].xml`` with ``content_type``."""
@@ -461,12 +469,12 @@ class PackagePatch:
             else:
                 later.addprevious(calc)
         calc.set("fullCalcOnLoad", "1")
-        self.parts["xl/workbook.xml"] = _serialized(workbook)
+        self.parts["xl/workbook.xml"] = serialized(workbook)
 
     def finish(self) -> dict[str, bytes]:
         """The parts as the file is to hold them."""
         if self._types is not None:
-            self.parts["[Content_Types].xml"] = _serialized(self._types)
+            self.parts["[Content_Types].xml"] = serialized(self._types)
         return self.parts
 
 
@@ -526,7 +534,7 @@ class SheetNotes:
 
     def finish(self) -> None:
         if self._changed and self._comments is not None and self.comments_part is not None:
-            self.package.parts[self.comments_part] = _serialized(self._comments)
+            self.package.parts[self.comments_part] = serialized(self._comments)
 
     def _comment(self, ref: str) -> etree._Element | None:
         if self.comments_part is None:

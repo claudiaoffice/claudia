@@ -36,7 +36,7 @@ from claudia_computes.values import ErrorValue, Value
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import write_parts
 
-from ._unwritten import XLSX_WRITTEN, workbook_unwritten_changes
+from ._unwritten import XLSX_WRITTEN, in_order, workbook_unwritten_changes
 from .cell_looks import (
     Dressing,
     Lines,
@@ -53,6 +53,7 @@ from .excel_names import with_marks
 from .extensions import to_excel, with_note
 from .openformula import Untranslatable
 from .xlsx_looks import XlsxLooks, read_looks
+from .xlsx_names import XlsxNamesPatch, header_losses, write_names
 from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
 from .xlsx_read import (
     SheetRead,
@@ -146,9 +147,11 @@ def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
 def xlsx_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None = None) -> tuple[Loss, ...]:
     """What changed in ``model`` that the xlsx converters do not write, each as a code with how many entries differ from
     ``baseline`` -- the model the original file was read as, for an edit-and-reexport -- or from an empty workbook, for
-    a fresh file (``None``): ``"layout"`` (sheets with other column widths or row heights), ``"name"`` (named ranges
-    and tables), ``"chart"`` and ``"object"`` (with the pictures and shapes they use)."""
-    return workbook_unwritten_changes(model, baseline, written=XLSX_WRITTEN)
+    a fresh file (``None``): ``"layout"`` (sheets with other column widths or row heights), ``"name"`` (what a file
+    cannot hold of a named range or table: ``result``, ``purpose``, ``table-scope``, ``table-header``), ``"chart"``
+    and ``"object"`` (with the pictures and shapes they use)."""
+    found = workbook_unwritten_changes(model, baseline, written=XLSX_WRITTEN)
+    return in_order((*found, *header_losses(model, baseline).result()))
 
 
 def workbook_to_xlsx(model: WorkbookModel) -> bytes:
@@ -167,6 +170,7 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
         looks.sheet(sheet, ws)
     if not wb.sheetnames:
         wb.create_sheet(title="Sheet1")
+    write_names(wb, model)
     out = BytesIO()
     wb.save(out)
     return out.getvalue()
@@ -288,6 +292,7 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
     current.calc.recalculate_all()  # (``store`` without the server's settle leaves dependents stale, as for ods)
     package = open_package(original_bytes)
     patch = PackagePatch(package.parts)
+    names = XlsxNamesPatch(patch, package, baseline, current)
     styles = StylesPatch(patch.parts, current)
     old_looks = LookExport(baseline)
     restyled = changed_styles(old_looks, styles.looks)
@@ -299,6 +304,7 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
             continue  # nothing about this sheet changed: its part stays exactly as it is
         changed = True
         formulas |= _write_sheet(patch, part.part, before, after, (styles, looks))
+    changed |= names.run()
     if not changed:
         return original_bytes
     styles.finish()
