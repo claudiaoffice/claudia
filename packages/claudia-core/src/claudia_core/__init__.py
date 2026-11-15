@@ -67,7 +67,7 @@ from .css import (
     roles_used,
     validate_css,
 )
-from .document import Applied, CheckpointInfo, Document, Line, environment_of
+from .document import Applied, CheckpointInfo, Document, Line, Look, environment_of
 from .errors import (
     KernelError,
     MissingUpcaster,
@@ -136,6 +136,7 @@ from .manifest import (
 )
 from .messages import ChatRecord, Ephemeral, parse_chat
 from .model import DocumentModel, Snapshot
+from .names import MAX_THING_NAME, clean_name, free_name, name_key, name_problem
 from .object_texts import ObjectText, edit_object_text, object_texts
 from .objects import (
     ASPECT_TOLERANCE,
@@ -163,6 +164,7 @@ from .objects import (
     ObjectsChanged,
     ObjectSet,
     RemoveObject,
+    RenameThing,
     RenderingsChanged,
     ResizeObject,
     RotateObject,
@@ -172,6 +174,7 @@ from .objects import (
     SetSnap,
     SetText,
     ShapesChanged,
+    ThingRenamed,
     UpdateDiagram,
     UpdateRendering,
     VisualObject,
@@ -258,12 +261,14 @@ __all__ = [
     "CommandLog",
     "CommandRegistry",
     "Context",
+    "clean_name",
     "contrast",
     "CreateStyle",
     "CSS_VERSION",
     "CssError",
     "CssProblem",
     "decode_image",
+    "free_name",
     "DefineDiagram",
     "DefineImage",
     "DefineRendering",
@@ -274,6 +279,7 @@ __all__ = [
     "DiagramDefinition",
     "DiagramsChanged",
     "Document",
+    "Look",
     "DocumentModel",
     "DocumentStore",
     "encode",
@@ -311,6 +317,8 @@ __all__ = [
     "KINDS",
     "Line",
     "luminance",
+    "name_key",
+    "name_problem",
     "MAIN",
     "Manifest",
     "MAX_IMAGE_BYTES",
@@ -322,6 +330,7 @@ __all__ = [
     "MAX_ROLES",
     "MAX_RENDERING_SOURCE",
     "MAX_SELECTION",
+    "MAX_THING_NAME",
     "MemoryStore",
     "MIN_OBJECT_SIZE",
     "MissingUpcaster",
@@ -357,6 +366,7 @@ __all__ = [
     "Region",
     "RegionHeld",
     "RemoveObject",
+    "RenameThing",
     "RenderedDefinition",
     "RenderingsChanged",
     "RemoveStyle",
@@ -391,6 +401,7 @@ __all__ = [
     "ShapeDefinition",
     "ShapeError",
     "ShapesChanged",
+    "ThingRenamed",
     "slice_runs",
     "Slot",
     "SLOTS",

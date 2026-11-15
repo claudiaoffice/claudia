@@ -707,19 +707,44 @@ def _log(ctx, limit):
     what was typed into it) and is gone from a redacted entry."""
     if not 1 <= limit <= MAX_LOG:
         raise RequestError("bad_request", msg("log: limit must be from 1 to {limit}", limit=MAX_LOG))
-    entries = ctx.document.log.path(ctx.document.revision)[-limit:]
-    return [
-        {
-            "revision": entry.rev.to_data(),
-            "author": entry.author,
-            "origin": entry.origin,
-            "time": entry.time,
-            "label": entry.command.label,
-            "summary": entry.command.summary,
-            "of": None if entry.of is None else entry.of.to_data(),
-        }
-        for entry in entries
-    ]
+    return [_entry_view(entry) for entry in ctx.document.log.path(ctx.document.revision)[-limit:]]
+
+
+def _entry_view(entry) -> dict:
+    """One step of the history as a history panel shows it: `{revision, author, origin, time, label, summary, of}`."""
+    return {
+        "revision": entry.rev.to_data(),
+        "author": entry.author,
+        "origin": entry.origin,
+        "time": entry.time,
+        "label": entry.command.label,
+        "summary": entry.command.summary,
+        "of": None if entry.of is None else entry.of.to_data(),
+    }
+
+
+@core_methods.method("peek_revision", "revision:revision state:bool=true")
+def _peek_revision(ctx, revision, state):
+    """A read-only look at the document after one step of its history, on any line, for replaying it (D551): `{revision,
+    entry, focus, app, state_schema, state}`. `entry` is the step as `log` gives it; `focus` lists the regions the step
+    touched (`{kind: "objects", container, ids}` for things on a slide or sheet, `{kind: "cells", ...}` for cells), the
+    places a view brings into sight; `state` is the full state in the shape of `snapshot` and is left out when `state`
+    is false, for a client that only wants to know where. Nothing changes; anybody who may read may look.
+    `command_error` for a revision the document does not have."""
+    try:
+        look = ctx.document.peek_revision(revision)
+    except KernelError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    out = {
+        "revision": revision.to_data(),
+        "entry": _entry_view(look.entry),
+        "focus": [region.to_data() for region in look.focus],
+        "app": look.model.app,
+    }
+    if state:
+        out["state_schema"] = look.model.state_schema
+        out["state"] = look.model.serialize()
+    return out
 
 
 @core_methods.method("chat_log", "limit:int=200")

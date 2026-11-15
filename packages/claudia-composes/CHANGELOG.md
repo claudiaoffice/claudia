@@ -3,6 +3,13 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.9.0] - 2026-11-15
+
+Names of things (D550).
+
+### Added
+- Objects carry a `name` (`ObjectBody.name`) and are renamed with `RenameThing`, both from `claudia_core`.
+
 ## [0.8.0] - 2026-11-14
 
 Search and replace (E9.28).

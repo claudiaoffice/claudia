@@ -1,0 +1,238 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-label="Scrubbing: the replay reaches a change outside the viewport; the viewport follows (computes)"><title>Scrubbing: the replay reaches a change outside the viewport; the viewport follows (computes)</title><desc>Playhead on ai adding the chart tab at 16:31; the tab appears and is shown; a toast explains the move.</desc><defs><filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1F1A33" flood-opacity="0.20"/></filter><filter id="sh2" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1F1A33" flood-opacity="0.16"/></filter></defs><rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#FFFFFF" />
+<rect x="0.0" y="0.0" width="1280.0" height="48.0" rx="0" fill="#F7F3EC" />
+<line x1="0.0" y1="48.0" x2="1280.0" y2="48.0" stroke="#DAD4C8" stroke-width="1" />
+<text x="18.0" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >File</text>
+<path d="M45.190546874999995,26.25 L48.690546874999995,29.75 L52.190546874999995,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="68.7" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Edit</text>
+<path d="M97.67195312499999,26.25 L101.17195312499999,29.75 L104.67195312499999,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="121.2" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >View</text>
+<path d="M157.544609375,26.25 L161.044609375,29.75 L164.544609375,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="181.0" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Format</text>
+<path d="M230.8096875,26.25 L234.3096875,29.75 L237.8096875,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="254.3" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Tools</text>
+<path d="M293.55109375,26.25 L297.05109375,29.75 L300.55109375,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="317.1" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Help</text>
+<path d="M351.280625,26.25 L354.780625,29.75 L358.280625,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="560.0" cy="24.0" r="11" fill="#1F8A83" />
+<text x="560.0" y="28.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle" >c</text>
+<text x="580.0" y="22.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F1A33" text-anchor="start" >Budget 2027</text>
+<text x="580.0" y="36.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="start" >computes · demo.claudia-office.de</text>
+<rect x="790.0" y="13.0" width="109.1" height="22.0" rx="11" fill="#5B4BC4" />
+<circle cx="806.0" cy="24.0" r="5.6" fill="none" stroke="#FFFFFF" stroke-width="1.4" />
+<path d="M806,21 L806,24.2 L808.2,25.6" fill="none" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+<text x="819.0" y="28.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#FFFFFF" text-anchor="start" >Replay · 16:31</text>
+<circle cx="1010.0" cy="24.0" r="12" fill="#2B7BD6" stroke="#FFFFFF" stroke-width="2" />
+<text x="1010.0" y="28.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.399999999999999" font-weight="700" fill="#FFFFFF" text-anchor="middle" >A</text>
+<circle cx="1032.0" cy="24.0" r="12" fill="#C8553D" stroke="#FFFFFF" stroke-width="2" />
+<text x="1032.0" y="28.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.399999999999999" font-weight="700" fill="#FFFFFF" text-anchor="middle" >B</text>
+<circle cx="1054.0" cy="24.0" r="12" fill="#5B4BC4" stroke="#FFFFFF" stroke-width="2" />
+<text x="1054.0" y="28.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.399999999999999" font-weight="700" fill="#FFFFFF" text-anchor="middle" >ai</text>
+<circle cx="1120.0" cy="24.0" r="5" fill="#2F9E6B" />
+<text x="1132.0" y="28.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start" >Connected</text>
+<text x="1262.0" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#6B6580" text-anchor="middle" >×</text>
+<rect x="0.0" y="48.0" width="900.0" height="44.0" rx="0" fill="#F7F3EC" />
+<line x1="0.0" y1="91.5" x2="900.0" y2="91.5" stroke="#DAD4C8" stroke-width="1" />
+<g opacity="0.45" >
+<rect x="16.0" y="56.0" width="132.0" height="28.0" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="27.0" y="74.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start" >Style: Amount</text>
+<path d="M132.5,68.25 L136,71.75 L139.5,68.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="158.0" y="56.0" width="134.0" height="28.0" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="169.0" y="74.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start" >Number: #,##0</text>
+<path d="M276.5,68.25 L280,71.75 L283.5,68.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="302.0" y="56.0" width="92.0" height="28.0" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="313.0" y="74.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start" >Σ  Sum</text>
+<path d="M378.5,68.25 L382,71.75 L385.5,68.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="404.0" y="56.0" width="128.0" height="28.0" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="415.0" y="74.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start" >Insert chart</text>
+<path d="M516.5,68.25 L520,71.75 L523.5,68.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<rect x="0.0" y="92.0" width="900.0" height="652.0" rx="0" fill="#FFFFFF" />
+<text x="40.0" y="132.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="600" fill="#1F1A33" text-anchor="start" >Revenue by quarter</text>
+<text x="40.0" y="150.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start" >from Budget!B7:E7 · bar chart</text>
+<line x1="110.0" y1="625.0" x2="840.0" y2="625.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="100.0" y="629.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >0</text>
+<line x1="110.0" y1="543.0" x2="840.0" y2="543.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="100.0" y="547.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >2,000</text>
+<line x1="110.0" y1="461.0" x2="840.0" y2="461.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="100.0" y="465.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >4,000</text>
+<line x1="110.0" y1="379.0" x2="840.0" y2="379.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="100.0" y="383.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >6,000</text>
+<line x1="110.0" y1="297.0" x2="840.0" y2="297.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="100.0" y="301.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >8,000</text>
+<line x1="110.0" y1="215.0" x2="840.0" y2="215.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="100.0" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >10,000</text>
+<text x="201.2" y="647.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#6B6580" text-anchor="middle" >Q1</text>
+<rect x="146.2" y="247.0" width="110.0" height="378.0" rx="3" fill="#1F8A83" />
+<text x="201.2" y="239.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="middle" >9,220</text>
+<text x="383.8" y="647.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#6B6580" text-anchor="middle" >Q2</text>
+<rect x="328.8" y="233.9" width="110.0" height="391.1" rx="3" fill="#1F8A83" />
+<text x="383.8" y="225.9" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="middle" >9,540</text>
+<text x="566.2" y="647.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#6B6580" text-anchor="middle" >Q3</text>
+<rect x="511.2" y="223.0" width="110.0" height="402.0" rx="3" fill="#1F8A83" />
+<text x="566.2" y="215.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="middle" >9,805</text>
+<text x="748.8" y="647.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#6B6580" text-anchor="middle" >Q4</text>
+<text x="748.8" y="611.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#9A94AD" text-anchor="middle" font-style="italic">no data yet</text>
+<line x1="110.0" y1="625.0" x2="840.0" y2="625.0" stroke="#9A94AD" stroke-width="1" />
+<g transform="translate(0,546)">
+<rect x="163.0" y="100.0" width="574.0" height="36.0" rx="18" fill="#1F1A33" filter="url(#sh)"/>
+<path d="M178.9794921875,118 L188.9794921875,118 M184.9794921875,113 L189.9794921875,118 L184.9794921875,123" fill="none" stroke="#B9B0F0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+<text x="201.0" y="123.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#FFFFFF" text-anchor="start" >Followed to the chart tab “Revenue by quarter” — created by ai at 16:31</text>
+<text x="723.0" y="123.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#B9B0F0" text-anchor="end" text-decoration="underline">Pause</text>
+</g>
+<rect x="1.5" y="49.5" width="897.0" height="694.0" rx="0" fill="none" stroke="#5B4BC4" stroke-width="3" opacity="0.55"/>
+<rect x="0.0" y="692.0" width="900.0" height="52.0" rx="0" fill="#E8E4F2" />
+<line x1="0.0" y1="692.0" x2="900.0" y2="692.0" stroke="#5B4BC4" stroke-width="2" />
+<circle cx="23.0" cy="707.0" r="5.6" fill="none" stroke="#3F31A0" stroke-width="1.4" />
+<path d="M23,704 L23,707.2 L25.2,708.6" fill="none" stroke="#3F31A0" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+<text x="38.0" y="713.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start" >Viewing 14 Nov 2026, 16:31</text>
+<text x="217.5" y="713.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start" >· after “ai: add chart tab Revenue by quarter” · preview only</text>
+<rect x="38.0" y="722.0" width="14.0" height="14.0" rx="3.5" fill="#5B4BC4" stroke="#5B4BC4" stroke-width="1.3" />
+<path d="M41,729 L44,732 L49,724" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+<text x="60.0" y="733.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start" >Follow changes</text>
+<rect x="174.3" y="722.0" width="14.0" height="14.0" rx="3.5" fill="#FFFFFF" stroke="#9A94AD" stroke-width="1.3" />
+<text x="196.3" y="733.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start" >Show differences from now</text>
+<rect x="600.0" y="700.0" width="132.0" height="36.0" rx="8" fill="#FFFFFF" stroke="#CFC8E6" stroke-width="1" />
+<text x="666.0" y="722.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#3F31A0" text-anchor="middle" >Suggest restore…</text>
+<rect x="742.0" y="700.0" width="146.0" height="36.0" rx="8" fill="#5B4BC4" />
+<text x="801.0" y="722.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >Return to now</text>
+<rect x="852.0" y="706.0" width="28.0" height="24.0" rx="4" fill="#7A6BD8" />
+<text x="866.0" y="721.6" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#FFFFFF" text-anchor="middle" >Esc</text>
+<rect x="0.0" y="744.0" width="900.0" height="32.0" rx="0" fill="#F7F3EC" />
+<line x1="0.0" y1="744.0" x2="900.0" y2="744.0" stroke="#DAD4C8" stroke-width="1" />
+<rect x="23.5" y="755.0" width="11.0" height="10.0" rx="1.5" fill="none" stroke="#6B6580" stroke-width="1.3" />
+<line x1="23.5" y1="760.0" x2="34.5" y2="760.0" stroke="#6B6580" stroke-width="1.1" />
+<line x1="29.0" y1="755.0" x2="29.0" y2="765.0" stroke="#6B6580" stroke-width="1.1" />
+<text x="42.0" y="765.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#6B6580" text-anchor="start" >Budget</text>
+<rect x="102.8" y="743.0" width="160.7" height="33.0" rx="0" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<rect x="102.8" y="773.0" width="160.7" height="3.0" rx="0" fill="#1F8A83" />
+<rect x="114.8" y="760.0" width="2.6" height="5.0" rx="0" fill="#1F8A83" />
+<rect x="118.5" y="756.0" width="2.6" height="9.0" rx="0" fill="#1F8A83" />
+<rect x="122.2" y="758.0" width="2.6" height="7.0" rx="0" fill="#1F8A83" />
+<text x="132.8" y="765.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start" >Revenue by quarter</text>
+<circle cx="254.5" cy="755.0" r="3.5" fill="#5B4BC4" />
+<rect x="269.5" y="749.0" width="24.0" height="22.0" rx="6" fill="none" stroke="#DAD4C8" stroke-width="1" />
+<text x="281.5" y="766.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="400" fill="#6B6580" text-anchor="middle" >+</text>
+<rect x="0.0" y="776.0" width="900.0" height="24.0" rx="0" fill="#FFFFFF" />
+<rect x="0.0" y="776.0" width="900.0" height="24.0" rx="0" fill="#FFFFFF" />
+<line x1="0.0" y1="776.0" x2="900.0" y2="776.0" stroke="#DAD4C8" stroke-width="1" />
+<text x="14.0" y="792.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start" >Replay · tab “Revenue by quarter” did not exist before 16:31, so it is absent from the tab bar at earlier points</text>
+<rect x="900.0" y="48.0" width="380.0" height="752.0" rx="0" fill="#FBFAF7" />
+<line x1="900.0" y1="48.0" x2="900.0" y2="800.0" stroke="#DAD4C8" stroke-width="1" />
+<circle cx="900.0" cy="424.0" r="11" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" filter="url(#sh2)"/>
+<path d="M897,419 L903,424 L897,429" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="924.0" cy="70.0" r="11" fill="#5B4BC4" stroke="#FFFFFF" stroke-width="2" />
+<text x="924.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.45" font-weight="700" fill="#FFFFFF" text-anchor="middle" >ai</text>
+<text x="942.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start" >AI</text>
+<rect x="1100.0" y="57.0" width="164.0" height="26.0" rx="8" fill="#E8E4F2" />
+<rect x="1102.0" y="59.0" width="78.0" height="22.0" rx="6" fill="#FFFFFF" stroke="#CFC8E6" stroke-width="1" />
+<text x="1141.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#3F31A0" text-anchor="middle" >Suggest</text>
+<text x="1223.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle" >Act</text>
+<line x1="900.0" y1="92.0" x2="1280.0" y2="92.0" stroke="#DAD4C8" stroke-width="1" />
+<text x="916.0" y="115.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start" >History &amp; Chat</text>
+<rect x="916.0" y="124.0" width="90.4" height="3.0" rx="1.5" fill="#5B4BC4" />
+<text x="1068.0" y="115.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#6B6580" text-anchor="start" >Help</text>
+<line x1="900.0" y1="128.0" x2="1280.0" y2="128.0" stroke="#DAD4C8" stroke-width="1" />
+<rect x="916.0" y="138.0" width="36.0" height="24.0" rx="12" fill="#5B4BC4" />
+<text x="934.0" y="154.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >All</text>
+<rect x="958.0" y="138.0" width="95.1" height="24.0" rx="12" fill="none" stroke="#DAD4C8" stroke-width="1" />
+<text x="1005.5" y="154.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle" >Conversation</text>
+<rect x="1059.1" y="138.0" width="70.9" height="24.0" rx="12" fill="none" stroke="#DAD4C8" stroke-width="1" />
+<text x="1094.5" y="154.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle" >Changes</text>
+<circle cx="1250.0" cy="150.0" r="13" fill="#5B4BC4" />
+<path d="M1244,150 a6,6 0 1 1 2,4.5" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M1243,146 L1244,150.5 L1248.5,149.5" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<text x="948.0" y="190.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#C8553D" text-anchor="start" >bob</text>
+<text x="1262.0" y="190.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >15:58</text>
+<rect x="944.0" y="196.0" width="322.0" height="48.0" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="956.0" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#2B7BD6" text-anchor="start" >@ann</text>
+<text x="994.5" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >Q3</text>
+<text x="1015.3" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >numbers</text>
+<text x="1070.8" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >are</text>
+<text x="1093.1" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >in,</text>
+<text x="1110.6" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >can</text>
+<text x="1135.8" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >you</text>
+<text x="1161.0" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >check</text>
+<text x="1200.3" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >the</text>
+<text x="956.0" y="238.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >totals?</text>
+<circle cx="951.0" cy="269.0" r="4" fill="#2B7BD6" />
+<text x="964.0" y="273.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#2B7BD6" text-anchor="start" >ann</text>
+<text x="992.8" y="273.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >B6 = 1380</text>
+<text x="1262.0" y="273.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:03</text>
+<circle cx="951.0" cy="299.0" r="4" fill="#2B7BD6" />
+<text x="964.0" y="303.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#2B7BD6" text-anchor="start" >ann</text>
+<text x="992.8" y="303.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >C6 = 1410</text>
+<text x="1262.0" y="303.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:03</text>
+<circle cx="951.0" cy="329.0" r="4" fill="#C8553D" />
+<path d="M964,325 L969,329 L964,333" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="976.0" y="333.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#C8553D" text-anchor="start" >bob</text>
+<text x="1004.8" y="333.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >4 changes in D6:D9</text>
+<text x="1262.0" y="333.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:11</text>
+<text x="948.0" y="356.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#2B7BD6" text-anchor="start" >ann</text>
+<text x="1262.0" y="356.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:18</text>
+<rect x="944.0" y="362.0" width="322.0" height="29.0" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="956.0" y="385.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >Total</text>
+<text x="988.3" y="385.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >looks</text>
+<text x="1023.3" y="385.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >off,</text>
+<text x="1046.0" y="385.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >checking</text>
+<text x="1103.4" y="385.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >the</text>
+<text x="1125.7" y="385.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >formulas.</text>
+<circle cx="951.0" cy="416.0" r="4" fill="#2B7BD6" />
+<text x="964.0" y="420.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#2B7BD6" text-anchor="start" >ann</text>
+<text x="992.8" y="420.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >F6 = SUM(B6:E6)</text>
+<text x="1262.0" y="420.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:21</text>
+<circle cx="951.0" cy="446.0" r="4" fill="#5B4BC4" />
+<text x="964.0" y="450.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#5B4BC4" text-anchor="start" >ai</text>
+<text x="985.8" y="450.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >style Total row: Sum</text>
+<text x="1262.0" y="450.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:24</text>
+<text x="948.0" y="473.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#2F9E6B" text-anchor="start" >you</text>
+<text x="1262.0" y="473.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:30</text>
+<rect x="944.0" y="479.0" width="322.0" height="29.0" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="956.0" y="502.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#5B4BC4" text-anchor="start" >@ai</text>
+<text x="982.5" y="502.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >chart</text>
+<text x="1016.5" y="502.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >revenue</text>
+<text x="1067.7" y="502.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >by</text>
+<text x="1085.6" y="502.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >quarter</text>
+<rect x="934.0" y="516.0" width="338.0" height="34.0" rx="8" fill="#E8E4F2" />
+<rect x="934.0" y="516.0" width="3.0" height="34.0" rx="1.5" fill="#5B4BC4" />
+<circle cx="951.0" cy="533.0" r="4" fill="#5B4BC4" />
+<text x="964.0" y="537.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#5B4BC4" text-anchor="start" >ai</text>
+<text x="985.8" y="537.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >add chart tab Revenue by quarter</text>
+<text x="1262.0" y="537.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:31</text>
+<g opacity="0.42" >
+<circle cx="951.0" cy="563.0" r="4" fill="#C8553D" />
+<text x="964.0" y="567.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#C8553D" text-anchor="start" >bob</text>
+<text x="992.8" y="567.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >E6 = 1522</text>
+<text x="1262.0" y="567.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:40</text>
+</g>
+<g opacity="0.42" >
+<text x="948.0" y="590.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#C8553D" text-anchor="start" >bob</text>
+<text x="1262.0" y="590.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:44</text>
+<rect x="944.0" y="596.0" width="322.0" height="29.0" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="956.0" y="619.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >Q4</text>
+<text x="977.1" y="619.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >forecast</text>
+<text x="1029.2" y="619.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >for</text>
+<text x="1049.2" y="619.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >consulting</text>
+<text x="1114.1" y="619.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >is</text>
+<text x="1127.2" y="619.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >in.</text>
+</g>
+<line x1="922.0" y1="176.0" x2="922.0" y2="533.0" stroke="#5B4BC4" stroke-width="2.5" />
+<line x1="922.0" y1="533.0" x2="922.0" y2="658.0" stroke="#BDB7D2" stroke-width="1.5" stroke-dasharray="2 4"/>
+<circle cx="922.0" cy="213.0" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="269.0" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="299.0" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="329.0" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="369.5" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="416.0" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="446.0" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="486.5" r="2.6" fill="#5B4BC4" />
+<circle cx="922.0" cy="563.0" r="2.6" fill="#FFFFFF" stroke="#BDB7D2" stroke-width="1.2" />
+<circle cx="922.0" cy="603.5" r="2.6" fill="#FFFFFF" stroke="#BDB7D2" stroke-width="1.2" />
+<circle cx="922.0" cy="533.0" r="8" fill="#5B4BC4" stroke="#FFFFFF" stroke-width="2.5" filter="url(#sh2)"/>
+<circle cx="922.0" cy="533.0" r="2.6" fill="#FFFFFF" />
+<circle cx="922.0" cy="666.0" r="5.5" fill="#2F9E6B" stroke="#FFFFFF" stroke-width="2" />
+<text x="936.0" y="670.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="600" fill="#2F9E6B" text-anchor="start" >now</text>
+<text x="1268.0" y="666.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="400" fill="#6B6580" text-anchor="end" >Wheel: step · Shift+wheel: step by author · Esc: now</text>
+<rect x="914.0" y="692.0" width="352.0" height="92.0" rx="10" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1.2" />
+<text x="928.0" y="718.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9A94AD" text-anchor="start" >Message — @name to mention, # to reference</text>
+<circle cx="1242.0" cy="762.0" r="13" fill="#5B4BC4" />
+<path d="M1236.5,762 L1247.5,762 M1243,757 L1248,762 L1243,767" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>

@@ -27,14 +27,15 @@ register = SlideModel.registry.register
 @register
 @dataclass(frozen=True)
 class AddSlide(Command):
-    """Add an empty slide, at the end or at a place. It carries notes and a planned time only when it is the
-    inverse of removing a slide that had them."""
+    """Add an empty slide, at the end or at a place. It carries notes, a planned time and a name only when it is the
+    inverse of removing a slide that had them, or when the server names a new one (D550)."""
 
     kind: ClassVar[str] = "creates.AddSlide"
     id: str
     at: int | None = None
     notes: str = ""
     seconds: int | None = None
+    name: str = ""
 
     @property
     def label(self) -> str:
@@ -45,7 +46,7 @@ class AddSlide(Command):
         return "Added a slide"
 
     def apply(self, ctx: Context[SlideModel]) -> Command:
-        ctx.model.insert_slide(self.id, self.at, self.notes, self.seconds)
+        ctx.model.insert_slide(self.id, self.at, self.notes, self.seconds, self.name)
         ctx.emit(SlidesChanged())
         return RemoveSlide(self.id)
 
@@ -55,18 +56,20 @@ class AddSlide(Command):
             data["notes"] = self.notes
         if self.seconds is not None:
             data["seconds"] = self.seconds
+        if self.name:
+            data["name"] = self.name
         return data
 
     @classmethod
     def from_data(cls, data, registry) -> AddSlide:
-        return cls(data["id"], data.get("at"), data.get("notes", ""), data.get("seconds"))
+        return cls(data["id"], data.get("at"), data.get("notes", ""), data.get("seconds"), data.get("name", ""))
 
     def shifted_by(self, other: Command) -> Command | None:
         return None if isinstance(other, AddSlide) and other.id == self.id else self
 
     def redacted(self) -> Command:
         """Notes are content (E1.8); the slide itself is what later commands refer to."""
-        return AddSlide(self.id, self.at)
+        return AddSlide(self.id, self.at, name=self.name)
 
 
 @register
@@ -88,9 +91,10 @@ class RemoveSlide(Command):
     def apply(self, ctx: Context[SlideModel]) -> Command:
         notes = ctx.model.notes.get(self.id, "")
         seconds = ctx.model.times.get(self.id)
+        name = ctx.model.slide_names.get(self.id, "")
         place = ctx.model.delete_slide(self.id)
         ctx.emit(SlidesChanged())
-        return AddSlide(self.id, place, notes, seconds)
+        return AddSlide(self.id, place, notes, seconds, name)
 
     def to_data(self) -> dict:
         return {"id": self.id}

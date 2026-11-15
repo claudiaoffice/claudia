@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { roleNow } from '~/lib/replay'
 // A text: the style bar, the page, the suggestions above the panel, and the counts along the bottom, inside the
 // document window every app shares (DocumentFrame).
 import { computed, ref, watch } from 'vue'
@@ -15,7 +16,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
-  panelItem,
+  panelItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -155,6 +156,15 @@ async function pasteFromClipboard() {
 // and gone to, and the marks the editor draws for what it found. Ctrl+F and Ctrl+H work anywhere in the window except in
 // a text field of its own, which keeps the browser's find; what is selected in the text becomes the first thing to find.
 const search = useSearch(() => !readonly.value, () => editor.value?.focus())
+/** While replaying, a view that follows goes to the paragraph the step touched (E5.19, D551). */
+watch(
+  () => state.replay?.focus,
+  (focus) => {
+    if (!focus || !state.replay?.follow) return
+    const first = focus.find((r) => r.kind === 'text')
+    if (first?.kind === 'text') editor.value?.scrollToBlock(first.block)
+  },
+)
 const searchHost = textSearchHost({ session, goTo: (block) => editor.value?.scrollToBlock(block), t })
 const searchMarks = computed(() => (search.open.value ? marksFor(search.view.value.matches, search.view.value.current) : []))
 const openSearch = (replace = false) => search.openSearch(replace, session.selectedText())
@@ -201,7 +211,7 @@ const listStart = () => String(state.lists.find((l) => l.id === session.currentI
 /** What the shared menu items need from this window (`lib/document-menus.ts`). */
 const shared = computed<DocumentMenuContext>(() => ({
   t,
-  role: state.me.role,
+  role: roleNow(state),
   open: (name) => frame.value?.openDialog(name),
   leave: (opts) => emit('leave', opts),
   save: () => frame.value?.checkpoint(null),
@@ -282,6 +292,7 @@ const menus = computed<Menu[]>(() => {
       items: [
         { id: 'view.authors', label: t('Show Who Wrote What'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
+        replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
         darkItem(c, { on: dark, toggle: toggleDark }),
         { label: '', separator: true },
         { label: t('Flow'), checked: view.value === 'flow', action: () => (view.value = 'flow') },

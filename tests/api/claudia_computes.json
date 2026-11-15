@@ -1,10 +1,10 @@
 {
- "version": "0.7.0",
+ "version": "0.8.0",
  "AddChart": {
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', name: 'str', spec_id: 'str', index: 'int | None' = None) -> None",
+  "init": "(id: 'str', name: 'str', spec_id: 'str', index: 'int | None' = None, legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'AddChart'",
@@ -42,7 +42,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'SheetId', name: 'str', index: 'int | None' = None) -> None",
+  "init": "(id: 'SheetId', name: 'str', index: 'int | None' = None, legacy_names: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'AddSheet'",
@@ -526,7 +526,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False) -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
@@ -1115,6 +1115,7 @@
    "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
    "load_state": "(self, state: 'dict') -> 'None'",
+   "named_things": "(self)",
    "outcome_table": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, combine: 'str' = 'all') -> 'OutcomeTable | None'",
    "put_names": "(self, entries: 'Sequence[tuple[NameKey, NamedRange | None]]') -> 'NameRestores'",
    "query": "(self, text: 'str', home: 'SheetId', parameters: 'Sequence[object]' = ()) -> 'Table'",
@@ -1125,6 +1126,7 @@
    "restore": "(state: 'dict') -> 'Self'",
    "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
    "serialize": "(self) -> 'dict'",
+   "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "settle": "(self, ctx) -> 'None'",
    "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
    "sheet": "(self, sheet_id: 'SheetId') -> 'Sheet'",
@@ -1133,6 +1135,7 @@
    "sheet_print_of": "(self, target: 'str') -> 'SheetPrintSetup'",
    "store": "(self, sheet: 'Sheet', row: 'int', col: 'int', content: 'Content') -> 'Content'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "thing_name": "(self, thing_id: 'str') -> 'str'",
    "trace": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, reach: 'str' = 'group', window: 'Window | None' = None) -> 'Trace'",
    "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "value": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Value'"

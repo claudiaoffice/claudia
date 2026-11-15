@@ -52,6 +52,19 @@ the number formats). Search on claudia-search (SEC-18, CODE-18).
 ### Added (UX-33)
 - `WorkbookModel.setup_commands`: a new workbook starts with its first sheet, `s1` "Sheet1", made by the server as nobody's undo step (UX-33). The web client no longer adds it.
 
+## [0.8.0] - 2026-11-15
+
+Names of things (D550).
+
+### Added
+- Sheets, chart tabs and objects share one namespace: `WorkbookModel.named_things`, `thing_name`, `set_thing_name`;
+  `RenameThing` renames a chart tab (a sheet is refused: its formulas would need rewriting, E6.24).
+- `AddSheet.legacy_names` and `AddChart.legacy_names`: set by the upcaster for entries written before names were shared,
+  so a document with a sheet and a chart tab of one name still replays.
+
+### Changed
+- `AddSheet` and `AddChart` are schema 2: a new sheet or chart tab may not take a name any other thing has.
+
 ## [0.7.0] - 2026-11-14
 
 ### Added

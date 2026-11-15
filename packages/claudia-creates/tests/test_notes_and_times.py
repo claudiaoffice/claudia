@@ -130,10 +130,10 @@ def test_notes_and_times_survive_the_log_and_a_snapshot(doc):
 
 def test_a_snapshot_of_schema_7_opens_without_notes_or_times(doc):
     state = doc.model.serialize()
-    del state["notes"], state["times"]
+    del state["notes"], state["times"], state["names"]
     old = SlideModel.restore(state)
     assert (old.notes_of("s1"), old.time_of("s1"), old.total_time()) == ("", None, 0)
-    assert SlideModel.state_schema == 10  # 9: notes and times; 10: rendered text containers (D390)
+    assert SlideModel.state_schema == 11  # 9: notes and times; 10: rendered text containers (D390); 11: names (D550)
 
 
 def test_undoing_my_notes_after_a_colleague_changed_them_is_refused(doc):

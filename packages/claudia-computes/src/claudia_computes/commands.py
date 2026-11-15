@@ -60,6 +60,14 @@ from .region import CellRegion
 
 register = WorkbookModel.registry.register
 
+
+@WorkbookModel.registry.upcaster("computes.AddSheet", 1)
+@WorkbookModel.registry.upcaster("computes.AddChart", 1)
+def _names_not_yet_shared(data: dict) -> dict:
+    """Schema 1 wrote sheets and chart tabs before names were one namespace: replay them under the old rule."""
+    return {**data, "legacy_names": True}
+
+
 MAX_LISTED = 3  # cells a history sentence names one by one
 MAX_LISTED_TEXT = 70  # characters of such a sentence; longer ones name the area instead
 MAX_LISTED_ALT = 40  # characters of an image's alt text that a history sentence quotes
@@ -111,10 +119,16 @@ def _check_position(row: int, col: int) -> None:
 @register
 @dataclass(frozen=True)
 class AddSheet(Command):
+    """Add a sheet. Its name must be free in the whole document, not only among the sheets (D550). ``legacy_names`` is
+    set for what a log wrote before names were shared: it keeps the old rule (no second sheet of that name), so an old
+    document replays, even one that has a sheet and a chart tab of one name."""
+
     kind: ClassVar[str] = "computes.AddSheet"
+    schema: ClassVar[int] = 2  # 2: names are shared with chart tabs and objects (D550)
     id: SheetId
     name: str
     index: int | None = None  # where in the tab order; None: at the end
+    legacy_names: bool = False
 
     @property
     def label(self) -> str:
@@ -130,22 +144,28 @@ class AddSheet(Command):
             raise ValueError(f"sheet id {self.id!r} exists")
         if any(s.name.casefold() == self.name.casefold() for s in model.sheets.values()):
             raise ValueError(f"a sheet called {self.name!r} exists")
+        if not self.legacy_names:
+            model.check_name_free(self.id, self.name)
         model.add_sheet(Sheet(self.id, self.name), self.index)
         ctx.emit(SheetsChanged())
         return RemoveSheet(self.id)
 
     def to_data(self) -> dict:
-        return {"id": self.id, "name": self.name, "index": self.index}
+        data = {"id": self.id, "name": self.name, "index": self.index}
+        if self.legacy_names:
+            data["legacy_names"] = True
+        return data
 
     @classmethod
     def from_data(cls, data, registry) -> AddSheet:
-        return cls(SheetId(data["id"]), data["name"], data.get("index"))
+        return cls(SheetId(data["id"]), data["name"], data.get("index"), data.get("legacy_names", False))
 
     def stub(self) -> dict:
         return {"sheet": self.id}
 
     def redacted(self) -> Command:
-        return AddSheet(self.id, self.id, self.index)  # still there for later commands, with a neutral name
+        # still there for later commands, with a neutral name
+        return AddSheet(self.id, self.id, self.index, legacy_names=True)
 
 
 @register
@@ -186,7 +206,10 @@ class RemoveSheet(Command):
         ctx.emit(SheetsChanged())
         if name_restores:
             ctx.emit(NamesChanged())
-        undo: list[Command] = [AddSheet(sheet.id, sheet.name, index)]
+        # a name that clashed even then (an old document) is put back as it was; any other is checked again
+        undo: list[Command] = [
+            AddSheet(sheet.id, sheet.name, index, legacy_names=model.name_holder(sheet.id, sheet.name) is not None)
+        ]
         if cells:
             undo.append(SetCells(sheet.id, cells))
         if row_heights:
@@ -621,10 +644,12 @@ class AddChart(Command):
     here rather than in :mod:`claudia_core.objects`, even though the definition it shows does not."""
 
     kind: ClassVar[str] = "computes.AddChart"
+    schema: ClassVar[int] = 2  # 2: names are shared with sheets and objects (D550); see ``AddSheet.legacy_names``
     id: str
     name: str
     spec_id: str
     index: int | None = None  # where in the tab order; None: at the end
+    legacy_names: bool = False
 
     @property
     def label(self) -> str:
@@ -640,6 +665,8 @@ class AddChart(Command):
             raise ValueError(f"chart id {self.id!r} exists")
         if any(c.name.casefold() == self.name.casefold() for c in model.charts.values()):
             raise ValueError(f"a chart called {self.name!r} exists")
+        if not self.legacy_names:
+            model.check_name_free(self.id, self.name)
         if self.spec_id not in model.diagrams:
             raise ValueError(f"this document does not know the diagram {self.spec_id!r}")
         model.add_chart(Chart(self.id, self.name, self.spec_id), self.index)
@@ -647,11 +674,14 @@ class AddChart(Command):
         return RemoveChart(self.id)
 
     def to_data(self) -> dict:
-        return {"id": self.id, "name": self.name, "spec_id": self.spec_id, "index": self.index}
+        data = {"id": self.id, "name": self.name, "spec_id": self.spec_id, "index": self.index}
+        if self.legacy_names:
+            data["legacy_names"] = True
+        return data
 
     @classmethod
     def from_data(cls, data, registry) -> AddChart:
-        return cls(data["id"], data["name"], data["spec_id"], data.get("index"))
+        return cls(data["id"], data["name"], data["spec_id"], data.get("index"), data.get("legacy_names", False))
 
     def shifted_by(self, other: Command) -> Command | None:
         """Refused once the diagram it would show is gone (the same guard ``AddObject`` keeps for its shape,
@@ -662,7 +692,8 @@ class AddChart(Command):
         return {"chart": self.id}
 
     def redacted(self) -> Command:
-        return AddChart(self.id, self.id, self.spec_id, self.index)  # still there for later commands, neutral name
+        # still there for later commands, with a neutral name
+        return AddChart(self.id, self.id, self.spec_id, self.index, legacy_names=True)
 
 
 @register
@@ -689,7 +720,9 @@ class RemoveChart(Command):
         index = list(model.charts).index(self.id)
         model.remove_chart(self.id)
         ctx.emit(ChartsChanged())
-        return AddChart(chart.id, chart.name, chart.spec_id, index)
+        return AddChart(
+            chart.id, chart.name, chart.spec_id, index, legacy_names=model.name_holder(chart.id, chart.name) is not None
+        )
 
     def to_data(self) -> dict:
         return {"id": self.id}

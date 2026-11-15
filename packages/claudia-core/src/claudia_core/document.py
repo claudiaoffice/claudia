@@ -14,6 +14,7 @@ passwords belong to other layers. Threading rule (D16): all calls come from one 
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
@@ -61,6 +62,16 @@ class Applied:
     command: Command
     inverse: Command
     entry: Entry
+
+
+@dataclass(frozen=True)
+class Look:
+    """What ``Document.peek_revision`` shows of one step of the history (D551)."""
+
+    revision: Revision
+    model: DocumentModel  # the state after the step, on a scratch model
+    entry: Entry  # the step itself: who, when, what
+    focus: tuple[Region, ...]  # where the step touched the document, the places a view brings into sight
 
 
 @dataclass(frozen=True)
@@ -448,6 +459,34 @@ class Document:
         if line not in self.log.branches:
             raise KernelError(f"there is no line called {line!r}")
         return self.materialize(self.log.head(line))
+
+    def peek_revision(self, rev: Revision) -> Look:
+        """A read-only look at the document after one step of its history, on any line (D551): the state at ``rev``, the
+        step itself, and the regions the step touched. This is what replaying the history shows, one step at a time.
+
+        The regions are the command's own, read against the state before the step and then against the state after it,
+        each place once: a removed thing is found in the first, a new one in the second. A command that cannot say
+        where it acts on one of the two states (the thing is not there) adds nothing from it. Like ``materialize`` it
+        touches neither the live model, the active line nor anybody's undo steps. ``KernelError`` for a revision the
+        document does not have."""
+        if not self.log.has(rev):
+            raise KernelError(f"there is no revision {rev}")
+        entry = self.log.get(rev)
+        after = self.materialize(rev)
+        before = self.materialize(entry.parent)
+        focus: list[Region] = []
+        seen: set[str] = set()
+        for model in (before, after):
+            try:
+                found = entry.command.regions(model)
+            except (KeyError, ValueError, IndexError):
+                continue  # the thing it acts on is not in this state
+            for region in found:
+                key = json.dumps(region.to_data(), sort_keys=True)
+                if key not in seen:
+                    seen.add(key)
+                    focus.append(region)
+        return Look(rev, after, entry, tuple(focus))
 
     def switch_to(self, line: str, author: str | None = None) -> Applied | None:
         """Make an existing line the one the document continues on (the way back after a restore).

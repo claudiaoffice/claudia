@@ -5,6 +5,7 @@
 // the slide (and to the notes, which are shown for it).
 import type { SlideSession } from './slide-session'
 import type { Kinds, SearchHost, SearchMatch, SearchPlace, SearchSwitch } from './search'
+import { lookOnly } from './replay'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 
@@ -58,7 +59,7 @@ export function slideSearchHost(from: {
   const number = (slide: string) => state.slides.findIndex((s) => s.id === slide) + 1
   return {
     get readonly() {
-      return state.me.role === 'viewer'
+      return lookOnly(state)
     },
     unit: 'text',
     switches: SWITCHES,

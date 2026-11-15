@@ -64,7 +64,7 @@ def objects(doc, slide="s1"):
 
 
 def test_a_new_presentation_has_one_empty_slide(deck):
-    assert call(deck, "slides") == [{"id": "s1", "objects": 0, "seconds": None, "has_notes": False}]
+    assert call(deck, "slides") == [{"id": "s1", "name": "", "objects": 0, "seconds": None, "has_notes": False}]
     assert call(deck, "slide", {"slide": "s1"}) == {
         "revision": None,
         "slide": "s1",
@@ -82,7 +82,7 @@ def test_a_text_box_is_added_with_a_plain_box_and_body_text_words(deck):
     assert (box["kind"], box["anchor"]["x"], box["anchor"]["y"], box["w"], box["h"]) == ("text", 100, 80, 400, 120)
     assert box["style"] == "plain-box" and box["paragraph"]["style"] == "body-text"  # two slots (D304, D310)
     assert box["paragraph"]["text"] == "" and box["shape"] is None
-    assert call(deck, "slides") == [{"id": "s1", "objects": 1, "seconds": None, "has_notes": False}]
+    assert call(deck, "slides") == [{"id": "s1", "name": "", "objects": 1, "seconds": None, "has_notes": False}]
 
 
 def test_text_can_be_given_when_the_box_is_added(deck):
@@ -276,7 +276,7 @@ def test_viewers_may_look_but_not_change(deck):
 def test_notes_and_planned_times_are_set_and_read_back(deck):
     call(deck, "set_slide_notes", {"slide": "s1", "notes": "Start with **2019**."})
     call(deck, "set_slide_time", {"slide": "s1", "seconds": 120})
-    assert call(deck, "slides") == [{"id": "s1", "objects": 0, "seconds": 120, "has_notes": True}]
+    assert call(deck, "slides") == [{"id": "s1", "name": "", "objects": 0, "seconds": 120, "has_notes": True}]
     one = call(deck, "slide", {"slide": "s1"})
     assert (one["notes"], one["seconds"]) == ("Start with **2019**.", 120)
     call(deck, "set_slide_time", {"slide": "s1", "seconds": None})

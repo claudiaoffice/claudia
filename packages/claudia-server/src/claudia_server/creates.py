@@ -70,7 +70,9 @@ from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
+from .replay import add_replay_methods
 from .styles import add_style_methods
+from .thing_names import add_name_methods, default_name
 
 #: The style a new object of each kind starts with: its container's slot (D304). A text box's box is a box style
 #: of its own (D310), so a change to it never has to deviate from Body text.
@@ -133,7 +135,15 @@ def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, d
     )
     object_id = _fresh("o", deck.objects)
     body = ObjectBody(
-        object_id, "image", w, h, STYLE_OF_KIND["image"], image=asset.id, imported=imported, decorative=bool(decorative)
+        object_id,
+        "image",
+        w,
+        h,
+        STYLE_OF_KIND["image"],
+        image=asset.id,
+        imported=imported,
+        decorative=bool(decorative),
+        name=default_name(ctx, "image"),
     )
     steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
@@ -257,6 +267,8 @@ def _add_shared_methods(table: MethodTable) -> None:
     planned times (D342, D343), search and replace (E10.19), and printing and the language (D917)."""
     add_style_methods(table)
     _add_object_methods(table)
+    add_name_methods(table)
+    add_replay_methods(table)
     _add_print_methods(table)
     _add_plan_methods(table)
     add_search_methods(table)
@@ -269,9 +281,9 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
 
     @table.method("slides")
     def _slides(ctx):
-        """The slides in order, each as `{id, objects, seconds, has_notes}`: how many things are on it, its planned
-        time in seconds (`null` when it has none, D343) and whether it has speaker notes (D342, read them with
-        `slide`)."""
+        """The slides in order, each as `{id, name, objects, seconds, has_notes}`: its name (`""` for a slide from
+        before names, see `name_unnamed`), how many things are on it, its planned time in seconds (`null` when it has
+        none, D343) and whether it has speaker notes (D342, read them with `slide`)."""
         deck = _deck(ctx)
         return [
             {
@@ -279,6 +291,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 "objects": len(deck.objects_on(slide)),
                 "seconds": deck.times.get(slide),
                 "has_notes": slide in deck.notes,
+                "name": deck.slide_names.get(slide, ""),
             }
             for slide in deck.slides
         ]
@@ -366,7 +379,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     def _add_slide(ctx, base):
         """Add an empty slide at the end. Returns its id and the revision."""
         slide = _fresh("s", _deck(ctx).slides)
-        return _done(ctx, AddSlide(slide), base, slide=slide)
+        return _done(ctx, AddSlide(slide, name=default_name(ctx, "slide")), base, slide=slide)
 
     @table.method(
         "add_object", 'slide:str kind:str x:int y:int w:int h:int shape:str? text:text="" base:revision?', write=True
@@ -394,7 +407,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         object_id = _fresh("o", deck.objects)
         style = STYLE_OF_KIND[kind]
         words = paragraph_for(object_id, PARAGRAPH_STYLE_OF_KIND[kind], text, ctx.user)
-        body = ObjectBody(object_id, kind, w, h, style, words, shape=shape)
+        body = ObjectBody(object_id, kind, w, h, style, words, shape=shape, name=default_name(ctx, kind))
         steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return _done(ctx, command, base, object=object_id)

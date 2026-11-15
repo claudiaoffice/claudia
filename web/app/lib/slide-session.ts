@@ -1,6 +1,7 @@
 // One person's view of one presentation (creates): the slides, their objects and the shapes, kept up to date from the
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
+import { containerOf, firstFocus, lookOnly } from './replay'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { describeParams } from './descriptions'
 import type { Frame } from './geometry'
@@ -125,6 +126,12 @@ export class SlideSession extends BaseSession<SlideState> {
     s.styleModel = styleModel
     if (!slides.some((x) => x.id === s.activeSlide)) s.activeSlide = slides[0]?.id ?? ''
     if (s.selected && !s.objects[s.selected]) s.selected = null
+  }
+
+  /** A step of the replay is shown on the slide it touched (D551). */
+  protected override followReplay(focus: Region[]): void {
+    const slide = containerOf(firstFocus(focus))
+    if (slide && this.state.slides.some((x) => x.id === slide)) this.state.activeSlide = slide
   }
 
   /** The objects of a slide, the one in front last. */
@@ -324,7 +331,7 @@ export class SlideSession extends BaseSession<SlideState> {
   // -- styles and the palette (E9.7, D200, D203). The same eight methods computes' session has, because the style
   // menu is one component talking to one `StyleHost` and neither knows which app it is in.
   get readOnly(): boolean {
-    return this.state.me.role === 'viewer'
+    return lookOnly(this.state)
   }
 
   /** The styles as the menu wants them, in the order the server lists them. */
@@ -397,7 +404,7 @@ export class SlideSession extends BaseSession<SlideState> {
     s.selected = id
     if (id === null) return this.letGo()
     const regions = this.regionOf(id)
-    if (s.me.role === 'viewer') return this.showRegions(`select ${id}`, regions)
+    if (lookOnly(s)) return this.showRegions(`select ${id}`, regions)
     if (!(await this.hold(regions)) && s.selected === id) s.selected = null
   }
 

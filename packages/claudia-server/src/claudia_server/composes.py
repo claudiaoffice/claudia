@@ -73,8 +73,10 @@ from .office_export import export_with_original, office_export
 from .printing import add_language_methods
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
+from .replay import add_replay_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
+from .thing_names import add_name_methods
 
 MAX_ZONE_WORDS = 10  # the widest ± n words zone a cursor may ask for
 ZONE_SECONDS = 15.0  # a held zone lapses this long after its owner was last active
@@ -124,6 +126,8 @@ class _BlockTargets:
 
 add_style_methods(composes_methods, guard=_people_only, targets=(_BlockTargets(), OBJECTS))
 add_list_methods(composes_methods, guard=_people_only)
+add_name_methods(composes_methods, guard=_people_only)
+add_replay_methods(composes_methods)
 
 
 def _rev(ctx: Context) -> str | None:

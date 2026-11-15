@@ -638,6 +638,18 @@
           },
           {
             "accelerators": [
+              "<Primary><Alt>z"
+            ],
+            "checkable": false,
+            "id": "view.replay",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Replay History\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
               "<Primary><Alt><Shift>d"
             ],
             "checkable": true,

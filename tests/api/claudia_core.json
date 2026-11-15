@@ -1,5 +1,5 @@
 {
- "version": "0.23.0",
+ "version": "0.24.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -458,6 +458,7 @@
    "on_purge": "(self, hook: 'Callable[[tuple[Revision, ...]], None]') -> 'None'",
    "open": "(model_cls: 'type[DocumentModel]', log: 'CommandLog', *, snapshot: 'Snapshot | None' = None, branch: 'str | None' = None, **options) -> 'Document'",
    "peek_line": "(self, line: 'str') -> 'DocumentModel'",
+   "peek_revision": "(self, rev: 'Revision') -> 'Look'",
    "post_chat": "(self, author: 'str', raw: 'str', *, users: 'Iterable[str]' = ()) -> 'ChatRecord'",
    "publish": "(self, kind: 'str', sender: 'str | None', data: 'dict | None' = None) -> 'Ephemeral'",
    "redact": "(self, revisions: 'Iterable[Revision]', *, author: 'str | None' = None) -> 'Applied'",
@@ -874,6 +875,14 @@
   },
   "properties": []
  },
+ "Look": {
+  "class": [
+   "object"
+  ],
+  "init": "(revision: 'Revision', model: 'DocumentModel', entry: 'Entry', focus: 'tuple[Region, ...]') -> None",
+  "methods": {},
+  "properties": []
+ },
  "MAIN": {
   "value": "'main'"
  },
@@ -897,6 +906,9 @@
  },
  "MAX_SELECTION": {
   "value": "64"
+ },
+ "MAX_THING_NAME": {
+  "value": "60"
  },
  "MIN_OBJECT_SIZE": {
   "value": "20"
@@ -964,7 +976,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False) -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
@@ -980,7 +992,9 @@
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'A'",
    "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
+   "check_name_free": "(self, thing_id: 'str', name: 'str') -> 'None'",
    "check_object": "(self, obj: 'VisualObject[A]') -> 'None'",
+   "check_thing_name": "(self, thing_id: 'str', name: 'str') -> 'None'",
    "close_container": "(self, container: 'str') -> 'None'",
    "containers": "(self) -> 'Iterable[str]'",
    "define_diagram": "(self, definition: 'DiagramDefinition') -> 'None'",
@@ -997,6 +1011,9 @@
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
    "images_to_data": "(self) -> 'list[dict]'",
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None) -> 'None'",
+   "name_holder": "(self, thing_id: 'str', name: 'str') -> 'tuple[str, str] | None'",
+   "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
+   "names_in_use": "(self) -> 'list[str]'",
    "objects_changed": "(self, container: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
    "objects_on": "(self, container: 'str') -> 'list[VisualObject[A]]'",
    "objects_to_data": "(self) -> 'list[dict]'",
@@ -1008,9 +1025,12 @@
    "replace_rendering": "(self, definition: 'RenderedDefinition') -> 'RenderedDefinition'",
    "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = ()) -> 'None'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
+   "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "shapes_to_data": "(self) -> 'list[dict]'",
    "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "thing_name": "(self, thing_id: 'str') -> 'str'",
+   "unnamed_things": "(self) -> 'Iterator[tuple[str, str]]'",
    "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
    "users_of_rendering": "(self, rendering_id: 'str') -> 'list[str]'",
@@ -1295,6 +1315,24 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RenameStyle'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RenameThing": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', name: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RenameThing'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -1775,6 +1813,16 @@
  "TEXT_FLOOR": {
   "value": "4.5"
  },
+ "ThingRenamed": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "UI_FLOOR": {
   "value": "3.0"
  },
@@ -1861,6 +1909,9 @@
  "check_kind": {
   "function": "(kind: 'str', properties: 'Iterable[str]') -> 'None'"
  },
+ "clean_name": {
+  "function": "(text: 'str') -> 'str'"
+ },
  "contrast": {
   "function": "(one: 'str', other: 'str') -> 'float'"
  },
@@ -1888,11 +1939,20 @@
  "format_css": {
   "function": "(css: 'Mapping[str, str]') -> 'str'"
  },
+ "free_name": {
+  "function": "(label: 'str', taken: 'Iterable[str]') -> 'str'"
+ },
  "insert_runs": {
   "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
  },
  "luminance": {
   "function": "(colour: 'str') -> 'float'"
+ },
+ "name_key": {
+  "function": "(text: 'str') -> 'str'"
+ },
+ "name_problem": {
+  "function": "(text: 'str') -> 'str | None'"
  },
  "new_registry": {
   "function": "() -> 'CommandRegistry'"

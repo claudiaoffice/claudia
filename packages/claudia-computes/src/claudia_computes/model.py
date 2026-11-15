@@ -618,6 +618,36 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.chart(chart_id)
         self.charts = {c.id: c for c in self.charts.values() if c.id != chart_id}
 
+    # -- names (D550) ------------------------------------------------------------
+    def named_things(self):
+        """The objects with names, then the sheets and the chart tabs: one namespace for all of them."""
+        yield from super().named_things()
+        for sheet in self.sheets.values():
+            yield "sheet", sheet.id, sheet.name
+        for chart in self.charts.values():
+            yield "chart", chart.id, chart.name
+
+    def thing_name(self, thing_id: str) -> str:
+        """The name of a sheet, a chart tab or an object; ``ValueError`` if there is none of them."""
+        if thing_id in self.sheets:
+            return self.sheets[SheetId(thing_id)].name
+        if thing_id in self.charts:
+            return self.charts[thing_id].name
+        return super().thing_name(thing_id)
+
+    def set_thing_name(self, thing_id: str, name: str) -> str:
+        """Name a chart tab or an object; returns the name it had. A sheet is refused: formulas write the name of the
+        sheet they read (``Sheet1!A1``), so a new name needs the formulas rewritten with it, which is not built yet."""
+        if thing_id in self.sheets:
+            raise ValueError("Sheets cannot be renamed yet: formulas that read them would stop finding them")
+        if thing_id not in self.charts:
+            return super().set_thing_name(thing_id, name)
+        if not name:
+            raise ValueError("a chart needs a name")
+        chart = self.charts[thing_id]
+        self.charts = {c.id: replace(c, name=name) if c.id == thing_id else c for c in self.charts.values()}
+        return chart.name
+
     def chart_figure(self, diagram_id: str) -> dict:
         """The Plotly figure (``{"data": [...], "layout": {...}}``) a diagram draws right now, read live off its
         sheet (E6.6); ``ValueError`` if ``diagram_id`` names no diagram this workbook knows.

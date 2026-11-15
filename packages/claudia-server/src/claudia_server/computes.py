@@ -133,8 +133,10 @@ from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
+from .replay import add_replay_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
+from .thing_names import add_name_methods, default_name
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
 MAX_TYPED_CELLS = 10_000  # cells in one ``set_cells``
@@ -185,6 +187,8 @@ computes_methods = core_methods.extended()
 # API (``apply_style``, ``deviate``) are the same in every app (E1.10, D200); a workbook's targets are its floating
 # objects and its cells. A workbook has no rule of its own about who may change them.
 add_style_methods(computes_methods, targets=(OBJECTS, _CellTargets()))
+add_name_methods(computes_methods)
+add_replay_methods(computes_methods)
 computes_methods.kind("image")(image_bytes)
 
 
@@ -732,7 +736,7 @@ def _add_diagram_object(ctx, *, sheet, row, col, w, h, diagram, base):
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     _diagram_definition(workbook, diagram, "add_diagram_object")
     object_id = _fresh_object_id(workbook.objects)
-    body = ObjectBody(object_id, "diagram", w, h, "plain-image", diagram=diagram)
+    body = ObjectBody(object_id, "diagram", w, h, "plain-image", diagram=diagram, name=default_name(ctx, "diagram"))
     command = AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data())
     applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"object": object_id, "revision": applied.revision.to_data()}
@@ -795,7 +799,15 @@ def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_pat
     )
     object_id = _fresh_object_id(workbook.objects)
     body = ObjectBody(
-        object_id, "image", w, h, "plain-image", image=asset.id, imported=imported, decorative=bool(decorative)
+        object_id,
+        "image",
+        w,
+        h,
+        "plain-image",
+        image=asset.id,
+        imported=imported,
+        decorative=bool(decorative),
+        name=default_name(ctx, "image"),
     )
     steps.append(AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data()))
     command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")

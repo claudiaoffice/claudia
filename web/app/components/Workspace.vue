@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { lookOnly, roleNow } from '~/lib/replay'
 // A workbook: the formula bar, the grid (or a chart tab), the sheet tabs, inside the document window every app shares
 // (DocumentFrame).
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -33,7 +34,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
-  panelItem,
+  panelItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -103,10 +104,11 @@ const grid = ref<{
   selectedObject: () => string | null
   stepObject: (step: 1 | -1) => void
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
+  show: (row: number, col: number) => void
 } | null>(null)
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
-const readonly = computed(() => state.me.role === 'viewer')
+const readonly = computed(() => lookOnly(state))
 const b = computed(() => bounds(sel.value))
 const sheetNames = computed(() => visibleNames(state.names, state.activeSheet))
 /** The Name Box shows the name of the cells that are selected when they are exactly a name's (E6.5), else their address. */
@@ -598,6 +600,18 @@ const searchHost = sheetSearchHost({
   t,
 })
 /** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */
+/** While replaying, a view that follows goes to what the step touched: the sheet (the session switched it) and the cell,
+ * moving no further than needed (E5.19, D551). */
+watch(
+  () => state.replay?.focus,
+  async (focus) => {
+    if (!focus || !state.replay?.follow) return
+    const first = focus.find((r) => r.kind === 'cells')
+    if (first?.kind !== 'cells') return
+    await nextTick()
+    grid.value?.show(first.range.first.row, first.range.first.col)
+  },
+)
 async function goToCell(sheet: string, row: number, col: number) {
   if (sheet !== state.activeSheet || activeChart.value) await pickTab(sheet, 'sheet')
   sel.value = single(row, col)
@@ -876,7 +890,7 @@ function chartInserted(objectId: string | null, chartId: string | null) {
 /** What the shared menu items need from this window (`lib/document-menus.ts`). */
 const shared = computed<DocumentMenuContext>(() => ({
   t,
-  role: state.me.role,
+  role: roleNow(state),
   open: (name) => frame.value?.openDialog(name),
   leave: (opts) => emit('leave', opts),
   save: () => frame.value?.checkpoint(null),
@@ -959,6 +973,7 @@ const menus = computed<Menu[]>(() => {
       items: [
         authorsItemUnavailable(c), // computes tracks no per-cell authorship yet
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
+        replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
         darkItem(c, { on: dark, toggle: toggleDark }),
       ],
     },

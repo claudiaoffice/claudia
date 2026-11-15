@@ -933,6 +933,8 @@ function anchorPoint(row: number, col: number): { x: number; y: number } | null 
 
 defineExpose({
   anchorPoint,
+  /** Bring a cell into sight, by moving no further than needed (a replay shows what a step touched, D551). */
+  show: (row: number, col: number) => reveal(row, col, true, true),
   focus: () => viewport.value?.focus(),
   selectObject: (id: string) => (selectedObject.value = id),
   stepObject,

@@ -29,6 +29,7 @@ import type { LinkLike, Region, WireData } from './protocol'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
 import { translate as t } from './i18n'
+import { lookOnly } from './replay'
 export interface SuggestionInfo {
   id: string
   author: string | null
@@ -126,7 +127,7 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   get readOnly(): boolean {
-    return this.state.me.role === 'viewer'
+    return lookOnly(this.state)
   }
 
   // ------------------------------------------------------------------------------ loading

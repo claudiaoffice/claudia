@@ -1,5 +1,5 @@
 {
- "version": "0.11.0",
+ "version": "0.12.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -27,7 +27,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None) -> None",
+  "init": "(id: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'AddSlide'",
@@ -186,7 +186,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False) -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
@@ -536,16 +536,20 @@
    "delete_slide": "(self, slide: 'str') -> 'int'",
    "empty": "() -> 'Self'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
-   "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None) -> 'None'",
+   "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '') -> 'None'",
+   "named_things": "(self)",
    "notes_of": "(self, slide: 'str') -> 'str'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "restore": "(state: 'dict') -> 'Self'",
    "serialize": "(self) -> 'dict'",
    "set_notes": "(self, slide: 'str', text: 'str') -> 'str'",
+   "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "set_time": "(self, slide: 'str', seconds: 'int | None') -> 'int | None'",
    "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
+   "thing_name": "(self, thing_id: 'str') -> 'str'",
    "time_of": "(self, slide: 'str') -> 'int | None'",
-   "total_time": "(self) -> 'int'"
+   "total_time": "(self) -> 'int'",
+   "unnamed_things": "(self)"
   },
   "properties": []
  },

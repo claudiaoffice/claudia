@@ -120,7 +120,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 8: object bodies carry a description (alternative text)
     # 9: speaker notes (Markdown, D342) and planned times (D343) of the slides
     # 10: rendered text containers (D390)
-    state_schema: ClassVar[int] = 10
+    # 11: slides have names, in one namespace with the objects (D550)
+    state_schema: ClassVar[int] = 11
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -136,6 +137,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.notes: dict[str, str] = {}
         #: The planned time of the slides that have one, in whole seconds (D343).
         self.times: dict[str, int] = {}
+        #: The names of the slides that have one (D550); a name is shared with the objects, so see ``named_things``.
+        self.slide_names: dict[str, str] = {}
         #: How the slides are printed, as a layout and a page (D917).
         self.print_setup: PrintSetup = print_setup if print_setup is not None else PrintSetup()
         #: The language of the presentation, a BCP 47 tag, or ``None`` when it is not known (D915, D917).
@@ -163,6 +166,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "slides": list(self.slides),
             "notes": dict(self.notes),
             "times": dict(self.times),
+            "names": dict(self.slide_names),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
             "shapes": self.shapes_to_data(),
@@ -186,6 +190,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         # schema 8 and earlier: no notes and no planned times
         model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.slides and v}
         model.times = {k: v for k, v in state.get("times", {}).items() if k in model.slides}
+        # schema 10 and earlier: no names
+        model.slide_names = {k: v for k, v in state.get("names", {}).items() if k in model.slides and v}
         model.restore_objects(
             state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
         )
@@ -216,9 +222,11 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return self.get_object(object_id)
 
     # -- slides ----------------------------------------------------------------
-    def insert_slide(self, slide: str, at: int | None = None, notes: str = "", seconds: int | None = None) -> None:
-        """Add a slide at position ``at`` (the end by default), optionally with its notes and planned time (which is
-        how undoing the removal of a slide gives them back)."""
+    def insert_slide(
+        self, slide: str, at: int | None = None, notes: str = "", seconds: int | None = None, name: str = ""
+    ) -> None:
+        """Add a slide at position ``at`` (the end by default), optionally with its notes, planned time and name (which
+        is how undoing the removal of a slide gives them back)."""
         if not _ID.fullmatch(slide):
             raise ValueError(f"slide id {slide!r}: lower-case letters, digits, '-' and '_', starting with a letter")
         if slide in self.slides:
@@ -228,12 +236,15 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         notes = _checked_notes(notes)
         if seconds is not None:
             _check_seconds(seconds)
+        self.check_thing_name(slide, name)
         self.slides.insert(len(self.slides) if at is None else at, slide)
         self.open_container(slide)
         if notes:
             self.notes[slide] = notes
         if seconds is not None:
             self.times[slide] = seconds
+        if name:
+            self.slide_names[slide] = name
 
     def delete_slide(self, slide: str) -> int:
         """Remove an empty slide; returns the place it had."""
@@ -246,7 +257,40 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.close_container(slide)
         self.notes.pop(slide, None)
         self.times.pop(slide, None)
+        self.slide_names.pop(slide, None)
         return place
+
+    # -- names (D550) ------------------------------------------------------------
+    def named_things(self):
+        """The objects with names, then the slides with names: one namespace."""
+        yield from super().named_things()
+        for slide in self.slides:
+            if slide in self.slide_names:
+                yield "slide", slide, self.slide_names[slide]
+
+    def unnamed_things(self):
+        """The slides without a name, then the objects without one."""
+        for slide in self.slides:
+            if slide not in self.slide_names:
+                yield "slide", slide
+        yield from super().unnamed_things()
+
+    def thing_name(self, thing_id: str) -> str:
+        """The name of an object or a slide, ``""`` if it has none; ``ValueError`` if there is neither."""
+        if thing_id in self.slides:
+            return self.slide_names.get(thing_id, "")
+        return super().thing_name(thing_id)
+
+    def set_thing_name(self, thing_id: str, name: str) -> str:
+        """Name an object or a slide; returns the name it had."""
+        if thing_id not in self.slides:
+            return super().set_thing_name(thing_id, name)
+        old = self.slide_names.get(thing_id, "")
+        if name:
+            self.slide_names[thing_id] = name
+        else:
+            self.slide_names.pop(thing_id, None)
+        return old
 
     # -- notes and planned times (E10.2) -----------------------------------------
     def notes_of(self, slide: str) -> str:

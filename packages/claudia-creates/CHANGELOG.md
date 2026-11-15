@@ -3,6 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.12.0] - 2026-11-15
+
+Names of things (D550).
+
+### Added
+- Slides have names, in one namespace with the objects: `AddSlide(name=)`, `SlideModel.slide_names`, and the model's
+  `named_things`, `unnamed_things`, `thing_name`, `set_thing_name`; `RenameThing` renames a slide.
+
+### Changed
+- State schema 10 → 11 (`names`); older documents have unnamed slides. `RemoveSlide`'s inverse gives the name back.
+
 ## [0.11.0] - 2026-11-14
 
 Search and replace (E10.19).

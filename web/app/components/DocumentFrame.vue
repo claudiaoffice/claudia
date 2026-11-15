@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { lookOnly } from '~/lib/replay'
 // What a document window has, whatever the app: the top bar, the menus, the panel with history and chat, the notices,
 // the keys for undo, redo and save, the dialogs to save, share, hand over, export and delete, and the "not connected
 // any more" screen. computes, composes and creates all mount it; each fills in the rest through the slots: `toolbar`
@@ -37,8 +38,8 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }
 const state = props.session.state
 const panelOpen = ref(true)
 const dialog = ref<FrameDialog | null>(null)
-const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs', topic?: string) => void } | null>(null)
-const readonly = computed(() => state.me.role === 'viewer')
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs', topic?: string) => void; replay: () => void } | null>(null)
+const readonly = computed(() => lookOnly(state))
 const frame = ref<HTMLElement | null>(null)
 
 /** F6 / Shift+F6: on to the next (or back to the previous) part of the window (WCAG 2.1.2, 2.4.1). */
@@ -73,6 +74,12 @@ function ask(text = '@ai ') {
   setTimeout(() => panel.value?.ask(text), 0)
 }
 
+/** View ▸ Replay history…: open the panel and start looking at the document as it was (E5.19, D551). */
+function replayHistory() {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.replay(), 0)
+}
+
 /** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5), and a link to one `topic` from the app. The
  * dock opens if it was closed, so the help is on the screen where the person asked for it. */
 function openHelp(mode?: 'how-to' | 'docs', topic?: string) {
@@ -103,6 +110,7 @@ defineExpose({
   checkpoint,
   ask,
   openHelp,
+  replayHistory,
   openDialog,
   /** View ▸ History and chat (D120's shared block) toggles the one `panelOpen` this frame owns — exposed as a
    * getter/setter pair, not the ref itself, so the parent's own `computed` menus still track it correctly. */

@@ -4,6 +4,8 @@ import { clock, colorOf, inkOn } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 import type { BaseSession } from '~/lib/base-session'
 import type { AiMode } from '~/lib/ai-mode'
+import { rowKey } from '~/lib/base-session'
+import { keyStep, WheelStepper, wheelDelta, type Filter } from '~/lib/replay'
 
 const props = defineProps<{ session: BaseSession }>()
 const state = props.session.state
@@ -62,6 +64,90 @@ const rows = computed(() => {
   }
   return out
 })
+
+// ------------------------------------------------------------------------------ replaying the history (E5.19, D551)
+const replay = computed(() => state.replay)
+const stepper = new WheelStepper()
+const filters: { id: Filter; label: string }[] = [
+  { id: 'all', label: t('All') },
+  { id: 'changes', label: t('Changes') },
+  { id: 'conversation', label: t('Chat') },
+]
+const canReplay = computed(() => state.status === 'open' && state.entries.length > 0)
+/** The rows the playhead can visit with the current filter, by key. */
+const visited = computed(() => new Set(state.replay ? props.session.replayItems().map(rowKey) : []))
+/** Where the playhead is, as a place in the order of the revisions, so rows after it can be dimmed. */
+const sequence = (revision: string) => Number(revision.slice(revision.lastIndexOf(':') + 1))
+const afterPlayhead = (revision: string) => replay.value !== null && sequence(revision) > sequence(replay.value.revision)
+const position = computed(() => {
+  const at = state.replay ? props.session.replayIndex() : -1
+  return at < 0 ? '' : t('Step {at} of {total}', { at: at + 1, total: props.session.replayItems().length })
+})
+/** What a screen reader hears when the playhead moves. */
+const announcement = computed(() => {
+  const r = state.replay
+  if (!r) return ''
+  const item = props.session.replayItems().find((i) => rowKey(i) === r.row)
+  if (!item) return ''
+  const what = item.kind === 'change' ? item.summary : item.text
+  return `${position.value}: ${item.author ?? '?'} — ${what}`
+})
+
+function isCurrent(key: string): boolean {
+  return state.replay?.row === key
+}
+function visit(key: string) {
+  const at = props.session.replayItems().findIndex((i) => rowKey(i) === key)
+  if (at >= 0) void props.session.replayGo(at)
+}
+function toggleReplay() {
+  void (state.replay ? props.session.endReplay() : props.session.startReplay())
+}
+
+/** The wheel over History & Chat steps the playhead; Ctrl+wheel scrolls as before. Wheeling up from the present starts a
+ * replay; wheeling down in the present scrolls the lists as usual. */
+function onWheel(event: WheelEvent) {
+  if (event.ctrlKey || tab.value !== 'history') return
+  const delta = wheelDelta(event)
+  if (!state.replay && (delta >= 0 || !canReplay.value)) return
+  const steps = stepper.feed(delta)
+  event.preventDefault()
+  if (steps === 0) return
+  const unit = event.shiftKey ? 'author' : 'row'
+  const by = steps > 0 ? 1 : -1
+  const begin = state.replay ? Promise.resolve() : props.session.startReplay()
+  void begin.then(() => {
+    for (let i = 0; i < Math.abs(steps); i++) void props.session.replayStep(by, unit)
+  })
+}
+function onKey(event: KeyboardEvent) {
+  const move = keyStep(event)
+  if (!move || (!state.replay && !('by' in move && canReplay.value))) return
+  event.preventDefault()
+  if ('by' in move) {
+    const begin = state.replay ? Promise.resolve() : props.session.startReplay()
+    void begin.then(() => props.session.replayStep(move.by))
+  } else if (move.to === 'now') void props.session.endReplay()
+  else void props.session.replayGo(0)
+}
+watch(
+  () => state.replay?.row,
+  async (row) => {
+    if (!row) return
+    stepper.reset()
+    await nextTick()
+    for (const list of [history.value, chatLog.value]) {
+      const el = list?.querySelector<HTMLElement>(`[data-row="${CSS.escape(row)}"]`)
+      el?.scrollIntoView({ block: 'nearest' })
+    }
+  },
+)
+/** View ▸ Replay history…: the history tab, with the playhead at the latest change. */
+function startReplay() {
+  tab.value = 'history'
+  void props.session.startReplay()
+}
+defineExpose({ ask, openHelp, replay: startReplay })
 
 const others = computed(() => state.typing.filter((u) => u !== state.me.user))
 
@@ -131,13 +217,12 @@ function ask(prefill = '@ai ') {
     input.value?.setSelectionRange(draft.value.length, draft.value.length)
   })
 }
-defineExpose({ ask, openHelp })
 
 const isAi = (user: string) => user.toLowerCase() === 'ai'
 </script>
 
 <template>
-  <aside class="panel" :aria-label="t('document panel')">
+  <aside class="panel" :class="{ replaying: replay }" :aria-label="t('document panel')" @keydown="onKey">
     <slot name="top" />
 
     <!-- How the AI treats my requests here (D262): directly above the tabs, so it reads as a setting of the whole
@@ -164,7 +249,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
       <button type="button" role="tab" :aria-selected="tab === 'help'" :class="{ active: tab === 'help' }" @click="tab = 'help'">{{ t('Help') }}</button>
     </div>
 
-    <div v-show="tab === 'history'" class="historyChat" :aria-label="t('history and chat')">
+    <div v-show="tab === 'history'" class="historyChat" :aria-label="t('history and chat')" @wheel="onWheel">
     <div v-if="myProposal" class="proposal" role="alert">
       <p class="ask">
         <TransText :text="t('{who} suggests going to {line}.', { line: myProposal.label })"><template #who><b>{{ myProposal.by }}</b></template></TransText>
@@ -178,17 +263,43 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </div>
 
     <section class="history">
-      <h2>{{ t('History') }} <span class="count">{{ state.entries.length }}</span></h2>
+      <h2>
+        {{ t('History') }} <span class="count">{{ state.entries.length }}</span>
+        <button type="button" class="replayBtn" :aria-pressed="replay !== null" :disabled="!replay && !canReplay" :title="t('Replay the history: wheel over this panel, or Alt+Page Up')" @click="toggleReplay">{{ replay ? t('Back to now') : t('Replay') }}</button>
+      </h2>
+      <div v-if="replay" class="replayBar" data-testid="replay-bar">
+        <div class="segmented" role="radiogroup" :aria-label="t('Which steps the wheel visits')">
+          <button
+            v-for="f in filters"
+            :key="f.id"
+            type="button"
+            role="radio"
+            :aria-checked="replay.filter === f.id"
+            @click="session.setReplayFilter(f.id)"
+          >{{ f.label }}</button>
+        </div>
+        <label class="follow"><input type="checkbox" :checked="replay.follow" @change="session.setReplayFollow(($event.target as HTMLInputElement).checked)"> {{ t('Follow changes') }}</label>
+        <span class="where" aria-hidden="true">{{ position }}<template v-if="replay.loading"> …</template></span>
+        <span v-if="replay.newer" class="newer">{{ t('{n} newer changes by others', { n: replay.newer }) }}</span>
+        <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</p>
+      </div>
       <ol ref="history" class="log mono" :aria-label="t('everything that was done to this document')">
         <li v-if="!rows.length" class="empty">{{ state.app === 'composes' ? t('Nothing yet. Start writing.') : state.app === 'creates' ? t('Nothing yet. Put a text box on the slide.') : t('Nothing yet. Type into a cell.') }}</li>
         <template v-for="(row, i) in rows" :key="i">
-          <li v-if="row.kind === 'entry'" class="entry" :class="{ undo: row.entry.origin !== 'do' }">
-            <span class="dot" :style="{ background: colorOf(state, row.entry.author ?? '') }" />
-            <span class="who">{{ row.entry.author ?? '?' }}</span>
-            <span class="what" :title="row.entry.label">
-              <em v-if="row.entry.origin !== 'do'">{{ row.entry.origin }} · </em>{{ row.entry.summary }}
-            </span>
-            <time>{{ clock(row.entry.time) }}</time>
+          <li
+            v-if="row.kind === 'entry'"
+            class="entry"
+            :class="{ undo: row.entry.origin !== 'do', current: isCurrent('c:' + row.entry.revision), later: afterPlayhead(row.entry.revision), skipped: replay && !visited.has('c:' + row.entry.revision) }"
+            :data-row="'c:' + row.entry.revision"
+          >
+            <component :is="replay ? 'button' : 'div'" class="entryRow" :type="replay ? 'button' : undefined" :aria-current="isCurrent('c:' + row.entry.revision) ? 'step' : undefined" @click="replay && visit('c:' + row.entry.revision)">
+              <span class="dot" :style="{ background: colorOf(state, row.entry.author ?? '') }" />
+              <span class="who">{{ row.entry.author ?? '?' }}</span>
+              <span class="what" :title="row.entry.label">
+                <em v-if="row.entry.origin !== 'do'">{{ row.entry.origin }} · </em>{{ row.entry.summary }}
+              </span>
+              <time>{{ clock(row.entry.time) }}</time>
+            </component>
           </li>
           <li v-else class="mark">
             <span>{{ t('◆ saved: {label}', { label: row.label }) }}<template v-if="row.author"> · {{ row.author }}</template></span>
@@ -227,12 +338,14 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           v-for="m in state.chat"
           :key="m.number"
           class="msg"
-          :class="{ ai: isAi(m.author), mine: m.author === state.me.user }"
+          :class="{ ai: isAi(m.author), mine: m.author === state.me.user, current: isCurrent('m:' + m.number), skipped: replay && !visited.has('m:' + m.number) }"
+          :data-row="'m:' + m.number"
         >
           <header>
             <span class="author" :style="{ background: colorOf(state, m.author), color: inkOn(colorOf(state, m.author)) }">{{ m.author }}</span>
             <span v-if="m.to" class="to">→ {{ m.to }}</span>
             <time>{{ clock(m.time) }}</time>
+            <button v-if="replay" type="button" class="visit" :aria-current="isCurrent('m:' + m.number) ? 'step' : undefined" :aria-label="t('Show the document as it was at this message')" @click="visit('m:' + m.number)">{{ isCurrent('m:' + m.number) ? t('▶ here') : t('▷ go here') }}</button>
           </header>
           <p>{{ m.text }}</p>
         </li>
@@ -348,11 +461,107 @@ ol {
   font-size: 12px;
 }
 .entry {
+  padding: 3px 0;
+}
+.entryRow {
   display: grid;
   grid-template-columns: 9px auto 1fr auto;
   align-items: baseline;
   gap: 8px;
-  padding: 3px 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+button.entryRow {
+  cursor: pointer;
+}
+button.entryRow:hover .what {
+  text-decoration: underline;
+}
+button.entryRow:focus-visible,
+.visit:focus-visible,
+.replayBtn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+/* The playhead: a marker that is not only a colour (BITV): a bar at the left and a heavier line. */
+.entry.current,
+.msg.current {
+  box-shadow: inset 3px 0 0 var(--apricot);
+  background: rgb(255 255 255 / 9%);
+  padding-left: 6px;
+}
+.entry.later,
+.entry.skipped,
+.msg.skipped {
+  opacity: 0.55;
+}
+.replayBtn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid rgb(231 225 244 / 30%);
+  border-radius: 999px;
+  color: rgb(230 224 245 / 85%);
+  font: 500 10.5px var(--font-ui);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+.replayBtn[aria-pressed='true'] {
+  background: var(--iris);
+  border-color: var(--iris);
+  color: #fff;
+}
+.replayBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.replayBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 6%);
+  font-size: 11.5px;
+}
+.replayBar .segmented {
+  flex: 0 0 auto;
+}
+.replayBar .segmented button {
+  padding: 3px 9px;
+  font-size: 11px;
+}
+.follow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.where {
+  font-family: var(--font-mono);
+  color: rgb(230 224 245 / 75%);
+}
+.newer {
+  color: var(--apricot);
+}
+.visit {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  color: rgb(230 224 245 / 75%);
+  font: 11px var(--font-ui);
+  cursor: pointer;
+}
+.msg.current .visit {
+  color: var(--apricot);
 }
 .entry .dot {
   align-self: center;

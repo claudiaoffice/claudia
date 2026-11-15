@@ -27,13 +27,14 @@ or style-it.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime_checkable
 
 from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Command, CommandRegistry, core_commands
 from .facets import SLOTS, fits
+from .names import clean_name, name_key, name_problem
 from .paragraphs import Paragraph
 from .renderings import RenderedDefinition
 from .shapes import ShapeDefinition
@@ -71,15 +72,19 @@ _BODY_FIELDS = (
     "snap",
     "description",
     "decorative",
+    "name",
 )
+#: The field of named things (D550): bodies written before it read with no name.
+_NAME_FIELD = "name"
 #: The fields documents written before descriptions existed lack (``ObjectBody.from_data`` fills them in).
 _LATER_FIELDS = ("description", "decorative")
 #: The field of rendered containers (D390), later than the two above: bodies of each earlier generation still read.
 _RENDERED_FIELD = "rendered"
 _FIELD_SETS = (
     frozenset(_BODY_FIELDS),
-    frozenset(_BODY_FIELDS) - {_RENDERED_FIELD},
-    frozenset(_BODY_FIELDS) - {_RENDERED_FIELD, *_LATER_FIELDS},
+    frozenset(_BODY_FIELDS) - {_NAME_FIELD},
+    frozenset(_BODY_FIELDS) - {_NAME_FIELD, _RENDERED_FIELD},
+    frozenset(_BODY_FIELDS) - {_NAME_FIELD, _RENDERED_FIELD, *_LATER_FIELDS},
 )
 
 
@@ -169,6 +174,9 @@ class ObjectBody:
     D214): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
     document state.
 
+    ``name`` is what people call the object (D550): unique among everything in the document that has a name, and
+    ``""`` only for a body that has none yet (the server gives every new object one).
+
     ``description`` is what the object says to someone who cannot see it, and ``decorative`` says it has nothing to
     say (a flourish, a divider): a decorative object has no description. Both are the same in every kind of
     object, and a screen reader, a tagged PDF and an office file each get them from here. A picture that has no
@@ -189,6 +197,7 @@ class ObjectBody:
     snap: bool = True
     description: str = ""
     decorative: bool = False
+    name: str = ""
 
     def __post_init__(self) -> None:
         if self.imported is not None and not self.description and not self.decorative:
@@ -312,6 +321,18 @@ class ObjectSet:
 
 
 # --------------------------------------------------------------------------- the events
+@dataclass(frozen=True)
+class ThingRenamed:
+    """A thing (an object, a slide, a sheet, a chart tab) was given another name (D550): its id and its new name."""
+
+    id: str
+    name: str
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "thing_renamed", "id": self.id, "name": self.name}
+
+
 @dataclass(frozen=True)
 class ObjectsChanged:
     """Objects of one container changed. ``changed`` are their new state (added or altered), ``removed`` their
@@ -491,6 +512,66 @@ class ObjectModel[A: Anchor]:
         obj = self.objects.get(object_id)
         return () if obj is None else (ObjectSet(obj.container, frozenset({object_id})),)
 
+    # -- names (D550, D551) --------------------------------------------------------
+    def named_things(self) -> Iterator[tuple[str, str, str]]:
+        """``(kind, id, name)`` of everything in this document that has a name: the objects here, and whatever else the
+        app names (its slides, sheets, chart tabs) by adding to this. One namespace for all of it (D550)."""
+        for obj in self.objects.values():
+            if obj.body.name:
+                yield obj.body.kind, obj.id, obj.body.name
+
+    def unnamed_things(self) -> Iterator[tuple[str, str]]:
+        """``(kind, id)`` of everything that could have a name and has none: what a document from before names holds. An
+        app that names more than its objects adds to this, as it does to :meth:`named_things`."""
+        for obj in self.objects.values():
+            if not obj.body.name:
+                yield obj.body.kind, obj.id
+
+    def thing_name(self, thing_id: str) -> str:
+        """The name of the thing with this id, ``""`` if it has none; ``ValueError`` if there is no such thing."""
+        return self.get_object(thing_id).body.name
+
+    def set_thing_name(self, thing_id: str, name: str) -> str:
+        """Give the thing this (checked) name; returns the one it had. An app that names more than its objects
+        overrides this for its own things and hands the rest on."""
+        old = self.get_object(thing_id)
+        self.replace_object(old.with_body(name=name))
+        return old.body.name
+
+    def check_thing_name(self, thing_id: str, name: str) -> None:
+        """``ValueError`` with a sentence unless ``name`` may be the name of the thing ``thing_id`` (``""`` is no name
+        and always allowed): written tidily, a good name, and nobody else's, however capitals and spaces are written."""
+        if not name:
+            return
+        problem = name_problem(name)
+        if problem is not None:
+            raise ValueError(problem)
+        if clean_name(name) != name:
+            raise ValueError("a name is written without spaces around it or twice in a row")
+        self.check_name_free(thing_id, name)
+
+    def name_holder(self, thing_id: str, name: str) -> tuple[str, str] | None:
+        """``(kind, name)`` of another thing that already has this name, however capitals and spaces are written."""
+        key = name_key(name)
+        for kind, other, other_name in self.named_things():
+            if other != thing_id and name_key(other_name) == key:
+                return kind, other_name
+        return None
+
+    def check_name_free(self, thing_id: str, name: str) -> None:
+        """``ValueError`` with a sentence unless nobody but ``thing_id`` has this name. Only this half of the check is
+        for commands that may be in an old log (D550): what was written before names were shared is not tidied or
+        judged again, it only never gets a new clash."""
+        holder = self.name_holder(thing_id, name)
+        if holder is not None:
+            kind, other_name = holder
+            article = "an" if kind[:1] in "aeiou" else "a"
+            raise ValueError(f"There is already {article} {kind} called “{other_name}”")
+
+    def names_in_use(self) -> list[str]:
+        """Every name in this document, for choosing a free one (:func:`~claudia_core.free_name`)."""
+        return [name for _kind, _id, name in self.named_things()]
+
     def users_of_image(self, image_id: str) -> list[str]:
         """The ids of the objects that use this image asset."""
         return [obj.id for obj in self.objects.values() if obj.body.image == image_id]
@@ -650,6 +731,7 @@ class ObjectModel[A: Anchor]:
         if type(body.snap) is not bool:
             raise ValueError("snap must be true or false")
         self._check_description(body)
+        self.check_thing_name(body.id, body.name)
         self.check_anchor(obj.anchor, body)
 
     @staticmethod
@@ -859,6 +941,7 @@ def _target(command: Command) -> str | None:
         | SetParagraphStyle
         | RotateObject
         | RemoveObject
+        | RenameThing
     )
     if isinstance(command, kinds):
         return command.id
@@ -1284,7 +1367,9 @@ class AddObject(Command):
     The body is the shared part; ``anchor`` is plain data the app reads back (see the module description)."""
 
     kind: ClassVar[str] = "core.AddObject"
-    schema: ClassVar[int] = 3  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``
+    schema: ClassVar[int] = (
+        4  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``; 3: without ``name``
+    )
     body: ObjectBody
     anchor: dict
     at: int | None = None
@@ -1801,6 +1886,60 @@ def _objects_with_descriptions(data: dict) -> dict:
 def _objects_without_renderings(data: dict) -> dict:
     """Schema 2 bodies had no ``rendered``: none of those objects shows a rendered container."""
     return {**data, "body": {**data["body"], "rendered": None}}
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class RenameThing(Command):
+    """Give an object, a slide, a sheet or a chart tab another name (D550). The id stays, so everything that points at
+    the thing (a tag in the chat, a formula) keeps pointing at it. Refused with a sentence when somebody else has that
+    name already, whatever kind of thing they are."""
+
+    kind: ClassVar[str] = "core.RenameThing"
+    id: str
+    name: str
+
+    @property
+    def label(self) -> str:
+        return "Rename"
+
+    @property
+    def summary(self) -> str:
+        return f"Renamed something to “{self.name}”"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        name = clean_name(self.name)
+        model.check_thing_name(self.id, name)
+        old = model.set_thing_name(self.id, name)
+        ctx.emit(ThingRenamed(self.id, name))
+        if self.id in model.objects:
+            changed = model.objects[self.id]
+            ctx.emit(model.objects_changed(changed.container, changed=(changed,)))
+        return RenameThing(self.id, old)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "name": self.name}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> RenameThing:
+        return cls(data["id"], data["name"])
+
+    def regions(self, model: object) -> tuple[ObjectSet, ...]:
+        return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """A rename undoes cleanly unless the thing was renamed, removed or made again by somebody since."""
+        return None if isinstance(other, RenameThing | RemoveObject | AddObject) and _target(other) == self.id else self
+
+    def stub(self) -> dict:
+        return {"id": self.id}
+
+
+@core_commands.upcaster("core.AddObject", 3)
+def _objects_without_names(data: dict) -> dict:
+    """Schema 3 bodies had no ``name``: those objects have none yet."""
+    return {**data, "body": {**data["body"], "name": ""}}
 
 
 @core_commands.register

@@ -39,6 +39,7 @@ from claudia_render import RenderService, UnknownType, default_alt
 
 from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
+from .thing_names import default_name
 
 STYLE = "plain-image"
 MAX_ALT = 500
@@ -147,7 +148,16 @@ def _add(model_of: Callable[[Context], ObjectModel], anchor_of: Callable[..., di
         rendering_id = _fresh("r", model.renderings)
         object_id = _fresh("o", model.objects)
         words = (alt or "")[:MAX_ALT]
-        body = ObjectBody(object_id, "rendered", w, h, STYLE, rendered=rendering_id, description=words)
+        body = ObjectBody(
+            object_id,
+            "rendered",
+            w,
+            h,
+            STYLE,
+            rendered=rendering_id,
+            description=words,
+            name=default_name(ctx, "rendered"),
+        )
         definition = RenderedDefinition(rendering_id, type, source, settings)  # type: ignore[arg-type]
         command = Batch(
             (DefineRendering(definition.to_data()), AddObject(body, anchor_of(**where))), name="Add rendered container"

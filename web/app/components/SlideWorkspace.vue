@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { lookOnly, roleNow } from '~/lib/replay'
 // A presentation: the slide, the tool bar to put things on it, the slides along the bottom and the panel.
 import { computed, nextTick, ref } from 'vue'
 import { insertFrame, type Frame } from '~/lib/geometry'
@@ -12,7 +13,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
-  panelItem,
+  panelItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -61,7 +62,7 @@ const EXPORT_FORMATS = [
   { value: 'odp', get label() { return t('OpenDocument presentation (.odp)') } },
 ]
 
-const readonly = computed(() => state.me.role === 'viewer')
+const readonly = computed(() => lookOnly(state))
 
 // ------------------------------------------------------------------------------ the show and the notes (E10.2)
 // Presenting is read-only and local (D340): a viewer may do it too, and it writes nothing to the document.
@@ -210,7 +211,7 @@ async function pasteFromClipboard() {
 /** What the shared menu items need from this window (`lib/document-menus.ts`). */
 const shared = computed<DocumentMenuContext>(() => ({
   t,
-  role: state.me.role,
+  role: roleNow(state),
   open: (dialog) => frame.value?.openDialog(dialog),
   leave: (opts) => emit('leave', opts),
   save: () => frame.value?.checkpoint(null),
@@ -268,6 +269,7 @@ const menus = computed<Menu[]>(() => {
       items: [
         authorsItemUnavailable(c), // creates tracks no per-object authorship yet
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
+        replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
         darkItem(c, { on: dark, toggle: toggleDark }),
         // After the shared block, as composes' Page is (the same order in every app and every client)
         { label: '', separator: true },

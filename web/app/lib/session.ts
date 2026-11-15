@@ -3,6 +3,7 @@
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
+import { containerOf, firstFocus, lookOnly } from './replay'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
 import type { NumberFormatDef } from './number-format'
@@ -243,7 +244,7 @@ export class Session extends BaseSession<State> {
   // -- styles and the palette (E9.7, D200, D203): the same methods creates' session has, so that one style menu
   // can talk to either app through a `StyleHost`.
   get readOnly(): boolean {
-    return this.state.me.role === 'viewer'
+    return lookOnly(this.state)
   }
 
   styleViews(): StyleDef[] {
@@ -614,6 +615,12 @@ export class Session extends BaseSession<State> {
   async outcomeTable(sheet: string, row: number, col: number, combine: 'all' | 'pair' = 'all'): Promise<OutcomeTable | null | false> {
     const done = await this.attempt('outcome_table', { sheet, row, col, combine })
     return done === false ? false : (done.table as OutcomeTable | null)
+  }
+
+  /** A step of the replay is shown on the sheet it touched (D551); the grid scrolls to it from `state.replay.focus`. */
+  protected override followReplay(focus: Region[]): void {
+    const sheet = containerOf(firstFocus(focus))
+    if (sheet && this.state.sheets.some((x) => x.id === sheet)) this.state.activeSheet = sheet
   }
 
   /** Start following the computation the cell at (`row`, `col`) is part of (E6.23): the cells of `window` that are

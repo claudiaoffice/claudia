@@ -5,6 +5,7 @@
 import { bounds, type Sel } from './selection'
 import type { Session, SearchScope } from './session'
 import type { Change, Kinds, SearchHost, SearchMatch, SearchPlace, SearchSwitch, Skipped } from './search'
+import { lookOnly } from './replay'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 
@@ -42,7 +43,7 @@ export function sheetSearchHost(from: {
   const state = session.state
   return {
     get readonly() {
-      return state.me.role === 'viewer'
+      return lookOnly(state)
     },
     unit: 'cell',
     switches: SWITCHES,

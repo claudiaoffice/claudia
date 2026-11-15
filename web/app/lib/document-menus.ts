@@ -157,6 +157,12 @@ export function panelItem(c: DocumentMenuContext, panel: { open: () => boolean; 
   return { id: 'view.panel', label: t('History and Chat'), checked: panel.open(), action: toggling(panel.open, panel.toggle) }
 }
 
+/** View ▸ Replay history…: show the document as it was, step by step (E5.19, D551). */
+export function replayItem(c: DocumentMenuContext, replay: { start: () => void; possible: () => boolean }): MenuItem {
+  const { t } = c
+  return { id: 'view.replay', label: t('Replay History…'), action: () => replay.start(), disabled: !replay.possible() }
+}
+
 /** View ▸ Dark mode. */
 export function darkItem(c: DocumentMenuContext, theme: { on: () => boolean; toggle: () => void }): MenuItem {
   const { t } = c

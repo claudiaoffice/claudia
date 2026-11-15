@@ -104,7 +104,7 @@ def test_the_field_is_part_of_the_plain_data_of_every_body():
 
 def test_a_body_written_before_rendered_objects_existed_still_reads():
     old = rendered_body(kind="text", rendered=None, paragraph=paragraph_for("o1", "body-text", "x")).to_data()
-    del old["rendered"]
+    del old["rendered"], old["name"]  # a body of that time had neither
     assert ObjectBody.from_data(old).rendered is None
 
 

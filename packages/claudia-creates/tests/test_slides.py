@@ -584,6 +584,7 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "snap",
         "description",  # BITV 1.1.1: what the object says to someone who cannot see it
         "decorative",
+        "name",  # D550: what people call it
         "anchor",
     }
     assert box.to_data()["anchor"] == {"kind": "slide", "container": SLIDE, "x": 100, "y": 100}

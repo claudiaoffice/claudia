@@ -164,11 +164,17 @@ def test_only_the_shared_edit_block_carries_a_macos_role(app: manifest.Manifest)
 
 
 def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
-    """Show who wrote what, History and chat, Dark mode — D120's shared block, verbatim in every app (even where,
-    per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship yet)."""
+    """Show who wrote what, History and chat, Replay history, Dark mode — D120's shared block, verbatim in every app
+    (even where, per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship
+    yet)."""
     section = app.menu("View").sections[0]
     assert all(isinstance(e, Action) for e in section), f"expected only plain actions, got {section!r}"
-    assert [e.id for e in section if isinstance(e, Action)] == ["view.authors", "view.panel", "view.dark"]
+    assert [e.id for e in section if isinstance(e, Action)] == [
+        "view.authors",
+        "view.panel",
+        "view.replay",
+        "view.dark",
+    ]
 
 
 def test_configs_items_are_shortcuts_then_app_language(app: manifest.Manifest) -> None:

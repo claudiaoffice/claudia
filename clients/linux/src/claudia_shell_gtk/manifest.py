@@ -635,6 +635,12 @@ def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
             checkable=True,
         ),
         _page(
+            "view.replay",
+            "Replay History…",
+            "Look at the document as it was, step by step (the mouse wheel over the history does the same)",
+            accelerators=("<Primary><Alt>z",),
+        ),
+        _page(
             "view.dark",
             "Dark Mode",
             "Follow or override the system's light/dark setting",

@@ -47,6 +47,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | Colours… | Ctrl+Alt+K |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
+| View | Replay History… | Ctrl+Alt+Z |  |
 | View | Dark Mode | Ctrl+Shift+Alt+D |  |
 | View | Page | Ctrl+Alt+P |  |
 | Tools | Ask the Assistant… | Ctrl+Alt+J |  |
@@ -109,6 +110,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | Describe Object… | Ctrl+Alt+D |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
+| View | Replay History… | Ctrl+Alt+Z |  |
 | View | Dark Mode | Ctrl+Shift+Alt+D |  |
 | Tools | Ask the Assistant… | Ctrl+Alt+J |  |
 | Tools | Random Generator… | Ctrl+Alt+R |  |
@@ -171,6 +173,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | Describe Object… | Ctrl+Alt+D |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
+| View | Replay History… | Ctrl+Alt+Z |  |
 | View | Dark Mode | Ctrl+Shift+Alt+D |  |
 | View | Show Grid | Ctrl+Alt+G |  |
 | View | Present from the First Slide | F5 |  |

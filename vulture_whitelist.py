@@ -203,8 +203,11 @@ used.menu_help  # (same)
 used.StartElementHandler  # expat calls the handlers assigned to these attributes (splice.py's `_spans`)
 used.EndElementHandler  # (same)
 used._objects_without_renderings  # registered as an upcaster by a decorator (claudia_core AddObject 2 -> 3, D390)
+used._objects_without_names  # registered as an upcaster by a decorator (claudia_core AddObject 3 -> 4, D550)
+used._names_not_yet_shared  # registered as an upcaster by a decorator (computes AddSheet, AddChart 1 -> 2, D550)
 used._quick  # autouse fixture of packages/claudia-server/tests/test_server_rendering_jobs.py
 used.val  # python-docx: assigning `.val` of an ilvl or numId writes its ``w:val`` (claudia_composes_io._docx_lists)
 used.left_indent  # python-docx: assigning it writes the ``w:ind`` of a style (claudia_composes_io._docx_styles)
 used.right_indent  # python-docx: the same, for the right side
 used.line_spacing_rule  # python-docx: assigning it writes the ``w:spacing`` rule of a style
+used._peek_revision  # registered as a protocol method by a decorator (server test_server_peek_revision.py)

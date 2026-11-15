@@ -85,5 +85,6 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'view.panel': { chord: { key: 'h', code: 'KeyH', ctrl: true, alt: true }, owner: 'page' },
   'view.present-here': { chord: { key: 'F5', shift: true }, owner: 'page' },
   'view.present-start': { chord: { key: 'F5' }, owner: 'page' },
+  'view.replay': { chord: { key: 'z', code: 'KeyZ', ctrl: true, alt: true }, owner: 'page' },
   'view.speaker-notes': { chord: { key: 'v', code: 'KeyV', ctrl: true, alt: true }, owner: 'page' },
 }

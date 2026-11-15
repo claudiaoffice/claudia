@@ -5,6 +5,7 @@
 // person to the paragraph it hangs from.
 import type { TextSession } from './text-session'
 import type { Kinds, SearchHost, SearchMatch, SearchPlace, SearchSwitch } from './search'
+import { lookOnly } from './replay'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 
@@ -69,7 +70,7 @@ export function textSearchHost(from: {
   }
   return {
     get readonly() {
-      return state.me.role === 'viewer'
+      return lookOnly(state)
     },
     unit: 'text',
     switches: SWITCHES,

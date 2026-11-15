@@ -7,6 +7,7 @@ import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQue
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
+import { nearest, PastLink, step as stepRow, timeline, type Filter, type Item } from './replay'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
 
@@ -73,6 +74,26 @@ export interface HelpTopic extends HelpTopicSummary {
   explains: string[]
   body: string
 }
+/** Looking at the document as it was (D551): where the playhead stands, and what the views are showing. */
+export interface ReplayState {
+  /** Which rows the history shows, and the wheel visits. */
+  filter: Filter
+  /** The row the playhead is on: `c:<revision>` for a change, `m:<number>` for a chat message. */
+  row: string
+  /** The step the views show: the document after this revision. */
+  revision: string
+  /** Do the views go to what the step touched? */
+  follow: boolean
+  /** How many changes others made since the replay began, which the views do not show. */
+  newer: number
+  /** Is a step still being loaded? */
+  loading: boolean
+  /** What the step touched, for the views to point at. */
+  focus: Region[]
+}
+
+export const rowKey = (item: Item): string => (item.kind === 'change' ? `c:${item.revision}` : `m:${item.number}`)
+
 export interface BaseState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
@@ -106,6 +127,8 @@ export interface BaseState {
   proposal: RestoreProposal | null
   /** How silence at a suggestion's deadline is read: `consensus` (must actively agree) or `veto` (must object). */
   restorePolicy: 'consensus' | 'veto'
+  /** The playhead, while the person looks at the document as it was; `null` in the present. */
+  replay: ReplayState | null
 }
 
 export interface SessionOptions {
@@ -144,6 +167,7 @@ function initialState(): BaseState {
     lines: [],
     proposal: null,
     restorePolicy: 'consensus',
+    replay: null,
   }
 }
 
@@ -162,6 +186,9 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   private storage: ModeStorage
 
   private stopLanguage: (() => void) | null = null
+  private replayLink: PastLink | null = null
+  private replayWanted: string | null = null
+  private replayPump: Promise<void> | null = null
 
   /** `app` is the app's own part of the state (it becomes reactive together with the common part). */
   constructor(
@@ -310,6 +337,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   // ------------------------------------------------------------------------------ loading
   /** Everything the screen shows: the common parts and the app's. */
   protected async reload() {
+    await this.stopReplay() // the present is what a reload is for
     const link = this.need()
     const s = this.state
     const [entries, chat, checkpoints, history, lines, restorePolicy] = await Promise.all([
@@ -336,12 +364,13 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   // ------------------------------------------------------------------------------ events
   private onEvent(name: string, data: WireData) {
-    if (this.onAppEvent(name, data)) return
     const s = this.state
+    if (!s.replay && this.onAppEvent(name, data)) return // while looking at the past, the present does not disturb it
     switch (name) {
       case 'command':
         s.revision = data.revision
         if (!s.entries.some((e) => e.revision === data.revision)) {
+          if (s.replay) s.replay.newer++
           s.entries.push(data)
           if (s.entries.length > LOG_LIMIT) s.entries.shift()
         }
@@ -412,7 +441,122 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   protected need(): LinkLike {
     if (!this.link) throw new ProtocolError('closed', 'not connected')
+    if (this.state.replay) return (this.replayLink ??= new PastLink(this.link, () => this.replayShown))
     return this.link
+  }
+
+  /** The step the views are being loaded for (the playhead's own moves on as soon as the person steps again). */
+  private replayShown = ''
+
+  // ------------------------------------------------------------------------------ replaying (D551)
+  /** The rows of the history as the replay's filter shows them. */
+  replayItems(): Item[] {
+    const s = this.state
+    return timeline(s.entries, s.chat, s.replay?.filter ?? 'all')
+  }
+
+  /** Which row the playhead is on, `-1` when it is on none. */
+  replayIndex(): number {
+    const row = this.state.replay?.row
+    return this.replayItems().findIndex((i) => rowKey(i) === row)
+  }
+
+  /** Start looking at the document as it was, at `revision` or at its latest change. */
+  async startReplay(revision?: string): Promise<void> {
+    const s = this.state
+    if (s.replay || s.status !== 'open' || s.entries.length === 0) return
+    const items = timeline(s.entries, s.chat, 'all')
+    const at = revision ? nearest(items, revision) : items.findLastIndex((i) => i.kind === 'change')
+    const latest = s.entries.at(-1)!.revision
+    s.replay = { filter: 'all', row: rowKey(items[at]!), revision: latest, follow: true, newer: 0, loading: false, focus: [] }
+    this.replayLink = null
+    this.replayShown = latest
+    await this.replayGo(at)
+  }
+
+  /** Move the playhead `by` rows (or, with `unit: 'author'`, runs of rows by one person). */
+  async replayStep(by: 1 | -1, unit: 'row' | 'author' = 'row'): Promise<void> {
+    if (!this.state.replay) return
+    const items = this.replayItems()
+    const here = this.replayIndex()
+    await this.replayGo(stepRow(items, here < 0 ? items.length - 1 : here, by, unit))
+  }
+
+  /** Move the playhead to row `index`; the views catch up with the last place it was told to go to. */
+  async replayGo(index: number): Promise<void> {
+    const s = this.state
+    const items = this.replayItems()
+    if (!s.replay || items.length === 0) return
+    const item = items[Math.min(Math.max(index, 0), items.length - 1)]!
+    s.replay.row = rowKey(item)
+    this.replayWanted = item.state ?? s.entries[0]!.revision
+    await this.catchUp()
+  }
+
+  /** Visit only the changes, only the conversation, or both; the playhead stays where it is, or at the nearest change. */
+  setReplayFilter(filter: Filter): void {
+    const r = this.state.replay
+    if (!r) return
+    r.filter = filter
+    const items = this.replayItems()
+    if (items.some((i) => rowKey(i) === r.row)) return
+    const at = nearest(items, r.revision)
+    if (at >= 0) r.row = rowKey(items[at]!)
+  }
+
+  /** Should the views go to what each step touched? Turning it on goes to what this one touched. */
+  setReplayFollow(follow: boolean): void {
+    const r = this.state.replay
+    if (!r) return
+    r.follow = follow
+    if (follow) this.followReplay(r.focus)
+  }
+
+  /** Back to the present. */
+  async endReplay(): Promise<void> {
+    if (!this.state.replay) return
+    await this.stopReplay()
+    await this.track(this.loadApp())
+  }
+
+  /** The views' own part of following a step: go to what it touched. */
+  protected followReplay(_focus: Region[]): void {}
+
+  private async stopReplay(): Promise<void> {
+    const r = this.state.replay
+    if (!r) return
+    this.replayWanted = r.revision // the step being loaded is the last
+    await this.replayPump
+    this.state.replay = null
+    this.replayLink = null
+    this.replayWanted = null
+  }
+
+  private catchUp(): Promise<void> {
+    this.replayPump ??= this.loadWanted().finally(() => {
+      this.replayPump = null
+    })
+    return this.replayPump
+  }
+
+  private async loadWanted(): Promise<void> {
+    const s = this.state
+    while (s.replay && this.replayWanted !== null && this.replayWanted !== s.replay.revision) {
+      const revision = this.replayWanted
+      s.replay.loading = true
+      this.replayShown = revision
+      try {
+        const [looked] = await Promise.all([this.need().request<{ focus: Region[] }>('peek_revision', { revision, state: false }), this.loadApp()])
+        if (!s.replay) return
+        s.replay.revision = revision
+        s.replay.focus = looked.focus
+        if (s.replay.follow) this.followReplay(looked.focus)
+      } catch (error) {
+        if (s.replay) this.replayWanted = s.replay.revision // stay where the views are
+        this.explain(error)
+      }
+    }
+    if (s.replay) s.replay.loading = false
   }
 
   /** Run a request; `false` after telling the person why it did not work. */

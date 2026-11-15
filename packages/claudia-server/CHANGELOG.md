@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Names of things (D550): `rename_thing` and `name_unnamed` in the three apps (the assistant may not in composes,
+  D63); a new object, slide or diagram gets the first free "Text box 1", "Slide 2" ... in the maker's language; `slides`
+  says each slide's `name`. `PROTOCOL_VERSION` stays 1: methods and a field were added.
+- `peek_revision` (D551): the document after one step of its history, with the step and the regions it touched
+  (`focus`), for replaying the history in the dock; `state: false` asks for the place only.
+- `as_of` (D551): any of the reads a view makes (`slides`, `cells`, `blocks`, ... the list is `replay.VIEW_READS`),
+  answered for an earlier revision, so the views draw the past from the requests they already make. It never writes;
+  any other method is `forbidden`. States rebuilt for it are kept for a moment, so one step costs one rebuild.
+
 ### Fixed
 - A web app built again while the server runs is no longer blocked: the Content-Security-Policy's hashes of the inline
   scripts follow the files in the web folder (`WebScriptHashes`, read again when a page's name, time or size changed).

@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-label="Referencing: typing # in the chat opens a list of named things in view (creates)"><title>Referencing: typing # in the chat opens a list of named things in view (creates)</title><desc>Creates window, slide Method. The # dropdown lists objects on the slide and the slide tabs. Objects show name labels; one is hovered for click-to-insert.</desc><defs><filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1F1A33" flood-opacity="0.20"/></filter><filter id="sh2" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1F1A33" flood-opacity="0.16"/></filter></defs><rect x="0.0" y="0.0" width="1280.0" height="800.0" rx="0" fill="#FFFFFF" />
+<rect x="0.0" y="0.0" width="1280.0" height="48.0" rx="0" fill="#F7F3EC" />
+<line x1="0.0" y1="48.0" x2="1280.0" y2="48.0" stroke="#DAD4C8" stroke-width="1" />
+<text x="18.0" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >File</text>
+<path d="M45.190546874999995,26.25 L48.690546874999995,29.75 L52.190546874999995,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="68.7" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Edit</text>
+<path d="M97.67195312499999,26.25 L101.17195312499999,29.75 L104.67195312499999,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="121.2" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >View</text>
+<path d="M157.544609375,26.25 L161.044609375,29.75 L164.544609375,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="181.0" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Insert</text>
+<path d="M222.58945312499998,26.25 L226.08945312499998,29.75 L229.58945312499998,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="246.1" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Format</text>
+<path d="M295.85453125,26.25 L299.35453125,29.75 L302.85453125,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="319.4" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Tools</text>
+<path d="M358.5959375,26.25 L362.0959375,29.75 L365.5959375,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="382.1" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start" >Help</text>
+<path d="M416.32546874999997,26.25 L419.82546874999997,29.75 L423.32546874999997,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="560.0" cy="24.0" r="11" fill="#E8955A" />
+<text x="560.0" y="28.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle" >c</text>
+<text x="580.0" y="22.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F1A33" text-anchor="start" >Pilot results</text>
+<text x="580.0" y="36.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="start" >creates · demo.claudia-office.de</text>
+<circle cx="1010.0" cy="24.0" r="12" fill="#C8553D" stroke="#FFFFFF" stroke-width="2" />
+<text x="1010.0" y="28.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.399999999999999" font-weight="700" fill="#FFFFFF" text-anchor="middle" >B</text>
+<circle cx="1032.0" cy="24.0" r="12" fill="#5B4BC4" stroke="#FFFFFF" stroke-width="2" />
+<text x="1032.0" y="28.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.399999999999999" font-weight="700" fill="#FFFFFF" text-anchor="middle" >ai</text>
+<circle cx="1120.0" cy="24.0" r="5" fill="#2F9E6B" />
+<text x="1132.0" y="28.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start" >Connected</text>
+<text x="1262.0" y="29.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#6B6580" text-anchor="middle" >×</text>
+<rect x="0.0" y="48.0" width="900.0" height="44.0" rx="0" fill="#F7F3EC" />
+<line x1="0.0" y1="91.5" x2="900.0" y2="91.5" stroke="#DAD4C8" stroke-width="1" />
+<rect x="16.0" y="56.0" width="176.0" height="28.0" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="27.0" y="74.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start" >Layout: Figure + text</text>
+<path d="M176.5,68.25 L180,71.75 L183.5,68.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="202.0" y="56.0" width="132.0" height="28.0" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="213.0" y="74.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start" >Style: Body</text>
+<path d="M318.5,68.25 L322,71.75 L325.5,68.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="344.0" y="56.0" width="96.0" height="28.0" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="355.0" y="74.3" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start" >Insert</text>
+<path d="M424.5,68.25 L428,71.75 L431.5,68.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="756.0" y="56.0" width="128.0" height="28.0" rx="8" fill="#E8955A" />
+<text x="820.0" y="74.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >▶  Present</text>
+<rect x="0.0" y="92.0" width="900.0" height="652.0" rx="0" fill="#ECE8DF" />
+<rect x="90.0" y="215.0" width="720.0" height="405.0" rx="3" fill="#FFFFFF" filter="url(#sh)"/>
+<rect x="90.0" y="215.0" width="8.0" height="405.0" rx="0" fill="#E8955A" />
+<text x="126.0" y="283.0" font-family="Fraunces, Georgia, serif" font-size="31" font-weight="600" fill="#1F1A33" text-anchor="start" >How we measured</text>
+<rect x="126.0" y="315.0" width="320.0" height="230.0" rx="4" fill="#FFFBF6" stroke="#EBDCCB" stroke-width="1" />
+<text x="140.0" y="337.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#6B6580" text-anchor="start" >Weekly revenue per active user</text>
+<line x1="140.0" y1="515.0" x2="432.0" y2="515.0" stroke="#B7AFA3" stroke-width="1" />
+<rect x="152.0" y="463.0" width="18.0" height="52.0" rx="2" fill="#E8955A" />
+<rect x="173.0" y="471.6" width="18.0" height="43.4" rx="2" fill="#1F8A83" />
+<rect x="200.0" y="451.0" width="18.0" height="64.0" rx="2" fill="#E8955A" />
+<rect x="221.0" y="458.0" width="18.0" height="57.0" rx="2" fill="#1F8A83" />
+<rect x="248.0" y="441.0" width="18.0" height="74.0" rx="2" fill="#E8955A" />
+<rect x="269.0" y="441.8" width="18.0" height="73.2" rx="2" fill="#1F8A83" />
+<rect x="296.0" y="445.0" width="18.0" height="70.0" rx="2" fill="#E8955A" />
+<rect x="317.0" y="428.2" width="18.0" height="86.8" rx="2" fill="#1F8A83" />
+<rect x="344.0" y="433.0" width="18.0" height="82.0" rx="2" fill="#E8955A" />
+<rect x="365.0" y="415.8" width="18.0" height="99.2" rx="2" fill="#1F8A83" />
+<rect x="392.0" y="425.0" width="18.0" height="90.0" rx="2" fill="#E8955A" />
+<rect x="413.0" y="405.9" width="18.0" height="109.1" rx="2" fill="#1F8A83" />
+<text x="172.0" y="530.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#6B6580" text-anchor="middle" >wk 2</text>
+<text x="220.0" y="530.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#6B6580" text-anchor="middle" >wk 4</text>
+<text x="268.0" y="530.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#6B6580" text-anchor="middle" >wk 6</text>
+<text x="316.0" y="530.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#6B6580" text-anchor="middle" >wk 8</text>
+<text x="364.0" y="530.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#6B6580" text-anchor="middle" >wk 10</text>
+<text x="412.0" y="530.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#6B6580" text-anchor="middle" >wk 12</text>
+<circle cx="486.0" cy="334.0" r="11" fill="#FCE9DA" />
+<text x="486.0" y="338.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="700" fill="#B2602A" text-anchor="middle" >1</text>
+<text x="508.0" y="339.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="400" fill="#1F1A33" text-anchor="start" >Two pilot sites, twelve weeks</text>
+<circle cx="486.0" cy="372.0" r="11" fill="#FCE9DA" />
+<text x="486.0" y="376.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="700" fill="#B2602A" text-anchor="middle" >2</text>
+<text x="508.0" y="377.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="400" fill="#1F1A33" text-anchor="start" >Same short survey before and after</text>
+<circle cx="486.0" cy="410.0" r="11" fill="#FCE9DA" />
+<text x="486.0" y="414.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="700" fill="#B2602A" text-anchor="middle" >3</text>
+<text x="508.0" y="415.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="400" fill="#1F1A33" text-anchor="start" >Revenue per active user, weekly</text>
+<rect x="474.0" y="465.0" width="300.0" height="80.0" rx="8" fill="#FCE9DA" stroke="#E8955A" stroke-width="1.2" />
+<text x="490.0" y="497.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="500" fill="#1F1A33" text-anchor="start" >Every step can be repeated</text>
+<text x="490.0" y="518.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="500" fill="#1F1A33" text-anchor="start" >by the schools themselves.</text>
+<text x="782.0" y="604.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >2 / 5</text>
+<rect x="1.5" y="93.5" width="897.0" height="650.0" rx="0" fill="none" stroke="#5B4BC4" stroke-width="3" opacity="0.55"/>
+<rect x="123.0" y="246.0" width="426.0" height="52.0" rx="6" fill="none" stroke="#5B4BC4" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="123.0" y="227.0" width="35.1" height="18.0" rx="9" fill="#5B4BC4" />
+<text x="140.6" y="239.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >title</text>
+<rect x="123.0" y="312.0" width="326.0" height="236.0" rx="6" fill="none" stroke="#5B4BC4" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="123.0" y="293.0" width="53.1" height="18.0" rx="9" fill="#5B4BC4" />
+<text x="149.6" y="305.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >figure 1</text>
+<rect x="471.0" y="312.0" width="306.0" height="136.0" rx="6" fill="#5B4BC4" opacity="0.09"/>
+<rect x="471.0" y="312.0" width="306.0" height="136.0" rx="6" fill="none" stroke="#5B4BC4" stroke-width="2.4" />
+<rect x="471.0" y="293.0" width="85.3" height="18.0" rx="9" fill="#5B4BC4" />
+<text x="513.7" y="305.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >method steps</text>
+<rect x="471.0" y="462.0" width="306.0" height="86.0" rx="6" fill="none" stroke="#5B4BC4" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="471.0" y="443.0" width="55.8" height="18.0" rx="9" fill="#5B4BC4" />
+<text x="498.9" y="455.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >so what</text>
+<path d="M624,393 L624,410 L628.5,406 L632,413 L634.5,412 L631,405 L636.5,405 Z" fill="#1F1A33" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="638.0" y="413.0" width="168.0" height="26.0" rx="8" fill="#1F1A33" filter="url(#sh2)"/>
+<text x="650.0" y="430.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#FFFFFF" text-anchor="start" >Click to insert  method steps</text>
+<rect x="275.6" y="104.0" width="348.8" height="28.0" rx="14" fill="#E8E4F2" stroke="#CFC8E6" stroke-width="1" />
+<text x="450.0" y="122.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#3F31A0" text-anchor="middle" >Choose from the list, or click an object  ·  Esc to cancel</text>
+<rect x="0.0" y="744.0" width="900.0" height="32.0" rx="0" fill="#F7F3EC" />
+<line x1="0.0" y1="744.0" x2="900.0" y2="744.0" stroke="#DAD4C8" stroke-width="1" />
+<rect x="23.0" y="755.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#6B6580" stroke-width="1.3" />
+<line x1="26.0" y1="766.0" x2="32.0" y2="766.0" stroke="#6B6580" stroke-width="1.3" />
+<text x="42.0" y="765.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#6B6580" text-anchor="start" >Title</text>
+<rect x="97.1" y="755.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#6B6580" stroke-width="1.3" />
+<line x1="100.1" y1="766.0" x2="106.1" y2="766.0" stroke="#6B6580" stroke-width="1.3" />
+<text x="116.1" y="765.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#6B6580" text-anchor="start" >Motivation</text>
+<rect x="197.1" y="743.0" width="89.8" height="33.0" rx="0" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<rect x="197.1" y="773.0" width="89.8" height="3.0" rx="0" fill="#E8955A" />
+<rect x="208.1" y="755.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#E8955A" stroke-width="1.3" />
+<line x1="211.1" y1="766.0" x2="217.1" y2="766.0" stroke="#E8955A" stroke-width="1.3" />
+<text x="227.1" y="765.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start" >Method</text>
+<rect x="301.9" y="755.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#6B6580" stroke-width="1.3" />
+<line x1="304.9" y1="766.0" x2="310.9" y2="766.0" stroke="#6B6580" stroke-width="1.3" />
+<text x="320.9" y="765.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#6B6580" text-anchor="start" >Results</text>
+<rect x="393.7" y="755.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#6B6580" stroke-width="1.3" />
+<line x1="396.7" y1="766.0" x2="402.7" y2="766.0" stroke="#6B6580" stroke-width="1.3" />
+<text x="412.7" y="765.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="500" fill="#6B6580" text-anchor="start" >Outlook</text>
+<rect x="479.3" y="749.0" width="24.0" height="22.0" rx="6" fill="none" stroke="#DAD4C8" stroke-width="1" />
+<text x="491.3" y="766.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="400" fill="#6B6580" text-anchor="middle" >+</text>
+<rect x="0.0" y="776.0" width="900.0" height="24.0" rx="0" fill="#FFFFFF" />
+<rect x="13.0" y="748.0" width="68.1" height="26.0" rx="5" fill="none" stroke="#5B4BC4" stroke-width="1.3" stroke-dasharray="4 3"/>
+<rect x="87.1" y="748.0" width="105.0" height="26.0" rx="5" fill="none" stroke="#5B4BC4" stroke-width="1.3" stroke-dasharray="4 3"/>
+<rect x="198.1" y="748.0" width="87.8" height="26.0" rx="5" fill="none" stroke="#5B4BC4" stroke-width="1.3" stroke-dasharray="4 3"/>
+<rect x="291.9" y="748.0" width="85.7" height="26.0" rx="5" fill="none" stroke="#5B4BC4" stroke-width="1.3" stroke-dasharray="4 3"/>
+<rect x="383.7" y="748.0" width="88.6" height="26.0" rx="5" fill="none" stroke="#5B4BC4" stroke-width="1.3" stroke-dasharray="4 3"/>
+<rect x="0.0" y="776.0" width="900.0" height="24.0" rx="0" fill="#FFFFFF" />
+<line x1="0.0" y1="776.0" x2="900.0" y2="776.0" stroke="#DAD4C8" stroke-width="1" />
+<text x="14.0" y="792.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start" >Slide 3 of 5 · Method</text>
+<rect x="900.0" y="48.0" width="380.0" height="752.0" rx="0" fill="#FBFAF7" />
+<line x1="900.0" y1="48.0" x2="900.0" y2="800.0" stroke="#DAD4C8" stroke-width="1" />
+<circle cx="900.0" cy="424.0" r="11" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" filter="url(#sh2)"/>
+<path d="M897,419 L903,424 L897,429" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="924.0" cy="70.0" r="11" fill="#5B4BC4" stroke="#FFFFFF" stroke-width="2" />
+<text x="924.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.45" font-weight="700" fill="#FFFFFF" text-anchor="middle" >ai</text>
+<text x="942.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start" >AI</text>
+<rect x="1100.0" y="57.0" width="164.0" height="26.0" rx="8" fill="#E8E4F2" />
+<rect x="1102.0" y="59.0" width="78.0" height="22.0" rx="6" fill="#FFFFFF" stroke="#CFC8E6" stroke-width="1" />
+<text x="1141.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#3F31A0" text-anchor="middle" >Suggest</text>
+<text x="1223.0" y="74.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle" >Act</text>
+<line x1="900.0" y1="92.0" x2="1280.0" y2="92.0" stroke="#DAD4C8" stroke-width="1" />
+<text x="916.0" y="115.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start" >History &amp; Chat</text>
+<rect x="916.0" y="124.0" width="90.4" height="3.0" rx="1.5" fill="#5B4BC4" />
+<text x="1068.0" y="115.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#6B6580" text-anchor="start" >Help</text>
+<line x1="900.0" y1="128.0" x2="1280.0" y2="128.0" stroke="#DAD4C8" stroke-width="1" />
+<rect x="916.0" y="138.0" width="36.0" height="24.0" rx="12" fill="#5B4BC4" />
+<text x="934.0" y="154.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#FFFFFF" text-anchor="middle" >All</text>
+<rect x="958.0" y="138.0" width="95.1" height="24.0" rx="12" fill="none" stroke="#DAD4C8" stroke-width="1" />
+<text x="1005.5" y="154.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle" >Conversation</text>
+<rect x="1059.1" y="138.0" width="70.9" height="24.0" rx="12" fill="none" stroke="#DAD4C8" stroke-width="1" />
+<text x="1094.5" y="154.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle" >Changes</text>
+<circle cx="1250.0" cy="150.0" r="13" fill="none" stroke="#DAD4C8" stroke-width="1" />
+<path d="M1244,150 a6,6 0 1 1 2,4.5" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M1243,146 L1244,150.5 L1248.5,149.5" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<text x="948.0" y="190.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#C8553D" text-anchor="start" >bob</text>
+<text x="1262.0" y="190.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:30</text>
+<rect x="944.0" y="196.0" width="322.0" height="29.0" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="956.0" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >Slides</text>
+<text x="995.1" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >1</text>
+<text x="1003.7" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >to</text>
+<text x="1018.7" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >3</text>
+<text x="1029.9" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >look</text>
+<text x="1058.3" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >good</text>
+<text x="1092.2" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >to</text>
+<text x="1107.2" y="219.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >me.</text>
+<circle cx="951.0" cy="250.0" r="4" fill="#2B7BD6" />
+<text x="964.0" y="254.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#2B7BD6" text-anchor="start" >ann</text>
+<text x="992.8" y="254.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >add figure 1 (image) on Method</text>
+<text x="1262.0" y="254.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:38</text>
+<circle cx="951.0" cy="280.0" r="4" fill="#2B7BD6" />
+<text x="964.0" y="284.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="600" fill="#2B7BD6" text-anchor="start" >ann</text>
+<text x="992.8" y="284.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start" >resize figure 1</text>
+<text x="1262.0" y="284.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="end" >16:39</text>
+<rect x="914.0" y="692.0" width="352.0" height="92.0" rx="10" fill="#FFFFFF" stroke="#CFC8E6" stroke-width="1.2" />
+<text x="928.0" y="718.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#C8553D" text-anchor="start" >@bret</text>
+<text x="968.3" y="718.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >sorry</text>
+<text x="1002.7" y="718.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >but</text>
+<text x="1025.4" y="718.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start" >#</text>
+<circle cx="1242.0" cy="762.0" r="13" fill="#5B4BC4" />
+<path d="M1236.5,762 L1247.5,762 M1243,757 L1248,762 L1243,767" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="1024.4" y="703.0" width="12.0" height="19.0" rx="0" fill="#FFFFFF" />
+<text x="1025.4" y="718.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="700" fill="#5B4BC4" text-anchor="start" >#</text>
+<rect x="1035.4" y="703.0" width="1.6" height="19.0" rx="0" fill="#5B4BC4" />
+<rect x="912.0" y="262.0" width="356.0" height="416.0" rx="12" fill="#FFFFFF" stroke="#CFC8E6" stroke-width="1.2" filter="url(#sh)"/>
+<path d="M1021.380859375,678 L1029.380859375,686 L1037.380859375,678" fill="#FFFFFF" stroke="#CFC8E6" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="1022.4" y="676.0" width="16.0" height="4.0" rx="0" fill="#FFFFFF" />
+<text x="928.0" y="286.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="600" fill="#6B6580" text-anchor="start" letter-spacing="0.8">NAMED THINGS IN VIEW</text>
+<text x="928.0" y="312.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="start" >On this slide</text>
+<rect x="918.0" y="322.0" width="344.0" height="32.0" rx="8" fill="#E8E4F2" />
+<rect x="918.0" y="327.0" width="3.0" height="22.0" rx="1.5" fill="#5B4BC4" />
+<rect x="933.0" y="333.0" width="12.0" height="10.0" rx="2" fill="none" stroke="#5B4BC4" stroke-width="1.3" />
+<circle cx="936.5" cy="336.5" r="1.2" fill="#5B4BC4" />
+<path d="M934,342 L938,338 L941,341 L943,339 L944.5,341" fill="none" stroke="#5B4BC4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="956.0" y="343.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >figure 1</text>
+<text x="1252.0" y="343.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >Image</text>
+<text x="939.0" y="375.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#5B4BC4" text-anchor="middle" >T</text>
+<text x="956.0" y="375.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >method steps</text>
+<text x="1252.0" y="375.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >Text box</text>
+<rect x="933.0" y="396.5" width="12.0" height="8.0" rx="2.5" fill="none" stroke="#5B4BC4" stroke-width="1.3" />
+<path d="M936,404.5 L936,408 L939.5,404.5" fill="none" stroke="#5B4BC4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="956.0" y="407.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >so what</text>
+<text x="1252.0" y="407.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >Callout</text>
+<text x="939.0" y="439.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#5B4BC4" text-anchor="middle" >T</text>
+<text x="956.0" y="439.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >title</text>
+<text x="1252.0" y="439.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >Title</text>
+<line x1="924.0" y1="456.0" x2="1256.0" y2="456.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="928.0" y="478.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F1A33" text-anchor="start" >Slide tabs</text>
+<rect x="933.0" y="497.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#5B4BC4" stroke-width="1.3" />
+<line x1="936.0" y1="508.0" x2="942.0" y2="508.0" stroke="#5B4BC4" stroke-width="1.3" />
+<text x="956.0" y="507.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >Title</text>
+<rect x="933.0" y="529.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#5B4BC4" stroke-width="1.3" />
+<line x1="936.0" y1="540.0" x2="942.0" y2="540.0" stroke="#5B4BC4" stroke-width="1.3" />
+<text x="956.0" y="539.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >Motivation</text>
+<rect x="933.0" y="561.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#5B4BC4" stroke-width="1.3" />
+<line x1="936.0" y1="572.0" x2="942.0" y2="572.0" stroke="#5B4BC4" stroke-width="1.3" />
+<text x="956.0" y="571.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >Method</text>
+<text x="1252.0" y="571.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end" >this slide</text>
+<rect x="933.0" y="593.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#5B4BC4" stroke-width="1.3" />
+<line x1="936.0" y1="604.0" x2="942.0" y2="604.0" stroke="#5B4BC4" stroke-width="1.3" />
+<text x="956.0" y="603.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >Results</text>
+<rect x="933.0" y="625.0" width="12.0" height="8.5" rx="1.5" fill="none" stroke="#5B4BC4" stroke-width="1.3" />
+<line x1="936.0" y1="636.0" x2="942.0" y2="636.0" stroke="#5B4BC4" stroke-width="1.3" />
+<text x="956.0" y="635.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" fill="#1F1A33" text-anchor="start" >Outlook</text>
+<line x1="924.0" y1="650.0" x2="1256.0" y2="650.0" stroke="#E6E1D6" stroke-width="1" />
+<text x="928.0" y="670.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="start" >↑↓ choose · Enter insert · Esc keeps “#” as plain text</text></svg>
