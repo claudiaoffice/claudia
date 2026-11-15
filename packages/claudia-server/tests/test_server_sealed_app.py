@@ -114,7 +114,7 @@ def test_the_list_of_documents_shows_sealed_documents_without_a_password(tmp_pat
     with server(tmp_path) as client:
         listing = client.get("/api/docs").json()["documents"]
         assert [d["id"] for d in listing] == ["budget"]
-        assert set(listing[0]) == {"id", "app", "modified", "online"}
+        assert set(listing[0]) == {"id", "app", "modified", "online", "description", "tags"}
 
 
 @pytest.mark.parametrize("who", ["owner", "newcomer"])

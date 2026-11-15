@@ -136,3 +136,15 @@ export function entriesOf(collection: Collection, mine: MineEntry[]): MineEntry[
     return named ? [{ ...named, opened: '' }] : []
   })
 }
+
+/** The collection the front page shows after `clicked` was chosen in the sidebar: choosing the one already shown
+ *  leaves it, which is the way back to the whole page (Mine and the place's documents). */
+export function nextShown(shown: string | null, clicked: string): string | null {
+  return shown === clicked ? null : clicked
+}
+
+/** The collection to keep showing: `shown` if it is still there, else none, so the page never shows a collection that
+ *  has been removed (here, or in another tab of this browser). */
+export function stillShown(shown: string | null, collections: Collection[]): string | null {
+  return shown !== null && collections.some((c) => c.name === shown) ? shown : null
+}

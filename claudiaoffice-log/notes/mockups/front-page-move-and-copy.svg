@@ -1,0 +1,371 @@
+<svg viewBox="0 0 1400 1856" width="1400" height="1856" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="1856" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" >claudia — front page: moving and copying documents by drag and drop, proposed</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Drag a document row onto a place (sidebar, "My places"): it moves there. Hold Ctrl: it is copied — but Claudia asks first, because the document takes its whole history with it.</text>
+<text x="40" y="82" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Drawn on the front page as built (D443). Documents are sealed files (D19, D20): a move is "place the file there, then delete it here", so it needs the owner (E2.10).</text>
+<rect x="40" y="100" width="650" height="400" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="62" y="134" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" >A · Drag onto a place: move</text>
+<text x="62" y="154" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >The target place is outlined while the pointer is over it. The label says what will happen.</text>
+<clipPath id="crmove"><rect x="54" y="172" width="622" height="310" rx="12"/></clipPath><g clip-path="url(#crmove)">
+<rect x="54" y="172" width="622" height="310" rx="0" fill="#fff" />
+<rect x="54" y="172" width="240" height="310" rx="0" fill="#e7e1f4" />
+<line x1="294" y1="172" x2="294" y2="482" stroke="#e0dfe2" stroke-width="1" />
+<text x="72" y="198" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >My places</text>
+<rect x="64" y="208" width="220" height="42" rx="9" fill="#e3f2f0" />
+<circle cx="81" cy="229" r="4" fill="#13917f"/>
+<text x="96" y="226" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >This computer</text>
+<text x="96" y="241" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >127.0.0.1:8420</text>
+<rect x="64" y="254" width="220" height="42" rx="9" fill="#fff" stroke="#5b4bc4" stroke-width="2.5" />
+<circle cx="81" cy="275" r="4" fill="#c9c6d6"/>
+<text x="96" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Finance server</text>
+<text x="96" y="287" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >finance.example.org</text>
+<text x="72" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ Connect to a server…</text>
+<text x="72" y="352" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >Collections</text>
+<path d="M76 372 h10 v14 l-5 -4 l-5 4 Z" fill="none" stroke="#6d6a7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="96" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Budget 2027</text>
+<text x="272" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >4</text>
+<path d="M76 410 h10 v14 l-5 -4 l-5 4 Z" fill="none" stroke="#6d6a7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="96" y="422" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Teaching</text>
+<text x="272" y="422" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >2</text>
+<text x="72" y="454" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ New collection</text>
+<text x="314" y="202" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >ON THIS COMPUTER · 5</text>
+<rect x="314" y="214" width="342" height="66" rx="9" fill="#fff" stroke="#93919d" stroke-width="1" stroke-dasharray="4 3" opacity="0.7" />
+<rect x="324" y="225" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="329.5" y1="233.25" x2="340.5" y2="233.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M329.5 239.09375 C332.25 236.34375 334.3125 241.84375 337.0625 239.09375 C338.4375 237.71875 339.46875 238.0625 340.5 238.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="358" y="236" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#6d6a7a" text-anchor="start" >budget-2027</text>
+<text x="358" y="254" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#a9a6b6" text-anchor="start" >Budget with three scenarios for the board</text>
+<rect x="314" y="288" width="342" height="66" rx="9" fill="#fff" stroke="#e0dfe2" stroke-width="1" />
+<rect x="324" y="299" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="329.5" y1="307.25" x2="340.5" y2="307.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M329.5 313.09375 C332.25 310.34375 334.3125 315.84375 337.0625 313.09375 C338.4375 311.71875 339.46875 312.0625 340.5 312.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="358" y="310" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >forecast-q3</text>
+<text x="644" y="310" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >1 h ago</text>
+<text x="358" y="328" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#6d6a7a" xml:space="preserve"><tspan>Cash-flow forecast, Q3</tspan></text>
+<rect x="358" y="333" width="61.5" height="20" rx="10" fill="#ece7f7" />
+<text x="366" y="347" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >finance</text>
+<rect x="425.5" y="333" width="68.0" height="20" rx="10" fill="#ece7f7" />
+<text x="433.5" y="347" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >forecast</text>
+<rect x="314" y="362" width="342" height="66" rx="9" fill="#fff" stroke="#e0dfe2" stroke-width="1" />
+<rect x="324" y="373" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="329.5" y1="381.25" x2="340.5" y2="381.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M329.5 387.09375 C332.25 384.34375 334.3125 389.84375 337.0625 387.09375 C338.4375 385.71875 339.46875 386.0625 340.5 386.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="358" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >lab-notes</text>
+<text x="644" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >3 d ago</text>
+<text x="358" y="402" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#6d6a7a" xml:space="preserve"><tspan>Titration series, raw readings</tspan></text>
+<rect x="358" y="407" width="61.5" height="20" rx="10" fill="#ece7f7" />
+<text x="366" y="421" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >science</text>
+</g>
+<rect x="187" y="295" width="250" height="44" rx="10" fill="#1f1a33" opacity="0.18" />
+<rect x="184" y="290" width="250" height="44" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.5" opacity="0.92" />
+<rect x="194" y="301" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="199.5" y1="309.25" x2="210.5" y2="309.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M199.5 315.09375 C202.25 312.34375 204.3125 317.84375 207.0625 315.09375 C208.4375 313.71875 209.46875 314.0625 210.5 314.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="242" y="317" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >budget-2027</text>
+<path d="M198 298 l0 17 l4.5 -4 l3.2 7.3 l2.6 -1.2 l-3.2 -7.2 l6 -0.4 Z" fill="#1f1a33" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="220" cy="321" r="8.5" fill="#fff" stroke="#1f1a33" stroke-width="1.2"/>
+<path d="M216 321 h8 m-3 -3 l3 3 l-3 3" fill="none" stroke="#1f1a33" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="210" y="352" width="173.8" height="28" rx="8" fill="#1f1a33" />
+<text x="221" y="370.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="start" >Move to Finance server</text>
+<rect x="710" y="100" width="650" height="400" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="732" y="134" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" >B · Hold Ctrl while dragging: copy</text>
+<text x="732" y="154" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >The cursor gets a "+"; the label says "Copy …" and ends in "…" because a question follows (see D).</text>
+<clipPath id="crcopy"><rect x="724" y="172" width="622" height="310" rx="12"/></clipPath><g clip-path="url(#crcopy)">
+<rect x="724" y="172" width="622" height="310" rx="0" fill="#fff" />
+<rect x="724" y="172" width="240" height="310" rx="0" fill="#e7e1f4" />
+<line x1="964" y1="172" x2="964" y2="482" stroke="#e0dfe2" stroke-width="1" />
+<text x="742" y="198" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >My places</text>
+<rect x="734" y="208" width="220" height="42" rx="9" fill="#e3f2f0" />
+<circle cx="751" cy="229" r="4" fill="#13917f"/>
+<text x="766" y="226" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >This computer</text>
+<text x="766" y="241" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >127.0.0.1:8420</text>
+<rect x="734" y="254" width="220" height="42" rx="9" fill="#fff" stroke="#5b4bc4" stroke-width="2.5" />
+<circle cx="751" cy="275" r="4" fill="#c9c6d6"/>
+<text x="766" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Finance server</text>
+<text x="766" y="287" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >finance.example.org</text>
+<text x="742" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ Connect to a server…</text>
+<text x="742" y="352" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >Collections</text>
+<path d="M746 372 h10 v14 l-5 -4 l-5 4 Z" fill="none" stroke="#6d6a7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="766" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Budget 2027</text>
+<text x="942" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >4</text>
+<path d="M746 410 h10 v14 l-5 -4 l-5 4 Z" fill="none" stroke="#6d6a7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="766" y="422" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Teaching</text>
+<text x="942" y="422" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >2</text>
+<text x="742" y="454" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ New collection</text>
+<text x="984" y="202" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >ON THIS COMPUTER · 5</text>
+<rect x="984" y="214" width="342" height="66" rx="9" fill="#fff" stroke="#93919d" stroke-width="1" stroke-dasharray="4 3" opacity="0.7" />
+<rect x="994" y="225" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="999.5" y1="233.25" x2="1010.5" y2="233.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M999.5 239.09375 C1002.25 236.34375 1004.3125 241.84375 1007.0625 239.09375 C1008.4375 237.71875 1009.46875 238.0625 1010.5 238.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="1028" y="236" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#6d6a7a" text-anchor="start" >budget-2027</text>
+<text x="1028" y="254" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#a9a6b6" text-anchor="start" >Budget with three scenarios for the board</text>
+<rect x="984" y="288" width="342" height="66" rx="9" fill="#fff" stroke="#e0dfe2" stroke-width="1" />
+<rect x="994" y="299" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="999.5" y1="307.25" x2="1010.5" y2="307.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M999.5 313.09375 C1002.25 310.34375 1004.3125 315.84375 1007.0625 313.09375 C1008.4375 311.71875 1009.46875 312.0625 1010.5 312.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="1028" y="310" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >forecast-q3</text>
+<text x="1314" y="310" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >1 h ago</text>
+<text x="1028" y="328" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#6d6a7a" xml:space="preserve"><tspan>Cash-flow forecast, Q3</tspan></text>
+<rect x="1028" y="333" width="61.5" height="20" rx="10" fill="#ece7f7" />
+<text x="1036" y="347" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >finance</text>
+<rect x="1095.5" y="333" width="68.0" height="20" rx="10" fill="#ece7f7" />
+<text x="1103.5" y="347" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >forecast</text>
+<rect x="984" y="362" width="342" height="66" rx="9" fill="#fff" stroke="#e0dfe2" stroke-width="1" />
+<rect x="994" y="373" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="999.5" y1="381.25" x2="1010.5" y2="381.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M999.5 387.09375 C1002.25 384.34375 1004.3125 389.84375 1007.0625 387.09375 C1008.4375 385.71875 1009.46875 386.0625 1010.5 386.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="1028" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >lab-notes</text>
+<text x="1314" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >3 d ago</text>
+<text x="1028" y="402" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#6d6a7a" xml:space="preserve"><tspan>Titration series, raw readings</tspan></text>
+<rect x="1028" y="407" width="61.5" height="20" rx="10" fill="#ece7f7" />
+<text x="1036" y="421" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >science</text>
+</g>
+<rect x="857" y="295" width="250" height="44" rx="10" fill="#1f1a33" opacity="0.18" />
+<rect x="854" y="290" width="250" height="44" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.5" opacity="0.92" />
+<rect x="864" y="301" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="869.5" y1="309.25" x2="880.5" y2="309.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M869.5 315.09375 C872.25 312.34375 874.3125 317.84375 877.0625 315.09375 C878.4375 313.71875 879.46875 314.0625 880.5 314.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="912" y="317" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >budget-2027</text>
+<path d="M868 298 l0 17 l4.5 -4 l3.2 7.3 l2.6 -1.2 l-3.2 -7.2 l6 -0.4 Z" fill="#1f1a33" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="890" cy="321" r="8.5" fill="#fff" stroke="#1f1a33" stroke-width="1.2"/>
+<line x1="886" y1="321" x2="894" y2="321" stroke="#1f1a33" stroke-width="1.8" />
+<line x1="890" y1="317" x2="890" y2="325" stroke="#1f1a33" stroke-width="1.8" />
+<rect x="880" y="352" width="218.70000000000002" height="28" rx="8" fill="#1f1a33" />
+<text x="891" y="370.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="start" >Copy to Finance server…</text>
+<rect x="1054.7" y="357" width="36" height="18" rx="5" fill="#3a3458" stroke="#6b638f" stroke-width="1" />
+<text x="1072.7" y="370" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="500" fill="#fff" text-anchor="middle" >Ctrl</text>
+<circle cx="410" cy="366" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="410" y="370.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >1</text>
+<circle cx="1130" cy="366" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="1130" y="370.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >2</text>
+<rect x="40" y="530" width="650" height="640" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="62" y="564" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" >C · Drop: Move dialog</text>
+<text x="62" y="584" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Asked on every move: it ends with a delete on the old place, and that is the owner's act (E2.10).</text>
+<rect x="64" y="612" width="606" height="540" rx="16" fill="#1f1a33" opacity="0.14" />
+<rect x="62" y="606" width="606" height="540" rx="16" fill="#fff" stroke="#1f1a33" stroke-width="1" />
+<text x="86" y="644" font-family="Fraunces, Georgia, serif" font-size="19" font-weight="500" fill="#1f1a33" text-anchor="start" >Move budget-2027</text>
+<text x="640" y="642" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="400" fill="#6d6a7a" text-anchor="middle" >×</text>
+<rect x="86" y="668" width="28" height="28" rx="6.5625" fill="#13917f" />
+<line x1="93.0" y1="678.5" x2="107.0" y2="678.5" stroke="#fff" stroke-width="2.1875" />
+<path d="M93.0 685.9375 C96.5 682.4375 99.125 689.4375 102.625 685.9375 C104.375 684.1875 105.6875 684.625 107.0 685.5" fill="none" stroke="#fff" stroke-width="2.1875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="124" y="682" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="500" fill="#1f1a33" text-anchor="start" >budget-2027</text>
+<text x="124" y="698" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Table · changed 2 hours ago</text>
+<rect x="86" y="718" width="249.0" height="46" rx="10" fill="#f7f6f3" stroke="#e0dfe2" stroke-width="1" />
+<text x="100" y="738" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >This computer</text>
+<text x="100" y="754" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >127.0.0.1:8420</text>
+<rect x="395.0" y="718" width="249.0" height="46" rx="10" fill="#f7f6f3" stroke="#e0dfe2" stroke-width="1" />
+<text x="409.0" y="738" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >Finance server</text>
+<text x="409.0" y="754" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >finance.example.org</text>
+<text x="365.0" y="747" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="400" fill="#5b4bc4" text-anchor="middle" >→</text>
+<text x="86" y="796" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >The document goes as it is: sealed, with its whole history, its chat and everybody's access.</text>
+<text x="86" y="814" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Afterwards it is gone from This computer, and Mine and your collections point to the new place.</text>
+<rect x="86" y="844" width="558" height="58" rx="9" fill="#fdf0dd" stroke="#f2a057" stroke-width="1" />
+<circle cx="106" cy="873" r="5" fill="#13917f"/>
+<text x="122" y="868" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start" >Ann is working in it right now.</text>
+<text x="122" y="885" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >She is taken back to the list when it moves, and finds it again on Finance server.</text>
+<text x="86" y="933" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start" >Your password, to confirm</text>
+<rect x="86" y="938" width="300" height="32" rx="7" fill="#fff" stroke="#93919d" stroke-width="1" />
+<text x="97" y="959.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" >••••••••••</text>
+<text x="86" y="982" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Only the owner can move a document. You are its owner.</text>
+<text x="86" y="1002" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Nothing is removed from This computer before Finance server holds the document;</text>
+<text x="86" y="1017" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >if the move stops half-way, the document is still here.</text>
+<rect x="436" y="1090" width="100" height="32" rx="8" fill="#fff" stroke="#93919d" stroke-width="1" />
+<text x="486.0" y="1110.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Cancel</text>
+<rect x="544" y="1090" width="100" height="32" rx="8" fill="#13917f" />
+<text x="594.0" y="1110.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#fff" text-anchor="middle" >Move</text>
+<circle cx="94" cy="708" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="94" y="712.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >5</text>
+<circle cx="632" cy="851" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="632" y="855.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >4</text>
+<circle cx="404" cy="948" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="404" y="952.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >3</text>
+<rect x="710" y="530" width="650" height="640" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="732" y="564" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" >D · Drop with Ctrl: Copy dialog</text>
+<text x="732" y="584" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >The question the owner asked for: "really create a copy?" — Cancel is the default button.</text>
+<rect x="734" y="612" width="606" height="360" rx="16" fill="#1f1a33" opacity="0.14" />
+<rect x="732" y="606" width="606" height="360" rx="16" fill="#fff" stroke="#1f1a33" stroke-width="1" />
+<text x="756" y="644" font-family="Fraunces, Georgia, serif" font-size="19" font-weight="500" fill="#1f1a33" text-anchor="start" >Copy budget-2027?</text>
+<text x="1310" y="642" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="400" fill="#6d6a7a" text-anchor="middle" >×</text>
+<rect x="756" y="668" width="28" height="28" rx="6.5625" fill="#13917f" />
+<line x1="763.0" y1="678.5" x2="777.0" y2="678.5" stroke="#fff" stroke-width="2.1875" />
+<path d="M763.0 685.9375 C766.5 682.4375 769.125 689.4375 772.625 685.9375 C774.375 684.1875 775.6875 684.625 777.0 685.5" fill="none" stroke="#fff" stroke-width="2.1875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="794" y="682" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="500" fill="#1f1a33" text-anchor="start" >budget-2027</text>
+<text x="794" y="698" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Table · changed 2 hours ago</text>
+<rect x="756" y="718" width="249.0" height="46" rx="10" fill="#f7f6f3" stroke="#e0dfe2" stroke-width="1" />
+<text x="770" y="738" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >This computer</text>
+<text x="770" y="754" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >budget-2027 stays</text>
+<text x="1035.0" y="747" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="400" fill="#5b4bc4" text-anchor="middle" >+</text>
+<rect x="1065.0" y="718" width="249.0" height="46" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.5" />
+<text x="1079.0" y="738" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >Finance server</text>
+<text x="1079.0" y="754" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start" >budget-2027, a copy</text>
+<text x="756" y="796" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >A copy is a second document with the same name, the same whole history, the same</text>
+<text x="756" y="814" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >chat and the same people. From now on the two go separate ways: what is changed</text>
+<text x="756" y="832" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >in one is not changed in the other. Everybody keeps the password they have.</text>
+<rect x="1076" y="910" width="100" height="32" rx="8" fill="#fff" stroke="#93919d" stroke-width="1" />
+<text x="1126.0" y="930.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Cancel</text>
+<rect x="1073" y="907" width="106" height="38" rx="11" fill="none" stroke="#5b4bc4" stroke-width="2" />
+<rect x="1184" y="910" width="130" height="32" rx="8" fill="#fff" stroke="#93919d" stroke-width="1" />
+<text x="1249.0" y="930.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Create a copy</text>
+<circle cx="1298" cy="666" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="1298" y="670.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >6</text>
+<text x="732" y="994" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >When the name is taken there — the same dialog, refusing:</text>
+<rect x="734" y="1012" width="606" height="162" rx="16" fill="#1f1a33" opacity="0.14" />
+<rect x="732" y="1006" width="606" height="162" rx="16" fill="#fff" stroke="#1f1a33" stroke-width="1" />
+<text x="756" y="1044" font-family="Fraunces, Georgia, serif" font-size="19" font-weight="500" fill="#1f1a33" text-anchor="start" >Copy budget-2027?</text>
+<text x="756" y="1068" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Finance server holds a document called budget-2027 already. A name cannot change</text>
+<text x="756" y="1086" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >(it is sealed into the file), so a copy cannot go there. Open the one that is there,</text>
+<text x="756" y="1104" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >or copy to another place.</text>
+<rect x="1214" y="1118" width="100" height="32" rx="8" fill="#13917f" />
+<text x="1264.0" y="1138.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#fff" text-anchor="middle" >OK</text>
+<circle cx="1322" cy="1032" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="1322" y="1036.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >7</text>
+<rect x="40" y="1190" width="650" height="380" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="62" y="1224" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" >E · Drop onto a collection: a bookmark, not a transfer</text>
+<text x="62" y="1244" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Collections are lists in the browser (D443); the document stays where it is. So no question is asked.</text>
+<clipPath id="cre"><rect x="54" y="1262" width="622" height="290" rx="12"/></clipPath><g clip-path="url(#cre)">
+<rect x="54" y="1262" width="622" height="290" rx="0" fill="#fff" />
+<rect x="54" y="1262" width="240" height="290" rx="0" fill="#e7e1f4" />
+<line x1="294" y1="1262" x2="294" y2="1552" stroke="#e0dfe2" stroke-width="1" />
+<text x="72" y="1288" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >My places</text>
+<rect x="64" y="1298" width="220" height="42" rx="9" fill="#e3f2f0" />
+<circle cx="81" cy="1319" r="4" fill="#13917f"/>
+<text x="96" y="1316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >This computer</text>
+<text x="96" y="1331" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >127.0.0.1:8420</text>
+<circle cx="81" cy="1365" r="4" fill="#c9c6d6"/>
+<text x="96" y="1362" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Finance server</text>
+<text x="96" y="1377" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >finance.example.org</text>
+<text x="72" y="1406" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ Connect to a server…</text>
+<text x="72" y="1442" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >Collections</text>
+<path d="M76 1462 h10 v14 l-5 -4 l-5 4 Z" fill="none" stroke="#6d6a7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="96" y="1474" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Budget 2027</text>
+<text x="272" y="1474" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >4</text>
+<rect x="64" y="1490" width="220" height="34" rx="9" fill="#fff" stroke="#5b4bc4" stroke-width="2.5" />
+<path d="M76 1500 h10 v14 l-5 -4 l-5 4 Z" fill="none" stroke="#6d6a7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="96" y="1512" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Teaching</text>
+<text x="272" y="1512" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >2</text>
+<text x="72" y="1544" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ New collection</text>
+<text x="314" y="1292" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >IN BUDGET 2027 (shown)</text>
+<rect x="314" y="1304" width="340" height="66" rx="9" fill="#fff" stroke="#e0dfe2" stroke-width="1" />
+<rect x="324" y="1315" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="329.5" y1="1323.25" x2="340.5" y2="1323.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M329.5 1329.09375 C332.25 1326.34375 334.3125 1331.84375 337.0625 1329.09375 C338.4375 1327.71875 339.46875 1328.0625 340.5 1328.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="358" y="1326" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >budget-2027</text>
+<text x="642" y="1326" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >2 h ago</text>
+<text x="358" y="1344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#6d6a7a" xml:space="preserve"><tspan>Budget with three scenarios</tspan></text>
+<rect x="358" y="1349" width="61.5" height="20" rx="10" fill="#ece7f7" />
+<text x="366" y="1363" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >finance</text>
+<rect x="314" y="1378" width="340" height="66" rx="9" fill="#fff" stroke="#e0dfe2" stroke-width="1" />
+<rect x="324" y="1389" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="329.5" y1="1397.25" x2="340.5" y2="1397.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M329.5 1403.09375 C332.25 1400.34375 334.3125 1405.84375 337.0625 1403.09375 C338.4375 1401.71875 339.46875 1402.0625 340.5 1402.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="358" y="1400" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >forecast-q3</text>
+<text x="642" y="1400" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >1 h ago</text>
+<text x="358" y="1418" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#6d6a7a" xml:space="preserve"><tspan>Cash-flow forecast, Q3</tspan></text>
+<rect x="358" y="1423" width="61.5" height="20" rx="10" fill="#ece7f7" />
+<text x="366" y="1437" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >finance</text>
+</g>
+<rect x="187" y="1445" width="230" height="44" rx="10" fill="#1f1a33" opacity="0.18" />
+<rect x="184" y="1440" width="230" height="44" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.5" opacity="0.92" />
+<rect x="194" y="1451" width="22" height="22" rx="5.15625" fill="#13917f" />
+<line x1="199.5" y1="1459.25" x2="210.5" y2="1459.25" stroke="#fff" stroke-width="1.71875" />
+<path d="M199.5 1465.09375 C202.25 1462.34375 204.3125 1467.84375 207.0625 1465.09375 C208.4375 1463.71875 209.46875 1464.0625 210.5 1464.75" fill="none" stroke="#fff" stroke-width="1.71875" stroke-linecap="round" stroke-linejoin="round" />
+<text x="242" y="1467" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >forecast-q3</text>
+<path d="M198 1448 l0 17 l4.5 -4 l3.2 7.3 l2.6 -1.2 l-3.2 -7.2 l6 -0.4 Z" fill="#1f1a33" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="224" cy="1472" r="8.5" fill="#fff" stroke="#1f1a33" stroke-width="1.2"/>
+<path d="M220 1472 h8 m-3 -3 l3 3 l-3 3" fill="none" stroke="#1f1a33" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="210" y="1502" width="132.4" height="28" rx="8" fill="#1f1a33" />
+<text x="221" y="1520.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="start" >Move to Teaching</text>
+<text x="68" y="1548" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#1f1a33" text-anchor="start" ></text>
+<circle cx="388" cy="1517" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="388" y="1521.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >8</text>
+<rect x="710" y="1190" width="650" height="380" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="732" y="1224" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" >F · Places that cannot take it</text>
+<text x="732" y="1244" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Greyed while dragging, with the reason in the label — never a surprise after the drop.</text>
+<text x="732" y="1260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="start" >Also greyed: places that are unreachable or refuse new documents (E3.11).</text>
+<clipPath id="crf"><rect x="724" y="1262" width="622" height="290" rx="12"/></clipPath><g clip-path="url(#crf)">
+<rect x="724" y="1262" width="622" height="290" rx="0" fill="#fff" />
+<rect x="724" y="1262" width="240" height="290" rx="0" fill="#e7e1f4" />
+<line x1="964" y1="1262" x2="964" y2="1552" stroke="#e0dfe2" stroke-width="1" />
+<text x="742" y="1288" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >My places</text>
+<rect x="734" y="1298" width="220" height="42" rx="9" fill="#e3f2f0" />
+<circle cx="751" cy="1319" r="4" fill="#13917f"/>
+<text x="766" y="1316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >This computer</text>
+<text x="766" y="1331" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >127.0.0.1:8420</text>
+<circle cx="751" cy="1365" r="4" fill="#c9c6d6"/>
+<text x="766" y="1362" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Finance server</text>
+<text x="766" y="1377" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >finance.example.org</text>
+<circle cx="751" cy="1411" r="4" fill="#c9c6d6"/>
+<text x="766" y="1408" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Acme server</text>
+<text x="766" y="1423" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#6d6a7a" text-anchor="start" >acme.example.com</text>
+<text x="742" y="1452" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ Connect to a server…</text>
+<text x="742" y="1488" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >Collections</text>
+<path d="M746 1508 h10 v14 l-5 -4 l-5 4 Z" fill="none" stroke="#6d6a7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+<text x="766" y="1520" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Budget 2027</text>
+<text x="942" y="1520" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >4</text>
+<text x="742" y="1552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#5b4bc4" text-anchor="start" >+ New collection</text>
+<rect x="734" y="1344" width="220" height="42" rx="9" fill="#ffffff" opacity="0.6" />
+<rect x="734" y="1390" width="220" height="42" rx="9" fill="#ffffff" opacity="0.6" />
+<text x="984" y="1292" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6d6a7a" text-anchor="start" >ON THIS COMPUTER · 5</text>
+<rect x="984" y="1304" width="340" height="66" rx="9" fill="#fff" stroke="#e0dfe2" stroke-width="1" />
+<rect x="994" y="1315" width="22" height="22" rx="5.15625" fill="#f2a057" />
+<rect x="998.46875" y="1321.53125" width="13.0625" height="8.9375" rx="1.71875" fill="#fff" />
+<circle cx="1002.59375" cy="1326.0" r="1.71875" fill="#f2a057"/>
+<text x="1028" y="1326" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >board-slides</text>
+<text x="1312" y="1326" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6d6a7a" text-anchor="end" >1 d ago</text>
+<text x="1028" y="1344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#6d6a7a" xml:space="preserve"><tspan>Annual meeting, 24 slides</tspan></text>
+<rect x="1028" y="1349" width="48.5" height="20" rx="10" fill="#ece7f7" />
+<text x="1036" y="1363" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >board</text>
+</g>
+<rect x="877" y="1363" width="230" height="44" rx="10" fill="#1f1a33" opacity="0.18" />
+<rect x="874" y="1358" width="230" height="44" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.5" opacity="0.92" />
+<rect x="884" y="1369" width="22" height="22" rx="5.15625" fill="#f2a057" />
+<rect x="888.46875" y="1375.53125" width="13.0625" height="8.9375" rx="1.71875" fill="#fff" />
+<circle cx="892.59375" cy="1380.0" r="1.71875" fill="#f2a057"/>
+<text x="932" y="1385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start" >board-slides</text>
+<path d="M888 1366 l0 17 l4.5 -4 l3.2 7.3 l2.6 -1.2 l-3.2 -7.2 l6 -0.4 Z" fill="#1f1a33" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="914" cy="1390" r="9" fill="#fff" stroke="#d6477a" stroke-width="1.5"/>
+<line x1="909" y1="1385" x2="919" y2="1395" stroke="#d6477a" stroke-width="1.8" />
+<line x1="919" y1="1385" x2="909" y2="1395" stroke="#d6477a" stroke-width="1.8" />
+<rect x="900" y="1420" width="229.0" height="28" rx="8" fill="#1f1a33" />
+<text x="911" y="1438.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="start" >Finance server keeps no slides</text>
+<circle cx="1115" cy="1434" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="1115" y="1438.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >9</text>
+<text x="62" y="1606" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start" >What to settle</text>
+<circle cx="73" cy="1626" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="73" y="1630.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >1</text>
+<text x="92" y="1630" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Plain drag = move, dropped on a place in "My places". The place is outlined, the label says what happens.</text>
+<circle cx="73" cy="1650" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="73" y="1654.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >2</text>
+<text x="92" y="1654" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Ctrl while dragging = copy. The label ends in "…" because Claudia asks first (see D).</text>
+<circle cx="73" cy="1674" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="73" y="1678.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >3</text>
+<text x="92" y="1678" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >The move dialog asks for the owner's password every time: deleting the source is owner-only and</text>
+<text x="92" y="1695" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >passwords belong to each document (D20). Without it a "move" could only ever be a copy.</text>
+<circle cx="73" cy="1715" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="73" y="1719.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >4</text>
+<text x="92" y="1719" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Live participants are named before the move and returned to the list (as when a document is deleted).</text>
+<text x="92" y="1736" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >They are not asked: the owner decides, as with deleting.</text>
+<circle cx="73" cy="1756" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="73" y="1760.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >5</text>
+<text x="92" y="1760" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Feasibility: a page talks only to its own server (D170). A move between places therefore runs shell to</text>
+<text x="92" y="1777" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >server or server to server (the target pulls the file with a one-time token); the browser alone cannot</text>
+<text x="92" y="1794" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >relay a sealed file between two origins. To be checked with E3 before this is built.</text>
+<text x="702" y="1606" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start" > </text>
+<circle cx="713" cy="1626" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="713" y="1630.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >6</text>
+<text x="732" y="1630" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Copy asks before it acts, as requested. It needs no password: the sealed file is copied as it is.</text>
+<text x="732" y="1647" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >The copy and the original are independent forks; both show the same past in their history.</text>
+<circle cx="713" cy="1667" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="713" y="1671.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >7</text>
+<text x="732" y="1671" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >The name is sealed into the file (D443), so one place can never hold two of the same name: no "copy</text>
+<text x="732" y="1688" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >to this place", no "(2)" suffix. A rename-on-copy would re-seal the file: needs the password and a new</text>
+<text x="732" y="1705" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >kernel operation — not drawn.</text>
+<circle cx="713" cy="1725" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="713" y="1729.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >8</text>
+<text x="732" y="1729" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Collections stay private bookmarks in the browser. Onto a collection: from a place list it adds, from a</text>
+<text x="732" y="1746" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >collection view it moves the entry between collections (Ctrl keeps it in the old one too). No question.</text>
+<circle cx="713" cy="1766" r="11" fill="#f2a057" stroke="#1f1a33" stroke-width="1"/>
+<text x="713" y="1770.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="700" fill="#1f1a33" text-anchor="middle" >9</text>
+<text x="732" y="1770" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >A non-owner who drops on a place gets the copy question instead, with the reason ("only the owner</text>
+<text x="732" y="1787" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >can move it"). Undo: none for the delete on the old place (E2.10); the toast offers "Move it back".</text>
+</svg>

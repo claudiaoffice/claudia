@@ -128,6 +128,10 @@ export interface LinkOptions {
   upload?: string
   /** With `upload`: keep the file inside the document (the default) for an exact round trip (D439). */
   keepOriginal?: boolean
+  /** With `upload`: what the document is about (Markdown) and its tags: kept plain in the file, so anybody who can list
+   *  the server can read them. */
+  description?: string
+  tags?: string[]
   /** The client's own locale (E5.7, D31) — always a client setting, never stored on the server. Omitted, it is not
    *  sent and the server assumes 'en'. */
   locale?: string
@@ -163,7 +167,7 @@ export class Link implements LinkLike {
   }
 
   connect(): Promise<Welcome> {
-    const { url, user, password, create = false, recoveryKey, locale, upload, keepOriginal } = this.options
+    const { url, user, password, create = false, recoveryKey, locale, upload, keepOriginal, description, tags } = this.options
     const make = this.options.socket ?? ((u: string) => new WebSocket(u) as unknown as SocketLike)
     const socket = (this.socket = make(url))
     return new Promise<Welcome>((resolve, reject) => {
@@ -176,6 +180,8 @@ export class Link implements LinkLike {
         if (upload !== undefined && create) {
           params.upload = upload
           params.keep_original = keepOriginal !== false
+          if (description) params.description = description
+          if (tags?.length) params.tags = tags
         }
         socket.send(JSON.stringify({ id, method: 'hello', params }))
       }

@@ -1,5 +1,5 @@
 {
- "version": "0.5.0",
+ "version": "0.7.0",
  "ContainerError": {
   "class": [
    "Exception"
@@ -98,6 +98,15 @@
   "methods": {},
   "properties": []
  },
+ "MAX_DESCRIPTION": {
+  "value": "2000"
+ },
+ "MAX_TAG": {
+  "value": "30"
+ },
+ "MAX_TAGS": {
+  "value": "10"
+ },
  "MIN_PASSWORD_LENGTH": {
   "value": "8"
  },
@@ -105,12 +114,14 @@
   "class": [
    "object"
   ],
-  "init": "(id: str, app: str, title: str, unlisted: bool, created: str, last_change: str, kdf: claudia_container.crypto.KdfParams, salt: bytes) -> None",
+  "init": "(name: str, uid: str, app: str, unlisted: bool, created: str, last_change: str, kdf: claudia_container.crypto.KdfParams, salt: bytes, description: str = '', tags: tuple[str, ...] = ()) -> None",
   "methods": {
    "from_dict": "(data: object) -> claudia_container.container.Manifest",
    "to_dict": "(self) -> dict[str, object]"
   },
-  "properties": []
+  "properties": [
+   "binding"
+  ]
  },
  "NotAClaudiaDocument": {
   "class": [
@@ -196,8 +207,11 @@
  "change_password": {
   "function": "(path: pathlib.Path, name: str, old_password: str, new_password: str) -> bool"
  },
+ "clean_details": {
+  "function": "(description: str, tags: collections.abc.Sequence[str]) -> tuple[str, tuple[str, ...]]"
+ },
  "create_document": {
-  "function": "(path: pathlib.Path, *, doc_id: str, app: str, title: str, owner: str, password: str, kdf: claudia_container.crypto.KdfParams | None = None, recovery_key: bytes | None = None, now: str | None = None) -> claudia_container.slots.Unlocked"
+  "function": "(path: pathlib.Path, *, name: str, app: str, owner: str, password: str, kdf: claudia_container.crypto.KdfParams | None = None, recovery_key: bytes | None = None, now: str | None = None, description: str = '', tags: collections.abc.Sequence[str] = ()) -> claudia_container.slots.Unlocked"
  },
  "derive_login_material": {
   "function": "(password: str, name: str, doc_salt: bytes, params: claudia_container.crypto.KdfParams) -> claudia_container.crypto.LoginMaterial"
@@ -210,6 +224,9 @@
  },
  "has_recovery_key": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> bool"
+ },
+ "is_uid": {
+  "function": "(value: object) -> bool"
  },
  "journal_generation": {
   "function": "(path: pathlib.Path) -> int"
@@ -228,6 +245,9 @@
  },
  "new_recovery_key": {
   "function": "() -> bytes"
+ },
+ "new_uid": {
+  "function": "() -> str"
  },
  "open_sealed": {
   "function": "(key: bytes, sealed: bytes, aad: bytes) -> bytes"
@@ -276,6 +296,9 @@
  },
  "seal": {
   "function": "(key: bytes, plaintext: bytes, aad: bytes) -> bytes"
+ },
+ "set_details": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], description: str, tags: collections.abc.Sequence[str]) -> None"
  },
  "set_recovery_key": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], recovery_key: bytes) -> None"

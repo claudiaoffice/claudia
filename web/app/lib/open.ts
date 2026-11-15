@@ -1,6 +1,8 @@
 // Opening a document: which app it belongs to decides which session shows it, and only the server knows.
 import type { SessionOptions } from './base-session'
 import type { LinkLike } from './protocol'
+import { parseNotes, type Span } from './notes-markdown'
+import { ProtocolError } from './protocol'
 import { Session } from './session'
 import { SlideSession } from './slide-session'
 import { TextSession } from './text-session'
@@ -22,6 +24,10 @@ export interface Listed {
   app: string
   modified: string
   online: number
+  /** What the owner said the document is about (Markdown), plain in the file: anybody who can list can read it. An
+   *  older server says nothing. */
+  description?: string
+  tags?: string[]
 }
 
 export interface DocsListing {
@@ -104,11 +110,101 @@ export async function openSession(makeLink: () => LinkLike, options: SessionOpti
 export const isText = (session: AnySession): session is TextSession => session instanceof TextSession
 export const isSlides = (session: AnySession): session is SlideSession => session instanceof SlideSession
 
-/** The documents whose id holds every word of `query` (case and accents ignored), of `app` if one is given. The
- *  contents are sealed, so the id is all there is to search (D431). */
-export function filterListed<T extends { id: string; app: string }>(documents: T[], query: string, app = ''): T[] {
+/** The documents whose id, tags or description hold every word of `query` (case and accents ignored), of `app` if one
+ *  is given. The contents are sealed, so what the manifest says in the open is all there is to search (D431, D103). */
+export function filterListed<T extends { id: string; app: string; description?: string; tags?: string[] }>(
+  documents: T[],
+  query: string,
+  app = '',
+): T[] {
   const words = fold(query).split(/\s+/).filter(Boolean)
-  return documents.filter((d) => (!app || d.app === app) && words.every((w) => fold(d.id).includes(w)))
+  return documents.filter((d) => {
+    if (app && d.app !== app) return false
+    const text = fold([d.id, d.description ?? '', ...(d.tags ?? [])].join('\n'))
+    return words.every((w) => text.includes(w))
+  })
+}
+
+/** The documents that carry `tag` (all of them for an empty one). */
+export function filterByTag<T extends { tags?: string[] }>(documents: T[], tag: string): T[] {
+  const wanted = tag.trim().toLowerCase()
+  return wanted ? documents.filter((d) => d.tags?.includes(wanted)) : documents
+}
+
+/** Every tag used on a place and in how many documents: the most used first, then alphabetically. */
+export function tagCounts(documents: { tags?: string[] }[]): { tag: string; count: number }[] {
+  const counts = new Map<string, number>()
+  for (const d of documents) for (const tag of d.tags ?? []) counts.set(tag, (counts.get(tag) ?? 0) + 1)
+  return [...counts].map(([tag, count]) => ({ tag, count })).sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+}
+
+/** The tags a person typed, as the server keeps them: split at commas, trimmed, lower case, no empty one, no repeat. */
+export function tagsFromText(text: string): string[] {
+  const seen = new Set<string>()
+  for (const part of text.split(',')) {
+    const tag = part.trim().replace(/\s+/g, ' ').toLowerCase()
+    if (tag) seen.add(tag)
+  }
+  return [...seen]
+}
+
+/** Most tags a document has, and most characters of one: what the server keeps (`claudia_container.MAX_TAGS`, `MAX_TAG`). */
+export const MAX_TAGS = 10
+export const MAX_TAG = 30
+export const MAX_DESCRIPTION = 2000
+
+/** `typed` added to `tags`: all of its tags at once (it may hold several, split by commas), none twice, at most ten, none
+ *  longer than thirty characters. What was left out is said in `problem`, a sentence for the person ('' if nothing). */
+export function addTags(tags: string[], typed: string): { tags: string[]; problem: string } {
+  const result = [...tags]
+  let problem = ''
+  for (const tag of tagsFromText(typed)) {
+    if (result.includes(tag)) continue
+    if (result.length >= MAX_TAGS) {
+      problem = t('A document has at most {count} tags.', { count: MAX_TAGS })
+      break
+    }
+    if (tag.length > MAX_TAG) {
+      problem = t('A tag has at most {count} characters.', { count: MAX_TAG })
+      continue
+    }
+    result.push(tag)
+  }
+  return { tags: result, problem }
+}
+
+/** The tags of the place to suggest for what is being typed: those that start with it and are not taken yet. */
+export function tagChoices(counts: { tag: string; count: number }[], typed: string, taken: string[]) {
+  const start = fold(typed.trim())
+  return counts.filter((c) => !taken.includes(c.tag) && fold(c.tag).startsWith(start))
+}
+
+/** The one line a list shows of a description: its first line, with the inline Markdown read as looks. It is never
+ *  HTML (the same small reader as the speaker notes, D347): nothing in it can put markup, a picture or a script on
+ *  anybody's screen, and a link shows its words but is not something to click in a list. */
+export function summaryOf(description: string | undefined): Span[] {
+  const first = parseNotes(description ?? '').find((line) => !line.blank)
+  return first ? first.spans : []
+}
+
+/** Change the description and tags of a document without opening it: connect as its owner (the link is made with the
+ *  owner's name and password), ask, and let go. Gives what the server kept, or a sentence for the person. */
+export async function saveDetails(
+  makeLink: () => LinkLike,
+  password: string,
+  description: string,
+  tags: string[],
+): Promise<{ description: string; tags: string[] } | { error: string }> {
+  const link = makeLink()
+  try {
+    await link.connect()
+    return await link.request<{ description: string; tags: string[] }>('set_details', { password, description, tags })
+  } catch (error) {
+    if (error instanceof ProtocolError) return { error: error.message }
+    return { error: t('The server cannot be reached.') }
+  } finally {
+    link.close()
+  }
 }
 
 function fold(text: string): string {
@@ -128,10 +224,16 @@ export interface Uploaded {
   /** An Office or OpenDocument file: an id made from its name, and its kind in words. */
   suggested_id?: string
   kind?: string
-  /** A Claudia file: its own id and title, and whether this server holds a document of that id already. */
+  /** A Claudia file: its own name (`id` on the wire), whether this server holds a document of that name already,
+   *  and the name of the document here that is the very same one (what the file is made of, not its name, decides:
+   *  it may be called otherwise here), else null. The file's random id is never sent. */
   id?: string
-  title?: string
   exists?: boolean
+  same_document?: string | null
+  /** What the file says about itself (properties of an office file, the manifest of a Claudia one) to offer as a
+   *  start: the person may keep, change or clear it. */
+  description?: string
+  tags?: string[]
 }
 
 /** The file types the file picker offers: every one Claudia opens (sheet 10, B2). */

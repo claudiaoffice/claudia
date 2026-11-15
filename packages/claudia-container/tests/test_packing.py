@@ -20,6 +20,7 @@ from claudia_container.container import (
     create_document,
     journal_path,
     pack_journal,
+    read_manifest,
     read_snapshot,
     read_state,
     remove_user,
@@ -33,10 +34,8 @@ CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 OWNER_PW, ED_PW, VIEW_PW = "Correct-Horse-9", "Battery-Staple-7", "Purple-Monkey-5"
 
 
-def make(path: Path, doc_id="plan"):
-    return create_document(
-        path, doc_id=doc_id, app="computes", title="t", owner="Annabelle", password=OWNER_PW, kdf=CHEAP
-    )
+def make(path: Path, name="plan"):
+    return create_document(path, name=name, app="computes", owner="Annabelle", password=OWNER_PW, kdf=CHEAP)
 
 
 @pytest.fixture
@@ -119,7 +118,7 @@ def test_packing_moves_the_journal_into_sealed_blocks_and_starts_the_next_genera
     names = set(entries(path))
     assert {"head.bin", "history/000001.blk", "chat/000001.blk"} <= names
     assert fresh.generation == 1 and fresh.seq == 0
-    assert read_journal(journal_path(path), "plan", owner.keys) == []
+    assert read_journal(journal_path(path), read_manifest(path).binding, owner.keys) == []
     state = read_state(path, owner.keys)
     assert (state.history, state.chat, state.pending) == (H, C, 0)
     fresh.close()
@@ -196,7 +195,7 @@ def test_a_crash_between_the_new_file_and_the_new_journal_loses_nothing_and_repe
     writer.close()
     # the first half of a pack: the zip is replaced, the journal of generation 0 is still there
     container._pack_blocks(path, owner.keys, history=H, chat=C, snapshot=None, generation=0)
-    assert read_journal(journal_path(path), "plan", owner.keys)  # still holds everything
+    assert read_journal(journal_path(path), read_manifest(path).binding, owner.keys)  # still holds everything
     state = read_state(path, owner.keys)
     assert (state.history, state.chat, state.pending) == (H, C, 0)  # counted once
     resumed = begin(path, owner.keys)  # the next start replaces the old journal

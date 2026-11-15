@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { appOfFileName, appOfServer, fetchDocsListing, filterListed, openSession, openableFor, placeUpload, sendFile, type AnySession, type Listed, type Upload, type Uploaded } from '~/lib/open'
+import { appOfFileName, appOfServer, fetchDocsListing, filterByTag, filterListed, openSession, openableFor, placeUpload, saveDetails, sendFile, tagCounts, type AnySession, type Listed, type Upload, type Uploaded } from '~/lib/open'
 import type { ImportPhase } from '~/lib/import-progress'
-import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, parseKey, rememberOpened, setInCollection, type MineEntry } from '~/lib/mine'
+import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, nextShown, parseKey, rememberOpened, setInCollection, stillShown, type MineEntry } from '~/lib/mine'
 import { holdPresence } from '~/lib/presence'
 import { chooseLocalFile } from '~/lib/local-files'
 import { ago } from '~/lib/people'
@@ -114,12 +114,63 @@ const app = computed(() =>
 )
 /** The place shown, in the sidebar's words. */
 const placeLabel = computed(() => bookmarks.value.find((b) => b.origin === origin.value)?.label ?? hostOf(origin.value))
-const placeDocs = computed(() => filterListed(documents.value, query.value, shownApp.value))
+/** The tag the lists are narrowed to ('' for all): a chip sets it, choosing it again or "all tags" clears it. */
+const tagFilter = ref('')
+const placeDocs = computed(() => filterByTag(filterListed(documents.value, query.value, shownApp.value), tagFilter.value))
 const placeCount = computed(() => filterListed(documents.value, '', shownApp.value).length)
+/** The tags used on this place, for the filter and for suggestions (of the app shown, if one is). */
+const placeTags = computed(() => tagCounts(filterListed(documents.value, '', shownApp.value)))
+watch(placeTags, (tags) => {
+  if (tagFilter.value && !tags.some((c) => c.tag === tagFilter.value)) tagFilter.value = ''
+})
+function toggleTag(tag: string) {
+  tagFilter.value = tagFilter.value === tag ? '' : tag
+}
+/** What the list of this place says of a document of Mine: only a document of the place shown can be looked up. */
+function detailsOf(entry: MineEntry): { description?: string; tags?: string[] } {
+  if (entry.origin !== origin.value) return {}
+  const listed = documents.value.find((d) => d.id === entry.id && d.app === entry.app)
+  return listed ? { description: listed.description, tags: listed.tags } : {}
+}
 const mineHere = computed(() => {
   const shown = shownCollection.value === null ? mine.value : entriesOf(collections.value.find((c) => c.name === shownCollection.value) ?? { name: '', entries: [] }, mine.value)
-  return filterListed(shown, query.value, shownApp.value)
+  const described = shown.map((e) => ({ ...e, ...detailsOf(e) }))
+  return filterByTag(filterListed(described, query.value, shownApp.value), tagFilter.value)
 })
+const searchWords = computed(() => query.value.split(/\s+/).filter(Boolean))
+
+// Details… of a document (sheet 10): its description and tags, changed from the list without opening it.
+const editing = ref<{ id: string; app: string; description: string; tags: string[] } | null>(null)
+const detailsError = ref('')
+const detailsBusy = ref(false)
+function editDetails(id: string, app: string) {
+  const listed = documents.value.find((d) => d.id === id && d.app === app)
+  detailsError.value = ''
+  editing.value = { id, app, description: listed?.description ?? '', tags: [...(listed?.tags ?? [])] }
+}
+async function saveEditing(values: { user: string; password: string; description: string; tags: string[] }) {
+  const target = editing.value
+  if (!target) return
+  detailsBusy.value = true
+  detailsError.value = ''
+  const makeLink = () =>
+    new Link({
+      url: socketUrl(target.id, { protocol: location.protocol, host: server.value }, target.app || undefined),
+      user: values.user,
+      password: values.password,
+      locale: currentLocale(),
+    })
+  const saved = await saveDetails(makeLink, values.password, values.description, values.tags)
+  detailsBusy.value = false
+  if ('error' in saved) {
+    detailsError.value = saved.error
+    return
+  }
+  user.value = values.user
+  documents.value = documents.value.map((d) => (d.id === target.id && d.app === target.app ? { ...d, ...saved } : d))
+  editing.value = null
+  notice.value = t('The description and tags of {id} are saved.', { id: target.id })
+}
 /** How many documents of a collection this page shows (a desktop window: only its app's). */
 function shownIn(entries: string[]): number {
   return windowApp.value ? entries.filter((key) => parseKey(key)?.app === windowApp.value).length : entries.length
@@ -284,8 +335,13 @@ onBeforeUnmount(() => {
   if (!props.modal) shell.value?.detach() // a borrowed bridge stays the document's
 })
 
-/** Ctrl+F searches, Ctrl+Shift+O opens a file (sheet 10, D). */
+/** Ctrl+F searches, Ctrl+Shift+O opens a file (sheet 10, D); Escape leaves the collection shown (the dialog of
+ * File ▸ Open has its own Escape, which closes it). */
 function onKey(event: KeyboardEvent) {
+  if (event.key === 'Escape' && !props.modal && shownCollection.value !== null && menuFor.value === null && !typingIn(event.target)) {
+    shownCollection.value = null
+    return
+  }
   const mod = event.ctrlKey || event.metaKey
   if (!mod || event.altKey) return
   if (event.shiftKey && event.key.toLowerCase() === 'o') {
@@ -295,6 +351,10 @@ function onKey(event: KeyboardEvent) {
     event.preventDefault()
     searchField.value?.focus()
   }
+}
+/** Is the key going to a field (where Escape belongs to the field)? */
+function typingIn(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
 }
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
@@ -434,7 +494,7 @@ function makeCollection() {
 
 function dropCollection(name: string) {
   collections.value = deleteCollection(name)
-  if (shownCollection.value === name) shownCollection.value = null
+  shownCollection.value = stillShown(shownCollection.value, collections.value)
 }
 
 function toggleIn(name: string, inside: boolean) {
@@ -611,7 +671,7 @@ function onDrop(event: DragEvent) {
 }
 
 /** An Office or OpenDocument file becomes a new document (D438): the usual create, with the upload. */
-async function importFile(values: { id: string; user: string; password: string; keep: boolean }) {
+async function importFile(values: { id: string; user: string; password: string; keep: boolean; description: string; tags: string[] }) {
   const file = incoming.value
   if (!file) return
   doc.value = values.id
@@ -620,7 +680,7 @@ async function importFile(values: { id: string; user: string; password: string; 
   newApp.value = file.app
   importError.value = ''
   importPhase.value = 'reading'
-  await go('create', { upload: file.upload, keep: values.keep }, () => {
+  await go('create', { upload: file.upload, keep: values.keep, description: values.description, tags: values.tags }, () => {
     importPhase.value = 'opening'
   })
   if (error.value) {
@@ -651,7 +711,8 @@ async function placeFile() {
 function openExisting() {
   const file = incoming.value
   incoming.value = null
-  if (file?.id) choose(file.id, file.app)
+  const here = file?.same_document || file?.id
+  if (file && here) choose(here, file.app)
 }
 
 function proceed() {
@@ -665,7 +726,7 @@ function proceed() {
  * document, or comes in with the recovery key and the new password. Every later connection (the session's own, and its
  * reconnects) is an ordinary login with what the person typed, which by then is right.
  */
-async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean }, onAnswered?: () => void) {
+async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean; description?: string; tags?: string[] }, onAnswered?: () => void) {
   error.value = ''
   startingNew.value = false
   if (how === 'create') await listed
@@ -691,6 +752,8 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       create: how === 'create' && first,
       upload: how === 'create' && first ? from?.upload : undefined,
       keepOriginal: from?.keep,
+      description: how === 'create' && first ? from?.description : undefined,
+      tags: how === 'create' && first ? from?.tags : undefined,
       recoveryKey: how === 'recover' && first ? recoveryKey.value.trim() : undefined,
       locale: currentLocale(),
     })
@@ -792,7 +855,8 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
               class="server"
               :class="{ target: dropTarget === c.name }"
               :aria-current="shownCollection === c.name ? 'true' : undefined"
-              @click="shownCollection = shownCollection === c.name ? null : c.name"
+              :title="shownCollection === c.name ? t('Shown now. Choose it again, or Esc, to see all documents.') : undefined"
+              @click="shownCollection = nextShown(shownCollection, c.name)"
               @dragover.prevent.stop="dropTarget = c.name"
               @dragleave="dropTarget = null"
               @drop.prevent.stop="dropOn(c.name, $event)"
@@ -816,6 +880,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       </nav>
 
       <div class="main">
+        <button v-if="shownCollection !== null" type="button" class="back link" data-testid="all-documents" @click="shownCollection = null">← {{ t('All documents') }}</button>
         <h1>{{ shownCollection ?? (showsAll ? placeLabel : words.headline) }}</h1>
         <p class="sub">
           {{ shownCollection !== null ? t('The documents you put into this collection, on any place.') : showsAll ? t('Tables, texts and slides on this place, and the documents you opened before.') : words.sub }}
@@ -850,6 +915,14 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                   </button>
                   <div class="row-actions">
                     <button
+                      v-if="e.origin === origin"
+                      type="button"
+                      class="server-action"
+                      :title="t('Details of {id}…', { id: e.id })"
+                      :aria-label="t('Details of {id}…', { id: e.id })"
+                      @click="editDetails(e.id, e.app)"
+                    >i</button>
+                    <button
                       type="button"
                       class="server-action"
                       aria-haspopup="menu"
@@ -877,6 +950,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                       @click="toggleKey(shownCollection, keyOf(e))"
                     >×</button>
                   </div>
+                  <DocDetails v-if="e.origin === origin" :description="e.description" :tags="e.tags" :active="tagFilter" :words="searchWords" :hint="false" @tag="toggleTag" />
                   <div v-if="menuFor === 'mine ' + keyOf(e)" class="collection-menu" role="menu" @click.stop @keydown.escape="menuFor = null">
                     <button v-for="c in collections" :key="c.name" type="button" role="menuitemcheckbox" :aria-checked="isInKey(c.name, keyOf(e))" @click="toggleKey(c.name, keyOf(e))">
                       <span class="tick" aria-hidden="true">{{ isInKey(c.name, keyOf(e)) ? '✓' : '' }}</span>{{ c.name }}
@@ -891,10 +965,16 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             <div v-if="shownCollection === null" class="list">
               <div class="list-head">
                 <h2>{{ isSuite ? t('On {place} · {count}', { place: placeLabel, count: placeCount }) : t('On this server') }}</h2>
+                <div class="filters">
+                <select v-if="placeTags.length" v-model="tagFilter" class="filter" data-testid="tag-filter" :aria-label="t('Which tags')">
+                  <option value="">{{ t('all tags') }}</option>
+                  <option v-for="c in placeTags" :key="c.tag" :value="c.tag">{{ c.tag }} ({{ c.count }})</option>
+                </select>
                 <select v-if="showsAll" v-model="appFilter" class="filter" :aria-label="t('Which apps')">
                   <option value="">{{ t('all apps') }}</option>
                   <option v-for="a in apps" :key="a" :value="a">{{ APP_WORDS[a]?.() ?? a }}</option>
                 </select>
+                </div>
               </div>
               <p v-if="listError" class="hint">{{ listError }}</p>
               <p v-else-if="!placeCount" class="hint">{{ t('Nothing yet. Create the first document.') }}</p>
@@ -909,6 +989,13 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                     <button
                       type="button"
                       class="server-action"
+                      :title="t('Details of {id}…', { id: d.id })"
+                      :aria-label="t('Details of {id}…', { id: d.id })"
+                      @click="editDetails(d.id, d.app)"
+                    >i</button>
+                    <button
+                      type="button"
+                      class="server-action"
                       aria-haspopup="menu"
                       :aria-expanded="menuFor === 'place ' + placeKey(d)"
                       :title="t('Collections of {id}…', { id: d.id })"
@@ -918,6 +1005,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                       <svg width="12" height="15" viewBox="0 0 12 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 1h10v13l-5-4-5 4z" /></svg>
                     </button>
                   </div>
+                  <DocDetails :description="d.description" :tags="d.tags" :active="tagFilter" :words="searchWords" @tag="toggleTag" />
                   <div v-if="menuFor === 'place ' + placeKey(d)" class="collection-menu" role="menu" @click.stop @keydown.escape="menuFor = null">
                     <button v-for="c in collections" :key="c.name" type="button" role="menuitemcheckbox" :aria-checked="isInKey(c.name, placeKey(d))" @click="toggleKey(c.name, placeKey(d))">
                       <span class="tick" aria-hidden="true">{{ isInKey(c.name, placeKey(d)) ? '✓' : '' }}</span>{{ c.name }}
@@ -986,6 +1074,19 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       </div>
     </section>
     <RecoveryKeyDialog v-if="fresh" :recovery-key="fresh.key" :doc="doc.trim()" @done="proceed" />
+    <DetailsDialog
+      v-if="editing"
+      :id="editing.id"
+      :description="editing.description"
+      :tags="editing.tags"
+      :user="user"
+      :place="placeLabel"
+      :counts="placeTags"
+      :busy="detailsBusy"
+      :error="detailsError"
+      @close="editing = null"
+      @save="saveEditing"
+    />
     <ImportDialog
       v-if="incoming"
       :file="incoming"
@@ -995,6 +1096,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       :error="importError"
       :phase="importPhase"
       :sent="importSent"
+      :counts="placeTags"
       @close="dropIncoming"
       @import="importFile"
       @place="placeFile"
@@ -1165,6 +1267,12 @@ header {
 .btn.small {
   padding: 5px 10px;
   font-size: 12.5px;
+}
+/* the way out of a collection: first thing in the main part, so it is found before the list is */
+.back {
+  display: inline-block;
+  margin: 0 0 10px;
+  font-size: 13.5px;
 }
 h1 {
   font: 400 40px/1.1 var(--font-display);
@@ -1415,6 +1523,10 @@ form {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+}
+.filters {
+  display: flex;
+  gap: 8px;
 }
 .filter {
   font: 12px var(--font-ui);

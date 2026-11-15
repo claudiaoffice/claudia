@@ -39,7 +39,7 @@ import re
 import threading
 import time
 import unicodedata
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -55,6 +55,7 @@ from claudia_container import (
     add_user,
     begin,
     change_password,
+    clean_details,
     create_document,
     derive_login_material,
     format_recovery_key,
@@ -69,6 +70,7 @@ from claudia_container import (
     read_state,
     recover_access,
     remove_user,
+    set_details,
     set_recovery_key,
     transfer_owner,
     unlock,
@@ -79,7 +81,7 @@ from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Snapsh
 
 from .auth import AI_USER, Account, AuthRefused, Credentials, is_reserved
 from .filestore import JournalStore, replay
-from .hub import DocumentSealed, StoredInfo
+from .hub import DocumentSealed, DuplicateDocument, StoredInfo
 from .i18n import msg
 from .state import private_dir
 
@@ -301,9 +303,8 @@ class SealedDocuments:
             raise ValueError("a new document starts with its owner")
         unlocked = create_document(
             self._file(doc_id),
-            doc_id=doc_id,
+            name=doc_id,
             app=self.model_cls.app,
-            title=doc_id,
             owner=account.user,
             password=password,
             kdf=self._kdf,
@@ -427,6 +428,29 @@ class SealedDocuments:
         journal_path(path).unlink(missing_ok=True)
         path.unlink()
         return True
+
+    def set_details(self, doc_id: str, owner: str, owner_password: str, description: str, tags: Sequence[str]) -> bool:
+        """Say what the document is about, for everybody who can list the server: the description and tags go into the
+        file's plain manifest (D103), not into its history, and not under a key. ``owner`` is the person who says it
+        and ``owner_password`` their own password; an editor or an owner may, a viewer may not. ``False`` if the
+        password is wrong or the person is a viewer (the same refusal either way, nothing changes then);
+        ``ValueError`` with a sentence if the text does not fit."""
+        path = self._file(doc_id)
+        clean_details(description, tags)  # a text that does not fit costs no password check
+        unlocked = unlock(path, owner, owner_password)
+        if unlocked is None or unlocked.role is Role.VIEWER:
+            return False
+        with self._lock:
+            set_details(path, unlocked.keys, description, tags)
+        return True
+
+    def describe(self, doc_id: str, description: str, tags: Sequence[str]) -> None:
+        """Give a document its maker has just made (whose keys are still held) a description and tags: the one
+        way to set them without a password, because whoever holds the keys of a new document made it a moment ago.
+        ``ValueError`` if the text does not fit, ``DocumentSealed`` if the keys are no longer held."""
+        keys = self._all_keys(doc_id)
+        with self._lock:
+            set_details(self._file(doc_id), keys, description, tags)
 
     # -- DocumentProvider ---------------------------------------------------------------------
     def create(self, doc_id: str) -> Document:
@@ -557,18 +581,22 @@ class SealedDocuments:
             return None
 
     def place(self, doc_id: str, data: bytes) -> None:
-        """Take in a Claudia document file as it is, still sealed, as ``doc_id`` (which its manifest must name).
-        ``FileExistsError`` if a document of that id is here; ``ValueError`` if the file is not a document of this
-        app or is damaged. Never overwrites, and nothing is left behind when it fails."""
+        """Take in a Claudia document file as it is, still sealed, as ``doc_id`` (which its manifest must name), and
+        with the uid it has (D533). ``FileExistsError`` if a document of that name is here; ``DuplicateDocument`` if
+        a document with the same uid is here already, whatever its name; ``ValueError`` if the file is not a document
+        of this app or is damaged. Never overwrites, and nothing is left behind when it fails."""
         target = self._file(doc_id)
         temp = target.with_name(f".{target.name}.{threading.get_ident()}.incoming")
         temp.write_bytes(data)
         try:
             manifest = read_manifest(temp)
-            if manifest.id != doc_id:
-                raise ValueError(f"the file is {manifest.id}, not {doc_id}")
+            if manifest.name != doc_id:
+                raise ValueError(f"the file is {manifest.name}, not {doc_id}")
             if manifest.app != self.model_cls.app:
                 raise ValueError(f"it is a document of {manifest.app}, not of {self.model_cls.app}")
+            twin = self.find(manifest.uid)
+            if twin is not None:
+                raise DuplicateDocument(twin.id)
             os.link(temp, target)  # fails if the target exists: never overwrites
         except ContainerError as error:
             raise ValueError(str(error)) from error
@@ -618,6 +646,18 @@ class SealedDocuments:
             self._keep_pending(doc_id, unlocked.keys)
         return Account(person.name, person.role.value)
 
+    def uid_of(self, doc_id: str) -> str | None:
+        """The uid of a stored document (D533), or ``None`` if there is no such document or it cannot be read."""
+        try:
+            return read_manifest(self._file(doc_id)).uid
+        except (ContainerError, OSError, ValueError):
+            return None
+
+    def find(self, uid: str) -> StoredInfo | None:
+        """The stored document of this app with exactly this uid, or ``None`` (D533). A scan of the manifests, which
+        is cheap next to a password hash; the caller limits how often it may be asked."""
+        return next((info for info in self.documents() if info.uid == uid), None)
+
     def documents(self) -> list[StoredInfo]:
         """Every document file that can be read, the most recently changed first."""
         found = []
@@ -633,5 +673,14 @@ class SealedDocuments:
             if manifest.app != self.model_cls.app:
                 continue  # another app's file in this app's place (D431): not listed, never opened
             stamp = datetime.fromtimestamp(changed, UTC).isoformat(timespec="milliseconds")
-            found.append(StoredInfo(manifest.id, manifest.app, stamp.replace("+00:00", "Z")))
+            found.append(
+                StoredInfo(
+                    manifest.name,
+                    manifest.app,
+                    stamp.replace("+00:00", "Z"),
+                    manifest.description,
+                    manifest.tags,
+                    manifest.uid,
+                )
+            )
         return sorted(found, key=lambda info: (info.modified, info.id), reverse=True)

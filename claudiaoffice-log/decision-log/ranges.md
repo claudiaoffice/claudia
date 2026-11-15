@@ -41,6 +41,7 @@ Unused numbers in a closed block stay unused.
 | D500–D519 | the three desktop clients: the shared server on macOS and Linux, fonts every server has, files through the shells' dialogs, printing from a window, the front page's File menu (branch `clients`; D500–D503 used) | 2026-11-15 | open |
 | D520–D529 | the search panel and movable dialogs: moving, the one-button "Look in", "n matches", Markdown in help topics and the topic opened from the panel (branch `search-ui`; D520–D522 used) | 2026-11-15 | open |
 | D470–D479 | search & replace in composes and creates: what is searched, shortcuts in a text, locks (E9.28, E10.19; branch `search`; D470–D472 used) | 2026-11-14 | open |
+| D530–D549 | document description and tags, the front page's way back from a collection, moving and copying documents between places (branch `file-handling`; D530–D535 used) | 2026-11-15 | open |
 
 ## Never to be used
 

@@ -25,7 +25,7 @@ import hmac
 import os
 import re
 import unicodedata
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
@@ -197,6 +197,17 @@ class DeletableDirectory(Protocol):
         """Remove the document for good: its file, its history and its chat. ``False`` if ``owner_password`` is
         wrong or ``owner`` is not currently an owner of the document (the same refusal either way); nothing is
         removed then."""
+
+
+@runtime_checkable
+class DetailsDirectory(Protocol):
+    """A directory whose documents carry a description and tags that anyone who may list the server can read (the
+    manifest of the file is plain, D103)."""
+
+    def set_details(self, doc_id: str, owner: str, owner_password: str, description: str, tags: Sequence[str]) -> bool:
+        """Replace the description (Markdown) and the tags. ``False`` if ``owner_password`` is wrong or ``owner`` is
+        not currently an owner (the same refusal either way); nothing changes then. ``ValueError`` with a sentence if
+        the text is too long or a tag is not acceptable."""
 
 
 @dataclass(frozen=True)

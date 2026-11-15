@@ -40,6 +40,27 @@ describe('Link', () => {
     expect(await welcome).toEqual(WELCOME)
   })
 
+  it('sends the description and tags of an import with the upload, and nothing of them otherwise', async () => {
+    const make = (extra: object) => {
+      const socket = new FakeSocket()
+      const l = new Link({ url: 'ws://x/api/docs/plan/ws', user: 'ann', password: 'pw', create: true, socket: () => socket, ...extra })
+      l.connect().catch(() => {})
+      socket.open()
+      return socket.sent[0]
+    }
+    expect(make({ upload: 'tok', description: 'Q3 **budget**', tags: ['finance'] })).toEqual({
+      id: 1,
+      method: 'hello',
+      params: { user: 'ann', password: 'pw', create: true, upload: 'tok', keep_original: true, description: 'Q3 **budget**', tags: ['finance'] },
+    })
+    expect(make({ upload: 'tok', description: '', tags: [] })).toEqual({
+      id: 1,
+      method: 'hello',
+      params: { user: 'ann', password: 'pw', create: true, upload: 'tok', keep_original: true },
+    })
+    expect(make({ description: 'no upload, no details', tags: ['x'] })).toEqual({ id: 1, method: 'hello', params: { user: 'ann', password: 'pw', create: true } })
+  })
+
   it('comes in with a recovery key and a new password instead of creating or logging in', async () => {
     const socket = new FakeSocket()
     const l = new Link({

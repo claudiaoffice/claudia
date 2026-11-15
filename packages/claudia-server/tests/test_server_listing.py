@@ -1,13 +1,16 @@
 """The list of documents on a server: ``GET /api/docs`` (supersedes D50's "no list")."""
 
 import asyncio
+from contextlib import contextmanager
 
 from starlette.testclient import TestClient
 
+from claudia_container import KdfParams
 from claudia_core.testing import Insert, ListModel
 from claudia_creates import SlideModel
 from claudia_server import Hub, MemoryProvider, ScryptDirectory, create_app
 from claudia_server.filestore import FileProvider
+from claudia_server.sealed import SealedDocuments
 
 PASSWORD = "correct horse battery"
 
@@ -45,7 +48,7 @@ def test_documents_are_listed_with_app_time_and_people_online():
                     assert {d["id"]: d["online"] for d in listed} == {"alpha": 0, "beta": 1}
         listed = client.get("/api/docs").json()["documents"]
         assert [d["id"] for d in listed] == ["beta", "alpha"], "most recently changed first"
-        assert all(set(d) == {"id", "app", "modified", "online"} for d in listed)
+        assert all(set(d) == {"id", "app", "modified", "online", "description", "tags"} for d in listed)
         assert listed[0]["app"] == "test-list" and listed[0]["modified"].endswith("Z")
 
 
@@ -91,3 +94,125 @@ def test_hub_listing_counts_each_person_once():
 
     (info,) = asyncio.run(scenario())
     assert info["online"] == 1
+
+
+# ------------------------------------------------------------------------- description and tags (plain manifest)
+SEALED_PASSWORD = "Correct-Horse-9"
+CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
+
+
+def sealed_server(tmp_path):
+    """A server on a folder of document files: the store is the directory too."""
+    store = SealedDocuments(tmp_path, ListModel, kdf=CHEAP)
+    return store, TestClient(create_app(Hub(store), store))
+
+
+@contextmanager
+def made(client, doc_id, user="ann", password=SEALED_PASSWORD):
+    """A person who made the document ``doc_id`` and is connected to it."""
+    with client.websocket_connect(f"/api/docs/{doc_id}/ws") as sock:
+        sock.send_json({"id": 1, "method": "hello", "params": {"user": user, "password": password, "create": True}})
+        assert sock.receive_json()["ok"]
+        yield sock
+
+
+def call(sock, method, params, request_id=2):
+    sock.send_json({"id": request_id, "method": method, "params": params})
+    while True:
+        frame = sock.receive_json()
+        if frame.get("id") == request_id:
+            return frame
+
+
+def test_the_list_carries_description_and_tags_and_empty_ones_by_default(tmp_path):
+    provider, client = sealed_server(tmp_path)
+    with client:
+        with made(client, "alpha"):
+            pass
+        (entry,) = client.get("/api/docs").json()["documents"]
+        assert entry["description"] == "" and entry["tags"] == []
+        assert set(entry) == {"id", "app", "modified", "online", "description", "tags"}
+
+
+def test_the_owner_sets_description_and_tags_and_anyone_can_read_them_in_the_list(tmp_path):
+    provider, client = sealed_server(tmp_path)
+    with client:
+        with made(client, "alpha") as sock:
+            frame = call(
+                sock,
+                "set_details",
+                {"password": SEALED_PASSWORD, "description": "Q3 **budget**", "tags": ["Finance", "q3"]},
+            )
+            assert frame["ok"] and frame["result"] == {"description": "Q3 **budget**", "tags": ["finance", "q3"]}
+        (entry,) = client.get("/api/docs").json()["documents"]
+        assert entry["description"] == "Q3 **budget**" and entry["tags"] == ["finance", "q3"]
+
+
+def test_details_are_plain_in_the_file_so_that_they_need_no_password(tmp_path):
+    from claudia_container import read_manifest
+
+    provider, client = sealed_server(tmp_path)
+    with client, made(client, "alpha") as sock:
+        assert call(sock, "set_details", {"password": SEALED_PASSWORD, "description": "open to all", "tags": ["x"]})[
+            "ok"
+        ]
+    manifest = read_manifest(provider._file("alpha"))
+    assert manifest.description == "open to all" and manifest.tags == ("x",)
+
+
+def test_a_wrong_password_cannot_change_the_details(tmp_path):
+    provider, client = sealed_server(tmp_path)
+    with client, made(client, "alpha") as sock:
+        wrong = call(sock, "set_details", {"password": "not the password", "description": "x", "tags": []})
+        assert not wrong["ok"] and wrong["error"]["code"] == "unauthorized"
+    (entry,) = client.get("/api/docs").json()["documents"]
+    assert entry["description"] == "" and entry["tags"] == []
+
+
+def test_an_editor_may_change_the_details_with_their_own_password(tmp_path):
+    provider, client = sealed_server(tmp_path)
+    with client:
+        with made(client, "alpha"):
+            provider.add_user("alpha", "bob", "Another-Pass-77", "editor")
+        with client.websocket_connect("/api/docs/alpha/ws") as other:
+            other.send_json({"id": 1, "method": "hello", "params": {"user": "bob", "password": "Another-Pass-77"}})
+            assert other.receive_json()["ok"]
+            done = call(other, "set_details", {"password": "Another-Pass-77", "description": "by bob", "tags": ["B"]})
+            assert done["ok"] and done["result"] == {"description": "by bob", "tags": ["b"]}
+            wrong = call(other, "set_details", {"password": SEALED_PASSWORD, "description": "x", "tags": []})
+            assert not wrong["ok"] and wrong["error"]["code"] == "unauthorized"  # the owner's password is not bob's
+        (entry,) = client.get("/api/docs").json()["documents"]
+        assert entry["description"] == "by bob" and entry["tags"] == ["b"]
+
+
+def test_a_viewer_cannot_change_the_details(tmp_path):
+    provider, client = sealed_server(tmp_path)
+    with client:
+        with made(client, "alpha"):
+            provider.add_user("alpha", "vera", "Another-Pass-77", "viewer")
+        with client.websocket_connect("/api/docs/alpha/ws") as other:
+            other.send_json({"id": 1, "method": "hello", "params": {"user": "vera", "password": "Another-Pass-77"}})
+            assert other.receive_json()["ok"]
+            refused = call(other, "set_details", {"password": "Another-Pass-77", "description": "x", "tags": []})
+            assert not refused["ok"] and refused["error"]["code"] == "forbidden"
+        (entry,) = client.get("/api/docs").json()["documents"]
+        assert entry["description"] == "" and entry["tags"] == []
+
+
+def test_details_that_do_not_fit_are_refused_with_a_sentence(tmp_path):
+    provider, client = sealed_server(tmp_path)
+    with client, made(client, "alpha") as sock:
+        too_long = call(sock, "set_details", {"password": SEALED_PASSWORD, "description": "x" * 5000, "tags": []})
+        assert not too_long["ok"] and too_long["error"]["code"] == "command_error"
+        many = call(
+            sock,
+            "set_details",
+            {"password": SEALED_PASSWORD, "description": "", "tags": [f"t{i}" for i in range(50)]},
+        )
+        assert not many["ok"] and many["error"]["code"] == "command_error"
+
+
+def test_a_store_that_cannot_hold_details_says_so(tmp_path):
+    with serve(MemoryProvider(ListModel)) as client, made(client, "alpha") as sock:
+        frame = call(sock, "set_details", {"password": SEALED_PASSWORD, "description": "x", "tags": []})
+        assert not frame["ok"] and frame["error"]["code"] in {"unavailable", "forbidden"}

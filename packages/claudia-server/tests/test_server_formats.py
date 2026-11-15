@@ -49,9 +49,8 @@ def test_a_claudia_document_is_recognised_by_its_first_entry(tmp_path):
     path = tmp_path / "plan.claudia"
     create_document(
         path,
-        doc_id="plan",
+        name="plan",
         app="computes",
-        title="Plan",
         owner="ann",
         password="Correct-Horse-9",
         kdf=KdfParams(iterations=1, memory_kib=64, lanes=1),

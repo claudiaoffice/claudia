@@ -3,6 +3,32 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.7.0] - 2026-11-15
+
+The random id of a document, and the document's name called by its name (D533, D534). Breaking: files of 0.6 are not read
+(pre-release, no migration).
+
+### Added
+- `Manifest.uid`: a random version 4 UUID, made by `create_document`, kept for good, checked on reading (`is_uid`,
+  `new_uid`). `Manifest.binding` is `name:uid`.
+
+### Changed
+- `Manifest.id` is `Manifest.name` (manifest key `name`) and `create_document(doc_id=...)` is `create_document(name=...)`.
+- Slots, the list of people, blocks, head, snapshot, original and journal are bound to `Manifest.binding` instead of
+  the id, so a manifest whose name or uid was changed opens nothing.
+
+### Removed
+- `Manifest.title` and the `title` argument of `create_document`: it was a copy of the name.
+
+## [0.6.0] - 2026-11-15
+
+### Added
+- `Manifest.description` (Markdown, at most `MAX_DESCRIPTION` = 2000 characters) and `Manifest.tags` (at most `MAX_TAGS` =
+  10, each at most `MAX_TAG` = 30 characters): what the owner says about a document, kept in the plain manifest so that it
+  can be read without a password (D530). `create_document(..., description="", tags=())`; files without them read as empty.
+- `set_details(path, keys, description, tags)` replaces them (needs all keys); `clean_details(description, tags)` tidies
+  them (trims, lower-cases tags, drops repeats) and raises `ValueError` with a sentence for what does not fit.
+
 ## [0.5.0] - 2026-11-14
 
 ### Added

@@ -72,6 +72,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
+from claudia_container import clean_details, is_uid
 from claudia_core import Import, LanguageError, Setup, normalize_language
 from claudia_fonts import DEFAULT_SUBSTITUTIONS
 
@@ -81,13 +82,14 @@ from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserD
 from .fonts import FontService, font_router
 from .formats import CLAUDIA, import_state
 from .hosts import AllowedHosts, HostGuard
-from .hub import Hub, HubError
+from .hub import Hub, HubError, same_document_message
 from .hyphenation import HyphenationService, hyphenation_router
 from .i18n import localized, msg
 from .idle import IdleMiddleware, IdleWatch
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, web_script_hashes
 from .suite import Module, Suite
+from .throttle import Throttle
 from .uploads import Upload, UploadDesk, UploadRefused, file_name
 
 log = logging.getLogger("claudia_server")
@@ -378,6 +380,18 @@ class Gateway:
             raise HubError("bad_request", msg("a file becomes a new document: hello needs create"))
         return upload
 
+    @staticmethod
+    def _details_for(params: dict) -> tuple[str, tuple[str, ...]]:
+        """The description and tags the person gave an import, tidied: checked before anything is made, so that a tag
+        that does not fit costs nobody a half-made document."""
+        description, tags = params.get("description", ""), params.get("tags", [])
+        if not isinstance(description, str) or not isinstance(tags, list) or not all(isinstance(t, str) for t in tags):
+            raise HubError("bad_request", msg("description is text and tags are a list of words"))
+        try:
+            return clean_details(description, tags)
+        except ValueError as error:
+            raise HubError("bad_request", str(error)) from error
+
     async def _read_upload(self, module: Module, doc_id: str, upload: Upload) -> tuple[Upload, dict, list[dict]]:
         """The state the import makes, read in the worker pool before anything is created (D436): a file that cannot
         be read costs nobody a half-made document."""
@@ -395,17 +409,26 @@ class Gateway:
         return upload, state, losses
 
     async def _import(
-        self, module: Module, doc_id: str, hosted, author: str, imported: tuple[Upload, dict, list[dict]], params: dict
+        self,
+        module: Module,
+        doc_id: str,
+        hosted,
+        author: str,
+        imported: tuple[Upload, dict, list[dict]],
+        params: dict,
+        details: tuple[str, tuple[str, ...]] = ("", ()),
     ) -> dict:
-        """Make the new document what the file holds: one ``core.Import`` entry, and the file itself kept in the
-        document unless the person said not to (D439). Answers what the welcome says about it."""
+        """Make the new document what the file holds: one ``core.Import`` entry, the file itself kept in the document
+        unless the person said not to (D439), and the description and tags the person chose in its plain manifest.
+        Answers what the welcome says about it."""
         upload, state, losses = imported
         self.uploads.take(upload.token)
         keep = params.get("keep_original") is not False
         digest = hashlib.sha256(upload.data).hexdigest()
         kept = keep and await asyncio.to_thread(module.hub.keep_original, doc_id, upload.data)
         hosted.document.execute(Import(upload.name, upload.fmt, state, sha256=digest, kept=kept), author=author)
-        return {"name": upload.name, "format": upload.fmt, "kept": kept, "losses": losses}
+        described = details != ("", ()) and await asyncio.to_thread(module.hub.describe, doc_id, *details)
+        return {"name": upload.name, "format": upload.fmt, "kept": kept, "losses": losses, "described": described}
 
     async def _hello(self, websocket: WebSocket, doc_id: str, app: str | None):
         """The first frame: ``(request id, account, document)`` if the person may come in, else the socket is closed."""
@@ -430,6 +453,7 @@ class Gateway:
         try:
             Hub.check_id(doc_id)
             upload = self._upload_for(params)
+            details = self._details_for(params) if upload is not None else ("", ())
             module = self.module_for(doc_id, app, params.get("app") or (upload.app if upload else None))
             imported = None if upload is None else await self._read_upload(module, doc_id, upload)
             if params.get("recovery_key") is not None:
@@ -444,7 +468,7 @@ class Gateway:
                 return None
             document = await module.hub.open(doc_id)
             if created and imported is not None:
-                answer = await self._import(module, doc_id, document, account.user, imported, params)
+                answer = await self._import(module, doc_id, document, account.user, imported, params, details)
                 return request_id, account, document, created, locale, answer
             if created:
                 _set_up(document.document, account.user, locale)
@@ -716,6 +740,7 @@ def _fixed_routes(app: FastAPI, suite: Suite, gateway: Gateway, presence: _Prese
         return suite.first.hub.methods.describe(suite.first.hub.limits)
 
     if list_documents:
+        app.state.lookup_throttle = throttle = Throttle()
 
         @app.get("/api/docs")
         async def documents(request: Request):
@@ -723,6 +748,26 @@ def _fixed_routes(app: FastAPI, suite: Suite, gateway: Gateway, presence: _Prese
             _may_list(gateway, request)
             only = suite.apps[0] if len(suite.apps) == 1 else None
             return {"app": only, "apps": list(suite.apps), "documents": suite.listing()}
+
+        @app.post("/api/docs/lookup")
+        async def lookup(request: Request):
+            """Find a document by its uid, an exact match (D533): ``{app, id, modified}``, or 404. Whoever may list the
+            server may ask (so a server that does not list does not answer, and one with an access secret asks for
+            it), a few times a minute from one address. A uid that is not one and a uid nobody here has get the same
+            answer, and nothing about the document is told beyond what the list tells."""
+            _may_list(gateway, request)
+            address = request.client.host if request.client else ""
+            if not throttle.allow(address):
+                raise HTTPException(429, "too many questions; try again in a minute", headers={"Retry-After": "60"})
+            try:
+                uid = json.loads(await _body(request, 1024))["uid"]
+            except (ValueError, KeyError, TypeError) as exc:
+                raise HTTPException(400, 'ask with {"uid": ...}') from exc
+            found = await suite.find(uid) if is_uid(uid) else None
+            if found is None:
+                raise HTTPException(404, "no such document here")
+            module, info = found
+            return {"app": module.app, "id": info.id, "modified": info.modified}
 
     @app.websocket("/api/docs/{doc_id}/ws")
     async def live(websocket: WebSocket, doc_id: str):
@@ -773,6 +818,8 @@ def _upload_routes(app: FastAPI, suite: Suite, gateway: Gateway) -> None:
         answer["hosted"] = module is not None
         if held.fmt == CLAUDIA:
             answer["exists"] = module is not None and module.hub.exists(held.doc_id)
+            twin = await suite.find(held.uid)
+            answer["same_document"] = None if twin is None else twin[1].id  # a name, for the person; never the uid
         return answer
 
     @app.post("/api/uploads/{token}/place")
@@ -784,6 +831,9 @@ def _upload_routes(app: FastAPI, suite: Suite, gateway: Gateway) -> None:
         module = suite.module(held.app)
         if module is None:
             raise HTTPException(422, f"this server does not host {held.app}")
+        twin = await suite.find(held.uid)
+        if twin is not None:  # the same document is here, under whatever name and in whatever app (D533)
+            raise HTTPException(409, str(same_document_message(twin[1].id)))
         try:
             await module.hub.place(held.doc_id, held.data)
         except HubError as exc:

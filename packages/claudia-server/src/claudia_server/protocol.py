@@ -38,6 +38,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from claudia_container import clean_details
 from claudia_core import (
     Document,
     KernelError,
@@ -53,6 +54,7 @@ from .ai_mode import parse_mode
 from .auth import (
     Account,
     DeletableDirectory,
+    DetailsDirectory,
     LeavableDirectory,
     PasswordDirectory,
     RecoverableDirectory,
@@ -936,6 +938,33 @@ def _delete_document(ctx, password):
         raise RequestError("unauthorized", msg("that is not your current password"))
     ctx.document.publish("document_deleted", ctx.user, {})
     return {"deleted": True}
+
+
+@core_methods.method("set_details", "password:str description:text tags:list")
+def _set_details(ctx, password, description, tags):
+    """Owners and editors: say what this document is about. `description` is Markdown, `tags` a list of short words;
+    both replace what was there, and both are kept in the plain part of the document file so that everybody who may
+    list the server can read and search them, without a password. They are not part of the history. You confirm it is
+    really you with your own password; a viewer may not. Returns `{description, tags}` as kept;
+    `unauthorized` if the password is wrong; `command_error` with a sentence if a text is too long or there are too
+    many tags."""
+    if ctx.account.role not in ("owner", "editor"):
+        raise RequestError(
+            "forbidden", msg("only an editor or an owner of a document may change its description and tags")
+        )
+    if not isinstance(ctx.directory, DetailsDirectory):
+        raise RequestError("unavailable", msg("this server does not keep a description and tags"))
+    if not all(isinstance(tag, str) for tag in tags):
+        raise RequestError("bad_request", msg("tags are words"))
+    try:
+        changed = ctx.directory.set_details(ctx.doc_id, ctx.user, password, description, tags)
+    except ValueError as error:
+        raise RequestError("command_error", str(error)) from error
+    if not changed:
+        raise RequestError("unauthorized", msg("that is not your current password"))
+    kept_description, kept_tags = clean_details(description, tags)
+    ctx.document.publish("details_changed", ctx.user, {"description": kept_description, "tags": list(kept_tags)})
+    return {"description": kept_description, "tags": list(kept_tags)}
 
 
 @core_methods.method("export_content")
