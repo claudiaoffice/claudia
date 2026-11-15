@@ -37,7 +37,7 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }
 const state = props.session.state
 const panelOpen = ref(true)
 const dialog = ref<FrameDialog | null>(null)
-const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs') => void } | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs', topic?: string) => void } | null>(null)
 const readonly = computed(() => state.me.role === 'viewer')
 const frame = ref<HTMLElement | null>(null)
 
@@ -73,10 +73,11 @@ function ask(text = '@ai ') {
   setTimeout(() => panel.value?.ask(text), 0)
 }
 
-/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5). */
-function openHelp(mode?: 'how-to' | 'docs') {
+/** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5), and a link to one `topic` from the app. The
+ * dock opens if it was closed, so the help is on the screen where the person asked for it. */
+function openHelp(mode?: 'how-to' | 'docs', topic?: string) {
   panelOpen.value = true
-  setTimeout(() => panel.value?.openHelp(mode), 0)
+  setTimeout(() => panel.value?.openHelp(mode, topic), 0)
 }
 
 // D122: the shared shortcut map and the app's own, in one list that both the window's key handler and
@@ -134,7 +135,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 </script>
 
 <template>
-  <div ref="frame" class="frame">
+  <div ref="frame" class="frame" :class="{ wide: !panelOpen }">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
     <MenuBar data-region="menus" :class="{ hidden: shell.nativeMenu }" :menus="menus" />
@@ -204,6 +205,12 @@ onBeforeUnmount(() => clearTimeout(timer))
   display: flex;
   flex-direction: column;
   position: relative;
+  /* How much of the right edge History and chat takes (the column of `.main`): a floating panel (the search panel,
+   * D282) keeps to the left of it, so that it never covers what it opens there, like the help. */
+  --dock-width: 340px;
+}
+.frame.wide {
+  --dock-width: 0px;
 }
 .main {
   flex: 1;
@@ -256,6 +263,9 @@ onBeforeUnmount(() => clearTimeout(timer))
   margin: 0 0 8px;
 }
 @media (max-width: 736px) {
+  .frame {
+    --dock-width: 0px;
+  }
   .main {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) 40%;

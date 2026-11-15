@@ -2,9 +2,12 @@
 // The speaker notes of a slide, drawn from the Markdown (`lib/notes-markdown.ts`): lines of spans, never HTML. A link is
 // shown with its address after it and is not something to click on during a talk.
 import { computed } from 'vue'
+import { parseHelp } from '~/lib/help-markdown'
 import { parseNotes, type NoteLine } from '~/lib/notes-markdown'
 
-const props = defineProps<{ notes: string }>()
+/** `flow`: a line break inside a paragraph is a space (a help topic, written in lines of 120 characters); without it
+ * each line of the notes is a line on the screen, as the person who wrote them broke it. */
+const props = defineProps<{ notes: string; flow?: boolean }>()
 
 interface Token {
   text: string
@@ -30,11 +33,11 @@ function tokens(line: NoteLine): Token[] {
 /** Emphasis is said in the element, not only drawn: a screen reader reads <strong> and <em> as such (BITV). */
 const tagOf = (token: Token) => (token.bold ? 'strong' : token.italic ? 'em' : token.code ? 'code' : 'span')
 
-const lines = computed(() => parseNotes(props.notes).map((line) => ({ line, tokens: tokens(line) })))
+const lines = computed(() => (props.flow ? parseHelp(props.notes) : parseNotes(props.notes)).map((line) => ({ line, tokens: tokens(line) })))
 </script>
 
 <template>
-  <div class="notes-text" data-testid="notes-text">
+  <div class="notes-text" :class="{ flow }" data-testid="notes-text">
     <template v-for="(row, i) in lines" :key="i">
       <p v-if="row.line.blank" class="gap" aria-hidden="true" />
       <p
@@ -86,6 +89,11 @@ const lines = computed(() => parseNotes(props.notes).map((line) => ({ line, toke
 }
 .heading {
   margin-top: 0.3em;
+}
+/* A help topic reads as a page: a heading stands out and a paragraph has room above it. */
+.flow .heading {
+  margin-top: 0.9em;
+  font-size: 1.06em;
 }
 .quote {
   border-inline-start: 3px solid currentcolor;

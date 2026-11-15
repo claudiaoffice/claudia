@@ -28,7 +28,7 @@ from urllib.parse import unquote
 
 from claudia_container import ContainerError, read_manifest
 
-from .formats import CLAUDIA, FORMATS, sniff
+from .formats import CLAUDIA, FORMATS, file_details, sniff
 
 MAX_UPLOAD_BYTES = 64 * 1024 * 1024
 DEFAULT_MOST = 16
@@ -57,16 +57,18 @@ class Upload:
     app: str  # the app its document belongs to
     address: str
     expires: float
-    doc_id: str  # a Claudia file: its own id; any other: an id made from its name, which the person may change
-    title: str = ""  # a Claudia file: the title its manifest gives
+    doc_id: str  # a Claudia file: its own name; any other: a name made from the file's, which the person may change
+    uid: str = ""  # a Claudia file: its random id (D533); held for the check when it is placed, never shown
+    description: str = ""  # what the file says about itself: its manifest, or the properties of an office file
+    tags: tuple[str, ...] = ()
 
     def describe(self) -> dict:
         """What the person is told about it: never the bytes."""
         answer = {"upload": self.token, "name": self.name, "format": self.fmt, "app": self.app, "size": len(self.data)}
         answer["id" if self.fmt == CLAUDIA else "suggested_id"] = self.doc_id
-        if self.fmt == CLAUDIA:
-            answer["title"] = self.title
-        else:
+        answer["description"] = self.description
+        answer["tags"] = list(self.tags)
+        if self.fmt != CLAUDIA:
             answer["kind"] = FORMATS[self.fmt][1]
         return answer
 
@@ -128,15 +130,17 @@ class UploadDesk:
             kind = sniff(data)
         except ValueError as error:
             raise UploadRefused(415, "this is not a file Claudia can open") from error
-        title = ""
+        uid = ""
+        details: tuple[str, tuple[str, ...]] = ("", ())
         if kind.fmt == CLAUDIA:
-            app, doc_id, title = _claudia_manifest(data)
+            app, doc_id, uid, details = _claudia_manifest(data)
         else:
-            app, doc_id = FORMATS[kind.fmt][0], id_from_name(name)
+            app, doc_id, details = FORMATS[kind.fmt][0], id_from_name(name), file_details(kind.fmt, data)
         upload = Upload(
             secrets.token_urlsafe(24), name, data, kind.fmt, app, address, self._clock() + self._ttl, doc_id
         )
-        upload.title = title
+        upload.uid = uid
+        upload.description, upload.tags = details
         self._held[upload.token] = upload
         return upload
 
@@ -153,8 +157,9 @@ class UploadDesk:
         return upload
 
 
-def _claudia_manifest(data: bytes) -> tuple[str, str, str]:
-    """The app, id and title a Claudia file's manifest gives (read from a private temporary file)."""
+def _claudia_manifest(data: bytes) -> tuple[str, str, str, tuple[str, tuple[str, ...]]]:
+    """The app, name, uid, and (description, tags) a Claudia file's manifest gives (read from a private temporary
+    file)."""
     with tempfile.TemporaryDirectory(prefix="claudia-upload-") as folder:
         path = Path(folder) / "upload.claudia"
         path.write_bytes(data)
@@ -162,4 +167,4 @@ def _claudia_manifest(data: bytes) -> tuple[str, str, str]:
             manifest = read_manifest(path)
         except ContainerError as error:
             raise UploadRefused(415, "this Claudia file is damaged or from a newer version") from error
-    return manifest.app, manifest.id, manifest.title
+    return manifest.app, manifest.name, manifest.uid, (manifest.description, manifest.tags)

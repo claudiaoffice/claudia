@@ -413,3 +413,15 @@ the server now follows a rebuilt web app.
 
 Decisions: D504 (every Claudia server uses port 8765, ./start.sh too); D505 (the Linux window takes files dropped on
 the front page)
+
+## The search panel and movable dialogs (branch `search-ui`, 2026-11-15)
+
+The owner looked at the composes panel and found: "in x texts" confusing (a document is one text), five switches under
+"Look in" taking too much room, "Replace with" and "Build a pattern" looking like links and too close to the count,
+"About searching and patterns" opening the Help tab where the panel itself covered it and not at a topic, and the panel
+and the dialogs fixed in place; he thought moving had been started somewhere. It had not. He chose one checkbox
+drop-down for "Look in", moving for all dialogs and the panel, and the topic opened itself; then asked that the help
+panel show its Markdown as such.
+
+Decisions: D520 (every dialog and the panel can be moved); D521 (the one-button "Look in", "n matches", the buttons);
+D522 (help topics as Markdown, opened from the panel)

@@ -3,7 +3,7 @@ id: composes.searching-and-replacing
 title: Wie finde und ersetze ich Wörter in meinem Text?
 apps: composes
 language: de
-source-hash: 080d882b20a7
+source-hash: 47981c70f575
 tags: Suchen, Finden, Ersetzen, Muster, Baukasten, Treffer, Überschrift, Bemerkung
 explains: Suchen & Ersetzen, Ersetzen durch, Muster bauen, Ausgelassen
 ---
@@ -14,12 +14,22 @@ Sind beim Öffnen Wörter markiert, sucht das Feld zuerst danach. Strg+H öffnet
 
 ## Wo gesucht wird
 
-Die Schalter unter **Suchen in** legen fest, was durchsucht wird: **Text** (Absätze), **Überschriften**,
-**Bemerkungen**, **Objekte** (die Wörter in Textfeldern und Formen auf dem Text) und **Beschreibungen** (die
-Beschreibungen, die zu einem Objekt vorgelesen werden). **Der ganze Text**, **Dieser Abschnitt** und **Auswahl**
-legen fest, wie weit gesucht wird; **Groß-/Kleinschreibung beachten** und **Ganzer Text** schränken weiter ein. Ein Treffer in
+Die Schaltfläche **Suchen in** sagt, was durchsucht wird: **Alles (5)** oder die Namen der Arten, die eingeschaltet
+sind. Ein Druck darauf öffnet eine Liste mit einem Kontrollkästchen für jede Art und der Zahl ihrer Treffer: **Text**
+(Absätze), **Überschriften**, **Bemerkungen**, **Objekte** (die Wörter in Textfeldern und Formen auf dem Text) und
+**Beschreibungen** (die Beschreibungen, die zu einem Objekt vorgelesen werden). **Alle** und **Keine** unten in der
+Liste schalten jede Art ein oder aus. Die Auswahlliste daneben legt fest, wie weit gesucht wird: **Der ganze Text**,
+**Dieser Abschnitt** oder **Auswahl**; die Kontrollkästchen **Groß-/Kleinschreibung beachten** und **Ganzer Text**
+schränken weiter ein. Ein Treffer in
 einem Objekt wird nicht im Text gezeichnet: Die Liste nennt ihn, und ein Klick führt zum Absatz, zu dem das Objekt
 gehört.
+
+## Das Feld verschieben
+
+Ziehen Sie das Feld an seiner Titelleiste dorthin, wo es nicht verdeckt, woran Sie arbeiten. Es bleibt dort, bis Sie
+die Seite neu laden. Mit der Tastatur verschieben **Alt+Pfeiltasten** das Feld (**Alt+Umschalt+Pfeiltasten** in
+größeren Schritten; auf dem Mac die Wahltaste), außer der Cursor steht in einem Textfeld, wo diese Tasten ihre eigene
+Bedeutung behalten. Jeder Dialog lässt sich genauso verschieben.
 
 ## Mehr beschreiben als ein Wort
 

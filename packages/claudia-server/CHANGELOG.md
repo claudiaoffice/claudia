@@ -11,6 +11,28 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   The desktop apps' shared server (D445) outlives its windows, and the start scripts build the web app at every start,
   so the second start showed an empty window (the new build's inline script was refused).
 
+## [0.36.0] - 2026-11-15
+
+The uid of a document: found by its exact value, kept when a file is placed, never twice on a server (D533–D535).
+
+### Added
+- `POST /api/docs/lookup` `{uid}` answers `{app, id, modified}` of the document of any app with exactly that uid, or
+  404; follows the list's rules (no answer with `--no-list`, the access secret when there is one) and is throttled per
+  address (`Throttle`, `app.state.lookup_throttle`).
+- The welcome carries `uid`; the upload answer of a Claudia file carries `same_document` (the name of the document here
+  that is the same one, or `null`).
+- `Hub.find`, `Hub.uid_of`, `Suite.find`, `SealedDocuments.find`, `SealedDocuments.uid_of`, `StoredInfo.uid`,
+  `hub.DuplicateDocument` (what a store raises for a file whose uid it has), `hub.same_document_message`.
+
+### Changed
+- Placing a Claudia file refuses (409) one whose uid is on the server already, under any name and in any app, and says
+  which document it is.
+- `set_details` may be called by an editor as well as an owner (a viewer is refused with `forbidden`) (D530).
+- Needs `claudia-container` 0.7.0: `SealedDocuments` makes documents by `name`.
+
+### Removed
+- The `title` of a Claudia file in the upload answer.
+
 ### Changed
 - Every server has the starter set of open fonts (D500): the copy shipped with `claudia_fonts` is read first, the
   folders of `--fonts` (or `STATE_DIR/fonts`) after it, and win for the same family and style. A server started with
@@ -29,6 +51,27 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   the patch writer reported (`removed-...`, `stale-reference`) and the unwritten changes since the import
   (`not-written`, `layout`, `chart`, `planned-time`...) (D450, D452). The docx answer has a loss list now too, and
   opening a docx or pptx names what the model does not show of it (D451).
+
+## [0.35.0] - 2026-11-15
+
+Description and tags of a document (D530, D531).
+
+### Added
+- `GET /api/docs` and `GET /api/{app}/docs` list `description` and `tags` of every document (`StoredInfo.description`,
+  `StoredInfo.tags`); they are read from the plain manifest, so they need no password. A store that has none lists them
+  empty.
+- The protocol method `set_details(password, description, tags)`: an owner replaces them, confirming with their own
+  password (`unauthorized` if wrong, `forbidden` for anybody else, `command_error` with a sentence if they do not fit,
+  `unavailable` on a store that cannot keep them); the people connected get `details_changed`. `DetailsDirectory`
+  names the capability, `SealedDocuments.set_details` implements it.
+- The upload answer has `description` and `tags`: the Dublin Core description and keywords of an Office or
+  OpenDocument file (`formats.file_details`; a part that is large, not XML or has a DOCTYPE says nothing), or those of a
+  Claudia file's manifest.
+- `hello` with `create` and `upload` takes `description` and `tags` (checked before anything is made); the welcome's
+  `imported` says `described`. `Hub.describe` and `SealedDocuments.describe` keep them for a document just made.
+
+### Changed
+- The entries of the document list have two more keys, `description` and `tags`.
 
 ## [0.34.0] - 2026-11-14
 

@@ -104,6 +104,13 @@ Neutralino e2e scripts.
   `test_files.py`, the contract tests (TS and Python) and `shell-bridge.test.ts`; a real drag from Nautilus is not
   automated (no file manager on the test machine).
 
+## Merged with main (c87590b)
+
+Conflicts only in `ranges.md` and `_rounds.md` (both kept; this round's second pass sits with D500–D503), the server's
+CHANGELOG (the CSP fix under `[Unreleased]`, above main's 0.36.0) and the catalogs (main's, regenerated from the merged
+sources). Main's file-handling round left three Sphinx warnings in `claudia_container` (`clean_details` was not on the
+API page; a docstring Napoleon read as a type); fixed so that `check_debt.py` is clean.
+
 ## Left open
 
 * The macOS crash at quit: the owner sends a crash report. Since this round the core no longer stops the server when

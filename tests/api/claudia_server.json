@@ -1,5 +1,5 @@
 {
- "version": "0.34.0",
+ "version": "0.36.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -297,7 +297,7 @@
   "class": [
    "object"
   ],
-  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None, original: 'Callable[[], bytes | None]' = <function HostedDocument.<lambda>>)",
+  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None, original: 'Callable[[], bytes | None]' = <function HostedDocument.<lambda>>, uid: 'Callable[[], str | None]' = <function HostedDocument.<lambda>>)",
   "methods": {
    "ai_mode_of": "(self, user: 'str') -> 'str | None'",
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
@@ -323,8 +323,10 @@
   "methods": {
    "check_id": "(doc_id: 'object') -> 'str'",
    "count_known": "(self) -> 'int'",
+   "describe": "(self, doc_id: 'str', description: 'str', tags: 'Sequence[str]') -> 'bool'",
    "ensure_room": "(self) -> 'None'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
+   "find": "(self, uid: 'str') -> 'StoredInfo | None'",
    "housekeeping": "(self) -> 'None'",
    "is_loaded": "(self, doc_id: 'str') -> 'bool'",
    "keep_original": "(self, doc_id: 'str', data: 'bytes') -> 'bool'",
@@ -335,7 +337,8 @@
    "share_room": "(self, room: 'Room') -> 'None'",
    "start": "(self) -> 'None'",
    "stop": "(self) -> 'None'",
-   "sweep": "(self) -> 'None'"
+   "sweep": "(self) -> 'None'",
+   "uid_of": "(self, doc_id: 'str') -> 'str | None'"
   },
   "properties": [
    "app",
@@ -555,8 +558,10 @@
    "change_password": "(self, doc_id: 'str', name: 'str', old_password: 'str', new_password: 'str') -> 'bool'",
    "create": "(self, doc_id: 'str') -> 'Document'",
    "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
+   "describe": "(self, doc_id: 'str', description: 'str', tags: 'Sequence[str]') -> 'None'",
    "documents": "(self) -> 'list[StoredInfo]'",
    "exists": "(self, doc_id: 'str') -> 'bool'",
+   "find": "(self, uid: 'str') -> 'StoredInfo | None'",
    "keep_original": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "leave": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'bool'",
    "list_people": "(self, doc_id: 'str') -> 'list[Account]'",
@@ -568,6 +573,8 @@
    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
    "release": "(self, doc_id: 'str') -> 'None'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
+   "set_details": "(self, doc_id: 'str', owner: 'str', owner_password: 'str', description: 'str', tags: 'Sequence[str]') -> 'bool'",
+   "uid_of": "(self, doc_id: 'str') -> 'str | None'",
    "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
   },
   "properties": [
@@ -594,7 +601,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', app: 'str', modified: 'str') -> None",
+  "init": "(id: 'str', app: 'str', modified: 'str', description: 'str' = '', tags: 'tuple[str, ...]' = (), uid: 'str' = '') -> None",
   "methods": {},
   "properties": []
  },
@@ -604,6 +611,7 @@
   ],
   "init": "(modules: 'Iterable[Module]', *, max_documents: 'int | None' = None)",
   "methods": {
+   "find": "(self, uid: 'str') -> 'tuple[Module, StoredInfo] | None'",
    "for_new": "(self, app: 'str | None') -> 'Module'",
    "listing": "(self) -> 'list[dict]'",
    "locate": "(self, doc_id: 'str') -> 'Module | None'",

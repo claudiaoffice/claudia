@@ -366,9 +366,13 @@ def test_a_writer_for_the_wrong_keys_cannot_continue_somebody_elses_journal(tmp_
     from claudia_container import Domain, random_key
 
     start(store_in(tmp_path))
+    from claudia_container import read_manifest
+
     path = journal_path(tmp_path / "docs" / "plan.claudia")
     keys = {d: random_key() for d in Domain}
-    writer = JournalWriter.open(path, "plan", keys)  # it can append, but nobody with the real keys can read it
+    writer = JournalWriter.open(
+        path, read_manifest(tmp_path / "docs" / "plan.claudia").binding, keys
+    )  # it can append, but nobody with the real keys can read it
     writer.append(Domain.HISTORY, b"x")
     writer.close()
     store = store_in(tmp_path)

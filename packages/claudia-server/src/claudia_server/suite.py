@@ -20,7 +20,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
 from .auth import UserDirectory
-from .hub import Hub, HubError, Room
+from .hub import Hub, HubError, Room, StoredInfo
 from .i18n import msg
 
 #: The apps of the suite and the document model of each (``module:Class``), in the order a server hosts them by
@@ -94,6 +94,15 @@ class Suite:
         for module in self._modules.values():
             if module.hub.exists(doc_id):
                 return module
+        return None
+
+    async def find(self, uid: str) -> tuple[Module, StoredInfo] | None:
+        """The module and the stored document with exactly this uid, looking in every module in order (D533);
+        ``None`` if this server has none."""
+        for module in self._modules.values():
+            info = await module.hub.find(uid)
+            if info is not None:
+                return module, info
         return None
 
     def for_new(self, app: str | None) -> Module:

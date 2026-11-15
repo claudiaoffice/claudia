@@ -28,6 +28,7 @@ describe('the search host of a workbook', () => {
     ])
     expect(host.scopes).toEqual(['sheet', 'all', 'selection'])
     expect(host.extraParts).toEqual(['cellref'])
+    expect(host.helpTopic).toBe('computes.searching-and-replacing')
   })
 
   it('is read-only for somebody who can only look', () => {

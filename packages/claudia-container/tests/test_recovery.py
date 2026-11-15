@@ -27,9 +27,7 @@ def path(tmp_path):
 
 @pytest.fixture
 def owner(path):
-    return create_document(
-        path, doc_id="plan", app="computes", title="t", owner="Annabelle", password=OWNER_PW, kdf=CHEAP
-    )
+    return create_document(path, name="plan", app="computes", owner="Annabelle", password=OWNER_PW, kdf=CHEAP)
 
 
 @pytest.fixture
@@ -46,7 +44,7 @@ def test_a_document_made_without_a_recovery_key_has_none(path, owner):
 def test_a_document_made_with_a_recovery_key_has_one(path):
     key = new_recovery_key()
     owner = create_document(
-        path, doc_id="plan", app="computes", title="t", owner="Ann", password=OWNER_PW, kdf=CHEAP, recovery_key=key
+        path, name="plan", app="computes", owner="Ann", password=OWNER_PW, kdf=CHEAP, recovery_key=key
     )
     assert has_recovery_key(path, owner.keys) is True
     assert unlock_with_recovery(path, key) is not None

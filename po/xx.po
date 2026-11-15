@@ -41,11 +41,11 @@ msgstr "[(nôné)~~]"
 msgid "+ Add administrator…"
 msgstr "[+ Àdd àdmînîstràtôr…~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:779
+#: web/app/components/OpenDialog.vue:842
 msgid "+ Connect to a server…"
 msgstr "[+ Cônnéct tô à sérvér…~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:809
+#: web/app/components/OpenDialog.vue:873
 msgid "+ New collection"
 msgstr "[+ Néw côlléctîôn~~~~~~]"
 
@@ -169,7 +169,7 @@ msgstr "[9 pér pàgé~~~~]"
 msgid "@ai review this text"
 msgstr "[@àî révîéw thîs téxt~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:120
+#: web/app/components/ImportDialog.vue:162
 msgid "A Claudia document goes into a place as it is, still sealed, and is opened with a name and password it already knows."
 msgstr "[À Clàûdîà dôcûmént gôés întô à plàcé às ît îs, stîll séàléd, ànd îs ôpénéd wîth à nàmé ànd pàsswôrd ît àlréàdy knôws.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -181,7 +181,7 @@ msgstr "[À Clàûdîà sérvér ôf ànôthér vérsîôn ({running}, thîs àp
 msgid "A Roman numeral as a number (capitals or not; a leading minus sign is kept)."
 msgstr "[À Rômàn nûméràl às à nûmbér (càpîtàls ôr nôt; à léàdîng mînûs sîgn îs képt).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:493
+#: web/app/lib/search.ts:495
 msgid "A bracket is never closed."
 msgstr "[À bràckét îs névér clôséd.~~~~~~~~~~]"
 
@@ -189,13 +189,17 @@ msgstr "[À bràckét îs névér clôséd.~~~~~~~~~~]"
 msgid "A change here changes every use of “{name}”"
 msgstr "[À chàngé héré chàngés évéry ûsé ôf “{name}”~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:496
+#: web/app/lib/search.ts:498
 msgid "A closing bracket has no opening one."
 msgstr "[À clôsîng bràckét hàs nô ôpénîng ôné.~~~~~~~~~~~~~~~]"
 
 #: web/app/components/PaletteDialog.vue:85
 msgid "A colour here means something. Change it and everything that means the same thing changes with it."
 msgstr "[À côlôûr héré méàns sôméthîng. Chàngé ît ànd évérythîng thàt méàns thé sàmé thîng chàngés wîth ît.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/open.ts:164
+msgid "A document has at most {count} tags."
+msgstr "[À dôcûmént hàs àt môst {count} tàgs.~~~~~~~~~~~~~~]"
 
 #: web/app/components/SheetChartInsertDialog.vue:155
 msgid "A floating object on the sheet"
@@ -221,7 +225,7 @@ msgstr "[À lînk: gîvés thé frîéndly téxt îf théré îs ôné, ôthérw
 msgid "A name like this exists already and will point here."
 msgstr "[À nàmé lîké thîs éxîsts àlréàdy ànd wîll pôînt héré.~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:983
+#: web/app/components/OpenDialog.vue:1071
 msgid "A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit)."
 msgstr "[À néw dôcûmént bélôngs tô whôévér créàtés ît fîrst. Thé pàsswôrd prôtécts thîs dôcûmént ônly (àt léàst 8 chàràctérs, wîth à càpîtàl léttér, à smàll léttér ànd à dîgît).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -269,7 +273,7 @@ msgstr "[À récôvéry kéy, nôt néédéd dày tô dày — àdmînîstràtô
 msgid "A request beyond this number is refused before anything is written."
 msgstr "[À réqûést béyônd thîs nûmbér îs réfûséd béfôré ànythîng îs wrîttén.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:502
+#: web/app/lib/search.ts:504
 msgid "A square bracket is never closed."
 msgstr "[À sqûàré bràckét îs névér clôséd.~~~~~~~~~~~~~]"
 
@@ -281,11 +285,15 @@ msgstr "[À tàb~~]"
 msgid "A table always has its header row."
 msgstr "[À tàblé àlwàys hàs îts héàdér rôw.~~~~~~~~~~~~~~]"
 
+#: web/app/lib/open.ts:168
+msgid "A tag has at most {count} characters."
+msgstr "[À tàg hàs àt môst {count} chàràctérs.~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A text as a number with the decimal and group separators you name (. and , unless given); spaces are ignored and each % divides by 100."
 msgstr "[À téxt às à nûmbér wîth thé décîmàl ànd grôûp sépàràtôrs yôû nàmé (. ànd , ûnléss gîvén); spàcés àré îgnôréd ànd éàch % dîvîdés by 100.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:568
+#: web/app/components/SearchPanel.vue:478
 msgid "A value follows from its formula: it can be found, not replaced."
 msgstr "[À vàlûé fôllôws frôm îts fôrmûlà: ît càn bé fôûnd, nôt réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -293,7 +301,7 @@ msgstr "[À vàlûé fôllôws frôm îts fôrmûlà: ît càn bé fôûnd, nôt
 msgid "A whole number as text in another base (2 to 36), padded with zeros to a minimum length."
 msgstr "[À whôlé nûmbér às téxt în ànôthér bàsé (2 tô 36), pàddéd wîth zérôs tô à mînîmûm léngth.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:940
+#: web/app/components/OpenDialog.vue:1028
 msgid "ABCD-EFGH-…"
 msgstr "[ÀBCD-ÉFGH-…~~~~]"
 
@@ -317,7 +325,7 @@ msgstr "[Àbôût Clàûdîà Créàtés~~~~~~~~]"
 msgid "About claudia"
 msgstr "[Àbôût clàûdîà~~~~~]"
 
-#: web/app/components/SearchPanel.vue:451
+#: web/app/components/SearchPanel.vue:472
 msgid "About searching and patterns"
 msgstr "[Àbôût séàrchîng ànd pàttérns~~~~~~~~~~~]"
 
@@ -361,7 +369,7 @@ msgstr "[Àdd Shéét~~~~]"
 msgid "Add a chart of the selected cells"
 msgstr "[Àdd à chàrt ôf thé séléctéd célls~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:529 web/app/components/SearchPanel.vue:530
+#: web/app/components/SearchPanel.vue:565 web/app/components/SearchPanel.vue:566
 msgid "Add a condition"
 msgstr "[Àdd à côndîtîôn~~~~~~]"
 
@@ -373,9 +381,13 @@ msgstr "[Àdd à néw shéét tô thé dôcûmént~~~~~~~~~~~~]"
 msgid "Add a new slide to the presentation"
 msgstr "[Àdd à néw slîdé tô thé préséntàtîôn~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:503 web/app/components/SearchPanel.vue:504
+#: web/app/components/SearchPanel.vue:539 web/app/components/SearchPanel.vue:540
 msgid "Add a part"
 msgstr "[Àdd à pàrt~~~~]"
+
+#: web/app/components/DetailsFields.vue:101
+msgid "Add a tag…"
+msgstr "[Àdd à tàg…~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Add a text box to the slide"
@@ -384,6 +396,14 @@ msgstr "[Àdd à téxt bôx tô thé slîdé~~~~~~~~~~~]"
 #: web/app/components/ShareDialog.vue:50
 msgid "Add person"
 msgstr "[Àdd pérsôn~~~~]"
+
+#: web/app/components/DetailsFields.vue:101
+msgid "Add tags, e.g. finance, 2027"
+msgstr "[Àdd tàgs, é.g. fînàncé, 2027~~~~~~~~~~~]"
+
+#: web/app/components/DetailsFields.vue:113
+msgid "Add “{tag}” as a new tag"
+msgstr "[Àdd “{tag}” às à néw tàg~~~~~~~~~~]"
 
 #: web/app/components/AdminAccessDocuments.vue:200
 msgid "Added {when}"
@@ -405,13 +425,17 @@ msgstr "[Àdmînîstràtôr sîncé {when}~~~~~~~~~~]"
 msgid "Administrators"
 msgstr "[Àdmînîstràtôrs~~~~~~]"
 
-#: web/app/components/SidePanel.vue:173
+#: web/app/components/SidePanel.vue:174
 msgid "Agree"
 msgstr "[Àgréé~~]"
 
 #: web/app/components/StyleSpec.vue:177
 msgid "Alignment"
 msgstr "[Àlîgnmént~~~~]"
+
+#: web/app/components/SearchPanel.vue:485
+msgid "All"
+msgstr "[Àll~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleMenu.vue:49 web/app/lib/format-menu.ts:106
 msgid "All Styles…"
@@ -425,6 +449,10 @@ msgstr "[Àll célls séléctéd~~~~~~~]"
 msgid "All combinations"
 msgstr "[Àll cômbînàtîôns~~~~~~]"
 
+#: web/app/components/OpenDialog.vue:885
+msgid "All documents"
+msgstr "[Àll dôcûménts~~~~~]"
+
 #: clients/linux/src/claudia_shell_gtk/window.py:117
 msgid "All files"
 msgstr "[Àll fîlés~~~~]"
@@ -433,13 +461,17 @@ msgstr "[Àll fîlés~~~~]"
 msgid "All four sides"
 msgstr "[Àll fôûr sîdés~~~~~~]"
 
-#: web/app/lib/sheet-search-host.ts:51
+#: web/app/lib/sheet-search-host.ts:52
 msgid "All sheets"
 msgstr "[Àll shééts~~~~]"
 
-#: web/app/components/PresentShow.vue:225 web/app/components/PresentShow.vue:227 web/app/lib/slide-search-host.ts:67
+#: web/app/components/PresentShow.vue:225 web/app/components/PresentShow.vue:227 web/app/lib/slide-search-host.ts:68
 msgid "All slides"
 msgstr "[Àll slîdés~~~~]"
+
+#: web/app/components/DetailsFields.vue:108
+msgid "Already used on {place}"
+msgstr "[Àlréàdy ûséd ôn {place}~~~~~~~~~]"
 
 #: web/app/lib/shortcuts.ts:122
 msgid "Alt"
@@ -521,7 +553,7 @@ msgstr "[Àssîgn Néw Ôwnér…~~~~~~~]"
 msgid "Assign a new owner"
 msgstr "[Àssîgn à néw ôwnér~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:491
+#: web/app/components/SearchPanel.vue:527
 msgid "At least"
 msgstr "[Àt léàst~~~]"
 
@@ -529,7 +561,7 @@ msgstr "[Àt léàst~~~]"
 msgid "At least 8 characters, with a capital letter, a small letter and a digit."
 msgstr "[Àt léàst 8 chàràctérs, wîth à càpîtàl léttér, à smàll léttér ànd à dîgît.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:492
+#: web/app/components/SearchPanel.vue:528
 msgid "At most"
 msgstr "[Àt môst~~~]"
 
@@ -549,19 +581,19 @@ msgstr "[Àûtô~~]"
 msgid "Average {value}"
 msgstr "[Àvéràgé {value}~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:950
+#: web/app/components/OpenDialog.vue:1038
 msgid "Back"
 msgstr "[Bàck~~]"
 
-#: web/app/components/HelpPanel.vue:79
+#: web/app/components/HelpPanel.vue:91
 msgid "Back to results"
 msgstr "[Bàck tô résûlts~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:555
+#: web/app/components/SearchPanel.vue:591
 msgid "Back to the builder"
 msgstr "[Bàck tô thé bûîldér~~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:195
+#: web/app/components/DocumentFrame.vue:196
 msgid "Back to the documents"
 msgstr "[Bàck tô thé dôcûménts~~~~~~~~]"
 
@@ -569,7 +601,7 @@ msgstr "[Bàck tô thé dôcûménts~~~~~~~~]"
 msgid "Back to the list of documents"
 msgstr "[Bàck tô thé lîst ôf dôcûménts~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:555
+#: web/app/components/SearchPanel.vue:591
 msgid "Back to the simple field"
 msgstr "[Bàck tô thé sîmplé fîéld~~~~~~~~~~]"
 
@@ -633,7 +665,7 @@ msgstr "[Bôx {box} · Wôrds {words} — thé twô slôts nôw dîffér~~~~~~~~
 msgid "Break long words at the end of a line where the text's language allows (in the pages and the PDF)"
 msgstr "[Bréàk lông wôrds àt thé énd ôf à lîné whéré thé téxt's làngûàgé àllôws (în thé pàgés ànd thé PDF)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:582
+#: web/app/components/SearchPanel.vue:616
 msgid "Build a pattern…"
 msgstr "[Bûîld à pàttérn…~~~~~~]"
 
@@ -677,7 +709,7 @@ msgstr "[Càlcûlàtîôn~~~~]"
 msgid "Calculation step"
 msgstr "[Càlcûlàtîôn stép~~~~~~]"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:129 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:784 web/app/components/OpenDialog.vue:814 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr "[Càncél~~]"
 
@@ -737,6 +769,10 @@ msgstr "[Chàngé hôw thîs kînd ôf pàràgràph lôôks~~~~~~~~~~~~~~~~]"
 msgid "Change it"
 msgstr "[Chàngé ît~~~~]"
 
+#: web/app/components/DetailsFields.vue:84
+msgid "Change it as you like."
+msgstr "[Chàngé ît às yôû lîké.~~~~~~~~~]"
+
 #: web/app/components/AdminAccessDocuments.vue:210 web/app/components/ChangePasswordDialog.vue:43
 msgid "Change password"
 msgstr "[Chàngé pàsswôrd~~~~~~]"
@@ -765,7 +801,7 @@ msgstr "[Chàrt: {name}~~~~~]"
 msgid "Chart…"
 msgstr "[Chàrt…~~]"
 
-#: web/app/components/SidePanel.vue:222
+#: web/app/components/SidePanel.vue:223
 msgid "Chat"
 msgstr "[Chàt~~]"
 
@@ -773,7 +809,7 @@ msgstr "[Chàt~~]"
 msgid "Checkpoint saved."
 msgstr "[Chéckpôînt sàvéd.~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:675
+#: web/app/components/OpenDialog.vue:736
 msgid "Choose Table, Text or Slides first."
 msgstr "[Chôôsé Tàblé, Téxt ôr Slîdés fîrst.~~~~~~~~~~~~~~]"
 
@@ -797,11 +833,11 @@ msgstr "[Chôôsé à stylé fôr thé séléctîôn, éàch dràwn în îts ôw
 msgid "Choose somebody…"
 msgstr "[Chôôsé sômébôdy…~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:143
+#: web/app/components/OpenDialog.vue:194
 msgid "Claudia cannot open this file."
 msgstr "[Clàûdîà cànnôt ôpén thîs fîlé.~~~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:105
+#: web/app/components/ImportDialog.vue:137
 msgid "Claudia makes {what} of it, and the file goes into the new document with it, sealed. The file on this computer stays as it is."
 msgstr "[Clàûdîà màkés {what} ôf ît, ànd thé fîlé gôés întô thé néw dôcûmént wîth ît, séàléd. Thé fîlé ôn thîs cômpûtér stàys às ît îs.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -837,7 +873,7 @@ msgstr "[Cléàr thé séléctéd célls~~~~~~~~~~]"
 msgid "Click"
 msgstr "[Clîck~~]"
 
-#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:23 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/OutcomePopover.vue:156 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:443 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
+#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:23 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/OutcomePopover.vue:156 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:464 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
 msgid "Close"
 msgstr "[Clôsé~~]"
 
@@ -857,15 +893,15 @@ msgstr "[Clôsé Clàûdîà Créàtés~~~~~~~~]"
 msgid "Close Document"
 msgstr "[Clôsé Dôcûmént~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:605
+#: web/app/components/SearchPanel.vue:639
 msgid "Close Replace"
 msgstr "[Clôsé Réplàcé~~~~~]"
 
-#: web/app/components/OpenDialog.vue:789
+#: web/app/components/OpenDialog.vue:852
 msgid "Collections"
 msgstr "[Côlléctîôns~~~~]"
 
-#: web/app/components/OpenDialog.vue:859 web/app/components/OpenDialog.vue:860 web/app/components/OpenDialog.vue:916 web/app/components/OpenDialog.vue:917
+#: web/app/components/OpenDialog.vue:1003 web/app/components/OpenDialog.vue:1004 web/app/components/OpenDialog.vue:932 web/app/components/OpenDialog.vue:933
 msgid "Collections of {id}…"
 msgstr "[Côlléctîôns ôf {id}…~~~~~~~~]"
 
@@ -917,7 +953,7 @@ msgstr "[Côlûmns~~~]"
 msgid "Common times"
 msgstr "[Cômmôn tîmés~~~~~]"
 
-#: web/app/components/SearchPanel.vue:513
+#: web/app/components/SearchPanel.vue:549
 msgid "Condition"
 msgstr "[Côndîtîôn~~~~]"
 
@@ -937,7 +973,7 @@ msgstr "[Cônnéctéd~~~~]"
 msgid "Connecting to {address}…"
 msgstr "[Cônnéctîng tô {address}…~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:787 web/app/lib/connection.ts:32
+#: web/app/components/OpenDialog.vue:850 web/app/lib/connection.ts:32
 msgid "Connecting…"
 msgstr "[Cônnéctîng…~~~~]"
 
@@ -997,7 +1033,7 @@ msgstr "[Côpy thé séléctîôn tô thé clîpbôàrd~~~~~~~~~~~~~~]"
 msgid "Could not connect"
 msgstr "[Côûld nôt cônnéct~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:718
+#: web/app/components/OpenDialog.vue:781
 msgid "Could not connect."
 msgstr "[Côûld nôt cônnéct.~~~~~~~]"
 
@@ -1025,7 +1061,7 @@ msgstr "[Côûnt {value}~~~~~]"
 msgid "Create administrator"
 msgstr "[Créàté àdmînîstràtôr~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:982
+#: web/app/components/OpenDialog.vue:1070
 msgid "Create document"
 msgstr "[Créàté dôcûmént~~~~~~]"
 
@@ -1097,7 +1133,7 @@ msgstr "[Dàtà~~]"
 msgid "Data from"
 msgstr "[Dàtà frôm~~~~]"
 
-#: web/app/components/SidePanel.vue:174
+#: web/app/components/SidePanel.vue:175
 msgid "Decline"
 msgstr "[Déclîné~~~]"
 
@@ -1169,21 +1205,37 @@ msgstr "[Déscrîbé thé pîctûré, ôr tîck \"Décôràtîvé\" îf ît àdd
 msgid "Describe…"
 msgstr "[Déscrîbé…~~~~]"
 
+#: web/app/components/DetailsFields.vue:67 web/app/components/ImportDialog.vue:165
+msgid "Description"
+msgstr "[Déscrîptîôn~~~~]"
+
 #: web/app/components/ImageImportDialog.vue:103 web/app/components/ObjectDescriptionDialog.vue:46 web/app/components/SheetImageImportDialog.vue:100
 msgid "Description (read aloud to someone who cannot see it)"
 msgstr "[Déscrîptîôn (réàd àlôûd tô sôméôné whô cànnôt séé ît)~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/text-search-host.ts:94
+#: web/app/lib/text-search-host.ts:95
 msgid "Description of an object in paragraph {n}"
 msgstr "[Déscrîptîôn ôf àn ôbjéct în pàràgràph {n}~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/slide-search-host.ts:76
+#: web/app/lib/slide-search-host.ts:77
 msgid "Description of an object on slide {n}"
 msgstr "[Déscrîptîôn ôf àn ôbjéct ôn slîdé {n}~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:321
+#: web/app/components/DetailsFields.vue:68
+msgid "Description view"
+msgstr "[Déscrîptîôn vîéw~~~~~~]"
+
+#: web/app/components/SearchPanel.vue:326
 msgid "Descriptions"
 msgstr "[Déscrîptîôns~~~~~]"
+
+#: web/app/components/DetailsDialog.vue:37
+msgid "Details of {id}"
+msgstr "[Détàîls ôf {id}~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:923 web/app/components/OpenDialog.vue:924 web/app/components/OpenDialog.vue:994 web/app/components/OpenDialog.vue:995
+msgid "Details of {id}…"
+msgstr "[Détàîls ôf {id}…~~~~~~]"
 
 #: web/app/components/AdminTypesetting.vue:61
 msgid "Detected on this machine"
@@ -1213,7 +1265,7 @@ msgstr "[Dîsmîss~~~]"
 msgid "Distribution"
 msgstr "[Dîstrîbûtîôn~~~~~]"
 
-#: web/app/components/SearchPanel.vue:496
+#: web/app/components/SearchPanel.vue:532
 msgid "Do not keep this part"
 msgstr "[Dô nôt kéép thîs pàrt~~~~~~~~]"
 
@@ -1221,11 +1273,11 @@ msgstr "[Dô nôt kéép thîs pàrt~~~~~~~~]"
 msgid "Do your last undone step again"
 msgstr "[Dô yôûr làst ûndôné stép àgàîn~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:937
+#: web/app/components/OpenDialog.vue:1025
 msgid "Document"
 msgstr "[Dôcûmént~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:93 web/app/lib/document-menus.ts:209
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:105 web/app/lib/document-menus.ts:209
 msgid "Documentation"
 msgstr "[Dôcûméntàtîôn~~~~~]"
 
@@ -1337,7 +1389,7 @@ msgstr "[Éntér~~]"
 msgid "Enter / Tab / Esc"
 msgstr "[Éntér / Tàb / Ésc~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:655
+#: web/app/components/SearchPanel.vue:689
 msgid "Enter: next match · Shift+Enter: previous · Esc: close"
 msgstr "[Éntér: néxt màtch · Shîft+Éntér: prévîôûs · Ésc: clôsé~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -1361,6 +1413,10 @@ msgstr "[Évéry ûsé ôf “{name}”~~~~~~~~]"
 msgid "Everybody agreed: now at {label}."
 msgstr "[Évérybôdy àgrééd: nôw àt {label}.~~~~~~~~~~~~~]"
 
+#: web/app/lib/search.ts:540
+msgid "Everything ({count})"
+msgstr "[Évérythîng ({count})~~~~~~~~]"
+
 #: web/app/components/RandomDialog.vue:210
 msgid "Excel has no formula for this: the file holds the current value."
 msgstr "[Éxcél hàs nô fôrmûlà fôr thîs: thé fîlé hôlds thé cûrrént vàlûé.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -1369,7 +1425,7 @@ msgstr "[Éxcél hàs nô fôrmûlà fôr thîs: thé fîlé hôlds thé cûrré
 msgid "Excel workbook (.xlsx)"
 msgstr "[Éxcél wôrkbôôk (.xlsx)~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:131
+#: web/app/components/OpenDialog.vue:182
 msgid "Excel, OpenDocument or Claudia tables, or drop one anywhere on this page."
 msgstr "[Éxcél, ÔpénDôcûmént ôr Clàûdîà tàblés, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -1409,11 +1465,11 @@ msgstr "[Fîlé sîzé~~~~]"
 msgid "Fill"
 msgstr "[Fîll~~]"
 
-#: web/app/components/OpenDialog.vue:683
+#: web/app/components/OpenDialog.vue:744
 msgid "Fill in the document, your name and your password."
 msgstr "[Fîll în thé dôcûmént, yôûr nàmé ànd yôûr pàsswôrd.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:682
+#: web/app/components/OpenDialog.vue:743
 msgid "Fill in the document, your name, the recovery key and a new password."
 msgstr "[Fîll în thé dôcûmént, yôûr nàmé, thé récôvéry kéy ànd à néw pàsswôrd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -1425,11 +1481,11 @@ msgstr "[Fîll în yôûr nàmé ànd à pàsswôrd.~~~~~~~~~~~~~]"
 msgid "Fill in your name and password."
 msgstr "[Fîll în yôûr nàmé ànd pàsswôrd.~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:811
+#: web/app/components/OpenDialog.vue:875
 msgid "Finance"
 msgstr "[Fînàncé~~~]"
 
-#: web/app/components/SearchPanel.vue:464 web/app/components/SearchPanel.vue:465 web/app/components/SearchPanel.vue:479 web/app/lib/search.ts:486
+#: web/app/components/SearchPanel.vue:500 web/app/components/SearchPanel.vue:501 web/app/components/SearchPanel.vue:515 web/app/lib/search.ts:488
 msgid "Find"
 msgstr "[Fînd~~]"
 
@@ -1449,7 +1505,7 @@ msgstr "[Fînd wôrds, héàdîngs, rémàrks ànd whàt îs sàîd în ôbjéct
 msgid "Find words, labels, speaker notes and descriptions, and replace them"
 msgstr "[Fînd wôrds, làbéls, spéàkér nôtés ànd déscrîptîôns, ànd réplàcé thém~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:542
+#: web/app/components/SearchPanel.vue:578
 msgid "Find — pattern"
 msgstr "[Fînd — pàttérn~~~~~~]"
 
@@ -1565,7 +1621,7 @@ msgstr "[Fôr {doc}, às {user}. Évérybôdy élsé kééps théîr ôwn pàssw
 msgid "Forecast"
 msgstr "[Fôrécàst~~~]"
 
-#: web/app/components/SidePanel.vue:218
+#: web/app/components/SidePanel.vue:219
 msgid "Forget every hidden line"
 msgstr "[Fôrgét évéry hîddén lîné~~~~~~~~~~]"
 
@@ -1577,7 +1633,7 @@ msgstr "[Fôrmàt~~]"
 msgid "Formula"
 msgstr "[Fôrmûlà~~~]"
 
-#: web/app/components/SearchPanel.vue:311
+#: web/app/components/SearchPanel.vue:316
 msgid "Formulas"
 msgstr "[Fôrmûlàs~~~]"
 
@@ -1597,7 +1653,7 @@ msgstr "[GÎF (ànîmàtéd)~~~~~~]"
 msgid "Gamma"
 msgstr "[Gàmmà~~]"
 
-#: web/app/components/OpenDialog.vue:949
+#: web/app/components/OpenDialog.vue:1037
 msgid "Get back in"
 msgstr "[Gét bàck în~~~~]"
 
@@ -1605,11 +1661,11 @@ msgstr "[Gét bàck în~~~~]"
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr "[Gîvé à côlléàgûé à nàmé ànd à pàsswôrd fôr {doc}. Théy ôpén thé dôcûmént wîth thém, lîké yôû dîd. Téll thém thé pàsswôrd yôûrsélf: thé sérvér névér shôws ît àgàîn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:783
+#: web/app/components/OpenDialog.vue:846
 msgid "Go"
 msgstr "[Gô~]"
 
-#: web/app/components/SearchPanel.vue:558
+#: web/app/components/SearchPanel.vue:594
 msgid "Go back"
 msgstr "[Gô bàck~~~]"
 
@@ -1693,11 +1749,11 @@ msgstr "[Hàndôûts~~~]"
 msgid "Hard to read"
 msgstr "[Hàrd tô réàd~~~~~]"
 
-#: web/app/components/SearchPanel.vue:315
+#: web/app/components/SearchPanel.vue:320
 msgid "Headings"
 msgstr "[Héàdîngs~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:163 web/app/lib/document-menus.ts:205
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:164 web/app/lib/document-menus.ts:205
 msgid "Help"
 msgstr "[Hélp~~]"
 
@@ -1713,11 +1769,11 @@ msgstr "[Hîdé~~]"
 msgid "Hide password"
 msgstr "[Hîdé pàsswôrd~~~~~]"
 
-#: web/app/components/SidePanel.vue:180
+#: web/app/components/SidePanel.vue:181
 msgid "History"
 msgstr "[Hîstôry~~~]"
 
-#: web/app/components/SidePanel.vue:162
+#: web/app/components/SidePanel.vue:163
 msgid "History & Chat"
 msgstr "[Hîstôry & Chàt~~~~~~]"
 
@@ -1729,7 +1785,7 @@ msgstr "[Hîstôry & chàt~~~~~~]"
 msgid "History and Chat"
 msgstr "[Hîstôry ànd Chàt~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:106 web/app/lib/document-menus.ts:208
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue:118 web/app/lib/document-menus.ts:208
 msgid "How Do I…?"
 msgstr "[Hôw Dô Î…?~~~~]"
 
@@ -1749,7 +1805,7 @@ msgstr "[Hôw fôrmûlàs, hélp pàgés ànd éxpôrts àré typését wîth L�
 msgid "How long you want to spend on this slide; the bar below the slides adds the times up"
 msgstr "[Hôw lông yôû wànt tô spénd ôn thîs slîdé; thé bàr bélôw thé slîdés àdds thé tîmés ûp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:488
+#: web/app/components/SearchPanel.vue:524
 msgid "How many"
 msgstr "[Hôw màny~~~]"
 
@@ -1789,7 +1845,7 @@ msgstr "[Hôw màny slîdés gô ôn à pàgé~~~~~~~~~~~]"
 msgid "How many standard deviations a value is from the mean."
 msgstr "[Hôw màny stàndàrd dévîàtîôns à vàlûé îs frôm thé méàn.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:491
+#: web/app/components/SearchPanel.vue:527
 msgid "How many times"
 msgstr "[Hôw màny tîmés~~~~~~]"
 
@@ -1797,7 +1853,7 @@ msgstr "[Hôw màny tîmés~~~~~~]"
 msgid "How strong"
 msgstr "[Hôw strông~~~~]"
 
-#: web/app/components/SearchPanel.vue:521
+#: web/app/components/SearchPanel.vue:557
 msgid "How the conditions go together"
 msgstr "[Hôw thé côndîtîôns gô tôgéthér~~~~~~~~~~~~]"
 
@@ -1813,7 +1869,7 @@ msgstr "[Hôw thîs stylé lôôks: fônt, sîzé, côlôûr, CSS (rîght-clîck
 msgid "Hyphenate"
 msgstr "[Hyphénàté~~~~]"
 
-#: web/app/components/OpenDialog.vue:960
+#: web/app/components/OpenDialog.vue:1048
 msgid "I forgot my password"
 msgstr "[Î fôrgôt my pàsswôrd~~~~~~~~]"
 
@@ -1857,7 +1913,7 @@ msgstr "[Împôrtéd frôm dîsk~~~~~~~]"
 msgid "In an Excel file"
 msgstr "[În àn Éxcél fîlé~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:962
+#: web/app/components/OpenDialog.vue:1050
 msgid "In collections"
 msgstr "[În côlléctîôns~~~~~~]"
 
@@ -1865,7 +1921,7 @@ msgstr "[În côlléctîôns~~~~~~]"
 msgid "In this document now:"
 msgstr "[În thîs dôcûmént nôw:~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:842
+#: web/app/components/OpenDialog.vue:907
 msgid "In {name}"
 msgstr "[În {name}~~~~]"
 
@@ -1977,7 +2033,7 @@ msgstr "[Înstàllàtîôn~~~~~]"
 msgid "Iris"
 msgstr "[Îrîs~~]"
 
-#: web/app/lib/search.ts:509
+#: web/app/lib/search.ts:511
 msgid "It is not run, so nothing is found or replaced."
 msgstr "[Ît îs nôt rûn, sô nôthîng îs fôûnd ôr réplàcéd.~~~~~~~~~~~~~~~~~~~]"
 
@@ -2005,19 +2061,19 @@ msgstr "[Jôîns vàlûés ànd ràngés wîth à délîmîtér bétwéén thém
 msgid "Justify"
 msgstr "[Jûstîfy~~~]"
 
-#: web/app/components/NamesDialog.vue:85 web/app/components/SearchPanel.vue:498
+#: web/app/components/NamesDialog.vue:85 web/app/components/SearchPanel.vue:534
 msgid "Keep"
 msgstr "[Kéép~~]"
 
-#: web/app/components/SearchPanel.vue:559
+#: web/app/components/SearchPanel.vue:595
 msgid "Keep the pattern"
 msgstr "[Kéép thé pàttérn~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:115
+#: web/app/components/ImportDialog.vue:157
 msgid "Keep the {format} file inside the document: Download then gives back this file with only your changes."
 msgstr "[Kéép thé {format} fîlé însîdé thé dôcûmént: Dôwnlôàd thén gîvés bàck thîs fîlé wîth ônly yôûr chàngés.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:498
+#: web/app/components/SearchPanel.vue:534
 msgid "Keep this part, to use it in the replacement"
 msgstr "[Kéép thîs pàrt, tô ûsé ît în thé réplàcémént~~~~~~~~~~~~~~~~~~]"
 
@@ -2025,15 +2081,15 @@ msgstr "[Kéép thîs pàrt, tô ûsé ît în thé réplàcémént~~~~~~~~~~~~~
 msgid "Keep this server local for now"
 msgstr "[Kéép thîs sérvér lôcàl fôr nôw~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:495
+#: web/app/components/SearchPanel.vue:531
 msgid "Kept as"
 msgstr "[Képt às~~~]"
 
-#: web/app/components/SearchPanel.vue:601
+#: web/app/components/SearchPanel.vue:635
 msgid "Kept parts, click to insert:"
 msgstr "[Képt pàrts, clîck tô însért:~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:969
+#: web/app/components/OpenDialog.vue:1057
 msgid "Kind of the new document"
 msgstr "[Kînd ôf thé néw dôcûmént~~~~~~~~~~]"
 
@@ -2085,7 +2141,7 @@ msgstr "[Léàvé thîs dôcûmént~~~~~~~~]"
 msgid "Left"
 msgstr "[Léft~~]"
 
-#: web/app/components/SearchPanel.vue:641
+#: web/app/components/SearchPanel.vue:675
 msgid "Left out ({count})"
 msgstr "[Léft ôût ({count})~~~~~~~]"
 
@@ -2117,7 +2173,7 @@ msgstr "[Lîght ûp thé célls thàt tàké pàrt în thîs céll's cômpûtàt
 msgid "Line · soon"
 msgstr "[Lîné · sôôn~~~~]"
 
-#: web/app/components/SidePanel.vue:202
+#: web/app/components/SidePanel.vue:203
 msgid "Lines"
 msgstr "[Lînés~~]"
 
@@ -2141,11 +2197,11 @@ msgstr "[Lôg-nôrmàl~~~~]"
 msgid "Look"
 msgstr "[Lôôk~~]"
 
-#: web/app/lib/search.ts:506
+#: web/app/lib/search.ts:508
 msgid "Look at the backslash at character {position}. Nothing is replaced."
 msgstr "[Lôôk àt thé bàckslàsh àt chàràctér {position}. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:566 web/app/components/SearchPanel.vue:567
+#: web/app/components/SearchPanel.vue:476 web/app/components/SearchPanel.vue:477 web/app/components/SearchPanel.vue:604
 msgid "Look in"
 msgstr "[Lôôk în~~~]"
 
@@ -2153,15 +2209,15 @@ msgstr "[Lôôk în~~~]"
 msgid "Look…"
 msgstr "[Lôôk…~~]"
 
-#: web/app/components/SearchPanel.vue:554
+#: web/app/components/SearchPanel.vue:590
 msgid "Made by the builder. If you edit it here, the builder can no longer show it."
 msgstr "[Màdé by thé bûîldér. Îf yôû édît ît héré, thé bûîldér càn nô lôngér shôw ît.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:554
+#: web/app/components/SearchPanel.vue:590
 msgid "Made from what you typed. Your own pattern replaces it."
 msgstr "[Màdé frôm whàt yôû typéd. Yôûr ôwn pàttérn réplàcés ît.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:813
+#: web/app/components/OpenDialog.vue:877
 msgid "Make"
 msgstr "[Màké~~]"
 
@@ -2193,7 +2249,7 @@ msgstr "[Mànàgé~~]"
 msgid "Manage this server…"
 msgstr "[Mànàgé thîs sérvér…~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:768 web/app/components/OpenDialog.vue:768
+#: web/app/components/OpenDialog.vue:831 web/app/components/OpenDialog.vue:831
 msgid "Manage {server}…"
 msgstr "[Mànàgé {server}…~~~~~~]"
 
@@ -2205,15 +2261,19 @@ msgstr "[Màrgîns~~~]"
 msgid "Markdown (.md)"
 msgstr "[Màrkdôwn (.md)~~~~~~]"
 
+#: web/app/components/DetailsFields.vue:85
+msgid "Markdown. Shown in the list to everybody who can see {place}, also without a password."
+msgstr "[Màrkdôwn. Shôwn în thé lîst tô évérybôdy whô càn séé {place}, àlsô wîthôût à pàsswôrd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/SlideNotes.vue:91
 msgid "Markdown: **bold**, *italic*, - lists. Shown in the presenter view, never on the slide."
 msgstr "[Màrkdôwn: **bôld**, *îtàlîc*, - lîsts. Shôwn în thé préséntér vîéw, névér ôn thé slîdé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:577
+#: web/app/components/SearchPanel.vue:611
 msgid "Match case"
 msgstr "[Màtch càsé~~~~]"
 
-#: web/app/components/SearchPanel.vue:611
+#: web/app/components/SearchPanel.vue:645
 msgid "Matches"
 msgstr "[Màtchés~~~]"
 
@@ -2229,15 +2289,15 @@ msgstr "[Màxîmûm dôcûménts~~~~~~~]"
 msgid "May"
 msgstr "[Mày~]"
 
-#: web/app/components/SidePanel.vue:248
+#: web/app/components/SidePanel.vue:249
 msgid "Message everyone, or @ai …"
 msgstr "[Méssàgé évéryôné, ôr @àî …~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:817
+#: web/app/components/OpenDialog.vue:881
 msgid "Mine and the collections are kept in this browser."
 msgstr "[Mîné ànd thé côlléctîôns àré képt în thîs brôwsér.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:842
+#: web/app/components/OpenDialog.vue:907
 msgid "Mine · opened before"
 msgstr "[Mîné · ôpénéd béfôré~~~~~~~~]"
 
@@ -2249,7 +2309,7 @@ msgstr "[Mîst~~]"
 msgid "Model folder"
 msgstr "[Môdél fôldér~~~~~]"
 
-#: web/app/components/SearchPanel.vue:442 web/app/components/SearchPanel.vue:446
+#: web/app/components/SearchPanel.vue:463 web/app/components/SearchPanel.vue:467
 msgid "More"
 msgstr "[Môré~~]"
 
@@ -2285,15 +2345,15 @@ msgstr "[Môvé “{name}” héré~~~~~~~]"
 msgid "Multiplies the ranges cell by cell (they must have the same shape) and adds up the products."
 msgstr "[Mûltîplîés thé ràngés céll by céll (théy mûst hàvé thé sàmé shàpé) ànd àdds ûp thé prôdûcts.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:742
+#: web/app/components/OpenDialog.vue:805
 msgid "My places"
 msgstr "[My plàcés~~~~]"
 
-#: web/app/components/OpenDialog.vue:741
+#: web/app/components/OpenDialog.vue:804
 msgid "My places and collections"
 msgstr "[My plàcés ànd côlléctîôns~~~~~~~~~~]"
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/ImportDialog.vue:108 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/ShareDialog.vue:44 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1125
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/ShareDialog.vue:44 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1125
 msgid "Name"
 msgstr "[Nàmé~~]"
 
@@ -2305,7 +2365,7 @@ msgstr "[Nàmé (thé tàb ît ôpéns às)~~~~~~~~~~]"
 msgid "Name it"
 msgstr "[Nàmé ît~~~]"
 
-#: web/app/components/OpenDialog.vue:811
+#: web/app/components/OpenDialog.vue:875
 msgid "Name of the collection"
 msgstr "[Nàmé ôf thé côlléctîôn~~~~~~~~~]"
 
@@ -2313,7 +2373,7 @@ msgstr "[Nàmé ôf thé côlléctîôn~~~~~~~~~]"
 msgid "Name of the style"
 msgstr "[Nàmé ôf thé stylé~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:153
+#: web/app/components/DocumentFrame.vue:154
 msgid "Name of this state (you can leave it empty)"
 msgstr "[Nàmé ôf thîs stàté (yôû càn léàvé ît émpty)~~~~~~~~~~~~~~~~~]"
 
@@ -2349,11 +2409,11 @@ msgstr "[Néw Shéét…~~~~]"
 msgid "New Slide"
 msgstr "[Néw Slîdé~~~~]"
 
-#: web/app/components/OpenDialog.vue:887 web/app/components/OpenDialog.vue:928
+#: web/app/components/OpenDialog.vue:1016 web/app/components/OpenDialog.vue:961
 msgid "New collection"
 msgstr "[Néw côlléctîôn~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:887 web/app/components/OpenDialog.vue:928
+#: web/app/components/OpenDialog.vue:1016 web/app/components/OpenDialog.vue:961
 msgid "New collection…"
 msgstr "[Néw côlléctîôn…~~~~~~]"
 
@@ -2365,7 +2425,7 @@ msgstr "[Néw nàmé ôf {name}~~~~~~~]"
 msgid "New owner"
 msgstr "[Néw ôwnér~~~~]"
 
-#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:943
+#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:1031
 msgid "New password"
 msgstr "[Néw pàsswôrd~~~~~]"
 
@@ -2389,7 +2449,7 @@ msgstr "[Néxt Ôbjéct~~~~]"
 msgid "Next Part of the Window"
 msgstr "[Néxt Pàrt ôf thé Wîndôw~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:473
+#: web/app/components/SearchPanel.vue:509
 msgid "Next match"
 msgstr "[Néxt màtch~~~~]"
 
@@ -2397,15 +2457,19 @@ msgstr "[Néxt màtch~~~~]"
 msgid "Next slide"
 msgstr "[Néxt slîdé~~~~]"
 
-#: web/app/components/HelpPanel.vue:102
+#: web/app/components/DocDetails.vue:41
+msgid "No description yet"
+msgstr "[Nô déscrîptîôn yét~~~~~~~]"
+
+#: web/app/components/HelpPanel.vue:114
 msgid "No function matches \"{query}\"."
 msgstr "[Nô fûnctîôn màtchés \"{query}\".~~~~~~~~~~~~]"
 
-#: web/app/components/HelpPanel.vue:115
+#: web/app/components/HelpPanel.vue:127
 msgid "No guide matches \"{query}\"."
 msgstr "[Nô gûîdé màtchés \"{query}\".~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:100
+#: web/app/lib/search.ts:548
 msgid "No matches"
 msgstr "[Nô màtchés~~~~]"
 
@@ -2445,7 +2509,7 @@ msgstr "[Nôbôdy édîts thîs dôcûmént yét. Màké sômébôdy àn édît�
 msgid "Non-breaking Hyphen"
 msgstr "[Nôn-bréàkîng Hyphén~~~~~~~~]"
 
-#: web/app/lib/print/setup.ts:30 web/app/lib/roles.ts:38
+#: web/app/components/SearchPanel.vue:486 web/app/lib/print/setup.ts:30 web/app/lib/roles.ts:38
 msgid "None"
 msgstr "[Nôné~~]"
 
@@ -2469,7 +2533,7 @@ msgstr "[Nôt cônnéctéd: yôû dîd nôt trûst thîs sérvér's cértîfîc�
 msgid "Not encrypted"
 msgstr "[Nôt éncryptéd~~~~~]"
 
-#: web/app/components/HelpPanel.vue:118
+#: web/app/components/HelpPanel.vue:130
 msgid "Not finding it? Say {mention} in the chat."
 msgstr "[Nôt fîndîng ît? Sày {mention} în thé chàt.~~~~~~~~~~~~~~~~~]"
 
@@ -2489,11 +2553,15 @@ msgstr "[Nôt sét~~~]"
 msgid "Notes"
 msgstr "[Nôtés~~]"
 
+#: web/app/lib/search.ts:539
+msgid "Nothing"
+msgstr "[Nôthîng~~~]"
+
 #: web/app/lib/base-session.ts:490
 msgid "Nothing has changed since the last checkpoint."
 msgstr "[Nôthîng hàs chàngéd sîncé thé làst chéckpôînt.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:844
+#: web/app/components/OpenDialog.vue:909
 msgid "Nothing in this collection yet. Add a document with the bookmark button next to it, or drag it onto the collection."
 msgstr "[Nôthîng în thîs côlléctîôn yét. Àdd à dôcûmént wîth thé bôôkmàrk bûttôn néxt tô ît, ôr dràg ît ôntô thé côlléctîôn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2501,13 +2569,17 @@ msgstr "[Nôthîng în thîs côlléctîôn yét. Àdd à dôcûmént wîth thé
 msgid "Nothing is called like that."
 msgstr "[Nôthîng îs càlléd lîké thàt.~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:494 web/app/lib/search.ts:497 web/app/lib/search.ts:500 web/app/lib/search.ts:503 web/app/lib/search.ts:506 web/app/lib/search.ts:512
+#: web/app/lib/search.ts:496 web/app/lib/search.ts:499 web/app/lib/search.ts:502 web/app/lib/search.ts:505 web/app/lib/search.ts:508 web/app/lib/search.ts:514
 msgid "Nothing is replaced."
 msgstr "[Nôthîng îs réplàcéd.~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:844
+#: web/app/components/OpenDialog.vue:909
 msgid "Nothing opened yet from this browser."
 msgstr "[Nôthîng ôpénéd yét frôm thîs brôwsér.~~~~~~~~~~~~~~~]"
+
+#: web/app/components/DetailsFields.vue:73
+msgid "Nothing to preview yet."
+msgstr "[Nôthîng tô prévîéw yét.~~~~~~~~~]"
 
 #: web/app/components/FormulaBar.vue:98 web/app/components/InsertBar.vue:50
 msgid "Nothing to redo"
@@ -2517,23 +2589,23 @@ msgstr "[Nôthîng tô rédô~~~~~~]"
 msgid "Nothing to undo"
 msgstr "[Nôthîng tô ûndô~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:362
+#: web/app/components/SearchPanel.vue:378
 msgid "Nothing was replaced."
 msgstr "[Nôthîng wàs réplàcéd.~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:902
+#: web/app/components/OpenDialog.vue:982
 msgid "Nothing yet. Create the first document."
 msgstr "[Nôthîng yét. Créàté thé fîrst dôcûmént.~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:182
+#: web/app/components/SidePanel.vue:183
 msgid "Nothing yet. Put a text box on the slide."
 msgstr "[Nôthîng yét. Pût à téxt bôx ôn thé slîdé.~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:182
+#: web/app/components/SidePanel.vue:183
 msgid "Nothing yet. Start writing."
 msgstr "[Nôthîng yét. Stàrt wrîtîng.~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:182
+#: web/app/components/SidePanel.vue:183
 msgid "Nothing yet. Type into a cell."
 msgstr "[Nôthîng yét. Typé întô à céll.~~~~~~~~~~~~]"
 
@@ -2549,7 +2621,7 @@ msgstr "[Nûmbéréd lîst~~~~~]"
 msgid "Numbered list (Ctrl+Shift+7)"
 msgstr "[Nûmbéréd lîst (Ctrl+Shîft+7)~~~~~~~~~~~]"
 
-#: web/app/lib/text-search-host.ts:94
+#: web/app/lib/text-search-host.ts:95
 msgid "Object in paragraph {n}"
 msgstr "[Ôbjéct în pàràgràph {n}~~~~~~~~~]"
 
@@ -2557,11 +2629,11 @@ msgstr "[Ôbjéct în pàràgràph {n}~~~~~~~~~]"
 msgid "Object menu"
 msgstr "[Ôbjéct ménû~~~~]"
 
-#: web/app/lib/slide-search-host.ts:76
+#: web/app/lib/slide-search-host.ts:77
 msgid "Object on slide {n}"
 msgstr "[Ôbjéct ôn slîdé {n}~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:319
+#: web/app/components/SearchPanel.vue:324
 msgid "Objects"
 msgstr "[Ôbjécts~~~]"
 
@@ -2577,39 +2649,43 @@ msgstr "[Ôff thé pàlétté…~~~~~~]"
 msgid "Offline"
 msgstr "[Ôfflîné~~~]"
 
-#: web/app/components/OpenDialog.vue:895
+#: web/app/components/OpenDialog.vue:969
 msgid "On this server"
 msgstr "[Ôn thîs sérvér~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:895
+#: web/app/components/OpenDialog.vue:969
 msgid "On {place} · {count}"
 msgstr "[Ôn {place} · {count}~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:101
+#: web/app/lib/search.ts:549
 msgid "One match"
 msgstr "[Ôné màtch~~~~]"
 
-#: web/app/components/SearchPanel.vue:652
+#: web/app/components/SearchPanel.vue:686
 msgid "One step in the history. Undo brings it back."
 msgstr "[Ôné stép în thé hîstôry. Ûndô brîngs ît bàck.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:486
+#: web/app/components/DetailsDialog.vue:45
+msgid "Only an editor or an owner of the document can change this."
+msgstr "[Ônly àn édîtôr ôr àn ôwnér ôf thé dôcûmént càn chàngé thîs.~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/search.ts:488
 msgid "Only in cells matching"
 msgstr "[Ônly în célls màtchîng~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:544
+#: web/app/components/SearchPanel.vue:580
 msgid "Only in cells matching (optional)"
 msgstr "[Ônly în célls màtchîng (ôptîônàl)~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:511
+#: web/app/components/SearchPanel.vue:547
 msgid "Only in cells that…"
 msgstr "[Ônly în célls thàt…~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:544
+#: web/app/components/SearchPanel.vue:580
 msgid "Only in texts matching (optional)"
 msgstr "[Ônly în téxts màtchîng (ôptîônàl)~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:511
+#: web/app/components/SearchPanel.vue:547
 msgid "Only in texts that…"
 msgstr "[Ônly în téxts thàt…~~~~~~~~]"
 
@@ -2625,7 +2701,7 @@ msgstr "[Ônly ôné côlûmn — nô rôôm fôr à héàdér théré; à làb�
 msgid "Only one row — no room for a header there either."
 msgstr "[Ônly ôné rôw — nô rôôm fôr à héàdér théré éîthér.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:413
+#: web/app/components/SearchPanel.vue:429
 msgid "Only the first {count} matches are listed."
 msgstr "[Ônly thé fîrst {count} màtchés àré lîstéd.~~~~~~~~~~~~~~~~~]"
 
@@ -2645,7 +2721,7 @@ msgstr "[Ônly whén ît îs thé whôlé téxt.~~~~~~~~~~~~]"
 msgid "Only whole words."
 msgstr "[Ônly whôlé wôrds.~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:131 web/app/components/OpenDialog.vue:729 web/app/components/OpenDialog.vue:953
+#: web/app/components/ImportDialog.vue:182 web/app/components/OpenDialog.vue:1041 web/app/components/OpenDialog.vue:792
 msgid "Open"
 msgstr "[Ôpén~~]"
 
@@ -2653,7 +2729,7 @@ msgstr "[Ôpén~~]"
 msgid "Open a File"
 msgstr "[Ôpén à Fîlé~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:832 web/app/lib/document-menus.ts:77
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:897 web/app/lib/document-menus.ts:77
 msgid "Open a File…"
 msgstr "[Ôpén à Fîlé…~~~~~]"
 
@@ -2665,19 +2741,19 @@ msgstr "[Ôpén à Wôrd, Éxcél, PôwérPôînt, ÔpénDôcûmént ôr Clàûd
 msgid "Open a document from one of your places, a collection or Mine"
 msgstr "[Ôpén à dôcûmént frôm ôné ôf yôûr plàcés, à côlléctîôn ôr Mîné~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:74
+#: web/app/components/ImportDialog.vue:106
 msgid "Open a file"
 msgstr "[Ôpén à fîlé~~~~]"
 
-#: web/app/components/OpenDialog.vue:155
+#: web/app/components/OpenDialog.vue:206
 msgid "Open a presentation, or start a new one. Everybody you invite works on the same slides at the same time."
 msgstr "[Ôpén à préséntàtîôn, ôr stàrt à néw ôné. Évérybôdy yôû învîté wôrks ôn thé sàmé slîdés àt thé sàmé tîmé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:159
+#: web/app/components/OpenDialog.vue:210
 msgid "Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant."
 msgstr "[Ôpén à tàblé, ôr stàrt à néw ôné. Évérybôdy yôû învîté wôrks în thé sàmé tàblé, ànd sô dôés thé àssîstànt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:151
+#: web/app/components/OpenDialog.vue:202
 msgid "Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide."
 msgstr "[Ôpén à téxt, ôr stàrt à néw ôné. Évérybôdy yôû învîté wrîtés în thé sàmé téxt, ànd sô dôés thé àssîstànt: ît sûggésts, yôû décîdé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2689,7 +2765,7 @@ msgstr "[Ôpén thé chàt wîth àn émpty prômpt~~~~~~~~~~~~~~]"
 msgid "Open the first suggestion"
 msgstr "[Ôpén thé fîrst sûggéstîôn~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:130
+#: web/app/components/ImportDialog.vue:181
 msgid "Open the one here"
 msgstr "[Ôpén thé ôné héré~~~~~~~]"
 
@@ -2705,11 +2781,11 @@ msgstr "[ÔpénDôcûmént spréàdshéét (.ôds)~~~~~~~~~~~~]"
 msgid "OpenDocument text (.odt)"
 msgstr "[ÔpénDôcûmént téxt (.ôdt)~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:47 web/app/lib/import-progress.ts:34
+#: web/app/components/ImportDialog.vue:50 web/app/lib/import-progress.ts:34
 msgid "Opening"
 msgstr "[Ôpénîng~~~]"
 
-#: web/app/components/ImportDialog.vue:86
+#: web/app/components/ImportDialog.vue:118
 msgid "Opening {name}"
 msgstr "[Ôpénîng {name}~~~~~~]"
 
@@ -2717,7 +2793,7 @@ msgstr "[Ôpénîng {name}~~~~~~]"
 msgid "Open…"
 msgstr "[Ôpén…~~]"
 
-#: web/app/components/OpenDialog.vue:968
+#: web/app/components/OpenDialog.vue:1056
 msgid "Or start a new one"
 msgstr "[Ôr stàrt à néw ôné~~~~~~~]"
 
@@ -2801,7 +2877,7 @@ msgstr "[Pàpér~~]"
 msgid "Paragraph"
 msgstr "[Pàràgràph~~~~]"
 
-#: web/app/lib/text-search-host.ts:93
+#: web/app/lib/text-search-host.ts:94
 msgid "Paragraph {n}"
 msgstr "[Pàràgràph {n}~~~~~]"
 
@@ -2809,7 +2885,7 @@ msgstr "[Pàràgràph {n}~~~~~]"
 msgid "Part of the result of the query in {cell}"
 msgstr "[Pàrt ôf thé résûlt ôf thé qûéry în {cell}~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminLogin.vue:48 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:111 web/app/components/OpenDialog.vue:943
+#: web/app/components/AdminLogin.vue:48 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:153 web/app/components/OpenDialog.vue:1031
 msgid "Password"
 msgstr "[Pàsswôrd~~~]"
 
@@ -2829,7 +2905,7 @@ msgstr "[Pàsté~~]"
 msgid "Paste As"
 msgstr "[Pàsté Às~~~]"
 
-#: web/app/components/SearchPanel.vue:550
+#: web/app/components/SearchPanel.vue:586
 msgid "Pattern syntax: Python re"
 msgstr "[Pàttérn syntàx: Pythôn ré~~~~~~~~~~]"
 
@@ -2897,7 +2973,7 @@ msgstr "[Pôrtràît~~~]"
 msgid "PowerPoint presentation (.pptx)"
 msgstr "[PôwérPôînt préséntàtîôn (.pptx)~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:132
+#: web/app/components/OpenDialog.vue:183
 msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
 msgstr "[PôwérPôînt, ÔpénDôcûmént ôr Clàûdîà slîdés, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2929,6 +3005,10 @@ msgstr "[Préséntér vîéw~~~~~~]"
 msgid "Presenter view (P)"
 msgstr "[Préséntér vîéw (P)~~~~~~~]"
 
+#: web/app/components/DetailsFields.vue:70
+msgid "Preview"
+msgstr "[Prévîéw~~~]"
+
 #: web/app/components/Workspace.vue:669
 msgid "Previous Object"
 msgstr "[Prévîôûs Ôbjéct~~~~~~]"
@@ -2937,7 +3017,7 @@ msgstr "[Prévîôûs Ôbjéct~~~~~~]"
 msgid "Previous Part of the Window"
 msgstr "[Prévîôûs Pàrt ôf thé Wîndôw~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:472
+#: web/app/components/SearchPanel.vue:508
 msgid "Previous match"
 msgstr "[Prévîôûs màtch~~~~~~]"
 
@@ -2973,7 +3053,7 @@ msgstr "[Pût à pîctûré ôn thé slîdé~~~~~~~~~~]"
 msgid "Put in {cell}"
 msgstr "[Pût în {cell}~~~~~]"
 
-#: web/app/components/ImportDialog.vue:107 web/app/components/ImportDialog.vue:121 web/app/components/ImportDialog.vue:131
+#: web/app/components/ImportDialog.vue:139 web/app/components/ImportDialog.vue:163 web/app/components/ImportDialog.vue:182
 msgid "Put it in"
 msgstr "[Pût ît în~~~~]"
 
@@ -3013,7 +3093,7 @@ msgstr "[Réàd àgàînst~~~~~]"
 msgid "Read against — as it is now"
 msgstr "[Réàd àgàînst — às ît îs nôw~~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:47 web/app/lib/import-progress.ts:32
+#: web/app/components/ImportDialog.vue:50 web/app/lib/import-progress.ts:32
 msgid "Reading"
 msgstr "[Réàdîng~~~]"
 
@@ -3029,7 +3109,7 @@ msgstr "[Réàds téxt às à nûmbér (\"12.5\" gîvés 12.5); #VÀLÛÉ! îf �
 msgid "Reconnecting…"
 msgstr "[Récônnéctîng…~~~~~]"
 
-#: web/app/components/OpenDialog.vue:940 web/app/components/ShareDialog.vue:58
+#: web/app/components/OpenDialog.vue:1028 web/app/components/ShareDialog.vue:58
 msgid "Recovery key"
 msgstr "[Récôvéry kéy~~~~~]"
 
@@ -3061,19 +3141,23 @@ msgstr "[Réjéct~~]"
 msgid "Release from grid"
 msgstr "[Réléàsé frôm grîd~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:317
+#: web/app/components/SearchPanel.vue:322
 msgid "Remarks"
 msgstr "[Rémàrks~~~]"
 
-#: web/app/components/AdminAccessDocuments.vue:211 web/app/components/SearchPanel.vue:595
+#: web/app/components/AdminAccessDocuments.vue:211 web/app/components/SearchPanel.vue:629
 msgid "Remove"
 msgstr "[Rémôvé~~]"
 
-#: web/app/components/OpenDialog.vue:806 web/app/components/OpenDialog.vue:806
+#: web/app/components/OpenDialog.vue:870 web/app/components/OpenDialog.vue:870
 msgid "Remove collection {name}"
 msgstr "[Rémôvé côlléctîôn {name}~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:517
+#: web/app/components/DetailsFields.vue:93
+msgid "Remove tag {tag}"
+msgstr "[Rémôvé tàg {tag}~~~~~~]"
+
+#: web/app/components/SearchPanel.vue:553
 msgid "Remove this condition"
 msgstr "[Rémôvé thîs côndîtîôn~~~~~~~~]"
 
@@ -3081,7 +3165,7 @@ msgstr "[Rémôvé thîs côndîtîôn~~~~~~~~]"
 msgid "Remove this document from the server for good"
 msgstr "[Rémôvé thîs dôcûmént frôm thé sérvér fôr gôôd~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:499
+#: web/app/components/SearchPanel.vue:535
 msgid "Remove this part"
 msgstr "[Rémôvé thîs pàrt~~~~~~]"
 
@@ -3097,11 +3181,11 @@ msgstr "[Rémôvés spàcés àt bôth énds ànd rédûcés thé ônés bétwé
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr "[Rémôvés thé chàràctérs thàt cànnôt bé prîntéd (côdés 0 tô 31) frôm à téxt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:763 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
+#: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
 msgid "Rename"
 msgstr "[Rénàmé~~]"
 
-#: web/app/components/OpenDialog.vue:749 web/app/components/OpenDialog.vue:763
+#: web/app/components/OpenDialog.vue:812 web/app/components/OpenDialog.vue:826
 msgid "Rename {server}"
 msgstr "[Rénàmé {server}~~~~~~]"
 
@@ -3109,7 +3193,7 @@ msgstr "[Rénàmé {server}~~~~~~]"
 msgid "Replace"
 msgstr "[Réplàcé~~~]"
 
-#: web/app/components/SearchPanel.vue:651
+#: web/app/components/SearchPanel.vue:685
 msgid "Replace all {count}"
 msgstr "[Réplàcé àll {count}~~~~~~~~]"
 
@@ -3117,35 +3201,35 @@ msgstr "[Réplàcé àll {count}~~~~~~~~]"
 msgid "Replace the access secret? Anyone using the old one will need the new one — this never signs an administrator out."
 msgstr "[Réplàcé thé àccéss sécrét? Ànyôné ûsîng thé ôld ôné wîll nééd thé néw ôné — thîs névér sîgns àn àdmînîstràtôr ôût.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:650
+#: web/app/components/SearchPanel.vue:684
 msgid "Replace this one"
 msgstr "[Réplàcé thîs ôné~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:547 web/app/components/SearchPanel.vue:591 web/app/components/SearchPanel.vue:592 web/app/components/SearchPanel.vue:593 web/app/lib/search.ts:486
+#: web/app/components/SearchPanel.vue:583 web/app/components/SearchPanel.vue:625 web/app/components/SearchPanel.vue:626 web/app/components/SearchPanel.vue:627 web/app/lib/search.ts:488
 msgid "Replace with"
 msgstr "[Réplàcé wîth~~~~~]"
 
-#: web/app/components/SearchPanel.vue:581 web/app/components/SearchPanel.vue:585
+#: web/app/components/SearchPanel.vue:615 web/app/components/SearchPanel.vue:619
 msgid "Replace with…"
 msgstr "[Réplàcé wîth…~~~~~]"
 
-#: web/app/components/SearchPanel.vue:625
+#: web/app/components/SearchPanel.vue:659
 msgid "Replace {where}"
 msgstr "[Réplàcé {where}~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:363
+#: web/app/components/SearchPanel.vue:379
 msgid "Replaced in one cell. Undo brings it back."
 msgstr "[Réplàcéd în ôné céll. Ûndô brîngs ît bàck.~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:364
+#: web/app/components/SearchPanel.vue:380
 msgid "Replaced in one text. Undo brings it back."
 msgstr "[Réplàcéd în ôné téxt. Ûndô brîngs ît bàck.~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:363
+#: web/app/components/SearchPanel.vue:379
 msgid "Replaced in {count} cells. Undo brings them back."
 msgstr "[Réplàcéd în {count} célls. Ûndô brîngs thém bàck.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:364
+#: web/app/components/SearchPanel.vue:380
 msgid "Replaced in {count} texts. Undo brings them back."
 msgstr "[Réplàcéd în {count} téxts. Ûndô brîngs thém bàck.~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3317,7 +3401,7 @@ msgstr "[Sàndbôx~~~]"
 msgid "Sandboxed execution"
 msgstr "[Sàndbôxéd éxécûtîôn~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/files.py:217 clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:154 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:66 web/app/lib/document-menus.ts:79 web/app/lib/shortcuts.ts:68
+#: clients/linux/src/claudia_shell_gtk/files.py:217 clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:155 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:66 web/app/lib/document-menus.ts:79 web/app/lib/shortcuts.ts:68
 msgid "Save"
 msgstr "[Sàvé~~]"
 
@@ -3329,7 +3413,11 @@ msgstr "[Sàvé Néw Chéckpôînt…~~~~~~~~]"
 msgid "Save as"
 msgstr "[Sàvé às~~~]"
 
-#: web/app/components/DocumentFrame.vue:152
+#: web/app/components/DetailsDialog.vue:49
+msgid "Save details"
+msgstr "[Sàvé détàîls~~~~~]"
+
+#: web/app/components/DocumentFrame.vue:153
 msgid "Save new checkpoint"
 msgstr "[Sàvé néw chéckpôînt~~~~~~~~]"
 
@@ -3345,7 +3433,7 @@ msgstr "[Sàvéd às {path}.~~~~~~]"
 msgid "Saved {name} to {folder}"
 msgstr "[Sàvéd {name} tô {folder}~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:154
+#: web/app/components/OpenDialog.vue:205
 msgid "Say it on a slide."
 msgstr "[Sày ît ôn à slîdé.~~~~~~~]"
 
@@ -3361,11 +3449,11 @@ msgstr "[Scàlé~~]"
 msgid "Scatter · soon"
 msgstr "[Scàttér · sôôn~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:79
+#: web/app/components/ImportDialog.vue:111
 msgid "Sealed Claudia document"
 msgstr "[Séàléd Clàûdîà dôcûmént~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:828
+#: web/app/components/OpenDialog.vue:893
 msgid "Search"
 msgstr "[Séàrch~~]"
 
@@ -3377,19 +3465,19 @@ msgstr "[Séàrch & Réplàcé~~~~~~]"
 msgid "Search & Replace…"
 msgstr "[Séàrch & Réplàcé…~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:439 web/app/components/SearchPanel.vue:441
+#: web/app/components/SearchPanel.vue:459 web/app/components/SearchPanel.vue:462
 msgid "Search & replace"
 msgstr "[Séàrch & réplàcé~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:829
+#: web/app/components/OpenDialog.vue:894
 msgid "Search Mine and {place}"
 msgstr "[Séàrch Mîné ànd {place}~~~~~~~~~]"
 
-#: web/app/components/HelpPanel.vue:75
+#: web/app/components/HelpPanel.vue:87
 msgid "Search help…"
 msgstr "[Séàrch hélp…~~~~~]"
 
-#: web/app/components/SearchPanel.vue:98
+#: web/app/components/SearchPanel.vue:106
 msgid "Searching…"
 msgstr "[Séàrchîng…~~~~]"
 
@@ -3417,11 +3505,11 @@ msgstr "[Séléct {blocker}~~~~~~]"
 msgid "Selected: {name}"
 msgstr "[Séléctéd: {name}~~~~~~]"
 
-#: web/app/lib/print/sheet.ts:65 web/app/lib/sheet-search-host.ts:51 web/app/lib/text-search-host.ts:78
+#: web/app/lib/print/sheet.ts:65 web/app/lib/sheet-search-host.ts:52 web/app/lib/text-search-host.ts:79
 msgid "Selection"
 msgstr "[Séléctîôn~~~~]"
 
-#: web/app/components/ImportDialog.vue:47
+#: web/app/components/ImportDialog.vue:50
 msgid "Sending"
 msgstr "[Séndîng~~~]"
 
@@ -3437,7 +3525,7 @@ msgstr "[Sént~~]"
 msgid "Series are in"
 msgstr "[Sérîés àré în~~~~~]"
 
-#: web/app/components/OpenDialog.vue:781
+#: web/app/components/OpenDialog.vue:844
 msgid "Server address"
 msgstr "[Sérvér àddréss~~~~~~]"
 
@@ -3465,7 +3553,7 @@ msgstr "[Sét wîdth~~~~]"
 msgid "Shape"
 msgstr "[Shàpé~~]"
 
-#: web/app/components/SearchPanel.vue:323
+#: web/app/components/SearchPanel.vue:328
 msgid "Shape labels"
 msgstr "[Shàpé làbéls~~~~~]"
 
@@ -3517,7 +3605,7 @@ msgstr "[Shôw Whô Wrôté Whàt~~~~~~~~]"
 msgid "Show as"
 msgstr "[Shôw às~~~]"
 
-#: web/app/components/SearchPanel.vue:638
+#: web/app/components/SearchPanel.vue:672
 msgid "Show more"
 msgstr "[Shôw môré~~~~]"
 
@@ -3549,6 +3637,10 @@ msgstr "[Shôw thé préséntàtîôn fûll scréén, bégînnîng wîth thé sl
 msgid "Show the text as pages instead of a flowing text"
 msgstr "[Shôw thé téxt às pàgés înstéàd ôf à flôwîng téxt~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/components/OpenDialog.vue:860
+msgid "Shown now. Choose it again, or Esc, to see all documents."
+msgstr "[Shôwn nôw. Chôôsé ît àgàîn, ôr Ésc, tô séé àll dôcûménts.~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/AdminLogin.vue:54
 msgid "Sign in"
 msgstr "[Sîgn în~~~]"
@@ -3573,7 +3665,7 @@ msgstr "[Sîzé~~]"
 msgid "Skip for now"
 msgstr "[Skîp fôr nôw~~~~~]"
 
-#: web/app/components/SearchPanel.vue:635
+#: web/app/components/SearchPanel.vue:669
 msgid "Skipped {where}"
 msgstr "[Skîppéd {where}~~~~~~]"
 
@@ -3609,7 +3701,7 @@ msgstr "[Snàp tô grîd~~~~~]"
 msgid "Soft Hyphen"
 msgstr "[Sôft Hyphén~~~~]"
 
-#: web/app/lib/search.ts:499
+#: web/app/lib/search.ts:501
 msgid "Something is repeated that is not there."
 msgstr "[Sôméthîng îs répéàtéd thàt îs nôt théré.~~~~~~~~~~~~~~~~]"
 
@@ -3633,11 +3725,11 @@ msgstr "[Sôûrcé~~]"
 msgid "Speaker Notes"
 msgstr "[Spéàkér Nôtés~~~~~]"
 
-#: web/app/components/PresentShow.vue:207 web/app/components/SearchPanel.vue:325 web/app/components/SlideNotes.vue:88 web/app/components/SlideNotes.vue:90
+#: web/app/components/PresentShow.vue:207 web/app/components/SearchPanel.vue:330 web/app/components/SlideNotes.vue:88 web/app/components/SlideNotes.vue:90
 msgid "Speaker notes"
 msgstr "[Spéàkér nôtés~~~~~]"
 
-#: web/app/lib/slide-search-host.ts:75
+#: web/app/lib/slide-search-host.ts:76
 msgid "Speaker notes of slide {n}"
 msgstr "[Spéàkér nôtés ôf slîdé {n}~~~~~~~~~~]"
 
@@ -3661,7 +3753,7 @@ msgstr "[Stàrt à néw dôcûmént~~~~~~~~]"
 msgid "Start numbering at"
 msgstr "[Stàrt nûmbérîng àt~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:449
+#: web/app/components/SearchPanel.vue:470
 msgid "Start over"
 msgstr "[Stàrt ôvér~~~~]"
 
@@ -3709,7 +3801,7 @@ msgstr "[Stylé…~~]"
 msgid "Suggest first"
 msgstr "[Sûggést fîrst~~~~~]"
 
-#: web/app/components/SidePanel.vue:194
+#: web/app/components/SidePanel.vue:195
 msgid "Suggest going back to this checkpoint"
 msgstr "[Sûggést gôîng bàck tô thîs chéckpôînt~~~~~~~~~~~~~~~]"
 
@@ -3781,9 +3873,13 @@ msgstr "[Tàblé~~]"
 msgid "Tables"
 msgstr "[Tàblés~~]"
 
-#: web/app/components/OpenDialog.vue:823
+#: web/app/components/OpenDialog.vue:888
 msgid "Tables, texts and slides on this place, and the documents you opened before."
 msgstr "[Tàblés, téxts ànd slîdés ôn thîs plàcé, ànd thé dôcûménts yôû ôpénéd béfôré.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/DetailsFields.vue:89 web/app/components/DocDetails.vue:42 web/app/components/ImportDialog.vue:167
+msgid "Tags"
+msgstr "[Tàgs~~]"
 
 #: web/app/components/NamesDialog.vue:84
 msgid "Take away"
@@ -3801,11 +3897,11 @@ msgstr "[Tàké thé séléctéd célls' ôwn stylé ôff, bàck tô thé tàbl�
 msgid "Take the selected object off the slide"
 msgstr "[Tàké thé séléctéd ôbjéct ôff thé slîdé~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:869 web/app/components/OpenDialog.vue:870
+#: web/app/components/OpenDialog.vue:942 web/app/components/OpenDialog.vue:943
 msgid "Take {id} off Mine"
 msgstr "[Tàké {id} ôff Mîné~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:877 web/app/components/OpenDialog.vue:878
+#: web/app/components/OpenDialog.vue:950 web/app/components/OpenDialog.vue:951
 msgid "Take {id} out of {name}"
 msgstr "[Tàké {id} ôût ôf {name}~~~~~~~~~]"
 
@@ -3817,7 +3913,7 @@ msgstr "[Tàké {name} àwày?~~~~~~~]"
 msgid "Teal"
 msgstr "[Téàl~~]"
 
-#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:101 web/app/components/SearchPanel.vue:327 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
+#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:101 web/app/components/SearchPanel.vue:332 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
 msgid "Text"
 msgstr "[Téxt~~]"
 
@@ -3833,7 +3929,7 @@ msgstr "[Téxt bôx~~~]"
 msgid "Text boxes hold no lists yet"
 msgstr "[Téxt bôxés hôld nô lîsts yét~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:158
+#: web/app/components/SidePanel.vue:159
 msgid "Text documents: the AI suggests either way."
 msgstr "[Téxt dôcûménts: thé ÀÎ sûggésts éîthér wày.~~~~~~~~~~~~~~~~~]"
 
@@ -3841,11 +3937,11 @@ msgstr "[Téxt dôcûménts: thé ÀÎ sûggésts éîthér wày.~~~~~~~~~~~~~~~
 msgid "Text in a base (2 to 36) as a number."
 msgstr "[Téxt în à bàsé (2 tô 36) às à nûmbér.~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:596 web/app/components/SearchPanel.vue:598
+#: web/app/components/SearchPanel.vue:630 web/app/components/SearchPanel.vue:632
 msgid "Text of the replacement"
 msgstr "[Téxt ôf thé réplàcémént~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:714
+#: web/app/components/OpenDialog.vue:777
 msgid "That document exists already — or the name or password is not acceptable. Try Open."
 msgstr "[Thàt dôcûmént éxîsts àlréàdy — ôr thé nàmé ôr pàsswôrd îs nôt àccéptàblé. Try Ôpén.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3869,7 +3965,7 @@ msgstr "[Thàt îs tôô mûch tô pàsté àt ôncé (àt môst 10,000 célls).
 msgid "That range will not make a chart."
 msgstr "[Thàt ràngé wîll nôt màké à chàrt.~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:716
+#: web/app/components/OpenDialog.vue:779
 msgid "That recovery key does not fit this document."
 msgstr "[Thàt récôvéry kéy dôés nôt fît thîs dôcûmént.~~~~~~~~~~~~~~~~~~]"
 
@@ -3973,7 +4069,7 @@ msgstr "[Thé chàràctér wîth à Ûnîcôdé côdé pôînt.~~~~~~~~~~~~~~~~]
 msgid "The character with a code from 1 to 255 (the Windows-1252 set: 65 is A, 128 the euro sign)."
 msgstr "[Thé chàràctér wîth à côdé frôm 1 tô 255 (thé Wîndôws-1252 sét: 65 îs À, 128 thé éûrô sîgn).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:485 web/app/components/SearchPanel.vue:516
+#: web/app/components/SearchPanel.vue:521 web/app/components/SearchPanel.vue:552
 msgid "The characters"
 msgstr "[Thé chàràctérs~~~~~~]"
 
@@ -3989,15 +4085,15 @@ msgstr "[Thé côlôûrs ît stàrtéd wîth~~~~~~~~~~~]"
 msgid "The colours of this document, by what each one means"
 msgstr "[Thé côlôûrs ôf thîs dôcûmént, by whàt éàch ôné méàns~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:252
+#: web/app/lib/protocol.ts:258
 msgid "The connection to the server was lost."
 msgstr "[Thé cônnéctîôn tô thé sérvér wàs lôst.~~~~~~~~~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:194
+#: web/app/components/DocumentFrame.vue:195
 msgid "The connection was closed."
 msgstr "[Thé cônnéctîôn wàs clôséd.~~~~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:139
+#: web/app/components/DocumentFrame.vue:140
 msgid "The connection was lost. Trying to get back… what you do now is not saved."
 msgstr "[Thé cônnéctîôn wàs lôst. Tryîng tô gét bàck… whàt yôû dô nôw îs nôt sàvéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4057,6 +4153,10 @@ msgstr "[Thé dày ôf thé mônth ôf à dàté, 1 tô 31.~~~~~~~~~~~~~~~~]"
 msgid "The day of the week of a date: 1 (Sunday) to 7, or as the second argument counts (2: Monday is 1)."
 msgstr "[Thé dày ôf thé wéék ôf à dàté: 1 (Sûndày) tô 7, ôr às thé sécônd àrgûmént côûnts (2: Môndày îs 1).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/components/OpenDialog.vue:172
+msgid "The description and tags of {id} are saved."
+msgstr "[Thé déscrîptîôn ànd tàgs ôf {id} àré sàvéd.~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The determinant of a square matrix of numbers."
 msgstr "[Thé détérmînànt ôf à sqûàré màtrîx ôf nûmbérs.~~~~~~~~~~~~~~~~~~]"
@@ -4069,15 +4169,15 @@ msgstr "[Thé dîfférént rôws ôf à ràngé în ôrdér ôf fîrst àppéàr
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr "[Thé dôcûmént chàngéd ûndér yôû (ît wént bàck tô à chéckpôînt ôr wàs rébûîlt). Ît wàs rélôàdéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:250
+#: web/app/lib/protocol.ts:256
 msgid "The document is full, or the connection was too slow."
 msgstr "[Thé dôcûmént îs fûll, ôr thé cônnéctîôn wàs tôô slôw.~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:248
+#: web/app/lib/protocol.ts:254
 msgid "The document is waiting for an owner or editor to open it."
 msgstr "[Thé dôcûmént îs wàîtîng fôr àn ôwnér ôr édîtôr tô ôpén ît.~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:823
+#: web/app/components/OpenDialog.vue:888
 msgid "The documents you put into this collection, on any place."
 msgstr "[Thé dôcûménts yôû pût întô thîs côlléctîôn, ôn àny plàcé.~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4109,7 +4209,7 @@ msgstr "[Thé fàctôrîàl ôf thé sûm ôf thé nûmbérs dîvîdéd by thé 
 msgid "The file could not be saved: {reason}"
 msgstr "[Thé fîlé côûld nôt bé sàvéd: {reason}~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:193
+#: web/app/lib/open.ts:295
 msgid "The file is too large for this server."
 msgstr "[Thé fîlé îs tôô làrgé fôr thîs sérvér.~~~~~~~~~~~~~~~]"
 
@@ -4321,15 +4421,19 @@ msgstr "[Thé môdél thàt ànswérs @àî în évéry dôcûmént ôn thîs s�
 msgid "The month of a date, 1 to 12."
 msgstr "[Thé mônth ôf à dàté, 1 tô 12.~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:717
+#: web/app/components/DetailsDialog.vue:38
+msgid "The name is sealed into the file and cannot change."
+msgstr "[Thé nàmé îs séàléd întô thé fîlé ànd cànnôt chàngé.~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:780
 msgid "The name or password is not right (or there is no such document)."
 msgstr "[Thé nàmé ôr pàsswôrd îs nôt rîght (ôr théré îs nô sûch dôcûmént).~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:240
+#: web/app/lib/protocol.ts:246
 msgid "The name or password is not right."
 msgstr "[Thé nàmé ôr pàsswôrd îs nôt rîght.~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/auth.py:277 packages/claudia-server/src/claudia_server/sealed.py:260
+#: packages/claudia-server/src/claudia_server/auth.py:288 packages/claudia-server/src/claudia_server/sealed.py:262
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr "[Thé nàmé “{name}” bélôngs tô thé ÀÎ àssîstànt. Chôôsé ànôthér nàmé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4517,7 +4621,7 @@ msgstr "[Thé rànk ôf à vàlûé àmông thé nûmbérs às à shàré frôm 
 msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
 msgstr "[Thé ràté àt whîch càsh flôws (thé fîrst ôné nôw, ôné pér pérîôd àftér ît) àré wôrth nôthîng tôdày.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:957
+#: web/app/components/OpenDialog.vue:1045
 msgid "The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do."
 msgstr "[Thé récôvéry kéy wàs shôwn tô thé ôwnér whén thé dôcûmént wàs màdé (ôr whén théy màdé à néw ôné). Wîth ît yôû chôôsé à néw pàsswôrd; yôû kéép whàt yôû wéré àllôwéd tô dô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4525,11 +4629,11 @@ msgstr "[Thé récôvéry kéy wàs shôwn tô thé ôwnér whén thé dôcûmé
 msgid "The remainder of a division; it has the sign of the divisor."
 msgstr "[Thé rémàîndér ôf à dîvîsîôn; ît hàs thé sîgn ôf thé dîvîsôr.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:500
+#: web/app/lib/search.ts:502
 msgid "The repeat at character {position} has nothing before it. Nothing is replaced."
 msgstr "[Thé répéàt àt chàràctér {position} hàs nôthîng béfôré ît. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:511
+#: web/app/lib/search.ts:513
 msgid "The replacement uses a kept part that the pattern does not have."
 msgstr "[Thé réplàcémént ûsés à képt pàrt thàt thé pàttérn dôés nôt hàvé.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4545,7 +4649,7 @@ msgstr "[Thé rôws ôf à ràngé fôr whîch thé côndîtîôn ràngé hôlds
 msgid "The same as CEILING.PRECISE: rounds up to a multiple of the significance; its sign is ignored."
 msgstr "[Thé sàmé às CÉÎLÎNG.PRÉCÎSÉ: rôûnds ûp tô à mûltîplé ôf thé sîgnîfîcàncé; îts sîgn îs îgnôréd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:616
+#: web/app/components/SearchPanel.vue:650
 msgid "The search was stopped after a while, so this may not be everything."
 msgstr "[Thé séàrch wàs stôppéd àftér à whîlé, sô thîs mày nôt bé évérythîng.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4557,11 +4661,11 @@ msgstr "[Thé sécànt ôf àn ànglé în ràdîàns (1 / CÔS).~~~~~~~~~~~~~~~
 msgid "The second, 0 to 59, of a time."
 msgstr "[Thé sécônd, 0 tô 59, ôf à tîmé.~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:203 web/app/lib/open.ts:225 web/app/lib/open.ts:61
+#: web/app/lib/open.ts:305 web/app/lib/open.ts:327 web/app/lib/open.ts:67
 msgid "The server answered with an error ({status})."
 msgstr "[Thé sérvér ànswéréd wîth àn érrôr ({status}).~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:182 web/app/lib/open.ts:212 web/app/lib/open.ts:50
+#: web/app/lib/open.ts:204 web/app/lib/open.ts:284 web/app/lib/open.ts:314 web/app/lib/open.ts:56
 msgid "The server cannot be reached."
 msgstr "[Thé sérvér cànnôt bé réàchéd.~~~~~~~~~~~~]"
 
@@ -4573,15 +4677,15 @@ msgstr "[Thé sérvér côûld nôt bé àskéd rîght nôw.~~~~~~~~~~~~~~~~]"
 msgid "The server did not answer at {url} within {seconds} seconds."
 msgstr "[Thé sérvér dîd nôt ànswér àt {url} wîthîn {seconds} sécônds.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:64
+#: web/app/lib/open.ts:70
 msgid "The server did not answer with a document list."
 msgstr "[Thé sérvér dîd nôt ànswér wîth à dôcûmént lîst.~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:246
+#: web/app/lib/protocol.ts:252
 msgid "The server did not hear from the page in time."
 msgstr "[Thé sérvér dîd nôt héàr frôm thé pàgé în tîmé.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:238
+#: web/app/lib/protocol.ts:244
 msgid "The server did not understand the request."
 msgstr "[Thé sérvér dîd nôt ûndérstànd thé réqûést.~~~~~~~~~~~~~~~~~]"
 
@@ -4741,7 +4845,7 @@ msgstr "[Thé t béyônd whîch, în bôth dîréctîôns tôgéthér, thé shà
 msgid "The tangent of an angle in radians."
 msgstr "[Thé tàngént ôf àn ànglé în ràdîàns.~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:484 web/app/components/SearchPanel.vue:516
+#: web/app/components/SearchPanel.vue:520 web/app/components/SearchPanel.vue:552
 msgid "The text"
 msgstr "[Thé téxt~~~]"
 
@@ -4837,7 +4941,7 @@ msgstr "[Thé wéb prôcéss éndéd ({reason}). Stàrt Clàûdîà àgàîn.~~~
 msgid "The whole part of a division, cut towards zero (the remainder is left out)."
 msgstr "[Thé whôlé pàrt ôf à dîvîsîôn, cût tôwàrds zérô (thé rémàîndér îs léft ôût).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/text-search-host.ts:78
+#: web/app/lib/text-search-host.ts:79
 msgid "The whole text"
 msgstr "[Thé whôlé téxt~~~~~~]"
 
@@ -4869,23 +4973,23 @@ msgstr "[Thé z fôr whîch thé shàré p ôf thé stàndàrd nôrmàl dîstrî
 msgid "The z for which the share p of the standard normal distribution lies below."
 msgstr "[Thé z fôr whîch thé shàré p ôf thé stàndàrd nôrmàl dîstrîbûtîôn lîés bélôw.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:494
+#: web/app/lib/search.ts:496
 msgid "The “(” at character {position} has no “)”. Nothing is replaced."
 msgstr "[Thé “(” àt chàràctér {position} hàs nô “)”. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:497
+#: web/app/lib/search.ts:499
 msgid "The “)” at character {position} has no “(”. Nothing is replaced."
 msgstr "[Thé “)” àt chàràctér {position} hàs nô “(”. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:503
+#: web/app/lib/search.ts:505
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "[Thé “[” àt chàràctér {position} hàs nô “]”. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:244
+#: web/app/lib/protocol.ts:250
 msgid "There is no such document."
 msgstr "[Théré îs nô sûch dôcûmént.~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:141
+#: web/app/components/OpenDialog.vue:192
 msgid "These are slides. Open them with Claudia Creates."
 msgstr "[Thésé àré slîdés. Ôpén thém wîth Clàûdîà Créàtés.~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4905,6 +5009,10 @@ msgstr "[Thésé wôrds wîll bé hàrd tô réàd.~~~~~~~~~~~~~]"
 msgid "These {count} cells only"
 msgstr "[Thésé {count} célls ônly~~~~~~~~~~]"
 
+#: web/app/components/ImportDialog.vue:168
+msgid "They come with the file and cannot be changed here — use Details… after it is in."
+msgstr "[Théy cômé wîth thé fîlé ànd cànnôt bé chàngéd héré — ûsé Détàîls… àftér ît îs în.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/StyleSpec.vue:246
 msgid "Thicker"
 msgstr "[Thîckér~~~]"
@@ -4913,7 +5021,7 @@ msgstr "[Thîckér~~~]"
 msgid "Thicker border"
 msgstr "[Thîckér bôrdér~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:158
+#: web/app/components/OpenDialog.vue:209
 msgid "Think with your data."
 msgstr "[Thînk wîth yôûr dàtà.~~~~~~~~]"
 
@@ -4925,11 +5033,11 @@ msgstr "[Thînnér~~~]"
 msgid "Thinner border"
 msgstr "[Thînnér bôrdér~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:604 web/app/components/SearchPanel.vue:607
+#: web/app/components/SearchPanel.vue:638 web/app/components/SearchPanel.vue:641
 msgid "This also appears in {count} formulas, which are left alone."
 msgstr "[Thîs àlsô àppéàrs în {count} fôrmûlàs, whîch àré léft àlôné.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:505
+#: web/app/lib/search.ts:507
 msgid "This backslash does not mean anything here."
 msgstr "[Thîs bàckslàsh dôés nôt méàn ànythîng héré.~~~~~~~~~~~~~~~~~]"
 
@@ -4965,6 +5073,10 @@ msgstr "[Thîs cômpûtér~~~~~]"
 msgid "This document has no sheet yet."
 msgstr "[Thîs dôcûmént hàs nô shéét yét.~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/hub.py:105
+msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
+msgstr "[Thîs dôcûmént îs ôn thîs sérvér àlréàdy, às “{id}”. Ît cànnôt bé àddéd à sécônd tîmé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/lib/base-session.ts:403
 msgid "This document was deleted by its owner."
 msgstr "[Thîs dôcûmént wàs délétéd by îts ôwnér.~~~~~~~~~~~~~~~~]"
@@ -4973,15 +5085,15 @@ msgstr "[Thîs dôcûmént wàs délétéd by îts ôwnér.~~~~~~~~~~~~~~~~]"
 msgid "This does not look like a picture the browser can show."
 msgstr "[Thîs dôés nôt lôôk lîké à pîctûré thé brôwsér càn shôw.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:140
+#: web/app/components/OpenDialog.vue:191
 msgid "This is a table. Open it with Claudia Computes."
 msgstr "[Thîs îs à tàblé. Ôpén ît wîth Clàûdîà Cômpûtés.~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:139
+#: web/app/components/OpenDialog.vue:190
 msgid "This is a text. Open it with Claudia Composes."
 msgstr "[Thîs îs à téxt. Ôpén ît wîth Clàûdîà Cômpôsés.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts:194
+#: web/app/lib/open.ts:296
 msgid "This is not a file Claudia can open."
 msgstr "[Thîs îs nôt à fîlé Clàûdîà càn ôpén.~~~~~~~~~~~~~~]"
 
@@ -5001,7 +5113,7 @@ msgstr "[Thîs nûmbér mûst bé gréàtér thàn zérô.~~~~~~~~~~~~~~~]"
 msgid "This object only"
 msgstr "[Thîs ôbjéct ônly~~~~~~]"
 
-#: web/app/lib/protocol.ts:242
+#: web/app/lib/protocol.ts:248
 msgid "This page is not allowed to use that server."
 msgstr "[Thîs pàgé îs nôt àllôwéd tô ûsé thàt sérvér.~~~~~~~~~~~~~~~~~~]"
 
@@ -5009,7 +5121,7 @@ msgstr "[Thîs pàgé îs nôt àllôwéd tô ûsé thàt sérvér.~~~~~~~~~~~~~
 msgid "This paragraph only"
 msgstr "[Thîs pàràgràph ônly~~~~~~~~]"
 
-#: web/app/lib/search.ts:508
+#: web/app/lib/search.ts:510
 msgid "This pattern has too many brackets inside each other."
 msgstr "[Thîs pàttérn hàs tôô màny bràckéts însîdé éàch ôthér.~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5017,7 +5129,7 @@ msgstr "[Thîs pàttérn hàs tôô màny bràckéts însîdé éàch ôthér.~~
 msgid "This picture only"
 msgstr "[Thîs pîctûré ônly~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:126
+#: web/app/components/ImportDialog.vue:177
 msgid "This place does not keep documents of this kind."
 msgstr "[Thîs plàcé dôés nôt kéép dôcûménts ôf thîs kînd.~~~~~~~~~~~~~~~~~~~]"
 
@@ -5041,11 +5153,11 @@ msgstr "[Thîs sàvés thé cûrrént côntént ôf {doc} tô thîs cômpûtér 
 msgid "This saves the current content of {doc} to this computer, in the format you pick below. It does not include the document's history or chat, and no tracked changes are kept — just the content as it stands now."
 msgstr "[Thîs sàvés thé cûrrént côntént ôf {doc} tô thîs cômpûtér, în thé fôrmàt yôû pîck bélôw. Ît dôés nôt înclûdé thé dôcûmént's hîstôry ôr chàt, ànd nô tràckéd chàngés àré képt — jûst thé côntént às ît stànds nôw.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/text-search-host.ts:78
+#: web/app/lib/text-search-host.ts:79
 msgid "This section"
 msgstr "[Thîs séctîôn~~~~~]"
 
-#: web/app/lib/open.ts:52
+#: web/app/lib/open.ts:58
 msgid "This server does not list its documents. Type the name of yours."
 msgstr "[Thîs sérvér dôés nôt lîst îts dôcûménts. Typé thé nàmé ôf yôûrs.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5053,11 +5165,11 @@ msgstr "[Thîs sérvér dôés nôt lîst îts dôcûménts. Typé thé nàmé �
 msgid "This shape only"
 msgstr "[Thîs shàpé ônly~~~~~~]"
 
-#: web/app/lib/print/sheet.ts:64 web/app/lib/sheet-search-host.ts:51
+#: web/app/lib/print/sheet.ts:64 web/app/lib/sheet-search-host.ts:52
 msgid "This sheet"
 msgstr "[Thîs shéét~~~~]"
 
-#: web/app/components/PresentShow.vue:176 web/app/lib/slide-search-host.ts:67
+#: web/app/components/PresentShow.vue:176 web/app/lib/slide-search-host.ts:68
 msgid "This slide"
 msgstr "[Thîs slîdé~~~~]"
 
@@ -5109,7 +5221,7 @@ msgstr "[Twô pàgés sîdé by sîdé~~~~~~~~~]"
 msgid "Type"
 msgstr "[Typé~~]"
 
-#: web/app/components/OpenDialog.vue:380 web/app/components/OpenDialog.vue:385
+#: web/app/components/OpenDialog.vue:440 web/app/components/OpenDialog.vue:445
 msgid "Type a server address."
 msgstr "[Typé à sérvér àddréss.~~~~~~~~~]"
 
@@ -5120,6 +5232,10 @@ msgstr "[Typé thé àddréss ôf à sérvér, sûch às démô.éxàmplé.ôrg:
 #: web/app/components/Workspace.vue:992
 msgid "Type, F2 or double click"
 msgstr "[Typé, F2 ôr dôûblé clîck~~~~~~~~~~]"
+
+#: web/app/components/DetailsFields.vue:118
+msgid "Type, then Enter or comma. At most {count} tags."
+msgstr "[Typé, thén Éntér ôr cômmà. Àt môst {count} tàgs.~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/AdminShell.vue:14 web/app/components/AdminTypesetting.vue:58
 msgid "Typesetting"
@@ -5165,11 +5281,11 @@ msgstr "[Ûsé {name} înstéàd~~~~~~~]"
 msgid "Use {right}"
 msgstr "[Ûsé {right}~~~~]"
 
-#: web/app/components/SearchPanel.vue:552
+#: web/app/components/SearchPanel.vue:588
 msgid "Valid."
 msgstr "[Vàlîd.~~]"
 
-#: web/app/components/SearchPanel.vue:313
+#: web/app/components/SearchPanel.vue:318
 msgid "Values"
 msgstr "[Vàlûés~~]"
 
@@ -5213,7 +5329,7 @@ msgstr "[Vîéw ôf thé stylé~~~~~~~]"
 msgid "Waiting for a name"
 msgstr "[Wàîtîng fôr à nàmé~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:170
+#: web/app/components/SidePanel.vue:171
 msgid "Waiting on {names}."
 msgstr "[Wàîtîng ôn {names}.~~~~~~~~]"
 
@@ -5241,6 +5357,10 @@ msgstr "[Whàt chàngés wîth ît~~~~~~~~]"
 msgid "What is printed"
 msgstr "[Whàt îs prîntéd~~~~~~]"
 
+#: web/app/components/DetailsFields.vue:81
+msgid "What is this document for? Others see this in the list."
+msgstr "[Whàt îs thîs dôcûmént fôr? Ôthérs séé thîs în thé lîst.~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/OutcomePopover.vue:117 web/app/components/OutcomePopover.vue:118
 msgid "What moves the result most"
 msgstr "[Whàt môvés thé résûlt môst~~~~~~~~~~]"
@@ -5249,11 +5369,11 @@ msgstr "[Whàt môvés thé résûlt môst~~~~~~~~~~]"
 msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
 msgstr "[Whàt régûlàr pàyménts (ànd à sûm àt thé énd) àré wôrth tôdày àt à fîxéd ràté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:203
+#: web/app/components/SidePanel.vue:204
 msgid "What silence at a suggestion's deadline means"
 msgstr "[Whàt sîléncé àt à sûggéstîôn's déàdlîné méàns~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:481
+#: web/app/components/SearchPanel.vue:517
 msgid "What to find"
 msgstr "[Whàt tô fînd~~~~~]"
 
@@ -5269,7 +5389,7 @@ msgstr "[Whàt {n} dràws lôôk lîké~~~~~~~~~~]"
 msgid "What “{name}” sets itself. The rest comes from its parent."
 msgstr "[Whàt “{name}” séts îtsélf. Thé rést cômés frôm îts pàrént.~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:145
+#: web/app/components/SidePanel.vue:146
 msgid "When I ask the AI, in this document:"
 msgstr "[Whén Î àsk thé ÀÎ, în thîs dôcûmént:~~~~~~~~~~~~~~]"
 
@@ -5293,11 +5413,11 @@ msgstr "[Whéré thé téxt îs fôûnd în ànôthér téxt (frôm 1; càpîtà
 msgid "Where the word may be broken at the end of a line"
 msgstr "[Whéré thé wôrd mày bé brôkén àt thé énd ôf à lîné~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:574
+#: web/app/components/SearchPanel.vue:606
 msgid "Where to look"
 msgstr "[Whéré tô lôôk~~~~~]"
 
-#: web/app/components/OpenDialog.vue:896
+#: web/app/components/OpenDialog.vue:975
 msgid "Which apps"
 msgstr "[Whîch àpps~~~~]"
 
@@ -5308,6 +5428,10 @@ msgstr "[Whîch pàrt îs styléd~~~~~~~~]"
 #: web/app/components/StyleSpec.vue:198
 msgid "Which side the border is on"
 msgstr "[Whîch sîdé thé bôrdér îs ôn~~~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:971
+msgid "Which tags"
+msgstr "[Whîch tàgs~~~~]"
 
 #: web/app/lib/base-session.ts:252
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
@@ -5325,7 +5449,7 @@ msgstr "[Whîté~~]"
 msgid "Who may change these settings, who may create or list documents, and how many this server holds."
 msgstr "[Whô mày chàngé thésé séttîngs, whô mày créàté ôr lîst dôcûménts, ànd hôw màny thîs sérvér hôlds.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:578
+#: web/app/components/SearchPanel.vue:612
 msgid "Whole cell"
 msgstr "[Whôlé céll~~~~]"
 
@@ -5337,7 +5461,7 @@ msgstr "[Whôlé stylés thàt àlsô sét à {slot} — théîr {slot} pàrt:~~
 msgid "Whole table"
 msgstr "[Whôlé tàblé~~~~]"
 
-#: web/app/components/SearchPanel.vue:578
+#: web/app/components/SearchPanel.vue:612
 msgid "Whole text"
 msgstr "[Whôlé téxt~~~~]"
 
@@ -5349,7 +5473,7 @@ msgstr "[Whôlé wôrkbôôk~~~~~~]"
 msgid "Width"
 msgstr "[Wîdth~~]"
 
-#: web/app/components/SidePanel.vue:175
+#: web/app/components/SidePanel.vue:176
 msgid "Withdraw"
 msgstr "[Wîthdràw~~~]"
 
@@ -5361,11 +5485,11 @@ msgstr "[Wîthôût ôné, ônly thîs màchîné mày créàté dôcûménts.~~
 msgid "Word document (.docx)"
 msgstr "[Wôrd dôcûmént (.dôcx)~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:134
+#: web/app/components/OpenDialog.vue:185
 msgid "Word, Excel, PowerPoint, OpenDocument or Claudia, or drop one anywhere on this page."
 msgstr "[Wôrd, Éxcél, PôwérPôînt, ÔpénDôcûmént ôr Clàûdîà, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:130
+#: web/app/components/OpenDialog.vue:181
 msgid "Word, OpenDocument or Claudia texts, or drop one anywhere on this page."
 msgstr "[Wôrd, ÔpénDôcûmént ôr Clàûdîà téxts, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5389,15 +5513,19 @@ msgstr "[Wôrks ôn~~~]"
 msgid "Wrap long text"
 msgstr "[Wràp lông téxt~~~~~~]"
 
+#: web/app/components/DetailsFields.vue:69
+msgid "Write"
+msgstr "[Wrîté~~]"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Write in the selected text box"
 msgstr "[Wrîté în thé séléctéd téxt bôx~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:448
+#: web/app/components/SearchPanel.vue:469
 msgid "Write the pattern yourself…"
 msgstr "[Wrîté thé pàttérn yôûrsélf…~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:224
+#: web/app/components/SidePanel.vue:225
 msgid "Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do."
 msgstr "[Wrîté tô évérybôdy, ôr {ask} tô àsk thé àssîstànt. Sày {help} tô séé whàt ît càn dô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5405,7 +5533,7 @@ msgstr "[Wrîté tô évérybôdy, ôr {ask} tô àsk thé àssîstànt. Sày {h
 msgid "Write to the assistant in the chat"
 msgstr "[Wrîté tô thé àssîstànt în thé chàt~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:150
+#: web/app/components/OpenDialog.vue:201
 msgid "Write together."
 msgstr "[Wrîté tôgéthér.~~~~~~]"
 
@@ -5417,11 +5545,11 @@ msgstr "[X àxîs (ôptîônàl)~~~~~~~]"
 msgid "Y axis (optional)"
 msgstr "[Y àxîs (ôptîônàl)~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:117
+#: web/app/components/ImportDialog.vue:159
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
 msgstr "[Yôû àré îts ôwnér. Whàt thé dôcûmént dôés nôt shôw stàys în thé képt fîlé ànd îs lîstéd àftér ît ôpéns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:193
+#: web/app/components/DocumentFrame.vue:194
 msgid "You are not connected any more"
 msgstr "[Yôû àré nôt cônnéctéd àny môré~~~~~~~~~~~~]"
 
@@ -5449,11 +5577,11 @@ msgstr "[Yôûr brôwsér wôûld nôt côpy ît: séléct thé kéy ànd côpy 
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr "[Yôûr chàngé wàs nôt àpplîéd: thé dôcûmént chàngéd ûndér yôû. Ît wàs rélôàdéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:557
+#: web/app/components/SearchPanel.vue:593
 msgid "Your changes to the pattern are dropped."
 msgstr "[Yôûr chàngés tô thé pàttérn àré drôppéd.~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminLogin.vue:47 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:110 web/app/components/OpenDialog.vue:938
+#: web/app/components/AdminLogin.vue:47 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:152 web/app/components/OpenDialog.vue:1026
 msgid "Your name"
 msgstr "[Yôûr nàmé~~~~]"
 
@@ -5461,11 +5589,11 @@ msgstr "[Yôûr nàmé~~~~]"
 msgid "Your password"
 msgstr "[Yôûr pàsswôrd~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:166
+#: web/app/components/DocumentFrame.vue:167
 msgid "Your password for {doc} is changed."
 msgstr "[Yôûr pàsswôrd fôr {doc} îs chàngéd.~~~~~~~~~~~~~~]"
 
-#: web/app/components/DeleteDocumentDialog.vue:29
+#: web/app/components/DeleteDocumentDialog.vue:29 web/app/components/DetailsDialog.vue:43
 msgid "Your password, to confirm"
 msgstr "[Yôûr pàsswôrd, tô cônfîrm~~~~~~~~~~]"
 
@@ -5477,19 +5605,19 @@ msgstr "[Yôûr récôvéry kéy~~~~~~~]"
 msgid "Zoom"
 msgstr "[Zôôm~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:376
+#: packages/claudia-server/src/claudia_server/app.py:378
 msgid "a Claudia file goes in as it is, not as a new document"
 msgstr "[à Clàûdîà fîlé gôés în às ît îs, nôt às à néw dôcûmént~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:199 web/app/lib/search.ts:236
+#: web/app/components/SearchPanel.vue:204 web/app/lib/search.ts:236
 msgid "a cell reference"
 msgstr "[à céll référéncé~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:190 web/app/lib/search.ts:218
+#: web/app/components/SearchPanel.vue:195 web/app/lib/search.ts:218
 msgid "a digit"
 msgstr "[à dîgît~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:378
+#: packages/claudia-server/src/claudia_server/app.py:380
 msgid "a file becomes a new document: hello needs create"
 msgstr "[à fîlé bécômés à néw dôcûmént: héllô nééds créàté~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5497,7 +5625,7 @@ msgstr "[à fîlé bécômés à néw dôcûmént: héllô nééds créàté~~~~
 msgid "a grid of random numbers (1 row, 1 column, from 0 to 1 and not whole numbers unless said otherwise). With whole TRUE the numbers are whole, from min to max."
 msgstr "[à grîd ôf ràndôm nûmbérs (1 rôw, 1 côlûmn, frôm 0 tô 1 ànd nôt whôlé nûmbérs ûnléss sàîd ôthérwîsé). Wîth whôlé TRÛÉ thé nûmbérs àré whôlé, frôm mîn tô màx.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:189 web/app/lib/search.ts:215
+#: web/app/components/SearchPanel.vue:194 web/app/lib/search.ts:215
 msgid "a letter"
 msgstr "[à léttér~~~]"
 
@@ -5513,7 +5641,7 @@ msgstr "[à nàmé nééds sômé téxt~~~~~~~~~]"
 msgid "a name starts with a letter and has only letters, digits, _ and ."
 msgstr "[à nàmé stàrts wîth à léttér ànd hàs ônly léttérs, dîgîts, _ ànd .~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:193 web/app/lib/search.ts:227
+#: web/app/components/SearchPanel.vue:198 web/app/lib/search.ts:227
 msgid "a number"
 msgstr "[à nûmbér~~~]"
 
@@ -5533,7 +5661,7 @@ msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "[à ràndôm nûmbér frôm thé nàméd dîstrîbûtîôn, fôr éxàmplé RÀNDÔM(\"nôrmàl\", 1000, 150). Wîthôût àrgûménts ît îs RÀND(). ``lôw`` ànd ``hîgh`` cût thé dîstrîbûtîôn (côntînûôûs ônés ônly). Dîstrîbûtîôns: ûnîfôrm, nôrmàl, lôgnôrmàl, trîàngûlàr, pért, éxpônéntîàl, wéîbûll, bétà, gàmmà, bînômîàl, pôîssôn, dîscrété.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:337
+#: packages/claudia-server/src/claudia_server/app.py:339
 msgid "a recovery key, a name and a new password are needed"
 msgstr "[à récôvéry kéy, à nàmé ànd à néw pàsswôrd àré néédéd~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5541,7 +5669,7 @@ msgstr "[à récôvéry kéy, à nàmé ànd à néw pàsswôrd àré néédéd~
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "[à rémàrk sûggésts nô chàngé; dîsmîss ît înstéàd~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:448
+#: packages/claudia-server/src/claudia_server/protocol.py:450
 msgid "a request must be a JSON object"
 msgstr "[à réqûést mûst bé à JSÔN ôbjéct~~~~~~~~~~~~]"
 
@@ -5553,7 +5681,7 @@ msgstr "[à rôlé îs mîssîng {kéy!r}~~~~~~~~~~]"
 msgid "a role's id, name and colour are text"
 msgstr "[à rôlé's îd, nàmé ànd côlôûr àré téxt~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:191 web/app/lib/search.ts:221
+#: web/app/components/SearchPanel.vue:196 web/app/lib/search.ts:221
 msgid "a space"
 msgstr "[à spàcé~~~]"
 
@@ -5561,7 +5689,7 @@ msgstr "[à spàcé~~~]"
 msgid "a summary (1 AVERAGE, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 6 PRODUCT, 7 STDEV, 8 STDEV.P, 9 SUM, 10 VAR, 11 VAR.P; add 100 to skip hidden rows) that leaves out other SUBTOTAL cells."
 msgstr "[à sûmmàry (1 ÀVÉRÀGÉ, 2 CÔÛNT, 3 CÔÛNTÀ, 4 MÀX, 5 MÎN, 6 PRÔDÛCT, 7 STDÉV, 8 STDÉV.P, 9 SÛM, 10 VÀR, 11 VÀR.P; àdd 100 tô skîp hîddén rôws) thàt léàvés ôût ôthér SÛBTÔTÀL célls.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:52
+#: web/app/components/ImportDialog.vue:76
 msgid "a table"
 msgstr "[à tàblé~~~]"
 
@@ -5573,7 +5701,7 @@ msgstr "[à tàrgét îs àn ôbjéct sûch às {\"ôbjéct\": îd}~~~~~~~~~~~~~
 msgid "a target names one of: {adapters}"
 msgstr "[à tàrgét nàmés ôné ôf: {adapters}~~~~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:52
+#: web/app/components/ImportDialog.vue:76
 msgid "a text"
 msgstr "[à téxt~~]"
 
@@ -5581,7 +5709,7 @@ msgstr "[à téxt~~]"
 msgid "a whole number from bottom to top, both included."
 msgstr "[à whôlé nûmbér frôm bôttôm tô tôp, bôth înclûdéd.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:200 web/app/lib/search.ts:239
+#: web/app/components/SearchPanel.vue:205 web/app/lib/search.ts:239
 msgid "a word"
 msgstr "[à wôrd~~]"
 
@@ -5617,17 +5745,21 @@ msgstr "[àdd_ôbjéct: ûsé àdd_îmàgé tô pût à pîctûré ôn à slîd�
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr "[àdd_shéét: thé nàmé mûst hàvé 1 tô {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:838
+#: packages/claudia-server/src/claudia_server/protocol.py:840
 msgid "add_user: role must be editor or viewer"
 msgstr "[àdd_ûsér: rôlé mûst bé édîtôr ôr vîéwér~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:897
+#: web/app/components/OpenDialog.vue:976
 msgid "all apps"
 msgstr "[àll àpps~~~]"
 
-#: web/app/components/SearchPanel.vue:522
+#: web/app/components/SearchPanel.vue:558
 msgid "all of these must hold"
 msgstr "[àll ôf thésé mûst hôld~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue:972
+msgid "all tags"
+msgstr "[àll tàgs~~~]"
 
 #: web/app/components/RandomDialog.vue:131
 msgid "alpha"
@@ -5653,15 +5785,15 @@ msgstr "[ànd {moreCount} môré~~~~~~~~]"
 msgid "and {n} more"
 msgstr "[ànd {n} môré~~~~~]"
 
-#: web/app/components/OpenDialog.vue:938
+#: web/app/components/OpenDialog.vue:1026
 msgid "ann"
 msgstr "[ànn~]"
 
-#: web/app/components/SearchPanel.vue:192 web/app/lib/search.ts:224
+#: web/app/components/SearchPanel.vue:197 web/app/lib/search.ts:224
 msgid "any character"
 msgstr "[àny chàràctér~~~~~]"
 
-#: web/app/components/SearchPanel.vue:188
+#: web/app/components/SearchPanel.vue:193
 msgid "any character except"
 msgstr "[àny chàràctér éxcépt~~~~~~~~]"
 
@@ -5669,15 +5801,15 @@ msgstr "[àny chàràctér éxcépt~~~~~~~~]"
 msgid "any character except {chars}"
 msgstr "[àny chàràctér éxcépt {chars}~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:206
+#: web/app/components/SearchPanel.vue:211
 msgid "any number"
 msgstr "[àny nûmbér~~~~]"
 
-#: web/app/components/SearchPanel.vue:187
+#: web/app/components/SearchPanel.vue:192
 msgid "any one of"
 msgstr "[àny ôné ôf~~~~]"
 
-#: web/app/components/SearchPanel.vue:523
+#: web/app/components/SearchPanel.vue:559
 msgid "any one of these may hold"
 msgstr "[àny ôné ôf thésé mày hôld~~~~~~~~~~]"
 
@@ -5685,7 +5817,7 @@ msgstr "[àny ôné ôf thésé mày hôld~~~~~~~~~~]"
 msgid "any one of {chars}"
 msgstr "[àny ôné ôf {chars}~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:215
+#: web/app/components/SearchPanel.vue:220
 msgid "are exactly"
 msgstr "[àré éxàctly~~~~]"
 
@@ -5693,7 +5825,7 @@ msgstr "[àré éxàctly~~~~]"
 msgid "are exactly “{text}”"
 msgstr "[àré éxàctly “{text}”~~~~~~~~]"
 
-#: web/app/lib/search.ts:464
+#: web/app/lib/search.ts:466
 msgid "are not exactly “{text}”"
 msgstr "[àré nôt éxàctly “{text}”~~~~~~~~~~]"
 
@@ -5705,7 +5837,7 @@ msgstr "[àûdîéncé vîéw~~~~~]"
 msgid "authorship colours"
 msgstr "[àûthôrshîp côlôûrs~~~~~~~]"
 
-#: web/app/components/DocumentFrame.vue:155
+#: web/app/components/DocumentFrame.vue:156
 msgid "before the review"
 msgstr "[béfôré thé révîéw~~~~~~~]"
 
@@ -5713,7 +5845,7 @@ msgstr "[béfôré thé révîéw~~~~~~~]"
 msgid "beta"
 msgstr "[bétà~~]"
 
-#: web/app/components/SearchPanel.vue:208
+#: web/app/components/SearchPanel.vue:213
 msgid "between"
 msgstr "[bétwéén~~~]"
 
@@ -5729,7 +5861,7 @@ msgstr "[blôcks mûst bé à lîst ôf 1 tô {limit} pàràgràph îds~~~~~~~~~
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr "[blôcks mûst bé à lîst ôf àt môst {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:937
+#: web/app/components/OpenDialog.vue:1025
 msgid "budget-2027"
 msgstr "[bûdgét-2027~~~~]"
 
@@ -5773,19 +5905,19 @@ msgstr "[chàrt~~]"
 msgid "chart type"
 msgstr "[chàrt typé~~~~]"
 
-#: web/app/components/SidePanel.vue:247
+#: web/app/components/SidePanel.vue:248
 msgid "chat message"
 msgstr "[chàt méssàgé~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:967
+#: packages/claudia-server/src/claudia_server/protocol.py:996
 msgid "chat: {reason}"
 msgstr "[chàt: {reason}~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:728
+#: packages/claudia-server/src/claudia_server/protocol.py:730
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr "[chàt_lôg: lîmît mûst bé frôm 1 tô {limit}~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:212
+#: web/app/components/SidePanel.vue:213
 msgid "close"
 msgstr "[clôsé~~]"
 
@@ -5809,27 +5941,27 @@ msgstr "[cômplétîôns~~~~]"
 msgid "connect to this server instead of starting one on this computer (https://host[:port]; plain http is only accepted for this computer)"
 msgstr "[cônnéct tô thîs sérvér înstéàd ôf stàrtîng ôné ôn thîs cômpûtér (https://hôst[:pôrt]; plàîn http îs ônly àccéptéd fôr thîs cômpûtér)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:211
+#: web/app/components/SearchPanel.vue:216
 msgid "contain"
 msgstr "[côntàîn~~~]"
 
-#: web/app/components/SearchPanel.vue:217
+#: web/app/components/SearchPanel.vue:222
 msgid "contain none of"
 msgstr "[côntàîn nôné ôf~~~~~~]"
 
-#: web/app/lib/search.ts:273 web/app/lib/search.ts:466
+#: web/app/lib/search.ts:273 web/app/lib/search.ts:468
 msgid "contain none of {chars}"
 msgstr "[côntàîn nôné ôf {chars}~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:216
+#: web/app/components/SearchPanel.vue:221
 msgid "contain one of"
 msgstr "[côntàîn ôné ôf~~~~~~]"
 
-#: web/app/lib/search.ts:271 web/app/lib/search.ts:468
+#: web/app/lib/search.ts:271 web/app/lib/search.ts:470
 msgid "contain one of {chars}"
 msgstr "[côntàîn ôné ôf {chars}~~~~~~~~~]"
 
-#: web/app/lib/search.ts:261 web/app/lib/search.ts:456
+#: web/app/lib/search.ts:261 web/app/lib/search.ts:458
 msgid "contain “{text}”"
 msgstr "[côntàîn “{text}”~~~~~~]"
 
@@ -5861,39 +5993,43 @@ msgstr "[délété à wôrd~~~~~]"
 msgid "delete; at the edge of a paragraph it joins the one next to it"
 msgstr "[délété; àt thé édgé ôf à pàràgràph ît jôîns thé ôné néxt tô ît~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:344
+#: web/app/components/SearchPanel.vue:360
 msgid "description"
 msgstr "[déscrîptîôn~~~~]"
 
-#: web/app/components/SearchPanel.vue:212
+#: packages/claudia-server/src/claudia_server/app.py:389
+msgid "description is text and tags are a list of words"
+msgstr "[déscrîptîôn îs téxt ànd tàgs àré à lîst ôf wôrds~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/SearchPanel.vue:217
 msgid "do not contain"
 msgstr "[dô nôt côntàîn~~~~~~]"
 
-#: web/app/lib/search.ts:263 web/app/lib/search.ts:458
+#: web/app/lib/search.ts:263 web/app/lib/search.ts:460
 msgid "do not contain “{text}”"
 msgstr "[dô nôt côntàîn “{text}”~~~~~~~~~]"
 
-#: web/app/lib/search.ts:462
+#: web/app/lib/search.ts:464
 msgid "do not end with “{text}”"
 msgstr "[dô nôt énd wîth “{text}”~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:470
+#: web/app/lib/search.ts:472
 msgid "do not match the pattern for cells"
 msgstr "[dô nôt màtch thé pàttérn fôr célls~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:470
+#: web/app/lib/search.ts:472
 msgid "do not match the pattern for texts"
 msgstr "[dô nôt màtch thé pàttérn fôr téxts~~~~~~~~~~~~~~]"
 
-#: web/app/lib/search.ts:460
+#: web/app/lib/search.ts:462
 msgid "do not start with “{text}”"
 msgstr "[dô nôt stàrt wîth “{text}”~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:614
+#: packages/claudia-server/src/claudia_server/hub.py:635
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "[dôcûmént îds àré 1-64 léttérs, dîgîts, '-' ôr '_'~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:139
+#: web/app/components/SidePanel.vue:140
 msgid "document panel"
 msgstr "[dôcûmént pànél~~~~~~]"
 
@@ -5929,7 +6065,7 @@ msgstr "[énd~]"
 msgid "end the paragraph (after a heading the next one is body text); in a list, the next item; on an empty item, out of the list"
 msgstr "[énd thé pàràgràph (àftér à héàdîng thé néxt ôné îs bôdy téxt); în à lîst, thé néxt îtém; ôn àn émpty îtém, ôût ôf thé lîst~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:214
+#: web/app/components/SearchPanel.vue:219
 msgid "end with"
 msgstr "[énd wîth~~~]"
 
@@ -5949,15 +6085,15 @@ msgstr "[érrôr {value}: {why}~~~~~~~~]"
 msgid "every role is an object with id, name, purpose and colour"
 msgstr "[évéry rôlé îs àn ôbjéct wîth îd, nàmé, pûrpôsé ànd côlôûr~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:181
+#: web/app/components/SidePanel.vue:182
 msgid "everything that was done to this document"
 msgstr "[évérythîng thàt wàs dôné tô thîs dôcûmént~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:207
+#: web/app/components/SearchPanel.vue:212
 msgid "exactly"
 msgstr "[éxàctly~~~]"
 
-#: web/app/components/OpenDialog.vue:781
+#: web/app/components/OpenDialog.vue:844
 msgid "example.com:8420"
 msgstr "[éxàmplé.côm:8420~~~~~~]"
 
@@ -5985,13 +6121,17 @@ msgstr "[fîrst {length} shôwn~~~~~~~~]"
 msgid "font {hash}… is not in the server's catalogue"
 msgstr "[fônt {hash}… îs nôt în thé sérvér's càtàlôgûé~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:334 web/app/lib/grid-a11y.ts:50
+#: web/app/components/SearchPanel.vue:350 web/app/lib/grid-a11y.ts:50
 msgid "formula"
 msgstr "[fôrmûlà~~~]"
 
 #: web/app/components/RandomDialog.vue:180
 msgid "from"
 msgstr "[frôm~~]"
+
+#: web/app/components/DetailsFields.vue:116 web/app/components/DetailsFields.vue:84
+msgid "from the file"
+msgstr "[frôm thé fîlé~~~~~]"
 
 #: web/app/components/PresentShow.vue:219
 msgid "full screen"
@@ -6009,7 +6149,7 @@ msgstr "[gîvé thé CSS às sét prôpértîés ôr às téxt, nôt bôth~~~~~~
 msgid "greatest"
 msgstr "[gréàtést~~~]"
 
-#: web/app/components/SearchPanel.vue:338
+#: web/app/components/SearchPanel.vue:354
 msgid "heading"
 msgstr "[héàdîng~~~]"
 
@@ -6025,7 +6165,7 @@ msgstr "[héré~~]"
 msgid "high"
 msgstr "[hîgh~~]"
 
-#: web/app/components/SidePanel.vue:166
+#: web/app/components/SidePanel.vue:167
 msgid "history and chat"
 msgstr "[hîstôry ànd chàt~~~~~~]"
 
@@ -6045,7 +6185,7 @@ msgstr "[hôw màny rôws thé ràngé hàs.~~~~~~~~~~~]"
 msgid "how many sheets the workbook has (1 for a reference)."
 msgstr "[hôw màny shééts thé wôrkbôôk hàs (1 fôr à référéncé).~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:451
+#: packages/claudia-server/src/claudia_server/protocol.py:453
 msgid "id must be an integer or a short string"
 msgstr "[îd mûst bé àn întégér ôr à shôrt strîng~~~~~~~~~~~~~~~~]"
 
@@ -6065,15 +6205,15 @@ msgstr "[în {name}~~~~]"
 msgid "insert"
 msgstr "[însért~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:273
+#: packages/claudia-server/src/claudia_server/hub.py:292
 msgid "internal server error"
 msgstr "[întérnàl sérvér érrôr~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:772
+#: packages/claudia-server/src/claudia_server/protocol.py:774
 msgid "invalid command: {reason!r}"
 msgstr "[învàlîd cômmànd: {réàsôn!r}~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:240
+#: web/app/components/SidePanel.vue:241
 msgid "is working"
 msgstr "[îs wôrkîng~~~~]"
 
@@ -6089,7 +6229,7 @@ msgstr "[jûst nôw~~~]"
 msgid "keep and go down / keep and go right / cancel"
 msgstr "[kéép ànd gô dôwn / kéép ànd gô rîght / càncél~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:346
+#: web/app/components/SearchPanel.vue:362
 msgid "label"
 msgstr "[làbél~~]"
 
@@ -6137,7 +6277,7 @@ msgstr "[lîké SÛBTÔTÀL wîth môré fûnctîôns (1-13 às SÛBTÔTÀL bût
 msgid "line {line}"
 msgstr "[lîné {line}~~~~]"
 
-#: web/app/components/SearchPanel.vue:408
+#: web/app/components/SearchPanel.vue:424
 msgid "locked by {name}"
 msgstr "[lôckéd by {name}~~~~~~]"
 
@@ -6145,7 +6285,7 @@ msgstr "[lôckéd by {name}~~~~~~]"
 msgid "log more and enable the web inspector"
 msgstr "[lôg môré ànd énàblé thé wéb înspéctôr~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:707
+#: packages/claudia-server/src/claudia_server/protocol.py:709
 msgid "log: limit must be from 1 to {limit}"
 msgstr "[lôg: lîmît mûst bé frôm 1 tô {limit}~~~~~~~~~~~~~~]"
 
@@ -6177,15 +6317,15 @@ msgstr "[médîàn~~]"
 msgid "menu"
 msgstr "[ménû~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:442
+#: packages/claudia-server/src/claudia_server/protocol.py:444
 msgid "message too large"
 msgstr "[méssàgé tôô làrgé~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:392
+#: packages/claudia-server/src/claudia_server/protocol.py:394
 msgid "method must be a string"
 msgstr "[méthôd mûst bé à strîng~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:443
+#: packages/claudia-server/src/claudia_server/app.py:467
 msgid "missing or wrong credentials"
 msgstr "[mîssîng ôr wrông crédéntîàls~~~~~~~~~~~]"
 
@@ -6249,11 +6389,11 @@ msgstr "[nô àpp~~]"
 msgid "no cells"
 msgstr "[nô célls~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:610
+#: packages/claudia-server/src/claudia_server/protocol.py:612
 msgid "no checkpoint number {checkpoint}"
 msgstr "[nô chéckpôînt nûmbér {checkpoint}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:728
+#: packages/claudia-server/src/claudia_server/hub.py:783
 msgid "no document {id!r}"
 msgstr "[nô dôcûmént {îd!r}~~~~~~~]"
 
@@ -6261,15 +6401,15 @@ msgstr "[nô dôcûmént {îd!r}~~~~~~~]"
 msgid "no function named {name!r}"
 msgstr "[nô fûnctîôn nàméd {nàmé!r}~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:512
+#: packages/claudia-server/src/claudia_server/protocol.py:514
 msgid "no help topic {id!r}"
 msgstr "[nô hélp tôpîc {îd!r}~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:395
+#: packages/claudia-server/src/claudia_server/protocol.py:397
 msgid "no method {name!r}"
 msgstr "[nô méthôd {nàmé!r}~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:920
+#: packages/claudia-server/src/claudia_server/protocol.py:922
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "[nô ôwnérshîp trànsfér îs wàîtîng fôr yôû wîth thàt pàsswôrd~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6277,23 +6417,23 @@ msgstr "[nô ôwnérshîp trànsfér îs wàîtîng fôr yôû wîth thàt pàss
 msgid "no style of their own"
 msgstr "[nô stylé ôf théîr ôwn~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:476
+#: packages/claudia-server/src/claudia_server/protocol.py:478
 msgid "not a region this document understands: {reason!r}"
 msgstr "[nôt à régîôn thîs dôcûmént ûndérstànds: {réàsôn!r}~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/protocol.ts:195
+#: web/app/lib/protocol.ts:201
 msgid "not connected"
 msgstr "[nôt cônnéctéd~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:446
+#: packages/claudia-server/src/claudia_server/protocol.py:448
 msgid "not valid JSON"
 msgstr "[nôt vàlîd JSÔN~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:348
+#: web/app/components/SearchPanel.vue:364
 msgid "notes"
 msgstr "[nôtés~~]"
 
-#: web/app/components/SearchPanel.vue:342 web/app/lib/noun-phrases.ts:27
+#: web/app/components/SearchPanel.vue:358 web/app/lib/noun-phrases.ts:27
 msgid "object"
 msgstr "[ôbjéct~~]"
 
@@ -6305,11 +6445,11 @@ msgstr "[ôbjécts mûst bé à lîst ôf àt môst {limit} ôbjéct îds~~~~~~~
 msgid "on time"
 msgstr "[ôn tîmé~~~]"
 
-#: web/app/components/SearchPanel.vue:203
+#: web/app/components/SearchPanel.vue:208
 msgid "once"
 msgstr "[ôncé~~]"
 
-#: web/app/components/SearchPanel.vue:205
+#: web/app/components/SearchPanel.vue:210
 msgid "one or more"
 msgstr "[ôné ôr môré~~~~]"
 
@@ -6321,7 +6461,11 @@ msgstr "[ônly Sûndày îs ôff~~~~~~~]"
 msgid "only Sunday is off: Saturday is a workday"
 msgstr "[ônly Sûndày îs ôff: Sàtûrdày îs à wôrkdày~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:932
+#: packages/claudia-server/src/claudia_server/protocol.py:953
+msgid "only an editor or an owner of a document may change its description and tags"
+msgstr "[ônly àn édîtôr ôr àn ôwnér ôf à dôcûmént mày chàngé îts déscrîptîôn ànd tàgs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:934
 msgid "only an owner of a document may delete it"
 msgstr "[ônly àn ôwnér ôf à dôcûmént mày délété ît~~~~~~~~~~~~~~~~]"
 
@@ -6341,23 +6485,23 @@ msgstr "[ônly thé àssîstànt màkés sûggéstîôns~~~~~~~~~~~~~~]"
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr "[ônly thé brànch tàkén îs évàlûàtéd, sô ÎF(B1=0, 0, À1/B1) névér dîvîdés by zérô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:834
+#: packages/claudia-server/src/claudia_server/protocol.py:836
 msgid "only the owner of a document adds people to it"
 msgstr "[ônly thé ôwnér ôf à dôcûmént àdds péôplé tô ît~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:902
+#: packages/claudia-server/src/claudia_server/protocol.py:904
 msgid "only the owner of a document can hand it over"
 msgstr "[ônly thé ôwnér ôf à dôcûmént càn hànd ît ôvér~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:670
+#: packages/claudia-server/src/claudia_server/protocol.py:672
 msgid "only the owner of a document discards its hidden lines"
 msgstr "[ônly thé ôwnér ôf à dôcûmént dîscàrds îts hîddén lînés~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:850
+#: packages/claudia-server/src/claudia_server/protocol.py:852
 msgid "only the owner of a document makes a recovery key"
 msgstr "[ônly thé ôwnér ôf à dôcûmént màkés à récôvéry kéy~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:591
+#: packages/claudia-server/src/claudia_server/protocol.py:593
 msgid "only the owner of a document sets this"
 msgstr "[ônly thé ôwnér ôf à dôcûmént séts thîs~~~~~~~~~~~~~~~]"
 
@@ -6365,7 +6509,7 @@ msgstr "[ônly thé ôwnér ôf à dôcûmént séts thîs~~~~~~~~~~~~~~~]"
 msgid "only their box"
 msgstr "[ônly théîr bôx~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:204
+#: web/app/components/DetailsFields.vue:67 web/app/components/DetailsFields.vue:89 web/app/components/SearchPanel.vue:209
 msgid "optional"
 msgstr "[ôptîônàl~~~]"
 
@@ -6389,7 +6533,7 @@ msgstr "[pàràgràph~~~~]"
 msgid "paragraphs"
 msgstr "[pàràgràphs~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:364
+#: packages/claudia-server/src/claudia_server/protocol.py:366
 msgid "params must be an object"
 msgstr "[pàràms mûst bé àn ôbjéct~~~~~~~~~~]"
 
@@ -6401,7 +6545,7 @@ msgstr "[pàrt ôf à résûlt~~~~~~]"
 msgid "pdftocairo"
 msgstr "[pdftôcàîrô~~~~]"
 
-#: web/app/components/SidePanel.vue:212
+#: web/app/components/SidePanel.vue:213
 msgid "peek"
 msgstr "[péék~~]"
 
@@ -6473,11 +6617,11 @@ msgstr "[récôvéry kéy~~~~~]"
 msgid "redo"
 msgstr "[rédô~~]"
 
-#: web/app/components/SearchPanel.vue:340
+#: web/app/components/SearchPanel.vue:356
 msgid "remark"
 msgstr "[rémàrk~~]"
 
-#: web/app/lib/protocol.ts:222
+#: web/app/lib/protocol.ts:228
 msgid "request failed"
 msgstr "[réqûést fàîléd~~~~~~]"
 
@@ -6521,7 +6665,7 @@ msgstr "[rôw {n}’s stylé~~~~~~]"
 msgid "scale"
 msgstr "[scàlé~~]"
 
-#: web/app/components/HelpPanel.vue:75
+#: web/app/components/HelpPanel.vue:87
 msgid "search help"
 msgstr "[séàrch hélp~~~~]"
 
@@ -6545,7 +6689,7 @@ msgstr "[séléct à blôck~~~~~~]"
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr "[séléct àn ôbjéct (côlléàgûés cànnôt chàngé ît whîlé yôû hôld ît)~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:252
+#: web/app/components/SidePanel.vue:253
 msgid "send"
 msgstr "[sénd~~]"
 
@@ -6561,7 +6705,7 @@ msgstr "[sét_célls: éàch céll îs àn ôbjéct wîth rôw, côl ànd înpû
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr "[sét_célls: înpût mûst bé téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:594
+#: packages/claudia-server/src/claudia_server/protocol.py:596
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr "[sét_réstôré_pôlîcy: pôlîcy mûst bé ôné ôf {policies}~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6577,15 +6721,15 @@ msgstr "[shàpé~~]"
 msgid "sheets"
 msgstr "[shééts~~]"
 
-#: web/app/components/SidePanel.vue:205
+#: web/app/components/SidePanel.vue:206
 msgid "silence = agree"
 msgstr "[sîléncé = àgréé~~~~~~]"
 
-#: web/app/components/SidePanel.vue:204
+#: web/app/components/SidePanel.vue:205
 msgid "silence = decline"
 msgstr "[sîléncé = déclîné~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:636
+#: web/app/components/SearchPanel.vue:670
 msgid "skipped"
 msgstr "[skîppéd~~~]"
 
@@ -6593,7 +6737,7 @@ msgstr "[skîppéd~~~]"
 msgid "slide"
 msgstr "[slîdé~~]"
 
-#: web/app/components/ImportDialog.vue:52 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:374
+#: web/app/components/ImportDialog.vue:76 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:374
 msgid "slides"
 msgstr "[slîdés~~]"
 
@@ -6617,7 +6761,7 @@ msgstr "[sql_prévîéw: lîmît mûst bé à whôlé nûmbér frôm 0 tô {limi
 msgid "start 1,000, save 100 a month at 12% a year, to reach 10,000"
 msgstr "[stàrt 1,000, sàvé 100 à mônth àt 12% à yéàr, tô réàch 10,000~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:213
+#: web/app/components/SearchPanel.vue:218
 msgid "start with"
 msgstr "[stàrt wîth~~~~]"
 
@@ -6629,7 +6773,7 @@ msgstr "[stàrt wîth “{text}”~~~~~~~~]"
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr "[strûctûré: àxîs mûst bé \"rôw\" ôr \"côl\"~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:213
+#: web/app/components/SidePanel.vue:214
 msgid "suggest switching here"
 msgstr "[sûggést swîtchîng héré~~~~~~~~~]"
 
@@ -6649,11 +6793,15 @@ msgstr "[tàblé · {rows} rôws~~~~~~~~]"
 msgid "tables"
 msgstr "[tàblés~~]"
 
+#: packages/claudia-server/src/claudia_server/protocol.py:958
+msgid "tags are words"
+msgstr "[tàgs àré wôrds~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/style_targets.py:116
 msgid "targets is a list of 1 to {limit} targets"
 msgstr "[tàrgéts îs à lîst ôf 1 tô {limit} tàrgéts~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:350
+#: web/app/components/SearchPanel.vue:366
 msgid "text"
 msgstr "[téxt~~]"
 
@@ -6665,7 +6813,7 @@ msgstr "[téxt bôx~~~]"
 msgid "text of the object"
 msgstr "[téxt ôf thé ôbjéct~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:874 packages/claudia-server/src/claudia_server/protocol.py:891 packages/claudia-server/src/claudia_server/protocol.py:906 packages/claudia-server/src/claudia_server/protocol.py:936
+#: packages/claudia-server/src/claudia_server/protocol.py:876 packages/claudia-server/src/claudia_server/protocol.py:893 packages/claudia-server/src/claudia_server/protocol.py:908 packages/claudia-server/src/claudia_server/protocol.py:938 packages/claudia-server/src/claudia_server/protocol.py:964
 msgid "that is not your current password"
 msgstr "[thàt îs nôt yôûr cûrrént pàsswôrd~~~~~~~~~~~~~]"
 
@@ -6681,23 +6829,23 @@ msgstr "[thé àssîstànt càn ônly màké sûggéstîôns; péôplé sét th�
 msgid "the assistant can only make suggestions; people write the text"
 msgstr "[thé àssîstànt càn ônly màké sûggéstîôns; péôplé wrîté thé téxt~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:766
+#: packages/claudia-server/src/claudia_server/protocol.py:768
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr "[thé àssîstànt cànnôt àpply à ràw cômmànd; ûsé thé àpp's ôwn méthôds~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:607
+#: packages/claudia-server/src/claudia_server/protocol.py:609
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr "[thé àssîstànt dôés nôt sûggést réstôrîng à chéckpôînt~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:633
+#: packages/claudia-server/src/claudia_server/protocol.py:635
 msgid "the assistant does not suggest switching lines"
 msgstr "[thé àssîstànt dôés nôt sûggést swîtchîng lînés~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:652
+#: packages/claudia-server/src/claudia_server/protocol.py:654
 msgid "the assistant does not vote"
 msgstr "[thé àssîstànt dôés nôt vôté~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:680
+#: packages/claudia-server/src/claudia_server/protocol.py:682
 msgid "the assistant does not withdraw suggestions"
 msgstr "[thé àssîstànt dôés nôt wîthdràw sûggéstîôns~~~~~~~~~~~~~~~~~]"
 
@@ -6725,7 +6873,7 @@ msgstr "[thé célls thàt thé téxt nàmés (``\"B\"&À1``, ``\"Shéét2!À1:�
 msgid "the column number."
 msgstr "[thé côlûmn nûmbér.~~~~~~~]"
 
-#: web/app/lib/protocol.ts:185
+#: web/app/lib/protocol.ts:191
 msgid "the connection closed ({code})"
 msgstr "[thé cônnéctîôn clôséd ({code})~~~~~~~~~~~~]"
 
@@ -6737,19 +6885,19 @@ msgstr "[thé dàté ànd tîmé às à dày nûmbér wîth thé tîmé ôf dày
 msgid "the document's own"
 msgstr "[thé dôcûmént's ôwn~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:195 web/app/lib/search.ts:233
+#: web/app/components/SearchPanel.vue:200 web/app/lib/search.ts:233
 msgid "the end of the cell"
 msgstr "[thé énd ôf thé céll~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:195 web/app/lib/search.ts:233
+#: web/app/components/SearchPanel.vue:200 web/app/lib/search.ts:233
 msgid "the end of the text"
 msgstr "[thé énd ôf thé téxt~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:374
+#: packages/claudia-server/src/claudia_server/app.py:376
 msgid "the file is no longer here: choose it again"
 msgstr "[thé fîlé îs nô lôngér héré: chôôsé ît àgàîn~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:426
+#: packages/claudia-server/src/claudia_server/app.py:449
 msgid "the first message must be hello with params"
 msgstr "[thé fîrst méssàgé mûst bé héllô wîth pàràms~~~~~~~~~~~~~~~~~]"
 
@@ -6841,15 +6989,15 @@ msgstr "[thé shéét’s stylé~~~~~~~]"
 msgid "the slides"
 msgstr "[thé slîdés~~~~]"
 
-#: web/app/components/SearchPanel.vue:194 web/app/lib/search.ts:230
+#: web/app/components/SearchPanel.vue:199 web/app/lib/search.ts:230
 msgid "the start of the cell"
 msgstr "[thé stàrt ôf thé céll~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:194 web/app/lib/search.ts:230
+#: web/app/components/SearchPanel.vue:199 web/app/lib/search.ts:230
 msgid "the start of the text"
 msgstr "[thé stàrt ôf thé téxt~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:186 web/app/components/TextEditor.vue:413 web/app/lib/print/source.ts:121
+#: web/app/components/SearchPanel.vue:191 web/app/components/TextEditor.vue:413 web/app/lib/print/source.ts:121
 msgid "the text"
 msgstr "[thé téxt~~~]"
 
@@ -6881,7 +7029,7 @@ msgstr "[thé vàlûé, ôr thé àltérnàtîvé whén thé vàlûé îs àn é
 msgid "the whole table, header included"
 msgstr "[thé whôlé tàblé, héàdér înclûdéd~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:672
+#: packages/claudia-server/src/claudia_server/protocol.py:674
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr "[théré îs àn ôpén sûggéstîôn; ànswér ôr wîthdràw ît fîrst~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6889,7 +7037,7 @@ msgstr "[théré îs àn ôpén sûggéstîôn; ànswér ôr wîthdràw ît fîr
 msgid "there is no earlier list of this kind to continue"
 msgstr "[théré îs nô éàrlîér lîst ôf thîs kînd tô côntînûé~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:635
+#: packages/claudia-server/src/claudia_server/protocol.py:637
 msgid "there is no line called {line!r}"
 msgstr "[théré îs nô lîné càlléd {lîné!r}~~~~~~~~~~~~~]"
 
@@ -6933,15 +7081,19 @@ msgstr "[thîs pàràgràph îs nôt à lîst îtém~~~~~~~~~~~~~]"
 msgid "this row"
 msgstr "[thîs rôw~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:284 packages/claudia-server/src/claudia_server/suite.py:106
+#: packages/claudia-server/src/claudia_server/app.py:286 packages/claudia-server/src/claudia_server/suite.py:115
 msgid "this server does not host {app}"
 msgstr "[thîs sérvér dôés nôt hôst {app}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:340 packages/claudia-server/src/claudia_server/protocol.py:852
+#: packages/claudia-server/src/claudia_server/protocol.py:956
+msgid "this server does not keep a description and tags"
+msgstr "[thîs sérvér dôés nôt kéép à déscrîptîôn ànd tàgs~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/app.py:342 packages/claudia-server/src/claudia_server/protocol.py:854
 msgid "this server does not keep recovery keys"
 msgstr "[thîs sérvér dôés nôt kéép récôvéry kéys~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:862
+#: packages/claudia-server/src/claudia_server/protocol.py:864
 msgid "this server does not list a document's people this way"
 msgstr "[thîs sérvér dôés nôt lîst à dôcûmént's péôplé thîs wày~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6949,31 +7101,31 @@ msgstr "[thîs sérvér dôés nôt lîst à dôcûmént's péôplé thîs wày~
 msgid "this server does not make rendered containers"
 msgstr "[thîs sérvér dôés nôt màké réndéréd côntàînérs~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:836
+#: packages/claudia-server/src/claudia_server/protocol.py:838
 msgid "this server does not manage people"
 msgstr "[thîs sérvér dôés nôt mànàgé péôplé~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:885
+#: packages/claudia-server/src/claudia_server/protocol.py:887
 msgid "this server does not support changing a password"
 msgstr "[thîs sérvér dôés nôt sûppôrt chàngîng à pàsswôrd~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:934
+#: packages/claudia-server/src/claudia_server/protocol.py:936
 msgid "this server does not support deleting a document"
 msgstr "[thîs sérvér dôés nôt sûppôrt délétîng à dôcûmént~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:904 packages/claudia-server/src/claudia_server/protocol.py:917
+#: packages/claudia-server/src/claudia_server/protocol.py:906 packages/claudia-server/src/claudia_server/protocol.py:919
 msgid "this server does not support handing over ownership"
 msgstr "[thîs sérvér dôés nôt sûppôrt hàndîng ôvér ôwnérshîp~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:872
+#: packages/claudia-server/src/claudia_server/protocol.py:874
 msgid "this server does not support leaving a document"
 msgstr "[thîs sérvér dôés nôt sûppôrt léàvîng à dôcûmént~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:556
+#: packages/claudia-server/src/claudia_server/hub.py:577
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "[thîs sérvér hôlds {limit} dôcûménts, thé môst ît mày hôld~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:657
+#: packages/claudia-server/src/claudia_server/hub.py:710
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "[thîs sérvér kééps îts dôcûménts în mémôry ànd cànnôt tàké în à fîlé~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7025,7 +7177,7 @@ msgstr "[typé héré tô àdd à rôw~~~~~~~~~]"
 msgid "undo"
 msgstr "[ûndô~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:368
+#: packages/claudia-server/src/claudia_server/protocol.py:370
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "[ûnknôwn pàràmétér {pàràmétér!r} fôr {name}~~~~~~~~~~~~~~~~~]"
 
@@ -7049,11 +7201,11 @@ msgstr "[ûséd by 1 stylé~~~~~~]"
 msgid "used by {count} styles"
 msgstr "[ûséd by {count} stylés~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:336
+#: web/app/components/SearchPanel.vue:352
 msgid "value"
 msgstr "[vàlûé~~]"
 
-#: web/app/components/SearchPanel.vue:410
+#: web/app/components/SearchPanel.vue:426
 msgid "was typed into since you looked"
 msgstr "[wàs typéd întô sîncé yôû lôôkéd~~~~~~~~~~~~]"
 
@@ -7081,11 +7233,11 @@ msgstr "[wôrds~~]"
 msgid "words must be from 0 to {limit}"
 msgstr "[wôrds mûst bé frôm 0 tô {limit}~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:411
+#: web/app/components/SearchPanel.vue:427
 msgid "would be too long"
 msgstr "[wôûld bé tôô lông~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:409
+#: web/app/components/SearchPanel.vue:425
 msgid "would no longer be a formula"
 msgstr "[wôûld nô lôngér bé à fôrmûlà~~~~~~~~~~~]"
 
@@ -7173,7 +7325,7 @@ msgstr "[{caption}: màrk thé téxt bôx by whàt ît îs fôr~~~~~~~~~~~~~~~~~
 msgid "{cell} (no table right now)"
 msgstr "[{cell} (nô tàblé rîght nôw)~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:614
+#: web/app/components/SearchPanel.vue:648
 msgid "{changing} will change, {skipping} skipped"
 msgstr "[{changing} wîll chàngé, {skipping} skîppéd~~~~~~~~~~~~~~~~~]"
 
@@ -7189,17 +7341,17 @@ msgstr "[{count} côlûmns~~~~~~]"
 msgid "{count} columns selected — {line} to column {last} — with different sizes."
 msgstr "[{count} côlûmns séléctéd — {line} tô côlûmn {last} — wîth dîfférént sîzés.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:102
+#: web/app/components/DetailsFields.vue:110
+msgid "{count} docs"
+msgstr "[{count} dôcs~~~~~]"
+
+#: web/app/lib/search.ts:550
 msgid "{count} matches"
 msgstr "[{count} màtchés~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:103
+#: web/app/lib/search.ts:551
 msgid "{count} matches in {cells} cells"
 msgstr "[{count} màtchés în {cells} célls~~~~~~~~~~~~~]"
-
-#: web/app/components/SearchPanel.vue:103
-msgid "{count} matches in {texts} texts"
-msgstr "[{count} màtchés în {texts} téxts~~~~~~~~~~~~~]"
 
 #: web/app/lib/noun-phrases.ts:113 web/app/lib/noun-phrases.ts:115
 msgid "{count} objects"
@@ -7208,6 +7360,10 @@ msgstr "[{count} ôbjécts~~~~~~]"
 #: web/app/components/ObjectDescriptionDialog.vue:34
 msgid "{count} of {max} characters"
 msgstr "[{count} ôf {max} chàràctérs~~~~~~~~~~~]"
+
+#: web/app/lib/search.ts:542
+msgid "{count} of {total} kinds"
+msgstr "[{count} ôf {total} kînds~~~~~~~~~~]"
 
 #: web/app/lib/print/setup.ts:104 web/app/lib/print/sheet.ts:99
 msgid "{count} pages"
@@ -7277,35 +7433,35 @@ msgstr "[{host} càn nôw bé réàchéd frôm ôûtsîdé thîs cômpûtér. B�
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr "[{host} îsn't réàchàblé béyônd thîs cômpûtér yét, sô thîs îsn't réqûîréd — bût sét à nàmé ànd pàsswôrd nôw îf yôû'd lîké tô mànàgé îts séttîngs, ôr béfôré yôû ôpén ît ûp tô ôthérs làtér.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:391
+#: packages/claudia-server/src/claudia_server/hub.py:412
 msgid "{id} already has {limit} connections"
 msgstr "[{id} àlréàdy hàs {limit} cônnéctîôns~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:716
+#: packages/claudia-server/src/claudia_server/hub.py:771
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd yét: {reason}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:719
+#: packages/claudia-server/src/claudia_server/hub.py:774
 msgid "{id} cannot be opened: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd: {reason}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:723
+#: packages/claudia-server/src/claudia_server/hub.py:778
 msgid "{id} cannot be read"
 msgstr "[{id} cànnôt bé réàd~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:667
+#: packages/claudia-server/src/claudia_server/hub.py:722
 msgid "{id} cannot be taken in: {reason}"
 msgstr "[{id} cànnôt bé tàkén în: {reason}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:660 packages/claudia-server/src/claudia_server/hub.py:665
+#: packages/claudia-server/src/claudia_server/hub.py:713 packages/claudia-server/src/claudia_server/hub.py:718
 msgid "{id} is here already"
 msgstr "[{id} îs héré àlréàdy~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:389
+#: packages/claudia-server/src/claudia_server/app.py:403
 msgid "{id} is here already: give the new document another name"
 msgstr "[{id} îs héré àlréàdy: gîvé thé néw dôcûmént ànôthér nàmé~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:650
+#: web/app/components/OpenDialog.vue:710
 msgid "{id} is here now. Open it with your name and password in it."
 msgstr "[{id} îs héré nôw. Ôpén ît wîth yôûr nàmé ànd pàsswôrd în ît.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7385,11 +7541,11 @@ msgstr "[{method}: à shéét îs nàméd by îts îd~~~~~~~~~~~~~~]"
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "[{method}: kînds îs à lîst ôf {kinds}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:376
+#: packages/claudia-server/src/claudia_server/protocol.py:378
 msgid "{method}: missing parameter {parameter!r}"
 msgstr "[{method}: mîssîng pàràmétér {pàràmétér!r}~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:385
+#: packages/claudia-server/src/claudia_server/protocol.py:387
 msgid "{method}: {parameter} {reason}"
 msgstr "[{method}: {parameter} {reason}~~~~~~~~~~~~]"
 
@@ -7397,15 +7553,19 @@ msgstr "[{method}: {parameter} {reason}~~~~~~~~~~~~]"
 msgid "{method}: {why}"
 msgstr "[{method}: {why}~~~~~~]"
 
+#: web/app/lib/search.ts:541
+msgid "{names} ({count})"
+msgstr "[{names} ({count})~~~~~~~]"
+
 #: web/app/components/PaletteDialog.vue:105
 msgid "{name} as hex"
 msgstr "[{name} às héx~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:394
+#: packages/claudia-server/src/claudia_server/app.py:408
 msgid "{name} cannot be read"
 msgstr "[{name} cànnôt bé réàd~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:386
+#: packages/claudia-server/src/claudia_server/app.py:400
 msgid "{name} cannot become a document of {app}"
 msgstr "[{name} cànnôt bécômé à dôcûmént ôf {app}~~~~~~~~~~~~~~~~]"
 
@@ -7417,15 +7577,15 @@ msgstr "[{name} côûld nôt bé réàd: {reason}~~~~~~~~~~~~~~]"
 msgid "{name} has no cells right now"
 msgstr "[{name} hàs nô célls rîght nôw~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:404
+#: web/app/components/OpenDialog.vue:464
 msgid "{name} is here, and kept inside the document for Download."
 msgstr "[{name} îs héré, ànd képt însîdé thé dôcûmént fôr Dôwnlôàd.~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:405
+#: web/app/components/OpenDialog.vue:465
 msgid "{name} is here. The file was not kept: Download writes a new one."
 msgstr "[{name} îs héré. Thé fîlé wàs nôt képt: Dôwnlôàd wrîtés à néw ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/OpenDialog.vue:403
+#: web/app/components/OpenDialog.vue:463
 msgid "{name} is here. {count} things it holds are not shown, and stay in the kept file."
 msgstr "[{name} îs héré. {count} thîngs ît hôlds àré nôt shôwn, ànd stày în thé képt fîlé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7433,11 +7593,11 @@ msgstr "[{name} îs héré. {count} thîngs ît hôlds àré nôt shôwn, ànd s
 msgid "{name} is larger than {mb} MB."
 msgstr "[{name} îs làrgér thàn {mb} MB.~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:401
+#: packages/claudia-server/src/claudia_server/protocol.py:403
 msgid "{name} is not one of the methods this account may call"
 msgstr "[{name} îs nôt ôné ôf thé méthôds thîs àccôûnt mày càll~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:397
+#: packages/claudia-server/src/claudia_server/protocol.py:399
 msgid "{name} needs the editor role"
 msgstr "[{name} nééds thé édîtôr rôlé~~~~~~~~~~~]"
 
@@ -7477,7 +7637,7 @@ msgstr "[{n} mîn~~~]"
 msgid "{n} min ago"
 msgstr "[{n} mîn àgô~~~~]"
 
-#: web/app/components/SearchPanel.vue:105
+#: web/app/components/SearchPanel.vue:109
 msgid "{n} of {count}"
 msgstr "[{n} ôf {count}~~~~~~]"
 
@@ -7521,9 +7681,13 @@ msgstr "[{owner} îs nôw thé ôwnér ôf thîs dôcûmént.~~~~~~~~~~~~~~~~~]"
 msgid "{path} could not be written: {reason}"
 msgstr "[{path} côûld nôt bé wrîttén: {reason}~~~~~~~~~~~~~~~]"
 
-#: web/app/components/ImportDialog.vue:123
+#: web/app/components/ImportDialog.vue:174
 msgid "{place} already holds a document called {id}. A name cannot change (it is sealed into the file): open the one that is here, or open the place you want it in first."
 msgstr "[{place} àlréàdy hôlds à dôcûmént càlléd {id}. À nàmé cànnôt chàngé (ît îs séàléd întô thé fîlé): ôpén thé ôné thàt îs héré, ôr ôpén thé plàcé yôû wànt ît în fîrst.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/ImportDialog.vue:171
+msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
+msgstr "[{place} àlréàdy hôlds thîs dôcûmént, às {id}. Ît cànnôt bé àddéd à sécônd tîmé: ôpén thé ôné thàt îs héré.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/grid-a11y.ts:71
 msgid "{range} selected, {count} cells"
@@ -7537,7 +7701,7 @@ msgstr "[{range} · {rows} rôws · {purpose}~~~~~~~~~~~~~]"
 msgid "{ref}, empty"
 msgstr "[{ref}, émpty~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:697
+#: packages/claudia-server/src/claudia_server/protocol.py:699
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr "[{revision} îs nôt pàrt ôf thé dôcûmént's cûrrént lîné; rélôàd ît~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7665,7 +7829,7 @@ msgstr "[{what}: {problem}~~~~~~~]"
 msgid "{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do."
 msgstr "[{who} hàs béén àskéd tô tàké ôvér {doc}. Ûntîl théy àccépt, yôû àré stîll thé ôwnér. Yôû wîll bécômé àn édîtôr thé mômént théy dô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:169
+#: web/app/components/SidePanel.vue:170
 msgid "{who} suggests going to {line}."
 msgstr "[{who} sûggésts gôîng tô {line}.~~~~~~~~~~~~]"
 
@@ -7677,7 +7841,7 @@ msgstr "[{width} × {height} px~~~~~~~~]"
 msgid "· editing"
 msgstr "[· édîtîng~~~~]"
 
-#: web/app/components/OpenDialog.vue:908
+#: web/app/components/OpenDialog.vue:988
 msgid "· {online} here now"
 msgstr "[· {online} héré nôw~~~~~~~~]"
 
@@ -7701,10 +7865,10 @@ msgstr "[“{requested}” îs nôt ôn thîs sérvér; thé prévîéw ànd th�
 msgid "← Styles"
 msgstr "[← Stylés~~~]"
 
-#: web/app/components/SidePanel.vue:194
+#: web/app/components/SidePanel.vue:195
 msgid "↺ restore"
 msgstr "[↺ réstôré~~~~]"
 
-#: web/app/components/SidePanel.vue:193
+#: web/app/components/SidePanel.vue:194
 msgid "◆ saved: {label}"
 msgstr "[◆ sàvéd: {label}~~~~~~]"

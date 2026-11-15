@@ -59,6 +59,7 @@ A document is a zip file with a readable manifest, the key slots, the sealed lis
 history and chat as blocks. Every change replaces the file atomically.
 
 .. autofunction:: claudia_container.create_document
+.. autofunction:: claudia_container.clean_details
 .. autofunction:: claudia_container.read_manifest
 .. autofunction:: claudia_container.unlock
 .. autofunction:: claudia_container.unlock_with_recovery

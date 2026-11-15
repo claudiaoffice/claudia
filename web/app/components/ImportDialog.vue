@@ -22,11 +22,14 @@ const props = defineProps<{
   phase: ImportPhase
   /** How much of the file has been sent (0 to 1). */
   sent: number
+  /** The tags this place already uses and how often, to suggest from. */
+  counts?: { tag: string; count: number }[]
 }>()
 const emit = defineEmits<{
   close: []
-  /** Make the new document: its id, the owner's name and password, and whether the file is kept inside. */
-  import: [values: { id: string; user: string; password: string; keep: boolean }]
+  /** Make the new document: its id, the owner's name and password, whether the file is kept inside, and the
+   * description and tags the person left or wrote (both optional). */
+  import: [values: { id: string; user: string; password: string; keep: boolean; description: string; tags: string[] }]
   /** Put the Claudia file into this place as it is. */
   place: []
   /** Open the document of that id that is here already. */
@@ -48,6 +51,27 @@ const STEPS = [t('Sending'), t('Reading'), t('Opening')]
 const user = ref(props.user)
 const password = ref('')
 const keep = ref(true)
+// What the file says about itself is the start of the two fields; it arrives with the server's answer, so it fills them
+// only while the person has not written anything of their own.
+const description = ref(props.file.description ?? '')
+const tags = ref([...(props.file.tags ?? [])])
+const descriptionTouched = ref(false)
+const tagsTouched = ref(false)
+watch(
+  () => [props.file.description, props.file.tags] as const,
+  ([said, words]) => {
+    if (!descriptionTouched.value) description.value = said ?? ''
+    if (!tagsTouched.value) tags.value = [...(words ?? [])]
+  },
+)
+watch(description, (now) => {
+  if (now !== (props.file.description ?? '')) descriptionTouched.value = true
+})
+watch(tags, (now) => {
+  if (now.join('\n') !== (props.file.tags ?? []).join('\n')) tagsTouched.value = true
+})
+const fromFileDescription = computed(() => !!props.file.description && description.value === props.file.description)
+const fromFileTags = computed(() => !!props.file.tags?.length && tags.value.join('\n') === props.file.tags.join('\n'))
 const claudia = computed(() => props.file.format === 'claudia')
 const appName: Record<string, string> = { computes: t('a table'), composes: t('a text'), creates: t('slides') }
 const formatName: Record<string, string> = {
@@ -66,7 +90,15 @@ function size(bytes: number): string {
 function submit() {
   if (props.phase !== 'sent') return
   if (claudia.value) emit('place')
-  else emit('import', { id: id.value.trim(), user: user.value.trim(), password: password.value, keep: keep.value })
+  else
+    emit('import', {
+      id: id.value.trim(),
+      user: user.value.trim(),
+      password: password.value,
+      keep: keep.value,
+      description: description.value,
+      tags: tags.value,
+    })
 }
 </script>
 
@@ -106,6 +138,16 @@ function submit() {
         </p>
         <p class="where">{{ t('Put it in') }}: <b>{{ place }}</b></p>
         <label class="field">{{ t('Name') }}<input v-model="id" name="import-name" autocomplete="off" required :readonly="working" ></label>
+        <DetailsFields
+          v-model:description="description"
+          v-model:tags="tags"
+          :counts="counts ?? []"
+          :place="place"
+          :readonly="working"
+          :description-from-file="fromFileDescription"
+          :tags-from-file="fromFileTags"
+          id-prefix="import"
+        />
         <div class="two">
           <label class="field">{{ t('Your name') }}<input v-model="user" name="import-user" autocomplete="username" required :readonly="working" ></label>
           <label class="field">{{ t('Password') }}<PasswordInput v-model="password" name="import-password" autocomplete="new-password" required :readonly="working" /></label>
@@ -119,7 +161,16 @@ function submit() {
       <template v-else>
         <p class="lead">{{ t('A Claudia document goes into a place as it is, still sealed, and is opened with a name and password it already knows.') }}</p>
         <p class="where">{{ t('Put it in') }}: <b>{{ place }}</b></p>
-        <p v-if="file.exists" class="warn" role="status">
+        <div v-if="file.description || file.tags?.length" class="theirs" data-testid="own-details">
+          <b>{{ t('Description') }}</b>
+          <NotesText v-if="file.description" :notes="file.description" />
+          <ul v-if="file.tags?.length" class="own-tags" :aria-label="t('Tags')"><li v-for="tag in file.tags" :key="tag">{{ tag }}</li></ul>
+          <p class="hint">{{ t('They come with the file and cannot be changed here — use Details… after it is in.') }}</p>
+        </div>
+        <p v-if="file.same_document" class="warn" role="status" data-testid="same-document">
+          {{ t('{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here.', { place, id: file.same_document }) }}
+        </p>
+        <p v-else-if="file.exists" class="warn" role="status">
           {{ t('{place} already holds a document called {id}. A name cannot change (it is sealed into the file): open the one that is here, or open the place you want it in first.', { place, id: file.id ?? '' }) }}
         </p>
       </template>
@@ -127,7 +178,7 @@ function submit() {
       <p v-if="error" class="error" role="alert">{{ error }}</p>
       <div class="buttons">
         <button class="btn" type="button" :disabled="working" @click="emit('close')">{{ t('Cancel') }}</button>
-        <button v-if="claudia && file.exists" class="btn primary" type="button" :disabled="phase !== 'sent' || busy" @click="emit('existing')">{{ t('Open the one here') }}</button>
+        <button v-if="claudia && (file.exists || file.same_document)" class="btn primary" type="button" :disabled="phase !== 'sent' || busy" @click="emit('existing')">{{ t('Open the one here') }}</button>
         <button v-else class="btn primary" type="submit" :disabled="phase !== 'sent' || busy || !file.hosted">{{ claudia ? t('Put it in') : t('Open') }}</button>
       </div>
     </form>
@@ -135,6 +186,28 @@ function submit() {
 </template>
 
 <style scoped>
+.theirs {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--app-soft);
+  font-size: 13px;
+}
+.own-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.own-tags li {
+  border-radius: 999px;
+  background: var(--surface);
+  padding: 1px 10px;
+  font-size: 12.5px;
+}
 .file {
   display: flex;
   gap: 12px;

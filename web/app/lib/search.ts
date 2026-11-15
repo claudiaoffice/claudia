@@ -404,6 +404,8 @@ export interface SearchHost<Scope = unknown> {
   readonly scopes: string[]
   /** Parts of the builder that only this app has (a cell reference). */
   readonly extraParts: PartWhat[]
+  /** The help topic that explains searching in this app (`computes.searching-and-replacing`); the panel's menu opens it. */
+  readonly helpTopic: string
   /** What the scope is called in the list: "This sheet". */
   scopeLabel(scope: string): string
   /** The scope as the server wants it. */
@@ -528,4 +530,23 @@ export function latest<T>(): (run: () => Promise<T>) => Promise<T | null> {
       return null
     }
   }
+}
+
+/** What the "Look in" button says: every kind that is on, or "Everything" when all are. Never more than two names, so
+ * that it fits in its place however many kinds an app has. */
+export function lookInSummary(labels: { label: string; on: boolean }[], t: Translate): string {
+  const on = labels.filter((l) => l.on)
+  if (on.length === 0) return t('Nothing')
+  if (on.length === labels.length) return t('Everything ({count})', { count: on.length })
+  if (on.length <= 2) return t('{names} ({count})', { names: on.map((l) => l.label).join(', '), count: on.length })
+  return t('{count} of {total} kinds', { count: on.length, total: labels.length })
+}
+
+/** The line above the matches. A person thinks of a document as one text, so for texts it says only how many matches
+ * there are; a workbook says in how many cells, because there they do think in cells. */
+export function matchSummary(count: number, units: number, unit: Unit, t: Translate): string {
+  if (count === 0) return t('No matches')
+  if (count === 1) return t('One match')
+  if (unit === 'text' || units === count) return t('{count} matches', { count })
+  return t('{count} matches in {cells} cells', { count, cells: units })
 }

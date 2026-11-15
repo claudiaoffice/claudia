@@ -374,7 +374,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         :replace="search.replace.value"
         @close="search.closeSearch()"
         @view="search.view.value = $event"
-        @help="frame?.openHelp('how-to')"
+        @help="frame?.openHelp('how-to', searchHost.helpTopic)"
       />
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />

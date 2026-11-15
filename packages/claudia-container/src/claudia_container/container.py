@@ -3,7 +3,8 @@
 ::
 
     format          "claudia-document 1", stored uncompressed and first, so tools can recognise the file
-    manifest.json   readable by anyone: id, title, app, times, unlisted flag, the cost of the password hashing, salt
+    manifest.json   readable by anyone: name, uid, description, tags, app, times, unlisted flag, the cost of the
+                    password hashing, salt
     slots.json      the key slots (see :mod:`claudia_container.slots`): locators and sealed keys, no names
     people.bin      names, roles and slot locators of everybody; sealed with the content key (D102, D111)
 
@@ -23,10 +24,11 @@ import os
 import re
 import threading
 import unicodedata
+import uuid
 import zipfile
 import zlib
 from collections.abc import Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -49,6 +51,13 @@ _RATIO_FROM = 1024 * 1024
 _NAME = re.compile(r"[a-z0-9][a-z0-9_.-]*(/[a-z0-9][a-z0-9_.-]*)*")
 _DOC_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 _MAX_PERSON_NAME = 80
+MAX_DESCRIPTION = 2000
+"""Most characters of a document's description (Markdown, shown in the list to whoever may see the list)."""
+MAX_TAGS = 10
+"""Most tags a document has."""
+MAX_TAG = 30
+"""Most characters of one tag."""
+_CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")  # all control characters but the line break and the tab
 _CORE_ENTRIES = frozenset({"format", "manifest.json", "slots.json", "people.bin"})
 _BLOCK_NAME = re.compile(r"(history|chat)/(\d{6})\.blk")
 _HEAD = "head.bin"
@@ -83,22 +92,33 @@ class ReaderLimitExceeded(ContainerError):
 class Manifest:
     """What anyone may read without a password (D103): enough to list the document, and to open it."""
 
-    id: str
+    name: str
+    uid: str
     app: str
-    title: str
     unlisted: bool
     created: str
     last_change: str
     kdf: KdfParams
     salt: bytes
+    description: str = ""
+    tags: tuple[str, ...] = ()
+
+    @property
+    def binding(self) -> str:
+        """The name and the uid together, which the sealed parts of the document are bound to (D533). The manifest is
+        plain, so anybody can change a field; with the binding a changed name or uid makes every slot, block and
+        journal fail to open, and a file cannot be passed off under another uid."""
+        return f"{self.name}:{self.uid}"
 
     def to_dict(self) -> dict[str, object]:
         """The manifest as plain data."""
         return {
             "format": FORMAT_VERSION,
-            "id": self.id,
+            "name": self.name,
+            "uid": self.uid,
             "app": self.app,
-            "title": self.title,
+            "description": self.description,
+            "tags": list(self.tags),
             "unlisted": self.unlisted,
             "created": self.created,
             "last_change": self.last_change,
@@ -114,23 +134,27 @@ class Manifest:
             if data["format"] != FORMAT_VERSION or data["ciphers"] != {"kdf": "argon2id", "aead": "aes-256-gcm"}:  # type: ignore[index]
                 raise ValueError("unknown format or ciphers")
             manifest = cls(
-                id=data["id"],  # type: ignore[index]
+                name=data["name"],  # type: ignore[index]
+                uid=data["uid"],  # type: ignore[index]
                 app=data["app"],  # type: ignore[index]
-                title=data["title"],  # type: ignore[index]
                 unlisted=data["unlisted"],  # type: ignore[index]
                 created=data["created"],  # type: ignore[index]
                 last_change=data["last_change"],  # type: ignore[index]
                 kdf=KdfParams.from_dict(data["kdf"]),  # type: ignore[index]
                 salt=base64.b64decode(data["salt"], validate=True),  # type: ignore[index]
+                description=data.get("description", ""),  # type: ignore[attr-defined]  # older files have none
+                tags=_tuple_of(data.get("tags", [])),  # type: ignore[attr-defined]
             )
-        except (KeyError, TypeError, binascii.Error) as error:
+        except (KeyError, TypeError, AttributeError, binascii.Error) as error:
             raise ValueError(f"not a manifest: {error}") from error
         if not (
-            isinstance(manifest.id, str)
-            and _DOC_ID.fullmatch(manifest.id)
+            isinstance(manifest.binding, str)
+            and _DOC_ID.fullmatch(manifest.name)
+            and is_uid(manifest.uid)
             and isinstance(manifest.app, str)
-            and isinstance(manifest.title, str)
-            and len(manifest.title) <= 200
+            and isinstance(manifest.description, str)
+            and len(manifest.description) <= MAX_DESCRIPTION
+            and _tags_fit(manifest.tags)
             and isinstance(manifest.unlisted, bool)
             and isinstance(manifest.created, str)
             and isinstance(manifest.last_change, str)
@@ -138,6 +162,61 @@ class Manifest:
         ):
             raise ValueError("not a manifest: a field has the wrong form")
         return manifest
+
+
+def is_uid(value: object) -> bool:
+    """A uid as :func:`new_uid` makes it: a random (version 4) UUID in its canonical lower-case form."""
+    if not isinstance(value, str):
+        return False
+    try:
+        parsed = uuid.UUID(value)
+    except ValueError:
+        return False
+    return str(parsed) == value and parsed.version == 4
+
+
+def new_uid() -> str:
+    """A new random document uid: a version 4 UUID from the system's random source, so it is not derived from the
+    time, the name, the owner or the content (D533)."""
+    return str(uuid.UUID(bytes=os.urandom(16), version=4))
+
+
+def _tuple_of(value: object) -> tuple[str, ...]:
+    """The tags of a manifest as a tuple; ``TypeError`` for anything but a list of strings."""
+    if not isinstance(value, list) or not all(isinstance(tag, str) for tag in value):
+        raise TypeError("the tags are not a list of strings")
+    return tuple(value)
+
+
+def _tags_fit(tags: tuple[str, ...]) -> bool:
+    return len(tags) <= MAX_TAGS and all(len(tag) <= MAX_TAG for tag in tags)
+
+
+def clean_details(description: str, tags: Sequence[str]) -> tuple[str, tuple[str, ...]]:
+    """Tidy a description and tags before they go into a manifest, or ``ValueError`` with a sentence for the person.
+
+    The description keeps its line breaks and loses other control characters; it is trimmed. A tag is trimmed, its
+    inner white space becomes one space, and it is lower case, so "Finance" and "finance " are one tag; the same tag
+    twice counts once and keeps its first place. A comma cannot be in a tag (it is what people type between tags), nor
+    a control character."""
+    text = _CONTROL.sub("", unicodedata.normalize("NFC", description).replace("\r\n", "\n").replace("\r", "\n")).strip()
+    if len(text) > MAX_DESCRIPTION:
+        raise ValueError(f"the description is longer than {MAX_DESCRIPTION} characters")
+    cleaned: dict[str, None] = {}
+    for raw in tags:
+        if _CONTROL.search(raw) or "\n" in raw or "\t" in raw:
+            raise ValueError("a tag cannot hold a control character")
+        if "," in raw:
+            raise ValueError("a tag cannot hold a comma: write each tag on its own")
+        tag = " ".join(unicodedata.normalize("NFC", raw).split()).lower()
+        if not tag:
+            continue
+        if len(tag) > MAX_TAG:
+            raise ValueError(f"a tag has at most {MAX_TAG} characters")
+        cleaned[tag] = None
+    if len(cleaned) > MAX_TAGS:
+        raise ValueError(f"a document has at most {MAX_TAGS} tags")
+    return text, tuple(cleaned)
 
 
 @dataclass(frozen=True)
@@ -256,18 +335,18 @@ def unlock(path: Path, name: str, password: str) -> Unlocked | None:
     entries = _read_entries(path)
     manifest = _manifest_of(entries, path)
     material = derive_login_material(password, name, manifest.salt, manifest.kdf)
-    return open_slot(_slots_of(entries, path), material, manifest.id)
+    return open_slot(_slots_of(entries, path), material, manifest.binding)
 
 
 def unlock_with_recovery(path: Path, recovery_key: bytes) -> Unlocked | None:
     """Open with the recovery key (D105): an owner with all keys, or ``None`` if it is not the document's key."""
     entries = _read_entries(path)
     manifest = _manifest_of(entries, path)
-    return open_slot(_slots_of(entries, path), derive_recovery_material(recovery_key), manifest.id)
+    return open_slot(_slots_of(entries, path), derive_recovery_material(recovery_key), manifest.binding)
 
 
-def _people_aad(doc_id: str) -> bytes:
-    return b"claudia/people/1" + doc_id.encode()
+def _people_aad(binding: str) -> bytes:
+    return b"claudia/people/1" + binding.encode()
 
 
 def _open_people_data(
@@ -278,7 +357,7 @@ def _open_people_data(
     if key is None:
         raise PermissionError("the list of people is sealed with the content key")
     try:
-        data = json.loads(open_sealed(key, entries["people.bin"], _people_aad(manifest.id)))
+        data = json.loads(open_sealed(key, entries["people.bin"], _people_aad(manifest.binding)))
         people = [
             Person(item["name"], Role(item["role"]), base64.b64decode(item["locator"], validate=True))
             for item in data["people"]
@@ -309,7 +388,7 @@ def _people_blob(manifest: Manifest, content_key: bytes, people: list[Person], r
         ],
         "recovery": None if recovery is None else base64.b64encode(recovery).decode(),
     }
-    return seal(content_key, json.dumps(data).encode(), _people_aad(manifest.id))
+    return seal(content_key, json.dumps(data).encode(), _people_aad(manifest.binding))
 
 
 def _carried(entries: Mapping[str, bytes]) -> dict[str, bytes]:
@@ -358,53 +437,60 @@ def _write_zip(
 def create_document(
     path: Path,
     *,
-    doc_id: str,
+    name: str,
     app: str,
-    title: str,
     owner: str,
     password: str,
     kdf: KdfParams | None = None,
     recovery_key: bytes | None = None,
     now: str | None = None,
+    description: str = "",
+    tags: Sequence[str] = (),
 ) -> Unlocked:
     """Make a new document file with one owner (and, if given, a recovery key). Returns the owner, unlocked.
 
-    ``FileExistsError`` if the file exists, ``ValueError`` for an unacceptable id or name,
+    ``description`` and ``tags`` go into the manifest, which anyone may read
+    (see :func:`~claudia_container.clean_details`).
+
+    ``FileExistsError`` if the file exists, ``ValueError`` for an unacceptable id, name, description or tag,
     :class:`~claudia_container.passwords.WeakPassword` for a password that breaks the rules.
     """
-    if not _DOC_ID.fullmatch(doc_id):
-        raise ValueError(f"{doc_id!r} is not a valid document id")
-    name = _check_name(owner)
+    if not _DOC_ID.fullmatch(name):
+        raise ValueError(f"{name!r} is not a valid document name")
+    user = _check_name(owner)
     require_strong_password(password)
     params = kdf or KdfParams.default()
     stamp = now or _now()
-    manifest = Manifest(doc_id, app, title, False, stamp, stamp, params, os.urandom(16))
+    clean_description, clean_tags = clean_details(description, tags)
+    manifest = Manifest(
+        name,
+        new_uid(),
+        app,
+        False,
+        stamp,
+        stamp,
+        params,
+        os.urandom(16),
+        description=clean_description,
+        tags=clean_tags,
+    )
     keys = new_domain_keys()
-    material = derive_login_material(password, name, manifest.salt, params)
-    slots = [make_slot(material, doc_id, name, Role.OWNER, keys)]
+    material = derive_login_material(password, user, manifest.salt, params)
+    slots = [make_slot(material, manifest.binding, user, Role.OWNER, keys)]
     recovery_locator = None
     if recovery_key is not None:
         recovery = derive_recovery_material(recovery_key)
-        slots.append(make_slot(recovery, doc_id, _RECOVERY_NAME, Role.OWNER, keys))
+        slots.append(make_slot(recovery, manifest.binding, _RECOVERY_NAME, Role.OWNER, keys))
         recovery_locator = recovery.locator
-    person = Person(name, Role.OWNER, material.locator)
+    person = Person(user, Role.OWNER, material.locator)
     blob = _people_blob(manifest, keys[Domain.CONTENT], [person], recovery_locator)
     with _WRITE_LOCK:
         _write_zip(path, manifest, slots, blob, {}, exclusive=True)
-    return Unlocked(name, Role.OWNER, keys)
+    return Unlocked(user, Role.OWNER, keys)
 
 
 def _changed(manifest: Manifest) -> Manifest:
-    return Manifest(
-        manifest.id,
-        manifest.app,
-        manifest.title,
-        manifest.unlisted,
-        manifest.created,
-        _now(),
-        manifest.kdf,
-        manifest.salt,
-    )
+    return replace(manifest, last_change=_now())
 
 
 def _require_all_keys(keys: Mapping[Domain, bytes]) -> None:
@@ -429,7 +515,7 @@ def add_user(path: Path, keys: Mapping[Domain, bytes], name: str, password: str,
             raise ValueError(f"{clean!r} is already a person of this document")
         material = derive_login_material(password, clean, manifest.salt, manifest.kdf)
         person = Person(clean, role, material.locator)
-        slots = [*_slots_of(entries, path), make_slot(material, manifest.id, clean, role, keys)]
+        slots = [*_slots_of(entries, path), make_slot(material, manifest.binding, clean, role, keys)]
         blob = _people_blob(manifest, keys[Domain.CONTENT], [*people, person], recovery)
         _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
     return person
@@ -467,13 +553,13 @@ def change_password(path: Path, name: str, old_password: str, new_password: str)
         manifest = _manifest_of(entries, path)
         slots = _slots_of(entries, path)
         old = derive_login_material(old_password, name, manifest.salt, manifest.kdf)
-        unlocked = open_slot(slots, old, manifest.id)
+        unlocked = open_slot(slots, old, manifest.binding)
         if unlocked is None:
             return False
         fresh = derive_login_material(new_password, unlocked.name, manifest.salt, manifest.kdf)
         people, recovery = _open_people_data(entries, manifest, unlocked.keys)
         people = [Person(p.name, p.role, fresh.locator) if p.locator == old.locator else p for p in people]
-        replacement = make_slot(fresh, manifest.id, unlocked.name, unlocked.role, unlocked.keys)
+        replacement = make_slot(fresh, manifest.binding, unlocked.name, unlocked.role, unlocked.keys)
         slots = [replacement if s.locator == old.locator else s for s in slots]
         blob = _people_blob(manifest, unlocked.keys[Domain.CONTENT], people, recovery)
         _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
@@ -496,7 +582,7 @@ def leave_document(path: Path, name: str, password: str) -> bool:
         manifest = _manifest_of(entries, path)
         slots = _slots_of(entries, path)
         material = derive_login_material(password, name, manifest.salt, manifest.kdf)
-        unlocked = open_slot(slots, material, manifest.id)
+        unlocked = open_slot(slots, material, manifest.binding)
         if unlocked is None:
             return False
         people, recovery = _open_people_data(entries, manifest, unlocked.keys)
@@ -531,13 +617,13 @@ def transfer_owner(
         manifest = _manifest_of(entries, path)
         slots = _slots_of(entries, path)
         old_material = derive_login_material(old_owner_password, old_owner, manifest.salt, manifest.kdf)
-        old_unlocked = open_slot(slots, old_material, manifest.id)
+        old_unlocked = open_slot(slots, old_material, manifest.binding)
         if old_unlocked is None:
             return False
         if old_unlocked.role is not Role.OWNER:
             raise ValueError(f"{old_owner!r} is not the owner of this document")
         new_material = derive_login_material(new_owner_password, new_owner, manifest.salt, manifest.kdf)
-        new_unlocked = open_slot(slots, new_material, manifest.id)
+        new_unlocked = open_slot(slots, new_material, manifest.binding)
         if new_unlocked is None:
             return False
         if new_unlocked.role is not Role.EDITOR:
@@ -545,8 +631,8 @@ def transfer_owner(
         people, recovery = _open_people_data(entries, manifest, old_unlocked.keys)
         old_person = next(p for p in people if p.locator == old_material.locator)
         new_person = next(p for p in people if p.locator == new_material.locator)
-        old_slot = make_slot(old_material, manifest.id, old_unlocked.name, Role.EDITOR, old_unlocked.keys)
-        new_slot = make_slot(new_material, manifest.id, new_unlocked.name, Role.OWNER, old_unlocked.keys)
+        old_slot = make_slot(old_material, manifest.binding, old_unlocked.name, Role.EDITOR, old_unlocked.keys)
+        new_slot = make_slot(new_material, manifest.binding, new_unlocked.name, Role.OWNER, old_unlocked.keys)
         slots = [
             old_slot if s.locator == old_material.locator else new_slot if s.locator == new_material.locator else s
             for s in slots
@@ -562,6 +648,27 @@ def transfer_owner(
         blob = _people_blob(manifest, old_unlocked.keys[Domain.CONTENT], people, recovery)
         _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
     return True
+
+
+def set_details(path: Path, keys: Mapping[Domain, bytes], description: str, tags: Sequence[str]) -> None:
+    """Give the document this description and these tags, which replace the ones it had. They are part of the
+    manifest, which anyone who has the file may read without a password (D103): the owner chooses them knowing that.
+
+    Needs all keys (``PermissionError``), as every change of the document itself does. ``ValueError`` for a
+    description or tag that is not acceptable (see :func:`~claudia_container.clean_details`); nothing changes then."""
+    _require_all_keys(keys)
+    clean_description, clean_tags = clean_details(description, tags)
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = replace(_manifest_of(entries, path), description=clean_description, tags=clean_tags)
+        _write_zip(
+            path,
+            _changed(manifest),
+            _slots_of(entries, path),
+            entries["people.bin"],
+            _carried(entries),
+            exclusive=False,
+        )
 
 
 # --- the recovery key -----------------------------------------------------------------------------------------------
@@ -584,7 +691,7 @@ def set_recovery_key(path: Path, keys: Mapping[Domain, bytes], recovery_key: byt
         manifest = _manifest_of(entries, path)
         people, old = _open_people_data(entries, manifest, keys)
         slots = [s for s in _slots_of(entries, path) if old is None or s.locator != old]
-        slots.append(make_slot(material, manifest.id, _RECOVERY_NAME, Role.OWNER, keys))
+        slots.append(make_slot(material, manifest.binding, _RECOVERY_NAME, Role.OWNER, keys))
         blob = _people_blob(manifest, keys[Domain.CONTENT], people, material.locator)
         _write_zip(path, _changed(manifest), slots, blob, _carried(entries), exclusive=False)
 
@@ -600,7 +707,7 @@ def recover_access(path: Path, recovery_key: bytes, name: str, new_password: str
         entries = _read_entries(path)
         manifest = _manifest_of(entries, path)
         slots = _slots_of(entries, path)
-        opened = open_slot(slots, derive_recovery_material(recovery_key), manifest.id)
+        opened = open_slot(slots, derive_recovery_material(recovery_key), manifest.binding)
         if opened is None:
             return None
         require_strong_password(new_password)
@@ -609,7 +716,7 @@ def recover_access(path: Path, recovery_key: bytes, name: str, new_password: str
         label = target.name if target else clean
         role = target.role if target else Role.OWNER
         material = derive_login_material(new_password, label, manifest.salt, manifest.kdf)
-        fresh = make_slot(material, manifest.id, label, role, opened.keys)
+        fresh = make_slot(material, manifest.binding, label, role, opened.keys)
         person = Person(label, role, material.locator)
         if target is None:
             slots, people = [*slots, fresh], [*people, person]
@@ -672,7 +779,7 @@ def _head_of(
     if history_key is None:
         raise PermissionError("the head is sealed with the history key")
     try:
-        return open_head(history_key, manifest.id, stored)
+        return open_head(history_key, manifest.binding, stored)
     except BlockError as error:
         raise TamperedDocument(str(error)) from error
 
@@ -695,7 +802,7 @@ def _load_chains(entries: Mapping[str, bytes], manifest: Manifest, keys: Mapping
         for number in numbers:
             data = entries[names[domain][number]]
             try:
-                payloads = open_block(keys[domain], Place(manifest.id, domain, number, previous), data)
+                payloads = open_block(keys[domain], Place(manifest.binding, domain, number, previous), data)
             except BlockError as error:
                 raise TamperedDocument(f"{names[domain][number]}: {error}") from error
             stored[domain].append(data)
@@ -711,13 +818,13 @@ def _snapshot_of(entries: Mapping[str, bytes], manifest: Manifest, keys: Mapping
     if key is None or stored is None:
         return None
     try:
-        return open_sealed(key, stored, _snapshot_aad(manifest.id))
+        return open_sealed(key, stored, _snapshot_aad(manifest.binding))
     except DecryptionError:
         return None  # a cache that cannot be trusted is no cache; the history still has everything
 
 
-def _snapshot_aad(doc_id: str) -> bytes:
-    return b"claudia/snapshot/1" + doc_id.encode()
+def _snapshot_aad(binding: str) -> bytes:
+    return b"claudia/snapshot/1" + binding.encode()
 
 
 def read_snapshot(path: Path, keys: Mapping[Domain, bytes]) -> bytes | None:
@@ -727,8 +834,8 @@ def read_snapshot(path: Path, keys: Mapping[Domain, bytes]) -> bytes | None:
 
 
 # --- the original of an imported document (D439) ----------------------------------------------------------------------
-def _original_aad(doc_id: str) -> bytes:
-    return b"claudia/original/1" + doc_id.encode()
+def _original_aad(binding: str) -> bytes:
+    return b"claudia/original/1" + binding.encode()
 
 
 def write_original(path: Path, keys: Mapping[Domain, bytes], data: bytes) -> None:
@@ -739,7 +846,7 @@ def write_original(path: Path, keys: Mapping[Domain, bytes], data: bytes) -> Non
     with _WRITE_LOCK:
         entries = _read_entries(path)
         manifest = _manifest_of(entries, path)
-        others = {**_carried(entries), _ORIGINAL: seal(keys[Domain.CONTENT], data, _original_aad(manifest.id))}
+        others = {**_carried(entries), _ORIGINAL: seal(keys[Domain.CONTENT], data, _original_aad(manifest.binding))}
         _write_zip(path, _changed(manifest), _slots_of(entries, path), entries["people.bin"], others, exclusive=False)
 
 
@@ -755,7 +862,7 @@ def read_original(path: Path, keys: Mapping[Domain, bytes]) -> bytes | None:
     if stored is None:
         return None
     try:
-        return open_sealed(key, stored, _original_aad(_manifest_of(entries, path).id))
+        return open_sealed(key, stored, _original_aad(_manifest_of(entries, path).binding))
     except DecryptionError as error:
         raise TamperedDocument("the kept original does not belong to this document or was changed") from error
 
@@ -773,7 +880,7 @@ def _journal_records(
     if generation > head.generation + 1:
         raise TamperedDocument("the journal does not follow the document file: blocks or the head were taken out")
     history, chat = [], []
-    for record in read_journal(journal, manifest.id, keys):
+    for record in read_journal(journal, manifest.binding, keys):
         if record.domain is Domain.HISTORY:
             history.append(record.payload)
         elif record.domain is Domain.CHAT:
@@ -811,12 +918,12 @@ def begin(path: Path, keys: Mapping[Domain, bytes]) -> JournalWriter:
         head = _head_of(entries, manifest, keys, blocks_exist=any(_block_names(entries).values()))
         journal, wanted = journal_path(path), head.generation + 1
         if not journal.exists():
-            return JournalWriter.create(journal, manifest.id, keys, wanted)
+            return JournalWriter.create(journal, manifest.binding, keys, wanted)
         generation = journal_generation(journal)
         if generation == wanted:
-            return JournalWriter.open(journal, manifest.id, keys)
+            return JournalWriter.open(journal, manifest.binding, keys)
         if generation < wanted:
-            return JournalWriter.replace(journal, manifest.id, keys, wanted)
+            return JournalWriter.replace(journal, manifest.binding, keys, wanted)
         raise TamperedDocument("the journal does not follow the document file: blocks or the head were taken out")
 
 
@@ -834,7 +941,7 @@ def _chunks(payloads: Sequence[bytes]) -> Iterator[list[bytes]]:
 
 
 def _extend(
-    key: bytes, doc_id: str, domain: Domain, chains: _Chains, payloads: Sequence[bytes]
+    key: bytes, binding: str, domain: Domain, chains: _Chains, payloads: Sequence[bytes]
 ) -> tuple[dict[str, bytes], Chain]:
     """The blocks of ``domain`` after ``payloads`` were added: the last block is filled up if it is small, new blocks
     follow. Returns the block entries and the new end of the chain."""
@@ -847,7 +954,7 @@ def _extend(
             payloads = [*last, *payloads]
     previous = block_hash(stored[-1]) if stored else GENESIS
     for run in _chunks(payloads):
-        data = seal_block(key, Place(doc_id, domain, len(stored) + 1, previous), run)
+        data = seal_block(key, Place(binding, domain, len(stored) + 1, previous), run)
         stored.append(data)
         previous = block_hash(data)
     entries = {f"{domain.value}/{number:06d}.blk": data for number, data in enumerate(stored, start=1)}
@@ -872,14 +979,19 @@ def _pack_blocks(
         chains = _load_chains(entries, manifest, keys)
         if generation <= chains.head.generation:
             raise ValueError(f"journal generation {generation} is already in the file")
-        history_blocks, history_end = _extend(keys[Domain.HISTORY], manifest.id, Domain.HISTORY, chains, history)
-        chat_blocks, chat_end = _extend(keys[Domain.CHAT], manifest.id, Domain.CHAT, chains, chat)
+        history_blocks, history_end = _extend(keys[Domain.HISTORY], manifest.binding, Domain.HISTORY, chains, history)
+        chat_blocks, chat_end = _extend(keys[Domain.CHAT], manifest.binding, Domain.CHAT, chains, chat)
         head = Head(generation, history_end, chat_end)
         replaced = (_HEAD, _SNAPSHOT)
         kept = {n: d for n, d in _carried(entries).items() if n not in replaced and not _BLOCK_NAME.fullmatch(n)}
-        packed = {**kept, **history_blocks, **chat_blocks, _HEAD: seal_head(keys[Domain.HISTORY], manifest.id, head)}
+        packed = {
+            **kept,
+            **history_blocks,
+            **chat_blocks,
+            _HEAD: seal_head(keys[Domain.HISTORY], manifest.binding, head),
+        }
         if snapshot is not None:
-            packed[_SNAPSHOT] = seal(keys[Domain.CONTENT], snapshot, _snapshot_aad(manifest.id))
+            packed[_SNAPSHOT] = seal(keys[Domain.CONTENT], snapshot, _snapshot_aad(manifest.binding))
         people_blob = entries["people.bin"]
         _write_zip(path, _changed(manifest), _slots_of(entries, path), people_blob, packed, exclusive=False)
 
@@ -900,7 +1012,7 @@ def pack_journal(
     journal = journal_path(path)
     manifest = read_manifest(path)
     history, chat = [], []
-    for record in read_journal(journal, manifest.id, keys):
+    for record in read_journal(journal, manifest.binding, keys):
         if record.domain is Domain.HISTORY:
             history.append(record.payload)
         elif record.domain is Domain.CHAT:
@@ -908,4 +1020,4 @@ def pack_journal(
     _pack_blocks(path, keys, history=history, chat=chat, snapshot=snapshot, generation=writer.generation)
     generation = writer.generation
     writer.close()
-    return JournalWriter.replace(journal, manifest.id, keys, generation + 1)
+    return JournalWriter.replace(journal, manifest.binding, keys, generation + 1)

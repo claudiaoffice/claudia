@@ -25,7 +25,7 @@ import json
 import logging
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -94,6 +94,15 @@ class StoredInfo:
     id: str
     app: str
     modified: str  # ISO 8601 UTC, when the document last changed
+    description: str = ""  # Markdown, plain in the file: anybody who may list the server may read it
+    tags: tuple[str, ...] = ()
+    uid: str = ""  # the random id of the document (D533); a capability, so never part of a listing
+
+
+def same_document_message(existing: str) -> str:
+    """The sentence for a file that is a document this server has already (D533): the person sees its name, never
+    its uid."""
+    return msg("This document is on this server already, as “{id}”. It cannot be added a second time.", id=existing)
 
 
 class DocumentProvider(Protocol):
@@ -120,6 +129,15 @@ class DocumentProvider(Protocol):
 
     def documents(self) -> list[StoredInfo]:
         """Every stored document, the most recently changed first."""
+
+
+class DuplicateDocument(ValueError):
+    """A file was offered whose uid belongs to a document that is here already (D533). ``existing`` is that
+    document's name."""
+
+    def __init__(self, existing: str):
+        super().__init__(existing)
+        self.existing = existing
 
 
 class DocumentSealed(ValueError):
@@ -211,6 +229,7 @@ class Connection:
             "user": self.account.user,
             "role": self.account.role,
             "doc": self.hosted.id,
+            "uid": self.hosted.uid(),
             "app": doc.model.app,
             "state_schema": doc.model.state_schema,
             "line": doc.branch,
@@ -315,11 +334,13 @@ class HostedDocument:
         directory: UserDirectory | None = None,
         renderings: RenderDesk | None = None,
         original: Callable[[], bytes | None] = lambda: None,
+        uid: Callable[[], str | None] = lambda: None,
     ):
         self.id = doc_id
         self.document = document
         self.renderings = renderings
         self.original = original  # the file the document was imported from, if it is kept (D439)
+        self.uid = uid  # the document's random id, for the client to keep in a link (D533); never shown to a person
         self.acting_user: str | None = None  # whose request is being handled right now (see `_schedule_render`)
         self._render_jobs: dict[str, asyncio.Task] = {}
         self._rendered: dict[str, tuple[str, tuple]] = {}  # what a finished job made a picture of, by container
@@ -624,21 +645,43 @@ class Hub:
         return self.provider.app
 
     def listing(self) -> list[dict]:
-        """The documents on this server: ``{id, app, modified, online}``, most recently changed first.
+        """The documents on this server: ``{id, app, modified, online, description, tags}``, most recently changed
+        first.
 
-        ``online`` is the number of different people connected now. No names and no content: whoever may reach the
-        server may see that a document exists, and still needs its password to open it."""
+        ``online`` is the number of different people connected now. ``description`` and ``tags`` are what the owner
+        chose to say about the document, kept plain in the file so that they can be read (and searched) without a
+        password. No names and no content: whoever may reach the server may see that a document exists, and still
+        needs its password to open it."""
         found = []
         for info in self.provider.documents():
             hosted = self._documents.get(info.id)
             online = len({c.account.user.casefold() for c in hosted.humans()}) if hosted else 0
-            found.append({"id": info.id, "app": info.app, "modified": info.modified, "online": online})
+            found.append(
+                {
+                    "id": info.id,
+                    "app": info.app,
+                    "modified": info.modified,
+                    "online": online,
+                    "description": info.description,
+                    "tags": list(info.tags),
+                }
+            )
         return found
 
     def original(self, doc_id: str) -> bytes | None:
         """The file the document was imported from, if its store keeps one (D439)."""
         read = getattr(self.provider, "original", None)
         return read(doc_id) if read is not None else None
+
+    def uid_of(self, doc_id: str) -> str | None:
+        """The random id of a stored document (D533), if its store gives documents one."""
+        read = getattr(self.provider, "uid_of", None)
+        return read(doc_id) if read is not None else None
+
+    async def find(self, uid: str) -> StoredInfo | None:
+        """The document with exactly this uid, if its store has one (D533); ``None`` otherwise."""
+        look = getattr(self.provider, "find", None)
+        return None if look is None else await asyncio.to_thread(look, uid)
 
     def keep_original(self, doc_id: str, data: bytes) -> bool:
         """Keep the file the document was imported from, if the store can; ``False`` if it cannot."""
@@ -648,10 +691,20 @@ class Hub:
         keep(doc_id, data)
         return True
 
+    def describe(self, doc_id: str, description: str, tags: Sequence[str]) -> bool:
+        """Say what a document that was just made is about, if its store can keep that (the plain part of the file,
+        D103); ``False`` if it cannot. The owner changes them later with ``set_details``."""
+        describe = getattr(self.provider, "describe", None)
+        if describe is None:
+            return False
+        describe(doc_id, description, tags)
+        return True
+
     async def place(self, doc_id: str, data: bytes) -> None:
         """Take a Claudia document file in as it is (D442): ``HubError('not_found')`` if this store cannot hold
         files, ``HubError('bad_request')`` if one of that name is here already or the file is not one of this app's,
-        ``HubError('unavailable')`` if the server is full."""
+        ``HubError('unavailable')`` if the server is full. A file whose uid is a document here already is refused
+        in plain words, whatever its name (D533)."""
         place = getattr(self.provider, "place", None)
         if place is None:
             raise HubError("not_found", msg("this server keeps its documents in memory and cannot take in a file"))
@@ -663,6 +716,8 @@ class Hub:
                 await asyncio.to_thread(place, doc_id, data)
             except FileExistsError as exc:
                 raise HubError("bad_request", msg("{id} is here already", id=doc_id)) from exc
+            except DuplicateDocument as exc:
+                raise HubError("bad_request", same_document_message(exc.existing)) from exc
             except ValueError as exc:
                 raise HubError("bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=exc)) from exc
             self._known.add(doc_id)
@@ -737,6 +792,7 @@ class Hub:
                 directory=self.directory,
                 renderings=self.renderings,
                 original=lambda: self.original(doc_id),
+                uid=lambda: self.uid_of(doc_id),
             )
             if self.assistant is not None:
                 self.assistant().attach(hosted)

@@ -4,6 +4,7 @@ import io
 import json
 import os
 import sys
+import uuid
 import zipfile
 
 import pytest
@@ -11,6 +12,9 @@ import pytest
 from claudia_container import container
 from claudia_container.container import (
     FORMAT_TEXT,
+    MAX_DESCRIPTION,
+    MAX_TAG,
+    MAX_TAGS,
     ContainerError,
     NotAClaudiaDocument,
     Person,
@@ -18,11 +22,13 @@ from claudia_container.container import (
     UnsupportedFormat,
     add_user,
     change_password,
+    clean_details,
     create_document,
     leave_document,
     read_manifest,
     read_people,
     remove_user,
+    set_details,
     transfer_owner,
     unlock,
     unlock_with_recovery,
@@ -42,9 +48,7 @@ def path(tmp_path):
 
 @pytest.fixture
 def owner(path):
-    return create_document(
-        path, doc_id="plan", app="computes", title="Budget 2027", owner="Annabelle", password=OWNER_PW, kdf=CHEAP
-    )
+    return create_document(path, name="plan", app="computes", owner="Annabelle", password=OWNER_PW, kdf=CHEAP)
 
 
 @pytest.fixture
@@ -69,7 +73,7 @@ def test_the_document_is_one_zip_that_names_its_format_first(path, owner):
 
 def test_the_manifest_is_readable_without_a_password(path, owner):
     manifest = read_manifest(path)
-    assert (manifest.id, manifest.app, manifest.title) == ("plan", "computes", "Budget 2027")
+    assert (manifest.name, manifest.app) == ("plan", "computes")
     assert manifest.unlisted is False
     assert manifest.kdf == CHEAP
     assert manifest.last_change.endswith("Z")
@@ -88,22 +92,18 @@ def test_the_file_shows_neither_names_nor_passwords_nor_keys(path, team):
 
 def test_creating_never_overwrites(path, owner):
     with pytest.raises(FileExistsError):
-        create_document(path, doc_id="plan", app="computes", title="x", owner="A", password=OWNER_PW, kdf=CHEAP)
+        create_document(path, name="plan", app="computes", owner="A", password=OWNER_PW, kdf=CHEAP)
 
 
 @pytest.mark.parametrize("bad_id", ["", "../x", "a b", "x" * 65, "-lead"])
 def test_a_document_id_must_be_safe(tmp_path, bad_id):
-    with pytest.raises(ValueError, match="id"):
-        create_document(
-            tmp_path / "x.claudia", doc_id=bad_id, app="computes", title="t", owner="A", password=OWNER_PW, kdf=CHEAP
-        )
+    with pytest.raises(ValueError, match="name"):
+        create_document(tmp_path / "x.claudia", name=bad_id, app="computes", owner="A", password=OWNER_PW, kdf=CHEAP)
 
 
 def test_a_weak_password_cannot_start_a_document(tmp_path):
     with pytest.raises(WeakPassword):
-        create_document(
-            tmp_path / "x.claudia", doc_id="x", app="computes", title="t", owner="A", password="short", kdf=CHEAP
-        )
+        create_document(tmp_path / "x.claudia", name="x", app="computes", owner="A", password="short", kdf=CHEAP)
     assert not (tmp_path / "x.claudia").exists()
 
 
@@ -323,7 +323,7 @@ def test_the_recovery_key_opens_an_owner_slot_that_no_name_can_find(tmp_path):
     recovery = new_recovery_key()
     path = tmp_path / "r.claudia"
     created = create_document(
-        path, doc_id="r", app="computes", title="t", owner="Ann", password=OWNER_PW, kdf=CHEAP, recovery_key=recovery
+        path, name="r", app="computes", owner="Ann", password=OWNER_PW, kdf=CHEAP, recovery_key=recovery
     )
     opened = unlock_with_recovery(path, recovery)
     assert opened is not None
@@ -340,9 +340,7 @@ def test_a_document_without_a_recovery_key_has_no_way_in_but_a_password(path, ow
 def test_somebody_holding_the_recovery_key_can_give_the_owner_a_new_password(tmp_path):
     recovery = new_recovery_key()
     path = tmp_path / "r.claudia"
-    create_document(
-        path, doc_id="r", app="computes", title="t", owner="Ann", password=OWNER_PW, kdf=CHEAP, recovery_key=recovery
-    )
+    create_document(path, name="r", app="computes", owner="Ann", password=OWNER_PW, kdf=CHEAP, recovery_key=recovery)
     keys = unlock_with_recovery(path, recovery).keys
     remove_user(path, keys, "Ann", allow_last=True)
     add_user(path, keys, "Ann", "Brand-New-Pass-1", Role.OWNER)
@@ -499,9 +497,7 @@ def test_an_original_sealed_for_another_document_does_not_open(tmp_path, path, o
     from claudia_container.container import read_original, write_original
 
     other_path = tmp_path / "other.claudia"
-    other = create_document(
-        other_path, doc_id="other", app="computes", title="x", owner="Annabelle", password=OWNER_PW, kdf=CHEAP
-    )
+    other = create_document(other_path, name="other", app="computes", owner="Annabelle", password=OWNER_PW, kdf=CHEAP)
     write_original(other_path, other.keys, b"the other one")
     with zipfile.ZipFile(other_path) as archive:
         stolen = archive.read("content/original.bin")
@@ -514,3 +510,206 @@ def test_an_original_sealed_for_another_document_does_not_open(tmp_path, path, o
             archive.writestr(name, data)
     with pytest.raises(container.TamperedDocument):
         read_original(path, keys)
+
+
+# --- description and tags: a property of the document that anyone with the file may read (D103, D530) ---------------
+
+
+def test_a_new_document_has_no_description_and_no_tags(path, owner):
+    manifest = read_manifest(path)
+    assert manifest.description == ""
+    assert manifest.tags == ()
+
+
+def test_a_document_can_be_made_with_a_description_and_tags(path):
+    create_document(
+        path,
+        name="plan",
+        app="computes",
+        owner="Annabelle",
+        password=OWNER_PW,
+        kdf=CHEAP,
+        description="Budget with **three** scenarios",
+        tags=["Finance", "budget"],
+    )
+    manifest = read_manifest(path)
+    assert manifest.description == "Budget with **three** scenarios"
+    assert manifest.tags == ("finance", "budget")
+
+
+def test_description_and_tags_are_readable_without_a_password_and_stored_in_the_clear(path, owner):
+    set_details(path, owner.keys, "Cash-flow forecast, Q3", ["finance", "forecast"])
+    with zipfile.ZipFile(path) as z:
+        plain = json.loads(z.read("manifest.json"))
+    assert plain["description"] == "Cash-flow forecast, Q3"
+    assert plain["tags"] == ["finance", "forecast"]
+    assert read_manifest(path).tags == ("finance", "forecast")
+
+
+def test_only_the_owner_who_holds_all_keys_may_change_them(path, team):
+    viewer = unlock(path, "Cornelia", VIEW_PW)
+    with pytest.raises(PermissionError):
+        set_details(path, viewer.keys, "mine now", [])
+    assert read_manifest(path).description == ""
+
+
+def test_changing_them_keeps_the_rest_of_the_document_whole(path, team):
+    before = read_manifest(path)
+    set_details(path, team.keys, "About the budget", ["finance"])
+    after = read_manifest(path)
+    assert (after.name, after.uid, after.app, after.created, after.salt) == (
+        before.name,
+        before.uid,
+        before.app,
+        before.created,
+        before.salt,
+    )
+    assert after.last_change >= before.last_change
+    assert [p.name for p in read_people(path, team.keys)] == ["Annabelle", "Bertram", "Cornelia"]
+    assert unlock(path, "Bertram", ED_PW) is not None
+
+
+def test_changing_the_people_keeps_the_description_and_tags(path, team):
+    set_details(path, team.keys, "About the budget", ["finance"])
+    add_user(path, team.keys, "Dorothea", "Silver-Fox-3-Run", Role.VIEWER)
+    change_password(path, "Bertram", ED_PW, "New-Passw0rd-xx")
+    manifest = read_manifest(path)
+    assert (manifest.description, manifest.tags) == ("About the budget", ("finance",))
+
+
+def test_a_document_written_before_description_and_tags_existed_still_reads(path, owner):
+    with zipfile.ZipFile(path) as z:
+        entries = {name: z.read(name) for name in z.namelist()}
+    old = json.loads(entries["manifest.json"])
+    del old["description"], old["tags"]
+    entries["manifest.json"] = json.dumps(old).encode()
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("format", entries.pop("format"), compress_type=zipfile.ZIP_STORED)
+        for name, data in entries.items():
+            z.writestr(name, data)
+    manifest = read_manifest(path)
+    assert (manifest.description, manifest.tags) == ("", ())
+
+
+def test_tags_are_tidied_lower_cased_and_counted_once():
+    assert clean_details("  hello  ", ["  Finance ", "finance", "Year  9", "", "  "])[1] == ("finance", "year 9")
+
+
+def test_a_tag_may_not_hold_a_comma_or_a_control_character():
+    with pytest.raises(ValueError, match="comma"):
+        clean_details("", ["a,b"])
+    with pytest.raises(ValueError, match="control"):
+        clean_details("", ["a\x00b"])
+
+
+def test_the_limits_on_description_and_tags_are_kept():
+    with pytest.raises(ValueError, match="description"):
+        clean_details("x" * (MAX_DESCRIPTION + 1), [])
+    with pytest.raises(ValueError, match="tag"):
+        clean_details("", ["x" * (MAX_TAG + 1)])
+    with pytest.raises(ValueError, match="tags"):
+        clean_details("", [f"t{i}" for i in range(MAX_TAGS + 1)])
+
+
+def test_a_description_keeps_its_line_breaks_but_loses_stray_control_characters():
+    assert clean_details("one\ntwo\x07", [])[0] == "one\ntwo"
+
+
+def test_a_manifest_with_a_description_or_tags_of_the_wrong_form_is_refused(path, owner):
+    for broken in (
+        {"description": 5},
+        {"tags": "finance"},
+        {"tags": [1]},
+        {"description": "x" * (MAX_DESCRIPTION + 1)},
+    ):
+        with zipfile.ZipFile(path) as z:
+            entries = {name: z.read(name) for name in z.namelist()}
+        manifest = json.loads(entries["manifest.json"])
+        manifest.update(broken)
+        entries["manifest.json"] = json.dumps(manifest).encode()
+        broken_path = path.with_name("broken.claudia")
+        with zipfile.ZipFile(broken_path, "w") as z:
+            z.writestr("format", entries.pop("format"), compress_type=zipfile.ZIP_STORED)
+            for name, data in entries.items():
+                z.writestr(name, data)
+        with pytest.raises(NotAClaudiaDocument):
+            read_manifest(broken_path)
+
+
+# --- the random id (D533) ------------------------------------------------------------------------------------------
+
+
+def _tamper(path, **changes):
+    """Rewrite the plain manifest of the file with some fields changed, the way anybody with the file could."""
+    with zipfile.ZipFile(path) as z:
+        entries = {i.filename: z.read(i.filename) for i in z.infolist()}
+    manifest = json.loads(entries["manifest.json"])
+    manifest.update(changes)
+    entries["manifest.json"] = json.dumps(manifest).encode()
+    with zipfile.ZipFile(path, "w") as z:
+        for filename, data in entries.items():
+            z.writestr(filename, data)
+
+
+def test_every_new_document_gets_its_own_random_uuid(tmp_path):
+    uids = set()
+    for number in range(5):
+        file = tmp_path / f"d{number}.claudia"
+        create_document(file, name="same", app="computes", owner="A", password=OWNER_PW, kdf=CHEAP)
+        uids.add(read_manifest(file).uid)
+    assert len(uids) == 5
+    for uid in uids:
+        parsed = uuid.UUID(uid)
+        assert (str(parsed), parsed.version) == (uid, 4)
+
+
+def test_the_manifest_has_a_name_and_a_uid_but_no_id_or_title(path, owner):
+    with zipfile.ZipFile(path) as z:
+        plain = json.loads(z.read("manifest.json"))
+    assert plain["name"] == "plan"
+    assert plain["uid"] == read_manifest(path).uid
+    assert "id" not in plain
+    assert "title" not in plain
+
+
+def test_the_uid_says_nothing_about_the_owner_or_the_content(path, owner):
+    assert "Annabelle" not in read_manifest(path).uid
+    assert "plan" not in read_manifest(path).uid
+
+
+@pytest.mark.parametrize("bad", ["", "plan", "not-a-uuid", "00000000-0000-0000-0000-000000000000", 7, None])
+def test_a_manifest_with_a_bad_uid_is_not_a_document(path, owner, bad):
+    _tamper(path, uid=bad)
+    with pytest.raises(NotAClaudiaDocument):
+        read_manifest(path)
+
+
+def test_a_uid_that_is_not_in_the_canonical_form_is_refused(path, owner):
+    _tamper(path, uid=read_manifest(path).uid.upper())
+    with pytest.raises(NotAClaudiaDocument):
+        read_manifest(path)
+
+
+def test_a_name_cannot_hold_a_colon_so_name_and_uid_stay_apart(tmp_path):
+    with pytest.raises(ValueError, match="name"):
+        create_document(tmp_path / "x.claudia", name="a:b", app="computes", owner="A", password=OWNER_PW, kdf=CHEAP)
+
+
+def test_changing_the_uid_in_the_manifest_locks_everybody_out(path, team):
+    _tamper(path, uid=str(uuid.uuid4()))
+    assert unlock(path, "Annabelle", OWNER_PW) is None
+    assert unlock(path, "Bertram", ED_PW) is None
+
+
+def test_changing_the_name_in_the_manifest_locks_everybody_out(path, team):
+    _tamper(path, name="other")
+    assert unlock(path, "Annabelle", OWNER_PW) is None
+
+
+def test_the_uid_stays_through_every_change_of_the_file(path, team):
+    uid = read_manifest(path).uid
+    set_details(path, team.keys, "About it", ["x"])
+    add_user(path, team.keys, "Dora", "Tangerine-Dream-4", Role.EDITOR)
+    change_password(path, "Bertram", ED_PW, "Another-Strong-8")
+    assert read_manifest(path).uid == uid
+    assert unlock(path, "Dora", "Tangerine-Dream-4") is not None

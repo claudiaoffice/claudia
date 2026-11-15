@@ -8,9 +8,11 @@ import {
   keyOf,
   listCollections,
   listMine,
+  nextShown,
   parseKey,
   rememberOpened,
   setInCollection,
+  stillShown,
 } from '~/lib/mine'
 
 function memoryStorage() {
@@ -113,5 +115,21 @@ describe('collections', () => {
   it('read back the place, app and id of a key', () => {
     expect(parseKey(keyOf(budget))).toEqual(budget)
     expect(parseKey('not a key at all')).toBeNull()
+  })
+})
+
+describe('the collection shown on the front page', () => {
+  it('shows a collection when its entry is chosen, and the whole page again when it is chosen once more', () => {
+    expect(nextShown(null, 'Finance')).toBe('Finance')
+    expect(nextShown('Finance', 'Finance')).toBeNull()
+  })
+  it('changes to another collection when that one is chosen', () => {
+    expect(nextShown('Finance', 'Teaching')).toBe('Teaching')
+  })
+  it('goes back to the whole page when the collection shown is gone (removed here or in another tab)', () => {
+    const left = [{ name: 'Teaching', entries: [] }]
+    expect(stillShown('Finance', left)).toBeNull()
+    expect(stillShown('Teaching', left)).toBe('Teaching')
+    expect(stillShown(null, left)).toBeNull()
   })
 })

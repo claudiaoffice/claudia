@@ -12,10 +12,19 @@ same panel with **Replace with** already showing.
 
 ## Where it looks
 
-The three switches under **Look in** say what is searched: **Text** (what you typed into a cell), **Formulas** (the
-formula as written, with its `=`) and **Values** (what a cell shows, including what a formula computes). Each switch
-shows how many matches it has. **This sheet**, **All sheets** and **Selection** say how far to look; **Match case**
-and **Whole cell** narrow it further.
+The **Look in** button says what is searched: **Everything (3)**, or the names of the kinds that are on. Press it
+for a list with a checkbox for each kind and the number of matches it has: **Text** (what you typed into a cell),
+**Formulas** (the formula as written, with its `=`) and **Values** (what a cell shows, including what a formula
+computes). **All** and **None** at the bottom of the list switch every kind on or off. The list beside the button
+says how far to look: **This sheet**, **All sheets** or **Selection**; the checkboxes **Match case** and **Whole
+cell** narrow it further.
+
+## Moving the panel
+
+Drag the panel by its title bar to put it where it does not cover what you are working on. It stays where you leave it
+until you reload the page. From the keyboard, **Alt+arrow keys** move it (**Alt+Shift+arrow keys** in bigger steps;
+Option on a Mac), unless the cursor is in a text field, where those keys keep their own meaning. Every dialog moves the
+same way.
 
 ## Describing more than a word
 
