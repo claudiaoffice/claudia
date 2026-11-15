@@ -415,6 +415,37 @@ describe('files through the shell (D501, D502)', () => {
     await expect(short).rejects.toThrow(/whole/)
   })
 
+  it('hands a file the person dropped on the window to whoever listens (D505)', () => {
+    const { bridge, say } = welcomed()
+    const got: File[] = []
+    const stop = bridge.onFileOffered((file) => got.push(file))
+    say({ type: 'offer_file', request: 'drop-1', name: 'budget.ods', size: 11 })
+    say({ type: 'file_chunk', request: 'drop-1', index: 0, data: b64('hello ') })
+    say({ type: 'file_chunk', request: 'drop-1', index: 1, data: b64('world') })
+    say({ type: 'file_done', request: 'drop-1', chunks: 2 })
+    expect(got.map((file) => file.name)).toEqual(['budget.ods'])
+    stop()
+    say({ type: 'offer_file', request: 'drop-2', name: 'more.ods', size: 1 })
+    say({ type: 'file_chunk', request: 'drop-2', index: 0, data: b64('x') })
+    say({ type: 'file_done', request: 'drop-2', chunks: 1 })
+    expect(got).toHaveLength(1)
+  })
+
+  it('drops an offered file that is too large or arrives short, without throwing', () => {
+    const { bridge, say } = welcomed()
+    const got: File[] = []
+    bridge.onFileOffered((file) => got.push(file))
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    say({ type: 'offer_file', request: 'drop-1', name: 'huge.ods', size: 200 * 1024 * 1024 })
+    say({ type: 'file_done', request: 'drop-1', chunks: 0 })
+    say({ type: 'offer_file', request: 'drop-2', name: 'short.ods', size: 4 })
+    say({ type: 'file_chunk', request: 'drop-2', index: 0, data: b64('ab') })
+    say({ type: 'file_done', request: 'drop-2', chunks: 1 })
+    expect(got).toEqual([])
+    expect(warn).toHaveBeenCalledTimes(2)
+    warn.mockRestore()
+  })
+
   it('ignores answers to a request it did not make', () => {
     const { say } = welcomed()
     expect(() => say({ type: 'file_result', request: 'nobody', outcome: 'saved', path: '/x' })).not.toThrow()

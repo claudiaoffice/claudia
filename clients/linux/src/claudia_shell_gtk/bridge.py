@@ -234,6 +234,13 @@ class Bridge:
         self._reply(contract.file_result(request, outcome, **details))
         return True
 
+    def send_file_offer(self, request: str, name: str, size: int) -> bool:
+        """A file the person dropped on the window; its pieces follow (D505). ``False`` when no page is there."""
+        if not self._ready:
+            return False
+        self._reply(contract.offer_file(request, name, size))
+        return True
+
     def send_file_chunk(self, request: str, index: int, data: str) -> bool:
         """One piece of a file the page asked for."""
         if not self._ready:

@@ -7,6 +7,7 @@ Slow (a few seconds) and dependent on the checkout: it needs ``uv sync`` (``.ven
 from __future__ import annotations
 
 import os
+import socket
 from pathlib import Path
 
 import pytest
@@ -69,6 +70,12 @@ TYPE_A_WORD = """
 """
 
 
+def _free_port() -> int:
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
+
 @pytest.fixture
 def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     if find_server_python() is None or find_frontend() is None:
@@ -80,6 +87,7 @@ def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
     monkeypatch.setenv("XDG_DOWNLOAD_DIR", str(tmp_path / "Downloads"))
+    monkeypatch.setenv("CLAUDIA_SERVER_PORT", str(_free_port()))  # not 8765 (D504), where ./start.sh may run
     from claudia_shell_gtk._gi import Adw, Gio
     from claudia_shell_gtk.app import ClaudiaApp
 

@@ -88,8 +88,9 @@ function fromBase64(data: string): Uint8Array {
 
 /** A file on its way from the shell to the page, or from the page to the shell. */
 interface Transfer {
-  /** `pick`: chunks arrive and the promise gets a `File`; `save`: the shell answers with where it went. */
-  kind: 'pick' | 'save'
+  /** `pick`: chunks arrive and the promise gets a `File`; `save`: the shell answers with where it went; `offer`: a
+   * file the person dropped on the window, which the shell sends unasked (D505). */
+  kind: 'pick' | 'save' | 'offer'
   name: string
   size: number
   chunks: Uint8Array[]
@@ -170,6 +171,7 @@ export class ShellBridge {
   private transfers = new Map<string, Transfer>()
   private requests = 0
   private handlers = new Set<ActionHandler>()
+  private offerHandlers = new Set<(file: File) => void>()
   private failureHandlers = new Set<ConnectFailedHandler>()
   private lastReported: Record<string, string> = {}
 
@@ -243,7 +245,27 @@ export class ShellBridge {
     return answer
   }
 
+  /** The shell starts sending a dropped file (D505): its pieces come like those of a picked file. */
+  private offered(message: WireData): void {
+    if (typeof message.request !== 'string' || this.transfers.has(message.request)) return
+    const size = typeof message.size === 'number' ? message.size : 0
+    const name = typeof message.name === 'string' ? message.name : 'file'
+    if (size > MAX_FILE_BYTES) return console.warn('[claudia shell] a dropped file is too large:', name)
+    const deliver = (file: File) => {
+      for (const handler of this.offerHandlers) handler(file)
+    }
+    this.transfers.set(message.request, {
+      kind: 'offer',
+      name,
+      size,
+      chunks: [],
+      resolve: deliver as (value: never) => void,
+      reject: (problem) => console.warn('[claudia shell] a dropped file did not arrive:', problem.message),
+    })
+  }
+
   private fileMessage(message: WireData): void {
+    if (message.type === 'offer_file') return this.offered(message)
     const transfer = typeof message.request === 'string' ? this.transfers.get(message.request) : undefined
     if (!transfer) return
     const request = message.request as string
@@ -266,14 +288,14 @@ export class ShellBridge {
         transfer.size = typeof message.size === 'number' ? message.size : 0
         if (transfer.size > MAX_FILE_BYTES) fail(`the file is larger than ${MAX_FILE_BYTES / 1024 / 1024} MB`)
       }
-    } else if (message.type === 'file_chunk' && transfer.kind === 'pick' && typeof message.data === 'string') {
+    } else if (message.type === 'file_chunk' && transfer.kind !== 'save' && typeof message.data === 'string') {
       if (message.index !== transfer.chunks.length) return fail('a piece of the file went missing on the way')
       try {
         transfer.chunks.push(fromBase64(message.data))
       } catch {
         fail('a piece of the file arrived damaged')
       }
-    } else if (message.type === 'file_done' && transfer.kind === 'pick') {
+    } else if (message.type === 'file_done' && transfer.kind !== 'save') {
       this.transfers.delete(request)
       const file = new File(transfer.chunks as BlobPart[], transfer.name)
       if (file.size !== transfer.size) return transfer.reject(new Error('the file did not arrive whole'))
@@ -299,7 +321,7 @@ export class ShellBridge {
       this.servers = message.servers.filter(isBookmark)
     } else if (message.type === 'connect_failed' && typeof message.message === 'string') {
       for (const handler of this.failureHandlers) handler(String(message.code), message.message)
-    } else if (message.type === 'file_result' || message.type === 'file_chunk' || message.type === 'file_done') {
+    } else if (['file_result', 'file_chunk', 'file_done', 'offer_file'].includes(String(message.type))) {
       this.fileMessage(message)
     } else if (message.type === 'error') {
       this.lastError = `${message.code}: ${message.message}`
@@ -311,6 +333,13 @@ export class ShellBridge {
   onAction(handler: ActionHandler): () => void {
     this.handlers.add(handler)
     return () => this.handlers.delete(handler)
+  }
+
+  /** Called with a file the person dropped on the window, which the shell took because the web view would not hand it
+   * to the page (D505: WebKitGTK, from the file manager). Returns a remover. */
+  onFileOffered(handler: (file: File) => void): () => void {
+    this.offerHandlers.add(handler)
+    return () => this.offerHandlers.delete(handler)
   }
 
   /** Called when the shell could not connect to the server that `connect` asked for; `message` is fit for the person. */

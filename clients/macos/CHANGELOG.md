@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.1] - unreleased
 
+### Changed (D504): the local server is on port 8765
+- The shared local server listens on 8765, the port of `./start.sh`; a Claudia server of the same version already there
+  is used, whoever started it. Another port only when something else holds 8765 (logged), or with
+  `CLAUDIA_SERVER_PORT`. The e2e script gives each window a free port of its own.
+
 ### Changed (D445, D444, D434): the three apps share one local server, as on Windows
 - The core no longer starts a server of its own app (`--model`, random port) and stops it with the window. The first
   window finds or starts the one server of the suite (`desktop-server.ts`, the Windows client's, unchanged but for the

@@ -40,6 +40,7 @@ const VALID: Array<[string, unknown]> = [
   ['file_result picked', { type: 'file_result', request: 'f1', outcome: 'picked', name: 'a.docx', size: 5 }],
   ['file_result saved', { type: 'file_result', request: 'f2', outcome: 'saved', path: '/Users/ann/Documents/Budget 2027.xlsx' }],
   ['file_result failed', { type: 'file_result', request: 'f2', outcome: 'failed', message: 'The disk is full.' }],
+  ['offer_file (D505)', { type: 'offer_file', request: 'd1', name: 'Budget.xlsx', size: 1234 }],
 ]
 
 const INVALID: Array<[string, unknown]> = [
@@ -84,6 +85,8 @@ const INVALID: Array<[string, unknown]> = [
   ['file_chunk with a negative index', { type: 'file_chunk', request: 'f2', index: -1, data: '' }],
   ['file_done without a count', { type: 'file_done', request: 'f2' }],
   ['file_result with an unknown outcome', { type: 'file_result', request: 'f2', outcome: 'lost' }],
+  ['offer_file without a size', { type: 'offer_file', request: 'd1', name: 'a.txt' }],
+  ['offer_file with an empty name', { type: 'offer_file', request: 'd1', name: '', size: 1 }],
   ['a type nobody knows', { type: 'dance' }],
   ['no type', { contract: 1 }],
 ]

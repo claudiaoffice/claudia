@@ -31,7 +31,16 @@ Local server
 .. automodule:: claudia_shell_gtk.server
    :members:
 
+.. automodule:: claudia_shell_gtk.desktop_server
+   :members: DesktopServer, SERVER_PORT, probe_health, read_port, write_port, is_port_free, server_version
+
 .. automodule:: claudia_shell_gtk.launch
+   :members:
+
+Files of this computer
+----------------------
+
+.. automodule:: claudia_shell_gtk.files
    :members:
 
 Connecting to other servers

@@ -86,7 +86,7 @@ from .hyphenation import HyphenationService, hyphenation_router
 from .i18n import localized, msg
 from .idle import IdleMiddleware, IdleWatch
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
-from .security_headers import SecurityHeaders, web_script_hashes
+from .security_headers import SecurityHeaders, WebScriptHashes
 from .suite import Module, Suite
 from .uploads import Upload, UploadDesk, UploadRefused, file_name
 
@@ -660,7 +660,7 @@ def create_app(
             allow_headers=["Content-Type", "Authorization"],
         )
     # SEC-13: CSP, nosniff, referrer and permissions on every answer; the start page's inline scripts by hash.
-    app.add_middleware(SecurityHeaders, script_hashes=web_script_hashes(web_dir))
+    app.add_middleware(SecurityHeaders, script_hashes=WebScriptHashes(web_dir))
     if idle is not None:
         app.add_middleware(IdleMiddleware, watch=idle)
     app.add_middleware(HostGuard, hosts=hosts)  # added last, so it is the first to see a request (even a preflight)

@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   DesktopServer,
   IDLE_SECONDS,
+  SERVER_PORT,
   STATE_FILE,
   isPortFree,
   probeHealth,
@@ -90,66 +91,79 @@ describe('DesktopServer', () => {
     return { server, probed, starts, sockets, logged }
   }
 
-  it('starts a server on a fresh port when none runs, and remembers the port', async () => {
+  it('starts the server on 8765, the port of every Claudia server, when none runs (D504)', async () => {
     const { server, starts } = harness()
-    expect(await server.start()).toBe('http://127.0.0.1:41233')
+    expect(SERVER_PORT).toBe(8765)
+    expect(await server.start()).toBe('http://127.0.0.1:8765')
     expect(starts).toHaveLength(1)
-    expect(starts[0]!.command).toContain('41233')
+    expect(starts[0]!.command).toContain('8765')
     expect(starts[0]!.command).toEqual(expect.arrayContaining(['--exit-when-idle', String(IDLE_SECONDS)]))
     expect(starts[0]!.command).not.toContain('--model') // all three apps (D445)
-    expect(JSON.parse(readFileSync(join(state, STATE_FILE), 'utf8'))).toEqual({ port: 41233 })
+    expect(JSON.parse(readFileSync(join(state, STATE_FILE), 'utf8'))).toEqual({ port: 8765 })
     expect(starts[0]!.log).toBe(join(state, 'server.log'))
     await server.stop()
   })
 
-  it('uses the remembered port, so the address (and what the page keeps for it) stays the same', async () => {
-    writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
-    const { server, starts } = harness({ port: 41233 })
-    expect(await server.start()).toBe('http://127.0.0.1:50123')
-    expect(starts[0]!.url).toBe('http://127.0.0.1:50123')
+  it('finds a server that runs already on 8765 and starts nothing, whoever started it', async () => {
+    const { server, starts, probed } = harness({ answers: [OURS] })
+    expect(await server.start()).toBe('http://127.0.0.1:8765')
+    expect(starts).toEqual([])
+    expect(probed).toEqual(['http://127.0.0.1:8765'])
     await server.stop()
   })
 
-  it('finds a server that runs already and starts nothing', async () => {
+  it('goes back to 8765 from a port an earlier version picked, once nothing runs there any more', async () => {
     writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
-    const { server, starts } = harness({ answers: [OURS] })
+    const { server, starts, probed } = harness()
+    expect(await server.start()).toBe('http://127.0.0.1:8765')
+    expect(probed).toEqual(['http://127.0.0.1:8765', 'http://127.0.0.1:50123'])
+    expect(starts[0]!.url).toBe('http://127.0.0.1:8765')
+    expect(JSON.parse(readFileSync(join(state, STATE_FILE), 'utf8'))).toEqual({ port: 8765 })
+    await server.stop()
+  })
+
+  it('still uses a server that runs on the remembered port, until it stops', async () => {
+    writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
+    const { server, starts } = harness({ answers: [NONE, OURS] })
     expect(await server.start()).toBe('http://127.0.0.1:50123')
     expect(starts).toEqual([])
     await server.stop()
   })
 
   it('refuses a running server of another version, and says how to get rid of it', async () => {
-    writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
     const { server } = harness({ answers: [{ ...OURS, version: '0.31.0' }], version: '0.32.0' })
     await expect(server.start()).rejects.toThrow(/0\.31\.0.*0\.32\.0|0\.32\.0.*0\.31\.0/s)
     await expect(server.start()).rejects.toThrow(/Task Manager/)
   })
 
   it('does not insist on a version it could not find out', async () => {
-    writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
     const { server } = harness({ answers: [OURS], version: null })
-    await expect(server.start()).resolves.toBe('http://127.0.0.1:50123')
+    await expect(server.start()).resolves.toBe('http://127.0.0.1:8765')
     await server.stop()
   })
 
   it('refuses a running server that does not serve this app', async () => {
-    writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
     const { server } = harness({ answers: [{ kind: 'claudia', apps: ['composes'], version: '0.32.0' }] })
     await expect(server.start()).rejects.toThrow(/does not serve computes/)
   })
 
-  it('moves to a new port when something else answers on the remembered one', async () => {
-    writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
-    const { server, starts, logged } = harness({ answers: [{ kind: 'other' }, NONE], port: 41233 })
+  it('goes to another port when something that is not a Claudia server answers on 8765, and remembers it', async () => {
+    const { server, starts, logged } = harness({ answers: [{ kind: 'other' }], port: 41233 })
     expect(await server.start()).toBe('http://127.0.0.1:41233')
     expect(starts[0]!.url).toBe('http://127.0.0.1:41233')
     expect(JSON.parse(readFileSync(join(state, STATE_FILE), 'utf8'))).toEqual({ port: 41233 })
-    expect(logged.join('\n')).toMatch(/50123/)
+    expect(logged.join('\n')).toMatch(/8765/)
     await server.stop()
   })
 
-  it('moves to a new port when the remembered one is taken by something that says nothing', async () => {
+  it('keeps the port it went to then, while 8765 is still taken', async () => {
     writeFileSync(join(state, STATE_FILE), JSON.stringify({ port: 50123 }))
+    const { server } = harness({ answers: [{ kind: 'other' }, NONE], port: 41233 })
+    expect(await server.start()).toBe('http://127.0.0.1:50123')
+    await server.stop()
+  })
+
+  it('goes to another port when 8765 is taken by something that says nothing', async () => {
     const server = new DesktopServer({
       app: 'computes',
       python: 'py',
@@ -159,7 +173,7 @@ describe('DesktopServer', () => {
       probe: async () => NONE,
       makeServer: (_command, url) => ({ start: async () => url, stop: async () => {} }),
       pickPort: async () => 41233,
-      portFree: async (port) => port !== 50123, // only the remembered one is taken
+      portFree: async (port) => port !== 8765,
       version: async () => null,
       connect: () => new FakeSocket(),
       sleep: async () => {},
@@ -170,17 +184,17 @@ describe('DesktopServer', () => {
 
   it('treats an unreadable state file as no state file', async () => {
     writeFileSync(join(state, STATE_FILE), '{ not json')
-    const { server } = harness({ port: 41233 })
-    expect(await server.start()).toBe('http://127.0.0.1:41233')
-    expect(JSON.parse(readFileSync(join(state, STATE_FILE), 'utf8'))).toEqual({ port: 41233 })
+    const { server } = harness()
+    expect(await server.start()).toBe('http://127.0.0.1:8765')
+    expect(JSON.parse(readFileSync(join(state, STATE_FILE), 'utf8'))).toEqual({ port: 8765 })
     await server.stop()
   })
 
   describe('two windows starting at once', () => {
     it('a start that lost to another one (it exited at start-up) uses the one that won', async () => {
       const lost = new ServerStartError('the server stopped at start-up (exit code 2)\nerror: another Claudia server uses C:\\docs', { exited: true })
-      const { server } = harness({ answers: [NONE, NONE, OURS], startFails: lost, port: 41233 })
-      await expect(server.start()).resolves.toBe('http://127.0.0.1:41233')
+      const { server } = harness({ answers: [NONE, NONE, OURS], startFails: lost })
+      await expect(server.start()).resolves.toBe('http://127.0.0.1:8765')
       await server.stop()
     })
 
@@ -265,7 +279,7 @@ describe('DesktopServer', () => {
       })
       await server.start()
       await new Promise((resolve) => setImmediate(resolve))
-      expect(urls).toEqual(['ws://127.0.0.1:41233/api/presence'])
+      expect(urls).toEqual(['ws://127.0.0.1:8765/api/presence'])
       await server.stop()
     })
   })

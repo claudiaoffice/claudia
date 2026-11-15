@@ -4,11 +4,14 @@
 //  - **One server for the suite.** It serves all three apps (no `--model`), keeps one folder of documents and one of
 //    state, and stops by itself (`--exit-when-idle`, D434) ten minutes after nothing was connected. The first window
 //    that needs it starts it; the others find it.
-//  - **Found by its port.** The port is chosen at the first start and remembered in `desktop-server.json` in the state
-//    folder, so the address -- and what the page keeps for that address -- stays the same for ever. A running server is
-//    recognised by `/api/health` (its apps; its version, for a request from this computer): nothing else is asked of it.
-//  - **Two windows starting at once** are settled by the server's own lock on its folder (D435): the one that loses exits
-//    at start-up, and its window then uses the one that won.
+//  - **Found by its port: 8765, the port of every Claudia server** (D504; `./start.sh` and a cloud server use it too), so
+//    the address -- and what the page keeps for that address -- stays the same. Only when something that is not a
+//    Claudia server holds 8765 does the suite go to another port, remembered in `desktop-server.json` in the state
+//    folder. A running server is recognised by `/api/health` (its apps; its version, for a request from this computer):
+//    nothing else is asked of it, so a Claudia server of this version on 8765 is this computer's server, whoever
+//    started it.
+//  - **Two windows starting at once** both start a server on the same port; the one that loses (the port, or the
+//    server's own lock on its folder, D435) exits at start-up, and its window then uses the one that won.
 //  - **A window never ends the server.** Closing it only lets go of the connection it keeps (`/api/presence`) so the
 //    server is never taken for idle while a window is open -- an open front page holds nothing else. A window that finds
 //    the server gone (it stopped, or somebody ended it) starts it again on the same port, where the page reconnects.
@@ -25,8 +28,10 @@ import { buildServerCommand, freePort, LocalServer, LOOPBACK, ServerStartError }
 
 /** `--exit-when-idle`: ten minutes (D445). The clock starts only when the last page has closed. */
 export const IDLE_SECONDS = 600
-/** In the server's state folder: `{"port": N}`. */
+/** In the server's state folder: `{"port": N}`, the port the server went to when 8765 was taken. */
 export const STATE_FILE = 'desktop-server.json'
+/** The port of every Claudia server unless told otherwise (D504): ./start.sh, a cloud server, the desktop's own. */
+export const SERVER_PORT = 8765
 
 /** What is listening where the server should be. */
 export type Health =
@@ -151,6 +156,8 @@ export interface DesktopServerOptions {
   log?: (message: string) => void
   /** How long a start that lost to another one looks for the winner. */
   raceWaitMs?: number
+  /** The port to use when it is free (`SERVER_PORT`). */
+  port?: number
   // What the tests replace:
   probe?: (url: string) => Promise<Health>
   makeServer?: (command: string[], url: string, log: string) => ServerProcess
@@ -209,34 +216,38 @@ export class DesktopServer {
   }
 
   private async ensure(): Promise<string> {
-    let port = await this.settlePort()
-    let url = `http://${LOOPBACK}:${port}`
-    const found = await this.probe(url)
-    if (found.kind === 'claudia') {
-      await this.checkIsOurs(found, port)
-      return url
+    const preferred = this.options.port ?? SERVER_PORT
+    const remembered = readPort(this.stateFile)
+    // A server that runs already: on the port of every Claudia server, or where an earlier start had to go instead.
+    let preferredTaken = false
+    for (const port of remembered !== null && remembered !== preferred ? [preferred, remembered] : [preferred]) {
+      const url = `http://${LOOPBACK}:${port}`
+      const found = await this.probe(url)
+      if (found.kind === 'claudia') {
+        await this.checkIsOurs(found, port)
+        this.remember(port)
+        return url
+      }
+      if (port === preferred) preferredTaken = found.kind === 'other' || !(await this.portFree(port))
     }
-    if (found.kind === 'other' || !(await this.portFree(port))) {
-      // The remembered port is taken by something that is not our server: it cannot be ours, so the suite moves (once).
-      const taken = port
-      port = await this.pickPort()
-      writePort(this.stateFile, port, 'overwrite')
-      url = `http://${LOOPBACK}:${port}`
-      this.log(`port ${taken} is used by something else; the local server moves to port ${port}`)
+    // None runs: start one, on the usual port unless something that is not a Claudia server holds it.
+    let port = preferred
+    if (preferredTaken) {
+      port = remembered !== null && remembered !== preferred && (await this.portFree(remembered)) ? remembered : await this.pickPort()
+      this.log(`port ${preferred} is used by something that is not a Claudia server; the local server goes to port ${port}`)
     }
-    return this.startServer(url, port)
+    this.remember(port)
+    return this.startServer(`http://${LOOPBACK}:${port}`, port)
   }
 
-  /** The remembered port, else a fresh one that is remembered at once (two first starts agree on the first one's). */
-  private async settlePort(): Promise<number> {
-    const known = readPort(this.stateFile)
-    if (known !== null) return known
-    const fresh = await this.pickPort()
-    if (writePort(this.stateFile, fresh, 'exclusive')) return fresh
-    const other = readPort(this.stateFile)
-    if (other !== null) return other
-    writePort(this.stateFile, fresh, 'overwrite') // there was a file, and it was not one
-    return fresh
+  /** Write down where the server is, if that is not what the file says already. */
+  private remember(port: number): void {
+    if (readPort(this.stateFile) === port) return
+    try {
+      writePort(this.stateFile, port, 'overwrite')
+    } catch (problem) {
+      this.log(`${this.stateFile} could not be written: ${(problem as Error).message}`)
+    }
   }
 
   private async checkIsOurs(found: Extract<Health, { kind: 'claudia' }>, port: number): Promise<void> {

@@ -14,7 +14,12 @@ from claudia_core.testing import ListModel
 from claudia_server.app import create_app
 from claudia_server.auth import ScryptDirectory
 from claudia_server.hub import Hub, MemoryProvider
-from claudia_server.security_headers import FRAME_ANCESTORS, content_security_policy, inline_script_hashes
+from claudia_server.security_headers import (
+    FRAME_ANCESTORS,
+    WebScriptHashes,
+    content_security_policy,
+    inline_script_hashes,
+)
 
 CONFIG = 'window.__NUXT__={};window.__NUXT__.config={public:{},app:{baseURL:"/"}}'
 IMPORT_MAP = '{"imports":{"#entry":"/_nuxt/entry.js"}}'
@@ -112,3 +117,32 @@ def test_the_api_description_keeps_only_the_framing_rule_for_now(client):
     response = client.get("/api/swagger")
     assert response.headers["content-security-policy"] == f"frame-ancestors {FRAME_ANCESTORS}"
     assert response.headers["x-content-type-options"] == "nosniff"
+
+
+def test_the_hashes_follow_a_web_app_that_is_built_again_while_the_server_runs(tmp_path):
+    """The desktop apps' server outlives its windows (D445) and the start scripts build the web app again before each
+    window: a policy with the old build's hashes blocked the new build's inline script, and the window stayed blank
+    (2026-11-15). The pages are read again when one changed, and only then."""
+    index = tmp_path / "index.html"
+    index.write_text('<script>window.__NUXT__={buildId:"one"}</script>')
+    hashes = WebScriptHashes(tmp_path)
+    first = hashes()
+    assert first == (sha('window.__NUXT__={buildId:"one"}'),)
+    assert hashes() is first  # nothing changed: nothing read again
+    index.write_text('<script>window.__NUXT__={buildId:"two, a longer one"}</script>')
+    assert hashes() == (sha('window.__NUXT__={buildId:"two, a longer one"}'),)
+
+
+def test_without_a_web_app_there_are_no_hashes():
+    assert WebScriptHashes(None)() == ()
+
+
+def test_a_rebuilt_web_app_is_not_blocked_by_the_policy_of_the_running_server(tmp_path):
+    (tmp_path / "index.html").write_text("<!doctype html><script>boot(1)</script>")
+    app = create_app(Hub(MemoryProvider(ListModel)), ScryptDirectory(cost=2**4), web_dir=tmp_path)
+    with TestClient(app) as client:
+        assert sha("boot(1)") in client.get("/").headers["content-security-policy"]
+        (tmp_path / "index.html").write_text("<!doctype html><script>boot(22)</script>")  # rebuilt, server running
+        policy = client.get("/").headers["content-security-policy"]
+    assert sha("boot(22)") in policy
+    assert sha("boot(1)") not in policy

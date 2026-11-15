@@ -22,6 +22,7 @@ import pytest
 from claudia_shell_gtk import desktop_server
 from claudia_shell_gtk.desktop_server import (
     IDLE_SECONDS,
+    SERVER_PORT,
     STATE_FILE,
     DesktopServer,
     Health,
@@ -141,33 +142,42 @@ def make(harnesses: list[Harness], state: Path, **options: object) -> Harness:
     return harness
 
 
-def test_starts_a_server_on_a_fresh_port_when_none_runs_and_remembers_the_port(state: Path, harnesses) -> None:
+def test_starts_the_server_on_8765_the_port_of_every_claudia_server(state: Path, harnesses) -> None:
+    """D504: ./start.sh, a cloud server and the desktop's own all use 8765."""
     h = make(harnesses, state)
-    assert h.server.start() == "http://127.0.0.1:41233"
+    assert SERVER_PORT == 8765
+    assert h.server.start() == "http://127.0.0.1:8765"
     command, _url, log = h.starts[0]
-    assert "41233" in command
+    assert "8765" in command
     assert command[command.index("--exit-when-idle") + 1] == str(IDLE_SECONDS)
     assert "--model" not in command  # all three apps (D445)
-    assert json.loads((state / STATE_FILE).read_text()) == {"port": 41233}
+    assert json.loads((state / STATE_FILE).read_text()) == {"port": 8765}
     assert log == state / "server.log"
 
 
-def test_uses_the_remembered_port_so_the_address_stays_the_same(state: Path, harnesses) -> None:
+def test_finds_a_server_on_8765_and_starts_nothing_whoever_started_it(state: Path, harnesses) -> None:
+    h = make(harnesses, state, answers=[OURS])
+    assert h.server.start() == "http://127.0.0.1:8765"
+    assert h.starts == []
+    assert h.probed == ["http://127.0.0.1:8765"]
+
+
+def test_goes_back_to_8765_from_a_port_an_earlier_version_picked(state: Path, harnesses) -> None:
     (state / STATE_FILE).write_text(json.dumps({"port": 50123}))
     h = make(harnesses, state)
-    assert h.server.start() == "http://127.0.0.1:50123"
-    assert h.starts[0][1] == "http://127.0.0.1:50123"
+    assert h.server.start() == "http://127.0.0.1:8765"
+    assert h.probed == ["http://127.0.0.1:8765", "http://127.0.0.1:50123"]
+    assert json.loads((state / STATE_FILE).read_text()) == {"port": 8765}
 
 
-def test_finds_a_server_that_runs_already_and_starts_nothing(state: Path, harnesses) -> None:
+def test_still_uses_a_server_on_the_remembered_port_until_it_stops(state: Path, harnesses) -> None:
     (state / STATE_FILE).write_text(json.dumps({"port": 50123}))
-    h = make(harnesses, state, answers=[OURS])
+    h = make(harnesses, state, answers=[NONE, OURS])
     assert h.server.start() == "http://127.0.0.1:50123"
     assert h.starts == []
 
 
 def test_refuses_a_running_server_of_another_version_and_says_how_to_get_rid_of_it(state: Path, harnesses) -> None:
-    (state / STATE_FILE).write_text(json.dumps({"port": 50123}))
     h = make(harnesses, state, answers=[Health("claudia", OURS.apps, "0.31.0")], version="0.32.0")
     with pytest.raises(ServerStartError) as refused:
         h.server.start()
@@ -177,27 +187,29 @@ def test_refuses_a_running_server_of_another_version_and_says_how_to_get_rid_of_
 
 
 def test_does_not_insist_on_a_version_it_could_not_find_out(state: Path, harnesses) -> None:
-    (state / STATE_FILE).write_text(json.dumps({"port": 50123}))
     h = make(harnesses, state, answers=[OURS], version=None)
-    assert h.server.start() == "http://127.0.0.1:50123"
+    assert h.server.start() == "http://127.0.0.1:8765"
 
 
 def test_refuses_a_running_server_that_does_not_serve_this_app(state: Path, harnesses) -> None:
-    (state / STATE_FILE).write_text(json.dumps({"port": 50123}))
     h = make(harnesses, state, answers=[Health("claudia", ("composes",), "0.32.0")])
     with pytest.raises(ServerStartError, match="does not serve computes"):
         h.server.start()
 
 
-def test_moves_to_a_new_port_when_something_else_answers_on_the_remembered_one(state: Path, harnesses) -> None:
-    (state / STATE_FILE).write_text(json.dumps({"port": 50123}))
-    h = make(harnesses, state, answers=[Health("other"), NONE])
+def test_goes_to_another_port_when_something_else_answers_on_8765(state: Path, harnesses) -> None:
+    h = make(harnesses, state, answers=[Health("other")])
     assert h.server.start() == "http://127.0.0.1:41233"
     assert json.loads((state / STATE_FILE).read_text()) == {"port": 41233}
 
 
-def test_moves_to_a_new_port_when_the_remembered_one_is_taken_by_something_silent(state: Path, harnesses) -> None:
+def test_keeps_the_port_it_went_to_while_8765_is_still_taken(state: Path, harnesses) -> None:
     (state / STATE_FILE).write_text(json.dumps({"port": 50123}))
+    h = make(harnesses, state, answers=[Health("other"), NONE])
+    assert h.server.start() == "http://127.0.0.1:50123"
+
+
+def test_goes_to_another_port_when_8765_is_taken_by_something_silent(state: Path, harnesses) -> None:
     h = make(harnesses, state, port_free=False)
     assert h.server.start() == "http://127.0.0.1:41233"
 
@@ -205,8 +217,8 @@ def test_moves_to_a_new_port_when_the_remembered_one_is_taken_by_something_silen
 def test_treats_an_unreadable_state_file_as_none(state: Path, harnesses) -> None:
     (state / STATE_FILE).write_text("{ not json")
     h = make(harnesses, state)
-    assert h.server.start() == "http://127.0.0.1:41233"
-    assert json.loads((state / STATE_FILE).read_text()) == {"port": 41233}
+    assert h.server.start() == "http://127.0.0.1:8765"
+    assert json.loads((state / STATE_FILE).read_text()) == {"port": 8765}
 
 
 # --------------------------------------------------------------------------------------- two windows at once
@@ -217,7 +229,7 @@ def test_a_start_that_lost_to_another_one_uses_the_one_that_won(state: Path, har
         "the server stopped at start-up (exit code 2)\nanother Claudia server uses /docs", exited=True
     )
     h = make(harnesses, state, answers=[NONE, NONE, OURS], start_fails=lost)
-    assert h.server.start() == "http://127.0.0.1:41233"
+    assert h.server.start() == "http://127.0.0.1:8765"
 
 
 def test_says_what_the_server_said_when_nobody_else_answers_either(state: Path, harnesses) -> None:
@@ -251,7 +263,7 @@ def test_spawn_finds_the_server_without_blocking_and_check_ready_says_when(state
     h = make(harnesses, state)
     h.server.spawn()
     wait_for(h.server.check_ready)
-    assert h.server.url == "http://127.0.0.1:41233"
+    assert h.server.url == "http://127.0.0.1:8765"
 
 
 def test_check_ready_raises_what_went_wrong(state: Path, harnesses) -> None:
@@ -268,7 +280,7 @@ def test_keeps_a_presence_connection_and_lets_go_of_it_not_of_the_server(state: 
     h = make(harnesses, state)
     h.server.start()
     wait_for(lambda: len(h.sockets) == 1)
-    assert h.connected == ["ws://127.0.0.1:41233/api/presence"]
+    assert h.connected == ["ws://127.0.0.1:8765/api/presence"]
     h.server.stop()
     assert h.sockets[0].closed
     assert len(h.starts) == 1  # closing a window does not stop the server
@@ -426,11 +438,16 @@ class _PresenceServer:
         self.listener.close()
 
 
+def _wait_then_set(socket_: desktop_server._WebSocket, done: threading.Event) -> None:
+    socket_.wait_closed()
+    done.set()
+
+
 def test_the_presence_socket_answers_pings_and_notices_the_end() -> None:
     server = _PresenceServer()
     socket_ = desktop_server._WebSocket(server.url)
     done = threading.Event()
-    threading.Thread(target=lambda: (socket_.wait_closed(), done.set()), daemon=True).start()
+    threading.Thread(target=_wait_then_set, args=(socket_, done), daemon=True).start()
     assert server.pong.wait(5), "the ping was not answered"
     assert server.path == "/api/presence"
     assert not done.is_set()
@@ -442,7 +459,7 @@ def test_closing_the_presence_socket_ends_the_wait() -> None:
     server = _PresenceServer()
     socket_ = desktop_server._WebSocket(server.url)
     done = threading.Event()
-    threading.Thread(target=lambda: (socket_.wait_closed(), done.set()), daemon=True).start()
+    threading.Thread(target=_wait_then_set, args=(socket_, done), daemon=True).start()
     server.accepted.wait(5)
     socket_.close()
     assert done.wait(5)

@@ -48,6 +48,7 @@ class Reply(Protocol):
     """How the answers go to the page (the bridge's ``send_file_*``)."""
 
     def send_file_result(self, request: str, outcome: str, **details: object) -> bool: ...
+    def send_file_offer(self, request: str, name: str, size: int) -> bool: ...
     def send_file_chunk(self, request: str, index: int, data: str) -> bool: ...
     def send_file_done(self, request: str, chunks: int) -> bool: ...
 
@@ -91,6 +92,48 @@ class Files:
         self._incoming: dict[str, _Incoming] = {}
         self._last_folder: Path | None = None
         """The folder of the last file opened or saved: the next dialog starts there."""
+        self._offers = 0
+
+    def _read(self, request: str, path: Path) -> bytes | None:
+        """The bytes of ``path``, or ``None`` after telling the page why not."""
+        try:
+            size = path.stat().st_size
+            if size > contract.MAX_FILE_BYTES:
+                self._fail(
+                    request,
+                    _("{name} is larger than {mb} MB.").format(
+                        name=path.name, mb=contract.MAX_FILE_BYTES // 1024 // 1024
+                    ),
+                )
+                return None
+            return path.read_bytes()
+        except OSError as problem:
+            self._fail(request, _("{name} could not be read: {reason}").format(name=path.name, reason=problem))
+            return None
+
+    def _send_pieces(self, request: str, data: bytes) -> None:
+        step = contract.FILE_CHUNK_BYTES
+        pieces = range(0, len(data), step)
+        for index, at in enumerate(pieces):
+            self._reply.send_file_chunk(request, index, base64.b64encode(data[at : at + step]).decode("ascii"))
+        self._reply.send_file_done(request, len(pieces))
+
+    def offer(self, path: Path) -> bool:
+        """D505: the person dropped ``path`` on the window; hand it to the page as if it had been dropped there.
+        ``False`` when it is not a file that can be read (nothing is sent then)."""
+        try:
+            if not path.is_file() or path.stat().st_size > contract.MAX_FILE_BYTES:
+                return False
+            data = path.read_bytes()
+        except OSError as problem:
+            log.warning("a dropped file could not be read: %s", problem)
+            return False
+        self._offers += 1
+        request = f"drop-{self._offers}"
+        self._last_folder = path.parent
+        self._reply.send_file_offer(request, path.name, len(data))
+        self._send_pieces(request, data)
+        return True
 
     def _fail(self, request: str, message: str) -> None:
         log.warning("file %s: %s", request, message)
@@ -105,27 +148,12 @@ class Files:
             if path is None:
                 self._reply.send_file_result(request, "cancelled")
                 return
-            try:
-                size = path.stat().st_size
-                if size > contract.MAX_FILE_BYTES:
-                    self._fail(
-                        request,
-                        _("{name} is larger than {mb} MB.").format(
-                            name=path.name, mb=contract.MAX_FILE_BYTES // 1024 // 1024
-                        ),
-                    )
-                    return
-                data = path.read_bytes()
-            except OSError as problem:
-                self._fail(request, _("{name} could not be read: {reason}").format(name=path.name, reason=problem))
+            data = self._read(request, path)
+            if data is None:
                 return
             self._last_folder = path.parent
             self._reply.send_file_result(request, "picked", name=path.name, size=len(data))
-            step = contract.FILE_CHUNK_BYTES
-            pieces = range(0, len(data), step)
-            for index, at in enumerate(pieces):
-                self._reply.send_file_chunk(request, index, base64.b64encode(data[at : at + step]).decode("ascii"))
-            self._reply.send_file_done(request, len(pieces))
+            self._send_pieces(request, data)
 
         self._dialogs.open(
             title or _("Open a File"),

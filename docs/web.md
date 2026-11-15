@@ -41,7 +41,8 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
   (`saved` with the path, `cancelled`, or `downloaded` in a tab); the export dialogs show "Saved as …". Print… in the
   preview hands the PDF to the shell, which opens it in the computer's PDF viewer. `currentShell()` is the bridge of the
   page shown now. On the front page File ▸ New empties and focuses the Document field and marks the "start a new one"
-  part; Open… focuses the search field.
+  part; Open… focuses the search field. A file the shell offers (`offer_file`, D505: dropped on a Linux window, whose web
+  view keeps it from the page) reaches the front page through `ShellBridge.onFileOffered` and is imported like a drop.
 * **Passwords** (D448): every password field is `PasswordInput.vue`, with an eye that shows and hides what was typed
   (starts hidden; attributes go to the input). File ▸ Manage ▸ Change Password… (`ChangePasswordDialog.vue`,
   `BaseSession.changePassword`, the protocol's `change_password`) changes the person's own password; a refusal is said

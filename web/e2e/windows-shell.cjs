@@ -20,6 +20,7 @@ const { execFileSync, spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const http = require('node:http')
+const net = require('node:net')
 const os = require('node:os')
 const path = require('node:path')
 
@@ -48,6 +49,18 @@ window.Neutralino = {
   extensions: { dispatch: async (id, event, data) => window.__dispatch(event, data), getStats: async () => ({ loaded: [id], connected: [id] }) },
 }
 `
+
+/** A port nothing listens on, for the window's own server: it must not find one already on 8765 (D504), such as a
+ * developer's ./start.sh. */
+function freePort() {
+  const probe = net.createServer()
+  return new Promise((resolve) =>
+    probe.listen(0, '127.0.0.1', () => {
+      const { port } = probe.address()
+      probe.close(() => resolve(port))
+    }),
+  )
+}
 
 /** Neutralino's static file server for one app folder, with the fake client library in place of the real one. */
 function servePages(appDir) {
@@ -93,6 +106,7 @@ async function openWindow(browser, app, server) {
       USERPROFILE: home,
       LOCALAPPDATA: path.join(home, 'AppData', 'Local'),
       CLAUDIA_SERVER_PYTHON: PYTHON,
+      CLAUDIA_SERVER_PORT: String(await freePort()),
     },
     stdio: ['pipe', 'inherit', 'inherit'],
   })

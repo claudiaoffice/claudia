@@ -92,11 +92,12 @@ a command line that contains the folder; the launcher refuses a path with a spac
 | --- | --- |
 | `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv/bin/python` of the checkout. |
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: `web/.output/public`. If set, it is the only candidate: a wrong path is reported. |
+| `CLAUDIA_SERVER_PORT` | The port of the local server. Default: 8765, the port of `./start.sh` (D504); a Claudia server already there is used. |
 | `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `apps/<app>/bin/neutralino-mac_<arch>`, where `neu update` puts it. |
 
 The three apps share one local server (D445, as on Windows): documents are in
 `~/Library/Application Support/Claudia/documents/<app>`, the server's state, `server.log` and `desktop-server.json` (its
-port) in `…/Claudia/state`; each app's `…/Claudia/<app>/state/shell.log` is its core's log;
+port: 8765, D504) in `…/Claudia/state`; each app's `…/Claudia/<app>/state/shell.log` is its core's log;
 `~/Library/Application Support/Claudia/shell.json` holds the server lists. The server stops by itself ten minutes after
 its last window has closed.
 `--debug` prints where these are.

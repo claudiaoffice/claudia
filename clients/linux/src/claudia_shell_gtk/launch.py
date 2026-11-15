@@ -14,7 +14,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from .desktop_server import DesktopServer
+from .desktop_server import SERVER_PORT, DesktopServer
 from .i18n import translate as _
 from .identity import AppIdentity
 from .paths import find_frontend, server_documents_dir, server_state_dir
@@ -57,4 +57,7 @@ def prepare_server(identity: AppIdentity, *, repo: Path | None = None) -> Deskto
     documents.mkdir(parents=True, exist_ok=True)
     state = server_state_dir()
     state.mkdir(parents=True, exist_ok=True)
-    return DesktopServer(app=identity.name, python=python, web=web, documents=documents, state=state)
+    # CLAUDIA_SERVER_PORT: another port than 8765 (D504), for a person who needs 8765 for something else, and for tests.
+    wanted = os.environ.get("CLAUDIA_SERVER_PORT", "")
+    port = int(wanted) if wanted.isdigit() and 0 < int(wanted) < 65536 else SERVER_PORT
+    return DesktopServer(app=identity.name, python=python, web=web, documents=documents, state=state, port=port)

@@ -268,6 +268,8 @@ function attachShell() {
   }
   const bridge = createShellBridge(isApp(app.value) ? app.value : undefined, undefined, (b) => reactive(b) as typeof b, 'start')
   bridge.onAction(onShellAction)
+  // A file dropped on the window that the web view keeps from the page comes from the shell instead (D505: WebKitGTK).
+  bridge.onFileOffered((file) => void takeFile(file))
   bridge.onConnectFailed((_code, message) => {
     connectPending.value = false
     connectError.value = message

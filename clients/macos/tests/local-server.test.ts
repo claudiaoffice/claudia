@@ -48,6 +48,15 @@ describe('prepareServer', () => {
     expect(existsSync(join(home, 'Library', 'Application Support', 'Claudia', 'creates', 'documents'))).toBe(false) // no folder per app any more
   })
 
+  it('uses 8765 (D504), or the port of CLAUDIA_SERVER_PORT', async () => {
+    const usual = await prepareServer('creates', { repo, home, env: {} })
+    expect((usual as unknown as { options: { port?: number } }).options.port).toBeUndefined() // SERVER_PORT, 8765
+    const other = await prepareServer('creates', { repo, home, env: { CLAUDIA_SERVER_PORT: '18765' } })
+    expect((other as unknown as { options: { port?: number } }).options.port).toBe(18765)
+    const nonsense = await prepareServer('creates', { repo, home, env: { CLAUDIA_SERVER_PORT: 'x' } })
+    expect((nonsense as unknown as { options: { port?: number } }).options.port).toBeUndefined()
+  })
+
   it('a missing server python is explained with the way to fix it', async () => {
     rmSync(join(repo, '.venv', 'bin', 'python'))
     await expect(prepareServer('creates', { repo, home, env: {} })).rejects.toThrow(SetupProblem)

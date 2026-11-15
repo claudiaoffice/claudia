@@ -406,3 +406,10 @@ every server. The Windows client's own branch `win-client` was already on main i
 Decisions: D500 (the starter fonts ship with every server); D501 (files through the shells' own dialogs; supersedes
 D216); D502 (proposal: Print… in a window opens the PDF viewer); D503 (proposal: what New and Open… do on the front page)
 
+Second pass, same day: on Windows (fresh checkout) and on a Mac (second start) the window stayed empty; the servers
+still used a random port; on Linux File ▸ Open showed nothing and a dropped file did nothing. The empty window was the
+server's script hashes going stale when the start scripts rebuilt the web app under a server that kept running (D445);
+the server now follows a rebuilt web app.
+
+Decisions: D504 (every Claudia server uses port 8765, ./start.sh too); D505 (the Linux window takes files dropped on
+the front page)

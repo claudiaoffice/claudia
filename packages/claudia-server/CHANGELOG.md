@@ -5,6 +5,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- A web app built again while the server runs is no longer blocked: the Content-Security-Policy's hashes of the inline
+  scripts follow the files in the web folder (`WebScriptHashes`, read again when a page's name, time or size changed).
+  The desktop apps' shared server (D445) outlives its windows, and the start scripts build the web app at every start,
+  so the second start showed an empty window (the new build's inline script was refused).
+
 ### Changed
 - Every server has the starter set of open fonts (D500): the copy shipped with `claudia_fonts` is read first, the
   folders of `--fonts` (or `STATE_DIR/fonts`) after it, and win for the same family and style. A server started with

@@ -31,7 +31,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
 from starlette.datastructures import MutableHeaders
@@ -77,6 +77,44 @@ def web_script_hashes(web_dir: str | Path | None) -> tuple[str, ...]:
     return inline_script_hashes(p.read_text(encoding="utf-8") for p in sorted(Path(web_dir).glob("*.html")))
 
 
+class WebScriptHashes:
+    """:func:`web_script_hashes` that follows the web app when it is built again while the server runs.
+
+    Every build of the web app writes a new inline script (its build id is in it), and a policy with the hashes of the
+    build the server started with blocks it: the page stays blank. That happened to the desktop apps (2026-11-15):
+    their server outlives its windows (D445), and the start scripts build the web app again before each window. So
+    the pages are looked at again (their size and time, which is cheap) before each answer, and read again only when
+    one changed."""
+
+    def __init__(self, web_dir: str | Path | None) -> None:
+        self._dir = Path(web_dir) if web_dir is not None else None
+        self._seen: tuple[tuple[str, int, int], ...] | None = None
+        self._hashes: tuple[str, ...] = ()
+
+    @staticmethod
+    def _stamp(folder: Path) -> tuple[tuple[str, int, int], ...]:
+        stamp = []
+        for page in sorted(folder.glob("*.html")):
+            try:
+                info = page.stat()
+            except OSError:  # being written again right now
+                continue
+            stamp.append((page.name, info.st_mtime_ns, info.st_size))
+        return tuple(stamp)
+
+    def __call__(self) -> tuple[str, ...]:
+        if self._dir is None:
+            return ()
+        stamp = self._stamp(self._dir)
+        if stamp != self._seen:
+            try:
+                self._hashes = web_script_hashes(self._dir)
+            except OSError:  # a page went away in between: keep the last hashes, look again next time
+                return self._hashes
+            self._seen = stamp
+        return self._hashes
+
+
 def content_security_policy(host: str, script_hashes: Iterable[str] = ()) -> str:
     """The policy for a page that was asked for under ``host`` (``name`` or ``name:port``). Anything in ``host`` that
     is not part of a host name, an IPv6 literal or a port is dropped, so it cannot add a directive."""
@@ -104,9 +142,9 @@ class SecurityHeaders:
     """ASGI middleware: the headers above on every HTTP answer (a WebSocket has none to set). A header the
     application set itself is left as it is."""
 
-    def __init__(self, app: ASGIApp, *, script_hashes: Iterable[str] = ()) -> None:
+    def __init__(self, app: ASGIApp, *, script_hashes: Iterable[str] | Callable[[], Iterable[str]] = ()) -> None:
         self.app = app
-        self.script_hashes = tuple(script_hashes)
+        self.script_hashes = script_hashes if callable(script_hashes) else tuple(script_hashes)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -114,7 +152,8 @@ class SecurityHeaders:
             return
         host = _host(scope)
         loose = scope.get("path", "").startswith(_LOOSE)
-        policy = f"frame-ancestors {FRAME_ANCESTORS}" if loose else content_security_policy(host, self.script_hashes)
+        hashes = self.script_hashes() if callable(self.script_hashes) else self.script_hashes
+        policy = f"frame-ancestors {FRAME_ANCESTORS}" if loose else content_security_policy(host, hashes)
 
         async def send_with_headers(message: Message) -> None:
             if message["type"] == "http.response.start":

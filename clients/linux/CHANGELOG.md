@@ -4,6 +4,20 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Changed (D504): the local server is on port 8765
+- The shared local server listens on 8765, the port of `./start.sh`; a Claudia server of the same version already there
+  is used, whoever started it. Another port only when something else holds 8765 (logged), or with
+  `CLAUDIA_SERVER_PORT`. The e2e test gives its window a free port of its own.
+
+### Added (D505): files dropped on the front page
+- A file dragged from the file manager onto the window while the front page is shown is read by the window and sent
+  to the page (shell contract v1, additive: `offer_file`, then `file_chunk`/`file_done`), which imports it. WebKitGTK
+  does not hand such a drop to the page.
+
+### Fixed
+- File ▸ New and Open… on the front page now show what they did (D503): after a menu action the keyboard focus was not
+  in the web view, so the field the page focused did not show it; the window now gives the web view the focus.
+
 ### Changed (D445, D434): the three apps share one local server
 - The window no longer starts a server of its own app (`--model`, a new port each time) that ends with it.
   `desktop_server.py` finds or starts the one server of the suite: all three apps, `$XDG_DATA_HOME/claudia/documents`

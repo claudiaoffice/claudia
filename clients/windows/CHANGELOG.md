@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.0] - unreleased
 
+### Changed (D504): the local server is on port 8765
+- The shared local server listens on 8765, the port of `./start.sh`; a Claudia server of the same version already there
+  is used, whoever started it. Another port only when something else holds 8765 (logged), or with
+  `CLAUDIA_SERVER_PORT`. The e2e script gives each window a free port of its own.
+
 ### Added (D501, D502, D503)
 - Files through Windows' own dialogs (shell contract capability `files`): Open a File… and Insert Image show the Open
   dialog, from the native menu too; Export…, Download and Download PDF show the Save dialog and say where the file went,

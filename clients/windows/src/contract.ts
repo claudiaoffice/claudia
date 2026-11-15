@@ -208,6 +208,12 @@ const CHECKS: Record<string, Check> = {
     token(message.request, "'request'")
     wholeNumber(message, 'chunks')
   },
+  offer_file(message) {
+    token(message.request, "'request'")
+    const name = message.name
+    if (!(typeof name === 'string' && name.length >= 1 && name.length <= MAX_ADDRESS)) throw bad("'name' is a file name of 1 to 255 characters")
+    wholeNumber(message, 'size', MAX_FILE_BYTES)
+  },
   file_result(message) {
     token(message.request, "'request'")
     if (!FILE_OUTCOMES.includes(message.outcome as FileOutcome)) throw bad(`'outcome' is one of ${FILE_OUTCOMES.join(', ')}`)

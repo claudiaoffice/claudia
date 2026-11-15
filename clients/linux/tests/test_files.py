@@ -6,6 +6,7 @@ from __future__ import annotations
 import base64
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -35,7 +36,7 @@ class FakeDialogs:
 
 class Reply:
     def __init__(self) -> None:
-        self.sent: list[tuple[object, ...]] = []
+        self.sent: list[tuple[Any, ...]] = []
 
     def send_file_result(self, request: str, outcome: str, **details: object) -> bool:
         self.sent.append(("result", request, outcome, details))
@@ -47,6 +48,10 @@ class Reply:
 
     def send_file_done(self, request: str, chunks: int) -> bool:
         self.sent.append(("done", request, chunks))
+        return True
+
+    def send_file_offer(self, request: str, name: str, size: int) -> bool:
+        self.sent.append(("offer", request, name, size))
         return True
 
 
@@ -134,3 +139,27 @@ def test_a_pdf_to_print_opens_in_the_viewer_from_a_folder_of_its_own(tmp_path: P
     assert printed.read_bytes() == b"%PDF-1.7"
     assert reply.sent == [("result", "f4", "opened", {"path": str(printed)})]
     assert not (tmp_path / "Quarterly.pdf").exists()  # the name could not climb out of its folder
+
+
+def test_a_dropped_file_goes_to_the_page_as_an_offer_in_pieces(tmp_path: Path) -> None:
+    """D505: WebKitGTK does not hand a file dropped from the file manager to the page; the window does."""
+    path = tmp_path / "Budget.xlsx"
+    data = bytes(range(256)) * (contract.FILE_CHUNK_BYTES // 256 + 1)
+    path.write_bytes(data)
+    reply = Reply()
+    files = Files(FakeDialogs(), reply, documents=tmp_path)
+    assert files.offer(path)
+    assert reply.sent[0] == ("offer", "drop-1", "Budget.xlsx", len(data))
+    chunks = [m for m in reply.sent if m[0] == "chunk"]
+    assert b"".join(base64.b64decode(m[3]) for m in chunks) == data
+    assert reply.sent[-1] == ("done", "drop-1", len(chunks))
+    assert files.offer(path)
+    assert reply.sent[-1][1] == "drop-2"  # every drop is a transfer of its own
+
+
+def test_a_dropped_folder_or_a_missing_file_is_not_offered(tmp_path: Path) -> None:
+    reply = Reply()
+    files = Files(FakeDialogs(), reply, documents=tmp_path)
+    assert not files.offer(tmp_path)
+    assert not files.offer(tmp_path / "gone.docx")
+    assert reply.sent == []

@@ -77,6 +77,7 @@ VALID = [
     {"type": "file_result", "request": "f2", "outcome": "saved", "path": "/home/ann/Documents/Budget 2027.xlsx"},
     {"type": "file_result", "request": "f3", "outcome": "opened", "path": "/tmp/claudia-print/pages.pdf"},
     {"type": "file_result", "request": "f2", "outcome": "failed", "message": "The disk is full."},
+    {"type": "offer_file", "request": "d1", "name": "Budget.xlsx", "size": 1234},  # (D505)
 ]
 # ... and messages nobody may accept.
 INVALID = [
@@ -124,6 +125,8 @@ INVALID = [
     {"type": "file_chunk", "request": "f2", "index": -1, "data": ""},
     {"type": "file_done", "request": "f2"},
     {"type": "file_result", "request": "f2", "outcome": "lost"},
+    {"type": "offer_file", "request": "d1", "name": "a.txt"},
+    {"type": "offer_file", "request": "d1", "name": "", "size": 1},
 ]
 
 

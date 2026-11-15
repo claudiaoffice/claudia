@@ -73,3 +73,15 @@ def test_a_wrong_frontend_path_is_reported_not_replaced(checkout: Path, monkeypa
     with pytest.raises(launch.SetupProblem) as problem:
         launch.prepare_server(identity.get("composes"), repo=checkout)
     assert "/nonexistent/frontend" in str(problem.value)
+
+
+def test_the_server_port_is_8765_or_the_one_of_claudia_server_port(
+    checkout: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D504: the port of every Claudia server; CLAUDIA_SERVER_PORT for a person who needs 8765 for something else."""
+    monkeypatch.delenv("CLAUDIA_SERVER_PORT", raising=False)
+    assert launch.prepare_server(identity.get("composes"), repo=checkout)._port == 8765  # noqa: SLF001
+    monkeypatch.setenv("CLAUDIA_SERVER_PORT", "18765")
+    assert launch.prepare_server(identity.get("composes"), repo=checkout)._port == 18765  # noqa: SLF001
+    monkeypatch.setenv("CLAUDIA_SERVER_PORT", "nonsense")
+    assert launch.prepare_server(identity.get("composes"), repo=checkout)._port == 8765  # noqa: SLF001

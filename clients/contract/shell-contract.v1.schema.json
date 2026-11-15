@@ -18,7 +18,8 @@
     { "$ref": "#/$defs/save_file" },
     { "$ref": "#/$defs/file_chunk" },
     { "$ref": "#/$defs/file_done" },
-    { "$ref": "#/$defs/file_result" }
+    { "$ref": "#/$defs/file_result" },
+    { "$ref": "#/$defs/offer_file" }
   ],
   "$defs": {
     "actionId": {
@@ -229,6 +230,17 @@
         "type": { "const": "file_done" },
         "request": { "$ref": "#/$defs/fileRequest" },
         "chunks": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "offer_file": {
+      "description": "Shell to page (D505): the person dropped a file of this computer on the window, where the web view would not hand it to the page. The file follows in 'file_chunk' messages and a 'file_done' with this 'request' (a name the shell chose); the page takes it as if it had been dropped on it. Only sent by a shell that offers 'files'.",
+      "type": "object",
+      "required": ["type", "request", "name", "size"],
+      "properties": {
+        "type": { "const": "offer_file" },
+        "request": { "$ref": "#/$defs/fileRequest" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "size": { "type": "integer", "minimum": 0, "maximum": 104857600 }
       }
     },
     "file_result": {

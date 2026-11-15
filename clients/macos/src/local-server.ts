@@ -51,5 +51,16 @@ export async function prepareServer(app: string, options: PrepareServerOptions =
   const state = serverStateDir(options.home)
   await mkdir(documents, { recursive: true })
   await mkdir(state, { recursive: true })
-  return new DesktopServer({ app: identity.name, python, web, documents, state, log: options.log, ...options.seams })
+  // CLAUDIA_SERVER_PORT: another port than 8765 (D504), for a person who needs 8765 for something else, and for tests.
+  const port = Number.parseInt(env.CLAUDIA_SERVER_PORT ?? '', 10)
+  return new DesktopServer({
+    app: identity.name,
+    python,
+    web,
+    documents,
+    state,
+    log: options.log,
+    ...(port > 0 && port < 65536 ? { port } : {}),
+    ...options.seams,
+  })
 }

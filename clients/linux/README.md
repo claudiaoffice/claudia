@@ -63,8 +63,9 @@ There is no command that asks which app to open; `python3 -m claudia_shell_gtk` 
 
 The three apps share one local server (D445): documents are kept in `$XDG_DATA_HOME/claudia/documents/<app>` and the
 server's state and log in `$XDG_STATE_HOME/claudia/server` (`server.log` is where to look when the window says the
-server did not start; `desktop-server.json` remembers its port). The first window starts it, the others find it, and it
-stops by itself ten minutes after its last window has closed.
+server did not start; it runs on port 8765 like `./start.sh`, D504). The first window starts it, the others find it, and it
+stops by itself ten minutes after its last window has closed. A file dragged from the file manager onto the front page
+is imported (D505).
 
 ## Other servers
 
@@ -97,6 +98,7 @@ explanation, and nothing is trusted unasked.
 | --- | --- |
 | `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv/bin/python` of the checkout. |
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: the one shipped in the package, else `web/.output/public`. If set, it is the only candidate: a wrong path is reported, not replaced. |
+| `CLAUDIA_SERVER_PORT` | The port of the local server. Default: 8765, the port of `./start.sh` (D504); a Claudia server already there is used. |
 | `CLAUDIA_DEBUG` | `--debug` sets it: more logging, the web inspector, the page's console on stdout. |
 | `CLAUDIA_CLIENT_PYTHON` | For `scripts/check_debt.py`: the interpreter that runs this client's tests. |
 

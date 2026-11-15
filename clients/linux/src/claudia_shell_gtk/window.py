@@ -23,7 +23,7 @@ from importlib import resources
 from pathlib import Path
 from typing import Any, Protocol
 
-from ._gi import Adw, Gio, GLib, Gtk
+from ._gi import Adw, Gdk, Gio, GLib, Gtk
 from ._version import __version__
 from .bridge import Bridge
 from .connection import Outcome
@@ -250,6 +250,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         for action in manifest.actions:
             self._add_action(action)
         self._show_view("start")  # the front page comes first
+        self._install_file_drop()
 
     def _attach_menus(self) -> None:
         """Give every menu button the menu of the app's manifest (see ``data/window.ui``); keep the short menu of the
@@ -360,6 +361,10 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         spec = self._manifest.action(action.get_name())
         if spec.kind is Kind.PAGE:
             self._bridge.send_action(spec.id)
+            # The page carries the action out where the person sees it (File ▸ Open… puts the cursor into the search
+            # field, D503): that needs the keyboard focus in the web view, and the menu leaves it with the menu bar.
+            # Once the menu has closed, the view takes it back.
+            GLib.idle_add(self._focus_page)
         elif spec.kind is Kind.EDITING and self._page is not None and spec.editing:
             self._page.run_editing_command(spec.editing)
         elif spec.id == "file.quit":
@@ -368,6 +373,12 @@ class ClaudiaWindow(Adw.ApplicationWindow):
             self._show_about()
         else:  # a new shell action without a handler is a mistake in the shell, not in the person's request
             log.error("nothing carries out the action %s", spec.id)
+
+    def _focus_page(self) -> bool:
+        widget = self._page.widget if self._page is not None else None
+        if widget is not None:
+            widget.grab_focus()
+        return GLib.SOURCE_REMOVE
 
     def _on_change_state(self, action: Gio.SimpleAction, value: GLib.Variant) -> None:
         """The person ticked or unticked a choice: ask the page for it. The state changes when the page confirms."""
@@ -441,8 +452,39 @@ class ClaudiaWindow(Adw.ApplicationWindow):
     def send_file_result(self, request: str, outcome: str, **details: Any) -> bool:
         return self._bridge.send_file_result(request, outcome, **details)
 
+    def send_file_offer(self, request: str, name: str, size: int) -> bool:
+        return self._bridge.send_file_offer(request, name, size)
+
     def send_file_chunk(self, request: str, index: int, data: str) -> bool:
         return self._bridge.send_file_chunk(request, index, data)
+
+    # A file dropped on the front page (D505). WebKitGTK does not hand a file dropped from the file manager to the page
+    # (the owner, 2026-11-15; on macOS WKWebView does), so the window takes the drop itself, before the web view sees
+    # it, while the front page is shown, and hands the file to the page in pieces. On a document the web view keeps its
+    # own handling of drops.
+
+    def _install_file_drop(self) -> None:
+        target = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
+        target.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        target.connect("accept", self._accepts_file_drop)
+        target.connect("drop", self._on_file_drop)
+        self.add_controller(target)
+
+    def _front_page_shown(self) -> bool:
+        return self._bridge.ready and self._bridge.view == "start"
+
+    def _accepts_file_drop(self, _target: Gtk.DropTarget, drop: Gdk.Drop) -> bool:
+        return self._front_page_shown() and drop.get_formats().contain_gtype(Gdk.FileList)
+
+    def _on_file_drop(self, _target: Gtk.DropTarget | None, value: Any, _x: float, _y: float) -> bool:
+        if not self._front_page_shown():
+            return False
+        files = value.get_files() if value is not None else []
+        for file in files:
+            path = file.get_path()
+            if path and self.files.offer(Path(path)):
+                return True  # one file at a time, as on the page
+        return False
 
     def send_file_done(self, request: str, chunks: int) -> bool:
         return self._bridge.send_file_done(request, chunks)

@@ -70,8 +70,8 @@ What is Windows' own, against macOS:
 * **The server is stopped with its whole process tree** (`server.ts`, `taskkill /pid N /T /F`): the interpreter that
   `uv sync` puts in `.venv\Scripts\python.exe` is a launcher that starts the real one as its child, and
   `ChildProcess.kill()` would end only the launcher. Windows has no gentler signal, so there is no grace period.
-* **One local server for all three apps (D445).** The first window starts it, the others find it (the port is
-  remembered in `desktop-server.json`), it ends ten minutes after the last window is closed (`--exit-when-idle`, D434), and
+* **One local server for all three apps (D445).** The first window starts it, the others find it (on port 8765 like
+  `./start.sh`, D504; a Claudia server already there is used), it ends ten minutes after the last window is closed (`--exit-when-idle`, D434), and
   a window whose server has gone starts it again on the same port. Closing a window does not stop it.
 * **Folders:** `%LOCALAPPDATA%\Claudia\documents\<app>` (all documents), `...\state` (`server.log`, `desktop-server.json`),
   `...\<app>\state\shell.log` (the core of that window); `%LOCALAPPDATA%\Claudia\shell.json` holds the server lists.
@@ -124,6 +124,7 @@ command line that contains the folder; the launcher refuses a path with a space 
 | --- | --- |
 | `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv\Scripts\python.exe` of the checkout. |
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: `web\.output\public`. If set, it is the only candidate: a wrong path is reported. |
+| `CLAUDIA_SERVER_PORT` | The port of the local server. Default: 8765, the port of `./start.sh` (D504); a Claudia server already there is used. |
 | `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `apps\<app>\bin\neutralino-win_x64.exe`, where `neu update` puts it. |
 
 If the window stays on "Starting…" the core could not be reached: the page says so after 20 seconds and names the logs

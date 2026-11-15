@@ -38,6 +38,7 @@ __all__ = [
     "file_done",
     "file_result",
     "negotiate",
+    "offer_file",
     "parse",
     "servers",
     "welcome",
@@ -300,6 +301,14 @@ def _check_file_done(message: Message) -> None:
     _whole_number(message, "chunks")
 
 
+def _check_offer_file(message: Message) -> None:
+    _token(message.get("request"), "'request'")
+    name = message.get("name")
+    if not (isinstance(name, str) and 1 <= len(name) <= _MAX_ADDRESS):
+        raise _bad("'name' is a file name of 1 to 255 characters")
+    _whole_number(message, "size", most=MAX_FILE_BYTES)
+
+
 def _check_file_result(message: Message) -> None:
     _token(message.get("request"), "'request'")
     if message.get("outcome") not in FILE_OUTCOMES:
@@ -324,6 +333,7 @@ _CHECKS: dict[str, Callable[[Message], None]] = {
     "file_chunk": _check_file_chunk,
     "file_done": _check_file_done,
     "file_result": _check_file_result,
+    "offer_file": _check_offer_file,
 }
 
 # -------------------------------------------------------------------------------------------------- negotiation
@@ -424,6 +434,13 @@ def file_result(request: str, outcome: str, **details: Any) -> Message:
     if details.get("size") is not None:
         built["size"] = details["size"]
     _check_file_result(built)
+    return built
+
+
+def offer_file(request: str, name: str, size: int) -> Message:
+    """A file the person dropped on the window; its pieces follow (D505)."""
+    built: Message = {"type": "offer_file", "request": request, "name": name[:_MAX_ADDRESS], "size": size}
+    _check_offer_file(built)
     return built
 
 

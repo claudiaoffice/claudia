@@ -471,3 +471,24 @@ def test_the_gtk_dialogs_are_made_with_the_extensions_and_the_folder(window, tmp
     assert filters.get_n_items() == 2  # the kinds asked for, then every file
     assert dialog.get_default_filter().get_name() == "DOCX, ODT"
     assert dialogs._dialog("Save", [], None).get_filters() is None  # noqa: SLF001
+
+
+def test_a_file_dropped_on_the_front_page_goes_to_the_page(window, tmp_path) -> None:
+    """D505: the window takes the drop (before the web view), while the front page is shown."""
+    from claudia_shell_gtk._gi import Gio
+
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    dropped = tmp_path / "Budget.docx"
+    dropped.write_bytes(b"PK\x03\x04 a docx")
+
+    class Files:
+        def get_files(self):
+            return [Gio.File.new_for_path(str(dropped))]
+
+    assert not window._on_file_drop(None, Files(), 0, 0)  # noqa: SLF001 (no page has said hello: nobody to give it to)
+    page.says({"type": "hello", "contract": 1, "app": "composes", "view": "start"})
+    assert window._on_file_drop(None, Files(), 0, 0)  # noqa: SLF001
+    offered = [m for m in page.sent if m["type"] in ("offer_file", "file_chunk", "file_done")]
+    assert offered[0] == {"type": "offer_file", "request": "drop-1", "name": "Budget.docx", "size": 11}
+    assert offered[-1] == {"type": "file_done", "request": "drop-1", "chunks": 1}

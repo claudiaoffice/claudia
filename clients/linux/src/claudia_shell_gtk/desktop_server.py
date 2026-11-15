@@ -5,11 +5,14 @@ The twin of ``clients/windows/src/desktop-server.ts`` and ``clients/macos/src/de
 * **One server for the suite.** It serves all three apps (no ``--model``), keeps one folder of documents and one of
   state, and stops by itself (``--exit-when-idle``, D434) ten minutes after nothing was connected. The first window
   that needs it starts it; the others find it.
-* **Found by its port.** The port is chosen at the first start and remembered in ``desktop-server.json`` in the state
-  folder, so the address — and what the page keeps for that address — stays the same. A running server is recognised
-  by ``/api/health`` (its apps; its version, for a request from this computer): nothing else is asked of it.
-* **Two windows starting at once** are settled by the server's own lock on its folder (D435): the one that loses exits
-  at start-up, and its window then uses the one that won.
+* **Found by its port: 8765, the port of every Claudia server** (D504; ``./start.sh`` and a cloud server use it too),
+  so the address — and what the page keeps for that address — stays the same. Only when something that is not a
+  Claudia server holds 8765 does the suite go to another port, remembered in ``desktop-server.json`` in the state
+  folder. A running server is recognised by ``/api/health`` (its apps; its version, for a request from this computer):
+  nothing else is asked of it, so a Claudia server of this version on 8765 is this computer's server, whoever started
+  it.
+* **Two windows starting at once** both start a server on the same port; the one that loses (the port, or the server's
+  own lock on its folder, D435) exits at start-up, and its window then uses the one that won.
 * **A window never ends the server.** Closing it only lets go of the connection it keeps (``/api/presence``), so the
   server is never taken for idle while a window is open. A window that finds the server gone (it stopped, or somebody
   ended it) starts it again on the same port, where the page reconnects.
@@ -47,6 +50,7 @@ from .server import LOOPBACK, LocalServer, ServerStartError, free_port, server_c
 
 __all__ = [
     "IDLE_SECONDS",
+    "SERVER_PORT",
     "STATE_FILE",
     "DesktopServer",
     "Health",
@@ -63,7 +67,9 @@ log = logging.getLogger(__name__)
 IDLE_SECONDS = 600
 """``--exit-when-idle``: ten minutes (D445). The clock starts only when the last page has closed."""
 STATE_FILE = "desktop-server.json"
-"""In the server's state folder: ``{"port": N}``."""
+"""The file in the server's state folder that says where the server runs, ``{"port": N}``."""
+SERVER_PORT = 8765
+"""The port of every Claudia server unless told otherwise (D504), the same for ./start.sh and the desktop's own."""
 
 _PRESENCE_PAUSE = 1.0
 _PRESENCE_PAUSE_MAX = 10.0
@@ -298,6 +304,7 @@ class DesktopServer:
         state: Path,
         idle_seconds: int = IDLE_SECONDS,
         race_wait: float = 30.0,
+        port: int = SERVER_PORT,
         # What the tests replace:
         probe: Callable[[str], Health] = probe_health,
         make_server: Callable[[list[str], str, Path], ServerProcess] = _make_server,
@@ -314,6 +321,7 @@ class DesktopServer:
         self._state = state
         self._idle = idle_seconds
         self._race_wait = race_wait
+        self._port = port
         self._probe = probe
         self._make_server = make_server
         self._pick_port = pick_port
@@ -386,34 +394,40 @@ class DesktopServer:
             self._result = ServerStartError(str(problem))
 
     def _ensure(self) -> str:
-        port = self._settle_port()
-        url = f"http://{LOOPBACK}:{port}"
-        found = self._probe(url)
-        if found.kind == "claudia":
-            self._check_is_ours(found, port)
-            return url
-        if found.kind == "other" or not self._port_free(port):
-            # The remembered port is taken by something that is not our server: the suite moves (once).
-            taken, port = port, self._pick_port()
-            write_port(self._state_file, port, exclusive=False)
+        preferred = self._port
+        remembered = read_port(self._state_file)
+        # A server that runs already: on the port of every Claudia server, or where an earlier start had to go instead.
+        preferred_taken = False
+        for port in [preferred] if remembered in (None, preferred) else [preferred, remembered]:
             url = f"http://{LOOPBACK}:{port}"
-            log.info("port %s is used by something else; the local server moves to port %s", taken, port)
-        return self._start_server(url, port)
+            found = self._probe(url)
+            if found.kind == "claudia":
+                self._check_is_ours(found, port)
+                self._remember(port)
+                return url
+            if port == preferred:
+                preferred_taken = found.kind == "other" or not self._port_free(port)
+        # None runs: start one, on the usual port unless something that is not a Claudia server holds it.
+        port = preferred
+        if preferred_taken:
+            usable = remembered is not None and remembered != preferred and self._port_free(remembered)
+            port = remembered if usable and remembered is not None else self._pick_port()
+            log.info(
+                "port %s is used by something that is not a Claudia server; the local server goes to port %s",
+                preferred,
+                port,
+            )
+        self._remember(port)
+        return self._start_server(f"http://{LOOPBACK}:{port}", port)
 
-    def _settle_port(self) -> int:
-        """The remembered port, else a fresh one that is remembered at once (two first starts agree on the first
-        one's)."""
-        known = read_port(self._state_file)
-        if known is not None:
-            return known
-        fresh = self._pick_port()
-        if write_port(self._state_file, fresh, exclusive=True):
-            return fresh
-        other = read_port(self._state_file)
-        if other is not None:
-            return other
-        write_port(self._state_file, fresh, exclusive=False)  # there was a file, and it was not one
-        return fresh
+    def _remember(self, port: int) -> None:
+        """Write down where the server is, if that is not what the file says already."""
+        if read_port(self._state_file) == port:
+            return
+        try:
+            write_port(self._state_file, port, exclusive=False)
+        except OSError as problem:
+            log.warning("%s could not be written: %s", self._state_file, problem)
 
     def _check_is_ours(self, found: Health, port: int) -> None:
         hint = _(
