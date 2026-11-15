@@ -520,8 +520,9 @@ def _search_block(describe: str = "Find text, formulas and values, and replace t
 
 def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = False, rotate: bool = False) -> Menu:
     """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
-    and where there are objects, Describe Object… (BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024). List ▸ is in every app as on the web; outside a text
-    the page reports its entries disabled. Computes adds Clear Cell Style, which the web has in Apply Style's flyout."""
+    and where there are objects, Describe Object… (BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024). List ▸
+    is in every app as on the web; outside a text the page reports its entries disabled. Computes adds Clear Cell
+    Style, which the web has in Apply Style's flyout."""
     styles: tuple[MenuEntry, ...] = (
         _page(
             "format.apply-style",

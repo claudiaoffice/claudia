@@ -60,7 +60,7 @@ def test_an_angle_in_degrees_clockwise_is_radians_counter_clockwise_as_the_stand
     assert transform_of(0, (0, 0, 10, 10)) is None
     assert angle_of("rotate (0.5235987755982988) translate (1cm 1cm)") == pytest.approx(330)
     assert angle_of("rotate (-0.5235987755982988) translate (1cm 1cm)") == pytest.approx(30)
-    assert transform_of(30, (0, 0, 0, 0)) == "rotate (-0.523598775598299) translate (0cm 0cm)"  # as LibreOffice writes it
+    assert transform_of(30, (0, 0, 0, 0)) == "rotate (-0.523598775598299) translate (0cm 0cm)"
 
 
 @pytest.mark.parametrize("degrees", [0, 1, 30, 90, 180, 270, 359])

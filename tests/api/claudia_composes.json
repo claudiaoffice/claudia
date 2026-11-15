@@ -67,7 +67,6 @@
   "methods": {
    "carried_to": "(self, block: 'str', shift: 'int') -> 'BlockAnchor'",
    "check_floating": "(self) -> 'None'",
-   "floated_to": "(self, dx: 'int', dy: 'int') -> 'BlockAnchor'",
    "followed": "(self, span: 'Span') -> 'BlockAnchor'",
    "from_data": "(data: 'dict') -> 'BlockAnchor'",
    "to_data": "(self) -> 'dict'"

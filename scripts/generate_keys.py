@@ -120,7 +120,17 @@ def render() -> str:
 
 _OWNER_WORDS = {"page": "", "shell": "the shell", "view": "the document view or the browser"}
 _SHOWN = {"Primary": "Ctrl", "Shift": "Shift", "Alt": "Alt"}
-_NAMES = {"Up": "↑", "Down": "↓", "Left": "←", "Right": "→", "Return": "Enter", "Delete": "Del", "minus": "-", "period": ".", "comma": ","}
+_NAMES = {
+    "Up": "↑",
+    "Down": "↓",
+    "Left": "←",
+    "Right": "→",
+    "Return": "Enter",
+    "Delete": "Del",
+    "minus": "-",
+    "period": ".",
+    "comma": ",",
+}
 _SYMBOLS = {"question": "?", "underscore": "_"}
 
 

@@ -11,7 +11,7 @@ Objects float (D1023).
 - `BlockAnchor.dx` and `BlockAnchor.dy` (default 0): how far to the right and down the top-left corner of an object lies
   from the character it hangs from, in CSS pixels, at most `MAX_ANCHOR_OFFSET` (10 000) either way. The offset follows
   the anchor through typing, splitting and joining paragraphs and undo; only moving the object changes it.
-- `BlockAnchor.carried_to` and `floated_to`, and `check_floating`; `MAX_ANCHOR_OFFSET`.
+- `BlockAnchor.carried_to` and `check_floating`; `MAX_ANCHOR_OFFSET`.
 ### Changed
 - `BlockAnchor.to_data` carries `dx` and `dy`. An anchor written before them reads as sitting on its character, so
   older documents and logs open unchanged. Placing an object where it hangs (D907) now adds the offset.

@@ -472,7 +472,8 @@ def test_a_deck_with_a_picture_comes_back_patched_with_the_picture_turned_and_de
             ws.send_json(hello(create=True, upload=token))
             assert ws.receive_json()["ok"]
             doc = hosted(client, app, "deck").document
-            doc.execute(MoveObject("o1", SlideAnchor("s1", 20, 30).to_data()), author="ann")
+            # turned by 15 degrees the picture's outline still lies on the slide here (D1022)
+            doc.execute(MoveObject("o1", SlideAnchor("s1", 60, 80).to_data()), author="ann")
             doc.execute(RotateObject("o1", 15), author="ann")
             doc.execute(DescribeObject("o1", "after"), author="ann")
             if fmt == "odp":
@@ -481,7 +482,7 @@ def test_a_deck_with_a_picture_comes_back_patched_with_the_picture_turned_and_de
     assert answer["patched"] is True and answer["losses"] == []
     back = (pptx_to_slides if fmt == "pptx" else odp_to_slides)(base64.b64decode(answer["data"]))
     found = next(iter(back.objects.values()))
-    assert (found.anchor.x, found.anchor.y, found.body.rotation, found.body.description) == (20, 30, 15, "after")
+    assert (found.anchor.x, found.anchor.y, found.body.rotation, found.body.description) == (60, 80, 15, "after")
     assert back.images[found.body.image].data == asset.data
 
 

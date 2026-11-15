@@ -78,7 +78,7 @@ function done() {
             :aria-describedby="'rotate-unit'"
             @input="typed"
             @blur="settle"
-          />
+          >
           <span id="rotate-unit">{{ t('degrees clockwise') }}</span>
         </span>
       </label>

@@ -233,8 +233,8 @@ def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing
     paper.model.insert_object(VisualObject(picture, BlockAnchor("b1", 7)))
     objects = call(paper, "objects", account=VERA)["objects"]
     assert [(o["id"], o["anchor"]) for o in objects] == [
-        ("o1", {"kind": "block", "container": "b1", "offset": 2}),
-        ("o2", {"kind": "block", "container": "b1", "offset": 7}),
+        ("o1", {"kind": "block", "container": "b1", "offset": 2, "dx": 0, "dy": 0}),
+        ("o2", {"kind": "block", "container": "b1", "offset": 7, "dx": 0, "dy": 0}),
     ]
     assert objects[0]["paragraph"]["text"] == "a note"
     images = call(paper, "images", account=VERA)

@@ -69,10 +69,6 @@ class BlockAnchor:
         """The anchor ``shift`` characters further along, in the paragraph ``block`` (a join carries its objects)."""
         return BlockAnchor(block, self.offset + shift, self.dx, self.dy)
 
-    def floated_to(self, dx: int, dy: int) -> BlockAnchor:
-        """The same anchor character with the object floating at another offset."""
-        return BlockAnchor(self.block, self.offset, dx, dy)
-
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
         return {"kind": self.kind, "container": self.block, "offset": self.offset, "dx": self.dx, "dy": self.dy}
