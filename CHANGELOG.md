@@ -4,6 +4,16 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.26.0] - 2026-11-15
+
+Pictures of files, shared by the converters of all three apps (D464).
+
+### Added
+- `picture_body`, `asset_of`, `keeps_proportions`, `blank_png`, `Rasterise`, `FILE_IMPORTER`, `IMAGE_STYLE`,
+  `UNKNOWN_TIME`, `FALLBACK_SIDE`: how a picture of a docx, odt, pptx or odp file becomes the image object of the
+  model (and a rendered text container the picture of a file), moved here from `claudia-creates-io` so that composes
+  reads and writes pictures the same way creates does. The names `claudia_creates_io` exported stay there too.
+
 ## [0.25.0] - 2026-11-15
 
 Named ranges are things (D552); replaying the history shows differences, and a step can be restored (D553).
@@ -43,11 +53,6 @@ Names of things (D550): every object, slide, sheet and chart tab has one name, u
 ### Changed
 - `AddObject` is schema 4: bodies carry `name`. The upcaster reads older bodies as unnamed.
 - A body with a name is checked (tidy, 1 to 60 characters, not somebody else's) when an object is added or replaced.
-Pictures of files, shared by the converters of all three apps (D464).
-- `picture_body`, `asset_of`, `keeps_proportions`, `blank_png`, `Rasterise`, `FILE_IMPORTER`, `IMAGE_STYLE`,
-  `UNKNOWN_TIME`, `FALLBACK_SIDE`: how a picture of a docx, odt, pptx or odp file becomes the image object of the
-  model (and a rendered text container the picture of a file), moved here from `claudia-creates-io` so that composes
-  reads and writes pictures the same way creates does. The names `claudia_creates_io` exported stay there too.
 
 ## [0.23.0] - 2026-11-14
 

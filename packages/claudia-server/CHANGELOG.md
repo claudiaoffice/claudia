@@ -11,11 +11,6 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   thing keeps its name and nothing is written. `blocks` in composes says a named paragraph's `name`.
 - A new document's things are named in its `Setup` entry, in the maker's language: a presentation's first slide was the
   one thing without a name (UX-40).
-
-### Fixed
-- `add_object` in creates refuses `rendered` and `diagram` with a sentence that says where they come from; it failed
-  inside the server (CODE-24).
-
 - `changes_since` (D553), in the three apps: `{regions, truncated}`, every place that changed after a step of the line
   (`replay.MAX_CHANGES` at most), for "show differences from now" in a replay.
 - `propose_restore_step` (D553): suggest going back to the state after one step of the history, with the same
@@ -40,6 +35,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   containers. No change to `PROTOCOL_VERSION`: the methods are new.
 
 ### Fixed
+- `add_object` in creates refuses `rendered` and `diagram` with a sentence that says where they come from; it failed
+  inside the server (CODE-24).
+- A docx imported and kept stays a patch of that file when paragraphs were added or removed (D456); before, the download
+  was a new file without the file's tables and pictures, with a `not-patched` loss. It also says `removed-...` for what
+  went with a removed paragraph.
 - A web app built again while the server runs is no longer blocked: the Content-Security-Policy's hashes of the inline
   scripts follow the files in the web folder (`WebScriptHashes`, read again when a page's name, time or size changed).
   The desktop apps' shared server (D445) outlives its windows, and the start scripts build the web app at every start,
@@ -78,9 +78,6 @@ The uid of a document: found by its exact value, kept when a file is placed, nev
 - The hyphenation patterns fetched into the Docker image were readable by root only (`mkstemp` makes 0600 files), so
   the container, which runs as another user, stopped at start with "Permission denied"; fetched files are 0644 now.
   A start-up error from reading a file or folder is no longer worded as a problem with the redirect port.
-- A docx imported and kept stays a patch of that file when paragraphs were added or removed (D456); before, the download
-  was a new file without the file's tables and pictures, with a `not-patched` loss. It also says `removed-...` for what
-  went with a removed paragraph.
 - The patch of a kept odt gets the document's `info` and the times of its suggestions, as a new file does (D411, D454).
 
 ### Changed
