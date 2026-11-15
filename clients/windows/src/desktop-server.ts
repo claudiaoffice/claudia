@@ -1,5 +1,5 @@
-// The one local server that the three desktop apps share (D445). Adapted for Node and Windows from the decision, not
-// from another client: the macOS and Linux shells still start one server per window and app.
+// The one local server that the three desktop apps share (D445). Written first, from the decision; the twin of
+// clients/macos/src/desktop-server.ts and of clients/linux/.../desktop_server.py, which now follow it.
 //
 //  - **One server for the suite.** It serves all three apps (no `--model`), keeps one folder of documents and one of
 //    state, and stops by itself (`--exit-when-idle`, D434) ten minutes after nothing was connected. The first window

@@ -224,3 +224,68 @@ def _image_params() -> dict:
         "alt": "a sample picture",
         "source_name": "pic.gif",
     }
+
+
+# -- paragraphs of a text (D554) -------------------------------------------------------------------------------------
+@pytest.fixture
+def text():
+    from claudia_composes import InsertText, SetStyle, SplitBlock, TextModel
+
+    doc = Document(TextModel(), store=MemoryStore())
+    doc.execute(InsertText("b1", 0, "Introduction"), author="ann")
+    doc.execute(SetStyle("b1", "heading-1"), author="ann")
+    doc.execute(SplitBlock("b1", 12, "b2", "body"), author="ann")
+    doc.execute(InsertText("b2", 0, "The quick brown fox."), author="ann")
+    return doc
+
+
+def on_text(doc, name, params=None, account=ANN, locale="en"):
+    from claudia_server.composes import composes_methods
+
+    ctx = Context(doc, account, Limits(), users=lambda: ["ann", "ben"], lock_seconds=30.0, locale=locale)
+    return composes_methods.dispatch(ctx, name, params)
+
+
+def test_a_heading_pointed_at_is_named_by_its_words(text):
+    answer = on_text(text, "name_thing", {"id": "b1"})
+    assert answer["name"] == "Introduction" and answer["revision"] is not None
+    assert name_of(text, "b1") == "Introduction"
+
+
+def test_a_paragraph_pointed_at_is_named_by_what_it_is_in_the_language_of_the_one_who_points(text):
+    assert on_text(text, "name_thing", {"id": "b2"}, locale="de")["name"] == translate("Paragraph", "de") + " 1"
+
+
+def test_a_thing_that_has_a_name_keeps_it_and_nothing_is_written(text):
+    on_text(text, "rename_thing", {"id": "b1", "name": "Intro"})
+    revision = text.revision
+    assert on_text(text, "name_thing", {"id": "b1"}) == {"name": "Intro", "revision": revision.to_data()}
+
+
+def test_a_heading_whose_words_are_taken_gets_a_numbered_name(text):
+    on_text(text, "rename_thing", {"id": "b2", "name": "introduction"})
+    assert on_text(text, "name_thing", {"id": "b1"})["name"] == translate("Heading", "en") + " 1"
+
+
+def test_naming_something_that_is_not_there_is_refused(text):
+    with pytest.raises(RequestError) as caught:
+        on_text(text, "name_thing", {"id": "b99"})
+    assert caught.value.code == "command_error"
+
+
+def test_the_paragraphs_say_their_names(text):
+    on_text(text, "rename_thing", {"id": "b2", "name": "Fox"})
+    blocks = {b["id"]: b for b in on_text(text, "blocks")["blocks"]}
+    assert blocks["b2"]["name"] == "Fox" and "name" not in blocks["b1"]
+
+
+def test_a_viewer_cannot_name_a_paragraph(text):
+    with pytest.raises(RequestError):
+        on_text(text, "name_thing", {"id": "b1"}, account=VERA)
+    assert name_of(text, "b1") == ""
+
+
+def test_name_thing_names_an_object_too(deck):
+    box = add_text(deck)
+    deck.execute(RenameThing(box, ""), author="ann")
+    assert call(deck, "name_thing", {"id": box})["name"] == "Text box 1"

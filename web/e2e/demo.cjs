@@ -152,8 +152,8 @@ async function menu(page, title, ...path) {
     assert.equal(await ann.locator('[data-testid=ai-mode] [aria-checked=true]').getAttribute('data-mode'), 'suggest')
     await ann.click('[data-testid=ai-mode] [data-mode=act]')
     await waitFor(ann, () => document.querySelector('[data-testid=ai-mode] [aria-checked=true]')?.dataset.mode === 'act', null, 'act at once')
-    await ann.fill('.write input', '@ai build an example budget')
-    await ann.press('.write input', 'Enter')
+    await ann.fill('.write [role=combobox]', '@ai build an example budget')
+    await ann.press('.write [role=combobox]', 'Enter')
     await waitFor(ann, () => document.querySelector('.typing'), null, 'ai is working')
     await sleep(1500)
     await ann.screenshot({ path: `${SHOTS}/05-ai-working.png` })
@@ -169,8 +169,8 @@ async function menu(page, title, ...path) {
     await ben.screenshot({ path: `${SHOTS}/07-ben-sees-ai.png` })
 
     // ---- ann asks for a sum; the number lands in her cell
-    await ann.fill('.write input', '@ai sum B2:B5 into B7')
-    await ann.press('.write input', 'Enter')
+    await ann.fill('.write [role=combobox]', '@ai sum B2:B5 into B7')
+    await ann.press('.write [role=combobox]', 'Enter')
     await waitFor(ann, () => [...document.querySelectorAll('.msg.ai')].some((e) => e.textContent.includes('I wrote =SUM(B2:B5)')), null, 'ai sum')
     await click(ann, 6, 1)
     await waitFor(ann, () => document.querySelector('.text').value !== '', null, 'formula bar shows B7')

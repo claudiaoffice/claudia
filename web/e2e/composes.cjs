@@ -133,7 +133,7 @@ async function menu(page, title, ...path) {
     log('authorship shown:', writers.join(', '))
 
     // ---- the assistant suggests, nothing is written until a person accepts
-    const input = ann.locator('aside input').first()
+    const input = ann.locator('.write [role=combobox]').first() // the chat box is a combobox of words and chips (E5.20)
     await input.fill('@ai review this text')
     await input.press('Enter')
     // The suggestions are marked in the text and counted in the bottom bar; a mark opens its card (no list in the panel).

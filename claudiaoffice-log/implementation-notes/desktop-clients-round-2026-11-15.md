@@ -116,6 +116,8 @@ API page; a docstring Napoleon read as a type); fixed so that `check_debt.py` is
 * The macOS crash at quit: the owner sends a crash report. Since this round the core no longer stops the server when
   the window ends (it only closes its presence socket), which changes what happens at quit.
 * `print.cjs` (web e2e) waits for a recovery-key dialog that a `--model` server no longer shows on main; not touched.
+  *(QA 2026-11-15: not so. `print.cjs` passes against a `--model` server as CI starts it; it fails only without
+  `--hyphenation`, where the preview rightly says the text is not hyphenated.)*
 * `./start.sh` and the desktop apps now want the same port: with a desktop server on 8765, `./start.sh` fails to bind
   until that server has stopped by itself (D504's notes). If that gets in the way, `start.sh` could use a running server
   of the same version instead of failing.

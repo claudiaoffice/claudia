@@ -425,3 +425,40 @@ panel show its Markdown as such.
 
 Decisions: D520 (every dialog and the panel can be moved); D521 (the one-button "Look in", "n matches", the buttons);
 D522 (help topics as Markdown, opened from the panel)
+
+## Document handling on the front page (branch `file-handling`, 2026-11-15)
+
+The owner wanted to say what a document is about and find it by that, a way back from a collection, and a document
+that can be traced without its name: description and tags plain in the manifest, the import asking for both, and a
+random uid that is never shown and never twice on a server. Moving and copying documents between places was mocked and
+left for a decision.
+
+Decisions: D530 (description and tags plain in the manifest); D531 (the import offers what the file says); D532 (the
+way back from a collection); D533 (the uid, bound into the sealed parts); D534 (the manifest's `name`); D535 (lookup by
+uid, a uid once per server). Renumbered from D520–D525 at the merge.
+
+## The dock: names, scrubbing and tags (branch `dock`, 2026-11-15)
+
+Pointing at something in the chat needs things with names: one namespace for objects, slides, sheets, chart tabs and
+then named ranges; replaying the history by scrubbing the dock; tags as chips.
+
+Decisions: D550 (names of things, one namespace); D551 (scrubbing and tags in the dock); D552 (named ranges are
+things); D553 (differences from now, restoring a step). Renumbered from D520–D523 at the merge.
+
+## Rendered text containers, the screens (branch `containers`, 2026-11-15)
+
+Insert ▸ Container in every app, the text edited in place, fenced text that becomes a container, containers floating
+over a paragraph in composes; Excalidraw left out.
+
+Decisions: D560–D564. Renumbered from D520–D524 at the merge.
+
+## QA of 2026-11-15 (after merging the day's branches, at `078d19d`)
+
+The owner asked for a QA pass over the day's merges and, while it ran, reported two things: the Details dialog says a
+document's name is sealed into the file, which the uid was meant to avoid; and composes' headings, list items and
+paragraphs cannot be tagged. He chose to bind the sealed parts to the uid alone, the owner as the one who renames, and
+clients that keep the uid, as a decision and a story now with the build on a branch of its own.
+
+Decisions: D536 (sealed parts bound to the uid; the owner renames; clients keep the uid; story E5.21); D554 (a
+paragraph is a thing, named when first pointed at). The findings are in `bugtracker.md` (UX-40 to UX-43, CODE-23 to
+CODE-25, PROC-23, DOC-03) and `implementation-notes/qa-2026-11-15.md`.

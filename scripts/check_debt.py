@@ -22,6 +22,8 @@ checks are:
              ``uv run python scripts/compile_mo.py po/de.po de`` to fix it -- there was nothing worth drifting from
              before this round's real German translations existed, which is why this check is new here
 * mo compilation server  the same for the server's own ``de`` catalog (D322)
+* menus      the Windows and macOS clients' generated menus match the Linux client's manifest (D159, CODE-16); run
+             ``python tools/generate_menu.py --all`` in ``clients/windows`` and ``clients/macos`` to fix them
 * tests      the whole suite, with a note of the slowest ones; it also measures coverage (``--cov``, CODE-01)
 * coverage   each package against its floor in ``pyproject.toml`` (``scripts/check_coverage.py``). The floors are
              measured on Linux with TeX installed, where every test runs; elsewhere this check skips, saying why
@@ -135,6 +137,16 @@ def checks() -> list[Check]:
             "mo compilation server",
             (*run, "python", "scripts/compile_mo.py", "po/de.po", "de", "--locale-dir", SERVER_LOCALE_DIR, "--check"),
         ),
+        # The Windows and macOS menus are generated from the Linux client's manifest (D159); CI's client jobs compare
+        # them too, but a stale one should be caught before it is pushed (CODE-16 happened twice).
+        *[
+            Check(
+                f"menus {shell}",
+                (*run, "--no-project", "python", "tools/generate_menu.py", "--all", "--check"),
+                cwd=ROOT / "clients" / shell,
+            )
+            for shell in ("windows", "macos")
+        ],
         Check(
             "tests",
             (

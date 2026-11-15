@@ -3,6 +3,15 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.10.0] - 2026-11-15
+
+Paragraphs are things (D554).
+
+### Added
+- A paragraph is a thing (D554): `TextModel.block_names` (state schema 11), `block_kind` (`heading`, `item`,
+  `paragraph`), and `named_things`, `thing_name`, `set_thing_name`, `has_thing` for paragraphs; `RenameThing` names one.
+  Paragraphs are not among `unnamed_things`: they are named one at a time, when somebody points at one.
+
 ## [0.9.0] - 2026-11-15
 
 Names of things (D550).

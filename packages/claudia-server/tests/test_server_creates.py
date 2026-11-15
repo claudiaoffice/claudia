@@ -468,6 +468,17 @@ def test_add_object_refuses_kind_image_and_points_to_add_image(deck):
     assert caught.value.code == "bad_request"
 
 
+@pytest.mark.parametrize(("kind", "pointer"), [("diagram", "computes"), ("rendered", "add_rendering")])
+def test_add_object_refuses_the_kinds_it_cannot_make_and_says_where_they_come_from(deck, kind, pointer):
+    """A chart or a rendered container is made from a definition, which `add_object` has none of. Since the containers
+    came (D390) the object kinds include "rendered", and both kinds reached a lookup of the kind's style that failed
+    with an internal error, after a message that listed them as allowed."""
+    with pytest.raises(RequestError, match=pointer) as caught:
+        call(deck, "add_object", {"slide": "s1", "kind": kind, "x": 0, "y": 0, "w": 100, "h": 50})
+    assert caught.value.code == "bad_request"
+    assert objects(deck) == [], "a refused request changes nothing"
+
+
 def test_the_source_path_is_sent_only_to_the_person_who_imported_the_image(deck):
     box = add_image(deck, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN (the default account)
     (seen_by_importer,) = call(deck, "slide", {"slide": "s1"}, account=ANN)["objects"]

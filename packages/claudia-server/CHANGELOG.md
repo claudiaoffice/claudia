@@ -6,6 +6,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `name_thing` (D554), in the three apps: give a thing that has no name the one it gets when first pointed at (a
+  heading of a text its own words, anything else "Paragraph 1", "Text box 3" ... in the asker's language); a named
+  thing keeps its name and nothing is written. `blocks` in composes says a named paragraph's `name`.
+- A new document's things are named in its `Setup` entry, in the maker's language: a presentation's first slide was the
+  one thing without a name (UX-40).
+
+### Fixed
+- `add_object` in creates refuses `rendered` and `diagram` with a sentence that says where they come from; it failed
+  inside the server (CODE-24).
+
 - `changes_since` (D553), in the three apps: `{regions, truncated}`, every place that changed after a step of the line
   (`replay.MAX_CHANGES` at most), for "show differences from now" in a replay.
 - `propose_restore_step` (D553): suggest going back to the state after one step of the history, with the same

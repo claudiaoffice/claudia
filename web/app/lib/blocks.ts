@@ -24,6 +24,8 @@ export interface Block {
   item?: ListItem | null
   /** Set when it is one and the server has counted it. */
   label?: Label
+  /** Its name, when somebody has pointed at it or named it (D554). */
+  name?: string
 }
 export interface Pos {
   block: string

@@ -31,7 +31,8 @@ This note records how the pieces fit, what the three real tools taught, and what
 
 - Undo follows history: the render is its own undo step, so after one undo the text may show the older picture.
 - Wire methods are synchronous; rendering is a hub job (D395). The submit/status job API (D92, E3.4) is not built.
-- Composes has no object add on the wire. Its model holds definitions, and its server methods only read.
+- Composes has no object add on the wire. Its model holds definitions, and its server methods only read. *(Stale since
+  the screens round: composes has `add_rendering`, anchored to a paragraph; see `rendered-text-containers-screens.md`.)*
 - The tool settings are read at start-up; changing them while the server runs needs a restart.
 
 ## Tests

@@ -253,7 +253,8 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         searchItem(c, { open: () => openSearch() }),
         { label: '', separator: true },
-        referenceItem(c, { run: () => {}, possible: () => false }), // text has no object to select in the web yet
+        // the paragraph with the caret (D554); a floating object cannot be selected in the text yet
+        referenceItem(c, { run: () => void frame.value?.referenceThing(session.state.selection?.focus.block ?? ''), possible: () => !!session.state.selection }),
         { label: '', separator: true },
         // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
         {

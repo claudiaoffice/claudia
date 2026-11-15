@@ -254,6 +254,9 @@ class Suggestion:
 #: One floating thing in a text: a text box, a shape or an image, hanging from a place in a paragraph.
 type TextObject = VisualObject[BlockAnchor]
 
+#: The built-in styles that make a paragraph a heading (and every style based on one of them).
+HEADING_STYLES = frozenset({"title", "heading-1", "heading-2"})
+
 
 class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     """The paragraphs of a document, its suggestions and the objects floating over it."""
@@ -264,7 +267,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 6: the text says which page it is printed on (D904)
     # 7: the text says which language it is written in (D915)
     # 8: paragraphs may be items of lists, which the text holds in a book of its own (E9.21)
-    state_schema: ClassVar[int] = 10  # 8: object bodies without a description; 9: no rendered containers
+    # 11: paragraphs may have names, by their id (D554)
+    state_schema: ClassVar[int] = 11  # 8: object bodies without a description; 9: no rendered containers
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -289,6 +293,10 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         #: The lists the items of the text belong to (E9.21); what a list is, not which paragraphs are in it.
         self.lists: ListBook = lists if lists is not None else ListBook()
         self.suggestions: dict[str, Suggestion] = {}
+        #: The names of paragraphs, by id (D554). A paragraph id is never given twice, so a name stays with its
+        #: paragraph through every edit; one whose paragraph was joined away is kept, unused, until undo brings the
+        #: paragraph back.
+        self.block_names: dict[str, str] = {}
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
         for block in self.blocks:
             self.open_container(block.id)
@@ -326,6 +334,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
             "renderings": self.renderings_to_data(),
+            "names": dict(self.block_names),
             "last": dict(self._last),
         }
 
@@ -348,6 +357,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         model.restore_objects(  # schema 3 and earlier had no objects
             state.get("objects", ()), state.get("images", ()), state.get("shapes", ()), (), state.get("renderings", ())
         )
+        model.block_names = dict(state.get("names", {}))  # schema 10 and earlier: no paragraph had a name
         model._last = dict(state.get("last", model._last))
         return model
 
@@ -395,6 +405,52 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
                     self._stack[was].remove(obj.id)
             moved.append(self.objects[obj.id].to_data())
         return moved
+
+    # -- names (D550, D554) ---------------------------------------------------------
+    def block_kind(self, block: Block) -> str:
+        """What a paragraph is, as a thing: ``heading`` (its style is the title or a heading, or based on one),
+        ``item`` (of a list), or ``paragraph``."""
+        try:
+            chain = {style.id for style in self.styles.chain(block.style)}
+        except (KeyError, ValueError):
+            chain = {block.style}
+        if chain & HEADING_STYLES:
+            return "heading"
+        return "item" if block.item is not None else "paragraph"
+
+    def named_things(self):
+        """The objects with names, then the paragraphs with names, in the order of the text: one namespace."""
+        yield from super().named_things()
+        for block in self.blocks:
+            name = self.block_names.get(block.id)
+            if name:
+                yield self.block_kind(block), block.id, name
+
+    # (``unnamed_things`` stays the objects': paragraphs are named one at a time, when somebody points at one.)
+
+    def _has_block(self, block_id: str) -> bool:
+        return any(block.id == block_id for block in self.blocks)
+
+    def has_thing(self, thing_id: str) -> bool:
+        """Is there an object or a paragraph with this id, named or not?"""
+        return self._has_block(thing_id) or super().has_thing(thing_id)
+
+    def thing_name(self, thing_id: str) -> str:
+        """The name of a paragraph or an object, ``""`` if it has none; ``ValueError`` if there is neither."""
+        if self._has_block(thing_id):
+            return self.block_names.get(thing_id, "")
+        return super().thing_name(thing_id)
+
+    def set_thing_name(self, thing_id: str, name: str) -> str:
+        """Name a paragraph or an object (``""``: no name); returns the name it had."""
+        if not self._has_block(thing_id):
+            return super().set_thing_name(thing_id, name)
+        old = self.block_names.get(thing_id, "")
+        if name:
+            self.block_names[thing_id] = name
+        else:
+            self.block_names.pop(thing_id, None)
+        return old
 
     # -- reading -----------------------------------------------------------------
     def block(self, block_id: str) -> Block:

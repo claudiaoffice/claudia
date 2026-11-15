@@ -179,6 +179,9 @@ const kindLabels: Record<ThingKind, string> = {
   sheet: t('Sheet'),
   chart: t('Chart'),
   range: t('Range'),
+  heading: t('Heading'),
+  item: t('List item'),
+  paragraph: t('Paragraph'),
 }
 const optionId = (i: number) => `tag-option-${i}`
 
@@ -196,9 +199,12 @@ watch(
 )
 watch(() => hash.value?.query, () => (active.value = 0))
 
-function pickThing(thing: Thing) {
+async function pickThing(offeredThing: Thing) {
   const h = hash.value
   if (!h) return
+  // a paragraph without a name gets one first (D554): the tag must name what the document calls it
+  const thing = offeredThing.unnamed ? await props.session.thingToReference(offeredThing.id) : offeredThing
+  if (!thing) return
   const done = withTag(draft.value, h, caret.value, thing)
   draft.value = done.text
   caret.value = done.caret
@@ -213,7 +219,7 @@ async function nameThem() {
 }
 function pickOption(i: number) {
   const thing = suggestions.value[i]
-  if (thing) pickThing(thing)
+  if (thing) void pickThing(thing)
   else if (offerNaming.value) void nameThem()
 }
 /** The keys of a combobox: arrows move, Enter and Tab pick, Escape closes the list and the `#…` stays plain text. */

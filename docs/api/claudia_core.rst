@@ -13,6 +13,20 @@ Documents
 .. autoclass:: claudia_core.Applied
 .. autoclass:: claudia_core.Line
 .. autoclass:: claudia_core.CheckpointInfo
+.. autoclass:: claudia_core.Look
+.. autoclass:: claudia_core.Changes
+
+Names of things
+---------------
+
+One namespace for every thing of a document that can be pointed at (D550, D552, D554).
+
+.. autofunction:: claudia_core.clean_name
+.. autofunction:: claudia_core.name_key
+.. autofunction:: claudia_core.name_problem
+.. autofunction:: claudia_core.free_name
+.. autoclass:: claudia_core.RenameThing
+.. autoclass:: claudia_core.ThingRenamed
 
 Commands
 --------

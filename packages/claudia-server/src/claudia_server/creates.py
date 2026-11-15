@@ -32,7 +32,6 @@ from claudia_creates_io import (
 )
 
 from claudia_core import (
-    OBJECT_KINDS,
     AddObject,
     Batch,
     DefineImage,
@@ -80,6 +79,25 @@ STYLE_OF_KIND = {"text": "plain-box", "shape": "plain-shape", "image": "plain-im
 #: The style a new object's words start with: its words' slot. A shape's outline and its words are two styles of
 #: two kinds (D310).
 PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}
+#: What `add_object` makes; a picture, a container and a chart each come from their own request.
+ADDABLE_KINDS = tuple(PARAGRAPH_STYLE_OF_KIND)
+
+
+def _check_addable(kind: str, shape: str | None) -> None:
+    """Refuse, saying where to go instead, a kind that `add_object` does not make: a picture, a container and a chart
+    each come from a definition of their own."""
+    if kind == "image":
+        raise RequestError("bad_request", msg("add_object: use add_image to put a picture on a slide"))
+    if kind == "rendered":
+        raise RequestError("bad_request", msg("add_object: use add_rendering to put a container on a slide"))
+    if kind == "diagram":
+        raise RequestError("bad_request", msg("add_object: a chart is made in computes, not on a slide"))
+    if kind not in ADDABLE_KINDS:
+        raise RequestError(
+            "bad_request", msg("add_object: kind must be one of {kinds}", kinds=", ".join(ADDABLE_KINDS))
+        )
+    if kind == "shape" and shape is None:
+        raise RequestError("bad_request", msg("add_object: a shape needs the id of its outline"))
 
 
 def _deck(ctx: Context) -> SlideModel:
@@ -390,14 +408,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         another. It gets the
         style of its kind. Returns the new object's id and the revision. A circle must keep its proportions."""
         deck = _deck(ctx)
-        if kind not in OBJECT_KINDS:
-            raise RequestError(
-                "bad_request", msg("add_object: kind must be one of {kinds}", kinds=", ".join(OBJECT_KINDS))
-            )
-        if kind == "shape" and shape is None:
-            raise RequestError("bad_request", msg("add_object: a shape needs the id of its outline"))
-        if kind == "image":
-            raise RequestError("bad_request", msg("add_object: use add_image to put a picture on a slide"))
+        _check_addable(kind, shape)
         steps: list = []
         if shape is not None and shape not in deck.shapes:
             outline = library.get(shape)

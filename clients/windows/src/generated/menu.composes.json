@@ -358,6 +358,54 @@
       ]
     },
     {
+      "label": "Insert",
+      "sections": [
+        [
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>f"
+                ],
+                "checkable": false,
+                "id": "insert.container.latex",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "LaTeX",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>g"
+                ],
+                "checkable": false,
+                "id": "insert.container.mermaid",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Mermaid",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>y"
+                ],
+                "checkable": false,
+                "id": "insert.container.typst",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Typst",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Container"
+          }
+        ]
+      ]
+    },
+    {
       "label": "Format",
       "sections": [
         [

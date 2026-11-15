@@ -151,7 +151,8 @@ def _blocks(ctx):
     """The paragraphs in order, each as `{id, style, text, runs}` (`runs` are `[length, author, via]`: who wrote
     which stretch), the styles (see `styles`), the lists and the schemes they can have, and the revision they are
     at. A paragraph that is a list item also has `item` (`{list, level}`) and `label` (`{marker, path}`: what is
-    drawn in front of it, derived from the structure, and for numbers the trail of counters). `lists` are
+    drawn in front of it, derived from the structure, and for numbers the trail of counters); a named one has `name`
+    (D554). `lists` are
     `{id, scheme, start, name}`; `schemes` are `{id, name, kind, indent, gap}` (`indent` and `gap` in em)."""
     model = _text(ctx)
     labels = model.labels()
@@ -160,10 +161,19 @@ def _blocks(ctx):
         "styles": model.styles.views(model.palette.colours()),
         "lists": model.lists.to_data(),
         "schemes": [scheme.to_data() for scheme in SCHEMES.values()],
-        "blocks": [
-            {**b.to_data(), "label": labels[b.id].to_data()} if b.id in labels else b.to_data() for b in model.blocks
-        ],
+        "blocks": [_block_view(model, b, labels) for b in model.blocks],
     }
+
+
+def _block_view(model, block, labels) -> dict:
+    """A paragraph as `blocks` sends it: its data, its list label if it is an item, its name if it has one (D554)."""
+    view = block.to_data()
+    if block.id in labels:
+        view["label"] = labels[block.id].to_data()
+    name = model.block_names.get(block.id)
+    if name:
+        view["name"] = name
+    return view
 
 
 @composes_methods.method("suggestions")

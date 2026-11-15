@@ -62,6 +62,17 @@ def test_a_new_text_or_deck_is_in_the_language_of_its_makers_interface_and_has_n
     assert not document.history_for("ann").can_undo
 
 
+@pytest.mark.parametrize(("locale", "label"), [("en", "Slide 1"), ("de", "Folie 1")])
+def test_a_new_decks_first_slide_has_a_name_in_its_makers_language(locale, label):
+    """Every thing has a name (D550). The first slide is part of an empty presentation, not added by anybody, so no
+    `add_slide` named it: it stayed nameless, and the next slide took "Slide 1" before it."""
+    document = made(SlideModel, locale=locale).open("plan")
+    (first,) = document.model.slides
+    assert document.model.thing_name(first) == label
+    assert list(document.model.unnamed_things()) == []
+    assert not document.history_for("ann").can_undo, "naming it is part of the setup, nobody's undo step"
+
+
 def test_without_a_locale_the_language_is_the_servers_default():
     assert made(TextModel).open("plan").model.language == "en"
 

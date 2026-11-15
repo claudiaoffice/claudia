@@ -4,13 +4,29 @@
 // export) reads it as the plain words it is. Pure: no component, no connection, so every rule has a test.
 
 /** What can be named, by what it is: an object's own kind, or the slide, sheet, chart tab or named range it is. */
-export type ThingKind = 'text' | 'shape' | 'image' | 'diagram' | 'rendered' | 'slide' | 'sheet' | 'chart' | 'range'
+export type ThingKind =
+  | 'text'
+  | 'shape'
+  | 'image'
+  | 'diagram'
+  | 'rendered'
+  | 'slide'
+  | 'sheet'
+  | 'chart'
+  | 'range'
+  // the paragraphs of a text (D554)
+  | 'heading'
+  | 'item'
+  | 'paragraph'
 
 /** A thing a tag can point at. */
 export interface Thing {
   id: string
   name: string
   kind: ThingKind
+  /** Offered, but without a name yet (a paragraph, D554): picking it names it first (`thingToReference`), and `name`
+   * is only what the list shows until then. */
+  unnamed?: boolean
 }
 
 /** A message, cut into plain text and tags. */

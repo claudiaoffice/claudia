@@ -181,11 +181,13 @@ jobs:
           URL=http://127.0.0.1:8766/ npm run e2e:styling
           URL=http://127.0.0.1:8766/ npm run e2e:print
           URL=http://127.0.0.1:8766/ npm run e2e:lists
+          URL=http://127.0.0.1:8766/ npm run e2e:dock-text # paragraphs as things: a tag to a heading (D554)
           URL=http://127.0.0.1:8767/ npm run e2e:slides
           URL=http://127.0.0.1:8767/ npm run e2e:creates-styles
           URL=http://127.0.0.1:8767/ npm run e2e:print-creates
           URL=http://127.0.0.1:8767/ npm run e2e:describe-creates
           URL=http://127.0.0.1:8767/ npm run e2e:present
+          URL=http://127.0.0.1:8767/ npm run e2e:dock # names, a tag in the chat, replay (D550, D551)
           npm run e2e:keys # all three servers: one key table, every menu entry, nothing to undo in a new document
           pkill -f claudia_server || true
       # These two start (and restart) a server of their own, on ports the step above has freed.
@@ -196,6 +198,7 @@ jobs:
           npm run e2e:recovery
           npm run e2e:search
           npm run e2e:passwords
+          npm run e2e:details # description and tags on the front page (D530-D532), against a sealed server of its own
       # The Windows client's window, minus Neutralino itself: its built shell page and core, the real web app in the
       # frame. Starts servers of its own (8791 for --server), on ports the steps above have freed.
       - name: The Windows client's window (shell page, core, server and web app, Neutralino faked)

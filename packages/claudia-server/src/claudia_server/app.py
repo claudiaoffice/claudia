@@ -89,6 +89,7 @@ from .idle import IdleMiddleware, IdleWatch
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, WebScriptHashes
 from .suite import Module, Suite
+from .thing_names import naming_steps
 from .throttle import Throttle
 from .uploads import Upload, UploadDesk, UploadRefused, file_name
 
@@ -515,12 +516,13 @@ class _Presence:
 def _set_up(document, author: str, locale: str) -> None:
     """What a new document starts with (``DocumentModel.setup_commands``: a workbook's first sheet, a text's language,
     D915), as one ``Setup`` entry by its maker that is nobody's undo step (UX-33). Before, her client did this as her
-    own first steps, and her first Ctrl+Z took them back."""
+    own first steps, and her first Ctrl+Z took them back. A thing the empty document already holds (a presentation's
+    first slide) is named in the same entry, in her language: every thing has a name (D550)."""
     try:
         language: str | None = normalize_language(locale)
     except LanguageError:
         language = None
-    commands = type(document.model).setup_commands(language)
+    commands = [*type(document.model).setup_commands(language), *naming_steps(document.model, locale)]
     if commands:
         document.execute(Setup(tuple(commands)), author=author)
 

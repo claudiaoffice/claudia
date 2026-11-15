@@ -28,11 +28,15 @@ import type { ImageAsset } from './images'
 import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject } from './objects'
 import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
-import type { Thing } from './tags'
+import { MAX_NAME, type Thing, type ThingKind } from './tags'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
 import { translate as t } from './i18n'
 import { lookOnly } from './replay'
+
+/** The built-in styles that make a paragraph a heading (D554), and every style based on one (`HEADING_STYLES` on the
+ * server). */
+const HEADING_STYLES: ReadonlySet<string> = new Set(['title', 'heading-1', 'heading-2'])
 export interface SuggestionInfo {
   id: string
   author: string | null
@@ -637,16 +641,61 @@ export class TextSession extends BaseSession<TextState> {
     return found
   }
   override nameOf(id: string): string | undefined {
-    return this.state.renamed[id] ?? this.objectNames.get(id)
+    return this.state.renamed[id] ?? this.state.blocks.find((b) => b.id === id)?.name ?? this.objectNames.get(id)
   }
+  /** What a paragraph is, as a thing (D554): a heading (its style is the title or a heading, or based on one), an item
+   * of a list, or a paragraph. The same rule as the server's `TextModel.block_kind`. */
+  blockKind(block: Block): ThingKind {
+    const styles = this.state.styles
+    let style: string | null = block.style
+    for (let hops = 0; style && hops < 32; hops++) {
+      if (HEADING_STYLES.has(style)) return 'heading'
+      style = styles.find((s) => s.id === style)?.based_on ?? null
+    }
+    return block.item ? 'item' : 'paragraph'
+  }
+  /** The named paragraphs: from the replica, which `blocks` and `thing_renamed` keep current. */
+  protected override things(): Thing[] {
+    const s = this.state
+    return s.blocks.flatMap((b) => {
+      const name = s.renamed[b.id] ?? b.name
+      return name ? [{ id: b.id, name, kind: this.blockKind(b) }] : []
+    })
+  }
+  /** What `#` offers in a text: the named objects, every named paragraph, and, still to be named when picked, the
+   * headings (the outline of the text) and the paragraph the caret is in. */
   protected override async inView(): Promise<Thing[]> {
     const s = this.state
-    return (await this.floating()).filter((o) => o.name).map((o) => ({ id: o.id, name: s.renamed[o.id] ?? o.name!, kind: o.kind }))
+    const objects = (await this.floating()).filter((o) => o.name).map((o) => ({ id: o.id, name: s.renamed[o.id] ?? o.name!, kind: o.kind }))
+    const named = this.things()
+    const known = new Set(named.map((t) => t.id))
+    const caret = s.selection?.focus.block
+    const offered = s.blocks.flatMap((b): Thing[] => {
+      if (known.has(b.id)) return []
+      const kind = this.blockKind(b)
+      if (kind !== 'heading' && b.id !== caret) return []
+      const words = b.text.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME)
+      return [{ id: b.id, name: words || t('This paragraph'), kind, unnamed: true }]
+    })
+    return [...objects, ...named, ...offered]
+  }
+  /** A paragraph without a name is named when it is first pointed at (D554): a heading by its words, any other by what
+   * it is. Objects as before. */
+  override async thingToReference(id: string): Promise<Thing | null> {
+    const block = this.state.blocks.find((b) => b.id === id)
+    if (!block) return super.thingToReference(id)
+    const named = this.things().find((thing) => thing.id === id)
+    if (named) return named
+    const done = await this.attempt('name_thing', { id, base: this.state.revision })
+    if (done === false) return null
+    this.state.renamed[id] = done.name
+    return { id, name: done.name, kind: this.blockKind(block) }
   }
   override async unnamedInView(): Promise<number> {
     return (await this.floating()).filter((o) => !o.name).length
   }
   protected override async locate(id: string): Promise<{ container: string | null } | null> {
+    if (this.state.blocks.some((b) => b.id === id)) return { container: id }
     const found = (await this.floating()).find((o) => o.id === id)
     return found ? { container: found.anchor.container } : null
   }

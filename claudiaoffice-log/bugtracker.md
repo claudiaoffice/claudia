@@ -144,6 +144,15 @@ statement in the docs or on the website).
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |
 | CODE-22 | P2 | Code / Import | An xlsx with an array formula failed to import; one edit dropped a sheet's lists, icon sets and spill marks | **fixed** 2026-11-13 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
+| UX-40 | P2 | UX / creates | A new presentation's first slide had no name; the next one was called "Slide 1" too, and both tabs said "Slide 1" | **fixed** 2026-11-15 |
+| UX-41 | P2 | UX / composes | Headings, list items and paragraphs could not be pointed at with `#` in the chat | **fixed** 2026-11-15 (D554) |
+| UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |
+| UX-43 | P3 | UX / creates | A text box whose words become a container is two undo steps and loses its name (a tag to it breaks) | **new, open** |
+| CODE-23 | P2 | Code / clients | The Windows and macOS menus lacked Insert ▸ Container: their generated menus were stale and CI's client job red (CODE-16 again) | **fixed** 2026-11-15 |
+| CODE-24 | P3 | Code / server | `add_object` with kind `rendered` or `diagram` failed inside the server after a message that allowed them | **fixed** 2026-11-15 |
+| CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |
+| PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |
+| DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | partly fixed 2026-11-15; supersessions need a decision |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1375,6 +1384,69 @@ written without `_xlfn.`, so Excel showed `#NAME?`.
 **Fix.** D370 (read from the XML, never fail, a formula the model cannot calculate comes in as Excel's value) and D371
 (write the edited cells into the original sheet's XML). Tests first: `packages/claudia-computes-io/tests/test_xlsx_real_world.py`
 and `test-documents/xlsx/beyond-claudia/excel-today`.
+
+## Round of 2026-11-15 at `078d19d`
+
+All of the day's branches merged (clients, search-ui, file-handling, dock, containers). The report is
+`implementation-notes/qa-2026-11-15.md`; the Python gate, the web, layout and client unit tests were clean at
+`078d19d`, so everything below was found by running the end-to-end tests and by reading.
+
+### UX-40 · The first slide of a new presentation had no name · P2 · fixed 2026-11-15
+**Evidence (measured)** with the new `tests/e2e/test_things_have_names.py`: the slide an empty presentation starts with
+is part of the empty model, so no `add_slide` named it (D550); the next slide got the first free name, "Slide 1", and
+the tab of the unnamed one says "Slide 1" by its place. **Fix:** the server names what an empty document holds in the
+same `Setup` entry that sets its language, in the maker's language (`thing_names.naming_steps`, `app._set_up`). Test
+first: `test_server_setup.py::test_a_new_decks_first_slide_has_a_name_in_its_makers_language`; in the browser,
+`web/e2e/dock.cjs`.
+
+### UX-41 · Paragraphs of a text could not be tagged · P2 · fixed 2026-11-15
+Reported by the owner. **Fix (D554):** a paragraph is a thing (`TextModel.block_names`, state schema 11; kinds
+`heading`, `item`, `paragraph`), named when first pointed at (`name_thing`); `#` offers the named paragraphs, the
+headings and the caret's paragraph; Edit ▸ Reference in Chat tags the caret's paragraph.
+
+### UX-42 · A document cannot be renamed · P2 · decided, open
+Reported by the owner: Details… says "The name is sealed into the file and cannot change". **Read:** D533 binds every
+sealed part, every person's key slot included, to `name:uid`. **Decided (D536):** bind to the uid alone; the owner
+renames; clients keep the uid. Build: E5.21.
+
+### UX-43 · A fenced text box becomes a container in two steps · P3 · open
+**Read:** `slide-session.ts` `fenceToContainer` adds the container and then removes the box: two entries in the
+history (one undo brings the box back next to the container) and the container gets a new default name, so a tag to the
+box shows it as gone. **Fix:** one server request that replaces the box in one `Batch`, giving the container the box's
+name.
+
+### CODE-23 · The neutralino shells' menus were stale · P2 · fixed 2026-11-15
+**Evidence (measured):** `tools/generate_menu.py --all --check` failed in `clients/windows` and `clients/macos`: the
+containers merge added Insert ▸ Container (LaTeX, Mermaid, Typst) to the manifest and nobody regenerated, so CI's
+`windows-client` job is red on `main`. **Fix:** regenerated; `scripts/check_debt.py` now runs the check as `menus
+windows` and `menus macos`, so the gate on a laptop says it before a push (`tests/test_check_debt.py`).
+
+### CODE-24 · `add_object` failed inside on kinds it cannot make · P3 · fixed 2026-11-15
+**Evidence (measured):** `add_object` with `kind: "rendered"` (or `"diagram"`) passed the check against
+`OBJECT_KINDS` and failed with a `KeyError` on the style of the kind. **Fix:** only text and shape are made there; the
+others are refused with where they come from. Test: `test_server_creates.py`.
+
+### CODE-25 · Object names are lost in pptx and odp without a word · P2 · open
+**Evidence (measured):** renaming a slide and exporting reports `not-written: names`; renaming an object reports
+nothing, because the `objects` facet counts as written. **Fix:** write the names (`p:cNvPr/@name`, `draw:name`; and the
+slide names: `p:cSld/@name`, the page's `draw:name`), read them on import (suffixing duplicates), then drop `names` from
+the unwritten facets. Until then every presentation's export lists `names` as not written.
+
+### PROC-23 · The browser tests on `main` were red after the dock merge · P1 · fixed 2026-11-15
+**Evidence (measured)** against servers started as CI starts them: `demo.cjs` and `composes.cjs` looked for the chat box
+as an `input`, which `ChatInput.vue` (a `contenteditable` combobox) replaced; `keys.cjs` expected creates' View menu
+without Replay History…. `details.cjs` (D530) was never run anywhere but on the branch. **Fix:** the selectors and the
+expected menu; `e2e:details` and the new `e2e:dock` are npm scripts and CI steps. All other web e2e scripts, the
+Windows and macOS shell scripts and `tests/e2e` passed.
+
+### DOC-03 · The decision log contradicts itself in places · P3 · partly fixed
+**Read:** current decisions that later current ones overrule without a supersession: D2 (each app its own doc server,
+a GTK client) against D430, D445, D42, D156; D84 (a server hosts one app) against D430; D115 (a new port at every start)
+against D504; D44 (File, Edit, Tools, Help) against D120; D242 (checked from `/api/docs`) against D444. `ranges.md`
+listed D300–D319 twice. `_rounds.md` had no entry for the file-handling, dock and containers rounds. **Fixed:** the
+`ranges.md` row, the rounds, stale lines in two implementation notes and a stale comment in the Windows client.
+**Needs a decision:** whether to mark D2, D44, D84, D115 and D242 superseded (proposed: D84 by D430, D115 by D504, D44
+by D120; D2 and D242 partly, with a sentence each).
 
 ## Website
 

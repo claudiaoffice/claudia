@@ -11,6 +11,7 @@ import { paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
+import { usePointed } from '~/lib/pointed'
 
 const { t } = useI18n()
 
@@ -416,7 +417,9 @@ function scrollToBlock(id: string) {
   blockEl(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
-// A tag in the chat that points at something hanging from a paragraph: the paragraph comes into view.
+// A tag in the chat that points at a paragraph marks it (D554); one that points at something hanging from a paragraph
+// brings the paragraph into view.
+usePointed(props.session.state, root, (id) => `[data-block="${CSS.escape(id)}"]`)
 watch(
   () => props.session.state.pointed,
   (pointed) => {
