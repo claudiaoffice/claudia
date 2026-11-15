@@ -35,6 +35,13 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
 * **The front page says it is the front page** (`hello` `view: "start"`, D447), so a desktop app shows its short menu,
   and answers File ▸ New, Open…, Open a File…, View ▸ Dark Mode and Config ▸ App Language, reporting the ticks. A
   document says `view: "document"`.
+* **Files in a desktop window** (D501, D502, D503): a shell that offers `files` chooses and saves files with its own
+  dialogs. `lib/local-files.ts` (`chooseLocalFile`) asks it for Open a File… and Insert Image (the file input's dialog
+  in a browser tab), `lib/download.ts` (`saveBlob`) hands it every file the page saves and says what became of it
+  (`saved` with the path, `cancelled`, or `downloaded` in a tab); the export dialogs show "Saved as …". Print… in the
+  preview hands the PDF to the shell, which opens it in the computer's PDF viewer. `currentShell()` is the bridge of the
+  page shown now. On the front page File ▸ New empties and focuses the Document field and marks the "start a new one"
+  part; Open… focuses the search field.
 * **Passwords** (D448): every password field is `PasswordInput.vue`, with an eye that shows and hides what was typed
   (starts hidden; attributes go to the input). File ▸ Manage ▸ Change Password… (`ChangePasswordDialog.vue`,
   `BaseSession.changePassword`, the protocol's `change_password`) changes the person's own password; a refusal is said

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive, watchEffect } from 'vue'
-import { ShellBridge, createShellBridge, detectHandler, detectParentSink, isApp, isShellOrigin, tabTitle } from '~/lib/shell-bridge'
+import { FILE_CHUNK_BYTES, ShellBridge, acceptedExtensions, createShellBridge, currentShell, detectHandler, detectParentSink, isApp, isShellOrigin, tabTitle } from '~/lib/shell-bridge'
 
 function fakeSink() {
   const posted: Record<string, unknown>[] = []
@@ -356,5 +356,128 @@ describe('createShellBridge with a sink that listens', () => {
     expect(bridge.nativeMenu).toBe(true)
     bridge.detach()
     expect(stop).toHaveBeenCalled()
+  })
+})
+
+describe('files through the shell (D501, D502)', () => {
+  const shell = { name: 'gtk', platform: 'linux', version: '1' }
+  function welcomed(capabilities = ['native-menu', 'actions', 'files']) {
+    const { sink, posted } = fakeSink()
+    const bridge = new ShellBridge('composes', sink)
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities }))
+    posted.length = 0
+    return { bridge, posted, say: (m: Record<string, unknown>) => bridge.receive(JSON.stringify(m)) }
+  }
+  const b64 = (text: string) => btoa(text)
+
+  it('handles files only when the shell says so', () => {
+    expect(welcomed().bridge.handlesFiles).toBe(true)
+    expect(welcomed(['native-menu']).bridge.handlesFiles).toBe(false)
+    expect(new ShellBridge('composes', fakeSink().sink).handlesFiles).toBe(false)
+  })
+
+  it('asks for a file with the extensions, and makes a File of the pieces that come back', async () => {
+    const { bridge, posted, say } = welcomed()
+    const picking = bridge.pickFile(['docx', 'odt'], 'Open a File')
+    expect(posted).toEqual([{ type: 'pick_file', request: expect.stringMatching(/^[a-z][a-z0-9-]*$/), accept: ['docx', 'odt'], title: 'Open a File' }])
+    const request = posted[0]!.request as string
+    say({ type: 'file_result', request, outcome: 'picked', name: 'budget.docx', size: 11 })
+    say({ type: 'file_chunk', request, index: 0, data: b64('hello ') })
+    say({ type: 'file_chunk', request, index: 1, data: b64('world') })
+    say({ type: 'file_done', request, chunks: 2 })
+    const file = await picking
+    expect(file?.name).toBe('budget.docx')
+    expect(await file?.text()).toBe('hello world')
+  })
+
+  it('gives null when the person cancelled, and an error with the shell\'s words when it failed', async () => {
+    const { bridge, posted, say } = welcomed()
+    const cancelled = bridge.pickFile([])
+    say({ type: 'file_result', request: posted[0]!.request, outcome: 'cancelled' })
+    expect(await cancelled).toBeNull()
+    const failing = bridge.pickFile([])
+    say({ type: 'file_result', request: posted[1]!.request, outcome: 'failed', message: 'permission denied' })
+    await expect(failing).rejects.toThrow('permission denied')
+  })
+
+  it('refuses a file that lost a piece or came incomplete', async () => {
+    const { bridge, posted, say } = welcomed()
+    const gap = bridge.pickFile([])
+    const request = posted[0]!.request
+    say({ type: 'file_result', request, outcome: 'picked', name: 'a.txt', size: 4 })
+    say({ type: 'file_chunk', request, index: 1, data: b64('ab') })
+    await expect(gap).rejects.toThrow(/missing/)
+    const short = bridge.pickFile([])
+    const second = posted[1]!.request
+    say({ type: 'file_result', request: second, outcome: 'picked', name: 'a.txt', size: 4 })
+    say({ type: 'file_chunk', request: second, index: 0, data: b64('ab') })
+    say({ type: 'file_done', request: second, chunks: 1 })
+    await expect(short).rejects.toThrow(/whole/)
+  })
+
+  it('ignores answers to a request it did not make', () => {
+    const { say } = welcomed()
+    expect(() => say({ type: 'file_result', request: 'nobody', outcome: 'saved', path: '/x' })).not.toThrow()
+  })
+
+  it('sends a file to save in pieces no message is too large for, and says where the shell saved it', async () => {
+    const { bridge, posted, say } = welcomed()
+    const bytes = new Uint8Array(FILE_CHUNK_BYTES * 2 + 5).map((_, i) => i % 251)
+    const saving = bridge.saveFile('budget.xlsx', new Blob([bytes], { type: 'application/vnd.ms-excel' }))
+    await vi.waitFor(() => expect(posted.at(-1)?.type).toBe('file_done'))
+    const [begin, ...rest] = posted
+    expect(begin).toMatchObject({ type: 'save_file', name: 'budget.xlsx', size: bytes.length, mime: 'application/vnd.ms-excel' })
+    expect(begin).not.toHaveProperty('purpose')
+    const chunks = rest.filter((m) => m.type === 'file_chunk')
+    expect(chunks.map((m) => m.index)).toEqual([0, 1, 2])
+    for (const chunk of chunks) expect(JSON.stringify(chunk).length).toBeLessThan(64 * 1024)
+    const joined = chunks.map((m) => atob(m.data as string)).join('')
+    expect(Uint8Array.from(joined, (c) => c.charCodeAt(0))).toEqual(bytes)
+    expect(rest.at(-1)).toEqual({ type: 'file_done', request: begin!.request, chunks: 3 })
+    say({ type: 'file_result', request: begin!.request, outcome: 'saved', path: '/home/ann/Documents/budget.xlsx' })
+    expect(await saving).toEqual({ kind: 'saved', path: '/home/ann/Documents/budget.xlsx' })
+  })
+
+  it('hands a PDF over to print it: the shell opens it in the computer\'s viewer (D502)', async () => {
+    const { bridge, posted, say } = welcomed()
+    const opening = bridge.saveFile('pages.pdf', new Blob(['%PDF'], { type: 'application/pdf' }), 'print')
+    await vi.waitFor(() => expect(posted.at(-1)?.type).toBe('file_done'))
+    expect(posted[0]).toMatchObject({ type: 'save_file', purpose: 'print' })
+    say({ type: 'file_result', request: posted[0]!.request, outcome: 'opened', path: '/tmp/pages.pdf' })
+    expect(await opening).toEqual({ kind: 'opened', path: '/tmp/pages.pdf' })
+  })
+
+  it('a cancelled Save dialog is no error', async () => {
+    const { bridge, posted, say } = welcomed()
+    const saving = bridge.saveFile('a.txt', new Blob(['x']))
+    await vi.waitFor(() => expect(posted.at(-1)?.type).toBe('file_done'))
+    say({ type: 'file_result', request: posted[0]!.request, outcome: 'cancelled' })
+    expect(await saving).toEqual({ kind: 'cancelled' })
+  })
+})
+
+describe('acceptedExtensions', () => {
+  it('keeps the extensions of an accept value, without the dot, and leaves out MIME types', () => {
+    expect(acceptedExtensions('.docx, .ODT,image/png,.claudia,.docx')).toEqual(['docx', 'odt', 'claudia'])
+    expect(acceptedExtensions('image/*')).toEqual([])
+    expect(acceptedExtensions('.a b,.toolongextension123')).toEqual([])
+  })
+})
+
+describe('currentShell', () => {
+  it('is the newest bridge whose shell has said welcome, and forgets one that is detached', () => {
+    const sink = { post: () => {}, listen: () => () => {} }
+    expect(currentShell()).toBeNull()
+    const first = createShellBridge('composes', sink)
+    expect(currentShell()).toBeNull() // no welcome yet
+    first.receive(JSON.stringify({ type: 'welcome', contract: 1, shell: { name: 'gtk', platform: 'linux', version: '1' }, capabilities: ['files'] }))
+    expect(currentShell()).toBe(first)
+    const second = createShellBridge('composes', sink)
+    second.receive(JSON.stringify({ type: 'welcome', contract: 1, shell: { name: 'gtk', platform: 'linux', version: '1' }, capabilities: [] }))
+    expect(currentShell()).toBe(second)
+    second.detach()
+    expect(currentShell()).toBe(first)
+    first.detach()
+    expect(currentShell()).toBeNull()
   })
 })

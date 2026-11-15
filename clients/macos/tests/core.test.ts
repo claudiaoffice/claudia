@@ -114,7 +114,7 @@ describe('Core', () => {
 
     it('says nothing more once stopped, and stops a server that came up late', async () => {
       let release: (url: string) => void = () => {}
-      const server: ServerLike = { url: '', start: () => new Promise((resolve) => (release = resolve)), stop: async () => {} }
+      const server: ServerLike = { start: () => new Promise((resolve) => (release = resolve)), stop: async () => {} }
       const core = make({ serverFactory: async () => server })
       core.handle({ kind: 'start' })
       await tick()

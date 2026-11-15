@@ -4,7 +4,7 @@
 // Claudia's own file format moved to File ▸ Download (`ExportDialog.vue`); this is the new home of "Export…".
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
-import { downloadBase64, downloadText } from '~/lib/download'
+import { downloadBase64, downloadText, type Saved } from '~/lib/download'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
@@ -25,22 +25,35 @@ const emit = defineEmits<{ close: [] }>()
 const chosen = ref(props.formats[0]?.value ?? '')
 const busy = ref(false)
 const done = ref(false)
+/** Where a desktop window saved it (D501): the person chose it, and sees it again here. */
+const savedTo = ref('')
+const problem = ref('')
+
+/** The file is out: downloaded in a browser tab, saved where the person chose in a desktop window. A cancelled Save
+ * dialog leaves this dialog as it was, to try again or close. */
+function finished(saved: Saved) {
+  if (saved.kind === 'cancelled') return
+  savedTo.value = saved.kind === 'downloaded' ? '' : saved.path
+  done.value = true
+}
 
 async function exportNow() {
   const format = props.formats.find((f) => f.value === chosen.value)
   if (!format) return
   busy.value = true
-  if (format.local) {
-    downloadText(`${props.session.state.doc}.${format.value}`, format.local(), format.mimeType)
-    done.value = true
-  } else {
-    const result = await props.session.exportOffice(format.value)
-    if (result !== false) {
-      downloadBase64(`${props.session.state.doc}.${format.value}`, result.content_type, result.data)
-      done.value = true
+  problem.value = ''
+  try {
+    if (format.local) {
+      finished(await downloadText(`${props.session.state.doc}.${format.value}`, format.local(), format.mimeType))
+    } else {
+      const result = await props.session.exportOffice(format.value)
+      if (result !== false) finished(await downloadBase64(`${props.session.state.doc}.${format.value}`, result.content_type, result.data))
     }
+  } catch (e) {
+    problem.value = t('The file could not be saved: {reason}', { reason: (e as Error).message })
+  } finally {
+    busy.value = false
   }
-  busy.value = false
 }
 </script>
 
@@ -54,7 +67,9 @@ async function exportNow() {
         <option v-for="f in formats" :key="f.value" :value="f.value">{{ f.label }}</option>
       </select>
     </label>
-    <p v-if="done" class="lead">{{ t('Exported.') }}</p>
+    <p v-if="done && savedTo" class="lead" data-testid="export-saved-to">{{ t('Saved as {path}.', { path: savedTo }) }}</p>
+    <p v-else-if="done" class="lead">{{ t('Exported.') }}</p>
+    <p v-if="problem" class="error" role="alert">{{ problem }}</p>
     <div class="buttons">
       <button v-if="!done" class="btn primary" type="button" :disabled="busy" @click="exportNow">{{ t('Export') }}</button>
       <button class="btn" type="button" @click="emit('close')">{{ done ? t('Done') : t('Cancel') }}</button>
@@ -66,6 +81,10 @@ async function exportNow() {
 .lead {
   margin: 0;
   color: var(--muted);
+}
+.error {
+  margin: 0;
+  color: var(--rose);
 }
 .field {
   display: flex;

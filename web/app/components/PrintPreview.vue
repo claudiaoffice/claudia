@@ -11,6 +11,8 @@ import { facesOf, pageSvg, registerFaces } from '~/lib/print/paint'
 import { marginPreset, mm, withCustomSize, withPaper } from '~/lib/print/setup'
 import { fromBase64 } from '~/lib/print/document'
 import { pdfOfPages, type PrintPages, type PrintSource } from '~/lib/print/source'
+import { saveBlob } from '~/lib/download'
+import { currentShell } from '~/lib/shell-bridge'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
@@ -202,14 +204,18 @@ async function pdf(): Promise<Uint8Array | null> {
   const a = assets.value
   return a && r ? pdfOfPages(a, r, images, source) : null
 }
+/** What the bar says after the PDF went somewhere in a desktop window (D501, D502): where it was saved, or that it
+ * opened in the computer's viewer to print. */
+const outcome = ref('')
 async function download() {
   const bytes = await pdf()
   if (!bytes) return
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/pdf' }))
-  a.download = `${source.title()}.pdf`
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(a.href), 60_000)
+  try {
+    const saved = await saveBlob(`${source.title()}.pdf`, new Blob([bytes as BlobPart], { type: 'application/pdf' }))
+    outcome.value = saved.kind === 'saved' ? t('Saved as {path}.', { path: saved.path }) : ''
+  } catch (e) {
+    problem.value = t('The file could not be saved: {reason}', { reason: (e as Error).message })
+  }
 }
 let frame: HTMLIFrameElement | null = null
 /** The PDF goes to the browser's own print dialog, in a frame of its own; where a browser cannot print a PDF in a
@@ -222,6 +228,18 @@ async function print() {
   const instead = (globalThis as { __claudiaPrintDialog?: (pdf: Uint8Array) => void }).__claudiaPrintDialog
   if (instead) {
     instead(bytes)
+    return
+  }
+  // A desktop window's web view prints no PDF of its own (D502): the shell opens it in the computer's viewer for PDFs,
+  // whose Print prints it, with the printer and its settings the person knows.
+  const shell = currentShell()
+  if (shell?.handlesFiles) {
+    try {
+      const opened = await shell.saveFile(`${source.title()}.pdf`, new Blob([bytes as BlobPart], { type: 'application/pdf' }), 'print')
+      outcome.value = opened.kind === 'opened' ? t('The pages are open in your PDF viewer: print them from there.') : ''
+    } catch (e) {
+      problem.value = t('The pages could not be handed to your PDF viewer: {reason}', { reason: (e as Error).message })
+    }
     return
   }
   const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/pdf' }))
@@ -330,6 +348,7 @@ defineExpose({ print, download, status })
       <div class="over">
         <p v-for="(n, i) in noteText" :key="i" class="note" data-testid="print-note"><span aria-hidden="true">ⓘ</span> {{ n }}</p>
         <p v-if="problem" class="note bad" role="alert" data-testid="print-problem">{{ problem }}</p>
+        <p v-if="outcome" class="note" role="status" data-testid="print-outcome">{{ outcome }}</p>
         <span class="grow" />
         <div class="zoom" role="group" :aria-label="t('Zoom')">
           <button type="button" :title="t('Smaller')" @click="zoomBy(0.8)">−</button>

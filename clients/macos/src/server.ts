@@ -13,9 +13,13 @@
 //  - `os.killpg` is POSIX and exists on macOS too (unlike the signal-group call's Windows caveat in server.py's
 //    own comments) -- `child.kill(signal)` here is sent to the negative pid Node gives a detached child's group
 //    leader automatically on POSIX, so no extra API is needed for that part.
+//  - Since D445 this class is only the mechanics of one server process: starting it, asking whether it answers, ending it
+//    when it did not come up. Which server a window uses, and the fact that a server that came up is *not* ended with its
+//    window (it stops itself, `--exit-when-idle`), is desktop-server.ts's business. The server.log is shared by every
+//    start, so a start-up error quotes only what this start wrote. (The twin of clients/windows/src/server.ts.)
 
 import { spawn as nodeSpawn, type ChildProcess } from 'node:child_process'
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync } from 'node:fs'
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -26,7 +30,16 @@ const HEALTH_PATH = '/api/health'
 /** How much of the log's tail a start-up error quotes -- same figure as server.py's own `_LOG_TAIL`. */
 const LOG_TAIL = 2000
 
-export class ServerStartError extends Error {}
+export class ServerStartError extends Error {
+  /** `true` when the process ended by itself at start-up (a port or a folder that another server holds, a crash); then
+   * another server may have won, and a caller that shares the server (desktop-server.ts) looks for it. */
+  readonly exited: boolean
+
+  constructor(message: string, options: { exited?: boolean } = {}) {
+    super(message)
+    this.exited = options.exited === true
+  }
+}
 
 /** A port on `host` nobody is listening on right now (mirrors `free_port()` in the Linux client's server.py). The
  * port can in principle be taken by something else between this call returning and the server actually binding it
@@ -46,23 +59,22 @@ export function freePort(host: string = LOOPBACK): Promise<number> {
 }
 
 export interface ServerCommandOptions {
-  model: string
   port: number
   documents: string
   web: string
   state: string
+  /** `--exit-when-idle`: the server stops itself once nothing has used it for this long (D434, D445). */
+  idleSeconds: number
 }
 
-/** The command line of one app's server on this computer: loopback only, serving the bundled frontend itself so
- * the page and its WebSocket share an origin and no `--allow-origin` is needed (same reasoning as
- * `composes_command` in server.py). */
+/** The command line of the desktop server on this computer (D445): all three apps (no `--model`; each app's documents
+ * go to `DIR/<app>`), loopback only, serving the bundled frontend itself so the page and its WebSocket share an origin
+ * and no `--allow-origin` is needed, and stopping by itself when nobody has used it for `idleSeconds` (D434). */
 export function buildServerCommand(python: string, options: ServerCommandOptions): string[] {
   return [
     python,
     '-m',
     'claudia_server',
-    '--model',
-    options.model,
     '--host',
     LOOPBACK,
     '--port',
@@ -74,6 +86,8 @@ export function buildServerCommand(python: string, options: ServerCommandOptions
     options.state,
     '--web',
     options.web,
+    '--exit-when-idle',
+    String(options.idleSeconds),
   ]
 }
 
@@ -90,9 +104,21 @@ export function defaultSpawn(command: string[], logPath: string): ChildProcess {
   mkdirSync(dirname(logPath), { recursive: true })
   const fd = openSync(logPath, 'a')
   try {
-    return nodeSpawn(program, args, { detached: true, stdio: ['ignore', fd, fd] })
+    // `detached`: a process group of its own, so a Ctrl-C in the launcher's terminal does not reach it.
+    const child = nodeSpawn(program, args, { detached: true, stdio: ['ignore', fd, fd] })
+    // The server outlives the window that started it (D445): nothing here may wait for it.
+    child.unref()
+    return child
   } finally {
     closeSync(fd)
+  }
+}
+
+function logSize(path: string): number {
+  try {
+    return statSync(path).size
+  } catch {
+    return 0
   }
 }
 
@@ -143,6 +169,9 @@ export class LocalServer {
   private readonly nowFn: () => number
   private readonly stopGraceMs: number
   private process: ChildProcess | null = null
+  /** How long server.log was when this server was started: the log is shared by every start, and an error quotes only
+   * what this start wrote. */
+  private logFrom = 0
   private spawnedAt = 0
   private ready = false
   /** Set by the child's own 'error' event -- the OS refusing to start the process at all (ENOENT, EACCES, ...),
@@ -172,6 +201,7 @@ export class LocalServer {
   spawn(): void {
     if (this.process !== null) throw new Error('the server was started already')
     this.spawnError = null
+    this.logFrom = logSize(this.logPath)
     this.process = this.spawnFn(this.command, this.logPath)
     this.process.on('error', (error) => {
       this.spawnError = error
@@ -194,7 +224,9 @@ export class LocalServer {
     }
     if (process.exitCode !== null) {
       await this.stop(this.stopGraceMs)
-      throw new ServerStartError(`the server stopped at start-up (exit code ${process.exitCode})${this.whatItSaid()}`)
+      throw new ServerStartError(`the server stopped at start-up (exit code ${process.exitCode})${this.whatItSaid()}`, {
+        exited: true,
+      })
     }
     if (await this.healthFn(this.url)) {
       this.ready = true
@@ -215,7 +247,7 @@ export class LocalServer {
   private whatItSaid(): string {
     try {
       if (!existsSync(this.logPath)) return ''
-      const tail = readFileSync(this.logPath, 'utf8').slice(-LOG_TAIL).trim()
+      const tail = readFileSync(this.logPath).subarray(this.logFrom).toString('utf8').slice(-LOG_TAIL).trim()
       return tail ? `\n--- what the server printed (${this.logPath}) ---\n${tail}` : ''
     } catch {
       return ''

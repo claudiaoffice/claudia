@@ -13,7 +13,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { CORE_ID } from './core-protocol.js'
 
 /** What the checked-in config holds: runs when someone starts Neutralino without the launcher (the core then knows its
- * app from its folder and starts its own server). */
+ * app from its folder and uses the local server of the suite). */
 export const DEFAULT_COMMAND = 'node ${NL_PATH}/ext/core.mjs'
 
 export interface CoreCommandOptions {
@@ -58,11 +58,31 @@ export function parseCoreArgs(argv: readonly string[]): CoreArgs {
   return found
 }
 
-/** Sets the core's command in the config file, in the file's own format (two spaces, final newline). */
+/** Writes the config the way the file was: two spaces, a final newline, and the line ends it had (a checkout on Windows
+ * may have CRLF, and a rewrite that turned them into LF would show as a change of every line). */
+function writeConfig(configFile: string, original: string, config: unknown): void {
+  const eol = original.includes('\r\n') ? '\r\n' : '\n'
+  writeFileSync(configFile, JSON.stringify(config, null, 2).replace(/\n/g, eol) + eol)
+}
+
+/** Switches the web inspector of the window on or off in the config file. Neutralino opens the inspector (the
+ * DevTools window) by itself at start when it is on, so the checked-in config has it off and only `--debug` turns it
+ * on, for that run. */
+export function setInspector(configFile: string, enabled: boolean): void {
+  const text = readFileSync(configFile, 'utf8')
+  const config = JSON.parse(text) as { modes?: { window?: { enableInspector?: boolean } } }
+  const window = config.modes?.window
+  if (window === undefined) throw new Error(`${configFile} has no modes.window`)
+  window.enableInspector = enabled
+  writeConfig(configFile, text, config)
+}
+
+/** Sets the core's command in the config file, in the file's own format (two spaces, final newline, its line ends). */
 export function setCoreCommand(configFile: string, command: string): void {
-  const config = JSON.parse(readFileSync(configFile, 'utf8')) as { extensions?: Array<{ id: string; commandDarwin?: string }> }
+  const text = readFileSync(configFile, 'utf8')
+  const config = JSON.parse(text) as { extensions?: Array<{ id: string; commandDarwin?: string }> }
   const entry = config.extensions?.find((extension) => extension.id === CORE_ID)
   if (entry === undefined) throw new Error(`${configFile} has no extension '${CORE_ID}'`)
   entry.commandDarwin = command
-  writeFileSync(configFile, JSON.stringify(config, null, 2) + '\n')
+  writeConfig(configFile, text, config)
 }

@@ -17,7 +17,8 @@
 // process tree of one that never came up.
 
 import { execFile } from 'node:child_process'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { randomBytes } from 'node:crypto'
+import { linkSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { dirname, join } from 'node:path'
 import { buildServerCommand, freePort, LocalServer, LOOPBACK, ServerStartError } from './server.js'
@@ -68,12 +69,38 @@ export function readPort(file: string): number | null {
  * always writes. The folder is made. */
 export function writePort(file: string, port: number, mode: 'exclusive' | 'overwrite'): boolean {
   mkdirSync(dirname(file), { recursive: true })
-  try {
-    writeFileSync(file, JSON.stringify({ port }) + '\n', { flag: mode === 'exclusive' ? 'wx' : 'w' })
+  const text = JSON.stringify({ port }) + '\n'
+  if (mode === 'overwrite') {
+    writeFileSync(file, text)
     return true
-  } catch (problem) {
-    if (mode === 'exclusive' && (problem as NodeJS.ErrnoException).code === 'EEXIST') return false
-    throw problem
+  }
+  // Written whole under another name and then linked into place: a second window that loses never reads a file that is
+  // there but not written yet (two first starts at once are exactly when this is asked). Where the folder cannot hold
+  // links, the exclusive create is the fallback.
+  const temporary = join(dirname(file), `.desktop-server-${process.pid}-${randomBytes(4).toString('hex')}`)
+  try {
+    writeFileSync(temporary, text)
+    try {
+      linkSync(temporary, file)
+      return true
+    } catch (problem) {
+      const code = (problem as NodeJS.ErrnoException).code
+      if (code === 'EEXIST') return false
+      if (code !== 'EPERM' && code !== 'ENOTSUP' && code !== 'ENOSYS') throw problem
+    }
+    try {
+      writeFileSync(file, text, { flag: 'wx' })
+      return true
+    } catch (problem) {
+      if ((problem as NodeJS.ErrnoException).code === 'EEXIST') return false
+      throw problem
+    }
+  } finally {
+    try {
+      unlinkSync(temporary)
+    } catch {
+      // gone already
+    }
   }
 }
 

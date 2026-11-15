@@ -39,10 +39,15 @@ function setup(overrides: { dispatchFails?: number; setMenuFails?: boolean; stat
   const posted: Array<{ data: string; origin: string }> = []
   const contentWindow = { postMessage: (data: string, origin: string) => posted.push({ data, origin }) }
   const frameListeners: Array<() => void> = []
+  let focused = 0
   const frame = {
     src: '',
     contentWindow: contentWindow as typeof contentWindow | null,
     addEventListener: (_type: 'load', listener: () => void) => frameListeners.push(listener),
+    focus: () => void (focused += 1),
+    get focused() {
+      return focused
+    },
   }
   const statuses: Array<{ title: string; details?: string; error: boolean } | 'hidden'> = []
   const status = {
@@ -197,7 +202,7 @@ describe('the core shows a server', () => {
     expect(t.frame.src).toBe('https://demo.example.org/')
     expect(t.statuses.at(-1)).toMatchObject({ title: 'Opening…' })
     t.hello()
-    expect(t.toFrame()).toMatchObject([{ type: 'welcome', capabilities: ['native-menu', 'actions', 'connect', 'servers'] }])
+    expect(t.toFrame()).toMatchObject([{ type: 'welcome', capabilities: ['native-menu', 'actions', 'connect', 'servers', 'files'] }])
     expect(t.posted[0]!.origin).toBe('https://demo.example.org')
   })
 
@@ -450,5 +455,47 @@ describe('the front page and a document (sheet 11)', () => {
   })
   it('has no Edit, Format or Tools on the front page', () => {
     expect(tops(START)).toEqual(['File', 'View', 'Config', 'Help'])
+  })
+})
+
+describe('files (D501, D502)', () => {
+  it('passes a request for a file on to the core, and the file it reads back to the page, piece by piece', async () => {
+    const t = setup()
+    await t.open()
+    t.fromFrame({ type: 'pick_file', request: 'f1-x', accept: ['docx'], title: 'Open a File' })
+    await tick()
+    expect(t.dispatched.map((d) => d.data)).toEqual([{ kind: 'pick_file', request: 'f1-x', accept: ['docx'], title: 'Open a File' }])
+    t.core({ kind: 'file_result', request: 'f1-x', outcome: 'picked', name: 'a.docx', size: 2 })
+    t.core({ kind: 'file_chunk', request: 'f1-x', index: 0, data: 'aGk=' })
+    t.core({ kind: 'file_done', request: 'f1-x', chunks: 1 })
+    expect(t.toFrame()).toEqual([
+      { type: 'file_result', request: 'f1-x', outcome: 'picked', name: 'a.docx', size: 2 },
+      { type: 'file_chunk', request: 'f1-x', index: 0, data: 'aGk=' },
+      { type: 'file_done', request: 'f1-x', chunks: 1 },
+    ])
+  })
+
+  it('passes a file to save on to the core, and where it went back to the page', async () => {
+    const t = setup()
+    await t.open()
+    t.fromFrame({ type: 'save_file', request: 'f2', name: 'a.pdf', size: 2, purpose: 'print' })
+    t.fromFrame({ type: 'file_chunk', request: 'f2', index: 0, data: 'aGk=' })
+    t.fromFrame({ type: 'file_done', request: 'f2', chunks: 1 })
+    await tick()
+    expect(t.dispatched.map((d) => d.data)).toEqual([
+      { kind: 'save_begin', request: 'f2', name: 'a.pdf', size: 2, purpose: 'print' },
+      { kind: 'save_chunk', request: 'f2', index: 0, data: 'aGk=' },
+      { kind: 'save_done', request: 'f2', chunks: 1 },
+    ])
+    t.core({ kind: 'file_result', request: 'f2', outcome: 'opened', path: '/tmp/claudia-print/a.pdf' })
+    expect(t.toFrame()).toEqual([{ type: 'file_result', request: 'f2', outcome: 'opened', path: '/tmp/claudia-print/a.pdf' }])
+  })
+
+  it('gives the frame the keyboard focus before it sends a menu action, so the page can show what it does', async () => {
+    const t = setup()
+    await t.open()
+    t.menuClick('file.open')
+    expect(t.frame.focused).toBe(1)
+    expect(t.toFrame()).toEqual([{ type: 'action', action: 'file.open' }])
   })
 })

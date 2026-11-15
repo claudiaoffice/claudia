@@ -16,7 +16,7 @@ from .catalogue import DEFAULT_SUBSTITUTIONS, Catalogue, Problem, Resolution
 from .collection import COLLECTION_FILE, Collection, CollectionRecord, RecordError
 from .font import Axis, FontFile, FontProblem, read_font
 from .fontconfig import JobFonts, write_fontconfig
-from .starter import FetchError, LockedCollection, LockedFile, collection_folders, fetch, read_lock
+from .starter import FetchError, LockedCollection, LockedFile, builtin_folder, collection_folders, fetch, read_lock
 from .webfonts import NotServable, WebFontCache, font_face_css
 
 __all__ = [
@@ -38,6 +38,7 @@ __all__ = [
     "Resolution",
     "WebFontCache",
     "__version__",
+    "builtin_folder",
     "collection_folders",
     "fetch",
     "font_face_css",

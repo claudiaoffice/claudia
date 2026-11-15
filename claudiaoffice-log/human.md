@@ -41,7 +41,7 @@ Work plan for Nov 14/15th 2026
 		- [ ] **import-export-wiring** every internal feature should be connected to the Importer/Exporter
 			- [ ] e.g. ordered/unordered lists in composes not imported/exported
 		- [ ] **ongoing on branch "search"** extend regex search from computes to creates and composes
-		- [ ] deployability server, to QNAP and elsewhere
+		- [x] deployability server, to QNAP and elsewhere
 		- [ ] CI on github, get it green!!
 		- [ ] desktop client tests (visual deviations)
 		- [ ] decision log should reflect the reality (e.g. "Linux client is GTK completely" => wrong!)

@@ -37,8 +37,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     set -- --locked --no-dev --no-editable --package claudia-server; \
     if [ "$WITH_OPENVINO" = "true" ]; then set -- "$@" --extra openvino; fi; \
     uv sync "$@"
-# The starter set of open fonts, pinned by SHA-256 (D905): what the clients lay out and print with.
-RUN /app/.venv/bin/python -m claudia_fonts fetch /app/fonts
+# The starter set of open fonts (D905) ships inside claudia_fonts since D500: nothing to fetch for it.
 # The hyphenation patterns, pinned the same way (D913): what the clients hyphenate with.
 RUN /app/.venv/bin/python -m claudia_server.hyphenation fetch /app/hyphenation
 
@@ -51,7 +50,6 @@ RUN groupadd --system --gid 10001 claudia \
 
 COPY --from=python /app/.venv /app/.venv
 COPY --from=web /build/web/.output/public /app/web
-COPY --from=python /app/fonts /app/fonts
 COPY --from=python /app/hyphenation /app/hyphenation
 COPY --chmod=755 docker/entrypoint.sh /app/entrypoint.sh
 COPY docker/healthcheck.py /app/healthcheck.py

@@ -6,6 +6,7 @@ test (``test_e2e.py``) runs the real one.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import signal
 import subprocess
@@ -189,24 +190,85 @@ def test_the_server_dies_when_the_shell_is_killed_without_a_chance_to_clean_up(t
             shell.kill()
 
 
+def test_a_server_that_outlives_the_shell_survives_its_death(tmp_path: Path) -> None:
+    """The shared desktop server (D445) is started with ``outlives_shell``: no death signal, it stops by itself."""
+    script = tmp_path / "fake_server.py"
+    script.write_text(FAKE, encoding="utf-8")
+    port = server.free_port()
+    shell = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                f"""
+                import sys, time
+                sys.path.insert(0, {SRC!r})
+                from claudia_shell_gtk.server import LocalServer
+                local = LocalServer([sys.executable, {str(script)!r}, "{port}", "ok"], url="http://127.0.0.1:{port}",
+                                    outlives_shell=True)
+                local.start()
+                print("PID", local.pid, flush=True)
+                time.sleep(60)
+                """
+            ),
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    server_pid = 0
+    try:
+        assert shell.stdout is not None
+        line = shell.stdout.readline()
+        assert line.startswith("PID "), line
+        server_pid = int(line.split()[1])
+        os.kill(shell.pid, signal.SIGKILL)  # type: ignore[attr-defined] # POSIX only, not on Windows
+        shell.wait(timeout=5)
+        time.sleep(0.3)
+        assert alive(server_pid), "the shared server died with the shell"
+    finally:
+        if shell.poll() is None:
+            shell.kill()
+        if server_pid:
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(server_pid, signal.SIGKILL)  # type: ignore[attr-defined]
+
+
+def test_a_start_that_ended_by_itself_says_so_and_quotes_only_what_it_wrote(fake, tmp_path: Path) -> None:
+    """server.log is shared by every start of the suite's server: an error quotes this start's lines only, and says
+    that the process ended by itself (then another window's server may have won, D435)."""
+    (tmp_path / "server.log").write_text("an older run said this\n")
+    local = fake("crash")
+    with pytest.raises(ServerStartError) as failed:
+        local.start()
+    assert failed.value.exited
+    assert "boom" in str(failed.value)
+    assert "an older run" not in str(failed.value)
+
+
+def test_a_start_that_never_answered_did_not_end_by_itself(fake) -> None:
+    local = fake("silent", startup_timeout=0.4)
+    with pytest.raises(ServerStartError) as failed:
+        local.start()
+    assert not failed.value.exited
+
+
 # --------------------------------------------------------------------------------------------- the command line
 
 
-@pytest.mark.parametrize(
-    "model", ["claudia_composes:TextModel", "claudia_computes:WorkbookModel", "claudia_creates:SlideModel"]
-)
-def test_the_server_command_serves_the_bundled_frontend_on_loopback_only(tmp_path: Path, model: str) -> None:
+def test_the_server_command_is_the_one_server_of_the_suite_on_loopback_only(tmp_path: Path) -> None:
+    """D445: all three apps (no ``--model``), and stopping by itself once nobody has used it for a while (D434)."""
     command = server.server_command(
         "/opt/claudia/python",
-        model=model,
         port=8123,
         documents=tmp_path / "docs",
         web=tmp_path / "web",
         state=tmp_path / "state",
+        idle_seconds=600,
     )
     assert command[:3] == ["/opt/claudia/python", "-m", "claudia_server"]
     joined = " ".join(command)
-    assert f"--model {model}" in joined
+    assert "--model" not in command
+    assert "--exit-when-idle 600" in joined
     assert "--host 127.0.0.1" in joined
     assert "--port 8123" in joined
     assert f"--dir {tmp_path / 'docs'}" in joined

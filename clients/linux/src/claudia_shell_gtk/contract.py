@@ -20,6 +20,9 @@ from typing import Any, TypeGuard
 __all__ = [
     "CONNECT_FAILED_CODES",
     "CONTRACT_VERSION",
+    "FILE_CHUNK_BYTES",
+    "FILE_OUTCOMES",
+    "MAX_FILE_BYTES",
     "MAX_MESSAGE_BYTES",
     "MAX_SERVER_LIST",
     "SUPPORTED_VERSIONS",
@@ -31,6 +34,9 @@ __all__ = [
     "connect_failed",
     "error",
     "error_for",
+    "file_chunk",
+    "file_done",
+    "file_result",
     "negotiate",
     "parse",
     "servers",
@@ -66,6 +72,15 @@ CONNECT_FAILED_CODES = (
 """Why a ``connect`` can fail (E5.8): what the page may rely on to decide what to show next."""
 MAX_SERVER_LIST = 64
 """The most servers a ``servers`` message may carry."""
+MAX_FILE_BYTES = 100 * 1024 * 1024
+"""The largest file a transfer carries (D501)."""
+FILE_CHUNK_BYTES = 36 * 1024
+"""How many bytes go into one ``file_chunk``: 36 KiB are 48 KiB of base64, which keeps a message within 64 KiB."""
+FILE_OUTCOMES = ("picked", "saved", "opened", "cancelled", "failed")
+"""What became of a file transfer (D501, D502)."""
+_MAX_CHUNK_TEXT = 48 * 1024
+_EXTENSION = re.compile(r"^[a-z0-9]{1,16}$")
+_BASE64 = re.compile(r"^[A-Za-z0-9+/]*={0,2}$")
 _MAX_ACTION_ID = 64
 _MAX_TOKEN = 32
 _MAX_TEXT = 512
@@ -244,6 +259,57 @@ def _check_servers(message: Message) -> None:
         _check_server_entry(entry)
 
 
+def _whole_number(message: Mapping[str, Any], key: str, *, most: int | None = None, required: bool = True) -> None:
+    value = message.get(key)
+    if value is None and not required:
+        return
+    if not _is_int(value) or value < 0 or (most is not None and value > most):
+        raise _bad(f"'{key}' is a whole number from 0" + (f" to {most}" if most is not None else ""))
+
+
+def _check_pick_file(message: Message) -> None:
+    _token(message.get("request"), "'request'")
+    accept = message.get("accept")
+    extensions = isinstance(accept, list) and all(isinstance(e, str) and _EXTENSION.match(e) for e in accept)
+    if not (extensions and isinstance(accept, list) and len(accept) <= 32):
+        raise _bad("'accept' is a list of at most 32 extensions such as 'docx'")
+    _text(message, "title", limit=_MAX_LABEL)
+
+
+def _check_save_file(message: Message) -> None:
+    _token(message.get("request"), "'request'")
+    name = message.get("name")
+    if not (isinstance(name, str) and 1 <= len(name) <= _MAX_ADDRESS and "/" not in name and "\\" not in name):
+        raise _bad("'name' is a file name of 1 to 255 characters, without a folder")
+    _whole_number(message, "size", most=MAX_FILE_BYTES)
+    _text(message, "mime", limit=_MAX_LABEL)
+    if message.get("purpose", "save") not in ("save", "print"):
+        raise _bad("'purpose' is 'save' or 'print'")
+
+
+def _check_file_chunk(message: Message) -> None:
+    _token(message.get("request"), "'request'")
+    _whole_number(message, "index")
+    data = message.get("data")
+    if not (isinstance(data, str) and len(data) <= _MAX_CHUNK_TEXT and _BASE64.match(data)):
+        raise _bad(f"'data' is base64 of at most {_MAX_CHUNK_TEXT} characters")
+
+
+def _check_file_done(message: Message) -> None:
+    _token(message.get("request"), "'request'")
+    _whole_number(message, "chunks")
+
+
+def _check_file_result(message: Message) -> None:
+    _token(message.get("request"), "'request'")
+    if message.get("outcome") not in FILE_OUTCOMES:
+        raise _bad(f"'outcome' is one of {', '.join(FILE_OUTCOMES)}")
+    _text(message, "name", limit=_MAX_ADDRESS)
+    _whole_number(message, "size", most=MAX_FILE_BYTES, required=False)
+    _text(message, "path", limit=4096)
+    _text(message, "message", limit=_MAX_TEXT)
+
+
 _CHECKS: dict[str, Callable[[Message], None]] = {
     "hello": _check_hello,
     "welcome": _check_welcome,
@@ -253,6 +319,11 @@ _CHECKS: dict[str, Callable[[Message], None]] = {
     "connect": _check_connect,
     "connect_failed": _check_connect_failed,
     "servers": _check_servers,
+    "pick_file": _check_pick_file,
+    "save_file": _check_save_file,
+    "file_chunk": _check_file_chunk,
+    "file_done": _check_file_done,
+    "file_result": _check_file_result,
 }
 
 # -------------------------------------------------------------------------------------------------- negotiation
@@ -340,4 +411,31 @@ def servers(entries: Iterable[Mapping[str, Any]]) -> Message:
     """The list of servers the shell remembers for its app (``servers.for_page`` makes it)."""
     built: Message = {"type": "servers", "servers": [dict(entry) for entry in entries]}
     _check_servers(built)
+    return built
+
+
+def file_result(request: str, outcome: str, **details: Any) -> Message:
+    """What became of a file transfer (D501, D502): ``name`` and ``size`` with ``picked``, ``path`` with ``saved`` and
+    ``opened``, ``message`` (for the person) with ``failed``. Texts that are too long are cut."""
+    built: Message = {"type": "file_result", "request": request, "outcome": outcome}
+    for key, limit in (("name", _MAX_ADDRESS), ("path", 4096), ("message", _MAX_TEXT)):
+        if details.get(key) is not None:
+            built[key] = str(details[key])[:limit]
+    if details.get("size") is not None:
+        built["size"] = details["size"]
+    _check_file_result(built)
+    return built
+
+
+def file_chunk(request: str, index: int, data: str) -> Message:
+    """One piece of a file, as base64 (D501)."""
+    built: Message = {"type": "file_chunk", "request": request, "index": index, "data": data}
+    _check_file_chunk(built)
+    return built
+
+
+def file_done(request: str, chunks: int) -> Message:
+    """Every piece of a file has been sent (D501)."""
+    built: Message = {"type": "file_done", "request": request, "chunks": chunks}
+    _check_file_done(built)
     return built

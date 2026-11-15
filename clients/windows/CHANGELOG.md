@@ -4,6 +4,18 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.0] - unreleased
 
+### Added (D501, D502, D503)
+- Files through Windows' own dialogs (shell contract capability `files`): Open a File… and Insert Image show the Open
+  dialog, from the native menu too; Export…, Download and Download PDF show the Save dialog and say where the file went,
+  instead of WebView2 putting it into Downloads without a word. The core shows the dialogs (`dialogs.ts`, Windows Forms
+  through PowerShell, in front of the window) and reads and writes the files (`files.ts`); the shell page passes the
+  pieces on. Not run on Windows yet.
+- Print… in the print preview opens the pages in Windows' application for PDFs, which prints them.
+- A native menu action gives the frame the keyboard focus first, so that what the page does is seen.
+
+### Fixed
+- Two windows starting at once could pick two ports: the port file is now written whole and linked into place.
+
 ### Fixed (CI on Windows)
 - The web app's front page now takes part in the shell handshake when it runs in a Neutralino window (a frame of the
   shell page), not only under the macOS WebKit handler. Before, the window's app was unknown there, so the front

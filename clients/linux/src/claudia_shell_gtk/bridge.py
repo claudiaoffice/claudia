@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Protocol
 
 from . import contract
 from .contract import ContractError, UnknownMessageType
 from .manifest import Kind, Manifest
 
-__all__ = ["Bridge"]
+__all__ = ["Bridge", "FileDesk"]
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +23,22 @@ CAPABILITIES = ("native-menu", "actions")
 """What every shell offers the page: it shows the menus itself, and it sends ``action`` messages for them. A shell
 that can also connect to another server (E5.8) adds ``connect``, and one that keeps the list of servers adds
 ``servers`` — each only when the window gave the bridge something to do it with."""
+
+
+class FileDesk(Protocol):
+    """What the shell does with the page's files (D501, D502): the bridge checks the messages, this does the work."""
+
+    def pick(self, request: str, accept: list[str], title: str | None) -> None:
+        """Show the Open dialog for files with these extensions; answer with the bridge's ``send_file_*``."""
+
+    def begin(self, request: str, name: str, size: int, purpose: str) -> None:
+        """A file of ``size`` bytes is coming: to save where the person says, or (``print``) to open in the viewer."""
+
+    def chunk(self, request: str, index: int, data: str) -> None:
+        """One piece of it, base64."""
+
+    def done(self, request: str, chunks: int) -> None:
+        """All of it has come."""
 
 
 class Bridge:
@@ -40,6 +56,7 @@ class Bridge:
         on_connect: Callable[[str], None] | None = None,
         on_servers: Callable[[list[dict[str, Any]]], None] | None = None,
         server_list: Callable[[], list[dict[str, Any]]] | None = None,
+        files: FileDesk | None = None,
     ) -> None:
         self._manifest = manifest
         self._send = send
@@ -50,6 +67,7 @@ class Bridge:
         self._on_connect = on_connect
         self._on_servers = on_servers
         self._server_list = server_list
+        self._files = files
         self._ready = False
         self.view = "document"
         """What the page said it is in its last ``hello`` (sheet 11): ``start``, the front page, or ``document`` — also
@@ -84,6 +102,10 @@ class Bridge:
             "error": self._page_error,
             "connect": self._connect,
             "servers": self._servers,
+            "pick_file": self._file,
+            "save_file": self._file,
+            "file_chunk": self._file,
+            "file_done": self._file,
         }.get(message["type"])
         if handler is None:
             self._reply(contract.error("bad_message", f"'{message['type']}' is sent by the shell, not by the page"))
@@ -109,6 +131,7 @@ class Bridge:
                 capabilities=self._capabilities(),
                 contract=version,
                 locale=self._locale,
+                app=self._manifest.app,  # D444: this window is one app, whatever the server behind it hosts
             )
         )
         if self._server_list is not None:
@@ -120,7 +143,26 @@ class Bridge:
             *CAPABILITIES,
             *(("connect",) if self._on_connect is not None else ()),
             *(("servers",) if self._server_list is not None else ()),
+            *(("files",) if self._files is not None else ()),
         )
+
+    def _file(self, message: contract.Message) -> None:
+        if not self._ready:
+            self._reply(contract.error("bad_message", f"say 'hello' before '{message['type']}'"))
+            return
+        if self._files is None:
+            self._reply(contract.error("bad_message", "this shell does not handle files"))
+            return
+        request = message["request"]
+        kind = message["type"]
+        if kind == "pick_file":
+            self._files.pick(request, list(message["accept"]), message.get("title"))
+        elif kind == "save_file":
+            self._files.begin(request, message["name"], message["size"], message.get("purpose", "save"))
+        elif kind == "file_chunk":
+            self._files.chunk(request, message["index"], message["data"])
+        else:
+            self._files.done(request, message["chunks"])
 
     def _connect(self, message: contract.Message) -> None:
         if not self._ready:
@@ -183,6 +225,27 @@ class Bridge:
         if not self._ready:
             return False
         self._reply(contract.connect_failed(code, message))
+        return True
+
+    def send_file_result(self, request: str, outcome: str, **details: Any) -> bool:
+        """What became of a file transfer (D501, D502). ``False`` when the page is not there any more."""
+        if not self._ready:
+            return False
+        self._reply(contract.file_result(request, outcome, **details))
+        return True
+
+    def send_file_chunk(self, request: str, index: int, data: str) -> bool:
+        """One piece of a file the page asked for."""
+        if not self._ready:
+            return False
+        self._reply(contract.file_chunk(request, index, data))
+        return True
+
+    def send_file_done(self, request: str, chunks: int) -> bool:
+        """Every piece of a file the page asked for has been sent."""
+        if not self._ready:
+            return False
+        self._reply(contract.file_done(request, chunks))
         return True
 
     def _reply(self, message: contract.Message) -> None:

@@ -200,3 +200,68 @@ describe('to the page', () => {
     expect(bridge.sendAction('file.new')).toBe(false)
   })
 })
+
+describe('files (D501, D502)', () => {
+  function withFiles() {
+    const calls: unknown[][] = []
+    const files = {
+      pick: (...args: unknown[]) => void calls.push(['pick', ...args]),
+      begin: (...args: unknown[]) => void calls.push(['begin', ...args]),
+      chunk: (...args: unknown[]) => void calls.push(['chunk', ...args]),
+      done: (...args: unknown[]) => void calls.push(['done', ...args]),
+    }
+    return { ...make({ files }), fileCalls: calls }
+  }
+
+  it('offers files only when the shell can handle them', () => {
+    const { sent, hello } = withFiles()
+    hello()
+    expect(sent[0]!.capabilities).toEqual(['native-menu', 'actions', 'connect', 'servers', 'files'])
+  })
+
+  it('hands every file message of the page to the desk, checked', () => {
+    const { hello, say, fileCalls, sent } = withFiles()
+    hello()
+    sent.length = 0
+    say({ type: 'pick_file', request: 'f1', accept: ['docx'], title: 'Open' })
+    say({ type: 'save_file', request: 'f2', name: 'a.pdf', size: 3, purpose: 'print' })
+    say({ type: 'save_file', request: 'f3', name: 'a.txt', size: 3 })
+    say({ type: 'file_chunk', request: 'f2', index: 0, data: 'YWJj' })
+    say({ type: 'file_done', request: 'f2', chunks: 1 })
+    say({ type: 'save_file', request: 'f4', name: '../a.txt', size: 3 })
+    expect(fileCalls).toEqual([
+      ['pick', 'f1', ['docx'], 'Open'],
+      ['begin', 'f2', 'a.pdf', 3, 'print'],
+      ['begin', 'f3', 'a.txt', 3, 'save'],
+      ['chunk', 'f2', 0, 'YWJj'],
+      ['done', 'f2', 1],
+    ])
+    expect(sent).toEqual([expect.objectContaining({ type: 'error', code: 'bad_message' })]) // the name with a folder in it
+  })
+
+  it('refuses file messages before hello, and from a page of a shell that does not handle files', () => {
+    const early = withFiles()
+    early.say({ type: 'pick_file', request: 'f1', accept: [] })
+    expect(early.fileCalls).toEqual([])
+    expect(early.sent[0]).toMatchObject({ type: 'error', code: 'bad_message' })
+    const plain = make()
+    plain.hello()
+    plain.say({ type: 'pick_file', request: 'f1', accept: [] })
+    expect(plain.sent.at(-1)).toMatchObject({ type: 'error', message: 'this shell does not handle files' })
+  })
+
+  it('sends what became of a file, and its pieces, while the page is there', () => {
+    const { bridge, hello, sent } = withFiles()
+    expect(bridge.sendFileResult('f1', 'cancelled')).toBe(false)
+    hello()
+    sent.length = 0
+    bridge.sendFileResult('f1', 'picked', { name: 'a.docx', size: 3 })
+    bridge.sendFileChunk('f1', 0, 'YWJj')
+    bridge.sendFileDone('f1', 1)
+    expect(sent).toEqual([
+      { type: 'file_result', request: 'f1', outcome: 'picked', name: 'a.docx', size: 3 },
+      { type: 'file_chunk', request: 'f1', index: 0, data: 'YWJj' },
+      { type: 'file_done', request: 'f1', chunks: 1 },
+    ])
+  })
+})

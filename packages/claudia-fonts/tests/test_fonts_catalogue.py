@@ -80,6 +80,21 @@ def test_the_font_that_was_replaced_is_listed_so_that_nobody_uses_it_by_accident
     assert "replaced" in problem.reason
 
 
+def test_the_same_file_twice_is_not_reported_as_replaced(tmp_path):
+    """The shipped starter set (D500) and an operator's fetched copy of it hold the same files: nothing to report."""
+    font = make_font(tmp_path / "src.ttf", "Same Sans", "Regular")
+    for name in ("a", "b"):
+        folder = tmp_path / name
+        folder.mkdir()
+        (folder / COLLECTION_FILE).write_text(
+            json.dumps({"format": 1, "name": name, "licence": "OFL-1.1", "redistributable": True})
+        )
+        (folder / "Same.ttf").write_bytes(font.read_bytes())
+    catalogue = Catalogue.from_folders([tmp_path / "a", tmp_path / "b"])
+    assert catalogue.problems == ()
+    assert len(catalogue.fonts()) == 1
+
+
 def test_lookup_ignores_case_and_orders_by_weight_then_slant(tmp_path):
     root = folder(
         tmp_path,

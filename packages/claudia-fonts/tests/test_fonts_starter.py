@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from claudia_fonts import COLLECTION_FILE, Catalogue, FetchError, collection_folders, fetch, read_lock
+from claudia_fonts import COLLECTION_FILE, Catalogue, FetchError, builtin_folder, collection_folders, fetch, read_lock
 from claudia_fonts.__main__ import main
 from claudia_fonts.starter import LockedCollection, LockedFile
 from claudia_fonts.testing import make_font
@@ -22,6 +22,30 @@ def test_the_packaged_lock_pins_open_fonts_by_hash_at_a_fixed_commit():
         for f in collection.files:
             assert f.url.startswith("https://raw.githubusercontent.com/google/fonts/35e77c38")
             assert len(f.sha256) == 64
+
+
+def test_the_package_ships_exactly_the_pinned_starter_set():
+    """D500: every server has the starter set without the network. What ships is what the lock pins, byte for byte,
+    with each collection's record, and nothing else."""
+    root = builtin_folder()
+    lock = read_lock()
+    assert sorted(p.name for p in root.iterdir() if p.is_dir()) == sorted(c.folder for c in lock)
+    for collection in lock:
+        folder = root / collection.folder
+        assert sorted(p.name for p in folder.iterdir()) == sorted(
+            [f.name for f in collection.files] + [COLLECTION_FILE]
+        )
+        for f in collection.files:
+            assert hashlib.sha256((folder / f.name).read_bytes()).hexdigest() == f.sha256, f.name
+        record = json.loads((folder / COLLECTION_FILE).read_text())
+        assert (record["name"], record["licence"], record["redistributable"]) == (collection.name, "OFL-1.1", True)
+
+
+def test_the_shipped_starter_set_is_a_catalogue_with_the_fallback_family():
+    catalogue = Catalogue.from_folders(collection_folders(builtin_folder()))
+    assert catalogue.problems == ()
+    assert {"Inter", "Fraunces", "JetBrains Mono", "Carlito", "Caladea"} <= set(catalogue.families())
+    assert catalogue.resolve("Calibri").provided == "Carlito"
 
 
 def lock_of(tmp_path, *, bad=False):

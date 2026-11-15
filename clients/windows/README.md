@@ -11,7 +11,8 @@ claudia-computes  [--server URL] [--debug]
 claudia-creates   [--server URL] [--debug]
 ```
 
-Without `--server` the window starts the app's own server on this computer. With it, no server is started: the
+Without `--server` the window uses the local server of the three apps on this computer (D445), and starts it if none
+runs. With it, no server is started: the
 window connects to that one (`https://host[:port]`, a bare host means https, plain `http` only for this computer),
 after the same checks as the Linux client (D242): it answers, it is a Claudia server, it runs **this window's app**,
 and its HTTPS certificate is one this computer trusts (Windows' own certificate store, see below). A window shows
@@ -45,8 +46,9 @@ so it very likely had the same gap, and it has been rebuilt on the design that D
   when that is a page on this computer's loopback.
 * **The native core** (`core.ts`, bundled to `ext/core.mjs`) is a Node process that Neutralino starts with the window
   (an *extension*, `commandWindows` in the config). It runs `connection.ts` (the checks), `connector.ts`/`servers.ts`/
-  `settings.ts` (the list), and `local-server.ts`/`server.ts` (the app's own server). When the window ends, so does the
-  core, and it stops the server: this is also what stops a server when the window is killed (`D161`, below).
+  `settings.ts` (the list), `desktop-server.ts`/`local-server.ts`/`server.ts` (the local server of the three apps, D445)
+  and `files.ts`/`dialogs.ts` (the page's files, D501). When the window ends, so does the core: it lets go of the shared
+  server, which stops by itself once nothing is connected.
 * **The launcher** (`launch.ts`, `cli.ts`) finds the Neutralino binary, puts the core's command into the app's
   `neutralino.config.json` for the run (the absolute `node`, `--use-system-ca` where Node knows the flag (22.15+), so HTTPS
   trusts what the Windows certificate store trusts, `--app`, `--server`; `core-command.ts`), runs the binary with `--path`,
@@ -84,7 +86,9 @@ src/
   connection.ts       the checks before a server is shown                           connector.ts    connect, remember, newest request wins
   core.ts             the native core                                               core-entry.ts   the extension program (core-command.ts: its command)
   core-protocol.ts    page <-> core messages                                        extension.ts    the Neutralino extension link (WebSocket)
-  local-server.ts     the app's own server                                          server.ts       start, wait for, stop it (the tree, on Windows)
+  local-server.ts     the local server, put together                                server.ts       start, wait for, stop one server process (the tree)
+  desktop-server.ts   the one server of the three apps (D445)                       files.ts        the page's files (D501, D502)
+  dialogs.ts          Windows' dialogs, through PowerShell                          file-protocol.ts  page <-> core file messages
   shell-page.ts       the shell page's logic                                        shell-page-entry.ts  its wiring to the browser
   menu.ts / menu-actions.ts   the native menu from the shared manifest
   generated/          menu.<app>.json, from clients/linux's manifest.py
@@ -166,8 +170,9 @@ suspicion; `server.log` will say).
    (`--use-system-ca`, Node 22.15+), against a real server; and that a certificate nobody vouches for is refused with "not
    issued by an authority this computer trusts".
 4. **Edit shortcuts in the frame** (Ctrl+C/V/X/Z in the web app: WebView2 handles them itself; the menu items go through the
-   page), and `<input type="file">`, which WebView2 should open a picker for without help (macOS needs a contract message,
-   `pick_file`) — a hypothesis from the engines' documentation.
+   page), and **the dialogs** (D501): that the Windows Forms Open and Save dialogs that the core shows through PowerShell
+   come up in front of the window (owned by a top-most form) and how long PowerShell takes to show them; and that a PDF
+   to print opens in the application Windows has for PDFs (D502).
 5. **Orphans**: the core ends with the window and stops the server, and now the whole tree of it; a window or core killed
    with `taskkill /f` was not tried (D161 stays open for it), nor was `taskkill /T` against the real `uv` interpreter.
 6. **WebView2 Runtime** on a trimmed machine image (Windows 11 has it), an older Windows, a screen reader.
@@ -176,8 +181,8 @@ suspicion; `server.log` will say).
 ## Known gaps and follow-ups
 
 * **Self-signed certificates** (D245, trust by pin) are not built, for any desktop client yet: such a server is refused.
-* **Printing and links that open a window** from the framed page are not handled by the shell yet (D158 point 2); nor is
-  **`pick_file`**, if WebView2 turns out to need it.
+* **Links that open a window** from the framed page are not handled by the shell yet. Files and printing go through the
+  contract (`pick_file`, `save_file`, D501, D502).
 * **The frame has no `sandbox`** attribute: untried, so not guessed at. The framed page is cross-origin and cannot reach
   Neutralino; a sandbox would add a second line of defence.
 * **The shell page's status screens** (starting, connecting, cannot start) are plain text; no design has been agreed.

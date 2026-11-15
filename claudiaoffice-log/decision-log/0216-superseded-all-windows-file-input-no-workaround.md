@@ -1,12 +1,12 @@
 ---
 id: D216
 title: "Proposal: `<input type=\"file\">` needs no shell-side workaround on Windows, unlike macOS (D158's `file-dialog.ts`)"
-status: current
+status: superseded
 applies-to: all
 date: 2026-11-08
 round: "Neutralino on Windows and macOS (twenty-eighth round)"
 supersedes: []
-superseded-by: []
+superseded-by: [D501]
 previous-id: D160
 ---
 
@@ -19,3 +19,5 @@ previous-id: D160
 *Renumbered on 2026-11-10 from D160, a number that had been allocated twice by branches written in parallel (see `_rounds.md`, "One file per decision").*
 
 *Written as a proposal; confirmed by the owner on 2026-11-10, since the code already follows it.*
+
+*Superseded on 2026-11-15 by D501: every shell, Windows included, now chooses and saves files with its own dialogs.*

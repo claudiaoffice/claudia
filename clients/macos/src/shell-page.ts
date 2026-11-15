@@ -35,6 +35,8 @@ export interface FrameLike {
   src: string
   readonly contentWindow: { postMessage(data: string, targetOrigin: string): void } | null
   addEventListener(type: 'load', listener: () => void): void
+  /** Give the frame the keyboard focus (a native menu leaves it with the shell page). */
+  focus?(): void
 }
 
 /** The overlay that says what is going on while there is no web page to show (starting, connecting, failed). */
@@ -121,6 +123,13 @@ export class ShellPage {
       },
       onConnect: (address) => this.ask({ kind: 'connect', address }),
       onServers: (servers) => this.ask({ kind: 'servers', servers }),
+      // D501, D502: the core shows the dialogs and reads and writes the files; this page only passes the pieces on.
+      files: {
+        pick: (request, accept, title) => this.ask({ kind: 'pick_file', request, accept, ...(title !== undefined ? { title } : {}) }),
+        begin: (request, name, size, purpose) => this.ask({ kind: 'save_begin', request, name, size, purpose }),
+        chunk: (request, index, data) => this.ask({ kind: 'save_chunk', request, index, data }),
+        done: (request, chunks) => this.ask({ kind: 'save_done', request, chunks }),
+      },
     })
   }
 
@@ -262,6 +271,17 @@ export class ShellPage {
           this.env.status.show('Cannot connect', message.message, true)
         }
         return
+      case 'file_result': {
+        const { request, outcome, kind: _kind, ...details } = message
+        this.bridge.sendFileResult(request, outcome, details)
+        return
+      }
+      case 'file_chunk':
+        this.bridge.sendFileChunk(message.request, message.index, message.data)
+        return
+      case 'file_done':
+        this.bridge.sendFileDone(message.request, message.chunks)
+        return
     }
   }
 
@@ -291,6 +311,9 @@ export class ShellPage {
       void this.env.neutralino.app.exit().catch((problem: Error) => this.log(`could not quit: ${problem.message}`))
       return
     }
+    // The page carries the action out where the person sees it (File ▸ Open… puts the cursor in its search field): the
+    // frame needs the keyboard focus for that, and a native menu leaves it with this page.
+    this.env.frame.focus?.()
     if (!this.bridge.sendAction(route.action, route.target)) {
       this.log(`the menu item '${route.action}' was not sent: the page in the frame has not said hello (there is nobody to do it)`)
     }

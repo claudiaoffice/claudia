@@ -14,6 +14,16 @@ import type { ActionState, KnownAction } from './menu-actions.js'
  * each only when the owner of the bridge gave it something to do it with. */
 const BASE_CAPABILITIES = ['native-menu', 'actions'] as const
 
+/** What the shell does with the page's files (D501, D502): the bridge checks the messages, this does the work. */
+export interface FileDesk {
+  /** Show the Open dialog for files with these extensions; the answer goes back with `sendFileResult` and friends. */
+  pick(request: string, accept: string[], title?: string): void
+  /** A file of `size` bytes is coming: to save where the person says, or (`print`) to open in the computer's viewer. */
+  begin(request: string, name: string, size: number, purpose: 'save' | 'print'): void
+  chunk(request: string, index: number, data: string): void
+  done(request: string, chunks: number): void
+}
+
 export interface BridgeOptions {
   app: App
   known: readonly KnownAction[]
@@ -26,6 +36,8 @@ export interface BridgeOptions {
   onReady?: () => void
   onConnect?: (address: string) => void
   onServers?: (servers: unknown[]) => void
+  /** Choosing and saving files with the shell's dialogs (D501); without it the shell does not offer `files`. */
+  files?: FileDesk
 }
 
 export class Bridge {
@@ -75,6 +87,11 @@ export class Bridge {
         return this.connect(message)
       case 'servers':
         return this.servers(message)
+      case 'pick_file':
+      case 'save_file':
+      case 'file_chunk':
+      case 'file_done':
+        return this.file(message)
       default:
         return this.reply(contract.error('bad_message', `'${message.type}' is sent by the shell, not by the page`))
     }
@@ -99,6 +116,7 @@ export class Bridge {
         shell: this.options.shell,
         capabilities: this.capabilities(),
         contract: version,
+        app, // D444: this window is one app, whatever the server behind it hosts
         ...(this.options.locale !== undefined ? { locale: this.options.locale } : {}),
       }),
     )
@@ -110,7 +128,25 @@ export class Bridge {
       ...BASE_CAPABILITIES,
       ...(this.options.onConnect ? ['connect'] : []),
       ...(this.options.onServers ? ['servers'] : []),
+      ...(this.options.files ? ['files'] : []),
     ]
+  }
+
+  private file(message: Message): void {
+    if (!this.isReady) return this.reply(contract.error('bad_message', `say 'hello' before '${message.type}'`))
+    const files = this.options.files
+    if (!files) return this.reply(contract.error('bad_message', 'this shell does not handle files'))
+    const request = String(message.request)
+    switch (message.type) {
+      case 'pick_file':
+        return files.pick(request, message.accept as string[], message.title as string | undefined)
+      case 'save_file':
+        return files.begin(request, String(message.name), message.size as number, message.purpose === 'print' ? 'print' : 'save')
+      case 'file_chunk':
+        return files.chunk(request, message.index as number, String(message.data))
+      case 'file_done':
+        return files.done(request, message.chunks as number)
+    }
   }
 
   private connect(message: Message): void {
@@ -165,6 +201,26 @@ export class Bridge {
   sendConnectFailed(code: contract.ConnectFailedCode, message: string): boolean {
     if (!this.isReady) return false
     this.reply(contract.connectFailed(code, message))
+    return true
+  }
+
+  /** What became of a file transfer (D501). `false` when the page is not there any more. */
+  sendFileResult(request: string, outcome: contract.FileOutcome, details: Parameters<typeof contract.fileResult>[2] = {}): boolean {
+    if (!this.isReady) return false
+    this.reply(contract.fileResult(request, outcome, details))
+    return true
+  }
+
+  /** One piece of a file the page asked for, or the end of it (D501). */
+  sendFileChunk(request: string, index: number, data: string): boolean {
+    if (!this.isReady) return false
+    this.reply(contract.fileChunk(request, index, data))
+    return true
+  }
+
+  sendFileDone(request: string, chunks: number): boolean {
+    if (!this.isReady) return false
+    this.reply(contract.fileDone(request, chunks))
     return true
   }
 

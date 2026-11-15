@@ -52,4 +52,4 @@ if [ -n "$model" ]; then
 fi
 
 # The web app is the client of every app.
-exec python -m claudia_server --host 0.0.0.0 --port "${PORT:-8765}" --web /app/web --fonts /app/fonts --hyphenation /app/hyphenation "$@"
+exec python -m claudia_server --host 0.0.0.0 --port "${PORT:-8765}" --web /app/web --hyphenation /app/hyphenation "$@"

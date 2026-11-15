@@ -7,6 +7,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { Frame } from '~/lib/geometry'
 import { IMAGE_FILE_ACCEPT, MAX_IMAGE_BYTES, fileToBase64 } from '~/lib/images'
+import { chooseLocalFile } from '~/lib/local-files'
 import type { SlideSession } from '~/lib/slide-session'
 import { useI18n } from '~/lib/i18n'
 
@@ -40,12 +41,16 @@ function reset() {
 }
 onBeforeUnmount(reset)
 
+/** The computer's own file dialog: the input's in a browser tab, the shell's in a desktop window (D501). */
 function choose() {
-  fileInput.value?.click()
+  void chooseLocalFile(fileInput.value, take, (message) => (fileError.value = message))
 }
 
 function onFileChange(event: Event) {
-  const picked = (event.target as HTMLInputElement).files?.[0] ?? null
+  take((event.target as HTMLInputElement).files?.[0] ?? null)
+}
+
+function take(picked: File | null) {
   reset()
   fileError.value = ''
   if (!picked) return

@@ -13,7 +13,12 @@
     { "$ref": "#/$defs/error" },
     { "$ref": "#/$defs/connect" },
     { "$ref": "#/$defs/connect_failed" },
-    { "$ref": "#/$defs/servers" }
+    { "$ref": "#/$defs/servers" },
+    { "$ref": "#/$defs/pick_file" },
+    { "$ref": "#/$defs/save_file" },
+    { "$ref": "#/$defs/file_chunk" },
+    { "$ref": "#/$defs/file_done" },
+    { "$ref": "#/$defs/file_result" }
   ],
   "$defs": {
     "actionId": {
@@ -59,7 +64,7 @@
           }
         },
         "capabilities": {
-          "description": "What this shell offers. 'native-menu': the shell shows File, Edit, Tools and Help itself, the page should not draw its own menu bar. 'actions': the shell sends 'action' messages for its menu. 'connect': the shell connects to another server when the page sends 'connect' (the page does not navigate there itself: the shell keeps its view on one server's origin). 'servers': the shell keeps the list of servers and sends it as 'servers'; the page sends the list back when it changes.",
+          "description": "What this shell offers. 'native-menu': the shell shows File, Edit, Tools and Help itself, the page should not draw its own menu bar. 'actions': the shell sends 'action' messages for its menu. 'connect': the shell connects to another server when the page sends 'connect' (the page does not navigate there itself: the shell keeps its view on one server's origin). 'servers': the shell keeps the list of servers and sends it as 'servers'; the page sends the list back when it changes. 'files' (D501): the shell chooses files of this computer for the page ('pick_file') and saves the page's files there ('save_file'), with its own dialogs.",
           "type": "array",
           "items": { "$ref": "#/$defs/token" },
           "uniqueItems": true
@@ -170,6 +175,74 @@
       "properties": {
         "type": { "const": "servers" },
         "servers": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/serverEntry" } }
+      }
+    },
+    "fileRequest": {
+      "description": "The page's name for one file transfer, unique while it lasts; every message of the transfer carries it (D501).",
+      "$ref": "#/$defs/token"
+    },
+    "pick_file": {
+      "description": "Page to shell (D501): the person wants a file of this computer. The shell shows its Open dialog, offering files with these extensions, and answers 'file_result': 'picked' (then the file in 'file_chunk' messages and a 'file_done'), 'cancelled' or 'failed'. Only sent when the shell offers 'files'.",
+      "type": "object",
+      "required": ["type", "request", "accept"],
+      "properties": {
+        "type": { "const": "pick_file" },
+        "request": { "$ref": "#/$defs/fileRequest" },
+        "accept": {
+          "description": "Extensions without the dot, lower case; empty for any file.",
+          "type": "array",
+          "maxItems": 32,
+          "items": { "type": "string", "pattern": "^[a-z0-9]{1,16}$" }
+        },
+        "title": { "description": "The dialog's title.", "type": "string", "maxLength": 128 }
+      }
+    },
+    "save_file": {
+      "description": "Page to shell (D501, D502): a file of 'size' bytes follows in 'file_chunk' messages and a 'file_done'. With 'purpose' 'save' (the default) the shell asks where to save it, suggesting 'name', and answers 'file_result' 'saved' with the path, 'cancelled' or 'failed'. With 'print' it asks nothing: it opens the file in the computer's viewer for its kind (a PDF), from where it is printed, and answers 'opened'. Only sent when the shell offers 'files'.",
+      "type": "object",
+      "required": ["type", "request", "name", "size"],
+      "properties": {
+        "type": { "const": "save_file" },
+        "request": { "$ref": "#/$defs/fileRequest" },
+        "name": { "description": "The file's name, without a folder.", "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^[^/\\\\]+$" },
+        "size": { "type": "integer", "minimum": 0, "maximum": 104857600 },
+        "mime": { "type": "string", "maxLength": 128 },
+        "purpose": { "enum": ["save", "print"] }
+      }
+    },
+    "file_chunk": {
+      "description": "Either direction (D501): one piece of the file of a transfer, in order from 0, as base64 (at most 48 KiB, so that the message stays within 64 KiB).",
+      "type": "object",
+      "required": ["type", "request", "index", "data"],
+      "properties": {
+        "type": { "const": "file_chunk" },
+        "request": { "$ref": "#/$defs/fileRequest" },
+        "index": { "type": "integer", "minimum": 0 },
+        "data": { "type": "string", "maxLength": 49152, "pattern": "^[A-Za-z0-9+/]*={0,2}$" }
+      }
+    },
+    "file_done": {
+      "description": "Either direction (D501): every piece of the file of a transfer has been sent; 'chunks' says how many.",
+      "type": "object",
+      "required": ["type", "request", "chunks"],
+      "properties": {
+        "type": { "const": "file_done" },
+        "request": { "$ref": "#/$defs/fileRequest" },
+        "chunks": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "file_result": {
+      "description": "Shell to page (D501, D502): what became of a transfer. 'picked' comes before the pieces of the chosen file and names it ('name', 'size'); 'saved' and 'opened' give the 'path' it went to; 'cancelled' means the person closed the dialog; 'failed' has a 'message' fit to show to the person.",
+      "type": "object",
+      "required": ["type", "request", "outcome"],
+      "properties": {
+        "type": { "const": "file_result" },
+        "request": { "$ref": "#/$defs/fileRequest" },
+        "outcome": { "enum": ["picked", "saved", "opened", "cancelled", "failed"] },
+        "name": { "type": "string", "maxLength": 255 },
+        "size": { "type": "integer", "minimum": 0, "maximum": 104857600 },
+        "path": { "type": "string", "maxLength": 4096 },
+        "message": { "type": "string", "maxLength": 512 }
       }
     }
   }

@@ -13,6 +13,13 @@ export const SUPPORTED_VERSIONS: readonly number[] = [1]
 /** A message longer than this is refused unread. */
 export const MAX_MESSAGE_BYTES = 64 * 1024
 export const MAX_SERVER_LIST = 64
+/** The largest file a transfer carries (D501), and the most base64 one `file_chunk` carries (48 KiB). */
+export const MAX_FILE_BYTES = 100 * 1024 * 1024
+export const MAX_CHUNK_TEXT = 48 * 1024
+/** How many bytes go into one `file_chunk`: 36 KiB are 48 KiB of base64. */
+export const FILE_CHUNK_BYTES = 36 * 1024
+export const FILE_OUTCOMES = ['picked', 'saved', 'opened', 'cancelled', 'failed'] as const
+export type FileOutcome = (typeof FILE_OUTCOMES)[number]
 
 export const CONNECT_FAILED_CODES = [
   'bad_address',
@@ -39,6 +46,8 @@ const MAX_TOKEN = 32
 const MAX_TEXT = 512
 const MAX_ADDRESS = 255
 const MAX_LABEL = 128
+const EXTENSION = /^[a-z0-9]{1,16}$/
+const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/
 
 /** A message that cannot be accepted. `code` is one of the schema's `error` codes. */
 export class ContractError extends Error {
@@ -91,6 +100,12 @@ function version(message: Record<string, unknown>): void {
   if (!isInt(value) || value < 1) throw bad(`'${String(message.type)}' needs 'contract', a whole number from 1`)
 }
 
+function wholeNumber(message: Record<string, unknown>, key: string, most = Number.MAX_SAFE_INTEGER, required = true): void {
+  const value = message[key]
+  if (value === undefined && !required) return
+  if (!isInt(value) || value < 0 || value > most) throw bad(`'${key}' is a whole number from 0 to ${most}`)
+}
+
 type Check = (message: Record<string, unknown>) => void
 
 const CHECKS: Record<string, Check> = {
@@ -118,6 +133,7 @@ const CHECKS: Record<string, Check> = {
     if (locale !== undefined && locale !== null && !(typeof locale === 'string' && locale.length <= 35 && LOCALE.test(locale))) {
       throw bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
     }
+    if ('app' in message) token(message.app, "'app'")
   },
   action(message) {
     actionId(message.action)
@@ -161,6 +177,44 @@ const CHECKS: Record<string, Check> = {
       throw bad(`'servers' is a list of at most ${MAX_SERVER_LIST} servers`)
     }
     for (const entry of entries) checkServerEntry(entry)
+  },
+  pick_file(message) {
+    token(message.request, "'request'")
+    const accept = message.accept
+    if (!Array.isArray(accept) || accept.length > 32 || !accept.every((e) => typeof e === 'string' && EXTENSION.test(e))) {
+      throw bad("'accept' is a list of at most 32 extensions such as 'docx'")
+    }
+    text(message, 'title', MAX_LABEL)
+  },
+  save_file(message) {
+    token(message.request, "'request'")
+    const name = message.name
+    if (!(typeof name === 'string' && name.length >= 1 && name.length <= MAX_ADDRESS && !/[/\\]/.test(name))) {
+      throw bad("'name' is a file name of 1 to 255 characters, without a folder")
+    }
+    wholeNumber(message, 'size', MAX_FILE_BYTES)
+    text(message, 'mime', MAX_LABEL)
+    if ('purpose' in message && message.purpose !== 'save' && message.purpose !== 'print') throw bad("'purpose' is 'save' or 'print'")
+  },
+  file_chunk(message) {
+    token(message.request, "'request'")
+    wholeNumber(message, 'index')
+    const data = message.data
+    if (!(typeof data === 'string' && data.length <= MAX_CHUNK_TEXT && BASE64.test(data))) {
+      throw bad(`'data' is base64 of at most ${MAX_CHUNK_TEXT} characters`)
+    }
+  },
+  file_done(message) {
+    token(message.request, "'request'")
+    wholeNumber(message, 'chunks')
+  },
+  file_result(message) {
+    token(message.request, "'request'")
+    if (!FILE_OUTCOMES.includes(message.outcome as FileOutcome)) throw bad(`'outcome' is one of ${FILE_OUTCOMES.join(', ')}`)
+    text(message, 'name', MAX_ADDRESS)
+    wholeNumber(message, 'size', MAX_FILE_BYTES, false)
+    text(message, 'path', 4096)
+    text(message, 'message', MAX_TEXT)
   },
 }
 
@@ -224,6 +278,8 @@ export function welcome(options: {
   capabilities: readonly string[]
   contract?: number
   locale?: string
+  /** The app of this window (D444): the page then shows that app's documents only. */
+  app?: string
 }): Message {
   const built: Message = {
     type: 'welcome',
@@ -232,6 +288,7 @@ export function welcome(options: {
     capabilities: [...options.capabilities],
   }
   if (options.locale !== undefined) built.locale = options.locale
+  if (options.app !== undefined) built.app = options.app
   return built
 }
 
@@ -265,5 +322,34 @@ export type ServerEntry = { origin: string; label: string; custom: boolean; loca
 export function servers(entries: readonly ServerEntry[]): Message {
   const built: Message = { type: 'servers', servers: entries.map((entry) => ({ ...entry })) }
   CHECKS.servers?.(built)
+  return built
+}
+
+/** What became of a file transfer (D501, D502). */
+export function fileResult(
+  request: string,
+  outcome: FileOutcome,
+  details: { name?: string; size?: number; path?: string; message?: string } = {},
+): Message {
+  const built: Message = { type: 'file_result', request, outcome }
+  if (details.name !== undefined) built.name = details.name.slice(0, MAX_ADDRESS)
+  if (details.size !== undefined) built.size = details.size
+  if (details.path !== undefined) built.path = details.path.slice(0, 4096)
+  if (details.message !== undefined) built.message = details.message.slice(0, MAX_TEXT)
+  CHECKS.file_result?.(built)
+  return built
+}
+
+/** One piece of a file, as base64 (D501). */
+export function fileChunk(request: string, index: number, data: string): Message {
+  const built: Message = { type: 'file_chunk', request, index, data }
+  CHECKS.file_chunk?.(built)
+  return built
+}
+
+/** Every piece of a file has been sent (D501). */
+export function fileDone(request: string, chunks: number): Message {
+  const built: Message = { type: 'file_done', request, chunks }
+  CHECKS.file_done?.(built)
   return built
 }

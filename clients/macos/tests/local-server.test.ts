@@ -1,10 +1,12 @@
-// prepareServer() is tested the way clients/linux/tests/test_launch.py tests prepare_server(): a free loopback
-// port, the right command, the documents folder created, missing-python/missing-frontend explained with the fix.
-// (The real process start is in server.test.ts.)
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+// prepareServer() is tested the way clients/linux/tests/test_launch.py tests prepare_server(): the right folders made,
+// missing-python/missing-frontend explained with the fix. Since D445 it hands over the one local server of the suite
+// (desktop-server.ts), not started yet; which port, which command and what happens when two windows start at once are
+// tested in desktop-server.test.ts, and the real process start in server.test.ts.
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { DesktopServer } from '../src/desktop-server.js'
 import { SetupProblem, prepareServer } from '../src/local-server.js'
 
 describe('prepareServer', () => {
@@ -12,8 +14,8 @@ describe('prepareServer', () => {
   let home: string
 
   beforeEach(() => {
-    repo = mkdtempSync(join(tmpdir(), 'claudia-repo-'));
-    home = mkdtempSync(join(tmpdir(), 'claudia-home-'));
+    repo = mkdtempSync(join(tmpdir(), 'claudia-repo-'))
+    home = mkdtempSync(join(tmpdir(), 'claudia-home-'))
     const python = join(repo, '.venv', 'bin', 'python')
     mkdirSync(join(repo, '.venv', 'bin'), { recursive: true })
     writeFileSync(python, '#!/bin/sh\n')
@@ -28,23 +30,22 @@ describe('prepareServer', () => {
     rmSync(home, { recursive: true, force: true })
   })
 
-  it('builds a server for the app on a free loopback port, not started yet', async () => {
+  it('hands over the local server of the suite, not started yet', async () => {
     const server = await prepareServer('creates', { repo, home, env: {} })
-    expect(server.url.startsWith('http://127.0.0.1:')).toBe(true)
-    expect(server.running).toBe(false)
+    expect(server).toBeInstanceOf(DesktopServer)
+    expect(server.url).toBeNull()
   })
 
-  it('points the server at state/server.log, so a start-up failure is not silent', async () => {
+  it('points the server at state/server.log of the suite, so a start-up failure is not silent', async () => {
     const server = await prepareServer('creates', { repo, home, env: {} })
-    expect(server.logPath).toBe(
-      join(home, 'Library', 'Application Support', 'Claudia', 'creates', 'state', 'server.log'),
-    )
+    expect(server.logPath).toBe(join(home, 'Library', 'Application Support', 'Claudia', 'state', 'server.log'))
   })
 
-  it('the documents and state folders exist once prepared', async () => {
-    await prepareServer('creates', { repo, home, env: {} })
-    expect(() => mkdirSync(join(home, 'Library', 'Application Support', 'Claudia', 'creates', 'documents'))).toThrow() // already exists
-    expect(() => mkdirSync(join(home, 'Library', 'Application Support', 'Claudia', 'creates', 'state'))).toThrow()
+  it('the one folder of documents and the one of state exist once prepared, whichever app asks', async () => {
+    for (const app of ['composes', 'computes', 'creates']) await prepareServer(app, { repo, home, env: {} })
+    expect(existsSync(join(home, 'Library', 'Application Support', 'Claudia', 'documents'))).toBe(true)
+    expect(existsSync(join(home, 'Library', 'Application Support', 'Claudia', 'state'))).toBe(true)
+    expect(existsSync(join(home, 'Library', 'Application Support', 'Claudia', 'creates', 'documents'))).toBe(false) // no folder per app any more
   })
 
   it('a missing server python is explained with the way to fix it', async () => {

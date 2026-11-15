@@ -3,16 +3,19 @@
 // object (menu recorded, events, `extensions.dispatch` over a WebSocket to the core, broadcasts back) -- because that is
 // the one piece that needs a Mac. What this shows, per app: the shell page and the web app complete the handshake; the
 // web app's own menu bar gives way to the native one; a click in the native menu does what it says in the document;
-// the window's end stops the server it started. And once more with a server given on the command line (`--server`).
+// the window's end leaves the shared server (D445) running, to stop by itself once idle. And once more with a server given on the command line (`--server`).
 //
 //   (cd clients/macos && npm ci && npm run build) && cd web && npm run build && npm run e2e:macos-shell
 //
 // Needs: the built macOS client (clients/macos/apps/<app>/{index.html,shell/,ext/core.mjs}), the built web app
 // (web/.output/public), the Python environment (.venv). Not covered, and for a Mac: Neutralino itself, WKWebView, the
 // real menu.
+//
+// The twin of windows-shell.cjs; where the two differ: the folders the core uses (~/Library/Application Support), and
+// the server's interpreter, which is the checkout's .venv/bin/python here.
 const { chromium } = require('playwright')
 const { createRequire } = require('node:module')
-const { spawn } = require('node:child_process')
+const { execFileSync, spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const http = require('node:http')
@@ -21,6 +24,7 @@ const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
 const MACOS = path.join(ROOT, 'clients/macos')
+const PYTHON = path.join(ROOT, '.venv/bin/python')
 const SHOTS = process.env.SHOTS
 const APPS = (process.env.APPS || 'computes,composes,creates').split(',')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -79,7 +83,14 @@ async function openWindow(browser, app, server) {
     })
   })
   const args = [path.join(appDir, 'ext/core.mjs'), `--app=${app}`, ...(server ? [`--server=${server}`] : [])]
-  const core = spawn(process.execPath, args, { env: { PATH: process.env.PATH, HOME: home }, stdio: ['pipe', 'inherit', 'inherit'] })
+  const core = spawn(process.execPath, args, {
+    env: {
+      PATH: process.env.PATH,
+      HOME: home,
+      CLAUDIA_SERVER_PYTHON: PYTHON,
+    },
+    stdio: ['pipe', 'inherit', 'inherit'],
+  })
   const exited = new Promise((resolve) => core.once('exit', resolve))
   core.stdin.write(JSON.stringify({ nlPort: neutralino.address().port, nlToken: 'token', nlConnectToken: 'connect', nlExtensionId: 'de.claudiaoffice.core' }))
 
@@ -94,6 +105,7 @@ async function openWindow(browser, app, server) {
 
   return {
     page,
+    home,
     fromCore,
     /** The page of the web app inside the shell's frame, once it is there. */
     async frame() {
@@ -134,6 +146,14 @@ async function ready(url) {
     await sleep(200)
   }
   throw new Error('the server did not start: ' + url)
+}
+/** The shared server a window started outlives it (D445) and would idle for ten minutes: end it, by its own folder. */
+function stopSharedServer(home) {
+  try {
+    execFileSync('pkill', ['-f', `claudia_server.*${home}`], { stdio: 'ignore' })
+  } catch {
+    // none left, or no pkill on this machine: the server stops itself once idle
+  }
 }
 const down = async (url) => fetch(url + 'api/health', { signal: AbortSignal.timeout(2000) }).then(() => false, () => true)
 
@@ -179,6 +199,24 @@ async function checkWindow(window, app, label) {
   const front = await window.firstMenuJson()
   assert.ok(front.includes('Open…') && !front.includes('Save New Checkpoint'), `${label}: the front page has the short native menu`)
 
+  // D503: the front page's File menu does something the person sees
+  await frame.fill('input[name=document]', 'something typed')
+  await window.click('file.new', 'New')
+  await frame.waitForSelector('[data-testid=start-new].wanted', { timeout: 10000 }).catch(() => {
+    throw new Error(`${label}: File ▸ New on the front page did nothing visible`)
+  })
+  assert.equal(await frame.inputValue('input[name=document]'), '', `${label}: File ▸ New empties the name of the document`)
+  assert.equal(await frame.evaluate(() => document.activeElement?.getAttribute('name')), 'document', `${label}: File ▸ New puts the cursor into it`)
+  await window.click('file.open', 'Open…')
+  await frame.waitForFunction(() => document.activeElement?.getAttribute('name') === 'search', null, { timeout: 10000 }).catch(() => {
+    throw new Error(`${label}: File ▸ Open… on the front page did not go to the search field`)
+  })
+  // D501: Open a File… goes through the shell's own dialog. This machine has none to show, so the shell says so.
+  await window.click('file.open-file', 'Open a File…')
+  await frame.waitForSelector('.refusal:has-text("could not be shown")', { timeout: 20000 }).catch(() => {
+    throw new Error(`${label}: File ▸ Open a File… did not reach the shell's dialog; the console says:\n${window.page.consoleLines.join('\n')}`)
+  })
+
   await createDocument(frame, app, `e2e-${app}`)
   await frame.waitForFunction(() => document.querySelector('nav.menus')?.classList.contains('hidden'), null, { timeout: 15000 }).catch(() => {
     throw new Error(`${label}: the web app kept its own menu bar; the console says:\n${window.page.consoleLines.join('\n')}`)
@@ -213,12 +251,15 @@ async function checkWindow(window, app, label) {
         assert.match(origin, /^http:\/\/127\.0\.0\.1:\d+$/, 'its own server is on this computer, plain http')
         const code = await window.close()
         assert.equal(code, 0, `${app}: the core ended cleanly with the window`)
-        assert.ok(await down(origin + '/'), `${app}: the server the window started is stopped with it`)
-        console.log(`${app}: handshake, native menu, checkpoint dialog, server stopped with the window`)
+        // D445: the window's server is shared by every window; it is let go of, and stops by itself once idle
+        assert.equal(await down(origin + '/'), false, `${app}: the shared server is left running when the window ends`)
+        console.log(`${app}: handshake, native menu, checkpoint dialog, shared server left to stop by itself`)
       } catch (problem) {
         await shot(window.page, `${app}-failed`)
         await window.close().catch(() => {})
         throw problem
+      } finally {
+        stopSharedServer(window.home)
       }
     }
 
@@ -227,7 +268,7 @@ async function checkWindow(window, app, label) {
     const url = `http://127.0.0.1:${port}/`
     const data = fs.mkdtempSync(path.join(os.tmpdir(), 'claudia-e2e-macos-server-'))
     const server = spawn(
-      path.join(ROOT, '.venv/bin/python'),
+      PYTHON,
       ['-m', 'claudia_server', '--no-tls', '--port', String(port), '--dir', data, '--web', path.join(ROOT, 'web/.output/public'), '--model', 'claudia_computes:WorkbookModel'],
       { cwd: ROOT, stdio: 'ignore' },
     )

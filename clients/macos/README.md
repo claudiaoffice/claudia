@@ -10,7 +10,8 @@ claudia-computes  [--server URL] [--debug]
 claudia-creates   [--server URL] [--debug]
 ```
 
-Without `--server` the window starts the app's own server on this computer. With it, no server is started: the
+Without `--server` the window uses the local server of the three apps on this computer (D445), and starts it if none
+runs. With it, no server is started: the
 window connects to that one (`https://host[:port]`, a bare host means https, plain `http` only for this computer),
 after the same checks as the Linux client (D242): it answers, it is a Claudia server, it runs **this window's app**,
 and its HTTPS certificate is one this Mac trusts. A window shows servers of its own app only; the list of servers
@@ -41,9 +42,10 @@ earlier demo was the web app's own). So the window is built the other way round:
 * **The web app** needs one small thing: when it is framed (`web/app/lib/shell-bridge.ts`, `detectParentSink`) it posts to
   its parent window and hears only the parent, and only when that is a page on this computer's loopback.
 * **The native core** (`core.ts`, bundled to `ext/core.mjs`) is a Node process that Neutralino starts with the window
-  (an *extension*). It runs `connection.ts` (the checks), `connector.ts`/`servers.ts`/`settings.ts` (the list), and
-  `local-server.ts`/`server.ts` (the app's own server). When the window ends, so does the core, and it stops the
-  server: this is also what keeps a killed window from leaving a server behind (macOS has no `PR_SET_PDEATHSIG`).
+  (an *extension*). It runs `connection.ts` (the checks), `connector.ts`/`servers.ts`/`settings.ts` (the list),
+  `desktop-server.ts`/`local-server.ts`/`server.ts` (the local server of the three apps, D445) and `files.ts`/`dialogs.ts`
+  (the page's files, D501). When the window ends, so does the core: it lets go of the shared server, which stops by
+  itself once nothing is connected.
 * **The launcher** (`launch.ts`, `cli.ts`) finds the Neutralino binary, wraps it in a minimal `.app` (so macOS shows
   the app's name, see `app-bundle.ts`), puts the core's command into the app's `neutralino.config.json` for the run (the absolute `node`, `--use-system-ca`
   where Node knows the flag (22.15+), so HTTPS trusts what the Mac trusts, `--app`, `--server`; `core-command.ts`), runs
@@ -58,7 +60,9 @@ src/
   connection.ts       the checks before a server is shown                           connector.ts    connect, remember, newest request wins
   core.ts             the native core                                               core-entry.ts   the extension program (core-command.ts: its command)
   core-protocol.ts    page <-> core messages                                        extension.ts    the Neutralino extension link (WebSocket)
-  local-server.ts     the app's own server                                          server.ts       start, wait for, stop it
+  local-server.ts     the local server, put together                                server.ts       start, wait for, stop one server process
+  desktop-server.ts   the one server of the three apps (D445)                       files.ts        the page's files (D501, D502)
+  dialogs.ts          the Mac's panels, through osascript                           file-protocol.ts  page <-> core file messages
   shell-page.ts       the shell page's logic                                        shell-page-entry.ts  its wiring to the browser
   menu.ts / menu-actions.ts   the native menu from the shared manifest             app-bundle.ts   the minimal .app
   generated/          menu.<app>.json, from clients/linux's manifest.py
@@ -90,8 +94,11 @@ a command line that contains the folder; the launcher refuses a path with a spac
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: `web/.output/public`. If set, it is the only candidate: a wrong path is reported. |
 | `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `apps/<app>/bin/neutralino-mac_<arch>`, where `neu update` puts it. |
 
-Documents are in `~/Library/Application Support/Claudia/<app>/documents`; its `state/` folder has `server.log` (the
-server) and `shell.log` (the core); `~/Library/Application Support/Claudia/shell.json` holds the server lists.
+The three apps share one local server (D445, as on Windows): documents are in
+`~/Library/Application Support/Claudia/documents/<app>`, the server's state, `server.log` and `desktop-server.json` (its
+port) in `…/Claudia/state`; each app's `…/Claudia/<app>/state/shell.log` is its core's log;
+`~/Library/Application Support/Claudia/shell.json` holds the server lists. The server stops by itself ten minutes after
+its last window has closed.
 `--debug` prints where these are.
 
 ## Tests
@@ -126,14 +133,17 @@ real local servers for the checks. What a Linux run cannot show, and what the fi
    "not issued by an authority this computer trusts".
 4. **Cmd+C/V/X/Z in the web app** inside the frame (the Edit menu's Cocoa actions work on the focused field; spike 5:
    the shortcuts themselves did not fire, the menu items did).
-5. **Orphans**: the core ends with the window and stops the server, but a window killed with `kill -9` was not tried.
+5. **The shared server** (D445): the window lets go of it, and it stops by itself ten minutes later; a window killed
+   with `kill -9` was not tried.
+6. **The panels** (D501, D502): that NSOpenPanel and NSSavePanel, run by `osascript` in JavaScript for Automation, come
+   up in front of the window, and that `open` shows a PDF in Preview. The e2e script only shows that the request goes
+   from the page through the shell page to the core and back.
 
 ## Known gaps and follow-ups
 
 * **Self-signed certificates** (D245, trust by pin) are not built, for any desktop client yet: such a server is refused.
-* **`<input type="file">` does not open a file panel** in the macOS web view (as in the earlier demo). The old
-  workaround ran inside the page and cannot run in a cross-origin frame; it needs a contract message (`pick_file`).
-* **Links that open a new window, and `window.print()`** from the framed page are not handled by the shell yet.
+* **Links that open a new window** from the framed page are not handled by the shell yet. Files and printing go
+  through the contract (`pick_file`, `save_file`, D501, D502).
 * **The frame has no `sandbox`** attribute: untested on a Mac, so not guessed at. The framed page is cross-origin and
   cannot reach Neutralino; a sandbox would add a second line of defence.
 * **The shell page's status screens** (starting, connecting, cannot start) are plain text; no design has been agreed.

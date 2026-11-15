@@ -7,7 +7,7 @@
 //
 // What it hands to the window: the command that Neutralino runs as the core (core-command.ts), which names the
 // absolute path of the node that runs this launcher and carries, as arguments and not as environment, which app this
-// window is, which server it was given with --server (as a canonical origin; absent: the core starts its own) and
+// window is, which server it was given with --server (as a canonical origin; absent: the core uses the local server of the suite) and
 // `--use-system-ca` where Node knows it, so that HTTPS trusts what this Mac trusts. The launcher puts the command into
 // the app's neutralino.config.json for the run and the default back afterwards.
 
@@ -17,11 +17,11 @@ import { delimiter, dirname, join } from 'node:path'
 import { arch as hostArch, argv as processArgv, env as processEnv, execPath } from 'node:process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { ensureAppBundle } from './app-bundle.js'
-import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand } from './core-command.js'
+import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand, setInspector } from './core-command.js'
 import { parseCommand, splitAppArgument, type Options } from './cli.js'
 import { getIdentity, type AppIdentity } from './identity.js'
 import { SetupProblem } from './local-server.js'
-import { defaultRepo, stateDir, type Env } from './paths.js'
+import { defaultRepo, serverStateDir, stateDir, type Env } from './paths.js'
 
 export { SetupProblem }
 
@@ -113,6 +113,8 @@ export interface RunDeps {
   makeBundle?: (appDir: string, binary: string, identity: AppIdentity) => string
   /** Sets the core's command in the app's config (default: in neutralino.config.json). */
   setCommand?: (appDir: string, command: string) => void
+  /** Switches the window's web inspector on or off in the app's config (default: in neutralino.config.json). */
+  setInspector?: (appDir: string, enabled: boolean) => void
   out?: (line: string) => void
   err?: (line: string) => void
 }
@@ -160,18 +162,22 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
   const nodeBinary = deps.nodeBinary ?? execPath
   const environment = buildShellEnvironment(options, env, nodeBinary, supportsSystemCa)
   const setCommand = deps.setCommand ?? ((dir, command) => setCoreCommand(join(dir, 'neutralino.config.json'), command))
+  const inspector = deps.setInspector ?? ((dir, enabled) => setInspector(join(dir, 'neutralino.config.json'), enabled))
   try {
     setCommand(
       appDir,
       buildCoreCommand({ nodeBinary, systemCa: supportsSystemCa, app: options.app, server: options.server?.origin ?? null, debug: options.debug }),
     )
+    // The web inspector only for --debug: the checked-in config has it off (as on Windows, where Neutralino opens the
+    // DevTools window by itself when it is on).
+    inspector(appDir, options.debug)
   } catch (problem) {
     err(`Could not set up the core's command: ${(problem as Error).message}`)
     return 1
   }
   if (options.debug) {
     out(`app folder: ${appDir}`)
-    out(`logs: ${join(stateDir(options.app), 'shell.log')} and ${join(stateDir(options.app), 'server.log')}`)
+    out(`logs: ${join(stateDir(options.app), 'shell.log')} and ${join(serverStateDir(), 'server.log')}; the web inspector is on`)
   }
   const [shellBinary, ...shellArgs] = buildShellCommand(binary, appDir)
   try {
@@ -180,6 +186,7 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     // The checkout is left as it was found (the checked-in config holds the default command).
     try {
       setCommand(appDir, DEFAULT_COMMAND)
+      inspector(appDir, false)
     } catch (problem) {
       err(`Could not put the default core command back: ${(problem as Error).message}`)
     }

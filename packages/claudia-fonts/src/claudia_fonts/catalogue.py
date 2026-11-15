@@ -101,8 +101,8 @@ class Catalogue:
                     problems.append(Problem(path, str(error)))
                     continue
                 key = (font.family.casefold(), font.style.casefold())
-                if key in chosen:
-                    old = chosen[key]
+                old = chosen.get(key)
+                if old is not None and old.sha256 != font.sha256:  # the same file twice is nothing to report
                     problems.append(Problem(old.path, f"replaced by {font.path} (same family and style)"))
                 chosen[key] = font
         return cls(chosen.values(), problems, DEFAULT_SUBSTITUTIONS if substitutions is None else substitutions)

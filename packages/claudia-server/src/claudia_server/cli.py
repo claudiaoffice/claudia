@@ -61,6 +61,7 @@ from typing import Any
 from claudia_ai import DEFAULT_DEVICE, ModelError, ModelRunner, OpenVinoModel
 from claudia_core import DocumentModel
 from claudia_creates import ShapeLibrary
+from claudia_fonts import builtin_folder
 from claudia_render import RenderService, ToolRegistry, builtin_registry
 
 from . import __version__, redirect
@@ -157,9 +158,9 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         metavar="DIR",
-        help="font collections to hand to clients for layout and PDF export (/api/fonts): a collection folder or a "
-        "folder of them; repeatable. Default: STATE_DIR/fonts if it exists. "
-        "Fill one with python -m claudia_fonts fetch",
+        help="font collections to hand to clients for layout and PDF export (/api/fonts), besides the open fonts "
+        "every server has (D500): a collection folder or a folder of them; repeatable. Default: STATE_DIR/fonts if "
+        "it exists",
     )
     parser.add_argument(
         "--hyphenation",
@@ -364,12 +365,14 @@ def _shapes(args: argparse.Namespace, models: list[type[DocumentModel]]) -> Shap
 
 
 def _fonts(args: argparse.Namespace, state_dir: Path) -> FontService:
-    """The fonts this server hands to its clients: the folders of ``--fonts``, else ``STATE_DIR/fonts`` if there is
-    one. ``UsageError`` for a folder given on the command line that does not exist."""
+    """The fonts this server hands to its clients: the starter set that ships with ``claudia_fonts`` (D500, so that
+    printing never finds a server without fonts), then the folders of ``--fonts``, else ``STATE_DIR/fonts`` if there
+    is one; a font of the same family and style in those replaces the shipped one. ``UsageError`` for a folder given
+    on the command line that does not exist."""
     for folder in args.fonts:
         if not Path(folder).is_dir():
             raise UsageError(f"--fonts: {folder} is not a folder")
-    folders = [Path(f) for f in args.fonts] or [state_dir / "fonts"]
+    folders = [builtin_folder(), *([Path(f) for f in args.fonts] or [state_dir / "fonts"])]
     return FontService.from_folders(folders, state_dir / "webfonts")
 
 

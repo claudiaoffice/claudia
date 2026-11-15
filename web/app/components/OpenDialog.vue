@@ -5,6 +5,7 @@ import { appOfFileName, appOfServer, fetchDocsListing, filterListed, openSession
 import type { ImportPhase } from '~/lib/import-progress'
 import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, parseKey, rememberOpened, setInCollection, type MineEntry } from '~/lib/mine'
 import { holdPresence } from '~/lib/presence'
+import { chooseLocalFile } from '~/lib/local-files'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
@@ -231,11 +232,12 @@ function settle() {
 const shellRemovers: Array<() => void> = []
 
 /** The native menu's entries on the front page (sheet 11): File ▸ New, Open…, Open a File…, View ▸ Dark Mode and
- * Config ▸ App Language. The shell shows no others here. */
+ * Config ▸ App Language. The shell shows no others here. Each does something the person sees (D503): before, Open…
+ * and New only moved the focus, which a window whose page did not have the focus did not show at all. */
 function onShellAction(action: string, target?: string) {
   if (action === 'file.open-file') chooseFile()
-  else if (action === 'file.open') searchField.value?.focus()
-  else if (action === 'file.new') newStart.value?.focus()
+  else if (action === 'file.open') findDocument()
+  else if (action === 'file.new') startNew()
   else if (action === 'view.dark') {
     if (target === undefined || (target === 'on') !== dark()) toggleDark()
   } else if (action.startsWith('config.language.')) void chooseLanguage(action.slice('config.language.'.length))
@@ -408,6 +410,7 @@ async function enter(session: AnySession) {
 function choose(id: string, docAppName: string) {
   doc.value = id
   docApp.value = docAppName
+  startingNew.value = false
 }
 
 /** A document from Mine: here, it is chosen; on another place, that place's page opens with it chosen. */
@@ -505,9 +508,40 @@ watch(doc, (id) => {
   if (!listed.some((d) => d.app === docApp.value)) docApp.value = listed.length === 1 ? (listed[0]?.app ?? '') : (own ?? '')
 })
 
-/** Open a file… : the computer's own file dialog, every type Claudia opens already chosen (sheet 10, B2). */
+/** Open a file… : the computer's own file dialog, every type Claudia opens already chosen (sheet 10, B2): the input's
+ * in a browser tab, the shell's in a desktop window (D501), where the input's may not open at all. */
 function chooseFile() {
-  fileInput.value?.click()
+  void chooseLocalFile(fileInput.value, (file) => void takeFile(file), (message) => (refusal.value = message))
+}
+
+/** The page has the focus of its window (a desktop window's menu leaves it with the window, not with the page). */
+function focusPage() {
+  window.focus()
+}
+
+/** File ▸ Open… on the front page (D503): the list is where documents are opened from, so the search field over it
+ * gets the focus, its text selected, and comes into view. */
+function findDocument() {
+  focusPage()
+  const field = searchField.value
+  if (!field) return
+  field.scrollIntoView({ block: 'nearest' })
+  field.focus()
+  field.select()
+}
+
+/** File ▸ New on the front page (D503): a new document starts with its name, so the Document field is emptied and gets
+ * the focus, and the "start a new one" part of the form is marked until something else is done. */
+const startingNew = ref(false)
+function startNew() {
+  focusPage()
+  error.value = ''
+  doc.value = ''
+  startingNew.value = true
+  void nextTick(() => {
+    newStart.value?.scrollIntoView({ block: 'nearest' })
+    docField.value?.focus()
+  })
 }
 
 async function takeFile(file: File | undefined) {
@@ -633,6 +667,7 @@ function proceed() {
  */
 async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean }, onAnswered?: () => void) {
   error.value = ''
+  startingNew.value = false
   if (how === 'create') await listed
   if (how === 'create' && !newApp.value) {
     error.value = t('Choose Table, Text or Slides first.')
@@ -927,7 +962,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                 <input type="checkbox" :checked="isIn(c.name)" @change="toggleIn(c.name, ($event.target as HTMLInputElement).checked)" > {{ c.name }}
               </label>
             </fieldset>
-            <div class="new">
+            <div class="new" :class="{ wanted: startingNew }" data-testid="start-new">
               <h3>{{ t('Or start a new one') }}</h3>
               <div v-if="showsAll" class="kinds" role="radiogroup" :aria-label="t('Kind of the new document')">
                 <button
@@ -1393,6 +1428,12 @@ form {
   margin-top: 8px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
+}
+/* File ▸ New (D503): the part of the form that makes a new document, marked until the person does something else */
+.new.wanted {
+  border-top-color: var(--iris);
+  box-shadow: inset 3px 0 0 var(--iris);
+  padding-left: 10px;
 }
 h3 {
   font: 600 13px var(--font-ui);

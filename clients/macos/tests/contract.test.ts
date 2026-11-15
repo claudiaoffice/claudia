@@ -31,6 +31,15 @@ const VALID: Array<[string, unknown]> = [
   ['connect_failed', { type: 'connect_failed', code: 'wrong_app', message: 'That server runs another app.' }],
   ['servers', { type: 'servers', servers: [SERVER, { ...SERVER, origin: 'http://127.0.0.1:5000', local: true, custom: true }] }],
   ['no servers', { type: 'servers', servers: [] }],
+  ['pick_file (D501)', { type: 'pick_file', request: 'f1-abc', accept: ['docx', 'odt'], title: 'Open a File' }],
+  ['pick_file for any file', { type: 'pick_file', request: 'f1', accept: [] }],
+  ['save_file', { type: 'save_file', request: 'f2', name: 'Budget 2027.xlsx', size: 1234, mime: 'application/vnd.ms-excel' }],
+  ['save_file to print (D502)', { type: 'save_file', request: 'f3', name: 'pages.pdf', size: 0, purpose: 'print' }],
+  ['file_chunk', { type: 'file_chunk', request: 'f2', index: 0, data: 'aGVsbG8=' }],
+  ['file_done', { type: 'file_done', request: 'f2', chunks: 1 }],
+  ['file_result picked', { type: 'file_result', request: 'f1', outcome: 'picked', name: 'a.docx', size: 5 }],
+  ['file_result saved', { type: 'file_result', request: 'f2', outcome: 'saved', path: '/Users/ann/Documents/Budget 2027.xlsx' }],
+  ['file_result failed', { type: 'file_result', request: 'f2', outcome: 'failed', message: 'The disk is full.' }],
 ]
 
 const INVALID: Array<[string, unknown]> = [
@@ -43,6 +52,7 @@ const INVALID: Array<[string, unknown]> = [
   ['welcome with another platform', { type: 'welcome', contract: 1, shell: { ...SHELL, platform: 'beos' }, capabilities: [] }],
   ['welcome with a doubled capability', { type: 'welcome', contract: 1, shell: SHELL, capabilities: ['connect', 'connect'] }],
   ['welcome with a capability that is not a word', { type: 'welcome', contract: 1, shell: SHELL, capabilities: ['Native Menu'] }],
+  ['welcome with an app that is not a word', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], app: 'Creates It' }],
   ['welcome with a bad locale', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], locale: 'de_DE' }],
   ['action without a name', { type: 'action' }],
   ['action that is not namespaced', { type: 'action', action: 'save' }],
@@ -62,6 +72,18 @@ const INVALID: Array<[string, unknown]> = [
   ['a server without an origin', { type: 'servers', servers: [{ label: 'A', custom: false }] }],
   ['a server whose custom is text', { type: 'servers', servers: [{ ...SERVER, custom: 'yes' }] }],
   ['too many servers', { type: 'servers', servers: Array.from({ length: 65 }, () => SERVER) }],
+  ['pick_file without a request', { type: 'pick_file', accept: [] }],
+  ['pick_file with a dotted extension', { type: 'pick_file', request: 'f1', accept: ['.docx'] }],
+  ['pick_file with too many extensions', { type: 'pick_file', request: 'f1', accept: Array.from({ length: 33 }, () => 'a') }],
+  ['save_file with a folder in the name', { type: 'save_file', request: 'f2', name: '../etc/passwd', size: 1 }],
+  ['save_file with a backslash in the name', { type: 'save_file', request: 'f2', name: 'a\\b.txt', size: 1 }],
+  ['save_file that is too large', { type: 'save_file', request: 'f2', name: 'a', size: 104857601 }],
+  ['save_file with another purpose', { type: 'save_file', request: 'f2', name: 'a', size: 1, purpose: 'mail' }],
+  ['file_chunk that is not base64', { type: 'file_chunk', request: 'f2', index: 0, data: 'not base64!' }],
+  ['file_chunk that is too large', { type: 'file_chunk', request: 'f2', index: 0, data: 'A'.repeat(49153) }],
+  ['file_chunk with a negative index', { type: 'file_chunk', request: 'f2', index: -1, data: '' }],
+  ['file_done without a count', { type: 'file_done', request: 'f2' }],
+  ['file_result with an unknown outcome', { type: 'file_result', request: 'f2', outcome: 'lost' }],
   ['a type nobody knows', { type: 'dance' }],
   ['no type', { contract: 1 }],
 ]
@@ -124,6 +146,7 @@ describe('what the shell builds passes the schema', () => {
     const built = [
       contract.welcome({ shell: SHELL, capabilities: ['native-menu', 'actions'], locale: 'de' }),
       contract.welcome({ shell: SHELL, capabilities: [] }),
+      contract.welcome({ shell: SHELL, capabilities: [], app: 'creates' }), // D444
       contract.action('file.new'),
       contract.action('view.panel', 'on'),
       contract.error('bad_message', 'x'),
@@ -131,6 +154,11 @@ describe('what the shell builds passes the schema', () => {
       contract.errorFor(new contract.ContractError('bad_json', 'x')),
       contract.connectFailed('unreachable', 'Could not reach a.example.'),
       contract.servers([SERVER]),
+      contract.fileResult('f1', 'picked', { name: 'a.docx', size: 3 }),
+      contract.fileResult('f2', 'saved', { path: '/Users/ann/a.docx' }),
+      contract.fileResult('f2', 'failed', { message: 'x'.repeat(2000) }),
+      contract.fileChunk('f1', 0, 'aGk='),
+      contract.fileDone('f1', 1),
     ]
     for (const message of built) expect(validate(message), JSON.stringify(message)).toBe(true)
   })

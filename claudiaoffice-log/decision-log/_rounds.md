@@ -394,3 +394,15 @@ library.
 Decisions: D1001 (the shared preview and its three added controls); D1002 (fit to width); D1003 (the print area is a
 named range); D1004 (what is kept per sheet and per workbook); D1005 (automatic cuts only); D1006 (the footer); D1007
 (purpose tints); D1008 (charts and chart tabs); D1009 (the paginator in the layout library); D1010 (the print setup on the wire and the bar's choices)
+
+## The three desktop clients (branch `clients`, 2026-11-15)
+
+The owner listed what was wrong in all three desktop clients: the macOS client still started one server per app (D445
+was built for Windows only; Linux turned out to need it too, and the owner said to do all three); the front page's File
+menu did nothing; on macOS "Open a File…" did nothing; printing stopped with "fonts are missing on the server, the
+administrator should install them"; an export went somewhere without a word. He chose to ship the starter fonts with
+every server. The Windows client's own branch `win-client` was already on main in content.
+
+Decisions: D500 (the starter fonts ship with every server); D501 (files through the shells' own dialogs; supersedes
+D216); D502 (proposal: Print… in a window opens the PDF viewer); D503 (proposal: what New and Open… do on the front page)
+

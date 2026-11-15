@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- Every server has the starter set of open fonts (D500): the copy shipped with `claudia_fonts` is read first, the
+  folders of `--fonts` (or `STATE_DIR/fonts`) after it, and win for the same family and style. A server started with
+  no fonts (the desktop apps' local server) can print. The Docker image no longer fetches the set.
+
 ### Fixed
 - On Windows the built web app's `_nuxt/` files were revalidated on every load instead of kept for good: Starlette
   hands the path over with backslashes there, and the rule looked for a slash.

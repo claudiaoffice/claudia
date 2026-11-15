@@ -1,10 +1,12 @@
-"""The local server that the shell starts for its window (E0.2): start, wait for it, stop, never leave it behind.
+"""The mechanics of one local server process (E0.2): start it, wait for it, stop one that did not come up.
 
 The shell shows the web frontend served by a Claudia server on this computer's loopback address. The server is a
 separate process on its own interpreter (3.14); the shell runs on the distribution's Python and must never ask for a
 newer one. Nothing here imports GTK.
 
-Three rules keep the server from outliving the window:
+Since D445 the three desktop apps share one server that outlives its windows and stops by itself
+(``desktop_server``); it is started with ``outlives_shell=True``. A server started without it is tied to the shell, as
+before, by three rules:
 
 * it is started in its own process group, and :meth:`LocalServer.stop` ends the whole group (a worker that the server
   started is not left behind);
@@ -51,7 +53,14 @@ _LAUNCH = (
 
 
 class ServerStartError(RuntimeError):
-    """The server did not come up. The message says why and quotes the end of what the server printed."""
+    """The server did not come up. The message says why and quotes the end of what the server printed.
+
+    ``exited`` is true when the process ended by itself at start-up (a port or a folder that another server holds, a
+    crash): then another server may have won, and a caller that shares the server (``desktop_server``) looks for it."""
+
+    def __init__(self, message: str, *, exited: bool = False) -> None:
+        super().__init__(message)
+        self.exited = exited
 
 
 def free_port(host: str = LOOPBACK) -> int:
@@ -74,9 +83,9 @@ def find_server_python(*, repo: Path | None = None) -> str | None:
     return str(candidate) if candidate.is_file() and os.access(candidate, os.X_OK) else None
 
 
-def server_command(python: str, *, model: str, port: int, documents: Path, web: Path, state: Path) -> list[str]:
-    """The command line of a server for one person on this computer, hosting the document ``model`` (``module:Class``,
-    ``AppIdentity.model``).
+def server_command(python: str, *, port: int, documents: Path, web: Path, state: Path, idle_seconds: int) -> list[str]:
+    """The command line of the desktop server on this computer (D445): all three apps (no ``--model``; each app's
+    documents go to ``DIR/<app>``, D431), stopping by itself once nothing has used it for ``idle_seconds`` (D434).
 
     It listens on the loopback address only, so the connection is plain (as in ``start.sh``); it serves the bundled web
     frontend itself, so the page and its WebSocket have the same origin and no ``--allow-origin`` is needed.
@@ -85,8 +94,6 @@ def server_command(python: str, *, model: str, port: int, documents: Path, web: 
         python,
         "-m",
         "claudia_server",
-        "--model",
-        model,
         "--host",
         LOOPBACK,
         "--port",
@@ -98,6 +105,8 @@ def server_command(python: str, *, model: str, port: int, documents: Path, web: 
         str(state),
         "--web",
         str(web),
+        "--exit-when-idle",
+        str(idle_seconds),
     ]
 
 
@@ -111,12 +120,15 @@ class LocalServer:
         url: str,
         log: Path | None = None,
         startup_timeout: float = 30.0,
+        outlives_shell: bool = False,
     ) -> None:
         self.url = url
         """Where the server will answer, for example ``http://127.0.0.1:41233``."""
         self._command = list(command)
         self._log = log
         self._timeout = startup_timeout
+        self._outlives_shell = outlives_shell
+        self._log_from = 0
         self._process: subprocess.Popen[bytes] | None = None
         self._spawned_at = 0.0
         self._ready = False
@@ -145,9 +157,12 @@ class LocalServer:
             os.close(handle)
             self._log = Path(name)
         self._log.parent.mkdir(parents=True, exist_ok=True)
+        # The log may be shared by every start (the desktop server's is): an error quotes only what this start wrote.
+        self._log_from = self._log.stat().st_size if self._log.exists() else 0
+        tied = [sys.executable, "-I", "-c", _LAUNCH, str(os.getpid())]  # asks for the death signal first
         with self._log.open("ab") as output:
             self._process = subprocess.Popen(
-                [sys.executable, "-I", "-c", _LAUNCH, str(os.getpid()), *self._command],
+                [*([] if self._outlives_shell else tied), *self._command],
                 stdin=subprocess.DEVNULL,
                 stdout=output,
                 stderr=subprocess.STDOUT,
@@ -170,7 +185,8 @@ class LocalServer:
         if code is not None:
             self.stop()
             raise ServerStartError(
-                _("The server stopped at start-up (exit code {code}).").format(code=code) + self._what_it_said()
+                _("The server stopped at start-up (exit code {code}).").format(code=code) + self._what_it_said(),
+                exited=True,
             )
         if self._answers():
             self._ready = True
@@ -225,7 +241,9 @@ class LocalServer:
     def _what_it_said(self) -> str:
         if self._log is None or not self._log.exists():
             return ""
-        tail = self._log.read_text(encoding="utf-8", errors="replace")[-_LOG_TAIL:].strip()
+        with self._log.open("rb") as written:
+            written.seek(self._log_from)
+            tail = written.read().decode("utf-8", errors="replace")[-_LOG_TAIL:].strip()
         if not tail:
             return ""
         return "\n" + _("--- What the server printed ({log}) ---").format(log=self._log) + f"\n{tail}"

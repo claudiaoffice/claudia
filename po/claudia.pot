@@ -41,15 +41,15 @@ msgstr ""
 msgid "+ Add administrator…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:742
+#: web/app/components/OpenDialog.vue:777
 msgid "+ Connect to a server…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:772
+#: web/app/components/OpenDialog.vue:807
 msgid "+ New collection"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/server.py:231
+#: clients/linux/src/claudia_shell_gtk/server.py:249
 msgid "--- What the server printed ({log}) ---"
 msgstr ""
 
@@ -173,6 +173,10 @@ msgstr ""
 msgid "A Claudia document goes into a place as it is, still sealed, and is opened with a name and password it already knows."
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:436
+msgid "A Claudia server of another version ({running}, this app belongs to {own}) is running on this computer (port {port})."
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A Roman numeral as a number (capitals or not; a leading minus sign is kept)."
 msgstr ""
@@ -217,7 +221,7 @@ msgstr ""
 msgid "A name like this exists already and will point here."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:946
+#: web/app/components/OpenDialog.vue:981
 msgid "A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit)."
 msgstr ""
 
@@ -241,7 +245,7 @@ msgstr ""
 msgid "A number raised to a power (the same as the operator ^)."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:263
+#: web/app/components/PrintPreview.vue:281
 msgid "A picture is printed without some of it: {reason}."
 msgstr ""
 
@@ -289,7 +293,7 @@ msgstr ""
 msgid "A whole number as text in another base (2 to 36), padded with zeros to a minimum length."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:903
+#: web/app/components/OpenDialog.vue:938
 msgid "ABCD-EFGH-…"
 msgstr ""
 
@@ -421,6 +425,10 @@ msgstr ""
 msgid "All combinations"
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/window.py:117
+msgid "All files"
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:45
 msgid "All four sides"
 msgstr ""
@@ -445,7 +453,7 @@ msgstr ""
 msgid "An angle in radians as degrees."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:264
+#: web/app/components/PrintPreview.vue:282
 msgid "An object cannot be printed: {reason}."
 msgstr ""
 
@@ -541,7 +549,7 @@ msgstr ""
 msgid "Average {value}"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:913
+#: web/app/components/OpenDialog.vue:948
 msgid "Back"
 msgstr ""
 
@@ -565,7 +573,7 @@ msgstr ""
 msgid "Back to the simple field"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:277
+#: web/app/components/PrintPreview.vue:295
 msgid "Back to {place} (Esc)"
 msgstr ""
 
@@ -645,7 +653,7 @@ msgstr ""
 msgid "By content: numbers right, text left"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/launch.py:41
+#: clients/linux/src/claudia_shell_gtk/launch.py:46
 msgid "CLAUDIA_WEB_DIR is set to {wrong}, but there is no built frontend (index.html) in it."
 msgstr ""
 
@@ -669,7 +677,7 @@ msgstr ""
 msgid "Calculation step"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/ExportDialog.vue:39 web/app/components/ExportFormatDialog.vue:60 web/app/components/ImageImportDialog.vue:102 web/app/components/ImportDialog.vue:129 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:747 web/app/components/OpenDialog.vue:777 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:99 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:129 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:782 web/app/components/OpenDialog.vue:812 web/app/components/PromptDialog.vue:30 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr ""
 
@@ -765,15 +773,15 @@ msgstr ""
 msgid "Checkpoint saved."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:638
+#: web/app/components/OpenDialog.vue:673
 msgid "Choose Table, Text or Slides first."
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:91 web/app/components/SheetImageImportDialog.vue:88
+#: web/app/components/ImageImportDialog.vue:96 web/app/components/SheetImageImportDialog.vue:93
 msgid "Choose a different file…"
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:91 web/app/components/SheetImageImportDialog.vue:88
+#: web/app/components/ImageImportDialog.vue:96 web/app/components/SheetImageImportDialog.vue:93
 msgid "Choose a file…"
 msgstr ""
 
@@ -789,7 +797,7 @@ msgstr ""
 msgid "Choose somebody…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:142
+#: web/app/components/OpenDialog.vue:143
 msgid "Claudia cannot open this file."
 msgstr ""
 
@@ -801,7 +809,7 @@ msgstr ""
 msgid "Claudia's Linux client needs GTK 4, libadwaita 1.5 or newer and WebKitGTK 6.0 with their Python bindings, installed by your distribution:\n  Debian/Ubuntu: sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-webkit-6.0\n  Fedora:        sudo dnf install python3-gobject gtk4 libadwaita webkitgtk6.0\nRun it with the system Python (/usr/bin/python3), not one from a virtual environment without system packages."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/launch.py:30
+#: clients/linux/src/claudia_shell_gtk/launch.py:35
 msgid "Claudia's server needs Python 3.14, and none was found.\nSet CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed (in a checkout: run 'uv sync' and the interpreter is .venv/bin/python)."
 msgstr ""
 
@@ -853,11 +861,11 @@ msgstr ""
 msgid "Close Replace"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:752
+#: web/app/components/OpenDialog.vue:787
 msgid "Collections"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:822 web/app/components/OpenDialog.vue:823 web/app/components/OpenDialog.vue:879 web/app/components/OpenDialog.vue:880
+#: web/app/components/OpenDialog.vue:857 web/app/components/OpenDialog.vue:858 web/app/components/OpenDialog.vue:914 web/app/components/OpenDialog.vue:915
 msgid "Collections of {id}…"
 msgstr ""
 
@@ -925,11 +933,11 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:242
+#: clients/linux/src/claudia_shell_gtk/window.py:329
 msgid "Connecting to {address}…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:750 web/app/lib/connection.ts:32
+#: web/app/components/OpenDialog.vue:785 web/app/lib/connection.ts:32
 msgid "Connecting…"
 msgstr ""
 
@@ -941,7 +949,7 @@ msgstr ""
 msgid "Connection to {label}: {word}. Show details."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:287
+#: web/app/components/PrintPreview.vue:305
 msgid "Contents"
 msgstr ""
 
@@ -985,11 +993,11 @@ msgstr ""
 msgid "Copy the selection to the clipboard"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:248
+#: clients/linux/src/claudia_shell_gtk/window.py:335
 msgid "Could not connect"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:681
+#: web/app/components/OpenDialog.vue:716
 msgid "Could not connect."
 msgstr ""
 
@@ -1017,7 +1025,7 @@ msgstr ""
 msgid "Create administrator"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:945
+#: web/app/components/OpenDialog.vue:980
 msgid "Create document"
 msgstr ""
 
@@ -1061,7 +1069,7 @@ msgstr ""
 msgid "Current slide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:300
+#: web/app/components/PrintPreview.vue:318
 msgid "Custom…"
 msgstr ""
 
@@ -1097,7 +1105,7 @@ msgstr ""
 msgid "Decorative: a screen reader skips it"
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:99 web/app/components/ObjectDescriptionDialog.vue:60 web/app/components/SheetImageImportDialog.vue:96
+#: web/app/components/ImageImportDialog.vue:104 web/app/components/ObjectDescriptionDialog.vue:60 web/app/components/SheetImageImportDialog.vue:101
 msgid "Decorative: only for looks, a screen reader skips it"
 msgstr ""
 
@@ -1161,7 +1169,7 @@ msgstr ""
 msgid "Describe…"
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:98 web/app/components/ObjectDescriptionDialog.vue:46 web/app/components/SheetImageImportDialog.vue:95
+#: web/app/components/ImageImportDialog.vue:103 web/app/components/ObjectDescriptionDialog.vue:46 web/app/components/SheetImageImportDialog.vue:100
 msgid "Description (read aloud to someone who cannot see it)"
 msgstr ""
 
@@ -1213,7 +1221,7 @@ msgstr ""
 msgid "Do your last undone step again"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:900
+#: web/app/components/OpenDialog.vue:935
 msgid "Document"
 msgstr ""
 
@@ -1225,7 +1233,7 @@ msgstr ""
 msgid "Documents"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue:39 web/app/components/AssignOwnerDialog.vue:62 web/app/components/ExportDialog.vue:39 web/app/components/ExportFormatDialog.vue:60 web/app/components/PaletteDialog.vue:143 web/app/components/ShareDialog.vue:51
+#: web/app/components/AcceptOwnershipDialog.vue:39 web/app/components/AssignOwnerDialog.vue:62 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/PaletteDialog.vue:143 web/app/components/ShareDialog.vue:51
 msgid "Done"
 msgstr ""
 
@@ -1245,7 +1253,7 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:326
+#: web/app/components/PrintPreview.vue:344
 msgid "Download PDF"
 msgstr ""
 
@@ -1361,7 +1369,7 @@ msgstr ""
 msgid "Excel workbook (.xlsx)"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:130
+#: web/app/components/OpenDialog.vue:131
 msgid "Excel, OpenDocument or Claudia tables, or drop one anywhere on this page."
 msgstr ""
 
@@ -1369,15 +1377,15 @@ msgstr ""
 msgid "Exponential"
 msgstr ""
 
-#: web/app/components/ExportDialog.vue:38 web/app/components/ExportFormatDialog.vue:59
+#: web/app/components/ExportDialog.vue:52 web/app/components/ExportFormatDialog.vue:74
 msgid "Export"
 msgstr ""
 
-#: web/app/components/ExportDialog.vue:32 web/app/components/ExportFormatDialog.vue:48
+#: web/app/components/ExportDialog.vue:44 web/app/components/ExportFormatDialog.vue:61
 msgid "Export this document"
 msgstr ""
 
-#: web/app/components/ExportDialog.vue:36 web/app/components/ExportFormatDialog.vue:57
+#: web/app/components/ExportDialog.vue:49 web/app/components/ExportFormatDialog.vue:71
 msgid "Exported."
 msgstr ""
 
@@ -1401,11 +1409,11 @@ msgstr ""
 msgid "Fill"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:646
+#: web/app/components/OpenDialog.vue:681
 msgid "Fill in the document, your name and your password."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:645
+#: web/app/components/OpenDialog.vue:680
 msgid "Fill in the document, your name, the recovery key and a new password."
 msgstr ""
 
@@ -1417,7 +1425,7 @@ msgstr ""
 msgid "Fill in your name and password."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:774
+#: web/app/components/OpenDialog.vue:809
 msgid "Finance"
 msgstr ""
 
@@ -1477,7 +1485,7 @@ msgstr ""
 msgid "First row is a header"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:338
+#: web/app/components/PrintPreview.vue:357
 msgid "Fit the width"
 msgstr ""
 
@@ -1489,7 +1497,7 @@ msgstr ""
 msgid "Fit to width"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:189
+#: web/app/components/PrintPreview.vue:191
 msgid "Fit width"
 msgstr ""
 
@@ -1589,7 +1597,7 @@ msgstr ""
 msgid "Gamma"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:912
+#: web/app/components/OpenDialog.vue:947
 msgid "Get back in"
 msgstr ""
 
@@ -1597,7 +1605,7 @@ msgstr ""
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:746
+#: web/app/components/OpenDialog.vue:781
 msgid "Go"
 msgstr ""
 
@@ -1677,7 +1685,7 @@ msgstr ""
 msgid "Hand {doc} over to somebody who already edits it. You will become an editor; they become the owner once they accept — confirm it is you with your own password."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:282
+#: web/app/components/PrintPreview.vue:300
 msgid "Handouts"
 msgstr ""
 
@@ -1725,7 +1733,7 @@ msgstr ""
 msgid "How Do I…?"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:292
+#: web/app/components/PrintPreview.vue:310
 msgid "How big the cells are printed"
 msgstr ""
 
@@ -1773,7 +1781,7 @@ msgstr ""
 msgid "How many positions meet all the criteria: pairs of a range and its criterion, all of the same shape."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:279
+#: web/app/components/PrintPreview.vue:297
 msgid "How many slides go on a page"
 msgstr ""
 
@@ -1805,7 +1813,7 @@ msgstr ""
 msgid "Hyphenate"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:923
+#: web/app/components/OpenDialog.vue:958
 msgid "I forgot my password"
 msgstr ""
 
@@ -1849,7 +1857,7 @@ msgstr ""
 msgid "In an Excel file"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:925
+#: web/app/components/OpenDialog.vue:960
 msgid "In collections"
 msgstr ""
 
@@ -1857,7 +1865,7 @@ msgstr ""
 msgid "In this document now:"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:805
+#: web/app/components/OpenDialog.vue:840
 msgid "In {name}"
 msgstr ""
 
@@ -1885,7 +1893,7 @@ msgstr ""
 msgid "Input {n}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:101 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/SheetImageImportDialog.vue:98 web/app/components/TextWorkspace.vue:237
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:106 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/SheetImageImportDialog.vue:103 web/app/components/TextWorkspace.vue:237
 msgid "Insert"
 msgstr ""
 
@@ -1945,7 +1953,7 @@ msgstr ""
 msgid "Insert chart"
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:87 web/app/components/SheetImageImportDialog.vue:84
+#: web/app/components/ImageImportDialog.vue:92 web/app/components/SheetImageImportDialog.vue:89
 msgid "Insert image"
 msgstr ""
 
@@ -1957,7 +1965,7 @@ msgstr ""
 msgid "Insert the clipboard without formatting"
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:101 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/SheetImageImportDialog.vue:98
+#: web/app/components/ImageImportDialog.vue:106 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/SheetImageImportDialog.vue:103
 msgid "Inserting…"
 msgstr ""
 
@@ -1971,6 +1979,10 @@ msgstr ""
 
 #: web/app/lib/search.ts:509
 msgid "It is not run, so nothing is found or replaced."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:419
+msgid "It stops by itself ten minutes after its last window has closed. Or end its python process (System Monitor). Then start again."
 msgstr ""
 
 #: web/app/components/StyleSpec.vue:166
@@ -2021,7 +2033,7 @@ msgstr ""
 msgid "Kept parts, click to insert:"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:932
+#: web/app/components/OpenDialog.vue:967
 msgid "Kind of the new document"
 msgstr ""
 
@@ -2029,15 +2041,15 @@ msgstr ""
 msgid "Label"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:310
+#: web/app/components/PrintPreview.vue:328
 msgid "Landscape"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:318
+#: web/app/components/PrintPreview.vue:336
 msgid "Language"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:337 web/app/components/StyleSizeField.vue:28 web/app/components/StyleSizeField.vue:28
+#: web/app/components/PrintPreview.vue:356 web/app/components/StyleSizeField.vue:28 web/app/components/StyleSizeField.vue:28
 msgid "Larger"
 msgstr ""
 
@@ -2049,11 +2061,11 @@ msgstr ""
 msgid "Last changed by {by} · {when}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:341
+#: web/app/components/PrintPreview.vue:360
 msgid "Laying out the pages…"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:279
+#: web/app/components/PrintPreview.vue:297
 msgid "Layout"
 msgstr ""
 
@@ -2149,7 +2161,7 @@ msgstr ""
 msgid "Made from what you typed. Your own pattern replaces it."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:776
+#: web/app/components/OpenDialog.vue:811
 msgid "Make"
 msgstr ""
 
@@ -2181,11 +2193,11 @@ msgstr ""
 msgid "Manage this server…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:731 web/app/components/OpenDialog.vue:731
+#: web/app/components/OpenDialog.vue:766 web/app/components/OpenDialog.vue:766
 msgid "Manage {server}…"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:312
+#: web/app/components/PrintPreview.vue:330
 msgid "Margins"
 msgstr ""
 
@@ -2221,11 +2233,11 @@ msgstr ""
 msgid "Message everyone, or @ai …"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:780
+#: web/app/components/OpenDialog.vue:815
 msgid "Mine and the collections are kept in this browser."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:805
+#: web/app/components/OpenDialog.vue:840
 msgid "Mine · opened before"
 msgstr ""
 
@@ -2273,11 +2285,11 @@ msgstr ""
 msgid "Multiplies the ranges cell by cell (they must have the same shape) and adds up the products."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:705
+#: web/app/components/OpenDialog.vue:740
 msgid "My places"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:704
+#: web/app/components/OpenDialog.vue:739
 msgid "My places and collections"
 msgstr ""
 
@@ -2293,7 +2305,7 @@ msgstr ""
 msgid "Name it"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:774
+#: web/app/components/OpenDialog.vue:809
 msgid "Name of the collection"
 msgstr ""
 
@@ -2337,11 +2349,11 @@ msgstr ""
 msgid "New Slide"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:850 web/app/components/OpenDialog.vue:891
+#: web/app/components/OpenDialog.vue:885 web/app/components/OpenDialog.vue:926
 msgid "New collection"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:850 web/app/components/OpenDialog.vue:891
+#: web/app/components/OpenDialog.vue:885 web/app/components/OpenDialog.vue:926
 msgid "New collection…"
 msgstr ""
 
@@ -2353,7 +2365,7 @@ msgstr ""
 msgid "New owner"
 msgstr ""
 
-#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:906
+#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:941
 msgid "New password"
 msgstr ""
 
@@ -2461,7 +2473,7 @@ msgstr ""
 msgid "Not finding it? Say {mention} in the chat."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:259
+#: web/app/components/PrintPreview.vue:277
 msgid "Not hyphenated: {reason}."
 msgstr ""
 
@@ -2469,7 +2481,7 @@ msgstr ""
 msgid "Not now"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:320
+#: web/app/components/PrintPreview.vue:338
 msgid "Not set"
 msgstr ""
 
@@ -2481,7 +2493,7 @@ msgstr ""
 msgid "Nothing has changed since the last checkpoint."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:807
+#: web/app/components/OpenDialog.vue:842
 msgid "Nothing in this collection yet. Add a document with the bookmark button next to it, or drag it onto the collection."
 msgstr ""
 
@@ -2493,7 +2505,7 @@ msgstr ""
 msgid "Nothing is replaced."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:807
+#: web/app/components/OpenDialog.vue:842
 msgid "Nothing opened yet from this browser."
 msgstr ""
 
@@ -2509,7 +2521,7 @@ msgstr ""
 msgid "Nothing was replaced."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:865
+#: web/app/components/OpenDialog.vue:900
 msgid "Nothing yet. Create the first document."
 msgstr ""
 
@@ -2565,11 +2577,11 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:858
+#: web/app/components/OpenDialog.vue:893
 msgid "On this server"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:858
+#: web/app/components/OpenDialog.vue:893
 msgid "On {place} · {count}"
 msgstr ""
 
@@ -2633,11 +2645,15 @@ msgstr ""
 msgid "Only whole words."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:131 web/app/components/OpenDialog.vue:692 web/app/components/OpenDialog.vue:916
+#: web/app/components/ImportDialog.vue:131 web/app/components/OpenDialog.vue:727 web/app/components/OpenDialog.vue:951
 msgid "Open"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:795 web/app/lib/document-menus.ts:77
+#: clients/linux/src/claudia_shell_gtk/files.py:131
+msgid "Open a File"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:830 web/app/lib/document-menus.ts:77
 msgid "Open a File…"
 msgstr ""
 
@@ -2653,15 +2669,15 @@ msgstr ""
 msgid "Open a file"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:154
+#: web/app/components/OpenDialog.vue:155
 msgid "Open a presentation, or start a new one. Everybody you invite works on the same slides at the same time."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:158
+#: web/app/components/OpenDialog.vue:159
 msgid "Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:150
+#: web/app/components/OpenDialog.vue:151
 msgid "Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide."
 msgstr ""
 
@@ -2701,7 +2717,7 @@ msgstr ""
 msgid "Open…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:931
+#: web/app/components/OpenDialog.vue:966
 msgid "Or start a new one"
 msgstr ""
 
@@ -2709,7 +2725,7 @@ msgstr ""
 msgid "Orange"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:308
+#: web/app/components/PrintPreview.vue:326
 msgid "Orientation"
 msgstr ""
 
@@ -2765,7 +2781,7 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:324
+#: web/app/components/PrintPreview.vue:342
 msgid "Page numbers"
 msgstr ""
 
@@ -2777,7 +2793,7 @@ msgstr ""
 msgid "Pair by position"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:297 web/app/lib/palette.ts:17
+#: web/app/components/PrintPreview.vue:315 web/app/lib/palette.ts:17
 msgid "Paper"
 msgstr ""
 
@@ -2793,7 +2809,7 @@ msgstr ""
 msgid "Part of the result of the query in {cell}"
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:48 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:111 web/app/components/OpenDialog.vue:906
+#: web/app/components/AdminLogin.vue:48 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:111 web/app/components/OpenDialog.vue:941
 msgid "Password"
 msgstr ""
 
@@ -2873,7 +2889,7 @@ msgstr ""
 msgid "Poisson"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:309
+#: web/app/components/PrintPreview.vue:327
 msgid "Portrait"
 msgstr ""
 
@@ -2881,7 +2897,7 @@ msgstr ""
 msgid "PowerPoint presentation (.pptx)"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:131
+#: web/app/components/OpenDialog.vue:132
 msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
 msgstr ""
 
@@ -2929,15 +2945,15 @@ msgstr ""
 msgid "Previous slide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:276
+#: web/app/components/PrintPreview.vue:294
 msgid "Print"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:275 web/app/components/PrintPreview.vue:277
+#: web/app/components/PrintPreview.vue:293 web/app/components/PrintPreview.vue:295
 msgid "Print preview"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:327 web/app/lib/document-menus.ts:82 web/app/lib/print/use-print.ts:33
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:345 web/app/lib/document-menus.ts:82 web/app/lib/print/use-print.ts:33
 msgid "Print…"
 msgstr ""
 
@@ -3013,7 +3029,7 @@ msgstr ""
 msgid "Reconnecting…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:903 web/app/components/ShareDialog.vue:58
+#: web/app/components/OpenDialog.vue:938 web/app/components/ShareDialog.vue:58
 msgid "Recovery key"
 msgstr ""
 
@@ -3053,7 +3069,7 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:769 web/app/components/OpenDialog.vue:769
+#: web/app/components/OpenDialog.vue:804 web/app/components/OpenDialog.vue:804
 msgid "Remove collection {name}"
 msgstr ""
 
@@ -3081,11 +3097,11 @@ msgstr ""
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr ""
 
-#: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:726 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
+#: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:761 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
 msgid "Rename"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:712 web/app/components/OpenDialog.vue:726
+#: web/app/components/OpenDialog.vue:747 web/app/components/OpenDialog.vue:761
 msgid "Rename {server}"
 msgstr ""
 
@@ -3301,7 +3317,7 @@ msgstr ""
 msgid "Sandboxed execution"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:154 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:66 web/app/lib/document-menus.ts:79 web/app/lib/shortcuts.ts:68
+#: clients/linux/src/claudia_shell_gtk/files.py:189 clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:154 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:66 web/app/lib/document-menus.ts:79 web/app/lib/shortcuts.ts:68
 msgid "Save"
 msgstr ""
 
@@ -3309,7 +3325,7 @@ msgstr ""
 msgid "Save New Checkpoint…"
 msgstr ""
 
-#: web/app/components/ExportFormatDialog.vue:53
+#: web/app/components/ExportFormatDialog.vue:66
 msgid "Save as"
 msgstr ""
 
@@ -3321,11 +3337,15 @@ msgstr ""
 msgid "Save the document's content in Claudia's own format"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:252
+#: web/app/components/ExportDialog.vue:48 web/app/components/ExportFormatDialog.vue:70 web/app/components/PrintPreview.vue:215
+msgid "Saved as {path}."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/window.py:339
 msgid "Saved {name} to {folder}"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:153
+#: web/app/components/OpenDialog.vue:154
 msgid "Say it on a slide."
 msgstr ""
 
@@ -3333,7 +3353,7 @@ msgstr ""
 msgid "Say what the object you have selected shows to someone who cannot see it"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:292
+#: web/app/components/PrintPreview.vue:310
 msgid "Scale"
 msgstr ""
 
@@ -3345,7 +3365,7 @@ msgstr ""
 msgid "Sealed Claudia document"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:791
+#: web/app/components/OpenDialog.vue:826
 msgid "Search"
 msgstr ""
 
@@ -3361,7 +3381,7 @@ msgstr ""
 msgid "Search & replace"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:792
+#: web/app/components/OpenDialog.vue:827
 msgid "Search Mine and {place}"
 msgstr ""
 
@@ -3417,7 +3437,7 @@ msgstr ""
 msgid "Series are in"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:744
+#: web/app/components/OpenDialog.vue:779
 msgid "Server address"
 msgstr ""
 
@@ -3465,7 +3485,7 @@ msgstr ""
 msgid "Sheet {name}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:261
+#: web/app/components/PrintPreview.vue:279
 msgid "Sheet: {reason}."
 msgstr ""
 
@@ -3569,11 +3589,11 @@ msgstr ""
 msgid "Slide {n} of {total}: {title}"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:100 web/app/lib/print/setup.ts:45
+#: web/app/components/OpenDialog.vue:101 web/app/lib/print/setup.ts:45
 msgid "Slides"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:335 web/app/components/StyleSizeField.vue:25 web/app/components/StyleSizeField.vue:25
+#: web/app/components/PrintPreview.vue:354 web/app/components/StyleSizeField.vue:25 web/app/components/StyleSizeField.vue:25
 msgid "Smaller"
 msgstr ""
 
@@ -3645,7 +3665,7 @@ msgstr ""
 msgid "Start over"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:160
+#: clients/linux/src/claudia_shell_gtk/window.py:247
 msgid "Starting {app}…"
 msgstr ""
 
@@ -3753,7 +3773,7 @@ msgstr ""
 msgid "Tab / Shift + Tab"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:100
+#: web/app/components/OpenDialog.vue:101
 msgid "Table"
 msgstr ""
 
@@ -3761,7 +3781,7 @@ msgstr ""
 msgid "Tables"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:786
+#: web/app/components/OpenDialog.vue:821
 msgid "Tables, texts and slides on this place, and the documents you opened before."
 msgstr ""
 
@@ -3781,11 +3801,11 @@ msgstr ""
 msgid "Take the selected object off the slide"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:832 web/app/components/OpenDialog.vue:833
+#: web/app/components/OpenDialog.vue:867 web/app/components/OpenDialog.vue:868
 msgid "Take {id} off Mine"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:840 web/app/components/OpenDialog.vue:841
+#: web/app/components/OpenDialog.vue:875 web/app/components/OpenDialog.vue:876
 msgid "Take {id} out of {name}"
 msgstr ""
 
@@ -3797,7 +3817,7 @@ msgstr ""
 msgid "Teal"
 msgstr ""
 
-#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:100 web/app/components/SearchPanel.vue:327 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
+#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:101 web/app/components/SearchPanel.vue:327 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
 msgid "Text"
 msgstr ""
 
@@ -3825,7 +3845,7 @@ msgstr ""
 msgid "Text of the replacement"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:677
+#: web/app/components/OpenDialog.vue:712
 msgid "That document exists already — or the name or password is not acceptable. Try Open."
 msgstr ""
 
@@ -3837,7 +3857,7 @@ msgstr ""
 msgid "That does not look like a Claudia server."
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:53 web/app/components/SheetImageImportDialog.vue:53
+#: web/app/components/ImageImportDialog.vue:58 web/app/components/SheetImageImportDialog.vue:58
 msgid "That file is too big (at most {mb} MB)."
 msgstr ""
 
@@ -3849,7 +3869,7 @@ msgstr ""
 msgid "That range will not make a chart."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:679
+#: web/app/components/OpenDialog.vue:714
 msgid "That recovery key does not fit this document."
 msgstr ""
 
@@ -3857,12 +3877,24 @@ msgstr ""
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:425
+msgid "The Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}."
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The ISO week number of a date: weeks start on Monday and week 1 is the one with the first Thursday."
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/files.py:135
+msgid "The Open dialog could not be shown: {reason}"
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The Pearson correlation of two ranges (the same as CORREL)."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/files.py:194
+msgid "The Save dialog could not be shown: {reason}"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -4045,7 +4077,7 @@ msgstr ""
 msgid "The document is waiting for an owner or editor to open it."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:786
+#: web/app/components/OpenDialog.vue:821
 msgid "The documents you put into this collection, on any place."
 msgstr ""
 
@@ -4071,6 +4103,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The factorial of the sum of the numbers divided by the product of their factorials."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/files.py:168 web/app/components/ExportDialog.vue:36 web/app/components/ExportFormatDialog.vue:53 web/app/components/PrintPreview.vue:217
+msgid "The file could not be saved: {reason}"
 msgstr ""
 
 #: web/app/lib/open.ts:193
@@ -4201,7 +4237,7 @@ msgstr ""
 msgid "The kurtosis of a sample (0 for a normal distribution): how heavy the tails are."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:318
+#: web/app/components/PrintPreview.vue:336
 msgid "The language of the document: its words are hyphenated by it"
 msgstr ""
 
@@ -4285,7 +4321,7 @@ msgstr ""
 msgid "The month of a date, 1 to 12."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:680
+#: web/app/components/OpenDialog.vue:715
 msgid "The name or password is not right (or there is no such document)."
 msgstr ""
 
@@ -4397,6 +4433,18 @@ msgstr ""
 msgid "The page stopped working"
 msgstr ""
 
+#: web/app/components/PrintPreview.vue:239
+msgid "The pages are open in your PDF viewer: print them from there."
+msgstr ""
+
+#: web/app/components/PrintPreview.vue:241
+msgid "The pages could not be handed to your PDF viewer: {reason}"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/files.py:204 clients/linux/src/claudia_shell_gtk/files.py:213
+msgid "The pages could not be opened to print: {reason}"
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The part of a year between two dates. Basis: 0 (default) US 30/360, 1 actual days over actual year, 2 actual/360, 3 actual/365, 4 European 30/360."
 msgstr ""
@@ -4469,7 +4517,7 @@ msgstr ""
 msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:920
+#: web/app/components/OpenDialog.vue:955
 msgid "The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do."
 msgstr ""
 
@@ -4521,7 +4569,7 @@ msgstr ""
 msgid "The server could not be asked right now."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/server.py:181
+#: clients/linux/src/claudia_shell_gtk/server.py:197
 msgid "The server did not answer at {url} within {seconds} seconds."
 msgstr ""
 
@@ -4541,7 +4589,7 @@ msgstr ""
 msgid "The server does not keep it and will {never}: write it down or put it in your password manager, and keep it away from the document."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/server.py:173
+#: clients/linux/src/claudia_shell_gtk/server.py:188
 msgid "The server stopped at start-up (exit code {code})."
 msgstr ""
 
@@ -4777,7 +4825,7 @@ msgstr ""
 msgid "The variance of a whole population (the old name of VAR.P)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/launch.py:46
+#: clients/linux/src/claudia_shell_gtk/launch.py:51
 msgid "The web frontend has not been built.\nBuild it ('npm run build' in the web folder) or set CLAUDIA_WEB_DIR to a folder that holds it."
 msgstr ""
 
@@ -4837,7 +4885,7 @@ msgstr ""
 msgid "There is no such document."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:140
+#: web/app/components/OpenDialog.vue:141
 msgid "These are slides. Open them with Claudia Creates."
 msgstr ""
 
@@ -4865,7 +4913,7 @@ msgstr ""
 msgid "Thicker border"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:157
+#: web/app/components/OpenDialog.vue:158
 msgid "Think with your data."
 msgstr ""
 
@@ -4909,7 +4957,7 @@ msgstr ""
 msgid "This colour is not in the palette, so a palette change will leave it behind."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:132 web/app/lib/server-bookmarks.ts:94
+#: clients/linux/src/claudia_shell_gtk/window.py:216 web/app/lib/server-bookmarks.ts:94
 msgid "This computer"
 msgstr ""
 
@@ -4921,15 +4969,15 @@ msgstr ""
 msgid "This document was deleted by its owner."
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:68 web/app/components/SheetImageImportDialog.vue:68
+#: web/app/components/ImageImportDialog.vue:73 web/app/components/SheetImageImportDialog.vue:73
 msgid "This does not look like a picture the browser can show."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:139
+#: web/app/components/OpenDialog.vue:140
 msgid "This is a table. Open it with Claudia Computes."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:138
+#: web/app/components/OpenDialog.vue:139
 msgid "This is a text. Open it with Claudia Composes."
 msgstr ""
 
@@ -4985,11 +5033,11 @@ msgstr ""
 msgid "This result has no name to take its cells from: select them and copy (Ctrl+C)."
 msgstr ""
 
-#: web/app/components/ExportDialog.vue:33
+#: web/app/components/ExportDialog.vue:45
 msgid "This saves the current content of {doc} to this computer as Claudia's own file format (a JSON snapshot) — not a Word, Excel or PowerPoint file; for one of those, use File ▸ Export… instead. It does not include the document's history or chat."
 msgstr ""
 
-#: web/app/components/ExportFormatDialog.vue:49
+#: web/app/components/ExportFormatDialog.vue:62
 msgid "This saves the current content of {doc} to this computer, in the format you pick below. It does not include the document's history or chat, and no tracked changes are kept — just the content as it stands now."
 msgstr ""
 
@@ -5049,11 +5097,11 @@ msgstr ""
 msgid "Try 2 for two minutes, 2:30 or 90s."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:189
+#: web/app/components/PrintPreview.vue:191
 msgid "Two pages"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:336
+#: web/app/components/PrintPreview.vue:355
 msgid "Two pages side by side"
 msgstr ""
 
@@ -5061,7 +5109,7 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:376 web/app/components/OpenDialog.vue:381
+#: web/app/components/OpenDialog.vue:378 web/app/components/OpenDialog.vue:383
 msgid "Type a server address."
 msgstr ""
 
@@ -5101,7 +5149,7 @@ msgstr ""
 msgid "Update now"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:306
+#: web/app/components/PrintPreview.vue:324
 msgid "Use"
 msgstr ""
 
@@ -5189,7 +5237,7 @@ msgstr ""
 msgid "What changes with it"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:287
+#: web/app/components/PrintPreview.vue:305
 msgid "What is printed"
 msgstr ""
 
@@ -5249,7 +5297,7 @@ msgstr ""
 msgid "Where to look"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:859
+#: web/app/components/OpenDialog.vue:894
 msgid "Which apps"
 msgstr ""
 
@@ -5313,11 +5361,11 @@ msgstr ""
 msgid "Word document (.docx)"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:133
+#: web/app/components/OpenDialog.vue:134
 msgid "Word, Excel, PowerPoint, OpenDocument or Claudia, or drop one anywhere on this page."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:129
+#: web/app/components/OpenDialog.vue:130
 msgid "Word, OpenDocument or Claudia texts, or drop one anywhere on this page."
 msgstr ""
 
@@ -5357,7 +5405,7 @@ msgstr ""
 msgid "Write to the assistant in the chat"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:149
+#: web/app/components/OpenDialog.vue:150
 msgid "Write together."
 msgstr ""
 
@@ -5405,7 +5453,7 @@ msgstr ""
 msgid "Your changes to the pattern are dropped."
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:47 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:110 web/app/components/OpenDialog.vue:901
+#: web/app/components/AdminLogin.vue:47 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:110 web/app/components/OpenDialog.vue:936
 msgid "Your name"
 msgstr ""
 
@@ -5425,7 +5473,7 @@ msgstr ""
 msgid "Your recovery key"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:334
+#: web/app/components/PrintPreview.vue:353
 msgid "Zoom"
 msgstr ""
 
@@ -5573,7 +5621,7 @@ msgstr ""
 msgid "add_user: role must be editor or viewer"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:860
+#: web/app/components/OpenDialog.vue:895
 msgid "all apps"
 msgstr ""
 
@@ -5605,7 +5653,7 @@ msgstr ""
 msgid "and {n} more"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:901
+#: web/app/components/OpenDialog.vue:936
 msgid "ann"
 msgstr ""
 
@@ -5681,7 +5729,7 @@ msgstr ""
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:900
+#: web/app/components/OpenDialog.vue:935
 msgid "budget-2027"
 msgstr ""
 
@@ -5909,7 +5957,7 @@ msgstr ""
 msgid "exactly"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:744
+#: web/app/components/OpenDialog.vue:779
 msgid "example.com:8420"
 msgstr ""
 
@@ -5965,7 +6013,7 @@ msgstr ""
 msgid "heading"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:305
+#: web/app/components/PrintPreview.vue:323
 msgid "height in millimetres"
 msgstr ""
 
@@ -6141,7 +6189,7 @@ msgstr ""
 msgid "missing or wrong credentials"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:305
+#: web/app/components/PrintPreview.vue:323
 msgid "mm"
 msgstr ""
 
@@ -6191,6 +6239,10 @@ msgstr ""
 
 #: web/app/components/SlideWorkspace.vue:386
 msgid "new slide"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:426
+msgid "no app"
 msgstr ""
 
 #: web/app/components/FormulaBar.vue:88
@@ -6325,7 +6377,7 @@ msgstr ""
 msgid "overview"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:344
+#: web/app/components/PrintPreview.vue:363
 msgid "page {n}"
 msgstr ""
 
@@ -6681,7 +6733,7 @@ msgstr ""
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:315
+#: web/app/components/PrintPreview.vue:333
 msgid "the document's own"
 msgstr ""
 
@@ -7013,7 +7065,7 @@ msgstr ""
 msgid "was {size} px wide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:304
+#: web/app/components/PrintPreview.vue:322
 msgid "width in millimetres"
 msgstr ""
 
@@ -7061,11 +7113,11 @@ msgstr ""
 msgid "{administrator}'s server"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/app.py:129
+#: clients/linux/src/claudia_shell_gtk/app.py:131
 msgid "{app} cannot start yet"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/app.py:132 clients/linux/src/claudia_shell_gtk/app.py:163
+#: clients/linux/src/claudia_shell_gtk/app.py:134 clients/linux/src/claudia_shell_gtk/app.py:165
 msgid "{app} could not start its server"
 msgstr ""
 
@@ -7253,7 +7305,7 @@ msgstr ""
 msgid "{id} is here already: give the new document another name"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:614
+#: web/app/components/OpenDialog.vue:648
 msgid "{id} is here now. Open it with your name and password in it."
 msgstr ""
 
@@ -7301,7 +7353,7 @@ msgstr ""
 msgid "{label}: {value}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:149
+#: web/app/components/PrintPreview.vue:151
 msgid "{language}: no hyphenation patterns on this server"
 msgstr ""
 
@@ -7357,20 +7409,28 @@ msgstr ""
 msgid "{name} cannot become a document of {app}"
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/files.py:120
+msgid "{name} could not be read: {reason}"
+msgstr ""
+
 #: web/app/lib/names.ts:185
 msgid "{name} has no cells right now"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:400
+#: web/app/components/OpenDialog.vue:402
 msgid "{name} is here, and kept inside the document for Download."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:401
+#: web/app/components/OpenDialog.vue:403
 msgid "{name} is here. The file was not kept: Download writes a new one."
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:399
+#: web/app/components/OpenDialog.vue:401
 msgid "{name} is here. {count} things it holds are not shown, and stay in the kept file."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/files.py:113
+msgid "{name} is larger than {mb} MB."
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:401
@@ -7455,6 +7515,10 @@ msgstr ""
 
 #: web/app/lib/base-session.ts:400
 msgid "{owner} is now the owner of this document."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/files.py:182
+msgid "{path} could not be written: {reason}"
 msgstr ""
 
 #: web/app/components/ImportDialog.vue:123
@@ -7613,7 +7677,7 @@ msgstr ""
 msgid "· editing"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:871
+#: web/app/components/OpenDialog.vue:906
 msgid "· {online} here now"
 msgstr ""
 
@@ -7629,7 +7693,7 @@ msgstr ""
 msgid "“{name}” is a {kind} style and does not fit {where}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:257
+#: web/app/components/PrintPreview.vue:275
 msgid "“{requested}” is not on this server; the preview and the PDF use {used} for it."
 msgstr ""
 

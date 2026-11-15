@@ -5,6 +5,7 @@
 // but the checks cost nothing), and the page does not trust a stray broadcast.
 
 import type { CoreMessage, CoreRequest } from './core.js'
+import { isFileMessage, isFileRequest } from './file-protocol.js'
 
 /** The extension's id in neutralino.config.json. */
 export const CORE_ID = 'de.claudiaoffice.core'
@@ -28,7 +29,7 @@ export function isRequest(value: unknown): value is CoreRequest {
     case 'servers':
       return Array.isArray(value.servers)
     default:
-      return false
+      return isFileRequest(value)
   }
 }
 
@@ -49,6 +50,6 @@ export function isCoreMessage(value: unknown): value is CoreMessage {
     case 'connect_failed':
       return typeof value.code === 'string' && typeof value.message === 'string'
     default:
-      return false
+      return isFileMessage(value)
   }
 }

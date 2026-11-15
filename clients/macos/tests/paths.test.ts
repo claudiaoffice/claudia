@@ -8,11 +8,15 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { configDir, defaultRepo, documentsDir, findFrontend, findRepo, findServerPython, stateDir } from '../src/paths.js'
+import { configDir, defaultRepo, findFrontend, findRepo, findServerPython, serverDocumentsDir, serverStateDir, stateDir } from '../src/paths.js'
 
-describe('documentsDir / stateDir', () => {
-  it("live under ~/Library/Application Support/Claudia/<app>, macOS's own convention", () => {
-    expect(documentsDir('creates', '/Users/x')).toBe('/Users/x/Library/Application Support/Claudia/creates/documents')
+describe('serverDocumentsDir / serverStateDir / stateDir', () => {
+  it("the local server's folders are the suite's, under ~/Library/Application Support/Claudia: the three apps share one server (D445)", () => {
+    expect(serverDocumentsDir('/Users/x')).toBe('/Users/x/Library/Application Support/Claudia/documents')
+    expect(serverStateDir('/Users/x')).toBe('/Users/x/Library/Application Support/Claudia/state')
+  })
+
+  it("a shell's own log is its app's: ~/Library/Application Support/Claudia/<app>/state", () => {
     expect(stateDir('creates', '/Users/x')).toBe('/Users/x/Library/Application Support/Claudia/creates/state')
   })
 })

@@ -1,9 +1,9 @@
-import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { buildCoreCommand, DEFAULT_COMMAND, parseCoreArgs, setCoreCommand } from '../src/core-command.js'
+import { buildCoreCommand, DEFAULT_COMMAND, parseCoreArgs, setCoreCommand, setInspector } from '../src/core-command.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const base = { nodeBinary: '/opt/homebrew/bin/node', systemCa: true, app: 'computes', server: null, debug: false } as const
@@ -54,10 +54,50 @@ describe('setCoreCommand', () => {
     expect(readFileSync(copy, 'utf8')).toBe(readFileSync(original, 'utf8'))
   })
 
+  it.each(['\n', '\r\n'])('keeps the line ends of the file (%j), as a checkout on Windows may have CRLF', (eol) => {
+    dir = mkdtempSync(join(tmpdir(), 'claudia-config-'))
+    const file = join(dir, 'neutralino.config.json')
+    const config = { modes: { window: { enableInspector: false } }, extensions: [{ id: 'de.claudiaoffice.core', commandDarwin: 'x' }] }
+    const original = JSON.stringify(config, null, 2).replace(/\n/g, eol) + eol
+    writeFileSync(file, original)
+    setCoreCommand(file, 'y')
+    expect(readFileSync(file, 'utf8')).toBe(original.replace('"x"', '"y"'))
+    setInspector(file, true)
+    expect(readFileSync(file, 'utf8')).toBe(original.replace('"x"', '"y"').replace('false', 'true'))
+  })
+
   it('refuses a config without the core extension', () => {
     dir = mkdtempSync(join(tmpdir(), 'claudia-config-'))
     const file = join(dir, 'neutralino.config.json')
     copyFileSync(join(root, 'package.json'), file)
     expect(() => setCoreCommand(file, 'x')).toThrow(/extension/)
+  })
+})
+
+describe('setInspector', () => {
+  const dirs: string[] = []
+  afterEach(() => { for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }) })
+  const configCopy = (): string => {
+    const dir = mkdtempSync(join(tmpdir(), 'claudia-inspector-'))
+    dirs.push(dir)
+    const file = join(dir, 'neutralino.config.json')
+    copyFileSync(join(root, 'apps', 'computes', 'neutralino.config.json'), file)
+    return file
+  }
+
+  it('turns the inspector on for a debug run and off again, and touches nothing else', () => {
+    const file = configCopy()
+    const before = JSON.parse(readFileSync(file, 'utf8'))
+    setInspector(file, true)
+    const on = JSON.parse(readFileSync(file, 'utf8'))
+    expect(on.modes.window.enableInspector).toBe(true)
+    setInspector(file, false)
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual(before)
+  })
+
+  it('refuses a config without a window mode', () => {
+    const file = configCopy()
+    writeFileSync(file, '{}')
+    expect(() => setInspector(file, true)).toThrow(/modes\.window/)
   })
 })

@@ -29,6 +29,7 @@ from .bridge import Bridge
 from .connection import Outcome
 from .connection import check as default_check
 from .connector import Connector, ServerBook, Work, run_threaded
+from .files import Chosen, Dialogs, Failed, Files
 from .i18n import translate as _
 from .identity import AppIdentity
 from .manifest import Action, Kind, Manifest, about_links, for_start, menu_button_id, menu_xml, on_start
@@ -89,6 +90,88 @@ def _layout() -> str:
     return resources.files("claudia_shell_gtk").joinpath("data/window.ui").read_text(encoding="utf-8")
 
 
+def documents_dir() -> Path:
+    """The person's Documents folder: where a Save dialog starts the first time (D501)."""
+    found = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOCUMENTS)
+    return Path(found) if found else Path.home() / "Documents"
+
+
+class GtkDialogs:
+    """GTK's own Open and Save dialogs, and the application GNOME opens a PDF with (D501, D502), for ``files.Files``.
+    The dialogs belong to the window (modal to it), and GTK answers through a callback."""
+
+    def __init__(self, window: Gtk.Window) -> None:
+        self._window = window
+
+    @staticmethod
+    def _filters(extensions: list[str]) -> Gio.ListStore | None:
+        if not extensions:
+            return None
+        store = Gio.ListStore.new(Gtk.FileFilter)
+        wanted = Gtk.FileFilter()
+        wanted.set_name(", ".join(e.upper() for e in extensions))
+        for extension in extensions:
+            wanted.add_suffix(extension)
+        store.append(wanted)
+        every = Gtk.FileFilter()
+        every.set_name(_("All files"))
+        every.add_pattern("*")
+        store.append(every)
+        return store
+
+    def _dialog(self, title: str, extensions: list[str], folder: Path | None) -> Gtk.FileDialog:
+        dialog = Gtk.FileDialog(title=title, modal=True)
+        filters = self._filters(extensions)
+        if filters is not None:
+            dialog.set_filters(filters)
+            dialog.set_default_filter(filters.get_item(0))
+        if folder is not None and folder.is_dir():
+            dialog.set_initial_folder(Gio.File.new_for_path(str(folder)))
+        return dialog
+
+    @staticmethod
+    def _answer(finish: Callable[[Any], Gio.File | None], chosen: Chosen, failed: Failed) -> Callable[..., None]:
+        def answered(_dialog: Any, result: Gio.AsyncResult) -> None:
+            try:
+                file = finish(result)
+            except GLib.Error as problem:
+                if problem.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED) or problem.matches(
+                    Gtk.dialog_error_quark(), Gtk.DialogError.CANCELLED
+                ):
+                    chosen(None)
+                else:
+                    failed(problem.message)
+                return
+            path = file.get_path() if file is not None else None
+            chosen(Path(path) if path else None)
+
+        return answered
+
+    def open(self, title: str, extensions: list[str], folder: Path | None, chosen: Chosen, failed: Failed) -> None:
+        dialog = self._dialog(title, extensions, folder)
+        dialog.open(self._window, None, self._answer(dialog.open_finish, chosen, failed))
+
+    def save(
+        self, title: str, name: str, extensions: list[str], folder: Path | None, chosen: Chosen, failed: Failed
+    ) -> None:
+        dialog = self._dialog(title, extensions, folder)
+        dialog.set_initial_name(name)
+        dialog.save(self._window, None, self._answer(dialog.save_finish, chosen, failed))
+
+    def show(self, path: Path, done: Callable[[], None], failed: Failed) -> None:
+        launcher = Gtk.FileLauncher.new(Gio.File.new_for_path(str(path)))
+
+        def launched(_launcher: Any, result: Gio.AsyncResult) -> None:
+            try:
+                launcher.launch_finish(result)
+            except GLib.Error as problem:
+                failed(problem.message)
+                return
+            done()
+
+        launcher.launch(self._window, None, launched)
+
+
 @Gtk.Template(string=_layout())
 class ClaudiaWindow(Adw.ApplicationWindow):
     """The main window of a Claudia app."""
@@ -120,6 +203,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         trust: TrustStore | None = None,
         work: Work[Any] | None = None,
         check: Callable[..., Outcome] = default_check,
+        dialogs: Dialogs | None = None,
         **properties: Any,
     ):
         super().__init__(**properties)
@@ -140,6 +224,8 @@ class ClaudiaWindow(Adw.ApplicationWindow):
             work=work or run_threaded(_on_main_thread),
             check=check,
         )
+        # D501, D502: the page's files go through the shell's own dialogs; the answers go back through the bridge.
+        self.files = Files(dialogs or GtkDialogs(self), self, documents=documents_dir())
         self._bridge = Bridge(
             manifest,
             self._send_to_page,
@@ -150,6 +236,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
             on_connect=self.connector.connect,
             on_servers=self.book.replace,
             server_list=self.book.entries,
+            files=self.files,
         )
         # GTK emits "destroy" only when the object is finally disposed, which can be long after the window is gone:
         # the page is released when the window is closed (and by the application on shutdown), "destroy" is the net.
@@ -348,6 +435,17 @@ class ClaudiaWindow(Adw.ApplicationWindow):
     def _send_to_page(self, raw: str) -> None:
         if self._page is not None:
             self._page.send(raw)
+
+    # The answers of the file desk (``files.Reply``), passed on to the page.
+
+    def send_file_result(self, request: str, outcome: str, **details: Any) -> bool:
+        return self._bridge.send_file_result(request, outcome, **details)
+
+    def send_file_chunk(self, request: str, index: int, data: str) -> bool:
+        return self._bridge.send_file_chunk(request, index, data)
+
+    def send_file_done(self, request: str, chunks: int) -> bool:
+        return self._bridge.send_file_done(request, chunks)
 
     def _show_about(self) -> None:
         """D28's shared About dialog, built by hand rather than from ``Adw.AboutDialog``: that widget's own "Website"

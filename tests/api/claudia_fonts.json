@@ -144,6 +144,9 @@
   },
   "properties": []
  },
+ "builtin_folder": {
+  "function": "() -> 'Path'"
+ },
  "collection_folders": {
   "function": "(path: 'str | Path') -> 'list[Path]'"
  },

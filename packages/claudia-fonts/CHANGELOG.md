@@ -5,6 +5,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- The starter set ships with the package (D500): `claudia_fonts/builtin/` holds the pinned files of
+  `starter.lock.json`, `builtin_folder()` names it. A test checks the files against the lock.
+
+### Changed
+- The same font file found twice (the shipped set and a fetched copy) is not reported as "replaced".
+
 ### Fixed
 - Fetched font files are 0644, not `mkstemp`'s 0600, so a server running as another user than the one that fetched
   them (the Docker image) can read them.

@@ -4,6 +4,28 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.2.1] - unreleased
 
+### Changed (D445, D444, D434): the three apps share one local server, as on Windows
+- The core no longer starts a server of its own app (`--model`, random port) and stops it with the window. The first
+  window finds or starts the one server of the suite (`desktop-server.ts`, the Windows client's, unchanged but for the
+  name of Activity Monitor): all three apps, one folder of documents and one of state
+  (`~/Library/Application Support/Claudia/documents` and `…/state`), the port remembered in `state/desktop-server.json`,
+  `--exit-when-idle 600`. Closing a window only lets go of its presence connection; the server stops by itself ten
+  minutes after nothing is connected. Documents of the old per-app folders are not moved (D437).
+- `welcome` carries the window's app (D444): on the shared server the front page shows this app's documents only.
+- The web inspector is off in the three `neutralino.config.json`, on for a `--debug` run only.
+
+### Added (D501, D502, D503)
+- Files through the Mac's own panels (shell contract capability `files`): Open a File… and Insert Image show
+  NSOpenPanel, in front of the window (the panel did not come up at all before); Export…, Download and Download PDF
+  show NSSavePanel and say where the file went. The core shows the panels (`dialogs.ts`, through `osascript`) and reads
+  and writes the files (`files.ts`); the shell page passes the pieces on.
+- Print… in the print preview opens the pages in the Mac's PDF viewer, which prints them.
+- A native menu action gives the frame the keyboard focus first, so that what the page does is seen (File ▸ Open… on
+  the front page puts the cursor into the search field).
+
+### Fixed
+- Two windows starting at once could pick two ports: the port file is now written whole and linked into place.
+
 ### Fixed
 - The end-to-end script of the macOS shell (`web/e2e/macos-shell.cjs`) reads the document's native menu (the latest one
   the shell was given), not the front page's short one that comes first, and checks that the front page has the short one.

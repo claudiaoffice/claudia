@@ -11,7 +11,7 @@ from claudia_fonts import COLLECTION_FILE
 from claudia_fonts.testing import make_font
 from claudia_server.app import create_app
 from claudia_server.auth import ScryptDirectory
-from claudia_server.cli import UsageError, make_plan
+from claudia_server.cli import UsageError, _fonts, build_parser, make_plan
 from claudia_server.fonts import FontService
 from claudia_server.hub import Hub, MemoryProvider
 
@@ -94,16 +94,33 @@ def test_the_command_line_reads_fonts_folders_and_says_what_it_has(tmp_path):
     collection(root / "b", "B", fonts=(("Beta", "Regular", 400), ("Beta", "Bold", 700)))
     state = tmp_path / "state"
     plan = make_plan(["--no-tls", "--state-dir", str(state), "--fonts", str(root)])
-    assert "fonts: 3 files in 2 families for clients (/api/fonts)" in plan.banner
+    # the 3 of the folder, and the 14 files of the 5 families every server has (D500)
+    assert "fonts: 17 files in 7 families for clients (/api/fonts)" in plan.banner
 
 
 def test_the_state_folder_s_fonts_are_used_when_none_are_given(tmp_path):
     state = tmp_path / "state"
     collection(state / "fonts" / "test")
     plan = make_plan(["--no-tls", "--state-dir", str(state)])
-    assert any(line.startswith("fonts: 1 files") for line in plan.banner)
+    assert "fonts: 15 files in 6 families for clients (/api/fonts)" in plan.banner
+
+
+def test_a_server_nobody_gave_fonts_has_the_starter_set_so_printing_always_works(tmp_path):
+    """D500: the desktop apps' local server is started without fonts; before, printing there said "the server has no
+    fonts to lay out with" and nothing else. The pinned starter set ships with claudia_fonts, so there is always the
+    fallback family (Inter) and the metric-compatible stand-ins for Calibri and Cambria (Carlito, Caladea)."""
     bare = make_plan(["--no-tls", "--state-dir", str(tmp_path / "empty")])
-    assert any(line.startswith("no fonts to hand out") for line in bare.banner)
+    assert "fonts: 14 files in 5 families for clients (/api/fonts)" in bare.banner
+    families = {f.family for f in _fonts(build_parser().parse_args([]), tmp_path / "empty").servable()}
+    assert {"Inter", "Fraunces", "JetBrains Mono", "Carlito", "Caladea"} <= families
+
+
+def test_a_font_the_operator_adds_replaces_the_shipped_one_of_the_same_family_and_style(tmp_path):
+    state = tmp_path / "state"
+    collection(state / "fonts" / "mine", "Mine", fonts=(("Inter", "Regular", 400),))
+    fonts = _fonts(build_parser().parse_args([]), state)
+    regular = [f for f in fonts.servable() if f.family == "Inter" and f.style == "Regular"]
+    assert len(regular) == 1 and regular[0].path.is_relative_to(state)
 
 
 def test_a_fonts_folder_that_does_not_exist_stops_the_server(tmp_path):

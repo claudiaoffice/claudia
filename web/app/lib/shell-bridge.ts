@@ -46,6 +46,57 @@ export interface ActionState {
 type ActionHandler = (id: string, target?: string) => void
 type ConnectFailedHandler = (code: string, message: string) => void
 
+/** How much of a file goes into one `file_chunk` (D501): 36 KiB of bytes are 48 KiB of base64, which leaves room in a
+ * message of at most 64 KiB. */
+export const FILE_CHUNK_BYTES = 36 * 1024
+/** The largest file that goes through the shell (D501): a bigger one is refused before anything is sent. */
+export const MAX_FILE_BYTES = 100 * 1024 * 1024
+
+/** What became of a file the page handed the shell (D501): saved where the person chose, opened in the computer's own
+ * viewer (to print it, D502), or nothing (the person cancelled the Save dialog). */
+export type SaveOutcome = { kind: 'saved'; path: string } | { kind: 'opened'; path: string } | { kind: 'cancelled' }
+/** Why the page hands the shell a file: to save it where the person says, or to print it (the shell opens it in the
+ * computer's viewer for PDFs, which prints, D502). */
+export type FilePurpose = 'save' | 'print'
+
+/** The extensions of an `<input accept>` value (`.docx,.odt,image/png` gives `docx`, `odt`): what the shell's dialog
+ * offers. A MIME type is left out (a shell's dialog filters by extension), and so is anything that is not a short
+ * word. */
+export function acceptedExtensions(accept: string): string[] {
+  const found: string[] = []
+  for (const token of accept.split(',')) {
+    const extension = token.trim().toLowerCase()
+    if (!extension.startsWith('.')) continue
+    const bare = extension.slice(1)
+    if (/^[a-z0-9]{1,16}$/.test(bare) && !found.includes(bare)) found.push(bare)
+  }
+  return found.slice(0, 32)
+}
+
+function toBase64(bytes: Uint8Array): string {
+  let text = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(text)
+}
+
+function fromBase64(data: string): Uint8Array {
+  const raw = atob(data)
+  const bytes = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
+  return bytes
+}
+
+/** A file on its way from the shell to the page, or from the page to the shell. */
+interface Transfer {
+  /** `pick`: chunks arrive and the promise gets a `File`; `save`: the shell answers with where it went. */
+  kind: 'pick' | 'save'
+  name: string
+  size: number
+  chunks: Uint8Array[]
+  resolve: (value: never) => void
+  reject: (problem: Error) => void
+}
+
 interface MessageSink {
   post(message: Record<string, unknown>): void
   /** For a shell that does not call `window.__claudiaShell.receive` itself: start passing what the shell sends to
@@ -116,6 +167,8 @@ export class ShellBridge {
   lastError: string | null = null
 
   private sink: MessageSink
+  private transfers = new Map<string, Transfer>()
+  private requests = 0
   private handlers = new Set<ActionHandler>()
   private failureHandlers = new Set<ConnectFailedHandler>()
   private lastReported: Record<string, string> = {}
@@ -142,6 +195,92 @@ export class ShellBridge {
     return this.ready && this.capabilities.includes('servers')
   }
 
+  /** Does the shell choose files on this computer and save files there, with its own dialogs (D501)? A web view in a
+   * desktop window may show no file picker for `<input type="file">` (WKWebView in Neutralino does not), cannot open
+   * one from a menu item at all, and saves a download to some folder without asking. */
+  get handlesFiles(): boolean {
+    return this.ready && this.capabilities.includes('files')
+  }
+
+  private nextRequest(): string {
+    this.requests += 1
+    return `f${this.requests}-${Math.random().toString(36).slice(2, 8)}`
+  }
+
+  /** Ask the shell for a file of this computer, with its own Open dialog showing the `extensions` (D501). `null` when
+   * the person cancelled; an `Error` with a message for the person when the shell could not read it. */
+  pickFile(extensions: readonly string[], title?: string): Promise<File | null> {
+    const request = this.nextRequest()
+    return new Promise<File | null>((resolve, reject) => {
+      this.transfers.set(request, { kind: 'pick', name: '', size: 0, chunks: [], resolve: resolve as (value: never) => void, reject })
+      this.sink.post({ type: 'pick_file', request, accept: [...extensions], ...(title ? { title } : {}) })
+    })
+  }
+
+  /** Hand the shell `blob` to save as `name` on this computer: it asks where with its own Save dialog (D501). With
+   * `purpose` `print` it asks nothing and opens the file in the computer's viewer for its kind instead (D502). */
+  async saveFile(name: string, blob: Blob, purpose: FilePurpose = 'save'): Promise<SaveOutcome> {
+    if (blob.size > MAX_FILE_BYTES) throw new Error(`the file is larger than ${MAX_FILE_BYTES / 1024 / 1024} MB`)
+    const bytes = new Uint8Array(await blob.arrayBuffer())
+    const request = this.nextRequest()
+    const answer = new Promise<SaveOutcome>((resolve, reject) => {
+      this.transfers.set(request, { kind: 'save', name, size: bytes.length, chunks: [], resolve: resolve as (value: never) => void, reject })
+    })
+    this.sink.post({
+      type: 'save_file',
+      request,
+      name,
+      size: bytes.length,
+      ...(blob.type ? { mime: blob.type.slice(0, 128) } : {}),
+      ...(purpose === 'print' ? { purpose } : {}),
+    })
+    let index = 0
+    for (let at = 0; at < bytes.length; at += FILE_CHUNK_BYTES) {
+      this.sink.post({ type: 'file_chunk', request, index, data: toBase64(bytes.subarray(at, at + FILE_CHUNK_BYTES)) })
+      index += 1
+    }
+    this.sink.post({ type: 'file_done', request, chunks: index })
+    return answer
+  }
+
+  private fileMessage(message: WireData): void {
+    const transfer = typeof message.request === 'string' ? this.transfers.get(message.request) : undefined
+    if (!transfer) return
+    const request = message.request as string
+    const fail = (text: string) => {
+      this.transfers.delete(request)
+      transfer.reject(new Error(text))
+    }
+    if (message.type === 'file_result') {
+      if (message.outcome === 'cancelled') {
+        this.transfers.delete(request)
+        transfer.resolve((transfer.kind === 'pick' ? null : { kind: 'cancelled' }) as never)
+      } else if (message.outcome === 'failed') {
+        fail(typeof message.message === 'string' ? message.message : 'the file could not be handled')
+      } else if ((message.outcome === 'saved' || message.outcome === 'opened') && transfer.kind === 'save') {
+        this.transfers.delete(request)
+        const path = typeof message.path === 'string' ? message.path : transfer.name
+        transfer.resolve({ kind: message.outcome, path } as never)
+      } else if (message.outcome === 'picked' && transfer.kind === 'pick') {
+        transfer.name = typeof message.name === 'string' ? message.name : 'file'
+        transfer.size = typeof message.size === 'number' ? message.size : 0
+        if (transfer.size > MAX_FILE_BYTES) fail(`the file is larger than ${MAX_FILE_BYTES / 1024 / 1024} MB`)
+      }
+    } else if (message.type === 'file_chunk' && transfer.kind === 'pick' && typeof message.data === 'string') {
+      if (message.index !== transfer.chunks.length) return fail('a piece of the file went missing on the way')
+      try {
+        transfer.chunks.push(fromBase64(message.data))
+      } catch {
+        fail('a piece of the file arrived damaged')
+      }
+    } else if (message.type === 'file_done' && transfer.kind === 'pick') {
+      this.transfers.delete(request)
+      const file = new File(transfer.chunks as BlobPart[], transfer.name)
+      if (file.size !== transfer.size) return transfer.reject(new Error('the file did not arrive whole'))
+      transfer.resolve(file as never)
+    }
+  }
+
   /** Call with whatever the shell hands `window.__claudiaShell.receive`. */
   receive(raw: string): void {
     let message: WireData
@@ -160,6 +299,8 @@ export class ShellBridge {
       this.servers = message.servers.filter(isBookmark)
     } else if (message.type === 'connect_failed' && typeof message.message === 'string') {
       for (const handler of this.failureHandlers) handler(String(message.code), message.message)
+    } else if (message.type === 'file_result' || message.type === 'file_chunk' || message.type === 'file_done') {
+      this.fileMessage(message)
     } else if (message.type === 'error') {
       this.lastError = `${message.code}: ${message.message}`
       console.warn('[claudia shell]', this.lastError)
@@ -222,6 +363,17 @@ export class ShellBridge {
  * reason). This module otherwise knows nothing about Vue (so `ShellBridge` itself stays unit-testable without it);
  * `wrap` keeps it that way by taking the reactivity function as a plain callback instead of importing one.
  */
+/** The bridges of the pages that are there now, newest last: a helper that is not part of any page (saving a file,
+ * `download.ts`) asks the newest one. */
+const living: ShellBridge[] = []
+
+/** The bridge of the page that is shown now, if the page is in a shell that has said `welcome`; `null` in a browser
+ * tab. */
+export function currentShell(): ShellBridge | null {
+  for (let i = living.length - 1; i >= 0; i--) if (living[i]?.ready) return living[i] ?? null
+  return null
+}
+
 export function createShellBridge(
   app: App | undefined,
   handler: MessageSink | null = detectHandler() ?? detectParentSink(),
@@ -239,9 +391,12 @@ export function createShellBridge(
     const root = globalThis as ShellRoot
     root.__claudiaShell = { receive, contract: SHELL_CONTRACT_VERSION }
     const stopListening = handler.listen?.(receive)
+    living.push(bridge)
     bridge.detach = () => {
       stopListening?.()
       if (root.__claudiaShell?.receive === receive) delete root.__claudiaShell
+      const at = living.indexOf(bridge)
+      if (at >= 0) living.splice(at, 1)
     }
   } else {
     bridge.detach = () => {}

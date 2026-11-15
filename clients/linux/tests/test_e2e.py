@@ -13,6 +13,7 @@ import pytest
 from support import evaluate, pump, pump_for
 
 from claudia_shell_gtk import identity
+from claudia_shell_gtk.desktop_server import STATE_FILE, probe_health, read_port
 from claudia_shell_gtk.launch import find_frontend, find_server_python
 
 pytestmark = [pytest.mark.gtk, pytest.mark.e2e]
@@ -92,7 +93,6 @@ def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
 def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it(app, tmp_path: Path) -> None:
     window = app.window
-    server_pid = app._server.pid  # noqa: SLF001
     assert window.visible_page == "starting"
 
     pump(lambda: window.visible_page == "web", timeout=60, what="the server to answer")
@@ -103,11 +103,31 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     pump(lambda: view.get_uri() is not None, timeout=15, what="the page to start loading")
     assert view.get_uri().startswith("http://127.0.0.1:")
 
+    # The suite's one server (D445): its port is remembered, and it serves all three apps.
+    origin = window.book.local_origin
+    port = read_port(tmp_path / "state" / "claudia" / "server" / STATE_FILE)
+    assert origin == f"http://127.0.0.1:{port}"
+    assert set(probe_health(origin).apps) == {"composes", "computes", "creates"}
+
     # The front page says hello as the front page (sheet 11): the short menu, and nothing of a document's to do.
     pump(lambda: bridge.ready and bridge.view == "start", timeout=30, what="the front page to say hello")
     pump(lambda: window.lookup_action("file.open-file").get_enabled(), what="the front page's own entries")
     assert not window.lookup_action("file.save").get_enabled()
     assert not window.menu_edit.get_visible()
+
+    # D503: File ▸ New and Open… on the front page do something the person sees.
+    window.lookup_action("file.new").activate(None)
+    pump(
+        lambda: evaluate(view, "document.querySelector('[data-testid=start-new]')?.classList.contains('wanted')"),
+        timeout=15,
+        what="File ▸ New to mark the new document's part of the form",
+    )
+    window.lookup_action("file.open").activate(None)
+    pump(
+        lambda: evaluate(view, "document.activeElement?.getAttribute('name')") == "search",
+        timeout=15,
+        what="File ▸ Open… to put the cursor into the search field",
+    )
 
     # Create a document through the page's own Open dialog.
     pump(lambda: evaluate(view, FILL_AND_CREATE) == "clicked", timeout=30, what="the create-document form to render")
@@ -145,10 +165,23 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
         pump_for(0.5)
         _screenshot(window, Path(shot))
 
-    # Closing the window ends the server.
+    # Closing the window lets go of the server (D445): it is shared, and stops by itself once nothing is connected.
     app.shutdown_for_test()
-    with pytest.raises(ProcessLookupError):
-        os.kill(server_pid, 0)
+    assert probe_health(origin).kind == "claudia"
+    _end_server(origin)
+
+
+def _end_server(origin: str) -> None:
+    """The test's server would idle for ten minutes: end it, by its port."""
+    import contextlib
+    import signal
+
+    port = origin.rsplit(":", 1)[1]
+    for proc in Path("/proc").iterdir():
+        with contextlib.suppress(OSError):
+            words = (proc / "cmdline").read_bytes().split(b"\0")
+            if b"claudia_server" in words and b"--port" in words and words[words.index(b"--port") + 1] == port.encode():
+                os.kill(int(proc.name), signal.SIGTERM)
 
 
 def _screenshot(window, path: Path) -> None:

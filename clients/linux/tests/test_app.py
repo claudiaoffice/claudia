@@ -1,5 +1,6 @@
 """The application: it starts the server without blocking the window, shows the page when the server answers, says
-what went wrong when it cannot, and never leaves the server running. Fakes stand in for the server and for WebKit."""
+what went wrong when it cannot, and lets go of the shared server at the end. Fakes stand in for the server and for
+WebKit."""
 
 from __future__ import annotations
 
@@ -109,7 +110,8 @@ def test_a_server_that_does_not_start_is_reported_with_what_it_said() -> None:
     app.shutdown_for_test()
 
 
-def test_the_server_is_stopped_when_the_application_ends() -> None:
+def test_the_server_is_let_go_of_when_the_application_ends() -> None:
+    """``stop`` lets go of the shared server (D445); the server stops by itself once nobody is connected."""
     from claudia_shell_gtk._gi import GLib
 
     server = FakeServer()

@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from claudia_shell_gtk import identity, launch
+from claudia_shell_gtk.desktop_server import DesktopServer
 
 
 @pytest.fixture
@@ -26,31 +27,30 @@ def checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path / "repo"
 
 
-def test_a_server_is_prepared_for_the_app_on_a_free_loopback_port(checkout: Path, tmp_path: Path) -> None:
+def test_the_shared_server_of_the_suite_is_prepared_not_asked_for_yet(checkout: Path, tmp_path: Path) -> None:
     server = launch.prepare_server(identity.get("composes"), repo=checkout)
-    assert server.url.startswith("http://127.0.0.1:")
-    assert not server.running  # prepared, not started
-    command = server._command  # noqa: SLF001 (what is run is the point of this test)
-    assert command[0] == str(checkout / ".venv" / "bin" / "python")
-    assert command[command.index("--model") + 1] == "claudia_composes:TextModel"
-    assert command[command.index("--web") + 1] == str(checkout / "web" / ".output" / "public")
-    assert command[command.index("--dir") + 1] == str(tmp_path / "data" / "claudia" / "composes" / "documents")
-    assert server.log_path == tmp_path / "state" / "claudia" / "composes" / "server.log"
+    assert isinstance(server, DesktopServer)
+    assert server.url == ""  # not asked for yet
+    assert server._python == str(checkout / ".venv" / "bin" / "python")  # noqa: SLF001 (what is run is the point)
+    assert server._web == checkout / "web" / ".output" / "public"  # noqa: SLF001
+    assert server.log_path == tmp_path / "state" / "claudia" / "server" / "server.log"
 
 
 @pytest.mark.parametrize("app", identity.names())
-def test_every_app_gets_its_own_model_folders_and_log(app: str, checkout: Path, tmp_path: Path) -> None:
-    """The server an app starts is that app's own: the model comes from the identity, never from a default."""
+def test_every_app_uses_the_one_folder_of_documents_and_of_state(app: str, checkout: Path, tmp_path: Path) -> None:
+    """The three apps share one local server (D445): the same folders, whichever app asks; the app is what the
+    server must serve."""
     server = launch.prepare_server(identity.get(app), repo=checkout)
-    command = server._command  # noqa: SLF001
-    assert command[command.index("--model") + 1] == identity.get(app).model
-    assert command[command.index("--dir") + 1] == str(tmp_path / "data" / "claudia" / app / "documents")
-    assert server.log_path == tmp_path / "state" / "claudia" / app / "server.log"
+    assert server._app == app  # noqa: SLF001
+    assert server._documents == tmp_path / "data" / "claudia" / "documents"  # noqa: SLF001
+    assert server.log_path == tmp_path / "state" / "claudia" / "server" / "server.log"
 
 
-def test_the_documents_folder_exists_when_the_server_starts(checkout: Path, tmp_path: Path) -> None:
+def test_the_folders_exist_once_prepared_and_none_per_app(checkout: Path, tmp_path: Path) -> None:
     launch.prepare_server(identity.get("composes"), repo=checkout)
-    assert (tmp_path / "data" / "claudia" / "composes" / "documents").is_dir()
+    assert (tmp_path / "data" / "claudia" / "documents").is_dir()
+    assert (tmp_path / "state" / "claudia" / "server").is_dir()
+    assert not (tmp_path / "data" / "claudia" / "composes").exists()
 
 
 def test_a_missing_server_python_is_explained_with_the_way_to_fix_it(checkout: Path) -> None:

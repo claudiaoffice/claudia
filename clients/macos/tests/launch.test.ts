@@ -155,6 +155,7 @@ function harness(overrides: Partial<RunDeps> = {}) {
   const out: string[] = []
   const err: string[] = []
   const commands: { appDir: string; command: string }[] = []
+  const inspectors: { appDir: string; enabled: boolean }[] = []
   const deps: RunDeps = {
     spawn: ((command: string, args: string[], options: never) => {
       spawned.push({ command, args, options })
@@ -169,11 +170,12 @@ function harness(overrides: Partial<RunDeps> = {}) {
     findBinary: () => '/repo/clients/macos/apps/creates/bin/neutralino-mac_arm64',
     makeBundle: () => '/bundle/Contents/MacOS/claudia-creates',
     setCommand: (appDir, command) => void commands.push({ appDir, command }),
+    setInspector: (appDir, enabled) => void inspectors.push({ appDir, enabled }),
     out: (line) => out.push(line),
     err: (line) => err.push(line),
     ...overrides,
   }
-  return { deps, spawned, child, out, err, commands }
+  return { deps, spawned, child, out, err, commands, inspectors }
 }
 
 describe('run', () => {
@@ -283,6 +285,22 @@ describe('run', () => {
     await run({ app: 'creates', server: null, debug: true }, deps)
     expect(out.join('\n')).toContain('shell.log')
     expect(out.join('\n')).toContain('server.log')
+  })
+
+  it('does not switch the web inspector on unless --debug asks for it, and puts it off again after', async () => {
+    const creates = { app: 'creates', server: null, debug: false } as const
+    const quiet = harness()
+    await run(creates, quiet.deps)
+    expect(quiet.inspectors).toEqual([
+      { appDir: '/repo/clients/macos/apps/creates', enabled: false },
+      { appDir: '/repo/clients/macos/apps/creates', enabled: false },
+    ])
+    const debugging = harness()
+    await run({ ...creates, debug: true }, debugging.deps)
+    expect(debugging.inspectors).toEqual([
+      { appDir: '/repo/clients/macos/apps/creates', enabled: true },
+      { appDir: '/repo/clients/macos/apps/creates', enabled: false },
+    ])
   })
 })
 

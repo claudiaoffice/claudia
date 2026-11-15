@@ -4,7 +4,7 @@
 // at the bottom.
 import { createServer, type Server } from 'node:net'
 import { createServer as createHttpServer, type Server as HttpServer } from 'node:http'
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -202,6 +202,13 @@ describe('DesktopServer', () => {
       expect(writePort(file, 41233, 'exclusive')).toBe(true)
       expect(writePort(file, 50000, 'exclusive')).toBe(false)
       expect(readPort(file)).toBe(41233)
+    })
+
+    it('the state file appears whole or not at all, and nothing else is left in the folder', () => {
+      const file = join(state, STATE_FILE)
+      expect(writePort(file, 41233, 'exclusive')).toBe(true)
+      expect(writePort(file, 50000, 'exclusive')).toBe(false)
+      expect(readdirSync(state)).toEqual([STATE_FILE])
     })
   })
 

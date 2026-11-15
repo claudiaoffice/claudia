@@ -18,7 +18,9 @@ clients/
       contract.py      parse and build contract messages              (no GTK)
       manifest.py      the menus: one list of actions per app          (no GTK)
       bridge.py        the conversation with the page                  (no GTK)
-      server.py        start, wait for and stop the local server       (no GTK)
+      desktop_server.py  the one local server of the three apps (D445) (no GTK)
+      server.py        start, wait for and stop one server process     (no GTK)
+      files.py         the page's files: dialogs, pieces, print (D501)  (no GTK)
       launch.py        which server, which frontend, or what is missing (no GTK)
       cli.py           the command line: --server, --debug, --version  (no GTK)
       servers.py       which addresses may be connected to, the list   (no GTK)
@@ -52,15 +54,17 @@ Installed (the `.deb`, or `pip install` of this directory) the same thing is `cl
 
 | Option | Meaning |
 | --- | --- |
-| *(none)* | Start this app's own server on this computer and show it. |
+| *(none)* | Use the local server of the three apps on this computer (start it if none runs) and show it. |
 | `--server URL` | Start no server; connect to that one (`https://host[:port]`, or a bare `host[:port]`, which means https; plain `http://` is only accepted for this computer). It is checked like a server typed into the page and remembered in this app's list of servers. |
 | `--debug` | More logging and the web inspector. |
 | `--version` | `claudia-computes 0.1.0`. |
 
 There is no command that asks which app to open; `python3 -m claudia_shell_gtk` needs the app as its first argument.
 
-Documents are kept in `$XDG_DATA_HOME/claudia/<app>/documents` and the server's state and log in
-`$XDG_STATE_HOME/claudia/<app>` (`server.log` is where to look when the window says the server did not start).
+The three apps share one local server (D445): documents are kept in `$XDG_DATA_HOME/claudia/documents/<app>` and the
+server's state and log in `$XDG_STATE_HOME/claudia/server` (`server.log` is where to look when the window says the
+server did not start; `desktop-server.json` remembers its port). The first window starts it, the others find it, and it
+stops by itself ten minutes after its last window has closed.
 
 ## Other servers
 
@@ -104,8 +108,8 @@ explanation, and nothing is trusted unasked.
   library features newer than 3.12 are caught. PyGObject, GTK, libadwaita and WebKitGTK come from the distribution, not
   from PyPI (a wheel would need a compiler and the GTK headers), so the shell is *not* part of the uv workspace.
 
-The shell starts the server as `<server python> -m claudia_server --model claudia_composes:TextModel --host 127.0.0.1
---port <free port> --no-tls --web <frontend> ...` and shows `http://127.0.0.1:<port>`. The page and its WebSocket have
+The shell starts the server as `<server python> -m claudia_server --host 127.0.0.1 --port <remembered port> --no-tls
+--web <frontend> --exit-when-idle 600 ...` (all three apps) and shows `http://127.0.0.1:<port>`. The page and its WebSocket have
 the same origin, so no cross-origin settings are needed. The connection is plain because it never leaves the computer.
 
 ## How it works
@@ -121,8 +125,13 @@ the same origin, so no cross-origin settings are needed. The connection is plain
 * **Rules of the web view (`webpage.py`, `urls.py`).** The view never leaves the server's origin; links to other sites
   open in the default browser (web and mail addresses only); permission requests are denied; nothing contacts another host by itself
   (no DNS prefetching, WebRTC or media streams); downloads go to the Downloads folder under a name the page cannot use to escape it and never overwrite a file.
-* **The server never outlives the window.** It runs in its own process group, which is ended with the window, and it
-  asks Linux to send it `SIGTERM` when the shell dies, however the shell dies (tested with `kill -9`).
+* **The server outlives its windows and stops by itself (D445, D434).** It runs in its own process group, without the
+  death signal a server of one window had; while a window is open the shell holds a presence connection
+  (`/api/presence`), and starts the server again on the same port if it went away. Ten minutes after nothing is
+  connected the server stops.
+* **Files through GTK's dialogs (D501, D502).** The page asks the shell for a file (`pick_file`) and hands it the files
+  it saves (`save_file`): `Gtk.FileDialog` asks, the file travels in pieces, the page says where it went. A PDF to print
+  opens in the desktop's PDF viewer (`Gtk.FileLauncher`).
 
 ## Tests
 

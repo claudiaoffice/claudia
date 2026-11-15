@@ -52,7 +52,9 @@ def hello(**changes: object) -> str:
 def test_a_hello_is_answered_with_a_welcome_that_says_the_shell_has_native_menus(rig) -> None:
     bridge, recorder = rig
     bridge.receive(hello())
-    assert recorder.sent == [contract.welcome(shell_version="0.1.0", capabilities=["native-menu", "actions"])]
+    assert recorder.sent == [
+        contract.welcome(shell_version="0.1.0", capabilities=["native-menu", "actions"], app="composes")
+    ]  # D444: the window says which app it is, whatever the server behind it hosts
     assert bridge.ready
     assert recorder.ready == 1
 
@@ -330,3 +332,78 @@ def test_a_page_that_names_another_app_is_still_refused(rig) -> None:
     bridge.receive(json.dumps({"type": "hello", "contract": 1, "app": "creates"}))
     assert not bridge.ready
     assert recorder.sent[0]["type"] == "error"
+
+
+# ------------------------------------------------------------------------------------------------ files (D501)
+
+
+class Desk:
+    def __init__(self) -> None:
+        self.calls: list[tuple[object, ...]] = []
+
+    def pick(self, request: str, accept: list[str], title: str | None) -> None:
+        self.calls.append(("pick", request, accept, title))
+
+    def begin(self, request: str, name: str, size: int, purpose: str) -> None:
+        self.calls.append(("begin", request, name, size, purpose))
+
+    def chunk(self, request: str, index: int, data: str) -> None:
+        self.calls.append(("chunk", request, index, data))
+
+    def done(self, request: str, chunks: int) -> None:
+        self.calls.append(("done", request, chunks))
+
+
+@pytest.fixture
+def filing() -> tuple[Bridge, Recorder, Desk]:
+    recorder, desk = Recorder(), Desk()
+    bridge = Bridge(manifest.composes(), recorder.send, shell_version="0.1.0", files=desk)
+    return bridge, recorder, desk
+
+
+def test_files_are_offered_only_when_the_shell_has_a_desk_for_them(rig, filing) -> None:
+    bridge, recorder, _desk = filing
+    bridge.receive(hello())
+    assert recorder.sent[0]["capabilities"] == ["native-menu", "actions", "files"]
+    plain, plain_recorder = rig
+    plain.receive(hello())
+    plain.receive(json.dumps({"type": "pick_file", "request": "f1", "accept": []}))
+    assert plain_recorder.sent[-1]["message"] == "this shell does not handle files"
+
+
+def test_every_file_message_of_the_page_goes_to_the_desk_checked(filing) -> None:
+    bridge, recorder, desk = filing
+    bridge.receive(json.dumps({"type": "pick_file", "request": "f0", "accept": []}))  # before hello: refused
+    bridge.receive(hello())
+    for message in (
+        {"type": "pick_file", "request": "f1", "accept": ["docx"], "title": "Open"},
+        {"type": "save_file", "request": "f2", "name": "a.pdf", "size": 3, "purpose": "print"},
+        {"type": "save_file", "request": "f3", "name": "a.txt", "size": 3},
+        {"type": "file_chunk", "request": "f2", "index": 0, "data": "YWJj"},
+        {"type": "file_done", "request": "f2", "chunks": 1},
+        {"type": "save_file", "request": "f4", "name": "../a.txt", "size": 3},
+    ):
+        bridge.receive(json.dumps(message))
+    assert desk.calls == [
+        ("pick", "f1", ["docx"], "Open"),
+        ("begin", "f2", "a.pdf", 3, "print"),
+        ("begin", "f3", "a.txt", 3, "save"),
+        ("chunk", "f2", 0, "YWJj"),
+        ("done", "f2", 1),
+    ]
+    assert [m["type"] for m in recorder.sent] == ["error", "welcome", "error"]
+
+
+def test_what_became_of_a_file_goes_to_the_page_while_it_is_there(filing) -> None:
+    bridge, recorder, _desk = filing
+    assert not bridge.send_file_result("f1", "cancelled")
+    bridge.receive(hello())
+    recorder.sent.clear()
+    bridge.send_file_result("f1", "picked", name="a.docx", size=3)
+    bridge.send_file_chunk("f1", 0, "YWJj")
+    bridge.send_file_done("f1", 1)
+    assert recorder.sent == [
+        {"type": "file_result", "request": "f1", "outcome": "picked", "name": "a.docx", "size": 3},
+        {"type": "file_chunk", "request": "f1", "index": 0, "data": "YWJj"},
+        {"type": "file_done", "request": "f1", "chunks": 1},
+    ]

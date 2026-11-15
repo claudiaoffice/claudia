@@ -1,9 +1,11 @@
-"""The starter set: open fonts a server can fetch so that it has something to lay out and print with (D93, D905).
+"""The starter set: open fonts every server has, so that it can always lay out and print (D93, D905, D500).
 
 The set is pinned in ``starter.lock.json``: every file by URL (a fixed commit of github.com/google/fonts) and SHA-256.
-:func:`fetch` downloads what is missing into one folder per collection, each with its ``collection.json``, and
-refuses a file whose bytes are not the pinned ones. It is the only part of this package that uses the network, and it
-runs only when an operator asks for it (``python -m claudia_fonts fetch DIR``) or the demo start script does.
+Since D500 the set ships inside this package (:func:`builtin_folder`), so a server has it without the network — the
+desktop apps' local server above all, which nobody sets fonts up for. :func:`fetch` downloads what is missing into one
+folder per collection, each with its ``collection.json``, and refuses a file whose bytes are not the pinned ones; it is
+the only part of this package that uses the network, and it runs only when an operator asks for it
+(``python -m claudia_fonts fetch DIR``). The test suite checks that the shipped files are the pinned ones.
 """
 
 from __future__ import annotations
@@ -154,6 +156,12 @@ def fetch(
         _write(folder / COLLECTION_FILE, (json.dumps(record, indent=2) + "\n").encode("utf-8"))
         folders.append(folder)
     return folders
+
+
+def builtin_folder() -> Path:
+    """The starter set as this package ships it: a folder of collection folders (D500). Every server reads it first;
+    the fonts an operator adds come after it and win for the same family and style."""
+    return Path(str(resources.files("claudia_fonts").joinpath("builtin")))
 
 
 def collection_folders(path: str | Path) -> list[Path]:

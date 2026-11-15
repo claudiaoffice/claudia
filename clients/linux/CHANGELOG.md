@@ -4,6 +4,25 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Changed (D445, D434): the three apps share one local server
+- The window no longer starts a server of its own app (`--model`, a new port each time) that ends with it.
+  `desktop_server.py` finds or starts the one server of the suite: all three apps, `$XDG_DATA_HOME/claudia/documents`
+  and `$XDG_STATE_HOME/claudia/server`, the port remembered in `desktop-server.json`, `--exit-when-idle 600`, started
+  without the death signal so that it outlives its windows. Finding it runs on a thread (the window never blocks); a
+  presence connection keeps it in use while a window is open and starts it again if it went away. The twin of the
+  Windows and macOS clients' `desktop-server.ts`. Documents of the old per-app folders are not moved (D437).
+
+### Fixed
+- `welcome` now carries the window's app (D444); with the shared server the front page would have listed every app's
+  documents.
+
+### Added (D501, D502, D503)
+- Shell contract v1, additive: capability `files` and the messages `pick_file`, `save_file` (`purpose`: `save` or
+  `print`), `file_chunk`, `file_done` and `file_result`. A file travels in pieces of 36 KiB, so no message is over 64 KiB.
+- The window chooses and saves the page's files with GTK's own dialogs (`files.py`, `window.GtkDialogs`): Open a
+  File… works from the native menu too, and an export asks where to save and says where it went, instead of landing in
+  Downloads. Print… opens the pages in the desktop's PDF viewer.
+
 ### Fixed (print on the desktop: E6.19)
 - Claudia Computes had File ▸ Print… (Ctrl+P) on the web only: the desktop shells hide the web menu bar, so on the
   desktop the sheets could not be printed. It is in the menus of the Linux client and in the listing for macOS and

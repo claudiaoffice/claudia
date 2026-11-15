@@ -66,6 +66,17 @@ VALID = [
             {"origin": "https://demo.example.org:8420", "label": "demo", "custom": False},
         ],
     },
+    # (D501, D502) files through the shell's own dialogs, in pieces
+    {"type": "pick_file", "request": "f1-abc", "accept": ["docx", "odt"], "title": "Open a File"},
+    {"type": "pick_file", "request": "f1", "accept": []},
+    {"type": "save_file", "request": "f2", "name": "Budget 2027.xlsx", "size": 1234, "mime": "application/zip"},
+    {"type": "save_file", "request": "f3", "name": "pages.pdf", "size": 0, "purpose": "print"},
+    {"type": "file_chunk", "request": "f2", "index": 0, "data": "aGVsbG8="},
+    {"type": "file_done", "request": "f2", "chunks": 1},
+    {"type": "file_result", "request": "f1", "outcome": "picked", "name": "a.docx", "size": 5},
+    {"type": "file_result", "request": "f2", "outcome": "saved", "path": "/home/ann/Documents/Budget 2027.xlsx"},
+    {"type": "file_result", "request": "f3", "outcome": "opened", "path": "/tmp/claudia-print/pages.pdf"},
+    {"type": "file_result", "request": "f2", "outcome": "failed", "message": "The disk is full."},
 ]
 # ... and messages nobody may accept.
 INVALID = [
@@ -101,6 +112,18 @@ INVALID = [
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": "yes"}]},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "local": 1}]},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False}] * 65},
+    {"type": "pick_file", "accept": []},  # (D501) no request
+    {"type": "pick_file", "request": "f1", "accept": [".docx"]},
+    {"type": "pick_file", "request": "f1", "accept": ["a"] * 33},
+    {"type": "save_file", "request": "f2", "name": "../etc/passwd", "size": 1},
+    {"type": "save_file", "request": "f2", "name": "a\\b.txt", "size": 1},
+    {"type": "save_file", "request": "f2", "name": "a", "size": 104857601},
+    {"type": "save_file", "request": "f2", "name": "a", "size": 1, "purpose": "mail"},
+    {"type": "file_chunk", "request": "f2", "index": 0, "data": "not base64!"},
+    {"type": "file_chunk", "request": "f2", "index": 0, "data": "A" * 49153},
+    {"type": "file_chunk", "request": "f2", "index": -1, "data": ""},
+    {"type": "file_done", "request": "f2"},
+    {"type": "file_result", "request": "f2", "outcome": "lost"},
 ]
 
 

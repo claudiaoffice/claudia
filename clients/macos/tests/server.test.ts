@@ -4,7 +4,7 @@
 // server if the shell is kill -9'd" guarantee here yet (see server.ts's own top comment and the implementation
 // notes: an open item, not silently assumed solved).
 import { EventEmitter } from 'node:events'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -21,20 +21,18 @@ describe('freePort', () => {
 })
 
 describe('buildServerCommand', () => {
-  it('matches the Linux client\'s composes_command shape, for the given model', () => {
+  it('is the command of the one server of the suite (D445): all apps, loopback, and stopping by itself when nobody uses it', () => {
     const command = buildServerCommand('/usr/bin/python3.14', {
-      model: 'claudia_creates:SlideModel',
       port: 41233,
       documents: '/docs',
       web: '/frontend',
       state: '/state',
+      idleSeconds: 600,
     })
     expect(command).toEqual([
       '/usr/bin/python3.14',
       '-m',
       'claudia_server',
-      '--model',
-      'claudia_creates:SlideModel',
       '--host',
       '127.0.0.1',
       '--port',
@@ -46,6 +44,8 @@ describe('buildServerCommand', () => {
       '/state',
       '--web',
       '/frontend',
+      '--exit-when-idle',
+      '600',
     ])
   })
 })
@@ -108,17 +108,58 @@ describe('LocalServer log capture', () => {
   it("ServerStartError quotes the log's tail when the process exits before answering", async () => {
     dir = mkdtempSync(join(tmpdir(), 'claudia-server-log-'))
     const log = join(dir, 'server.log')
-    writeFileSync(log, 'ModuleNotFoundError: no module named claudia_server\n')
     const child = new FakeChildProcess()
     const server = new LocalServer(['python3'], {
       url: 'http://127.0.0.1:1',
-      spawnFn: () => child as never,
+      spawnFn: (_command, path) => {
+        appendFileSync(path, 'ModuleNotFoundError: no module named claudia_server\n') // what the server writes
+        return child as never
+      },
       healthFn: async () => false,
       log,
     })
     server.spawn()
     child.exit(1)
     await expect(server.checkReady()).rejects.toThrow(/ModuleNotFoundError/)
+  })
+
+  it("quotes only what this start wrote: server.log is shared by every start of the suite's one server (D445)", async () => {
+    dir = mkdtempSync(join(tmpdir(), 'claudia-server-log-'))
+    const log = join(dir, 'server.log')
+    writeFileSync(log, 'serving composes, computes, creates on ws://127.0.0.1:41233\nan older run\n')
+    const child = new FakeChildProcess()
+    const server = new LocalServer(['python'], {
+      url: 'http://127.0.0.1:1',
+      spawnFn: (_command, path) => {
+        appendFileSync(path, 'error: another Claudia server uses /docs\n')
+        return child as never
+      },
+      healthFn: async () => false,
+      log,
+    })
+    server.spawn()
+    child.exit(2)
+    const caught = await server.checkReady().catch((problem: unknown) => problem)
+    expect(caught).toBeInstanceOf(ServerStartError)
+    expect((caught as Error).message).toMatch(/another Claudia server uses/)
+    expect((caught as Error).message).not.toMatch(/an older run|serving composes/)
+  })
+
+  it('tells a start that ended by itself from one that never answered (a caller that shares the server looks for the winner)', async () => {
+    const exited = new FakeChildProcess()
+    const one = new LocalServer(['python'], { url: 'http://127.0.0.1:1', spawnFn: () => exited as never, healthFn: async () => false, stopGraceMs: 1 })
+    one.spawn()
+    exited.exit(2)
+    expect(await one.checkReady().catch((problem: unknown) => problem)).toMatchObject({ exited: true })
+
+    let now = 0
+    const silent = new FakeChildProcess()
+    const two = new LocalServer(['python'], { url: 'http://127.0.0.1:1', spawnFn: () => silent as never, healthFn: async () => false, nowFn: () => now, startupTimeoutMs: 10, stopGraceMs: 1 })
+    two.spawn()
+    now = 100
+    const caught = await two.checkReady().catch((problem: unknown) => problem)
+    expect(caught).toBeInstanceOf(ServerStartError)
+    expect((caught as ServerStartError).exited).toBe(false)
   })
 
   it('says nothing extra when the log is empty or does not exist yet', async () => {

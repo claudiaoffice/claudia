@@ -445,3 +445,29 @@ def test_the_page_is_made_with_a_way_to_ask_for_the_trusted_certificates(window)
     window.show_page("http://127.0.0.1:1")
     pinned = window.fake_pages[0].callbacks["pinned"]
     assert pinned("https://demo.example.org") is None
+
+
+# --------------------------------------------------------------------------------------------- files (D501, D502)
+
+
+def test_the_window_offers_files_and_says_its_app_in_the_welcome(window) -> None:
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says({"type": "hello", "contract": 1, "app": "composes", "view": "start"})
+    welcome = next(m for m in page.sent if m["type"] == "welcome")
+    assert "files" in welcome["capabilities"]
+    assert welcome["app"] == "composes"  # D444: the front page of a shared server shows this app's documents only
+
+
+def test_the_gtk_dialogs_are_made_with_the_extensions_and_the_folder(window, tmp_path) -> None:
+    """What the person sees cannot be clicked here; what the dialog is given can be checked."""
+    from claudia_shell_gtk.window import GtkDialogs
+
+    dialogs = GtkDialogs(window)
+    dialog = dialogs._dialog("Open a File", ["docx", "odt"], tmp_path)  # noqa: SLF001
+    assert dialog.get_title() == "Open a File"
+    assert dialog.get_initial_folder().get_path() == str(tmp_path)
+    filters = dialog.get_filters()
+    assert filters.get_n_items() == 2  # the kinds asked for, then every file
+    assert dialog.get_default_filter().get_name() == "DOCX, ODT"
+    assert dialogs._dialog("Save", [], None).get_filters() is None  # noqa: SLF001
