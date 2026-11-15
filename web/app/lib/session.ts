@@ -16,6 +16,7 @@ import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
 import type { NameDraft, NameInfo } from './names'
+import type { PivotDefinition, PivotInfo, PivotLabels } from './pivots'
 import type { OutcomeTable } from './outcomes'
 import type { Reach, Trace, Window } from './follow'
 import type { PageSetupData } from '@claudia/layout'
@@ -84,6 +85,9 @@ export interface State extends BaseState {
   charts: Chart[] // chart tabs, in tab order
   /** The workbook's names: named ranges, tables and the results of `SQL()` cells (E6.5), as `names` sends them. */
   names: NameInfo[]
+  /** The workbook's pivot tables (E6.30), as `pivots` sends them: what each is made from, and the cells it fills now. Asked
+   * for again whenever something that could change them did (`reloadPivots`). */
+  pivots: PivotInfo[]
   /** A diagram's Plotly figure, read live off its sheet, cached by diagram id until something that could
    * change it happens — its own definition changing, or a `cells` event touching its range (`ensureFigure`,
    * `onAppEvent`'s `'cells'`/`'diagram'` cases). Never persisted across a reload: `loadApp` starts it empty. */
@@ -177,6 +181,7 @@ export class Session extends BaseSession<State> {
       diagrams: {},
       charts: [],
       names: [],
+      pivots: [],
       figures: {},
       styles: {},
       palette: null,
@@ -198,7 +203,7 @@ export class Session extends BaseSession<State> {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random, formats, printing, language] = await Promise.all([
+    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random, formats, printing, language, pivots] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
       link.request<ChartSpec[]>('diagrams'),
@@ -214,6 +219,8 @@ export class Session extends BaseSession<State> {
       // a server from before printing has neither: the preview then starts from A4 and cannot store a change
       link.request<{ page: PageSetupData; sheets: Record<string, SheetPrintData> }>('print_setup').catch(() => null),
       link.request<{ language: string | null }>('language').then((a) => a.language, () => undefined),
+      // a server from before pivot tables has none: there are no pivots to draw
+      link.request<{ pivots: PivotInfo[] }>('pivots').then((a) => a.pivots, () => [] as PivotInfo[]),
     ])
     this.forgetCells()
     const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
@@ -228,6 +235,7 @@ export class Session extends BaseSession<State> {
     s.diagrams = Object.fromEntries(diagrams.map((x) => [x.id, x]))
     s.charts = charts
     s.names = names.names
+    s.pivots = pivots
     s.figures = {}
     this.figuresInflight.clear()
     s.styles = Object.fromEntries(styles.map((x) => [x.id, x]))
@@ -381,6 +389,29 @@ export class Session extends BaseSession<State> {
     for (const spec of Object.values(this.state.diagrams)) if (spec.source !== undefined) delete this.state.figures[spec.id]
   }
 
+  private pivotsAsked = false
+  private pivotsAgain = false
+
+  /** Re-fetch the pivot tables: the `pivots` push event carries no payload of its own (`claudia_computes.events.PivotsChanged`),
+   * and the cells a pivot fills grow and shrink with its source, so a change of cells or rows asks too. Asks that come
+   * while one is out are one more ask afterwards, not each their own. A server from before pivot tables leaves them be. */
+  private async reloadPivots() {
+    if (this.pivotsAsked) {
+      this.pivotsAgain = true
+      return
+    }
+    this.pivotsAsked = true
+    try {
+      do {
+        this.pivotsAgain = false
+        const answer = await this.need().request<{ pivots: PivotInfo[] }>('pivots').catch(() => null)
+        if (answer) this.state.pivots = answer.pivots
+      } while (this.pivotsAgain)
+    } finally {
+      this.pivotsAsked = false
+    }
+  }
+
   /** Forgets a sheet's cells, and with them its row/column sizes — a structural edit (rows or columns inserted or
    * deleted) shifts both the same way, and the server does not echo the shifted sizes back as their own event. */
   private forgetCells(sheet?: string) {
@@ -497,6 +528,7 @@ export class Session extends BaseSession<State> {
           else map.set(key(r, c), content)
         }
         this.refollow()
+        if (s.pivots.length) this.track(this.reloadPivots()) // the source it reads, or the cells it fills, may be these
         // A changed cell may feed a diagram's figure even on another sheet's screen (a chart tab, say), so
         // every cached figure is checked, not only those for the active sheet.
         const positions = data.positions as [number, number][]
@@ -510,6 +542,7 @@ export class Session extends BaseSession<State> {
       case 'structure':
         this.forgetCells(data.sheet)
         this.refollow()
+        if (s.pivots.length) this.track(this.reloadPivots())
         return true
       case 'sizes': {
         const target = (data.axis as Axis) === 'row' ? (s.rowHeights[data.sheet] ??= new Map()) : (s.colWidths[data.sheet] ??= new Map())
@@ -545,6 +578,9 @@ export class Session extends BaseSession<State> {
         return true
       case 'names':
         this.track(this.reloadNames())
+        return true
+      case 'pivots':
+        this.track(this.reloadPivots())
         return true
       case 'styles':
         // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
@@ -800,6 +836,51 @@ export class Session extends BaseSession<State> {
   /** Put a query into a cell as `=SQL("…")`, and with `name` make its result a table of that name. */
   async defineSql(sheet: string, row: number, col: number, query: string, name: string | null): Promise<boolean> {
     return (await this.attempt('define_sql', { sheet, row, col, query, name, base: this.state.revision })) !== false
+  }
+
+  // -- pivot tables (E6.30)
+  /** Make a pivot table called `name` from `definition`, starting at a cell of `sheet` or on a sheet of its own called
+   * `newSheet`; the sheet it is on, or `null` after telling the person why not. The words it writes are `labels`. */
+  async definePivot(
+    name: string,
+    definition: PivotDefinition,
+    labels: PivotLabels,
+    place: { sheet: string; row: number; col: number } | { newSheet: string },
+  ): Promise<string | null> {
+    const where = 'newSheet' in place ? { new_sheet: place.newSheet } : { sheet: place.sheet, row: place.row, col: place.col }
+    const done = await this.attempt('define_pivot', { name, definition, labels, ...where, base: this.state.revision })
+    return done === false ? null : done.sheet
+  }
+
+  /** Change what a pivot table is made from; its cells follow. The words it already writes stay unless `labels` is given. */
+  async updatePivot(name: string, definition: PivotDefinition, labels?: PivotLabels): Promise<boolean> {
+    return (await this.attempt('update_pivot', { name, definition, ...(labels ? { labels } : {}), base: this.state.revision })) !== false
+  }
+
+  /** Take a pivot table away: its cells are empty, the source is untouched. */
+  async deletePivot(name: string): Promise<boolean> {
+    return (await this.attempt('delete_pivot', { name, base: this.state.revision })) !== false
+  }
+
+  /** The SQL query a pivot table is, or `null` after telling the person why not. */
+  async pivotSql(name: string): Promise<string | null> {
+    const done = await this.attempt('pivot_sql', { name })
+    return done === false ? null : done.sql
+  }
+
+  /** Turn a pivot table into a `SQL()` query of the same name; one step in the history. */
+  async pivotToSql(name: string): Promise<boolean> {
+    return (await this.attempt('pivot_to_sql', { name, base: this.state.revision })) !== false
+  }
+
+  /** The members a field of `source` has, for a filter's list: at most `limit` (the preview shows 50 rows at most), in order; `null` is "nothing". */
+  async pivotMembers(source: string, field: string, sheet: string, limit = 40): Promise<{ members: (string | number | null)[]; more: boolean } | null> {
+    const quote = (word: string) => `"${word.replace(/"/g, '""')}"`
+    const query = `SELECT DISTINCT ${quote(field)} FROM ${quote(source)} ORDER BY ${quote(field)} LIMIT ${limit + 1}`
+    const answer = await this.sqlPreview(query, sheet, limit + 1).catch(() => null)
+    if (!answer || !answer.ok) return null
+    const members = answer.rows.map((row) => row[0] as string | number | null)
+    return { members: members.slice(0, limit), more: members.length > limit }
   }
 
   /** Drag an object to a new anchor cell; its size never changes. */

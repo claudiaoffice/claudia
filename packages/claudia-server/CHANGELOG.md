@@ -38,6 +38,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `resize_object` and `remove_object` hang an object from a character of a paragraph, size it and take it away. The
   assistant is refused, as it is for the words. `add_rendering_methods` takes a `guard` that says who may change
   containers. No change to `PROTOCOL_VERSION`: the methods are new.
+- computes: `pivots`, `define_pivot`, `update_pivot`, `delete_pivot`, `pivot_sql`, `pivot_to_sql` (E6.30, D620, D626)
+  and a pushed `pivots` event: make, change, delete and read pivot tables, and turn one into the `SQL()` query it is.
+  `define_pivot` may make the sheet it starts on (`new_sheet`) in the same step of the history.
 
 ### Fixed
 - `add_object` in creates refuses `rendered` and `diagram` with a sentence that says where they come from; it failed

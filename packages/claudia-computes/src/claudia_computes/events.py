@@ -67,6 +67,15 @@ class NamesChanged:
 
 
 @dataclass(frozen=True)
+class PivotsChanged:
+    """A pivot table was made, changed (its fields or its words) or deleted."""
+
+    def to_data(self) -> dict:
+        """The event as it goes to the clients: only its type; they ask for the pivots again."""
+        return {"type": "pivots"}
+
+
+@dataclass(frozen=True)
 class LinesResized:
     """Rows or columns of one sheet were given a size, or returned to the sheet's default (``size`` is ``None``)."""
 

@@ -994,6 +994,41 @@ def computes() -> Manifest:
                     accelerators=("<Primary><Alt>y",),
                 ),
             ),
+            # Pivot tables (E6.30, D624): the entries that work on a pivot are off while the cursor is not in one.
+            # The keys are not the mock's proposals (Ctrl+Alt+T, E, M, Q): those are the terminal on Ubuntu and
+            # AltGr+E/M/Q (€, µ, @) on a German keyboard, which this manifest's own test refuses (D627).
+            (
+                _page(
+                    "tools.pivot",
+                    "Pivot Table…",
+                    "Make a pivot table from a table",
+                    accelerators=("<Primary><Alt>v",),
+                ),
+                _page(
+                    "tools.pivot-fields",
+                    "Pivot Fields",
+                    "Show or hide the panel with the fields of the pivot table",
+                    accelerators=("<Primary><Shift><Alt>f",),
+                ),
+                _page(
+                    "tools.pivot-value",
+                    "Value Field Settings…",
+                    "How the values of a pivot table field are put together",
+                    accelerators=("<Primary><Alt>z",),
+                ),
+                _page(
+                    "tools.pivot-sql",
+                    "Show Pivot Table as SQL…",
+                    "The query the pivot table asks of its source",
+                    accelerators=("<Primary><Alt>x",),
+                ),
+                _page(
+                    "tools.pivot-delete",
+                    "Delete Pivot Table…",
+                    "Take the pivot table away; its source stays",
+                    accelerators=("<Primary><Shift><Alt>v",),
+                ),
+            ),
         ),
     )
     return _manifest(

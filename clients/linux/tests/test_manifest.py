@@ -753,6 +753,22 @@ def test_computes_tools_menu_has_random_outcomes_and_follow_entries_each_with_a_
         assert computes.action(action_id).kind is Kind.PAGE, action_id
 
 
+def test_computes_tools_menu_has_the_pivot_table_entries_each_with_a_key(computes: manifest.Manifest) -> None:
+    """E6.30, D624: the five pivot entries of Tools, each with a key (project rule).
+
+    The mock proposed Ctrl+Alt+T/E/M/Q, which the terminal and AltGr take (D627)."""
+    keys = {
+        "tools.pivot": ("<Primary><Alt>v",),
+        "tools.pivot-fields": ("<Primary><Shift><Alt>f",),
+        "tools.pivot-value": ("<Primary><Alt>z",),
+        "tools.pivot-sql": ("<Primary><Alt>x",),
+        "tools.pivot-delete": ("<Primary><Shift><Alt>v",),
+    }
+    for action_id, accelerators in keys.items():
+        assert computes.action(action_id).accelerators == accelerators, action_id
+        assert computes.action(action_id).kind is Kind.PAGE, action_id
+
+
 # UX-36: the other direction. Entries that are only a flyout's parent (they have an id for the web's own drawing, not
 # an action) are named, with the reason, so that nothing else can be web-only without someone saying so here.
 WEB_ONLY_PARENTS = {

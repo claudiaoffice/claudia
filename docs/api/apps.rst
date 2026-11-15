@@ -29,9 +29,40 @@ computes
 .. autoclass:: claudia_computes.RemoveName
 .. autoclass:: claudia_computes.RestoreNames
 .. autoclass:: claudia_computes.spill.Table
+.. autoclass:: claudia_computes.spill.Matrix
 .. autoclass:: claudia_computes.SheetPrintSetup
 .. autoclass:: claudia_computes.PrintSetupError
 .. autodata:: claudia_computes.DEFAULT_SHEET_PRINT
+
+Pivot tables
+~~~~~~~~~~~~
+
+A pivot table is a definition, not a formula: it names a table or range, the fields down the rows and across the
+columns, and the values to add up (D620). :func:`claudia_computes.compute_pivot` makes it a query for the SQL engine
+and the answer a grid of values with the role each cell plays (D621, D622).
+
+.. autoclass:: claudia_computes.PivotDefinition
+.. autoclass:: claudia_computes.ValueField
+.. autoclass:: claudia_computes.PivotFilter
+.. autoclass:: claudia_computes.Aggregation
+.. autoclass:: claudia_computes.PivotLabels
+.. autoclass:: claudia_computes.PivotResult
+.. autoclass:: claudia_computes.PivotRole
+.. autoclass:: claudia_computes.PivotError
+.. autofunction:: claudia_computes.compute_pivot
+
+In a workbook (D626) a pivot is a :class:`~claudia_computes.PivotEntry` kept by name, a ``PIVOT("name")`` formula in
+the cell where it starts and a result name for the cells it fills. The functions below build the commands that keep the
+three in step; each is one step of the history.
+
+.. autoclass:: claudia_computes.PivotEntry
+.. autoclass:: claudia_computes.Pivots
+.. autoclass:: claudia_computes.SetPivot
+.. autoclass:: claudia_computes.PivotsChanged
+.. autofunction:: claudia_computes.create_pivot
+.. autofunction:: claudia_computes.update_pivot
+.. autofunction:: claudia_computes.delete_pivot
+.. autofunction:: claudia_computes.pivot_to_sql
 
 Random numbers, alternatives and following a computation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

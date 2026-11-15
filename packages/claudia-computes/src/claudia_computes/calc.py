@@ -35,7 +35,7 @@ from .events import CellsChanged
 from .formula import Formula, parse_formula, print_formula
 from .formula.compiler import Binding, Compiler, Evaluator
 from .formula.forms.alternatives import labels_of
-from .formula.nodes import Call, shape_only_refs, walk
+from .formula.nodes import Call, Str, shape_only_refs, walk
 from .formula.operators import single
 from .formula.scope import Scope
 from .functions.range import Range
@@ -81,6 +81,7 @@ class Compiled:
         "evaluate",
         "formula",
         "mentions",
+        "pivot",
         "random",
         "ranges",
         "reads",
@@ -105,8 +106,11 @@ class Compiled:
         # A formula with a query reads the tables it names, which its text does not: where it looked is recorded
         # (like a dynamic formula's), but it is calculated again only when what it read changes.
         self.records = formula.ast is not None and any(
-            isinstance(n, Call) and n.name == "SQL" for n in walk(formula.ast)
+            isinstance(n, Call) and n.name in ("SQL", "PIVOT") for n in walk(formula.ast)
         )
+        # The pivot table a formula shows (``PIVOT("Sales by region")`` as the whole formula): it is calculated again
+        # when the definition of that pivot changes, which its text does not say.
+        self.pivot: str | None = _pivot_of(formula)
         cells: list[Key] = []
         ranges: list[Rect] = []
         positions_only = _positions_only(formula)
@@ -131,6 +135,14 @@ class Compiled:
     @property
     def source(self) -> str:
         return self.formula.source
+
+
+def _pivot_of(formula) -> str | None:  # noqa: ANN001 (a ``Formula``, by duck type as above)
+    """The name of the pivot table a formula is the whole of (``PIVOT("name")``), or ``None``."""
+    ast = formula.ast
+    if isinstance(ast, Call) and ast.name == "PIVOT" and len(ast.args) == 1 and isinstance(ast.args[0], Str):
+        return ast.args[0].value.casefold()
+    return None
 
 
 class ColumnReaders:
@@ -425,6 +437,7 @@ class Calculator:
         self.outcomes = Outcomes(self)
         self.referring: dict[SheetId, set[Key]] = defaultdict(set)  # the formulas that name cells of a sheet
         self._name_users: dict[str, set[Key]] = defaultdict(set)  # name text (casefolded) -> the formulas using it
+        self._pivot_users: dict[str, set[Key]] = defaultdict(set)  # pivot name (casefolded) -> the cells showing it
         self._cell_readers: dict[Key, set[Key]] = defaultdict(set)
         self._column_readers: dict[tuple[SheetId, int], ColumnReaders] = {}
         self._wide_readers: dict[Key, list[Rect]] = {}
@@ -499,6 +512,10 @@ class Calculator:
         for key in [k for k in self.spills if k[0] == sheet_id]:
             self.clear_spill(key)
 
+    def refresh_pivot(self, name: str) -> None:
+        """The definition of the pivot ``name`` changed: the cells that show it are calculated again."""
+        self.forced |= self._pivot_users.get(name.casefold(), set())
+
     def users_of(self, text: str) -> list[Key]:
         """The formulas that use the name ``text`` (found or not), in order."""
         return sorted(self._name_users.get(text.casefold(), ()))
@@ -534,6 +551,8 @@ class Calculator:
             self._cell_readers[cell].add(key)
         for text in compiled.mentions:
             self._name_users[text].add(key)
+        if compiled.pivot is not None:
+            self._pivot_users[compiled.pivot].add(key)
         self._enter_rects(key, compiled.ranges)
         if forced:
             self.forced.add(key)
@@ -549,6 +568,8 @@ class Calculator:
         self.dynamic.discard(key)
         self.random.discard(key)
         self.alternatives.pop(key, None)
+        if compiled.pivot is not None:
+            self._pivot_users[compiled.pivot].discard(key)
         self.graph_version += 1
         for target in {area.sheet or sheet for area in compiled.formula.refs}:
             self.referring[target].discard(key)
@@ -647,6 +668,7 @@ class Calculator:
         self.graph_version += 1
         self.referring.clear()
         self._name_users.clear()
+        self._pivot_users.clear()
         self._cell_readers.clear()
         self._column_readers.clear()
         self._wide_readers.clear()
@@ -721,6 +743,7 @@ class Calculator:
         scope = Scope(self.model.sheets, self.model.sheet_id_of)
         scope.indexes = self._lookup_indexes
         scope.names = self.model.names
+        scope.pivots = self.model.pivots
         scope.spills = self.spills
         scope.seed, scope.draw = self.model.random_seed, self.model.random_draw
         scope.choice = self.choice

@@ -45,6 +45,7 @@ from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here
 from .names import NamedRange, NameKey, Names, Rect, key_of, name_problem
 from .numformats import NumberFormatBook
 from .outcomes import InputCell, OutcomeTable, Summary
+from .pivots import PivotEntry, Pivots
 from .printing import DEFAULT_SHEET_PRINT, SheetPrintSetup, sheet_print_to_data
 from .refs import CellRef, Position, RangeRef, SheetId, StructuralEdit, column_name
 from .spill import Table
@@ -430,9 +431,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 9: object bodies carry a description
     # 10: the workbook carries its named number formats (D378)
     # 11: rendered text containers (D390)
-    state_schema: ClassVar[int] = (
-        13  # 13: names have ids (D552); 12: how it is printed, and its language (E6.19, D1001)
-    )
+    # 12: how it is printed, and its language (E6.19, D1001)
+    # 13: names have ids (D552)
+    state_schema: ClassVar[int] = 14  # 14: the workbook carries its pivot tables (E6.30, D620)
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
@@ -459,6 +460,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.charts: dict[str, Chart] = {}
         #: Named ranges, tables and the results of ``SQL()`` formulas (E6.5): see :class:`~claudia_computes.Names`.
         self.names = Names()
+        #: The pivot tables of the workbook, as :class:`~claudia_computes.Pivots` (E6.30).
+        self.pivots = Pivots()
         #: The seed and the draw number every random number is a function of (D291). Both are part of the document, so
         #: everybody sees the same numbers; ``Resample`` raises the draw number, ``SetRandomSeed`` changes the seed.
         self.random_seed = 0
@@ -501,6 +504,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "objects": self.objects_to_data(),
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),
+            "pivots": self.pivots.to_data(),
             "random": {"seed": self.random_seed, "draw": self.random_draw},
             "number_formats": self.number_formats.to_data(),
             "print_page": self.print_page.to_data(),
@@ -524,6 +528,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         )
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
+        model.pivots = Pivots.from_data(state.get("pivots", ()))  # (schema 13 and earlier: none)
         model.random_seed, model.random_draw = state["random"]["seed"], state["random"]["draw"]
         model.number_formats = NumberFormatBook.from_data(state["number_formats"])
         # schema 11 and earlier: A4 portrait, every sheet printed the default way, no language (E6.19)
@@ -922,6 +927,14 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         scope = self.calc.scope_for(home)
         return run_query(text, parameters, scope.table_data)
 
+    def put_pivot(self, name: str, entry: PivotEntry | None) -> PivotEntry | None:
+        """Set (or, with ``None``, take out) the pivot called ``name``; returns what it was, to put back. The cells
+        that show it are calculated again."""
+        before = self.pivots.get(name)
+        self.pivots.put(name, entry)
+        self.calc.refresh_pivot(name)
+        return before
+
     def put_names(self, entries: Sequence[tuple[NameKey, NamedRange | None]]) -> NameRestores:
         """Set (or, with ``None``, take out) names; returns what each key held before, to put back. Formulas that use
         any of them are compiled again."""
@@ -1001,6 +1014,12 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             restores[home].append((row, col, {"t": "formula", "v": compiled.source}))
             calc.define(key, calc.compile_formula(home, formula, (row, col)))
         calc.rebind({old, new})
+        if scope is None:  # (a pivot over the table keeps reading it; the undo is the same rename the other way)
+            for entry in list(self.pivots):
+                if entry.definition.source.casefold() == old.casefold():
+                    source = replace(entry.definition, source=new)
+                    self.pivots.put(entry.name, replace(entry, definition=source))
+                    calc.refresh_pivot(entry.name)
         return restores
 
     def _adjust_names(self, edit: StructuralEdit, remap) -> NameRestores:

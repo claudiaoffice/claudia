@@ -23,6 +23,7 @@ import {
   type Purpose,
 } from '~/lib/names'
 import { queryOfFormula } from '~/lib/sql'
+import { pivotAt, roleAt, roleLabel, valueIndexFor } from '~/lib/pivots'
 import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
@@ -48,7 +49,7 @@ import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
 import { describeShortcut, objectName, pictureAlt } from '~/lib/descriptions'
 import { selectionAnnouncement } from '~/lib/grid-a11y'
-import { chordLabel, chordOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import type { PreviewAnswer, SearchMatch } from '~/lib/search'
 import { marksFor, NO_MARKS, sheetSearchHost } from '~/lib/sheet-search-host'
 import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~/lib/follow'
@@ -80,7 +81,7 @@ const edit = ref<EditState | null>(null)
 const pointed = ref(false) // the selection is the last cell range picked with the mouse in a formula
 let original = ''
 /** computes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'sheet' | 'rename' | 'image' | 'chart' | 'names' | 'row-size' | 'col-size' | 'styles' | 'colours' | 'random'>(null)
+const dialog = ref<null | 'sheet' | 'rename' | 'image' | 'chart' | 'names' | 'pivot-new' | 'row-size' | 'col-size' | 'styles' | 'colours' | 'random'>(null)
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 
 const EXPORT_FORMATS = [
@@ -308,6 +309,69 @@ async function pickPurpose(offset: number | null, purpose: Purpose) {
   tableMenu.value = null
   if (open) await session.defineName(withPurpose(open.table, offset, purpose))
 }
+
+// ------------------------------------------------------------------------------ pivot tables (E6.30, D624)
+// A pivot table is a name with a place (`state.pivots`); the entries of Tools that work on one are off while the cursor
+// is not in one. The field panel floats like Search & replace; the dialogs are made on demand.
+const pivotHere = computed(() => (activeChart.value ? null : pivotAt(state.pivots, state.activeSheet, sel.value.row, sel.value.col)))
+const pivotPanelName = ref<string | null>(null)
+const panelPivot = computed(() => state.pivots.find((p) => p.name === pivotPanelName.value) ?? null)
+const pivotValue = ref<{ name: string; index: number } | null>(null)
+const pivotSqlName = ref<string | null>(null)
+const pivotDeleteName = ref<string | null>(null)
+const pivotMembersOf = ref<{ name: string; field: string } | null>(null)
+watch(panelPivot, (now) => {
+  if (now === null) pivotPanelName.value = null // deleted, here or by somebody else
+})
+
+function openPivotNew() {
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  dialog.value = 'pivot-new'
+}
+async function pivotCreated(name: string, sheet: string) {
+  if (sheet !== state.activeSheet || activeChart.value) await pickTab(sheet, 'sheet')
+  pivotPanelName.value = name
+}
+/** Pivot Fields: shows the panel for the pivot the cursor is in, or hides it. */
+function togglePivotFields() {
+  if (panelPivot.value) {
+    pivotPanelName.value = null
+    return grid.value?.focus()
+  }
+  if (!pivotHere.value) return session.notice(t('Put the cursor in a pivot table first.'), 'warning')
+  pivotPanelName.value = pivotHere.value.name
+}
+function openPivotValue(index?: number) {
+  const pivot = pivotHere.value ?? panelPivot.value
+  if (!pivot || readonly.value) return
+  let at = index
+  if (at === undefined) {
+    const g = pivot.region
+    const texts: string[] = []
+    if (g && pivotHere.value) for (let r = 0; r < pivot.header_rows; r++) texts.push(String(session.cell(state.activeSheet, g.row0 + r, sel.value.col)?.v ?? ''))
+    at = valueIndexFor(pivot, texts) ?? undefined
+  }
+  if (at === undefined) return session.notice(t('This pivot table has no value field yet. Put a field into Values.'), 'warning')
+  pivotValue.value = { name: pivot.name, index: at }
+}
+function openPivotSql() {
+  const pivot = pivotHere.value ?? panelPivot.value
+  if (pivot) pivotSqlName.value = pivot.name
+}
+function openPivotDelete() {
+  const pivot = pivotHere.value
+  if (pivot && !readonly.value) pivotDeleteName.value = pivot.name
+}
+/** The entries of the cell menu and of Tools that work on the pivot the cursor is in. */
+const pivotItems = computed(() => {
+  const here = pivotHere.value !== null
+  return [
+    { id: 'tools.pivot-value', label: t('Value Field Settings…'), hint: hintOf('tools.pivot-value'), action: () => openPivotValue(), disabled: !here || readonly.value },
+    { id: 'tools.pivot-fields', label: t('Pivot Fields'), hint: hintOf('tools.pivot-fields'), checked: panelPivot.value !== null, action: () => togglePivotFields(), disabled: !here && panelPivot.value === null },
+    { id: 'tools.pivot-sql', label: t('Show Pivot Table as SQL…'), hint: hintOf('tools.pivot-sql'), action: () => openPivotSql(), disabled: !here },
+    { id: 'tools.pivot-delete', label: t('Delete Pivot Table…'), hint: hintOf('tools.pivot-delete'), action: () => openPivotDelete(), disabled: !here || readonly.value },
+  ]
+})
 
 /** The cell the SQL editor writes to: the active cell, or the cell of the query that fills it when it is a part of a
  * result — with what is already in it. */
@@ -691,6 +755,10 @@ function say() {
   const id = objectSelected.value ? grid.value?.selectedObject() : null
   const object = id ? state.objects[id] : undefined
   announcement.value = object ? t('Selected: {name}', { name: objectName(object) }) : (selectionAnnouncement(sel.value, VIEW_ROWS, VIEW_COLS) ?? '')
+  // a cell of a pivot table says what it is there (BITV): the colours alone would not
+  const pivot = pivotHere.value
+  const role = pivot && !object ? roleAt(pivot, sel.value.row, sel.value.col) : null
+  if (role && pivot) announcement.value = `${announcement.value} · ${t('{name}: {role}', { name: pivot.name, role: roleLabel(role) })}`
 }
 watch([sel, objectSelected], () => {
   clearTimeout(announceTimer)
@@ -960,6 +1028,7 @@ const cellMenuItems = computed(() => [
   { id: 'tools.outcomes', label: t('Outcomes of This Cell…'), hint: chordLabel(OUTCOMES.chord), action: () => openOutcomes(cellMenu.value ?? undefined), disabled: !hasOutcomes.value },
   { id: 'tools.follow', label: following.value ? t('Stop Following') : t('Follow Computation'), hint: chordLabel(FOLLOW.chord), action: () => toggleFollow() },
   { id: 'tools.resample', label: t('Resample Random Numbers'), hint: chordLabel(RESAMPLE.chord), action: () => void resample(), disabled: readonly.value },
+  ...(pivotHere.value ? [{ label: '', separator: true }, ...pivotItems.value.map(({ checked: _checked, ...item }) => item)] : []),
 ])
 
 const menus = computed<Menu[]>(() => {
@@ -1046,6 +1115,9 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         { id: 'tools.names', label: t('Names…'), action: () => (dialog.value = 'names') },
         { id: 'tools.sql', label: t('SQL Query…'), action: () => openSql(), disabled: readonly.value },
+        { label: '', separator: true },
+        { id: 'tools.pivot', label: t('Pivot Table…'), action: () => openPivotNew(), disabled: readonly.value },
+        ...pivotItems.value,
       ],
     },
     configMenu(c, { current: locale.value, choose }),
@@ -1215,6 +1287,36 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         @goto="selectName"
         @edit-query="(n) => n.anchor && openSql({ row: n.anchor.row, col: n.anchor.col })"
       />
+      <PivotCreateDialog
+        v-if="dialog === 'pivot-new'"
+        :session="session"
+        :sheet-name="sheetName(state.activeSheet)"
+        :cursor="{ row: sel.row, col: sel.col }"
+        @close="dialog = null"
+        @created="pivotCreated"
+      />
+      <PivotPanel
+        v-if="panelPivot"
+        :session="session"
+        :pivot="panelPivot"
+        :readonly="readonly"
+        @close="((pivotPanelName = null), grid?.focus())"
+        @value-settings="(index) => (pivotValue = { name: panelPivot!.name, index })"
+        @members="(field) => (pivotMembersOf = { name: panelPivot!.name, field })"
+        @sql="pivotSqlName = panelPivot!.name"
+      />
+      <PivotValueDialog v-if="pivotValue && state.pivots.some((p) => p.name === pivotValue!.name)" :session="session" :pivot="state.pivots.find((p) => p.name === pivotValue!.name)!" :index="pivotValue.index" @close="pivotValue = null" />
+      <PivotMembersDialog
+        v-if="pivotMembersOf && state.pivots.some((p) => p.name === pivotMembersOf!.name)"
+        :session="session"
+        :pivot="state.pivots.find((p) => p.name === pivotMembersOf!.name)!"
+        :field="pivotMembersOf.field"
+        :sheet="state.activeSheet"
+        :readonly="readonly"
+        @close="pivotMembersOf = null"
+      />
+      <PivotSqlDialog v-if="pivotSqlName" :session="session" :name="pivotSqlName" :readonly="readonly" @close="pivotSqlName = null" />
+      <PivotDeleteDialog v-if="pivotDeleteName" :session="session" :name="pivotDeleteName" @close="((pivotDeleteName = null), grid?.focus())" />
       <NameDefinePopover
         v-if="defining"
         :x="defining.x"

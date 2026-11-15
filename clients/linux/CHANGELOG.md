@@ -10,6 +10,8 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ### Added (D552, E6.24)
 - Edit ▸ Rename Sheet… in computes and Edit ▸ Rename Slide… in creates (Ctrl+Shift+F11), after New Sheet and New Slide.
+### Added (D627): Tools ▸ Pivot Table… and the entries that work on one
+- Claudia Computes' Tools menu has Pivot Table… (Ctrl+Alt+V), Pivot Fields (Ctrl+Shift+Alt+F), Value Field Settings… (Ctrl+Alt+Z), Show Pivot Table as SQL… (Ctrl+Alt+X) and Delete Pivot Table… (Ctrl+Shift+Alt+V); the generated menus of the macOS and Windows clients and the web key table follow the manifest.
 
 ### Changed (D504): the local server is on port 8765
 - The shared local server listens on 8765, the port of `./start.sh`; a Claudia server of the same version already there

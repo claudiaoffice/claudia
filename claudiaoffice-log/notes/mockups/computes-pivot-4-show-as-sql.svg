@@ -1,0 +1,348 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#F7F3EC" />
+<rect x="0" y="0" width="1280" height="46" rx="0" fill="#FBF9F5" />
+<line x1="0" y1="46" x2="1280" y2="46" stroke="#E3DED5" stroke-width="1" />
+<rect x="14" y="11" width="24" height="24" rx="6" fill="#13917F" />
+<path d="M19 20 H33" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19 28 C22.5 24.5 25 31 28.5 28 C30 26.5 31.5 27 33 27.8" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="50" y="28" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="500" text-anchor="start">Budget 2027</text>
+<text x="190" y="28" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">File</text>
+<path d="M225.8 22 L229.4 25.6 L233.0 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="257.6" y="28" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Edit</text>
+<path d="M293.40000000000003 22 L297.00000000000006 25.6 L300.6 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="325.2" y="28" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Tools</text>
+<path d="M369.2 22 L372.8 25.6 L376.4 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="400.2" y="28" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Help</text>
+<path d="M436.0 22 L439.6 25.6 L443.2 22" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1044" cy="23" r="11" fill="#D6477A"/>
+<text x="1044" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">A</text>
+<circle cx="1071" cy="23" r="11" fill="#13917F"/>
+<text x="1071" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">T</text>
+<circle cx="1098" cy="23" r="11" fill="#5B4BC4"/>
+<text x="1098" y="27.2" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">ai</text>
+<circle cx="1130" cy="23" r="3.5" fill="#13917F"/>
+<text x="1266" y="27" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="end">demo.claudia-office.de</text>
+<rect x="0" y="47" width="1280" height="34" rx="0" fill="#FFFFFF" />
+<line x1="0" y1="81" x2="1280" y2="81" stroke="#E3DED5" stroke-width="1" />
+<rect x="10" y="52" width="120" height="24" rx="6" fill="#FBF9F5" stroke="#D6CFE4" stroke-width="1" />
+<text x="21" y="69" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start">A5</text>
+<path d="M113.4 62.2 L117.0 65.8 L120.60000000000001 62.2" fill="none" stroke="#6B6580" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="140" y1="55" x2="140" y2="73" stroke="#E3DED5" stroke-width="1" />
+<text x="150" y="69" font-family="Fraunces, Georgia, serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start" font-style="italic">fx</text>
+<rect x="0" y="766" width="1280" height="34" rx="0" fill="#F2EEE6" />
+<line x1="0" y1="766" x2="1280" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="50.0" y="788" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="middle">Data</text>
+<rect x="96" y="767" width="84" height="33" rx="0" fill="#FFFFFF" />
+<rect x="96" y="797" width="84" height="3" rx="0" fill="#13917F" />
+<text x="138.0" y="788" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="middle">Report</text>
+<text x="226.0" y="788" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="middle">Pivot</text>
+<text x="278" y="789" font-family="Inter, Helvetica, Arial, sans-serif" font-size="17" fill="#6B6580" font-weight="400" text-anchor="start">+</text>
+<clipPath id="g"><rect x="0" y="82" width="1274" height="684"/></clipPath><g clip-path="url(#g)">
+<rect x="0" y="82" width="1274" height="684" rx="0" fill="#FFFFFF" />
+<rect x="0" y="82" width="1274" height="24" rx="0" fill="#FBF9F5" />
+<rect x="0" y="82" width="44" height="684" rx="0" fill="#FBF9F5" />
+<text x="109.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">A</text>
+<line x1="174" y1="82" x2="174" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="222.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">B</text>
+<line x1="270" y1="82" x2="270" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="318.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">C</text>
+<line x1="366" y1="82" x2="366" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="414.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">D</text>
+<line x1="462" y1="82" x2="462" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="510.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">E</text>
+<line x1="558" y1="82" x2="558" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="613.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">F</text>
+<line x1="668" y1="82" x2="668" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="723.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">G</text>
+<line x1="778" y1="82" x2="778" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="833.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">H</text>
+<line x1="888" y1="82" x2="888" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="943.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">I</text>
+<line x1="998" y1="82" x2="998" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="1053.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">J</text>
+<line x1="1108" y1="82" x2="1108" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="1163.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">K</text>
+<line x1="1218" y1="82" x2="1218" y2="766" stroke="#E3DED5" stroke-width="1" />
+<text x="1273.0" y="99" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">L</text>
+<line x1="1328" y1="82" x2="1328" y2="766" stroke="#E3DED5" stroke-width="1" />
+<line x1="0" y1="106" x2="1274" y2="106" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="124" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">1</text>
+<line x1="0" y1="132" x2="1274" y2="132" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="150" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">2</text>
+<line x1="0" y1="158" x2="1274" y2="158" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="176" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">3</text>
+<line x1="0" y1="184" x2="1274" y2="184" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="202" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">4</text>
+<line x1="0" y1="210" x2="1274" y2="210" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="228" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">5</text>
+<line x1="0" y1="236" x2="1274" y2="236" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="254" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">6</text>
+<line x1="0" y1="262" x2="1274" y2="262" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="280" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">7</text>
+<line x1="0" y1="288" x2="1274" y2="288" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="306" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">8</text>
+<line x1="0" y1="314" x2="1274" y2="314" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="332" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">9</text>
+<line x1="0" y1="340" x2="1274" y2="340" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="358" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">10</text>
+<line x1="0" y1="366" x2="1274" y2="366" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">11</text>
+<line x1="0" y1="392" x2="1274" y2="392" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="410" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">12</text>
+<line x1="0" y1="418" x2="1274" y2="418" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="436" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">13</text>
+<line x1="0" y1="444" x2="1274" y2="444" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="462" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">14</text>
+<line x1="0" y1="470" x2="1274" y2="470" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="488" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">15</text>
+<line x1="0" y1="496" x2="1274" y2="496" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="514" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">16</text>
+<line x1="0" y1="522" x2="1274" y2="522" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="540" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">17</text>
+<line x1="0" y1="548" x2="1274" y2="548" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="566" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">18</text>
+<line x1="0" y1="574" x2="1274" y2="574" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="592" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">19</text>
+<line x1="0" y1="600" x2="1274" y2="600" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="618" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">20</text>
+<line x1="0" y1="626" x2="1274" y2="626" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="644" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">21</text>
+<line x1="0" y1="652" x2="1274" y2="652" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="670" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">22</text>
+<line x1="0" y1="678" x2="1274" y2="678" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="696" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">23</text>
+<line x1="0" y1="704" x2="1274" y2="704" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="722" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">24</text>
+<line x1="0" y1="730" x2="1274" y2="730" stroke="#E3DED5" stroke-width="1" />
+<text x="22.0" y="748" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="middle">25</text>
+<line x1="0" y1="756" x2="1274" y2="756" stroke="#E3DED5" stroke-width="1" />
+<rect x="44" y="210" width="130" height="26" rx="0" fill="#C7E5DF" />
+<line x1="44" y1="236" x2="174" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<line x1="174" y1="210" x2="174" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<rect x="174" y="210" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="174" y1="236" x2="270" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<line x1="270" y1="210" x2="270" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<rect x="270" y="210" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="270" y1="236" x2="366" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<line x1="366" y1="210" x2="366" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<rect x="366" y="210" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="366" y1="236" x2="462" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<line x1="462" y1="210" x2="462" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<rect x="462" y="210" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="462" y1="236" x2="558" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<line x1="558" y1="210" x2="558" y2="236" stroke="#FFFFFF" stroke-width="1" />
+<rect x="44" y="236" width="130" height="26" rx="0" fill="#C7E5DF" />
+<line x1="44" y1="262" x2="174" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<line x1="174" y1="236" x2="174" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<rect x="174" y="236" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="174" y1="262" x2="270" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<line x1="270" y1="236" x2="270" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<rect x="270" y="236" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="270" y1="262" x2="366" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<line x1="366" y1="236" x2="366" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<rect x="366" y="236" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="366" y1="262" x2="462" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<line x1="462" y1="236" x2="462" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<rect x="462" y="236" width="96" height="26" rx="0" fill="#C7E5DF" />
+<line x1="462" y1="262" x2="558" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<line x1="558" y1="236" x2="558" y2="262" stroke="#FFFFFF" stroke-width="1" />
+<rect x="44" y="262" width="130" height="26" rx="0" fill="#D9EEE9" />
+<line x1="44" y1="288" x2="174" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<line x1="174" y1="262" x2="174" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<rect x="174" y="262" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="174" y1="288" x2="270" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<line x1="270" y1="262" x2="270" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<rect x="270" y="262" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="270" y1="288" x2="366" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<line x1="366" y1="262" x2="366" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<rect x="366" y="262" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="366" y1="288" x2="462" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<line x1="462" y1="262" x2="462" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<rect x="462" y="262" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="462" y1="288" x2="558" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<line x1="558" y1="262" x2="558" y2="288" stroke="#FFFFFF" stroke-width="1" />
+<rect x="44" y="288" width="130" height="26" rx="0" fill="#D9EEE9" />
+<line x1="44" y1="314" x2="174" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<line x1="174" y1="288" x2="174" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<rect x="174" y="288" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="174" y1="314" x2="270" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<line x1="270" y1="288" x2="270" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<rect x="270" y="288" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="270" y1="314" x2="366" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<line x1="366" y1="288" x2="366" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<rect x="366" y="288" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="366" y1="314" x2="462" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<line x1="462" y1="288" x2="462" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<rect x="462" y="288" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="462" y1="314" x2="558" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<line x1="558" y1="288" x2="558" y2="314" stroke="#FFFFFF" stroke-width="1" />
+<rect x="44" y="314" width="130" height="26" rx="0" fill="#D9EEE9" />
+<line x1="44" y1="340" x2="174" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<line x1="174" y1="314" x2="174" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<rect x="174" y="314" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="174" y1="340" x2="270" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<line x1="270" y1="314" x2="270" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<rect x="270" y="314" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="270" y1="340" x2="366" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<line x1="366" y1="314" x2="366" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<rect x="366" y="314" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="366" y1="340" x2="462" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<line x1="462" y1="314" x2="462" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<rect x="462" y="314" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="462" y1="340" x2="558" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<line x1="558" y1="314" x2="558" y2="340" stroke="#FFFFFF" stroke-width="1" />
+<rect x="44" y="340" width="130" height="26" rx="0" fill="#D9EEE9" />
+<line x1="44" y1="366" x2="174" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<line x1="174" y1="340" x2="174" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<rect x="174" y="340" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="174" y1="366" x2="270" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<line x1="270" y1="340" x2="270" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<rect x="270" y="340" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="270" y1="366" x2="366" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<line x1="366" y1="340" x2="366" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<rect x="366" y="340" width="96" height="26" rx="0" fill="#D9EEE9" />
+<line x1="366" y1="366" x2="462" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<line x1="462" y1="340" x2="462" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<rect x="462" y="340" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="462" y1="366" x2="558" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<line x1="558" y1="340" x2="558" y2="366" stroke="#FFFFFF" stroke-width="1" />
+<rect x="44" y="366" width="130" height="26" rx="0" fill="#B2DAD3" />
+<line x1="44" y1="392" x2="174" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<line x1="174" y1="366" x2="174" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<rect x="174" y="366" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="174" y1="392" x2="270" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<line x1="270" y1="366" x2="270" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<rect x="270" y="366" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="270" y1="392" x2="366" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<line x1="366" y1="366" x2="366" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<rect x="366" y="366" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="366" y1="392" x2="462" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<line x1="462" y1="366" x2="462" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<rect x="462" y="366" width="96" height="26" rx="0" fill="#B2DAD3" />
+<line x1="462" y1="392" x2="558" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<line x1="558" y1="366" x2="558" y2="392" stroke="#FFFFFF" stroke-width="1" />
+<text x="54" y="125" font-family="Inter, Helvetica, Arial, sans-serif" font-size="17" fill="#1F1A33" font-weight="500" text-anchor="start">Revenue by region and quarter</text>
+<text x="54" y="176" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#6B6580" font-weight="400" text-anchor="start">Product</text>
+<text x="184" y="176" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#6B6580" font-weight="400" text-anchor="start">(All)  ▾</text>
+<text x="54" y="228" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start">Sum of Amount</text>
+<text x="184" y="228" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start">Quarter</text>
+<text x="280" y="228" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start"></text>
+<text x="376" y="228" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start"></text>
+<text x="472" y="228" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start"></text>
+<text x="54" y="254" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start">Region</text>
+<text x="260" y="254" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">Q1</text>
+<text x="356" y="254" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">Q2</text>
+<text x="452" y="254" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">Q3</text>
+<text x="472" y="254" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start">Total</text>
+<text x="54" y="280" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">East</text>
+<text x="260" y="280" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">1,000</text>
+<text x="356" y="280" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">775</text>
+<text x="452" y="280" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">1,000</text>
+<text x="548" y="280" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">2,775</text>
+<text x="54" y="306" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">North</text>
+<text x="260" y="306" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">900</text>
+<text x="356" y="306" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">1,000</text>
+<text x="452" y="306" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">800</text>
+<text x="548" y="306" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">2,700</text>
+<text x="54" y="332" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">South</text>
+<text x="260" y="332" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">1,500</text>
+<text x="356" y="332" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">1,580</text>
+<text x="452" y="332" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">1,700</text>
+<text x="548" y="332" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">4,780</text>
+<text x="54" y="358" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">West</text>
+<text x="260" y="358" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end">1,200</text>
+<text x="356" y="358" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end"></text>
+<text x="452" y="358" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="end"></text>
+<text x="548" y="358" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">1,200</text>
+<text x="54" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start">Total</text>
+<text x="260" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">4,600</text>
+<text x="356" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">3,355</text>
+<text x="452" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">3,500</text>
+<text x="548" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="end">11,455</text>
+</g>
+<rect x="52" y="134" width="128" height="22" rx="11" fill="#13917F" />
+<text x="64" y="149" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#FFFFFF" font-weight="500" text-anchor="start">SalesPivot</text>
+<rect x="190" y="135" width="20" height="20" rx="0" fill="none" />
+<rect x="194" y="142" width="12" height="9" rx="2" fill="none" stroke="#6B6580" stroke-width="1.3" />
+<path d="M196.5 142 V139.5 A3.5 3.5 0 0 1 203.5 139.5 V142" fill="none" stroke="#6B6580" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="44" y="210" width="514" height="182" rx="0" fill="none" stroke="#13917F" stroke-width="2" />
+<g filter="url(#sh)">
+<rect x="330" y="92" width="904" height="540" rx="14" fill="#FFFFFF" />
+</g>
+<text x="362" y="138" font-family="Inter, Helvetica, Arial, sans-serif" font-size="20" fill="#1F1A33" font-weight="500" text-anchor="start">Pivot table as SQL</text>
+<path d="M1194 122 l12 12 M1206 122 l-12 12" fill="none" stroke="#6B6580" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="580" y="138" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#6B6580" font-weight="400" text-anchor="start">SalesPivot</text>
+<rect x="362" y="166" width="560" height="360" rx="10" fill="#FBF9F5" stroke="#D6CFE4" stroke-width="1" />
+<text x="382" y="190.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">1</text>
+<text x="414.0" y="190.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">SELECT &quot;Region&quot;, &quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Total&quot;</text>
+<text x="382" y="207.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">2</text>
+<text x="414.0" y="207.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">FROM (</text>
+<text x="382" y="225.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">3</text>
+<text x="427.8" y="225.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">SELECT 0 AS &quot;_order&quot;,</text>
+<text x="382" y="242.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">4</text>
+<text x="476.1" y="242.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">&quot;Region&quot;,</text>
+<text x="382" y="260.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">5</text>
+<text x="476.1" y="260.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(CASE WHEN &quot;Quarter&quot; = &#x27;Q1&#x27; THEN &quot;Amount&quot; END) AS &quot;Q1&quot;,</text>
+<text x="382" y="277.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">6</text>
+<text x="476.1" y="277.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(CASE WHEN &quot;Quarter&quot; = &#x27;Q2&#x27; THEN &quot;Amount&quot; END) AS &quot;Q2&quot;,</text>
+<text x="382" y="295.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">7</text>
+<text x="476.1" y="295.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(CASE WHEN &quot;Quarter&quot; = &#x27;Q3&#x27; THEN &quot;Amount&quot; END) AS &quot;Q3&quot;,</text>
+<text x="382" y="312.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">8</text>
+<text x="476.1" y="312.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(&quot;Amount&quot;) AS &quot;Total&quot;</text>
+<text x="382" y="330.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">9</text>
+<text x="427.8" y="330.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">FROM &quot;Sales&quot;</text>
+<text x="382" y="347.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">10</text>
+<text x="427.8" y="347.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">GROUP BY &quot;Region&quot;</text>
+<text x="382" y="365.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">11</text>
+<text x="427.8" y="365.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">UNION ALL</text>
+<text x="382" y="382.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">12</text>
+<text x="427.8" y="382.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">SELECT 1,</text>
+<text x="382" y="400.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">13</text>
+<text x="476.1" y="400.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">&#x27;Total&#x27;,</text>
+<text x="382" y="417.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">14</text>
+<text x="476.1" y="417.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(CASE WHEN &quot;Quarter&quot; = &#x27;Q1&#x27; THEN &quot;Amount&quot; END),</text>
+<text x="382" y="435.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">15</text>
+<text x="476.1" y="435.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(CASE WHEN &quot;Quarter&quot; = &#x27;Q2&#x27; THEN &quot;Amount&quot; END),</text>
+<text x="382" y="452.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">16</text>
+<text x="476.1" y="452.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(CASE WHEN &quot;Quarter&quot; = &#x27;Q3&#x27; THEN &quot;Amount&quot; END),</text>
+<text x="382" y="470.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">17</text>
+<text x="476.1" y="470.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">SUM(&quot;Amount&quot;)</text>
+<text x="382" y="487.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">18</text>
+<text x="427.8" y="487.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">FROM &quot;Sales&quot;</text>
+<text x="382" y="505.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">19</text>
+<text x="414.0" y="505.0" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#1F1A33" font-weight="400" text-anchor="start">)</text>
+<text x="382" y="522.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#A7A1B8" font-weight="400" text-anchor="start">20</text>
+<text x="414.0" y="522.5" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="11.5" fill="#5B4BC4" font-weight="400" text-anchor="start">ORDER BY &quot;_order&quot;, &quot;Region&quot; IS NULL, &quot;Region&quot; COLLATE NOCASE, &quot;Region&quot;</text>
+<text x="362" y="550" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">Read-only. It is what the pivot asks Sales; change the fields and it changes.</text>
+<rect x="950" y="166" width="252" height="214" rx="10" fill="#F4F1FB" stroke="#D6CFE4" stroke-width="1" />
+<text x="968" y="192" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="500" text-anchor="start">This query</text>
+<circle cx="971" cy="212" r="2.4" fill="#5B4BC4"/>
+<text x="982" y="216" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">Made from the fields in the panel.</text>
+<circle cx="971" cy="236" r="2.4" fill="#5B4BC4"/>
+<text x="982" y="240" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">Q1–Q3 are the Quarter values now in</text>
+<text x="982" y="264" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">Sales; a new quarter adds a column.</text>
+<circle cx="971" cy="284" r="2.4" fill="#5B4BC4"/>
+<text x="982" y="288" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">Runs on the same read-only engine</text>
+<text x="982" y="312" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">as SQL() (1 s, 100,000 rows).</text>
+<rect x="950" y="396" width="252" height="130" rx="10" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" />
+<text x="968" y="422" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start">Want to change it by hand?</text>
+<text x="968" y="444" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">Convert it to a SQL query. The cells</text>
+<text x="968" y="461" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">stay as they are; the pivot object</text>
+<text x="968" y="478" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">becomes a SQL() result. Undo brings</text>
+<text x="968" y="495" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="start">the pivot back.</text>
+<line x1="330" y1="568" x2="1234" y2="568" stroke="#E3DED5" stroke-width="1" />
+<rect x="362.5" y="580.5" width="103" height="35" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" />
+<text x="414.0" y="603.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="500" text-anchor="middle">Copy SQL</text>
+<rect x="884.5" y="580.5" width="213" height="35" rx="8" fill="#FFFFFF" stroke="#D6CFE4" stroke-width="1" />
+<text x="991.0" y="603.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="500" text-anchor="middle">Convert to SQL query…</text>
+<rect x="1110" y="580" width="92" height="36" rx="8" fill="#13917F" />
+<text x="1156.0" y="603.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="500" text-anchor="middle">Close</text>
+<rect x="56" y="652" width="1160" height="98" rx="12" fill="#1F1A33" />
+<text x="78" y="680" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#E6E0F5" font-weight="500" text-anchor="start">Pivot 4 · Show as SQL: the bridge from a pivot to a query</text>
+<circle cx="87" cy="701" r="9" fill="#5B4BC4"/>
+<text x="87" y="705" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">1</text>
+<text x="106" y="705" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#F0ECF8" font-weight="400" text-anchor="start">Show Pivot Table as SQL… (Ctrl+Alt+Q) shows what the pivot asks. A pivot is a special query, so the user can see that.</text>
+<circle cx="87" cy="726" r="9" fill="#5B4BC4"/>
+<text x="87" y="730" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">2</text>
+<text x="106" y="730" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#F0ECF8" font-weight="400" text-anchor="start">Convert to SQL query… turns the pivot into a SQL() result of the same name; from then on it is edited as SQL. One undo step.</text>
+</svg>

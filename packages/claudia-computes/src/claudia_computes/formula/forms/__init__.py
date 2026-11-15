@@ -63,6 +63,7 @@ from . import (  # noqa: E402, F401  (they register their forms)
     environment,
     information,
     lookup,
+    pivot,
     random,
     reference,
     sql,

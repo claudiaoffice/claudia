@@ -9,6 +9,7 @@ from typing import Protocol
 from ..draws import uniform
 from ..functions.range import Grid, Range
 from ..names import Anchor, Names, Rect, select
+from ..pivots import Pivots
 from ..refs import Position, SheetId, column_name
 from ..values import REF, FormulaError, Value, format_value
 
@@ -38,6 +39,7 @@ class Scope:
         self.reads: list[tuple[SheetId, int, int, int, int]] | None = None  # where OFFSET/INDIRECT looked, when asked
         self.spills: dict[Anchor, Rect] = {}  # where the SQL() cells put their results, as of the last calculation
         self.names: Names = Names()  # (set by the calculator)
+        self.pivots: Pivots = Pivots()  # (set by the calculator)
         self.mentioned: set[str] = set()  # the names a query looked up while the cell was calculated
         self.seed = 0  # the document's random seed and draw number (set by the calculator, D291)
         self.draw = 0

@@ -829,6 +829,68 @@
             "role": null,
             "start": false
           }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>v"
+            ],
+            "checkable": false,
+            "id": "tools.pivot",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Pivot Table\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift><Alt>f"
+            ],
+            "checkable": false,
+            "id": "tools.pivot-fields",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Pivot Fields",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>z"
+            ],
+            "checkable": false,
+            "id": "tools.pivot-value",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Value Field Settings\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>x"
+            ],
+            "checkable": false,
+            "id": "tools.pivot-sql",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Show Pivot Table as SQL\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift><Alt>v"
+            ],
+            "checkable": false,
+            "id": "tools.pivot-delete",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Delete Pivot Table\u2026",
+            "role": null,
+            "start": false
+          }
         ]
       ]
     },

@@ -10,6 +10,9 @@ charts    ChartSpec: what a diagram draws, computes' own ``DiagramDefinition`` (
 region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
 styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
 entry     parse_input: what typing into a cell means
+pivot     PivotDefinition, ValueField, PivotFilter, PivotLabels: what a pivot table is (E6.30)
+pivot_sql, pivot_render  a pivot as the SQL query it is, and that query's answer as a grid: compute_pivot
+pivots, pivot_commands  PivotEntry, Pivots, create_pivot/update_pivot/delete_pivot: pivots in a workbook (E6.30)
 search    scan and plan_replacement: search and replace in text, formulas and values (E6.20)
 
 
@@ -55,7 +58,7 @@ from claudia_core import (  # noqa: F401
     paragraph_for,
 )
 
-from . import commands, name_commands  # noqa: F401  (registers the commands)
+from . import commands, name_commands, pivot_commands  # noqa: F401  (registers the commands)
 from ._version import __version__
 from .cellstyles import CELL_SLOTS, DEFAULT_CELL_STYLE, LAYERS, MAX_STYLE_RANGES, CellStyles, layer_of
 from .charts import CHART_KINDS, ChartError, ChartSpec
@@ -81,6 +84,7 @@ from .events import (
     ImagesChanged,
     NamesChanged,
     ObjectsChanged,
+    PivotsChanged,
     PrintSetupChanged,
     RandomChanged,
     ShapesChanged,
@@ -102,6 +106,10 @@ from .name_commands import DefineName, RemoveName, RenameName, RestoreNames
 from .names import PURPOSES, NamedRange, Names
 from .numformats import NumberFormat, NumberFormatBook
 from .outcomes import AltInput, OutcomeRow, OutcomeTable, Swing
+from .pivot import Aggregation, PivotDefinition, PivotError, PivotFilter, PivotLabels, ValueField
+from .pivot_commands import SetPivot, create_pivot, delete_pivot, pivot_to_sql, update_pivot
+from .pivot_render import PivotResult, PivotRole, compute_pivot
+from .pivots import PivotEntry, Pivots
 from .printing import DEFAULT_SHEET_PRINT, MAX_PERCENT, MIN_PERCENT, PrintSetupError, SheetPrintSetup
 from .refs import (
     CellRef,
@@ -120,6 +128,22 @@ from .styles import BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 from .trace import Trace
 
 __all__ = [
+    "Aggregation",
+    "PivotDefinition",
+    "PivotEntry",
+    "PivotError",
+    "PivotFilter",
+    "PivotLabels",
+    "PivotResult",
+    "PivotRole",
+    "Pivots",
+    "PivotsChanged",
+    "ValueField",
+    "compute_pivot",
+    "create_pivot",
+    "delete_pivot",
+    "pivot_to_sql",
+    "update_pivot",
     "DEFAULT_SHEET_PRINT",
     "MAX_PERCENT",
     "MIN_PERCENT",
@@ -206,6 +230,7 @@ __all__ = [
     "RotateObject",
     "Run",
     "SetCells",
+    "SetPivot",
     "SetCellStyle",
     "SetRandomSeed",
     "SetParagraphStyle",

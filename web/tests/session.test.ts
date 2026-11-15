@@ -136,6 +136,7 @@ function server(link: FakeLink) {
     diagrams: () => [],
     charts: () => [],
     names: () => ({ revision: 'main:3', names: [] }),
+    pivots: () => ({ revision: 'main:3', pivots: [] }),
     random_state: () => ({ revision: 'main:3', seed: 0, draw: 0 }),
   }
 }
@@ -1130,6 +1131,126 @@ describe('names, tables and queries (E6.5)', () => {
     expect(session.figureOf('c1')).not.toBeNull()
     link.push('cells', { sheet: 's2', positions: [[40, 40]], cells: [] })
     expect(session.figureOf('c1')).toBeNull()
+  })
+})
+
+describe('pivot tables (E6.30)', () => {
+  const DEFINITION = {
+    format: 1 as const,
+    source: 'Sales',
+    rows: ['Region'],
+    columns: [],
+    values: [{ field: 'Amount', aggregation: 'sum' as const, name: '' }],
+    filters: [],
+    total_row: true,
+    total_column: true,
+  }
+  const LABELS = { total: 'Total', blank: '(blank)', row_header: 'Rows', sum_of: 'Sum of {field}', count_of: 'c', average_of: 'a', min_of: 'm', max_of: 'M' }
+  const PIVOT = {
+    name: 'SalesPivot',
+    definition: DEFINITION,
+    labels: LABELS,
+    anchor: { sheet: 's1', row: 0, col: 0 },
+    region: { sheet: 's1', row0: 0, col0: 0, row1: 4, col1: 1 },
+    a1: 'Budget!A1:B5',
+    placed: true,
+    error: null,
+    header_rows: 1,
+    header_roles: [['corner', 'header']],
+    total_row: true,
+    total_column: false,
+  }
+
+  it('loads the pivots with the document, and again when they change', async () => {
+    const { session, link } = await opened()
+    expect(session.state.pivots).toEqual([])
+    link.handlers.pivots = () => ({ revision: 'main:4', pivots: [PIVOT] })
+    link.push('pivots', { type: 'pivots' })
+    await session.settled()
+    expect(session.state.pivots.map((p) => p.name)).toEqual(['SalesPivot'])
+  })
+
+  it('opens a document whose server does not know pivot tables', async () => {
+    const link = new FakeLink()
+    server(link)
+    delete link.handlers.pivots
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    expect(session.state.pivots).toEqual([])
+  })
+
+  it('asks again when cells or rows change while there are pivots, and not while there are none', async () => {
+    const { session, link } = await opened()
+    let asked = 0
+    link.handlers.pivots = () => {
+      asked++
+      return { revision: 'main:4', pivots: [PIVOT] }
+    }
+    link.push('cells', { sheet: 's1', positions: [[1, 1]], cells: [] })
+    await session.settled()
+    expect(asked).toBe(0) // no pivot yet: nothing to keep up
+    link.push('pivots', { type: 'pivots' })
+    await session.settled()
+    expect(asked).toBe(1)
+    link.push('cells', { sheet: 's1', positions: [[1, 1]], cells: [] })
+    link.push('cells', { sheet: 's1', positions: [[2, 1]], cells: [] })
+    link.push('structure', { sheet: 's1' })
+    await session.settled()
+    expect(asked).toBeGreaterThanOrEqual(2)
+    expect(asked).toBeLessThan(5) // asks that came while one was out are one more, not each their own
+  })
+
+  it('makes a pivot on a sheet of its own or at a cell, with the revision it saw', async () => {
+    const { session, link } = await opened()
+    link.handlers.define_pivot = () => ({ revision: 'main:4', sheet: 's9' })
+    expect(await session.definePivot('SalesPivot', DEFINITION, LABELS, { newSheet: 'Pivot' })).toBe('s9')
+    expect(link.last('define_pivot')).toEqual({ name: 'SalesPivot', definition: DEFINITION, labels: LABELS, new_sheet: 'Pivot', base: 'main:3' })
+    await session.definePivot('SalesPivot', DEFINITION, LABELS, { sheet: 's1', row: 10, col: 7 })
+    expect(link.last('define_pivot')).toEqual({ name: 'SalesPivot', definition: DEFINITION, labels: LABELS, sheet: 's1', row: 10, col: 7, base: 'main:3' })
+  })
+
+  it('changes, deletes and turns a pivot into SQL', async () => {
+    const { session, link } = await opened()
+    link.handlers.update_pivot = () => ({ revision: 'main:4' })
+    link.handlers.delete_pivot = () => ({ revision: 'main:5' })
+    link.handlers.pivot_to_sql = () => ({ revision: 'main:6' })
+    link.handlers.pivot_sql = () => ({ sql: 'SELECT 1' })
+    expect(await session.updatePivot('SalesPivot', DEFINITION)).toBe(true)
+    expect(link.last('update_pivot')).toEqual({ name: 'SalesPivot', definition: DEFINITION, base: 'main:3' })
+    await session.updatePivot('SalesPivot', DEFINITION, LABELS)
+    expect(link.last('update_pivot')).toMatchObject({ labels: LABELS })
+    expect(await session.pivotSql('SalesPivot')).toBe('SELECT 1')
+    expect(link.last('pivot_sql')).toEqual({ name: 'SalesPivot' })
+    expect(await session.pivotToSql('SalesPivot')).toBe(true)
+    expect(link.last('pivot_to_sql')).toEqual({ name: 'SalesPivot', base: 'main:3' })
+    expect(await session.deletePivot('SalesPivot')).toBe(true)
+    expect(link.last('delete_pivot')).toEqual({ name: 'SalesPivot', base: 'main:3' })
+  })
+
+  it('says why a pivot was refused and answers null or false', async () => {
+    const { session, link } = await opened()
+    link.handlers.define_pivot = () => {
+      throw new ProtocolError('command_error', 'SalesPivot is a name already')
+    }
+    link.handlers.pivot_sql = () => {
+      throw new ProtocolError('command_error', 'the pivot gave nothing')
+    }
+    expect(await session.definePivot('SalesPivot', DEFINITION, LABELS, { newSheet: 'Pivot' })).toBeNull()
+    expect(session.state.notice?.text).toMatch(/name already/)
+    expect(await session.pivotSql('SalesPivot')).toBeNull()
+  })
+
+  it('lists the members of a field for a filter, quoting what it reads, and knows when there are more', async () => {
+    const { session, link } = await opened()
+    link.handlers.sql_preview = () => ({ ok: true, columns: ['Unit "price"'], rows: [['a'], [null], ['c']], row_count: 3, ms: 0.1 })
+    expect(await session.pivotMembers('Sales', 'Unit "price"', 's1', 2)).toEqual({ members: ['a', null], more: true })
+    expect(link.last('sql_preview')).toEqual({
+      query: 'SELECT DISTINCT "Unit ""price""" FROM "Sales" ORDER BY "Unit ""price""" LIMIT 3',
+      sheet: 's1',
+      limit: 3,
+    })
+    link.handlers.sql_preview = () => ({ ok: false, error: { code: '#SQL!', detail: 'no such column' } })
+    expect(await session.pivotMembers('Sales', 'x', 's1')).toBeNull()
   })
 })
 

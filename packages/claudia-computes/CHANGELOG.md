@@ -63,6 +63,29 @@ state schema 12 → 13.
 ### Added (UX-33)
 - `WorkbookModel.setup_commands`: a new workbook starts with its first sheet, `s1` "Sheet1", made by the server as nobody's undo step (UX-33). The web client no longer adds it.
 
+## [0.10.0] - 2026-11-15
+
+Pivot tables (E6.30, D620-D622, D626): the engine, and a pivot in a workbook. State schema 13 → 14 (the pivots).
+
+### Added
+- `PivotDefinition`, `ValueField`, `PivotFilter` and `Aggregation` (sum, count, average, min, max): what a pivot is, as
+  plain data (`to_data`, `from_data`, format 1). This version takes at most one row field and one column field.
+- `compute_pivot(definition, tables, labels)`: reads the fields off the source, asks the SQL engine (D605) for the
+  column members and then for the numbers, and gives a `PivotResult`: the grid of values, a `PivotRole` for each cell
+  (corner, field, header, label, value, total) so that styles can follow it, and the SQL the numbers came from. Run by
+  itself that SQL gives the same rows.
+- `PivotLabels`: the words a pivot puts in its own cells (Total, (blank), Sum of ...), for a client to translate.
+- `PivotError`.
+- Pivots in a workbook: `WorkbookModel.pivots` (`Pivots`, `PivotEntry`: a name, a definition and the words it was made
+  with), shown by a `PIVOT("name")` formula in the cell where the pivot starts, which fills its cells like a `SQL()`
+  does and is calculated again whenever its source changes (D623). `create_pivot`, `update_pivot` and `delete_pivot`
+  build the commands (each one step of the history, with an exact undo) out of the new `SetPivot` and the commands of
+  cells and names; `PivotsChanged` is the new event.
+- `PivotResult.total_row` and `total_column`; `create_pivot(..., new_sheet=)` makes the sheet in the same step;
+  `pivot_to_sql` turns a pivot into the `SQL()` query it is (D624), the name staying the query's result.
+- A pivot's name is a result name (D607): other formulas, `SQL()` and other pivots read it. `RemoveName`, `RenameName`
+  and `DefineName` refuse to change the name of a pivot on its own; renaming the table a pivot reads renames its source.
+
 ## [0.9.0] - 2026-11-15
 
 ### Added

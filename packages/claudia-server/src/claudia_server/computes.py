@@ -5,9 +5,10 @@
 ``resize_object``, ``rotate_object``, ``remove_object``, ``diagrams``, ``charts``, ``chart_figure``,
 ``define_diagram``, ``update_diagram``, ``forget_diagram``, ``add_diagram_object``, ``add_chart``,
 ``remove_chart``, for named ranges, tables and queries (E6.5), ``names``, ``define_name``, ``rename_name``,
-``remove_name``, ``sql_preview`` and ``define_sql``, and for search and replace (E6.20) ``search_find``,
-``search_preview`` and ``search_replace`` (:mod:`claudia_server.computes_search`), and for printing (E6.19)
-``print_setup``, ``set_print_page``, ``set_sheet_print``, ``language`` and ``set_language``. Cells
+``remove_name``, ``sql_preview`` and ``define_sql``, for pivot tables (E6.30) ``pivots``, ``define_pivot``,
+``update_pivot``, ``delete_pivot``, ``pivot_sql`` and ``pivot_to_sql``, and for search and replace (E6.20)
+``search_find``, ``search_preview`` and ``search_replace`` (:mod:`claudia_server.computes_search`), and for printing
+(E6.19) ``print_setup``, ``set_print_page``, ``set_sheet_print``, ``language`` and ``set_language``. Cells
 travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
 "int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
 with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
@@ -21,6 +22,15 @@ cell, as ``{name, scope, kind, header, grows, purpose, column_purposes, sheet, r
 ``[{name, type, purpose}]`` with the names as a query sees them. A cell that shows a part of a query result comes
 with ``"spill": true`` and ``"from": [row, col]`` (the formula that fills it): it is not stored and cannot be typed
 into (``set_cells`` refuses it with ``command_error``).
+
+A *pivot table* (E6.30, D620, D626) is a definition kept by name, shown by a ``PIVOT("name")`` formula in the cell
+where it starts, as ``{name, definition, labels, anchor, region, a1, placed, error, header_rows, header_roles,
+total_row, total_column}``: ``definition`` is :meth:`claudia_computes.PivotDefinition.to_data`, ``labels`` the words
+it was made with, ``anchor`` the cell it starts in and ``region`` the cells it fills now (``{sheet, row0, col0, row1,
+col1}``, ``null`` when it fills none); ``placed`` is false when its cell was overwritten. Its cells are ordinary
+spilled cells; ``header_roles`` tells a client what each cell of the header rows is for (``corner``, ``field``,
+``header``) and the rest follows from ``total_row`` and ``total_column``: the first column is ``label`` (``total`` on
+the total row), the others ``value`` (``total`` on the total row and in the total column).
 
 An object is a shared ``ObjectBody`` plus a ``CellAnchor`` (E10.16): the body — kind, size, style, text, shape,
 image, rotation, snap — travels the wire identically in all three apps, and only ``anchor`` differs, as
@@ -71,6 +81,9 @@ from claudia_computes import (
     InsertCols,
     InsertRows,
     NamedRange,
+    PivotDefinition,
+    PivotError,
+    PivotLabels,
     PrintSetupError,
     RemoveChart,
     RemoveName,
@@ -86,10 +99,14 @@ from claudia_computes import (
     SheetPrintSetup,
     Structure,
     WorkbookModel,
+    create_pivot,
+    delete_pivot,
     function_catalog,
     get_function,
     parse_input,
+    pivot_to_sql,
     search_functions,
+    update_pivot,
 )
 from claudia_computes.cellstyles import check_area
 from claudia_computes.distributions import DISTRIBUTIONS, check_parameters, quantile
@@ -101,10 +118,10 @@ from claudia_computes.model import (
     MIN_COL_WIDTH,
     MIN_ROW_HEIGHT,
 )
-from claudia_computes.names import PURPOSES  # noqa: F401
+from claudia_computes.names import PURPOSES, key_of  # noqa: F401
 from claudia_computes.refs import CellRef, RangeRef
 from claudia_computes.trace import REACHES
-from claudia_computes.values import FormulaError
+from claudia_computes.values import ErrorValue, FormulaError
 from claudia_core import (
     AddObject,
     Batch,
@@ -571,6 +588,14 @@ def _set_cells(ctx, sheet, cells, base):
     return {"revision": applied.revision.to_data()}
 
 
+def _fresh_sheet_id(taken) -> str:
+    """The next sheet id (``s2``, ``s3`` ...) that no sheet of the workbook has."""
+    number = len(taken) + 1
+    while f"s{number}" in taken:
+        number += 1
+    return f"s{number}"
+
+
 @computes_methods.method("add_sheet", "name:str base:revision?", write=True)
 def _add_sheet(ctx, name, base):
     """Add a sheet at the end. The name must be new (case does not matter) and not empty. Returns the new sheet's id
@@ -581,11 +606,7 @@ def _add_sheet(ctx, name, base):
             "bad_request",
             msg("add_sheet: the name must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
         )
-    taken = _workbook(ctx).sheets
-    number = len(taken) + 1
-    while f"s{number}" in taken:
-        number += 1
-    sheet_id = f"s{number}"
+    sheet_id = _fresh_sheet_id(_workbook(ctx).sheets)
     applied = ctx.document.execute(AddSheet(SheetId(sheet_id), name), author=ctx.user, base=base)
     return {"sheet": sheet_id, "revision": applied.revision.to_data()}
 
@@ -1102,6 +1123,167 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
         except ValueError as problem:
             raise RequestError("bad_request", msg("define_sql: {problem}", problem=problem)) from None
     applied = ctx.document.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+# ---------------------------------------------------------------------------------------------- pivot tables
+def _pivot_data(workbook: WorkbookModel, entry) -> dict:
+    """One pivot as a client is sent it (see the module documentation)."""
+    named = workbook.names.get(key_of(None, entry.name))
+    anchor = None if named is None or named.anchor is None else named.anchor
+    region = None if named is None else workbook.region_of(named)
+    result = workbook.pivots.result(entry.name)
+    error = None
+    if anchor is not None:
+        shown = workbook.value(*anchor)
+        if isinstance(shown, ErrorValue):
+            error = {"code": shown.code, "detail": shown.detail}
+    a1 = None
+    if region is not None:
+        sheet_id, r0, c0, r1, c1 = region
+        a1 = RangeRef(CellRef(r0, c0, sheet_id), CellRef(r1, c1, sheet_id)).to_a1(workbook.sheet_name_of)
+    placed = False
+    if anchor is not None and anchor[0] in workbook.sheets:
+        content = workbook.sheet(anchor[0]).cells.get((anchor[1], anchor[2]))
+        placed = content is not None and content.get("t") == "formula" and "PIVOT(" in str(content.get("v", "")).upper()
+    return {
+        "name": entry.name,
+        "definition": entry.definition.to_data(),
+        "labels": entry.labels.to_data(),
+        "anchor": None if anchor is None else {"sheet": anchor[0], "row": anchor[1], "col": anchor[2]},
+        "region": None
+        if region is None or result is None
+        else {"sheet": region[0], "row0": region[1], "col0": region[2], "row1": region[3], "col1": region[4]},
+        "a1": a1 if result is not None else None,
+        "placed": placed,
+        "error": error,
+        "header_rows": 0 if result is None else result.header_rows,
+        "header_roles": []
+        if result is None
+        else [[role.value for role in row] for row in result.roles[: result.header_rows]],
+        "total_row": False if result is None else result.total_row,
+        "total_column": False if result is None else result.total_column,
+    }
+
+
+def _pivot_definition(data, what: str) -> PivotDefinition:
+    try:
+        return PivotDefinition.from_data(data)
+    except PivotError as problem:
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+
+
+def _pivot_labels(data, what: str) -> PivotLabels | None:
+    if data is None:
+        return None
+    try:
+        return PivotLabels.from_data(data)
+    except PivotError as problem:
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+
+
+def _refused(problem: ValueError):
+    return RequestError("command_error", msg("{problem}", problem=problem))
+
+
+@computes_methods.method("pivots")
+def _pivots(ctx):
+    """Every pivot table of the workbook, by name, as `{revision, pivots: [{name, definition, labels, anchor, region,
+    a1, placed, error, header_rows, header_roles, total_row, total_column}]}` (see the module documentation).
+    `error` is `{code, detail}` when the pivot's cell shows an error (`#SQL!` for a field or a source that is not
+    there). Ask again after a `pivots` push event and after a `cells` event on a pivot's sheet: its region grows and
+    shrinks with its source."""
+    workbook = _workbook(ctx)
+    return {"revision": _rev(ctx), "pivots": [_pivot_data(workbook, entry) for entry in workbook.pivots.sorted()]}
+
+
+@computes_methods.method(
+    "define_pivot",
+    "name:str definition:dict labels:dict? sheet:str? row:int=0 col:int=0 new_sheet:str? base:revision?",
+    write=True,
+)
+def _define_pivot(ctx, *, name, definition, labels, sheet, row, col, new_sheet, base):
+    """Make a pivot table called `name` (a name of the workbook: a word that is not a cell address) from
+    `definition` (`{format: 1, source, rows, columns, values: [{field, aggregation, name}], filters, total_row,
+    total_column}`; `source` is the name of a table, range or query result, the fields are its columns). It starts in
+    the cell (`row`, `col`) of `sheet`, or of a sheet it makes called `new_sheet` (give one of the two); `labels`
+    are the words it writes into its cells (`{total, blank, row_header, sum_of, count_of, average_of, min_of,
+    max_of}`, `{field}` standing for the field's name) in the person's language, English where not given. One change
+    in the history. Returns `{revision, sheet}`."""
+    workbook = _workbook(ctx)
+    if (sheet is None) == (new_sheet is None):
+        raise RequestError("bad_request", msg("define_pivot: give the sheet it starts on or new_sheet, not both"))
+    row, col = _index(row, MAX_ROWS, "row"), _index(col, MAX_COLS, "col")
+    parsed, words = _pivot_definition(definition, "define_pivot"), _pivot_labels(labels, "define_pivot")
+    if new_sheet is None:
+        target = sheet
+    else:
+        new_sheet = new_sheet.strip()
+        if not new_sheet or len(new_sheet) > MAX_SHEET_NAME:
+            raise RequestError(
+                "bad_request",
+                msg("define_pivot: the name of the new sheet must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
+            )
+        target = _fresh_sheet_id(workbook.sheets)
+    try:
+        command = create_pivot(workbook, name, (SheetId(target), row, col), parsed, words, new_sheet)
+    except ValueError as problem:
+        raise _refused(problem) from None
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"sheet": target, "revision": applied.revision.to_data()}
+
+
+@computes_methods.method("update_pivot", "name:str definition:dict labels:dict? base:revision?", write=True)
+def _update_pivot(ctx, *, name, definition, labels, base):
+    """Change what the pivot table `name` is made from (`definition` as in `define_pivot`); its cells follow. `labels`
+    gives new words (`{}` the English ones); without it the words stay. One change in the history."""
+    workbook = _workbook(ctx)
+    parsed, words = _pivot_definition(definition, "update_pivot"), _pivot_labels(labels, "update_pivot")
+    try:
+        command = update_pivot(workbook, name, parsed, words)
+    except ValueError as problem:
+        raise _refused(problem) from None
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("delete_pivot", "name:str base:revision?", write=True)
+def _delete_pivot(ctx, *, name, base):
+    """Delete the pivot table `name`: its cells are empty, its name and definition gone. One change in the history."""
+    try:
+        command = delete_pivot(_workbook(ctx), name)
+    except ValueError as problem:
+        raise _refused(problem) from None
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@computes_methods.method("pivot_sql", "name:str")
+def _pivot_sql(ctx, *, name):
+    """The SQL query the pivot table `name` is, as `{sql}`: what it asks of its source, read only. Run as a `SQL()`
+    formula it gives the same numbers (one header row). `command_error` for a pivot that gave nothing."""
+    workbook = _workbook(ctx)
+    entry = workbook.pivots.get(name)
+    if entry is None:
+        raise RequestError("command_error", msg("there is no pivot table called {name!r}", name=name))
+    result = workbook.pivots.result(entry.name)
+    if result is None or not result.sql:
+        raise RequestError(
+            "command_error", msg("the pivot table {name} gave nothing: there is no SQL to show", name=entry.name)
+        )
+    return {"sql": result.sql}
+
+
+@computes_methods.method("pivot_to_sql", "name:str base:revision?", write=True)
+def _pivot_to_sql(ctx, *, name, base):
+    """Turn the pivot table `name` into the `SQL()` query it is: the cell it starts in holds the query, the name is
+    the query's result now and the pivot is gone, as one change in the history (undo brings the pivot back). The cells
+    are what the query gives: one header row, then the rows."""
+    try:
+        command = pivot_to_sql(_workbook(ctx), name)
+    except ValueError as problem:
+        raise _refused(problem) from None
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
 

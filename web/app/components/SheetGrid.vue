@@ -24,6 +24,7 @@ import {
 } from '~/lib/line-sizes'
 import { NO_MARKS, type SearchMarks } from '~/lib/sheet-search-host'
 import { purposeVar, tableBoxes, type NameInfo, type TableBox } from '~/lib/names'
+import { pivotBoxes } from '~/lib/pivots'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { useI18n } from '~/lib/i18n'
 import { currentLocale } from '~/lib/locale'
@@ -155,9 +156,17 @@ const editHere = computed(() => props.edit !== null && props.edit.sheet === prop
 /** What is drawn under the cells of each table in view: the tint of each column's purpose, the header, the frame and
  * the ghost row that says a table grows when something is typed below it. */
 const tables = computed(() => tableBoxes(state.names, props.sheet, range.value))
+/** What a pivot table's cells are (E6.30, mock 1): its headers, the labels, the totals. Shape and weight as well as
+ * colour — a header is bold, a total has a rule above it — so that nothing rests on colour alone (BITV). */
+const pivotParts = computed(() => pivotBoxes(state.pivots, props.sheet, range.value))
 const headCells = computed(() => {
   const keys = new Set<number>()
   for (const t of tables.value) if (t.kind === 'head') keys.add(t.r0 * 100_000 + t.c0)
+  // headers and totals of a pivot table are set in bold too (E6.30): the weight says what they are, not only the tint
+  for (const p of pivotParts.value) {
+    if (p.role === 'label' || p.role === 'value') continue
+    for (let r = p.r0; r <= p.r1; r++) for (let c = p.c0; c <= p.c1; c++) keys.add(r * 100_000 + c)
+  }
   return keys
 })
 function tableStyle(t: TableBox): Record<string, string> {
@@ -1024,6 +1033,7 @@ defineExpose({
         >
           <span v-if="tb.kind === 'ghost'" class="ghost-label">{{ t('type here to add a row') }}</span>
         </div>
+        <div v-for="pb in pivotParts" :key="pb.key" class="pivotpart" :class="`role-${pb.role}`" :style="box(pb.r0, pb.c0, pb.r1, pb.c1)" :data-pivot-role="pb.role" aria-hidden="true" />
         <div v-for="rl in rowLines" :key="`r${rl.key}`" class="gridline horiz" :style="{ top: `${rl.top}px` }" />
         <div v-for="cl in colLines" :key="`c${cl.key}`" class="gridline vert" :style="{ left: `${cl.left}px` }" />
         <div
@@ -1359,6 +1369,26 @@ defineExpose({
 }
 .table.frame.purpose-result {
   border-color: color-mix(in srgb, var(--teal) 80%, transparent);
+}
+.pivotpart {
+  position: absolute;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.pivotpart.role-corner,
+.pivotpart.role-field,
+.pivotpart.role-header {
+  background: color-mix(in srgb, var(--purpose-result) 100%, var(--ink) 8%);
+}
+.pivotpart.role-corner {
+  border-bottom: 2px solid color-mix(in srgb, var(--teal) 55%, transparent);
+}
+.pivotpart.role-label {
+  background: color-mix(in srgb, var(--purpose-result) 70%, transparent);
+}
+.pivotpart.role-total {
+  background: color-mix(in srgb, var(--purpose-result) 100%, var(--ink) 14%);
+  border-top: 1.5px solid color-mix(in srgb, var(--teal) 70%, transparent);
 }
 .table.ghost {
   border: 1px dashed var(--line-field);
