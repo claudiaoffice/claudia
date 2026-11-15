@@ -74,6 +74,7 @@ export function textSearchHost(from: {
     unit: 'text',
     switches: SWITCHES,
     scopes: ['all', 'section', 'selection'] satisfies TextScopeId[],
+    helpTopic: 'composes.searching-and-replacing',
     extraParts: ['word'],
     scopeLabel: (scope) => (scope === 'all' ? t('The whole text') : scope === 'section' ? t('This section') : t('Selection')),
     scopeOf(scope) {

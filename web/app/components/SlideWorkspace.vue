@@ -362,7 +362,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         :replace="search.replace.value"
         @close="search.closeSearch()"
         @view="search.view.value = $event"
-        @help="frame?.openHelp('how-to')"
+        @help="frame?.openHelp('how-to', searchHost.helpTopic)"
       />
       <PresentShow v-if="presenting" :session="session" :from="presenting.from" view="audience" :t="t" @close="endShow" />
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />

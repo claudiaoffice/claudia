@@ -60,6 +60,7 @@ Work plan for Nov 14/15th 2026
 		- [ ] latex
 			- [ ] first usecase: formulas in composes & creates
 		- [ ] excalidraw
+		      has its own json format, needs full editor => not good
 	- [ ] bibliography with bibtex support and zotero
 	- [ ] tables in composes
 # computes
@@ -86,6 +87,8 @@ Work plan for Nov 14/15th 2026
 
 # creates
 
+- [ ] you can add a text-rendering-container containing python using matplotlib, and it renders, my dear.
+- [ ] 
 
 # overall
 A collection of docs should be able to reference each other. Equivalent to a "Project", e.g. consisting of a paper, a slide deck and the data in computes.

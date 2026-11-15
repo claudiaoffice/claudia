@@ -47,6 +47,7 @@ export function sheetSearchHost(from: {
     unit: 'cell',
     switches: SWITCHES,
     scopes: ['sheet', 'all', 'selection'] satisfies ScopeId[],
+    helpTopic: 'computes.searching-and-replacing',
     extraParts: ['cellref'],
     scopeLabel: (scope) => (scope === 'sheet' ? t('This sheet') : scope === 'all' ? t('All sheets') : t('Selection')),
     scopeOf(scope) {

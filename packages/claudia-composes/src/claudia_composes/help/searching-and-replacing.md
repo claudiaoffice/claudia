@@ -13,11 +13,20 @@ already showing.
 
 ## Where it looks
 
-The switches under **Look in** say what is searched: **Text** (body paragraphs), **Headings**, **Remarks**,
-**Objects** (the words in text boxes and shapes that sit on the text) and **Descriptions** (the descriptions that are
-read aloud for an object). **The whole text**, **This section** and **Selection** say how far to look; **Match case**
-and **Whole text** narrow it further. A match in an object is not drawn in the text: the list names it, and a click
+The **Look in** button says what is searched: **Everything (5)**, or the names of the kinds that are on. Press it
+for a list with a checkbox for each kind and the number of matches it has: **Text** (body paragraphs), **Headings**,
+**Remarks**, **Objects** (the words in text boxes and shapes that sit on the text) and **Descriptions** (the
+descriptions that are read aloud for an object). **All** and **None** at the bottom of the list switch every kind on
+or off. The list beside the button says how far to look: **The whole text**, **This section** or **Selection**; the
+checkboxes **Match case** and **Whole text** narrow it further. A match in an object is not drawn in the text: the list names it, and a click
 takes you to the paragraph the object belongs to.
+
+## Moving the panel
+
+Drag the panel by its title bar to put it where it does not cover what you are working on. It stays where you leave it
+until you reload the page. From the keyboard, **Alt+arrow keys** move it (**Alt+Shift+arrow keys** in bigger steps;
+Option on a Mac), unless the cursor is in a text field, where those keys keep their own meaning. Every dialog moves the
+same way.
 
 ## Describing more than a word
 

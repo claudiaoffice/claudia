@@ -1110,7 +1110,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         :replace="searchReplace"
         @close="closeSearch"
         @view="searchView = $event"
-        @help="frame?.openHelp('how-to')"
+        @help="frame?.openHelp('how-to', searchHost.helpTopic)"
       />
       <RandomDialog
         v-if="dialog === 'random'"

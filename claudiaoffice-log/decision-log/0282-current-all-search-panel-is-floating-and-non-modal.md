@@ -18,3 +18,5 @@ superseded-by: []
 **As built (2026-11-13).** `web/app/components/SearchPanel.vue` for all three apps, `web/app/lib/sheet-search-host.ts` for computes; fixed at the right of the document, below the formula bar, and a bottom sheet on narrow windows. Ctrl+F and Ctrl+H follow the shared shortcut rule (D122): they do not fire while a text field has the focus, so inside the formula bar the browser's own find opens; Edit ▸ Search & replace… always works. Esc closes the panel and returns the focus to the grid.
 
 **Amended 2026-11-14 (D471).** In composes and creates Ctrl+F and Ctrl+H also work from the document itself; only an `INPUT` or `TEXTAREA` keeps the browser's find.
+
+**Amended 2026-11-15 (D520, D521).** The panel can be moved by its title bar (D520); its quick path has one "Look in" button with a checklist, real buttons for Replace and the pattern builder, and says "n matches" (D521). It stays beside the dock, as above.

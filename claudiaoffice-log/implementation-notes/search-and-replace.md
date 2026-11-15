@@ -100,7 +100,7 @@ else changes in them.
 * “Select the cells” of the mock-up: a selection is one rectangle, scattered matches cannot be selected.
 * The sample text for a typed pattern (D283).
 * Virtualised list: the first 200 rows and “Show more”.
-* The Help topic (`computes.searching-and-replacing`) opens the How-do-I section of the Help tab, not the topic itself.
+* ~~The Help topic opens the How-do-I section, not the topic itself~~: built 2026-11-15, see the last section.
 * A test that drives `search_replace` through the assistant (it is registered as a model method).
 
 ## Numbers
@@ -167,3 +167,47 @@ creates coverage floor 95. Web: 1188 tests.
 composes, D472); marks inside the notes field; an e2e script per app (`web/e2e/search.cjs` covers computes only);
 a heading shown with each result in composes; per-match (instead of per-paragraph) lock skipping; the Windows and macOS
 npm tests were not run here (no `node_modules`), only their menu generator's checks.
+
+## 2026-11-15: the panel's quick path, moving, the help topic (branch `search-ui`; D520–D522; UX-39)
+
+What the owner saw on the composes panel, and what changed.
+
+* **The line of matches** is `matchSummary(count, units, unit, t)` in `lib/search.ts`: "No matches", "One match", "n matches"; only
+  a sheet adds "in m cells", and only when m < n. A text or a slide never says "in x texts". The old wording is gone from
+  the catalogue.
+* **"Look in"** is one button (`data-testid="search-lookin"`) whose text is `lookInSummary(...)`: "Everything (n)", the
+  names when one or two kinds are on, "k of n kinds", "Nothing". It opens a `Popover` with a checkbox per kind (the
+  count, or 🔒 for a kind that cannot be replaced while Replace is open), and All / None. The kinds are still the
+  host's `switches`, so a fourth app gets the list for free. "Match case" and "Whole text/cell" stay checkboxes;
+  "Replace with… ›" and "Build a pattern…" are `.btn` buttons (the end-to-end script finds the first by its text, which is
+  unchanged).
+* **Where it sits.** `DocumentFrame` sets `--dock-width` (340px beside an open dock, 0 when the dock is closed or the
+  window is narrow) and the panel's right edge is `16px + --dock-width`. The help it opens is therefore never under it.
+* **Moving** (`lib/dragging.ts`, `lib/use-draggable.ts`; used by `Modal.vue` and `SearchPanel.vue`). The pure part decides
+  where a box may be (`clampShift`: inside the window, a 48 px strip of the top edge always reachable; a box wider than
+  the window can be moved across it), what a drag and what Alt+arrows do (`dragged`, `keyShift`: 20 px, 100 with Shift),
+  what starts a drag (`startsDrag`: not a button, field or link in the header) and where Alt+arrows must be left alone
+  (`takesTyping`). The wiring keeps one offset per dialog title in a `Map` for the life of the page and re-fits on resize.
+  **The offset is applied through `--dx` and `--dy` on the insets, not a transform**: with `transform` the box becomes the
+  containing block of the `position: fixed` popovers inside it (the Look-in list, the ⋯ menu, the dialogs' own pickers)
+  and they open far from their button. `Modal.vue`'s backdrop click ignores the click that ends a drag
+  (`justDragged()`), or a drag that ends outside would close the dialog; Esc is untouched (D128).
+* **The help topic.** `SearchHost.helpTopic` (one id per app) goes `SearchPanel → @help → DocumentFrame.openHelp(mode, topic)
+  → SidePanel.openHelp → HelpPanel.showTopic(id)`. `showTopic` opens the topic and focuses its heading; an unknown id shows the
+  how-to list. The body is drawn by `NotesText` with `flow`: `lib/help-markdown.ts` joins soft line breaks (not inside code
+  fences, not before a heading, a list item or a quote) and hands the text to `notes-markdown.ts`, so it is the notes' safe
+  reader: no HTML. Function help (`<pre class="body">`) is still plain text.
+* **Texts.** Five new strings in the catalogue ("All", "Everything ({count})", "Nothing", "{names} ({count})", "{count} of {total} kinds"; "None" existed, "{count} matches in {texts} texts" went),
+  German in `po/de.po`. The three help topics were rewritten for the button and a "Moving the panel" section, with new
+  `source-hash`es in the German files.
+
+**Tested.** `dragging.test.ts` (clamping, drag arithmetic, keys, what starts a drag), `help-markdown.test.ts`,
+`search-panel-wording.test.ts`, and `helpTopic` in the three hosts' tests; `modal-layout.test.ts` still passes. The
+components themselves were driven in headless Chrome (the Look-in list, the layout beside an open and a closed dock,
+dragging the panel and a dialog, the topic opening on its heading, Markdown drawn as headings and lists); that script is
+not in the repository, and `web/e2e/search.cjs` was not changed or run here.
+
+**Not built.** Positions kept across a reload; the Alt+arrow keys inside text fields (they keep the browser's meaning);
+Markdown for function help; a drag handle on the *whole* of a dialog; an e2e script for moving (Playwright can do it:
+`mouse.down` on the header, `mouse.move`, `mouse.up`, then compare `getBoundingClientRect()`); the
+desktop clients need no change (they frame this page, and no menu entry was added).

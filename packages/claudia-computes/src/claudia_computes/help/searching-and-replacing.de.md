@@ -3,7 +3,7 @@ id: computes.searching-and-replacing
 title: Wie finde und ersetze ich etwas in meiner Arbeitsmappe?
 apps: computes
 language: de
-source-hash: 52314c746213
+source-hash: 76d205f9b97a
 tags: Suchen, Finden, Ersetzen, Muster, Baukasten, Treffer
 explains: Suchen & Ersetzen, Ersetzen durch, Muster bauen, Ausgelassen
 ---
@@ -13,11 +13,20 @@ Treffer, Umschalt+Eingabetaste zum vorherigen. Strg+H öffnet dasselbe Feld, in 
 
 ## Wo gesucht wird
 
-Die drei Schalter unter **Suchen in** sagen, was durchsucht wird: **Text** (was Sie in eine Zelle eingegeben haben),
-**Formeln** (die Formel, wie sie geschrieben ist, mit ihrem `=`) und **Werte** (was eine Zelle anzeigt, auch was eine
-Formel ausrechnet). Jeder Schalter zeigt, wie viele Treffer er hat. **Dieses Tabellenblatt**, **Alle Tabellenblätter**
-und **Auswahl** sagen, wie weit gesucht wird; **Groß-/Kleinschreibung beachten** und **Ganze Zelle** grenzen die Suche
-weiter ein.
+Die Schaltfläche **Suchen in** sagt, was durchsucht wird: **Alles (3)** oder die Namen der Arten, die eingeschaltet
+sind. Ein Druck darauf öffnet eine Liste mit einem Kontrollkästchen für jede Art und der Zahl ihrer Treffer: **Text**
+(was Sie in eine Zelle eingegeben haben), **Formeln** (die Formel, wie sie geschrieben ist, mit ihrem `=`) und
+**Werte** (was eine Zelle anzeigt, auch was eine Formel ausrechnet). **Alle** und **Keine** unten in der Liste
+schalten jede Art ein oder aus. Die Auswahlliste daneben sagt, wie weit gesucht wird: **Dieses Tabellenblatt**,
+**Alle Tabellenblätter** oder **Auswahl**; die Kontrollkästchen **Groß-/Kleinschreibung beachten** und **Ganze Zelle**
+grenzen die Suche weiter ein.
+
+## Das Feld verschieben
+
+Ziehen Sie das Feld an seiner Titelleiste dorthin, wo es nicht verdeckt, woran Sie arbeiten. Es bleibt dort, bis Sie
+die Seite neu laden. Mit der Tastatur verschieben **Alt+Pfeiltasten** das Feld (**Alt+Umschalt+Pfeiltasten** in
+größeren Schritten; auf dem Mac die Wahltaste), außer der Cursor steht in einem Textfeld, wo diese Tasten ihre eigene
+Bedeutung behalten. Jeder Dialog lässt sich genauso verschieben.
 
 ## Mehr als ein Wort beschreiben
 

@@ -129,6 +129,7 @@ statement in the docs or on the website).
 | UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **fixed** 2026-11-13 (D360) |
 | UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **fixed** 2026-11-13 (D361) |
 | UX-37 | P3 | UX / composes | composes shows an act/suggest switch that changes nothing | **new, open** |
+| UX-39 | P2 | UX | A dialog or the search panel cannot be moved; its help link did not reach its topic; help topics showed their Markdown as typed | **fixed** 2026-11-15 (D520–D522) |
 | UX-38 | P2 | UX / Linux client | Dialogs are stretched to the window's height in WebKitGTK: huge gaps, a button in a row of its own turns into a circle | **fixed** 2026-11-14 (`web/tests/modal-layout.test.ts`) |
 | PROC-18 | **P1** | Process / CI | The gate fails on every fresh clone: a note names `web/public/wasm`, a build output | **fixed** 2026-11-13 |
 | PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |
@@ -1297,6 +1298,16 @@ Firefox does not do it. **Fix:** `Modal.vue` says `height: fit-content`, `align-
 `grid-auto-rows: max-content`; the dialogs' own `.buttons` rows need no change. **Test:** `web/tests/modal-layout.test.ts`
 reads the stylesheet (the stretching only happens in WebKitGTK, which no test here runs); a measuring check in WebKitGTK
 itself would need the Linux client under Xvfb in CI.
+
+### UX-39 · A dialog or the search panel cannot be moved; the panel's help link did not reach its topic · P2 · fixed 2026-11-15
+Reported by the owner on the composes panel (2026-11-15). **Read:** neither `Modal.vue` nor `SearchPanel.vue` had any
+moving, and the log had no decision for it. The panel's ⋯ ▸ "About searching and patterns" opened the Help tab at the
+how-to list, under the panel, and the Help panel drew a topic's Markdown as typed (`**`, `##`, a line break in every
+sentence). Also on the panel: "in x texts", five switches that filled it, links for what are the main actions.
+**Fix:** D520 (moving, `lib/dragging.ts`, `lib/use-draggable.ts`), D521 (the panel's quick path), D522 (Markdown in help
+topics, the topic opened by `SearchHost.helpTopic`). **Tests:** `dragging.test.ts` (where a box may go; the keys),
+`help-markdown.test.ts`, `search-panel-wording.test.ts` (the Look-in line and the match line), the hosts' tests for
+`helpTopic`; the component wiring was run in a headless Chrome page only, not in `e2e/` (see the implementation note).
 
 ### PROC-18 · The gate fails on every fresh clone · P1 · fixed 2026-11-13
 `tests/test_notes_claim_built_files.py` read `web/public/wasm` in `notes/e9-print-and-layout.md` as a claim about the

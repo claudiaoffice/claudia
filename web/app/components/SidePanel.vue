@@ -38,13 +38,14 @@ function onModeKey(event: KeyboardEvent) {
 // redesign discussed alongside the help system is deferred — this tab strip is the one piece of that discussion
 // that ships now, so the new "Help" tab has somewhere to live without touching History & Chat itself).
 const tab = ref<'history' | 'help'>('history')
-const helpPanel = ref<{ focus: (mode?: 'how-to' | 'docs') => void } | null>(null)
+const helpPanel = ref<{ focus: (mode?: 'how-to' | 'docs') => void; showTopic: (id: string) => Promise<void> } | null>(null)
 
 /** Help ▸ "How do I…?" and Help ▸ "Documentation" (D125's stubs, now real): switch to the Help tab and its
- * matching section. */
-function openHelp(mode?: 'how-to' | 'docs') {
+ * matching section. With a `topic` (an id, `composes.searching-and-replacing`) the topic itself opens, which is what a
+ * link from inside the app, like the search panel's "About searching and patterns", asks for. */
+function openHelp(mode?: 'how-to' | 'docs', topic?: string) {
   tab.value = 'help'
-  nextTick(() => helpPanel.value?.focus(mode))
+  nextTick(() => (topic ? helpPanel.value?.showTopic(topic) : helpPanel.value?.focus(mode)))
 }
 
 /** The history with the checkpoints in their places. */

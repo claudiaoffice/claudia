@@ -257,3 +257,41 @@ layer and then ends. The window announces each slide to a screen reader and resp
 `lib/show.ts` (tested without a browser); `components/PresentShow.vue` draws them; `e2e/present.cjs`
 (`npm run e2e:present`, `BROWSER=firefox` for Firefox) drives all of it. A second audience window on another screen is
 not built yet (D345).
+
+## Search & replace panel, movable dialogs, help topics
+
+**Search & replace** (Edit ▸ Search & replace…, Ctrl+F; D282) is one component, `components/SearchPanel.vue`, for all three
+apps; each app gives it a `SearchHost` (`lib/sheet-search-host.ts`, `lib/text-search-host.ts`, `lib/slide-search-host.ts`)
+that says which kinds of text exist (`switches`), how far to look (`scopes`), how to name and go to a match, and which help
+topic explains it (`helpTopic`). Its quick path is a find field, a **Look in** button, the scope list, two checkboxes and
+the buttons **Replace with…** and **Build a pattern…**; the line above the matches reads "n matches" (D521). The two lines
+of text are plain functions in `lib/search.ts`, so they are tested without a browser:
+
+```ts
+lookInSummary(kinds, t)               // "Everything (5)", "Text, Headings (2)", "3 of 5 kinds", "Nothing"
+matchSummary(count, units, unit, t)   // "No matches", "One match", "12 matches", "12 matches in 5 cells"
+```
+
+**Moving** (D520). `components/Modal.vue` (every dialog) and the search panel have a title bar that is the handle:
+
+* `lib/dragging.ts` is the pure part: `clampShift` keeps a box inside the window with a 48 px strip of its title bar
+  reachable, `dragged` and `keyShift` say where a drag or Alt+arrows (20 px, Shift 100 px) take it, `startsDrag` says that a
+  button or field in the bar does not start a drag, `takesTyping` that Alt+arrows are left to a text field.
+* `lib/use-draggable.ts` is the wiring (pointer events on the window, one remembered offset per dialog title while the
+  page is open, a re-fit when the window shrinks, `justDragged()` so the click that ends a drag does not close a dialog by
+  its backdrop).
+* The box applies its offset to its own insets through the CSS variables `--dx` and `--dy`. Do not turn that into a
+  `transform`: it would make the box the containing block of the `position: fixed` popovers inside it.
+
+A new dialog gets all of this by using `Modal.vue` with a `title`; nothing else is needed. A box that is not a `Modal` calls
+`useDraggable(ref, id)`, puts `@pointerdown="start"` on its title bar and `@keydown="key"` on itself, and reads `offset`.
+
+**Help topics** (D522). The Help tab shows a topic's Markdown, not its source: `lib/help-markdown.ts` joins the line breaks
+inside a paragraph (the files are written in lines of about 120 characters) and `lib/notes-markdown.ts`, the reader of the
+speaker notes (D347), turns the text into lines of spans, which `components/NotesText.vue` (with `flow`) draws. It is
+never HTML. A host opens its own topic with `frame.openHelp('how-to', host.helpTopic)`; an unknown id shows the how-to
+list. A topic is a file of the app's package (`claudia_<app>/help/<name>.md` and `<name>.de.md`; the German one carries
+the `source-hash` of the English file, see `claudia_server/help.py`).
+
+Tests: `npm test` runs `dragging.test.ts`, `help-markdown.test.ts`, `search-panel-wording.test.ts` and the hosts'
+tests; `npm run e2e:search` drives the panel against a real server.

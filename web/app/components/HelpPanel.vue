@@ -3,6 +3,7 @@
 // computes only) and the "how do I" topics (E13.1/E13.3, every app). A third kind, the AI assistant, already
 // exists as the chat on the other tab (Help ▸ "Ask ai" opens it directly) and is not duplicated here.
 import { computed, nextTick, ref, watch } from 'vue'
+import NotesText from './NotesText.vue'
 import { useI18n } from '~/lib/i18n'
 import type { BaseSession, HelpTopic, HelpTopicSummary } from '~/lib/base-session'
 import type { FunctionHelp, FunctionSummary } from '~/lib/session'
@@ -45,9 +46,15 @@ async function openFunction(name: string) {
   const found = await (props.session as unknown as { functionHelp(name: string): Promise<FunctionHelp | false> }).functionHelp(name)
   if (found !== false) open.value = { kind: 'function', data: found }
 }
+const topicHeading = ref<HTMLElement | null>(null)
 async function openTopic(id: string) {
   const found = await props.session.helpTopic(id)
-  if (found !== false) open.value = { kind: 'topic', data: found }
+  if (found === false) return false
+  open.value = { kind: 'topic', data: found }
+  // the heading takes the focus, so a screen reader says where it landed and a keyboard can scroll the topic
+  await nextTick()
+  topicHeading.value?.focus()
+  return true
 }
 function back() {
   open.value = null
@@ -65,7 +72,12 @@ function focus(mode?: 'how-to' | 'docs') {
     target?.scrollIntoView({ block: 'nearest' })
   })
 }
-defineExpose({ focus })
+/** A link from the app to one topic (the search panel's "About searching and patterns"): the topic itself opens, not the
+ * list. Falls back to the list where the server has no such topic, so the person lands somewhere useful. */
+async function showTopic(id: string) {
+  if (!(await openTopic(id))) focus('how-to')
+}
+defineExpose({ focus, showTopic })
 </script>
 
 <template>
@@ -82,9 +94,9 @@ defineExpose({ focus })
         <pre class="body">{{ open.data.help }}</pre>
       </template>
       <template v-else>
-        <h3>{{ open.data.title }}</h3>
+        <h3 ref="topicHeading" tabindex="-1">{{ open.data.title }}</h3>
         <p v-if="open.data.tags.length" class="tags">{{ open.data.tags.join(' · ') }}</p>
-        <pre class="body">{{ open.data.body }}</pre>
+        <NotesText class="body flow" flow :notes="open.data.body" />
       </template>
     </div>
 
@@ -233,12 +245,21 @@ h2 {
   font-size: 11px;
   color: rgb(230 224 245 / 55%);
 }
-.topic .body {
+.topic h3:focus-visible {
+  outline: 2px solid var(--apricot);
+  outline-offset: 2px;
+}
+pre.body {
   font-family: var(--font-ui);
   font-size: 12.5px;
   line-height: 1.55;
   color: rgb(230 224 245 / 90%);
   white-space: pre-wrap;
   margin: 0;
+}
+/* the topic itself: Markdown, drawn (the function help above stays preformatted: its columns are its layout) */
+.topic .body.flow {
+  font-size: 12.5px;
+  color: rgb(230 224 245 / 90%);
 }
 </style>

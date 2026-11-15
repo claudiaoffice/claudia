@@ -12,10 +12,19 @@ slide takes you to that slide. Ctrl+H opens the same panel with **Replace with**
 
 ## Where it looks
 
-The switches under **Look in** say what is searched: **Text** (words in text boxes), **Shape labels**, **Speaker
-notes** and **Descriptions** (the descriptions that are read aloud for an object). **All slides** and **This slide**
-say how far to look; **Match case** and **Whole text** narrow it further. A match in the speaker notes shows the notes
+The **Look in** button says what is searched: **Everything (4)**, or the names of the kinds that are on. Press it
+for a list with a checkbox for each kind and the number of matches it has: **Text** (words in text boxes), **Shape
+labels**, **Speaker notes** and **Descriptions** (the descriptions that are read aloud for an object). **All** and
+**None** at the bottom of the list switch every kind on or off. The list beside the button says how far to look:
+**All slides** or **This slide**; the checkboxes **Match case** and **Whole text** narrow it further. A match in the speaker notes shows the notes
 under the slide.
+
+## Moving the panel
+
+Drag the panel by its title bar to put it where it does not cover what you are working on. It stays where you leave it
+until you reload the page. From the keyboard, **Alt+arrow keys** move it (**Alt+Shift+arrow keys** in bigger steps;
+Option on a Mac), unless the cursor is in a text field, where those keys keep their own meaning. Every dialog moves the
+same way.
 
 ## Describing more than a word
 

@@ -63,6 +63,7 @@ export function slideSearchHost(from: {
     unit: 'text',
     switches: SWITCHES,
     scopes: ['all', 'slide'] satisfies SlideScopeId[],
+    helpTopic: 'creates.searching-and-replacing',
     extraParts: ['word'],
     scopeLabel: (scope) => (scope === 'all' ? t('All slides') : t('This slide')),
     scopeOf: (scope) => (scope === 'slide' && state.activeSlide ? { slide: state.activeSlide } : {}),

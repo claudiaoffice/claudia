@@ -3,7 +3,7 @@ id: creates.searching-and-replacing
 title: Wie finde und ersetze ich Wörter in meiner Präsentation?
 apps: creates
 language: de
-source-hash: 507949bc7a6f
+source-hash: e17a98a0a29c
 tags: Suchen, Finden, Ersetzen, Muster, Baukasten, Treffer, Notizen, Folie
 explains: Suchen & Ersetzen, Ersetzen durch, Muster bauen, Ausgelassen
 ---
@@ -14,10 +14,19 @@ und ein Treffer auf einer anderen Folie führt Sie zu dieser Folie. Strg+H öffn
 
 ## Wo gesucht wird
 
-Die Schalter unter **Suchen in** legen fest, was durchsucht wird: **Text** (Wörter in Textfeldern),
-**Beschriftungen von Formen**, **Referentennotizen** und **Beschreibungen** (die Beschreibungen, die zu einem Objekt
-vorgelesen werden). **Alle Folien** und **Diese Folie** legen fest, wie weit gesucht wird; **Groß-/Kleinschreibung beachten**
-und **Ganzer Text** schränken weiter ein. Ein Treffer in den Referentennotizen blendet die Notizen unter der Folie ein.
+Die Schaltfläche **Suchen in** sagt, was durchsucht wird: **Alles (4)** oder die Namen der Arten, die eingeschaltet
+sind. Ein Druck darauf öffnet eine Liste mit einem Kontrollkästchen für jede Art und der Zahl ihrer Treffer: **Text**
+(Wörter in Textfeldern), **Beschriftungen von Formen**, **Referentennotizen** und **Beschreibungen** (die
+Beschreibungen, die zu einem Objekt vorgelesen werden). **Alle** und **Keine** unten in der Liste schalten jede Art
+ein oder aus. Die Auswahlliste daneben legt fest, wie weit gesucht wird: **Alle Folien** oder **Diese Folie**; die
+Kontrollkästchen **Groß-/Kleinschreibung beachten** und **Ganzer Text** schränken weiter ein. Ein Treffer in den Referentennotizen blendet die Notizen unter der Folie ein.
+
+## Das Feld verschieben
+
+Ziehen Sie das Feld an seiner Titelleiste dorthin, wo es nicht verdeckt, woran Sie arbeiten. Es bleibt dort, bis Sie
+die Seite neu laden. Mit der Tastatur verschieben **Alt+Pfeiltasten** das Feld (**Alt+Umschalt+Pfeiltasten** in
+größeren Schritten; auf dem Mac die Wahltaste), außer der Cursor steht in einem Textfeld, wo diese Tasten ihre eigene
+Bedeutung behalten. Jeder Dialog lässt sich genauso verschieben.
 
 ## Mehr beschreiben als ein Wort
 

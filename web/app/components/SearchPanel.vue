@@ -13,6 +13,8 @@ import {
   explainError,
   keptNames,
   latest,
+  lookInSummary,
+  matchSummary,
   switchOf,
   newCondition,
   newPart,
@@ -31,7 +33,9 @@ import {
   type SearchLeave,
   type SearchMatch,
   type SearchModel,
+  type SearchSwitch,
 } from '~/lib/search'
+import { useDraggable } from '~/lib/use-draggable'
 import Popover from './Popover.vue'
 
 const props = defineProps<{
@@ -66,6 +70,10 @@ const menu = ref<{ x: number; y: number } | null>(null)
 const menuButton = ref<HTMLElement | null>(null)
 const quickField = ref<HTMLInputElement | null>(null)
 const root = ref<HTMLElement | null>(null)
+const lookMenu = ref<{ x: number; y: number } | null>(null)
+const lookButton = ref<HTMLElement | null>(null)
+// UX-39: the panel is moved by its header, or with Alt + the arrow keys while the focus is not in a field.
+const { offset, moving, start: startMove, key: moveKey, refit } = useDraggable(root, 'search-panel')
 /** The builder as it was when the person went to write the pattern herself: "Back to the builder" returns to it. */
 const builderBefore = ref<{ model: string; mode: SearchModel['mode'] } | null>(null)
 const askBack = ref(false)
@@ -96,11 +104,7 @@ const summary = computed(() => {
   if (!query.value) return ''
   if (problem.value) return problem.value.headline
   if (!a) return t('Searching…')
-  const n = shown.value.length
-  if (n === 0) return t('No matches')
-  if (n === 1) return t('One match')
-  if (unitCount.value === n) return t('{count} matches', { count: n })
-  return inCells.value ? t('{count} matches in {cells} cells', { count: n, cells: unitCount.value }) : t('{count} matches in {texts} texts', { count: n, texts: unitCount.value })
+  return matchSummary(shown.value.length, unitCount.value, props.host.unit, t)
 })
 const position = computed(() => (current.value === null || shown.value.length === 0 ? '' : t('{n} of {count}', { n: current.value + 1, count: shown.value.length })))
 const changing = computed(() => preview.value?.total ?? 0)
@@ -175,6 +179,7 @@ function onQuickKey(event: KeyboardEvent) {
   else next()
 }
 function onKey(event: KeyboardEvent) {
+  moveKey(event)
   if (event.key === 'Escape') {
     event.stopPropagation()
     emit('close')
@@ -327,6 +332,17 @@ function switchLabel(key: string): string {
       return t('Text')
   }
 }
+/** Is a kind looked in? One that cannot be replaced is not, while replacing (a value follows from its formula). */
+const lookedIn = (one: SearchSwitch) => !!kinds[one.key] && (one.replaceable || !replacing.value)
+const lookSummary = computed(() => lookInSummary(props.host.switches.map((one) => ({ label: switchLabel(one.key), on: lookedIn(one) })), t))
+function setAllKinds(on: boolean) {
+  for (const one of props.host.switches) if (one.replaceable || !replacing.value) kinds[one.key] = on
+}
+function openLook() {
+  const rect = lookButton.value?.getBoundingClientRect()
+  lookMenu.value = lookMenu.value ? null : { x: rect?.left ?? 0, y: (rect?.bottom ?? 0) + 4 }
+}
+
 /** What a kind of match is called in the list. */
 function kindLabel(kind: string): string {
   switch (kind) {
@@ -430,14 +446,19 @@ defineExpose({ focus: focusQuick, openReplace, seed })
 onMounted(() => {
   if (props.replace) openReplace()
   focusQuick()
+  window.addEventListener('resize', refit)
 })
-onBeforeUnmount(() => clearTimeout(timer))
+onBeforeUnmount(() => {
+  clearTimeout(timer)
+  window.removeEventListener('resize', refit)
+})
 watch(() => props.replace, (on) => on && openReplace())
 </script>
 
 <template>
-  <aside ref="root" class="search" role="search" :aria-label="t('Search & replace')" data-testid="search-panel" @keydown="onKey">
-    <header>
+  <aside ref="root" class="search" :class="{ moving }" role="search" :aria-label="t('Search & replace')" :style="{ '--dx': `${offset.x}px`, '--dy': `${offset.y}px` }" data-testid="search-panel" @keydown="onKey">
+    <header @pointerdown="startMove">
+      <svg class="grip" viewBox="0 0 10 16" width="10" height="16" aria-hidden="true"><circle cx="2.5" cy="3" r="1.4" /><circle cx="7.5" cy="3" r="1.4" /><circle cx="2.5" cy="8" r="1.4" /><circle cx="7.5" cy="8" r="1.4" /><circle cx="2.5" cy="13" r="1.4" /><circle cx="7.5" cy="13" r="1.4" /></svg>
       <h2>{{ t('Search & replace') }}</h2>
       <button ref="menuButton" type="button" class="icon" :aria-label="t('More')" aria-haspopup="menu" :aria-expanded="menu !== null" @click="openMenu">⋯</button>
       <button type="button" class="icon" :aria-label="t('Close')" @click="emit('close')">✕</button>
@@ -449,6 +470,21 @@ watch(() => props.replace, (on) => on && openReplace())
         <button type="button" role="menuitem" @click="startOver">{{ t('Start over') }}</button>
         <div class="sep" />
         <button type="button" role="menuitem" @click="openHelp">{{ t('About searching and patterns') }}</button>
+      </div>
+    </Popover>
+
+    <Popover v-if="lookMenu" :x="lookMenu.x" :y="lookMenu.y" :width="250" :label="t('Look in')" :anchor="lookButton" @close="lookMenu = null">
+      <div class="lookin" role="group" :aria-label="t('Look in')">
+        <label v-for="one in host.switches" :key="one.key" class="check" :class="{ locked: !one.replaceable && replacing }" :title="!one.replaceable && replacing ? t('A value follows from its formula: it can be found, not replaced.') : ''">
+          <input v-model="kinds[one.key]" type="checkbox" :disabled="!one.replaceable && replacing">
+          <span class="grow">{{ switchLabel(one.key) }}</span>
+          <small v-if="!one.replaceable && replacing" aria-hidden="true">🔒</small><small v-else>{{ answer?.counts[one.key] ?? 0 }}</small>
+        </label>
+        <div class="sep" />
+        <div class="row all">
+          <button type="button" class="link" @click="setAllKinds(true)">{{ t('All') }}</button>
+          <button type="button" class="link" @click="setAllKinds(false)">{{ t('None') }}</button>
+        </div>
       </div>
     </Popover>
 
@@ -563,26 +599,24 @@ watch(() => props.replace, (on) => on && openReplace())
 
       <!-- what else decides what is found -->
       <section class="options">
-        <h3 class="label">{{ t('Look in') }}</h3>
-        <div class="chips" role="group" :aria-label="t('Look in')">
-          <label v-for="one in host.switches" :key="one.key" class="chip" :class="{ on: kinds[one.key] && (one.replaceable || !replacing), locked: !one.replaceable && replacing }" :title="!one.replaceable && replacing ? t('A value follows from its formula: it can be found, not replaced.') : ''">
-            <input v-model="kinds[one.key]" type="checkbox" :disabled="!one.replaceable && replacing"><span aria-hidden="true">{{ kinds[one.key] && (one.replaceable || !replacing) ? '✓ ' : '' }}</span>{{ switchLabel(one.key) }}
-            <small v-if="!one.replaceable && replacing" aria-hidden="true">🔒</small><small v-else>{{ answer?.counts[one.key] ?? 0 }}</small>
-          </label>
-        </div>
-        <div class="row flags">
+        <div class="row selects">
+          <button ref="lookButton" type="button" class="field select" aria-haspopup="true" :aria-expanded="lookMenu !== null" data-testid="search-lookin" @click="openLook">
+            <span class="said">{{ t('Look in') }}: <strong>{{ lookSummary }}</strong></span><span class="caret" aria-hidden="true">▾</span>
+          </button>
           <select v-model="scope" class="field" :aria-label="t('Where to look')">
             <option v-for="id in host.scopes" :key="id" :value="id">{{ host.scopeLabel(id) }}</option>
           </select>
-          <label class="toggle" :class="{ on: model.matchCase }"><input v-model="model.matchCase" type="checkbox">{{ t('Match case') }}</label>
-          <label v-if="model.mode !== 'pattern'" class="toggle" :class="{ on: model.whole === 'entire' }"><input type="checkbox" :checked="model.whole === 'entire'" @change="model.whole = ($event.target as HTMLInputElement).checked ? 'entire' : 'none'">{{ inCells ? t('Whole cell') : t('Whole text') }}</label>
         </div>
-        <div v-if="model.mode === 'quick'" class="row links">
-          <button v-if="!replaceOpen && !host.readonly" type="button" class="link" @click="openReplace">{{ t('Replace with…') }} ›</button>
-          <button type="button" class="link end" @click="startBuilder">{{ t('Build a pattern…') }}</button>
+        <div class="row flags">
+          <label class="check"><input v-model="model.matchCase" type="checkbox">{{ t('Match case') }}</label>
+          <label v-if="model.mode !== 'pattern'" class="check"><input type="checkbox" :checked="model.whole === 'entire'" @change="model.whole = ($event.target as HTMLInputElement).checked ? 'entire' : 'none'">{{ inCells ? t('Whole cell') : t('Whole text') }}</label>
         </div>
-        <div v-else-if="!replaceOpen && !host.readonly" class="row links">
-          <button type="button" class="link" @click="openReplace">{{ t('Replace with…') }} ›</button>
+        <div v-if="model.mode === 'quick'" class="row actions">
+          <button v-if="!replaceOpen && !host.readonly" type="button" class="btn" @click="openReplace">{{ t('Replace with…') }} ›</button>
+          <button type="button" class="btn" @click="startBuilder">{{ t('Build a pattern…') }}</button>
+        </div>
+        <div v-else-if="!replaceOpen && !host.readonly" class="row actions">
+          <button type="button" class="btn" @click="openReplace">{{ t('Replace with…') }} ›</button>
         </div>
       </section>
 
@@ -661,9 +695,11 @@ watch(() => props.replace, (on) => on && openReplace())
 .search {
   position: fixed;
   z-index: 40;
-  top: 140px;
-  right: 16px;
-  bottom: 56px;
+  /* `--dx` and `--dy` are how far the person has moved it (UX-39): all four edges move together, so it keeps its size.
+   * To the left of History and chat (`--dock-width`, set by DocumentFrame), so it never covers what it opens there. */
+  top: calc(140px + var(--dy, 0px));
+  right: calc(16px + var(--dock-width, 0px) - var(--dx, 0px));
+  bottom: calc(56px - var(--dy, 0px));
   width: 380px;
   max-width: calc(100vw - 32px);
   display: flex;
@@ -680,8 +716,23 @@ header {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 10px 12px 8px 18px;
+  padding: 10px 12px 8px 14px;
   border-bottom: 1px solid var(--line);
+  /* the header is the handle (UX-39): the grip says so, a drag on it moves the panel */
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.moving header {
+  cursor: grabbing;
+}
+header .icon {
+  cursor: pointer;
+}
+.grip {
+  flex: none;
+  margin-right: 6px;
+  fill: var(--muted);
 }
 header h2 {
   flex: 1;
@@ -692,7 +743,7 @@ header h2 {
 .body {
   flex: 0 1 auto;
   overflow-y: auto;
-  padding: 10px 16px 6px;
+  padding: 12px 16px 18px;
   display: grid;
   gap: 8px;
   align-content: start;
@@ -716,7 +767,7 @@ header h2 {
 }
 .field:focus-visible,
 .chip:focus-within,
-.toggle:focus-within,
+.check:focus-within,
 button:focus-visible {
   outline: 2px solid var(--app);
   outline-offset: 1px;
@@ -792,12 +843,6 @@ button:focus-visible {
 .link:hover {
   text-decoration: underline;
 }
-.link.end {
-  margin-left: auto;
-}
-.links {
-  justify-content: space-between;
-}
 .add .adding {
   position: relative;
   display: inline-block;
@@ -823,13 +868,7 @@ button:focus-visible {
   align-items: center;
   gap: 2px;
 }
-.chips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.chip,
-.toggle {
+.chip {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -841,16 +880,14 @@ button:focus-visible {
   cursor: pointer;
   user-select: none;
 }
-.chip input,
-.toggle input {
+.chip input {
   position: absolute;
   opacity: 0;
   inset: 0;
   margin: 0;
   cursor: pointer;
 }
-.chip.on,
-.toggle.on {
+.chip.on {
   border-color: var(--app);
   background: var(--app-soft);
   color: var(--app-text);
@@ -870,8 +907,90 @@ button:focus-visible {
 .keptchip.insert {
   padding: 2px 10px;
 }
+.options {
+  display: grid;
+  gap: 10px;
+}
+/* "Look in" is one button with a checklist under it (it was five chips and two more rows): it says what is on, in the
+ * same row as where to look. */
+.selects {
+  flex-wrap: nowrap;
+}
+.select {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+}
+.select .said {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.caret {
+  flex: none;
+  font-size: 11px;
+}
+.selects select.field {
+  flex: none;
+  max-width: 45%;
+}
 .flags {
+  gap: 18px;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+.check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--app);
+  cursor: pointer;
+}
+.check.locked {
+  opacity: 0.7;
+  cursor: default;
+}
+.check small {
+  color: var(--muted);
+}
+/* Replace and the builder are buttons, with room before the matches: they were small links close to the result line. */
+.actions {
+  gap: 10px;
   margin-top: 6px;
+}
+.actions .btn {
+  flex: 1 1 0;
+  min-height: 34px;
+  color: var(--app-text);
+  border-color: var(--app);
+  cursor: pointer;
+}
+.lookin {
+  display: grid;
+  gap: 2px;
+  padding: 4px;
+}
+.lookin .check {
+  padding: 6px 8px;
+  border-radius: 7px;
+}
+.lookin .check:hover:not(.locked) {
+  background: var(--mist);
+  color: var(--ink);
+}
+.lookin .all {
+  gap: 16px;
+  padding: 2px 8px 4px;
 }
 .items {
   display: flex;
@@ -1076,9 +1195,9 @@ footer .hint {
 @media (max-width: 720px) {
   .search {
     top: auto;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
+    left: calc(8px + var(--dx, 0px));
+    right: calc(8px - var(--dx, 0px));
+    bottom: calc(8px - var(--dy, 0px));
     width: auto;
     max-width: none;
     max-height: 70vh;

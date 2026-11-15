@@ -30,6 +30,7 @@ describe('the search host of a presentation', () => {
     ])
     expect(host.scopes).toEqual(['all', 'slide'])
     expect(host.extraParts).toEqual(['word'])
+    expect(host.helpTopic).toBe('creates.searching-and-replacing')
   })
 
   it('is read-only for somebody who can only look', () => {

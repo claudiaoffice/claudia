@@ -25,6 +25,7 @@ describe('the search host of a text', () => {
     expect(host.switches.map((s) => s.key)).toEqual(['text', 'heading', 'remark', 'object', 'description'])
     expect(host.scopes).toEqual(['all', 'section', 'selection'])
     expect(host.extraParts).toEqual(['word'])
+    expect(host.helpTopic).toBe('composes.searching-and-replacing')
   })
 
   it('is read-only for somebody who can only look', () => {
