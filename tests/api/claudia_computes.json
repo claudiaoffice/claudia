@@ -1100,6 +1100,7 @@
    "add_sheet": "(self, sheet: 'Sheet', index: 'int | None') -> 'None'",
    "anchor_from_data": "(self, data: 'dict') -> 'CellAnchor'",
    "chart": "(self, chart_id: 'str') -> 'Chart'",
+   "chart_cells": "(self, diagram_id: 'str') -> 'tuple[RangeRef, bool] | None'",
    "chart_figure": "(self, diagram_id: 'str') -> 'dict'",
    "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
    "check_anchor": "(self, anchor: 'CellAnchor', body: 'ObjectBody') -> 'None'",

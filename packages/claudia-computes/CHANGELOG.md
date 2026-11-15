@@ -5,6 +5,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-15
+
+### Added
+- `WorkbookModel.chart_cells(diagram_id)`: the cells a chart reads (a range that names its sheet, and whether its
+  first row is a header), for a chart that follows a name too; `None` when it reads nothing (D462).
+
 Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 → 10 (9: an object's description, 10:
 the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges are things (D552) and a sheet can be renamed (E6.24):
 state schema 12 → 13.

@@ -769,6 +769,16 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             ]
         return figure_of(spec, categories, series)
 
+    def chart_cells(self, diagram_id: str) -> tuple[RangeRef, bool] | None:
+        """The cells a diagram reads right now, as a range that names its sheet, and whether its first row is a header
+        row; ``None`` when a named source has no cells at the moment. A named source answers with the range it is
+        today, so a file that cannot follow a name (D462) can hold the chart as it looks now."""
+        window = self._chart_window(_chart_spec(self.diagrams[diagram_id]))
+        if window is None:
+            return None
+        sheet, first, last, header_row = window
+        return RangeRef(CellRef(first.row, first.col, sheet.id), CellRef(last.row, last.col, sheet.id)), header_row
+
     def _chart_window(self, spec: ChartSpec) -> tuple[Sheet, CellRef, CellRef, bool] | None:
         """The cells a chart reads right now: ``(sheet, first, last, header_row)``, or ``None`` when its named
         source has no cells (the name is gone, or a ``SQL()`` result is not a table at the moment). A named source

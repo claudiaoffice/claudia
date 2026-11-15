@@ -17,7 +17,7 @@ from ._named import unheld
 
 #: The facets a converter writes, by the name :func:`facets` gives them: the cells with their looks, and the look
 #: definitions they name.
-ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout"})
+ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
 XLSX_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout"})
 
 #: The code a facet is reported under, where an export reported it before the facets existed.
@@ -27,7 +27,8 @@ KINDS: dict[str, str] = {"layout": "layout", "charts": "chart", "objects": "obje
 def facets(model: WorkbookModel) -> dict[str, object]:
     """A workbook as the facets a converter writes or leaves out, in the order losses are reported. The sheets count
     by their name, cells and looks; the widths and heights of rows and columns are a facet of their own (only a sheet
-    that has any), and the floating objects come with the assets they use."""
+    that has any), the charts shown (a tab, or a diagram floating on a sheet, each with its definition) are one facet
+    and the other floating objects, with the assets they use, another."""
     data = model.serialize()
     sheets = data["sheets"]
     return {
@@ -37,15 +38,24 @@ def facets(model: WorkbookModel) -> dict[str, object]:
         "number_formats": data["number_formats"],
         "layout": {s["id"]: (s["row_heights"], s["col_widths"]) for s in sheets if s["row_heights"] or s["col_widths"]},
         "names": data["names"],
-        "charts": data["charts"],
+        "charts": _charts(data),
         "objects": [
-            *data["objects"],
+            *(each for each in data["objects"] if each.get("diagram") is None),
             *(("image", each) for each in data["images"]),
             *(("shape", each) for each in data["shapes"]),
-            *(("diagram", each) for each in data["diagrams"]),
             *(("rendering", each) for each in data["renderings"]),
         ],
     }
+
+
+def _charts(data: dict) -> dict[str, object]:
+    """The charts a workbook shows, each with the definition it draws: a tab, or a diagram floating on a sheet."""
+    definitions = {each["id"]: each for each in data["diagrams"]}
+    shown: dict[str, object] = {f"tab {tab['id']}": (tab, definitions.get(tab["spec_id"])) for tab in data["charts"]}
+    for each in data["objects"]:
+        if each.get("diagram") is not None:
+            shown[f"object {each['id']}"] = (each, definitions.get(each["diagram"]))
+    return shown
 
 
 def workbook_unwritten_changes(

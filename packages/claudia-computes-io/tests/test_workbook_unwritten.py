@@ -11,7 +11,18 @@ from claudia_computes_io import (
     xlsx_unwritten_changes,
 )
 
-from claudia_computes import CellAnchor, Chart, ObjectBody, Sheet, SheetId, VisualObject, WorkbookModel
+from claudia_computes import (
+    CellAnchor,
+    CellRef,
+    Chart,
+    ChartSpec,
+    ObjectBody,
+    RangeRef,
+    Sheet,
+    SheetId,
+    VisualObject,
+    WorkbookModel,
+)
 from claudia_core import Paragraph
 from claudia_odf_io import Loss
 
@@ -47,11 +58,30 @@ def test_column_widths_and_row_heights_are_written_so_they_are_no_loss(unwritten
     assert unwritten(after, a_workbook()) == ()
 
 
-@BOTH
-def test_a_chart_tab_is_not_written(unwritten):
+def test_a_chart_tab_is_not_written_to_xlsx():
     after = a_workbook()
     after.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert unwritten(after, a_workbook()) == (Loss("chart", "", 1),)
+    assert xlsx_unwritten_changes(after, a_workbook()) == (Loss("chart", "", 1),)
+
+
+def test_a_chart_tab_is_written_to_ods_as_a_sheet_so_it_is_no_loss():
+    after = a_workbook()
+    after.define_diagram(
+        ChartSpec(id="spec", kind="bar", range=RangeRef(CellRef(0, 0, SheetId("s1")), CellRef(0, 0, SheetId("s1"))))
+    )
+    after.charts["c1"] = Chart("c1", "Chart", "spec")
+    assert ods_unwritten_changes(after, a_workbook()) == ()
+
+
+def test_a_chart_floating_on_a_sheet_is_written_to_ods_so_it_is_no_loss():
+    after = a_workbook()
+    after.define_diagram(
+        ChartSpec(id="spec", kind="bar", range=RangeRef(CellRef(0, 0, SheetId("s1")), CellRef(0, 0, SheetId("s1"))))
+    )
+    body = ObjectBody("o1", "diagram", 200, 100, "plain-image", diagram="spec")
+    after.insert_object(VisualObject(body, CellAnchor(SheetId("s1"), 3, 3)))
+    assert ods_unwritten_changes(after, a_workbook()) == ()
+    assert xlsx_unwritten_changes(after, a_workbook()) != ()
 
 
 @BOTH
@@ -66,12 +96,13 @@ def test_a_floating_object_is_not_written(unwritten):
 def test_a_fresh_export_compares_with_an_empty_workbook(unwritten):
     model = a_workbook()
     model.sheets[SheetId("s1")].row_heights[2] = 40.0
-    model.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert unwritten(model) == (Loss("chart", "", 1),)
+    box = ObjectBody("o1", "text", 100, 100, "plain-box", Paragraph("p1", "note"))
+    model.insert_object(VisualObject(box, CellAnchor(SheetId("s1"), 0, 0)))
+    assert unwritten(model) == (Loss("object", "", 1),)
 
 
 def test_the_export_loss_lists_say_what_the_converters_do_not_write():
     model = a_workbook()
     model.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert Loss("chart", "", 1) in ods_export_losses(model)
+    assert Loss("chart", "empty", 1) in ods_export_losses(model)  # (a chart tab with nothing to draw)
     assert Loss("chart", "", 1) in xlsx_export_losses(model)

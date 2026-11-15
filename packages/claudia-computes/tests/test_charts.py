@@ -15,16 +15,19 @@ from claudia_computes import (
     DeleteRows,
     ForgetDiagram,
     InsertRows,
+    NamedRange,
     RangeRef,
     RemoveChart,
     RemoveObject,
     RemoveSheet,
+    Sheet,
     SheetId,
     Structure,
     UpdateDiagram,
     WorkbookModel,
 )
 from claudia_computes.events import ChartsChanged, DiagramsChanged, ObjectsChanged
+from claudia_computes.names import key_of
 from claudia_core import Batch, Document, MemoryStore, encode
 
 
@@ -329,3 +332,35 @@ def test_a_charts_range_may_end_up_pointing_at_rows_that_no_longer_exist():
     doc.execute(Structure(DeleteRows(S1, 0, 5)), author="ana")
     assert doc.model.diagrams[spec.id].range.to_dict() == spec.range.to_dict()
     assert doc.model.sheet(SheetId(S1)).rows_used == 0  # the sheet itself is now empty where the range still points
+
+
+# -- the cells a chart reads, for the writers of files (D462) --------------------------------------------------
+def test_a_chart_says_which_cells_it_reads_now():
+    model = WorkbookModel()
+    model.sheets[SheetId(S1)] = Sheet(SheetId(S1), "Data")
+    model.define_diagram(chart_spec("c1", first=(0, 0), last=(3, 2), header_row=False))
+    cells = model.chart_cells("c1")
+    assert cells is not None
+    assert (cells[0].sheet, cells[0].first, cells[0].last, cells[1]) == (
+        SheetId(S1),
+        CellRef(0, 0, SheetId(S1)),
+        CellRef(3, 2, SheetId(S1)),
+        False,
+    )
+
+
+def test_a_chart_that_follows_a_name_says_the_cells_the_name_is_today_and_none_when_it_is_gone():
+    model = WorkbookModel()
+    model.sheets[SheetId(S1)] = Sheet(SheetId(S1), "Data")
+    model.names.put(
+        NamedRange("Sales", None, RangeRef(CellRef(1, 1, SheetId(S1)), CellRef(4, 2, SheetId(S1))), header=True)
+    )
+    model.define_diagram(ChartSpec(id="c1", kind="bar", source="Sales"))
+    cells = model.chart_cells("c1")
+    assert cells is not None and (cells[0].first, cells[0].last, cells[1]) == (
+        CellRef(1, 1, SheetId(S1)),
+        CellRef(4, 2, SheetId(S1)),
+        True,
+    )
+    model.names.put(None, key_of(None, "Sales"))
+    assert model.chart_cells("c1") is None

@@ -53,6 +53,9 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-L18 | A cropped, flipped or stretched picture, one that is not PNG/JPEG/GIF/BMP/SVG, or an odp picture whose bytes are not in the package, stays in the file and is listed as `picture`. A picture added or removed in a kept pptx still means a new file (`not-patched`). | An image object keeps the picture's own proportions. |
 | IEW-L19 | A pptx has no place for margins (other than the paper's own) or page numbers of the print setup, an odp none for the print layout (`not-written` / `print_setup`). The language of a kept pptx is not rewritten (`not-written` / `language`); a rendered text container comes back as a plain picture. | Files have no such thing; a deck can mix languages. |
 | IEW-L12 | The ods names of one sheet are written at the end of the `table:table`; the standard's schema was not checked for this place (LibreOffice reads it). | See D457. |
+| IEW-L20 | A chart tab is written to ods as a sheet with the chart in it (`chart:tab`); a chart that follows a name is written as the cells the name is now (`chart:source`); a turned chart stands upright (`chart:rotation`); a chart that reads nothing is not written (`chart:empty`). | A file has no tab for a chart, no named source, no turned chart. |
+| IEW-L21 | Only clustered, upright, two-dimensional bar charts over cells of one sheet are read as charts; any other chart of an ods stays in the file and is listed as `chart`. Colours, fonts and the look of a chart another program drew are not read; the chart is shown in Claudia with Claudia's colours. | The model has only bar charts. |
+| IEW-L22 | A chart another program drew is kept as it is when only its numbers, place, size or description change; when its definition (range, titles, legend, gridlines, series direction) is changed in Claudia it is drawn the way Claudia draws a bar chart (`chart:look`). | The model does not hold the look. |
 
 ## What to try (QA)
 
@@ -68,6 +71,13 @@ File ▸ Download as .xlsx and as .ods: both open in LibreOffice (and Excel) wit
 `layout` loss is listed. Open an imported file with sized columns, widen one, download again: the other columns, the
 cells' looks and the rest of the file are as they were. Give a size up (reset it): the line is at the default size in
 the next download. A column over 255 characters wide (about 1,785 px) is written at 255 and listed.
+
+*Slice 5c, charts to ods.* Make a bar chart over a table (Insert ▸ Chart…, floating on the sheet), give it a title and an
+alt text, download as .ods and open it in LibreOffice: the chart is at its cell, reads the table, has the title and
+the same colours; edit a number in LibreOffice and the chart follows. Open an ods with a LibreOffice bar chart: it
+shows in Claudia as a chart; move and resize it, download again: LibreOffice draws it as it was, only moved. Change its
+title in Claudia: the download dialog lists `chart` / `look`. A chart tab downloads as an extra sheet and says so.
+Other kinds of chart in an ods are still not shown and are listed as `chart`.
 
 *Slice 7, creates.* Turn a box, a shape and a picture in a presentation (Format ▸ Rotate…), download as .pptx and .odp,
 open both in LibreOffice (and PowerPoint): the objects are turned like in Claudia and no loss is listed. Open an odp

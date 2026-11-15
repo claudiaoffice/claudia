@@ -5,7 +5,7 @@ splice     XmlPart -- edit one XML part by splicing bytes, so everything outside
 paragraph  read_text/set_text/insert_elements/hidden_content -- the text of one paragraph, changing it in place,
 putting change marks between its characters, and what it shows that is not its text
 meta       DocumentInfo, new_meta, update_meta, update_package_meta -- title, dates and people of a document
-package    new_package, problems -- a package from its parts, and a check that a file is one
+package    new_package, update_manifest, problems -- a package from its parts, its manifest changed, and a check
 language   default_style_xml, read_language, patch_language -- the language of a file, in its default style
 report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
 """
@@ -21,7 +21,7 @@ from .language import (
 )
 from .meta import GENERATOR, DocumentInfo, new_meta, odf_date, read_info, update_meta, update_package_meta
 from .names import NS, decode_style_name, encode_style_name, local_name, qname
-from .package import MIME, VERSION, new_package, problems, read_manifest
+from .package import MIME, VERSION, new_package, problems, read_manifest, update_manifest
 from .paragraph import hidden_content, insert_elements, read_text, set_text, xml_safe
 from .report import NOT_WRITTEN, Loss, LossLog, unwritten_changes
 from .splice import OdfError, Span, XmlPart
@@ -59,6 +59,7 @@ __all__ = [
     "read_manifest",
     "read_text",
     "set_text",
+    "update_manifest",
     "update_meta",
     "unwritten_changes",
     "update_package_meta",

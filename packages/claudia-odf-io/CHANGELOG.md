@@ -5,6 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-15
+
+Charts: embedded objects in a package (D462).
+
+### Added
+- `NS["chart"]`, the chart namespace.
+- `new_package(..., extra=...)` takes folder entries too: a part whose data is `None` is listed in the manifest only
+  (an embedded object's folder, with its media type).
+- `update_manifest(parts, add=..., remove=...)`: the manifest of a kept package with entries added, and the ones under
+  a name removed (a patch that adds or drops embedded objects).
+
 ## [0.3.0] - 2026-11-15
 
 ### Added

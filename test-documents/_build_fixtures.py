@@ -695,6 +695,60 @@ def build_ods_widths_and_heights() -> bytes:
     return new_package("spreadsheet", content.encode(), styles.encode())
 
 
+def build_ods_charts() -> bytes:
+    """An ods the way LibreOffice saves charts: a bar chart with its titles over the columns of a table, and one over
+    its rows, each in an ``Object N`` folder with a preview picture, pinned to a cell. Written by Claudia, then saved by
+    LibreOffice (``soffice`` has to be installed to build it again)."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    from claudia_computes_io import workbook_to_ods
+
+    from claudia_computes import (
+        CellAnchor,
+        CellRef,
+        ChartSpec,
+        ObjectBody,
+        RangeRef,
+        Sheet,
+        SheetId,
+        VisualObject,
+        WorkbookModel,
+    )
+
+    sheet_id = SheetId("s1")
+    model = WorkbookModel()
+    model.sheets[sheet_id] = Sheet(sheet_id, "Data")
+    model.open_container("s1")
+    table = (("Region", "Amount", "Cost"), ("North", 100, 60), ("South", 200, 120), ("East", 130, 90))
+    for row, line in enumerate(table):
+        for col, value in enumerate(line):
+            model.store(
+                model.sheets[sheet_id], row, col, {"t": "text" if isinstance(value, str) else "int", "v": value}
+            )
+    model._calculate_loaded()  # noqa: SLF001
+    whole = RangeRef(CellRef(0, 0, sheet_id), CellRef(3, 2, sheet_id))
+    first = ChartSpec(id="c1", kind="bar", range=whole, title="Sales", x_title="Region", y_title="Euro")
+    second = ChartSpec(id="c2", kind="bar", range=whole, series_in="rows", legend=False)
+    for spec, object_id, anchor in ((first, "o1", (6, 1)), (second, "o2", (6, 8))):
+        model.define_diagram(spec)
+        body = ObjectBody(object_id, "diagram", 480, 300, "plain-image", diagram=spec.id)
+        model.insert_object(VisualObject(body, CellAnchor(sheet_id, *anchor)))
+    with tempfile.TemporaryDirectory() as folder:
+        source = Path(folder) / "in" / "charts.ods"
+        source.parent.mkdir()
+        source.write_bytes(workbook_to_ods(model))
+        subprocess.run(
+            ["soffice", "--headless", "--convert-to", "ods", "--outdir", str(Path(folder) / "out"), str(source)],
+            check=True,
+            capture_output=True,
+            timeout=180,
+        )
+        assert shutil.which("soffice")
+        return (Path(folder) / "out" / "charts.ods").read_bytes()
+
+
 FIXTURES = {
     "docx/heading-styles/source.docx": build_heading_styles,
     "docx/tracked-change-suggestion/source.docx": build_tracked_change_suggestion,
@@ -722,6 +776,7 @@ FIXTURES = {
     "ods/names-and-tables/source.ods": build_ods_names_and_tables,
     "xlsx/widths-and-heights/source.xlsx": build_xlsx_widths_and_heights,
     "ods/widths-and-heights/source.ods": build_ods_widths_and_heights,
+    "ods/charts/source.ods": build_ods_charts,
 }
 
 

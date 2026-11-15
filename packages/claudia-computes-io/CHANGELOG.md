@@ -3,6 +3,21 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.9.0] - 2026-11-15
+
+Charts go to and from ods (D462).
+
+### Added
+- `workbook_to_ods` writes the bar charts floating on a sheet as charts of their own (an embedded `Object N` with the
+  cells it reads, its colours, titles, legend and gridlines, and a copy of its numbers), pinned to the cell they are
+  anchored to; a chart tab becomes a sheet with the chart in it.
+- `ods_to_workbook` reads the bar charts of a file that are the chart the model draws (a LibreOffice chart too) as
+  diagrams with a floating object; any other chart stays in the file and is reported as `chart`.
+- `apply_edits_to_ods` adds, removes, moves, resizes, describes and redraws charts in a kept file; a chart it did not
+  draw is redrawn only when its definition changed (and says `chart` / `look`).
+- `ods_export_losses` says `chart` / `tab`, `source`, `rotation` or `empty`; `ods_unwritten_changes` counts a chart as
+  written.
+
 ## [0.8.0] - 2026-11-15
 
 Column widths and row heights go to and from ods and xlsx (D458).

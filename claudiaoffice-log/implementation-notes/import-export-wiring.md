@@ -77,6 +77,27 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
 * Checked against LibreOffice 24.2.7 (`soffice --convert-to`): sizes survive xlsx to ods, ods to xlsx and each format
   to itself; a LibreOffice file from a csv comes in with its narrow columns, patches, and opens again.
 
+## Slice 5c — computes: charts to ods (D462)
+* `claudia_odf_io` 0.4.0: `NS["chart"]`, `new_package(extra=…)` takes folder entries (`None` data = manifest only),
+  `update_manifest(parts, add=, remove=)` for a patch.
+* `claudia_computes.WorkbookModel.chart_cells(diagram_id)` is the one answer to "which cells does this chart read",
+  for a named source too; the writer, the loss list and the patch all ask it.
+* computes-io is four modules: `ods_charts.py` (writer, reader, `chart_losses`, `written_charts`; `plan_of` mirrors the
+  model's `chart_figure` convention, and the reader accepts a chart only when its plan equals the one the model would
+  draw for the bounding box of what it reads), `ods_chart_files.py` (`file_charts`: which frames of a file are charts,
+  where, in which cell, how big), `ods_chart_patch.py` (`ChartPatch`: add, remove, move, resize, describe, redraw in a
+  kept `content.xml`; chart tabs added as sheets) and the glue in `ods.py` (`_held_charts`, `_Patch._patch_charts`).
+* `_unwritten.py`: `charts` is in `ODS_WRITTEN`; its facet is `tab <id>` / `object <id>` (item + definition), and the
+  `objects` facet leaves out diagram objects, so a chart is counted once.
+* A chart "ours" is recognised by comparing the part with what we would draw for the baseline: only then is it drawn
+  again for a changed size; a foreign chart keeps its drawing unless its definition changed (`chart:look`).
+* Found on the way: a chart tab whose diagram is gone made the loss list raise (now `chart:empty`); mypy found
+  `new_package(extra=…)` too narrow for odp (now a `Mapping`).
+* Checked against LibreOffice 24.2.7: our charts open and come back from LibreOffice as the same four specs (columns,
+  rows, no header, one series), pdf export draws them, and LibreOffice's own bar charts are held with identical
+  definitions. Library cases: new `ods-charts` (built by LibreOffice from our file; `_build_fixtures.build_ods_charts`
+  needs `soffice`), `ods-beyond-claudia-chart` now sees the chart as an object and still keeps its parts byte for byte.
+
 ## Slice 7 — creates: rotation, pictures, print setup, language, pptx loss lists (D459–D461)
 * `odp_transform.py` is the whole of ODF's turn (`transform_of`, `turned_box`, `angle_of`); `odp._placing` writes a
   turned object's size and transform (pictures too), `_Patch._moved` decides what a patch sets and takes off.

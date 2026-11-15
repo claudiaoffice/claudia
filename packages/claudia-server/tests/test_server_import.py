@@ -429,3 +429,29 @@ def test_a_deck_with_a_picture_comes_back_patched_with_the_picture_turned_and_de
     found = next(iter(back.objects.values()))
     assert (found.anchor.x, found.anchor.y, found.body.rotation, found.body.description) == (20, 30, 15, "after")
     assert back.images[found.body.image].data == asset.data
+
+
+def test_a_workbook_with_charts_comes_back_patched_with_a_chart_moved_and_described_and_no_loss():
+    from pathlib import Path
+
+    from claudia_computes_io import ods_to_workbook
+
+    from claudia_computes import CellAnchor
+    from claudia_core import DescribeObject, MoveObject
+
+    library = Path(__file__).resolve().parents[3] / "test-documents" / "ods" / "charts" / "source.ods"
+    original = library.read_bytes()
+    with workbook_server() as client:
+        token = upload(client, original, name="Sales.ods").json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, "computes", "budget").document
+            doc.execute(MoveObject("o1", CellAnchor("s1", 14, 2).to_data()), author="ann")
+            doc.execute(DescribeObject("o1", "Sales per region"), author="ann")
+            answer = request(ws, "export_office", {"format": "ods"})["result"]
+    assert answer["patched"] is True and answer["losses"] == []
+    back = ods_to_workbook(base64.b64decode(answer["data"]))
+    found = back.objects["o1"]
+    assert (found.anchor, found.body.description) == (CellAnchor("s1", 14, 2), "Sales per region")
+    assert set(back.diagrams) == {"c1", "c2"}

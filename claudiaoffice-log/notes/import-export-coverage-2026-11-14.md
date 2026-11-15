@@ -68,6 +68,7 @@ Status: ✅ wired · ◐ partly · ❌ not wired and **nothing says so** (silent
 | Number formats (D378) | ✅ ✅ | ✅ ✅ | ✅ ✅ | |
 | **Row heights, column widths** (`ResizeLines`, D135, D215) | xlsx ❌ silent; ods 🔔 `layout` | ❌ ❌ not read, no loss code | ❌ a resize in Claudia on an imported file is not written | The loss code exists only for the ods export |
 | **Charts** (`AddChart`, `RemoveChart`, `DefineDiagram`, chart specs; D204–D209) | xlsx ❌ silent ("No charts yet"); ods 🔔 `chart` | 🔔 `chart` (stays in the file) | ◐ the file's charts stay; adding/removing one in Claudia is not written, silent | |
+|  | *Update 2026-11-15 (D462): ods ✅ both ways (bar charts, patch, tabs as sheets); xlsx still open (slice 5d).* | | | | |
 | **Floating objects** (images, shapes, text boxes: `AddObject`, `MoveObject`, `ResizeObject`, `RotateObject`, `DescribeObject`) | xlsx ❌ silent; ods 🔔 `object` | 🔔 `picture` / `shape` | ◐ as charts | Alt text not written either |
 | **Names and tables** (`DefineName`, `RenameName`, `RemoveName`, `RestoreNames`; D600–D603) | ❌ ❌ no defined names or tables written, none reported. A formula that uses a name is written with the name in it and the name is missing in the file (likely `#NAME?` in Excel; **verify with a test**) | xlsx ✅ (names, tables as names); ods 🔔 `named-range` (not imported) | ❌ ❌ a name defined in Claudia is not written | The most serious computes gap |
 | SQL queries (`define_sql`, D605–D607) | ◐ the formula cannot be said; written as its value, probably 🔔 `formula` (**verify**) | n/a | | |

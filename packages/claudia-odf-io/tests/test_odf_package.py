@@ -7,7 +7,7 @@ from io import BytesIO
 
 import pytest
 
-from claudia_odf_io import MIME, new_package, problems, read_manifest
+from claudia_odf_io import MIME, OdfError, new_package, problems, read_manifest, update_manifest
 from claudia_opc_io import read_parts, write_parts
 
 CONTENT = (
@@ -131,3 +131,45 @@ def test_a_content_part_without_a_version_is_a_problem():
 def test_a_directory_entry_needs_no_manifest_line_of_its_own_but_may_have_one():
     parts = read_parts(a_text_package(**{"Configurations2/": (b"", "application/vnd.sun.xml.ui.configuration")}))
     assert problems(write_parts(parts)) == []
+
+
+def test_a_folder_is_listed_in_the_manifest_without_a_part_of_its_own():
+    data = new_package(
+        "spreadsheet",
+        CONTENT,
+        STYLES,
+        extra={
+            "Object 1/": (None, "application/vnd.oasis.opendocument.chart"),
+            "Object 1/content.xml": (b"<c/>", "text/xml"),
+        },
+    )
+    parts = read_parts(data)
+    assert "Object 1/" not in parts and parts["Object 1/content.xml"] == b"<c/>"
+    assert read_manifest(parts["META-INF/manifest.xml"])["Object 1/"] == "application/vnd.oasis.opendocument.chart"
+    assert problems(data) == []
+
+
+def test_the_manifest_gets_parts_listed_and_a_folder_with_everything_in_it_taken_off():
+    parts = read_parts(
+        new_package(
+            "spreadsheet",
+            CONTENT,
+            STYLES,
+            extra={
+                "Object 1/": (None, "application/vnd.oasis.opendocument.chart"),
+                "Object 1/content.xml": (b"<c/>", "text/xml"),
+                "Object 10/content.xml": (b"<d/>", "text/xml"),
+            },
+        )
+    )
+    update_manifest(parts, add={"Object 2/": "application/vnd.oasis.opendocument.chart", "content.xml": "text/xml"})
+    update_manifest(parts, remove=("Object 1/",))
+    listed = read_manifest(parts["META-INF/manifest.xml"])
+    assert "Object 2/" in listed and "Object 10/content.xml" in listed
+    assert not [name for name in listed if name.startswith("Object 1/")]
+    assert list(listed).count("content.xml") == 1  # (already listed: not twice)
+
+
+def test_a_package_without_a_manifest_has_nothing_to_list_parts_in():
+    with pytest.raises(OdfError):
+        update_manifest({"content.xml": b"<x/>"}, add={"a": "text/xml"})

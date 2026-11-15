@@ -41,7 +41,16 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_computes import Content, Sheet, SheetId, WorkbookModel, function_catalog
+from claudia_computes import (
+    CellAnchor,
+    Content,
+    ObjectBody,
+    Sheet,
+    SheetId,
+    VisualObject,
+    WorkbookModel,
+    function_catalog,
+)
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.formula import Call, parse_formula
 from claudia_computes.formula.nodes import walk
@@ -70,6 +79,9 @@ from ._unwritten import ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS, changed_sizes
+from .ods_chart_files import FileChart, file_charts
+from .ods_chart_patch import ChartPatch
+from .ods_charts import chart_losses, written_charts
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
 from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names
@@ -512,6 +524,20 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, list[_Tabl
     return parts, content, _tables(content, looks), looks
 
 
+def _held_charts(tables: list[_Table], parts: dict[str, bytes]) -> list[FileChart]:
+    """The charts of the file the model holds, each counted off what the sheet leaves out (D462)."""
+    found = file_charts(tables, parts)
+    for table in tables:
+        held = sum(1 for chart in found if chart.held is not None and chart.sheet == SheetId(table.id))
+        if held:
+            table.left_out = [
+                (kind, detail, count - held if (kind, detail) == ("chart", "") else count)
+                for kind, detail, count in table.left_out
+            ]
+            table.left_out = [entry for entry in table.left_out if entry[2] > 0]
+    return found
+
+
 def _tables(content: etree._Element, looks: OdsLooks) -> list[_Table]:
     tables: list[_Table] = []
     populated = 0
@@ -575,7 +601,7 @@ def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
     them. The formulas are translated from OpenFormula; one that cannot be comes in as its last value. What the
     model does not hold is in :func:`ods_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is
     not an ods."""
-    _, content, tables, looks = _document(ods_bytes)
+    parts, content, tables, looks = _document(ods_bytes)
     model = WorkbookModel()
     dressing = Dressing(model, looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
@@ -586,6 +612,15 @@ def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
         model.open_container(str(sheet.id))
     for named in read_names(_spreadsheet(content), _places(_spreadsheet(content))).names:
         model.names.put(named)
+    for chart in _held_charts(tables, parts):
+        if chart.held is not None:
+            model.define_diagram(chart.spec)
+            body = ObjectBody(
+                chart.object_id, "diagram", chart.width, chart.height, "plain-image", diagram=chart.spec_id
+            )
+            if chart.description:
+                body = replace(body, description=chart.description)
+            model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see xlsx_to_workbook)
     return model
 
@@ -595,7 +630,8 @@ def ods_import_losses(ods_bytes: bytes) -> tuple[Loss, ...]:
     not read as one, ``"date"``, ``"look"``, ``"merge"``, ``"comment"``, ``"chart"``, ``"picture"``, ``"pivot-table"``,
     ``"named-range"``...) with how many there are. None of it is lost from the *file*: an edit exported with
     :func:`apply_edits_to_ods` keeps all of it."""
-    _, content, tables, looks = _document(ods_bytes)
+    parts, content, tables, looks = _document(ods_bytes)
+    _held_charts(tables, parts)
     losses = LossLog()
     dressing = Dressing(WorkbookModel(), looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
@@ -805,9 +841,13 @@ def _new_table(
     lost: LossLog | None,
     writer: OdsLookWriter | None = None,
     names: etree._Element | None = None,
+    shapes: etree._Element | None = None,
 ) -> etree._Element:
-    """A ``table:table`` of ``sheet``; ``names`` is the ``table:named-expressions`` of the sheet's own names (D457)."""
+    """A ``table:table`` of ``sheet``; ``names`` is the ``table:named-expressions`` of the sheet's own names (D457) and
+    ``shapes`` the ``table:shapes`` with its charts (D462)."""
     table = _el("table", "table", {"table:name": xml_safe(sheet.name)})
+    if shapes is not None:
+        table.append(shapes)
     looks = _looks_of(sheet, writer)
     used = [column for _, column in sheet.cells] + [column for row in looks.cells.values() for column in row]
     width = max([*used, *sheet.col_widths], default=0) + 1
@@ -837,24 +877,34 @@ def workbook_to_ods(model: WorkbookModel, *, info: DocumentInfo | None = None) -
         etree.SubElement(root, _q("office", name))
     spreadsheet = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "spreadsheet"))
     writer = OdsLookWriter(model)
+    charts = written_charts(model)
     for sheet in model.sheets.values():
-        spreadsheet.append(_new_table(sheet, None, writer, local_expressions(model, sheet.id)))
-    if not model.sheets:
+        spreadsheet.append(
+            _new_table(sheet, None, writer, local_expressions(model, sheet.id), charts.shapes.get(sheet.id))
+        )
+    for name, shapes in charts.tabs:
+        spreadsheet.append(_new_table(Sheet(SheetId("chart"), name), None, shapes=shapes))
+    if not model.sheets and not charts.tabs:
         spreadsheet.append(_new_table(Sheet(SheetId("s1"), "Sheet1"), None))
     spreadsheet.extend(global_elements(model))
     root.find("office:automatic-styles", NS).extend(writer.automatic_styles())  # type: ignore[union-attr]
     etree.cleanup_namespaces(root, keep_ns_prefixes=list(_NS_DECLS))  # (formulas name "of:" in their text)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
     styles = _styles_part(writer)
-    return new_package("spreadsheet", content.encode(), styles, meta=new_meta(info or DocumentInfo()))
+    return new_package(
+        "spreadsheet", content.encode(), styles, meta=new_meta(info or DocumentInfo()), extra=charts.parts or None
+    )
 
 
 def ods_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     """What :func:`workbook_to_ods` cannot put into the file for ``model``, each as a code with how many:
-    ``"formula"`` (with the reason: the cell is written as its value), ``"chart"`` and ``"object"`` (charts and the
-    text, shape and image objects floating on a sheet are not written yet) and ``"look"`` (``too-many-cells``: cells
-    of style ranges too large to write one by one)."""
+    ``"formula"`` (with the reason: the cell is written as its value), ``"chart"`` (with ``tab``: a file has no chart
+    tab, it is a sheet with the chart; ``source``: a chart that follows a name has the cells the name is now; ``empty``:
+    it reads nothing and is not written), ``"object"`` (the text, shape and image objects floating on a sheet are not
+    written yet) and ``"look"`` (``too-many-cells``: cells of style ranges too large to write one by one)."""
     losses = LossLog()
+    for detail in chart_losses(model):
+        losses.add("chart", detail)
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
         losses.add("look", "too-many-cells", dropped)
@@ -955,7 +1005,9 @@ class _Patch:
         self.spreadsheet = _spreadsheet(self.part.root)
         self.tables = _tables(self.part.root, OdsLooks())  # (no looks: only where the cells are)
         self.by_id = {table.id: table for table in self.tables}
+        self.new_tables: dict[SheetId, etree._Element] = {}  # the sheets this run adds, as the file will have them
         self.changed = False
+        self.charts = _held_charts(self.tables, self.parts)
         self._check_baseline()
         styles = self.parts.get("styles.xml")
         self.styles_root = None if styles is None else etree.fromstring(styles, etree.XMLParser(resolve_entities=False))
@@ -967,6 +1019,10 @@ class _Patch:
         if [(sheet.id, sheet.name) for sheet in self.baseline.sheets.values()] != [
             (table.id, table.name) for table in self.tables
         ] or any(self.baseline.sheets[SheetId(table.id)].cells != table.cells for table in self.tables):
+            raise UnsupportedEdit("the baseline is not the workbook this file holds")
+        if sorted(chart.object_id for chart in self.charts if chart.held is not None) != sorted(
+            obj.id for obj in self.baseline.objects.values() if obj.body.diagram is not None
+        ):
             raise UnsupportedEdit("the baseline is not the workbook this file holds")
         kept = [sheet_id for sheet_id in self.current.sheets if sheet_id in self.baseline.sheets]
         if kept != [sheet_id for sheet_id in self.baseline.sheets if sheet_id in set(kept)]:
@@ -986,13 +1042,49 @@ class _Patch:
                 self._patch_table(table, sheet)
         self._add_tables()
         self._patch_names()
+        self._patch_charts()
         if not self.changed:
             return self.original
         self._add_styles()
-        self.parts["content.xml"] = self.part.result()
+        try:
+            self.parts["content.xml"] = self.part.result()
+        except OdfError as problem:
+            raise UnsupportedEdit(str(problem)) from problem
         if self.info is not None:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
+
+    def _patch_charts(self) -> None:
+        """The charts: added, removed, moved, drawn again; and what a file cannot keep of the ones there are (D462)."""
+        for detail in chart_losses(self.current):
+            self._lose("chart", detail)
+        patch = ChartPatch(
+            self.part,
+            self.parts,
+            self.baseline,
+            self.current,
+            self.charts,
+            {SheetId(table.id): table.element for table in self.tables},
+            self.new_tables,
+            self._lose,
+        )
+        if patch.run():
+            self.changed = True
+        last = self.part_after_last_sheet()
+        for table in patch.tab_tables:
+            self.part.insert_after(last, table) if last is not None else self.part.insert_into(self.spreadsheet, table)
+            self.changed = True
+
+    def part_after_last_sheet(self) -> etree._Element | None:
+        """The ``table:table`` that comes last in the file once this run's sheets are in: the last sheet of the
+        workbook (a chart tab comes after it)."""
+        for sheet_id in reversed(self.current.sheets):
+            element = self.new_tables.get(sheet_id) if sheet_id in self.new_tables else None
+            if element is None and str(sheet_id) in self.by_id:
+                element = self.by_id[str(sheet_id)].element
+            if element is not None:
+                return element
+        return None
 
     def _patch_names(self) -> None:
         """The names of the workbook and of its sheets (D457)."""
@@ -1057,6 +1149,7 @@ class _Patch:
                 anchor = existing.element
                 continue
             element = _new_table(sheet, self.losses, names=local_expressions(self.current, sheet_id))
+            self.new_tables[sheet_id] = element
             self.changed = True
             if anchor is not None:
                 self.part.insert_after(anchor, element)

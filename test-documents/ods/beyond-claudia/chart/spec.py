@@ -1,7 +1,8 @@
 """A chart (LibreOffice-written) is an embedded sub-document (``Object 1/…``) with a preview picture
 (``ObjectReplacements/Object 1``), placed by a frame in a cell of the second sheet. The edit changes a cell of
-the chart's source data; the chart's parts and the frame that places it come back byte for byte (D413). The chart
-itself is not in the model, the import reports it as a loss."""
+the chart's source data; the chart's parts and the frame that places it come back byte for byte (D413). The chart is
+a bar chart over the cells of the first sheet, so it is in the model now (D462): the import reports no loss, and the
+kept file is not rewritten for it."""
 
 from __future__ import annotations
 
@@ -15,6 +16,8 @@ def import_checks(model: WorkbookModel) -> None:
     assert model.sheets[SheetId("s1")].cells[(0, 0)] == {"t": "text", "v": "Region"}
     assert model.sheets[SheetId("s1")].cells[(1, 1)] == {"t": "int", "v": 100}
     assert model.sheets[SheetId("s2")].cells == {}
+    (chart,) = model.objects.values()
+    assert chart.body.diagram in model.diagrams and chart.anchor.sheet == "s2"
 
 
 def modify(model: WorkbookModel) -> WorkbookModel:

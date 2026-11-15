@@ -6,6 +6,7 @@ OpenDocument has: the manifest that lists every part with its media type, and th
 from __future__ import annotations
 
 import zipfile
+from collections.abc import Mapping
 from io import BytesIO
 
 from lxml import etree
@@ -13,7 +14,8 @@ from lxml import etree
 from claudia_opc_io import write_parts
 
 from .meta import DocumentInfo, new_meta
-from .names import NS
+from .names import NS, qname
+from .splice import OdfError, XmlPart
 
 #: The media types of the three kinds of document, by the name of the kind.
 MIME = {
@@ -49,20 +51,45 @@ def new_package(
     styles: bytes,
     *,
     meta: bytes | None = None,
-    extra: dict[str, tuple[bytes, str]] | None = None,
+    extra: Mapping[str, tuple[bytes | None, str]] | None = None,
 ) -> bytes:
     """A new OpenDocument file of ``kind`` (``"text"``, ``"spreadsheet"`` or ``"presentation"``) from its content
     and styles parts, and the document's metadata (a minimal one if none is given). ``extra`` has the other parts
-    -- pictures, embedded objects -- by name, each with its bytes and media type. The same input always gives the
-    same bytes."""
+    -- pictures, embedded objects -- by name, each with its bytes and media type; ``None`` for the bytes lists a folder
+    (``"Object 1/"``, an embedded object is one) in the manifest only. The same input always gives the same bytes."""
     parts: dict[str, bytes] = {"mimetype": MIME[kind].encode(), "content.xml": content, "styles.xml": styles}
     parts["meta.xml"] = meta if meta is not None else new_meta(DocumentInfo())
     entries = [("content.xml", "text/xml"), ("styles.xml", "text/xml"), ("meta.xml", "text/xml")]
     for name, (data, media_type) in (extra or {}).items():
-        parts[name] = data
+        if data is not None:
+            parts[name] = data
         entries.append((name, media_type))
     parts[_MANIFEST] = _manifest(kind, entries)
     return write_parts(parts)
+
+
+def update_manifest(
+    parts: dict[str, bytes], *, add: dict[str, str] | None = None, remove: tuple[str, ...] = ()
+) -> None:
+    """The manifest of a package (as ``read_parts`` gives its parts), in place: ``add`` lists more parts, each by name
+    with its media type, and ``remove`` takes off every entry whose name starts with one of the prefixes (a folder
+    and what is in it). The other entries stay as they are."""
+    if _MANIFEST not in parts:
+        raise OdfError("this file has no manifest to list its parts in")
+    manifest = XmlPart(parts[_MANIFEST])
+    path = qname("manifest:full-path")
+    gone = [entry for entry in manifest.root if remove and (entry.get(path) or "").startswith(remove)]
+    listed = {entry.get(path) for entry in manifest.root if entry not in gone}
+    for entry in gone:
+        manifest.remove(entry)
+    new = [
+        manifest.make("manifest:file-entry", {"manifest:full-path": name, "manifest:media-type": media})
+        for name, media in (add or {}).items()
+        if name not in listed
+    ]
+    if new:
+        manifest.insert_into(manifest.root, *new)
+    parts[_MANIFEST] = manifest.result()
 
 
 def read_manifest(manifest_xml: bytes) -> dict[str, str]:
