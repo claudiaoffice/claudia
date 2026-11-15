@@ -805,7 +805,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', rotation: 'int') -> None",
+  "init": "(id: 'str', rotation: 'int', anchor: 'dict | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RotateObject'",

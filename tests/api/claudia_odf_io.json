@@ -1,5 +1,5 @@
 {
- "version": "0.5.0",
+ "version": "0.6.0",
  "DocumentInfo": {
   "class": [
    "object"
@@ -75,7 +75,7 @@
    "remove": "(self, element: 'etree._Element') -> 'None'",
    "replace": "(self, element: 'etree._Element', new: 'etree._Element | bytes', *more: 'etree._Element | bytes') -> 'None'",
    "result": "(self) -> 'bytes'",
-   "set_attributes": "(self, element: 'etree._Element', values: 'Mapping[str, str]', remove: 'Collection[str]' = ()) -> 'None'",
+   "set_attributes": "(self, element: 'etree._Element', values: 'Mapping[str, str]', *, remove: 'Iterable[str]' = ()) -> 'None'",
    "span": "(self, element: 'etree._Element') -> 'tuple[int, int]'"
   },
   "properties": []
