@@ -23,27 +23,27 @@ Work plan for Nov 14/15th 2026
 			- [ ] fix the crash at the end ("closed unexpectedly")
 		- [ ] rotation UI in all three apps
 		- [ ] macos client still picks random port and the button "open document" as well as native menu entries dont do anything.
-		- [ ] print on desktop clients "has no fonts"
-		- [ ] export to office format in desktop client => where do the files go? In web app theyre downloaded in the browser, perfect!
+		- [x] print on desktop clients "has no fonts"
+		- [x] export to office format in desktop client => where do the files go? In web app theyre downloaded in the browser, perfect!
 		- [ ] win client 
 			- [ ] still has npm message "npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the cu"
 			- [ ] opens object inspector on startup?
 			- [ ] still shows non-useful menu entries at front page and seems to connect to random server port => state of the client?
 			- [ ] invalid menu entries like "review this text" still exist
-		- [ ] cant find fonts in a desktop client when printing
+		- [x] cant find fonts in a desktop client when printing
 		- [ ] in help system the Markdown isn't rendered but raw ("how do I..." sections)
 		- [ ] can't move the search&replace overlay in computes
+		- [ ] when you have selected a collection, you can't clear that filter, can you?
 	- [x] UI for import of MS OFfice and ODF files, otherwise makes no sense to have real world docs
 	- [ ] QA + security
 		- [ ] versioning announcement of server on start page
 		- [ ] performance
 		- [ ] scaleway: replace not new image
 		- [ ] **import-export-wiring** every internal feature should be connected to the Importer/Exporter
-			- [ ] e.g. ordered/unordered lists in composes not imported/exported
-		- [ ] **ongoing on branch "search"** extend regex search from computes to creates and composes
+		- [x] **ongoing on branch "search"** extend regex search from computes to creates and composes
 		- [x] deployability server, to QNAP and elsewhere
 		- [ ] CI on github, get it green!!
-		- [ ] desktop client tests (visual deviations)
+		- [x] desktop client tests (visual deviations)
 		- [ ] decision log should reflect the reality (e.g. "Linux client is GTK completely" => wrong!)
 	- [ ] every object should have a name (even if its not in the UI yet); and objects can have relationships between each other (reference each other)
 		- [ ] images
@@ -62,16 +62,38 @@ Work plan for Nov 14/15th 2026
 		- [ ] excalidraw
 	- [ ] bibliography with bibtex support and zotero
 	- [ ] tables in composes
-	- [ ] cell formats beyond style in Excel (%, €)
+# computes
 
-* LAMBDA in Excel
-* dynamic arrays in Excel
-* computation with # symbol as in GEMO excel
-* 
+- [ ] cell formats beyond style in Excel (%, €)
+- [ ] LAMBDA in Excel
+- [ ] dynamic arrays in Excel
+- [ ] CSV export
+- [ ] computation with # symbol 
+- [ ] JSON cell type in computes, including validator if user provides a fixed structure
+- [ ] a UserFunction can return objects: e.g. an image, or a JSON of course
+- [ ] check if numpy and pandas make sense for speed, should be available in UserFunctions
+- [ ] Cell Input validation, with lists and Regex
+- [ ] Think about Navigation in large sheets: zooming and sections like on conceptboard, make the Name Concept Even more accessible
+
+# composes
+
+- [ ] reference objects (anything) of other documents, e.g. chart from computes.
+      probably needs importing as documents are encrypted and independent
+- [ ] every paragraph, chapter etc. has a name by which it can be referenced, and a description tag.
+      these are used to produce a "slide view" or "corkboard" overview of the document, that allows re-arranging whole objects with drag-n-drop
+- [ ] "binder" or "research" would be a place to store links, PDFs, documents, images,... in one place as sources. Needs proper separation of concerns from the bibliography!
+- [ ] a work planner: I'm "drafting", "brainstorming", "polishing"; introduce these as "modes" that switch between different views on the same underlying document, but allow some actions on it more easily than others
+
+# creates
 
 
-- [x] explore QNAP docker server
+# overall
+A collection of docs should be able to reference each other. Equivalent to a "Project", e.g. consisting of a paper, a slide deck and the data in computes.
 
+
+
+
+# bugs and review
 
 Linux: still random port
 File > Open doesn't give feedback
