@@ -1,6 +1,6 @@
-"""Reading the pictures of an odp as image objects (D460): a ``draw:frame`` with a ``draw:image`` in it, which the model
-holds when its bytes are in the package and are an image the app decodes, it is not cropped, and it has the proportions
-of the picture itself (see :mod:`claudia_creates_io.pictures`)."""
+"""Reading the pictures of an OpenDocument file as image objects (D460, D464): a ``draw:frame`` with a ``draw:image`` in
+it, which the model holds when its bytes are in the package and are an image the app decodes, and it is not cropped (the
+proportions are the caller's to check, see :mod:`claudia_core.file_pictures`)."""
 
 from __future__ import annotations
 
@@ -9,10 +9,9 @@ from collections.abc import Mapping
 
 from lxml import etree
 
-from claudia_core import ImageAsset
-from claudia_odf_io import NS, local_name
+from claudia_core import ImageAsset, asset_of
 
-from .pictures import asset_of
+from .names import NS, local_name
 
 _NO_CLIP = re.compile(r"rect\(\s*(?:0(?:\.0+)?(?:cm|mm|in|pt)?\s*,?\s*){4}\)")
 

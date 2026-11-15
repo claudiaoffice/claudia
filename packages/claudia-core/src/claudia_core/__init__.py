@@ -25,6 +25,8 @@
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
+    file_pictures  the pictures of an office file as image objects: what an app needs to hold one (D464)
+    raster       Rasterise and the empty picture that stands in for an SVG nobody can draw (D394)
     page         PageSetup: the paper, orientation, margins and page numbers a document prints on (D904, D917)
     language     the language a document is written in, and SetLanguage (D915, D917)
 
@@ -109,6 +111,7 @@ from .facets import (
     facet_of,
     fits,
 )
+from .file_pictures import FILE_IMPORTER, IMAGE_STYLE, UNKNOWN_TIME, asset_of, keeps_proportions, picture_body
 from .history import History, Step
 from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
 from .lists import (
@@ -213,6 +216,7 @@ from .paragraphs import (
     total,
 )
 from .presence import Hold, Presence
+from .raster import FALLBACK_SIDE, Rasterise, blank_png
 from .region import Region, transform
 from .renderings import MAX_RENDERING_SOURCE, RenderedDefinition
 from .replay import replay
@@ -222,6 +226,15 @@ from .store import DocumentStore, MemoryStore
 from .styles import ChangeStyle, CreateStyle, RemoveStyle, RenameStyle, StyleBook, StyleDef, StylesChanged
 
 __all__ = [
+    "FALLBACK_SIDE",
+    "FILE_IMPORTER",
+    "IMAGE_STYLE",
+    "UNKNOWN_TIME",
+    "Rasterise",
+    "asset_of",
+    "blank_png",
+    "keeps_proportions",
+    "picture_body",
     "MAX_LIST_LEVEL",
     "numbering_labels",
     "Scheme",

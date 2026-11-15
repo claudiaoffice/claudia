@@ -23,6 +23,7 @@ from __future__ import annotations
 import posixpath
 import zipfile
 from collections.abc import Hashable
+from dataclasses import replace
 from io import BytesIO
 from xml.sax.saxutils import escape as _xml_escape
 
@@ -30,7 +31,7 @@ import openpyxl
 from lxml import etree
 from openpyxl.comments import Comment
 
-from claudia_computes import Content, Sheet, WorkbookModel
+from claudia_computes import CellAnchor, Content, ObjectBody, Sheet, VisualObject, WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.values import ErrorValue, Value
 from claudia_odf_io import Loss, LossLog
@@ -49,10 +50,13 @@ from .cell_looks import (
     runs_of,
     sheet_styling,
 )
+from .chart_plan import chart_losses
 from .excel_names import with_marks
 from .extensions import to_excel, with_note
 from .layout_sizes import changed_sizes
 from .openformula import Untranslatable
+from .xlsx_chart_patch import Drawings, patch_charts
+from .xlsx_charts import WrittenChart, file_charts, written_charts
 from .xlsx_layout import layout_losses
 from .xlsx_looks import XlsxLooks, read_looks
 from .xlsx_names import XlsxNamesPatch, header_losses, write_names
@@ -129,13 +133,17 @@ def _put(cell, content: Content, value: Value) -> Loss | None:  # noqa: ANN001 (
 def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     """What :func:`workbook_to_xlsx` cannot say in Excel for ``model``, each as a code with how many:
     ``"formula"`` (with the reason, ``random`` for a draw Excel has no single formula for: written as its value),
-    ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest) and ``"look"``
-    (``too-many-cells``: cells of style ranges too large to write one by one), and what :func:`xlsx_unwritten_changes`
+    ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest), ``"look"``
+    (``too-many-cells``: cells of style ranges too large to write one by one) and ``"chart"`` (``tab``: a chart tab is
+    a sheet with the chart in it; ``source``: a chart that follows a name has the cells the name is now; ``rotation``;
+    ``empty``: a chart that reads nothing is not written), and what :func:`xlsx_unwritten_changes`
     says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``."""
     losses = LossLog()
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
         losses.add("look", "too-many-cells", dropped)
+    for detail in chart_losses(model):
+        losses.add("chart", detail)
     for sheet in model.sheets.values():
         for position, content in sheet.cells.items():
             _, note, lost = _written(content, sheet.grid.get(position))
@@ -161,7 +169,8 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
     """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
     with the leading ``=``; see ``_written`` for what is written differently), and the cells' looks: Body text as
     the file's Normal, named styles as named cell styles, the rest as direct formats with their number formats
-    (``xlsx_write_looks``, D379). No charts yet (E6.4, E6.9 are the full story)."""
+    (``xlsx_write_looks``, D379), and the bar charts floating on its sheets, each pinned to its cell (a chart tab as a
+    sheet of its own with the chart in it; ``xlsx_charts``, D463)."""
     wb = openpyxl.Workbook()
     assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
@@ -171,12 +180,35 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
         for (row, col), content in sheet.cells.items():
             _put(ws.cell(row=row + 1, column=col + 1), content, sheet.grid.get((row, col)))
         looks.sheet(sheet, ws)
+    charts, tabs = written_charts(model)
+    for name in tabs:
+        wb.create_sheet(title=name)
     if not wb.sheetnames:
         wb.create_sheet(title="Sheet1")
     write_names(wb, model)
     out = BytesIO()
     wb.save(out)
-    return out.getvalue()
+    return _with_charts(out.getvalue(), charts) if charts else out.getvalue()
+
+
+def _with_charts(data: bytes, charts: list[WrittenChart]) -> bytes:
+    """``data`` with ``charts`` on its sheets (each by the name of its sheet)."""
+    package = open_package(data)
+    patch = PackagePatch(package.parts)
+    drawings = Drawings(patch)
+    by_name = {sheet.name.casefold(): sheet.part for sheet in package.sheets}
+    for chart in charts:
+        drawings.add(
+            by_name[chart.sheet.casefold()],
+            chart.xml,
+            chart.row,
+            chart.col,
+            chart.width,
+            chart.height,
+            chart.description,
+        )
+    drawings.finish()
+    return write_parts(patch.finish())
 
 
 def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
@@ -201,6 +233,15 @@ def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
         model.open_container(str(sheet.id))
     for named in names:
         model.names.put(named)
+    for chart in file_charts(package)[0]:
+        if chart.held is not None:
+            model.define_diagram(chart.spec)
+            body = ObjectBody(
+                chart.object_id, "diagram", chart.width, chart.height, "plain-image", diagram=chart.spec_id
+            )
+            if chart.description:
+                body = replace(body, description=chart.description)
+            model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
     return model
 
@@ -215,11 +256,17 @@ def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
     names, losses = names_and_tables(package)
     known = frozenset(named.name.casefold() for named in names)
     dressing = _dressing(WorkbookModel(), read_looks(package.parts))
+    reads = []
     for part in package.sheets:
         read = read_sheet(package, part, known)
-        for loss in read.lost.result():
-            losses.add(loss.kind, loss.detail, loss.count)
         _dress(dressing, Sheet(part.sheet_id, part.name), read)
+        reads.append((part, read))
+    held = [chart.sheet for chart in file_charts(package)[0] if chart.held is not None]
+    for part, read in reads:
+        for loss in read.lost.result():
+            count = loss.count - held.count(part.sheet_id) if loss.kind == "chart" else loss.count
+            if count:
+                losses.add(loss.kind, loss.detail, count)
     for what, count in dressing.lost.items():
         losses.add("look", what, count)
     workbook_losses(package, losses)
@@ -275,7 +322,9 @@ _ORDER = (
 )
 
 
-def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current: WorkbookModel) -> bytes:
+def apply_edits_to_xlsx(
+    original_bytes: bytes, baseline: WorkbookModel, current: WorkbookModel, *, losses: LossLog | None = None
+) -> bytes:
     """Re-export ``current`` to xlsx by writing the cells that changed since ``baseline`` (the model as it stood
     right after :func:`xlsx_to_workbook` imported ``original_bytes``) into those same bytes (D371, after D220).
 
@@ -287,8 +336,15 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
     comment on the same cell wins. When a formula changed, Excel's calculation chain is dropped (Excel builds it
     again), and the workbook asks to be calculated when it is opened.
 
-    Raises :class:`UnsupportedEdit` if a sheet was added, removed, renamed or reordered since ``baseline``, or a
-    cell inside an array formula or a spilled range was changed. An unchanged model gives back ``original_bytes``."""
+    Charts: one that was added is a new part in the drawing of its sheet, one that was removed is taken out with its
+    part, one that was moved or made another size has its anchor changed, one that was described its alt text, and
+    one whose definition or numbers changed is drawn again; a chart another program drew keeps its drawing unless its
+    definition changed (``losses`` gets ``chart`` / ``look`` then, and what a file cannot keep of the charts:
+    :func:`xlsx_export_losses`; D463).
+
+    Raises :class:`UnsupportedEdit` if a sheet or a chart tab was added, removed, renamed or reordered since
+    ``baseline``, or a cell inside an array formula or a spilled range was changed. An unchanged model gives back
+    ``original_bytes``."""
     baseline_sheets = [(sheet.id, sheet.name) for sheet in baseline.sheets.values()]
     current_sheets = [(sheet.id, sheet.name) for sheet in current.sheets.values()]
     if baseline_sheets != current_sheets:
@@ -311,6 +367,7 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
         changed = True
         formulas |= _write_sheet(patch, part.part, before, after, (styles, looks))
     changed |= names.run()
+    changed |= patch_charts(patch, package, baseline, current, (losses or LossLog()).add)
     if not changed:
         return original_bytes
     styles.finish()

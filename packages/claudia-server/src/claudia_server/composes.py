@@ -197,18 +197,25 @@ def _export_office(ctx, *, format, tracked_changes):
         raise RequestError("bad_request", msg('export_office: format must be "docx" or "odt"'))
     model = _text(ctx)
     info, times = export_info(ctx.document.log, ctx.document.branch)
+    draw = None if ctx.renderings is None else ctx.renderings.rasteriser  # draws an SVG picture as a PNG (D464)
     if format == "docx":
         return export_with_original(
             ctx,
             format,
             TextModel,
             lambda original, baseline, current, losses: apply_edits_to_docx(
-                original, baseline, current, track_suggestions=tracked_changes, change_times=times, losses=losses
+                original,
+                baseline,
+                current,
+                track_suggestions=tracked_changes,
+                change_times=times,
+                losses=losses,
+                rasterise=draw,
             ),
             lambda: office_export(
                 format,
-                text_to_docx(model, track_suggestions=tracked_changes, change_times=times),
-                docx_export_losses(model, track_suggestions=tracked_changes),
+                text_to_docx(model, track_suggestions=tracked_changes, change_times=times, rasterise=draw),
+                docx_export_losses(model, track_suggestions=tracked_changes, rasterised=draw is not None),
             ),
             docx_unwritten_changes,
         )
@@ -217,12 +224,18 @@ def _export_office(ctx, *, format, tracked_changes):
         format,
         TextModel,
         lambda original, baseline, current, _: apply_edits_to_odt(
-            original, baseline, current, track_suggestions=tracked_changes, info=info, change_times=times
+            original,
+            baseline,
+            current,
+            track_suggestions=tracked_changes,
+            info=info,
+            change_times=times,
+            rasterise=draw,
         ),
         lambda: office_export(
             format,
-            text_to_odt(model, track_suggestions=tracked_changes, info=info, change_times=times),
-            odt_export_losses(model, track_suggestions=tracked_changes),
+            text_to_odt(model, track_suggestions=tracked_changes, info=info, change_times=times, rasterise=draw),
+            odt_export_losses(model, track_suggestions=tracked_changes, rasterised=draw is not None),
         ),
         odt_unwritten_changes,
     )

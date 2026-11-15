@@ -288,7 +288,7 @@ def test_what_the_text_does_not_show_is_reported():
         "<text:list><text:list-item><text:p>x</text:p></text:list-item></text:list>"
     )
     losses = odt_import_losses(data)
-    assert {Loss("formatting"), Loss("link"), Loss("footnote"), Loss("frame"), Loss("list-look")} <= set(losses)
+    assert {Loss("formatting"), Loss("link"), Loss("footnote"), Loss("picture"), Loss("list-look")} <= set(losses)
 
 
 def test_existing_tracked_changes_are_reported():
@@ -680,3 +680,10 @@ def test_tracked_changes_added_to_an_existing_file_have_their_times():
     current.suggestions["s1"] = Suggestion("s1", "Claudia AI", TextRange("b2", 6, 10), "bold", "plain", "")
     edited = apply_edits_to_odt(original, baseline, current, info=INFO, change_times={"s1": "2026-11-10T08:30:00Z"})
     assert change_dates(edited) == ["2026-11-10T08:30:00Z"] * 2
+
+
+def test_a_text_of_this_app_edited_in_its_words_gets_no_style_added_to_its_file():
+    """IEW-17: the styles of the app's own file were written again, under a second name, by any edit."""
+    original = text_to_odt(model_of((DEFAULT_STYLE, "Hello world"), (DEFAULT_STYLE, "Second")))
+    edited, *_ = edit(original, lambda m: retext(m, "b1", "Hello wide world"))
+    assert read_parts(edited)["styles.xml"] == read_parts(original)["styles.xml"]

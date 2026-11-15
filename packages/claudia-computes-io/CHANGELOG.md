@@ -3,6 +3,30 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.10.0] - 2026-11-15
+
+Charts go to and from xlsx (D463).
+
+### Added
+- `workbook_to_xlsx` writes the bar charts floating on a sheet as charts of their own (`xl/charts/chartN.xml` in the
+  drawing of the sheet, with the cells it reads and a cache of its numbers, its colours, titles, legend and gridlines),
+  pinned to its cell; a chart tab becomes a sheet with the chart in it.
+- `xlsx_to_workbook` reads the bar charts of a file that are the chart the model draws (an Excel or LibreOffice one too)
+  as diagrams with a floating object; a frame pinned by two cells has the size the frame states, or else the size of
+  the cells it reaches. Any other chart stays in the file and is reported as `chart`.
+- `apply_edits_to_xlsx(..., losses=)` adds, removes, moves, resizes, describes and redraws charts in a kept file; a
+  chart it did not draw is redrawn only when its definition changed (and says `chart` / `look`).
+- `xlsx_export_losses` says `chart` / `tab`, `source`, `rotation` or `empty`; `xlsx_unwritten_changes` counts a chart
+  as written.
+
+### Fixed
+- An xlsx written by Claudia was reported as having a protected workbook on import (`protection`): the empty element
+  it carries protects nothing (IEW-15).
+- Charts were missing from every xlsx download and no loss said so (IEW-16).
+
+### Changed
+- The planning of a chart (`plan_of`, `plan_from`, `spec_of`, …) lives in one module for ods and xlsx.
+
 ## [0.9.0] - 2026-11-15
 
 Charts go to and from ods (D462).

@@ -40,6 +40,7 @@ from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.opc.package import Part
 from pptx.util import Emu, Pt
 
+from claudia_core import Rasterise, blank_png, picture_body
 from claudia_core.assets import MAX_ALT_CHARS
 from claudia_creates import (
     MAX_NOTES_LENGTH,
@@ -56,10 +57,8 @@ from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
-from ._raster import Rasterise, blank_png
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
-from .pictures import body_of
 from .pptx_pictures import alt_text_of, held_picture
 from .pptx_setup import part_names, read_print_setup, speak, spoken, write_print_setup
 
@@ -531,7 +530,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                 if asset.id not in model.images:
                     model.define_image(asset)
                 description, decorative = alt_text_of(shape)
-                body = body_of(
+                body = picture_body(
                     object_id,
                     asset,
                     (w, h),

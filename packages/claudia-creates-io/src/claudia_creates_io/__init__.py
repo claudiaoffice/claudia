@@ -13,7 +13,8 @@ odp    slides_to_odp, odp_to_slides, apply_edits_to_odp, odp_import_losses, odp_
        odp_unwritten_changes
 """
 
-from ._raster import Rasterise
+from claudia_core import Rasterise
+
 from ._version import __version__
 from .odp import (
     apply_edits_to_odp,

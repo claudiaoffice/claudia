@@ -38,7 +38,7 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_core import ImageAsset, ObjectBody, VisualObject, paragraph_for
+from claudia_core import ImageAsset, ObjectBody, Rasterise, VisualObject, paragraph_for, picture_body
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
@@ -49,26 +49,29 @@ from claudia_odf_io import (
     OdfError,
     XmlPart,
     default_style_xml,
+    description_element,
+    description_of,
     hidden_content,
+    inches,
     local_name,
+    name_of,
     new_meta,
     new_package,
     patch_language,
+    picture_of,
     read_language,
     read_text,
     set_text,
+    transform_of,
+    turned_box,
     update_package_meta,
     xml_safe,
 )
 from claudia_opc_io import read_parts, write_parts
 
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
-from ._raster import Rasterise
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
-from .odp_pictures import description_element, description_of, name_of, picture_of
-from .odp_transform import inches, transform_of, turned_box
-from .pictures import body_of
 from .pptx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -212,7 +215,7 @@ class _Probe:
                 return False
             if asset.id not in self.model.images:
                 self.model.define_image(asset)
-            body = body_of("o0", asset, (box[2], box[3]))
+            body = picture_body("o0", asset, (box[2], box[3]))
         else:
             style, words = _default_styles(kind)
             body = ObjectBody("o0", kind, box[2], box[3], style, paragraph_for("o0", words, text), shape=shape)
@@ -591,7 +594,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 assert found.asset is not None  # the scan keeps an image only with its asset
                 if found.asset.id not in model.images:
                     model.define_image(found.asset)
-                body = body_of(
+                body = picture_body(
                     found.id,
                     found.asset,
                     (found.w, found.h),
@@ -805,7 +808,9 @@ class _Writer:
     cm_per_unit: tuple[float, float]
     pt_per_unit: float
     pictures: dict[str, str] = field(default_factory=dict)  # asset id -> name in the package
-    rasterise: Rasterise | None = None  # draws an SVG as a PNG for the programs that cannot (see ``_raster``)
+    rasterise: Rasterise | None = (
+        None  # draws an SVG as a PNG for the programs that cannot (see ``claudia_core.raster``)
+    )
     rasters: dict[str, bytes] = field(default_factory=dict)  # name in the package -> a PNG drawn by ``rasterise``
     losses: LossLog = field(default_factory=LossLog)
 
@@ -938,8 +943,8 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     one is in front, as in the app. A text box is a frame with a text box, the three shapes are what they are, an image
     is a picture whose own bytes are in the package. What a style says (fill, line, size, colour) is written as an
     automatic style in values the file can hold. A rendered text container is the picture last made from its text: with
-    ``rasterise`` (see ``_raster``) a PNG every program draws, without it the SVG itself. ``info`` is the metadata
-    (D411). Anything the file cannot hold is in :func:`odp_export_losses`."""
+    ``rasterise`` (see ``claudia_core.raster``) a PNG every program draws, without it the SVG itself. ``info`` is the
+    metadata (D411). Anything the file cannot hold is in :func:`odp_export_losses`."""
     cm_per_unit = (_SLIDE_CM[0] / SLIDE_WIDTH, _SLIDE_CM[1] / SLIDE_HEIGHT)
     pt_per_unit = _SLIDE_CM[1] / _CM_PER_INCH * 72 / SLIDE_HEIGHT
     writer = _Writer(model, _Looks(set()), cm_per_unit, pt_per_unit, rasterise=rasterise)

@@ -282,7 +282,7 @@ def _export_office(ctx, *, format):
             ctx,
             format,
             WorkbookModel,
-            lambda original, baseline, current, _: apply_edits_to_xlsx(original, baseline, current),
+            lambda original, baseline, current, found: apply_edits_to_xlsx(original, baseline, current, losses=found),
             lambda: office_export(format, workbook_to_xlsx(book), xlsx_export_losses(book)),
             xlsx_unwritten_changes,
         )

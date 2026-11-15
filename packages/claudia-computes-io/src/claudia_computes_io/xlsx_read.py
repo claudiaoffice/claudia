@@ -557,7 +557,8 @@ def workbook_losses(package: Package, lost: LossLog) -> None:
     )
     if hidden:
         lost.add("hidden-sheet", count=hidden)
-    if package.workbook.find("x:workbookProtection", NS) is not None:
+    protection = package.workbook.find("x:workbookProtection", NS)
+    if protection is not None and len(protection.attrib):  # (openpyxl writes an empty one: it protects nothing)
         lost.add("protection")
 
 

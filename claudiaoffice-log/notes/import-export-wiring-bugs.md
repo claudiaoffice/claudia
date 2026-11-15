@@ -25,6 +25,10 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-09 | computes, ods/xlsx export | Names and tables defined in Claudia were silently missing from every export (no loss listed in xlsx). | slice 5a | `test_ods_names.py`, `test_xlsx_names.py`, server tests |
 | IEW-10 | computes, xlsx export | A column that had only a look (a style on the whole column) was written 13 characters wide, not at the sheet's default: it looked wider in Excel and LibreOffice than in Claudia. | slice 5b | `test_xlsx_layout.py::test_a_look_only_column_does_not_get_a_width_of_its_own` |
 | IEW-11 | computes, ods/xlsx | A column width or row height set in Claudia was missing from every export (xlsx did not even list it as a loss) and was dropped by an edit-and-reexport of an imported file; the ods import counted any file with sized columns as `layout`. | slice 5b | `test_xlsx_layout.py`, `test_ods_layout.py`, `test_server_import.py::test_a_resized_column_is_in_the_patched_download_and_no_loss` |
+| IEW-15 | computes, xlsx import | A workbook downloaded from Claudia as .xlsx and opened again was reported as lost `protection`: the empty `workbookProtection` element the writer carries protects nothing. | slice 5d | `test_xlsx_real_world.py` (empty workbookProtection) |
+| IEW-17 | composes, odt patch | Editing the words of any paragraph of a text Claudia had written to odt (and imported again) added a copy of each style of the text to the file's `styles.xml` under a second name (`Remark_2`, `Definition_2`...): bloat and, in LibreOffice, a long list of unused styles. | slice 6a | `test_odt.py::test_a_text_of_this_app_edited_in_its_words_gets_no_style_added_to_its_file` |
+| IEW-18 | composes, docx/odt export | Pictures of a text (images, rendered text containers) were missing from every .docx and .odt download, and a picture of an imported file was not shown; nothing said so. Their alt text (BITV 1.1.1) was lost with them. | slice 6a | `test_composes_pictures.py`, `test_server_import.py::test_a_picture_of_a_file_is_an_object_…` |
+| IEW-16 | computes, xlsx export/import | Charts of a spreadsheet were missing from every .xlsx download and nothing said so; a chart of an imported xlsx was a plain loss and never shown. | slice 5d | `test_xlsx_charts.py`, `test_server_import.py::test_a_workbook_with_charts_comes_back_patched_…[xlsx]` |
 
 | IEW-12 | creates, pptx/odp export | A turned object came out of Claudia upright: pptx fresh export wrote no rotation (the patch did), odp wrote none and left an object that somebody turned in a file out of the model (`rotated-object`). | slice 7 | `test_creates_rotation.py` |
 | IEW-13 | creates, pptx patch | Giving a text box, shape or picture of an imported pptx another description (alt text) changed nothing in the file. | slice 7 | `test_creates_pictures.py::test_a_text_box_is_given_a_description_in_a_kept_pptx_too` |
@@ -56,6 +60,11 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-L20 | A chart tab is written to ods as a sheet with the chart in it (`chart:tab`); a chart that follows a name is written as the cells the name is now (`chart:source`); a turned chart stands upright (`chart:rotation`); a chart that reads nothing is not written (`chart:empty`). | A file has no tab for a chart, no named source, no turned chart. |
 | IEW-L21 | Only clustered, upright, two-dimensional bar charts over cells of one sheet are read as charts; any other chart of an ods stays in the file and is listed as `chart`. Colours, fonts and the look of a chart another program drew are not read; the chart is shown in Claudia with Claudia's colours. | The model has only bar charts. |
 | IEW-L22 | A chart another program drew is kept as it is when only its numbers, place, size or description change; when its definition (range, titles, legend, gridlines, series direction) is changed in Claudia it is drawn the way Claudia draws a bar chart (`chart:look`). | The model does not hold the look. |
+| IEW-L23 | An xlsx chart pinned by two cells and drawn by Excel has the size of the cells it reaches, which uses the column widths of the file (7 px a character); Excel's own layout may differ by a few pixels. | Excel states no size for the frame. |
+| IEW-L24 | A picture of a docx or odt comes in only when it is an image the app decodes, not cropped or flipped, in its own proportions, turned by nothing but a rotation, and not in a table, a header, a footer or a text box; any other stays in the file, is not shown and is listed as `picture`. | The model has floating images with a size and a turn, nothing else. |
+| IEW-L25 | A picture is written without wrapping: the words do not flow around it (the model has none), so in Word and LibreOffice it lies over the text at its character; an imported picture that wrapped the words stays in the file but comes in as one that does not. | No wrapping in the model. |
+| IEW-L26 | odt has no mark for a decorative picture (ODF 1.3): it is written without description and `decorative` is listed; it comes back as a picture with no description. docx has the mark. | The format. |
+| IEW-L27 | An SVG in a docx is written with a PNG fallback that is empty unless the server has a rasteriser (`rsvg-convert`); `svg-fallback` is listed. Word before 2016 shows the empty picture. | A PNG fallback must be a raster. |
 
 ## What to try (QA)
 
@@ -79,6 +88,11 @@ shows in Claudia as a chart; move and resize it, download again: LibreOffice dra
 title in Claudia: the download dialog lists `chart` / `look`. A chart tab downloads as an extra sheet and says so.
 Other kinds of chart in an ods are still not shown and are listed as `chart`.
 
+*Slice 5d, charts to xlsx.* As 5c, with .xlsx: a chart over a table downloads and opens in Excel or LibreOffice at its
+cell with its title, legend and colours; an Excel or LibreOffice bar chart shows in Claudia and comes back as it
+was after a move. A chart of another kind (line, pie, stacked) stays in the file and is listed as `chart`. An xlsx
+downloaded from Claudia opens again without a `protection` loss.
+
 *Slice 7, creates.* Turn a box, a shape and a picture in a presentation (Format ▸ Rotate…), download as .pptx and .odp,
 open both in LibreOffice (and PowerPoint): the objects are turned like in Claudia and no loss is listed. Open an odp
 or pptx with turned pictures: the preview shows them (alt text in the object's description), move one and download again:
@@ -87,3 +101,11 @@ landscape and download as .pptx: PowerPoint's print dialog says handouts, 6 per 
 landscape; margins and page numbers are listed as not written. Set the language to German and download as .odp and
 .pptx: spell-checking in LibreOffice uses German. Open a PowerPoint deck with coloured shapes and bold words: the
 download dialog lists `look` and `formatting`.
+
+*Slice 6a, pictures in composes.* Insert a picture into a paragraph (Insert ▸ Picture…) and give it a description; download
+as .docx and as .odt and open both in Word/LibreOffice: the picture is at its place in the paragraph, as large and as
+turned as in Claudia, and its alt text is there (Word: Picture format ▸ Alt text). Mark one decorative: Word shows the
+"decorative" box ticked; the odt download dialog lists `decorative`. Open a Word or LibreOffice file with pictures: they
+show in the text (inline ones too); move one, resize it, give it another description and download again: the other
+pictures and the rest of the file are as they were. Remove a picture and download: it is gone from the file (odt: from the
+package as well). A cropped or stretched picture stays in the file and is listed as `picture`.

@@ -29,14 +29,22 @@ from docx.oxml.ns import qn
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
-from claudia_composes import DEFAULT_STYLE, Block, Run, Suggestion, TextModel
+from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
+from claudia_core import Rasterise, VisualObject
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
 from ._docx_blocks import hidden_content, place, remove
 from ._docx_lists import ListWriter, numbering_in, read_lists
+from ._docx_pictures import (
+    PictureEdits,
+    PictureWriter,
+    file_pictures,
+    unheld_pictures,
+)
 from ._docx_setup import read_setup, write_language, write_page
 from ._docx_styles import WORD_NAMES, WordNames, unsaid_of, write_styles
+from ._pictures import picture_losses, pictures_of
 from ._style_look import look_for
 from ._suggestions import WhenMade, open_replacements, when_made
 from ._unwritten import DOCX_WRITTEN, text_unwritten_changes
@@ -61,13 +69,19 @@ class UnsupportedEdit(Exception):
 
 
 def text_to_docx(
-    model: TextModel, *, track_suggestions: bool = True, change_times: Mapping[str, str] | None = None
+    model: TextModel,
+    *,
+    track_suggestions: bool = True,
+    change_times: Mapping[str, str] | None = None,
+    rasterise: Rasterise | None = None,
 ) -> bytes:
     """``model`` as docx bytes: one paragraph per block. When ``track_suggestions`` (the default), every open
     suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
     remark (no replacement) carries no text to track and is left out, same as a withdrawn or resolved suggestion.
     ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one with no time is
-    written without a date, which Word shows as undated (D411)."""
+    written without a date, which Word shows as undated (D411). The pictures floating over the text (an image, a
+    rendered text container) are written as anchored drawings in the paragraph they hang from, with their alt text;
+    an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464)."""
     document = Document()
     write_page(document, None, model.page)
     write_language(document, model.language)
@@ -76,11 +90,13 @@ def text_to_docx(
     by_block = open_replacements(model, track=track_suggestions)
     change_ids, when = count(1), when_made(change_times)
     lists = ListWriter(document, model.lists)
+    pictures = PictureWriter(document, rasterise)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=names.of(block.style))
         if block.item is not None:
             lists.write(paragraph, block.item)
-        _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when)
+        marks = [(obj.anchor.offset, pictures.run(obj, asset)) for obj, asset in pictures_of(model, block.id)]
+        _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when, marks)
     out = BytesIO()
     document.save(out)
     return out.getvalue()
@@ -112,8 +128,10 @@ class _BlockWriter:
         replacements: dict[str, list[Suggestion]],
         when: WhenMade,
         losses: LossLog | None,
+        marks: Mapping[str, list[tuple[int, Any]]],
     ) -> None:
         self.document, self.names, self.lists = document, names, lists
+        self.marks = marks  # the pictures of each block that are written with its words (by block id)
         self.replacements, self.when, self.losses = replacements, when, losses
         self.change_ids = count(1)
 
@@ -142,7 +160,14 @@ class _BlockWriter:
         return paragraph._p
 
     def _fill(self, paragraph: Paragraph, block: Block) -> None:
-        _fill_paragraph(paragraph, block.text, self.replacements.get(block.id, []), self.change_ids, self.when)
+        _fill_paragraph(
+            paragraph,
+            block.text,
+            self.replacements.get(block.id, []),
+            self.change_ids,
+            self.when,
+            self.marks.get(block.id, []),
+        )
 
 
 #: What a run of text holds: the words and the marks between them. A run that holds anything else (a picture, a note's
@@ -175,17 +200,39 @@ def _word_names(document: Any, model: TextModel) -> WordNames:
 
 
 def _fill_paragraph(
-    paragraph: Paragraph, text: str, suggestions: list[Suggestion], change_ids: Iterator[int], when: WhenMade
+    paragraph: Paragraph,
+    text: str,
+    suggestions: list[Suggestion],
+    change_ids: Iterator[int],
+    when: WhenMade,
+    marks: list[tuple[int, Any]] | None = None,
 ) -> None:
+    """Write ``text`` into ``paragraph`` with its suggestions as tracked changes and ``marks`` (``(offset, run)``: the
+    pictures) after the characters they stand behind; one that stands inside words a tracked change deletes follows the
+    change."""
+    waiting = sorted(marks or [], key=lambda mark: mark[0])
     position = 0
     element = paragraph._p  # python-docx's own documented way to reach markup it does not model (its FAQ)
+
+    def release() -> None:
+        while waiting and waiting[0][0] <= position:
+            element.append(waiting.pop(0)[1])
+
+    def write(end: int) -> None:
+        nonlocal position
+        while position < end:
+            release()
+            cut = min(end, waiting[0][0]) if waiting else end
+            paragraph.add_run(text[position:cut])
+            position = cut
+        release()
+
     for suggestion in suggestions:
-        start, end = suggestion.anchor.start, suggestion.anchor.end
-        if start < position or end > len(text):
+        start, stop = suggestion.anchor.start, suggestion.anchor.end
+        if start < position or stop > len(text):
             continue  # the anchor no longer matches this text; skip it rather than guess where it went
-        if start > position:
-            paragraph.add_run(text[position:start])
-        deleted = text[start:end]
+        write(start)
+        deleted = text[start:stop]
         if deleted:
             element.append(
                 _tracked_change("w:del", next(change_ids), suggestion.author, deleted, when(suggestion), deleted=True)
@@ -194,9 +241,10 @@ def _fill_paragraph(
             element.append(
                 _tracked_change("w:ins", next(change_ids), suggestion.author, suggestion.replacement, when(suggestion))
             )
-        position = end
-    if position < len(text):
-        paragraph.add_run(text[position:])
+        position = stop
+    write(len(text))
+    for _, run in waiting:
+        element.append(run)
 
 
 def _tracked_change(
@@ -224,7 +272,9 @@ def _tracked_change(
 def docx_to_text(docx_bytes: bytes) -> TextModel:
     """``docx_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph, in order, Word's
     built-in styles mapped back to claudia's (anything else -- "Normal", a custom style, no style at all --
-    becomes body text, the same fallback ``text_to_docx`` uses going the other way). A tracked change's own text
+    becomes body text, the same fallback ``text_to_docx`` uses going the other way). A picture the model can show as it
+    is (an image the app decodes, not cropped or flipped, in its own proportions) comes in as an image object hanging
+    from its paragraph, with its alt text (D464). A tracked change's own text
     is not seen here: python-docx's own ``paragraph.text`` already skips it (only runs that are direct children
     of the paragraph count), and re-importing an existing tracked change is not this slice's job."""
     document = Document(BytesIO(docx_bytes))
@@ -237,15 +287,21 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         text = paragraph.text
         runs = (Run(len(text), None),) if text else ()
         blocks.append(Block(f"b{index}", style_id, text, runs, reading.items.get(paragraph._p)))
-    return TextModel(blocks or None, page=setup.page, language=setup.language, lists=reading.book if blocks else None)
+    model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=reading.book if blocks else None)
+    for picture in file_pictures(document):
+        if picture.asset.id not in model.images:
+            model.define_image(picture.asset)
+        model.insert_object(VisualObject(picture.body, BlockAnchor(f"b{picture.block + 1}", picture.offset)))
+    return model
 
 
 def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
     """What :func:`docx_to_text` does not show of the file, each as a code (``"table"``, ``"list-look"`` (a list drawn
     otherwise than the model draws it), ``"list-depth"``, ``"page"`` (a page the model cannot hold), ``"frame"``,
-    ``"footnote"``, ``"comment"``, ``"formatting"``, ``"link"``, ``"tracked-change"`` and a ``"style"`` named by what
-    the file calls it) with how many there are, in the order they come. None of it is lost from the *file*: an edit
-    that is exported with :func:`apply_edits_to_docx` keeps all of it."""
+    ``"picture"`` (a picture the model does not show as it is: cropped, flipped, stretched, in a table, an image the app
+    cannot decode), ``"footnote"``, ``"comment"``, ``"formatting"``, ``"link"``, ``"tracked-change"`` and a ``"style"``
+    named by what the file calls it) with how many there are, in the order they come. None of it is lost from the
+    *file*: an edit that is exported with :func:`apply_edits_to_docx` keeps all of it."""
     document = Document(BytesIO(docx_bytes))
     body = document.element.body
     losses = LossLog()
@@ -254,16 +310,25 @@ def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
         if style is not None and style.name not in _CLAUDIA_STYLE and style.name != "Normal":
             losses.add("style", style.name)
     reading = read_lists(document.paragraphs, numbering_in(document))
+    held = file_pictures(document)
     counts = {
         "list-look": reading.odd_looks,
         "list-depth": reading.too_deep,
         "page": int(read_setup(document).odd_page),
+        "picture": unheld_pictures(document, held),
+        "frame": _frames(body),
     }
     for code, tags in _IMPORT_LOSSES:
         number = counts[code] if code in counts else sum(1 for tag in tags for _ in body.iter(qn(tag)))
         if number:
             losses.add(code, count=number)
     return losses.result()
+
+
+def _frames(body: Any) -> int:  # noqa: ANN401
+    """How many drawings and legacy pictures of ``body`` are not pictures (a text box, a shape, a chart, a diagram)."""
+    drawings = sum(1 for drawing in body.iter(qn("w:drawing")) if not drawing.xpath(".//pic:pic"))
+    return drawings + sum(1 for _ in body.iter(qn("w:pict")))
 
 
 #: What a docx has that the model does not show, by code in the order it is reported: the elements to count (a
@@ -273,7 +338,8 @@ _IMPORT_LOSSES = (
     ("list-look", ()),
     ("list-depth", ()),
     ("page", ()),
-    ("frame", ("w:drawing", "w:pict")),
+    ("frame", ()),
+    ("picture", ()),
     ("footnote", ("w:footnoteReference", "w:endnoteReference")),
     ("comment", ("w:commentReference",)),
     ("formatting", ("w:rPr",)),
@@ -282,12 +348,16 @@ _IMPORT_LOSSES = (
 )
 
 
-def docx_export_losses(model: TextModel, *, track_suggestions: bool = True) -> tuple[Loss, ...]:
+def docx_export_losses(
+    model: TextModel, *, track_suggestions: bool = True, rasterised: bool = False
+) -> tuple[Loss, ...]:
     """What :func:`text_to_docx` cannot put into the file for ``model``, each as a code with how many: a ``"style"``
     (named by its id) that is written as Normal, ``"authorship"`` (who wrote which run of a block: a docx does not
     keep it), a ``"remark"`` (nothing to track), a ``"suggestion"`` that is not written because tracking is off, a
-    ``"suggestion-anchor"`` that no longer matches its text, and what :func:`docx_unwritten_changes` says of a fresh
-    file."""
+    ``"suggestion-anchor"`` that no longer matches its text, ``"svg-fallback"`` (a picture that is an SVG, which only
+    Word 2016 and later draw: another program shows an empty picture unless a rasteriser was given, ``rasterised``),
+    ``"rendering-pending"`` (a rendered text container nothing has been drawn for: left out), and what
+    :func:`docx_unwritten_changes` says of a fresh file."""
     losses = LossLog()
     names = WordNames(model.styles)
     for block in model.blocks:
@@ -309,6 +379,7 @@ def docx_export_losses(model: TextModel, *, track_suggestions: bool = True) -> t
         skipped = _unplaced(model)
         if skipped:
             losses.add("suggestion-anchor", count=skipped)
+    picture_losses(model, losses, vector_loss=None if rasterised else "svg-fallback")
     return (*losses.result(), *docx_unwritten_changes(model))
 
 
@@ -384,6 +455,7 @@ def apply_edits_to_docx(
     track_suggestions: bool = True,
     change_times: Mapping[str, str] | None = None,
     losses: LossLog | None = None,
+    rasterise: Rasterise | None = None,
 ) -> bytes:
     """Re-export ``current`` to docx by patching only what changed since ``baseline`` (the model as it stood
     right after :func:`docx_to_text` imported ``original_bytes``) onto those same bytes, instead of rebuilding
@@ -398,6 +470,12 @@ def apply_edits_to_docx(
     a ``removed-...`` entry for each picture, note, comment, link or tracked change that went with it. A paragraph that
     ends a section of the file is only emptied, so that the section stays. ``losses`` also gets a ``style`` entry for
     a block whose style the text does not have.
+
+    The pictures of the text are kept in step (D464): a picture that was removed takes its drawing out of the file, one
+    that was added is drawn into the paragraph it hangs from (an SVG as ``rasterise`` draws it, else an empty picture),
+    one that was moved is put where it hangs now and one that was resized, turned or described changes only that; the
+    picture's own bytes stay. A picture of the file that the model does not show (cropped, flipped, in a table) is not
+    touched.
 
     Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, and blocks
     moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know)."""
@@ -417,12 +495,17 @@ def apply_edits_to_docx(
     for list_id in baseline.lists.ids():
         if list_id in current.lists and current.lists.get(list_id) != baseline.lists.get(list_id):
             lists.restyle(list_id)
+    replacements = open_replacements(current, track=track_suggestions)
+    rewritten = {
+        block.id for block in current.blocks if baseline_by_id.get(block.id) != block or block.id in replacements
+    }
+    if losses is not None:  # (what a rendered container is that nothing has been drawn for)
+        picture_losses(current, losses)
+    pictures = PictureEdits(document, baseline, current, rewritten, rasterise, losses)
     for block in held:
         if block.id not in current_ids:
             _remove_block(paragraph_of[block.id]._p, losses)
-    writer = _BlockWriter(
-        document, names, lists, open_replacements(current, track=track_suggestions), when_made(change_times), losses
-    )
+    writer = _BlockWriter(document, names, lists, replacements, when_made(change_times), losses, pictures.marks)
     last: Any = None  # the element of the block before the one at hand, in the text
     for index, after in enumerate(current.blocks):
         before = baseline_by_id.get(after.id)
@@ -431,6 +514,9 @@ def apply_edits_to_docx(
             last = writer.add(after, last, following)
         else:
             last = writer.edit(paragraph_of[after.id], before, after)
+    pictures.settle({block_id: paragraph._p for block_id, paragraph in paragraph_of.items()})
     patched = BytesIO()
     document.save(patched)
+    if pictures.changed:
+        owned.update(("word/_rels/document.xml.rels", "[Content_Types].xml"))
     return reconcile(original_bytes, patched.getvalue(), owns(["word/document.xml", *lists.owned(), *owned]))

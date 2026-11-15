@@ -118,3 +118,35 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   LibreOffice into run styles, not the default style, so it does not come back from there as a deck language.
 * Library cases: `pptx-picture-and-language` (built), `odp-rotated-picture` (LibreOffice's own file, checked in); the
   two `beyond-claudia-image` cases now see the picture as an object.
+
+## Slice 5d — computes: charts to xlsx (D463)
+* computes-io: `chart_plan.py` (the plan of a chart, shared by ods and xlsx: `Series`, `Plan`, `plan_of`, `plan_from`,
+  `spec_of`, `chart_losses`, `with_id`), `xlsx_charts.py` (writer `chart_xml`, reader `read_chart`, `file_charts`,
+  `written_charts`, the geometry of cells for a `twoCellAnchor`), `xlsx_chart_patch.py` (`Drawings`, `ChartPatch`,
+  `patch_charts`), glue in `xlsx.py`. `_unwritten.py`: `charts` is in `XLSX_WRITTEN`.
+* The server passes the loss log to the xlsx patch (`losses=found`), as it does for ods.
+* Held charts are numbered `o{n}` / `c{n}` in the order of the file, so the baseline model and the file agree on ids.
+* Checked against LibreOffice 24.2.7: our xlsx charts open and render (title, axis titles, legend, gridlines, colours);
+  LibreOffice's own xlsx bar charts are held with identical definitions. LibreOffice pins a chart by two cells and also
+  states the frame's `xfrm`: that is the size read (the cells alone gave 392 px for a 480 px frame, LibreOffice lays
+  columns out differently from 7 px per character). Excel was not available: its charts are tested by hand-built XML.
+* Library case: new `xlsx-charts` (built by LibreOffice from our file; `_build_fixtures.build_xlsx_charts`).
+* Found on the way: IEW-15 (empty `workbookProtection`), IEW-16 (charts missing from xlsx downloads, no loss).
+
+## Slice 6a — composes: pictures to docx and odt (D464)
+* composes-io: `_pictures.py` (which objects are pictures, losses), `_docx_pictures.py` (reader, writer, `PictureEdits`
+  for the patch), `_odt_pictures.py` (reader, `PictureWriter`, `PicturePlan` for the patch), glue in `docx.py` / `odt.py`;
+  `_unwritten.py`: `pictures` is in `_WRITTEN_BY_BOTH`, the facet `objects` is split into `pictures` / `objects` /
+  `shapes` (the last two stay unwritten until 6b).
+* Moved to shared packages so that creates and composes read pictures one way: `claudia_core.raster` and
+  `file_pictures`, `claudia_odf_io.transform` and `pictures`, `paragraph.frames_of` / `offset_of` / `detach`.
+* The server passes `rasterise` (the renderings' rasteriser, as creates does) to the fresh and patched docx and odt.
+* The patch cannot move a frame between two paragraphs without a copy: the copy of the file's frame goes into the
+  paragraph the text now says, the original is taken out of the paragraph it was in (every paragraph with frames to
+  change is rewritten in a copy; byte-splicing keeps the rest of `content.xml`).
+* Checked against LibreOffice 24.2.7: our docx and odt pictures open and render at their place; LibreOffice's own docx
+  and odt are read with the same anchors and descriptions (library cases `docx-pictures`, `odt-pictures`, built by
+  LibreOffice from our file); patched files (a resized and turned picture and a new one) open and show all pictures.
+  Word was not available: its pictures are tested by hand-built XML (inline pictures, crops, tables).
+* Found on the way: IEW-17 (the odt patch wrote every style of the app's own file again under a second name after any
+  edit).

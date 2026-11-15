@@ -36,4 +36,4 @@ kept file that Claudia did not draw is left as the file has it unless its defini
   chart in it (`chart` / `tab`); it comes back as a sheet with a floating chart.
 * *What is a loss.* `chart:source` (a chart that follows a name is written as the cells the name is now), `chart:rotation`
   (a chart in a file stands upright), `chart:empty` (a chart that reads nothing is not written), `chart:tab`.
-* *Not here.* xlsx charts (slice 5d); other kinds of chart (the model has only bars).
+* *Not here.* xlsx charts (see D463); other kinds of chart (the model has only bars).

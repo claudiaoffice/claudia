@@ -12,7 +12,8 @@ from collections.abc import Callable
 
 FALLBACK_SIDE = 32  # pixels on the longer side of the empty picture that stands in when nothing can draw the SVG
 
-#: Draws an SVG (its bytes, the frame's width and height in slide units) as a PNG; see :func:`slides_to_pptx`.
+#: Draws an SVG (its bytes, the frame's width and height in the document's units) as a PNG; see
+#: :func:`slides_to_pptx` and :func:`text_to_docx`.
 Rasterise = Callable[[bytes, int, int], bytes]
 
 

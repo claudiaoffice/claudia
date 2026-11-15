@@ -1,5 +1,5 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
  "DocumentInfo": {
   "class": [
    "object"
@@ -80,17 +80,35 @@
   },
   "properties": []
  },
+ "angle_of": {
+  "function": "(transform: 'str') -> 'float | None'"
+ },
  "decode_style_name": {
   "function": "(name: 'str') -> 'str'"
  },
  "default_style_xml": {
   "function": "(language: 'str | None') -> 'str'"
  },
+ "description_element": {
+  "function": "(frame: 'etree._Element') -> 'etree._Element | None'"
+ },
+ "description_of": {
+  "function": "(frame: 'etree._Element') -> 'str'"
+ },
+ "detach": {
+  "function": "(element: 'etree._Element') -> 'None'"
+ },
  "encode_style_name": {
   "function": "(display_name: 'str') -> 'str'"
  },
+ "frames_of": {
+  "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
+ },
  "hidden_content": {
   "function": "(paragraph: 'etree._Element') -> 'list[str]'"
+ },
+ "inches": {
+  "function": "(value: 'str | None') -> 'float | None'"
  },
  "insert_elements": {
   "function": "(paragraph: 'etree._Element', placements: 'Sequence[tuple[int, etree._Element]]') -> 'None'"
@@ -101,6 +119,9 @@
  "local_name": {
   "function": "(tag: 'str') -> 'str'"
  },
+ "name_of": {
+  "function": "(frame: 'etree._Element') -> 'str'"
+ },
  "new_meta": {
   "function": "(info: 'DocumentInfo') -> 'bytes'"
  },
@@ -110,11 +131,17 @@
  "odf_date": {
   "function": "(moment: 'str') -> 'str'"
  },
+ "offset_of": {
+  "function": "(paragraph: 'etree._Element', element: 'etree._Element') -> 'int | None'"
+ },
  "parts_of_language": {
   "function": "(tag: 'str | None') -> 'tuple[str, str | None, str | None]'"
  },
  "patch_language": {
   "function": "(part: 'XmlPart', before: 'str | None', after: 'str | None') -> 'bool'"
+ },
+ "picture_of": {
+  "function": "(frame: 'etree._Element', graphics: 'Mapping[str, etree._Element]', parts: 'Mapping[str, bytes]') -> 'ImageAsset | None'"
  },
  "problems": {
   "function": "(data: 'bytes') -> 'list[str]'"
@@ -136,6 +163,12 @@
  },
  "set_text": {
   "function": "(paragraph: 'etree._Element', text: 'str') -> 'None'"
+ },
+ "transform_of": {
+  "function": "(degrees: 'int', box: 'tuple[float, float, float, float]') -> 'str | None'"
+ },
+ "turned_box": {
+  "function": "(transform: 'str', w: 'float', h: 'float') -> 'tuple[float, float, float] | None'"
  },
  "unwritten_changes": {
   "function": "(before: 'Mapping[str, object]', after: 'Mapping[str, object]', *, written: 'Collection[str]', kinds: 'Mapping[str, str] | None' = None) -> 'tuple[Loss, ...]'"

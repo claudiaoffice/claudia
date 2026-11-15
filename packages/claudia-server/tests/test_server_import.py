@@ -307,6 +307,60 @@ def test_a_docx_comes_back_patched_with_the_paragraphs_split_and_joined_and_its_
     assert back.tables[0].cell(0, 0).text == "kept cell"
 
 
+def made_by_ann(asset):
+    from claudia_core import ImageImport
+
+    return ImageImport.from_data(
+        {
+            "asset": asset.id,
+            "alt": "",
+            "imported_by": "ann",
+            "imported_at": "2026-11-07T10:00:00.000Z",
+            "source": "disk",
+            "source_name": "pic.gif",
+            "source_path": None,
+        }
+    )
+
+
+@pytest.mark.parametrize("fmt", ["docx", "odt"])
+def test_a_picture_of_a_file_is_an_object_of_the_text_and_its_new_description_is_patched_into_the_file(fmt):
+    import struct
+
+    from claudia_composes_io import docx_to_text, odt_to_text, text_to_docx, text_to_odt
+
+    from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+    from claudia_core import DescribeObject, ImageAsset, ObjectBody, VisualObject, decode_image
+
+    header = b"GIF89a" + struct.pack("<HHBBB", 40, 20, 0, 0, 0)
+    frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 40, 20) + b"\x00" + b"\x02\x01\x00\x00"
+    asset: ImageAsset = decode_image(header + frame + b"\x3b")
+    start = TextModel([Block("b1", DEFAULT_STYLE, "Hello world")])
+    start.define_image(asset)
+    start.insert_object(
+        VisualObject(
+            ObjectBody("o1", "image", 200, 100, "plain-image", image=asset.id, imported=made_by_ann(asset)),
+            BlockAnchor("b1", 5),
+        )
+    )
+    written, read = (text_to_docx, docx_to_text) if fmt == "docx" else (text_to_odt, odt_to_text)
+    suite = Suite([Module(app_hub(MemoryProvider(TextModel), TextModel), _directory())])
+    with TestClient(create_app(suite)) as client:
+        token = upload(client, written(start), name=f"file.{fmt}").json()["upload"]
+        with client.websocket_connect("/api/composes/docs/file/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, "composes", "file").document
+            assert doc.model.get_object("o1").anchor == BlockAnchor("b1", 5)
+            doc.execute(DescribeObject("o1", "a small picture"), author="ann")
+            answer = request(ws, "export_office", {"format": fmt})["result"]
+    assert answer["patched"] is True and not any(loss["kind"] == "not-patched" for loss in answer["losses"])
+    back = read(base64.b64decode(answer["data"]))
+    found = back.get_object("o1")
+    assert (found.body.description, found.anchor) == ("a small picture", BlockAnchor("b1", 5))
+    assert back.images[found.body.image].data == asset.data
+
+
 # --------------------------------------------------------------------------------- sealed: kept across a restart
 def test_the_kept_file_survives_packing_and_a_restart(tmp_path):
     def server():
@@ -431,27 +485,28 @@ def test_a_deck_with_a_picture_comes_back_patched_with_the_picture_turned_and_de
     assert back.images[found.body.image].data == asset.data
 
 
-def test_a_workbook_with_charts_comes_back_patched_with_a_chart_moved_and_described_and_no_loss():
+@pytest.mark.parametrize("fmt", ["ods", "xlsx"])
+def test_a_workbook_with_charts_comes_back_patched_with_a_chart_moved_and_described_and_no_loss(fmt):
     from pathlib import Path
 
-    from claudia_computes_io import ods_to_workbook
+    from claudia_computes_io import ods_to_workbook, xlsx_to_workbook
 
     from claudia_computes import CellAnchor
     from claudia_core import DescribeObject, MoveObject
 
-    library = Path(__file__).resolve().parents[3] / "test-documents" / "ods" / "charts" / "source.ods"
+    library = Path(__file__).resolve().parents[3] / "test-documents" / fmt / "charts" / f"source.{fmt}"
     original = library.read_bytes()
     with workbook_server() as client:
-        token = upload(client, original, name="Sales.ods").json()["upload"]
+        token = upload(client, original, name=f"Sales.{fmt}").json()["upload"]
         with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
             ws.send_json(hello(create=True, upload=token))
             assert ws.receive_json()["ok"]
             doc = hosted(client, "computes", "budget").document
             doc.execute(MoveObject("o1", CellAnchor("s1", 14, 2).to_data()), author="ann")
             doc.execute(DescribeObject("o1", "Sales per region"), author="ann")
-            answer = request(ws, "export_office", {"format": "ods"})["result"]
+            answer = request(ws, "export_office", {"format": fmt})["result"]
     assert answer["patched"] is True and answer["losses"] == []
-    back = ods_to_workbook(base64.b64decode(answer["data"]))
+    back = (ods_to_workbook if fmt == "ods" else xlsx_to_workbook)(base64.b64decode(answer["data"]))
     found = back.objects["o1"]
     assert (found.anchor, found.body.description) == (CellAnchor("s1", 14, 2), "Sales per region")
     assert set(back.diagrams) == {"c1", "c2"}

@@ -5,6 +5,18 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-15
+
+Pictures in paragraphs, for the text and the slides alike (D464).
+
+### Added
+- `picture_of`, `name_of`, `description_of`, `description_element`: the picture a `draw:frame` holds (an image of the
+  package the app decodes) and what the frame says of it (`svg:desc`, or else `svg:title`).
+- `inches`, `transform_of`, `turned_box`, `angle_of`: lengths of the format and how a drawing object is turned
+  (`draw:transform`), moved here from `claudia-creates-io`.
+- `frames_of`, `offset_of`, `detach`: the frames that stand in a paragraph, how many characters stand before one, and
+  taking one out while the text after it stays.
+
 ## [0.4.0] - 2026-11-15
 
 Charts: embedded objects in a package (D462).

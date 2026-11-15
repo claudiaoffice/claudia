@@ -77,11 +77,12 @@ from claudia_opc_io import read_parts, write_parts
 
 from ._unwritten import ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
+from .chart_plan import chart_losses
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS, changed_sizes
 from .ods_chart_files import FileChart, file_charts
 from .ods_chart_patch import ChartPatch
-from .ods_charts import chart_losses, written_charts
+from .ods_charts import written_charts
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
 from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names

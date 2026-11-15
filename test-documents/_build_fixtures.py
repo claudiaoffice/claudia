@@ -695,15 +695,14 @@ def build_ods_widths_and_heights() -> bytes:
     return new_package("spreadsheet", content.encode(), styles.encode())
 
 
-def build_ods_charts() -> bytes:
-    """An ods the way LibreOffice saves charts: a bar chart with its titles over the columns of a table, and one over
-    its rows, each in an ``Object N`` folder with a preview picture, pinned to a cell. Written by Claudia, then saved by
-    LibreOffice (``soffice`` has to be installed to build it again)."""
-    import shutil
+def _library_charts_through_libreoffice(to: str) -> bytes:
+    """A workbook with two bar charts (a titled one over the columns of a table, one over its rows, pinned to a cell
+    each), written by Claudia and saved by LibreOffice as ``to`` (``ods`` or ``xlsx``): the way LibreOffice lays charts
+    out. ``soffice`` has to be installed to build it again."""
     import subprocess
     import tempfile
 
-    from claudia_computes_io import workbook_to_ods
+    from claudia_computes_io import workbook_to_ods, workbook_to_xlsx
 
     from claudia_computes import (
         CellAnchor,
@@ -736,17 +735,102 @@ def build_ods_charts() -> bytes:
         body = ObjectBody(object_id, "diagram", 480, 300, "plain-image", diagram=spec.id)
         model.insert_object(VisualObject(body, CellAnchor(sheet_id, *anchor)))
     with tempfile.TemporaryDirectory() as folder:
-        source = Path(folder) / "in" / "charts.ods"
+        source = Path(folder) / "in" / f"charts.{to}"
         source.parent.mkdir()
-        source.write_bytes(workbook_to_ods(model))
+        source.write_bytes((workbook_to_ods if to == "ods" else workbook_to_xlsx)(model))
         subprocess.run(
-            ["soffice", "--headless", "--convert-to", "ods", "--outdir", str(Path(folder) / "out"), str(source)],
+            ["soffice", "--headless", "--convert-to", to, "--outdir", str(Path(folder) / "out"), str(source)],
             check=True,
             capture_output=True,
             timeout=180,
         )
-        assert shutil.which("soffice")
-        return (Path(folder) / "out" / "charts.ods").read_bytes()
+        return (Path(folder) / "out" / f"charts.{to}").read_bytes()
+
+
+def build_ods_charts() -> bytes:
+    """An ods the way LibreOffice saves charts (D462)."""
+    return _library_charts_through_libreoffice("ods")
+
+
+def build_xlsx_charts() -> bytes:
+    """An xlsx the way LibreOffice saves charts (D463)."""
+    return _library_charts_through_libreoffice("xlsx")
+
+
+def _library_pictures_through_libreoffice(to: str) -> bytes:
+    """A text with two pictures (the first with a description, in the middle of a paragraph; the second in another
+    paragraph), written by Claudia and saved by LibreOffice as ``to`` (``docx`` or ``odt``): the way LibreOffice lays
+    pictures out. ``soffice`` has to be installed to build it again."""
+    import struct
+    import subprocess
+    import tempfile
+
+    from claudia_composes_io import text_to_docx, text_to_odt
+
+    from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+    from claudia_core import ImageImport, ObjectBody, VisualObject, decode_image
+
+    def gif(shade: int) -> bytes:
+        return (
+            b"GIF89a"
+            + struct.pack("<HHBBB", 60, 30, 0, 0, 0)
+            + b"\x2c"
+            + struct.pack("<HHHH", 0, 0, 60, 30)
+            + b"\x00"
+            + b"\x02\x01"
+            + bytes([shade])
+            + b"\x00"
+            + b"\x3b"
+        )
+
+    model = TextModel(
+        [
+            Block("b1", "heading-1", "Pictures"),
+            Block("b2", DEFAULT_STYLE, "A paragraph with a picture in the middle of it."),
+            Block("b3", DEFAULT_STYLE, "Nothing here changes."),
+        ]
+    )
+    for number, (block, offset, description) in enumerate(
+        (("b2", 22, "Two cyclists on a hill"), ("b3", 0, "A small mark")), start=1
+    ):
+        asset = decode_image(gif(number))
+        model.define_image(asset)
+        record = ImageImport.from_data(
+            {
+                "asset": asset.id,
+                "alt": "",
+                "imported_by": "ana",
+                "imported_at": "2026-11-07T10:00:00.000Z",
+                "source": "disk",
+                "source_name": f"picture{number}.gif",
+                "source_path": None,
+            }
+        )
+        body = ObjectBody(
+            f"o{number}", "image", 180, 90, "plain-image", image=asset.id, imported=record, description=description
+        )
+        model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
+    with tempfile.TemporaryDirectory() as folder:
+        source = Path(folder) / "in" / f"pictures.{to}"
+        source.parent.mkdir()
+        source.write_bytes((text_to_docx if to == "docx" else text_to_odt)(model))
+        subprocess.run(
+            ["soffice", "--headless", "--convert-to", to, "--outdir", str(Path(folder) / "out"), str(source)],
+            check=True,
+            capture_output=True,
+            timeout=180,
+        )
+        return (Path(folder) / "out" / f"pictures.{to}").read_bytes()
+
+
+def build_docx_pictures() -> bytes:
+    """A docx the way LibreOffice saves pictures (D464)."""
+    return _library_pictures_through_libreoffice("docx")
+
+
+def build_odt_pictures() -> bytes:
+    """An odt the way LibreOffice saves pictures (D464)."""
+    return _library_pictures_through_libreoffice("odt")
 
 
 FIXTURES = {
@@ -777,6 +861,9 @@ FIXTURES = {
     "xlsx/widths-and-heights/source.xlsx": build_xlsx_widths_and_heights,
     "ods/widths-and-heights/source.ods": build_ods_widths_and_heights,
     "ods/charts/source.ods": build_ods_charts,
+    "xlsx/charts/source.xlsx": build_xlsx_charts,
+    "docx/pictures/source.docx": build_docx_pictures,
+    "odt/pictures/source.odt": build_odt_pictures,
 }
 
 

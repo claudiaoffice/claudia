@@ -12,8 +12,10 @@ from collections.abc import Collection
 from claudia_composes import Block, TextModel
 from claudia_odf_io import Loss, unwritten_changes
 
+from ._pictures import PICTURE_KINDS
+
 #: The facets a converter writes, by the name :func:`facets` gives them.
-_WRITTEN_BY_BOTH = {"blocks", "suggestions", "lists", "page", "language", "styles", "palette"}
+_WRITTEN_BY_BOTH = {"blocks", "suggestions", "lists", "page", "language", "styles", "palette", "pictures"}
 ODT_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
 DOCX_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
 
@@ -31,10 +33,7 @@ def facets(model: TextModel) -> dict[str, object]:
         "language": data["language"],
         "lists": _lists(data["lists"], model.blocks),
         "suggestions": data["suggestions"],
-        "shapes": data["shapes"],
-        "images": data["images"],
-        "objects": data["objects"],
-        "renderings": data["renderings"],
+        **_objects(model),
     }
 
 
@@ -54,3 +53,19 @@ def text_unwritten_changes(
     return unwritten_changes(
         facets(baseline if baseline is not None else TextModel([])), facets(model), written=written
     )
+
+
+def _objects(model: TextModel) -> dict[str, object]:
+    """The objects of a text as the facets a converter writes or leaves out: the pictures (an image, a rendered text
+    container, and what draws them), and the other objects with the outlines that shape them."""
+    data = model.serialize()
+    picture_ids = {obj.id for obj in model.objects.values() if obj.body.kind in PICTURE_KINDS}
+    return {
+        "pictures": {
+            "objects": [each for each in data["objects"] if each["id"] in picture_ids],
+            "images": data["images"],
+            "renderings": data["renderings"],
+        },
+        "objects": [each for each in data["objects"] if each["id"] not in picture_ids],
+        "shapes": data["shapes"],
+    }

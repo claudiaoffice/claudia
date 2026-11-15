@@ -20,7 +20,8 @@ from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
 from claudia_core.assets import MAX_ALT_CHARS
 from claudia_odf_io import NS, local_name
 
-from .ods_charts import ReadChart, describe, holds_a_chart, read_chart, sizes_of, with_id
+from .chart_plan import ReadChart, with_id
+from .ods_charts import describe, holds_a_chart, read_chart, sizes_of
 from .ods_layout import pixels_of
 
 if TYPE_CHECKING:

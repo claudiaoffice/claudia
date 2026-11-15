@@ -1,4 +1,4 @@
-"""How an OpenDocument drawing object is turned (D459).
+"""How an OpenDocument drawing object is turned (D459, D464).
 
 A file turns an object with ``draw:transform="rotate (a) translate (x y)"`` and no ``svg:x`` or ``svg:y``: the object is
 drawn at its own size with its top left corner at the origin, turned about that corner by ``a``, and then moved by

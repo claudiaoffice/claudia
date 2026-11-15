@@ -17,14 +17,13 @@ from claudia_creates_io import (
     slides_to_odp,
     slides_to_pptx,
 )
-from claudia_creates_io.odp_transform import angle_of, transform_of, turned_box
 from lxml import etree
 from pptx import Presentation
 from test_odp import CM_PER_UNIT, an_object, an_odp, content, page, textbox
 
 from claudia_core import VisualObject
 from claudia_creates import ShapeLibrary, SlideModel
-from claudia_odf_io import NS
+from claudia_odf_io import NS, angle_of, transform_of, turned_box
 
 
 def a_deck(rotation: int = 0, kind: str = "shape") -> SlideModel:

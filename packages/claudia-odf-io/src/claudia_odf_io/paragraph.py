@@ -174,6 +174,24 @@ def read_text(paragraph: etree._Element) -> str:
     return "".join(out)
 
 
+def frames_of(paragraph: etree._Element) -> list[etree._Element]:
+    """The ``draw:frame`` elements that stand in ``paragraph`` (also in a span or a link of it), in order: pictures,
+    text boxes, charts that are anchored to a character or to the paragraph. One inside a frame is not among them."""
+    frame = f"{{{NS['draw']}}}frame"
+    return [piece.owner for piece in _walk(paragraph) if piece.kind == "visible" and piece.owner.tag == frame]
+
+
+def offset_of(paragraph: etree._Element, element: etree._Element) -> int | None:
+    """How many characters of the text of ``paragraph`` (see :func:`read_text`) stand before ``element``, an element
+    that is shown and is no text (a frame, a note, a field); ``None`` when it is not in the paragraph."""
+    position = 0
+    for piece, collapsed in _collapsed(paragraph):
+        if piece.kind == "visible" and piece.owner is element:
+            return position
+        position += len(collapsed) if piece.kind == "text" else piece.size()
+    return None
+
+
 def hidden_content(paragraph: etree._Element) -> list[str]:
     """What ``paragraph`` shows that its text cannot: ``"footnote"``, ``"endnote"``, ``"field"``, ``"frame"``,
     ``"comment"`` or ``"ruby"``, one entry for each, in the order they come."""
@@ -270,6 +288,12 @@ def _slot_before(element: etree._Element) -> tuple[etree._Element, str, int]:
     parent = element.getparent()
     assert parent is not None
     return parent, "text", len(parent.text or "")
+
+
+def detach(element: etree._Element) -> None:
+    """Take ``element`` (a frame or anything else shown in a paragraph that is no text) out of its paragraph and leave
+    the text that follows it where it is."""
+    _remove_keeping_tail(element)
 
 
 def _remove_keeping_tail(element: etree._Element) -> None:

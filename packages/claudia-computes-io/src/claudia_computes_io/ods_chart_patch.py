@@ -21,8 +21,9 @@ from lxml import etree
 from claudia_computes import ChartSpec, SheetId, VisualObject, WorkbookModel
 from claudia_odf_io import NS, XmlPart, local_name, qname, update_manifest, xml_safe
 
+from .chart_plan import offset_of
 from .ods_chart_files import FileChart
-from .ods_charts import Parts, a_chart, chart_document, new_shapes, offset_of, tab_sheet
+from .ods_charts import Parts, a_chart, chart_document, new_shapes, tab_sheet
 from .ods_layout import text_of
 
 #: What a table of a file holds that comes after its drawings.

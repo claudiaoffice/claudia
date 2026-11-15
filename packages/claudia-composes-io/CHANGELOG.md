@@ -5,6 +5,31 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-15
+
+Pictures floating over a text reach docx and odt (D464).
+
+### Added
+- `text_to_docx` and `text_to_odt` write the image objects of a text (and a rendered text container) as pictures: a
+  drawing in the paragraph they hang from at their character, not wrapping the words, with their description, size
+  and turn. An SVG is written with a PNG next to it in a docx (a program that cannot draw an SVG shows that), and as
+  the SVG itself in an odt; `rasterise` (new argument) draws a PNG of a rendered container or an SVG.
+- `docx_to_text` and `odt_to_text` read the pictures of a file the model can show as it is (an image the app decodes,
+  not cropped, in its own proportions, turned by nothing but a rotation; an inline picture of a docx floats in the
+  model) as image objects with their alt text and, in a docx, the mark that says they are decoration.
+  `docx_import_losses` and `odt_import_losses` report `picture` for those they do not show as they are; `frame`
+  stays for what is no picture.
+- `apply_edits_to_docx` and `apply_edits_to_odt` (new argument `rasterise`) add, remove, move, resize, turn and
+  describe the pictures of a kept file, and keep the ones nobody touched byte for byte. An image that no frame shows
+  any more leaves the package of an odt.
+- New losses: `decorative` (odt export: ODF 1.3 has no mark for decoration), `svg-fallback` (docx) and `svg-picture`
+  (odt) for an SVG no rasteriser drew, `rendering-pending` for a rendered container nothing has been drawn for.
+  `docx_export_losses` and `odt_export_losses` take `rasterised`. `"pictures"` is no longer a `not-written` loss.
+
+### Fixed
+- `apply_edits_to_odt` wrote the styles of the app's own files again under a second name (`Remark_2`, ...) after any
+  edit of a text the app had written itself (IEW-17).
+
 ## [0.4.0] - 2026-11-15
 
 Lists, the page, the language, the styles and the palette reach odt and docx, and a kept docx can have paragraphs added

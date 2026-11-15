@@ -24,6 +24,7 @@ from lxml import etree
 
 from claudia_computes import Sheet, SheetId, WorkbookModel
 from claudia_odf_io import Loss
+from claudia_opc_io import read_parts
 
 X = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -720,3 +721,12 @@ def test_a_note_on_a_sheet_whose_comments_have_no_drawing_gets_one_before_its_ta
     out = edited(data, store(0, 1, {"t": "formula", "v": "=ALTERNATIVES(1,2)"}))
     root = etree.fromstring(part(out, "xl/worksheets/sheet1.xml"))
     assert [etree.QName(e).localname for e in root][-2:] == ["legacyDrawing", "tableParts"]
+
+
+def test_a_file_claudia_wrote_is_not_reported_as_a_protected_workbook():
+    """openpyxl writes an empty ``workbookProtection``: it protects nothing, so the import says nothing (IEW-15)."""
+    model = WorkbookModel()
+    model.sheets[SheetId("s1")] = Sheet(SheetId("s1"), "Data")
+    model.open_container("s1")
+    assert b"<workbookProtection/>" in read_parts(workbook_to_xlsx(model))["xl/workbook.xml"]
+    assert xlsx_import_losses(workbook_to_xlsx(model)) == ()

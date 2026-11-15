@@ -1,4 +1,4 @@
-"""The pictures of a presentation file, as the model holds them (D460): an image object with its asset.
+"""The pictures of an office file, as the model holds them (D460, D464): an image object with its asset.
 
 A picture comes in when the model can hold it as it is shown: its bytes are an image the app decodes (PNG, JPEG, GIF,
 BMP or SVG), it is not cropped or flipped, and it has the proportions of the picture itself (a picture stretched to
@@ -12,8 +12,8 @@ record names the file's own name for the picture and no time.
 
 from __future__ import annotations
 
-from claudia_core import ASPECT_TOLERANCE, ImageAsset, ImageError, ImageImport, ObjectBody, decode_image
-from claudia_core.assets import MAX_ALT_CHARS, MAX_SOURCE_NAME_CHARS
+from .assets import MAX_ALT_CHARS, MAX_SOURCE_NAME_CHARS, ImageAsset, ImageError, ImageImport, decode_image
+from .objects import ASPECT_TOLERANCE, ObjectBody
 
 #: The style an image object comes in with (its box: the border and fill the model gives a picture).
 IMAGE_STYLE = "plain-image"
@@ -37,7 +37,7 @@ def keeps_proportions(asset: ImageAsset, w: int, h: int) -> bool:
     return abs(w - asset.aspect * h) <= ASPECT_TOLERANCE
 
 
-def body_of(
+def picture_body(
     object_id: str,
     asset: ImageAsset,
     size: tuple[int, int],

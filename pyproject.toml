@@ -130,19 +130,19 @@ release accepts minimatch 11."""
 # only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.
 "claudia-ai" = 99
 "claudia-client" = 88
-"claudia-composes" = 96
-"claudia-composes-io" = 95
-"claudia-computes" = 92
+"claudia-composes" = 97
+"claudia-composes-io" = 96
+"claudia-computes" = 93
 "claudia-computes-io" = 95
 "claudia-container" = 91
 "claudia-core" = 94
 "claudia-creates" = 95
-"claudia-creates-io" = 91
+"claudia-creates-io" = 92
 "claudia-fonts" = 97
-"claudia-odf-io" = 96
+"claudia-odf-io" = 97
 "claudia-opc-io" = 100
+"claudia-render" = 92
 "claudia-search" = 99
 "claudia-server" = 94
 "claudia-test-documents" = 89
-"claudia-render" = 90
 "claudia-typeset" = 87

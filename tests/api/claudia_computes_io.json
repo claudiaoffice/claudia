@@ -1,5 +1,5 @@
 {
- "version": "0.9.0",
+ "version": "0.10.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -31,7 +31,7 @@
   "function": "(original_bytes: 'bytes', baseline: 'WorkbookModel', current: 'WorkbookModel', *, losses: 'LossLog | None' = None, info: 'DocumentInfo | None' = None) -> 'bytes'"
  },
  "apply_edits_to_xlsx": {
-  "function": "(original_bytes: 'bytes', baseline: 'WorkbookModel', current: 'WorkbookModel') -> 'bytes'"
+  "function": "(original_bytes: 'bytes', baseline: 'WorkbookModel', current: 'WorkbookModel', *, losses: 'LossLog | None' = None) -> 'bytes'"
  },
  "from_openformula": {
   "function": "(attribute: 'str', functions: 'Container[str] | None' = None, names: 'Container[str] | None' = None) -> 'str'"

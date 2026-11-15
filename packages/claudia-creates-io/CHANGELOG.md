@@ -3,6 +3,13 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Changed
+- The picture code the converters of the text app needed too moved out: `Rasterise` and how a picture of a file
+  becomes an image object are in `claudia-core`, the transform and frame helpers of odp in `claudia-odf-io` (D464).
+  `claudia_creates_io.Rasterise` is still there.
+
 ## [0.5.0] - 2026-11-15
 
 A turned object, a picture, the print setup and the language reach the files (D459, D460, D461).

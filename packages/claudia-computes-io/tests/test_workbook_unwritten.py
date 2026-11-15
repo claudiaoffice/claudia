@@ -58,30 +58,26 @@ def test_column_widths_and_row_heights_are_written_so_they_are_no_loss(unwritten
     assert unwritten(after, a_workbook()) == ()
 
 
-def test_a_chart_tab_is_not_written_to_xlsx():
+def a_chart_spec() -> ChartSpec:
+    one = CellRef(0, 0, SheetId("s1"))
+    return ChartSpec(id="spec", kind="bar", range=RangeRef(one, one))
+
+
+@BOTH
+def test_a_chart_tab_is_written_as_a_sheet_so_it_is_no_loss(unwritten):
     after = a_workbook()
+    after.define_diagram(a_chart_spec())
     after.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert xlsx_unwritten_changes(after, a_workbook()) == (Loss("chart", "", 1),)
+    assert unwritten(after, a_workbook()) == ()
 
 
-def test_a_chart_tab_is_written_to_ods_as_a_sheet_so_it_is_no_loss():
+@BOTH
+def test_a_chart_floating_on_a_sheet_is_written_so_it_is_no_loss(unwritten):
     after = a_workbook()
-    after.define_diagram(
-        ChartSpec(id="spec", kind="bar", range=RangeRef(CellRef(0, 0, SheetId("s1")), CellRef(0, 0, SheetId("s1"))))
-    )
-    after.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert ods_unwritten_changes(after, a_workbook()) == ()
-
-
-def test_a_chart_floating_on_a_sheet_is_written_to_ods_so_it_is_no_loss():
-    after = a_workbook()
-    after.define_diagram(
-        ChartSpec(id="spec", kind="bar", range=RangeRef(CellRef(0, 0, SheetId("s1")), CellRef(0, 0, SheetId("s1"))))
-    )
+    after.define_diagram(a_chart_spec())
     body = ObjectBody("o1", "diagram", 200, 100, "plain-image", diagram="spec")
     after.insert_object(VisualObject(body, CellAnchor(SheetId("s1"), 3, 3)))
-    assert ods_unwritten_changes(after, a_workbook()) == ()
-    assert xlsx_unwritten_changes(after, a_workbook()) != ()
+    assert unwritten(after, a_workbook()) == ()
 
 
 @BOTH
@@ -105,4 +101,4 @@ def test_the_export_loss_lists_say_what_the_converters_do_not_write():
     model = a_workbook()
     model.charts["c1"] = Chart("c1", "Chart", "spec")
     assert Loss("chart", "empty", 1) in ods_export_losses(model)  # (a chart tab with nothing to draw)
-    assert Loss("chart", "", 1) in xlsx_export_losses(model)
+    assert Loss("chart", "empty", 1) in xlsx_export_losses(model)

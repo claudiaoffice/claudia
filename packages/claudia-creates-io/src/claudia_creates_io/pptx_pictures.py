@@ -1,5 +1,5 @@
 """Reading the pictures of a pptx as image objects (D460): which a picture is that the model holds, its asset and what
-the file says of it (see :mod:`claudia_creates_io.pictures`)."""
+the file says of it (see :mod:`claudia_core.file_pictures`)."""
 
 from __future__ import annotations
 
@@ -8,10 +8,8 @@ from typing import Any
 from lxml import etree
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
-from claudia_core import ImageAsset
+from claudia_core import ImageAsset, asset_of, keeps_proportions
 from claudia_creates import SLIDE_HEIGHT, SLIDE_WIDTH
-
-from .pictures import asset_of, keeps_proportions
 
 _NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
@@ -53,7 +51,7 @@ def _blob_of(shape) -> bytes | None:  # noqa: ANN001 (python-pptx's own shape cl
 
 def held_picture(shape) -> ImageAsset | None:  # noqa: ANN001
     """The asset of ``shape`` when it is a picture the model holds as it is shown (see
-    :mod:`claudia_creates_io.pictures`), else ``None``."""
+    :mod:`claudia_core.file_pictures`), else ``None``."""
     if shape.shape_type != MSO_SHAPE_TYPE.PICTURE:
         return None
     if any((shape.crop_left, shape.crop_right, shape.crop_top, shape.crop_bottom)):

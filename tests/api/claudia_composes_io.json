@@ -1,5 +1,5 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -9,13 +9,13 @@
   "properties": []
  },
  "apply_edits_to_docx": {
-  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None, losses: 'LossLog | None' = None) -> 'bytes'"
+  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None, losses: 'LossLog | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  },
  "apply_edits_to_odt": {
-  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, losses: 'LossLog | None' = None, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, losses: 'LossLog | None' = None, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  },
  "docx_export_losses": {
-  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True) -> 'tuple[Loss, ...]'"
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"
  },
  "docx_import_losses": {
   "function": "(docx_bytes: 'bytes') -> 'tuple[Loss, ...]'"
@@ -30,7 +30,7 @@
   "function": "(log: 'CommandLog', branch: 'str | None' = None) -> 'tuple[DocumentInfo, dict[str, str]]'"
  },
  "odt_export_losses": {
-  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True) -> 'tuple[Loss, ...]'"
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"
  },
  "odt_import_losses": {
   "function": "(odt_bytes: 'bytes') -> 'tuple[Loss, ...]'"
@@ -42,9 +42,9 @@
   "function": "(model: 'TextModel', baseline: 'TextModel | None' = None) -> 'tuple[Loss, ...]'"
  },
  "text_to_docx": {
-  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  },
  "text_to_odt": {
-  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  }
 }

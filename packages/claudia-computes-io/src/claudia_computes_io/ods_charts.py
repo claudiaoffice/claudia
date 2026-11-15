@@ -26,18 +26,17 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, replace
-from typing import NamedTuple
+from dataclasses import dataclass
 
 from lxml import etree
 
-from claudia_computes import CellRef, ChartError, ChartSpec, RangeRef, SheetId, WorkbookModel
+from claudia_computes import ChartSpec, SheetId, WorkbookModel
 from claudia_computes.charts import BAR_COLORS
-from claudia_computes.limits import MAX_COLS, MAX_ROWS
-from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT, MIN_OBJECT_SIZE
+from claudia_computes.model import MIN_OBJECT_SIZE
 from claudia_computes.refs import column_name
 from claudia_odf_io import NS, local_name, qname, xml_safe
 
+from .chart_plan import Area, ReadChart, chart_losses, number_text, offset_of, plan_from, plan_of, spec_of
 from .ods_layout import pixels_of, text_of
 from .ods_names import range_of
 
@@ -57,46 +56,6 @@ SheetIds = Callable[[str], SheetId | None]
 
 def _q(name: str) -> str:
     return qname(name)
-
-
-# ------------------------------------------------------------------------------------------------ the plan
-class Series(NamedTuple):
-    """One series as the model reads a range: the cells of its values and the cell of its name (``None``: it has
-    none). A cell is ``(row, col)``; a run of cells is its first and last."""
-
-    values: tuple[tuple[int, int], tuple[int, int]]
-    label: tuple[int, int] | None
-
-
-class Plan(NamedTuple):
-    """What :meth:`~claudia_computes.WorkbookModel.chart_figure` makes of a range, as the cells it reads."""
-
-    categories: tuple[tuple[int, int], tuple[int, int]] | None
-    series: tuple[Series, ...]
-    first_row_is_header: bool
-    first_column_is_header: bool
-
-
-def plan_of(first: CellRef, last: CellRef, *, series_in: str, header_row: bool) -> Plan:
-    """The series and the categories ``chart_figure`` draws of the range ``first``..``last``: the first column (row)
-    names the categories as soon as there is more than one column (row to read them in), and the first row (column)
-    the series if the definition says it has a header."""
-    has_row = header_row and last.row > first.row
-    has_col = last.col > first.col
-    row0, col0 = first.row + has_row, first.col + has_col
-    if series_in == "columns":
-        categories = ((row0, first.col), (last.row, first.col)) if has_col else None
-        series = tuple(
-            Series(((row0, col), (last.row, col)), (first.row, col) if has_row else None)
-            for col in range(col0, last.col + 1)
-        )
-    else:
-        categories = ((first.row, col0), (first.row, last.col)) if has_row else None
-        series = tuple(
-            Series(((row, col0), (row, last.col)), (row, first.col) if has_col else None)
-            for row in range(row0, last.row + 1)
-        )
-    return Plan(categories, series, has_row, has_col)
 
 
 # ------------------------------------------------------------------------------------------------ addresses
@@ -131,10 +90,6 @@ def _style(name: str, family: str, *properties: tuple[str, Mapping[str, str]]) -
     return f'<style:style style:name="{name}" style:family="{family}">{inner}</style:style>'
 
 
-def _number_text(value: float) -> str:
-    return repr(int(value)) if float(value).is_integer() else repr(float(value))
-
-
 def _escape(text: str) -> str:
     return xml_safe(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -158,7 +113,7 @@ def _local_table(figure: dict) -> str:
             f'<table:table-cell office:value-type="string"><text:p>{_escape(str(category))}</text:p></table:table-cell>'
         )
         for one in data:
-            number = _number_text(one["y"][place])
+            number = number_text(one["y"][place])
             cells += (
                 f'<table:table-cell office:value-type="float" office:value="{number}"><text:p>{number}</text:p>'
                 "</table:table-cell>"
@@ -282,17 +237,6 @@ def frame_element(  # noqa: PLR0913 (a frame is: which chart, where, how big and
 
 
 # ------------------------------------------------------------------------------------------------ reading
-@dataclass(frozen=True)
-class ReadChart:
-    """A chart of a file that the model can hold: its definition (``id`` is left for the caller to give), its size
-    in pixels and what it says to someone who cannot see it."""
-
-    spec: ChartSpec
-    width: int
-    height: int
-    description: str
-
-
 def _text_of(element: etree._Element | None) -> str:
     if element is None:
         return ""
@@ -322,9 +266,6 @@ def _is_the_models(root: etree._Element, chart: etree._Element, plot: etree._Ele
         if any(found.get(key) not in (None, "false") for key in _NOT_THE_MODELS):
             return False
     return True
-
-
-Area = tuple[tuple[int, int], tuple[int, int]]
 
 
 def _named_areas(
@@ -363,26 +304,6 @@ def _named_areas(
     return next(iter(sheets)), categories, series
 
 
-def _plan_from(
-    sheet: SheetId, categories: Area | None, series: list[tuple[Area, Area | None]], rows: bool
-) -> tuple[CellRef, CellRef, bool, Plan] | None:
-    """The range the cells a chart names make, the way the model reads it, and what the model would draw of that
-    range, when that is exactly the series and the categories the chart names; else ``None``."""
-    areas = [area for values, label in series for area in (values, label) if area is not None]
-    if categories is not None:
-        areas.append(categories)
-    first = CellRef(min(a[0][0] for a in areas), min(a[0][1] for a in areas), sheet)
-    last = CellRef(max(a[1][0] for a in areas), max(a[1][1] for a in areas), sheet)
-    if not (last.row < MAX_ROWS and last.col < MAX_COLS):
-        return None
-    want = tuple(Series(values, None if label is None else label[0]) for values, label in series)
-    for header_row in (True, False):
-        plan = plan_of(first, last, series_in="rows" if rows else "columns", header_row=header_row)
-        if plan.categories == categories and plan.series == want and header_row == plan.first_row_is_header:
-            return first, last, header_row, plan
-    return None
-
-
 def read_chart(content: bytes, sheet_ids: SheetIds) -> ReadChart | None:  # noqa: PLR0911 (each way a chart is not the model's)
     """The chart of an embedded chart part (``Object 1/content.xml``) as the model holds it, or ``None`` when it is
     not a bar chart that is drawn the way the model draws one over cells of one sheet of this file. ``sheet_ids`` says
@@ -406,35 +327,27 @@ def read_chart(content: bytes, sheet_ids: SheetIds) -> ReadChart | None:  # noqa
     sheet, categories, series = named
     (r0, c0), (r1, c1) = series[0][0]
     rows = plot.get(_q("chart:series-source")) == "rows" or (r0 == r1 and c0 != c1)
-    drawn = _plan_from(sheet, categories, series, rows)
+    drawn = plan_from(sheet, categories, series, rows)
     if drawn is None:
         return None
     first, last, header_row, _ = drawn
     x_axis = next((a for a in plot.iterfind("chart:axis", NS) if a.get(_q("chart:dimension")) == "x"), None)
     y_axis = next((a for a in plot.iterfind("chart:axis", NS) if a.get(_q("chart:dimension")) == "y"), None)
-    try:
-        spec = ChartSpec(
-            id="c0",
-            kind="bar",
-            range=RangeRef(first, last),
-            series_in="rows" if rows else "columns",
-            header_row=header_row,
-            title=_text_of(chart.find("chart:title", NS)),
-            x_title=_text_of(None if x_axis is None else x_axis.find("chart:title", NS)),
-            y_title=_text_of(None if y_axis is None else y_axis.find("chart:title", NS)),
-            legend=chart.find("chart:legend", NS) is not None,
-            gridlines=y_axis is not None and y_axis.find("chart:grid", NS) is not None,
-        )
-        ChartSpec.from_data(spec.to_data())  # (the titles of a file are held to what a title of the model may be)
-    except ChartError:
+    spec = spec_of(
+        first,
+        last,
+        rows=rows,
+        header_row=header_row,
+        title=_text_of(chart.find("chart:title", NS)),
+        x_title=_text_of(None if x_axis is None else x_axis.find("chart:title", NS)),
+        y_title=_text_of(None if y_axis is None else y_axis.find("chart:title", NS)),
+        legend=chart.find("chart:legend", NS) is not None,
+        gridlines=y_axis is not None and y_axis.find("chart:grid", NS) is not None,
+    )
+    if spec is None:
         return None
     width, height = (pixels_of(chart.get(_q(f"svg:{side}"))) for side in ("width", "height"))
     return ReadChart(spec, width or 0, height or 0, "")
-
-
-def with_id(spec: ChartSpec, spec_id: str) -> ChartSpec:
-    """``spec`` called ``spec_id``."""
-    return replace(spec, id=spec_id)
 
 
 def holds_a_chart(frame: etree._Element) -> str | None:
@@ -464,13 +377,6 @@ def describe(frame: etree._Element) -> str:
 
 
 # ------------------------------------------------------------------------------------------------ a file's charts
-def offset_of(widths: Mapping[int, float], heights: Mapping[int, float], row: int, col: int) -> tuple[float, float]:
-    """Where the corner of a cell is, in pixels from the corner of the sheet (the inverse of ``cell_at``)."""
-    left = sum(widths.get(column, DEFAULT_COL_WIDTH) for column in range(col))
-    top = sum(heights.get(line, DEFAULT_ROW_HEIGHT) for line in range(row))
-    return left, top
-
-
 Parts = dict[str, tuple[bytes | None, str]]
 
 
@@ -526,25 +432,6 @@ def _sheet_name(wanted: str, taken: set[str]) -> str:
         candidate = f"{name} ({number})"
     taken.add(candidate.casefold())
     return candidate
-
-
-def chart_losses(model: WorkbookModel) -> list[str]:
-    """What a file cannot keep of the charts of ``model``, one detail for each: ``tab`` (a chart tab is a sheet with the
-    chart in it), ``source`` (a chart that follows a name has the cells the name is now), ``rotation`` (a chart in a
-    file stands upright) and ``empty`` (a chart that reads nothing is not written)."""
-    lost: list[str] = []
-    shown = [obj.body.diagram for obj in model.objects.values() if obj.body.diagram is not None]
-    tabs = [tab.spec_id for tab in model.charts.values()]
-    lost.extend("rotation" for obj in model.objects.values() if obj.body.diagram is not None and obj.body.rotation)
-    for is_tab, spec_ids in ((False, shown), (True, tabs)):
-        for spec_id in spec_ids:
-            spec = model.diagrams.get(spec_id)
-            if not isinstance(spec, ChartSpec) or model.chart_cells(spec_id) is None:
-                lost.append("empty")
-                continue
-            lost.extend(["tab"] if is_tab else [])
-            lost.extend(["source"] if spec.source else [])
-    return lost
 
 
 def written_charts(model: WorkbookModel, *, first: int = 1) -> WrittenCharts:

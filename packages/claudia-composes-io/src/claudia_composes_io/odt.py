@@ -26,11 +26,13 @@ import copy
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from itertools import count
+from typing import cast
 from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_composes import DEFAULT_STYLE, Block, Run, Suggestion, TextModel
+from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
+from claudia_core import Rasterise, VisualObject
 from claudia_odf_io import (
     MIME,
     NS,
@@ -42,18 +44,30 @@ from claudia_odf_io import (
     XmlPart,
     decode_style_name,
     default_style_xml,
+    frames_of,
     hidden_content,
     insert_elements,
     new_meta,
     new_package,
     read_text,
     set_text,
+    update_manifest,
     update_package_meta,
     xml_safe,
 )
 from claudia_opc_io import read_parts, write_parts
 
 from ._odt_lists import LIST, ListFlow, ListNames, can_rebuild, read_lists
+from ._odt_pictures import (
+    PICTURE_STYLE,
+    PICTURE_STYLE_XML,
+    PicturePlan,
+    PictureWriter,
+    file_pictures,
+    frames_not_pictures,
+    graphic_styles,
+    unheld_pictures,
+)
 from ._odt_setup import (
     FOOTER_STYLE,
     FOOTER_STYLE_XML,
@@ -64,6 +78,7 @@ from ._odt_setup import (
     read_setup,
 )
 from ._odt_styles import StyleNames, style_xml
+from ._pictures import picture_losses, pictures_of
 from ._suggestions import WhenMade, open_replacements, when_made
 from ._unwritten import ODT_WRITTEN, text_unwritten_changes
 from .docx import UnsupportedEdit
@@ -256,8 +271,10 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     called ``b1``, ``b2``... by its place. Title, Heading 1, Heading 2 and Quotations (or a style based on one) map to
     the styles of the text app and anything else is body text. The first paragraph of every item of a list is an item
     of that list (the scheme, start and name of the list from its list style, ``_odt_lists``), at the level of its
-    place in the nest. What the model does not show is in
-    :func:`odt_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is not an odt."""
+    place in the nest. A picture (a ``draw:frame`` with an image in it) that the model shows as it is -- an image the
+    app decodes, not cropped, in its own proportions -- is an image object hanging from the character it stands at,
+    with its description (D464). What the model does not show is in :func:`odt_import_losses`. Raises
+    :class:`~claudia_odf_io.OdfError` for a file that is not an odt."""
     parts, body, scan, parents = _document(odt_bytes)
     lists = _lists_of(parts, body, scan)
     setup = read_setup(etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
@@ -266,14 +283,22 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
         text = read_text(paragraph)
         runs = (Run(len(text), None),) if text else ()
         blocks.append(Block(f"b{number}", _style_of(paragraph, parents, None), text, runs, lists.items.get(paragraph)))
-    return TextModel(blocks or None, page=setup.page, language=setup.language, lists=lists.book if blocks else None)
+    model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=lists.book if blocks else None)
+    root = body.getroottree().getroot()
+    graphics = graphic_styles(root, etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
+    for picture in file_pictures(scan.paragraphs, graphics, parts):
+        if picture.asset.id not in model.images:
+            model.define_image(picture.asset)
+        model.insert_object(VisualObject(picture.body, BlockAnchor(f"b{picture.block + 1}", picture.offset)))
+    return model
 
 
 def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
     """What :func:`odt_to_text` does not show of the file, each as a code (``"table"``, ``"footnote"``,
     ``"formatting"``, ``"list-look"`` for lists drawn otherwise than the model draws them, ``"page"`` for a page the
-    model cannot hold...) with how many there are, in the order they come. None of it is lost from the *file*: an
-    edit that is exported with :func:`apply_edits_to_odt` keeps all of it."""
+    model cannot hold, ``"picture"`` for one it does not show as it is...) with how many there are, in the order they
+    come. None of it is lost from the *file*: an edit that is exported with :func:`apply_edits_to_odt` keeps all of
+    it."""
     parts, body, scan, parents = _document(odt_bytes)
     reading = _lists_of(parts, body, scan)
     setup = read_setup(etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
@@ -286,6 +311,19 @@ def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
             hidden[kind] = hidden.get(kind, 0) + 1
         formatting += sum(1 for span in paragraph.iter(_q("text", "span")) if span.get(_STYLE_NAME))
         links += sum(1 for _ in paragraph.iter(_q("text", "a")))
+    graphics = graphic_styles(
+        body.getroottree().getroot(), etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None
+    )
+    held = file_pictures(scan.paragraphs, graphics, parts)
+    unheld = unheld_pictures(scan.paragraphs, held, graphics)
+    shown_as_frames = sum(1 for paragraph in scan.paragraphs for frame in frames_of(paragraph))
+    plain = shown_as_frames - sum(frames_not_pictures(paragraph) for paragraph in scan.paragraphs)
+    if "frame" in hidden:  # (the pictures are shown or are a picture of their own, not a frame)
+        hidden["frame"] -= plain
+        if hidden["frame"] <= 0:
+            del hidden["frame"]
+    if unheld:
+        hidden["picture"] = unheld
     for code, number in (
         ("table", scan.tables),
         ("list-look", reading.odd_looks),
@@ -338,6 +376,24 @@ def _plan(text: str, suggestions: list[Suggestion], when: WhenMade | None = None
             out += replacement
         position = end
     return out + text[position:], changes, skipped
+
+
+def _moved(offset: int, text: str, suggestions: list[Suggestion]) -> int:
+    """Where the character ``offset`` of a block's own ``text`` is in the text of its paragraph, in which the
+    replacements of ``suggestions`` stand for what they replace (what :func:`_plan` writes); one inside what is
+    replaced is before its replacement."""
+    shift, position = 0, 0
+    for suggestion in suggestions:
+        start, end = suggestion.anchor.start, suggestion.anchor.end
+        if start < position or end > len(text):
+            continue
+        if offset <= start:
+            break
+        if offset < end:
+            return start + shift
+        shift += len(xml_safe(suggestion.replacement or "")) - (end - start)
+        position = end
+    return offset + shift
 
 
 def _element(prefix: str, local: str, **attributes: str) -> etree._Element:
@@ -439,6 +495,7 @@ def text_to_odt(
     track_suggestions: bool = True,
     info: DocumentInfo | None = None,
     change_times: Mapping[str, str] | None = None,
+    rasterise: Rasterise | None = None,
 ) -> bytes:
     """``model`` as odt bytes: one paragraph (or heading) per block, the built-in styles written as the styles of the
     same name, and an item of a list as the item of a ``text:list`` (nested for its level) with a list style that has
@@ -451,7 +508,9 @@ def text_to_odt(
     ``info`` is what the file says about the document in ``meta.xml`` (title, who made it and when, who saved it last
     and when). ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one it has no
     time for is dated by ``info.modified`` (the suggestion is not younger than that), and one with neither by the
-    earliest date there is (D411)."""
+    earliest date there is (D411). A picture floating over the text (an image, a rendered text container) is a frame in
+    the paragraph it hangs from, at its character, with its description; a rendered container is drawn as a PNG by
+    ``rasterise`` when there is one (D464)."""
     when = when_made(change_times, info.modified if info else None)
     by_block = open_replacements(model, track=track_suggestions)
     ids = _ids(set())
@@ -466,27 +525,53 @@ def text_to_odt(
     names = ListNames(model.lists)
     flow = ListFlow(text, lambda list_id, element: names.start(list_id, element))
     regions: list[etree._Element] = []
+    pictures = PictureWriter(rasterise)
     for block in model.blocks:
         paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when, styles)
+        _add_pictures(paragraph, model, block, by_block.get(block.id, []), pictures)
         flow.add(paragraph, block.item)
         regions += found
     automatic = root.find("office:automatic-styles", NS)
     if automatic is not None:
         automatic.extend(etree.fromstring(style) for style in names.new_styles)
+        if pictures.parts:
+            automatic.append(etree.fromstring(PICTURE_STYLE_XML))
     if regions:
         tracked = _element("text", "tracked-changes", track_changes="false")
         tracked.extend(regions)
         text.insert(0, tracked)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
-    return new_package("text", content.encode(), _styles_part(model, styles), meta=new_meta(info or DocumentInfo()))
+    return new_package(
+        "text",
+        content.encode(),
+        _styles_part(model, styles),
+        meta=new_meta(info or DocumentInfo()),
+        extra={name: (data, pictures.media_types[name]) for name, data in pictures.parts.items()},
+    )
 
 
-def odt_export_losses(model: TextModel, *, track_suggestions: bool = True) -> tuple[Loss, ...]:
+def _add_pictures(
+    paragraph: etree._Element, model: TextModel, block: Block, suggestions: list[Suggestion], writer: PictureWriter
+) -> None:
+    """Put the frames of the pictures that hang from ``block`` into its ``paragraph``, each at its character."""
+    marks = [
+        (_moved(obj.anchor.offset, block.text, suggestions), writer.frame(obj, asset))
+        for obj, asset in pictures_of(model, block.id)
+    ]
+    insert_elements(paragraph, marks)
+
+
+def odt_export_losses(
+    model: TextModel, *, track_suggestions: bool = True, rasterised: bool = False
+) -> tuple[Loss, ...]:
     """What :func:`text_to_odt` cannot put into the file for ``model``, each as a code with how many: a ``"style"``
     (named by its id) that is written as body text, ``"authorship"`` (who wrote which run of a block: an odt does not
     keep it), a ``"remark"`` (nothing to track), a ``"suggestion"`` that is not written because tracking is off and
-    a ``"suggestion-anchor"`` that no longer matches its text, and what :func:`odt_unwritten_changes` says of a fresh
-    file."""
+    a ``"suggestion-anchor"`` that no longer matches its text, ``"decorative"`` (a picture marked as decoration: ODF 1.3
+    has no attribute for it, so a reader of the file sees a picture nobody described), ``"rendering-pending"`` (a
+    rendered text container nothing has been drawn for yet: left out), ``"svg-picture"`` (a rendered container written
+    as the SVG itself because nothing could draw it as a PNG, ``rasterised``), and what :func:`odt_unwritten_changes`
+    says of a fresh file."""
     losses = LossLog()
     names = StyleNames(model.styles)
     for block in model.blocks:
@@ -501,6 +586,12 @@ def odt_export_losses(model: TextModel, *, track_suggestions: bool = True) -> tu
     remarks = sum(1 for s in open_ones if s.replacement is None)
     if remarks:
         losses.add("remark", count=remarks)
+    decorative = sum(
+        1 for obj in model.objects.values() if obj.body.kind in ("image", "rendered") and obj.body.decorative
+    )
+    if decorative:
+        losses.add("decorative", count=decorative)
+    picture_losses(model, losses, vector_loss=None if rasterised else "svg-picture", only_rendered=True)
     if not track_suggestions:
         if len(open_ones) > remarks:
             losses.add("suggestion", count=len(open_ones) - remarks)
@@ -536,6 +627,7 @@ class _Patch:
         losses: LossLog | None,
         info: DocumentInfo | None,
         when: WhenMade,
+        rasterise: Rasterise | None,
     ) -> None:
         self.original = original
         self.info = info
@@ -567,6 +659,17 @@ class _Patch:
         self.held = held
         self.paragraphs = paragraphs
         self.element_of = {block.id: element for block, element in zip(held, paragraphs, strict=True)}
+        graphics = graphic_styles(*roots)
+        self.has_picture_style = PICTURE_STYLE in graphics
+        self.pictures = PicturePlan(
+            file_pictures(paragraphs, graphics, self.parts),
+            [block.id for block in held],
+            baseline,
+            current,
+            rasterise,
+            set(self.parts),
+            losses,
+        )
         self.before = {block.id: block for block in held}
         self.reading = read_lists(paragraphs, [self.part.root, self.styles.root if self.styles else self.part.root])
         self.top = {block.id: self.reading.container[self.element_of[block.id]] for block in held}
@@ -584,6 +687,8 @@ class _Patch:
             raise UnsupportedEdit("blocks cannot be moved relative to each other in the file")
 
     def run(self) -> bytes:
+        if self.losses is not None:  # (what a rendered container is that nothing has been drawn for)
+            picture_losses(self.current, self.losses, only_rendered=True)
         self.plan = self._plan()
         self._remove_dropped()
         self._patch_current()
@@ -595,10 +700,32 @@ class _Patch:
             return self.original
         if self.changed:
             self.parts["content.xml"] = self.part.result()
+            self._settle_pictures_in_package()
         self._add_missing_styles(setup_changed)
         if self.info is not None:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
+
+    def _settle_pictures_in_package(self) -> None:
+        """The images of the new frames into the package and its manifest; those of frames that went out of it, when no
+        frame left shows them (and no name of the package starts with theirs: the manifest drops by prefix)."""
+        plan = self.pictures
+        hrefs = cast(list[str], etree.fromstring(self.parts["content.xml"]).xpath("//@xlink:href", namespaces=NS))
+        still = {href.removeprefix("./") for href in hrefs}
+        styles = self.parts.get("styles.xml", b"")
+        orphans = {
+            name
+            for name in plan.removed
+            if name in self.parts
+            and name not in still
+            and name.encode() not in styles
+            and not any(other != name and other.startswith(name) for other in self.parts)
+        }
+        for name in orphans:
+            del self.parts[name]
+        if plan.writer.parts or orphans:
+            self.parts.update(plan.writer.parts)
+            update_manifest(self.parts, add=plan.writer.media_types, remove=tuple(orphans))
 
     def _style_name(self, style_id: str) -> str:
         """The name a block of ``style_id`` is written with, noting a style the file must be given."""
@@ -693,6 +820,7 @@ class _Patch:
             found, regions = _new_paragraph(block.style, block.text, suggestions, self.ids, self.when, self.style_names)
             self._style_name(block.style)
             self.regions += regions
+            self._hang_pictures(found, block, suggestions)
         found.tail = None
         return found
 
@@ -761,6 +889,7 @@ class _Patch:
                 )
                 self._style_name(block.style)
                 self.regions += found
+                self._hang_pictures(paragraph, block, suggestions)
                 self._place([paragraph], anchor)
             number = end
 
@@ -784,16 +913,30 @@ class _Patch:
         """A copy of the paragraph ``element`` with the words and the style the block has now; ``None`` if it has
         what the block has."""
         old = self.before[block.id]
-        if old.text == block.text and old.style == block.style and not suggestions:
+        if (
+            old.text == block.text
+            and old.style == block.style
+            and not suggestions
+            and block.id not in self.pictures.touched
+        ):
             return None
         edited = copy.deepcopy(element)
         text, changes, _ = _plan(block.text, suggestions, self.when)
+        framed = self.pictures.has_any(block.id)
+        if framed:  # (the frames of the pictures are put back at the end, where the text says they hang)
+            self.pictures.take_out(edited, element, block.id)
         set_text(edited, text)
         name = edited.get(_STYLE_NAME) or _STANDARD
         if old.style != block.style:
             name = self._restyle(edited, block.style)
         self.regions += _write_changes(edited, changes, self.ids, name)
+        if framed:
+            self._hang_pictures(edited, block, suggestions)
         return edited
+
+    def _hang_pictures(self, paragraph: etree._Element, block: Block, suggestions: list[Suggestion]) -> None:
+        """The frames of the pictures that hang from ``block``, each at its character of ``paragraph``, as written."""
+        self.pictures.hang(paragraph, block.id, lambda offset: _moved(offset, block.text, suggestions))
 
     def _edit(self, block: Block, element: etree._Element, suggestions: list[Suggestion]) -> None:
         edited = self._edited(block, element, suggestions)
@@ -803,11 +946,14 @@ class _Patch:
 
     def _finish_lists(self) -> None:
         """The list styles the text needs and the ``xml:id`` that the lists after a list of the file continue."""
-        if self.names.new_styles:
+        styles = list(self.names.new_styles)
+        if self.pictures.written and not self.has_picture_style:
+            styles.append(PICTURE_STYLE_XML.encode())
+        if styles:
             automatic = self.part.root.find("office:automatic-styles", NS)
             if automatic is None:
-                raise UnsupportedEdit("this file has no place for the style of a list")
-            self.part.insert_into(automatic, *self.names.new_styles)
+                raise UnsupportedEdit("this file has no place for the style of a list or of a picture")
+            self.part.insert_into(automatic, *styles)
             self.changed = True
         for element, xml_id in self.names.ids_to_add().items():
             self.part.set_attributes(element, {"xml:id": xml_id})
@@ -871,7 +1017,7 @@ class _Patch:
             return False
         if self.styles is None:
             raise UnsupportedEdit("this file has no styles.xml to write the styles of the text in")
-        before_names = StyleNames(before.styles)
+        before_names = StyleNames(before.styles, self.defined)  # (named as now: a name the file has is taken)
         colours_before, colours_after = before.palette.colours(), after.palette.colours()
         elements = {
             e.get(_q("style", "name")): e
@@ -915,6 +1061,7 @@ def apply_edits_to_odt(
     losses: LossLog | None = None,
     info: DocumentInfo | None = None,
     change_times: Mapping[str, str] | None = None,
+    rasterise: Rasterise | None = None,
 ) -> bytes:
     """Re-export ``current`` to odt by patching what changed since ``baseline`` (the model as :func:`odt_to_text` read
     it from ``original_bytes``) onto those same bytes -- so a table, a picture, a footnote, a style, anything the text
@@ -935,4 +1082,13 @@ def apply_edits_to_odt(
     Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, and blocks
     moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know)."""
     when = when_made(change_times, info.modified if info else None)
-    return _Patch(original_bytes, baseline, current, track=track_suggestions, losses=losses, info=info, when=when).run()
+    return _Patch(
+        original_bytes,
+        baseline,
+        current,
+        track=track_suggestions,
+        losses=losses,
+        info=info,
+        when=when,
+        rasterise=rasterise,
+    ).run()

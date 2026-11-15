@@ -86,6 +86,7 @@ def test_kernel_has_no_third_party_imports():
         "types",  # renderings.py: an immutable view of a rendering's settings
         "typing",
         "unicodedata",  # pure tables, used to turn a style name into an id
+        "zlib",  # raster.py: the empty PNG that stands in for an SVG nobody can draw
         "xml",  # assets.py: sanitizing an imported SVG with the standard library's own parser, no third party
     }
     for path, tree in modules().items():
