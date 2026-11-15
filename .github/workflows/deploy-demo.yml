@@ -6,6 +6,10 @@
 # The image is copied from GHCR to the Scaleway registry under an unchanging tag per commit, the containers are pointed
 # at it and redeployed. Their settings (environment, scale, domain) are left as they are in Scaleway.
 #
+# Before the copy, the old tags of claudia-demo in the Scaleway registry are deleted (scripts/prune_registry.py), so it
+# holds only what runs and what is about to run instead of one image per push. Rolling back does not need them: it
+# copies the tag from GHCR again. If pruning fails, the deployment goes on with a warning.
+#
 # Set up once, in Settings > Secrets and variables > Actions, and Settings > Environments > demo:
 #   secret   SCW_SECRET_KEY            API key secret of a Scaleway IAM application (rights: ContainersFullAccess,
 #                                      ContainerRegistryFullAccess in the project of the demo)
@@ -13,6 +17,8 @@
 #   variable SCW_DEMO_CONTAINER_IDS    the ids (UUIDs) of the demo containers, separated by spaces (one per app)
 #   variable SCW_REGION                optional, default fr-par
 #   variable DEMO_URL                  optional, default https://demo.claudia-office.de; checked after the deployment
+#   variable SCW_DEMO_KEEP_TAGS        optional, default 0; how many older tags to keep in the Scaleway registry
+#                                      besides the running and the new one
 name: Deploy demo
 
 on:
@@ -76,6 +82,27 @@ jobs:
           [[ "$tag" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || { echo "::error::'$tag' is not an image tag"; exit 1; }
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "target=rg.${REGION}.scw.cloud/${NAMESPACE}/claudia-demo:${tag}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            scripts/prune_registry.py
+            .python-version
+          sparse-checkout-cone-mode: false
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Delete the old tags in the Scaleway registry
+        # Saves storage, but must never stop a deployment; the next run tries again.
+        continue-on-error: true
+        env:
+          TAG: ${{ steps.image.outputs.tag }}
+          KEEP_NEWEST: ${{ vars.SCW_DEMO_KEEP_TAGS || '0' }}
+        run: |
+          containers=()
+          for id in $CONTAINER_IDS; do containers+=(--container "$id"); done
+          uv run --no-project python scripts/prune_registry.py --region "$REGION" --namespace "$NAMESPACE" \
+            --image claudia-demo --keep "$TAG" --keep-newest "$KEEP_NEWEST" "${containers[@]}"
 
       - name: Copy the image from GHCR to the Scaleway registry
         env:
